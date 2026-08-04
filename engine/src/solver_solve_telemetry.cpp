@@ -113,6 +113,12 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
                sizeof(std::uint32_t) +
            diagnostics.policy_refinement.status.capacity() + 1 +
            diagnostics.policy_refinement.resource_cap.capacity() + 1 +
+           diagnostics.policy_refinement
+                   .published_fallback_kind.capacity() +
+               1 +
+           diagnostics.policy_refinement
+                   .preferred_publication_failure_reason.capacity() +
+               1 +
            broad_row_attribution_owned_bytes(
                diagnostics.policy_refinement.broad_row_attribution) +
            string_vector_owned_bytes(diagnostics.equivalence_witnesses) +
@@ -509,63 +515,15 @@ std::uint64_t SolveWork::Impl::audited_estimated_owned_bytes() const {
     }
 
 std::uint64_t SolveWork::Impl::output_incumbent_owned_bytes() const {
-        if (!output_incumbent.has_value()) return 0;
-        const BoundedPolicyIncumbent& incumbent = *output_incumbent;
-        std::uint64_t bytes = sizeof(BoundedPolicyIncumbent) +
-            incumbent.kind.capacity() + 1;
-        bytes += incumbent.values.capacity() * sizeof(double);
-        bytes += incumbent.policy_rows.capacity() * sizeof(std::uint64_t);
-        bytes += incumbent.policy_row_costs.capacity() * sizeof(double);
-        bytes += incumbent.policy.capacity() * sizeof(PolicyOperatorRef);
-        bytes += incumbent.choice_sources.capacity() *
-                 sizeof(BoundedPolicyIncumbent::ChoiceSource);
-        for (const auto& source : incumbent.choice_sources) {
-            bytes += source.choices.capacity() *
-                     sizeof(OutcomeChoiceOption);
+        std::uint64_t bytes = certified_fallback_portfolio.capacity() *
+            sizeof(BoundedPolicyIncumbent);
+        if (output_incumbent.has_value()) {
+            bytes += incumbent_owned_bytes(*output_incumbent);
         }
-        bytes += incumbent.frontier_operators.capacity() *
-                 sizeof(std::uint32_t);
-        bytes += incumbent.behavioral_representative_by_state.capacity() *
-                 sizeof(std::uint32_t);
-        bytes += incumbent.policy_reachable.capacity() *
-                 sizeof(std::uint8_t);
-        bytes += incumbent.primitive_renewal_witness
-                     .kernel_signature.capacity() *
-                 sizeof(std::uint64_t);
-        bytes += incumbent.unveil_preferences.capacity() *
-                 sizeof(std::vector<std::uint32_t>);
-        for (const auto& preferences : incumbent.unveil_preferences) {
-            bytes += preferences.capacity() * sizeof(std::uint32_t);
-        }
-        bytes += incumbent.option_unveil_preferences.capacity() *
-                 sizeof(std::vector<ObservedUnveilPreference>);
-        for (const auto& preferences :
-             incumbent.option_unveil_preferences) {
-            bytes += preferences.capacity() *
-                     sizeof(ObservedUnveilPreference);
-            for (const auto& preference : preferences) {
-                bytes += preference.choices.capacity() *
-                         sizeof(ObservedUnveilChoice);
-            }
-        }
-        if (incumbent.fallback &&
-            incumbent.fallback != focused_fallback_policy) {
-            const FocusedFallbackPolicy& fallback = *incumbent.fallback;
-            bytes += sizeof(FocusedFallbackPolicy);
-            bytes += fallback.renewal_kernel_signature.capacity() *
-                     sizeof(std::uint64_t);
-            bytes += fallback.primitive_renewal_modes.capacity() *
-                     sizeof(FocusedFallbackPolicy::PrimitiveRenewalMode);
-            for (const auto& mode : fallback.primitive_renewal_modes) {
-                bytes += mode.kernel_signature.capacity() *
-                         sizeof(std::uint64_t);
-            }
-            bytes += fallback.progress_state_value.size() *
-                     (sizeof(std::pair<const std::uint32_t, double>) +
-                      2 * sizeof(void*));
-            bytes += fallback.progress_state_operator.size() *
-                     (sizeof(std::pair<const std::uint32_t, std::uint32_t>) +
-                      2 * sizeof(void*));
+        for (const BoundedPolicyIncumbent& incumbent :
+             certified_fallback_portfolio) {
+            bytes += incumbent_owned_bytes(incumbent) -
+                sizeof(BoundedPolicyIncumbent);
         }
         return bytes;
     }
@@ -1273,6 +1231,18 @@ std::string serialize_solver_telemetry(
         json += ",\"memory_bytes\":null,\"peak_memory_bytes\":null";
         json += ",\"memory_limit_bytes\":null";
         json += ",\"retained_artifact_bytes\":null";
+        json += ",\"fallback_portfolio\":{"
+                "\"candidates\":null,\"invalidations\":null,"
+                "\"compilation_failures\":null,"
+                "\"memory_rejections\":null,\"owned_bytes\":null,"
+                "\"publication_attempts\":null,"
+                "\"publication_successes\":null,"
+                "\"preferred_candidate_upper\":null,"
+                "\"published_upper\":null,"
+                "\"published_evaluated_cost\":null,"
+                "\"published_witness_hash\":null,"
+                "\"published_kind\":null,"
+                "\"preferred_failure_reason\":null}";
         json += ",\"exact_state_reuses\":null,\"collapse_events\":null";
         json += ",\"collapse_destroyed_feature_mask\":null";
         json += ",\"collapse_preserved_feature_mask\":null";
@@ -1637,6 +1607,61 @@ std::string serialize_solver_telemetry(
                 std::to_string(refinement.memory_limit_bytes);
         json += ",\"retained_artifact_bytes\":" +
                 std::to_string(refinement.retained_artifact_bytes);
+        json += ",\"fallback_portfolio\":{";
+        json += "\"candidates\":" +
+                std::to_string(
+                    refinement.fallback_portfolio_candidates);
+        json += ",\"invalidations\":" +
+                std::to_string(
+                    refinement.fallback_portfolio_invalidations);
+        json += ",\"compilation_failures\":" +
+                std::to_string(
+                    refinement.fallback_portfolio_compilation_failures);
+        json += ",\"memory_rejections\":" +
+                std::to_string(
+                    refinement.fallback_portfolio_memory_rejections);
+        json += ",\"owned_bytes\":" +
+                std::to_string(
+                    refinement.fallback_portfolio_owned_bytes);
+        json += ",\"publication_attempts\":" +
+                std::to_string(
+                    refinement.fallback_publication_attempts);
+        json += ",\"publication_successes\":" +
+                std::to_string(
+                    refinement.fallback_publication_successes);
+        json += ",\"preferred_candidate_upper\":" +
+                telemetry_finite_json(
+                    refinement.preferred_candidate_upper);
+        json += ",\"published_upper\":" +
+                telemetry_finite_json(
+                    refinement.published_fallback_upper);
+        json += ",\"published_evaluated_cost\":" +
+                telemetry_finite_json(
+                    refinement.published_fallback_evaluated_cost);
+        char fallback_witness_hash[17];
+        std::snprintf(
+            fallback_witness_hash, sizeof(fallback_witness_hash),
+            "%016llx",
+            static_cast<unsigned long long>(
+                refinement.published_fallback_witness_hash));
+        json += ",\"published_witness_hash\":\"";
+        json += fallback_witness_hash;
+        json += "\",\"published_kind\":";
+        if (refinement.published_fallback_kind.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json, refinement.published_fallback_kind);
+        }
+        json += ",\"preferred_failure_reason\":";
+        if (refinement.preferred_publication_failure_reason.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json,
+                refinement.preferred_publication_failure_reason);
+        }
+        json += '}';
         json += ",\"exact_state_reuses\":" +
                 std::to_string(refinement.exact_state_reuses);
         json += ",\"collapse_events\":" +

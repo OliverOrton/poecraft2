@@ -210,6 +210,22 @@ struct PolicyRefinementTelemetry {
     std::uint64_t peak_memory_bytes = 0;
     std::uint64_t memory_limit_bytes = 0;
     std::uint64_t retained_artifact_bytes = 0;
+    std::uint64_t fallback_portfolio_candidates = 0;
+    std::uint64_t fallback_portfolio_invalidations = 0;
+    std::uint64_t fallback_portfolio_compilation_failures = 0;
+    std::uint64_t fallback_portfolio_memory_rejections = 0;
+    std::uint64_t fallback_portfolio_owned_bytes = 0;
+    std::uint64_t fallback_publication_attempts = 0;
+    std::uint64_t fallback_publication_successes = 0;
+    double preferred_candidate_upper =
+        std::numeric_limits<double>::infinity();
+    double published_fallback_upper =
+        std::numeric_limits<double>::infinity();
+    double published_fallback_evaluated_cost =
+        std::numeric_limits<double>::infinity();
+    std::uint64_t published_fallback_witness_hash = 0;
+    std::string published_fallback_kind;
+    std::string preferred_publication_failure_reason;
     /* Exact-state interner reuse is not an identity-destruction collapse. */
     std::uint64_t exact_state_reuses = 0;
     std::uint64_t collapse_events = 0;

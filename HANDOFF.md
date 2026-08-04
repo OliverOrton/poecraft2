@@ -1,8 +1,7 @@
 # Session Handoff
 
-**Status: certified fallback and terminal-reforge factorization Gate 0 is
-complete. Track A Gate 1, deterministic preservation of independently
-publishable fallback witnesses, is the active boundary.**
+**Status: certified fallback portfolio Gate 1 is complete. Track A Gate 2,
+the single canonical hard-case fallback qualification, is active.**
 
 Current plan:
 [Certified Fallback Publication And Final-Depth Reforge Accumulation](docs/active/certified-fallback-and-terminal-reforge-factorization.md).
@@ -31,8 +30,9 @@ Current branch: `codex/fallback-and-terminal-reforge-factorization`
 Current milestone starting commit:
 `0b4ba38aa5754a39715640ad6d7a48cab2dc2b6c`
 
-Current milestone commits: Gate 0 is recorded by the current local commit.
-Track A Gate 1 is the active implementation boundary.
+Current milestone commits: Gate 0 is
+`abe8e525d59cc6ae90663a1d56736d411da7ca6c`. Gate 1 is recorded by the
+current local commit. Track A Gate 2 is the active qualification boundary.
 
 Selected-closure milestone starting commit:
 `a6f7e13cf7d5cb202874c210992689d601c0e650`
@@ -95,6 +95,36 @@ Nothing has been pushed or merged. `main` remains unchanged at
   changing the lower or resolving alternatives. Track B continues afterward
   and must reduce real terminal work rather than reclassify it as free.
 - Gate 0 is documentation/evidence only; no test or benchmark was run.
+
+## Certified fallback portfolio Gate 1
+
+- The solver now keeps a deterministic four-entry portfolio of generic
+  primitive-renewal fallbacks. Each retained entry owns the captured policy
+  and witness, independently recomputed cost, compiled artifact and compiler
+  counts, complete identity/generation dependencies, properness/executability
+  result, compilation provenance, and capacity-derived owned bytes.
+- Preferred/coarse candidacy, selected publication proof, certified fallback,
+  and retained compiled artifact are distinct. Incremental/direct mutation
+  first preserves the current certified executable entry; a cheaper candidate
+  without complete executable provenance cannot erase it.
+- Preferred strict-lift and ordinary exact-publication failures try the best
+  still-current fallback. Invalid price/goal/graph/vocabulary/artifact/
+  generation dependencies remove only that entry. Successful cheaper
+  publication releases the unused portfolio.
+- A generic synthetic two-goal regression publishes the compiled renewal when
+  the preferred assertion stops at 1,000 work, publishes the cheaper preferred
+  exact policy at 2,000 work, and preserves the fallback through an isolated
+  preferred JSON compilation cap.
+- Pure tests cover multiple/equal-cost ordering, every invalidation family,
+  improper and non-executable candidates, missing policy/witness/compiler/
+  independent-evaluation provenance, and exact memory-cap arithmetic. The
+  focused solve suite passes 98,217 checks with zero failures.
+- The fallback supplies only an upper. Lower-bound and unresolved-alternative
+  authorities are unchanged. No mechanic, action vocabulary, cap/default, C
+  ABI, strategy vocabulary, WASM artifact, or frontend changed. Evidence is
+  `fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate1.json`.
+- The canonical hard case was not run in Gate 1; its one allowed invocation is
+  reserved for Gate 2.
 
 ## Selected-closure scaling Gate 0
 
@@ -627,27 +657,20 @@ tracked work counters. The tracked qualified Fracture evidence retains
 
 ## Exact next step
 
-Complete Track A Gate 1:
+Run Track A Gate 2 exactly once:
 
-1. Replace single-cheapest/scalar incumbent ownership with a small deterministic
-   portfolio whose entries own executable policy or renewal provenance,
-   independent evaluated cost, complete invalidation identity, compilation and
-   properness results, and solver-owned memory.
-2. Keep preferred optimistic candidate, selected strict lift, certified
-   fallback, and retained compiled artifact as separate states. An uncertified
-   cheaper candidate cannot evict a certified executable fallback.
-3. On lift success publish the cheaper certified result; on a lift cap publish
-   the best current fallback; on staleness, impropriety, compilation failure,
-   or reconciliation failure invalidate only the affected entry.
-4. Preserve the full-envelope lower and every unresolved alternative. Never
-   allow a scalar upper to survive without its executable provenance.
-5. Add the focused portfolio, invalidation, properness, compilation, ordering,
-   equality, and memory-cap tests named in the active plan, then commit Gate 1.
-
-After Gate 1, run the canonical hard case once for Track A Gate 2 at unchanged
-20M/1 GiB/27 actions/900 seconds with exact reconciliation and 10,000
-simulations. Track B attribution continues after Track A unless correctness is
-blocked.
+1. Use the canonical `natural-t1-breadth-two-4e65dda9c53b` hard case at the
+   unchanged 20M reforge-work cap, 1 GiB solver-owned cap, complete 27-action
+   vocabulary, and 900-second watchdog.
+2. Require the full-envelope lower to remain independent of the retained
+   fallback upper. The preferred Essence lift may stop, but the current Chaos
+   witness must publish as a bounded compiled policy near
+   `3984.9346987650665` if its frozen provenance remains valid.
+3. Reconcile the compiled strategy by exact evaluation and run 10,000
+   simulations with zero off-policy failures. Do not synthesize a fallback if
+   the frozen witness fails; diagnose its exact provenance/compiler boundary.
+4. Commit the Track A qualification separately, then continue to Track B
+   terminal-branch attribution unless a genuine correctness blocker exists.
 
 Deterministic checkpoint/replay remains deferred.
 

@@ -84,6 +84,159 @@ void run_bounded_policy_row_capture_tests() {
     PC_CHECK(stale_row_rejected);
 }
 
+void run_certified_fallback_contract_tests() {
+    using solve_detail::CertifiedFallbackContract;
+    using solve_detail::CertifiedFallbackCurrentContext;
+
+    CertifiedFallbackCurrentContext current;
+    current.goal_identity = 11;
+    current.economy_identity = 12;
+    current.action_vocabulary_identity = 13;
+    current.action_vocabulary_size = 27;
+    current.artifact_identity = 14;
+    current.source_generation = 101;
+    current.target_generation = 102;
+    current.graph_prefix_identity = 15;
+
+    CertifiedFallbackContract fallback;
+    fallback.certified_upper_bound = 4000.0;
+    fallback.evaluated_policy_cost = 4000.0;
+    fallback.goal_identity = current.goal_identity;
+    fallback.economy_identity = current.economy_identity;
+    fallback.action_vocabulary_identity =
+        current.action_vocabulary_identity;
+    fallback.action_vocabulary_size =
+        current.action_vocabulary_size;
+    fallback.artifact_identity = current.artifact_identity;
+    fallback.source_generation = 100;
+    fallback.target_generation = 100;
+    fallback.graph_prefix_identity = current.graph_prefix_identity;
+    fallback.witness_identity = 50;
+    fallback.portfolio_identity = 60;
+    fallback.root_operator = 7;
+    fallback.kind = "renewal";
+    fallback.complete_policy_or_witness = true;
+    fallback.compiled_payload_present = true;
+    fallback.compilation_provenance_present = true;
+    fallback.independently_evaluated = true;
+    fallback.proper = true;
+    fallback.executable = true;
+    PC_CHECK(
+        solve_detail::certified_fallback_invalid_reason(
+            fallback, current, 1e-9) == nullptr);
+
+    const auto invalid_reason = [&](CertifiedFallbackContract candidate) {
+        const char* reason =
+            solve_detail::certified_fallback_invalid_reason(
+                candidate, current, 1e-9);
+        return reason == nullptr ? std::string{} : std::string{reason};
+    };
+    CertifiedFallbackContract changed = fallback;
+    changed.economy_identity ^= 1;
+    PC_CHECK(invalid_reason(changed) == "economy_identity_changed");
+    changed = fallback;
+    changed.goal_identity ^= 1;
+    PC_CHECK(invalid_reason(changed) == "goal_identity_changed");
+    changed = fallback;
+    changed.graph_prefix_identity ^= 1;
+    PC_CHECK(invalid_reason(changed) == "graph_prefix_changed");
+    changed = fallback;
+    ++changed.action_vocabulary_size;
+    PC_CHECK(invalid_reason(changed) == "action_vocabulary_changed");
+    changed = fallback;
+    changed.action_vocabulary_identity ^= 1;
+    PC_CHECK(invalid_reason(changed) == "action_vocabulary_changed");
+    changed = fallback;
+    changed.artifact_identity ^= 1;
+    PC_CHECK(invalid_reason(changed) == "artifact_generation_changed");
+    changed = fallback;
+    changed.source_generation = current.source_generation + 1;
+    PC_CHECK(invalid_reason(changed) == "graph_generation_rewound");
+    changed = fallback;
+    changed.target_generation = current.target_generation + 1;
+    PC_CHECK(invalid_reason(changed) == "graph_generation_rewound");
+
+    changed = fallback;
+    changed.proper = false;
+    PC_CHECK(invalid_reason(changed) == "improper_policy");
+    changed = fallback;
+    changed.executable = false;
+    PC_CHECK(invalid_reason(changed) == "policy_not_executable");
+    changed = fallback;
+    changed.compiled_payload_present = false;
+    PC_CHECK(invalid_reason(changed) ==
+             "executable_provenance_missing");
+    changed = fallback;
+    changed.compilation_provenance_present = false;
+    PC_CHECK(invalid_reason(changed) ==
+             "executable_provenance_missing");
+    changed = fallback;
+    changed.complete_policy_or_witness = false;
+    PC_CHECK(invalid_reason(changed) ==
+             "executable_provenance_missing");
+    changed = fallback;
+    changed.independently_evaluated = false;
+    PC_CHECK(invalid_reason(changed) ==
+             "executable_provenance_missing");
+
+    /* A cheaper candidate without executable provenance cannot displace the
+     * more expensive certified fallback. A cheaper certified policy can. */
+    CertifiedFallbackContract cheaper = fallback;
+    cheaper.certified_upper_bound = 3000.0;
+    cheaper.evaluated_policy_cost = 3000.0;
+    cheaper.portfolio_identity = 61;
+    cheaper.compiled_payload_present = false;
+    std::vector<CertifiedFallbackContract> candidates{
+        cheaper, fallback};
+    candidates.erase(
+        std::remove_if(
+            candidates.begin(), candidates.end(),
+            [&](const CertifiedFallbackContract& candidate) {
+                return solve_detail::certified_fallback_invalid_reason(
+                           candidate, current, 1e-9) != nullptr;
+            }),
+        candidates.end());
+    PC_CHECK(candidates.size() == 1);
+    PC_CHECK(candidates.front().certified_upper_bound == 4000.0);
+
+    cheaper.compiled_payload_present = true;
+    PC_CHECK(
+        solve_detail::certified_fallback_precedes(
+            cheaper, fallback));
+    PC_CHECK(
+        !solve_detail::certified_fallback_precedes(
+            fallback, cheaper));
+
+    CertifiedFallbackContract equal_left = fallback;
+    CertifiedFallbackContract equal_right = fallback;
+    equal_left.root_operator = 3;
+    equal_right.root_operator = 4;
+    PC_CHECK(solve_detail::certified_fallback_precedes(
+        equal_left, equal_right));
+    equal_right.root_operator = equal_left.root_operator;
+    equal_left.witness_identity = 8;
+    equal_right.witness_identity = 9;
+    PC_CHECK(solve_detail::certified_fallback_precedes(
+        equal_left, equal_right));
+    std::vector<CertifiedFallbackContract> ordered{
+        fallback, equal_right, cheaper, equal_left};
+    std::sort(
+        ordered.begin(), ordered.end(),
+        [](const CertifiedFallbackContract& left,
+           const CertifiedFallbackContract& right) {
+            return solve_detail::certified_fallback_precedes(
+                left, right);
+        });
+    PC_CHECK(ordered.front().certified_upper_bound == 3000.0);
+
+    PC_CHECK(solve_detail::certified_fallback_fits_memory(
+        700, 300, 1000));
+    PC_CHECK(!solve_detail::certified_fallback_fits_memory(
+        701, 300, 1000));
+    PC_CHECK(!solve_detail::certified_fallback_fits_memory(
+        1001, 0, 1000));
+}
+
 void run_shared_sparse_policy_kernel_tests() {
     SolveTransitionCache graph;
     std::vector<PricedSparseRow> priced;
@@ -794,6 +947,19 @@ void run_alt_spam_tests() {
         refinement.peak_memory_bytes = 13;
         refinement.memory_limit_bytes = 14;
         refinement.retained_artifact_bytes = 15;
+        refinement.fallback_portfolio_candidates = 2;
+        refinement.fallback_portfolio_invalidations = 3;
+        refinement.fallback_portfolio_compilation_failures = 4;
+        refinement.fallback_portfolio_memory_rejections = 5;
+        refinement.fallback_portfolio_owned_bytes = 6;
+        refinement.fallback_publication_attempts = 7;
+        refinement.fallback_publication_successes = 1;
+        refinement.preferred_candidate_upper = 30.0;
+        refinement.published_fallback_upper = 40.0;
+        refinement.published_fallback_evaluated_cost = 40.0;
+        refinement.published_fallback_witness_hash = 31;
+        refinement.published_fallback_kind = "renewal";
+        refinement.preferred_publication_failure_reason = "lift cap";
         refinement.exact_state_reuses = 16;
         refinement.collapse_events = 17;
         refinement.collapse_destroyed_feature_mask = 1;
@@ -860,7 +1026,22 @@ void run_alt_spam_tests() {
         PC_CHECK(refinement_telemetry.find(
                      "\"memory_bytes\":12,\"peak_memory_bytes\":13,"
                      "\"memory_limit_bytes\":14,"
-                     "\"retained_artifact_bytes\":15,"
+                     "\"retained_artifact_bytes\":15") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"fallback_portfolio\":{\"candidates\":2,"
+                     "\"invalidations\":3,\"compilation_failures\":4,"
+                     "\"memory_rejections\":5,\"owned_bytes\":6,"
+                     "\"publication_attempts\":7,"
+                     "\"publication_successes\":1,"
+                     "\"preferred_candidate_upper\":30,"
+                     "\"published_upper\":40,"
+                     "\"published_evaluated_cost\":40,"
+                     "\"published_witness_hash\":\"000000000000001f\","
+                     "\"published_kind\":\"renewal\","
+                     "\"preferred_failure_reason\":\"lift cap\"}") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
                      "\"exact_state_reuses\":16,"
                      "\"collapse_events\":17,"
                      "\"collapse_destroyed_feature_mask\":1,"
@@ -1409,6 +1590,130 @@ void run_policy_guided_exact_lift_tests() {
     SolveOptions options;
     const SolveResult solved =
         solve(calc, start, prices, options);
+    {
+        auto fallback_session = make_solve_session({"fallback_goal"});
+        fallback_session->essence_guaranteed_mod_ids = {0};
+        ActionRegistry fallback_registry =
+            build_action_registry(*fallback_session);
+        GoalSpec fallback_goal;
+        fallback_goal.rarity = PC_RARITY_RARE;
+        for (const std::uint32_t family : {100u, 104u}) {
+            GoalSlot fallback_slot;
+            fallback_slot.family_id = family;
+            fallback_slot.min_tier = 1;
+            fallback_goal.slots.push_back(fallback_slot);
+        }
+        const std::uint32_t fallback_chaos =
+            fallback_registry.index_by_id.at("chaos");
+        const std::uint32_t fallback_essence =
+            fallback_registry.index_by_id.at(
+                "essence:fallback_goal");
+        pc_item_state fallback_start;
+        pc_item_clear(&fallback_start);
+        fallback_start.rarity = PC_RARITY_RARE;
+        const std::unordered_map<std::string, double> fallback_prices{
+            {"chaos", 1.0}, {"essence:fallback_goal", 0.01}};
+        const auto solve_fallback_case = [&]
+            (const std::uint64_t work_cap,
+             const std::uint64_t strategy_json_cap) {
+            CalcContext fallback_calc(
+                fallback_session, fallback_goal, fallback_registry,
+                {fallback_chaos, fallback_essence},
+                false, true, false, std::nullopt, {}, true);
+            SolveOptions fallback_options;
+            fallback_options.goal_progress_gated_reforges = true;
+            fallback_options.focused_expansion_queue_threshold = 1000000;
+            fallback_options.max_reforge_work = work_cap;
+            fallback_options.max_strategy_json_bytes = strategy_json_cap;
+            return solve(
+                fallback_calc, fallback_start, fallback_prices,
+                fallback_options);
+        };
+        const SolveResult capped_fallback =
+            solve_fallback_case(
+                1000, SolveOptions{}.max_strategy_json_bytes);
+        const PolicyRefinementTelemetry& capped_telemetry =
+            capped_fallback.diagnostics.policy_refinement;
+        PC_CHECK(capped_fallback.policy_available);
+        PC_CHECK(!capped_fallback.converged);
+        PC_CHECK(
+            capped_fallback.policy_status ==
+            SolvePolicyStatus::BoundedFeasible);
+        PC_CHECK(capped_fallback.primitive_renewal_witness.valid);
+        PC_CHECK(
+            !capped_fallback.refined_policy_artifact
+                 .strategy_json.empty());
+        PC_CHECK(capped_telemetry.status ==
+                 "certified_fallback_retained");
+        PC_CHECK(capped_telemetry.fallback_publication_attempts == 1);
+        PC_CHECK(capped_telemetry.fallback_publication_successes == 1);
+        PC_CHECK(capped_telemetry.bounded_publication_retained);
+        PC_CHECK(capped_telemetry.fallback_portfolio_candidates == 0);
+        PC_CHECK(capped_telemetry.fallback_portfolio_owned_bytes == 0);
+        PC_CHECK(
+            capped_telemetry.preferred_candidate_upper <
+            capped_telemetry.published_fallback_upper);
+        PC_CHECK(near(
+            capped_fallback.upper_bound,
+            capped_telemetry.published_fallback_upper, 1e-12));
+        PC_CHECK(near(
+            capped_fallback.evaluated_policy_cost,
+            capped_telemetry.published_fallback_evaluated_cost, 1e-12));
+        PC_CHECK(
+            capped_telemetry.published_fallback_witness_hash ==
+            capped_fallback.primitive_renewal_witness.witness_hash);
+        PC_CHECK(!capped_telemetry
+                      .preferred_publication_failure_reason.empty());
+        PC_CHECK(capped_fallback.diagnostics
+                     .policy_publication_failure_reason.empty());
+        PC_CHECK(
+            capped_fallback.lower_bound <=
+            capped_fallback.upper_bound + 1e-9);
+        const std::shared_ptr<StrategyImpl> fallback_strategy =
+            compile_strategy_json(
+                fallback_session,
+                capped_fallback.refined_policy_artifact
+                    .strategy_json.data(),
+                capped_fallback.refined_policy_artifact
+                    .strategy_json.size());
+        PC_CHECK(fallback_strategy != nullptr);
+
+        const SolveResult preferred = solve_fallback_case(
+            2000, SolveOptions{}.max_strategy_json_bytes);
+        PC_CHECK(preferred.policy_available);
+        PC_CHECK(preferred.policy_status == SolvePolicyStatus::Exact);
+        PC_CHECK(
+            preferred.diagnostics.policy_refinement
+                .fallback_publication_attempts == 0);
+        PC_CHECK(
+            preferred.diagnostics.policy_refinement
+                .fallback_publication_successes == 0);
+        PC_CHECK(
+            preferred.upper_bound < capped_fallback.upper_bound);
+
+        const SolveResult compile_limited_fallback =
+            solve_fallback_case(
+                2000,
+                capped_fallback.refined_policy_artifact
+                    .strategy_json.size());
+        PC_CHECK(compile_limited_fallback.policy_available);
+        PC_CHECK(
+            compile_limited_fallback.policy_status ==
+            SolvePolicyStatus::BoundedFeasible);
+        PC_CHECK(
+            compile_limited_fallback.diagnostics.policy_refinement
+                .fallback_publication_attempts == 1);
+        PC_CHECK(
+            compile_limited_fallback.diagnostics.policy_refinement
+                .fallback_publication_successes == 1);
+        PC_CHECK(near(
+            compile_limited_fallback.upper_bound,
+            capped_fallback.upper_bound, 1e-12));
+        PC_CHECK(
+            compile_limited_fallback.diagnostics.policy_refinement
+                .preferred_publication_failure_reason.find(
+                    "max_strategy_json_bytes") != std::string::npos);
+    }
     PC_CHECK(solved.policy_available);
     PC_CHECK(!solved.converged);
     PC_CHECK(
@@ -5576,6 +5881,7 @@ void run_solver_solve_tests(const char* artifact_dir) {
         default_options.max_solver_owned_bytes ==
         1024ull * 1024ull * 1024ull);
     run_bounded_policy_row_capture_tests();
+    run_certified_fallback_contract_tests();
     run_alt_spam_tests();
     run_solver_policy_refinement_tests();
     run_constructive_state_certificate_tests();

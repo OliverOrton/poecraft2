@@ -1,7 +1,7 @@
 # Active Work
 
-**Status: certified fallback and terminal-factorization Gate 0 is complete;
-Track A Gate 1 is active.**
+**Status: certified fallback portfolio Gate 1 is complete; Track A Gate 2
+hard-case qualification is active.**
 
 Parent: [Documentation map](../README.md)
 
@@ -17,9 +17,13 @@ generic primitive Chaos renewal with success probability
 `0.00025094514103578676`, certified value `3984.9346987650665`, 24 validated
 non-goal carriers, and witness hash `5e2bd0c222942bda`. The preferred coarse
 candidate is cheaper at `3323.6694369790375`, but its selected Essence policy
-cannot finish strict refinement under 20M and currently leaves no published
-policy. Gate 1 replaces scalar/single-candidate ownership with a deterministic
-portfolio of independently executable artifacts.
+cannot finish strict refinement under 20M and previously left no published
+policy. Gate 1 now retains a bounded four-entry deterministic portfolio of
+independently executable compiled primitive-renewal artifacts. Focused
+regressions prove capped preferred publication, isolated compilation failure,
+cheaper preferred replacement, complete invalidation, deterministic ties, and
+memory accounting. Gate 2 owns the single canonical hard-case invocation,
+exact reconciliation, and 10,000 simulations.
 
 The completed
 [Selected-Closure Scaling And Exact Broad-Row Projection](../archive/2026-08-03-selected-closure-broad-row-scaling/README.md)

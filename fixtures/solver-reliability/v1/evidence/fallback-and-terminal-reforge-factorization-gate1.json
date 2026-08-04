@@ -1,0 +1,137 @@
+{
+  "schema_version": "certified_fallback_portfolio_gate1_v1",
+  "date": "2026-08-03",
+  "decision": "gate1_qualified_begin_canonical_hard_case_fallback_qualification",
+  "branch": "codex/fallback-and-terminal-reforge-factorization",
+  "starting_commit": "0b4ba38aa5754a39715640ad6d7a48cab2dc2b6c",
+  "parent_gate_commit": "abe8e525d59cc6ae90663a1d56736d411da7ca6c",
+  "gate_commit": "the commit containing this evidence record",
+  "implementation": {
+    "portfolio_limit": 4,
+    "ordering": [
+      "certified upper ascending",
+      "root operator id",
+      "candidate kind",
+      "witness identity",
+      "stable portfolio identity"
+    ],
+    "retained_candidate_owns": [
+      "certified upper",
+      "independently recomputed policy cost",
+      "complete captured policy and primitive-renewal witness",
+      "compiled strategy JSON and compiler counts",
+      "goal and economy identities",
+      "action-vocabulary prefix identity and size",
+      "artifact owner/schema/base/item identity",
+      "source and target generations",
+      "graph and immutable graph-prefix identities",
+      "properness, executability, and compilation provenance",
+      "capacity-derived solver-owned bytes"
+    ],
+    "separated_states": [
+      "preferred coarse or optimistic candidate",
+      "selected candidate awaiting publication proof",
+      "independently certified executable fallback",
+      "retained compiled executable artifact"
+    ],
+    "publication_contract": {
+      "uncertified_cheaper_candidate_can_evict_fallback": false,
+      "preferred_publication_cap_uses_best_current_fallback": true,
+      "preferred_compilation_failure_uses_best_current_fallback": true,
+      "invalid_candidate_isolated_from_other_candidates": true,
+      "scalar_upper_without_policy_witness_and_compiled_payload": false,
+      "fallback_changes_lower_bound": false,
+      "fallback_resolves_alternatives": false
+    },
+    "current_certification_scope": "generic primitive renewal witnesses accepted by the existing gated-renewal proof and shared policy compiler; other bounded candidates remain preferred-only until they pass their existing exact publication assertion"
+  },
+  "focused_regressions": {
+    "synthetic_case": {
+      "mechanics": "two ordinary rare goal families with generic Chaos renewal and one forced Essence candidate",
+      "named_fixture_special_case": false,
+      "capped_preferred_assertion": {
+        "max_reforge_work": 1000,
+        "preferred_cost_approx": 0.0132075472,
+        "fallback_cost_approx": 4.10180527,
+        "result": "bounded feasible compiled fallback",
+        "fallback_publication_attempts": 1,
+        "fallback_publication_successes": 1,
+        "preferred_failure_retained_separately": true,
+        "public_policy_failure_cleared": true
+      },
+      "successful_preferred_assertion": {
+        "max_reforge_work": 2000,
+        "result": "cheaper exact preferred policy",
+        "fallback_publication_attempts": 0,
+        "fallback_publication_successes": 0
+      },
+      "preferred_json_compilation_cap": {
+        "fallback_compiles_with_same_limit": true,
+        "preferred_failure_mentions_max_strategy_json_bytes": true,
+        "unrelated_fallback_published": true
+      }
+    },
+    "pure_portfolio_contract": [
+      "cheaper uncertified plus more expensive certified fallback",
+      "cheaper certified replacement",
+      "price/economy invalidation",
+      "goal invalidation",
+      "graph-prefix invalidation",
+      "vocabulary prefix/size invalidation",
+      "artifact invalidation",
+      "source and target generation rewind invalidation",
+      "multiple and equal-cost deterministic ordering",
+      "improper and non-executable rejection",
+      "compiled-payload, compilation-provenance, policy/witness, and independent-evaluation provenance rejection",
+      "overflow-safe exact memory-cap boundary"
+    ]
+  },
+  "telemetry": {
+    "portfolio": [
+      "current candidates",
+      "invalidations",
+      "compilation failures",
+      "memory rejections",
+      "owned bytes"
+    ],
+    "publication": [
+      "attempts",
+      "successes",
+      "preferred candidate upper",
+      "published fallback upper and evaluated cost",
+      "published witness hash and kind",
+      "preferred publication failure reason"
+    ]
+  },
+  "source_sha256": {
+    "engine/src/solver_solve_constructive.cpp": "3e50347c0a447d255ce5669c427e55d98f257258cf6c4600ae896b7279db9ee7",
+    "engine/src/solver_solve_contracts.hpp": "491b78a9fbabe153c91e2741de8dacf07a4ab09278515a138ce408f4967ef535",
+    "engine/src/solver_solve_finish.cpp": "5908792dab28540b8fe5fc3204adb0d8f6405e8b2c5b9a6927cc9698aea3ae49",
+    "engine/src/solver_solve_incremental.cpp": "5f65b4059f09deb1570e5510bb40db8df18714c4583614daa372bd80defcfe33",
+    "engine/src/solver_solve_telemetry.cpp": "725fac0428516cab19b204e5987f0f6c63e06cfbeee3936cd5f7390df1f5c3d2",
+    "engine/src/solver_solve_types.hpp": "f4448e22dc561a151667dfcc57a9da7af684a2623a59b66cfd8676c34998f7ac",
+    "engine/tests/test_solver_solve.cpp": "8c8272da126da1c10d7601cdf1790a774ac3d3a079e67a2e4508649b57eadc4f"
+  },
+  "focused_acceptance": {
+    "command": "powershell -File scripts/dev-engine.ps1 -Task Test -Suite solve",
+    "checks": 98217,
+    "failures": 0,
+    "test_binary_sha256": "f6d5ff15ac44e2d5a5113b9d299e7228e240a79797fae0e27a140cadf638d560"
+  },
+  "scope": {
+    "mechanics_changed": false,
+    "max_reforge_work_changed": false,
+    "max_solver_owned_bytes_changed": false,
+    "action_vocabulary_narrowed": false,
+    "lower_bound_authority_changed": false,
+    "alternative_obligation_semantics_changed": false,
+    "public_c_abi_changed": false,
+    "strategy_vocabulary_changed": false,
+    "wasm_rebuilt": false,
+    "frontend_changed": false,
+    "full_pipeline_run": false,
+    "pushed": false,
+    "merged": false
+  },
+  "next_gate": "run the canonical hard two-goal case once at 20M/1GiB/27 actions/900 seconds, reconcile the compiled fallback exactly, and simulate it 10000 times"
+}

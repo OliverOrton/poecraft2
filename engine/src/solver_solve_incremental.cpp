@@ -580,6 +580,7 @@ SolveWork::Impl::certified_incremental_lower_values() {
 
 void SolveWork::Impl::refresh_incremental_upper_incumbent() {
     if (!output_incumbent.has_value()) return;
+    if (!retain_current_certified_incumbent()) return;
     BoundedPolicyIncumbent& incumbent = *output_incumbent;
     const std::uint64_t no_row =
         std::numeric_limits<std::uint64_t>::max();
@@ -671,6 +672,14 @@ void SolveWork::Impl::refresh_incremental_upper_incumbent() {
         incumbent.certified_upper_bound;
     incumbent.kind = "q_directed_incremental_policy";
     incumbent.graph_identity = graph_identity();
+    incumbent.compiled_artifact = {};
+    incumbent.compilation_provenance.clear();
+    incumbent.independently_certified = false;
+    incumbent.independently_evaluated = false;
+    incumbent.proper = false;
+    incumbent.executable = false;
+    incumbent.primitive_renewal_witness = {};
+    incumbent.portfolio_identity = 0;
     result.diagnostics.incumbent_kind = incumbent.kind;
     result.diagnostics.incumbent_graph_identity =
         incumbent.graph_identity;

@@ -1,9 +1,86 @@
 #include "solver_solve_types.hpp"
+#include "solver_compile_contracts.hpp"
 
 namespace poecraft {
 namespace solver {
 
 using namespace solve_detail;
+
+const char* solve_detail::certified_fallback_invalid_reason(
+        const CertifiedFallbackContract& candidate,
+        const CertifiedFallbackCurrentContext& current,
+        const double epsilon) {
+        if (!candidate.complete_policy_or_witness ||
+            !candidate.compiled_payload_present ||
+            !candidate.compilation_provenance_present ||
+            !candidate.independently_evaluated) {
+            return "executable_provenance_missing";
+        }
+        if (!candidate.proper) return "improper_policy";
+        if (!candidate.executable) return "policy_not_executable";
+        if (!std::isfinite(candidate.certified_upper_bound) ||
+            !std::isfinite(candidate.evaluated_policy_cost) ||
+            candidate.evaluated_policy_cost < 0.0 ||
+            candidate.evaluated_policy_cost >
+                candidate.certified_upper_bound +
+                    epsilon * std::max(
+                        1.0,
+                        std::abs(candidate.certified_upper_bound)) *
+                        10.0) {
+            return "evaluated_cost_invalid";
+        }
+        if (candidate.goal_identity != current.goal_identity) {
+            return "goal_identity_changed";
+        }
+        if (candidate.economy_identity != current.economy_identity) {
+            return "economy_identity_changed";
+        }
+        if (candidate.action_vocabulary_size >
+                current.action_vocabulary_size ||
+            candidate.action_vocabulary_identity !=
+                current.action_vocabulary_identity) {
+            return "action_vocabulary_changed";
+        }
+        if (candidate.artifact_identity != current.artifact_identity) {
+            return "artifact_generation_changed";
+        }
+        if (candidate.source_generation > current.source_generation ||
+            candidate.target_generation > current.target_generation) {
+            return "graph_generation_rewound";
+        }
+        if (candidate.graph_prefix_identity !=
+            current.graph_prefix_identity) {
+            return "graph_prefix_changed";
+        }
+        return nullptr;
+    }
+
+bool solve_detail::certified_fallback_precedes(
+        const CertifiedFallbackContract& left,
+        const CertifiedFallbackContract& right) {
+        if (left.certified_upper_bound !=
+            right.certified_upper_bound) {
+            return left.certified_upper_bound <
+                right.certified_upper_bound;
+        }
+        if (left.root_operator != right.root_operator) {
+            return left.root_operator < right.root_operator;
+        }
+        if (left.kind != right.kind) return left.kind < right.kind;
+        if (left.witness_identity != right.witness_identity) {
+            return left.witness_identity < right.witness_identity;
+        }
+        return left.portfolio_identity < right.portfolio_identity;
+    }
+
+bool solve_detail::certified_fallback_fits_memory(
+        const std::uint64_t current_owned_bytes,
+        const std::uint64_t candidate_owned_bytes,
+        const std::uint64_t maximum_owned_bytes) {
+        return current_owned_bytes <= maximum_owned_bytes &&
+            candidate_owned_bytes <=
+                maximum_owned_bytes - current_owned_bytes;
+    }
 
 CapturedBoundedPolicyRow solve_detail::capture_bounded_policy_row(
         const CalcContext& calc,
@@ -126,6 +203,38 @@ std::uint64_t SolveWork::Impl::graph_identity() const {
             identity_mix(hash, row.choice_offset);
             identity_mix(hash, row.choice_count);
         }
+        return hash;
+    }
+
+std::uint64_t SolveWork::Impl::artifact_identity() const {
+        std::uint64_t hash = 1469598103934665603ULL;
+        identity_mix(
+            hash,
+            static_cast<std::uint64_t>(
+                reinterpret_cast<std::uintptr_t>(
+                    calc.session().data.get())));
+        identity_mix(
+            hash, calc.session().data->artifact_schema_version);
+        identity_mix(hash, calc.session().base_index);
+        identity_mix(hash, calc.session().item_level);
+        return hash;
+    }
+
+std::uint64_t SolveWork::Impl::incumbent_graph_prefix_identity(
+        const std::uint64_t row_count,
+        const std::uint64_t priced_row_count,
+        const std::uint64_t successor_count,
+        const std::uint64_t probability_count,
+        const std::uint64_t choice_count,
+        const std::uint64_t choice_successor_count,
+        const std::uint64_t choice_option_count) const {
+        std::uint64_t hash = fallback_graph_prefix_identity(
+            row_count, priced_row_count);
+        identity_mix(
+            hash,
+            fallback_transition_prefix_identity(
+                successor_count, probability_count, choice_count,
+                choice_successor_count, choice_option_count));
         return hash;
     }
 
@@ -731,8 +840,372 @@ void SolveWork::Impl::populate_incumbent_policy(
         candidate.policy_materialized = true;
     }
 
+std::uint64_t SolveWork::Impl::incumbent_owned_bytes(
+        const BoundedPolicyIncumbent& incumbent) const {
+        std::uint64_t bytes = sizeof(BoundedPolicyIncumbent) +
+            incumbent.kind.capacity() + 1 +
+            incumbent.compilation_provenance.capacity() + 1;
+        bytes += incumbent.values.capacity() * sizeof(double);
+        bytes += incumbent.policy_rows.capacity() * sizeof(std::uint64_t);
+        bytes += incumbent.policy_row_costs.capacity() * sizeof(double);
+        bytes += incumbent.policy.capacity() * sizeof(PolicyOperatorRef);
+        bytes += incumbent.choice_sources.capacity() *
+                 sizeof(BoundedPolicyIncumbent::ChoiceSource);
+        for (const auto& source : incumbent.choice_sources) {
+            bytes += source.choices.capacity() *
+                     sizeof(OutcomeChoiceOption);
+        }
+        bytes += incumbent.frontier_operators.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += incumbent.behavioral_representative_by_state.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += incumbent.policy_reachable.capacity() *
+                 sizeof(std::uint8_t);
+        bytes += incumbent.primitive_renewal_witness
+                     .kernel_signature.capacity() *
+                 sizeof(std::uint64_t);
+        bytes += incumbent.compiled_artifact.strategy_json.capacity() + 1;
+        bytes += incumbent.unveil_preferences.capacity() *
+                 sizeof(std::vector<std::uint32_t>);
+        for (const auto& preferences : incumbent.unveil_preferences) {
+            bytes += preferences.capacity() * sizeof(std::uint32_t);
+        }
+        bytes += incumbent.option_unveil_preferences.capacity() *
+                 sizeof(std::vector<ObservedUnveilPreference>);
+        for (const auto& preferences :
+             incumbent.option_unveil_preferences) {
+            bytes += preferences.capacity() *
+                     sizeof(ObservedUnveilPreference);
+            for (const auto& preference : preferences) {
+                bytes += preference.choices.capacity() *
+                         sizeof(ObservedUnveilChoice);
+            }
+        }
+        if (incumbent.fallback &&
+            incumbent.fallback != focused_fallback_policy) {
+            const FocusedFallbackPolicy& fallback = *incumbent.fallback;
+            bytes += sizeof(FocusedFallbackPolicy);
+            bytes += fallback.renewal_kernel_signature.capacity() *
+                     sizeof(std::uint64_t);
+            bytes += fallback.primitive_renewal_modes.capacity() *
+                     sizeof(FocusedFallbackPolicy::PrimitiveRenewalMode);
+            for (const auto& mode : fallback.primitive_renewal_modes) {
+                bytes += mode.kernel_signature.capacity() *
+                         sizeof(std::uint64_t);
+            }
+            bytes += fallback.progress_state_value.size() *
+                     (sizeof(std::pair<const std::uint32_t, double>) +
+                      2 * sizeof(void*));
+            bytes += fallback.progress_state_operator.size() *
+                     (sizeof(std::pair<const std::uint32_t, std::uint32_t>) +
+                      2 * sizeof(void*));
+        }
+        return bytes;
+    }
+
+bool SolveWork::Impl::incumbent_precedes(
+        const BoundedPolicyIncumbent& left,
+        const BoundedPolicyIncumbent& right) const {
+        const auto contract = [&](const BoundedPolicyIncumbent& value) {
+            CertifiedFallbackContract view;
+            view.certified_upper_bound = value.certified_upper_bound;
+            view.root_operator =
+                result.start_state < value.policy.size()
+                    ? value.policy[result.start_state].index
+                    : kNoId;
+            view.kind = value.kind;
+            view.witness_identity =
+                value.primitive_renewal_witness.witness_hash;
+            view.portfolio_identity = value.portfolio_identity;
+            return view;
+        };
+        return certified_fallback_precedes(
+            contract(left), contract(right));
+    }
+
+const char* SolveWork::Impl::certified_incumbent_invalid_reason(
+        const BoundedPolicyIncumbent& incumbent) const {
+        CertifiedFallbackContract candidate;
+        candidate.certified_upper_bound =
+            incumbent.certified_upper_bound;
+        candidate.evaluated_policy_cost =
+            incumbent.evaluated_policy_cost;
+        candidate.goal_identity = incumbent.goal_identity;
+        candidate.economy_identity = incumbent.economy_identity;
+        candidate.action_vocabulary_identity =
+            incumbent.action_vocabulary_identity;
+        candidate.action_vocabulary_size =
+            incumbent.action_vocabulary_size;
+        candidate.artifact_identity = incumbent.artifact_identity;
+        candidate.source_generation = incumbent.source_generation;
+        candidate.target_generation = incumbent.target_generation;
+        candidate.graph_prefix_identity =
+            incumbent.graph_prefix_identity;
+        candidate.complete_policy_or_witness =
+            incumbent.primitive_renewal_witness.valid &&
+            incumbent.policy_materialized && !incumbent.policy.empty();
+        candidate.compiled_payload_present =
+            !incumbent.compiled_artifact.strategy_json.empty();
+        candidate.compilation_provenance_present =
+            !incumbent.compilation_provenance.empty();
+        candidate.independently_evaluated =
+            incumbent.independently_certified &&
+            incumbent.independently_evaluated;
+        candidate.proper = incumbent.proper;
+        candidate.executable = incumbent.executable;
+
+        CertifiedFallbackCurrentContext current;
+        current.goal_identity = goal_identity();
+        current.economy_identity = economy_identity();
+        current.action_vocabulary_size = operators.size();
+        current.action_vocabulary_identity =
+            action_vocabulary_prefix_identity(
+                incumbent.action_vocabulary_size);
+        current.artifact_identity = artifact_identity();
+        current.source_generation = transition_cache->rows.size();
+        current.target_generation = calc.state_count();
+        current.graph_prefix_identity =
+            incumbent_graph_prefix_identity(
+                incumbent.graph_row_count,
+                incumbent.graph_priced_row_count,
+                incumbent.graph_successor_count,
+                incumbent.graph_probability_count,
+                incumbent.graph_choice_count,
+                incumbent.graph_choice_successor_count,
+                incumbent.graph_choice_option_count);
+        return certified_fallback_invalid_reason(
+            candidate, current, options.epsilon);
+    }
+
+bool SolveWork::Impl::certify_incumbent_for_fallback(
+        BoundedPolicyIncumbent& incumbent) {
+        if (!incumbent.primitive_renewal_witness.valid) return false;
+        populate_incumbent_policy(incumbent);
+        const PrimitiveRenewalWitness& witness =
+            incumbent.primitive_renewal_witness;
+        if (result.start_state >= incumbent.policy.size() ||
+            result.start_state >= incumbent.policy_row_costs.size() ||
+            witness.operator_index >= calc.operators().size() ||
+            incumbent.policy[result.start_state].index !=
+                witness.operator_index ||
+            !(witness.success_probability > 0.0) ||
+            !std::isfinite(witness.success_probability) ||
+            !std::isfinite(incumbent.policy_row_costs[result.start_state]) ||
+            incumbent.policy_row_costs[result.start_state] < 0.0) {
+            ++result.diagnostics.policy_refinement
+                  .fallback_portfolio_invalidations;
+            return false;
+        }
+        const double evaluated_cost =
+            incumbent.policy_row_costs[result.start_state] /
+            witness.success_probability;
+        if (!std::isfinite(evaluated_cost) || evaluated_cost < 0.0 ||
+            std::abs(
+                evaluated_cost - incumbent.certified_upper_bound) >
+                value_comparison_tolerance(
+                    incumbent.certified_upper_bound)) {
+            ++result.diagnostics.policy_refinement
+                  .fallback_portfolio_invalidations;
+            return false;
+        }
+        incumbent.evaluated_policy_cost = evaluated_cost;
+        SolveResult proof;
+        proof.policy_available = true;
+        proof.policy_status = SolvePolicyStatus::BoundedFeasible;
+        proof.termination = SolveTermination::RefusedResourceCap;
+        proof.lower_bound = result.diagnostics.focused_lower_bound;
+        proof.upper_bound = incumbent.certified_upper_bound;
+        proof.evaluated_policy_cost = incumbent.evaluated_policy_cost;
+        proof.start_state = result.start_state;
+        proof.has_exact_start_item = result.has_exact_start_item;
+        proof.exact_start_item = result.exact_start_item;
+        proof.values = incumbent.values;
+        proof.policy = incumbent.policy;
+        proof.policy_reachable = incumbent.policy_reachable;
+        proof.unveil_preferences = incumbent.unveil_preferences;
+        proof.option_unveil_preferences =
+            incumbent.option_unveil_preferences;
+        proof.behavioral_representative_by_state =
+            incumbent.behavioral_representative_by_state;
+        proof.primitive_renewal_witness =
+            incumbent.primitive_renewal_witness;
+        proof.options = options;
+        proof.goal_states.assign(proof.values.size(), 0);
+        proof.expanded.assign(proof.values.size(), 0);
+        for (std::uint32_t state = 0; state < proof.values.size(); ++state) {
+            proof.goal_states[state] =
+                calc.is_goal_state(calc.state(state)) ? 1 : 0;
+        }
+        PolicyCompilationTelemetry compilation;
+        const std::uint64_t live = fast_estimated_owned_bytes();
+        const std::uint64_t candidate_bytes = incumbent_owned_bytes(incumbent);
+        if (live >= options.max_solver_owned_bytes ||
+            candidate_bytes >= options.max_solver_owned_bytes - live) {
+            ++result.diagnostics.policy_refinement
+                  .fallback_portfolio_memory_rejections;
+            return false;
+        }
+        try {
+            incumbent.compiled_artifact.strategy_json =
+                compile_policy_strategy_json(
+                    calc, proof, "certified executable fallback",
+                    &compilation, options.max_strategy_json_bytes,
+                    nullptr,
+                    options.max_solver_owned_bytes - live -
+                        candidate_bytes);
+        } catch (const std::exception&) {
+            ++result.diagnostics.policy_refinement
+                  .fallback_portfolio_compilation_failures;
+            incumbent.compiled_artifact = {};
+            return false;
+        }
+        if (!compilation.cap_hit.empty() ||
+            incumbent.compiled_artifact.strategy_json.empty()) {
+            ++result.diagnostics.policy_refinement
+                  .fallback_portfolio_compilation_failures;
+            incumbent.compiled_artifact = {};
+            return false;
+        }
+        incumbent.compiled_artifact.working_states =
+            compilation.working_states;
+        incumbent.compiled_artifact.policy_regions =
+            compilation.policy_regions;
+        incumbent.compiled_artifact.nodes = compilation.nodes;
+        incumbent.compiled_artifact.edges = compilation.edges;
+        incumbent.compilation_provenance =
+            "compiled_primitive_renewal_exact_kernel_v1";
+        incumbent.proper = true;
+        incumbent.executable = true;
+        incumbent.independently_certified = true;
+        incumbent.independently_evaluated = true;
+        incumbent.retained_owned_bytes = incumbent_owned_bytes(incumbent);
+        return true;
+    }
+
+bool SolveWork::Impl::retain_certified_incumbent(
+        const BoundedPolicyIncumbent& incumbent) {
+        PolicyRefinementTelemetry& telemetry =
+            result.diagnostics.policy_refinement;
+        if (const char* reason =
+                certified_incumbent_invalid_reason(incumbent)) {
+            (void)reason;
+            ++telemetry.fallback_portfolio_invalidations;
+            return false;
+        }
+        for (const BoundedPolicyIncumbent& retained :
+             certified_fallback_portfolio) {
+            if (retained.portfolio_identity ==
+                incumbent.portfolio_identity) {
+                return true;
+            }
+        }
+        constexpr std::size_t kMaximumFallbacks = 4;
+        if (certified_fallback_portfolio.size() >= kMaximumFallbacks &&
+            !incumbent_precedes(
+                incumbent, certified_fallback_portfolio.back())) {
+            return true;
+        }
+        const std::uint64_t candidate_dynamic_bytes =
+            incumbent_owned_bytes(incumbent) -
+            sizeof(BoundedPolicyIncumbent);
+        std::uint64_t current_bytes = fast_estimated_owned_bytes();
+        std::uint64_t added_bytes = candidate_dynamic_bytes;
+        if (certified_fallback_portfolio.size() >= kMaximumFallbacks) {
+            const std::uint64_t replaced_dynamic_bytes =
+                incumbent_owned_bytes(
+                    certified_fallback_portfolio.back()) -
+                sizeof(BoundedPolicyIncumbent);
+            current_bytes = current_bytes >= replaced_dynamic_bytes
+                                ? current_bytes - replaced_dynamic_bytes
+                                : 0;
+        } else if (certified_fallback_portfolio.capacity() <
+                   kMaximumFallbacks) {
+            added_bytes +=
+                (kMaximumFallbacks -
+                 certified_fallback_portfolio.capacity()) *
+                sizeof(BoundedPolicyIncumbent);
+        }
+        if (!certified_fallback_fits_memory(
+                current_bytes, added_bytes,
+                options.max_solver_owned_bytes)) {
+            ++telemetry.fallback_portfolio_memory_rejections;
+            return false;
+        }
+        if (certified_fallback_portfolio.capacity() <
+            kMaximumFallbacks) {
+            certified_fallback_portfolio.reserve(kMaximumFallbacks);
+        }
+        if (certified_fallback_portfolio.size() >= kMaximumFallbacks) {
+            certified_fallback_portfolio.back() = incumbent;
+        } else {
+            certified_fallback_portfolio.push_back(incumbent);
+        }
+        std::sort(
+            certified_fallback_portfolio.begin(),
+            certified_fallback_portfolio.end(),
+            [&](const BoundedPolicyIncumbent& left,
+                const BoundedPolicyIncumbent& right) {
+                return incumbent_precedes(left, right);
+            });
+        telemetry.fallback_portfolio_candidates =
+            certified_fallback_portfolio.size();
+        telemetry.fallback_portfolio_owned_bytes = 0;
+        for (BoundedPolicyIncumbent& retained :
+             certified_fallback_portfolio) {
+            retained.retained_owned_bytes = incumbent_owned_bytes(retained);
+            telemetry.fallback_portfolio_owned_bytes +=
+                retained.retained_owned_bytes;
+        }
+        return true;
+    }
+
+bool SolveWork::Impl::retain_current_certified_incumbent() {
+        if (!output_incumbent.has_value() ||
+            !output_incumbent->independently_certified) {
+            return true;
+        }
+        return retain_certified_incumbent(*output_incumbent);
+    }
+
+auto SolveWork::Impl::best_current_certified_fallback()
+        -> BoundedPolicyIncumbent* {
+        PolicyRefinementTelemetry& telemetry =
+            result.diagnostics.policy_refinement;
+        for (auto candidate = certified_fallback_portfolio.begin();
+             candidate != certified_fallback_portfolio.end();) {
+            if (certified_incumbent_invalid_reason(*candidate) == nullptr) {
+                ++candidate;
+            } else {
+                ++telemetry.fallback_portfolio_invalidations;
+                candidate = certified_fallback_portfolio.erase(candidate);
+            }
+        }
+        telemetry.fallback_portfolio_candidates =
+            certified_fallback_portfolio.size();
+        telemetry.fallback_portfolio_owned_bytes = 0;
+        for (const BoundedPolicyIncumbent& retained :
+             certified_fallback_portfolio) {
+            telemetry.fallback_portfolio_owned_bytes +=
+                incumbent_owned_bytes(retained);
+        }
+        return certified_fallback_portfolio.empty()
+                   ? nullptr
+                   : &certified_fallback_portfolio.front();
+    }
+
 void SolveWork::Impl::commit_output_incumbent(
         BoundedPolicyIncumbent candidate) {
+        if (output_incumbent.has_value() &&
+            output_incumbent->independently_certified &&
+            output_incumbent->portfolio_identity !=
+                candidate.portfolio_identity &&
+            !retain_certified_incumbent(*output_incumbent) &&
+            !candidate.independently_certified) {
+            /* Memory pressure cannot let an uncertified preferred policy
+             * destroy the only executable result. Keep the old fallback as
+             * the selected output instead. */
+            return;
+        }
         output_incumbent = std::move(candidate);
         result.diagnostics.incumbent_kind = output_incumbent->kind;
         result.diagnostics.incumbent_round = output_incumbent->round;
@@ -750,6 +1223,8 @@ void SolveWork::Impl::commit_output_incumbent(
             output_incumbent->graph_identity;
         result.diagnostics.incumbent_strict_state_provenance =
             output_incumbent->strict_state_provenance;
+        result.diagnostics.policy_refinement.preferred_candidate_upper =
+            output_incumbent->certified_upper_bound;
     }
 
 void SolveWork::Impl::install_output_incumbent(
@@ -765,15 +1240,6 @@ void SolveWork::Impl::install_output_incumbent(
         if (!std::isfinite(upper) || upper < 0.0 ||
             result.start_state >= values.size()) {
             return;
-        }
-        if (output_incumbent.has_value()) {
-            const double incumbent_upper =
-                output_incumbent->certified_upper_bound;
-            if (upper > incumbent_upper + options.epsilon ||
-                (!replace_equal_incumbent &&
-                 upper >= incumbent_upper - options.epsilon)) {
-                return;
-            }
         }
         BoundedPolicyIncumbent candidate;
         candidate.certified_upper_bound = upper;
@@ -797,7 +1263,31 @@ void SolveWork::Impl::install_output_incumbent(
         candidate.economy_identity = economy_identity();
         candidate.action_vocabulary_identity =
             action_vocabulary_identity();
+        candidate.action_vocabulary_size = operators.size();
         candidate.graph_identity = graph_identity();
+        candidate.artifact_identity = artifact_identity();
+        candidate.source_generation = transition_cache->rows.size();
+        candidate.target_generation = calc.state_count();
+        candidate.graph_row_count = transition_cache->rows.size();
+        candidate.graph_priced_row_count = priced_rows.size();
+        candidate.graph_successor_count =
+            transition_cache->successors.size();
+        candidate.graph_probability_count =
+            transition_cache->probabilities.size();
+        candidate.graph_choice_count = transition_cache->choices.size();
+        candidate.graph_choice_successor_count =
+            transition_cache->choice_successors.size();
+        candidate.graph_choice_option_count =
+            transition_cache->choice_options.size();
+        candidate.graph_prefix_identity =
+            incumbent_graph_prefix_identity(
+                candidate.graph_row_count,
+                candidate.graph_priced_row_count,
+                candidate.graph_successor_count,
+                candidate.graph_probability_count,
+                candidate.graph_choice_count,
+                candidate.graph_choice_successor_count,
+                candidate.graph_choice_option_count);
         candidate.behavioral_representative_by_state =
             result.behavioral_representative_by_state;
         if (policy_reachable != nullptr) {
@@ -819,6 +1309,53 @@ void SolveWork::Impl::install_output_incumbent(
          * output remain deferred, but finish() must never reinterpret an
          * incumbent through a replacement graph or a repriced row variant. */
         capture_incumbent_policy(candidate);
+        std::uint64_t identity = 1469598103934665603ULL;
+        identity_mix(
+            identity,
+            std::bit_cast<std::uint64_t>(
+                candidate.certified_upper_bound));
+        identity_mix(identity, candidate.goal_identity);
+        identity_mix(identity, candidate.economy_identity);
+        identity_mix(identity, candidate.action_vocabulary_identity);
+        /* The artifact owner address is an invalidation dependency, not a
+         * deterministic portfolio tie-break. Schema/base/item identities
+         * are stable semantic inputs and are mixed separately below. */
+        identity_mix(
+            identity, calc.session().data->artifact_schema_version);
+        identity_mix(identity, calc.session().base_index);
+        identity_mix(identity, calc.session().item_level);
+        identity_mix(identity, candidate.source_generation);
+        identity_mix(identity, candidate.target_generation);
+        identity_mix(identity, candidate.graph_prefix_identity);
+        identity_mix(
+            identity, candidate.primitive_renewal_witness.witness_hash);
+        if (result.start_state < candidate.policy.size()) {
+            identity_mix(
+                identity, candidate.policy[result.start_state].index);
+            identity_mix(
+                identity,
+                static_cast<std::uint64_t>(
+                    candidate.policy[result.start_state].kind));
+        }
+        identity_mix_string(identity, candidate.kind);
+        candidate.portfolio_identity = identity;
+        (void)certify_incumbent_for_fallback(candidate);
+        if (output_incumbent.has_value()) {
+            const double incumbent_upper =
+                output_incumbent->certified_upper_bound;
+            const bool strictly_better =
+                upper < incumbent_upper - options.epsilon;
+            const bool replace_equal =
+                replace_equal_incumbent &&
+                std::abs(upper - incumbent_upper) <= options.epsilon &&
+                incumbent_precedes(candidate, *output_incumbent);
+            if (!strictly_better && !replace_equal) {
+                if (candidate.independently_certified) {
+                    (void)retain_certified_incumbent(candidate);
+                }
+                return;
+            }
+        }
         commit_output_incumbent(std::move(candidate));
     }
 
@@ -898,6 +1435,17 @@ void SolveWork::Impl::install_direct_output_incumbent(
             result.behavioral_representative_by_state;
         candidate.strict_state_provenance =
             result.behavioral_representative_by_state.empty();
+        candidate.action_vocabulary_size = operators.size();
+        candidate.artifact_identity = artifact_identity();
+        candidate.source_generation = transition_cache->rows.size();
+        candidate.target_generation = calc.state_count();
+        candidate.portfolio_identity = 0;
+        candidate.compiled_artifact = {};
+        candidate.compilation_provenance.clear();
+        candidate.independently_certified = false;
+        candidate.independently_evaluated = false;
+        candidate.proper = false;
+        candidate.executable = false;
         candidate.unveil_preferences.clear();
         candidate.option_unveil_preferences.clear();
         candidate.policy_materialized = false;
@@ -1063,24 +1611,6 @@ void SolveWork::Impl::try_install_gated_root_renewal_incumbent(
         }
         witness.witness_hash = witness_hash;
 
-        std::uint32_t incumbent_root_operator = kNoId;
-        if (output_incumbent.has_value() &&
-            result.start_state <
-                output_incumbent->frontier_operators.size()) {
-            incumbent_root_operator =
-                output_incumbent
-                    ->frontier_operators[result.start_state];
-        }
-        const bool better =
-            !output_incumbent.has_value() ||
-            value < output_incumbent->certified_upper_bound -
-                        options.epsilon ||
-            (std::abs(
-                 value -
-                 output_incumbent->certified_upper_bound) <=
-                 options.epsilon &&
-             priced.index < incumbent_root_operator);
-        if (!better) return;
         install_output_incumbent(
             value, values, selected_rows, frontier, {},
             "gated_primitive_destructive_renewal",

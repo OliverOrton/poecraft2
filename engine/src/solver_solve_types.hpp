@@ -567,6 +567,56 @@ inline StateRowIndexRange state_row_indices(
 
 namespace solve_detail {
 
+/* Pure portfolio contract used by the solver and focused tests. It keeps
+ * invalidation and ordering independent of any named crafting action. */
+struct CertifiedFallbackContract {
+    double certified_upper_bound = kInfinity;
+    double evaluated_policy_cost = kInfinity;
+    std::uint64_t goal_identity = 0;
+    std::uint64_t economy_identity = 0;
+    std::uint64_t action_vocabulary_identity = 0;
+    std::uint64_t action_vocabulary_size = 0;
+    std::uint64_t artifact_identity = 0;
+    std::uint64_t source_generation = 0;
+    std::uint64_t target_generation = 0;
+    std::uint64_t graph_prefix_identity = 0;
+    std::uint64_t witness_identity = 0;
+    std::uint64_t portfolio_identity = 0;
+    std::uint32_t root_operator = kNoId;
+    std::string_view kind;
+    bool complete_policy_or_witness = false;
+    bool compiled_payload_present = false;
+    bool compilation_provenance_present = false;
+    bool independently_evaluated = false;
+    bool proper = false;
+    bool executable = false;
+};
+
+struct CertifiedFallbackCurrentContext {
+    std::uint64_t goal_identity = 0;
+    std::uint64_t economy_identity = 0;
+    std::uint64_t action_vocabulary_identity = 0;
+    std::uint64_t action_vocabulary_size = 0;
+    std::uint64_t artifact_identity = 0;
+    std::uint64_t source_generation = 0;
+    std::uint64_t target_generation = 0;
+    std::uint64_t graph_prefix_identity = 0;
+};
+
+const char* certified_fallback_invalid_reason(
+    const CertifiedFallbackContract& candidate,
+    const CertifiedFallbackCurrentContext& current,
+    double epsilon);
+
+bool certified_fallback_precedes(
+    const CertifiedFallbackContract& left,
+    const CertifiedFallbackContract& right);
+
+bool certified_fallback_fits_memory(
+    std::uint64_t current_owned_bytes,
+    std::uint64_t candidate_owned_bytes,
+    std::uint64_t maximum_owned_bytes);
+
 struct CapturedBoundedPolicyRow {
     PolicyOperatorRef policy;
     double cost = kInfinity;
@@ -887,6 +937,12 @@ struct SolveWork::Impl {
         std::vector<std::uint32_t> behavioral_representative_by_state;
         std::vector<std::uint8_t> policy_reachable;
         PrimitiveRenewalWitness primitive_renewal_witness;
+        /* Independently publishable candidates retain their already-checked
+         * compiler artifact separately from a cheaper policy that may still
+         * require strict lifting. The artifact is never scalar-only: it is
+         * coupled to the complete captured policy/witness and identities
+         * below. */
+        RetainedCompiledPolicyArtifact compiled_artifact;
         std::uint32_t restart_operator = kNoId;
         std::uint32_t restart_state = kNoId;
         std::uint32_t fallback_anchor_state = kNoId;
@@ -895,11 +951,33 @@ struct SolveWork::Impl {
         std::uint64_t goal_identity = 0;
         std::uint64_t economy_identity = 0;
         std::uint64_t action_vocabulary_identity = 0;
+        std::uint64_t action_vocabulary_size = 0;
         std::uint64_t graph_identity = 0;
+        std::uint64_t artifact_identity = 0;
+        std::uint64_t source_generation = 0;
+        std::uint64_t target_generation = 0;
+        std::uint64_t graph_prefix_identity = 0;
+        std::uint64_t graph_row_count = 0;
+        std::uint64_t graph_priced_row_count = 0;
+        std::uint64_t graph_successor_count = 0;
+        std::uint64_t graph_probability_count = 0;
+        std::uint64_t graph_choice_count = 0;
+        std::uint64_t graph_choice_successor_count = 0;
+        std::uint64_t graph_choice_option_count = 0;
+        std::uint64_t portfolio_identity = 0;
+        std::uint64_t retained_owned_bytes = 0;
+        std::string compilation_provenance;
         bool strict_state_provenance = true;
         bool policy_materialized = false;
+        bool independently_certified = false;
+        bool independently_evaluated = false;
+        bool proper = false;
+        bool executable = false;
     };
     std::optional<BoundedPolicyIncumbent> output_incumbent;
+    /* Best-first, deterministic, bounded collection of independently
+     * executable candidates displaced by cheaper preferred policies. */
+    std::vector<BoundedPolicyIncumbent> certified_fallback_portfolio;
     bool target_gap_stop = false;
     SolveGapTarget target_gap_fired = SolveGapTarget::None;
     std::uint64_t focused_direct_upper_row =
@@ -976,6 +1054,15 @@ struct SolveWork::Impl {
     std::uint64_t action_vocabulary_identity() const;
 
     std::uint64_t graph_identity() const;
+    std::uint64_t artifact_identity() const;
+    std::uint64_t incumbent_graph_prefix_identity(
+        std::uint64_t row_count,
+        std::uint64_t priced_row_count,
+        std::uint64_t successor_count,
+        std::uint64_t probability_count,
+        std::uint64_t choice_count,
+        std::uint64_t choice_successor_count,
+        std::uint64_t choice_option_count) const;
     std::uint64_t fallback_policy_identity(
         const FocusedFallbackPolicy& fallback) const;
     std::uint64_t fallback_graph_prefix_identity(
@@ -1016,6 +1103,26 @@ struct SolveWork::Impl {
         std::uint64_t row);
 
     void populate_incumbent_policy(BoundedPolicyIncumbent& candidate);
+
+    std::uint64_t incumbent_owned_bytes(
+        const BoundedPolicyIncumbent& incumbent) const;
+
+    bool incumbent_precedes(
+        const BoundedPolicyIncumbent& left,
+        const BoundedPolicyIncumbent& right) const;
+
+    const char* certified_incumbent_invalid_reason(
+        const BoundedPolicyIncumbent& incumbent) const;
+
+    bool certify_incumbent_for_fallback(
+        BoundedPolicyIncumbent& incumbent);
+
+    bool retain_certified_incumbent(
+        const BoundedPolicyIncumbent& incumbent);
+
+    bool retain_current_certified_incumbent();
+
+    BoundedPolicyIncumbent* best_current_certified_fallback();
 
     void commit_output_incumbent(BoundedPolicyIncumbent candidate);
 

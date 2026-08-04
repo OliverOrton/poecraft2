@@ -1320,6 +1320,28 @@ outcomes, 638,365 final-depth branches absent from the earlier sparse proxy,
 and approximately 0.809/1.004-second raw/V2 row wall. Track A fallback
 publication is scored separately from later Track B factorization.
 
+## Certified Fallback Portfolio Gate 1
+
+The 2026-08-03
+[`fallback-and-terminal-reforge-factorization-gate1.json`](../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate1.json)
+qualifies deterministic ownership and publication of independently compiled
+primitive-renewal fallbacks. A retained entry owns the complete captured
+policy/witness, independently recomputed cost, compiled artifact, compiler and
+properness provenance, full invalidation identity/generations, and
+capacity-derived solver memory. A cheaper candidate without all executable
+provenance cannot evict it.
+
+A synthetic two-goal regression publishes the compiled renewal after a
+1,000-work preferred assertion cap, publishes the cheaper exact preferred
+policy with 2,000 work, and preserves the renewal across an isolated preferred
+JSON compilation failure. Contract tests cover economy/goal/graph/vocabulary/
+artifact/generation invalidation, multiple and equal-cost deterministic
+ordering, improper and provenance-free rejection, and exact byte-cap
+arithmetic. The focused solve suite passes 98,217 checks with zero failures.
+No mechanic, action envelope, cap/default, lower-bound authority, obligation
+semantics, C ABI, strategy vocabulary, WASM, or frontend changed. The canonical
+hard case remains unrun at Gate 1 and is reserved for Gate 2.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

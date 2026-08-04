@@ -1,7 +1,7 @@
 # Certified Fallback Publication And Final-Depth Reforge Accumulation
 
-**Status: Gate 0 complete; Track A Gate 1 is the active implementation
-boundary.**
+**Status: Track A Gate 1 is complete; Gate 2 hard-case qualification is the
+active boundary.**
 
 Owner: Oliver
 
@@ -71,7 +71,8 @@ test changed at this gate.
 
 ### Gate 1 — preserve independently publishable witnesses
 
-**Status: active.**
+**Status: complete.** Tracked evidence is
+[`fallback-and-terminal-reforge-factorization-gate1.json`](../../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate1.json).
 
 Replace single-cheapest-incumbent ownership with a small deterministic
 portfolio. A retained candidate owns its certified upper, independently
@@ -104,9 +105,38 @@ vocabulary/generation invalidation, multiple deterministic and equal-cost
 fallbacks, improper cycles, memory accounting, and refusal of a scalar upper
 without executable provenance.
 
+The retained implementation keeps a deterministic four-entry portfolio. Each
+generic primitive-renewal entry owns its complete captured policy and witness,
+an independently recomputed cost, compiled strategy artifact and compiler
+counts, properness/executability result, goal/economy/vocabulary/artifact/
+graph identities, source and target generations, graph-prefix dependencies,
+and capacity-derived memory. Ordering is a strict total semantic order; graph
+and vocabulary append-only growth may preserve a witness only while its frozen
+prefix still matches.
+
+Before an incremental or direct preferred policy mutates the selected
+incumbent, an independently executable renewal is copied into the portfolio.
+Preferred strict-lift and ordinary exact-publication failures both try the best
+still-current fallback without clearing the preferred failure diagnostic. A
+successful cheaper preferred assertion discards the unused portfolio. The
+fallback restores only an executable upper; the full-envelope focused lower
+and unresolved alternative semantics are unchanged.
+
+The synthetic two-goal regression proves all three publication dispositions:
+a 1,000-work preferred assertion cap publishes the more expensive compiled
+renewal, a 2,000-work assertion publishes the cheaper preferred exact policy,
+and a preferred JSON compilation cap leaves the unrelated compact fallback
+publishable. Pure contract tests cover every declared identity/generation
+invalidation, multiple and equal-cost ordering, improper and provenance-free
+rejection, and exact byte-cap arithmetic. The focused solve suite passes
+98,217 checks with zero failures. Gate 1 does not qualify the canonical hard
+case; that one permitted invocation belongs to Gate 2.
+
 Commit Gate 1 separately.
 
 ### Gate 2 — hard-case fallback qualification
+
+**Status: active.**
 
 Run the canonical hard two-goal case exactly once with the unchanged 20M work
 cap, 1 GiB solver-owned cap, complete 27-action vocabulary, and 900-second

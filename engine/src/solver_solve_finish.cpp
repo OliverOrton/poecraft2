@@ -1391,6 +1391,131 @@ SolveResult SolveWork::Impl::finish() {
                 result.absolute_optimality_gap = kInfinity;
                 result.relative_optimality_gap = kInfinity;
             };
+        const auto publish_certified_fallback =
+            [&](const SolveTermination coarse_solve_termination) {
+                PolicyRefinementTelemetry& telemetry =
+                    result.diagnostics.policy_refinement;
+                BoundedPolicyIncumbent* retained =
+                    best_current_certified_fallback();
+                if (retained == nullptr) return false;
+                ++telemetry.fallback_publication_attempts;
+                BoundedPolicyIncumbent fallback = std::move(*retained);
+                certified_fallback_portfolio.clear();
+                certified_fallback_portfolio.shrink_to_fit();
+                telemetry.fallback_portfolio_candidates = 0;
+                telemetry.fallback_portfolio_owned_bytes = 0;
+                populate_incumbent_policy(fallback);
+                result.values = std::move(fallback.values);
+                result.policy = std::move(fallback.policy);
+                result.unveil_preferences =
+                    std::move(fallback.unveil_preferences);
+                result.option_unveil_preferences =
+                    std::move(fallback.option_unveil_preferences);
+                result.behavioral_representative_by_state =
+                    std::move(
+                        fallback.behavioral_representative_by_state);
+                result.policy_reachable =
+                    std::move(fallback.policy_reachable);
+                result.primitive_renewal_witness =
+                    std::move(fallback.primitive_renewal_witness);
+                result.refined_policy_artifact =
+                    std::move(fallback.compiled_artifact);
+                policy_rows = std::move(fallback.policy_rows);
+                restored_policy_row_costs =
+                    std::move(fallback.policy_row_costs);
+                result.goal_states.assign(result.values.size(), 0);
+                for (std::uint32_t state = 0;
+                     state < result.values.size(); ++state) {
+                    result.goal_states[state] =
+                        calc.is_goal_state(calc.state(state)) ? 1 : 0;
+                }
+                owned_result_nested_bytes = 0;
+                for (const auto& preferences :
+                     result.unveil_preferences) {
+                    owned_result_nested_bytes +=
+                        preferences.capacity() * sizeof(std::uint32_t);
+                }
+                for (const auto& preferences :
+                     result.option_unveil_preferences) {
+                    owned_result_nested_bytes +=
+                        preferences.capacity() *
+                        sizeof(ObservedUnveilPreference);
+                    for (const auto& preference : preferences) {
+                        owned_result_nested_bytes +=
+                            preference.choices.capacity() *
+                            sizeof(ObservedUnveilChoice);
+                    }
+                }
+                result.converged = false;
+                result.policy_available = true;
+                result.policy_status = SolvePolicyStatus::BoundedFeasible;
+                result.target_met = false;
+                result.target_fired = SolveGapTarget::None;
+                result.lower_bound =
+                    result.diagnostics.focused_lower_bound;
+                result.upper_bound = fallback.certified_upper_bound;
+                result.evaluated_policy_cost =
+                    fallback.evaluated_policy_cost;
+                result.absolute_optimality_gap = std::max(
+                    0.0, result.upper_bound - result.lower_bound);
+                result.relative_optimality_gap =
+                    result.lower_bound > 0.0
+                        ? std::max(
+                              0.0,
+                              result.upper_bound / result.lower_bound -
+                                  1.0)
+                        : kInfinity;
+                result.termination =
+                    successful_refined_publication_termination(
+                        coarse_solve_termination,
+                        result.diagnostics.resource_cap_hit);
+                result.diagnostics.focused_upper_bound =
+                    result.upper_bound;
+                result.diagnostics
+                    .focused_partial_policy_upper_bound =
+                    result.upper_bound;
+                result.diagnostics.focused_optimality_gap =
+                    result.absolute_optimality_gap;
+                result.diagnostics.solution_scope =
+                    "certified_executable_fallback_bounded";
+                result.diagnostics.incumbent_kind = fallback.kind;
+                result.diagnostics.incumbent_round = fallback.round;
+                result.diagnostics.incumbent_restart_state =
+                    fallback.restart_state;
+                result.diagnostics.incumbent_anchor_state =
+                    fallback.fallback_anchor_state;
+                result.diagnostics.incumbent_goal_identity =
+                    fallback.goal_identity;
+                result.diagnostics.incumbent_economy_identity =
+                    fallback.economy_identity;
+                result.diagnostics
+                    .incumbent_action_vocabulary_identity =
+                    fallback.action_vocabulary_identity;
+                result.diagnostics.incumbent_graph_identity =
+                    fallback.graph_identity;
+                result.diagnostics.incumbent_strict_state_provenance =
+                    fallback.strict_state_provenance;
+                result.diagnostics
+                    .policy_publication_failure_reason.clear();
+                telemetry.status = "certified_fallback_retained";
+                telemetry.bounded_publication_retained = true;
+                telemetry.retained_artifact_bytes =
+                    result.refined_policy_artifact
+                            .strategy_json.capacity() +
+                    1;
+                telemetry.published_fallback_upper = result.upper_bound;
+                telemetry.published_fallback_evaluated_cost =
+                    result.evaluated_policy_cost;
+                telemetry.published_fallback_witness_hash =
+                    result.primitive_renewal_witness.witness_hash;
+                telemetry.published_fallback_kind = fallback.kind;
+                ++telemetry.fallback_publication_successes;
+                count_policy_actions(
+                    result.policy,
+                    result.diagnostics.upper_policy_action_states);
+                executable_policy_abstraction_supported = true;
+                return true;
+            };
         const auto publication_options_for_live =
             [&](const std::uint64_t live_bytes)
                 -> std::optional<SolveOptions> {
@@ -1420,6 +1545,12 @@ SolveResult SolveWork::Impl::finish() {
                     coarse_reforge_work;
                 return scoped;
             };
+        if (result.policy_available &&
+            std::isfinite(result.evaluated_policy_cost)) {
+            result.diagnostics.policy_refinement
+                .preferred_candidate_upper =
+                result.evaluated_policy_cost;
+        }
         if (result.policy_available &&
             result.diagnostics.policy_refinement.triggers != 0) {
             /*
@@ -1900,6 +2031,10 @@ SolveResult SolveWork::Impl::finish() {
                         successful_refined_publication_termination(
                             coarse_solve_termination,
                             result.diagnostics.resource_cap_hit);
+                    certified_fallback_portfolio.clear();
+                    certified_fallback_portfolio.shrink_to_fit();
+                    telemetry.fallback_portfolio_candidates = 0;
+                    telemetry.fallback_portfolio_owned_bytes = 0;
                 }
             }
             if (!lift_complete) {
@@ -1916,6 +2051,11 @@ SolveResult SolveWork::Impl::finish() {
                         : reason + ": " +
                               certificate.failure_reason,
                     certificate.resource_cap);
+                telemetry.preferred_publication_failure_reason =
+                    result.diagnostics
+                        .policy_publication_failure_reason;
+                (void)publish_certified_fallback(
+                    coarse_solve_termination);
             }
         }
         if (result.policy_available &&
@@ -1926,6 +2066,8 @@ SolveResult SolveWork::Impl::finish() {
              * parse, exact-evaluate as a proper absorbing strategy, and
              * reconcile with the solver value.
              */
+            const SolveTermination coarse_solve_termination =
+                result.termination;
             const std::uint64_t publication_live_bytes =
                 estimated_owned_bytes();
             const std::uint64_t publication_retained_solver_bytes =
@@ -2068,6 +2210,16 @@ SolveResult SolveWork::Impl::finish() {
                     assertion_status);
                 revoke_publication(
                     reason, assertion.resource_cap);
+                telemetry.preferred_publication_failure_reason =
+                    result.diagnostics
+                        .policy_publication_failure_reason;
+                (void)publish_certified_fallback(
+                    coarse_solve_termination);
+            } else {
+                certified_fallback_portfolio.clear();
+                certified_fallback_portfolio.shrink_to_fit();
+                telemetry.fallback_portfolio_candidates = 0;
+                telemetry.fallback_portfolio_owned_bytes = 0;
             }
         }
         /*
