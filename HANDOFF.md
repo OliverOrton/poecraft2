@@ -1,9 +1,10 @@
 # Session Handoff
 
-**Status: no implementation boundary is active. Oliver must choose the next
-chunk before implementation resumes.**
+**Status: versioned reforge resource accounting Gate 0 is complete. Gate 1,
+reusable component accounting and honest nested propagation, is active.**
 
-Current plan: none.
+Current plan:
+[Versioned Reforge Resource Accounting And V3 Production Qualification](docs/active/versioned-reforge-resource-accounting-and-v3-production-qualification.md).
 
 Latest completed milestone:
 [Certified Fallback Publication And Final-Depth Reforge Accumulation](docs/archive/2026-08-03-certified-fallback-and-terminal-reforge-factorization/README.md).
@@ -29,12 +30,18 @@ Completed milestone branch: `codex/selected-closure-broad-row-scaling`
 
 Completed milestone branch: `codex/fallback-and-terminal-reforge-factorization`
 
-Current branch: `codex/fallback-and-terminal-reforge-factorization`
+Current branch: `codex/reforge-resource-accounting-v3-qualification`
 
 Current milestone starting commit:
+`00718908c866dc71a2e7e3864ebc5c5015ff063f`
+
+Current milestone commits: Gate 0 is recorded by the current local commit.
+Gate 1 is the active implementation boundary.
+
+Certified fallback milestone starting commit:
 `0b4ba38aa5754a39715640ad6d7a48cab2dc2b6c`
 
-Current milestone commits: Gate 0 is
+Certified fallback milestone commits: Gate 0 is
 `abe8e525d59cc6ae90663a1d56736d411da7ca6c`. Gate 1 is
 `feef64a25a1351b7111aab1fcb4d02e70404c80c`. Gate 2 is
 `a663bce98e24b793277f01bd4b56727aa8fceb9d`. Gate 3 is
@@ -77,6 +84,39 @@ the final archive commit.
 
 Nothing has been pushed or merged. `main` remains unchanged at
 `25d5bbe6791beb61eae803219563575346def2dc`.
+
+## Versioned reforge resource accounting Gate 0
+
+- The branch begins from clean commit
+  `00718908c866dc71a2e7e3864ebc5c5015ff063f`. Source tree, native binaries,
+  release WASM, artifact, Mirage economy, corpus/hard fixture, 27-action order,
+  V1/V2/V3 evidence, representative family/identity rows, and existing
+  transition/policy/strategy hashes are frozen in
+  `fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate0.json`.
+- The native `SolveOptions` and benchmark omission default is 50M. Null/zero C
+  options and omitted/zero WASM JSON inherit that default. TypeScript defines
+  no separate production default. The reliability generator and canonical
+  hard fixture explicitly override to 20M; preserved 18M/100M diagnostic and
+  every other tracked fixture/test override are separately inventoried.
+- The binding row remains V1 2,097,355 work / 0.809 seconds, V2 923,141 /
+  1.004 seconds, and V3 2,514,591 / 0.395 seconds. V3 is reopened because its
+  prior work rejection compared evaluator-specific operations, not because
+  exactness or wall time failed.
+- Qualification is frozen before implementation: V1 target/probability/value/
+  semantic-action equivalence; at least 25% median native binding improvement;
+  no aggregate eligible-row runtime regression; deterministic V1 dispatch for
+  any nontrivial row above 10% regression; at most 10% peak-memory and
+  cooperative-step regression; and adequate release-WASM responsiveness.
+- The preferred contract makes `max_reforge_work` a stable V1-equivalent
+  logical envelope and reports evaluator effort separately. It is conditional
+  on a safety proof under the logical, memory, and cancellation limits. A
+  separate evaluator-safety cap is allowed only if genuinely required; no
+  weighted universal score is allowed.
+- V1 remains the exact oracle and rollback path. V2 remains diagnostic. The
+  certified fallback remains independently executable and cannot alter the
+  lower or unresolved alternatives. Rare-renewal reconciliation, five-goal
+  finalization, and checkpoint/replay are out of scope.
+- Gate 0 changed documentation/evidence only. No test or benchmark was run.
 
 ## Certified fallback and terminal factorization Gate 0
 
@@ -824,20 +864,26 @@ tracked work counters. The tracked qualified Fracture evidence retains
 
 ## Exact next step
 
-Run Track A Gate 2 exactly once:
+Complete Gate 1 component accounting:
 
-1. Use the canonical `natural-t1-breadth-two-4e65dda9c53b` hard case at the
-   unchanged 20M reforge-work cap, 1 GiB solver-owned cap, complete 27-action
-   vocabulary, and 900-second watchdog.
-2. Require the full-envelope lower to remain independent of the retained
-   fallback upper. The preferred Essence lift may stop, but the current Chaos
-   witness must publish as a bounded compiled policy near
-   `3984.9346987650665` if its frozen provenance remains valid.
-3. Reconcile the compiled strategy by exact evaluation and run 10,000
-   simulations with zero off-policy failures. Do not synthesize a fallback if
-   the frozen witness fails; diagnose its exact provenance/compiler boundary.
-4. Commit the Track A qualification separately, then continue to Track B
-   terminal-branch attribution unless a genuine correctness blocker exists.
+1. Add one reusable saturating breakdown for logical work and V1/V2/V3
+   implementation components without manufacturing an additive score.
+2. Record exact aggregate row lifecycle, pool/family/bucket, exclusion,
+   frontier, terminal, successor/publication, identity, V3 recurrence, and
+   nested automatic-child counts. Keep bounded row samples with owner, family,
+   evaluator, cache, and disposition provenance.
+3. Accumulate hot-loop counts locally, include bounded storage in solver-owned
+   memory, preserve every legacy counter/serialized field, and keep telemetry
+   observational.
+4. Pass the remaining relevant budget to nested child contexts before they do
+   work. Merge all actually executed child work even if the row is later
+   interrupted, refused, or discarded.
+5. Add focused saturation, overflow, nested propagation, interruption,
+   reverse-enumeration, cache-reuse, and completed-publication contracts, then
+   commit Gate 1 separately. Do not run routine acceptance yet.
+
+Gate 2 then captures unchanged-production accounting and matched V1/V2/V3
+medians before Gate 3 changes any cap interpretation or production evaluator.
 
 Deterministic checkpoint/replay remains deferred.
 

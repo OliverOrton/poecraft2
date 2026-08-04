@@ -1,0 +1,254 @@
+{
+  "schema_version": "reforge_resource_accounting_v3_qualification_gate0_v1",
+  "recorded_at_local_date": "2026-08-04",
+  "decision": "freeze_versioned_resource_and_v3_qualification_contract_before_implementation",
+  "branch": "codex/reforge-resource-accounting-v3-qualification",
+  "starting_commit": "00718908c866dc71a2e7e3864ebc5c5015ff063f",
+  "starting_tree": "3fcf9bd2a32508b155572bb8bd7280f0434c5919",
+  "gate_commit": "the commit containing this evidence record",
+  "main_commit_unchanged": "25d5bbe6791beb61eae803219563575346def2dc",
+  "scope": {
+    "mechanics_changed": false,
+    "action_filtering_changed": false,
+    "goal_or_state_abstraction_changed": false,
+    "quotient_or_bellman_contract_changed": false,
+    "strategy_vocabulary_changed": false,
+    "canonical_fixture_changed": false,
+    "compiled_artifact_changed": false,
+    "economy_changed": false,
+    "product_or_default_cap_changed": false,
+    "public_abi_changed": false,
+    "wasm_changed": false,
+    "frontend_authority_changed": false,
+    "source_changed": false,
+    "tests_or_benchmarks_run": false,
+    "pushed": false,
+    "merged": false
+  },
+  "frozen_identities": {
+    "source": {
+      "commit": "00718908c866dc71a2e7e3864ebc5c5015ff063f",
+      "tree": "3fcf9bd2a32508b155572bb8bd7280f0434c5919",
+      "authorities_sha256": {
+        "engine/src/solver_calc_types.hpp": "23f6b599ff5f2c311818b67f5272de81312b64159c27409c2d5d6f24a22f2a2c",
+        "engine/src/solver_calc.cpp": "f3aa4fccda6abf16343c08591a540f8facd9fddba594b9a0b1d8aec061fa2eac",
+        "engine/src/solver_reforge.cpp": "392e8ab9af5cf817728b45051663d2430d22fe710ba1297918ce03cbecae04f7",
+        "engine/src/solver_options_automatic.cpp": "d3b5ea86a9ab1b8d584b40b85a2ec8a7f9fb94b3bb66c2b55f0d47aa8728b069",
+        "engine/src/solver_policy_oracle_setup.inc": "1b73250c7afdc5228b7b64facdc45643e6402d112283975b24a9d3a269b72e96",
+        "engine/src/solver_policy_oracle_kernels.inc": "cea0a16f1d1253fa9024fa19bf1c3eac622fa0824db0d6f42cba9ca3a253d8b9",
+        "engine/src/solver_policy_oracle_improve.inc": "a353a8e3e44f6263622b1905ee881c2d462868493830354e56cbee3efc782302",
+        "engine/src/solver_policy_refinement.cpp": "4e31136635d20e22b2baaf2d003b74f005f5782e9682cd745bc239ef38f53da9",
+        "engine/src/solver_solve_finish.cpp": "5908792dab28540b8fe5fc3204adb0d8f6405e8b2c5b9a6927cc9698aea3ae49",
+        "engine/src/solver_solve_telemetry.cpp": "c258b0c243a4178e32746ac529c2719980bf0bbbbb4fb427cecba27790ca8906",
+        "engine/src/solver_solve_contracts.hpp": "2fb63c1903a5b30e9e44c97de50eb74f04de578893aece3700b916de9620d70f",
+        "engine/src/solver_api.cpp": "81269def56aa97ef346101d232e1aa59805387dc76ab66848b9082fd60dfcef2",
+        "engine/include/poecraft/solver.h": "efc74805a66d8bdac9e7d45e57ca64ba5cd81227569d0ad04ded457dccb69046",
+        "bindings/wasm/wasm_api.cpp": "7863c285554896c1d76e00e795c339563385a84bf58b2b09c7f663965034139f",
+        "apps/web/src/app/engine-protocol.ts": "e17f217db9a8e7326bbe4f1659bde0fec7b5ad9735c909557482eea28ca43532",
+        "apps/web/src/app/engine-wasm.ts": "4dcfff78568014bf418128beb96ff281826d0bc2d7ec8fb8fbff95790db40dcd",
+        "apps/web/src/app/engine-worker.ts": "50faee9737af8e039d007c0207c258adf2ff2366cb3c941288c1f35ded1fc091"
+      }
+    },
+    "native_binaries": {
+      "benchmark_path": "build/engine/poecraft_solver_benchmark.exe",
+      "benchmark_sha256": "c5eca051443ed8a8befc993adfd7e0806be9668bd0ae7f648a2090b41c2139f3",
+      "engine_path": "build/engine/poecraft_engine.dll",
+      "engine_sha256": "8f05b4ecf48974b18e35b06fb3f62278a529f0c823deabcf0878ab9b52e2ea6f",
+      "tests_path": "build/engine/poecraft_engine_tests.exe",
+      "tests_sha256": "a14701907e6646466e3d2d1ea9097beace239ec563101e26de3a99dc12def246"
+    },
+    "release_wasm": {
+      "mjs_path": "bindings/wasm/dist/poecraft_engine.mjs",
+      "mjs_sha256": "c693963ba12b613de8bebedcfe76cf7324782c48a658ffbf2c9e8b2afd0e0647",
+      "wasm_path": "bindings/wasm/dist/poecraft_engine.wasm",
+      "wasm_sha256": "e9ae1ed11c72807f49d2fb97227d5b5188726022adaf8211d01aedc516c03363",
+      "abi_version": 2,
+      "expected_callable_exports": 61
+    },
+    "compiled_artifact": {
+      "path": "data/compiled/current/manifest.json",
+      "sha256": "ff851790a8c336eb6af3895c5483ff1d19f3b016d3d8335a1109b37a9c297602"
+    },
+    "economy": {
+      "content_identity": "9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+      "snapshot_path": "apps/web/public/economy/snapshots/9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f.json",
+      "snapshot_file_sha256": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e"
+    },
+    "corpus": {
+      "manifest_path": "fixtures/solver-reliability/v1/manifest.json",
+      "manifest_sha256": "38d1630920a34d4dda82bfe97f460f03220d162f27d94c250add3bb8f9dcbe1f",
+      "hard_case_id": "natural-t1-breadth-two-4e65dda9c53b",
+      "hard_case_path": "fixtures/solver-reliability/v1/cases/natural-t1-breadth-two-4e65dda9c53b.json",
+      "hard_case_sha256": "1dc33be7a08e1049b22383886e8c6d00a8ed78c7eea8628f5de0e80f2c3cb3be",
+      "medium_case_id": "reliability-class-belt",
+      "medium_case_sha256": "b9b363a45ff23a5aeb4c6b4f05800f537750f6098cbf63b8cc1dafbf16fe822d"
+    },
+    "action_vocabulary": {
+      "count": 27,
+      "order_identity_sha256": "63bf653ba73e7fae48dc0a68815a558268d95b09c64d14937ef48072d0d60df5",
+      "compact_json_sha256": "94fccfe5e3a7b5931954b6323241b18adce1e643b0a2576517a36a301f5f2318",
+      "frozen_source": "fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate0.json"
+    }
+  },
+  "default_and_override_inventory": {
+    "runtime_contract": {
+      "native_solve_options_default": 50000000,
+      "native_default_source": "engine/src/solver_solve_contracts.hpp",
+      "benchmark_omission_default": 50000000,
+      "benchmark_default_source": "engine/benchmarks/solver_benchmark.cpp",
+      "c_null_options_or_zero_field": "uses native SolveOptions default 50000000",
+      "wasm_omitted_or_zero_json_field": "marshals zero and therefore uses native SolveOptions default 50000000",
+      "typescript_field": "optional; production web sources define no independent max_reforge_work default",
+      "web_smoke_test_override": 5000000
+    },
+    "tracked_numeric_json_and_typescript_literals": {
+      "scope": "fixtures and apps/web/test, excluding evidence and copied baseline result files",
+      "assignment_count": 230,
+      "by_value": {
+        "100": 1,
+        "10000": 1,
+        "100000": 1,
+        "500000": 1,
+        "1000000": 2,
+        "2000000": 3,
+        "2500000": 2,
+        "3000000": 147,
+        "5000000": 3,
+        "10000000": 6,
+        "11000000": 4,
+        "20000000": 53,
+        "30000000": 1,
+        "40000000": 2,
+        "60000000": 1,
+        "100000000": 2
+      },
+      "interpretation": "these are fixture/test-specific caps, not alternate native or browser defaults"
+    },
+    "principal_fixture_contracts": {
+      "natural_t1_v1_generator": 3000000,
+      "reliability_v1_generator_and_product_cases": 20000000,
+      "canonical_hard_fixture": 20000000,
+      "proof_carrying_quotient_scale_five": 20000000,
+      "fracture_full_four_qualification": 100000000,
+      "preserved_selected_only_diagnostic": 100000000,
+      "preserved_v2_v3_binding_diagnostics": 18000000,
+      "authorized_but_unrun_work_growth_run_c": 200000000
+    },
+    "focused_cpp_test_literals": {
+      "one_unit_interruption_and_cap_tests": 2,
+      "one_million_automatic_and_s8_3_tests": 3,
+      "fifty_million_default_or_bellman_tests": 1,
+      "one_hundred_million_split_tests": 2,
+      "dynamic_fallback_work_cap_test": true
+    }
+  },
+  "frozen_prior_evidence": {
+    "binding_v1_v2_v3": {
+      "tracked_path": "fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate6-structural-rejection.json",
+      "tracked_sha256": "30e2f1c31ed626833845bc40bbd0a5c9da91499cae4541cbc1864dd41b716779",
+      "v1_raw_work": 2097355,
+      "v2_sparse_work": 923141,
+      "v3_factored_work": 2514591,
+      "v1_row_wall_seconds": 0.8089968,
+      "v2_row_wall_seconds": 1.0040188,
+      "v3_row_wall_seconds": 0.3952339,
+      "terminal_predecessors": 39900,
+      "terminal_contributions": 638365,
+      "canonical_terminal_successors": 125581,
+      "v3_exact": true,
+      "v3_production_enabled": false,
+      "reopened_reason": "the prior rejection compared heterogeneous evaluator counters despite V3's lower wall time"
+    },
+    "canonical_hard_20m": {
+      "tracked_path": "fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate2.json",
+      "tracked_sha256": "c330ad0550d7846573312c3f4e039750b077833908f73745e2190ae3648438e1",
+      "max_reforge_work": 20000000,
+      "coarse_reforge_work": 14077632,
+      "strict_selected_reforge_work": 5922368,
+      "strict_rows_completed": 2,
+      "strict_transitions": 345192,
+      "partition_reached": false,
+      "fallback_upper": 3984.9346987650665,
+      "lower": 752.90090756637869,
+      "compiled_strategy_sha256": "2be1d46e20de86f7f86d1d74e3ed897ed9e49f8753bfd69dade828d9a353bcf7",
+      "exact_evaluation": 3984.9346987639233,
+      "simulations": 10000,
+      "off_policy_failures": 0
+    },
+    "selected_only_100m": {
+      "tracked_path": "fixtures/solver-reliability/v1/evidence/selected-closure-broad-row-scaling-gate1.json",
+      "tracked_sha256": "4ada1b424c75cdce4aea04281a07ac5b5c8dff5872885179500127a1882ba5e1",
+      "selected_rows_completed": 40,
+      "selected_transitions": 6903840,
+      "coarse_reforge_work": 14077632,
+      "selected_reforge_work": 85922368,
+      "partition_reached": false,
+      "executable_upper_reached": false
+    },
+    "representative_family_and_identity_matrix": {
+      "tracked_path": "fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate5.json",
+      "tracked_sha256": "753c0ebab044f2547d148a3839868ae50bc6495f37b8cccfc097250b7f3938ce",
+      "test_source_sha256": "3d96b803cd1faac65f03573b54d0d4e5e3204647b7f3bf7c9a4b7d9475710711",
+      "ordinary": true,
+      "essence": true,
+      "harvest_targeted_and_support": true,
+      "fossil_positive_zero_added_and_forced": true,
+      "empty_carrier": true,
+      "fractured_carrier": true,
+      "identity_sensitive_group_exclusion": true,
+      "prefix_suffix_mixed_and_below_tier_goals": true,
+      "forward_and_reverse": true
+    },
+    "medium": {
+      "tracked_path": "fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate4.json",
+      "tracked_sha256": "f96d3fc91dd6bf40fd09037ff8fec8c68e63c71df32d97dfb47dd6b4c3609580",
+      "transition_bits_hash": "ce5a144282753b26",
+      "policy_bits_hash": "6bee45662f66d2e4",
+      "compiled_strategy_sha256": "87a5c6a5c0980b1696156aadbd8a4e94e804d66f6a0ef062dfbee105197855bb"
+    },
+    "v1_work_growth": {
+      "tracked_path": "fixtures/solver-reliability/v1/evidence/reforge-work-growth-diagnostic.json",
+      "tracked_sha256": "8e52d892e1585e1ecfe3bb9bb72800b9d5a80dbb854a8770b7f425aa57bbaf2d",
+      "transition_bits_hash": "4f26d305a908c59f",
+      "policy_bits_hash": "3e384d3eb52f9ab7",
+      "interpretation": "20M/50M/100M slope remains valid for V1 only"
+    },
+    "fracture": {
+      "release_evidence_path": "fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate8-release-acceptance.json",
+      "release_evidence_sha256": "2ffbeca0a063b8b3381c5225f6498a2f4f42f5980a9934e94b10e09ad4ae249c",
+      "transition_bits_hash": "04a66ba6c6dfcabf",
+      "policy_bits_hash": "3e5d7530e7aed5fb",
+      "compiled_strategy_sha256": "e951df8287448fce5c6d6238622a8977fa547cb33202ffe00f9a460366d64f0e",
+      "rare_renewal_reconciliation_boundary_preserved": true
+    }
+  },
+  "frozen_qualification_criteria": {
+    "v1_exact_equivalence": [
+      "canonical target maps",
+      "probabilities",
+      "Bellman values",
+      "selected semantic actions"
+    ],
+    "minimum_binding_native_median_wall_improvement_percent": 25,
+    "maximum_aggregate_eligible_runtime_regression_percent": 0,
+    "maximum_nontrivial_row_regression_without_v1_dispatch_percent": 10,
+    "maximum_peak_owned_memory_regression_percent": 10,
+    "maximum_cooperative_step_latency_regression_percent": 10,
+    "release_wasm_cancellation_and_responsiveness_required": true,
+    "partial_or_interrupted_row_certifiable": false,
+    "fallback_must_remain_independently_executable": true,
+    "fallback_may_change_lower_or_unresolved_accounting": false,
+    "named_action_modifier_or_fixture_dispatch_forbidden": true
+  },
+  "resource_contract_decision_rule": {
+    "preferred": "max_reforge_work limits stable V1 legacy-equivalent logical search breadth; evaluator effort is separately versioned and qualification uses wall, memory, and cooperative latency",
+    "safety_requirement": "prove V3 implementation effort is bounded under the logical envelope and existing memory/cancellation limits",
+    "fallback_if_not_proved": "add a separate versioned evaluator-safety cap and stop reason across every public binding only if genuinely required",
+    "fallback_if_neither_safe": "retain accounting, leave cap behavior unchanged, and retain V1 production selection",
+    "weighted_universal_score_forbidden": true,
+    "raw_v1_receives_historical_envelope": true,
+    "evaluator_switch_may_reduce_rows_at_same_logical_cap": false,
+    "nested_contexts_receive_remaining_budget_before_execution": true
+  },
+  "next_gate": "implement reusable versioned component accounting, provenance, honest nested propagation, and focused contracts"
+}

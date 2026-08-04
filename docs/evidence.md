@@ -1371,6 +1371,41 @@ failures, an analogous full-four Fracture miss, and the five-goal watchdog.
 Those results do not revoke the canonical Track A qualification and are not
 claimed as broader qualification.
 
+## Versioned Reforge Accounting And V3 Qualification Gate 0
+
+The 2026-08-04
+[`reforge-resource-accounting-v3-qualification-gate0.json`](../fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate0.json)
+freezes clean source commit `0071890`, current native and release-WASM
+binaries, the compiled artifact, Mirage economy, canonical corpus and hard
+fixture, the 27-action order, prior V1/V2/V3 measurements, family/identity
+equivalence coverage, and existing transition, policy, and compiled-strategy
+hashes. No benchmark or test was run and no production behavior changed.
+
+The resource inventory distinguishes the 50M native/API/benchmark omission
+default from explicit fixture contracts. A null C options pointer, zero C
+field, or omitted/zero WASM JSON field uses the native 50M default. Production
+TypeScript supplies no independent default. The reliability generator and
+canonical hard fixture explicitly use 20M; prior selected-only and Fracture
+diagnostics use 100M, while the binding V2/V3 probes used isolated 18M copies.
+The evidence groups every tracked numeric fixture/test override rather than
+calling any one of them a universal product default.
+
+The prior binding row remains 2,097,355 V1 work at about 0.809 seconds,
+923,141 V2 work at about 1.004 seconds, and 2,514,591 V3 work at about 0.395
+seconds. V3 is reopened because those counters measure different operations.
+Qualification is frozen before implementation: exact V1 semantic equivalence,
+at least 25% median native binding-row improvement, no aggregate eligible-row
+runtime regression, no unhandled nontrivial row regression above 10%, at most
+10% peak-memory and cooperative-step regressions, adequate release-WASM
+cancellation headroom, and no certification of interrupted work.
+
+The preferred cap contract is a stable V1 legacy-equivalent logical envelope
+with separately versioned implementation effort. It is allowed only if V3 is
+proved safely bounded under that envelope and existing memory/cancellation
+limits. Otherwise a distinct evaluator-safety cap is required; if neither
+contract is safe, accounting remains and production V1/cap behavior stays
+unchanged. No weighted universal score is permitted.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

@@ -29,8 +29,14 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. Oliver must choose the next chunk before
-implementation resumes. The archived
+The active
+[Versioned Reforge Resource Accounting And V3 Production Qualification](active/versioned-reforge-resource-accounting-and-v3-production-qualification.md)
+milestone has completed Gate 0 and is implementing deterministic versioned
+component accounting before changing cap behavior or evaluator selection. It
+freezes the native/API 50M default separately from the reliability product
+fixture's 20M override, preserves V1 as the independent oracle, and reopens V3
+on exactness, wall, memory, cooperative-latency, and release-WASM evidence
+rather than a universal weighted counter. The archived
 [Certified Fallback Publication And Final-Depth Reforge Accumulation](archive/2026-08-03-certified-fallback-and-terminal-reforge-factorization/README.md)
 milestone qualifies canonical hard-case fallback publication, structurally
 rejects exact V3 terminal accumulation, and passes the complete release
