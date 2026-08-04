@@ -29,19 +29,16 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active
-[Versioned Reforge Resource Accounting And V3 Production Qualification](active/versioned-reforge-resource-accounting-and-v3-production-qualification.md)
-milestone has completed Gates 0-4. Accounting overhead is 0.562%; matched
-native binding-row medians are 697.594/877.933/507.483 ms for V1/V2/V3 with
-identical deterministic results. `max_reforge_work` now limits a stable
-V1-equivalent logical envelope while active V1/V2/V3 effort remains separately
-reported. Strict selected and competitively scheduled alternative rows now use
-V3 provisionally while coarse remains V1; Gate 5 owns scaling and final product
-qualification.
-It freezes the native/API 50M default separately from the reliability product
-fixture's 20M override, preserves V1 as the independent oracle, and reopens V3
-on exactness, wall, memory, cooperative-latency, and release-WASM evidence
-rather than a universal weighted counter. The archived
+No implementation boundary is active. The completed
+[Versioned Reforge Resource Accounting And V3 Production Qualification](archive/2026-08-04-versioned-reforge-resource-accounting/README.md)
+milestone makes `max_reforge_work` a stable V1-equivalent logical envelope,
+reports V1/V2/V3 implementation effort separately, enforces remaining budgets
+before nested execution, and qualifies exact V3 for production strict rows.
+Coarse rows remain V1; native diagnostics retain raw-V1 rollback and sparse V2.
+The binding V3 median is 27.25% faster than V1, aggregate eligible performance
+does not regress, release WASM retains cancellation headroom, and the canonical
+hard fallback remains byte-identical and zero-off-policy across 10,000 runs.
+The archived
 [Certified Fallback Publication And Final-Depth Reforge Accumulation](archive/2026-08-03-certified-fallback-and-terminal-reforge-factorization/README.md)
 milestone qualifies canonical hard-case fallback publication, structurally
 rejects exact V3 terminal accumulation, and passes the complete release

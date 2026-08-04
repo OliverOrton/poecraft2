@@ -423,8 +423,8 @@ historical qualification and the omitted-final-depth proxy correction are
 recorded in the
 [final report](../archive/2026-08-03-selected-closure-broad-row-scaling/report.md).
 
-The active
-[versioned accounting milestone](../active/versioned-reforge-resource-accounting-and-v3-production-qualification.md)
+The completed
+[versioned accounting milestone](../archive/2026-08-04-versioned-reforge-resource-accounting/README.md)
 replaced that heterogeneous cap interpretation. `max_reforge_work` now
 consumes `reforge_logical_work_v1`, the stable V1-equivalent envelope: common
 row work plus one frontier-node charge and every roll bucket for each visited
@@ -455,9 +455,11 @@ while an interrupted row is discarded and cannot be certified. Cache reuse
 consumes neither logical nor evaluator work. Production coarse rows remain V1.
 Production strict selected and competitively scheduled alternative rows now
 use V3 generically; the native benchmark retains an explicit raw-V1
-oracle/rollback control and the existing sparse-V2 diagnostic. Gate 5 owns the
-aggregate native/release-WASM product qualification and must restore strict V1
-if any frozen performance, memory, or latency criterion fails.
+oracle/rollback control and the existing sparse-V2 diagnostic. Final
+qualification passed exactness, the 25% native binding gate, aggregate
+performance, per-case regression, memory, cooperative-latency, reliability,
+hard-fallback, and release-WASM criteria. No family-specific dispatch was
+required.
 
 The later
 [complete first-frontier census](../archive/2026-07-27-true-successor-frontier-census/report.md)
@@ -1086,15 +1088,14 @@ projected mass, work categories, and phase time. The producer retains at most
 cannot establish carrier equivalence, authorize junk collapse, or participate
 in proof, scheduling, compilation, or policy selection.
 
-Destructive-reforge work has two explicit observational versions during
-projected-frontier qualification. `raw_equivalent_work_v1` preserves the
-historic frontier charge of one state node plus every roll bucket, while
-`projected_work_v2` charges one sparse node, each interned-availability word
-inspected, and each eligible edge. Common raw-choice, guaranteed-pool scan,
-and terminal identity-expansion work appears in both. `frontier_work` remains
-the cap-bearing active evaluator ledger; the raw path is the product default
-until qualification promotes the projected path. Broad-row samples also name
-their active mode and retain row-local V1/V2 totals.
+Destructive-reforge accounting has three explicit evaluator versions.
+`raw_equivalent_work_v1` preserves the historic raw frontier charge;
+`projected_work_v2` describes sparse availability work; and
+`factored_work_v3` describes predecessor, denominator, subset, recurrence, and
+commit work. Common physical components remain separately observable.
+`reforge_logical_work_v1`, not any active evaluator ledger, is the cap basis.
+Broad-row samples name V1/V2/V3, owner, family, cache state, and transactional
+disposition.
 
 The frozen two-goal product measurement establishes a separate affordability
 boundary. Its coarse phase consumes 14,077,632 of the 20M work cap; two exact

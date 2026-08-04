@@ -1,7 +1,7 @@
 # Solver Benchmark Trajectories
 
-**Status: stable contract verified on 2026-07-26 at source commit
-`670e9b7`.** Checked against `engine/benchmarks/solver_benchmark.cpp`,
+**Status: stable contract verified on 2026-08-04 at source commit
+`7c7f462`.** Checked against `engine/benchmarks/solver_benchmark.cpp`,
 `solver_corpus_runner.py`, `solver_reports.py`, their focused tests, and the
 [fresh baseline evidence](../../fixtures/solver-natural-t1/v1/evidence/anytime-trajectory-baseline-summary.json).
 

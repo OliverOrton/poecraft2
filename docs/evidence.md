@@ -1450,6 +1450,49 @@ whether the stable V1-equivalent envelope plus existing memory/cancellation
 limits safely bounds V3; aggregate family and final production qualification
 remain pending.
 
+## Versioned Reforge Accounting Gates 3-6
+
+[Gate 3](../fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate3.json)
+makes `logical_work_v1` the sole `max_reforge_work` basis for V1/V2/V3 while
+retaining the legacy active ledger and separate evaluator effort. Its
+structural `N`/`B` bounds prove that V3 remains bounded by the logical envelope,
+existing selected-owned-memory cap, and cancellation boundary; no second cap
+or public binding change is needed. One-less-than-cap tests preserve completed
+rows and the next interruption for every evaluator, and nested contexts receive
+remaining budget before execution.
+
+[Gate 4](../fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate4.json)
+selects V3 generically for production strict selected and competitive
+alternative rows while coarse remains V1. A private native diagnostic retains
+raw-V1 rollback, and V2 remains selectable for research. The focused
+production/rollback/V2 comparison preserves cost, executability, properness,
+zero-off-policy behavior, and byte-identical compiled strategy JSON.
+
+[Gate 5](../fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate5.json)
+qualifies V3. The full mechanic matrix passes 252,997 checks. The frozen native
+binding row improves 27.25%; 31 eligible reliability cases improve 0.30% in
+aggregate with a +6.66% worst case, +0.007% maximum selected-owned-memory
+change, and improved maximum cooperative latency. Release WASM preserves the
+binding hashes/bounds, improves solve wall 0.71%, and acknowledges cancellation
+in 15.522 ms.
+
+The one 100M run preserves 40 selected rows, 6,903,840 transitions, and no
+partition under the exact V1 logical envelope while separately reporting
+102,322,134 V3 effort. The one canonical hard 20M run preserves the two-row
+strict allowance, lower/upper, hashes, and byte-identical four-node fallback;
+exact evaluation matches and all 10,000 simulations succeed with zero
+off-policy failures. The 48-case portfolio retains the two known rare-renewal
+misses and no new V3 failure. The standalone five-goal watchdog is not rerun.
+
+[Gate 6](../fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate6.json)
+records final native, benchmark, release-WASM, web/TypeScript, full-pipeline,
+documentation-link, and artifact identities. The
+[historical audit](archive/2026-08-04-versioned-reforge-resource-accounting/audit.md)
+preserves archived evidence while classifying V3 as recovered, V2 as still
+slower, V1 slopes as evaluator-version-only, fallback/frontier/density results
+as unchanged, and selected alternatives, rare renewals, and five-goal scale as
+unresolved.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

@@ -399,3 +399,28 @@ default covering that measured workload.
 **Consequences:** Unspecified native, WASM-product, and benchmark solves may
 perform up to 50,000,000 reforge-work units. Historical evidence and
 qualification inputs retain their pinned limits and experiment identity.
+
+## 2026-08-04 — Reforge Cap Uses A Versioned Logical Envelope; Strict Rows Use V3
+
+**Decision:** `max_reforge_work` limits `logical_work_v1`, the stable
+V1-equivalent row/search envelope, regardless of active evaluator. Keep
+V1/V2/V3 effort and physical component counts separate and do not combine them
+into a weighted score. Keep existing cap defaults and explicit overrides.
+
+Use raw V1 for coarse reforge rows and exact V3 for production strict selected
+and competitively scheduled alternative rows. Retain raw V1 as a native
+oracle/rollback control and sparse V2 as diagnostic research.
+
+**Context:** The
+[completed qualification](archive/2026-08-04-versioned-reforge-resource-accounting/README.md)
+proved V3 structurally bounded under the logical envelope and existing memory
+and cancellation limits. V3 is 27.25% faster on the frozen native binding row,
+does not regress aggregate eligible performance, stays within memory/latency
+limits, and preserves release-WASM responsiveness and the hard fallback.
+
+**Consequences:** Raw V1 receives its historical logical breadth. Changing
+evaluator cannot reduce completed rows at the same logical cap. Nested child
+contexts receive remaining budget before execution, and an interrupted row
+cannot publish. No second evaluator-safety cap or public ABI change is needed.
+V1/V2/V3 counters are explanatory only; performance qualification uses wall
+time, selected-owned memory, and cooperative latency.

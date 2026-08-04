@@ -1,0 +1,159 @@
+{
+  "schema_version": "reforge_resource_accounting_v3_qualification_gate6_v1",
+  "date": "2026-08-04",
+  "decision": "milestone_complete_v3_production_qualified_and_documented",
+  "branch": "codex/reforge-resource-accounting-v3-qualification",
+  "parent_gate_commit": "7c7f462",
+  "gate_commit": "the commit containing this evidence record",
+  "scope": {
+    "production_strict_evaluator": "v3_factored",
+    "production_coarse_evaluator": "v1_raw",
+    "raw_v1_rollback_retained": true,
+    "v2_diagnostic_retained": true,
+    "product_or_default_cap_changed": false,
+    "mechanics_changed": false,
+    "action_filtering_changed": false,
+    "goal_or_state_abstraction_changed": false,
+    "quotient_or_bellman_contract_changed": false,
+    "strategy_vocabulary_changed": false,
+    "public_abi_changed": false,
+    "frontend_rule_authority_changed": false,
+    "release_wasm_rebuilt": true,
+    "standalone_five_goal_watchdog_rerun": false,
+    "rendered_visual_review_performed": false,
+    "pushed": false,
+    "merged": false
+  },
+  "gate_commits": [
+    {"gate": 0, "commit": "a683b8c", "result": "boundary_and_decision_rules_frozen"},
+    {"gate": 1, "commit": "50bc7be", "result": "versioned_component_accounting_and_honest_nested_propagation"},
+    {"gate": 2, "commit": "7d15639", "result": "matched_v1_v2_v3_calibration"},
+    {"gate": 3, "commit": "8fe0112", "result": "logical_v1_envelope_and_structural_safety_proof"},
+    {"gate": 4, "commit": "5c5ffc0", "result": "generic_v3_production_strict_selection"},
+    {"gate": 5, "commit": "7c7f462", "result": "native_wasm_reliability_100m_and_hard20m_qualification"}
+  ],
+  "historical_audit": {
+    "path": "docs/archive/2026-08-04-versioned-reforge-resource-accounting/audit.md",
+    "sha256": "eef0f62c72a88b9ac127e2b3f6f48d88fd8c07d1fd747948ddf13c1aff25fc30",
+    "classifications": {
+      "v3_prior_rejection": "reopened_superseded_and_recovered",
+      "v2_sparse_result": "unchanged_negative_wall_result_and_version_only_counter",
+      "v1_20m_50m_100m_slope": "valid_only_for_v1",
+      "capped_alternatives": "still_unresolved",
+      "shared_frontier_wall_and_memory": "unchanged",
+      "structural_density_and_side_factorization": "unchanged",
+      "certified_fallback": "unchanged_and_independently_requalified",
+      "nested_post_hoc_saturation": "superseded_by_pre_execution_budgeting",
+      "rare_renewal_and_five_goal": "still_unresolved"
+    }
+  },
+  "gate5_authorities": {
+    "evidence_sha256": "829db5d0fc4c95f2f0073529efa25654140392259e3887dd58d79e6e4c138160",
+    "native_reliability_report_sha256": "e721178dd47bae3b2347d6af8ef52710e2d9397d6f4d6af3b22b52ade841ea7f",
+    "selected_only_100m_report_sha256": "bbf64914569768e85737e423e2a410040b091e6f11acbd7f6ca6ef68a7b42c35",
+    "canonical_hard_20m_report_sha256": "3dd27d01767aa35737d446df6b57f1b03e0187121894719770acb620e95e896d",
+    "required_reliability_workflow_reused_without_source_change": true,
+    "reliability_cases": 48,
+    "expectations_met": 46,
+    "preserved_rare_renewal_misses": 2,
+    "verification_runs": 380000,
+    "off_policy_failures": 0
+  },
+  "final_native_acceptance": {
+    "build": {
+      "command": "powershell -File scripts/build.ps1",
+      "result": "passed"
+    },
+    "focused_tests": [
+      {
+        "command": "build/engine/poecraft_engine_tests.exe --solver-calc-only data/compiled/current",
+        "checks": 252997,
+        "failures": 0
+      },
+      {
+        "command": "build/engine/poecraft_engine_tests.exe --solver-solve-only data/compiled/current",
+        "checks": 98280,
+        "failures": 0
+      },
+      {
+        "command": "build/engine/poecraft_engine_tests.exe --solver-eval-only data/compiled/current",
+        "checks": 16794,
+        "failures": 0
+      }
+    ],
+    "benchmark_validation": {
+      "command": "build/engine/poecraft_solver_benchmark.exe --artifact data/compiled/current --corpus fixtures/solver-benchmarks/v1/manifest.json --validate-only",
+      "specifications": 12,
+      "result": "passed"
+    }
+  },
+  "final_release_wasm": {
+    "binding": {
+      "status": "refused_resource_cap",
+      "expectation_met": true,
+      "solve_wall_ms": 12623.376,
+      "total_wall_ms": 13152.055,
+      "maximum_worker_slice_ms": 291.56,
+      "native_live_owned_bytes": 251180222,
+      "native_peak_owned_bytes": 314618217,
+      "transition_bits_hash": "4f26d305a908c59f",
+      "policy_bits_hash": "302ea0bcb228216e",
+      "lower": 752.9009075663787,
+      "upper": 3984.9346987650665
+    },
+    "cancellation": {
+      "case": "cancellation-oracle-two-mod",
+      "status": "cancelled",
+      "expectation_met": true,
+      "acknowledgement_ms": 18.723,
+      "limit_ms": 250.0,
+      "maximum_worker_slice_ms": 10.164
+    }
+  },
+  "web_acceptance": {
+    "npm_test": "passed",
+    "engine_smoke_checks": 27,
+    "engine_smoke_failures": 0,
+    "typescript_command": "npx tsc --noEmit",
+    "typescript_result": "passed",
+    "visual_review": "not_authorized_and_not_performed"
+  },
+  "full_pipeline": {
+    "command": "powershell -File scripts/test.ps1",
+    "invocation_count": 1,
+    "result": "passed",
+    "wall_seconds": 66.2,
+    "engine_checks": 3002456,
+    "engine_failures": 0,
+    "benchmark_specifications": 12,
+    "ingest_economy_database_fixture_artifact_and_python_bindings": "passed",
+    "web_and_wasm": "passed"
+  },
+  "documentation": {
+    "archive": "docs/archive/2026-08-04-versioned-reforge-resource-accounting/README.md",
+    "report": "docs/archive/2026-08-04-versioned-reforge-resource-accounting/report.md",
+    "report_sha256": "a7887591688248184e372dca41e07780873a5d20032aa7bcbd57ec81a15d1e40",
+    "stable_solver_evidence_decision_glossary_and_indexes_updated": true,
+    "modified_document_link_audit": "passed",
+    "handoff_cleared": true
+  },
+  "final_artifact_identities": {
+    "native_benchmark_sha256": "1bc0d0b6d889930b89971acc9ec576670f4600558220d729621c6796999f723b",
+    "native_engine_sha256": "740dbfd309535a7be2cd40a986524518bdf12b7d5a7837308d6ddfa724e034a9",
+    "native_tests_sha256": "1b88cc40380650fcb82995b2e4e0217511af3ecd6feb6204a39d2a42c8b8c4ea",
+    "release_mjs_sha256": "166a49ea0d0d5db6dfd2f0d852f08623995bb3d9488deab9932f26ce76bc112b",
+    "release_wasm_sha256": "33e14412bc1dac493217f925432dcb4a4562c3fde038c6d494e17830a363692a",
+    "compiled_manifest_sha256": "dbca51e581a6ef54a4d4928b495ae587e5eb6c1e1be394ddc20446763e23cc9f",
+    "economy_snapshot_sha256": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e",
+    "wasm_binding_report_sha256": "b1a428f11a9609cb2977cb14bea9dc0b7db41fb6e22ce669d231b652f50e60c7",
+    "wasm_cancellation_report_sha256": "66379846d204c8efd86633687046d262fb25979b4f00058e8cf3f63fc3b18310"
+  },
+  "remaining_boundaries": [
+    "selected closure reaches no partition at the preserved 100M logical envelope",
+    "competitive alternatives remain unresolved at cap",
+    "rare-renewal numerical reconciliation and finite-horizon practicality remain unqualified",
+    "five-goal finalization remains watchdog-bound",
+    "deterministic checkpoint and replay remains deferred"
+  ],
+  "next_boundary": "none_selected_oliver_must_choose"
+}

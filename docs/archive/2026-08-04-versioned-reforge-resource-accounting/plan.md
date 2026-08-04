@@ -12,7 +12,7 @@ Starting commit: `00718908c866dc71a2e7e3864ebc5c5015ff063f`.
 Branch: `codex/reforge-resource-accounting-v3-qualification`.
 
 Source milestone:
-[Certified Fallback Publication And Final-Depth Reforge Accumulation](../archive/2026-08-03-certified-fallback-and-terminal-reforge-factorization/README.md).
+[Certified Fallback Publication And Final-Depth Reforge Accumulation](../2026-08-03-certified-fallback-and-terminal-reforge-factorization/README.md).
 
 ## Objective
 
@@ -49,7 +49,7 @@ it may supply an upper, but cannot alter the lower or resolve alternatives.
 ## Gate 0 — frozen boundary and decision rules
 
 **Status: complete.** Tracked evidence is
-[`reforge-resource-accounting-v3-qualification-gate0.json`](../../fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate0.json).
+[`reforge-resource-accounting-v3-qualification-gate0.json`](../../../fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate0.json).
 
 The branch begins from clean source commit `0071890`. Gate 0 freezes the source
 tree, native binaries, release WASM, compiled artifact, Mirage economy,
@@ -95,7 +95,7 @@ boundary separately before implementation.
 ## Gate 1 — versioned component accounting
 
 **Status: complete.** Tracked evidence is
-[`reforge-resource-accounting-v3-qualification-gate1.json`](../../fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate1.json).
+[`reforge-resource-accounting-v3-qualification-gate1.json`](../../../fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate1.json).
 
 Add a reusable saturating `ReforgeEffortBreakdown` whose fields are deterministic
 physical counts, not a manufactured additive total. Retain the legacy V1, V2,
@@ -160,7 +160,7 @@ acceptance suite ran in Gate 1.
 ## Gate 2 — observational baseline and matched calibration
 
 **Status: complete.** Tracked evidence is
-[`reforge-resource-accounting-v3-qualification-gate2.json`](../../fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate2.json).
+[`reforge-resource-accounting-v3-qualification-gate2.json`](../../../fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate2.json).
 
 Keep production evaluator selection and cap behavior unchanged while capturing
 representative accounting. Require unchanged legacy work, bounds, stop reasons,
@@ -344,7 +344,15 @@ V3 dispatch. The standalone five-goal watchdog was not rerun. Evidence is
 
 ## Gate 6 — historical interpretation and release
 
-**Status: active.**
+**Status: complete.**
+
+The historical audit classifies prior results without rewriting archives. The
+stable solver, benchmarking, evidence, decision, glossary, and lifecycle
+indexes now carry the versioned logical-envelope and qualified-V3 contract.
+Release-WASM worker/cancellation checks, native build and focused suites, all
+12 benchmark specifications, the fresh 48-case reliability workflow, `npm
+test`, TypeScript, and the single complete `scripts/test.ps1` invocation pass.
+The dated archive report answers all final questions; no visual review ran.
 
 Add a tracked audit classifying prior reforge-work conclusions as unchanged,
 evaluator-version-only, superseded/recovered, reopened, or unresolved. Preserve

@@ -9,6 +9,14 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-08-04
+
+- [Versioned Reforge Resource Accounting And V3 Production Qualification](2026-08-04-versioned-reforge-resource-accounting/README.md) —
+  separates the stable V1-equivalent logical cap from V1/V2/V3 implementation
+  effort, makes nested cap propagation honest, qualifies exact V3 for generic
+  production strict rows, and requalifies the canonical hard fallback and
+  release WASM without changing defaults or mechanics.
+
 ## 2026-08-03
 
 - [Certified Fallback Publication And Final-Depth Reforge Accumulation](2026-08-03-certified-fallback-and-terminal-reforge-factorization/README.md) —

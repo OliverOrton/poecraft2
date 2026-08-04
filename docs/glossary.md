@@ -134,6 +134,14 @@ compile/evaluate, and sample comparison. See [Economy](economy/README.md).
 transitions, selected owned bytes, or serialized output. A cap refusal is not a
 mechanic invalidity. See [Solver](solver/README.md).
 
+**Logical reforge work** — Stable V1-equivalent row/search envelope consumed by
+`max_reforge_work` regardless of whether V1, V2, or V3 evaluates the row. It is
+not a weighted physical-operation score. See [Solver](solver/README.md).
+
+**Reforge evaluator effort** — Versioned explanatory V1/V2/V3 implementation
+counts. Cross-version qualification uses wall time, selected-owned memory, and
+cooperative latency instead of comparing these heterogeneous totals.
+
 **Selected owned bytes** — Engine-reported estimate for selected solver,
 evaluator, and facade-owned allocations. It is not total process, JavaScript,
 or WASM heap usage. See [WASM](engine/wasm.md).
