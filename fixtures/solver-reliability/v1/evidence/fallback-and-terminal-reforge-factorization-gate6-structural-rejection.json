@@ -1,0 +1,109 @@
+{
+  "schema_version": "v3_binding_performance_decision_gate6_v1",
+  "date": "2026-08-03",
+  "decision": "v3_structurally_rejected_keep_diagnostic_skip_gate7",
+  "branch": "codex/fallback-and-terminal-reforge-factorization",
+  "parent_gate_commit": "bf5fa6b8a5af7cbbe0dce630fb215caeeebef85a",
+  "gate_commit": "the commit containing this evidence record",
+  "scope": {
+    "authorized_invocations": 1,
+    "canonical_hard_case_rerun": false,
+    "temporary_carrier": "gate6-v3-binding-18m",
+    "semantic_difference_from_gate3_carrier": "factored_terminal_reforge_diagnostic=true",
+    "product_cap_changed": false,
+    "fallback_credit_allowed": false,
+    "verification_requested": false
+  },
+  "run": {
+    "actual_status": "refused_resource_cap",
+    "all_expectations_met": true,
+    "stop_cause": "reforge_work_cap",
+    "cap_hit_mask": 16,
+    "candidate_actions": 27,
+    "max_reforge_work": 18000000,
+    "max_solver_owned_bytes": 1073741824,
+    "report_total_wall_ms": 5115.0659999999998,
+    "solve_wall_ms": 3723.8658999999998,
+    "native_live_owned_bytes": 305290398,
+    "native_peak_owned_bytes": 375503397,
+    "solver_telemetry_json_bytes": 385654
+  },
+  "binding_row": {
+    "action": "essence:Metadata/Items/Currency/CurrencyEssenceZeal4",
+    "completed": true,
+    "forced_modifier_count": 1,
+    "frontier_state_visits": 51155,
+    "frontier_edges": 824190,
+    "v1_raw_equivalent_work": 2097355,
+    "v2_projected_work": 923141,
+    "v3_factored_work": 2514591,
+    "v3_multiple_of_300k_threshold": 8.38197,
+    "v3_increase_over_v2_percent": 172.395116239014,
+    "v3_increase_over_v1_percent": 19.8934372102005,
+    "row_wall_ns": 395233900,
+    "row_wall_seconds": 0.3952339,
+    "raw_wall_threshold_seconds": 0.809,
+    "wall_threshold_met": true,
+    "work_threshold_met": false,
+    "terminal_roll_states_published": 186419,
+    "successor_commits": 186419,
+    "unique_projected_outcomes": 172596,
+    "duplicate_projected_outcomes": 13823,
+    "duplicate_projected_probability_mass": 0.0098580050433847745
+  },
+  "v3_work_decomposition": {
+    "v2_nonterminal_base": 284776,
+    "terminal_predecessor_index": 39900,
+    "terminal_denominator_edges": 638365,
+    "canonical_subset_checks": 641095,
+    "completed_set_candidates": 136045,
+    "last_pick_recurrence_terms": 638365,
+    "completed_set_commits": 136045,
+    "retry_aggregates": 0,
+    "sum": 2514591,
+    "subset_cache_hits": 638365,
+    "subset_cache_misses_from_nonlive_subsets": 41860,
+    "subset_identity_mismatches": 0,
+    "interpretation": "destination publication removes duplicate commits but exact denominator traversal, live-parent selection, and incoming-mass recurrence retain or add more real operations than V2"
+  },
+  "selected_refinement": {
+    "rows_begun": 1,
+    "rows_completed": 1,
+    "reforge_work": 3922368,
+    "transitions": 172596,
+    "partition_reached": false,
+    "own_executable_upper_reached": false,
+    "action_accounting_complete": false,
+    "exact_alternative_envelope_closed": false
+  },
+  "fallback_reported_separately": {
+    "publication_attempts": 1,
+    "publication_successes": 1,
+    "published_upper": 3984.9346987650665,
+    "published_evaluated_cost": 3984.9346987650665,
+    "published_witness_hash": "5e2bd0c222942bda",
+    "qualifies_v3": false,
+    "note": "Gate 2 remains the fallback qualification authority; this temporary run intentionally skipped exact evaluation and simulation"
+  },
+  "bounds": {
+    "lower": 752.90090756637869,
+    "upper": 3984.9346987650665,
+    "policy_status": "bounded_feasible",
+    "upper_provenance": "retained certified fallback",
+    "selected_refinement_upper": null
+  },
+  "gate6_criteria": {
+    "criterion_one_work_at_most_300000_and_wall_at_most_0_809s": false,
+    "criterion_two_partition_and_own_proper_upper_within_original_20m": false,
+    "v3_qualified": false,
+    "gate7": "skipped",
+    "v3_disposition": "sound diagnostic retained; not integrated into selected or alternative production rows"
+  },
+  "artifacts": {
+    "manifest_sha256": "dfb902a2312ad5539d7c5377aaa4af273bbb12c405ee141d2638cfa60a556a70",
+    "case_sha256": "e0fab13a96241255d0c41d8a4732ccc2de099627418952b5a8a531d234a66fc9",
+    "report_sha256": "c32a032ad40f4644b4b6b445479a21279c23ef51c53ec5649eafbf6f07809c70",
+    "partial_sha256": "1b1a22357462bdb55feca5960089a0670b924452cd41bf0a12284808d41c03e0",
+    "benchmark_sha256": "a54d12aa8188f9189ac49a33d965116bc886a555914dd6b244947f9dd1d20bb3"
+  }
+}

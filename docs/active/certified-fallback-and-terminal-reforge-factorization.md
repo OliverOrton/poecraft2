@@ -1,7 +1,7 @@
 # Certified Fallback Publication And Final-Depth Reforge Accumulation
 
-**Status: Track A Gate 2 and Track B Gates 3-5 are complete; Track B Gate 6
-binding performance is the active boundary.**
+**Status: Track A Gate 2 is qualified; Track B Gate 6 structurally rejects V3
+and skips Gate 7. Gate 8 release acceptance is active.**
 
 Owner: Oliver
 
@@ -292,7 +292,8 @@ diagnostic.
 
 ### Gate 6 — binding performance decision
 
-**Status: active.**
+**Status: complete: V3 structurally rejected.** Tracked evidence is
+[`fallback-and-terminal-reforge-factorization-gate6-structural-rejection.json`](../../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate6-structural-rejection.json).
 
 Run the same hard-row diagnostic used for V1/V2. V3 qualifies only if:
 
@@ -305,9 +306,30 @@ Report fallback and selected-refinement publication separately. If V3 misses,
 retain Track A and all attribution/rejection evidence, and leave V3 diagnostic
 or restore it if unsound. Commit the decision.
 
+The one accepted temporary 18M carrier added only the V3 native diagnostic
+flag to Gate 3's semantics; the canonical hard case was not rerun. The binding
+Zeal Essence row remains exact and completes in 0.395 seconds, below the 0.809
+second wall threshold, but honest V3 work is 2,514,591: 8.38 times the 300,000
+limit, 172.40% above V2's 923,141, and 19.89% above raw V1's 2,097,355.
+
+V3 publishes 136,045 completed unordered sets rather than 638,365 terminal
+branches, but it must still perform 638,365 exact denominator-edge visits,
+641,095 live-canonical-subset checks, and 638,365 incoming last-pick recurrence
+terms. Together with predecessor indexing, candidate generation, completed
+publication, and the 284,776 nonterminal base, those operations exactly sum to
+the reported V3 ledger. No identity mismatch occurred.
+
+Selected refinement completes one row and consumes the temporary post-coarse
+3,922,368 allowance without reaching a partition or its own executable upper.
+The retained `3984.9346987650665` fallback is reported separately and gives no
+Track B credit. V3 therefore misses both Gate 6 criteria. It remains a sound
+diagnostic, is not integrated into production, and Gate 7 is skipped.
+
 ### Gate 7 — conditional production integration
 
 **Condition: only if Gate 6 qualifies V3.**
+
+**Status: skipped because Gate 6 rejected V3.**
 
 Integrate V3 into selected and competitively scheduled alternative rows while
 preserving proof-store, partition, invalidation, Bellman, properness, compiler,

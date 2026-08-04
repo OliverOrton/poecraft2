@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: certified fallback Gate 2 and terminal Gates 3-5 are complete.
-Track B Gate 6 binding performance is active.**
+**Status: certified fallback Gate 2 is qualified. Terminal Gate 6 rejects V3
+and skips Gate 7. Gate 8 release acceptance is active.**
 
 Current plan:
 [Certified Fallback Publication And Final-Depth Reforge Accumulation](docs/active/certified-fallback-and-terminal-reforge-factorization.md).
@@ -35,8 +35,9 @@ Current milestone commits: Gate 0 is
 `feef64a25a1351b7111aab1fcb4d02e70404c80c`. Gate 2 is
 `a663bce98e24b793277f01bd4b56727aa8fceb9d`. Gate 3 is
 `4dcf51d7e65dc483c5d8119c30d2919187f1de7a`. Gate 4 is
-`6b0fec599b7342faf8021f2c369c0cc6731ba9ad`. Gate 5 is recorded by the
-current local commit. Track B Gate 6 is the active implementation boundary.
+`6b0fec599b7342faf8021f2c369c0cc6731ba9ad`. Gate 5 is
+`bf5fa6b8a5af7cbbe0dce630fb215caeeebef85a`. Gate 6 is recorded by the
+current local commit. Gate 7 is skipped; Gate 8 is the active boundary.
 
 Selected-closure milestone starting commit:
 `a6f7e13cf7d5cb202874c210992689d601c0e650`
@@ -229,6 +230,28 @@ Nothing has been pushed or merged. `main` remains unchanged at
   pass 252,035 checks with zero failures. Gate 5 changes tests only and does
   not rerun the canonical hard case. Evidence is
   `fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate5.json`.
+
+## V3 binding performance Gate 6 structural rejection
+
+- One temporary 18M diagnostic reused Gate 3's semantic carrier and added only
+  `factored_terminal_reforge_diagnostic=true`. It did not rerun the canonical
+  hard case or change the 20M product cap.
+- The binding Zeal Essence row reports 2,097,355 V1 work, 923,141 V2 work, and
+  2,514,591 honest V3 work. V3 is 8.38 times the 300,000 threshold, 172.40%
+  above V2, and 19.89% above raw. Its 0.395-second row wall beats the 0.809-
+  second wall threshold, so only the work half of criterion one fails.
+- V3 publishes 136,045 completed sets but must retain 638,365 denominator
+  edges, 641,095 canonical-subset checks, and 638,365 last-pick recurrence
+  terms. With predecessor indexing, candidates, commits, and 284,776
+  nonterminal work, the decomposition sums exactly to 2,514,591. There are no
+  subset identity mismatches.
+- Selected refinement completes one row, consumes 3,922,368 reforge work, and
+  reaches neither a partition nor its own executable upper. Criterion two
+  fails. The separately reported `3984.9346987650665` fallback receives no V3
+  credit; Gate 2 remains its exact-evaluation and 10,000-run authority.
+- V3 is sound and remains diagnostic-only. It is not integrated into selected
+  or alternative production rows, so Gate 7 is skipped. Evidence is
+  `fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate6-structural-rejection.json`.
 
 ## Selected-closure scaling Gate 0
 
