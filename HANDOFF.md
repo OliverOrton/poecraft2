@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: certified fallback Gate 2 and terminal attribution Gate 3 are
-complete. Track B Gate 4 exact terminal accumulation is active.**
+**Status: certified fallback Gate 2 and terminal Gates 3-4 are complete.
+Track B Gate 5 exact equivalence is active.**
 
 Current plan:
 [Certified Fallback Publication And Final-Depth Reforge Accumulation](docs/active/certified-fallback-and-terminal-reforge-factorization.md).
@@ -33,8 +33,9 @@ Current milestone starting commit:
 Current milestone commits: Gate 0 is
 `abe8e525d59cc6ae90663a1d56736d411da7ca6c`. Gate 1 is
 `feef64a25a1351b7111aab1fcb4d02e70404c80c`. Gate 2 is
-`a663bce98e24b793277f01bd4b56727aa8fceb9d`. Gate 3 is recorded by the
-current local commit. Track B Gate 4 is the active implementation boundary.
+`a663bce98e24b793277f01bd4b56727aa8fceb9d`. Gate 3 is
+`4dcf51d7e65dc483c5d8119c30d2919187f1de7a`. Gate 4 is recorded by the
+current local commit. Track B Gate 5 is the active implementation boundary.
 
 Selected-closure milestone starting commit:
 `a6f7e13cf7d5cb202874c210992689d601c0e650`
@@ -178,6 +179,33 @@ Nothing has been pushed or merged. `main` remains unchanged at
   The native build and focused solver-calc suite pass 250,746 checks with zero
   failures. Track A's fallback is not counted toward Track B. Evidence is
   `fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate3.json`.
+
+## Exact V3 terminal accumulator Gate 4
+
+- V3 is an opt-in native diagnostic layered on the exact projected frontier.
+  It indexes complete live final-depth subsets, generates every completed
+  unordered roll set once from its canonical live removable last pick, and
+  reconstructs all incoming probability by a destination-driven subset
+  recurrence before publishing the completed set once.
+- Canonical ownership excludes predecessors that already terminated on goal.
+  Zero-progress non-goal final picks aggregate into one checked integer retry
+  numerator per predecessor. Exact bucket numerators and denominators remain
+  integers until the final ratio.
+- Local bucket ids bind the action, preserved base, pool/Fossil weights,
+  forced/guaranteed channels, exclusions, observation layout, and artifact
+  generation. Every subset hit reconstructs and compares the full RollState,
+  including availability, side capacity, goal/below/blocked masks, and member
+  tokens. The focused test observes zero identity mismatches.
+- V1 raw-equivalent, V2 sparse, and V3 factored ledgers remain parallel. V3
+  charges predecessor indexing, denominator scans, canonical-subset checks,
+  candidates, every recurrence term, completed publications, retry
+  aggregates, and raw-identity expansion. A one-less work cap refuses the
+  active V3 row. Scratch preflight owns the predecessor and candidate stores.
+- The C ABI, WASM, product default, raw oracle, and V2 path are unchanged. The
+  native build and focused ordinary/Essence/Harvest/Fossil solver-calc suite
+  pass 251,729 checks with zero failures, including forward/reverse V3 mass.
+  The canonical hard case was not rerun. Evidence is
+  `fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate4.json`.
 
 ## Selected-closure scaling Gate 0
 

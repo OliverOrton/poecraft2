@@ -110,6 +110,7 @@ struct ReforgeAttributionRecorder {
     std::uint64_t work_started = 0;
     std::uint64_t raw_equivalent_work_started = 0;
     std::uint64_t projected_work_started = 0;
+    std::uint64_t factored_work_started = 0;
     std::chrono::steady_clock::time_point started =
         std::chrono::steady_clock::now();
 
@@ -129,6 +130,10 @@ struct ReforgeAttributionRecorder {
             telemetry.reforge_projected_work >= projected_work_started
                 ? telemetry.reforge_projected_work -
                       projected_work_started
+                : 0;
+        row.factored_reforge_work =
+            telemetry.reforge_factored_work >= factored_work_started
+                ? telemetry.reforge_factored_work - factored_work_started
                 : 0;
         row.total_build_ns = static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -459,6 +464,97 @@ struct RollStateHash {
     }
 };
 
+/*
+ * Destination-driven V3 terminal recurrence identity. The local bucket ids
+ * are scoped by the surrounding action, preserved base, goal layout, pool,
+ * and artifact generation. They are stronger than a projected observation:
+ * each id owns its exact side, weight channels, raw identities, generation
+ * exclusions, and conflict masks. Availability remains collision checked on
+ * the retained RollState value before a subset contribution is admitted.
+ */
+struct TerminalPickKey {
+    std::uint16_t guaranteed_bucket =
+        std::numeric_limits<std::uint16_t>::max();
+    std::uint8_t pick_count = 0;
+    std::array<std::pair<std::uint16_t, std::uint8_t>, 6> picks{};
+
+    bool operator==(const TerminalPickKey& other) const = default;
+};
+
+struct TerminalPickKeyHash {
+    std::size_t operator()(const TerminalPickKey& key) const {
+        std::uint32_t hash = 2166136261u;
+        const auto mix = [&hash](const std::uint32_t value) {
+            hash ^= value;
+            hash *= 16777619u;
+        };
+        mix(key.guaranteed_bucket);
+        for (std::uint8_t i = 0; i < key.pick_count; ++i) {
+            mix((static_cast<std::uint32_t>(key.picks[i].first) << 8) |
+                key.picks[i].second);
+        }
+        return hash;
+    }
+};
+
+TerminalPickKey terminal_pick_key(const RollState& roll) {
+    TerminalPickKey key;
+    key.guaranteed_bucket = roll.guaranteed_bucket;
+    key.pick_count = roll.pick_count;
+    key.picks = roll.picks;
+    return key;
+}
+
+bool remove_terminal_pick(
+    TerminalPickKey& key,
+    const std::uint16_t bucket) {
+    for (std::uint8_t i = 0; i < key.pick_count; ++i) {
+        if (key.picks[i].first != bucket) continue;
+        const std::uint8_t guaranteed =
+            key.guaranteed_bucket == bucket ? 1 : 0;
+        if (key.picks[i].second <= guaranteed) return false;
+        --key.picks[i].second;
+        if (key.picks[i].second == 0) {
+            for (std::uint8_t j = i + 1; j < key.pick_count; ++j) {
+                key.picks[j - 1] = key.picks[j];
+            }
+            key.picks[--key.pick_count] = {};
+        }
+        return true;
+    }
+    return false;
+}
+
+void add_terminal_pick(
+    TerminalPickKey& key,
+    const std::uint16_t bucket) {
+    for (std::uint8_t i = 0; i < key.pick_count; ++i) {
+        if (key.picks[i].first != bucket) continue;
+        ++key.picks[i].second;
+        return;
+    }
+    if (key.pick_count >= key.picks.size()) {
+        throw std::logic_error(
+            "reforge terminal subset exceeded affix capacity");
+    }
+    key.picks[key.pick_count++] = {bucket, 1};
+    std::sort(key.picks.begin(), key.picks.begin() + key.pick_count);
+}
+
+struct FactoredTerminalPredecessor {
+    RollState roll;
+    double scaled_probability = 0.0;
+    std::uint64_t exact_denominator = 0;
+};
+
+struct FactoredTerminalCandidate {
+    RollState completed;
+
+    bool operator<(const FactoredTerminalCandidate& other) const {
+        return completed < other.completed;
+    }
+};
+
 struct FinalSuccessorAttribution {
     std::uint32_t last_predecessor_sequence = kNoId;
     std::uint16_t first_terminal_bucket = 0;
@@ -574,18 +670,24 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     attribution.goal_progress_gated = goal_progress_gated;
     attribution.projected_sparse_frontier =
         use_projected_reforge_frontier_;
+    attribution.factored_terminal_accumulator =
+        use_factored_terminal_reforge_;
     attribution_recorder.work_started =
         telemetry_.reforge_frontier_work;
     attribution_recorder.raw_equivalent_work_started =
         telemetry_.reforge_raw_equivalent_work;
     attribution_recorder.projected_work_started =
         telemetry_.reforge_projected_work;
+    attribution_recorder.factored_work_started =
+        telemetry_.reforge_factored_work;
     const auto consume_common_reforge_work =
         [&](const std::uint64_t amount) {
             telemetry_.reforge_raw_equivalent_work = saturated_add(
                 telemetry_.reforge_raw_equivalent_work, amount);
             telemetry_.reforge_projected_work = saturated_add(
                 telemetry_.reforge_projected_work, amount);
+            telemetry_.reforge_factored_work = saturated_add(
+                telemetry_.reforge_factored_work, amount);
             consume_reforge_work(amount);
         };
 
@@ -625,6 +727,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                           final_successor_attribution)::value_type)),
                   terminal_sample_storage_bytes)
             : 0;
+    std::uint64_t factored_terminal_scratch_bytes = 0;
     require_reforge_scratch_bytes(saturated_add(
         outcome_storage_budget,
         terminal_attribution_scratch_bytes));
@@ -672,7 +775,9 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                                     stationary_reforge_scratch_bytes,
                                     active_frontier_scratch_bytes),
                                 availability_scratch_bytes),
-                            terminal_attribution_scratch_bytes),
+                            saturated_add(
+                                terminal_attribution_scratch_bytes,
+                                factored_terminal_scratch_bytes)),
                     unordered_storage_bytes(
                         outcome_preflight_entries,
                         sizeof(decltype(outcome_acc)::value_type)));
@@ -1503,7 +1608,9 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     require_reforge_scratch_bytes(saturated_add(
         saturated_add(
             stationary_reforge_scratch_bytes,
-            terminal_attribution_scratch_bytes),
+            saturated_add(
+                terminal_attribution_scratch_bytes,
+                factored_terminal_scratch_bytes)),
         unordered_storage_bytes(
             outcome_preflight_entries,
             sizeof(decltype(outcome_acc)::value_type))));
@@ -1723,7 +1830,9 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                                 stationary_reforge_scratch_bytes,
                                 active_frontier_scratch_bytes),
                             availability_scratch_bytes),
-                        terminal_attribution_scratch_bytes),
+                        saturated_add(
+                            terminal_attribution_scratch_bytes,
+                            factored_terminal_scratch_bytes)),
                     unordered_storage_bytes(
                         outcome_preflight_entries,
                         sizeof(decltype(outcome_acc)::value_type)));
@@ -2339,7 +2448,9 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                             stationary_reforge_scratch_bytes,
                             active_frontier_scratch_bytes),
                         availability_storage_bytes(1)),
-                    terminal_attribution_scratch_bytes),
+                    saturated_add(
+                        terminal_attribution_scratch_bytes,
+                        factored_terminal_scratch_bytes)),
                 unordered_storage_bytes(
                     outcome_preflight_entries,
                     sizeof(decltype(outcome_acc)::value_type))));
@@ -2472,6 +2583,19 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                        ? bucket.multiplicity - used
                        : 0;
         };
+    const auto exact_projected_bucket_remaining =
+        [&](const RollState& roll, const std::uint16_t b) {
+            const std::uint64_t choices =
+                available_family_choices(roll, b);
+            const std::uint64_t weight = buckets[b].weight;
+            if (choices == 0 || weight == 0) return std::uint64_t{0};
+            if (weight >
+                std::numeric_limits<std::uint64_t>::max() / choices) {
+                throw std::logic_error(
+                    "reforge terminal exact weight overflow");
+            }
+            return weight * choices;
+        };
 
     std::unordered_map<RollState, double, RollStateHash> frontier;
     std::unordered_map<RollState, std::uint64_t, RollStateHash>
@@ -2503,7 +2627,9 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                         stationary_reforge_scratch_bytes,
                         active_frontier_scratch_bytes),
                     availability_scratch_bytes),
-                terminal_attribution_scratch_bytes),
+                saturated_add(
+                    terminal_attribution_scratch_bytes,
+                    factored_terminal_scratch_bytes)),
             unordered_storage_bytes(
                 outcome_preflight_entries,
                 sizeof(decltype(outcome_acc)::value_type))));
@@ -2681,6 +2807,18 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         std::unordered_map<RollState, double, RollStateHash> next;
         std::unordered_map<RollState, std::uint64_t, RollStateHash>
             next_order_multiplicity;
+        std::unordered_map<
+            TerminalPickKey,
+            FactoredTerminalPredecessor,
+            TerminalPickKeyHash>
+            factored_terminal_predecessors;
+        std::vector<FactoredTerminalCandidate>
+            factored_terminal_candidates;
+        std::size_t factored_predecessor_preflight_entries = 0;
+        std::size_t factored_candidate_preflight_entries = 0;
+        const bool use_factored_terminal_depth =
+            use_factored_terminal_reforge_ && goal_progress_gated &&
+            depth + 1 == max_target;
         if (frontier.size() >
             std::numeric_limits<std::size_t>::max() / 2) {
             require_reforge_scratch_bytes(
@@ -2729,7 +2867,9 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                                     stationary_reforge_scratch_bytes,
                                     active_frontier_scratch_bytes),
                                 availability_scratch_bytes),
-                            terminal_attribution_scratch_bytes),
+                            saturated_add(
+                                terminal_attribution_scratch_bytes,
+                                factored_terminal_scratch_bytes)),
                         unordered_storage_bytes(
                             outcome_preflight_entries,
                             sizeof(decltype(outcome_acc)::value_type))));
@@ -2754,6 +2894,70 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             [](const auto& left, const auto& right) {
                 return left.first < right.first;
             });
+        const auto update_factored_terminal_preflight = [&]() {
+            factored_terminal_scratch_bytes = saturated_add(
+                unordered_storage_bytes(
+                    factored_predecessor_preflight_entries,
+                    sizeof(decltype(
+                        factored_terminal_predecessors)::value_type)),
+                saturated_bytes(
+                    factored_candidate_preflight_entries,
+                    sizeof(FactoredTerminalCandidate)));
+            require_reforge_scratch_bytes(
+                saturated_add(
+                    saturated_add(
+                        saturated_add(
+                            saturated_add(
+                                stationary_reforge_scratch_bytes,
+                                active_frontier_scratch_bytes),
+                            availability_scratch_bytes),
+                        saturated_add(
+                            terminal_attribution_scratch_bytes,
+                            factored_terminal_scratch_bytes)),
+                    unordered_storage_bytes(
+                        outcome_preflight_entries,
+                        sizeof(decltype(outcome_acc)::value_type))));
+        };
+        if (use_factored_terminal_depth) {
+            factored_predecessor_preflight_entries =
+                std::max<std::size_t>(1, frontier.size());
+            factored_candidate_preflight_entries =
+                std::max<std::size_t>(1, frontier.size() * 2);
+            update_factored_terminal_preflight();
+            factored_terminal_predecessors.reserve(
+                factored_predecessor_preflight_entries);
+            factored_terminal_candidates.reserve(
+                factored_candidate_preflight_entries);
+            for (const auto& [roll, unused_probability] :
+                 ordered_frontier) {
+                (void)unused_probability;
+                if (roll_is_goal(roll)) continue;
+                const TerminalPickKey key = terminal_pick_key(roll);
+                auto [found, inserted] =
+                    factored_terminal_predecessors.try_emplace(
+                        key,
+                        FactoredTerminalPredecessor{roll, 0.0, 0});
+                if (!inserted && !(found->second.roll == roll)) {
+                    if (capture_attribution) {
+                        ++attribution
+                              .factored_subset_identity_mismatches;
+                    }
+                    throw std::logic_error(
+                        "reforge factored terminal preflight identity "
+                        "collision");
+                }
+            }
+            telemetry_.reforge_factored_work = saturated_add(
+                telemetry_.reforge_factored_work,
+                factored_terminal_predecessors.size());
+            consume_reforge_work(
+                factored_terminal_predecessors.size());
+            if (capture_attribution) {
+                attribution.frontier_work = saturated_add(
+                    attribution.frontier_work,
+                    factored_terminal_predecessors.size());
+            }
+        }
         std::uint32_t predecessor_sequence = 0;
         for (const auto& [roll, probability] : ordered_frontier) {
             const std::uint32_t current_predecessor_sequence =
@@ -2768,6 +2972,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 raw_node_work);
             telemetry_.reforge_projected_work = saturated_add(
                 telemetry_.reforge_projected_work, 1);
+            telemetry_.reforge_factored_work = saturated_add(
+                telemetry_.reforge_factored_work, 1);
             const std::uint64_t active_node_work =
                 use_projected_reforge_frontier_ ? 1 : raw_node_work;
             consume_reforge_work(active_node_work);
@@ -2814,6 +3020,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 const std::uint64_t word_work = words.size();
                 telemetry_.reforge_projected_work = saturated_add(
                     telemetry_.reforge_projected_work, word_work);
+                telemetry_.reforge_factored_work = saturated_add(
+                    telemetry_.reforge_factored_work, word_work);
                 consume_reforge_work(word_work);
                 if (capture_attribution) {
                     attribution.frontier_work += word_work;
@@ -2848,6 +3056,9 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 telemetry_.reforge_projected_work = saturated_add(
                     telemetry_.reforge_projected_work,
                     availability_word_count);
+                telemetry_.reforge_factored_work = saturated_add(
+                    telemetry_.reforge_factored_work,
+                    availability_word_count);
             }
             if (reverse_reforge_bucket_enumeration_) {
                 std::reverse(
@@ -2857,7 +3068,15 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             const std::uint64_t edge_work = eligible_buckets.size();
             telemetry_.reforge_projected_work = saturated_add(
                 telemetry_.reforge_projected_work, edge_work);
-            if (use_projected_reforge_frontier_) {
+            const bool factored_final_depth =
+                use_factored_terminal_reforge_ &&
+                goal_progress_gated && depth + 1 == max_target;
+            if (!factored_final_depth) {
+                telemetry_.reforge_factored_work = saturated_add(
+                    telemetry_.reforge_factored_work, edge_work);
+            }
+            if (use_projected_reforge_frontier_ &&
+                !factored_final_depth) {
                 consume_reforge_work(edge_work);
                 if (capture_attribution) {
                     attribution.frontier_work += edge_work;
@@ -2923,6 +3142,174 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                                     .final_depth_predecessor_order_excess,
                                 predecessor_order_multiplicity - 1);
                     }
+                }
+                if (use_factored_terminal_depth) {
+                    std::uint64_t exact_denominator = 0;
+                    std::uint64_t exact_retry_numerator = 0;
+                    std::uint64_t canonical_subset_checks = 0;
+                    const bool zero_progress =
+                        roll_has_zero_progress(roll);
+                    telemetry_.reforge_factored_work = saturated_add(
+                        telemetry_.reforge_factored_work,
+                        eligible_buckets.size());
+                    consume_reforge_work(eligible_buckets.size());
+                    if (capture_attribution) {
+                        attribution.frontier_work = saturated_add(
+                            attribution.frontier_work,
+                            eligible_buckets.size());
+                        ++attribution.factored_terminal_predecessors;
+                    }
+                    for (const std::uint16_t b : eligible_buckets) {
+                        const std::uint64_t remaining =
+                            exact_projected_bucket_remaining(roll, b);
+                        if (remaining >
+                            std::numeric_limits<std::uint64_t>::max() -
+                                exact_denominator) {
+                            throw std::logic_error(
+                                "reforge terminal denominator overflow");
+                        }
+                        exact_denominator += remaining;
+                        const bool retry_branch =
+                            zero_progress &&
+                            buckets[b].kind != BucketKind::GoalSat;
+                        if (retry_branch) {
+                            if (remaining >
+                                std::numeric_limits<std::uint64_t>::max() -
+                                    exact_retry_numerator) {
+                                throw std::logic_error(
+                                    "reforge terminal retry numerator "
+                                    "overflow");
+                            }
+                            exact_retry_numerator += remaining;
+                            continue;
+                        }
+                        TerminalPickKey completed_key =
+                            terminal_pick_key(roll);
+                        add_terminal_pick(completed_key, b);
+                        bool canonical_live_predecessor = false;
+                        bool found_live_predecessor = false;
+                        for (std::size_t reverse =
+                                 completed_key.pick_count;
+                             reverse > 0; --reverse) {
+                            const std::uint16_t removed =
+                                completed_key.picks[reverse - 1].first;
+                            TerminalPickKey subset = completed_key;
+                            if (!remove_terminal_pick(subset, removed)) {
+                                continue;
+                            }
+                            ++canonical_subset_checks;
+                            const auto live =
+                                factored_terminal_predecessors.find(subset);
+                            if (live ==
+                                factored_terminal_predecessors.end()) {
+                                continue;
+                            }
+                            if (roll_has_zero_progress(
+                                    live->second.roll) &&
+                                buckets[removed].kind !=
+                                    BucketKind::GoalSat) {
+                                continue;
+                            }
+                            found_live_predecessor = true;
+                            canonical_live_predecessor =
+                                removed == b &&
+                                subset == terminal_pick_key(roll);
+                            break;
+                        }
+                        if (!found_live_predecessor) {
+                            throw std::logic_error(
+                                "reforge factored terminal completed set "
+                                "has no live predecessor");
+                        }
+                        if (!canonical_live_predecessor) continue;
+                        const std::size_t required =
+                            factored_terminal_candidates.size() + 1;
+                        if (required >
+                            factored_candidate_preflight_entries) {
+                            const std::size_t doubled =
+                                factored_candidate_preflight_entries >
+                                        std::numeric_limits<
+                                            std::size_t>::max() /
+                                            2
+                                    ? std::numeric_limits<
+                                          std::size_t>::max()
+                                    : factored_candidate_preflight_entries *
+                                          2;
+                            factored_candidate_preflight_entries =
+                                std::max(required, doubled);
+                            update_factored_terminal_preflight();
+                            factored_terminal_candidates.reserve(
+                                factored_candidate_preflight_entries);
+                        }
+                        factored_terminal_candidates.push_back(
+                            {add_bucket_pick(roll, b)});
+                        telemetry_.reforge_factored_work = saturated_add(
+                            telemetry_.reforge_factored_work, 1);
+                        consume_reforge_work(1);
+                        if (capture_attribution) {
+                            ++attribution.factored_terminal_candidates;
+                            ++attribution.frontier_work;
+                        }
+                    }
+                    telemetry_.reforge_factored_work = saturated_add(
+                        telemetry_.reforge_factored_work,
+                        canonical_subset_checks);
+                    consume_reforge_work(canonical_subset_checks);
+                    if (capture_attribution) {
+                        attribution.factored_canonical_subset_checks =
+                            saturated_add(
+                                attribution
+                                    .factored_canonical_subset_checks,
+                                canonical_subset_checks);
+                        attribution.frontier_work = saturated_add(
+                            attribution.frontier_work,
+                            canonical_subset_checks);
+                    }
+                    if (exact_denominator == 0) {
+                        throw std::logic_error(
+                            "reforge factored terminal predecessor has an "
+                            "empty denominator");
+                    }
+                    const TerminalPickKey key = terminal_pick_key(roll);
+                    const auto found =
+                        factored_terminal_predecessors.find(key);
+                    if (found ==
+                            factored_terminal_predecessors.end() ||
+                        !(found->second.roll == roll)) {
+                        if (capture_attribution) {
+                            ++attribution
+                                  .factored_subset_identity_mismatches;
+                        }
+                        throw std::logic_error(
+                            "reforge factored terminal subset identity "
+                            "collision");
+                    }
+                    if (found->second.exact_denominator != 0) {
+                        throw std::logic_error(
+                            "reforge factored terminal predecessor was "
+                            "initialized twice");
+                    }
+                    found->second.scaled_probability =
+                        probability * deeper;
+                    found->second.exact_denominator = exact_denominator;
+                    if (exact_retry_numerator != 0) {
+                        const long double retry_ratio =
+                            static_cast<long double>(
+                                exact_retry_numerator) /
+                            static_cast<long double>(exact_denominator);
+                        commit_retry(static_cast<double>(
+                            static_cast<long double>(probability * deeper) *
+                            retry_ratio));
+                        telemetry_.reforge_factored_work = saturated_add(
+                            telemetry_.reforge_factored_work, 1);
+                        consume_reforge_work(1);
+                        ++result.gated_retry_short_circuits;
+                        if (capture_attribution) {
+                            ++attribution.factored_retry_aggregates;
+                            ++attribution.frontier_work;
+                        }
+                    }
+                    continue;
                 }
                 double retry_weight = 0.0;
                 for (const std::uint16_t b : eligible_buckets) {
@@ -2990,6 +3377,116 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 }
                 next.emplace(std::move(child), p);
             }
+        }
+        if (use_factored_terminal_depth) {
+            std::sort(
+                factored_terminal_candidates.begin(),
+                factored_terminal_candidates.end());
+            for (std::size_t index = 1;
+                 index < factored_terminal_candidates.size(); ++index) {
+                if (factored_terminal_candidates[index - 1].completed ==
+                    factored_terminal_candidates[index].completed) {
+                    throw std::logic_error(
+                        "reforge factored terminal canonical generation "
+                        "published one completed set twice");
+                }
+            }
+            for (const FactoredTerminalCandidate& candidate :
+                 factored_terminal_candidates) {
+                long double probability_mass = 0.0L;
+                std::uint64_t recurrence_terms = 0;
+                for (std::uint8_t pick = 0;
+                     pick < candidate.completed.pick_count; ++pick) {
+                    const std::uint16_t b =
+                        candidate.completed.picks[pick].first;
+                    TerminalPickKey predecessor_key =
+                        terminal_pick_key(candidate.completed);
+                    if (!remove_terminal_pick(predecessor_key, b)) {
+                        continue;
+                    }
+                    const auto found =
+                        factored_terminal_predecessors.find(
+                            predecessor_key);
+                    if (found == factored_terminal_predecessors.end()) {
+                        if (capture_attribution) {
+                            ++attribution.factored_subset_cache_misses;
+                        }
+                        continue;
+                    }
+                    const FactoredTerminalPredecessor& predecessor =
+                        found->second;
+                    if (predecessor.roll.availability_class == kNoId ||
+                        predecessor.roll.availability_class >=
+                            availability_classes.size()) {
+                        throw std::logic_error(
+                            "reforge factored terminal predecessor lost "
+                            "availability identity");
+                    }
+                    const auto& words = availability_classes[
+                        predecessor.roll.availability_class];
+                    if (b / 64 >= words.size() ||
+                        (words[b / 64] &
+                         (std::uint64_t{1} << (b % 64))) == 0) {
+                        throw std::logic_error(
+                            "reforge factored terminal subset admitted an "
+                            "unavailable last pick");
+                    }
+                    const RollState collision_check =
+                        add_bucket_pick(predecessor.roll, b);
+                    if (!(collision_check == candidate.completed)) {
+                        if (capture_attribution) {
+                            ++attribution
+                                  .factored_subset_identity_mismatches;
+                        }
+                        throw std::logic_error(
+                            "reforge factored terminal subset failed full "
+                            "availability and observation identity check");
+                    }
+                    const std::uint64_t numerator =
+                        exact_projected_bucket_remaining(
+                            predecessor.roll, b);
+                    if (numerator == 0 ||
+                        predecessor.exact_denominator == 0) {
+                        throw std::logic_error(
+                            "reforge factored terminal recurrence has an "
+                            "empty exact ratio");
+                    }
+                    probability_mass +=
+                        static_cast<long double>(
+                            predecessor.scaled_probability) *
+                        (static_cast<long double>(numerator) /
+                         static_cast<long double>(
+                             predecessor.exact_denominator));
+                    ++recurrence_terms;
+                    if (capture_attribution) {
+                        ++attribution.factored_subset_cache_hits;
+                    }
+                }
+                if (!(probability_mass > 0.0L)) {
+                    throw std::logic_error(
+                        "reforge factored terminal candidate has no exact "
+                        "incoming mass");
+                }
+                const std::uint64_t active_work = saturated_add(
+                    recurrence_terms, 1);
+                telemetry_.reforge_factored_work = saturated_add(
+                    telemetry_.reforge_factored_work, active_work);
+                consume_reforge_work(active_work);
+                if (capture_attribution) {
+                    attribution.factored_last_pick_terms = saturated_add(
+                        attribution.factored_last_pick_terms,
+                        recurrence_terms);
+                    ++attribution.factored_terminal_commits;
+                    attribution.frontier_work = saturated_add(
+                        attribution.frontier_work, active_work);
+                }
+                commit_outcome(
+                    candidate.completed,
+                    static_cast<double>(probability_mass));
+            }
+            factored_terminal_candidates.clear();
+            factored_terminal_predecessors.clear();
+            factored_terminal_scratch_bytes = 0;
         }
         frontier = std::move(next);
         if (capture_attribution) {

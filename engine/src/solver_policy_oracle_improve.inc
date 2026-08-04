@@ -1113,5 +1113,7 @@ RefinementLimits default_limits(
         std::max<std::uint32_t>(1, options.max_diagnostic_samples);
     limits.use_projected_reforge_frontier =
         options.projected_reforge_frontier_diagnostic;
+    limits.use_factored_terminal_reforge =
+        options.factored_terminal_reforge_diagnostic;
     return limits;
 }

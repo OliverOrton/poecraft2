@@ -1332,6 +1332,12 @@ CaseResult run_case(
                 poecraft::solver::
                     kProjectedReforgeFrontierDiagnosticFlag;
         }
+        if (optional_bool(
+                caps, "factored_terminal_reforge_diagnostic", false)) {
+            solve_options.solver_flags |=
+                poecraft::solver::
+                    kFactoredTerminalReforgeDiagnosticFlag;
+        }
         const std::uint32_t work_items =
             optional_u32(caps, "solve_step_work_items", 1);
         pc_error_info error;

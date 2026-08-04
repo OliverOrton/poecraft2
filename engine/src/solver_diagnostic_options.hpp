@@ -15,6 +15,8 @@ inline constexpr std::uint32_t kHighImpactExecutableUppersDiagnosticFlag =
     1u << 31;
 inline constexpr std::uint32_t kProjectedReforgeFrontierDiagnosticFlag =
     1u << 30;
+inline constexpr std::uint32_t kFactoredTerminalReforgeDiagnosticFlag =
+    1u << 29;
 
 } // namespace solver
 } // namespace poecraft

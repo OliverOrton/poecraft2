@@ -654,6 +654,14 @@ void run_projected_reforge_frontier_equivalence_tests() {
         session, family_goal_100(), registry, actions,
         false, false, true, std::nullopt, {}, false, {}, false,
         true, true, true);
+    CalcContext factored(
+        session, family_goal_100(), registry, actions,
+        false, false, true, std::nullopt, {}, false, {}, false,
+        true, true, false, true);
+    CalcContext factored_reverse(
+        session, family_goal_100(), registry, actions,
+        false, false, true, std::nullopt, {}, false, {}, false,
+        true, true, true, true);
     pc_item_state rare;
     pc_item_clear(&rare);
     rare.rarity = PC_RARITY_RARE;
@@ -663,6 +671,9 @@ void run_projected_reforge_frontier_equivalence_tests() {
         raw_reverse.intern_item(rare);
     const std::uint32_t projected_reverse_start =
         projected_reverse.intern_item(rare);
+    const std::uint32_t factored_start = factored.intern_item(rare);
+    const std::uint32_t factored_reverse_start =
+        factored_reverse.intern_item(rare);
     for (const std::uint32_t action : actions) {
         const OutcomeDistribution& raw_distribution =
             raw.outcomes(raw_start, action);
@@ -673,12 +684,19 @@ void run_projected_reforge_frontier_equivalence_tests() {
         const OutcomeDistribution& projected_reverse_distribution =
             projected_reverse.outcomes(
                 projected_reverse_start, action);
+        const OutcomeDistribution& factored_distribution =
+            factored.outcomes(factored_start, action);
+        const OutcomeDistribution& factored_reverse_distribution =
+            factored_reverse.outcomes(
+                factored_reverse_start, action);
         PC_CHECK(raw_distribution.supported);
         PC_CHECK(projected_distribution.supported);
         PC_CHECK(sums_to_one(raw_distribution));
         PC_CHECK(sums_to_one(projected_distribution));
         PC_CHECK(sums_to_one(raw_reverse_distribution));
         PC_CHECK(sums_to_one(projected_reverse_distribution));
+        PC_CHECK(sums_to_one(factored_distribution));
+        PC_CHECK(sums_to_one(factored_reverse_distribution));
         std::map<std::uint32_t, double> raw_mass;
         for (const OutcomeEntry& entry : raw_distribution.entries) {
             raw_mass[entry.state] += entry.probability;
@@ -690,6 +708,11 @@ void run_projected_reforge_frontier_equivalence_tests() {
         const auto projected_reverse_mass = project_distribution(
             projected_reverse, raw,
             projected_reverse_distribution);
+        const auto factored_mass = project_distribution(
+            factored, raw, factored_distribution);
+        const auto factored_reverse_mass = project_distribution(
+            factored_reverse, raw,
+            factored_reverse_distribution);
         const auto check_mass =
             [&](const std::map<std::uint32_t, double>& candidate) {
                 PC_CHECK(raw_mass.size() == candidate.size());
@@ -705,10 +728,14 @@ void run_projected_reforge_frontier_equivalence_tests() {
         check_mass(projected_mass);
         check_mass(raw_reverse_mass);
         check_mass(projected_reverse_mass);
+        check_mass(factored_mass);
+        check_mass(factored_reverse_mass);
         for (const OutcomeDistribution* candidate : {
                  &projected_distribution,
                  &raw_reverse_distribution,
-                 &projected_reverse_distribution}) {
+                 &projected_reverse_distribution,
+                 &factored_distribution,
+                 &factored_reverse_distribution}) {
             for (std::size_t slot = 0;
                  slot < kMaxGoalSlots; ++slot) {
                 PC_CHECK(near(
@@ -750,10 +777,94 @@ void run_projected_reforge_frontier_equivalence_tests() {
     const OutcomeDistribution& gated_reverse =
         projected_reverse.outcomes(
             projected_reverse_start, 0, true);
+    const OutcomeDistribution& gated_factored =
+        factored.outcomes(factored_start, 0, true);
+    const OutcomeDistribution& gated_factored_reverse =
+        factored_reverse.outcomes(
+            factored_reverse_start, 0, true);
     PC_CHECK(gated.supported);
     PC_CHECK(gated_reverse.supported);
     PC_CHECK(sums_to_one(gated));
     PC_CHECK(sums_to_one(gated_reverse));
+    PC_CHECK(gated_factored.supported);
+    PC_CHECK(gated_factored_reverse.supported);
+    PC_CHECK(sums_to_one(gated_factored));
+    PC_CHECK(sums_to_one(gated_factored_reverse));
+    const auto gated_mass = project_distribution(
+        projected, raw, gated);
+    const auto gated_factored_mass = project_distribution(
+        factored, raw, gated_factored);
+    const auto gated_factored_reverse_mass = project_distribution(
+        factored_reverse, raw, gated_factored_reverse);
+    PC_CHECK(gated_mass.size() == gated_factored_mass.size());
+    PC_CHECK(gated_mass.size() == gated_factored_reverse_mass.size());
+    for (const auto& [state, probability] : gated_mass) {
+        const auto direct = gated_factored_mass.find(state);
+        const auto reversed = gated_factored_reverse_mass.find(state);
+        PC_CHECK(direct != gated_factored_mass.end());
+        PC_CHECK(reversed != gated_factored_reverse_mass.end());
+        if (direct != gated_factored_mass.end()) {
+            PC_CHECK(near(probability, direct->second, 1e-12));
+        }
+        if (reversed != gated_factored_reverse_mass.end()) {
+            PC_CHECK(near(probability, reversed->second, 1e-12));
+        }
+    }
+    PC_CHECK(
+        factored.telemetry().reforge_frontier_work ==
+        factored.telemetry().reforge_factored_work);
+    PC_CHECK(
+        factored_reverse.telemetry().reforge_frontier_work ==
+        factored_reverse.telemetry().reforge_factored_work);
+    const ReforgeBuildAttribution& factored_terminal =
+        factored.telemetry().reforge_build_attribution_samples.back();
+    const ReforgeBuildAttribution& factored_terminal_reverse =
+        factored_reverse.telemetry()
+            .reforge_build_attribution_samples.back();
+    for (const ReforgeBuildAttribution* row : {
+             &factored_terminal,
+             &factored_terminal_reverse}) {
+        PC_CHECK(row->completed);
+        PC_CHECK(row->projected_sparse_frontier);
+        PC_CHECK(row->factored_terminal_accumulator);
+        PC_CHECK(row->factored_terminal_predecessors > 0);
+        PC_CHECK(row->factored_terminal_candidates > 0);
+        PC_CHECK(row->factored_last_pick_terms > 0);
+        PC_CHECK(
+            row->factored_terminal_candidates ==
+            row->factored_terminal_commits);
+        PC_CHECK(row->factored_subset_cache_hits > 0);
+        PC_CHECK(row->factored_subset_identity_mismatches == 0);
+    }
+    PC_CHECK(
+        factored_terminal.factored_terminal_predecessors ==
+        factored_terminal_reverse.factored_terminal_predecessors);
+    PC_CHECK(
+        factored_terminal.factored_terminal_candidates ==
+        factored_terminal_reverse.factored_terminal_candidates);
+    PC_CHECK(
+        factored_terminal.factored_last_pick_terms ==
+        factored_terminal_reverse.factored_last_pick_terms);
+    PC_CHECK(factored_terminal.total_reforge_work > 1);
+    CalcContext factored_capped(
+        session, family_goal_100(), registry, actions,
+        false, false, true, std::nullopt, {}, false, {}, false,
+        true, true, false, true);
+    const std::uint32_t factored_capped_start =
+        factored_capped.intern_item(rare);
+    factored_capped.set_solve_resource_caps(
+        100000,
+        factored_terminal.total_reforge_work - 1,
+        false);
+    bool factored_work_cap_hit = false;
+    try {
+        (void)factored_capped.outcomes(
+            factored_capped_start, 0, true);
+    } catch (const SolverResourceLimit& error) {
+        factored_work_cap_hit =
+            error.cap_name() == "max_reforge_work";
+    }
+    PC_CHECK(factored_work_cap_hit);
     const ReforgeBuildAttribution& terminal =
         projected.telemetry().reforge_build_attribution_samples.back();
     const ReforgeBuildAttribution& terminal_reverse =

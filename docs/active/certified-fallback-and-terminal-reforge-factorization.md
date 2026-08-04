@@ -1,7 +1,7 @@
 # Certified Fallback Publication And Final-Depth Reforge Accumulation
 
-**Status: Track A Gate 2 and Track B Gate 3 are complete; Track B Gate 4 exact
-terminal accumulation is the active boundary.**
+**Status: Track A Gate 2 and Track B Gates 3-4 are complete; Track B Gate 5
+exact equivalence is the active boundary.**
 
 Owner: Oliver
 
@@ -215,7 +215,8 @@ fallback receives no Track B credit.
 
 ### Gate 4 — exact V3 terminal accumulator prototype
 
-**Status: active.**
+**Status: complete.** Tracked evidence is
+[`fallback-and-terminal-reforge-factorization-gate4.json`](../../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate4.json).
 
 Choose the representation from Gate 3 evidence. Candidate forms include an
 unordered-set DP, factored last-pick transform, subset recurrence, cached
@@ -232,7 +233,30 @@ Retain parallel V1 raw, V2 sparse, and V3 factored ledgers. The active evaluator
 is charged honestly to `max_reforge_work`; V1 stays the independent oracle and
 V2/V3 remain diagnostic pending qualification.
 
+The diagnostic V3 path now indexes the complete live final-depth predecessor
+sets, generates each completed unordered roll set from one canonical live
+removable last pick, and reconstructs all incoming mass with a destination-
+driven subset recurrence. Already-terminal goal subsets do not claim canonical
+ownership. Zero-progress non-goal picks are summed as one exact retry numerator
+per predecessor. Complete availability and observation identity is checked by
+reconstructing every admitted predecessor-plus-last-pick state.
+
+Bucket numerators and denominators remain checked integers until the final
+ratio. The active V3 ledger separately charges predecessor indexing,
+denominator traversal, canonical-subset checks, candidates, every recurrence
+term, completed publications, retry aggregates, and any raw-identity
+expansion. All terminal maps and vectors participate in owned-memory
+preflight. A one-less-than-completed-work focused cap refuses the row.
+
+The flag occupies a native-benchmark-only diagnostic bit; the C ABI, WASM,
+product defaults, V1 oracle, and V2 diagnostic remain unchanged. Focused
+ordinary, Essence, Harvest, and Fossil coverage, including forward/reversed
+enumeration, passes 251,729 checks with zero failures. Broad mechanic and
+Bellman equivalence belongs to Gate 5; the canonical hard case was not rerun.
+
 ### Gate 5 — exact equivalence
+
+**Status: active.**
 
 Compare V3 with raw across ordinary reforges, forced Essence, targeted and
 exceptional-support Harvest, all relevant Fossil weight/addition/forced

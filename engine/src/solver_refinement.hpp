@@ -470,6 +470,7 @@ struct RefinementLimits {
     /* Native diagnostic only: selected-row qualification keeps product
      * refinement on the raw oracle until the projected path is promoted. */
     bool use_projected_reforge_frontier = false;
+    bool use_factored_terminal_reforge = false;
 };
 
 struct RefinementRequest {

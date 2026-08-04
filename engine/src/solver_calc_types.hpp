@@ -240,6 +240,7 @@ struct ReforgeBuildAttribution {
     std::uint64_t preserved_base_hash = 0;
     bool goal_progress_gated = false;
     bool projected_sparse_frontier = false;
+    bool factored_terminal_accumulator = false;
     bool completed = false;
     std::uint32_t forced_modifier_count = 0;
     std::uint64_t natural_pool_entries = 0;
@@ -336,6 +337,16 @@ struct ReforgeBuildAttribution {
     std::uint64_t total_reforge_work = 0;
     std::uint64_t raw_equivalent_reforge_work = 0;
     std::uint64_t projected_reforge_work = 0;
+    std::uint64_t factored_reforge_work = 0;
+    std::uint64_t factored_terminal_predecessors = 0;
+    std::uint64_t factored_terminal_candidates = 0;
+    std::uint64_t factored_canonical_subset_checks = 0;
+    std::uint64_t factored_last_pick_terms = 0;
+    std::uint64_t factored_terminal_commits = 0;
+    std::uint64_t factored_retry_aggregates = 0;
+    std::uint64_t factored_subset_cache_hits = 0;
+    std::uint64_t factored_subset_cache_misses = 0;
+    std::uint64_t factored_subset_identity_mismatches = 0;
     std::uint64_t pool_build_ns = 0;
     std::uint64_t bucket_build_ns = 0;
     std::uint64_t exclusion_build_ns = 0;
@@ -365,11 +376,14 @@ struct CalcTelemetry {
     std::uint64_t reforge_frontier_work = 0;
     /* Parallel effort ledgers. V1 raw-equivalent work retains the historic
      * one-node-plus-all-buckets definition. V2 projected work counts one
-     * sparse node, availability words inspected, and eligible edges. The
-     * public cap continues to apply to reforge_frontier_work, which equals
-     * the active evaluator's ledger. */
+     * sparse node, availability words inspected, and eligible edges. V3
+     * factored work retains V2's nonterminal charges, then counts canonical
+     * terminal candidates, every exact last-pick recurrence term, and each
+     * completed terminal publication. The public cap continues to apply to
+     * reforge_frontier_work, which equals the active evaluator's ledger. */
     std::uint64_t reforge_raw_equivalent_work = 0;
     std::uint64_t reforge_projected_work = 0;
+    std::uint64_t reforge_factored_work = 0;
     std::vector<ReforgeBuildAttribution> reforge_build_attribution_samples;
     std::uint64_t reforge_build_attribution_omitted = 0;
     std::uint64_t gated_reforge_rows = 0;
@@ -534,7 +548,8 @@ class CalcContext {
         bool distinguish_modifier_identity = false,
         bool capture_reforge_attribution = false,
         bool use_projected_reforge_frontier = false,
-        bool reverse_reforge_bucket_enumeration = false);
+        bool reverse_reforge_bucket_enumeration = false,
+        bool use_factored_terminal_reforge = false);
 
     const SessionImpl& session() const { return *session_; }
     const AbstractLayout& layout() const { return layout_; }
@@ -808,6 +823,7 @@ class CalcContext {
     bool capture_reforge_attribution_ = false;
     bool use_projected_reforge_frontier_ = false;
     bool reverse_reforge_bucket_enumeration_ = false;
+    bool use_factored_terminal_reforge_ = false;
 
     void initialize_temporary_bench_effect_classes();
     void initialize_owned_bytes_ledger();

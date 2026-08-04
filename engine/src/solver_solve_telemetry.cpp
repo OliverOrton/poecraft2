@@ -1484,6 +1484,9 @@ std::string serialize_solver_telemetry(
             json += ",\"projected_sparse_frontier\":" +
                     std::string(bool_json(
                         row.projected_sparse_frontier));
+            json += ",\"factored_terminal_accumulator\":" +
+                    std::string(bool_json(
+                        row.factored_terminal_accumulator));
             json += ",\"completed\":" +
                     std::string(bool_json(row.completed));
             json += ",\"forced_modifier_count\":" +
@@ -1877,7 +1880,29 @@ std::string serialize_solver_telemetry(
                     std::to_string(
                         row.raw_equivalent_reforge_work);
             json += ",\"projected_v2\":" +
-                    std::to_string(row.projected_reforge_work) + "}";
+                    std::to_string(row.projected_reforge_work);
+            json += ",\"factored_v3\":" +
+                    std::to_string(row.factored_reforge_work);
+            json += ",\"factored_terminal\":{\"predecessors\":" +
+                    std::to_string(row.factored_terminal_predecessors);
+            json += ",\"candidates\":" +
+                    std::to_string(row.factored_terminal_candidates);
+            json += ",\"canonical_subset_checks\":" +
+                    std::to_string(
+                        row.factored_canonical_subset_checks);
+            json += ",\"last_pick_terms\":" +
+                    std::to_string(row.factored_last_pick_terms);
+            json += ",\"commits\":" +
+                    std::to_string(row.factored_terminal_commits);
+            json += ",\"retry_aggregates\":" +
+                    std::to_string(row.factored_retry_aggregates);
+            json += ",\"subset_cache_hits\":" +
+                    std::to_string(row.factored_subset_cache_hits);
+            json += ",\"subset_cache_misses\":" +
+                    std::to_string(row.factored_subset_cache_misses);
+            json += ",\"subset_identity_mismatches\":" +
+                    std::to_string(
+                        row.factored_subset_identity_mismatches) + "}}";
             json += ",\"time_ns\":{\"pool\":" +
                     std::to_string(row.pool_build_ns);
             json += ",\"bucket\":" +
@@ -2996,6 +3021,8 @@ std::string serialize_solver_telemetry(
             std::to_string(cache.reforge_raw_equivalent_work);
     json += ",\"projected_work_v2\":" +
             std::to_string(cache.reforge_projected_work);
+    json += ",\"factored_work_v3\":" +
+            std::to_string(cache.reforge_factored_work);
     json += ",\"goal_progress_gated\":{\"rows\":" +
             std::to_string(cache.gated_reforge_rows);
     char gated_number[40];

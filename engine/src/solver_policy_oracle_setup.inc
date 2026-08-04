@@ -169,7 +169,10 @@
             exact_start_mods,
             false,
             true,
-            limits_.use_projected_reforge_frontier);
+            limits_.use_projected_reforge_frontier ||
+                limits_.use_factored_terminal_reforge,
+            false,
+            limits_.use_factored_terminal_reforge);
         require_local_memory(
             exact_start_mods.capacity() * sizeof(std::uint64_t),
             "strict calculation construction");

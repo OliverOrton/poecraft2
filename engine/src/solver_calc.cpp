@@ -351,7 +351,8 @@ CalcContext::CalcContext(
     const bool distinguish_modifier_identity,
     const bool capture_reforge_attribution,
     const bool use_projected_reforge_frontier,
-    const bool reverse_reforge_bucket_enumeration)
+    const bool reverse_reforge_bucket_enumeration,
+    const bool use_factored_terminal_reforge)
     : session_(std::move(session)),
       goal_(goal),
       registry_(std::move(registry)),
@@ -362,9 +363,12 @@ CalcContext::CalcContext(
       distinguish_modifier_identity_(distinguish_modifier_identity),
       capture_reforge_attribution_(capture_reforge_attribution),
       use_projected_reforge_frontier_(
-          use_projected_reforge_frontier),
+          use_projected_reforge_frontier ||
+          use_factored_terminal_reforge),
       reverse_reforge_bucket_enumeration_(
-          reverse_reforge_bucket_enumeration) {
+          reverse_reforge_bucket_enumeration),
+      use_factored_terminal_reforge_(
+          use_factored_terminal_reforge) {
     /* Action registries are public construction inputs in native tests and
      * future integrations, not only products of build_action_registry().
      * Canonicalize and prove every contract at the CalcContext boundary so a
