@@ -744,6 +744,82 @@ void run_projected_reforge_frontier_equivalence_tests() {
             row.projected_reforge_work <
             row.raw_equivalent_reforge_work);
     }
+
+    const OutcomeDistribution& gated =
+        projected.outcomes(projected_start, 0, true);
+    const OutcomeDistribution& gated_reverse =
+        projected_reverse.outcomes(
+            projected_reverse_start, 0, true);
+    PC_CHECK(gated.supported);
+    PC_CHECK(gated_reverse.supported);
+    PC_CHECK(sums_to_one(gated));
+    PC_CHECK(sums_to_one(gated_reverse));
+    const ReforgeBuildAttribution& terminal =
+        projected.telemetry().reforge_build_attribution_samples.back();
+    const ReforgeBuildAttribution& terminal_reverse =
+        projected_reverse.telemetry()
+            .reforge_build_attribution_samples.back();
+    const auto check_terminal_factorization =
+        [&](const ReforgeBuildAttribution& row) {
+            PC_CHECK(row.completed);
+            PC_CHECK(row.final_depth_predecessors > 0);
+            PC_CHECK(row.final_depth_branches > 0);
+            PC_CHECK(
+                row.final_depth_canonical_commits ==
+                row.final_depth_unique_canonical_successors +
+                    row.final_depth_duplicate_canonical_commits);
+            PC_CHECK(
+                row.final_depth_duplicate_canonical_commits ==
+                row.final_depth_duplicates_same_terminal_bucket +
+                    row.final_depth_duplicates_different_terminal_bucket);
+            PC_CHECK(
+                row.final_depth_branches ==
+                row.terminal_side_counts[0].branches +
+                    row.terminal_side_counts[1].branches);
+            PC_CHECK(
+                row.final_depth_branches ==
+                row.terminal_bucket_kind_counts[0].branches +
+                    row.terminal_bucket_kind_counts[1].branches +
+                    row.terminal_bucket_kind_counts[2].branches);
+            PC_CHECK(
+                row.terminal_target_counts[6]
+                    .final_modifier_branches ==
+                row.final_depth_branches);
+            PC_CHECK(
+                row.terminal_contribution_samples.size() <= 64);
+            PC_CHECK(
+                row.terminal_contribution_samples.size() +
+                    row.terminal_contribution_samples_omitted ==
+                row.final_depth_canonical_commits);
+            PC_CHECK(
+                row.final_depth_represented_order_paths >=
+                row.final_depth_branches);
+        };
+    check_terminal_factorization(terminal);
+    check_terminal_factorization(terminal_reverse);
+    PC_CHECK(
+        terminal.final_depth_predecessors ==
+        terminal_reverse.final_depth_predecessors);
+    PC_CHECK(
+        terminal.final_depth_branches ==
+        terminal_reverse.final_depth_branches);
+    PC_CHECK(
+        terminal.final_depth_unique_canonical_successors ==
+        terminal_reverse.final_depth_unique_canonical_successors);
+    PC_CHECK(
+        terminal.final_depth_duplicate_canonical_commits ==
+        terminal_reverse.final_depth_duplicate_canonical_commits);
+    PC_CHECK(
+        terminal.final_depth_duplicates_different_terminal_bucket ==
+        terminal_reverse
+            .final_depth_duplicates_different_terminal_bucket);
+    PC_CHECK(
+        terminal.final_depth_terminal_order_excess ==
+        terminal_reverse.final_depth_terminal_order_excess);
+    PC_CHECK(near(
+        terminal.final_depth_probability_mass,
+        terminal_reverse.final_depth_probability_mass,
+        1e-12));
 }
 
 void run_harvest_targeted_natural_regression() {

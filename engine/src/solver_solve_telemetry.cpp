@@ -85,6 +85,9 @@ std::uint64_t broad_row_attribution_owned_bytes(
         total += sample.observation_modifier_tag_ids.capacity() *
                  sizeof(std::uint32_t);
         total += sample.reforge.action_id.capacity() + 1;
+        total += sample.reforge.terminal_contribution_samples.capacity() *
+                 sizeof(ReforgeBuildAttribution::
+                            TerminalContributionSample);
     }
     return total;
 }
@@ -1567,6 +1570,299 @@ std::string serialize_solver_telemetry(
             json += ",\"terminal_suffix_counts\":";
             append_count_array(row.terminal_suffix_counts);
             json += "}";
+            const auto append_terminal_aggregate =
+                [&](const ReforgeBuildAttribution::TerminalAggregate&
+                        aggregate) {
+                    json += "{\"branches\":" +
+                            std::to_string(aggregate.branches);
+                    json += ",\"canonical_commits\":" +
+                            std::to_string(
+                                aggregate.canonical_commits);
+                    json += ",\"duplicate_canonical_commits\":" +
+                            std::to_string(
+                                aggregate.duplicate_canonical_commits);
+                    json += ",\"duplicates_within_predecessor\":" +
+                            std::to_string(
+                                aggregate
+                                    .duplicates_within_predecessor);
+                    json += ",\"duplicates_across_predecessors\":" +
+                            std::to_string(
+                                aggregate
+                                    .duplicates_across_predecessors);
+                    json += ",\"probability_mass\":" +
+                            telemetry_finite_json(
+                                aggregate.probability_mass);
+                    json += ",\"duplicate_probability_mass\":" +
+                            telemetry_finite_json(
+                                aggregate.duplicate_probability_mass) +
+                            "}";
+                };
+            json += ",\"terminal_factorization\":{\"target_counts\":[";
+            for (std::size_t target = 0;
+                 target < row.terminal_target_counts.size(); ++target) {
+                if (target != 0) json += ',';
+                const auto& target_row =
+                    row.terminal_target_counts[target];
+                json += "{\"target\":" + std::to_string(target);
+                json += ",\"state_contributions\":" +
+                        std::to_string(target_row.state_contributions);
+                json += ",\"final_modifier_branches\":" +
+                        std::to_string(
+                            target_row.final_modifier_branches);
+                json += ",\"probability_mass\":" +
+                        telemetry_finite_json(
+                            target_row.probability_mass);
+                json += ",\"final_modifier_probability_mass\":" +
+                        telemetry_finite_json(
+                            target_row
+                                .final_modifier_probability_mass) +
+                        "}";
+            }
+            json += "],\"side\":{\"prefix\":";
+            append_terminal_aggregate(row.terminal_side_counts[0]);
+            json += ",\"suffix\":";
+            append_terminal_aggregate(row.terminal_side_counts[1]);
+            json += "},\"terminal_bucket\":{\"goal_satisfied\":";
+            append_terminal_aggregate(
+                row.terminal_bucket_kind_counts[0]);
+            json += ",\"goal_below_tier\":";
+            append_terminal_aggregate(
+                row.terminal_bucket_kind_counts[1]);
+            json += ",\"junk\":";
+            append_terminal_aggregate(
+                row.terminal_bucket_kind_counts[2]);
+            json += "},\"predecessor_observation\":{\"goal_satisfied\":";
+            append_terminal_aggregate(
+                row.terminal_predecessor_observation_counts[0]);
+            json += ",\"goal_below_tier\":";
+            append_terminal_aggregate(
+                row.terminal_predecessor_observation_counts[1]);
+            json += ",\"junk\":";
+            append_terminal_aggregate(
+                row.terminal_predecessor_observation_counts[2]);
+            json += ",\"exclusion\":";
+            append_terminal_aggregate(
+                row.terminal_predecessor_observation_counts[3]);
+            json += "},\"final_depth\":{\"predecessors\":" +
+                    std::to_string(row.final_depth_predecessors);
+            json += ",\"branches\":" +
+                    std::to_string(row.final_depth_branches);
+            json += ",\"canonical_commits\":" +
+                    std::to_string(
+                        row.final_depth_canonical_commits);
+            json += ",\"unique_canonical_successors\":" +
+                    std::to_string(
+                        row.final_depth_unique_canonical_successors);
+            json += ",\"duplicate_canonical_commits\":" +
+                    std::to_string(
+                        row.final_depth_duplicate_canonical_commits);
+            json += ",\"duplicates_within_predecessor\":" +
+                    std::to_string(
+                        row.final_depth_duplicates_within_predecessor);
+            json += ",\"duplicates_across_predecessors\":" +
+                    std::to_string(
+                        row.final_depth_duplicates_across_predecessors);
+            json += ",\"duplicates_same_terminal_bucket\":" +
+                    std::to_string(
+                        row.final_depth_duplicates_same_terminal_bucket);
+            json += ",\"duplicates_different_terminal_bucket\":" +
+                    std::to_string(
+                        row.final_depth_duplicates_different_terminal_bucket);
+            json += ",\"duplicates_different_terminal_side\":" +
+                    std::to_string(
+                        row.final_depth_duplicates_different_terminal_side);
+            json += ",\"duplicates_different_terminal_kind\":" +
+                    std::to_string(
+                        row.final_depth_duplicates_different_terminal_kind);
+            json += ",\"duplicates_different_terminal_exclusion_signature\":" +
+                    std::to_string(
+                        row
+                            .final_depth_duplicates_different_terminal_exclusion_signature);
+            json += ",\"duplicates_different_predecessor_observation\":" +
+                    std::to_string(
+                        row
+                            .final_depth_duplicates_different_predecessor_observation);
+            json += ",\"duplicates_different_predecessor_availability\":" +
+                    std::to_string(
+                        row
+                            .final_depth_duplicates_different_predecessor_availability);
+            json += ",\"successors_with_multiple_predecessors\":" +
+                    std::to_string(
+                        row
+                            .final_depth_successors_with_multiple_predecessors);
+            json += ",\"predecessor_convergence_excess\":" +
+                    std::to_string(
+                        row.final_depth_predecessor_convergence_excess);
+            json += ",\"max_predecessors_per_successor\":" +
+                    std::to_string(
+                        row.final_depth_max_predecessors_per_successor);
+            json += ",\"predecessors_with_multiple_orders\":" +
+                    std::to_string(
+                        row
+                            .final_depth_predecessors_with_multiple_orders);
+            json += ",\"max_predecessor_order_multiplicity\":" +
+                    std::to_string(
+                        row
+                            .final_depth_max_predecessor_order_multiplicity);
+            json += ",\"predecessor_order_excess\":" +
+                    std::to_string(
+                        row.final_depth_predecessor_order_excess);
+            json += ",\"represented_order_paths\":" +
+                    std::to_string(
+                        row.final_depth_represented_order_paths);
+            json += ",\"terminal_order_excess\":" +
+                    std::to_string(
+                        row.final_depth_terminal_order_excess);
+            json += ",\"physical_modifier_choices\":" +
+                    std::to_string(
+                        row.final_depth_physical_modifier_choices);
+            json += ",\"branches_with_exclusion_observation\":" +
+                    std::to_string(
+                        row
+                            .final_depth_branches_with_exclusion_observation);
+            json += ",\"probability_mass\":" +
+                    telemetry_finite_json(
+                        row.final_depth_probability_mass);
+            json += ",\"duplicate_probability_mass\":" +
+                    telemetry_finite_json(
+                        row.final_depth_duplicate_probability_mass);
+            json += ",\"within_predecessor_duplicate_probability_mass\":" +
+                    telemetry_finite_json(
+                        row
+                            .final_depth_within_predecessor_duplicate_probability_mass);
+            json += ",\"across_predecessor_duplicate_probability_mass\":" +
+                    telemetry_finite_json(
+                        row
+                            .final_depth_across_predecessor_duplicate_probability_mass);
+            json += ",\"same_terminal_bucket_duplicate_probability_mass\":" +
+                    telemetry_finite_json(
+                        row
+                            .final_depth_same_terminal_bucket_duplicate_probability_mass);
+            json += ",\"different_terminal_bucket_duplicate_probability_mass\":" +
+                    telemetry_finite_json(
+                        row
+                            .final_depth_different_terminal_bucket_duplicate_probability_mass);
+            json += ",\"different_predecessor_observation_duplicate_probability_mass\":" +
+                    telemetry_finite_json(
+                        row
+                            .final_depth_different_predecessor_observation_duplicate_probability_mass);
+            json += ",\"lower_bounds\":{\"unavoidable_successor_representations\":" +
+                    std::to_string(
+                        row.final_depth_unique_canonical_successors);
+            json += ",\"algebraically_accumulable_contributions\":" +
+                    std::to_string(
+                        row.final_depth_duplicate_canonical_commits);
+            json += ",\"temporary_roll_order_distinctions\":" +
+                    std::to_string(
+                        row.final_depth_terminal_order_excess) +
+                    "}}";
+            json += ",\"samples\":[";
+            for (std::size_t index = 0;
+                 index < row.terminal_contribution_samples.size();
+                 ++index) {
+                if (index != 0) json += ',';
+                const auto& contribution =
+                    row.terminal_contribution_samples[index];
+                json += "{\"predecessor_sequence\":" +
+                        std::to_string(
+                            contribution.predecessor_sequence);
+                json += ",\"predecessor_signature_hash\":" +
+                        std::to_string(
+                            contribution.predecessor_signature_hash);
+                json += ",\"predecessor_order_multiplicity\":" +
+                        std::to_string(
+                            contribution.predecessor_order_multiplicity);
+                json += ",\"predecessor\":{\"sat_mask\":" +
+                        std::to_string(
+                            contribution.predecessor_sat_mask);
+                json += ",\"below_mask\":" +
+                        std::to_string(
+                            contribution.predecessor_below_mask);
+                json += ",\"blocked_mask\":" +
+                        std::to_string(
+                            contribution.predecessor_blocked_mask);
+                json += ",\"prefix_picks\":" +
+                        std::to_string(
+                            contribution.predecessor_prefix_picks);
+                json += ",\"suffix_picks\":" +
+                        std::to_string(
+                            contribution.predecessor_suffix_picks);
+                json += ",\"availability_class\":" +
+                        std::to_string(
+                            contribution
+                                .predecessor_availability_class) +
+                        "}";
+                json += ",\"target_count\":" +
+                        std::to_string(contribution.target_count);
+                json += ",\"terminal_bucket\":{\"index\":" +
+                        std::to_string(contribution.terminal_bucket);
+                json += ",\"side\":" +
+                        std::to_string(contribution.terminal_side);
+                json += ",\"kind\":" +
+                        std::to_string(
+                            contribution.terminal_bucket_kind);
+                json += ",\"goal_slot\":" +
+                        std::to_string(
+                            contribution.terminal_goal_slot);
+                json += ",\"junk_class\":" +
+                        std::to_string(
+                            contribution.terminal_junk_class);
+                json += ",\"block_mask\":" +
+                        std::to_string(
+                            contribution.terminal_block_mask);
+                json += ",\"multiplicity\":" +
+                        std::to_string(
+                            contribution
+                                .terminal_bucket_multiplicity);
+                json += ",\"available_family_choices\":" +
+                        std::to_string(
+                            contribution
+                                .terminal_available_family_choices);
+                json += ",\"exclusion_group_count\":" +
+                        std::to_string(
+                            contribution
+                                .terminal_exclusion_group_count);
+                json += ",\"exclusion_signature_hash\":" +
+                        std::to_string(
+                            contribution
+                                .terminal_exclusion_signature_hash) +
+                        "}";
+                json += ",\"canonical_successor\":{\"state\":" +
+                        std::to_string(
+                            contribution.canonical_successor_state);
+                json += ",\"hash\":" +
+                        std::to_string(
+                            contribution.canonical_successor_hash);
+                json += ",\"duplicate\":" +
+                        std::string(bool_json(
+                            contribution
+                                .duplicate_canonical_successor));
+                json += ",\"duplicate_within_predecessor\":" +
+                        std::string(bool_json(
+                            contribution
+                                .duplicate_within_predecessor));
+                json += ",\"duplicate_across_predecessors\":" +
+                        std::string(bool_json(
+                            contribution
+                                .duplicate_across_predecessors));
+                json += ",\"different_terminal_bucket_from_first\":" +
+                        std::string(bool_json(
+                            contribution
+                                .different_terminal_bucket_from_first));
+                json += ",\"different_predecessor_observation_from_first\":" +
+                        std::string(bool_json(
+                            contribution
+                                .different_predecessor_observation_from_first)) +
+                        "}";
+                json += ",\"probability_mass\":" +
+                        telemetry_finite_json(
+                            contribution.probability_mass) +
+                        "}";
+            }
+            json += "],\"samples_omitted\":" +
+                    std::to_string(
+                        row.terminal_contribution_samples_omitted) +
+                    "}";
             json += ",\"work\":{\"raw_choice_table\":" +
                     std::to_string(row.raw_choice_table_work);
             json += ",\"guaranteed_scan\":" +

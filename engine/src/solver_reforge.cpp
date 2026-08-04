@@ -459,6 +459,30 @@ struct RollStateHash {
     }
 };
 
+struct FinalSuccessorAttribution {
+    std::uint32_t last_predecessor_sequence = kNoId;
+    std::uint16_t first_terminal_bucket = 0;
+    std::uint8_t first_predecessor_sat_mask = 0;
+    std::uint8_t first_predecessor_below_mask = 0;
+    std::uint8_t first_predecessor_blocked_mask = 0;
+    std::uint8_t first_predecessor_prefix_picks = 0;
+    std::uint8_t first_predecessor_suffix_picks = 0;
+    std::uint32_t first_predecessor_availability_class = kNoId;
+    std::uint64_t contributions = 0;
+    std::uint64_t distinct_predecessors = 0;
+    double probability_mass = 0.0;
+};
+
+struct ActiveTerminalBranch {
+    RollState predecessor;
+    std::uint32_t predecessor_sequence = 0;
+    std::uint64_t predecessor_signature_hash = 0;
+    std::uint64_t predecessor_order_multiplicity = 1;
+    std::uint8_t target_count = 0;
+    std::uint16_t terminal_bucket = 0;
+    std::uint32_t available_family_choices = 0;
+};
+
 /* Goal-slot occupancy: satisfied, below-tier, or blocked all mean the
  * slot's exclusivity group is taken for the rest of the roll. */
 std::uint8_t occupied_mask(const RollState& state, std::uint8_t base_mask) {
@@ -580,15 +604,44 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         unordered_storage_bytes(
             outcome_reserve,
             sizeof(decltype(outcome_acc)::value_type));
-    require_reforge_scratch_bytes(outcome_storage_budget);
+    std::unordered_map<std::uint32_t, FinalSuccessorAttribution>
+        final_successor_attribution;
+    std::size_t final_successor_preflight_entries =
+        capture_attribution ? outcome_reserve : 0;
+    constexpr std::size_t kTerminalContributionSampleLimit = 64;
+    const std::uint64_t terminal_sample_storage_bytes =
+        capture_attribution
+            ? saturated_bytes(
+                  kTerminalContributionSampleLimit,
+                  sizeof(ReforgeBuildAttribution::
+                             TerminalContributionSample))
+            : 0;
+    std::uint64_t terminal_attribution_scratch_bytes =
+        capture_attribution
+            ? saturated_add(
+                  unordered_storage_bytes(
+                      final_successor_preflight_entries,
+                      sizeof(decltype(
+                          final_successor_attribution)::value_type)),
+                  terminal_sample_storage_bytes)
+            : 0;
+    require_reforge_scratch_bytes(saturated_add(
+        outcome_storage_budget,
+        terminal_attribution_scratch_bytes));
     outcome_acc.reserve(outcome_reserve);
+    if (capture_attribution) {
+        final_successor_attribution.reserve(
+            final_successor_preflight_entries);
+        attribution.terminal_contribution_samples.reserve(
+            kTerminalContributionSampleLimit);
+    }
     std::size_t outcome_preflight_entries = outcome_reserve;
     std::uint64_t stationary_reforge_scratch_bytes = 0;
     std::uint64_t active_frontier_scratch_bytes = 0;
     std::uint64_t availability_scratch_bytes = 0;
     const auto accumulate_outcome =
         [&](const std::uint32_t state,
-            const double probability) {
+            const double probability) -> bool {
             if (capture_attribution) {
                 ++attribution.successor_commits;
             }
@@ -600,7 +653,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                     attribution.duplicate_projected_probability_mass +=
                         probability;
                 }
-                return;
+                return true;
             }
             const std::size_t required = outcome_acc.size() + 1;
             if (required > outcome_preflight_entries) {
@@ -615,16 +668,19 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                     saturated_add(
                         saturated_add(
                             saturated_add(
-                                stationary_reforge_scratch_bytes,
-                                active_frontier_scratch_bytes),
-                            availability_scratch_bytes),
-                        unordered_storage_bytes(
-                            outcome_preflight_entries,
-                            sizeof(decltype(outcome_acc)::value_type)));
+                                saturated_add(
+                                    stationary_reforge_scratch_bytes,
+                                    active_frontier_scratch_bytes),
+                                availability_scratch_bytes),
+                            terminal_attribution_scratch_bytes),
+                    unordered_storage_bytes(
+                        outcome_preflight_entries,
+                        sizeof(decltype(outcome_acc)::value_type)));
                 require_reforge_scratch_bytes(projected);
                 outcome_acc.reserve(outcome_preflight_entries);
             }
             outcome_acc.emplace(state, probability);
+            return false;
         };
     /* Self-loop results reference the querying state and must not be
      * shared through the base memo. */
@@ -633,6 +689,54 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         -> std::shared_ptr<const OutcomeDistribution> {
         const auto finalize_started =
             std::chrono::steady_clock::now();
+        if (capture_attribution) {
+            attribution.final_depth_unique_canonical_successors =
+                final_successor_attribution.size();
+            attribution.final_depth_duplicate_canonical_commits =
+                attribution.final_depth_canonical_commits >=
+                        attribution
+                            .final_depth_unique_canonical_successors
+                    ? attribution.final_depth_canonical_commits -
+                          attribution
+                              .final_depth_unique_canonical_successors
+                    : 0;
+            for (const auto& [unused, successor] :
+                 final_successor_attribution) {
+                (void)unused;
+                attribution.final_depth_max_predecessors_per_successor =
+                    std::max(
+                        attribution
+                            .final_depth_max_predecessors_per_successor,
+                        successor.distinct_predecessors);
+                if (successor.distinct_predecessors > 1) {
+                    ++attribution
+                          .final_depth_successors_with_multiple_predecessors;
+                    attribution
+                        .final_depth_predecessor_convergence_excess =
+                        saturated_add(
+                            attribution
+                                .final_depth_predecessor_convergence_excess,
+                            successor.distinct_predecessors - 1);
+                }
+            }
+            std::sort(
+                attribution.terminal_contribution_samples.begin(),
+                attribution.terminal_contribution_samples.end(),
+                [](const auto& left, const auto& right) {
+                    return std::tie(
+                               left.target_count,
+                               left.predecessor_sequence,
+                               left.terminal_bucket,
+                               left.canonical_successor_hash,
+                               left.probability_mass) <
+                           std::tie(
+                               right.target_count,
+                               right.predecessor_sequence,
+                               right.terminal_bucket,
+                               right.canonical_successor_hash,
+                               right.probability_mass);
+                });
+        }
         std::vector<std::pair<std::uint32_t, double>> ordered_outcomes(
             outcome_acc.begin(), outcome_acc.end());
         std::sort(ordered_outcomes.begin(), ordered_outcomes.end());
@@ -1397,7 +1501,9 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     add_stationary(saturated_bytes(
         bucket_count, sizeof(double)));
     require_reforge_scratch_bytes(saturated_add(
-        stationary_reforge_scratch_bytes,
+        saturated_add(
+            stationary_reforge_scratch_bytes,
+            terminal_attribution_scratch_bytes),
         unordered_storage_bytes(
             outcome_preflight_entries,
             sizeof(decltype(outcome_acc)::value_type))));
@@ -1529,6 +1635,391 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     }
     const int max_target = targets.rbegin()->first;
 
+    std::optional<ActiveTerminalBranch> active_terminal_branch;
+    const auto roll_signature_hash = [](const RollState& roll) {
+        std::uint64_t hash = 1469598103934665603ull;
+        const auto mix = [&](const std::uint64_t value) {
+            hash ^= value;
+            hash *= 1099511628211ull;
+        };
+        mix(roll.sat_mask);
+        mix(roll.below_mask);
+        mix(roll.blocked_mask);
+        for (const std::uint32_t token :
+             roll.goal_member_class_tokens) {
+            mix(token);
+        }
+        mix(roll.prefix_picks);
+        mix(roll.suffix_picks);
+        mix(roll.guaranteed_bucket);
+        mix(roll.availability_class);
+        for (std::uint8_t pick = 0; pick < roll.pick_count; ++pick) {
+            mix(roll.picks[pick].first);
+            mix(roll.picks[pick].second);
+        }
+        return hash;
+    };
+    const auto exclusion_signature_hash = [](const RollBucket& bucket) {
+        std::uint64_t hash = 1469598103934665603ull;
+        for (const std::uint32_t group : bucket.exclusion_groups) {
+            hash ^= group;
+            hash *= 1099511628211ull;
+        }
+        return hash;
+    };
+    const auto record_target_contribution =
+        [&](const int target,
+            const double probability,
+            const bool final_modifier_branch) {
+            if (!capture_attribution || !(probability > 0.0) ||
+                target < 0 ||
+                target >= static_cast<int>(
+                    attribution.terminal_target_counts.size())) {
+                return;
+            }
+            auto& target_row =
+                attribution.terminal_target_counts[target];
+            ++target_row.state_contributions;
+            target_row.probability_mass += probability;
+            if (final_modifier_branch) {
+                ++target_row.final_modifier_branches;
+                target_row.final_modifier_probability_mass +=
+                    probability;
+            }
+        };
+    const auto record_terminal_successor =
+        [&](const std::uint32_t state,
+            const double probability) {
+            if (!capture_attribution ||
+                !active_terminal_branch.has_value()) {
+                return;
+            }
+            const ActiveTerminalBranch& branch =
+                *active_terminal_branch;
+            const RollBucket& bucket =
+                buckets[branch.terminal_bucket];
+            const std::size_t required =
+                final_successor_attribution.size() + 1;
+            if (final_successor_attribution.find(state) ==
+                    final_successor_attribution.end() &&
+                required > final_successor_preflight_entries) {
+                const std::size_t doubled =
+                    final_successor_preflight_entries >
+                            std::numeric_limits<std::size_t>::max() / 2
+                        ? std::numeric_limits<std::size_t>::max()
+                        : final_successor_preflight_entries * 2;
+                final_successor_preflight_entries =
+                    std::max(required, doubled);
+                terminal_attribution_scratch_bytes = saturated_add(
+                    unordered_storage_bytes(
+                        final_successor_preflight_entries,
+                        sizeof(decltype(
+                            final_successor_attribution)::value_type)),
+                    terminal_sample_storage_bytes);
+                const std::uint64_t projected = saturated_add(
+                    saturated_add(
+                        saturated_add(
+                            saturated_add(
+                                stationary_reforge_scratch_bytes,
+                                active_frontier_scratch_bytes),
+                            availability_scratch_bytes),
+                        terminal_attribution_scratch_bytes),
+                    unordered_storage_bytes(
+                        outcome_preflight_entries,
+                        sizeof(decltype(outcome_acc)::value_type)));
+                require_reforge_scratch_bytes(projected);
+                final_successor_attribution.reserve(
+                    final_successor_preflight_entries);
+            }
+            auto [found, inserted] =
+                final_successor_attribution.try_emplace(
+                    state, FinalSuccessorAttribution{});
+            FinalSuccessorAttribution& successor = found->second;
+            const bool duplicate = !inserted;
+            bool duplicate_within = false;
+            bool duplicate_across = false;
+            bool different_terminal_bucket = false;
+            bool different_predecessor_observation = false;
+            if (inserted) {
+                successor.last_predecessor_sequence =
+                    branch.predecessor_sequence;
+                successor.distinct_predecessors = 1;
+                successor.first_terminal_bucket =
+                    branch.terminal_bucket;
+                successor.first_predecessor_sat_mask =
+                    branch.predecessor.sat_mask;
+                successor.first_predecessor_below_mask =
+                    branch.predecessor.below_mask;
+                successor.first_predecessor_blocked_mask =
+                    branch.predecessor.blocked_mask;
+                successor.first_predecessor_prefix_picks =
+                    branch.predecessor.prefix_picks;
+                successor.first_predecessor_suffix_picks =
+                    branch.predecessor.suffix_picks;
+                successor.first_predecessor_availability_class =
+                    branch.predecessor.availability_class;
+            } else if (successor.last_predecessor_sequence ==
+                       branch.predecessor_sequence) {
+                duplicate_within = true;
+            } else {
+                duplicate_across = true;
+                successor.last_predecessor_sequence =
+                    branch.predecessor_sequence;
+                ++successor.distinct_predecessors;
+            }
+            if (duplicate) {
+                const RollBucket& first_bucket =
+                    buckets[successor.first_terminal_bucket];
+                different_terminal_bucket =
+                    successor.first_terminal_bucket !=
+                    branch.terminal_bucket;
+                if (different_terminal_bucket) {
+                    ++attribution
+                          .final_depth_duplicates_different_terminal_bucket;
+                    attribution
+                        .final_depth_different_terminal_bucket_duplicate_probability_mass +=
+                        probability;
+                } else {
+                    ++attribution
+                          .final_depth_duplicates_same_terminal_bucket;
+                    attribution
+                        .final_depth_same_terminal_bucket_duplicate_probability_mass +=
+                        probability;
+                }
+                if (first_bucket.side != bucket.side) {
+                    ++attribution
+                          .final_depth_duplicates_different_terminal_side;
+                }
+                if (first_bucket.kind != bucket.kind) {
+                    ++attribution
+                          .final_depth_duplicates_different_terminal_kind;
+                }
+                if (first_bucket.exclusion_groups !=
+                    bucket.exclusion_groups) {
+                    ++attribution
+                          .final_depth_duplicates_different_terminal_exclusion_signature;
+                }
+                different_predecessor_observation =
+                    successor.first_predecessor_sat_mask !=
+                        branch.predecessor.sat_mask ||
+                    successor.first_predecessor_below_mask !=
+                        branch.predecessor.below_mask ||
+                    successor.first_predecessor_blocked_mask !=
+                        branch.predecessor.blocked_mask ||
+                    successor.first_predecessor_prefix_picks !=
+                        branch.predecessor.prefix_picks ||
+                    successor.first_predecessor_suffix_picks !=
+                        branch.predecessor.suffix_picks;
+                if (different_predecessor_observation) {
+                    ++attribution
+                          .final_depth_duplicates_different_predecessor_observation;
+                    attribution
+                        .final_depth_different_predecessor_observation_duplicate_probability_mass +=
+                        probability;
+                }
+                if (successor.first_predecessor_availability_class !=
+                    branch.predecessor.availability_class) {
+                    ++attribution
+                          .final_depth_duplicates_different_predecessor_availability;
+                }
+            }
+            ++successor.contributions;
+            successor.probability_mass += probability;
+            ++attribution.final_depth_canonical_commits;
+            auto& side = attribution.terminal_side_counts.at(
+                static_cast<std::size_t>(bucket.side));
+            ++side.canonical_commits;
+            auto& kind = attribution.terminal_bucket_kind_counts.at(
+                static_cast<std::size_t>(bucket.kind));
+            ++kind.canonical_commits;
+            const auto credit_duplicate =
+                [&](ReforgeBuildAttribution::TerminalAggregate& aggregate) {
+                    ++aggregate.duplicate_canonical_commits;
+                    aggregate.duplicate_probability_mass += probability;
+                    if (duplicate_within) {
+                        ++aggregate.duplicates_within_predecessor;
+                    }
+                    if (duplicate_across) {
+                        ++aggregate.duplicates_across_predecessors;
+                    }
+                };
+            if (duplicate) {
+                credit_duplicate(side);
+                credit_duplicate(kind);
+                ++attribution.final_depth_duplicate_canonical_commits;
+                attribution.final_depth_duplicate_probability_mass +=
+                    probability;
+            }
+            if (duplicate_within) {
+                ++attribution
+                      .final_depth_duplicates_within_predecessor;
+                attribution
+                    .final_depth_within_predecessor_duplicate_probability_mass +=
+                    probability;
+            }
+            if (duplicate_across) {
+                ++attribution
+                      .final_depth_duplicates_across_predecessors;
+                attribution
+                    .final_depth_across_predecessor_duplicate_probability_mass +=
+                    probability;
+            }
+            const auto credit_predecessor_observation =
+                [&](const std::size_t index) {
+                    auto& observed = attribution
+                        .terminal_predecessor_observation_counts.at(index);
+                    ++observed.canonical_commits;
+                    if (duplicate) credit_duplicate(observed);
+                };
+            if (branch.predecessor.sat_mask != 0) {
+                credit_predecessor_observation(0);
+            }
+            if (branch.predecessor.below_mask != 0) {
+                credit_predecessor_observation(1);
+            }
+            bool predecessor_has_junk = false;
+            bool predecessor_has_exclusion = false;
+            for (std::uint8_t pick = 0;
+                 pick < branch.predecessor.pick_count; ++pick) {
+                const RollBucket& selected = buckets[
+                    branch.predecessor.picks[pick].first];
+                predecessor_has_junk |=
+                    selected.kind == BucketKind::Junk;
+                predecessor_has_exclusion |=
+                    !selected.exclusion_groups.empty();
+            }
+            if (predecessor_has_junk) {
+                credit_predecessor_observation(2);
+            }
+            if (predecessor_has_exclusion ||
+                !bucket.exclusion_groups.empty()) {
+                credit_predecessor_observation(3);
+            }
+            if (attribution.terminal_contribution_samples.size() >=
+                kTerminalContributionSampleLimit) {
+                ++attribution.terminal_contribution_samples_omitted;
+                return;
+            }
+            ReforgeBuildAttribution::TerminalContributionSample sample;
+            sample.predecessor_sequence =
+                branch.predecessor_sequence;
+            sample.predecessor_signature_hash =
+                branch.predecessor_signature_hash;
+            sample.predecessor_order_multiplicity =
+                branch.predecessor_order_multiplicity;
+            sample.predecessor_sat_mask = branch.predecessor.sat_mask;
+            sample.predecessor_below_mask =
+                branch.predecessor.below_mask;
+            sample.predecessor_blocked_mask =
+                branch.predecessor.blocked_mask;
+            sample.predecessor_prefix_picks =
+                branch.predecessor.prefix_picks;
+            sample.predecessor_suffix_picks =
+                branch.predecessor.suffix_picks;
+            sample.predecessor_availability_class =
+                branch.predecessor.availability_class;
+            sample.target_count = branch.target_count;
+            sample.terminal_bucket = branch.terminal_bucket;
+            sample.terminal_side = bucket.side;
+            sample.terminal_bucket_kind =
+                static_cast<std::uint8_t>(bucket.kind);
+            sample.terminal_goal_slot = bucket.slot;
+            sample.terminal_junk_class = bucket.junk_class;
+            sample.terminal_block_mask = bucket.block_mask;
+            sample.terminal_bucket_multiplicity = bucket.multiplicity;
+            sample.terminal_available_family_choices =
+                branch.available_family_choices;
+            sample.terminal_exclusion_group_count =
+                static_cast<std::uint32_t>(
+                    bucket.exclusion_groups.size());
+            sample.terminal_exclusion_signature_hash =
+                exclusion_signature_hash(bucket);
+            sample.canonical_successor_state = state;
+            sample.canonical_successor_hash =
+                abstract_state_hash(states_.at(state));
+            sample.duplicate_canonical_successor = duplicate;
+            sample.duplicate_within_predecessor = duplicate_within;
+            sample.duplicate_across_predecessors = duplicate_across;
+            sample.different_terminal_bucket_from_first =
+                different_terminal_bucket;
+            sample.different_predecessor_observation_from_first =
+                different_predecessor_observation;
+            sample.probability_mass = probability;
+            attribution.terminal_contribution_samples.push_back(
+                std::move(sample));
+        };
+    const auto begin_terminal_branch =
+        [&](const RollState& predecessor,
+            const std::uint32_t predecessor_sequence,
+            const std::uint64_t predecessor_order_multiplicity,
+            const std::uint16_t bucket_index,
+            const std::uint32_t available_family_choices,
+            const int target,
+            const double probability) {
+            if (!capture_attribution) return;
+            const RollBucket& bucket = buckets[bucket_index];
+            ++attribution.final_depth_branches;
+            attribution.final_depth_probability_mass += probability;
+            attribution.final_depth_physical_modifier_choices =
+                saturated_add(
+                    attribution.final_depth_physical_modifier_choices,
+                    available_family_choices);
+            attribution.final_depth_represented_order_paths =
+                saturated_add(
+                    attribution.final_depth_represented_order_paths,
+                    predecessor_order_multiplicity);
+            attribution.final_depth_terminal_order_excess =
+                saturated_add(
+                    attribution.final_depth_terminal_order_excess,
+                    predecessor_order_multiplicity > 0
+                        ? predecessor_order_multiplicity - 1
+                        : 0);
+            auto& side = attribution.terminal_side_counts.at(
+                static_cast<std::size_t>(bucket.side));
+            ++side.branches;
+            side.probability_mass += probability;
+            auto& kind = attribution.terminal_bucket_kind_counts.at(
+                static_cast<std::size_t>(bucket.kind));
+            ++kind.branches;
+            kind.probability_mass += probability;
+            const auto record_observation =
+                [&](const std::size_t index) {
+                    auto& observed = attribution
+                        .terminal_predecessor_observation_counts.at(index);
+                    ++observed.branches;
+                    observed.probability_mass += probability;
+                };
+            if (predecessor.sat_mask != 0) record_observation(0);
+            if (predecessor.below_mask != 0) record_observation(1);
+            bool predecessor_has_junk = false;
+            bool predecessor_has_exclusion = false;
+            for (std::uint8_t pick = 0;
+                 pick < predecessor.pick_count; ++pick) {
+                const RollBucket& selected =
+                    buckets[predecessor.picks[pick].first];
+                predecessor_has_junk |=
+                    selected.kind == BucketKind::Junk;
+                predecessor_has_exclusion |=
+                    !selected.exclusion_groups.empty();
+            }
+            if (predecessor_has_junk) record_observation(2);
+            if (predecessor_has_exclusion ||
+                !bucket.exclusion_groups.empty()) {
+                record_observation(3);
+                ++attribution
+                      .final_depth_branches_with_exclusion_observation;
+            }
+            record_target_contribution(target, probability, true);
+            active_terminal_branch = ActiveTerminalBranch{
+                predecessor,
+                predecessor_sequence,
+                roll_signature_hash(predecessor),
+                predecessor_order_multiplicity,
+                static_cast<std::uint8_t>(target),
+                bucket_index,
+                available_family_choices};
+        };
+
     /* --- forward frontier DP ------------------------------------------------ */
     std::optional<std::uint32_t> gated_retry_state;
     const auto retry_state = [&]() {
@@ -1583,7 +2074,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             if (result.gated_terminal_state == kNoId) {
                 result.gated_terminal_state = intern_state(successor);
             }
-            accumulate_outcome(
+            accumulate_outcome(result.gated_terminal_state, weight);
+            record_terminal_successor(
                 result.gated_terminal_state, weight);
             return;
         }
@@ -1592,8 +2084,9 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             return;
         }
         if (!veiled_reforge) {
-            accumulate_outcome(
-                intern_state(successor), weight);
+            const std::uint32_t state = intern_state(successor);
+            accumulate_outcome(state, weight);
+            record_terminal_successor(state, weight);
             return;
         }
 
@@ -1618,19 +2111,22 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                     static_cast<std::uint16_t>(
                         session.primary_group[mod_id]),
                     PC_MOD_SLOT_VEILED, nullptr) != PC_RESULT_OK) {
-                accumulate_outcome(
-                    state_id, weight * side_probability);
+                const double branch_weight = weight * side_probability;
+                accumulate_outcome(state_id, branch_weight);
+                record_terminal_successor(state_id, branch_weight);
                 state_dependent = true;
                 return;
             }
-            accumulate_outcome(
-                intern_item(concrete),
-                weight * side_probability);
+            const std::uint32_t state = intern_item(concrete);
+            const double branch_weight = weight * side_probability;
+            accumulate_outcome(state, branch_weight);
+            record_terminal_successor(state, branch_weight);
         };
         add_veiled(PC_SIDE_PREFIX, prefix_open);
         add_veiled(PC_SIDE_SUFFIX, suffix_open);
         if (!prefix_open && !suffix_open) {
             accumulate_outcome(state_id, weight);
+            record_terminal_successor(state_id, weight);
             state_dependent = true;
         }
     };
@@ -1839,9 +2335,11 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             saturated_add(
                 saturated_add(
                     saturated_add(
-                        stationary_reforge_scratch_bytes,
-                        active_frontier_scratch_bytes),
-                    availability_storage_bytes(1)),
+                        saturated_add(
+                            stationary_reforge_scratch_bytes,
+                            active_frontier_scratch_bytes),
+                        availability_storage_bytes(1)),
+                    terminal_attribution_scratch_bytes),
                 unordered_storage_bytes(
                     outcome_preflight_entries,
                     sizeof(decltype(outcome_acc)::value_type))));
@@ -1956,8 +2454,28 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             return static_cast<double>(bucket.weight) *
                    (bucket.multiplicity - used);
         };
+    const auto available_family_choices =
+        [&](const RollState& roll, const std::uint16_t b) {
+            const RollBucket& bucket = buckets[b];
+            std::uint32_t used = roll.picks_of(b);
+            if (bucket.interchangeable_family_class) {
+                used = 0;
+                for (std::uint8_t pick = 0;
+                     pick < roll.pick_count; ++pick) {
+                    if (buckets[roll.picks[pick].first].family_class ==
+                        bucket.family_class) {
+                        used += roll.picks[pick].second;
+                    }
+                }
+            }
+            return used < bucket.multiplicity
+                       ? bucket.multiplicity - used
+                       : 0;
+        };
 
     std::unordered_map<RollState, double, RollStateHash> frontier;
+    std::unordered_map<RollState, std::uint64_t, RollStateHash>
+        frontier_order_multiplicity;
     std::vector<std::pair<RollState, double>> ordered_frontier;
     std::vector<double> remaining_by_bucket(bucket_count, 0.0);
     std::vector<std::uint16_t> eligible_buckets;
@@ -1969,17 +2487,31 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         unordered_storage_bytes(
             frontier_preflight_entries,
             sizeof(decltype(frontier)::value_type));
+    if (capture_attribution) {
+        active_frontier_scratch_bytes = saturated_add(
+            active_frontier_scratch_bytes,
+            unordered_storage_bytes(
+                frontier_preflight_entries,
+                sizeof(decltype(
+                    frontier_order_multiplicity)::value_type)));
+    }
     require_reforge_scratch_bytes(
         saturated_add(
             saturated_add(
                 saturated_add(
-                    stationary_reforge_scratch_bytes,
-                    active_frontier_scratch_bytes),
-                availability_scratch_bytes),
+                    saturated_add(
+                        stationary_reforge_scratch_bytes,
+                        active_frontier_scratch_bytes),
+                    availability_scratch_bytes),
+                terminal_attribution_scratch_bytes),
             unordered_storage_bytes(
                 outcome_preflight_entries,
                 sizeof(decltype(outcome_acc)::value_type))));
     frontier.reserve(frontier_preflight_entries);
+    if (capture_attribution) {
+        frontier_order_multiplicity.reserve(
+            frontier_preflight_entries);
+    }
     const auto frontier_started = std::chrono::steady_clock::now();
     const auto add_bucket_pick =
         [&](const RollState& roll,
@@ -2077,7 +2609,11 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     if (!harvest) {
         RollState root;
         root.availability_class = root_availability_class;
-        frontier.emplace(std::move(root), 1.0);
+        const auto inserted = frontier.emplace(root, 1.0);
+        if (capture_attribution) {
+            frontier_order_multiplicity.emplace(
+                inserted.first->first, 1);
+        }
     } else {
         /* Guaranteed first pick from the tag-targeted natural pool.
          * An empty pool means the engine action does not apply. */
@@ -2116,6 +2652,14 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                     frontier.try_emplace(child, 0.0);
                 (void)inserted;
                 found->second += remaining / total;
+                if (capture_attribution) {
+                    auto [orders, unused] =
+                        frontier_order_multiplicity.try_emplace(
+                            child, 0);
+                    (void)unused;
+                    orders->second = saturated_add(
+                        orders->second, 1);
+                }
             };
         if (reverse_reforge_bucket_enumeration_) {
             for (std::size_t index = buckets.size(); index > 0; --index) {
@@ -2135,6 +2679,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             exact != targets.end() ? exact->second : 0.0;
         const double deeper = target_suffix(depth);
         std::unordered_map<RollState, double, RollStateHash> next;
+        std::unordered_map<RollState, std::uint64_t, RollStateHash>
+            next_order_multiplicity;
         if (frontier.size() >
             std::numeric_limits<std::size_t>::max() / 2) {
             require_reforge_scratch_bytes(
@@ -2162,19 +2708,38 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                             ordered_preflight_entries,
                             sizeof(decltype(
                                 ordered_frontier)::value_type)));
+                if (capture_attribution) {
+                    active_frontier_scratch_bytes = saturated_add(
+                        active_frontier_scratch_bytes,
+                        saturated_add(
+                            unordered_storage_bytes(
+                                frontier_preflight_entries,
+                                sizeof(decltype(
+                                    frontier_order_multiplicity)::value_type)),
+                            unordered_storage_bytes(
+                                next_preflight_entries,
+                                sizeof(decltype(
+                                    next_order_multiplicity)::value_type))));
+                }
                 require_reforge_scratch_bytes(
                     saturated_add(
                         saturated_add(
                             saturated_add(
-                                stationary_reforge_scratch_bytes,
-                                active_frontier_scratch_bytes),
-                            availability_scratch_bytes),
+                                saturated_add(
+                                    stationary_reforge_scratch_bytes,
+                                    active_frontier_scratch_bytes),
+                                availability_scratch_bytes),
+                            terminal_attribution_scratch_bytes),
                         unordered_storage_bytes(
                             outcome_preflight_entries,
                             sizeof(decltype(outcome_acc)::value_type))));
             };
         update_frontier_preflight();
         next.reserve(next_preflight_entries);
+        if (capture_attribution) {
+            next_order_multiplicity.reserve(
+                next_preflight_entries);
+        }
         ordered_frontier.reserve(
             ordered_preflight_entries);
         ordered_frontier.assign(frontier.begin(), frontier.end());
@@ -2189,7 +2754,14 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             [](const auto& left, const auto& right) {
                 return left.first < right.first;
             });
+        std::uint32_t predecessor_sequence = 0;
         for (const auto& [roll, probability] : ordered_frontier) {
+            const std::uint32_t current_predecessor_sequence =
+                predecessor_sequence++;
+            const std::uint64_t predecessor_order_multiplicity =
+                capture_attribution
+                    ? frontier_order_multiplicity.at(roll)
+                    : 1;
             const std::uint64_t raw_node_work = 1 + buckets.size();
             telemetry_.reforge_raw_equivalent_work = saturated_add(
                 telemetry_.reforge_raw_equivalent_work,
@@ -2205,12 +2777,25 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                     active_node_work;
             }
             if (goal_progress_gated && roll_is_goal(roll)) {
+                if (capture_attribution) {
+                    for (const auto& [target, target_probability] :
+                         targets) {
+                        if (target >= depth) {
+                            record_target_contribution(
+                                target,
+                                probability * target_probability,
+                                false);
+                        }
+                    }
+                }
                 commit_outcome(
                     roll, probability * (stop_here + deeper));
                 ++result.gated_terminal_short_circuits;
                 continue;
             }
             if (stop_here > 0.0) {
+                record_target_contribution(
+                    depth, probability * stop_here, false);
                 commit_outcome(roll, probability * stop_here);
             }
             if (deeper <= 0.0) continue;
@@ -2289,28 +2874,80 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                         buckets[b].kind == BucketKind::GoalSat;
                 }
                 if (!can_make_progress) {
+                    if (capture_attribution) {
+                        for (const auto& [target, target_probability] :
+                             targets) {
+                            if (target > depth) {
+                                record_target_contribution(
+                                    target,
+                                    probability * target_probability,
+                                    false);
+                            }
+                        }
+                    }
                     commit_retry(probability * deeper);
                     ++result.gated_retry_short_circuits;
                     continue;
                 }
             }
             if (total <= 0.0) {
+                if (capture_attribution) {
+                    for (const auto& [target, target_probability] :
+                         targets) {
+                        if (target > depth) {
+                            record_target_contribution(
+                                target,
+                                probability * target_probability,
+                                false);
+                        }
+                    }
+                }
                 commit_outcome(roll, probability * deeper);
                 continue;
             }
             if (goal_progress_gated && depth + 1 == max_target) {
+                if (capture_attribution && !eligible_buckets.empty()) {
+                    ++attribution.final_depth_predecessors;
+                    attribution
+                        .final_depth_max_predecessor_order_multiplicity =
+                        std::max(
+                            attribution
+                                .final_depth_max_predecessor_order_multiplicity,
+                            predecessor_order_multiplicity);
+                    if (predecessor_order_multiplicity > 1) {
+                        ++attribution
+                              .final_depth_predecessors_with_multiple_orders;
+                        attribution.final_depth_predecessor_order_excess =
+                            saturated_add(
+                                attribution
+                                    .final_depth_predecessor_order_excess,
+                                predecessor_order_multiplicity - 1);
+                    }
+                }
                 double retry_weight = 0.0;
                 for (const std::uint16_t b : eligible_buckets) {
                     const double remaining = remaining_by_bucket[b];
                     const double branch_weight =
                         probability * deeper * (remaining / total);
+                    begin_terminal_branch(
+                        roll,
+                        current_predecessor_sequence,
+                        predecessor_order_multiplicity,
+                        b,
+                        available_family_choices(roll, b),
+                        max_target,
+                        branch_weight);
                     if (roll_has_zero_progress(roll) &&
                         buckets[b].kind != BucketKind::GoalSat) {
+                        record_terminal_successor(
+                            retry_state(), branch_weight);
+                        active_terminal_branch.reset();
                         retry_weight += branch_weight;
                         continue;
                     }
                     commit_outcome(
                         add_bucket_pick(roll, b), branch_weight);
+                    active_terminal_branch.reset();
                 }
                 if (retry_weight > 0.0) {
                     commit_retry(retry_weight);
@@ -2322,6 +2959,14 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 const double remaining = remaining_by_bucket[b];
                 const double p = probability * (remaining / total);
                 RollState child = add_bucket_pick(roll, b);
+                if (capture_attribution) {
+                    auto [orders, unused] =
+                        next_order_multiplicity.try_emplace(child, 0);
+                    (void)unused;
+                    orders->second = saturated_add(
+                        orders->second,
+                        predecessor_order_multiplicity);
+                }
                 const auto existing = next.find(child);
                 if (existing != next.end()) {
                     existing->second += p;
@@ -2338,11 +2983,19 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                         std::max(required, doubled);
                     update_frontier_preflight();
                     next.reserve(next_preflight_entries);
+                    if (capture_attribution) {
+                        next_order_multiplicity.reserve(
+                            next_preflight_entries);
+                    }
                 }
                 next.emplace(std::move(child), p);
             }
         }
         frontier = std::move(next);
+        if (capture_attribution) {
+            frontier_order_multiplicity =
+                std::move(next_order_multiplicity);
+        }
         frontier_preflight_entries =
             next_preflight_entries;
     }

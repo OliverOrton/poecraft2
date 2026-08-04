@@ -1,0 +1,151 @@
+{
+  "schema_version": "terminal_reforge_attribution_gate3_v1",
+  "date": "2026-08-03",
+  "decision": "prototype_completed_successor_accumulation_with_factored_last_pick",
+  "branch": "codex/fallback-and-terminal-reforge-factorization",
+  "starting_commit": "0b4ba38aa5754a39715640ad6d7a48cab2dc2b6c",
+  "parent_gate_commit": "a663bce98e24b793277f01bd4b56727aa8fceb9d",
+  "gate_commit": "the commit containing this evidence record",
+  "scope": {
+    "telemetry_only": true,
+    "active_evaluator_changed": false,
+    "v1_v2_ledgers_changed": false,
+    "product_caps_changed": false,
+    "canonical_fixture_changed": false,
+    "canonical_hard_case_rerun": false,
+    "fallback_counted_toward_track_b": false
+  },
+  "measurement": {
+    "case_id": "gate3-terminal-attribution-18m",
+    "semantic_carrier": "natural-t1-breadth-two-4e65dda9c53b",
+    "temporary_max_reforge_work": 18000000,
+    "canonical_max_reforge_work": 20000000,
+    "projected_reforge_frontier_diagnostic": true,
+    "exact_strategy_evaluation_requested": false,
+    "verification_requested": false,
+    "actual_status": "refused_resource_cap",
+    "all_expectations_met": true,
+    "completed_selected_rows": 4,
+    "deterministic_row_aggregate_match": true,
+    "report_total_wall_ms": 7117.4302,
+    "solve_wall_ms": 3649.0246,
+    "maximum_solve_step_ms": 594.2134,
+    "native_live_owned_bytes": 305324403,
+    "native_peak_owned_bytes": 375503085,
+    "solver_telemetry_json_bytes": 598785
+  },
+  "binding_row": {
+    "action": "essence:Metadata/Items/Currency/CurrencyEssenceZeal4",
+    "forced_modifier_count": 1,
+    "frontier_states": 51155,
+    "eligible_edges": 824190,
+    "terminal_roll_states": 688739,
+    "canonical_outcomes": 172596,
+    "v1_raw_equivalent_work": 2097355,
+    "v2_sparse_work": 923141,
+    "instrumented_wall_ns": 620062500,
+    "frontier_wall_ns": 535066300,
+    "finalize_wall_ns": 79581800
+  },
+  "target_channels": [
+    {"target_count": 4, "state_contributions": 7604, "probability_mass": 0.33333333333333315, "final_depth_branches": 0},
+    {"target_count": 5, "state_contributions": 43259, "probability_mass": 0.33333333333334392, "final_depth_branches": 0},
+    {"target_count": 6, "state_contributions": 641724, "probability_mass": 0.33333333333334481, "final_depth_branches": 638365, "final_depth_mass": 0.3283997854817019, "other_state_contributions": 3359, "other_probability_mass": 0.0049335478516311}
+  ],
+  "final_depth": {
+    "predecessors": 39900,
+    "branches": 638365,
+    "commits": 638365,
+    "share_of_v1_work": 0.30436760350918654,
+    "share_of_v2_work": 0.6915140828984949,
+    "unique_canonical_successors": 125581,
+    "duplicate_accumulable_contributions": 512784,
+    "unique_successor_share_of_branches": 0.19672392815550726,
+    "duplicate_share_of_branches": 0.8032760718444927,
+    "unique_successor_share_of_all_row_outcomes": 0.7276008713991054,
+    "probability_mass": 0.3283997854817019,
+    "duplicate_probability_mass": 0.24498527000887341,
+    "duplicate_mass_share": 0.745996437630869,
+    "unique_probability_mass": 0.08341451547282849,
+    "sample_limit": 64,
+    "omitted_samples": 638301
+  },
+  "by_side": {
+    "prefix": {"branches": 376740, "unique_successors": 115115, "duplicates": 261625, "mass": 0.26810262, "duplicate_mass": 0.18812598},
+    "suffix": {"branches": 261625, "unique_successors": 10466, "duplicates": 251159, "mass": 0.06029716, "duplicate_mass": 0.05685929}
+  },
+  "by_terminal_bucket": {
+    "goal_satisfied": {"branches": 10465, "unique_successors": 1, "duplicates": 10464, "mass": 0.0004911147},
+    "below_tier": {"branches": 10465, "unique_successors": 10465, "duplicates": 0, "mass": 0.003437803},
+    "junk": {"branches": 617435, "unique_successors": 115115, "duplicates": 502320, "mass": 0.324470868, "duplicate_mass": 0.244494228}
+  },
+  "causal_attribution": {
+    "same_predecessor_duplicates": 0,
+    "different_predecessor_duplicates": 512784,
+    "same_terminal_bucket_duplicates": 10464,
+    "different_terminal_bucket_duplicates": 502320,
+    "different_terminal_bucket_duplicate_mass": 0.244494228,
+    "different_side_duplicates": 261625,
+    "different_modifier_kind_duplicates": 41860,
+    "different_exclusion_signature_duplicates": 502320,
+    "different_predecessor_observation_duplicates": 272090,
+    "different_predecessor_observation_mass": 0.087380254,
+    "different_predecessor_availability_duplicates": 512330,
+    "successors_with_multiple_predecessors": 125581,
+    "maximum_predecessors_per_successor": 10465,
+    "conclusion": "convergence happens after the completed canonical successor is known; availability and exclusions cannot be discarded before the terminal pick"
+  },
+  "order_attribution": {
+    "predecessors_with_multiple_orders": 39900,
+    "order_multiplicity": 24,
+    "predecessor_order_excess": 917700,
+    "represented_terminal_ordered_paths": 15320760,
+    "terminal_order_excess": 14682395,
+    "current_unordered_frontier_already_collapses_order": true
+  },
+  "predecessor_observation": {
+    "goal_satisfied_branches": 0,
+    "below_tier_branches": 41860,
+    "below_tier_duplicate_branches": 41860,
+    "junk_or_exclusion_observed_branches": 638365
+  },
+  "evidence_backed_lower_bounds": {
+    "unavoidable_completed_successor_representations": 125581,
+    "algebraically_accumulable_terminal_contributions": 512784,
+    "temporary_roll_order_distinctions": 14682395,
+    "v2_work_remaining_real": 638365
+  },
+  "selected_gate4_representation": {
+    "form": "completed-successor unordered set/subset recurrence with a factored last-pick transform shared across predecessor convergence",
+    "exact_accumulation": "integer/rational before double conversion",
+    "preterminal_key_retains": ["availability", "generation_group_exclusions", "side_capacity", "goal_and_below_tier_state", "forced_and_guaranteed_channels", "pool_and_fossil_weights", "crafted_fractured_and_protection_state", "observation_and_exclusion_signatures", "action_program", "artifact_generation"],
+    "discarded_only_after_completion": ["last_pick_identity", "predecessor_identity", "roll_order"],
+    "rationale": "there are no same-predecessor duplicates, while 502320 duplicate contributions cross final bucket and exclusion signatures and converge only on the completed canonical successor"
+  },
+  "verification": {
+    "build_command": "powershell -File scripts/build.ps1",
+    "build_result": "passed",
+    "focused_command": "build/engine/poecraft_engine_tests.exe --solver-calc-only data/compiled/current",
+    "focused_result": "250746 checks, 0 failures",
+    "forward_reverse_aggregate_conservation": true
+  },
+  "artifacts": {
+    "report": "build/acceptance/certified-fallback-and-terminal-reforge-factorization/gate3-terminal-attribution-18m/report.json",
+    "report_sha256": "1d018aecf5953de1f20efe33b4e54d903edcf53dc8174a5791372939e361c404",
+    "partial_sha256": "2c6d0905bc361dba530942d147edd7e34284bbc278b416a438c11c8f9a88b1e9",
+    "manifest_sha256": "29895c47de8d6e9b2cfb41b212fa235b65e34da44ff20c54984fc0e10452e3b2",
+    "case_sha256": "b61fb27af7e85eb58e0ffd199088811b2f36b3ebb63c18604cede2d1e082d8cd"
+  },
+  "source_sha256": {
+    "engine/src/solver_calc.cpp": "f5b3bbbbb470feed2295b8a6240d87197c7801564c74acaafe115210a35d460a",
+    "engine/src/solver_calc_types.hpp": "078b7677cb69c6c27547d321ffa262090592f9c2487fa3192208b523000c0bad",
+    "engine/src/solver_reforge.cpp": "46d4b7ed376ed1735081c23114dff74204625c77054be6772818c62f6fd905b4",
+    "engine/src/solver_solve_telemetry.cpp": "417679100df5f57856c71428d4735d951cacafa9c49f4d92a52c0ecf4e635161",
+    "engine/tests/test_solver_calc.cpp": "210b8b76bc2d3f31c0f3d710a114b1c7267f795278c73bd13a5df18177c20f2e"
+  },
+  "binary_sha256": {
+    "benchmark": "cc4df86ae718e1c5110b7bc2310019de400bfc8558d0dd59bcd25dc51bea8d87",
+    "engine_dll": "72420d96f279802202c67e1aff6bab4296a28d134b418ca1f3e77066dd6cd25a",
+    "tests": "70967674d779e007fb8bcb47e2f5689ff51d3033ae034688b5fb03d68a080b10"
+  }
+}

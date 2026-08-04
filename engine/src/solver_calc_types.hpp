@@ -187,6 +187,54 @@ struct ExecutableFixedOptionRecipe {
  * diagnostic only: no solver decision or proof may depend on them.
  */
 struct ReforgeBuildAttribution {
+    struct TerminalAggregate {
+        std::uint64_t branches = 0;
+        std::uint64_t canonical_commits = 0;
+        std::uint64_t duplicate_canonical_commits = 0;
+        std::uint64_t duplicates_within_predecessor = 0;
+        std::uint64_t duplicates_across_predecessors = 0;
+        double probability_mass = 0.0;
+        double duplicate_probability_mass = 0.0;
+    };
+
+    struct TerminalTargetAggregate {
+        std::uint64_t state_contributions = 0;
+        std::uint64_t final_modifier_branches = 0;
+        double probability_mass = 0.0;
+        double final_modifier_probability_mass = 0.0;
+    };
+
+    struct TerminalContributionSample {
+        std::uint32_t predecessor_sequence = 0;
+        std::uint64_t predecessor_signature_hash = 0;
+        std::uint64_t predecessor_order_multiplicity = 0;
+        std::uint8_t predecessor_sat_mask = 0;
+        std::uint8_t predecessor_below_mask = 0;
+        std::uint8_t predecessor_blocked_mask = 0;
+        std::uint8_t predecessor_prefix_picks = 0;
+        std::uint8_t predecessor_suffix_picks = 0;
+        std::uint32_t predecessor_availability_class = kNoId;
+        std::uint8_t target_count = 0;
+        std::uint32_t terminal_bucket = kNoId;
+        std::int8_t terminal_side = -1;
+        std::uint8_t terminal_bucket_kind = 0;
+        std::uint8_t terminal_goal_slot = 0;
+        std::uint32_t terminal_junk_class = kNoId;
+        std::uint32_t terminal_block_mask = 0;
+        std::uint32_t terminal_bucket_multiplicity = 0;
+        std::uint32_t terminal_available_family_choices = 0;
+        std::uint32_t terminal_exclusion_group_count = 0;
+        std::uint64_t terminal_exclusion_signature_hash = 0;
+        std::uint32_t canonical_successor_state = kNoId;
+        std::uint64_t canonical_successor_hash = 0;
+        bool duplicate_canonical_successor = false;
+        bool duplicate_within_predecessor = false;
+        bool duplicate_across_predecessors = false;
+        bool different_terminal_bucket_from_first = false;
+        bool different_predecessor_observation_from_first = false;
+        double probability_mass = 0.0;
+    };
+
     std::string action_id;
     std::uint32_t action_index = kNoId;
     std::uint64_t preserved_base_hash = 0;
@@ -233,6 +281,54 @@ struct ReforgeBuildAttribution {
         terminal_prefix_counts{};
     std::array<std::uint64_t, kMaxExplicitAffixes + 1>
         terminal_suffix_counts{};
+    /* Final-pick causal accounting. This is bounded, diagnostic-only
+     * telemetry: aggregate ledgers are exact for the completed row and the
+     * sample vector retains only a deterministic semantic prefix. */
+    std::array<TerminalTargetAggregate, kMaxExplicitAffixes + 1>
+        terminal_target_counts{};
+    std::array<TerminalAggregate, 2> terminal_side_counts{};
+    std::array<TerminalAggregate, 3> terminal_bucket_kind_counts{};
+    std::array<TerminalAggregate, 4>
+        terminal_predecessor_observation_counts{};
+    std::uint64_t final_depth_predecessors = 0;
+    std::uint64_t final_depth_branches = 0;
+    std::uint64_t final_depth_canonical_commits = 0;
+    std::uint64_t final_depth_unique_canonical_successors = 0;
+    std::uint64_t final_depth_duplicate_canonical_commits = 0;
+    std::uint64_t final_depth_duplicates_within_predecessor = 0;
+    std::uint64_t final_depth_duplicates_across_predecessors = 0;
+    std::uint64_t final_depth_duplicates_same_terminal_bucket = 0;
+    std::uint64_t final_depth_duplicates_different_terminal_bucket = 0;
+    std::uint64_t final_depth_duplicates_different_terminal_side = 0;
+    std::uint64_t final_depth_duplicates_different_terminal_kind = 0;
+    std::uint64_t
+        final_depth_duplicates_different_terminal_exclusion_signature = 0;
+    std::uint64_t
+        final_depth_duplicates_different_predecessor_observation = 0;
+    std::uint64_t
+        final_depth_duplicates_different_predecessor_availability = 0;
+    std::uint64_t final_depth_successors_with_multiple_predecessors = 0;
+    std::uint64_t final_depth_predecessor_convergence_excess = 0;
+    std::uint64_t final_depth_max_predecessors_per_successor = 0;
+    std::uint64_t final_depth_predecessors_with_multiple_orders = 0;
+    std::uint64_t final_depth_max_predecessor_order_multiplicity = 0;
+    std::uint64_t final_depth_predecessor_order_excess = 0;
+    std::uint64_t final_depth_represented_order_paths = 0;
+    std::uint64_t final_depth_terminal_order_excess = 0;
+    std::uint64_t final_depth_physical_modifier_choices = 0;
+    std::uint64_t final_depth_branches_with_exclusion_observation = 0;
+    double final_depth_probability_mass = 0.0;
+    double final_depth_duplicate_probability_mass = 0.0;
+    double final_depth_within_predecessor_duplicate_probability_mass = 0.0;
+    double final_depth_across_predecessor_duplicate_probability_mass = 0.0;
+    double final_depth_same_terminal_bucket_duplicate_probability_mass = 0.0;
+    double
+        final_depth_different_terminal_bucket_duplicate_probability_mass = 0.0;
+    double
+        final_depth_different_predecessor_observation_duplicate_probability_mass =
+            0.0;
+    std::vector<TerminalContributionSample> terminal_contribution_samples;
+    std::uint64_t terminal_contribution_samples_omitted = 0;
     std::uint64_t raw_choice_table_work = 0;
     std::uint64_t guaranteed_scan_work = 0;
     std::uint64_t frontier_work = 0;

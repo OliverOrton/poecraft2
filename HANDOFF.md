@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: certified fallback hard-case qualification Gate 2 is complete.
-Track B Gate 3 terminal-branch attribution is active.**
+**Status: certified fallback Gate 2 and terminal attribution Gate 3 are
+complete. Track B Gate 4 exact terminal accumulation is active.**
 
 Current plan:
 [Certified Fallback Publication And Final-Depth Reforge Accumulation](docs/active/certified-fallback-and-terminal-reforge-factorization.md).
@@ -32,8 +32,9 @@ Current milestone starting commit:
 
 Current milestone commits: Gate 0 is
 `abe8e525d59cc6ae90663a1d56736d411da7ca6c`. Gate 1 is
-`feef64a25a1351b7111aab1fcb4d02e70404c80c`. Gate 2 is recorded by the
-current local commit. Track B Gate 3 is the active implementation boundary.
+`feef64a25a1351b7111aab1fcb4d02e70404c80c`. Gate 2 is
+`a663bce98e24b793277f01bd4b56727aa8fceb9d`. Gate 3 is recorded by the
+current local commit. Track B Gate 4 is the active implementation boundary.
 
 Selected-closure milestone starting commit:
 `a6f7e13cf7d5cb202874c210992689d601c0e650`
@@ -147,6 +148,36 @@ Nothing has been pushed or merged. `main` remains unchanged at
   `fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate2.json`.
   The hard case must not be rerun. Gate 3 now owns deterministic attribution
   of the 638,365 exact final-depth branches.
+
+## Terminal branch attribution Gate 3
+
+- Bounded deterministic telemetry classifies the exact evaluator's final
+  contributions without affecting solver decisions. V1/V2 ledgers and the
+  active evaluator remain unchanged, and owned-memory preflight includes the
+  diagnostic successor, order, and sample storage.
+- The binding Zeal Essence row has 39,900 terminal predecessors, 638,365 real
+  final branches, and 125,581 completed canonical successors. The other
+  512,784 contributions are algebraically accumulable, representing 80.33%
+  of branches and 74.60% of final probability mass.
+- Every duplicate crosses predecessors. There are no same-predecessor
+  duplicates; 502,320 duplicates cross final bucket/exclusion signatures,
+  512,330 cross predecessor availability, and 261,625 cross side. Availability
+  and exclusions therefore remain in the preterminal key until the final pick
+  is applied.
+- All 39,900 predecessors represent multiple roll orders with multiplicity
+  24. The existing unordered frontier already collapses those orders; the
+  telemetry reports 14,682,395 temporary terminal order distinctions without
+  reclassifying any of the 638,365 V2 branches as free.
+- Gate 4 must use the completed canonical successor as its convergence key,
+  with an unordered set/subset recurrence and factored last-pick transform.
+  Predecessor, last-pick, and order identity may disappear only after that
+  completed successor exists. Accumulate exact integer/rational mass before
+  floating-point conversion.
+- The focused 18M diagnostic completes four deterministic selected rows,
+  passes all corpus expectations, and does not rerun the canonical hard case.
+  The native build and focused solver-calc suite pass 250,746 checks with zero
+  failures. Track A's fallback is not counted toward Track B. Evidence is
+  `fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate3.json`.
 
 ## Selected-closure scaling Gate 0
 

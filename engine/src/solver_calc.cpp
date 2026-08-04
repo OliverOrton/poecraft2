@@ -84,6 +84,21 @@ std::uint64_t selected_string_bytes(const std::string& value) {
     return static_cast<std::uint64_t>(value.capacity() + 1);
 }
 
+std::uint64_t reforge_attribution_owned_bytes(
+    const CalcTelemetry& telemetry) {
+    std::uint64_t bytes =
+        telemetry.reforge_build_attribution_samples.capacity() *
+        sizeof(ReforgeBuildAttribution);
+    for (const ReforgeBuildAttribution& sample :
+         telemetry.reforge_build_attribution_samples) {
+        bytes += selected_string_bytes(sample.action_id);
+        bytes += sample.terminal_contribution_samples.capacity() *
+                 sizeof(ReforgeBuildAttribution::
+                            TerminalContributionSample);
+    }
+    return bytes;
+}
+
 std::uint64_t planner_operator_nested_bytes(const PlannerOperator& value) {
     std::uint64_t bytes =
         selected_string_bytes(value.id) +
@@ -536,6 +551,7 @@ std::uint64_t CalcContext::dynamic_shallow_owned_bytes() const {
     bytes += telemetry_rows_.size() *
              (sizeof(std::pair<const std::uint64_t, std::uint8_t>) +
               2 * sizeof(void*));
+    bytes += reforge_attribution_owned_bytes(telemetry_);
     return bytes;
 }
 
@@ -1638,6 +1654,7 @@ std::uint64_t CalcContext::calculate_owned_bytes() const {
     bytes += telemetry_rows_.size() *
              (sizeof(std::pair<const std::uint64_t, std::uint8_t>) +
               2 * sizeof(void*));
+    bytes += reforge_attribution_owned_bytes(telemetry_);
     if (automatic_comparison_context_ != nullptr) {
         bytes += automatic_comparison_context_->calculate_owned_bytes();
     }

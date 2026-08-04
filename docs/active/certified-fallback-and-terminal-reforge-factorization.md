@@ -1,7 +1,7 @@
 # Certified Fallback Publication And Final-Depth Reforge Accumulation
 
-**Status: Track A Gate 2 is complete; Track B Gate 3 terminal-branch
-attribution is the active boundary.**
+**Status: Track A Gate 2 and Track B Gate 3 are complete; Track B Gate 4 exact
+terminal accumulation is the active boundary.**
 
 Owner: Oliver
 
@@ -172,7 +172,8 @@ authority. The canonical hard case will not be rerun in later gates.
 
 ### Gate 3 — explain the 638,365 terminal branches
 
-**Status: active.**
+**Status: complete.** Tracked evidence is
+[`fallback-and-terminal-reforge-factorization-gate3.json`](../../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate3.json).
 
 Add bounded deterministic telemetry classifying final-depth contributions by
 target count, side, predecessor, terminal bucket, canonical successor,
@@ -187,7 +188,34 @@ accumulable contributions and temporary roll-order distinctions. Branch work
 remains real work even when the implementation avoids materializing each
 branch. Commit attribution separately.
 
+Bounded deterministic telemetry now attributes the exact evaluator's final
+depth without changing its decisions or the V1/V2 work ledgers. The binding
+Zeal Essence row has 39,900 terminal predecessors and 638,365 real terminal
+branches, but only 125,581 completed canonical successors. The remaining
+512,784 contributions (80.33%) are algebraically accumulable; they carry
+74.60% of terminal probability mass.
+
+All duplicates cross predecessor identities. None occur within one
+predecessor. Of the duplicates, 502,320 cross terminal bucket and exclusion
+signatures, 512,330 cross predecessor availability, and 261,625 cross side.
+Therefore availability and generation-group exclusions remain observable
+until the final modifier has been applied, but predecessor, last-pick, and
+roll-order identity cease to matter once the completed canonical successor is
+formed. The existing unordered frontier already collapses the 24 possible
+orders per predecessor; the diagnostic records 14,682,395 temporary terminal
+order distinctions separately from the 638,365 charged V2 branches.
+
+Gate 4 consequently prototypes a completed-successor unordered set/subset
+recurrence with a factored last-pick transform shared across converging
+predecessors. Exact integer/rational mass is accumulated before conversion to
+floating point. The native build and the focused solver-calc suite pass
+250,746 checks with zero failures, including forward/reversed aggregate
+conservation. The canonical hard case was not rerun and the retained Track A
+fallback receives no Track B credit.
+
 ### Gate 4 — exact V3 terminal accumulator prototype
+
+**Status: active.**
 
 Choose the representation from Gate 3 evidence. Candidate forms include an
 unordered-set DP, factored last-pick transform, subset recurrence, cached
