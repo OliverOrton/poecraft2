@@ -1878,6 +1878,26 @@ void run_policy_guided_exact_lift_tests() {
              std::string::npos);
     PC_CHECK(refinement_json.find("\"owner\":\"strict_alternative\"") !=
              std::string::npos);
+    PC_CHECK(refinement_json.find("\"evaluator\":\"v3_factored\"") !=
+             std::string::npos);
+    bool saw_production_selected_v3 = false;
+    bool saw_production_alternative_v3 = false;
+    for (const ReforgeRowTelemetry& row :
+         refinement_telemetry.strict_reforge_row_samples) {
+        if (row.owner == ReforgeRowOwner::StrictSelected) {
+            saw_production_selected_v3 = true;
+            PC_CHECK(
+                row.evaluator ==
+                ReforgeEvaluatorVersion::V3Factored);
+        } else if (row.owner == ReforgeRowOwner::StrictAlternative) {
+            saw_production_alternative_v3 = true;
+            PC_CHECK(
+                row.evaluator ==
+                ReforgeEvaluatorVersion::V3Factored);
+        }
+    }
+    PC_CHECK(saw_production_selected_v3);
+    PC_CHECK(saw_production_alternative_v3);
     PC_CHECK(refinement_json.find("\"work_to_first_partition\":") !=
              std::string::npos);
     PC_CHECK(refinement_json.find("\"wall_ns_to_first_partition\":") !=
@@ -1938,6 +1958,66 @@ void run_policy_guided_exact_lift_tests() {
         lifted.refinement.telemetry.lumpability_checks > 0);
     PC_CHECK(
         lifted.adapter.canonical_successor_collapses > 0);
+
+    const auto check_strict_evaluator = [](
+            const refinement::PolicyExactLiftCertificate& certificate,
+            const ReforgeEvaluatorVersion expected) {
+        PC_CHECK(!certificate.adapter.strict_reforge_row_samples.empty());
+        for (const ReforgeRowTelemetry& row :
+             certificate.adapter.strict_reforge_row_samples) {
+            PC_CHECK(row.evaluator == expected);
+        }
+    };
+    check_strict_evaluator(
+        lifted, ReforgeEvaluatorVersion::V3Factored);
+
+    SolveOptions raw_oracle_options = options;
+    raw_oracle_options.raw_strict_reforge_oracle_diagnostic = true;
+    const refinement::PolicyExactLiftCertificate raw_oracle_lifted =
+        refinement::lift_policy_exact(
+            calc, solved, start, prices, raw_oracle_options,
+            "focused policy-guided exact lift");
+    report_lift_failure("Raw V1 rollback lift", raw_oracle_lifted);
+    PC_CHECK(
+        raw_oracle_lifted.status ==
+        refinement::PolicyExactLiftStatus::Complete);
+    PC_CHECK(raw_oracle_lifted.executable);
+    PC_CHECK(raw_oracle_lifted.compiled.executable);
+    PC_CHECK(raw_oracle_lifted.compiled.zero_off_policy);
+    PC_CHECK(raw_oracle_lifted.compiled.cost_reconciled);
+    PC_CHECK(near(
+        raw_oracle_lifted.exact_start_cost,
+        lifted.exact_start_cost, 1e-12));
+    PC_CHECK(
+        raw_oracle_lifted.compiled.strategy_json ==
+        lifted.compiled.strategy_json);
+    check_strict_evaluator(
+        raw_oracle_lifted, ReforgeEvaluatorVersion::V1Raw);
+
+    SolveOptions sparse_diagnostic_options = options;
+    sparse_diagnostic_options.projected_reforge_frontier_diagnostic = true;
+    const refinement::PolicyExactLiftCertificate sparse_diagnostic_lifted =
+        refinement::lift_policy_exact(
+            calc, solved, start, prices, sparse_diagnostic_options,
+            "focused policy-guided exact lift");
+    report_lift_failure(
+        "Sparse V2 diagnostic lift", sparse_diagnostic_lifted);
+    PC_CHECK(
+        sparse_diagnostic_lifted.status ==
+        refinement::PolicyExactLiftStatus::Complete);
+    PC_CHECK(sparse_diagnostic_lifted.executable);
+    PC_CHECK(sparse_diagnostic_lifted.compiled.executable);
+    PC_CHECK(sparse_diagnostic_lifted.compiled.zero_off_policy);
+    PC_CHECK(sparse_diagnostic_lifted.compiled.cost_reconciled);
+    PC_CHECK(near(
+        sparse_diagnostic_lifted.exact_start_cost,
+        lifted.exact_start_cost, 1e-12));
+    PC_CHECK(
+        sparse_diagnostic_lifted.compiled.strategy_json ==
+        lifted.compiled.strategy_json);
+    check_strict_evaluator(
+        sparse_diagnostic_lifted,
+        ReforgeEvaluatorVersion::V2Sparse);
 
     refinement::RefinementLimits interrupted_limits;
     interrupted_limits.max_exact_kernels =

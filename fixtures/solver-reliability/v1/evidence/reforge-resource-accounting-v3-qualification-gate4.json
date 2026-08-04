@@ -1,0 +1,148 @@
+{
+  "schema_version": "reforge_resource_accounting_v3_qualification_gate4_v1",
+  "recorded_at_local_date": "2026-08-04",
+  "decision": "provisionally_select_v3_for_production_strict_selected_and_competitive_alternative_rows",
+  "branch": "codex/reforge-resource-accounting-v3-qualification",
+  "milestone_starting_commit": "00718908c866dc71a2e7e3864ebc5c5015ff063f",
+  "gate_parent_commit": "8fe0112d60759b9dfa3c35bf909d57eae07ba579",
+  "gate_commit": "the commit containing this evidence record",
+  "scope": {
+    "mechanics_changed": false,
+    "action_filtering_changed": false,
+    "goal_or_state_abstraction_changed": false,
+    "quotient_proof_or_partition_changed": false,
+    "bellman_or_properness_changed": false,
+    "proof_store_or_invalidation_generation_changed": false,
+    "compiler_or_strategy_vocabulary_changed": false,
+    "canonical_fixture_changed": false,
+    "compiled_artifact_changed": false,
+    "economy_changed": false,
+    "product_or_default_cap_changed": false,
+    "logical_cap_contract_changed": false,
+    "production_strict_evaluator_selection_changed": true,
+    "production_coarse_evaluator_selection_changed": false,
+    "public_abi_layout_or_version_changed": false,
+    "named_public_diagnostic_flag_added": false,
+    "wasm_or_typescript_product_diagnostic_added": false,
+    "wasm_artifact_changed": false,
+    "release_wasm_rebuild_required_before_product_qualification": true,
+    "frontend_crafting_authority_changed": false,
+    "canonical_hard_20m_run": false,
+    "selected_only_100m_run": false,
+    "reliability_portfolio_run": false,
+    "full_acceptance_suite_run": false,
+    "pushed": false,
+    "merged": false
+  },
+  "evaluator_selection": {
+    "coarse_production": "v1_raw",
+    "strict_selected_production": "v3_factored",
+    "strict_competitive_alternative_production": "v3_factored",
+    "dispatch_rule": "one generic strict CalcContext selection",
+    "action_name_dispatch": false,
+    "modifier_dispatch": false,
+    "fixture_dispatch": false,
+    "family_dispatch": false,
+    "raw_v1_oracle_and_rollback": {
+      "retained": true,
+      "selector": "raw_strict_reforge_oracle_diagnostic",
+      "availability": "native benchmark and internal SolveOptions only",
+      "solver_flag_bit": 27,
+      "public_named_flag": false,
+      "wasm_product_option": false
+    },
+    "sparse_v2_diagnostic": {
+      "retained": true,
+      "selector": "projected_reforge_frontier_diagnostic"
+    },
+    "explicit_v3_diagnostic": {
+      "retained_for_backward_compatibility": true,
+      "selector": "factored_terminal_reforge_diagnostic"
+    },
+    "diagnostic_precedence": [
+      "raw V1 selector",
+      "sparse V2 selector when projected is true and explicit V3 is false",
+      "production or explicit V3"
+    ]
+  },
+  "focused_equivalence": {
+    "controlled_strategy_name": "focused policy-guided exact lift",
+    "variants": [
+      "production_v3",
+      "raw_v1_rollback",
+      "sparse_v2_diagnostic"
+    ],
+    "exact_start_cost_equal_tolerance": 1e-12,
+    "complete": true,
+    "executable": true,
+    "proper": true,
+    "zero_off_policy": true,
+    "cost_reconciled": true,
+    "compiled_strategy_json_byte_identical": true,
+    "production_selected_row_evaluator": "v3_factored",
+    "production_alternative_row_evaluator": "v3_factored",
+    "raw_rollback_row_evaluator": "v1_raw",
+    "sparse_diagnostic_row_evaluator": "v2_sparse"
+  },
+  "competitive_fixture_accounting": {
+    "logical_envelope_contract": "unchanged Gate 3 V1-equivalent breadth",
+    "prior_v1_selected_active_work": 7680,
+    "prior_v1_alternative_active_work": 7680,
+    "production_v3_selected_active_work": 4940,
+    "production_v3_alternative_active_work": 4940,
+    "interpretation": "evaluator-specific active work only; not a weighted cross-version score"
+  },
+  "preserved_authorities": {
+    "transactional_row_publication": true,
+    "interrupted_v3_row_certifiable": false,
+    "proof_store_and_partition_authority": true,
+    "unresolved_alternative_honesty": true,
+    "fallback_independence": true,
+    "compiler_routing_and_executable_provenance": true,
+    "focused_solve_suite_covers_certified_fallback_contract": true,
+    "focused_solve_suite_covers_interrupted_row_contract": true
+  },
+  "focused_contracts": {
+    "native_build": {
+      "command": "powershell -File scripts/build.ps1",
+      "result": "pass"
+    },
+    "solver_solve": {
+      "command": "build\\engine\\poecraft_engine_tests.exe --solver-solve-only data\\compiled\\current",
+      "checks": 98280,
+      "failures": 0,
+      "simulator_runs_preserved_by_existing_test": 10000,
+      "covers": [
+        "production strict selected V3 provenance",
+        "production strict alternative V3 provenance",
+        "raw V1 rollback exact equivalence",
+        "sparse V2 diagnostic exact equivalence",
+        "compiled strategy identity across evaluator versions",
+        "transactional interruption",
+        "certified fallback independence",
+        "unresolved alternative accounting"
+      ]
+    }
+  },
+  "source_sha256": {
+    "engine/src/solver_diagnostic_options.hpp": "97fb119ca932f1e36ee2b1a63960e242181ff45f96d37f534bf8c013b2f79fcf",
+    "engine/src/solver_solve_contracts.hpp": "dc7b4ced855ddece1d7c556a191ab9c3f97b0b0aac3d3e61631143716f847a31",
+    "engine/src/solver_api.cpp": "0997847bc431146cd46ea33f6d24b71fd97ca4768b1d4142a20d7c1ed5a1d900",
+    "engine/benchmarks/solver_benchmark.cpp": "feaf33cec4e6714274b0594a1bc773d01fc8d62cc6ca9b40ba8af148f886ba52",
+    "engine/src/solver_refinement.hpp": "08fe45dba67f978b012accec1be402f37d3d728a54babd3d0ae8efe06ba8655b",
+    "engine/src/solver_policy_oracle_improve.inc": "b83b1550c73f3c4331e897f040ae3136a1ebbf5ce0b45dbfe267c36e89f5cc8b",
+    "engine/tests/test_solver_solve.cpp": "12f8d7ffdb88a933e02578f88a30221bca4ca065500e0336c720d27cd2b959ab"
+  },
+  "native_binary_sha256": {
+    "build/engine/poecraft_engine.dll": "eb27920285b3422ed8fdc3af88aa6cf39865eae7c19368f20726a7e2eb069862",
+    "build/engine/poecraft_solver_benchmark.exe": "2c354e89786fc94c8c058f032705baafce458aa772c1ea6ee93f32d99eb0cfca",
+    "build/engine/poecraft_engine_tests.exe": "3c89530a10d81fff2af9ad0c4d63dd9e1a0434430db413f7e947878a0bb3e3d5"
+  },
+  "gate_result": {
+    "accepted": true,
+    "provisional": true,
+    "reason": "V3 is exact under production selected and competitive alternative provenance, V1 remains an independent rollback, V2 remains diagnostic, and all proof/publication/fallback contracts pass focused acceptance",
+    "rollback_condition": "restore production strict V1 if any Gate 5 frozen exactness, aggregate runtime, per-row runtime, owned-memory, cooperative-latency, or release-WASM criterion fails"
+  },
+  "next_gate": "run the full family equivalence and performance matrix, release-WASM qualification, one selected-only 100M diagnostic, the canonical hard 20M fallback qualification once, and the representative native reliability portfolio"
+}

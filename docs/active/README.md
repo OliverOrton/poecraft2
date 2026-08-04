@@ -1,7 +1,7 @@
 # Active Work
 
-**Status: versioned reforge resource accounting Gates 0-3 are complete; Gate
-4 V3 production qualification and integration is active.**
+**Status: versioned reforge resource accounting Gates 0-4 are complete; Gate
+5 scaling and product qualification is active.**
 
 Parent: [Documentation map](../README.md)
 
@@ -13,8 +13,10 @@ nested child enforcement. Gate 2 measured 0.562% accounting overhead and
 same-binary binding-row medians of 697.594/877.933/507.483 ms for V1/V2/V3,
 with identical deterministic results. Gate 3 established a stable
 V1-equivalent logical envelope for every evaluator without changing defaults
-or adding a weighted/evaluator-safety cap. Gate 4 now applies the frozen
-production decision, which requires
+or adding a weighted/evaluator-safety cap. Gate 4 selected V3 generically for
+strict selected and competitively scheduled alternative rows while retaining
+coarse V1, raw V1 rollback, and diagnostic V2. Gate 5 now applies the frozen
+product decision, which requires
 V1 exact equivalence, at least 25% median native binding-row improvement, no
 aggregate eligible-row regression, bounded memory/latency, and release-WASM
 responsiveness.

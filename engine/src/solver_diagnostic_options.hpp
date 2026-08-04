@@ -19,6 +19,8 @@ inline constexpr std::uint32_t kFactoredTerminalReforgeDiagnosticFlag =
     1u << 29;
 inline constexpr std::uint32_t kDisableReforgeResourceAccountingDiagnosticFlag =
     1u << 28;
+inline constexpr std::uint32_t kRawStrictReforgeOracleDiagnosticFlag =
+    1u << 27;
 
 } // namespace solver
 } // namespace poecraft

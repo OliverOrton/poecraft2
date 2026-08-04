@@ -49,12 +49,13 @@ struct SolveOptions {
     bool strict_states = false;
     bool kernel_reuse = true;
     bool goal_progress_gated_reforges = false;
-    /* Native benchmark investigation only; not exposed by the public ABI or
-     * product bindings. */
+    /* Native benchmark investigation only; not exposed by named public ABI
+     * flags or product bindings. */
     bool high_impact_executable_uppers = false;
     bool projected_reforge_frontier_diagnostic = false;
     bool factored_terminal_reforge_diagnostic = false;
     bool reforge_resource_accounting = true;
+    bool raw_strict_reforge_oracle_diagnostic = false;
     double max_absolute_optimality_gap = 0.0;
     double max_relative_optimality_gap = 0.0;
 };

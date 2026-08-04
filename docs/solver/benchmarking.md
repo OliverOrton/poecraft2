@@ -33,6 +33,13 @@ performance conclusions use wall time, owned memory, and maximum cooperative
 step latency; evaluator counters are explanatory and are never combined into a
 weighted score.
 
+For strict-row evaluator comparisons, omitted evaluator controls select the V3
+production path. Native benchmark specs may set
+`raw_strict_reforge_oracle_diagnostic` for the independent V1 oracle/rollback,
+or `projected_reforge_frontier_diagnostic` for V2. The retained
+`factored_terminal_reforge_diagnostic` explicitly selects V3 for backward-
+compatible evidence. These controls do not change the coarse V1 evaluator.
+
 Samples occur after an observable native step, at focused-round or incumbent
 changes, at the configured bounded wall interval, and at completion. A long
 blocking native step has no internal checkpoint. Reports and evidence must say

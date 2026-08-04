@@ -452,9 +452,12 @@ Automatic children and retained protected-repeat comparison contexts receive
 only their parent's remaining logical envelope before execution. Every
 executed active/logical delta merges even when the enclosing option is refused,
 while an interrupted row is discarded and cannot be certified. Cache reuse
-consumes neither logical nor evaluator work. V1 remains the production
-evaluator until the following qualification gate decides whether V3 is
-integrated.
+consumes neither logical nor evaluator work. Production coarse rows remain V1.
+Production strict selected and competitively scheduled alternative rows now
+use V3 generically; the native benchmark retains an explicit raw-V1
+oracle/rollback control and the existing sparse-V2 diagnostic. Gate 5 owns the
+aggregate native/release-WASM product qualification and must restore strict V1
+if any frozen performance, memory, or latency criterion fails.
 
 The later
 [complete first-frontier census](../archive/2026-07-27-true-successor-frontier-census/report.md)

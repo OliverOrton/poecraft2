@@ -467,8 +467,8 @@ struct RefinementLimits {
         std::numeric_limits<std::uint64_t>::max();
     std::uint32_t max_witnesses = 16;
     double probability_sum_tolerance = 1e-12;
-    /* Native diagnostic only: selected-row qualification keeps product
-     * refinement on the raw oracle until the projected path is promoted. */
+    /* Exact strict-row evaluator selection. Production uses V3; native-only
+     * controls retain V1 as oracle/rollback and V2 as a diagnostic. */
     bool use_projected_reforge_frontier = false;
     bool use_factored_terminal_reforge = false;
 };

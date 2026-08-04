@@ -1,6 +1,6 @@
 # Versioned Reforge Resource Accounting And V3 Production Qualification
 
-**Status: Gates 0-3 complete; Gate 4 V3 qualification and integration is the
+**Status: Gates 0-4 complete; Gate 5 scaling and product qualification is the
 active implementation boundary.**
 
 Owner: Oliver
@@ -271,7 +271,7 @@ Commit Gate 3 separately.
 
 ## Gate 4 — V3 qualification and integration
 
-**Status: active.**
+**Status: complete.**
 
 With Gates 1–3 passed, enable V3 for production strict selected rows and
 competitively scheduled alternative rows. It must stay generic across ordinary
@@ -288,7 +288,34 @@ If a meaningful eligible class is slower, use only a simple deterministic
 pre-enumeration feature rule supported by Gate 2. Do not branch on action,
 modifier, or fixture names. Commit the production decision separately.
 
+Production strict selected and competitively scheduled alternative rows now
+use the exact V3 evaluator through one generic strict `CalcContext` selection;
+coarse remains V1. No action, modifier, fixture, or family-specific dispatch
+was added. The native benchmark adds a raw-V1 strict oracle/rollback selector,
+retains sparse V2 diagnostic selection, and keeps the prior explicit V3 flag
+backward compatible. None of these diagnostic selectors is exposed through the
+WASM or TypeScript product protocol.
+
+The focused competitive-alternative solve proves strict selected and strict
+alternative row provenance both report `v3_factored`. Matched lifts under
+production V3, raw V1 rollback, and sparse V2 diagnostic selection preserve
+exact start cost, executability, properness, zero off-policy behavior, cost
+reconciliation, and byte-identical compiled strategy JSON when the strategy
+name is controlled. The broader solve suite, including certified-fallback and
+transactional interruption contracts, passes `98280/0`; its existing sampled
+assertion retains 10,000 runs. Production V3 active work for the competitive
+fixture is 4,940 selected plus 4,940 alternative, versus the preceding V1
+7,680 plus 7,680, while the Gate 3 logical envelope remains evaluator-neutral.
+
+This is the provisional production selection required for Gate 5 measurement,
+not final release qualification. No hard 20M, selected-only 100M, release-WASM,
+reliability portfolio, product cap/default, coarse-evaluator, public ABI,
+strategy-vocabulary, or full-acceptance change ran in this gate. Evidence is
+`fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate4.json`.
+
 ## Gate 5 — scaling and product qualification
+
+**Status: active.**
 
 After integration, run the focused exact-equivalence matrix across ordinary,
 Essence, Harvest, and Fossil rows, including positive/zero Fossil weights,

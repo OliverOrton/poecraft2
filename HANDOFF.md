@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: versioned reforge resource accounting Gates 0-3 are complete. Gate
-4, V3 production qualification and integration, is active.**
+**Status: versioned reforge resource accounting Gates 0-4 are complete. Gate
+5, scaling and product qualification, is active.**
 
 Current plan:
 [Versioned Reforge Resource Accounting And V3 Production Qualification](docs/active/versioned-reforge-resource-accounting-and-v3-production-qualification.md).
@@ -38,8 +38,8 @@ Current milestone starting commit:
 Current milestone commits: Gate 0 is
 `a683b8cbd9c5ac60b6e042d819a3ee6b3aa6fb0b`. Gate 1 is
 `50bc7be80ea81f9301dc3b1d5414a2ebb2595aec`. Gate 2 is `7d15639`. Gate 3 is
-recorded by the current local commit. Gate 4 is the active implementation
-boundary.
+`8fe0112`. Gate 4 is recorded by the current local commit. Gate 5 is the active
+implementation boundary.
 
 Certified fallback milestone starting commit:
 `0b4ba38aa5754a39715640ad6d7a48cab2dc2b6c`
@@ -213,6 +213,30 @@ Nothing has been pushed or merged. `main` remains unchanged at
   `fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate3.json`.
   Gate 4 may now qualify V3 for strict selected and competitively scheduled
   alternative rows; coarse stays V1 unless independently justified.
+
+## Versioned reforge resource accounting Gate 4
+
+- Production strict selected and competitively scheduled strict alternative
+  rows now use V3 through one generic strict-calculator selection. Coarse stays
+  V1. No action, modifier, fixture, or reforge-family dispatch exists.
+- A native-only raw-V1 selector preserves the independent oracle and rollback;
+  sparse V2 remains diagnostic, and the prior explicit V3 diagnostic remains
+  backward compatible. Product WASM/TypeScript exposes none of these controls.
+- Focused production provenance proves selected and alternative rows are both
+  `v3_factored`. Matched production V3, raw V1, and sparse V2 lifts preserve
+  exact start cost, executability/properness, zero off-policy behavior, cost
+  reconciliation, and byte-identical compiled strategy JSON under a controlled
+  name.
+- The focused solve suite, including transactional interruption and certified
+  fallback contracts, passes `98280/0` and retains its 10,000-run sampled
+  assertion. The competitive fixture's active work falls from V1 7,680+7,680
+  selected/alternative to V3 4,940+4,940; logical breadth remains the same.
+- This is provisional pending Gate 5 native family/portfolio, release-WASM,
+  memory, latency, selected-only 100M, and canonical hard 20M qualification.
+  No cap/default, coarse evaluator, public ABI, strategy vocabulary, hard run,
+  selected-only run, release-WASM, reliability portfolio, or full acceptance
+  changed/ran in Gate 4. Evidence is
+  `fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate4.json`.
 
 ## Certified fallback and terminal factorization Gate 0
 
@@ -960,21 +984,26 @@ tracked work counters. The tracked qualified Fracture evidence retains
 
 ## Exact next step
 
-Complete Gate 4 V3 qualification and integration:
+Complete Gate 5 scaling and product qualification:
 
-1. Select V3 generically for production strict selected rows and competitively
-   scheduled strict alternative rows. Keep coarse on V1, V1 independently
-   selectable as oracle/rollback, and V2 diagnostic.
-2. Preserve transactional row publication, proof-store/partition authority,
-   invalidation generations, unresolved-obligation honesty, Bellman/properness,
-   certified-fallback independence, and compiler provenance.
-3. Extend focused exact-equivalence coverage across ordinary, Essence,
-   Harvest, and Fossil strict rows. If a meaningful class regresses, use only a
-   simple pre-enumeration structural dispatch rule supported by measured
-   evidence; never branch on action/modifier/fixture names.
-4. Do not run the selected-only 100M or canonical hard 20M cases before Gate 5.
-   Gate 2 binding evidence alone is not aggregate family or release-WASM V3
-   qualification. Commit Gate 4 separately.
+1. Run the focused ordinary/Essence/Harvest/Fossil V1/V3 equivalence matrix,
+   including every carrier, goal, Fossil, Harvest, identity, and enumeration
+   edge named in the active plan. Measure nontrivial-row and aggregate runtime,
+   owned memory, and maximum cooperative step against the frozen criteria.
+2. Rebuild release WASM for the browser-visible strict evaluator and logical
+   progress contract, then qualify representative solve behavior and approved
+   worker cancellation/responsiveness.
+3. Run the one reserved selected-only 100M diagnostic and compare its logical
+   envelope, transitions, V3 effort, wall, memory, and latency with preserved
+   V1 evidence. Do not call absence of a partition a correctness failure.
+4. Run the canonical hard 20M case once with its frozen 27 actions, 1 GiB cap,
+   and 900-second watchdog. Preserve lower/unresolved honesty, independently
+   publish/compile/evaluate the fallback when selected refinement caps, and run
+   exactly 10,000 simulations with zero off-policy failures.
+5. Run the representative native reliability portfolio. Restore strict V1 if
+   any frozen exactness/performance/memory/latency/WASM criterion fails;
+   otherwise accept V3 and commit Gate 5 separately. Do not run the standalone
+   five-goal watchdog.
 
 Deterministic checkpoint/replay remains deferred.
 

@@ -1153,9 +1153,18 @@ RefinementLimits default_limits(
             : options.max_solver_owned_bytes - retained;
     limits.max_witnesses =
         std::max<std::uint32_t>(1, options.max_diagnostic_samples);
-    limits.use_projected_reforge_frontier =
-        options.projected_reforge_frontier_diagnostic;
+    /* Production strict selected and competitively scheduled alternative
+     * rows use the exact V3 evaluator. Coarse remains V1. The native-only
+     * controls retain V1 as an independent oracle/rollback and V2 as a
+     * diagnostic; an explicit V3 flag remains backward-compatible. */
+    const bool use_raw_v1 =
+        options.raw_strict_reforge_oracle_diagnostic;
+    const bool use_sparse_v2 =
+        !use_raw_v1 &&
+        options.projected_reforge_frontier_diagnostic &&
+        !options.factored_terminal_reforge_diagnostic;
+    limits.use_projected_reforge_frontier = !use_raw_v1;
     limits.use_factored_terminal_reforge =
-        options.factored_terminal_reforge_diagnostic;
+        !use_raw_v1 && !use_sparse_v2;
     return limits;
 }

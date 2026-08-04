@@ -641,6 +641,9 @@ solver::SolveOptions solve_options(const pc_solve_options* options) {
         value.reforge_resource_accounting =
             (options->solver_flags &
              solver::kDisableReforgeResourceAccountingDiagnosticFlag) == 0;
+        value.raw_strict_reforge_oracle_diagnostic =
+            (options->solver_flags &
+             solver::kRawStrictReforgeOracleDiagnosticFlag) != 0;
     }
     if (PC_SOLVE_OPTION_HAS(max_absolute_optimality_gap) &&
         options->max_absolute_optimality_gap > 0.0) {
