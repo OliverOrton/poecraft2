@@ -173,6 +173,8 @@
                 limits_.use_factored_terminal_reforge,
             false,
             limits_.use_factored_terminal_reforge);
+        strict_->set_reforge_resource_accounting(
+            options_.reforge_resource_accounting);
         strict_->set_reforge_provenance_context(
             ReforgeRowOwner::StrictSelected);
         require_local_memory(

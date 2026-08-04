@@ -1,7 +1,7 @@
 # Active Work
 
-**Status: versioned reforge resource accounting Gates 0-1 are complete; Gate 2
-observational baseline and matched calibration is active.**
+**Status: versioned reforge resource accounting Gates 0-2 are complete; Gate
+3 resource-cap contract is active.**
 
 Parent: [Documentation map](../README.md)
 
@@ -9,8 +9,10 @@ Current boundary:
 [Versioned Reforge Resource Accounting And V3 Production Qualification](versioned-reforge-resource-accounting-and-v3-production-qualification.md).
 Gate 1 retained the historical ledgers and added deterministic component
 accounting, bounded row provenance, transactional disposition, and honest
-nested child enforcement. Gate 2 now measures accounting overhead and matched
-V1/V2/V3 behavior without changing production selection or cap behavior. The
+nested child enforcement. Gate 2 measured 0.562% accounting overhead and
+same-binary binding-row medians of 697.594/877.933/507.483 ms for V1/V2/V3,
+with identical deterministic results. Gate 3 now establishes whether a stable
+V1-equivalent logical envelope safely bounds V3 without changing defaults. The
 frozen production decision requires
 V1 exact equivalence, at least 25% median native binding-row improvement, no
 aggregate eligible-row regression, bounded memory/latency, and release-WASM

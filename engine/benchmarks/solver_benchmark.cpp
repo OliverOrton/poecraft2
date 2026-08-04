@@ -1343,6 +1343,14 @@ CaseResult run_case(
                 poecraft::solver::
                     kFactoredTerminalReforgeDiagnosticFlag;
         }
+        if (optional_bool(
+                caps,
+                "disable_reforge_resource_accounting_diagnostic",
+                false)) {
+            solve_options.solver_flags |=
+                poecraft::solver::
+                    kDisableReforgeResourceAccountingDiagnosticFlag;
+        }
         const std::uint32_t work_items =
             optional_u32(caps, "solve_step_work_items", 1);
         pc_error_info error;

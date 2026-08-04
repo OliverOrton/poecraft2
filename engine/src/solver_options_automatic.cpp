@@ -123,6 +123,8 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
     }
     CalcContext& local = *local_pointer;
     local.set_defer_automatic_protected_baseline(true);
+    local.set_reforge_resource_accounting(
+        reforge_resource_accounting_);
     local.set_reforge_provenance_context(
         reforge_row_owner_, ReforgeRowFamily::AutomaticOption);
     batch.phases.local_context_ns = static_cast<std::uint64_t>(
@@ -826,6 +828,8 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                     }
                     CalcContext& comparison_context =
                         *automatic_comparison_context_;
+                    comparison_context.set_reforge_resource_accounting(
+                        reforge_resource_accounting_);
                     comparison_context.set_reforge_provenance_context(
                         reforge_row_owner_,
                         ReforgeRowFamily::AutomaticOption);

@@ -1424,6 +1424,32 @@ benchmark, canonical hard case, release-WASM build, or full acceptance suite,
 and changed no evaluator selection, cap interpretation/default, mechanic,
 public ABI, artifact, or frontend authority.
 
+## Versioned Reforge Accounting Gate 2
+
+The 2026-08-04
+[`reforge-resource-accounting-v3-qualification-gate2.json`](../fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate2.json)
+records three same-binary repetitions of the isolated 18M binding carrier.
+The V1 accounting-off/on row medians are 693.694/697.594 ms, so the new
+component ledger adds 0.562% against the frozen 5% limit. V2 remains a negative
+wall result at 877.933 ms. V3's 507.483 ms median is 27.25% faster than V1 and
+reopens production consideration without treating its 2,514,591 evaluator
+operations as V1 work units.
+
+Every variant retains 172,596 strict transitions, the same target map, bounds,
+stop cause, transition/policy hashes, and compiled strategy SHA-256. The full
+component table distinguishes V1 dense probes, V2 availability work, and V3
+predecessor/denominator/subset/recurrence work. It also demonstrates V1's
+all-bucket short-circuit overcharge and the Harvest guaranteed-support double
+traversal while preserving the historic ledger.
+
+Release WASM reproduces V1 counts and deterministic hashes on the isolated
+carrier; the approved worker cancellation case acknowledges in 14.401 ms
+against 250 ms. The hard 20M and selected-only 100M runs were not invoked.
+Gate 2 changes no production evaluator or cap interpretation. Gate 3 must prove
+whether the stable V1-equivalent envelope plus existing memory/cancellation
+limits safely bounds V3; aggregate family and final production qualification
+remain pending.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

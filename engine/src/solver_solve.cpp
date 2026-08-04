@@ -39,6 +39,8 @@ SolveWork::Impl::Impl(
         options.max_expanded_states = std::min(
             options.max_expanded_states, options.max_states);
         calc.reset_solve_telemetry();
+        calc.set_reforge_resource_accounting(
+            options.reforge_resource_accounting);
         calc.set_solve_resource_caps(
             options.max_discovered_states, options.max_reforge_work,
             true, options.max_solver_owned_bytes);

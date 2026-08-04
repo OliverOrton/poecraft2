@@ -1,7 +1,7 @@
 # Versioned Reforge Resource Accounting And V3 Production Qualification
 
-**Status: Gates 0-1 complete; Gate 2 observational baseline and matched
-calibration is the active implementation boundary.**
+**Status: Gates 0-2 complete; Gate 3 resource-cap contract is the active
+implementation boundary.**
 
 Owner: Oliver
 
@@ -159,7 +159,8 @@ acceptance suite ran in Gate 1.
 
 ## Gate 2 — observational baseline and matched calibration
 
-**Status: active.**
+**Status: complete.** Tracked evidence is
+[`reforge-resource-accounting-v3-qualification-gate2.json`](../../fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate2.json).
 
 Keep production evaluator selection and cap behavior unchanged while capturing
 representative accounting. Require unchanged legacy work, bounds, stop reasons,
@@ -184,7 +185,35 @@ legacy ledger:
 
 Commit the baseline/calibration evidence separately.
 
+The native-only accounting-off control disables only Gate 1 component/sample
+collection. Its V1 binding-row median is 693.694 ms versus 697.594 ms with
+accounting on, an observed 0.562% overhead under the frozen 5% limit. Legacy
+work, target maps, bounds, stop cause, 172,596 strict transitions, transition/
+policy hashes, and the 1,208-byte compiled strategy remain identical.
+
+Three same-binary repetitions measure median binding-row walls of 697.594 ms
+for V1, 877.933 ms for V2, and 507.483 ms for V3. V2 remains 25.85% slower;
+V3 is 27.25% faster and clears the binding-row threshold. V3 matches V1 peak
+owned memory and its median longest native solve step is 9.55% above V1,
+inside the 10% calibration boundary. This is not aggregate family/runtime or
+final production qualification.
+
+The component table explains the heterogeneous ledgers: V1 charges 51,155
+nodes times one plus all 40 buckets despite only 47,796 physical dense scans;
+V2 substitutes availability construction/scans; V3 replaces most terminal
+publication attempts with predecessor, denominator, subset, candidate,
+recurrence, and commit operations. Focused contracts separately prove both
+Harvest guaranteed-support passes and the repaired nested pre-execution cap.
+
+Release WASM reproduces the V1 logical/component counts and hashes on the
+isolated 18M carrier. The approved worker cancellation control acknowledges
+abort in 14.401 ms against its 250 ms limit. The canonical hard 20M and
+selected-only 100M runs remain untouched. Production still uses V1 and the
+historic active-ledger cap until Gate 3 proves a replacement contract.
+
 ## Gate 3 — resource-cap contract
+
+**Status: active.**
 
 Prefer the following contract if the implementation proves V3 effort safely
 bounded under the logical envelope plus existing memory/cancellation limits:

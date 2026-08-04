@@ -1,0 +1,493 @@
+{
+  "schema_version": "reforge_resource_accounting_v3_qualification_gate2_v1",
+  "date": "2026-08-04",
+  "decision": "gate2_pass_gate3_authorized_production_unchanged",
+  "branch": "codex/reforge-resource-accounting-v3-qualification",
+  "parent_gate_commit": "50bc7be80ea81f9301dc3b1d5414a2ebb2595aec",
+  "gate_commit": "the commit containing this evidence record",
+  "scope": {
+    "production_evaluator": "v1_raw_unchanged",
+    "production_cap_behavior": "legacy_active_ledger_unchanged",
+    "product_or_default_cap_changed": false,
+    "canonical_hard_20m_invocations": 0,
+    "selected_only_100m_invocations": 0,
+    "matched_carrier": "isolated copy of the prior gate6 18m binding carrier",
+    "native_repetitions": 3,
+    "release_wasm_subset": [
+      "isolated 18m V1 binding carrier without verification",
+      "approved cancellation-oracle-two-mod worker case"
+    ]
+  },
+  "diagnostic_control": {
+    "name": "disable_reforge_resource_accounting_diagnostic",
+    "surface": "native benchmark-only high solver flag; absent from the public header, WASM parser, and product protocol",
+    "same_binary": true,
+    "disabled_work": "only Gate 1 ReforgeEffortBreakdown increments and bounded row samples",
+    "preserved_while_disabled": [
+      "legacy active reforge-work ledger and cap",
+      "parallel V1/V2/V3 ledgers",
+      "row evaluator and transition construction",
+      "broad-row attribution timers",
+      "nested pre-execution cap enforcement",
+      "bounds, policy, compilation, and fallback behavior"
+    ],
+    "focused_contract": {
+      "accounting_disabled_components": "all zero",
+      "accounting_disabled_row_samples": 0,
+      "legacy_ledgers_equal_to_accounting_enabled": true,
+      "target_map_equal_to_accounting_enabled": true
+    }
+  },
+  "native_binding_calibration": {
+    "input": {
+      "base_metadata_path": "Metadata/Items/Amulets/Talismans/Talisman2_5",
+      "item_level": 86,
+      "goal_families": [
+        "IncreasedCastSpeed4",
+        "LifeRegeneration8_"
+      ],
+      "admitted_actions": 27,
+      "max_reforge_work": 18000000,
+      "max_solver_owned_bytes": 1073741824,
+      "binding_action": "essence:Metadata/Items/Currency/CurrencyEssenceZeal4"
+    },
+    "repetitions": [
+      {
+        "index": 1,
+        "row_wall_ms": {
+          "v1_accounting_off": 693.0512,
+          "v1_accounting_on": 694.5395,
+          "v2_accounting_on": 945.3365,
+          "v3_accounting_on": 683.5639
+        }
+      },
+      {
+        "index": 2,
+        "row_wall_ms": {
+          "v1_accounting_off": 693.6936,
+          "v1_accounting_on": 738.9077,
+          "v2_accounting_on": 877.9327,
+          "v3_accounting_on": 507.4825
+        }
+      },
+      {
+        "index": 3,
+        "row_wall_ms": {
+          "v1_accounting_off": 707.0603,
+          "v1_accounting_on": 697.594,
+          "v2_accounting_on": 818.9764,
+          "v3_accounting_on": 461.0763
+        }
+      }
+    ],
+    "median_table": [
+      {
+        "evaluator": "v1_raw",
+        "accounting": "off",
+        "row_wall_ms": 693.6936,
+        "solve_wall_ms": 4322.2891,
+        "total_wall_ms": 6512.1304,
+        "live_owned_bytes": 305291745,
+        "peak_owned_bytes": 375497904,
+        "longest_cooperative_step_ms": 770.8312,
+        "strict_transitions": 172596,
+        "canonical_successors": 172596,
+        "legacy_active_work": 2097355,
+        "logical_work_v1": 2097355,
+        "active_evaluator_work": 2097355,
+        "component_rows": 0
+      },
+      {
+        "evaluator": "v1_raw",
+        "accounting": "on",
+        "row_wall_ms": 697.594,
+        "solve_wall_ms": 4045.0908,
+        "total_wall_ms": 6258.0883,
+        "live_owned_bytes": 305313393,
+        "peak_owned_bytes": 375519552,
+        "longest_cooperative_step_ms": 661.6669,
+        "strict_transitions": 172596,
+        "canonical_successors": 172596,
+        "legacy_active_work": 2097355,
+        "logical_work_v1": 2097355,
+        "active_evaluator_work": 2097355,
+        "component_rows": 1
+      },
+      {
+        "evaluator": "v2_sparse",
+        "accounting": "on",
+        "row_wall_ms": 877.9327,
+        "solve_wall_ms": 4128.5007,
+        "total_wall_ms": 8718.3988,
+        "live_owned_bytes": 305326614,
+        "peak_owned_bytes": 375519552,
+        "longest_cooperative_step_ms": 727.4387,
+        "strict_transitions": 172596,
+        "canonical_successors": 172596,
+        "legacy_active_work": 923141,
+        "logical_work_v1": 2097355,
+        "active_evaluator_work": 923141,
+        "component_rows": 1
+      },
+      {
+        "evaluator": "v3_factored",
+        "accounting": "on",
+        "row_wall_ms": 507.4825,
+        "solve_wall_ms": 4154.2541,
+        "total_wall_ms": 5736.5383,
+        "live_owned_bytes": 305311601,
+        "peak_owned_bytes": 375519552,
+        "longest_cooperative_step_ms": 724.878,
+        "strict_transitions": 172596,
+        "canonical_successors": 172596,
+        "legacy_active_work": 2514591,
+        "logical_work_v1": 2097355,
+        "active_evaluator_work": 2514591,
+        "component_rows": 1
+      }
+    ],
+    "comparisons": {
+      "accounting_overhead_percent": 0.5622655304878377,
+      "accounting_overhead_limit_percent": 5.0,
+      "accounting_overhead_passed": true,
+      "v2_row_regression_vs_v1_percent": 25.8515268193247,
+      "v2_negative_result_preserved": true,
+      "v3_row_improvement_vs_v1_percent": 27.252456299796158,
+      "v3_gate0_binding_threshold_percent": 25.0,
+      "v3_binding_threshold_passed": true,
+      "v3_peak_memory_change_vs_v1_percent": 0.0,
+      "v3_live_memory_change_vs_v1_percent": -0.0005869378943312853,
+      "v3_longest_step_change_vs_v1_percent": 9.553311492534986,
+      "memory_and_step_limit_percent": 10.0,
+      "binding_memory_and_step_passed": true,
+      "note": "Gate 2 is calibration, not aggregate family/runtime or final production qualification; those remain Gate 4/5 decisions."
+    }
+  },
+  "completed_binding_row_components": {
+    "v1_raw": {
+      "rows_begun": 1,
+      "rows_completed": 1,
+      "rows_interrupted": 0,
+      "rows_cache_reused": 0,
+      "rows_discarded": 0,
+      "rows_published": 0,
+      "pool_entries_scanned": 259,
+      "physical_families_built": 39,
+      "roll_buckets_built": 40,
+      "exclusion_group_checks": 820,
+      "availability_classes_built": 0,
+      "availability_words_built": 0,
+      "frontier_nodes": 51155,
+      "dense_bucket_probes": 1911840,
+      "availability_words_scanned": 0,
+      "eligible_nonterminal_edges": 185825,
+      "terminal_contributions": 688739,
+      "canonical_terminal_successors": 172596,
+      "duplicate_terminal_contributions": 516143,
+      "raw_choice_entries": 0,
+      "identity_tree_nodes": 0,
+      "successor_publication_attempts": 688739,
+      "successor_unique_insertions": 172596,
+      "successor_duplicate_merges": 516143,
+      "state_interning_attempts": 674916,
+      "v3_predecessor_index_entries": 0,
+      "v3_denominator_edges": 0,
+      "v3_subset_checks": 0,
+      "v3_candidate_sets": 0,
+      "v3_recurrence_terms": 0,
+      "v3_commits": 0,
+      "nested_automatic_child_logical_work": 0,
+      "nested_automatic_child_active_work": 0
+    },
+    "v2_sparse": {
+      "rows_begun": 1,
+      "rows_completed": 1,
+      "rows_interrupted": 0,
+      "rows_cache_reused": 0,
+      "rows_discarded": 0,
+      "rows_published": 0,
+      "pool_entries_scanned": 259,
+      "physical_families_built": 39,
+      "roll_buckets_built": 40,
+      "exclusion_group_checks": 820,
+      "availability_classes_built": 3172,
+      "availability_words_built": 3172,
+      "frontier_nodes": 51155,
+      "dense_bucket_probes": 0,
+      "availability_words_scanned": 47796,
+      "eligible_nonterminal_edges": 185825,
+      "terminal_contributions": 688739,
+      "canonical_terminal_successors": 172596,
+      "duplicate_terminal_contributions": 516143,
+      "raw_choice_entries": 0,
+      "identity_tree_nodes": 0,
+      "successor_publication_attempts": 688739,
+      "successor_unique_insertions": 172596,
+      "successor_duplicate_merges": 516143,
+      "state_interning_attempts": 674916,
+      "v3_predecessor_index_entries": 0,
+      "v3_denominator_edges": 0,
+      "v3_subset_checks": 0,
+      "v3_candidate_sets": 0,
+      "v3_recurrence_terms": 0,
+      "v3_commits": 0,
+      "nested_automatic_child_logical_work": 0,
+      "nested_automatic_child_active_work": 0
+    },
+    "v3_factored": {
+      "rows_begun": 1,
+      "rows_completed": 1,
+      "rows_interrupted": 0,
+      "rows_cache_reused": 0,
+      "rows_discarded": 0,
+      "rows_published": 0,
+      "pool_entries_scanned": 259,
+      "physical_families_built": 39,
+      "roll_buckets_built": 40,
+      "exclusion_group_checks": 820,
+      "availability_classes_built": 3172,
+      "availability_words_built": 3172,
+      "frontier_nodes": 51155,
+      "dense_bucket_probes": 0,
+      "availability_words_scanned": 47796,
+      "eligible_nonterminal_edges": 185825,
+      "terminal_contributions": 186419,
+      "canonical_terminal_successors": 172596,
+      "duplicate_terminal_contributions": 13823,
+      "raw_choice_entries": 0,
+      "identity_tree_nodes": 0,
+      "successor_publication_attempts": 186419,
+      "successor_unique_insertions": 172596,
+      "successor_duplicate_merges": 13823,
+      "state_interning_attempts": 172596,
+      "v3_predecessor_index_entries": 39900,
+      "v3_denominator_edges": 638365,
+      "v3_subset_checks": 641095,
+      "v3_candidate_sets": 136045,
+      "v3_recurrence_terms": 638365,
+      "v3_commits": 136045,
+      "nested_automatic_child_logical_work": 0,
+      "nested_automatic_child_active_work": 0
+    }
+  },
+  "deterministic_equivalence": {
+    "all_three_native_repetitions_identical": true,
+    "actual_status": "refused_resource_cap",
+    "stop_cause": "reforge_work_cap",
+    "termination": "exact_closed",
+    "lower_bound": 752.9009075663787,
+    "upper_bound": 3984.9346987650665,
+    "evaluated_policy_cost": 3984.9346987650665,
+    "strict_transitions": 172596,
+    "transition_bits_hash": "4f26d305a908c59f",
+    "policy_bits_hash": "302ea0bcb228216e",
+    "compiled_nodes": 4,
+    "compiled_edges": 4,
+    "compiled_strategy_json_bytes": 1208,
+    "compiled_strategy_sha256": "2be1d46e20de86f7f86d1d74e3ed897ed9e49f8753bfd69dade828d9a353bcf7",
+    "frozen_hard_strategy_sha256": "2be1d46e20de86f7f86d1d74e3ed897ed9e49f8753bfd69dade828d9a353bcf7",
+    "selected_semantic_action": "essence:Metadata/Items/Currency/CurrencyEssenceZeal4",
+    "fallback_independent": true,
+    "interrupted_second_row_published": false,
+    "note": "The separately retained four-node Chaos-renewal fallback supplies the identical upper; it does not change the lower or close alternatives."
+  },
+  "production_v1_representatives": [
+    {
+      "id": "reliability-class-body-armour",
+      "status": "bounded_feasible",
+      "lower": 0.0,
+      "upper": 8.341181986595203,
+      "transitions": 231,
+      "transition_bits_hash": "98ffeb183e0e31b7",
+      "policy_bits_hash": "539e9bdc63f5ffc0",
+      "compiled_strategy_json_bytes": 723637,
+      "legacy_reforge_work": 134082,
+      "accounted_rows": 9,
+      "matches_frozen_gate8": true
+    },
+    {
+      "id": "reliability-start-fractured",
+      "status": "bounded_feasible",
+      "lower": 0.0,
+      "upper": 7.935041453806821,
+      "transitions": 449,
+      "transition_bits_hash": "977d8e02815c2e3a",
+      "policy_bits_hash": "4ee173ce34f39684",
+      "compiled_strategy_json_bytes": 1046442,
+      "legacy_reforge_work": 877098,
+      "accounted_rows": 16,
+      "matches_frozen_gate8": true
+    }
+  ],
+  "known_accounting_inconsistencies": {
+    "harvest_guaranteed_support": {
+      "verified": true,
+      "historic_behavior": "one all-bucket guaranteed scan charged",
+      "physical_behavior": "the same guaranteed support is traversed for denominator construction and again for branch publication",
+      "new_accounting": "dense_bucket_probes records both passes; the V1 ledger remains unchanged",
+      "contract_test": "the Harvest row proves guaranteed_scan_work equals roll_buckets_built, V1 adds it once, and physical probes include at least twice that scan"
+    },
+    "v1_short_circuit": {
+      "verified": true,
+      "binding_frontier_nodes": 51155,
+      "binding_roll_buckets": 40,
+      "v1_logical_work": 2097355,
+      "v1_formula": "51155 * (1 + 40)",
+      "physical_dense_bucket_probes": 1911840,
+      "physically_scanned_frontier_nodes": 47796,
+      "short_circuited_nodes_still_charged_all_buckets": 3359
+    },
+    "v2_vs_v3": {
+      "verified": true,
+      "v2_active_work": 923141,
+      "v2_terminal_contributions": 688739,
+      "v3_active_work": 2514591,
+      "v3_terminal_publication_attempts": 186419,
+      "v3_predecessor_index_entries": 39900,
+      "v3_denominator_edges": 638365,
+      "v3_subset_checks": 641095,
+      "v3_candidate_sets": 136045,
+      "v3_recurrence_terms": 638365,
+      "v3_commits": 136045,
+      "conclusion": "the evaluator ledgers count different algorithms and are not comparable universal work units"
+    },
+    "nested_automatic_children": {
+      "historic_pattern_verified": true,
+      "before_gate1": "a child/comparison context could execute against an independent or unlimited reforge budget, then merge by post-hoc parent saturation",
+      "after_gate1": "the parent computes and installs the remaining allowance before child/comparison work; every executed delta merges on success or refusal",
+      "gate2_control_preserves_enforcement": true,
+      "publication_contract": "an interrupted child or parent row cannot publish"
+    }
+  },
+  "release_wasm": {
+    "module_rebuilt": true,
+    "binding_v1": {
+      "status": "refused_resource_cap",
+      "expectation_met": true,
+      "solve_wall_ms": 12953.738,
+      "total_wall_ms": 13467.583,
+      "solve_steps": 3115,
+      "longest_worker_slice_ms": 286.965,
+      "wasm_heap_before_bytes": 278396928,
+      "wasm_heap_after_bytes": 577437696,
+      "wasm_heap_growth_bytes": 299040768,
+      "native_live_owned_bytes": 251181774,
+      "native_peak_owned_bytes": 314617969,
+      "transition_bits_hash": "4f26d305a908c59f",
+      "policy_bits_hash": "302ea0bcb228216e",
+      "lower": 752.9009075663787,
+      "upper": 3984.9346987650665,
+      "legacy_and_component_counts_match_native": true
+    },
+    "cancellation_control": {
+      "case": "cancellation-oracle-two-mod",
+      "status": "cancelled",
+      "expectation_met": true,
+      "acknowledgement_ms": 14.401,
+      "limit_ms": 250.0,
+      "longest_worker_slice_ms": 10.302,
+      "wasm_heap_growth_bytes": 0
+    },
+    "conclusion": "Release V1 accounting is deterministic across the worker boundary and prompt cancellation retains substantial headroom. V3 release-WASM performance remains a Gate 4/5 production-selection measurement because diagnostic evaluator bits are intentionally not exposed to WASM."
+  },
+  "validation": [
+    {
+      "command": "powershell -File scripts/build.ps1",
+      "status": "passed"
+    },
+    {
+      "command": "build/engine/poecraft_engine_tests.exe --solver-calc-only",
+      "checks": 125531,
+      "failures": 0,
+      "optional_artifact_suite": "skipped because no artifact path was supplied"
+    },
+    {
+      "command": "poecraft_solver_benchmark --validate-only on the four-case isolated Gate 2 carrier",
+      "specifications": 4,
+      "status": "passed"
+    },
+    {
+      "command": "three native four-way matched benchmark repetitions with --skip-verification",
+      "cases": 12,
+      "all_expectations_met": true
+    },
+    {
+      "command": "native compiled-artifact check with strategy output",
+      "strategies": 4,
+      "identical_sha256": true
+    },
+    {
+      "command": "native production V1 body-armour and fractured representatives with --skip-verification",
+      "cases": 2,
+      "all_expectations_met": true
+    },
+    {
+      "command": "the release emcc invocation from scripts/build-wasm.ps1 completed; the wrapper then received that script's exact newline/UTF-8 normalization step",
+      "status": "passed",
+      "wrapper_note": "the desktop command wrapper timed out while emcc continued; generated mjs/wasm completion, hashes, load, ABI, solve, and cancellation were independently verified"
+    },
+    {
+      "command": "npm run benchmark:solver -- isolated Gate 2 V1 carrier --skip-verification",
+      "status": "passed"
+    },
+    {
+      "command": "npm run benchmark:solver -- cancellation-oracle-two-mod --skip-verification",
+      "status": "passed"
+    }
+  ],
+  "identities_and_raw_evidence": {
+    "native_benchmark": {
+      "sha256": "ef8be3ab0b0c46d59562eef5137831bea6dbabbfd3162b0b39867ed38fdf56f3",
+      "bytes": 9044131
+    },
+    "native_dll": {
+      "sha256": "9edc3b818aac804c1ae612e0683f0e20591435db5ce91f30a3cb911a1f671c42",
+      "bytes": 8760394
+    },
+    "compiled_manifest": {
+      "sha256": "ff851790a8c336eb6af3895c5483ff1d19f3b016d3d8335a1109b37a9c297602",
+      "bytes": 5810
+    },
+    "economy_snapshot": {
+      "sha256": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e",
+      "bytes": 94189
+    },
+    "release_wasm_mjs": {
+      "sha256": "c5501a031a36c0c4916f6f0b95051f8356f39f9f07c1c07518f0ade94b01e117",
+      "bytes": 41445
+    },
+    "release_wasm_binary": {
+      "sha256": "6e38e56693a647880ffde942aeebd1d85035cdc2dc476281a9162d725fc0b4b3",
+      "bytes": 4588767
+    },
+    "native_repetition_reports": [
+      {
+        "path": "build/acceptance/reforge-resource-accounting-v3-qualification/gate2-calibration/native-repetition-1.json",
+        "sha256": "1436968624e881d61310a3358436755e8bd752342d451730f9ca7fcbeda9ba00"
+      },
+      {
+        "path": "build/acceptance/reforge-resource-accounting-v3-qualification/gate2-calibration/native-repetition-2.json",
+        "sha256": "c48d18fc23b0489575e7eaccb7f467c1bbb8292deb0624236adc8d4334c67902"
+      },
+      {
+        "path": "build/acceptance/reforge-resource-accounting-v3-qualification/gate2-calibration/native-repetition-3.json",
+        "sha256": "29d56efe6f1bb486c835b5c581ba69070ac3d2c871ced61acc8d7e951dfd9a7a"
+      }
+    ],
+    "native_artifact_report_sha256": "0f7206787b45a5fe391e7a49691593ab28f74f9aacd20f317c8467c7518d2ee0",
+    "native_body_armour_report_sha256": "3ec5ace5b0fc753625d6ff6a4dcee035e6c20a7c00560f85fc37a958390bd8cc",
+    "native_fractured_report_sha256": "767bc78b1db950c73f0f188a82e807112da9fe5e3acbe690ca34abfd7a1a3696",
+    "wasm_binding_report_sha256": "824947a54bf2525f2473419741f5f466a15fde56920b188a15a00a187058d1d9",
+    "wasm_cancellation_report_sha256": "8e8a6631da2c0c51ae9c203a8aa0cc82b0639f74b9bb0b4e05216274081fc097",
+    "frozen_hard_evidence_sha256": "c330ad0550d7846573312c3f4e039750b077833908f73745e2190ae3648438e1",
+    "frozen_gate8_reliability_report_sha256": "55d35a9c976e8f78f78cb4f28cec4b5bf7fd57a6e905bb610046a4389acfd50f"
+  },
+  "gate3_boundary": {
+    "authorized": true,
+    "required_proof": "establish whether V3 evaluator effort is safely bounded under the stable V1-equivalent logical envelope plus the existing owned-memory and cancellation limits",
+    "production_selection_before_gate3": "v1_raw",
+    "cap_interpretation_before_gate3": "legacy active evaluator ledger",
+    "no_weighted_score": true,
+    "no_public_evaluator_safety_cap_yet": true
+  }
+}

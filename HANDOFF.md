@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: versioned reforge resource accounting Gates 0-1 are complete. Gate
-2, observational baseline and matched V1/V2/V3 calibration, is active.**
+**Status: versioned reforge resource accounting Gates 0-2 are complete. Gate
+3, the resource-cap contract, is active.**
 
 Current plan:
 [Versioned Reforge Resource Accounting And V3 Production Qualification](docs/active/versioned-reforge-resource-accounting-and-v3-production-qualification.md).
@@ -36,8 +36,9 @@ Current milestone starting commit:
 `00718908c866dc71a2e7e3864ebc5c5015ff063f`
 
 Current milestone commits: Gate 0 is
-`a683b8cbd9c5ac60b6e042d819a3ee6b3aa6fb0b`. Gate 1 is recorded by the
-current local commit. Gate 2 is the active implementation boundary.
+`a683b8cbd9c5ac60b6e042d819a3ee6b3aa6fb0b`. Gate 1 is
+`50bc7be80ea81f9301dc3b1d5414a2ebb2595aec`. Gate 2 is recorded by the
+current local commit. Gate 3 is the active implementation boundary.
 
 Certified fallback milestone starting commit:
 `0b4ba38aa5754a39715640ad6d7a48cab2dc2b6c`
@@ -154,6 +155,33 @@ Nothing has been pushed or merged. `main` remains unchanged at
   `fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate1.json`.
   Gate 2 must keep cap behavior and production selection unchanged while it
   measures accounting overhead and matched V1/V2/V3 rows.
+
+## Versioned reforge resource accounting Gate 2
+
+- A native-benchmark-only accounting-off control disables only the Gate 1
+  component/sample ledger. The identical V1 binding row measures 693.694 ms
+  off and 697.594 ms on, a 0.562% instrumentation cost under the 5% limit.
+- Three same-binary repetitions produce V1/V2/V3 binding-row medians of
+  697.594/877.933/507.483 ms. V2 remains 25.85% slower than V1. V3 is 27.25%
+  faster, matches peak owned memory, and keeps median longest-step growth at
+  9.55%, inside the frozen 10% calibration boundary.
+- All variants preserve 2,097,355 logical V1 work, 172,596 transitions, target
+  probabilities, bounds, stop cause, transition/policy hashes, selected
+  semantic action, and compiled strategy SHA-256. The interrupted second row
+  never publishes; the independently executable fallback remains the upper.
+- The tracked component table proves the historic differences: Harvest scans
+  guaranteed support twice but V1 charges it once; V1 charges all 40 buckets
+  at 3,359 binding nodes that physically short-circuit; V2 counts availability
+  work; and V3 counts predecessor, denominator, subset, candidate, recurrence,
+  and commit operations. Nested work remains pre-bounded after Gate 1.
+- Release WASM reproduces V1 counts and hashes on the isolated 18M carrier.
+  The approved cancellation control acknowledges in 14.401 ms against its
+  250 ms limit. The hard 20M and selected-only 100M runs were not invoked.
+- The focused native build and calculator suite pass 125,531 checks with zero
+  failures. Production remains V1 and cap interpretation remains historic
+  until Gate 3 proves the stable logical-envelope contract.
+- Evidence is
+  `fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate2.json`.
 
 ## Certified fallback and terminal factorization Gate 0
 
@@ -901,26 +929,28 @@ tracked work counters. The tracked qualified Fracture evidence retains
 
 ## Exact next step
 
-Complete Gate 1 component accounting:
+Complete Gate 3 resource-cap contract:
 
-1. Add one reusable saturating breakdown for logical work and V1/V2/V3
-   implementation components without manufacturing an additive score.
-2. Record exact aggregate row lifecycle, pool/family/bucket, exclusion,
-   frontier, terminal, successor/publication, identity, V3 recurrence, and
-   nested automatic-child counts. Keep bounded row samples with owner, family,
-   evaluator, cache, and disposition provenance.
-3. Accumulate hot-loop counts locally, include bounded storage in solver-owned
-   memory, preserve every legacy counter/serialized field, and keep telemetry
-   observational.
-4. Pass the remaining relevant budget to nested child contexts before they do
-   work. Merge all actually executed child work even if the row is later
-   interrupted, refused, or discarded.
-5. Add focused saturation, overflow, nested propagation, interruption,
-   reverse-enumeration, cache-reuse, and completed-publication contracts, then
-   commit Gate 1 separately. Do not run routine acceptance yet.
+1. Trace a row's stable V1-equivalent logical charge independently from the
+   active evaluator's V1/V2/V3 implementation ledger. Prove raw V1 receives
+   exactly its historic envelope.
+2. Establish a deterministic safety bound from logical envelope and row
+   structure to V3 predecessor, denominator, subset, candidate, recurrence,
+   publication, memory, and cooperative-latency work. Do not invent weights.
+3. If the existing logical, owned-memory, and cancellation limits safely bound
+   V3, make `max_reforge_work` enforce logical V1-equivalent breadth for every
+   evaluator and keep evaluator effort report-only. Otherwise add a genuinely
+   separate evaluator-safety cap and stop reason through every affected layer.
+4. Preserve all defaults and fixture overrides. Give nested contexts only the
+   remaining logical/evaluator allowance before work; interrupted rows remain
+   observable and cannot publish; cache reuse remains explicit.
+5. Add focused raw-envelope, evaluator-switch, one-less-cap, cache, nested,
+   interruption, and saturation tests. Commit Gate 3 separately before any V3
+   production integration.
 
-Gate 2 then captures unchanged-production accounting and matched V1/V2/V3
-medians before Gate 3 changes any cap interpretation or production evaluator.
+Gate 4 may qualify and integrate V3 only after this safety contract passes.
+The Gate 2 binding result alone is not aggregate family or release-WASM V3
+qualification.
 
 Deterministic checkpoint/replay remains deferred.
 

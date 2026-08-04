@@ -638,6 +638,9 @@ solver::SolveOptions solve_options(const pc_solve_options* options) {
         value.factored_terminal_reforge_diagnostic =
             (options->solver_flags &
              solver::kFactoredTerminalReforgeDiagnosticFlag) != 0;
+        value.reforge_resource_accounting =
+            (options->solver_flags &
+             solver::kDisableReforgeResourceAccountingDiagnosticFlag) == 0;
     }
     if (PC_SOLVE_OPTION_HAS(max_absolute_optimality_gap) &&
         options->max_absolute_optimality_gap > 0.0) {

@@ -741,32 +741,36 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         for (const ReforgeCacheMemo& candidate : memo->second) {
             if (candidate.observation_signature == base_observation) {
                 ++telemetry_.reforge_hits;
-                ReforgeRowTelemetry row;
-                row.sequence = telemetry_.reforge_row_sequence;
-                telemetry_.reforge_row_sequence = saturated_add(
-                    telemetry_.reforge_row_sequence, 1);
-                row.action_index = action_index;
-                row.owner = reforge_row_owner_;
-                row.family = row_family;
-                row.evaluator = evaluator_version;
-                row.disposition = ReforgeRowDisposition::Completed;
-                row.cache_reused = true;
-                row.components.rows_cache_reused = 1;
-                merge_reforge_effort(
-                    telemetry_.reforge_effort, row.components);
-                constexpr std::size_t kRowSampleLimit = 64;
-                try {
-                    if (telemetry_.reforge_row_samples.size() <
-                        kRowSampleLimit) {
-                        telemetry_.reforge_row_samples.push_back(
-                            std::move(row));
-                    } else {
+                if (reforge_resource_accounting_) {
+                    ReforgeRowTelemetry row;
+                    row.sequence = telemetry_.reforge_row_sequence;
+                    telemetry_.reforge_row_sequence = saturated_add(
+                        telemetry_.reforge_row_sequence, 1);
+                    row.action_index = action_index;
+                    row.owner = reforge_row_owner_;
+                    row.family = row_family;
+                    row.evaluator = evaluator_version;
+                    row.disposition = ReforgeRowDisposition::Completed;
+                    row.cache_reused = true;
+                    row.components.rows_cache_reused = 1;
+                    merge_reforge_effort(
+                        telemetry_.reforge_effort, row.components);
+                    constexpr std::size_t kRowSampleLimit = 64;
+                    try {
+                        if (telemetry_.reforge_row_samples.size() <
+                            kRowSampleLimit) {
+                            telemetry_.reforge_row_samples.push_back(
+                                std::move(row));
+                        } else {
+                            telemetry_.reforge_row_samples_omitted =
+                                saturated_add(
+                                    telemetry_.reforge_row_samples_omitted,
+                                    1);
+                        }
+                    } catch (...) {
                         telemetry_.reforge_row_samples_omitted = saturated_add(
                             telemetry_.reforge_row_samples_omitted, 1);
                     }
-                } catch (...) {
-                    telemetry_.reforge_row_samples_omitted = saturated_add(
-                        telemetry_.reforge_row_samples_omitted, 1);
                 }
                 return candidate.distribution;
             }
@@ -775,13 +779,20 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     ++telemetry_.reforge_misses;
     telemetry_timer.miss = true;
 
-    ReforgeEffortRecorder effort_recorder{
-        telemetry_, action_index, reforge_row_owner_, row_family,
-        evaluator_version};
-    ReforgeEffortBreakdown& effort = effort_recorder.row.components;
-    const auto credit_effort = [](
+    std::optional<ReforgeEffortRecorder> effort_recorder;
+    if (reforge_resource_accounting_) {
+        effort_recorder.emplace(
+            telemetry_, action_index, reforge_row_owner_, row_family,
+            evaluator_version);
+    }
+    ReforgeEffortBreakdown disabled_effort;
+    ReforgeEffortBreakdown& effort = effort_recorder.has_value()
+                                           ? effort_recorder->row.components
+                                           : disabled_effort;
+    const auto credit_effort = [&](
         std::uint64_t& counter,
         const std::uint64_t amount = 1) {
+        if (!reforge_resource_accounting_) return;
         counter = saturated_add(counter, amount);
     };
 
@@ -1078,7 +1089,9 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             account_reforge_cache_insert(
                 old_capacity, bucket.capacity(), bucket.back());
         }
-        effort_recorder.completed = true;
+        if (effort_recorder.has_value()) {
+            effort_recorder->completed = true;
+        }
         return finalized;
     };
     const auto unapplied = [&]() -> std::shared_ptr<const OutcomeDistribution> {

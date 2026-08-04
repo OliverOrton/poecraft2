@@ -675,6 +675,12 @@ void run_projected_reforge_frontier_equivalence_tests() {
         session, family_goal_100(), registry, actions,
         false, false, true, std::nullopt, {}, false, {}, false,
         true, false);
+    CalcContext raw_without_resource_accounting(
+        session, family_goal_100(), registry, actions,
+        false, false, true, std::nullopt, {}, false, {}, false,
+        true, false);
+    raw_without_resource_accounting.set_reforge_resource_accounting(
+        false);
     CalcContext projected(
         session, family_goal_100(), registry, actions,
         false, false, true, std::nullopt, {}, false, {}, false,
@@ -699,6 +705,8 @@ void run_projected_reforge_frontier_equivalence_tests() {
     pc_item_clear(&rare);
     rare.rarity = PC_RARITY_RARE;
     const std::uint32_t raw_start = raw.intern_item(rare);
+    const std::uint32_t raw_without_resource_accounting_start =
+        raw_without_resource_accounting.intern_item(rare);
     const std::uint32_t projected_start = projected.intern_item(rare);
     const std::uint32_t raw_reverse_start =
         raw_reverse.intern_item(rare);
@@ -710,6 +718,10 @@ void run_projected_reforge_frontier_equivalence_tests() {
     for (const std::uint32_t action : actions) {
         const OutcomeDistribution& raw_distribution =
             raw.outcomes(raw_start, action);
+        const OutcomeDistribution&
+            raw_without_resource_accounting_distribution =
+                raw_without_resource_accounting.outcomes(
+                    raw_without_resource_accounting_start, action);
         const OutcomeDistribution& projected_distribution =
             projected.outcomes(projected_start, action);
         const OutcomeDistribution& raw_reverse_distribution =
@@ -723,8 +735,11 @@ void run_projected_reforge_frontier_equivalence_tests() {
             factored_reverse.outcomes(
                 factored_reverse_start, action);
         PC_CHECK(raw_distribution.supported);
+        PC_CHECK(raw_without_resource_accounting_distribution.supported);
         PC_CHECK(projected_distribution.supported);
         PC_CHECK(sums_to_one(raw_distribution));
+        PC_CHECK(sums_to_one(
+            raw_without_resource_accounting_distribution));
         PC_CHECK(sums_to_one(projected_distribution));
         PC_CHECK(sums_to_one(raw_reverse_distribution));
         PC_CHECK(sums_to_one(projected_reverse_distribution));
@@ -736,6 +751,11 @@ void run_projected_reforge_frontier_equivalence_tests() {
         }
         const auto projected_mass = project_distribution(
             projected, raw, projected_distribution);
+        const auto raw_without_resource_accounting_mass =
+            project_distribution(
+                raw_without_resource_accounting,
+                raw,
+                raw_without_resource_accounting_distribution);
         const auto raw_reverse_mass = project_distribution(
             raw_reverse, raw, raw_reverse_distribution);
         const auto projected_reverse_mass = project_distribution(
@@ -759,6 +779,7 @@ void run_projected_reforge_frontier_equivalence_tests() {
                 }
             };
         check_mass(projected_mass);
+        check_mass(raw_without_resource_accounting_mass);
         check_mass(raw_reverse_mass);
         check_mass(projected_reverse_mass);
         check_mass(factored_mass);
@@ -833,9 +854,69 @@ void run_projected_reforge_frontier_equivalence_tests() {
         factored, ReforgeEvaluatorVersion::V3Factored);
     check_completed_samples(
         factored_reverse, ReforgeEvaluatorVersion::V3Factored);
+
+    /* The historic V1 ledger charges one-plus-all-buckets for every
+     * frontier node even when goal/terminal control flow does not enter the
+     * dense scan. The component ledger records only probes actually made. */
+    const ReforgeRowTelemetry& ordinary_raw_row =
+        raw.telemetry().reforge_row_samples.at(0);
+    PC_CHECK(
+        ordinary_raw_row.logical_work_v1 ==
+        ordinary_raw_row.components.frontier_nodes *
+            (1 + ordinary_raw_row.components.roll_buckets_built));
+    PC_CHECK(
+        ordinary_raw_row.components.dense_bucket_probes <
+        ordinary_raw_row.components.frontier_nodes *
+            ordinary_raw_row.components.roll_buckets_built);
+
+    /* Harvest traverses guaranteed support once for its denominator and
+     * again for branch publication, while the preserved V1 ledger charges
+     * only one of those scans. */
+    const ReforgeRowTelemetry& harvest_raw_row =
+        raw.telemetry().reforge_row_samples.at(2);
+    const ReforgeBuildAttribution& harvest_raw_attribution =
+        raw.telemetry().reforge_build_attribution_samples.at(2);
+    PC_CHECK(harvest_raw_attribution.guaranteed_scan_work > 0);
+    PC_CHECK(
+        harvest_raw_attribution.guaranteed_scan_work ==
+        harvest_raw_row.components.roll_buckets_built);
+    PC_CHECK(
+        harvest_raw_row.logical_work_v1 ==
+        harvest_raw_attribution.guaranteed_scan_work +
+            harvest_raw_row.components.frontier_nodes *
+                (1 + harvest_raw_row.components.roll_buckets_built));
+    PC_CHECK(
+        harvest_raw_row.components.dense_bucket_probes >=
+        2 * harvest_raw_attribution.guaranteed_scan_work);
+
     PC_CHECK(
         raw.telemetry().reforge_effort ==
         raw_reverse.telemetry().reforge_effort);
+    PC_CHECK(
+        raw_without_resource_accounting.telemetry().reforge_effort ==
+        ReforgeEffortBreakdown{});
+    PC_CHECK(
+        raw_without_resource_accounting.telemetry()
+            .reforge_row_samples.empty());
+    PC_CHECK(
+        raw_without_resource_accounting.telemetry()
+            .reforge_row_samples_omitted == 0);
+    PC_CHECK(
+        raw_without_resource_accounting.telemetry()
+            .reforge_frontier_work ==
+        raw.telemetry().reforge_frontier_work);
+    PC_CHECK(
+        raw_without_resource_accounting.telemetry()
+            .reforge_raw_equivalent_work ==
+        raw.telemetry().reforge_raw_equivalent_work);
+    PC_CHECK(
+        raw_without_resource_accounting.telemetry()
+            .reforge_projected_work ==
+        raw.telemetry().reforge_projected_work);
+    PC_CHECK(
+        raw_without_resource_accounting.telemetry()
+            .reforge_factored_work ==
+        raw.telemetry().reforge_factored_work);
     PC_CHECK(
         projected.telemetry().reforge_effort ==
         projected_reverse.telemetry().reforge_effort);

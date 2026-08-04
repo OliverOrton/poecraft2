@@ -789,6 +789,10 @@ class CalcContext {
     }
 
     void reset_solve_telemetry();
+    void set_reforge_resource_accounting(const bool enabled);
+    bool reforge_resource_accounting() const {
+        return reforge_resource_accounting_;
+    }
     void set_defer_automatic_protected_baseline(const bool value) {
         defer_automatic_protected_baseline_ = value;
     }
@@ -951,6 +955,7 @@ class CalcContext {
     bool product_solver_parent_ = false;
     bool distinguish_modifier_identity_ = false;
     bool capture_reforge_attribution_ = false;
+    bool reforge_resource_accounting_ = true;
     bool use_projected_reforge_frontier_ = false;
     bool reverse_reforge_bucket_enumeration_ = false;
     bool use_factored_terminal_reforge_ = false;

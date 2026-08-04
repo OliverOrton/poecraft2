@@ -1386,6 +1386,18 @@ void CalcContext::reset_solve_telemetry() {
     }
 }
 
+void CalcContext::set_reforge_resource_accounting(const bool enabled) {
+    reforge_resource_accounting_ = enabled;
+    if (automatic_comparison_context_ != nullptr) {
+        automatic_comparison_context_->set_reforge_resource_accounting(
+            enabled);
+    }
+    for (auto& [unused_key, context] : automatic_admission_contexts_) {
+        (void)unused_key;
+        context->set_reforge_resource_accounting(enabled);
+    }
+}
+
 void CalcContext::set_solve_resource_caps(
     const std::uint32_t max_discovered_states,
     const std::uint64_t max_reforge_work,
