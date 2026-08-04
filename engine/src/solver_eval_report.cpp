@@ -208,6 +208,107 @@ void append_cost_totals_json(
     out.push_back('}');
 }
 
+void append_reforge_effort_json(
+    BoundedJson& out,
+    const ReforgeEffortBreakdown& effort) {
+    struct Field {
+        const char* name;
+        std::uint64_t ReforgeEffortBreakdown::*member;
+    };
+    static constexpr Field fields[] = {
+        {"rows_begun", &ReforgeEffortBreakdown::rows_begun},
+        {"rows_completed", &ReforgeEffortBreakdown::rows_completed},
+        {"rows_interrupted", &ReforgeEffortBreakdown::rows_interrupted},
+        {"rows_cache_reused", &ReforgeEffortBreakdown::rows_cache_reused},
+        {"rows_discarded", &ReforgeEffortBreakdown::rows_discarded},
+        {"rows_published", &ReforgeEffortBreakdown::rows_published},
+        {"pool_entries_scanned", &ReforgeEffortBreakdown::pool_entries_scanned},
+        {"physical_families_built", &ReforgeEffortBreakdown::physical_families_built},
+        {"roll_buckets_built", &ReforgeEffortBreakdown::roll_buckets_built},
+        {"exclusion_group_checks", &ReforgeEffortBreakdown::exclusion_group_checks},
+        {"availability_classes_built", &ReforgeEffortBreakdown::availability_classes_built},
+        {"availability_words_built", &ReforgeEffortBreakdown::availability_words_built},
+        {"frontier_nodes", &ReforgeEffortBreakdown::frontier_nodes},
+        {"dense_bucket_probes", &ReforgeEffortBreakdown::dense_bucket_probes},
+        {"availability_words_scanned", &ReforgeEffortBreakdown::availability_words_scanned},
+        {"eligible_nonterminal_edges", &ReforgeEffortBreakdown::eligible_nonterminal_edges},
+        {"terminal_contributions", &ReforgeEffortBreakdown::terminal_contributions},
+        {"canonical_terminal_successors", &ReforgeEffortBreakdown::canonical_terminal_successors},
+        {"duplicate_terminal_contributions", &ReforgeEffortBreakdown::duplicate_terminal_contributions},
+        {"raw_choice_entries", &ReforgeEffortBreakdown::raw_choice_entries},
+        {"identity_tree_nodes", &ReforgeEffortBreakdown::identity_tree_nodes},
+        {"successor_publication_attempts", &ReforgeEffortBreakdown::successor_publication_attempts},
+        {"successor_unique_insertions", &ReforgeEffortBreakdown::successor_unique_insertions},
+        {"successor_duplicate_merges", &ReforgeEffortBreakdown::successor_duplicate_merges},
+        {"state_interning_attempts", &ReforgeEffortBreakdown::state_interning_attempts},
+        {"v3_predecessor_index_entries", &ReforgeEffortBreakdown::v3_predecessor_index_entries},
+        {"v3_denominator_edges", &ReforgeEffortBreakdown::v3_denominator_edges},
+        {"v3_subset_checks", &ReforgeEffortBreakdown::v3_subset_checks},
+        {"v3_candidate_sets", &ReforgeEffortBreakdown::v3_candidate_sets},
+        {"v3_recurrence_terms", &ReforgeEffortBreakdown::v3_recurrence_terms},
+        {"v3_commits", &ReforgeEffortBreakdown::v3_commits},
+        {"nested_automatic_child_logical_work", &ReforgeEffortBreakdown::nested_automatic_child_logical_work},
+        {"nested_automatic_child_active_work", &ReforgeEffortBreakdown::nested_automatic_child_active_work},
+    };
+    out.push_back('{');
+    for (std::size_t i = 0; i < std::size(fields); ++i) {
+        if (i != 0) out.push_back(',');
+        out += "\"";
+        out += fields[i].name;
+        out += "\":" + std::to_string(effort.*fields[i].member);
+    }
+    out.push_back('}');
+}
+
+void append_reforge_resource_accounting_json(
+    BoundedJson& out,
+    const StrategyEvalResult& result) {
+    out += "{\"schema_version\":1,\"legacy_active_work\":" +
+           std::to_string(result.reforge_work);
+    out += ",\"logical_work_v1\":" +
+           std::to_string(result.reforge_logical_work_v1);
+    out += ",\"evaluator_work\":{\"v1\":" +
+           std::to_string(result.reforge_logical_work_v1);
+    out += ",\"v2\":" +
+           std::to_string(result.reforge_evaluator_work_v2);
+    out += ",\"v3\":" +
+           std::to_string(result.reforge_evaluator_work_v3) + "}";
+    out += ",\"components\":";
+    append_reforge_effort_json(out, result.reforge_effort);
+    out += ",\"row_samples\":[";
+    for (std::size_t i = 0; i < result.reforge_row_samples.size(); ++i) {
+        if (i != 0) out.push_back(',');
+        const ReforgeRowTelemetry& row = result.reforge_row_samples[i];
+        out += "{\"sequence\":" + std::to_string(row.sequence);
+        out += ",\"action_index\":" + std::to_string(row.action_index);
+        out += ",\"owner\":\"";
+        out += reforge_row_owner_name(row.owner);
+        out += "\",\"family\":\"";
+        out += reforge_row_family_name(row.family);
+        out += "\",\"evaluator\":\"";
+        out += reforge_evaluator_version_name(row.evaluator);
+        out += "\",\"cache\":\"";
+        out += (row.cache_reused ? "hit" : "miss");
+        out += "\",\"cache_reused\":";
+        out += (row.cache_reused ? "true" : "false");
+        out += ",\"disposition\":\"";
+        out += reforge_row_disposition_name(row.disposition);
+        out += "\",\"legacy_active_work\":" +
+               std::to_string(row.legacy_active_work);
+        out += ",\"logical_work_v1\":" +
+               std::to_string(row.logical_work_v1);
+        out += ",\"evaluator_work\":{\"v1\":" +
+               std::to_string(row.evaluator_work_v1);
+        out += ",\"v2\":" + std::to_string(row.evaluator_work_v2);
+        out += ",\"v3\":" + std::to_string(row.evaluator_work_v3) + "}";
+        out += ",\"components\":";
+        append_reforge_effort_json(out, row.components);
+        out.push_back('}');
+    }
+    out += "],\"row_samples_omitted\":" +
+           std::to_string(result.reforge_row_samples_omitted) + "}";
+}
+
 } // namespace
 
 std::string serialize_strategy_eval(const StrategyEvalResult& result) {
@@ -455,6 +556,8 @@ std::string serialize_strategy_eval(const StrategyEvalResult& result) {
            std::to_string(result.max_owned_bytes) +
            ",\"max_output_json_bytes\":" +
            std::to_string(result.max_output_json_bytes) + "}";
+    out += ",\"reforge_resource_accounting\":";
+    append_reforge_resource_accounting_json(out, result);
 
     out += ",\"targets\":[";
     for (std::size_t i = 0; i < result.targets.size(); ++i) {

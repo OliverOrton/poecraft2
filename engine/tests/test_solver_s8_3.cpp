@@ -631,6 +631,77 @@ void run_protected_price_flip() {
         repeat_calc.telemetry().owned_byte_ledger_child_context_visits > 0);
     PC_CHECK(
         repeat_calc.telemetry().owned_byte_ledger_max_recursion_depth > 0);
+    const CalcTelemetry& repeat_telemetry = repeat_calc.telemetry();
+    PC_CHECK(repeat_telemetry.reforge_frontier_work > 1);
+    PC_CHECK(
+        repeat_telemetry.reforge_effort
+            .nested_automatic_child_active_work ==
+        repeat_telemetry.reforge_frontier_work);
+    PC_CHECK(
+        repeat_telemetry.reforge_effort
+            .nested_automatic_child_logical_work ==
+        repeat_telemetry.reforge_raw_equivalent_work);
+    PC_CHECK(!repeat_telemetry.reforge_row_samples.empty());
+    PC_CHECK(std::all_of(
+        repeat_telemetry.reforge_row_samples.begin(),
+        repeat_telemetry.reforge_row_samples.end(),
+        [](const ReforgeRowTelemetry& row) {
+            return row.family ==
+                   ReforgeRowFamily::AutomaticOption;
+        }));
+
+    const std::uint64_t capped_reforge_work =
+        repeat_telemetry.reforge_frontier_work - 1;
+    CalcContext capped_repeat_calc(
+        session, goal, registry,
+        {restart, chaos, bench_prefix, bench_suffix});
+    const std::uint32_t capped_repeat_state =
+        capped_repeat_calc.intern_item(start);
+    const auto capped_repeat_prices =
+        std::unordered_map<std::string, double>{
+            {"base", 20.0},
+            {"chaos", 5.0},
+            {"scour", 1.0},
+            {"bench:s83_mod_6", 2.0},
+            {"bench:s83_mod_7", 3.0},
+            {"bench:s83_mod_9", 10.0}};
+    AutomaticAdmissionLimits capped_repeat_limits;
+    capped_repeat_limits.max_discovered_states = 100000;
+    capped_repeat_limits.max_state_action_rows = 100000;
+    capped_repeat_limits.max_transitions = 1000000;
+    capped_repeat_limits.max_reforge_work = capped_reforge_work;
+    capped_repeat_limits.max_solver_owned_bytes = 1073741824;
+    capped_repeat_limits.prices = &capped_repeat_prices;
+    const StateLocalAutomaticBatch capped_repeat_batch =
+        capped_repeat_calc.admit_state_local_automatic_candidates(
+            capped_repeat_state, capped_repeat_limits);
+    const CalcTelemetry& capped_repeat_telemetry =
+        capped_repeat_calc.telemetry();
+    PC_CHECK(
+        capped_repeat_telemetry.reforge_frontier_work ==
+        capped_reforge_work);
+    PC_CHECK(
+        capped_repeat_telemetry.reforge_effort
+            .nested_automatic_child_active_work ==
+        capped_repeat_telemetry.reforge_frontier_work);
+    PC_CHECK(
+        capped_repeat_telemetry.reforge_effort.rows_interrupted > 0);
+    PC_CHECK(std::any_of(
+        capped_repeat_telemetry.reforge_row_samples.begin(),
+        capped_repeat_telemetry.reforge_row_samples.end(),
+        [](const ReforgeRowTelemetry& row) {
+            return row.family == ReforgeRowFamily::AutomaticOption &&
+                   row.disposition ==
+                       ReforgeRowDisposition::Interrupted;
+        }));
+    PC_CHECK(std::any_of(
+        capped_repeat_batch.decisions.begin(),
+        capped_repeat_batch.decisions.end(),
+        [](const StateLocalAutomaticCandidate& decision) {
+            return decision.deferred &&
+                   decision.evidence.reason.find(
+                       "max_reforge_work") != std::string::npos;
+        }));
 
     const auto prices = [](const double lock_price) {
         return std::unordered_map<std::string, double>{

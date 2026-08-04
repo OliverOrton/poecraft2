@@ -1406,6 +1406,24 @@ limits. Otherwise a distinct evaluator-safety cap is required; if neither
 contract is safe, accounting remains and production V1/cap behavior stays
 unchanged. No weighted universal score is permitted.
 
+## Versioned Reforge Accounting Gate 1
+
+The 2026-08-04
+[`reforge-resource-accounting-v3-qualification-gate1.json`](../fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate1.json)
+accepts deterministic physical component accounting without constructing an
+additive score. It retains the active and parallel V1/V2/V3 ledgers, bounded
+coarse/strict/exact row provenance, transactional publication disposition,
+saturating aggregates, and capacity-derived owned-memory accounting.
+
+Automatic admission and protected-repeat comparison work are now constrained
+by the parent's remaining budget before execution. All executed nested work is
+merged on refusal and nested subtotals are not double counted. The focused
+calculator, S8.3 automatic, solve, and exact-evaluator entry points pass
+`125077`, `365`, `6083`, and `1176` checks with zero failures. This gate ran no
+benchmark, canonical hard case, release-WASM build, or full acceptance suite,
+and changed no evaluator selection, cap interpretation/default, mechanic,
+public ABI, artifact, or frontend authority.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

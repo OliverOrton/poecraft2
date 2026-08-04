@@ -599,6 +599,24 @@ void run_identity_reforge_factorization_tests() {
 }
 
 void run_projected_reforge_frontier_equivalence_tests() {
+    ReforgeEffortBreakdown saturated;
+    saturated.rows_begun =
+        std::numeric_limits<std::uint64_t>::max() - 1;
+    saturated.pool_entries_scanned = 7;
+    ReforgeEffortBreakdown overflow;
+    overflow.rows_begun = 9;
+    overflow.pool_entries_scanned = 5;
+    merge_reforge_effort(saturated, overflow);
+    PC_CHECK(
+        saturated.rows_begun ==
+        std::numeric_limits<std::uint64_t>::max());
+    PC_CHECK(saturated.pool_entries_scanned == 12);
+    ReforgeEffortBreakdown smaller;
+    smaller.rows_begun = 1;
+    const ReforgeEffortBreakdown clamped_delta =
+        reforge_effort_delta(smaller, saturated);
+    PC_CHECK(clamped_delta.rows_begun == 0);
+
     auto session = make_calc_session();
     session->essence_guaranteed_mod_ids = {3};
     session->fossil_added_mod_ids = {{4}};
@@ -760,6 +778,70 @@ void run_projected_reforge_frontier_equivalence_tests() {
             }
         }
     }
+    const std::array<ReforgeRowFamily, 4> expected_families{
+        ReforgeRowFamily::Ordinary,
+        ReforgeRowFamily::Essence,
+        ReforgeRowFamily::Harvest,
+        ReforgeRowFamily::Fossil};
+    const auto check_completed_samples = [&expected_families](
+            const CalcContext& context,
+            const ReforgeEvaluatorVersion evaluator) {
+        const CalcTelemetry& telemetry = context.telemetry();
+        PC_CHECK(
+            telemetry.reforge_row_samples.size() ==
+            expected_families.size());
+        PC_CHECK(telemetry.reforge_row_samples_omitted == 0);
+        ReforgeEffortBreakdown sampled;
+        for (std::size_t i = 0;
+             i < telemetry.reforge_row_samples.size(); ++i) {
+            const ReforgeRowTelemetry& row =
+                telemetry.reforge_row_samples[i];
+            PC_CHECK(row.sequence == i);
+            PC_CHECK(row.action_index == i);
+            PC_CHECK(row.owner == ReforgeRowOwner::Coarse);
+            PC_CHECK(row.family == expected_families[i]);
+            PC_CHECK(row.evaluator == evaluator);
+            PC_CHECK(!row.cache_reused);
+            PC_CHECK(
+                row.disposition ==
+                ReforgeRowDisposition::Completed);
+            PC_CHECK(row.components.rows_begun == 1);
+            PC_CHECK(row.components.rows_completed == 1);
+            PC_CHECK(row.components.rows_interrupted == 0);
+            PC_CHECK(row.components.pool_entries_scanned > 0);
+            PC_CHECK(row.components.physical_families_built > 0);
+            PC_CHECK(row.components.roll_buckets_built > 0);
+            PC_CHECK(row.components.frontier_nodes > 0);
+            PC_CHECK(row.components.terminal_contributions > 0);
+            PC_CHECK(
+                row.components.successor_publication_attempts > 0);
+            PC_CHECK(
+                row.components.successor_unique_insertions > 0);
+            PC_CHECK(row.components.state_interning_attempts > 0);
+            merge_reforge_effort(sampled, row.components);
+        }
+        PC_CHECK(sampled == telemetry.reforge_effort);
+    };
+    check_completed_samples(raw, ReforgeEvaluatorVersion::V1Raw);
+    check_completed_samples(
+        raw_reverse, ReforgeEvaluatorVersion::V1Raw);
+    check_completed_samples(
+        projected, ReforgeEvaluatorVersion::V2Sparse);
+    check_completed_samples(
+        projected_reverse, ReforgeEvaluatorVersion::V2Sparse);
+    check_completed_samples(
+        factored, ReforgeEvaluatorVersion::V3Factored);
+    check_completed_samples(
+        factored_reverse, ReforgeEvaluatorVersion::V3Factored);
+    PC_CHECK(
+        raw.telemetry().reforge_effort ==
+        raw_reverse.telemetry().reforge_effort);
+    PC_CHECK(
+        projected.telemetry().reforge_effort ==
+        projected_reverse.telemetry().reforge_effort);
+    PC_CHECK(
+        factored.telemetry().reforge_effort ==
+        factored_reverse.telemetry().reforge_effort);
     PC_CHECK(
         raw.telemetry().reforge_frontier_work ==
         raw.telemetry().reforge_raw_equivalent_work);
@@ -785,6 +867,58 @@ void run_projected_reforge_frontier_equivalence_tests() {
         PC_CHECK(
             row.projected_reforge_work <
             row.raw_equivalent_reforge_work);
+    }
+
+    const std::uint64_t raw_work_before_cache =
+        raw.telemetry().reforge_frontier_work;
+    raw.release_outcome(raw_start, 0);
+    (void)raw.outcomes(raw_start, 0);
+    PC_CHECK(
+        raw.telemetry().reforge_frontier_work ==
+        raw_work_before_cache);
+    PC_CHECK(raw.telemetry().reforge_effort.rows_cache_reused == 1);
+    PC_CHECK(
+        raw.telemetry().reforge_row_samples.back().cache_reused);
+    PC_CHECK(
+        raw.telemetry().reforge_row_samples.back().disposition ==
+        ReforgeRowDisposition::Completed);
+
+    CalcContext provenance(
+        session, family_goal_100(), registry, actions,
+        false, false, true);
+    const std::uint32_t provenance_start =
+        provenance.intern_item(rare);
+    {
+        ScopedReforgeRowProvenance published(
+            provenance, ReforgeRowOwner::StrictSelected);
+        (void)provenance.outcomes(provenance_start, 0);
+        published.publish();
+    }
+    provenance.release_outcome(provenance_start, 0);
+    {
+        ScopedReforgeRowProvenance discarded(
+            provenance, ReforgeRowOwner::StrictAlternative);
+        (void)provenance.outcomes(provenance_start, 0);
+    }
+    PC_CHECK(provenance.telemetry().reforge_effort.rows_published == 1);
+    PC_CHECK(provenance.telemetry().reforge_effort.rows_discarded == 1);
+    PC_CHECK(
+        provenance.telemetry().reforge_effort.rows_cache_reused == 1);
+    PC_CHECK(
+        provenance.telemetry().reforge_row_samples.size() == 2);
+    if (provenance.telemetry().reforge_row_samples.size() == 2) {
+        PC_CHECK(
+            provenance.telemetry().reforge_row_samples[0].owner ==
+            ReforgeRowOwner::StrictSelected);
+        PC_CHECK(
+            provenance.telemetry().reforge_row_samples[0].disposition ==
+            ReforgeRowDisposition::Published);
+        PC_CHECK(
+            provenance.telemetry().reforge_row_samples[1].owner ==
+            ReforgeRowOwner::StrictAlternative);
+        PC_CHECK(
+            provenance.telemetry().reforge_row_samples[1].disposition ==
+            ReforgeRowDisposition::Discarded);
     }
 
     const OutcomeDistribution& gated =
@@ -834,6 +968,14 @@ void run_projected_reforge_frontier_equivalence_tests() {
     PC_CHECK(
         factored_reverse.telemetry().reforge_frontier_work ==
         factored_reverse.telemetry().reforge_factored_work);
+    PC_CHECK(
+        factored.telemetry().reforge_effort.v3_predecessor_index_entries >
+        0);
+    PC_CHECK(factored.telemetry().reforge_effort.v3_denominator_edges > 0);
+    PC_CHECK(factored.telemetry().reforge_effort.v3_subset_checks > 0);
+    PC_CHECK(factored.telemetry().reforge_effort.v3_candidate_sets > 0);
+    PC_CHECK(factored.telemetry().reforge_effort.v3_recurrence_terms > 0);
+    PC_CHECK(factored.telemetry().reforge_effort.v3_commits > 0);
     const ReforgeBuildAttribution& factored_terminal =
         factored.telemetry().reforge_build_attribution_samples.back();
     const ReforgeBuildAttribution& factored_terminal_reverse =
@@ -883,6 +1025,22 @@ void run_projected_reforge_frontier_equivalence_tests() {
             error.cap_name() == "max_reforge_work";
     }
     PC_CHECK(factored_work_cap_hit);
+    PC_CHECK(
+        factored_capped.telemetry().reforge_effort.rows_begun == 1);
+    PC_CHECK(
+        factored_capped.telemetry().reforge_effort.rows_completed == 0);
+    PC_CHECK(
+        factored_capped.telemetry().reforge_effort.rows_interrupted == 1);
+    PC_CHECK(
+        factored_capped.telemetry().reforge_effort.rows_published == 0);
+    PC_CHECK(
+        factored_capped.telemetry().reforge_row_samples.size() == 1);
+    PC_CHECK(
+        factored_capped.telemetry().reforge_row_samples.front().disposition ==
+        ReforgeRowDisposition::Interrupted);
+    PC_CHECK(
+        factored_capped.telemetry().reforge_row_samples.front().logical_work_v1 >
+        0);
     PC_CHECK(
         factored.layout().junk_class_by_mod[3] !=
         factored.layout().junk_class_by_mod[4]);

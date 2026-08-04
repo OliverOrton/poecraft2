@@ -124,6 +124,9 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
                1 +
            broad_row_attribution_owned_bytes(
                diagnostics.policy_refinement.broad_row_attribution) +
+           diagnostics.policy_refinement
+                   .strict_reforge_row_samples.capacity() *
+               sizeof(ReforgeRowTelemetry) +
            string_vector_owned_bytes(diagnostics.equivalence_witnesses) +
            diagnostics.focused_schedule_rounds.capacity() *
                sizeof(FocusedScheduleRoundTelemetry) +
@@ -975,6 +978,135 @@ void append_telemetry_json_string(
     out += '"';
 }
 
+void append_reforge_effort_json(
+    BoundedTelemetryJson& out,
+    const ReforgeEffortBreakdown& effort) {
+    out += "{\"rows_begun\":" + std::to_string(effort.rows_begun);
+    out += ",\"rows_completed\":" +
+           std::to_string(effort.rows_completed);
+    out += ",\"rows_interrupted\":" +
+           std::to_string(effort.rows_interrupted);
+    out += ",\"rows_cache_reused\":" +
+           std::to_string(effort.rows_cache_reused);
+    out += ",\"rows_discarded\":" +
+           std::to_string(effort.rows_discarded);
+    out += ",\"rows_published\":" +
+           std::to_string(effort.rows_published);
+    out += ",\"pool_entries_scanned\":" +
+           std::to_string(effort.pool_entries_scanned);
+    out += ",\"physical_families_built\":" +
+           std::to_string(effort.physical_families_built);
+    out += ",\"roll_buckets_built\":" +
+           std::to_string(effort.roll_buckets_built);
+    out += ",\"exclusion_group_checks\":" +
+           std::to_string(effort.exclusion_group_checks);
+    out += ",\"availability_classes_built\":" +
+           std::to_string(effort.availability_classes_built);
+    out += ",\"availability_words_built\":" +
+           std::to_string(effort.availability_words_built);
+    out += ",\"frontier_nodes\":" +
+           std::to_string(effort.frontier_nodes);
+    out += ",\"dense_bucket_probes\":" +
+           std::to_string(effort.dense_bucket_probes);
+    out += ",\"availability_words_scanned\":" +
+           std::to_string(effort.availability_words_scanned);
+    out += ",\"eligible_nonterminal_edges\":" +
+           std::to_string(effort.eligible_nonterminal_edges);
+    out += ",\"terminal_contributions\":" +
+           std::to_string(effort.terminal_contributions);
+    out += ",\"canonical_terminal_successors\":" +
+           std::to_string(effort.canonical_terminal_successors);
+    out += ",\"duplicate_terminal_contributions\":" +
+           std::to_string(effort.duplicate_terminal_contributions);
+    out += ",\"raw_choice_entries\":" +
+           std::to_string(effort.raw_choice_entries);
+    out += ",\"identity_tree_nodes\":" +
+           std::to_string(effort.identity_tree_nodes);
+    out += ",\"successor_publication_attempts\":" +
+           std::to_string(effort.successor_publication_attempts);
+    out += ",\"successor_unique_insertions\":" +
+           std::to_string(effort.successor_unique_insertions);
+    out += ",\"successor_duplicate_merges\":" +
+           std::to_string(effort.successor_duplicate_merges);
+    out += ",\"state_interning_attempts\":" +
+           std::to_string(effort.state_interning_attempts);
+    out += ",\"v3_predecessor_index_entries\":" +
+           std::to_string(effort.v3_predecessor_index_entries);
+    out += ",\"v3_denominator_edges\":" +
+           std::to_string(effort.v3_denominator_edges);
+    out += ",\"v3_subset_checks\":" +
+           std::to_string(effort.v3_subset_checks);
+    out += ",\"v3_candidate_sets\":" +
+           std::to_string(effort.v3_candidate_sets);
+    out += ",\"v3_recurrence_terms\":" +
+           std::to_string(effort.v3_recurrence_terms);
+    out += ",\"v3_commits\":" +
+           std::to_string(effort.v3_commits);
+    out += ",\"nested_automatic_child_logical_work\":" +
+           std::to_string(
+               effort.nested_automatic_child_logical_work);
+    out += ",\"nested_automatic_child_active_work\":" +
+           std::to_string(
+               effort.nested_automatic_child_active_work) + "}";
+}
+
+void append_reforge_resource_accounting_json(
+    BoundedTelemetryJson& out,
+    const std::uint64_t legacy_active_work,
+    const std::uint64_t logical_work_v1,
+    const std::uint64_t evaluator_work_v2,
+    const std::uint64_t evaluator_work_v3,
+    const ReforgeEffortBreakdown& effort,
+    const std::vector<ReforgeRowTelemetry>& row_samples,
+    const std::uint64_t row_samples_omitted) {
+    out += "{\"schema_version\":1";
+    out += ",\"legacy_active_work\":" +
+           std::to_string(legacy_active_work);
+    out += ",\"logical_work_v1\":" +
+           std::to_string(logical_work_v1);
+    out += ",\"evaluator_work\":{\"v1\":" +
+           std::to_string(logical_work_v1);
+    out += ",\"v2\":" + std::to_string(evaluator_work_v2);
+    out += ",\"v3\":" + std::to_string(evaluator_work_v3) + "}";
+    out += ",\"components\":";
+    append_reforge_effort_json(out, effort);
+    out += ",\"row_samples\":[";
+    for (std::size_t i = 0; i < row_samples.size(); ++i) {
+        if (i != 0) out.push_back(',');
+        const ReforgeRowTelemetry& row = row_samples[i];
+        out += "{\"sequence\":" + std::to_string(row.sequence);
+        out += ",\"action_index\":" +
+               std::to_string(row.action_index);
+        out += ",\"owner\":\"";
+        out += reforge_row_owner_name(row.owner);
+        out += "\",\"family\":\"";
+        out += reforge_row_family_name(row.family);
+        out += "\",\"evaluator\":\"";
+        out += reforge_evaluator_version_name(row.evaluator);
+        out += "\",\"cache\":\"";
+        out += (row.cache_reused ? "hit" : "miss");
+        out += "\",\"cache_reused\":";
+        out += (row.cache_reused ? "true" : "false");
+        out += ",\"disposition\":\"";
+        out += reforge_row_disposition_name(row.disposition);
+        out += "\",\"legacy_active_work\":" +
+               std::to_string(row.legacy_active_work);
+        out += ",\"logical_work_v1\":" +
+               std::to_string(row.logical_work_v1);
+        out += ",\"evaluator_work\":{\"v1\":" +
+               std::to_string(row.evaluator_work_v1);
+        out += ",\"v2\":" +
+               std::to_string(row.evaluator_work_v2);
+        out += ",\"v3\":" +
+               std::to_string(row.evaluator_work_v3) + "}";
+        out += ",\"components\":";
+        append_reforge_effort_json(out, row.components);
+        out += "}";
+    }
+    out += "],\"row_samples_omitted\":" +
+           std::to_string(row_samples_omitted) + "}";
+}
+
 std::string telemetry_finite_json(const double value) {
     if (!std::isfinite(value)) return "null";
     char buffer[64];
@@ -1348,7 +1480,17 @@ std::string serialize_solver_telemetry(
                 std::to_string(refinement.alternative_reforge_work);
         json += ",\"transitions\":" +
                 std::to_string(refinement.alternative_transitions);
-        json += "},\"work_to_first_partition\":";
+        json += "},\"reforge_resource_accounting\":";
+        append_reforge_resource_accounting_json(
+            json,
+            refinement.strict_reforge_active_work,
+            refinement.strict_reforge_logical_work_v1,
+            refinement.strict_reforge_evaluator_work_v2,
+            refinement.strict_reforge_evaluator_work_v3,
+            refinement.strict_reforge_effort,
+            refinement.strict_reforge_row_samples,
+            refinement.strict_reforge_row_samples_omitted);
+        json += ",\"work_to_first_partition\":";
         if (refinement.work_to_first_partition.has_value()) {
             json += std::to_string(*refinement.work_to_first_partition);
         } else {
@@ -3023,6 +3165,16 @@ std::string serialize_solver_telemetry(
             std::to_string(cache.reforge_projected_work);
     json += ",\"factored_work_v3\":" +
             std::to_string(cache.reforge_factored_work);
+    json += ",\"resource_accounting\":";
+    append_reforge_resource_accounting_json(
+        json,
+        cache.reforge_frontier_work,
+        cache.reforge_raw_equivalent_work,
+        cache.reforge_projected_work,
+        cache.reforge_factored_work,
+        cache.reforge_effort,
+        cache.reforge_row_samples,
+        cache.reforge_row_samples_omitted);
     json += ",\"goal_progress_gated\":{\"rows\":" +
             std::to_string(cache.gated_reforge_rows);
     char gated_number[40];

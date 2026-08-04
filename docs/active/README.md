@@ -1,15 +1,17 @@
 # Active Work
 
-**Status: versioned reforge resource accounting Gate 0 is complete; Gate 1
-component accounting is active.**
+**Status: versioned reforge resource accounting Gates 0-1 are complete; Gate 2
+observational baseline and matched calibration is active.**
 
 Parent: [Documentation map](../README.md)
 
 Current boundary:
 [Versioned Reforge Resource Accounting And V3 Production Qualification](versioned-reforge-resource-accounting-and-v3-production-qualification.md).
-Gate 1 replaces the ambiguous shared reforge ledger with deterministic logical,
-evaluator-specific, and measured-resource dimensions, including honest nested
-child propagation and row provenance. The frozen production decision requires
+Gate 1 retained the historical ledgers and added deterministic component
+accounting, bounded row provenance, transactional disposition, and honest
+nested child enforcement. Gate 2 now measures accounting overhead and matched
+V1/V2/V3 behavior without changing production selection or cap behavior. The
+frozen production decision requires
 V1 exact equivalence, at least 25% median native binding-row improvement, no
 aggregate eligible-row regression, bounded memory/latency, and release-WASM
 responsiveness.

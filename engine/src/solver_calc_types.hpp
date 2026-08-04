@@ -181,6 +181,106 @@ struct ExecutableFixedOptionRecipe {
 };
 
 /*
+ * Reforge resource telemetry has three deliberately separate dimensions:
+ * the historic active ledger, parallel evaluator ledgers, and physical
+ * component counts. Component fields can overlap and therefore have no
+ * additive "total". They explain implementations; wall, memory, and step
+ * latency qualify them.
+ */
+enum class ReforgeRowOwner : std::uint8_t {
+    Coarse,
+    StrictSelected,
+    StrictAlternative,
+    ExactEvaluation,
+};
+
+enum class ReforgeRowFamily : std::uint8_t {
+    Ordinary,
+    Essence,
+    Harvest,
+    Fossil,
+    AutomaticOption,
+};
+
+enum class ReforgeEvaluatorVersion : std::uint8_t {
+    V1Raw,
+    V2Sparse,
+    V3Factored,
+};
+
+enum class ReforgeRowDisposition : std::uint8_t {
+    Completed,
+    Interrupted,
+    Discarded,
+    Published,
+};
+
+struct ReforgeEffortBreakdown {
+    std::uint64_t rows_begun = 0;
+    std::uint64_t rows_completed = 0;
+    std::uint64_t rows_interrupted = 0;
+    std::uint64_t rows_cache_reused = 0;
+    std::uint64_t rows_discarded = 0;
+    std::uint64_t rows_published = 0;
+    std::uint64_t pool_entries_scanned = 0;
+    std::uint64_t physical_families_built = 0;
+    std::uint64_t roll_buckets_built = 0;
+    std::uint64_t exclusion_group_checks = 0;
+    std::uint64_t availability_classes_built = 0;
+    std::uint64_t availability_words_built = 0;
+    std::uint64_t frontier_nodes = 0;
+    std::uint64_t dense_bucket_probes = 0;
+    std::uint64_t availability_words_scanned = 0;
+    std::uint64_t eligible_nonterminal_edges = 0;
+    std::uint64_t terminal_contributions = 0;
+    std::uint64_t canonical_terminal_successors = 0;
+    std::uint64_t duplicate_terminal_contributions = 0;
+    std::uint64_t raw_choice_entries = 0;
+    std::uint64_t identity_tree_nodes = 0;
+    std::uint64_t successor_publication_attempts = 0;
+    std::uint64_t successor_unique_insertions = 0;
+    std::uint64_t successor_duplicate_merges = 0;
+    std::uint64_t state_interning_attempts = 0;
+    std::uint64_t v3_predecessor_index_entries = 0;
+    std::uint64_t v3_denominator_edges = 0;
+    std::uint64_t v3_subset_checks = 0;
+    std::uint64_t v3_candidate_sets = 0;
+    std::uint64_t v3_recurrence_terms = 0;
+    std::uint64_t v3_commits = 0;
+    std::uint64_t nested_automatic_child_logical_work = 0;
+    std::uint64_t nested_automatic_child_active_work = 0;
+
+    bool operator==(const ReforgeEffortBreakdown&) const = default;
+};
+
+struct ReforgeRowTelemetry {
+    std::uint64_t sequence = 0;
+    std::uint32_t action_index = kNoId;
+    ReforgeRowOwner owner = ReforgeRowOwner::Coarse;
+    ReforgeRowFamily family = ReforgeRowFamily::Ordinary;
+    ReforgeEvaluatorVersion evaluator = ReforgeEvaluatorVersion::V1Raw;
+    ReforgeRowDisposition disposition = ReforgeRowDisposition::Completed;
+    bool cache_reused = false;
+    std::uint64_t legacy_active_work = 0;
+    std::uint64_t logical_work_v1 = 0;
+    std::uint64_t evaluator_work_v1 = 0;
+    std::uint64_t evaluator_work_v2 = 0;
+    std::uint64_t evaluator_work_v3 = 0;
+    ReforgeEffortBreakdown components;
+};
+
+const char* reforge_row_owner_name(ReforgeRowOwner value);
+const char* reforge_row_family_name(ReforgeRowFamily value);
+const char* reforge_evaluator_version_name(ReforgeEvaluatorVersion value);
+const char* reforge_row_disposition_name(ReforgeRowDisposition value);
+void merge_reforge_effort(
+    ReforgeEffortBreakdown& target,
+    const ReforgeEffortBreakdown& source);
+ReforgeEffortBreakdown reforge_effort_delta(
+    const ReforgeEffortBreakdown& after,
+    const ReforgeEffortBreakdown& before);
+
+/*
  * One source-authoritative destructive-reforge build profile. These samples
  * describe the raw evaluator's actual intermediate representation rather
  * than inferring phase ownership from the final transition count. They are
@@ -384,6 +484,10 @@ struct CalcTelemetry {
     std::uint64_t reforge_raw_equivalent_work = 0;
     std::uint64_t reforge_projected_work = 0;
     std::uint64_t reforge_factored_work = 0;
+    ReforgeEffortBreakdown reforge_effort;
+    std::vector<ReforgeRowTelemetry> reforge_row_samples;
+    std::uint64_t reforge_row_samples_omitted = 0;
+    std::uint64_t reforge_row_sequence = 0;
     std::vector<ReforgeBuildAttribution> reforge_build_attribution_samples;
     std::uint64_t reforge_build_attribution_omitted = 0;
     std::uint64_t gated_reforge_rows = 0;
@@ -522,6 +626,14 @@ bool calc_supports(const ActionDescriptor& action);
  * cannot advertise a choice protocol its mechanic kernel never emits. */
 RefinementOutcomeObservation calc_outcome_observation(
     const ActionDescriptor& action);
+
+struct ReforgeProvenanceCheckpoint {
+    ReforgeRowOwner previous_owner = ReforgeRowOwner::Coarse;
+    std::optional<ReforgeRowFamily> previous_family_override;
+    std::uint64_t first_sequence = 0;
+    std::uint64_t completed_before = 0;
+    std::uint64_t cache_reused_before = 0;
+};
 
 /*
  * The solver's inner loop and the Calculator's backend: from abstract state
@@ -686,6 +798,24 @@ class CalcContext {
         bool reserve_storage = true,
         std::optional<std::uint64_t> max_owned_bytes = std::nullopt);
     void consume_reforge_work(std::uint64_t amount);
+    ReforgeProvenanceCheckpoint begin_reforge_provenance(
+        ReforgeRowOwner owner,
+        std::optional<ReforgeRowFamily> family_override = std::nullopt);
+    void finish_reforge_provenance(
+        const ReforgeProvenanceCheckpoint& checkpoint,
+        ReforgeRowDisposition disposition);
+    void set_reforge_provenance_context(
+        ReforgeRowOwner owner,
+        std::optional<ReforgeRowFamily> family_override = std::nullopt);
+    ReforgeRowOwner reforge_row_owner() const {
+        return reforge_row_owner_;
+    }
+    std::optional<ReforgeRowFamily> reforge_row_family_override() const {
+        return reforge_row_family_override_;
+    }
+    void merge_nested_reforge_telemetry(
+        const CalcTelemetry& child,
+        const CalcTelemetry* before = nullptr);
     void record_primitive_row_time(
         std::uint32_t action_index,
         std::uint64_t elapsed_ns);
@@ -824,6 +954,8 @@ class CalcContext {
     bool use_projected_reforge_frontier_ = false;
     bool reverse_reforge_bucket_enumeration_ = false;
     bool use_factored_terminal_reforge_ = false;
+    ReforgeRowOwner reforge_row_owner_ = ReforgeRowOwner::Coarse;
+    std::optional<ReforgeRowFamily> reforge_row_family_override_;
 
     void initialize_temporary_bench_effect_classes();
     void initialize_owned_bytes_ledger();
@@ -875,6 +1007,25 @@ class CalcContext {
         const pc_item_state& item,
         const PoolBuildRequest& base_request,
         std::map<std::uint32_t, double>& accumulated);
+};
+
+class ScopedReforgeRowProvenance {
+  public:
+    ScopedReforgeRowProvenance(
+        CalcContext& context,
+        ReforgeRowOwner owner,
+        std::optional<ReforgeRowFamily> family_override = std::nullopt);
+    ~ScopedReforgeRowProvenance();
+    ScopedReforgeRowProvenance(const ScopedReforgeRowProvenance&) = delete;
+    ScopedReforgeRowProvenance& operator=(
+        const ScopedReforgeRowProvenance&) = delete;
+    void publish() { disposition_ = ReforgeRowDisposition::Published; }
+    void complete() { disposition_ = ReforgeRowDisposition::Completed; }
+
+  private:
+    CalcContext& context_;
+    ReforgeProvenanceCheckpoint checkpoint_;
+    ReforgeRowDisposition disposition_ = ReforgeRowDisposition::Discarded;
 };
 
 /*

@@ -868,6 +868,11 @@ void merge_adapter_telemetry(
         PolicyLiftAdapterTelemetry& total,
         const PolicyLiftAdapterTelemetry& pass) {
     const std::uint64_t prior_reforge_work = total.strict_reforge_work;
+    std::uint64_t prior_reforge_row_sequence =
+        total.strict_reforge_effort.rows_begun;
+    saturating_add(
+        prior_reforge_row_sequence,
+        total.strict_reforge_effort.rows_cache_reused);
     const std::uint64_t prior_alternative_rows =
         total.alternative_rows_completed;
     const auto add_u32 =
@@ -919,6 +924,40 @@ void merge_adapter_telemetry(
     saturating_add(
         total.strict_reforge_work,
         pass.strict_reforge_work);
+    saturating_add(
+        total.strict_reforge_logical_work_v1,
+        pass.strict_reforge_logical_work_v1);
+    saturating_add(
+        total.strict_reforge_evaluator_work_v2,
+        pass.strict_reforge_evaluator_work_v2);
+    saturating_add(
+        total.strict_reforge_evaluator_work_v3,
+        pass.strict_reforge_evaluator_work_v3);
+    merge_reforge_effort(
+        total.strict_reforge_effort,
+        pass.strict_reforge_effort);
+    for (const ReforgeRowTelemetry& pass_row :
+         pass.strict_reforge_row_samples) {
+        constexpr std::size_t kSampleLimit = 64;
+        if (total.strict_reforge_row_samples.size() >= kSampleLimit) {
+            saturating_add(
+                total.strict_reforge_row_samples_omitted, 1);
+            continue;
+        }
+        ReforgeRowTelemetry row = pass_row;
+        row.sequence = prior_reforge_row_sequence;
+        saturating_add(row.sequence, pass_row.sequence);
+        try {
+            total.strict_reforge_row_samples.push_back(
+                std::move(row));
+        } catch (...) {
+            saturating_add(
+                total.strict_reforge_row_samples_omitted, 1);
+        }
+    }
+    saturating_add(
+        total.strict_reforge_row_samples_omitted,
+        pass.strict_reforge_row_samples_omitted);
     saturating_add(total.selected_rows_begun, pass.selected_rows_begun);
     saturating_add(
         total.selected_rows_completed, pass.selected_rows_completed);

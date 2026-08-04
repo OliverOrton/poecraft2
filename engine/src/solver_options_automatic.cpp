@@ -123,6 +123,8 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
     }
     CalcContext& local = *local_pointer;
     local.set_defer_automatic_protected_baseline(true);
+    local.set_reforge_provenance_context(
+        reforge_row_owner_, ReforgeRowFamily::AutomaticOption);
     batch.phases.local_context_ns = static_cast<std::uint64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
             std::chrono::steady_clock::now() - local_context_started)
@@ -141,13 +143,20 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
         batch.phases.local_context_ns > local_attributed_ns
             ? batch.phases.local_context_ns - local_attributed_ns
             : 0;
+    const std::uint64_t parent_reforge_limit =
+        limits.max_reforge_work == 0
+            ? std::numeric_limits<std::uint64_t>::max()
+            : limits.max_reforge_work;
+    const auto remaining_parent_reforge_work = [&]() {
+        return parent_reforge_limit - std::min(
+            telemetry_.reforge_frontier_work,
+            parent_reforge_limit);
+    };
     local.set_solve_resource_caps(
         limits.max_discovered_states == 0
             ? std::numeric_limits<std::uint32_t>::max()
             : limits.max_discovered_states,
-        limits.max_reforge_work == 0
-            ? std::numeric_limits<std::uint64_t>::max()
-            : limits.max_reforge_work,
+        remaining_parent_reforge_work(),
         false,
         limits.max_solver_owned_bytes == 0
             ? std::nullopt
@@ -369,17 +378,24 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
     bool local_work_merged = false;
     const auto merge_local_work = [&]() {
         if (local_work_merged) return;
-        local_work_merged = true;
         const CalcTelemetry& work = local.telemetry();
+        std::optional<std::pair<const char*, std::uint64_t>> merge_cap;
         const auto add_bounded = [&](std::uint64_t& target,
                                      const std::uint64_t amount,
                                      const std::uint64_t limit,
                                      const char* cap) {
             if (limit != 0 && amount > limit - std::min(target, limit)) {
                 target = limit;
-                throw SolverResourceLimit(cap, limit);
+                if (!merge_cap.has_value()) {
+                    merge_cap = std::pair{cap, limit};
+                }
+                return;
             }
-            target += amount;
+            target = amount >
+                             std::numeric_limits<std::uint64_t>::max() -
+                                 target
+                         ? std::numeric_limits<std::uint64_t>::max()
+                         : target + amount;
         };
         telemetry_.distribution_requests += work.distribution_requests;
         telemetry_.distribution_hits += work.distribution_hits;
@@ -436,7 +452,21 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
             target.row_ns += source.row_ns;
             target.selected_bytes += source.selected_bytes;
         }
-        consume_reforge_work(work.reforge_frontier_work);
+        try {
+            consume_reforge_work(work.reforge_frontier_work);
+        } catch (const SolverResourceLimit& limit) {
+            (void)limit;
+            if (!merge_cap.has_value()) {
+                merge_cap = std::pair{
+                    "max_reforge_work", parent_reforge_limit};
+            }
+        }
+        merge_nested_reforge_telemetry(work);
+        local_work_merged = true;
+        if (merge_cap.has_value()) {
+            throw SolverResourceLimit(
+                merge_cap->first, merge_cap->second);
+        }
     };
 
     try {
@@ -793,16 +823,95 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                                 session_, comparison_goal, registry_,
                                 candidates_, false, false, true,
                                 solve_discovered_state_cap_);
-                        automatic_comparison_context_->set_solve_resource_caps(
-                            solve_discovered_state_cap_.value_or(
-                                std::numeric_limits<std::uint32_t>::max()),
-                            std::numeric_limits<std::uint64_t>::max(), false,
-                            solve_owned_bytes_cap_);
                     }
                     CalcContext& comparison_context =
                         *automatic_comparison_context_;
+                    comparison_context.set_reforge_provenance_context(
+                        reforge_row_owner_,
+                        ReforgeRowFamily::AutomaticOption);
                     const CalcTelemetry comparison_before =
                         comparison_context.telemetry();
+                    const std::uint64_t local_reforge_work =
+                        local.telemetry().reforge_frontier_work;
+                    const std::uint64_t parent_remaining =
+                        remaining_parent_reforge_work();
+                    const std::uint64_t comparison_allowance =
+                        parent_remaining - std::min(
+                            local_reforge_work, parent_remaining);
+                    const std::uint64_t comparison_reforge_cap =
+                        comparison_allowance >
+                                std::numeric_limits<std::uint64_t>::max() -
+                                    comparison_before.reforge_frontier_work
+                            ? std::numeric_limits<std::uint64_t>::max()
+                            : comparison_before.reforge_frontier_work +
+                                  comparison_allowance;
+                    comparison_context.set_solve_resource_caps(
+                        solve_discovered_state_cap_.value_or(
+                            std::numeric_limits<std::uint32_t>::max()),
+                        comparison_reforge_cap, false,
+                        solve_owned_bytes_cap_);
+                    bool comparison_work_merged = false;
+                    const auto merge_comparison_work = [&]() {
+                        if (comparison_work_merged) return;
+                        const CalcTelemetry& comparison_after =
+                            comparison_context.telemetry();
+                        telemetry_.distribution_requests +=
+                            comparison_after.distribution_requests -
+                            comparison_before.distribution_requests;
+                        telemetry_.distribution_hits +=
+                            comparison_after.distribution_hits -
+                            comparison_before.distribution_hits;
+                        telemetry_.distribution_misses +=
+                            comparison_after.distribution_misses -
+                            comparison_before.distribution_misses;
+                        telemetry_.distribution_build_ns +=
+                            comparison_after.distribution_build_ns -
+                            comparison_before.distribution_build_ns;
+                        telemetry_.outcome_entries +=
+                            comparison_after.outcome_entries -
+                            comparison_before.outcome_entries;
+                        telemetry_.choice_groups +=
+                            comparison_after.choice_groups -
+                            comparison_before.choice_groups;
+                        telemetry_.choice_successor_entries +=
+                            comparison_after.choice_successor_entries -
+                            comparison_before.choice_successor_entries;
+                        telemetry_.reforge_requests +=
+                            comparison_after.reforge_requests -
+                            comparison_before.reforge_requests;
+                        telemetry_.reforge_hits +=
+                            comparison_after.reforge_hits -
+                            comparison_before.reforge_hits;
+                        telemetry_.reforge_misses +=
+                            comparison_after.reforge_misses -
+                            comparison_before.reforge_misses;
+                        telemetry_.reforge_build_ns +=
+                            comparison_after.reforge_build_ns -
+                            comparison_before.reforge_build_ns;
+                        std::optional<SolverResourceLimit> comparison_cap;
+                        try {
+                            consume_reforge_work(
+                                comparison_after.reforge_frontier_work -
+                                comparison_before.reforge_frontier_work);
+                        } catch (const SolverResourceLimit& limit) {
+                            comparison_cap = limit;
+                        }
+                        merge_nested_reforge_telemetry(
+                            comparison_after, &comparison_before);
+                        comparison_work_merged = true;
+                        local.set_solve_resource_caps(
+                            limits.max_discovered_states == 0
+                                ? std::numeric_limits<std::uint32_t>::max()
+                                : limits.max_discovered_states,
+                            remaining_parent_reforge_work(), false,
+                            limits.max_solver_owned_bytes == 0
+                                ? std::nullopt
+                                : std::optional<std::uint64_t>{
+                                      limits.max_solver_owned_bytes});
+                        if (comparison_cap.has_value()) {
+                            throw *comparison_cap;
+                        }
+                    };
                     const std::uint32_t comparison_state =
                         comparison_context.intern_item(carrier);
                     const ActionDescriptor& baseline_action =
@@ -811,50 +920,24 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                     const bool baseline_legal = action_legal(
                         comparison_context.session(), baseline_action,
                         comparison_context.state(comparison_state));
-                    const OutcomeDistribution* baseline_distribution =
-                        baseline_legal
-                            ? &comparison_context.outcomes(
-                                  comparison_state,
-                                  local_planner.followup_action)
-                            : nullptr;
-                    const CalcTelemetry& comparison_after =
-                        comparison_context.telemetry();
-                    telemetry_.distribution_requests +=
-                        comparison_after.distribution_requests -
-                        comparison_before.distribution_requests;
-                    telemetry_.distribution_hits +=
-                        comparison_after.distribution_hits -
-                        comparison_before.distribution_hits;
-                    telemetry_.distribution_misses +=
-                        comparison_after.distribution_misses -
-                        comparison_before.distribution_misses;
-                    telemetry_.distribution_build_ns +=
-                        comparison_after.distribution_build_ns -
-                        comparison_before.distribution_build_ns;
-                    telemetry_.outcome_entries +=
-                        comparison_after.outcome_entries -
-                        comparison_before.outcome_entries;
-                    telemetry_.choice_groups +=
-                        comparison_after.choice_groups -
-                        comparison_before.choice_groups;
-                    telemetry_.choice_successor_entries +=
-                        comparison_after.choice_successor_entries -
-                        comparison_before.choice_successor_entries;
-                    telemetry_.reforge_requests +=
-                        comparison_after.reforge_requests -
-                        comparison_before.reforge_requests;
-                    telemetry_.reforge_hits +=
-                        comparison_after.reforge_hits -
-                        comparison_before.reforge_hits;
-                    telemetry_.reforge_misses +=
-                        comparison_after.reforge_misses -
-                        comparison_before.reforge_misses;
-                    telemetry_.reforge_build_ns +=
-                        comparison_after.reforge_build_ns -
-                        comparison_before.reforge_build_ns;
-                    consume_reforge_work(
-                        comparison_after.reforge_frontier_work -
-                        comparison_before.reforge_frontier_work);
+                    const OutcomeDistribution* baseline_distribution = nullptr;
+                    try {
+                        baseline_distribution =
+                            baseline_legal
+                                ? &comparison_context.outcomes(
+                                      comparison_state,
+                                      local_planner.followup_action)
+                                : nullptr;
+                    } catch (...) {
+                        try {
+                            merge_comparison_work();
+                        } catch (const SolverResourceLimit&) {
+                            /* Preserve the comparison operation's original
+                             * resource-limit witness. */
+                        }
+                        throw;
+                    }
+                    merge_comparison_work();
                     ProtectedKernelComparison comparison;
                     comparison.supported =
                         baseline_distribution != nullptr &&

@@ -1,0 +1,207 @@
+{
+  "schema_version": "reforge_resource_accounting_v3_qualification_gate1_v1",
+  "recorded_at_local_date": "2026-08-04",
+  "decision": "accept_versioned_component_accounting_and_remaining_budget_nested_enforcement",
+  "branch": "codex/reforge-resource-accounting-v3-qualification",
+  "milestone_starting_commit": "00718908c866dc71a2e7e3864ebc5c5015ff063f",
+  "gate_parent_commit": "a683b8cbd9c5ac60b6e042d819a3ee6b3aa6fb0b",
+  "gate_commit": "the commit containing this evidence record",
+  "scope": {
+    "mechanics_changed": false,
+    "action_filtering_changed": false,
+    "goal_or_state_abstraction_changed": false,
+    "quotient_or_bellman_contract_changed": false,
+    "strategy_vocabulary_changed": false,
+    "canonical_fixture_changed": false,
+    "compiled_artifact_changed": false,
+    "economy_changed": false,
+    "product_or_default_cap_changed": false,
+    "max_reforge_work_interpretation_changed": false,
+    "nested_cap_enforcement_repaired": true,
+    "production_evaluator_selection_changed": false,
+    "public_abi_changed": false,
+    "wasm_artifact_changed": false,
+    "frontend_authority_changed": false,
+    "benchmarks_run": false,
+    "full_acceptance_suite_run": false,
+    "pushed": false,
+    "merged": false
+  },
+  "resource_contract": {
+    "schema_version": 1,
+    "legacy_active_work_retained": true,
+    "logical_work_v1_retained": true,
+    "parallel_evaluator_ledgers": [
+      "v1_raw",
+      "v2_sparse",
+      "v3_factored"
+    ],
+    "component_total_defined": false,
+    "component_counts_participate_in_solver_decisions": false,
+    "component_arithmetic": "deterministic_uint64_saturation",
+    "sample_limit_per_context": 64,
+    "sample_allocation_failure_changes_solver_decision": false,
+    "sample_capacities_in_owned_memory": true,
+    "serialized_surfaces": [
+      "coarse_solve_cache_reforge_resource_accounting",
+      "strict_policy_refinement_certification_work_reforge_resource_accounting",
+      "exact_strategy_evaluation_reforge_resource_accounting"
+    ]
+  },
+  "component_fields": [
+    "rows_begun",
+    "rows_completed",
+    "rows_interrupted",
+    "rows_cache_reused",
+    "rows_discarded",
+    "rows_published",
+    "pool_entries_scanned",
+    "physical_families_built",
+    "roll_buckets_built",
+    "exclusion_group_checks",
+    "availability_classes_built",
+    "availability_words_built",
+    "frontier_nodes",
+    "dense_bucket_probes",
+    "availability_words_scanned",
+    "eligible_nonterminal_edges",
+    "terminal_contributions",
+    "canonical_terminal_successors",
+    "duplicate_terminal_contributions",
+    "raw_choice_entries",
+    "identity_tree_nodes",
+    "successor_publication_attempts",
+    "successor_unique_insertions",
+    "successor_duplicate_merges",
+    "state_interning_attempts",
+    "v3_predecessor_index_entries",
+    "v3_denominator_edges",
+    "v3_subset_checks",
+    "v3_candidate_sets",
+    "v3_recurrence_terms",
+    "v3_commits",
+    "nested_automatic_child_logical_work",
+    "nested_automatic_child_active_work"
+  ],
+  "row_provenance": {
+    "owners": [
+      "coarse",
+      "strict_selected",
+      "strict_alternative",
+      "exact_evaluation"
+    ],
+    "families": [
+      "ordinary",
+      "essence",
+      "harvest",
+      "fossil",
+      "automatic_option"
+    ],
+    "evaluators": [
+      "v1_raw",
+      "v2_sparse",
+      "v3_factored"
+    ],
+    "cache_values": [
+      "hit",
+      "miss"
+    ],
+    "dispositions": [
+      "completed",
+      "interrupted",
+      "discarded",
+      "published"
+    ],
+    "strict_publication_is_transactional": true,
+    "interrupted_row_publishable": false,
+    "aggregate_survives_sample_truncation": true
+  },
+  "nested_enforcement": {
+    "automatic_admission_child_receives_parent_remaining_work_before_execution": true,
+    "protected_repeat_comparison_child_receives_parent_remaining_work_less_unmerged_local_work": true,
+    "comparison_context_is_no_longer_unlimited": true,
+    "child_effort_merges_on_child_or_parent_refusal": true,
+    "post_hoc_parent_saturation_used_as_enforcement": false,
+    "grandchild_nested_subtotal_double_counted": false
+  },
+  "focused_contracts": {
+    "native_build": {
+      "command": "powershell -File scripts/build.ps1",
+      "result": "pass"
+    },
+    "solver_calc": {
+      "command": "build\\engine\\poecraft_engine_tests.exe --solver-calc-only",
+      "checks": 125077,
+      "failures": 0,
+      "artifact_subsuite": "skipped_missing_optional_path",
+      "covers": [
+        "saturation_and_underflow_clamping",
+        "ordinary_essence_harvest_fossil_components",
+        "v1_v2_v3_parallel_ledgers",
+        "forward_reverse_enumeration",
+        "cache_reuse",
+        "published_and_discarded_rows",
+        "interruption"
+      ]
+    },
+    "solver_s8_3": {
+      "command": "build\\engine\\poecraft_engine_tests.exe --solver-s8-3-only",
+      "checks": 365,
+      "failures": 0,
+      "covers": [
+        "nested_automatic_work_merge",
+        "protected_repeat_comparison_remaining_budget",
+        "nested_interruption_observability"
+      ]
+    },
+    "solver_solve": {
+      "command": "build\\engine\\poecraft_engine_tests.exe --solver-solve-only",
+      "checks": 6083,
+      "failures": 0,
+      "artifact_subsuite": "skipped_missing_optional_path",
+      "covers": [
+        "coarse_serialization",
+        "strict_selected_and_alternative_retention",
+        "transactional_published_disposition",
+        "interrupted_serialization"
+      ]
+    },
+    "solver_eval": {
+      "command": "build\\engine\\poecraft_engine_tests.exe --solver-eval-only",
+      "checks": 1176,
+      "failures": 0,
+      "artifact_subsuite": "skipped_unreadable_optional_path",
+      "simulator_runs_preserved_by_existing_test": 10000,
+      "covers": [
+        "exact_evaluation_provenance",
+        "exact_evaluation_serialization",
+        "exact_evaluation_owned_memory"
+      ]
+    }
+  },
+  "source_sha256": {
+    "engine/src/solver_calc_types.hpp": "a4a7bb7e3ed80651839a1e5637397bc8548cc6d32fed430171f0dbe4c96f2c63",
+    "engine/src/solver_calc.cpp": "226ce0f10f13e29562c0bafd0557c49c7ecd65bdd064bd0e4be1893cddcb9379",
+    "engine/src/solver_reforge.cpp": "be4e3addb7fa8774cbfd7d6f147ebf92d4ca9ab8cfe83eabe3043352ab46b273",
+    "engine/src/solver_options_automatic.cpp": "9077057d1ccbda981c6946421df5db2708137e3b24883560f3d88298bb4ff20c",
+    "engine/src/solver_policy_oracle_setup.inc": "48145316535919232059a070a88c3abeee32fe6f9a0195534eccb92516473a80",
+    "engine/src/solver_policy_oracle_kernels.inc": "bdd9e63c5eee5b542d7db05b77d8f327f2b9f0bda05648aac9888d9000785946",
+    "engine/src/solver_policy_oracle_improve.inc": "ac27521d1c7c9f6df656a523b7b618548e32f29e36abffe3ebbb7c31503337cf",
+    "engine/src/solver_solve_telemetry.cpp": "cb935029b4cec1acdfaf1892852e947d357838955a790aa633380c2070e89d51",
+    "engine/src/solver_eval.cpp": "5f7cb72c403c762005f6ca4ead78dfc72ec902df35530c6ea20f86b02701c654",
+    "engine/src/solver_eval_report.cpp": "b3e83ffc14e05c6b9fa431ecc44be6946bdca81af5bc7bd836bae6d8682619bb"
+  },
+  "native_binary_sha256": {
+    "build/engine/poecraft_engine.dll": "f9f2f0f6cf4fc66dc509a839ae41fc2998e5e5e6d08de53515eef83a884a470c",
+    "build/engine/poecraft_engine_tests.exe": "ed531ca8ae59a03c6da923d92471f4b0cfcd94f12ab335933ea21ed118756d8f"
+  },
+  "gate_result": {
+    "accepted": true,
+    "reason": "versioned physical accounting is observational, bounded, saturating, provenance-complete across coarse/strict/exact contexts, and nested child execution is enforced against the remaining parent budget",
+    "legacy_cap_behavior_retained_for_gate2_calibration": true,
+    "v1_production_selection_retained": true,
+    "v2_diagnostic_selection_retained": true,
+    "v3_production_selection_enabled": false
+  },
+  "next_gate": "capture the observational baseline, quantify accounting overhead, and perform matched V1/V2/V3 calibration without changing evaluator selection or cap behavior"
+}

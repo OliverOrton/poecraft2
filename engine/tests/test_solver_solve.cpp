@@ -1744,6 +1744,26 @@ void run_policy_guided_exact_lift_tests() {
     PC_CHECK(refinement_telemetry.alternative_rows_completed > 0);
     PC_CHECK(refinement_telemetry.alternative_transitions > 0);
     PC_CHECK(refinement_telemetry.alternative_reforge_work > 0);
+    PC_CHECK(refinement_telemetry.strict_reforge_active_work > 0);
+    PC_CHECK(refinement_telemetry.strict_reforge_logical_work_v1 > 0);
+    PC_CHECK(refinement_telemetry.strict_reforge_effort.rows_published > 0);
+    PC_CHECK(!refinement_telemetry.strict_reforge_row_samples.empty());
+    PC_CHECK(
+        refinement_telemetry.strict_reforge_row_samples.size() <= 64);
+    PC_CHECK(std::any_of(
+        refinement_telemetry.strict_reforge_row_samples.begin(),
+        refinement_telemetry.strict_reforge_row_samples.end(),
+        [](const ReforgeRowTelemetry& row) {
+            return row.owner == ReforgeRowOwner::StrictSelected &&
+                   row.disposition ==
+                       ReforgeRowDisposition::Published;
+        }));
+    PC_CHECK(std::any_of(
+        refinement_telemetry.strict_reforge_row_samples.begin(),
+        refinement_telemetry.strict_reforge_row_samples.end(),
+        [](const ReforgeRowTelemetry& row) {
+            return row.owner == ReforgeRowOwner::StrictAlternative;
+        }));
     PC_CHECK(
         refinement_telemetry.selected_rows_completed +
             refinement_telemetry.alternative_rows_completed ==
@@ -1850,6 +1870,13 @@ void run_policy_guided_exact_lift_tests() {
         calc, &solved, nullptr, std::nullopt, nullptr);
     PC_CHECK(valid_json_object(refinement_json));
     PC_CHECK(refinement_json.find("\"certification_work\":{") !=
+             std::string::npos);
+    PC_CHECK(refinement_json.find(
+                 "\"reforge_resource_accounting\":"
+                 "{\"schema_version\":1") != std::string::npos);
+    PC_CHECK(refinement_json.find("\"owner\":\"strict_selected\"") !=
+             std::string::npos);
+    PC_CHECK(refinement_json.find("\"owner\":\"strict_alternative\"") !=
              std::string::npos);
     PC_CHECK(refinement_json.find("\"work_to_first_partition\":") !=
              std::string::npos);
@@ -4500,6 +4527,23 @@ void run_goal_progress_gated_reforge_tests() {
     PC_CHECK(
         interrupted_telemetry.find(
             "\"cap\":\"max_reforge_work\"") !=
+        std::string::npos);
+    PC_CHECK(
+        interrupted_telemetry.find(
+            "\"resource_accounting\":{\"schema_version\":1") !=
+        std::string::npos);
+    PC_CHECK(
+        interrupted_telemetry.find(
+            "\"rows_interrupted\":1") !=
+        std::string::npos);
+    PC_CHECK(
+        interrupted_telemetry.find(
+            "\"owner\":\"coarse\",\"family\":\"ordinary\","
+            "\"evaluator\":\"v1_raw\",\"cache\":\"miss\"") !=
+        std::string::npos);
+    PC_CHECK(
+        interrupted_telemetry.find(
+            "\"disposition\":\"interrupted\"") !=
         std::string::npos);
 
     PolicyCompilationTelemetry early_compilation;

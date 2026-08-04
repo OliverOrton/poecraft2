@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: versioned reforge resource accounting Gate 0 is complete. Gate 1,
-reusable component accounting and honest nested propagation, is active.**
+**Status: versioned reforge resource accounting Gates 0-1 are complete. Gate
+2, observational baseline and matched V1/V2/V3 calibration, is active.**
 
 Current plan:
 [Versioned Reforge Resource Accounting And V3 Production Qualification](docs/active/versioned-reforge-resource-accounting-and-v3-production-qualification.md).
@@ -35,8 +35,9 @@ Current branch: `codex/reforge-resource-accounting-v3-qualification`
 Current milestone starting commit:
 `00718908c866dc71a2e7e3864ebc5c5015ff063f`
 
-Current milestone commits: Gate 0 is recorded by the current local commit.
-Gate 1 is the active implementation boundary.
+Current milestone commits: Gate 0 is
+`a683b8cbd9c5ac60b6e042d819a3ee6b3aa6fb0b`. Gate 1 is recorded by the
+current local commit. Gate 2 is the active implementation boundary.
 
 Certified fallback milestone starting commit:
 `0b4ba38aa5754a39715640ad6d7a48cab2dc2b6c`
@@ -117,6 +118,42 @@ Nothing has been pushed or merged. `main` remains unchanged at
   lower or unresolved alternatives. Rare-renewal reconciliation, five-goal
   finalization, and checkpoint/replay are out of scope.
 - Gate 0 changed documentation/evidence only. No test or benchmark was run.
+
+## Versioned reforge resource accounting Gate 1
+
+- `ReforgeEffortBreakdown` now records deterministic physical component
+  counts with saturating arithmetic and deliberately defines no additive
+  total. The legacy active ledger and parallel V1/V2/V3 ledgers remain
+  serialized and unchanged for comparison.
+- Bounded row samples cover coarse, strict selected, strict alternative, and
+  exact-evaluation ownership; ordinary, Essence, Harvest, Fossil, and
+  automatic-option family; evaluator version; cache hit/miss; and completed,
+  interrupted, discarded, or published disposition. Exact aggregates survive
+  truncation, diagnostic allocation cannot affect solver decisions, and sample
+  capacities enter calculator, strict adapter/result, and exact-evaluator
+  owned-memory ledgers.
+- Strict publication disposition is transactional. A memory checkpoint can
+  retain an in-progress completed sample, then synchronization refreshes it by
+  sequence after the enclosing proof scope publishes or discards the row.
+  Interrupted rows remain observable and cannot publish.
+- Automatic admission and the protected-repeat comparison context receive only
+  the parent's remaining work before evaluation. Comparison work is no longer
+  unlimited, all executed child work merges during refusal, and nested
+  grandchild subtotals are not double counted.
+- Focused native acceptance passes: calculator `125077/0`, S8.3 automatic
+  `365/0`, solve `6083/0`, and exact evaluator `1176/0`. Optional artifact
+  sub-suites without supplied readable paths were skipped. Existing evaluator
+  verification within the focused evaluator suite retained its 10,000-run
+  sample.
+- No mechanic, action/filter, state/goal, quotient/Bellman, compiler,
+  strategy-vocabulary, fixture, artifact, economy, public ABI, WASM, frontend,
+  production/default cap, cap interpretation, or production evaluator
+  selection changed. No benchmark, canonical hard run, release-WASM build, or
+  full acceptance suite ran.
+- Evidence is
+  `fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate1.json`.
+  Gate 2 must keep cap behavior and production selection unchanged while it
+  measures accounting overhead and matched V1/V2/V3 rows.
 
 ## Certified fallback and terminal factorization Gate 0
 

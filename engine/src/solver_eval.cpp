@@ -237,6 +237,8 @@ struct StrategyEvalWork::Impl {
         bytes += output.occupancy_states.capacity() * sizeof(AbstractState);
         bytes += output.occupancy.capacity() *
                  sizeof(StrategyEvalOccupancyEntry);
+        bytes += output.reforge_row_samples.capacity() *
+                 sizeof(ReforgeRowTelemetry);
         bytes += output.action_totals.capacity() * sizeof(StrategyEvalActionTotal);
         for (const auto& action : output.action_totals) {
             bytes += action_total_bytes(action) - sizeof(action);
@@ -584,6 +586,8 @@ struct StrategyEvalWork::Impl {
         }
         output.max_owned_bytes = options.max_owned_bytes;
         output.max_output_json_bytes = options.max_output_json_bytes;
+        model.calc->set_reforge_provenance_context(
+            ReforgeRowOwner::ExactEvaluation);
         model.calc->set_solve_resource_caps(
             options.max_states,
             options.max_reforge_work,
@@ -3084,6 +3088,17 @@ struct StrategyEvalWork::Impl {
         CalcContext& calc = *model.calc;
         output.reforge_work =
             calc.telemetry().reforge_frontier_work;
+        output.reforge_logical_work_v1 =
+            calc.telemetry().reforge_raw_equivalent_work;
+        output.reforge_evaluator_work_v2 =
+            calc.telemetry().reforge_projected_work;
+        output.reforge_evaluator_work_v3 =
+            calc.telemetry().reforge_factored_work;
+        output.reforge_effort = calc.telemetry().reforge_effort;
+        output.reforge_row_samples =
+            calc.telemetry().reforge_row_samples;
+        output.reforge_row_samples_omitted =
+            calc.telemetry().reforge_row_samples_omitted;
         const std::size_t node_count = strategy->nodes.size();
         const std::size_t operation_pair_count = static_cast<std::size_t>(
             std::count_if(

@@ -173,6 +173,8 @@
                 limits_.use_factored_terminal_reforge,
             false,
             limits_.use_factored_terminal_reforge);
+        strict_->set_reforge_provenance_context(
+            ReforgeRowOwner::StrictSelected);
         require_local_memory(
             exact_start_mods.capacity() * sizeof(std::uint64_t),
             "strict calculation construction");
@@ -217,6 +219,10 @@
         require_local_memory(
             exact_state_bytes(root),
             "exact-refinement root construction");
+    }
+
+    ~ProductionPolicyOracle() override {
+        sync_strict_reforge_resource_telemetry();
     }
 
     const StableKey& root_key() const {
@@ -564,6 +570,8 @@
                 PolicyExactLiftStatus::InvalidSolveState,
                 "alternative descriptor is stale or outside admission");
         }
+        ScopedReforgeRowProvenance provenance(
+            *strict_, ReforgeRowOwner::StrictAlternative);
         saturating_add(
             telemetry_.local_state_action_rows_scheduled, 1);
         const std::size_t attribution_sample_begin =
@@ -597,6 +605,7 @@
                 attribution_sample_begin);
             saturating_add(
                 telemetry_.local_state_action_rows_evaluated, 1);
+            provenance.publish();
             return row;
         } catch (const AdapterFailure& error) {
             if (error.status == PolicyExactLiftStatus::ResourceCap) throw;
@@ -612,6 +621,8 @@
                 "terminal carrier has no selected quotient row");
         }
         try {
+            ScopedReforgeRowProvenance provenance(
+                *strict_, ReforgeRowOwner::StrictSelected);
             const std::size_t attribution_sample_begin =
                 strict_->telemetry()
                     .reforge_build_attribution_samples.size();
@@ -636,9 +647,11 @@
                 after >= work_before ? after - work_before : 0);
             telemetry_.strict_reforge_work = after;
             if (current.has_value()) {
-                return quotient_build_compact_row(
+                QuotientOracleCompactRow row = quotient_build_compact_row(
                     state, std::move(*current), false,
                     attribution_sample_begin);
+                provenance.publish();
+                return row;
             }
         } catch (const AdapterFailure& error) {
             if (error.status == PolicyExactLiftStatus::ResourceCap) throw;
@@ -682,11 +695,14 @@
         };
         bool current_complete = false;
         try {
+            ScopedReforgeRowProvenance provenance(
+                *strict_, ReforgeRowOwner::StrictSelected);
             std::optional<SelectedAction> current = selected_action(state);
             if (current.has_value()) {
                 ExactActionKernel kernel = exact_kernel(state, *current);
                 append(std::move(*current), std::move(kernel));
                 current_complete = true;
+                provenance.publish();
             }
         } catch (const AdapterFailure& error) {
             if (error.status == PolicyExactLiftStatus::ResourceCap) throw;
@@ -696,6 +712,8 @@
             reoptimization_parents_.contains(state.coarse_state);
         if (affected || !current_complete) {
             for (const std::uint32_t operator_index : admitted_operators_) {
+                ScopedReforgeRowProvenance provenance(
+                    *strict_, ReforgeRowOwner::StrictAlternative);
                 saturating_add(
                     telemetry_.local_state_action_rows_scheduled, 1);
                 std::optional<SelectedAction> candidate =
@@ -712,6 +730,7 @@
                 ExactActionKernel copied = *kernel;
                 release_published_kernel_storage(state, *candidate);
                 append(std::move(*candidate), std::move(copied));
+                provenance.publish();
             }
         }
         if (rows.empty()) {

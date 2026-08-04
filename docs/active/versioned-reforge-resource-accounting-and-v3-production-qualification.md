@@ -1,7 +1,7 @@
 # Versioned Reforge Resource Accounting And V3 Production Qualification
 
-**Status: Gate 0 complete; Gate 1 versioned component accounting is the active
-implementation boundary.**
+**Status: Gates 0-1 complete; Gate 2 observational baseline and matched
+calibration is the active implementation boundary.**
 
 Owner: Oliver
 
@@ -94,7 +94,8 @@ boundary separately before implementation.
 
 ## Gate 1 — versioned component accounting
 
-**Status: active.**
+**Status: complete.** Tracked evidence is
+[`reforge-resource-accounting-v3-qualification-gate1.json`](../../fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate1.json).
 
 Add a reusable saturating `ReforgeEffortBreakdown` whose fields are deterministic
 physical counts, not a manufactured additive total. Retain the legacy V1, V2,
@@ -134,7 +135,31 @@ Focused contract coverage owns saturation, overflow, nested propagation,
 interruption, forward/reverse enumeration, cache reuse, and completed-row
 publication. Commit Gate 1 separately.
 
+Gate 1 added one reusable saturating component breakdown without defining an
+additive score. The existing active ledger and parallel V1/V2/V3 ledgers remain
+available. Bounded row samples identify coarse, strict-selected,
+strict-alternative, and exact-evaluation ownership; ordinary, Essence,
+Harvest, Fossil, and automatic-option family; evaluator; cache reuse; and
+transactional disposition. Exact aggregates remain authoritative when samples
+truncate, and selected sample capacities are included in calculator, strict
+adapter/result, and exact-evaluator owned-memory accounting.
+
+Automatic admission and its protected-repeat comparison child now receive the
+parent's remaining budget before work. Executed child effort merges on success
+or refusal, and grandchild subtotals are not counted twice. This repairs nested
+enforcement while leaving the interpretation and defaults of
+`max_reforge_work`, production V1 selection, diagnostic V2, and disabled V3
+production selection unchanged.
+
+The focused calculator, S8.3 automatic, solve, and exact-evaluator entry points
+pass with `125077`, `365`, `6083`, and `1176` checks respectively and zero
+failures. Optional artifact sub-suites without supplied paths were disclosed as
+skipped. No benchmark, canonical hard run, release-WASM build, or full
+acceptance suite ran in Gate 1.
+
 ## Gate 2 — observational baseline and matched calibration
+
+**Status: active.**
 
 Keep production evaluator selection and cap behavior unchanged while capturing
 representative accounting. Require unchanged legacy work, bounds, stop reasons,

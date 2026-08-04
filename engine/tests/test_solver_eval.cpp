@@ -595,6 +595,16 @@ void run_closed_form_tests() {
     })JSON";
     const StrategyEvalResult exact = evaluate_strategy(*loop_strategy, options);
     PC_CHECK(exact.converged);
+    PC_CHECK(exact.reforge_work > 0);
+    PC_CHECK(exact.reforge_logical_work_v1 > 0);
+    PC_CHECK(exact.reforge_effort.rows_completed > 0);
+    PC_CHECK(!exact.reforge_row_samples.empty());
+    PC_CHECK(std::all_of(
+        exact.reforge_row_samples.begin(),
+        exact.reforge_row_samples.end(),
+        [](const ReforgeRowTelemetry& row) {
+            return row.owner == ReforgeRowOwner::ExactEvaluation;
+        }));
     PC_CHECK(std::fabs(exact.success_probability - 1.0) < 1e-10);
     PC_CHECK(std::fabs(exact.expected_actions - 1.0 / p) < 1e-10);
     PC_CHECK(std::fabs(edge_value(exact, "hit") - 1.0) < 1e-10);
@@ -964,6 +974,11 @@ void run_closed_form_tests() {
     }
 
     const std::string bytes = serialize_strategy_eval(exact);
+    PC_CHECK(bytes.find(
+                 "\"reforge_resource_accounting\":"
+                 "{\"schema_version\":1") != std::string::npos);
+    PC_CHECK(bytes.find("\"owner\":\"exact_evaluation\"") !=
+             std::string::npos);
     const std::string accounting_json =
         serialize_strategy_eval(technique_accounting);
     PC_CHECK(accounting_json.find("\"reachable_regions\":") !=

@@ -299,7 +299,58 @@
         return stored->second;
     }
 
+    void sync_strict_reforge_resource_telemetry() const noexcept {
+        if (strict_ == nullptr) return;
+        const CalcTelemetry& strict = strict_->telemetry();
+        telemetry_.strict_reforge_work = strict.reforge_frontier_work;
+        telemetry_.strict_reforge_logical_work_v1 =
+            strict.reforge_raw_equivalent_work;
+        telemetry_.strict_reforge_evaluator_work_v2 =
+            strict.reforge_projected_work;
+        telemetry_.strict_reforge_evaluator_work_v3 =
+            strict.reforge_factored_work;
+        telemetry_.strict_reforge_effort = strict.reforge_effort;
+        for (ReforgeRowTelemetry& retained :
+             telemetry_.strict_reforge_row_samples) {
+            const auto current = std::find_if(
+                strict.reforge_row_samples.begin(),
+                strict.reforge_row_samples.end(),
+                [&](const ReforgeRowTelemetry& row) {
+                    return row.sequence == retained.sequence;
+                });
+            if (current != strict.reforge_row_samples.end()) {
+                retained = *current;
+            }
+        }
+        constexpr std::size_t kSampleLimit = 64;
+        while (strict_reforge_sample_cursor_ <
+               strict.reforge_row_samples.size()) {
+            if (telemetry_.strict_reforge_row_samples.size() >=
+                kSampleLimit) {
+                saturating_add(
+                    strict_reforge_sample_copy_omitted_, 1);
+                ++strict_reforge_sample_cursor_;
+                continue;
+            }
+            try {
+                telemetry_.strict_reforge_row_samples.push_back(
+                    strict.reforge_row_samples[
+                        strict_reforge_sample_cursor_]);
+            } catch (...) {
+                saturating_add(
+                    strict_reforge_sample_copy_omitted_, 1);
+            }
+            ++strict_reforge_sample_cursor_;
+        }
+        telemetry_.strict_reforge_row_samples_omitted =
+            strict.reforge_row_samples_omitted;
+        saturating_add(
+            telemetry_.strict_reforge_row_samples_omitted,
+            strict_reforge_sample_copy_omitted_);
+    }
+
     std::uint64_t dynamic_child_owned_bytes() const {
+        sync_strict_reforge_resource_telemetry();
         std::uint64_t bytes = 0;
         const std::uint64_t current_coarse_bytes =
             coarse_.fast_estimated_owned_bytes();
@@ -315,6 +366,10 @@
                 bytes,
                 strict_->fast_estimated_owned_bytes());
         }
+        saturating_add(
+            bytes,
+            telemetry_.strict_reforge_row_samples.capacity() *
+                sizeof(ReforgeRowTelemetry));
         return bytes;
     }
 
@@ -532,6 +587,8 @@
     mutable std::uint32_t adapter_memory_checks_since_audit_ = 0;
     mutable std::uint64_t adapter_memory_cached_non_child_bytes_ = 0;
     mutable std::uint64_t adapter_memory_projected_growth_bytes_ = 0;
+    mutable std::size_t strict_reforge_sample_cursor_ = 0;
+    mutable std::uint64_t strict_reforge_sample_copy_omitted_ = 0;
 
     ExactState materialize_exact_state(
             const StableKey& key,

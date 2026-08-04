@@ -32,6 +32,12 @@ struct PolicyLiftAdapterTelemetry {
     std::uint64_t adapter_owned_bytes = 0;
     std::uint64_t peak_adapter_owned_bytes = 0;
     std::uint64_t strict_reforge_work = 0;
+    std::uint64_t strict_reforge_logical_work_v1 = 0;
+    std::uint64_t strict_reforge_evaluator_work_v2 = 0;
+    std::uint64_t strict_reforge_evaluator_work_v3 = 0;
+    ReforgeEffortBreakdown strict_reforge_effort;
+    std::vector<ReforgeRowTelemetry> strict_reforge_row_samples;
+    std::uint64_t strict_reforge_row_samples_omitted = 0;
     /* Aggregate, deterministic attribution for the production streamed
      * quotient. "Selected" is the inherited/current exact policy decision;
      * "alternative" is any other admitted semantic decision considered for

@@ -89,6 +89,8 @@ std::uint64_t reforge_attribution_owned_bytes(
     std::uint64_t bytes =
         telemetry.reforge_build_attribution_samples.capacity() *
         sizeof(ReforgeBuildAttribution);
+    bytes += telemetry.reforge_row_samples.capacity() *
+             sizeof(ReforgeRowTelemetry);
     for (const ReforgeBuildAttribution& sample :
          telemetry.reforge_build_attribution_samples) {
         bytes += selected_string_bytes(sample.action_id);
@@ -168,6 +170,122 @@ std::uint64_t option_kernel_selected_bytes_for_ledger(
 }
 
 } // namespace
+
+namespace {
+
+std::uint64_t saturated_counter_add(
+    const std::uint64_t left,
+    const std::uint64_t right) {
+    return right > std::numeric_limits<std::uint64_t>::max() - left
+               ? std::numeric_limits<std::uint64_t>::max()
+               : left + right;
+}
+
+std::uint64_t counter_delta(
+    const std::uint64_t after,
+    const std::uint64_t before) {
+    return after >= before ? after - before : 0;
+}
+
+constexpr auto kReforgeEffortFields = std::to_array<std::uint64_t
+    ReforgeEffortBreakdown::*>({
+    &ReforgeEffortBreakdown::rows_begun,
+    &ReforgeEffortBreakdown::rows_completed,
+    &ReforgeEffortBreakdown::rows_interrupted,
+    &ReforgeEffortBreakdown::rows_cache_reused,
+    &ReforgeEffortBreakdown::rows_discarded,
+    &ReforgeEffortBreakdown::rows_published,
+    &ReforgeEffortBreakdown::pool_entries_scanned,
+    &ReforgeEffortBreakdown::physical_families_built,
+    &ReforgeEffortBreakdown::roll_buckets_built,
+    &ReforgeEffortBreakdown::exclusion_group_checks,
+    &ReforgeEffortBreakdown::availability_classes_built,
+    &ReforgeEffortBreakdown::availability_words_built,
+    &ReforgeEffortBreakdown::frontier_nodes,
+    &ReforgeEffortBreakdown::dense_bucket_probes,
+    &ReforgeEffortBreakdown::availability_words_scanned,
+    &ReforgeEffortBreakdown::eligible_nonterminal_edges,
+    &ReforgeEffortBreakdown::terminal_contributions,
+    &ReforgeEffortBreakdown::canonical_terminal_successors,
+    &ReforgeEffortBreakdown::duplicate_terminal_contributions,
+    &ReforgeEffortBreakdown::raw_choice_entries,
+    &ReforgeEffortBreakdown::identity_tree_nodes,
+    &ReforgeEffortBreakdown::successor_publication_attempts,
+    &ReforgeEffortBreakdown::successor_unique_insertions,
+    &ReforgeEffortBreakdown::successor_duplicate_merges,
+    &ReforgeEffortBreakdown::state_interning_attempts,
+    &ReforgeEffortBreakdown::v3_predecessor_index_entries,
+    &ReforgeEffortBreakdown::v3_denominator_edges,
+    &ReforgeEffortBreakdown::v3_subset_checks,
+    &ReforgeEffortBreakdown::v3_candidate_sets,
+    &ReforgeEffortBreakdown::v3_recurrence_terms,
+    &ReforgeEffortBreakdown::v3_commits,
+    &ReforgeEffortBreakdown::nested_automatic_child_logical_work,
+    &ReforgeEffortBreakdown::nested_automatic_child_active_work,
+});
+
+} // namespace
+
+const char* reforge_row_owner_name(const ReforgeRowOwner value) {
+    switch (value) {
+    case ReforgeRowOwner::Coarse: return "coarse";
+    case ReforgeRowOwner::StrictSelected: return "strict_selected";
+    case ReforgeRowOwner::StrictAlternative: return "strict_alternative";
+    case ReforgeRowOwner::ExactEvaluation: return "exact_evaluation";
+    }
+    return "coarse";
+}
+
+const char* reforge_row_family_name(const ReforgeRowFamily value) {
+    switch (value) {
+    case ReforgeRowFamily::Ordinary: return "ordinary";
+    case ReforgeRowFamily::Essence: return "essence";
+    case ReforgeRowFamily::Harvest: return "harvest";
+    case ReforgeRowFamily::Fossil: return "fossil";
+    case ReforgeRowFamily::AutomaticOption: return "automatic_option";
+    }
+    return "ordinary";
+}
+
+const char* reforge_evaluator_version_name(
+    const ReforgeEvaluatorVersion value) {
+    switch (value) {
+    case ReforgeEvaluatorVersion::V1Raw: return "v1_raw";
+    case ReforgeEvaluatorVersion::V2Sparse: return "v2_sparse";
+    case ReforgeEvaluatorVersion::V3Factored: return "v3_factored";
+    }
+    return "v1_raw";
+}
+
+const char* reforge_row_disposition_name(
+    const ReforgeRowDisposition value) {
+    switch (value) {
+    case ReforgeRowDisposition::Completed: return "completed";
+    case ReforgeRowDisposition::Interrupted: return "interrupted";
+    case ReforgeRowDisposition::Discarded: return "discarded";
+    case ReforgeRowDisposition::Published: return "published";
+    }
+    return "completed";
+}
+
+void merge_reforge_effort(
+    ReforgeEffortBreakdown& target,
+    const ReforgeEffortBreakdown& source) {
+    for (const auto field : kReforgeEffortFields) {
+        target.*field = saturated_counter_add(
+            target.*field, source.*field);
+    }
+}
+
+ReforgeEffortBreakdown reforge_effort_delta(
+    const ReforgeEffortBreakdown& after,
+    const ReforgeEffortBreakdown& before) {
+    ReforgeEffortBreakdown result;
+    for (const auto field : kReforgeEffortFields) {
+        result.*field = counter_delta(after.*field, before.*field);
+    }
+    return result;
+}
 
 std::uint8_t rarity_affix_cap(const SessionImpl& session, std::uint8_t rarity) {
     switch (rarity) {
@@ -1293,6 +1411,143 @@ void CalcContext::consume_reforge_work(const std::uint64_t amount) {
             "max_reforge_work", *solve_reforge_work_cap_);
     }
     telemetry_.reforge_frontier_work += amount;
+}
+
+ReforgeProvenanceCheckpoint CalcContext::begin_reforge_provenance(
+    const ReforgeRowOwner owner,
+    const std::optional<ReforgeRowFamily> family_override) {
+    ReforgeProvenanceCheckpoint checkpoint;
+    checkpoint.previous_owner = reforge_row_owner_;
+    checkpoint.previous_family_override = reforge_row_family_override_;
+    checkpoint.first_sequence = telemetry_.reforge_row_sequence;
+    checkpoint.completed_before = telemetry_.reforge_effort.rows_completed;
+    checkpoint.cache_reused_before =
+        telemetry_.reforge_effort.rows_cache_reused;
+    reforge_row_owner_ = owner;
+    reforge_row_family_override_ = family_override;
+    return checkpoint;
+}
+
+void CalcContext::finish_reforge_provenance(
+    const ReforgeProvenanceCheckpoint& checkpoint,
+    const ReforgeRowDisposition disposition) {
+    const std::uint64_t completed = counter_delta(
+        telemetry_.reforge_effort.rows_completed,
+        checkpoint.completed_before);
+    const std::uint64_t reused = counter_delta(
+        telemetry_.reforge_effort.rows_cache_reused,
+        checkpoint.cache_reused_before);
+    const std::uint64_t finalized = saturated_counter_add(completed, reused);
+    if (disposition == ReforgeRowDisposition::Published) {
+        telemetry_.reforge_effort.rows_published = saturated_counter_add(
+            telemetry_.reforge_effort.rows_published, finalized);
+    } else if (disposition == ReforgeRowDisposition::Discarded) {
+        telemetry_.reforge_effort.rows_discarded = saturated_counter_add(
+            telemetry_.reforge_effort.rows_discarded, finalized);
+    }
+    for (ReforgeRowTelemetry& row : telemetry_.reforge_row_samples) {
+        if (row.sequence < checkpoint.first_sequence ||
+            row.disposition != ReforgeRowDisposition::Completed) {
+            continue;
+        }
+        row.disposition = disposition;
+    }
+    reforge_row_owner_ = checkpoint.previous_owner;
+    reforge_row_family_override_ = checkpoint.previous_family_override;
+}
+
+void CalcContext::set_reforge_provenance_context(
+    const ReforgeRowOwner owner,
+    const std::optional<ReforgeRowFamily> family_override) {
+    reforge_row_owner_ = owner;
+    reforge_row_family_override_ = family_override;
+}
+
+void CalcContext::merge_nested_reforge_telemetry(
+    const CalcTelemetry& child,
+    const CalcTelemetry* before) {
+    const ReforgeEffortBreakdown empty_effort;
+    const ReforgeEffortBreakdown& before_effort =
+        before == nullptr ? empty_effort : before->reforge_effort;
+    ReforgeEffortBreakdown delta = reforge_effort_delta(
+        child.reforge_effort, before_effort);
+    /* From this context's perspective the child's complete ledger is one
+     * nested workload. Do not also retain the child's own nested subtotal,
+     * which would count grandchildren twice. */
+    delta.nested_automatic_child_active_work = 0;
+    delta.nested_automatic_child_logical_work = 0;
+    const std::uint64_t before_active =
+        before == nullptr ? 0 : before->reforge_frontier_work;
+    const std::uint64_t before_logical =
+        before == nullptr ? 0 : before->reforge_raw_equivalent_work;
+    delta.nested_automatic_child_active_work = saturated_counter_add(
+        delta.nested_automatic_child_active_work,
+        counter_delta(child.reforge_frontier_work, before_active));
+    delta.nested_automatic_child_logical_work = saturated_counter_add(
+        delta.nested_automatic_child_logical_work,
+        counter_delta(child.reforge_raw_equivalent_work, before_logical));
+    merge_reforge_effort(telemetry_.reforge_effort, delta);
+
+    telemetry_.reforge_raw_equivalent_work = saturated_counter_add(
+        telemetry_.reforge_raw_equivalent_work,
+        counter_delta(child.reforge_raw_equivalent_work, before_logical));
+    telemetry_.reforge_projected_work = saturated_counter_add(
+        telemetry_.reforge_projected_work,
+        counter_delta(
+            child.reforge_projected_work,
+            before == nullptr ? 0 : before->reforge_projected_work));
+    telemetry_.reforge_factored_work = saturated_counter_add(
+        telemetry_.reforge_factored_work,
+        counter_delta(
+            child.reforge_factored_work,
+            before == nullptr ? 0 : before->reforge_factored_work));
+
+    const std::uint64_t child_sequence_before =
+        before == nullptr ? 0 : before->reforge_row_sequence;
+    const std::uint64_t sequence_delta = counter_delta(
+        child.reforge_row_sequence, child_sequence_before);
+    const std::uint64_t parent_sequence_begin =
+        telemetry_.reforge_row_sequence;
+    telemetry_.reforge_row_sequence = saturated_counter_add(
+        telemetry_.reforge_row_sequence, sequence_delta);
+    constexpr std::size_t kRowSampleLimit = 64;
+    for (const ReforgeRowTelemetry& child_row : child.reforge_row_samples) {
+        if (child_row.sequence < child_sequence_before) continue;
+        if (telemetry_.reforge_row_samples.size() >= kRowSampleLimit) {
+            telemetry_.reforge_row_samples_omitted = saturated_counter_add(
+                telemetry_.reforge_row_samples_omitted, 1);
+            continue;
+        }
+        ReforgeRowTelemetry row = child_row;
+        row.sequence = saturated_counter_add(
+            parent_sequence_begin,
+            child_row.sequence - child_sequence_before);
+        row.family = ReforgeRowFamily::AutomaticOption;
+        try {
+            telemetry_.reforge_row_samples.push_back(std::move(row));
+        } catch (...) {
+            /* Diagnostic sampling must never change solver behavior. */
+            telemetry_.reforge_row_samples_omitted = saturated_counter_add(
+                telemetry_.reforge_row_samples_omitted, 1);
+        }
+    }
+    telemetry_.reforge_row_samples_omitted = saturated_counter_add(
+        telemetry_.reforge_row_samples_omitted,
+        counter_delta(
+            child.reforge_row_samples_omitted,
+            before == nullptr ? 0 : before->reforge_row_samples_omitted));
+}
+
+ScopedReforgeRowProvenance::ScopedReforgeRowProvenance(
+    CalcContext& context,
+    const ReforgeRowOwner owner,
+    const std::optional<ReforgeRowFamily> family_override)
+    : context_(context),
+      checkpoint_(context.begin_reforge_provenance(
+          owner, family_override)) {}
+
+ScopedReforgeRowProvenance::~ScopedReforgeRowProvenance() {
+    context_.finish_reforge_provenance(checkpoint_, disposition_);
 }
 
 void CalcContext::require_reforge_scratch_bytes(

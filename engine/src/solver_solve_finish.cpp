@@ -1640,8 +1640,24 @@ SolveResult SolveWork::Impl::finish() {
                 certificate.adapter.alternative_reforge_work;
             telemetry.alternative_transitions =
                 certificate.adapter.alternative_transitions;
+            telemetry.strict_reforge_active_work =
+                certificate.adapter.strict_reforge_work;
+            telemetry.strict_reforge_logical_work_v1 =
+                certificate.adapter.strict_reforge_logical_work_v1;
+            telemetry.strict_reforge_evaluator_work_v2 =
+                certificate.adapter.strict_reforge_evaluator_work_v2;
+            telemetry.strict_reforge_evaluator_work_v3 =
+                certificate.adapter.strict_reforge_evaluator_work_v3;
+            telemetry.strict_reforge_effort =
+                certificate.adapter.strict_reforge_effort;
+            telemetry.strict_reforge_row_samples =
+                std::move(
+                    certificate.adapter.strict_reforge_row_samples);
+            telemetry.strict_reforge_row_samples_omitted =
+                certificate.adapter
+                    .strict_reforge_row_samples_omitted;
             telemetry.broad_row_attribution =
-                certificate.adapter.broad_row_attribution;
+                std::move(certificate.adapter.broad_row_attribution);
             telemetry.broad_row_attribution_omitted =
                 certificate.adapter.broad_row_attribution_omitted;
             telemetry.work_to_first_partition =
