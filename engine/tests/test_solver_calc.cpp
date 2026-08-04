@@ -907,6 +907,10 @@ void run_projected_reforge_frontier_equivalence_tests() {
         raw.telemetry().reforge_frontier_work);
     PC_CHECK(
         raw_without_resource_accounting.telemetry()
+            .reforge_logical_work_v1 ==
+        raw.telemetry().reforge_logical_work_v1);
+    PC_CHECK(
+        raw_without_resource_accounting.telemetry()
             .reforge_raw_equivalent_work ==
         raw.telemetry().reforge_raw_equivalent_work);
     PC_CHECK(
@@ -926,6 +930,15 @@ void run_projected_reforge_frontier_equivalence_tests() {
     PC_CHECK(
         raw.telemetry().reforge_frontier_work ==
         raw.telemetry().reforge_raw_equivalent_work);
+    PC_CHECK(
+        raw.telemetry().reforge_logical_work_v1 ==
+        raw.telemetry().reforge_raw_equivalent_work);
+    PC_CHECK(
+        projected.telemetry().reforge_logical_work_v1 ==
+        raw.telemetry().reforge_logical_work_v1);
+    PC_CHECK(
+        factored.telemetry().reforge_logical_work_v1 ==
+        raw.telemetry().reforge_logical_work_v1);
     PC_CHECK(
         projected.telemetry().reforge_frontier_work ==
         projected.telemetry().reforge_projected_work);
@@ -952,17 +965,88 @@ void run_projected_reforge_frontier_equivalence_tests() {
 
     const std::uint64_t raw_work_before_cache =
         raw.telemetry().reforge_frontier_work;
+    const std::uint64_t logical_work_before_cache =
+        raw.telemetry().reforge_logical_work_v1;
     raw.release_outcome(raw_start, 0);
     (void)raw.outcomes(raw_start, 0);
     PC_CHECK(
         raw.telemetry().reforge_frontier_work ==
         raw_work_before_cache);
+    PC_CHECK(
+        raw.telemetry().reforge_logical_work_v1 ==
+        logical_work_before_cache);
     PC_CHECK(raw.telemetry().reforge_effort.rows_cache_reused == 1);
     PC_CHECK(
         raw.telemetry().reforge_row_samples.back().cache_reused);
     PC_CHECK(
         raw.telemetry().reforge_row_samples.back().disposition ==
         ReforgeRowDisposition::Completed);
+
+    /* One stable logical cap admits the same complete row envelope for all
+     * evaluator versions. The final over-cap row is observed as interrupted
+     * and never retained, while legacy active effort remains versioned. */
+    const std::uint64_t shared_logical_cap =
+        raw.telemetry().reforge_logical_work_v1 - 1;
+    CalcContext capped_raw(
+        session, family_goal_100(), registry, actions,
+        false, false, true, std::nullopt, {}, false, {}, false,
+        true, false);
+    CalcContext capped_projected(
+        session, family_goal_100(), registry, actions,
+        false, false, true, std::nullopt, {}, false, {}, false,
+        true, true);
+    CalcContext capped_factored(
+        session, family_goal_100(), registry, actions,
+        false, false, true, std::nullopt, {}, false, {}, false,
+        true, true, false, true);
+    const auto run_capped = [&](CalcContext& context) {
+        context.set_solve_resource_caps(
+            100000, shared_logical_cap, false);
+        const std::uint32_t start = context.intern_item(rare);
+        bool capped = false;
+        for (const std::uint32_t action : actions) {
+            try {
+                (void)context.outcomes(start, action);
+            } catch (const SolverResourceLimit& limit) {
+                PC_CHECK(limit.cap_name() == "max_reforge_work");
+                capped = true;
+                break;
+            }
+        }
+        PC_CHECK(capped);
+        PC_CHECK(
+            context.telemetry().reforge_logical_work_v1 ==
+            shared_logical_cap);
+        PC_CHECK(
+            context.telemetry().reforge_effort.rows_interrupted == 1);
+        PC_CHECK(
+            context.telemetry().reforge_row_samples.back().disposition ==
+            ReforgeRowDisposition::Interrupted);
+    };
+    run_capped(capped_raw);
+    run_capped(capped_projected);
+    run_capped(capped_factored);
+    PC_CHECK(
+        capped_raw.telemetry().reforge_effort.rows_completed ==
+        capped_projected.telemetry().reforge_effort.rows_completed);
+    PC_CHECK(
+        capped_raw.telemetry().reforge_effort.rows_completed ==
+        capped_factored.telemetry().reforge_effort.rows_completed);
+    PC_CHECK(
+        capped_raw.telemetry().reforge_raw_equivalent_work ==
+        capped_projected.telemetry().reforge_raw_equivalent_work);
+    PC_CHECK(
+        capped_raw.telemetry().reforge_raw_equivalent_work ==
+        capped_factored.telemetry().reforge_raw_equivalent_work);
+    PC_CHECK(
+        capped_raw.telemetry().reforge_frontier_work ==
+        shared_logical_cap);
+    PC_CHECK(
+        capped_projected.telemetry().reforge_frontier_work !=
+        capped_raw.telemetry().reforge_frontier_work);
+    PC_CHECK(
+        capped_factored.telemetry().reforge_frontier_work !=
+        capped_raw.telemetry().reforge_frontier_work);
 
     CalcContext provenance(
         session, family_goal_100(), registry, actions,

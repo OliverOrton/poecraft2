@@ -219,6 +219,8 @@ void SolveWork::Impl::prepare_iteration() {
             transition_cache->algebraic_self_loops;
         result.diagnostics.reforge_frontier_work =
             calc.telemetry().reforge_frontier_work;
+        result.diagnostics.reforge_logical_work_v1 =
+            calc.telemetry().reforge_logical_work_v1;
         prepare_priced_rows();
         if (focused_bound_proved) {
             const std::uint64_t no_row =
@@ -1848,6 +1850,8 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
             transition_cache->choice_successors.size();
         result.diagnostics.reforge_frontier_work =
             calc.telemetry().reforge_frontier_work;
+        result.diagnostics.reforge_logical_work_v1 =
+            calc.telemetry().reforge_logical_work_v1;
         expansion_active = false;
         backup_active = false;
         phase = SolvePhase::Done;

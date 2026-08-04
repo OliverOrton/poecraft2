@@ -678,6 +678,7 @@ export interface SolveOptions {
     max_expanded_states?: number;
     max_state_action_rows?: number;
     max_transitions?: number;
+    /** Stable V1-equivalent logical reforge search envelope. */
     max_reforge_work?: number;
     max_solver_owned_bytes?: number;
     max_compiled_nodes?: number;
@@ -729,6 +730,7 @@ export interface SolveProgress {
     frontier_states: number;
     state_action_rows: number;
     transition_entries: number;
+    /** Consumed V1-equivalent logical reforge envelope. */
     reforge_work: number;
     live_owned_bytes: number;
     peak_owned_bytes: number;

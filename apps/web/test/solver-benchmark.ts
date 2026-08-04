@@ -423,7 +423,7 @@ function buildCapChecks(spec: SolverBenchmarkCase, report: CaseReport): CaseRepo
     check("max_expanded_states", nestedNumber(report.solver_telemetry, "states", "expanded"), spec.caps.max_expanded_states);
     check("max_state_action_rows", nestedNumber(report.solver_telemetry, "work", "state_action_rows"), spec.caps.max_state_action_rows);
     check("max_transitions", nestedNumber(report.solver_telemetry, "work", "transition_entries"), spec.caps.max_transitions);
-    check("max_reforge_work", nestedNumber(report.solver_telemetry, "cache", "reforge", "frontier_work"), spec.caps.max_reforge_work);
+    check("max_reforge_work", nestedNumber(report.solver_telemetry, "work", "reforge_work"), spec.caps.max_reforge_work);
     check("max_solver_owned_bytes", nestedNumber(report.solver_telemetry, "memory", "solver_owned_bytes_estimate"), spec.caps.max_solver_owned_bytes);
     check("max_compiled_nodes", report.compiled_graph?.nodes ?? null, spec.caps.max_compiled_nodes);
     check("max_compiled_edges", report.compiled_graph?.edges ?? null, spec.caps.max_compiled_edges);

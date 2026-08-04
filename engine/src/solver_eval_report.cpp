@@ -263,12 +263,16 @@ void append_reforge_effort_json(
 void append_reforge_resource_accounting_json(
     BoundedJson& out,
     const StrategyEvalResult& result) {
-    out += "{\"schema_version\":1,\"legacy_active_work\":" +
+    out += "{\"schema_version\":2,";
+    out += "\"cap_contract\":{\"version\":1,";
+    out += "\"cap\":\"max_reforge_work\",";
+    out += "\"basis\":\"logical_work_v1\"},";
+    out += "\"legacy_active_work\":" +
            std::to_string(result.reforge_work);
     out += ",\"logical_work_v1\":" +
            std::to_string(result.reforge_logical_work_v1);
     out += ",\"evaluator_work\":{\"v1\":" +
-           std::to_string(result.reforge_logical_work_v1);
+           std::to_string(result.reforge_evaluator_work_v1);
     out += ",\"v2\":" +
            std::to_string(result.reforge_evaluator_work_v2);
     out += ",\"v3\":" +

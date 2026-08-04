@@ -825,7 +825,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 telemetry_.reforge_projected_work, amount);
             telemetry_.reforge_factored_work = saturated_add(
                 telemetry_.reforge_factored_work, amount);
-            consume_reforge_work(amount);
+            consume_reforge_work(amount, amount);
         };
 
     std::unordered_map<std::uint32_t, double> outcome_acc;
@@ -3153,7 +3153,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 effort.v3_predecessor_index_entries,
                 factored_terminal_predecessors.size());
             consume_reforge_work(
-                factored_terminal_predecessors.size());
+                factored_terminal_predecessors.size(), 0);
             if (capture_attribution) {
                 attribution.frontier_work = saturated_add(
                     attribution.frontier_work,
@@ -3179,7 +3179,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 telemetry_.reforge_factored_work, 1);
             const std::uint64_t active_node_work =
                 use_projected_reforge_frontier_ ? 1 : raw_node_work;
-            consume_reforge_work(active_node_work);
+            consume_reforge_work(active_node_work, raw_node_work);
             if (capture_attribution) {
                 ++attribution.frontier_state_visits;
                 attribution.frontier_work +=
@@ -3227,7 +3227,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                     telemetry_.reforge_projected_work, word_work);
                 telemetry_.reforge_factored_work = saturated_add(
                     telemetry_.reforge_factored_work, word_work);
-                consume_reforge_work(word_work);
+                consume_reforge_work(word_work, 0);
                 if (capture_attribution) {
                     attribution.frontier_work += word_work;
                 }
@@ -3284,7 +3284,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             }
             if (use_projected_reforge_frontier_ &&
                 !factored_final_depth) {
-                consume_reforge_work(edge_work);
+                consume_reforge_work(edge_work, 0);
                 if (capture_attribution) {
                     attribution.frontier_work += edge_work;
                 }
@@ -3359,7 +3359,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                     telemetry_.reforge_factored_work = saturated_add(
                         telemetry_.reforge_factored_work,
                         eligible_buckets.size());
-                    consume_reforge_work(eligible_buckets.size());
+                    consume_reforge_work(eligible_buckets.size(), 0);
                     if (capture_attribution) {
                         attribution.frontier_work = saturated_add(
                             attribution.frontier_work,
@@ -3455,7 +3455,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                         credit_effort(effort.v3_candidate_sets);
                         telemetry_.reforge_factored_work = saturated_add(
                             telemetry_.reforge_factored_work, 1);
-                        consume_reforge_work(1);
+                        consume_reforge_work(1, 0);
                         if (capture_attribution) {
                             ++attribution.factored_terminal_candidates;
                             ++attribution.frontier_work;
@@ -3464,7 +3464,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                     telemetry_.reforge_factored_work = saturated_add(
                         telemetry_.reforge_factored_work,
                         canonical_subset_checks);
-                    consume_reforge_work(canonical_subset_checks);
+                    consume_reforge_work(canonical_subset_checks, 0);
                     if (capture_attribution) {
                         attribution.factored_canonical_subset_checks =
                             saturated_add(
@@ -3512,7 +3512,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                             retry_ratio));
                         telemetry_.reforge_factored_work = saturated_add(
                             telemetry_.reforge_factored_work, 1);
-                        consume_reforge_work(1);
+                        consume_reforge_work(1, 0);
                         ++result.gated_retry_short_circuits;
                         if (capture_attribution) {
                             ++attribution.factored_retry_aggregates;
@@ -3683,7 +3683,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                     recurrence_terms, 1);
                 telemetry_.reforge_factored_work = saturated_add(
                     telemetry_.reforge_factored_work, active_work);
-                consume_reforge_work(active_work);
+                consume_reforge_work(active_work, 0);
                 if (capture_attribution) {
                     attribution.factored_last_pick_terms = saturated_add(
                         attribution.factored_last_pick_terms,

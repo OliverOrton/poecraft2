@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: versioned reforge resource accounting Gates 0-2 are complete. Gate
-3, the resource-cap contract, is active.**
+**Status: versioned reforge resource accounting Gates 0-3 are complete. Gate
+4, V3 production qualification and integration, is active.**
 
 Current plan:
 [Versioned Reforge Resource Accounting And V3 Production Qualification](docs/active/versioned-reforge-resource-accounting-and-v3-production-qualification.md).
@@ -37,8 +37,9 @@ Current milestone starting commit:
 
 Current milestone commits: Gate 0 is
 `a683b8cbd9c5ac60b6e042d819a3ee6b3aa6fb0b`. Gate 1 is
-`50bc7be80ea81f9301dc3b1d5414a2ebb2595aec`. Gate 2 is recorded by the
-current local commit. Gate 3 is the active implementation boundary.
+`50bc7be80ea81f9301dc3b1d5414a2ebb2595aec`. Gate 2 is `7d15639`. Gate 3 is
+recorded by the current local commit. Gate 4 is the active implementation
+boundary.
 
 Certified fallback milestone starting commit:
 `0b4ba38aa5754a39715640ad6d7a48cab2dc2b6c`
@@ -182,6 +183,36 @@ Nothing has been pushed or merged. `main` remains unchanged at
   until Gate 3 proves the stable logical-envelope contract.
 - Evidence is
   `fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate2.json`.
+
+## Versioned reforge resource accounting Gate 3
+
+- `max_reforge_work` now limits a separate V1-equivalent logical ledger for
+  every evaluator. The historic active `reforge_frontier_work` and raw V1,
+  sparse V2, and factored V3 effort ledgers remain available side by side.
+  Resource-accounting schema 2 explicitly names `logical_work_v1` as the cap
+  basis; no weighted cross-version score exists.
+- Raw V1 receives exactly its historical envelope. Coarse/strict splits,
+  compiled assertions, witness-driven rebuilds, automatic children, retained
+  comparison contexts, exact evaluation, progress, and benchmark cap checks
+  all use the logical ledger. Nested contexts receive the remaining logical
+  budget before work, merge all executed deltas, and cannot publish an
+  interrupted row. Cache reuse spends no work.
+- V3 is structurally safe without another cap: predecessor and retry counts
+  are frontier-bounded; availability, denominator, candidate, and commit work
+  is bounded by frontier times bucket count; and the six-affix capacity bounds
+  subset and recurrence passes. All retained/scratch structures still preflight
+  the existing owned-memory cap, while wall/step/WASM latency remains a
+  separate qualification criterion.
+- The one-less-cap V1/V2/V3 matrix admits the same complete rows and interrupts
+  the same next row. The native build and focused calculator, automatic, solve,
+  and exact-evaluator suites pass `252997/0`, `366/0`, `98231/0`, and
+  `16794/0`; existing sampled checks retain 10,000 runs. No hard 20M,
+  selected-only 100M, benchmark, release-WASM rebuild, cap/default change,
+  evaluator-selection change, or full acceptance ran.
+- Evidence is
+  `fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate3.json`.
+  Gate 4 may now qualify V3 for strict selected and competitively scheduled
+  alternative rows; coarse stays V1 unless independently justified.
 
 ## Certified fallback and terminal factorization Gate 0
 
@@ -929,28 +960,21 @@ tracked work counters. The tracked qualified Fracture evidence retains
 
 ## Exact next step
 
-Complete Gate 3 resource-cap contract:
+Complete Gate 4 V3 qualification and integration:
 
-1. Trace a row's stable V1-equivalent logical charge independently from the
-   active evaluator's V1/V2/V3 implementation ledger. Prove raw V1 receives
-   exactly its historic envelope.
-2. Establish a deterministic safety bound from logical envelope and row
-   structure to V3 predecessor, denominator, subset, candidate, recurrence,
-   publication, memory, and cooperative-latency work. Do not invent weights.
-3. If the existing logical, owned-memory, and cancellation limits safely bound
-   V3, make `max_reforge_work` enforce logical V1-equivalent breadth for every
-   evaluator and keep evaluator effort report-only. Otherwise add a genuinely
-   separate evaluator-safety cap and stop reason through every affected layer.
-4. Preserve all defaults and fixture overrides. Give nested contexts only the
-   remaining logical/evaluator allowance before work; interrupted rows remain
-   observable and cannot publish; cache reuse remains explicit.
-5. Add focused raw-envelope, evaluator-switch, one-less-cap, cache, nested,
-   interruption, and saturation tests. Commit Gate 3 separately before any V3
-   production integration.
-
-Gate 4 may qualify and integrate V3 only after this safety contract passes.
-The Gate 2 binding result alone is not aggregate family or release-WASM V3
-qualification.
+1. Select V3 generically for production strict selected rows and competitively
+   scheduled strict alternative rows. Keep coarse on V1, V1 independently
+   selectable as oracle/rollback, and V2 diagnostic.
+2. Preserve transactional row publication, proof-store/partition authority,
+   invalidation generations, unresolved-obligation honesty, Bellman/properness,
+   certified-fallback independence, and compiler provenance.
+3. Extend focused exact-equivalence coverage across ordinary, Essence,
+   Harvest, and Fossil strict rows. If a meaningful class regresses, use only a
+   simple pre-enumeration structural dispatch rule supported by measured
+   evidence; never branch on action/modifier/fixture names.
+4. Do not run the selected-only 100M or canonical hard 20M cases before Gate 5.
+   Gate 2 binding evidence alone is not aggregate family or release-WASM V3
+   qualification. Commit Gate 4 separately.
 
 Deterministic checkpoint/replay remains deferred.
 

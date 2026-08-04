@@ -976,7 +976,7 @@ void run_closed_form_tests() {
     const std::string bytes = serialize_strategy_eval(exact);
     PC_CHECK(bytes.find(
                  "\"reforge_resource_accounting\":"
-                 "{\"schema_version\":1") != std::string::npos);
+                 "{\"schema_version\":2") != std::string::npos);
     PC_CHECK(bytes.find("\"owner\":\"exact_evaluation\"") !=
              std::string::npos);
     const std::string accounting_json =

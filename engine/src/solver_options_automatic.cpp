@@ -151,7 +151,7 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
             : limits.max_reforge_work;
     const auto remaining_parent_reforge_work = [&]() {
         return parent_reforge_limit - std::min(
-            telemetry_.reforge_frontier_work,
+            telemetry_.reforge_logical_work_v1,
             parent_reforge_limit);
     };
     local.set_solve_resource_caps(
@@ -455,7 +455,9 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
             target.selected_bytes += source.selected_bytes;
         }
         try {
-            consume_reforge_work(work.reforge_frontier_work);
+            consume_reforge_work(
+                work.reforge_frontier_work,
+                work.reforge_logical_work_v1);
         } catch (const SolverResourceLimit& limit) {
             (void)limit;
             if (!merge_cap.has_value()) {
@@ -836,7 +838,7 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                     const CalcTelemetry comparison_before =
                         comparison_context.telemetry();
                     const std::uint64_t local_reforge_work =
-                        local.telemetry().reforge_frontier_work;
+                        local.telemetry().reforge_logical_work_v1;
                     const std::uint64_t parent_remaining =
                         remaining_parent_reforge_work();
                     const std::uint64_t comparison_allowance =
@@ -845,9 +847,9 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                     const std::uint64_t comparison_reforge_cap =
                         comparison_allowance >
                                 std::numeric_limits<std::uint64_t>::max() -
-                                    comparison_before.reforge_frontier_work
+                                    comparison_before.reforge_logical_work_v1
                             ? std::numeric_limits<std::uint64_t>::max()
-                            : comparison_before.reforge_frontier_work +
+                            : comparison_before.reforge_logical_work_v1 +
                                   comparison_allowance;
                     comparison_context.set_solve_resource_caps(
                         solve_discovered_state_cap_.value_or(
@@ -896,7 +898,9 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                         try {
                             consume_reforge_work(
                                 comparison_after.reforge_frontier_work -
-                                comparison_before.reforge_frontier_work);
+                                    comparison_before.reforge_frontier_work,
+                                comparison_after.reforge_logical_work_v1 -
+                                    comparison_before.reforge_logical_work_v1);
                         } catch (const SolverResourceLimit& limit) {
                             comparison_cap = limit;
                         }

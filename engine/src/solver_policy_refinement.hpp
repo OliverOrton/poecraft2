@@ -33,6 +33,7 @@ struct PolicyLiftAdapterTelemetry {
     std::uint64_t peak_adapter_owned_bytes = 0;
     std::uint64_t strict_reforge_work = 0;
     std::uint64_t strict_reforge_logical_work_v1 = 0;
+    std::uint64_t strict_reforge_evaluator_work_v1 = 0;
     std::uint64_t strict_reforge_evaluator_work_v2 = 0;
     std::uint64_t strict_reforge_evaluator_work_v3 = 0;
     ReforgeEffortBreakdown strict_reforge_effort;

@@ -352,6 +352,8 @@ typedef struct pc_solve_options {
     uint32_t max_expanded_states;
     uint64_t max_state_action_rows;
     uint64_t max_transitions;
+    /* Stable V1-equivalent logical reforge search envelope. Evaluator-specific
+     * V1/V2/V3 effort is reported separately in solver telemetry. */
     uint64_t max_reforge_work;
     uint64_t max_solver_owned_bytes;
     uint32_t max_compiled_nodes;
@@ -505,6 +507,8 @@ typedef struct pc_solve_progress {
     uint32_t frontier_states;
     uint64_t state_action_rows;
     uint64_t transition_entries;
+    /* Consumed V1-equivalent logical envelope, comparable to
+     * pc_solve_options.max_reforge_work for every evaluator version. */
     uint64_t reforge_work;
     uint64_t live_owned_bytes;
     uint64_t peak_owned_bytes;

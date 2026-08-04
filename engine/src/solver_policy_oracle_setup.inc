@@ -992,7 +992,7 @@
             refined_routing_bytes;
         const std::uint64_t strict_reforge_work =
             std::min(
-                strict_->telemetry().reforge_frontier_work,
+                strict_->telemetry().reforge_logical_work_v1,
                 remaining_options.max_reforge_work);
         remaining_options.max_reforge_work -=
             strict_reforge_work;

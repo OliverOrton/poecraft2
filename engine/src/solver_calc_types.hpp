@@ -473,14 +473,20 @@ struct CalcTelemetry {
     std::uint64_t reforge_hits = 0;
     std::uint64_t reforge_misses = 0;
     std::uint64_t reforge_build_ns = 0;
+    /* Historic active-evaluator ledger. Retained verbatim for comparisons
+     * with prior evidence; it no longer defines search admission. */
     std::uint64_t reforge_frontier_work = 0;
+    /* Stable V1-equivalent logical envelope consumed by max_reforge_work.
+     * This is distinct from raw-equivalent attempted effort so an interrupted
+     * over-cap charge remains observable without admitting or publishing it. */
+    std::uint64_t reforge_logical_work_v1 = 0;
     /* Parallel effort ledgers. V1 raw-equivalent work retains the historic
      * one-node-plus-all-buckets definition. V2 projected work counts one
      * sparse node, availability words inspected, and eligible edges. V3
      * factored work retains V2's nonterminal charges, then counts canonical
      * terminal candidates, every exact last-pick recurrence term, and each
-     * completed terminal publication. The public cap continues to apply to
-     * reforge_frontier_work, which equals the active evaluator's ledger. */
+     * completed terminal publication. These are observational; the public
+     * cap applies only to reforge_logical_work_v1. */
     std::uint64_t reforge_raw_equivalent_work = 0;
     std::uint64_t reforge_projected_work = 0;
     std::uint64_t reforge_factored_work = 0;
@@ -801,7 +807,9 @@ class CalcContext {
         std::uint64_t max_reforge_work,
         bool reserve_storage = true,
         std::optional<std::uint64_t> max_owned_bytes = std::nullopt);
-    void consume_reforge_work(std::uint64_t amount);
+    void consume_reforge_work(
+        std::uint64_t active_amount,
+        std::uint64_t logical_v1_amount);
     ReforgeProvenanceCheckpoint begin_reforge_provenance(
         ReforgeRowOwner owner,
         std::optional<ReforgeRowFamily> family_override = std::nullopt);

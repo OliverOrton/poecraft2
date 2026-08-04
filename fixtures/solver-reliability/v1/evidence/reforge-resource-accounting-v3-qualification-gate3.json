@@ -1,0 +1,196 @@
+{
+  "schema_version": "reforge_resource_accounting_v3_qualification_gate3_v1",
+  "recorded_at_local_date": "2026-08-04",
+  "decision": "accept_stable_v1_equivalent_logical_envelope_without_a_second_evaluator_cap",
+  "branch": "codex/reforge-resource-accounting-v3-qualification",
+  "milestone_starting_commit": "00718908c866dc71a2e7e3864ebc5c5015ff063f",
+  "gate_parent_commit": "7d156395e54238a255972828373a4bf5a1a872f6",
+  "gate_commit": "the commit containing this evidence record",
+  "scope": {
+    "mechanics_changed": false,
+    "action_filtering_changed": false,
+    "goal_or_state_abstraction_changed": false,
+    "quotient_or_bellman_contract_changed": false,
+    "strategy_vocabulary_changed": false,
+    "canonical_fixture_changed": false,
+    "compiled_artifact_changed": false,
+    "economy_changed": false,
+    "product_or_default_cap_changed": false,
+    "max_reforge_work_interpretation_changed": true,
+    "production_evaluator_selection_changed": false,
+    "abi_layout_or_version_changed": false,
+    "public_progress_semantics_changed": true,
+    "wasm_artifact_changed": false,
+    "release_wasm_rebuild_required_before_release": true,
+    "frontend_crafting_authority_changed": false,
+    "benchmark_measurement_run": false,
+    "canonical_hard_20m_run": false,
+    "selected_only_100m_run": false,
+    "full_acceptance_suite_run": false,
+    "pushed": false,
+    "merged": false
+  },
+  "cap_contract": {
+    "resource_accounting_schema_version": 2,
+    "cap_contract_version": 1,
+    "cap": "max_reforge_work",
+    "basis": "reforge_logical_work_v1",
+    "definition": "common V1 row charges plus one frontier-node charge and every roll bucket for each visited frontier node",
+    "independent_of_active_evaluator": true,
+    "raw_v1_historical_envelope_preserved": true,
+    "legacy_active_field": "reforge_frontier_work",
+    "legacy_active_field_preserved": true,
+    "attempted_v1_evaluator_field": "reforge_raw_equivalent_work",
+    "v2_evaluator_field": "reforge_projected_work",
+    "v3_evaluator_field": "reforge_factored_work",
+    "universal_weighted_score_defined": false,
+    "separate_evaluator_safety_cap_required": false,
+    "defaults_changed": false,
+    "native_default": 50000000,
+    "canonical_hard_fixture_override": 20000000
+  },
+  "interruption_contract": {
+    "logical_consumed_ledger_saturates_at_cap": true,
+    "attempted_evaluator_effort_remains_observable": true,
+    "raw_v1_legacy_active_ledger_still_saturates_at_historical_cap": true,
+    "v2_v3_legacy_active_ledgers_report_actual_versioned_effort": true,
+    "interrupted_row_publishable": false,
+    "partial_row_certifiable": false,
+    "cache_reuse_consumes_logical_work": false,
+    "cache_reuse_consumes_evaluator_work": false
+  },
+  "v3_structural_safety_proof": {
+    "symbols": {
+      "N": "frontier states at one depth",
+      "B": "roll buckets in the row",
+      "E": "eligible terminal denominator edges",
+      "C": "canonical completed candidate sets"
+    },
+    "logical_v1_node_envelope": "N * (1 + B)",
+    "bounds": {
+      "predecessor_index_entries": "<= N",
+      "availability_words_scanned": "<= N * ceil(B / 64)",
+      "denominator_edges": "E <= N * B",
+      "candidate_sets": "C <= E",
+      "subset_checks": "<= 6 * E because a completed key has at most six explicit affix picks",
+      "recurrence_terms": "<= 6 * C <= 6 * E because a completed key has at most six explicit affix picks",
+      "commits": "<= C",
+      "retry_aggregates": "<= N"
+    },
+    "relationship_is_a_weighted_equivalence": false,
+    "relationship_is_a_finite_structural_bound": true,
+    "retained_and_scratch_structures_preflight_owned_memory": [
+      "availability classes and words",
+      "ordered/current/next frontiers",
+      "factored terminal predecessor index",
+      "factored terminal candidate vector",
+      "outcome accumulator",
+      "bounded attribution structures"
+    ],
+    "memory_cap": "max_solver_owned_bytes",
+    "row_publication_transactional": true,
+    "cooperative_latency_qualified_separately": true,
+    "gate2_native_binding_median_max_step_regression_percent": 9.5533,
+    "gate2_release_wasm_cancellation_ack_ms": 14.401,
+    "frozen_release_wasm_cancellation_limit_ms": 250
+  },
+  "budget_propagation": {
+    "calc_consume_authority": "reforge_logical_work_v1",
+    "coarse_to_strict_subtraction": "logical",
+    "strict_to_compiled_assertion_subtraction": "logical",
+    "witness_driven_rebuild_subtraction": "logical",
+    "standalone_exact_evaluation": "logical",
+    "automatic_child_prebudget": "parent remaining logical",
+    "retained_comparison_context_prebudget": "context logical already consumed plus parent remaining logical after unmerged local child",
+    "child_merge": "active delta and logical delta are merged before refusal is published",
+    "progress_reforge_work": "logical",
+    "native_benchmark_cap_proximity": "logical progress",
+    "wasm_benchmark_spec_validation": "work.reforge_work",
+    "completed_progress_and_work_summary": "aggregate logical work across coarse, strict, and compiled exact evaluation"
+  },
+  "focused_contracts": {
+    "native_build": {
+      "command": "powershell -File scripts/build.ps1",
+      "result": "pass"
+    },
+    "solver_calc": {
+      "command": "build\\engine\\poecraft_engine_tests.exe --solver-calc-only data\\compiled\\current",
+      "checks": 252997,
+      "failures": 0,
+      "covers": [
+        "raw_v1_historic_active_and_logical_equality",
+        "completed_v1_v2_v3_logical_envelope_equality",
+        "one_less_cap_same_completed_rows_v1_v2_v3",
+        "same_next_row_interrupted_v1_v2_v3",
+        "interrupted_row_not_retained",
+        "legacy_active_effort_remains_evaluator_specific",
+        "attempted_v1_effort_observable_on_interruption",
+        "cache_reuse_spends_no_logical_work",
+        "forward_reverse_equivalence"
+      ]
+    },
+    "solver_s8_3": {
+      "command": "build\\engine\\poecraft_engine_tests.exe --solver-s8-3-only",
+      "checks": 366,
+      "failures": 0,
+      "covers": [
+        "nested_child_logical_merge",
+        "nested_child_active_merge",
+        "parent_logical_saturation",
+        "nested_interruption_observability"
+      ]
+    },
+    "solver_solve": {
+      "command": "build\\engine\\poecraft_engine_tests.exe --solver-solve-only data\\compiled\\current",
+      "checks": 98231,
+      "failures": 0,
+      "simulator_runs_preserved_by_existing_test": 10000,
+      "covers": [
+        "schema_2_coarse_and_strict_serialization",
+        "resource_cap_stop_reason",
+        "transactional_strict_publication",
+        "compiled_assertion_budget_propagation"
+      ]
+    },
+    "solver_eval": {
+      "command": "build\\engine\\poecraft_engine_tests.exe --solver-eval-only data\\compiled\\current",
+      "checks": 16794,
+      "failures": 0,
+      "simulator_runs_preserved_by_existing_test": 10000,
+      "covers": [
+        "schema_2_exact_evaluation_serialization",
+        "logical_and_v1_evaluator_ledgers",
+        "exact_evaluation_resource_cap"
+      ]
+    }
+  },
+  "source_sha256": {
+    "engine/src/solver_calc_types.hpp": "b9b3e799828160c66a7454cbe8ebf6ee98d4bb8ed6ddb3cc19a75cb114174bef",
+    "engine/src/solver_calc.cpp": "429736d161b9baee9125dd8167a020af92faf801ccfe8d8968671a2be20df13c",
+    "engine/src/solver_reforge.cpp": "961d07161a51b478e03f3132fe436bb1417e70b66775e218d543768fabfc0a83",
+    "engine/src/solver_options_automatic.cpp": "c876f8aee39dfaf279a59112150edb4e830ed546e2d40f9d6dc76f507ad1dbd6",
+    "engine/src/solver_policy_oracle_setup.inc": "1fc506821625e16ac73b2c15d662367c54990530ba204ae1af863e15fbb7293c",
+    "engine/src/solver_policy_oracle_kernels.inc": "ed3700cbab74c4c1ca5750d8e7f3fd912502f68ab174a85000ea4ab37543507e",
+    "engine/src/solver_policy_oracle_improve.inc": "6b4bb9af51c1c3f27ea03b0ced2e057787afda2f59ac97a6d5d83753ba6cebd7",
+    "engine/src/solver_policy_refinement.cpp": "edced8b72180937b60840a034f68ef671182f23b85dd78dec82823371001c046",
+    "engine/src/solver_solve_finish.cpp": "c9d754c04e0602c8ed57021f57eddafe1ffa722e85b01ad0573768cc9d0963b4",
+    "engine/src/solver_solve_telemetry.cpp": "5ca74767df983a071e3ba812f365b021aab5627cf8de03875b1a5026d3d4f5e8",
+    "engine/src/solver_eval.cpp": "73577b751578ec6716f360aacaf38e05d1f8300a0af358afa9be2f45aa4961c5",
+    "engine/src/solver_eval_report.cpp": "67e5d438f7e8dc048816396fa6f0f15187edb51f3360a1ad5736bd2044d519ac",
+    "engine/include/poecraft/solver.h": "60ddd6826e0d8abd46763460cf29081297dbdb7a0df8e3beab40fc510bedc0c8",
+    "apps/web/src/app/engine-protocol.ts": "6ac195ad33ad2652a06476f857ab218a0de41749fc53a68bbaad9d9ca12ee9a6",
+    "apps/web/test/solver-benchmark.ts": "84672227e930402499e3f448c2b93552551ad9e4a3b87e570dafbfa422c87612"
+  },
+  "native_binary_sha256": {
+    "build/engine/poecraft_engine.dll": "95fb58ae3b700ff6d6d2eb0a4bd94255f3f03ff070ae3e3976ce1080753f9d22",
+    "build/engine/poecraft_engine_tests.exe": "70cc3035a5bf4cc96439f19de5b947e3b7a73ec22cec1c848f1531b1cf97405a"
+  },
+  "gate_result": {
+    "accepted": true,
+    "reason": "the stable V1-equivalent logical envelope bounds V3 structure while the existing owned-memory cap bounds storage and measured native/WASM latency remains a separate release qualification dimension",
+    "v1_production_selection_retained": true,
+    "v2_diagnostic_selection_retained": true,
+    "v3_production_selection_enabled": false
+  },
+  "next_gate": "qualify and, if the frozen exactness/performance/memory/latency criteria pass, select V3 generically for strict selected and competitively scheduled alternative rows while coarse remains V1"
+}

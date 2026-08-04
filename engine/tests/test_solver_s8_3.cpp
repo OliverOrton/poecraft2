@@ -640,7 +640,7 @@ void run_protected_price_flip() {
     PC_CHECK(
         repeat_telemetry.reforge_effort
             .nested_automatic_child_logical_work ==
-        repeat_telemetry.reforge_raw_equivalent_work);
+        repeat_telemetry.reforge_logical_work_v1);
     PC_CHECK(!repeat_telemetry.reforge_row_samples.empty());
     PC_CHECK(std::all_of(
         repeat_telemetry.reforge_row_samples.begin(),
@@ -679,6 +679,9 @@ void run_protected_price_flip() {
         capped_repeat_calc.telemetry();
     PC_CHECK(
         capped_repeat_telemetry.reforge_frontier_work ==
+        capped_reforge_work);
+    PC_CHECK(
+        capped_repeat_telemetry.reforge_logical_work_v1 ==
         capped_reforge_work);
     PC_CHECK(
         capped_repeat_telemetry.reforge_effort

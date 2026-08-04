@@ -3089,6 +3089,8 @@ struct StrategyEvalWork::Impl {
         output.reforge_work =
             calc.telemetry().reforge_frontier_work;
         output.reforge_logical_work_v1 =
+            calc.telemetry().reforge_logical_work_v1;
+        output.reforge_evaluator_work_v1 =
             calc.telemetry().reforge_raw_equivalent_work;
         output.reforge_evaluator_work_v2 =
             calc.telemetry().reforge_projected_work;

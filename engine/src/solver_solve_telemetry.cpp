@@ -321,10 +321,14 @@ SolveProgress SolveWork::Impl::progress() const {
                                        : transition_cache->successors.size() +
                                              transition_cache
                                                  ->choice_successors.size();
-        value.reforge_work = calc.telemetry().reforge_frontier_work;
-        /* Progress is queried after every bounded C/WASM step. Use the
-         * conservative ledger here; cap/finalization checkpoints retain the
-         * full selected-allocation audits. */
+        value.reforge_work = value.done
+                                 ? result.diagnostics
+                                       .reforge_logical_work_v1
+                                 : calc.telemetry()
+                                       .reforge_logical_work_v1;
+        /* Progress is queried after every bounded C/WASM step. Before
+         * finalization only the coarse child has run; the completed snapshot
+         * uses the aggregate coarse/strict/evaluation logical audit. */
         value.live_owned_bytes = fast_estimated_owned_bytes();
         value.peak_owned_bytes = std::max(
             peak_owned_bytes, value.live_owned_bytes);
@@ -1054,18 +1058,22 @@ void append_reforge_resource_accounting_json(
     BoundedTelemetryJson& out,
     const std::uint64_t legacy_active_work,
     const std::uint64_t logical_work_v1,
+    const std::uint64_t evaluator_work_v1,
     const std::uint64_t evaluator_work_v2,
     const std::uint64_t evaluator_work_v3,
     const ReforgeEffortBreakdown& effort,
     const std::vector<ReforgeRowTelemetry>& row_samples,
     const std::uint64_t row_samples_omitted) {
-    out += "{\"schema_version\":1";
+    out += "{\"schema_version\":2";
+    out += ",\"cap_contract\":{\"version\":1,";
+    out += "\"cap\":\"max_reforge_work\",";
+    out += "\"basis\":\"logical_work_v1\"}";
     out += ",\"legacy_active_work\":" +
            std::to_string(legacy_active_work);
     out += ",\"logical_work_v1\":" +
            std::to_string(logical_work_v1);
     out += ",\"evaluator_work\":{\"v1\":" +
-           std::to_string(logical_work_v1);
+           std::to_string(evaluator_work_v1);
     out += ",\"v2\":" + std::to_string(evaluator_work_v2);
     out += ",\"v3\":" + std::to_string(evaluator_work_v3) + "}";
     out += ",\"components\":";
@@ -1485,6 +1493,7 @@ std::string serialize_solver_telemetry(
             json,
             refinement.strict_reforge_active_work,
             refinement.strict_reforge_logical_work_v1,
+            refinement.strict_reforge_evaluator_work_v1,
             refinement.strict_reforge_evaluator_work_v2,
             refinement.strict_reforge_evaluator_work_v3,
             refinement.strict_reforge_effort,
@@ -3095,6 +3104,16 @@ std::string serialize_solver_telemetry(
             std::to_string(cache.choice_groups);
     json += ",\"choice_successor_entries\":" +
             std::to_string(cache.choice_successor_entries);
+    json += ",\"reforge_work\":" +
+            std::to_string(
+                diagnostics == nullptr
+                    ? cache.reforge_logical_work_v1
+                    : diagnostics->reforge_logical_work_v1);
+    json += ",\"legacy_reforge_active_work\":" +
+            std::to_string(
+                diagnostics == nullptr
+                    ? cache.reforge_frontier_work
+                    : diagnostics->reforge_frontier_work);
     if (diagnostics == nullptr) {
         json += ",\"bellman_backups\":null";
         json += ",\"bellman_action_evaluations\":null";
@@ -3159,6 +3178,8 @@ std::string serialize_solver_telemetry(
             std::to_string(cache.reforge_build_ns);
     json += ",\"frontier_work\":" +
             std::to_string(cache.reforge_frontier_work);
+    json += ",\"logical_work_v1\":" +
+            std::to_string(cache.reforge_logical_work_v1);
     json += ",\"raw_equivalent_work_v1\":" +
             std::to_string(cache.reforge_raw_equivalent_work);
     json += ",\"projected_work_v2\":" +
@@ -3169,6 +3190,7 @@ std::string serialize_solver_telemetry(
     append_reforge_resource_accounting_json(
         json,
         cache.reforge_frontier_work,
+        cache.reforge_logical_work_v1,
         cache.reforge_raw_equivalent_work,
         cache.reforge_projected_work,
         cache.reforge_factored_work,

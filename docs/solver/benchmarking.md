@@ -16,7 +16,7 @@ native benchmark records observable root state after a complete
 - elapsed wall time and focused phase/round;
 - root lower and upper values, absolute and relative gaps, and incumbent kind;
 - discovered, expanded, and frontier states;
-- state/action rows, transitions, and reforge work;
+- state/action rows, transitions, and V1-equivalent logical reforge work;
 - live and peak solver-owned bytes; and
 - whether the sample raised or decreased the lower value, or lowered or
   increased an incumbent upper value.
@@ -25,6 +25,13 @@ The decrease/increase fields are diagnostics, not assertions. Focused graph
 growth is not currently specified to make the reported lower value monotone
 across rounds. An upper-value comparison is meaningful only when both samples
 have executable incumbents.
+
+`reforge_work` in progress and cap-proximity samples is the consumed
+`logical_work_v1` envelope for every evaluator. Solver telemetry separately
+retains legacy active work and V1/V2/V3 evaluator effort. Cross-version
+performance conclusions use wall time, owned memory, and maximum cooperative
+step latency; evaluator counters are explanatory and are never combined into a
+weighted score.
 
 Samples occur after an observable native step, at focused-round or incumbent
 changes, at the configured bounded wall interval, and at completion. A long
@@ -114,8 +121,11 @@ across roles. Existing smoke/full/deep acceptance tiers remain unchanged.
 
 Wall time is machine-, load-, operating-system-, build-, and compiler-bound.
 It does not survive a hardware or compiler change. Deterministic work counters
-such as expansions, rows, transitions, and reforge work are reported alongside
-wall time and remain the first check for algorithmic equivalence.
+such as expansions, rows, transitions, and logical reforge work are reported
+alongside wall time and remain the first check for search-envelope
+equivalence. Evaluator-specific reforge counters compare only like versions
+and explain implementation behavior; they are not universal runtime
+projections.
 
 Adaptive accumulated-gap racing is not implemented. Because pre-incumbent gap
 is fixed at its maximum, that rule preferentially eliminates runs that are

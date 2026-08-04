@@ -1873,7 +1873,7 @@ void run_policy_guided_exact_lift_tests() {
              std::string::npos);
     PC_CHECK(refinement_json.find(
                  "\"reforge_resource_accounting\":"
-                 "{\"schema_version\":1") != std::string::npos);
+                 "{\"schema_version\":2") != std::string::npos);
     PC_CHECK(refinement_json.find("\"owner\":\"strict_selected\"") !=
              std::string::npos);
     PC_CHECK(refinement_json.find("\"owner\":\"strict_alternative\"") !=
@@ -4530,7 +4530,7 @@ void run_goal_progress_gated_reforge_tests() {
         std::string::npos);
     PC_CHECK(
         interrupted_telemetry.find(
-            "\"resource_accounting\":{\"schema_version\":1") !=
+            "\"resource_accounting\":{\"schema_version\":2") !=
         std::string::npos);
     PC_CHECK(
         interrupted_telemetry.find(

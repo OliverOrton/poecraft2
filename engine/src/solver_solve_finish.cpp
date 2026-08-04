@@ -1538,7 +1538,7 @@ SolveResult SolveWork::Impl::finish() {
                     options.max_solver_owned_bytes - external_live;
                 const std::uint64_t coarse_reforge_work =
                     std::min(
-                        calc.telemetry().reforge_frontier_work,
+                        calc.telemetry().reforge_logical_work_v1,
                         options.max_reforge_work);
                 scoped.max_reforge_work =
                     options.max_reforge_work -
@@ -1644,6 +1644,8 @@ SolveResult SolveWork::Impl::finish() {
                 certificate.adapter.strict_reforge_work;
             telemetry.strict_reforge_logical_work_v1 =
                 certificate.adapter.strict_reforge_logical_work_v1;
+            telemetry.strict_reforge_evaluator_work_v1 =
+                certificate.adapter.strict_reforge_evaluator_work_v1;
             telemetry.strict_reforge_evaluator_work_v2 =
                 certificate.adapter.strict_reforge_evaluator_work_v2;
             telemetry.strict_reforge_evaluator_work_v3 =
@@ -1880,17 +1882,23 @@ SolveResult SolveWork::Impl::finish() {
                 telemetry.counterexample_samples_omitted,
                 certificate.refinement.telemetry.witnesses_omitted);
             result.diagnostics.reforge_frontier_work =
+                saturated_add(
+                    result.diagnostics.reforge_frontier_work,
+                    saturated_add(
+                        certificate.adapter.strict_reforge_work,
+                        certificate.compiled.evaluation.reforge_work));
+            result.diagnostics.reforge_logical_work_v1 =
                 certificate.resource_cap == "max_reforge_work"
                     ? options.max_reforge_work
                     : std::min(
                           options.max_reforge_work,
                           saturated_add(
-                              result.diagnostics.reforge_frontier_work,
+                              result.diagnostics.reforge_logical_work_v1,
                               saturated_add(
                                   certificate.adapter
-                                      .strict_reforge_work,
+                                      .strict_reforge_logical_work_v1,
                                   certificate.compiled.evaluation
-                                      .reforge_work)));
+                                      .reforge_logical_work_v1)));
             const std::uint64_t adapter_memory = std::max(
                 certificate.adapter.adapter_owned_bytes,
                 certificate.adapter.strict_calc_owned_bytes);
@@ -2125,13 +2133,18 @@ SolveResult SolveWork::Impl::finish() {
                                : lhs + rhs;
                 };
             result.diagnostics.reforge_frontier_work =
+                saturated_add(
+                    result.diagnostics.reforge_frontier_work,
+                    assertion.evaluation.reforge_work);
+            result.diagnostics.reforge_logical_work_v1 =
                 assertion.resource_cap == "max_reforge_work"
                     ? options.max_reforge_work
                     : std::min(
                           options.max_reforge_work,
                           saturated_add(
-                              result.diagnostics.reforge_frontier_work,
-                              assertion.evaluation.reforge_work));
+                              result.diagnostics.reforge_logical_work_v1,
+                              assertion.evaluation
+                                  .reforge_logical_work_v1));
             PolicyRefinementTelemetry& telemetry =
                 result.diagnostics.policy_refinement;
             telemetry.memory_limit_bytes =

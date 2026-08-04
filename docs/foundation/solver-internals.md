@@ -121,6 +121,11 @@ Oliver ruling and belong in the [mechanics library](../mechanics/README.md).
 - `CalcContext`, solve work, refinement graphs, compiled JSON, and evaluation
   work retain their existing ownership and named memory/work caps. Moving a
   declaration is not permission to shift retained-byte responsibility.
+- `max_reforge_work` is a V1-equivalent logical search-envelope cap independent
+  of the active V1/V2/V3 reforge implementation. Legacy active work and each
+  version's physical effort remain observational telemetry; wall time, owned
+  memory, and cooperative-step latency are separate qualification dimensions,
+  not inputs to a universal weighted score.
 - Crafting legality and probabilities stay in the native engine. Compilation,
   evaluation, WASM, and TypeScript consume native results; they do not recreate
   mechanics.

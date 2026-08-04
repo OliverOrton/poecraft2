@@ -202,6 +202,7 @@ struct StrategyEvalResult {
     std::uint64_t max_output_json_bytes = 0;
     std::uint64_t reforge_work = 0;
     std::uint64_t reforge_logical_work_v1 = 0;
+    std::uint64_t reforge_evaluator_work_v1 = 0;
     std::uint64_t reforge_evaluator_work_v2 = 0;
     std::uint64_t reforge_evaluator_work_v3 = 0;
     ReforgeEffortBreakdown reforge_effort;

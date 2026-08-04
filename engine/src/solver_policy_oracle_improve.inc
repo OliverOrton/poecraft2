@@ -928,6 +928,9 @@ void merge_adapter_telemetry(
         total.strict_reforge_logical_work_v1,
         pass.strict_reforge_logical_work_v1);
     saturating_add(
+        total.strict_reforge_evaluator_work_v1,
+        pass.strict_reforge_evaluator_work_v1);
+    saturating_add(
         total.strict_reforge_evaluator_work_v2,
         pass.strict_reforge_evaluator_work_v2);
     saturating_add(

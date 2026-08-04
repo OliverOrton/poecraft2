@@ -304,6 +304,8 @@
         const CalcTelemetry& strict = strict_->telemetry();
         telemetry_.strict_reforge_work = strict.reforge_frontier_work;
         telemetry_.strict_reforge_logical_work_v1 =
+            strict.reforge_logical_work_v1;
+        telemetry_.strict_reforge_evaluator_work_v1 =
             strict.reforge_raw_equivalent_work;
         telemetry_.strict_reforge_evaluator_work_v2 =
             strict.reforge_projected_work;

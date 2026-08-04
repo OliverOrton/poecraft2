@@ -417,10 +417,44 @@ bitset. It removes a roll bucket only for exact group conflict, exhausted
 multiplicity, occupied or blocked goal observations, closed side capacity, or
 zero natural weight. Versioned work ledgers report the raw node-plus-all-bucket
 V1 cost beside the V2 sparse-node, availability-word, and eligible-edge cost.
-The active evaluator alone is charged to `max_reforge_work`; raw remains the
-product evaluator. The rejected qualification and the omitted-final-depth
-proxy correction are recorded in the
+At the time of the selected-closure milestone, the active evaluator alone was
+charged to `max_reforge_work`; raw remained the product evaluator. That
+historical qualification and the omitted-final-depth proxy correction are
+recorded in the
 [final report](../archive/2026-08-03-selected-closure-broad-row-scaling/report.md).
+
+The active
+[versioned accounting milestone](../active/versioned-reforge-resource-accounting-and-v3-production-qualification.md)
+replaced that heterogeneous cap interpretation. `max_reforge_work` now
+consumes `reforge_logical_work_v1`, the stable V1-equivalent envelope: common
+row work plus one frontier-node charge and every roll bucket for each visited
+frontier node, regardless of the selected evaluator. Raw V1 therefore receives
+exactly its historical envelope. `reforge_frontier_work` remains the untouched
+legacy active-evaluator ledger, and raw V1, sparse V2, and factored V3 effort
+remain separately observable. Resource-accounting schema 2 explicitly names
+`logical_work_v1` as the cap basis; it does not define a weighted cross-version
+score.
+
+No separate evaluator-safety cap is required. For a frontier with `N` states
+and `B` roll buckets, the V1 logical node envelope includes `N * (1 + B)`.
+V3 has at most `N` predecessor records, `N * ceil(B / 64)` availability words,
+`N * B` denominator edges, and one candidate per eligible denominator edge.
+Each subset search and exact recurrence examines at most the six explicit
+affix picks, so subset and recurrence work are each bounded by `6 * N * B`;
+commits and retry aggregates are bounded by candidates and predecessors.
+These are structural bounds, not equivalence weights. Retained predecessor,
+candidate, availability, frontier, and outcome storage continues to preflight
+`max_solver_owned_bytes`; row publication remains transactional; and worker
+qualification separately measures maximum native step and release-WASM
+cancellation latency.
+
+Automatic children and retained protected-repeat comparison contexts receive
+only their parent's remaining logical envelope before execution. Every
+executed active/logical delta merges even when the enclosing option is refused,
+while an interrupted row is discarded and cannot be certified. Cache reuse
+consumes neither logical nor evaluator work. V1 remains the production
+evaluator until the following qualification gate decides whether V3 is
+integrated.
 
 The later
 [complete first-frontier census](../archive/2026-07-27-true-successor-frontier-census/report.md)

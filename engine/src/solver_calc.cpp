@@ -1413,16 +1413,24 @@ void CalcContext::set_solve_resource_caps(
     state_ids_by_hash_.reserve(practical_reserve);
 }
 
-void CalcContext::consume_reforge_work(const std::uint64_t amount) {
+void CalcContext::consume_reforge_work(
+    const std::uint64_t active_amount,
+    const std::uint64_t logical_v1_amount) {
     if (solve_reforge_work_cap_.has_value() &&
-        amount > *solve_reforge_work_cap_ -
-                     std::min(telemetry_.reforge_frontier_work,
+        logical_v1_amount > *solve_reforge_work_cap_ -
+                     std::min(telemetry_.reforge_logical_work_v1,
                               *solve_reforge_work_cap_)) {
-        telemetry_.reforge_frontier_work = *solve_reforge_work_cap_;
+        telemetry_.reforge_logical_work_v1 = *solve_reforge_work_cap_;
+        /* Raw V1 historically saturated its active ledger at the cap. Keep
+         * that observable behavior while V2/V3 retain honest active effort. */
+        if (!use_projected_reforge_frontier_) {
+            telemetry_.reforge_frontier_work = *solve_reforge_work_cap_;
+        }
         throw SolverResourceLimit(
             "max_reforge_work", *solve_reforge_work_cap_);
     }
-    telemetry_.reforge_frontier_work += amount;
+    telemetry_.reforge_logical_work_v1 += logical_v1_amount;
+    telemetry_.reforge_frontier_work += active_amount;
 }
 
 ReforgeProvenanceCheckpoint CalcContext::begin_reforge_provenance(
@@ -1491,13 +1499,13 @@ void CalcContext::merge_nested_reforge_telemetry(
     const std::uint64_t before_active =
         before == nullptr ? 0 : before->reforge_frontier_work;
     const std::uint64_t before_logical =
-        before == nullptr ? 0 : before->reforge_raw_equivalent_work;
+        before == nullptr ? 0 : before->reforge_logical_work_v1;
     delta.nested_automatic_child_active_work = saturated_counter_add(
         delta.nested_automatic_child_active_work,
         counter_delta(child.reforge_frontier_work, before_active));
     delta.nested_automatic_child_logical_work = saturated_counter_add(
         delta.nested_automatic_child_logical_work,
-        counter_delta(child.reforge_raw_equivalent_work, before_logical));
+        counter_delta(child.reforge_logical_work_v1, before_logical));
     merge_reforge_effort(telemetry_.reforge_effort, delta);
 
     telemetry_.reforge_raw_equivalent_work = saturated_counter_add(

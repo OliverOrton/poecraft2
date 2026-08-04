@@ -31,10 +31,11 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 The active
 [Versioned Reforge Resource Accounting And V3 Production Qualification](active/versioned-reforge-resource-accounting-and-v3-production-qualification.md)
-milestone has completed Gates 0-2. Accounting overhead is 0.562%; matched
+milestone has completed Gates 0-3. Accounting overhead is 0.562%; matched
 native binding-row medians are 697.594/877.933/507.483 ms for V1/V2/V3 with
-identical deterministic results. Gate 3 now establishes the resource-cap
-contract before changing evaluator selection.
+identical deterministic results. `max_reforge_work` now limits a stable
+V1-equivalent logical envelope while active V1/V2/V3 effort remains separately
+reported. Gate 4 now decides strict-row V3 production selection.
 It freezes the native/API 50M default separately from the reliability product
 fixture's 20M override, preserves V1 as the independent oracle, and reopens V3
 on exactness, wall, memory, cooperative-latency, and release-WASM evidence

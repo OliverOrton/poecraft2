@@ -187,6 +187,7 @@ struct PolicyRefinementTelemetry {
     std::uint64_t alternative_transitions = 0;
     std::uint64_t strict_reforge_active_work = 0;
     std::uint64_t strict_reforge_logical_work_v1 = 0;
+    std::uint64_t strict_reforge_evaluator_work_v1 = 0;
     std::uint64_t strict_reforge_evaluator_work_v2 = 0;
     std::uint64_t strict_reforge_evaluator_work_v3 = 0;
     ReforgeEffortBreakdown strict_reforge_effort;
@@ -456,6 +457,7 @@ struct SolveDiagnostics {
     double progressive_fracture_class_probability = 0.0;
     std::uint32_t progressive_fracture_post_modes = 0;
     std::uint64_t reforge_frontier_work = 0;
+    std::uint64_t reforge_logical_work_v1 = 0;
     bool incremental_action_generation = false;
     bool incremental_action_envelope_closed = true;
     std::uint64_t incremental_actions_admitted = 0;

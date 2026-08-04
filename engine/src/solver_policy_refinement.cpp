@@ -2686,7 +2686,7 @@ PolicyExactLiftCertificate lift_policy_exact(
             reoptimization_seed =
                 oracle.reoptimization_seed(lift_policy);
             const std::uint64_t spent_reforge = std::min(
-                lift_telemetry.strict_reforge_work,
+                lift_telemetry.strict_reforge_logical_work_v1,
                 options.max_reforge_work);
             const std::uint64_t remaining_reforge =
                 options.max_reforge_work - spent_reforge;
@@ -2780,10 +2780,10 @@ PolicyExactLiftCertificate lift_policy_exact(
                 static_cast<std::uint32_t>(spent_rounds);
             SolveOptions reoptimization_options = options;
             std::uint64_t spent_reforge =
-                lift_telemetry.strict_reforge_work;
+                lift_telemetry.strict_reforge_logical_work_v1;
             saturating_add(
                 spent_reforge,
-                reoptimization_telemetry.strict_reforge_work);
+                reoptimization_telemetry.strict_reforge_logical_work_v1);
             if (spent_reforge >=
                 reoptimization_options.max_reforge_work) {
                 throw AdapterFailure(

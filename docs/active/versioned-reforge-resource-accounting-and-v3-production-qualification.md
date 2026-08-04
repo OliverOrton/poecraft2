@@ -1,7 +1,7 @@
 # Versioned Reforge Resource Accounting And V3 Production Qualification
 
-**Status: Gates 0-2 complete; Gate 3 resource-cap contract is the active
-implementation boundary.**
+**Status: Gates 0-3 complete; Gate 4 V3 qualification and integration is the
+active implementation boundary.**
 
 Owner: Oliver
 
@@ -208,12 +208,12 @@ Harvest guaranteed-support passes and the repaired nested pre-execution cap.
 Release WASM reproduces the V1 logical/component counts and hashes on the
 isolated 18M carrier. The approved worker cancellation control acknowledges
 abort in 14.401 ms against its 250 ms limit. The canonical hard 20M and
-selected-only 100M runs remain untouched. Production still uses V1 and the
-historic active-ledger cap until Gate 3 proves a replacement contract.
+selected-only 100M runs remain untouched. Production still uses V1. Gate 3
+replaces the historic active-ledger cap with the stable logical contract below.
 
 ## Gate 3 — resource-cap contract
 
-**Status: active.**
+**Status: complete.**
 
 Prefer the following contract if the implementation proves V3 effort safely
 bounded under the logical envelope plus existing memory/cancellation limits:
@@ -234,11 +234,46 @@ TypeScript, tests, and documentation, and preserve all existing defaults. If
 neither contract is safe, retain Gate 1 accounting, leave cap behavior and V1
 production selection unchanged, and report the blocker. Do not invent weights.
 
+The preferred contract is accepted. `CalcTelemetry` now separates the
+historic active-evaluator `reforge_frontier_work`, the enforced
+`reforge_logical_work_v1`, and raw V1/sparse V2/factored V3 evaluator effort.
+Every cap and remaining-budget consumer uses the logical ledger: coarse-to-
+strict publication, strict compiled assertion, witness-driven adapter rebuild,
+standalone exact evaluation, automatic children, retained comparison contexts,
+progress, and benchmark cap proximity. Raw V1 still saturates its historic
+active ledger at the same boundary. Resource-accounting schema 2 names
+`logical_work_v1` as the cap basis while retaining the legacy serialized field
+and all evaluator ledgers.
+
+No evaluator-safety cap or ABI field was added. With `N` frontier states and
+`B` roll buckets, logical V1 charges `N * (1 + B)`. V3 predecessor entries are
+at most `N`; availability words are at most `N * ceil(B / 64)`; denominator
+edges and candidates are each at most `N * B`; and the fixed six-affix capacity
+bounds both subset checks and recurrence terms by `6 * N * B`. Commits and
+retry aggregates are bounded by candidates and predecessors. Existing
+preflight accounting owns every availability, predecessor, candidate,
+frontier, and outcome allocation under `max_solver_owned_bytes`. Transactional
+publication and the separately qualified maximum-step/WASM cancellation
+criteria remain the latency controls. These are structural safety bounds, not
+weights or runtime equivalences.
+
+A one-less-cap matrix proves V1/V2/V3 admit the same completed rows and stop the
+same next row on `max_reforge_work`; interrupted work remains sampled and does
+not publish. Cache reuse consumes no logical/evaluator work. The focused native
+build, calculator (`252997/0`), automatic-child (`366/0`), solve (`98231/0`),
+and exact-evaluator (`16794/0`) suites pass. The existing solve/evaluator tests
+retain their required 10,000-run sampled checks. No benchmark, release-WASM
+rebuild, hard 20M run, selected-only 100M run, product default/cap change,
+evaluator selection change, or full acceptance ran in this gate. Evidence is
+`fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate3.json`.
+
 Commit Gate 3 separately.
 
 ## Gate 4 — V3 qualification and integration
 
-Only after Gates 1–3 pass, enable V3 for production strict selected rows and
+**Status: active.**
+
+With Gates 1–3 passed, enable V3 for production strict selected rows and
 competitively scheduled alternative rows. It must stay generic across ordinary
 reforges, Essence, Harvest, and Fossils. Do not add it to the coarse oracle
 without separate justification. V1 remains independently selectable and V2

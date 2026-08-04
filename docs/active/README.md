@@ -1,7 +1,7 @@
 # Active Work
 
-**Status: versioned reforge resource accounting Gates 0-2 are complete; Gate
-3 resource-cap contract is active.**
+**Status: versioned reforge resource accounting Gates 0-3 are complete; Gate
+4 V3 production qualification and integration is active.**
 
 Parent: [Documentation map](../README.md)
 
@@ -11,9 +11,10 @@ Gate 1 retained the historical ledgers and added deterministic component
 accounting, bounded row provenance, transactional disposition, and honest
 nested child enforcement. Gate 2 measured 0.562% accounting overhead and
 same-binary binding-row medians of 697.594/877.933/507.483 ms for V1/V2/V3,
-with identical deterministic results. Gate 3 now establishes whether a stable
-V1-equivalent logical envelope safely bounds V3 without changing defaults. The
-frozen production decision requires
+with identical deterministic results. Gate 3 established a stable
+V1-equivalent logical envelope for every evaluator without changing defaults
+or adding a weighted/evaluator-safety cap. Gate 4 now applies the frozen
+production decision, which requires
 V1 exact equivalence, at least 25% median native binding-row improvement, no
 aggregate eligible-row regression, bounded memory/latency, and release-WASM
 responsiveness.
