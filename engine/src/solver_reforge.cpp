@@ -710,7 +710,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         final_successor_attribution;
     std::size_t final_successor_preflight_entries =
         capture_attribution ? outcome_reserve : 0;
-    constexpr std::size_t kTerminalContributionSampleLimit = 64;
+    constexpr std::size_t kTerminalContributionSampleLimit = 16;
     const std::uint64_t terminal_sample_storage_bytes =
         capture_attribution
             ? saturated_bytes(

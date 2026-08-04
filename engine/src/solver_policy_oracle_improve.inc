@@ -937,7 +937,7 @@ void merge_adapter_telemetry(
         total.alternative_transitions, pass.alternative_transitions);
     for (const PolicyBroadRowAttribution& pass_sample :
          pass.broad_row_attribution) {
-        constexpr std::size_t kSampleLimit = 64;
+        constexpr std::size_t kSampleLimit = 16;
         if (total.broad_row_attribution.size() >= kSampleLimit) {
             ++total.broad_row_attribution_omitted;
             continue;

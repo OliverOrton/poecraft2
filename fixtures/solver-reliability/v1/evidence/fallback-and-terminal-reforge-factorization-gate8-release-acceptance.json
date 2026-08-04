@@ -1,0 +1,196 @@
+{
+  "schema_version": "certified_fallback_release_acceptance_gate8_v1",
+  "date": "2026-08-03",
+  "decision": "track_a_product_behavior_qualified_broader_rare_renewal_boundary_disclosed",
+  "branch": "codex/fallback-and-terminal-reforge-factorization",
+  "parent_gate_commit": "1389bfb1296aae1d2c51efb5dbeffdead99047d1",
+  "gate_commit": "the commit containing this evidence record",
+  "scope": {
+    "canonical_hard_case_rerun": false,
+    "canonical_hard_case_authority": "fallback-and-terminal-reforge-factorization-gate2.json",
+    "product_reforge_work_cap": 20000000,
+    "solver_owned_byte_cap": 1073741824,
+    "verification_runs_per_compiled_strategy": 10000,
+    "mechanics_changed": false,
+    "action_vocabulary_changed": false,
+    "public_abi_changed": false,
+    "frontend_rule_authority_changed": false,
+    "visual_review_performed": false
+  },
+  "acceptance_repairs": {
+    "telemetry": {
+      "problem": "nested broad-row and terminal-contribution samples could exceed the one-MiB telemetry contract",
+      "resolution": "cap broad-row and terminal-contribution diagnostic samples independently at 16",
+      "affected_case_max_telemetry_json_bytes": 688902
+    },
+    "exact_evaluator": {
+      "problem": "raw exact occupancy was compared with approximate double quotient occupancy and could report a false mismatch",
+      "resolution": "audit behavioral quotient flow equations directly in high precision, including contracted deterministic chains",
+      "focused_command": "build/engine/poecraft_engine_tests.exe --solver-eval-only data/compiled/current",
+      "checks": 16787,
+      "failures": 0
+    },
+    "reliability_harness": {
+      "native_no_executable_policy_mapping": true,
+      "wasm_no_executable_policy_mapping": true,
+      "wasm_bounded_status_mapping_precedes_generic_nonconvergence": true,
+      "wasm_verification_runs_override": true
+    }
+  },
+  "native_reliability_portfolio": {
+    "logical_cases": 49,
+    "passing_cases": 47,
+    "failing_cases": 2,
+    "canonical_hard_case_reused_from_gate2": true,
+    "compiled_strategies": 40,
+    "verification_runs": 400000,
+    "off_policy_failures": 0,
+    "fresh_48_case_run": {
+      "report": "build/acceptance/certified-fallback-and-terminal-reforge-factorization/gate8/native-reliability-48.json",
+      "report_sha256": "404ccf573d846b07e448d138c365acdc40bf858a15e31fe3c65a4969ca352868",
+      "note": "26 cases passed unchanged; cases affected by telemetry and evaluator guard fixes were rerun below"
+    },
+    "corrected_affected_subset": {
+      "cases": 20,
+      "passing_cases": 20,
+      "compiled_strategies": 17,
+      "verification_runs": 170000,
+      "successes": 170000,
+      "failures": 0,
+      "off_policy_failures": 0,
+      "report_sha256": "55d35a9c976e8f78f78cb4f28cec4b5bf7fd57a6e905bb610046a4389acfd50f"
+    },
+    "current_48_case_composite": {
+      "passing_cases": 46,
+      "failing_cases": 2,
+      "compiled_strategies": 39,
+      "verification_runs": 390000,
+      "successes": 358333,
+      "finite_horizon_failures": 31667,
+      "off_policy_failures": 0
+    },
+    "remaining_failures": [
+      {
+        "case": "dense four-goal renewal",
+        "solver_cost": 39967848.233313486,
+        "exact_cost": 39967848.376564823,
+        "absolute_delta": 0.14325133711099625,
+        "relative_delta": 3.58416435818016e-9,
+        "exact_terminal_success_probability": 1.0000000058864122,
+        "verification_successes": 16,
+        "finite_horizon_failures": 9984,
+        "off_policy_failures": 0,
+        "report_sha256": "a6513d7ebfc582d6886c267bec1e74d5d46faad8d95cf2833b42524406e1ec83"
+      },
+      {
+        "case": "representative three-goal renewal",
+        "solver_cost": 14280279.438800555,
+        "exact_cost": 14280279.356852014,
+        "absolute_delta": 0.08194854110479355,
+        "relative_delta": 5.73858105900459e-9,
+        "exact_terminal_success_probability": 0.99999999301211773,
+        "verification_successes": 66,
+        "finite_horizon_failures": 9934,
+        "off_policy_failures": 0,
+        "report_sha256": "f1730c506e257fff79e690697d8478f4ca643e36a58977dcd273327e8ad2c8de"
+      }
+    ],
+    "interpretation": "Track A's canonical bounded fallback remains qualified. The two broader failures are extremely rare renewals outside the frozen 1e-9 relative cost reconciliation and 100000-action simulation horizon, so broad rare-renewal qualification is not claimed."
+  },
+  "full_four_fracture": {
+    "status": "bounded_feasible",
+    "stop_cause": "sweep_cap",
+    "lower": 65715.029067523152,
+    "solver_upper": 60341416.987842493,
+    "exact_cost": 60341416.534546264,
+    "exact_relative_delta": 7.51219066225455e-9,
+    "compiled_nodes": 4,
+    "compiled_edges": 4,
+    "verification_runs": 10000,
+    "successes": 15,
+    "finite_horizon_failures": 9985,
+    "off_policy_failures": 0,
+    "qualified": false,
+    "report_sha256": "5286843f731b8342681f33a22b4fcfb5322a1661873a0d45760709f7688b0760"
+  },
+  "five_goal_scale": {
+    "completed": false,
+    "watchdog_seconds": 900,
+    "process_id_terminated": 17188,
+    "last_sample_elapsed_ms": 920265.8726,
+    "lower": 35.642791775280784,
+    "incumbent_upper": 69701408.568658009,
+    "discovered_states": 30775,
+    "expanded_states": 30775,
+    "rows": 235429,
+    "transitions": 886958,
+    "reforge_work": 10861463,
+    "native_live_owned_bytes": 156489024,
+    "native_peak_owned_bytes": 163215423,
+    "time_to_first_incumbent_ms": 391.826,
+    "strategy_compiled": false,
+    "rerun": false,
+    "partial_report_sha256": "3ac0c6782bcf2756ec0e6302bd054dde3d09156f252835f598503f3e0f66ce00"
+  },
+  "release_wasm": {
+    "abi_version": 2,
+    "expected_exports": 61,
+    "callable_exports": 61,
+    "body_armour": {
+      "policy_status": "bounded_feasible",
+      "exact_evaluation": "matched",
+      "verification_runs": 10000,
+      "successes": 10000,
+      "failures": 0,
+      "off_policy_failures": 0,
+      "worker_max_slice_ms": 33.746
+    },
+    "ring": {
+      "actual_status": "refused_resource_cap",
+      "compiled_policy": true,
+      "exact_evaluation": "matched",
+      "verification_runs": 10000,
+      "successes": 10000,
+      "failures": 0,
+      "off_policy_failures": 0,
+      "worker_max_slice_ms": 205.326
+    },
+    "report_sha256": "5ec4e85f4d83136b9fd5b94bfcb207398b2f00b5c5b5b0dbfed2a0115a5da1a7",
+    "engine_smoke": {
+      "checks": 27,
+      "failures": 0,
+      "maximum_dedicated_solve_step_ms": 6.56,
+      "prompt_cancellation": "passed",
+      "ordered_progress": "passed",
+      "handle_leaks": "none"
+    },
+    "typescript": "passed",
+    "npm_test": "passed"
+  },
+  "artifact_hashes": {
+    "native_benchmark_sha256": "c5eca051443ed8a8befc993adfd7e0806be9668bd0ae7f648a2090b41c2139f3",
+    "release_mjs_sha256": "c693963ba12b613de8bebedcfe76cf7324782c48a658ffbf2c9e8b2afd0e0647",
+    "release_wasm_sha256": "e9ae1ed11c72807f49d2fb97227d5b5188726022adaf8211d01aedc516c03363"
+  },
+  "final_pipeline": {
+    "command": "powershell -File scripts/test.ps1",
+    "invocation_count": 1,
+    "result": "passed",
+    "wall_seconds": 68.9,
+    "engine_checks": 3001413,
+    "engine_failures": 0,
+    "solver_benchmark_specifications": 12,
+    "artifact_compile_validate": "passed",
+    "python_ingest_economy_bindings": "passed",
+    "web_and_wasm": "passed",
+    "typescript": "passed"
+  },
+  "milestone_conclusions": {
+    "certified_fallback_publication": "qualified on the canonical hard case",
+    "selected_policy_refinement": "cap-stopped without its own upper",
+    "final_depth_factorization": "exact diagnostic structurally rejected",
+    "release_acceptance": "repository pipeline and exercised release WASM are green; broader rare-renewal and five-goal qualification remain open",
+    "gate7": "skipped",
+    "gate8": "completed with disclosed qualification failures"
+  }
+}

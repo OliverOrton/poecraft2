@@ -439,7 +439,7 @@
             program.end());
         for (std::size_t index = sample_begin;
              index < samples.size(); ++index) {
-            constexpr std::size_t kSampleLimit = 64;
+            constexpr std::size_t kSampleLimit = 16;
             if (telemetry_.broad_row_attribution.size() >=
                 kSampleLimit) {
                 ++telemetry_.broad_row_attribution_omitted;

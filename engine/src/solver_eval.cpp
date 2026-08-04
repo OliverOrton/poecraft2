@@ -1,5 +1,8 @@
 #include "solver_eval_helpers.hpp"
 
+#include <iomanip>
+#include <sstream>
+
 namespace poecraft {
 namespace solver {
 
@@ -2955,23 +2958,79 @@ struct StrategyEvalWork::Impl {
             }
             visits_by_class[class_id] += exact_visits[raw];
         }
+        const std::uint32_t start_class = start_pair;
+        if (start_class >= pairs.size()) {
+            throw std::logic_error(
+                "strategy evaluation exact attribution start class is "
+                "missing");
+        }
+        check_owned_cap(capped_add(
+            transient_bytes(),
+            capped_product(
+                pairs.size(), sizeof(solve_detail::WideFloat))));
+        std::vector<solve_detail::WideFloat> quotient_expected(
+            pairs.size(), solve_detail::WideFloat{0.0});
+        quotient_expected[start_class] = solve_detail::WideFloat{1.0};
+        for (std::uint32_t source = 0; source < pairs.size(); ++source) {
+            if (source < pair_contracted.size() &&
+                pair_contracted[source]) {
+                if (chain_next[source] >= quotient_expected.size()) {
+                    throw std::logic_error(
+                        "strategy evaluation contracted quotient target is "
+                        "missing");
+                }
+                quotient_expected[chain_next[source]] +=
+                    solve_detail::WideFloat{visits_by_class[source]};
+                continue;
+            }
+            for (const EvalTransition& transition :
+                 pair_row(source).transitions) {
+                const std::uint32_t target =
+                    transition.via != kNoId
+                        ? transition.via
+                        : transition.target;
+                if (target >= quotient_expected.size()) {
+                    throw std::logic_error(
+                        "strategy evaluation behavioral quotient target is "
+                        "missing");
+                }
+                quotient_expected[target] +=
+                    solve_detail::WideFloat{visits_by_class[source]} *
+                    solve_detail::WideFloat{transition.probability};
+            }
+        }
+        check_owned_cap(capped_add(
+            transient_bytes(),
+            capped_product(
+                quotient_expected.capacity(),
+                sizeof(solve_detail::WideFloat))));
         for (std::size_t class_id = 0;
              class_id < visits_by_class.size(); ++class_id) {
-            const double tolerance = std::max(
-                1e-9,
-                options.epsilon *
-                    std::max(
-                        1.0,
-                        std::max(
-                            std::fabs(visits_by_class[class_id]),
-                            std::fabs(pair_visits[class_id]))) *
-                    100.0);
-            if (std::fabs(
-                    visits_by_class[class_id] -
-                    pair_visits[class_id]) > tolerance) {
-                throw std::runtime_error(
-                    "strategy evaluation exact attribution does not "
-                    "reconcile with the behavioral quotient");
+            const double expected = quotient_expected[class_id].value();
+            const double residual = std::fabs(
+                (solve_detail::WideFloat{visits_by_class[class_id]} -
+                 quotient_expected[class_id])
+                    .value());
+            const double scale = std::max(
+                {1.0, std::fabs(visits_by_class[class_id]),
+                 std::fabs(expected)});
+            const double tolerance =
+                std::max(
+                    options.epsilon,
+                    8.0 * std::numeric_limits<double>::epsilon()) *
+                scale;
+            if (!std::isfinite(residual) || residual > tolerance) {
+                std::ostringstream detail;
+                detail << std::setprecision(17)
+                       << "strategy evaluation exact attribution does not "
+                          "satisfy the behavioral quotient flow equation "
+                          "(class="
+                       << class_id
+                       << ", visits=" << visits_by_class[class_id]
+                       << ", expected=" << expected
+                       << ", residual=" << residual
+                       << ", tolerance=" << tolerance << ')';
+                throw std::runtime_error(detail.str());
             }
         }
         check_owned_cap(transient_bytes());

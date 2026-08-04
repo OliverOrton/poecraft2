@@ -29,6 +29,7 @@ interface CliOptions {
     output?: string;
     caseId?: string;
     skipVerification: boolean;
+    verificationRuns?: number;
 }
 
 interface CaseReport {
@@ -94,6 +95,7 @@ function parseArgs(args: string[]): CliOptions {
     let output: string | undefined;
     let caseId: string | undefined;
     let skipVerification = false;
+    let verificationRuns: number | undefined;
     for (let index = 0; index < args.length; index += 1) {
         const value = args[index + 1];
         if (args[index] === "--corpus" && value) {
@@ -107,11 +109,24 @@ function parseArgs(args: string[]): CliOptions {
             index += 1;
         } else if (args[index] === "--skip-verification") {
             skipVerification = true;
+        } else if (args[index] === "--verification-runs" && value) {
+            const parsed = Number(value);
+            if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+                throw new Error("--verification-runs must be a positive integer");
+            }
+            verificationRuns = parsed;
+            index += 1;
         } else {
             throw new Error(`unknown or incomplete argument: ${args[index]}`);
         }
     }
-    return { corpus, output, caseId, skipVerification };
+    return {
+        corpus,
+        output,
+        caseId,
+        skipVerification,
+        verificationRuns,
+    };
 }
 
 function readText(path: string): string {
@@ -298,6 +313,18 @@ function statusFrom(
             ? "converged_filtered_actions"
             : "converged";
     }
+    if (solve?.policy_status === "bounded_near_optimal") {
+        return "bounded_near_optimal";
+    }
+    if (solve?.policy_status === "bounded_feasible") {
+        return "bounded_feasible";
+    }
+    if (
+        solve && !solve.cancelled &&
+        solve.termination === "no_executable_policy"
+    ) {
+        return "no_executable_policy";
+    }
     const detail = error?.toLowerCase() ?? "";
     if (detail.includes("max_states") || detail.includes("state cap")) {
         return "refused_state_cap";
@@ -340,6 +367,7 @@ function expectationMet(expected: string, actual: string): boolean {
             "converged",
             "bounded_near_optimal",
             "bounded_feasible",
+            "no_executable_policy",
             "refused_state_cap",
             "refused_sweep_cap",
             "refused_resource_cap",
@@ -503,6 +531,7 @@ async function runCase(
     data: number,
     spec: SolverBenchmarkCase,
     skipVerification: boolean,
+    verificationRunsOverride?: number,
 ): Promise<CaseReport> {
     const totalStarted = performance.now();
     const errors: string[] = [];
@@ -533,7 +562,9 @@ async function runCase(
     let exactEvaluationStatus = spec.verification.exact_evaluation
         ? "not_attempted"
         : "not_requested";
-    let simulationStatus = spec.verification.runs > 0
+    const verificationRuns =
+        verificationRunsOverride ?? spec.verification.runs;
+    let simulationStatus = verificationRuns > 0
         ? "not_attempted"
         : "not_requested";
 
@@ -790,7 +821,7 @@ async function runCase(
                 telemetry = await safeTelemetry(client, solver, errors);
             }
             compileMs = roundMs(performance.now() - compileStarted);
-            if (strategyHandle && spec.verification.runs > 0 &&
+            if (strategyHandle && verificationRuns > 0 &&
                 !skipVerification) {
                 simulationStatus = "running";
                 const verifyStarted = performance.now();
@@ -810,6 +841,7 @@ async function runCase(
                             strategyHandle,
                             verificationStartValue,
                             spec,
+                            verificationRuns,
                             (handle) => { simulator = handle; },
                         );
                         simulationStatus =
@@ -951,12 +983,13 @@ async function verifyStrategy(
     strategyHandle: number,
     startValue: number,
     spec: SolverBenchmarkCase,
+    verificationRuns: number,
     setSimulator: (handle: number) => void,
 ): Promise<Record<string, unknown>> {
     const simulator = await client.createSimulator(session, strategyHandle, economy);
     setSimulator(simulator);
     const run = await client.runStrategy(simulator, {
-        target_runs: spec.verification.runs,
+        target_runs: verificationRuns,
         seed: spec.verification.seed,
         max_actions_per_run: spec.verification.max_actions_per_run,
     });
@@ -1028,7 +1061,12 @@ try {
         } else {
             process.stdout.write(`solver benchmark: ${spec.id}\n`);
             reports.push(await runCase(
-                client, data, spec, options.skipVerification));
+                client,
+                data,
+                spec,
+                options.skipVerification,
+                options.verificationRuns,
+            ));
         }
     }
     const report = {

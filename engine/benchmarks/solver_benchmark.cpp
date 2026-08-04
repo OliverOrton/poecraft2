@@ -726,6 +726,7 @@ bool expectation_matches(const std::string& expected,
         return actual == "converged" ||
                actual == "bounded_near_optimal" ||
                actual == "bounded_feasible" ||
+               actual == "no_executable_policy" ||
                actual == "refused_state_cap" ||
                actual == "refused_sweep_cap" ||
                actual == "refused_resource_cap" ||
@@ -1111,6 +1112,10 @@ std::string classify_completed_solve(
     }
     if (summary.policy_status == PC_SOLVE_POLICY_BOUNDED_FEASIBLE) {
         return "bounded_feasible";
+    }
+    if (summary.termination ==
+        PC_SOLVE_TERMINATION_NO_EXECUTABLE_POLICY) {
+        return "no_executable_policy";
     }
     if (!summary.converged) {
         const Value& caps = required(specification, "caps", Type::Object);

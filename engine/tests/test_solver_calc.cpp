@@ -998,7 +998,7 @@ void run_projected_reforge_frontier_equivalence_tests() {
                     .final_modifier_branches ==
                 row.final_depth_branches);
             PC_CHECK(
-                row.terminal_contribution_samples.size() <= 64);
+                row.terminal_contribution_samples.size() <= 16);
             PC_CHECK(
                 row.terminal_contribution_samples.size() +
                     row.terminal_contribution_samples_omitted ==
