@@ -1,13 +1,19 @@
 # Active Work
 
-**Status: no active implementation boundary.**
+**Status: Core Policy Preservation And Direct Certification is active.**
 
 Parent: [Documentation map](../README.md)
 
+Oliver selected [Core Policy Preservation And Direct Certification](core-policy-publication-recovery.md)
+on 2026-08-05. The active boundary freezes the cross-version publication
+regression, retains the selected core policy before strict refinement, attempts
+existing compilation and exact assertion directly, and uses strict refinement
+only for a demonstrated incompatibility. It changes no mechanics, action
+scope, objectives, caps, state abstraction, or strategy vocabulary.
+
 The completed
 [Goal-Gated Semantic Policy Routing](../archive/2026-08-04-goal-gated-semantic-policy-routing/README.md)
-milestone is archived. Oliver must select the next chunk before implementation
-resumes.
+milestone remains the preceding compiler and Calculator authority.
 
 The preceding completed
 [Versioned Reforge Resource Accounting And V3 Production Qualification](../archive/2026-08-04-versioned-reforge-resource-accounting/README.md)

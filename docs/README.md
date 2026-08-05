@@ -29,8 +29,11 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[HANDOFF](../HANDOFF.md) records no active implementation boundary; Oliver must
-select the next chunk before implementation resumes. The completed
+[Core Policy Preservation And Direct Certification](active/core-policy-publication-recovery.md)
+is the active Oliver-selected boundary. It freezes a cross-version regression,
+retains the core-selected candidate before strict refinement, tries the
+existing compiler and exact assertion directly, and preserves executable
+artifacts across later proof attempts without weakening exactness. The completed
 [Goal-Gated Semantic Policy Routing](archive/2026-08-04-goal-gated-semantic-policy-routing/README.md)
 milestone makes Calculator solves opt into the existing zero-goal-progress
 reforge restriction, records structured policy scope, compiles policies by
