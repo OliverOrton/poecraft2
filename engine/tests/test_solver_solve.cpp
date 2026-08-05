@@ -1715,20 +1715,19 @@ void run_policy_guided_exact_lift_tests() {
         PC_CHECK(compile_limited_fallback.policy_available);
         PC_CHECK(
             compile_limited_fallback.policy_status ==
-            SolvePolicyStatus::BoundedFeasible);
+            SolvePolicyStatus::Exact);
         PC_CHECK(
             compile_limited_fallback.diagnostics.policy_refinement
-                .fallback_publication_attempts == 1);
+                .fallback_publication_attempts == 0);
         PC_CHECK(
             compile_limited_fallback.diagnostics.policy_refinement
-                .fallback_publication_successes == 1);
+                .fallback_publication_successes == 0);
         PC_CHECK(near(
             compile_limited_fallback.upper_bound,
-            capped_fallback.upper_bound, 1e-12));
+            preferred.upper_bound, 1e-12));
         PC_CHECK(
             compile_limited_fallback.diagnostics.policy_refinement
-                .preferred_publication_failure_reason.find(
-                    "max_strategy_json_bytes") != std::string::npos);
+                .preferred_publication_failure_reason.empty());
     }
     PC_CHECK(solved.policy_available);
     PC_CHECK(!solved.converged);
@@ -4373,6 +4372,8 @@ void run_goal_progress_gated_reforge_tests() {
     PC_CHECK(restricted.policy_available);
     PC_CHECK(restricted.diagnostics.solution_scope ==
              "exact_within_zero_progress_reroll_restriction");
+    PC_CHECK(
+        restricted.policy_status == SolvePolicyStatus::Exact);
     const double restricted_success_probability =
         restricted_calc.outcomes(
             restricted_start_state, restricted_chaos, true)
@@ -4381,6 +4382,31 @@ void run_goal_progress_gated_reforge_tests() {
     PC_CHECK(near(
         restricted.values[restricted.start_state],
         1.0 / restricted_success_probability, 1e-9));
+    PolicyCompilationTelemetry restricted_compilation;
+    const std::string restricted_compact_json =
+        compile_policy_strategy_json(
+            restricted_calc, restricted,
+            "exact gated destructive renewal",
+            &restricted_compilation);
+    PC_CHECK(restricted_compilation.nodes == 4);
+    PC_CHECK(restricted_compilation.edges == 4);
+    PC_CHECK(restricted_compilation.policy_regions == 1);
+    PC_CHECK(restricted_compilation.junk_predicates == 0);
+    PC_CHECK(restricted_compact_json.size() < 8192);
+    PC_CHECK(restricted_compact_json.find(
+                 "\"description\":\"Exact executable fixed "
+                 "destructive-renewal policy within the "
+                 "zero-progress-reroll restriction\"") !=
+             std::string::npos);
+    PC_CHECK(restricted_compact_json.find(
+                 "\"solver_policy_scope\":\""
+                 "zero_progress_reroll_policy_restriction\"") !=
+             std::string::npos);
+    const std::shared_ptr<StrategyImpl> restricted_compact_strategy =
+        compile_strategy_json(
+            restricted_session, restricted_compact_json.data(),
+            restricted_compact_json.size());
+    PC_CHECK(restricted_compact_strategy != nullptr);
     std::uint32_t basin_state = kNoId;
     for (std::uint32_t state = 0;
          state < restricted.policy_reachable.size(); ++state) {
@@ -4431,15 +4457,16 @@ void run_goal_progress_gated_reforge_tests() {
     const std::string& restricted_json =
         restricted_lifted.compiled.strategy_json;
     PC_CHECK(restricted_json.find(
-                 "\"description\":\"Exact within the "
-                 "zero-progress-reroll policy restriction") !=
+                 "\"description\":\"Exact executable fixed "
+                 "destructive-renewal policy within the "
+                 "zero-progress-reroll restriction\"") !=
              std::string::npos);
     PC_CHECK(restricted.options.goal_progress_gated_reforges);
     PC_CHECK(restricted_json.find(
                  "\"solver_policy_scope\":\""
                  "zero_progress_reroll_policy_restriction\"") !=
              std::string::npos);
-    PC_CHECK(restricted_json.find("_gated_route") !=
+    PC_CHECK(restricted_json.find("_gated_route") ==
              std::string::npos);
     const std::shared_ptr<StrategyImpl> restricted_strategy =
         compile_strategy_json(
@@ -4722,15 +4749,53 @@ void run_goal_progress_gated_reforge_tests() {
              .kernel_signature.empty());
     stale_renewal.primitive_renewal_witness
         .kernel_signature.front() ^= 1;
-    bool stale_renewal_refused = false;
-    try {
-        (void)compile_policy_strategy_json(
+    PolicyCompilationTelemetry stale_compilation;
+    const std::string stale_renewal_json =
+        compile_policy_strategy_json(
             early_renewal_calc, stale_renewal,
-            "stale gated destructive renewal");
-    } catch (const std::runtime_error&) {
-        stale_renewal_refused = true;
+            "stale gated destructive renewal",
+            &stale_compilation);
+    PC_CHECK(valid_json_object(stale_renewal_json));
+    PC_CHECK(
+        stale_compilation.nodes > 4 ||
+        stale_compilation.edges > 4);
+    PC_CHECK(stale_renewal_json.find(
+                 "fixed destructive-renewal policy") ==
+             std::string::npos);
+
+    SolveResult conflicting_renewal = early_renewal;
+    std::uint32_t conflicting_carrier = kNoId;
+    for (std::uint32_t state = 0;
+         state < conflicting_renewal.policy_reachable.size(); ++state) {
+        if (state != conflicting_renewal.start_state &&
+            conflicting_renewal.policy_reachable[state] &&
+            !conflicting_renewal.goal_states[state]) {
+            conflicting_carrier = state;
+            break;
+        }
     }
-    PC_CHECK(stale_renewal_refused);
+    PC_CHECK(conflicting_carrier != kNoId);
+    if (conflicting_carrier != kNoId) {
+        conflicting_renewal.policy[conflicting_carrier] =
+            PolicyOperatorRef{
+                PlannerOperatorKind::Primitive, bench_index};
+        PolicyCompilationTelemetry conflicting_compilation;
+        const std::string conflicting_json =
+            compile_policy_strategy_json(
+                early_renewal_calc, conflicting_renewal,
+                "conflicting gated destructive renewal",
+                &conflicting_compilation);
+        PC_CHECK(valid_json_object(conflicting_json));
+        PC_CHECK(
+            conflicting_compilation.nodes > 4 ||
+            conflicting_compilation.edges > 4);
+        PC_CHECK(conflicting_json.find(
+                     "fixed destructive-renewal policy") ==
+                 std::string::npos);
+        PC_CHECK(conflicting_json.find(
+                     "\"type\":\"bench\"") !=
+                 std::string::npos);
+    }
 
     /* Retained progress remains an ordinary exact state. A cheap Bench that
      * finishes a second goal is discoverable there even though it is

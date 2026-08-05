@@ -1,6 +1,6 @@
 # Goal-Gated Semantic Policy Routing
 
-**Status: Gates 0-1 are complete; Gate 2 is active.**
+**Status: Gates 0-2 are complete; Gate 3 is active.**
 
 Owner: Oliver
 
@@ -135,7 +135,15 @@ Commit Gate 1 separately.
 
 ## Gate 2 — compact certified uniform-region compilation
 
-**Active.**
+**Completed.** The existing primitive-renewal compiler now certifies both
+exact and bounded executable policies directly from their complete reachable
+closure. U compiles to the preferred 4-node/4-edge graph, 1,205-byte JSON,
+154 condition bytes, and zero junk predicates with identical policy value and
+hashes. Exact evaluation reconciles and 10,000 simulations have zero failures
+and zero off-policy. Stale witness data, conflicting reachable operations,
+and observation-owned policies remain on the general compiler. The complete
+measurement is retained in
+[`goal-gated-semantic-policy-routing-gate2.json`](../../fixtures/solver-reliability/v1/evidence/goal-gated-semantic-policy-routing-gate2.json).
 
 Extend the existing primitive-renewal compiler and proof machinery. When all
 policy-reachable non-goal carriers select one identical state-independent
@@ -155,6 +163,8 @@ observation, or unproved closure uses the general compiler. Commit Gate 2
 separately.
 
 ## Gate 3 — route by final executable policy region
+
+**Active.**
 
 Generalize the existing quotient-feature and policy-route DAG path so its
 classification target is the final `policy_region_by_state`:

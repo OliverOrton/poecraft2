@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Status: Goal-Gated Semantic Policy Routing is active at Gate 2.**
+**Status: Goal-Gated Semantic Policy Routing is active at Gate 3.**
 
 Active plan:
 [Goal-Gated Semantic Policy Routing](docs/active/goal-gated-semantic-policy-routing.md).
@@ -32,15 +32,25 @@ Compiled strategies carry optional non-executable `solver_policy_scope`
 metadata, preserved by the TypeScript model, cloning, persistence, and
 comparison path. Focused web tests and native compile/solve suites pass.
 
-Gate 2 is in progress:
+Gate 2 is complete in its separate local commit. U now proves a complete
+fixed-policy closure directly from the exact solved policy and compiles to the
+existing 4-node/4-edge loop at 1,205 JSON bytes and zero junk predicates. Its
+policy value and hashes are unchanged; exact evaluation reconciles and 10,000
+simulations have zero failures/off-policy. Bounded witnessed renewal remains
+4/4. Stale signatures, conflicting carriers, and observation-owned behavior
+fall through to the general compiler.
 
-- extend the existing primitive-renewal proof path to exact as well as bounded
-  executable uniform policies;
-- prove identical operation, legality, engine kernel signature, closure,
-  properness, and goal-owned terminal exits over every reachable carrier;
-- emit the existing compact 4-node/4-edge loop when certified; and
-- refuse compaction for conflicting, incompatible, state-local, or unproved
-  cases and retain the general compiler.
+Gate 3 is in progress:
+
+- form final executable operation/continuation regions before generic route
+  condition minimization;
+- classify represented strict members by final region rather than behavioral
+  representative;
+- stop splitting when a partition has one executable region and consider only
+  features that distinguish different regions;
+- preserve off-policy/bounded defaults and exact-state fallback; and
+- keep complete recipe/continuation identity for gated retry, Unveil,
+  Fracture, Imprint, protected repeat, and other state-local options.
 
 ## Preserved boundaries
 

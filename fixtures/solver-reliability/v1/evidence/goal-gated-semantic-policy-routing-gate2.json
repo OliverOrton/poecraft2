@@ -1,0 +1,94 @@
+{
+  "schema_version": "goal_gated_semantic_policy_routing_gate2_v1",
+  "source_commit": "b0017e1",
+  "case": "goal-gated-semantic-policy-routing-uniform-case.json",
+  "certification": {
+    "source": "complete solved executable policy",
+    "requires_goal_progress_gated_reforges": true,
+    "accepted_policy_statuses": [
+      "exact",
+      "bounded_feasible",
+      "bounded_near_optimal"
+    ],
+    "proof_obligations": [
+      "one identical primitive destructive-renewal operation on every policy-reachable non-goal carrier",
+      "operation legality on every carrier",
+      "one identical non-empty engine-owned exact reforge kernel signature",
+      "one identical gated kernel hash and positive goal-terminal probability",
+      "unit probability and closed non-goal successors within the executable policy",
+      "goal predicate agreement for every terminal successor",
+      "finite evaluated policy cost reconciled with the published upper bound",
+      "retained bounded renewal witness agreement when such a witness exists"
+    ],
+    "properness_argument": "The certified state-independent gated kernel has identical positive goal-terminal probability on every closed non-goal carrier, so repeated application reaches the goal almost surely.",
+    "fallback": "Any failed obligation skips compact emission and uses the existing general compiler."
+  },
+  "before": {
+    "policy_status": "exact",
+    "policy_value": 8.070144284128844,
+    "policy_hash": "d55715dd93adc9b9",
+    "transition_hash": "d4a614f015dc678b",
+    "nodes": 8,
+    "edges": 10,
+    "behavioral_classes": 3,
+    "final_operation_regions": 2,
+    "strategy_json_bytes": 2232,
+    "total_condition_bytes": 431,
+    "maximum_condition_bytes": 154,
+    "junk_predicates": 0,
+    "compile_ms": 0.5931,
+    "previously_accounted_peak_owned_bytes": 2817,
+    "audited_complete_peak_owned_bytes": 13952,
+    "strategy_sha256": "8F88B1CC3EB81384857F417AEBAFDDA7A04D5E7C785ACB639679B5C4BD81ABC5"
+  },
+  "after": {
+    "policy_status": "exact",
+    "policy_value": 8.070144284128844,
+    "policy_hash": "d55715dd93adc9b9",
+    "transition_hash": "d4a614f015dc678b",
+    "solver_policy_scope": "zero_progress_reroll_policy_restriction",
+    "nodes": 4,
+    "edges": 4,
+    "node_ids": [
+      "start",
+      "router",
+      "goal",
+      "renewal"
+    ],
+    "behavioral_classes": 1,
+    "final_operation_regions": 1,
+    "strategy_json_bytes": 1205,
+    "total_condition_bytes": 154,
+    "maximum_condition_bytes": 154,
+    "exact_state_fallbacks": 0,
+    "junk_predicates": 0,
+    "compile_ms": 0.547,
+    "previously_accounted_peak_owned_bytes": 1206,
+    "audited_complete_peak_owned_bytes": 1817,
+    "strategy_sha256": "ADC73CEEF2F29F3CFE4FE71BB81B153A224C704E1A2C2F74A675306EB3D6E7C5",
+    "exact_evaluation": {
+      "cost_reconciled": true,
+      "off_policy_mass": 0.0
+    },
+    "simulation": {
+      "runs": 10000,
+      "successes": 10000,
+      "off_policy_failures": 0
+    }
+  },
+  "reductions_percent": {
+    "nodes": 50.0,
+    "edges": 60.0,
+    "strategy_json_bytes": 46.01254480286738,
+    "total_condition_bytes": 64.2691415313225,
+    "compile_ms": 7.772719608834922,
+    "previously_accounted_peak_owned_bytes": 57.18849840255591,
+    "audited_complete_peak_owned_bytes": 86.97677752293578
+  },
+  "refusal_regressions": {
+    "stale_kernel_signature": "general compiler",
+    "conflicting_reachable_operation": "general compiler",
+    "structured_observation_owned_policy": "general compiler",
+    "bounded_witness_shape": "retains the same 4-node/4-edge compact form when all obligations pass"
+  }
+}

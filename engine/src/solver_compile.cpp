@@ -138,51 +138,55 @@ std::string compile_policy_strategy_json(
     }
 
     /*
-     * A witnessed fixed destructive renewal has one action-local behavior:
-     * apply the selected reforge, succeed on the goal, otherwise repeat.
-     * The native incumbent already proved the complete gated row. Recheck
-     * action legality and the engine-owned preserved-boundary signature for
-     * every policy-reachable non-goal carrier before emitting the compact
-     * loop. This is a fixed-policy proof, not Bellman state equivalence.
+     * A uniform fixed destructive-renewal policy has one action-local
+     * behavior: apply the selected reforge, succeed on the goal, otherwise
+     * repeat. Prove this directly over the complete executable policy. A
+     * bounded incumbent witness, when present, must agree with that proof;
+     * exact policies need no retained upper-bound witness. This is a
+     * fixed-policy closure proof, not Bellman state equivalence.
      */
-    if (result.primitive_renewal_witness.valid) {
-        const PrimitiveRenewalWitness& witness =
-            result.primitive_renewal_witness;
+    const auto try_compile_primitive_renewal = [&]()
+        -> std::optional<std::string> {
         const bool bounded =
             result.policy_status == SolvePolicyStatus::BoundedFeasible ||
             result.policy_status ==
                 SolvePolicyStatus::BoundedNearOptimal;
-        if (!bounded ||
+        const bool exact =
+            result.policy_status == SolvePolicyStatus::Exact;
+        if ((!bounded && !exact) ||
             !result.options.goal_progress_gated_reforges ||
-            witness.operator_index >= calc.operators().size() ||
-            witness.primitive_action >=
-                calc.registry().actions.size() ||
-            witness.kernel_signature.empty() ||
-            !(witness.success_probability > 0.0) ||
-            !std::isfinite(witness.value) ||
-            witness.value < 0.0 ||
             result.start_state >= result.policy_reachable.size() ||
             !result.policy_reachable[result.start_state] ||
             result.policy_reachable.size() != result.values.size() ||
             result.goal_states.size() != result.values.size() ||
             result.policy.size() != result.values.size()) {
-            gap("gated primitive renewal witness is incomplete");
+            return std::nullopt;
+        }
+        const PolicyOperatorRef selected =
+            result.policy[result.start_state];
+        if (selected == kNoId ||
+            selected.index >= calc.operators().size()) {
+            return std::nullopt;
         }
         const PlannerOperator& planner =
-            calc.operators().at(witness.operator_index);
+            calc.operators().at(selected.index);
         if (planner.kind != PlannerOperatorKind::Primitive ||
-            planner.primitive_action != witness.primitive_action ||
-            result.policy[result.start_state].index !=
-                witness.operator_index ||
-            result.policy[result.start_state].kind != planner.kind) {
-            gap("gated primitive renewal witness action changed");
+            selected.kind != planner.kind ||
+            planner.primitive_action >=
+                calc.registry().actions.size()) {
+            return std::nullopt;
         }
+        const std::uint32_t primitive_action =
+            planner.primitive_action;
         const ActionDescriptor& descriptor =
-            calc.registry().actions.at(witness.primitive_action);
+            calc.registry().actions.at(primitive_action);
         if (!action_transition_facts(descriptor.params.type).renewal) {
-            gap("gated primitive renewal witness is not destructive");
+            return std::nullopt;
         }
         std::uint64_t working_states = 0;
+        double certified_success_probability = -1.0;
+        std::uint64_t certified_kernel_bits_hash = 0;
+        std::vector<std::uint64_t> certified_kernel_signature;
         for (std::uint32_t state = 0;
              state < result.values.size(); ++state) {
             if (!result.policy_reachable[state] ||
@@ -190,42 +194,120 @@ std::string compile_policy_strategy_json(
                 continue;
             }
             ++working_states;
-            if (result.policy[state].index != witness.operator_index ||
+            if (result.policy[state].index != selected.index ||
                 result.policy[state].kind != planner.kind ||
                 !action_legal(session, descriptor, calc.state(state))) {
-                gap("gated primitive renewal policy changed on a "
-                    "reachable carrier");
+                return std::nullopt;
             }
             std::vector<std::uint64_t> signature;
             if (!calc.exact_reforge_kernel_signature(
-                    state, witness.primitive_action, signature) ||
-                signature != witness.kernel_signature) {
-                gap("gated primitive renewal kernel signature changed");
+                    state, primitive_action, signature) ||
+                signature.empty()) {
+                return std::nullopt;
+            }
+            if (certified_kernel_signature.empty()) {
+                certified_kernel_signature = signature;
+            } else if (signature != certified_kernel_signature) {
+                return std::nullopt;
+            }
+            const OutcomeDistribution& kernel = calc.outcomes(
+                state, primitive_action, true);
+            if (!kernel.supported || !kernel.goal_progress_gated ||
+                !kernel.stable_shared_kernel ||
+                !kernel.choice_groups.empty() ||
+                !kernel.choice_options.empty()) {
+                return std::nullopt;
+            }
+            if (certified_kernel_bits_hash == 0) {
+                certified_kernel_bits_hash =
+                    kernel.gated_kernel_bits_hash;
+            } else if (kernel.gated_kernel_bits_hash !=
+                       certified_kernel_bits_hash) {
+                return std::nullopt;
+            }
+            double probability = 0.0;
+            double success_probability = 0.0;
+            for (const OutcomeEntry& outcome : kernel.entries) {
+                if (!(outcome.probability > 0.0) ||
+                    !std::isfinite(outcome.probability) ||
+                    outcome.state >= result.policy_reachable.size()) {
+                    return std::nullopt;
+                }
+                probability += outcome.probability;
+                const bool goal_successor =
+                    calc.is_goal_state(calc.state(outcome.state));
+                if (goal_successor) {
+                    if (!result.goal_states[outcome.state]) {
+                        return std::nullopt;
+                    }
+                    success_probability += outcome.probability;
+                } else if (result.goal_states[outcome.state] ||
+                           !result.policy_reachable[outcome.state]) {
+                    return std::nullopt;
+                }
+            }
+            const double probability_tolerance =
+                1e-12 * std::max(1.0, std::abs(probability));
+            if (std::abs(probability - 1.0) > probability_tolerance ||
+                !(success_probability > 0.0)) {
+                return std::nullopt;
+            }
+            if (certified_success_probability < 0.0) {
+                certified_success_probability = success_probability;
+            } else if (std::abs(
+                           success_probability -
+                           certified_success_probability) >
+                       1e-12 * std::max(
+                                   1.0,
+                                   std::abs(
+                                       certified_success_probability))) {
+                return std::nullopt;
             }
         }
-        if (working_states == 0 ||
-            working_states !=
-                witness.validated_non_goal_states) {
-            gap("gated primitive renewal reachable domain changed");
+        if (working_states == 0) {
+            return std::nullopt;
         }
+        const double certified_value =
+            result.evaluated_policy_cost;
         const double value_tolerance =
-            1e-9 * std::max(1.0, std::abs(witness.value));
-        if (!std::isfinite(result.evaluated_policy_cost) ||
-            std::abs(
-                result.evaluated_policy_cost -
-                witness.value) > value_tolerance ||
+            1e-9 * std::max(1.0, std::abs(certified_value));
+        if (!std::isfinite(certified_value) || certified_value < 0.0 ||
             !std::isfinite(result.upper_bound) ||
             std::abs(
-                result.upper_bound - witness.value) >
+                result.upper_bound - certified_value) >
                 value_tolerance) {
-            gap("gated primitive renewal value changed");
+            return std::nullopt;
+        }
+        if (result.primitive_renewal_witness.valid) {
+            const PrimitiveRenewalWitness& witness =
+                result.primitive_renewal_witness;
+            if (witness.operator_index != selected.index ||
+                witness.primitive_action != primitive_action ||
+                witness.kernel_signature !=
+                    certified_kernel_signature ||
+                witness.gated_kernel_bits_hash !=
+                    certified_kernel_bits_hash ||
+                witness.validated_non_goal_states != working_states ||
+                !(witness.success_probability > 0.0) ||
+                std::abs(
+                    witness.success_probability -
+                    certified_success_probability) >
+                    1e-12 * std::max(
+                                1.0,
+                                std::abs(
+                                    certified_success_probability)) ||
+                !std::isfinite(witness.value) ||
+                std::abs(witness.value - certified_value) >
+                    value_tolerance) {
+                return std::nullopt;
+            }
         }
 
         pc_item_state start_item;
         if (result.has_exact_start_item) {
             start_item = result.exact_start_item;
         } else if (!calc.materialize(result.start_state, start_item)) {
-            gap("gated primitive renewal start cannot be materialized");
+            return std::nullopt;
         }
         std::vector<std::string> goal_parts{
             rarity_condition(calc.goal().rarity)};
@@ -246,9 +328,14 @@ std::string compile_policy_strategy_json(
         std::string json =
             "{\"version\":\"v1\",\"name\":\"" +
             json_escape(name) +
-            "\",\"description\":\"Bounded executable fixed "
-            "destructive-renewal policy exact within the "
-            "zero-progress-reroll restriction; not a global optimum\","
+            "\",\"description\":\"" +
+            (exact
+                 ? "Exact executable fixed destructive-renewal policy "
+                   "within the zero-progress-reroll restriction"
+                 : "Bounded executable fixed destructive-renewal policy "
+                   "exact within the zero-progress-reroll restriction; "
+                   "not a global optimum") +
+            "\","
             "\"solver_policy_scope\":\""
             "zero_progress_reroll_policy_restriction\","
             "\"base_state\":{\"base_key\":\"" +
@@ -319,7 +406,7 @@ std::string compile_policy_strategy_json(
             "\"terminal\":\"success\"},"
             "{\"id\":\"renewal\",\"kind\":\"operation\","
             "\"expected_cost\":" +
-            number(witness.value) +
+            number(certified_value) +
             ",\"operation\":" +
             operation_json(session, descriptor) +
             "}],\"edges\":["
@@ -381,6 +468,11 @@ std::string compile_policy_strategy_json(
             telemetry->max_condition_bytes = goal_condition.size();
         }
         return json;
+    };
+    if (std::optional<std::string> compact =
+            try_compile_primitive_renewal();
+        compact.has_value()) {
+        return std::move(*compact);
     }
 
     /* Collect and validate the policy-reachable working states. */
