@@ -1,0 +1,215 @@
+{
+  "schema_version": "goal_gated_semantic_policy_routing_gate5_v1",
+  "source_gate4_commit": "ec3f99a",
+  "acceptance_cases": {
+    "U": {
+      "id": "goal-gated-uniform-alteration",
+      "policy_value": 8.070144284128844,
+      "nodes": 4,
+      "edges": 4,
+      "strategy_json_bytes": 1205,
+      "total_condition_bytes": 154,
+      "junk_predicates": 0,
+      "exact_cost_reconciled": true,
+      "simulations": 10000,
+      "successes": 10000,
+      "off_policy_failures": 0
+    },
+    "J": {
+      "id": "reliability-selected-gloves-10k",
+      "policy_value": 0.3684,
+      "before": {
+        "nodes": 5,
+        "edges": 5,
+        "strategy_json_bytes": 38457,
+        "total_condition_bytes": 37286,
+        "compile_ms": 1.8628,
+        "exact_evaluation_ms": 159.8041
+      },
+      "after": {
+        "nodes": 4,
+        "edges": 4,
+        "strategy_json_bytes": 1181,
+        "total_condition_bytes": 141,
+        "compile_ms": 0.6026,
+        "exact_evaluation_ms": 143.3282,
+        "previously_accounted_peak_owned_bytes": 1185,
+        "complete_peak_owned_bytes": 1748
+      },
+      "strategy_json_reduction_percent": 96.92903762643992,
+      "condition_reduction_percent": 99.6218419782224,
+      "exact_cost_reconciled": true,
+      "simulations": 10000,
+      "successes": 10000,
+      "failures": 0,
+      "off_policy_failures": 0
+    },
+    "M": {
+      "fixture": "engine/tests/test_solver_compile.cpp::run_synthetic_gate::alt-spam-strict",
+      "operations_preserved": [
+        "transmute",
+        "alteration"
+      ],
+      "final_regions": 2,
+      "explicit_off_policy_default": true,
+      "exact_cost_reconciled": true,
+      "simulations": 10000,
+      "successes": 10000,
+      "failures": 0,
+      "off_policy_failures": 0
+    },
+    "S": {
+      "fixture": "engine/tests/test_solver_compile.cpp::run_structured_observation_route_tests",
+      "case": "reliability-class-body-armour",
+      "route_kind": "structured observation-owned/state-local",
+      "policy_value": 8.341181986595203,
+      "nodes": 14,
+      "edges": 31,
+      "strategy_json_bytes": 723701,
+      "total_condition_bytes": 719918,
+      "exact_cost_reconciled": true,
+      "simulations": 10000,
+      "successes": 10000,
+      "failures": 0,
+      "off_policy_failures": 0,
+      "protection": "complete semantic operation recipe, observation ownership, and continuation remain separate"
+    }
+  },
+  "primary_attribution": {
+    "A_to_B_gating_reductions_percent": {
+      "nodes": 22.22222222222222,
+      "edges": 39.21568627450981,
+      "strategy_json_bytes": 84.8177828466502,
+      "total_condition_bytes": 84.8790141338511,
+      "junk_predicates": 85.1628084456881,
+      "compile_ms": 83.6200544788783,
+      "previously_accounted_peak_owned_bytes": 82.5290628551554,
+      "complete_peak_owned_bytes": 82.5180757304907
+    },
+    "B_to_C_structured_route": {
+      "nodes_before": 14,
+      "nodes_after": 14,
+      "edges_before": 31,
+      "edges_after": 31,
+      "condition_bytes_before": 719918,
+      "condition_bytes_after": 719918,
+      "json_metadata_delta_bytes": 64,
+      "reason": "structured observation-owned routes are deliberately outside generic region minimization"
+    },
+    "generic_strict_region_reduction_percent": {
+      "total_condition_bytes": 36.02329450915141,
+      "strategy_json_bytes": 35.19272529858849
+    }
+  },
+  "targeted_v1_v3_equivalence": {
+    "command": "powershell -File scripts/dev-engine.ps1 -Task Test -Suite calc-gated",
+    "checks": 5355,
+    "failures": 0,
+    "covered": [
+      "absent zero progress",
+      "present-below-tier zero progress",
+      "genuine partial progress",
+      "ordinary reforge",
+      "forced Essence",
+      "targeted and exceptional Harvest",
+      "positive-weight Fossil",
+      "zero-weight Fossil",
+      "additive Fossil",
+      "forced Fossil"
+    ],
+    "agreement": "exact target map, probability, and selected semantic action within existing family tolerances",
+    "standalone_full_252997_matrix_rerun": false
+  },
+  "representative_portfolio": {
+    "manifest": "build/acceptance/certified-fallback-and-terminal-reforge-factorization/gate8/reliability-48-manifest.json",
+    "report": "build/acceptance/goal-gated-semantic-policy-routing/gate5-native-reliability/report.json",
+    "cases": 48,
+    "compiled_and_verified": 38,
+    "requested_simulations": 380000,
+    "completed_simulations": 380000,
+    "successes": 348278,
+    "existing_action_limit_failures": 31722,
+    "off_policy_failures": 0,
+    "compiler_cap_hits": 0,
+    "expectation_failures": [
+      "natural-t1-deep-four-dense-a64d3d932590",
+      "natural-t1-representative-three-bd85c8c40df7"
+    ],
+    "expectation_failure_scope": "pre-existing rare-renewal exact-cost reconciliation excluded from this milestone",
+    "influenced_start_regression": {
+      "id": "reliability-start-influenced",
+      "status": "converged",
+      "policy_value": 24.14,
+      "nodes": 5,
+      "edges": 5,
+      "exact_status": "matched",
+      "simulations": 10000,
+      "successes": 10000,
+      "failures": 0,
+      "off_policy_failures": 0,
+      "resolution": "compact proof refuses a strict non-affix carrier whose reduced observation domain is insufficient; general exact Essence routing is retained"
+    },
+    "matched_compiled_ids": {
+      "count": 38,
+      "before": {
+        "nodes": 405,
+        "edges": 924,
+        "strategy_json_bytes": 25151385,
+        "total_condition_bytes": 25037770,
+        "compile_ms": 391.5099,
+        "exact_evaluation_ms": 27967.5464
+      },
+      "after": {
+        "nodes": 403,
+        "edges": 922,
+        "strategy_json_bytes": 25078873,
+        "total_condition_bytes": 24963216,
+        "compile_ms": 394.9302,
+        "exact_evaluation_ms": 28020.0654,
+        "previously_accounted_peak_owned_bytes_sum": 81709784,
+        "complete_peak_owned_bytes_sum": 81913708,
+        "previously_accounted_peak_owned_bytes_max": 4944070,
+        "complete_peak_owned_bytes_max": 4949512
+      },
+      "change_percent": {
+        "nodes": -0.49382716049382713,
+        "edges": -0.21645021645021645,
+        "strategy_json_bytes": -0.28830221476869,
+        "total_condition_bytes": -0.297766134923358,
+        "compile_ms": 0.873617755259828,
+        "exact_evaluation_ms": 0.187785511281033
+      }
+    },
+    "historical_only_compiled_id": {
+      "id": "natural-t1-representative-three-d0a2115efe54",
+      "current_status": "refused_resource_cap",
+      "cap": "max_reforge_work",
+      "attribution": "pre-existing versioned logical-work accounting at the starting boundary; not a routing or compiler-memory cap hit"
+    }
+  },
+  "focused_acceptance": {
+    "native_compile": {
+      "checks": 791,
+      "failures": 0
+    },
+    "native_solve": {
+      "checks": 98308,
+      "failures": 0
+    },
+    "release_wasm": "passed",
+    "focused_worker_calculator_model_tests": "passed",
+    "npm_test": "passed",
+    "typescript_no_emit": "passed",
+    "full_test_pipeline_once": "passed"
+  },
+  "unchanged_contracts": {
+    "policy_values_for_identical_options": true,
+    "crafting_mechanics": true,
+    "action_filtering": true,
+    "prices": true,
+    "bellman_comparisons": true,
+    "v3_evaluator_semantics": true,
+    "caps": true,
+    "engine_unrestricted_default": true
+  }
+}

@@ -94,7 +94,8 @@ std::string compile_policy_strategy_json(
         const std::uint64_t previously_accounted = std::max(
             result.refined_policy_artifact
                 .previously_accounted_peak_owned_bytes,
-            result.refined_policy_artifact.strategy_json.size() + 1);
+            static_cast<std::uint64_t>(
+                result.refined_policy_artifact.strategy_json.size()) + 1);
         observe_complete_compiler_owned(
             previously_accounted,
             std::max(
@@ -182,6 +183,56 @@ std::string compile_policy_strategy_json(
             calc.registry().actions.at(primitive_action);
         if (!action_transition_facts(descriptor.params.type).renewal) {
             return std::nullopt;
+        }
+        pc_item_state start_item;
+        if (result.has_exact_start_item) {
+            start_item = result.exact_start_item;
+        } else if (!calc.materialize(result.start_state, start_item)) {
+            return std::nullopt;
+        }
+        const bool exact_affix_seed_empty =
+            start_item.prefix_count == 0 &&
+            start_item.suffix_count == 0;
+        const bool strict_non_affix_carrier =
+            start_item.item_flags != 0 ||
+            start_item.generic_influence_bits != 0 ||
+            start_item.searing_exarch_tier != 0 ||
+            start_item.eater_of_worlds_tier != 0;
+        if (exact_affix_seed_empty && strict_non_affix_carrier) {
+            /* The exact evaluator must use its strict carrier for this base
+             * state, but the reduced graph supplies neither an exact affix
+             * seed nor the general router's count-observation domain.  Keep
+             * the general policy route so its executable observations remain
+             * explicit. */
+            return std::nullopt;
+        }
+        /* The four-edge graph deliberately omits the general router's exact
+         * carrier predicates.  Refuse that reduction when the existing
+         * abstract carrier cannot supply every observation needed by the
+         * selected action plus the goal predicate.  The general compiler can
+         * then retain the count-observation vocabulary that makes those
+         * distinctions executable. */
+        refinement::ObservationRequirement compact_observations =
+            refinement::observation_requirement_from_contract(
+                descriptor.refinement);
+        compact_observations.item_features |=
+            refinement_feature(RefinementFeature::Rarity);
+        compact_observations.affix_observations.push_back({
+            refinement_feature(
+                RefinementFeature::GoalStatusTierClass),
+            {}});
+        compact_observations =
+            refinement::canonical_observation_requirement(
+                std::move(compact_observations));
+        for (std::uint32_t state = 0;
+             state < result.values.size(); ++state) {
+            if (!result.policy_reachable[state]) continue;
+            if (!refinement::extract_strict_abstract_features(
+                     session, layout, calc.state(state),
+                     compact_observations)
+                     .complete()) {
+                return std::nullopt;
+            }
         }
         std::uint64_t working_states = 0;
         double certified_success_probability = -1.0;
@@ -303,12 +354,6 @@ std::string compile_policy_strategy_json(
             }
         }
 
-        pc_item_state start_item;
-        if (result.has_exact_start_item) {
-            start_item = result.exact_start_item;
-        } else if (!calc.materialize(result.start_state, start_item)) {
-            return std::nullopt;
-        }
         std::vector<std::string> goal_parts{
             rarity_condition(calc.goal().rarity)};
         std::vector<std::string> satisfied;

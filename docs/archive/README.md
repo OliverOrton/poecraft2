@@ -11,6 +11,13 @@ selected active work.
 
 ## 2026-08-04
 
+- [Goal-Gated Semantic Policy Routing](2026-08-04-goal-gated-semantic-policy-routing/README.md) —
+  makes Calculator solves explicitly opt into the existing zero-progress
+  reforge restriction, records non-executable scope provenance, compiles
+  generic routes by final executable region, certifies compact 4/4 renewal
+  loops, and enforces audited compiler-owned memory without changing
+  mechanics, caps, V3 semantics, or the unrestricted engine default.
+
 - [Versioned Reforge Resource Accounting And V3 Production Qualification](2026-08-04-versioned-reforge-resource-accounting/README.md) —
   separates the stable V1-equivalent logical cap from V1/V2/V3 implementation
   effort, makes nested cap propagation honest, qualifies exact V3 for generic

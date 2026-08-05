@@ -1127,6 +1127,168 @@ void run_projected_reforge_frontier_equivalence_tests() {
             PC_CHECK(near(probability, reversed->second, 1e-12));
         }
     }
+
+    /* Focused Gate 5 V1/V3 contract: compare the exact gated target map for
+     * every destructive reforge family with two goal slots. Zero-progress
+     * outcomes (including present-below-tier carriers) must aggregate into
+     * retry, while genuine one-slot progress remains an exact successor. */
+    GoalSpec progress_goal;
+    GoalSlot life;
+    life.family_id = 100;
+    life.min_tier = 1;
+    GoalSlot fire_resistance;
+    fire_resistance.family_id = 104;
+    fire_resistance.min_tier = 1;
+    progress_goal.slots = {life, fire_resistance};
+    CalcContext gated_raw(
+        session, progress_goal, registry, actions,
+        false, false, true, std::nullopt, {}, false, {}, false,
+        true, false);
+    CalcContext gated_v3(
+        session, progress_goal, registry, actions,
+        false, false, true, std::nullopt, {}, false, {}, false,
+        true, true, false, true);
+    const std::uint32_t gated_raw_start = gated_raw.intern_item(rare);
+    const std::uint32_t gated_v3_start = gated_v3.intern_item(rare);
+    bool saw_zero_progress = false;
+    bool saw_present_below_tier = false;
+    bool saw_partial_progress = false;
+    double raw_best_goal_probability = -1.0;
+    double v3_best_goal_probability = -1.0;
+    std::uint32_t raw_selected_action = kNoId;
+    std::uint32_t v3_selected_action = kNoId;
+    for (const std::uint32_t action : actions) {
+        const OutcomeDistribution& raw_ungated =
+            gated_raw.outcomes(gated_raw_start, action, false);
+        const OutcomeDistribution& v3_ungated =
+            gated_v3.outcomes(gated_v3_start, action, false);
+        const OutcomeDistribution& raw_gated =
+            gated_raw.outcomes(gated_raw_start, action, true);
+        const OutcomeDistribution& v3_gated =
+            gated_v3.outcomes(gated_v3_start, action, true);
+        PC_CHECK(raw_ungated.supported);
+        PC_CHECK(v3_ungated.supported);
+        PC_CHECK(raw_gated.supported);
+        PC_CHECK(v3_gated.supported);
+        PC_CHECK(sums_to_one(raw_ungated));
+        PC_CHECK(sums_to_one(v3_ungated));
+        PC_CHECK(sums_to_one(raw_gated));
+        PC_CHECK(sums_to_one(v3_gated));
+
+        const AbstractMassMap raw_ungated_mass =
+            abstract_distribution(gated_raw, raw_ungated);
+        const AbstractMassMap v3_ungated_mass =
+            abstract_distribution(gated_v3, v3_ungated);
+        const AbstractMassMap raw_gated_mass =
+            abstract_distribution(gated_raw, raw_gated);
+        const AbstractMassMap v3_gated_mass =
+            abstract_distribution(gated_v3, v3_gated);
+        const auto compare_mass = [](const AbstractMassMap& expected,
+                                     const AbstractMassMap& actual) {
+            PC_CHECK(expected.size() == actual.size());
+            for (const auto& [state, probability] : expected) {
+                const auto found = actual.find(state);
+                PC_CHECK(found != actual.end());
+                if (found != actual.end()) {
+                    PC_CHECK(near(probability, found->second, 1e-12));
+                }
+            }
+        };
+        compare_mass(raw_ungated_mass, v3_ungated_mass);
+        compare_mass(raw_gated_mass, v3_gated_mass);
+        PC_CHECK(near(
+            raw_gated.gated_retry_probability,
+            v3_gated.gated_retry_probability, 1e-12));
+        for (std::size_t slot = 0; slot < progress_goal.slots.size(); ++slot) {
+            PC_CHECK(near(
+                raw_ungated.slot_satisfied_probability[slot],
+                v3_ungated.slot_satisfied_probability[slot], 1e-12));
+            PC_CHECK(near(
+                raw_gated.slot_satisfied_probability[slot],
+                v3_gated.slot_satisfied_probability[slot], 1e-12));
+        }
+
+        double zero_progress_mass = 0.0;
+        double below_tier_mass = 0.0;
+        double partial_progress_mass = 0.0;
+        for (const OutcomeEntry& entry : raw_ungated.entries) {
+            const AbstractState& state = gated_raw.state(entry.state);
+            std::size_t satisfied = 0;
+            for (std::size_t slot = 0;
+                 slot < progress_goal.slots.size(); ++slot) {
+                satisfied +=
+                    state.slot_status[slot] ==
+                    static_cast<std::uint8_t>(
+                        GoalSlotStatus::Satisfied);
+                if (state.slot_status[slot] ==
+                    static_cast<std::uint8_t>(
+                        GoalSlotStatus::PresentBelowTier)) {
+                    below_tier_mass += entry.probability;
+                }
+            }
+            if (satisfied == 0) zero_progress_mass += entry.probability;
+            if (satisfied == 1) partial_progress_mass += entry.probability;
+        }
+        PC_CHECK(near(
+            zero_progress_mass,
+            raw_gated.gated_retry_probability, 1e-12));
+        double raw_goal_probability = 0.0;
+        double v3_goal_probability = 0.0;
+        for (const OutcomeEntry& entry : raw_gated.entries) {
+            if (gated_raw.is_goal_state(gated_raw.state(entry.state))) {
+                raw_goal_probability += entry.probability;
+            }
+        }
+        for (const OutcomeEntry& entry : v3_gated.entries) {
+            if (gated_v3.is_goal_state(gated_v3.state(entry.state))) {
+                v3_goal_probability += entry.probability;
+            }
+        }
+        PC_CHECK(near(
+            raw_goal_probability, v3_goal_probability, 1e-12));
+        if (raw_goal_probability > raw_best_goal_probability) {
+            raw_best_goal_probability = raw_goal_probability;
+            raw_selected_action = action;
+        }
+        if (v3_goal_probability > v3_best_goal_probability) {
+            v3_best_goal_probability = v3_goal_probability;
+            v3_selected_action = action;
+        }
+        saw_zero_progress =
+            saw_zero_progress || zero_progress_mass > 0.0;
+        saw_present_below_tier =
+            saw_present_below_tier || below_tier_mass > 0.0;
+        saw_partial_progress =
+            saw_partial_progress || partial_progress_mass > 0.0;
+        if (partial_progress_mass > 0.0) {
+            double gated_partial_mass = 0.0;
+            for (const OutcomeEntry& entry : raw_gated.entries) {
+                const AbstractState& state = gated_raw.state(entry.state);
+                std::size_t satisfied = 0;
+                for (std::size_t slot = 0;
+                     slot < progress_goal.slots.size(); ++slot) {
+                    satisfied +=
+                        state.slot_status[slot] ==
+                        static_cast<std::uint8_t>(
+                            GoalSlotStatus::Satisfied);
+                }
+                if (satisfied == 1) {
+                    PC_CHECK(state.goal_progress_retry_basin == 0);
+                    gated_partial_mass += entry.probability;
+                }
+            }
+            PC_CHECK(near(
+                gated_partial_mass, partial_progress_mass, 1e-12));
+        }
+    }
+    PC_CHECK(saw_zero_progress);
+    PC_CHECK(saw_present_below_tier);
+    PC_CHECK(saw_partial_progress);
+    PC_CHECK(raw_selected_action != kNoId);
+    PC_CHECK(v3_selected_action != kNoId);
+    PC_CHECK(
+        registry.actions[raw_selected_action].id ==
+        registry.actions[v3_selected_action].id);
     PC_CHECK(
         factored.telemetry().reforge_frontier_work ==
         factored.telemetry().reforge_factored_work);
@@ -3005,4 +3167,9 @@ void run_solver_calc_tests(const char* artifact_dir) {
     run_reforge_tests();
     run_special_evaluator_tests();
     run_artifact_calc_tests(artifact_dir);
+}
+
+void run_solver_calc_gated_equivalence_tests() {
+    run_projected_reforge_frontier_equivalence_tests();
+    run_harvest_targeted_natural_regression();
 }

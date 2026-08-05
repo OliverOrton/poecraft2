@@ -5,7 +5,8 @@ param(
         "Full", "BenchmarkValidate", "RerunFailed", "CleanRebuild")]
     [string]$Task = "Engine",
     [ValidateSet(
-        "abstract", "automatic-eldritch", "calc", "compile", "eval", "api",
+        "abstract", "automatic-eldritch", "calc", "calc-gated", "compile",
+        "eval", "api",
         "feasibility", "imprint", "policy-refinement", "quotient-proof",
         "refinement", "s8-3", "solve")]
     [string]$Suite = "refinement",
@@ -88,6 +89,7 @@ function Get-SuiteArguments {
         "abstract" { return @("--solver-abstract-only", $Artifact) }
         "automatic-eldritch" { return @("--solver-automatic-eldritch-only") }
         "calc" { return @("--solver-calc-only", $Artifact) }
+        "calc-gated" { return @("--solver-calc-gated-equivalence-only") }
         "compile" { return @("--solver-compile-only", $Artifact) }
         "eval" { return @("--solver-eval-only", $Artifact) }
         "api" { return @("--solver-api-only", $Artifact) }

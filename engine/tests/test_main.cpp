@@ -82,6 +82,15 @@ int main(int argc, char** argv) {
                     pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 &&
+        std::string(argv[1]) ==
+            "--solver-calc-gated-equivalence-only") {
+        run_solver_calc_gated_equivalence_tests();
+        std::printf(
+            "solver calc gated equivalence tests: %d checks, %d failures\n",
+            pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--solver-abstract-only") {
         run_solver_abstract_tests(argc > 2 ? argv[2] : nullptr);
         std::printf("solver abstract tests: %d checks, %d failures\n",

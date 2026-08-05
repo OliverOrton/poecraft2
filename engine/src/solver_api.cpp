@@ -1767,7 +1767,8 @@ pc_result pc_solver_compile_strategy(
                 telemetry.junk_predicates = refined.junk_predicates;
                 telemetry.previously_accounted_peak_owned_bytes = std::max(
                     refined.previously_accounted_peak_owned_bytes,
-                    refined.strategy_json.capacity() + 1);
+                    static_cast<std::uint64_t>(
+                        refined.strategy_json.capacity()) + 1);
                 telemetry.complete_peak_owned_bytes =
                     std::max(
                         refined.complete_peak_owned_bytes,

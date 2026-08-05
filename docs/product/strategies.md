@@ -4,8 +4,8 @@
 
 Parent: [Product](README.md)
 
-Verified against code: 2026-07-31 through Policy-Guided Exact State
-Refinement. Scope: web strategy document, authoring/validation, native
+Verified against code: 2026-08-04 through Goal-Gated Semantic Policy Routing.
+Scope: web strategy document, authoring/validation, native
 compile/run/evaluate semantics, board degradation, and current runner
 presentation. No rendered or visual review was performed.
 
@@ -17,13 +17,19 @@ A saved v1 `StrategyDocument` contains:
 - `start_node_id`;
 - a stable-key `base_state`;
 - start, operation, router, and terminal nodes;
-- prioritized guarded edges; and
-- optional economy identity and UI viewport metadata.
+- prioritized guarded edges;
+- optional economy identity and UI viewport metadata; and
+- optional non-executable `solver_policy_scope` provenance, either
+  `unrestricted` or `zero_progress_reroll_policy_restriction`.
 
 `base_state` can preserve base key, item level, rarity, quality, item flags,
 generic influence, both Eldritch tiers, and prefix/suffix modifier keys with
 crafted/fractured flags. Runtime integer ids are session-local and are never
 the saved identity.
+
+Authored legacy documents may omit `solver_policy_scope`. The web model,
+clone/persistence path, and comparisons preserve it when present, but native
+graph execution never reads it as a condition or crafting rule.
 
 Terminal kinds are `success`, `failure`, and `stop`. Reaching a success
 terminal defines success. Restart is an operation/control-flow choice and does

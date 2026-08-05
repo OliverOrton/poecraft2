@@ -4417,6 +4417,28 @@ void run_goal_progress_gated_reforge_tests() {
             restricted_session, restricted_compact_json.data(),
             restricted_compact_json.size());
     PC_CHECK(restricted_compact_strategy != nullptr);
+
+    /* A strict carrier established only by non-affix metadata cannot use the
+     * reduced graph's observation domain.  The general route retains the
+     * explicit count observers needed by exact evaluation. */
+    SolveResult strict_metadata_renewal = restricted;
+    pc_item_clear(&strict_metadata_renewal.exact_start_item);
+    strict_metadata_renewal.exact_start_item.rarity = PC_RARITY_RARE;
+    strict_metadata_renewal.exact_start_item.generic_influence_bits = 1;
+    strict_metadata_renewal.has_exact_start_item = true;
+    PolicyCompilationTelemetry strict_metadata_compilation;
+    const std::string strict_metadata_json =
+        compile_policy_strategy_json(
+            restricted_calc, strict_metadata_renewal,
+            "strict metadata renewal", &strict_metadata_compilation);
+    PC_CHECK(valid_json_object(strict_metadata_json));
+    PC_CHECK(
+        strict_metadata_compilation.nodes > 4 ||
+        strict_metadata_compilation.edges > 4);
+    PC_CHECK(strict_metadata_json.find(
+                 "fixed destructive-renewal policy") ==
+             std::string::npos);
+
     std::uint32_t basin_state = kNoId;
     for (std::uint32_t state = 0;
          state < restricted.policy_reachable.size(); ++state) {

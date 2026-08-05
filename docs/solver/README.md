@@ -514,8 +514,15 @@ cache identity and deterministic kernel-bit hash. Compiled policies, when one
 is available, emit an explicit post-reforge route to the selected basin
 action.
 
+The normal product Calculator explicitly enables this option for every Solve,
+including when neither optional gap target is configured. Native/WASM callers
+that omit it remain unrestricted. Solver-generated strategies record the
+chosen scope in optional `solver_policy_scope` metadata; the field is
+non-executable provenance and legacy documents may omit it.
+
 This mode solves a different, restricted executable MDP. Its result scope is
-`exact_within_zero_progress_reroll_restriction`; it is not globally optimal
+`exact_within_zero_progress_reroll_restriction`; generated strategy provenance
+uses `zero_progress_reroll_policy_restriction`. It is not globally optimal
 over excluded zero-progress salvage routes. Fixed-option kernels keep their
 existing exact program semantics, and the unrestricted mode keeps its prior
 state, transition, hash, and policy contract.
@@ -914,9 +921,27 @@ Code authority: `engine/include/poecraft/solver.h`,
 
 `pc_solver_compile_strategy` converts the latest executable policy into v1
 strategy JSON. `policy_available`, not exact convergence, is the compilation
-precondition. Exact policy regions with the same action and continuation share
-operation nodes, and a collision-checked decision DAG routes concrete states
-to those regions. The document otherwise contains ordinary start, router,
+precondition. Generic policies form their final executable
+operation/continuation regions before condition minimization. Every
+represented strict state maps through its behavioral representative to that
+final region; predicates distinguish the region only from different regions
+or off-policy states, and the root emits one route per final region. The
+collision-checked strict decision DAG stops splitting when a partition selects
+one region and uses the same quotient-feature minimizer. Unknown or conflicting
+values take the existing off-policy/bounded default, with exact-state
+serialization as the last correctness fallback. Structured observation-owned
+and state-local recipes keep their independent exact routing path.
+
+When every policy-reachable non-goal carrier proves one identical legal,
+state-independent destructive-renewal operation, compatible exact kernels,
+closed non-goal continuation, positive terminal probability, properness, and
+evaluated cost, exact or bounded policies compile to the existing four-node,
+four-edge goal-or-repeat graph. A conflicting carrier, stale witness,
+different kernel/operation, state-local choice, reduced exact-observation
+carrier that cannot support the operation and goal contract, or unproved
+closure falls through to the general compiler.
+
+The document otherwise contains ordinary start, router,
 operation, and terminal nodes, deterministic prioritized edges,
 `expected_cost` annotations, and non-executable accounting-role metadata.
 Fixed and automatic operators expand to their primitive programs. Exact closed
@@ -933,10 +958,14 @@ base.
 
 Compilation refuses a policy when the ordinary strategy vocabulary cannot
 represent it or when configured graph/output caps are exceeded. It does not
-invent a second execution format. Its telemetry reports `peak_owned_bytes`
-for compiler-owned working buffers, including structured refinement condition
-programs and the growing JSON document, but excluding the retained calculator
-and Solve result charged by the caller.
+invent a second execution format. Its `peak_owned_bytes` telemetry and
+`max_solver_owned_bytes` enforcement use audited complete compiler ownership,
+including condition strings, quotient members, feature indexes, route caches
+and nodes, structured refinement programs, and the growing JSON document. The
+historic partial estimate remains separately visible as
+`previously_accounted_peak_owned_bytes`; `complete_peak_owned_bytes` is the
+corrected column. Both exclude the retained Calculator and Solve result charged
+by the caller.
 
 Publication applies the policy-guided exact-refinement contract before this
 compiler boundary. The compiler consumes refined policy classes and emits

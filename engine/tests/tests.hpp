@@ -35,6 +35,7 @@ void run_simulator_tests(const char* artifact_dir);
 /* Solver phase S1-S5 suites. */
 void run_solver_abstract_tests(const char* artifact_dir);
 void run_solver_calc_tests(const char* artifact_dir);
+void run_solver_calc_gated_equivalence_tests();
 void run_solver_solve_tests(const char* artifact_dir);
 void run_solver_automatic_eldritch_tests();
 void run_solver_policy_refinement_tests();

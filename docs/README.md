@@ -29,12 +29,14 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[Goal-Gated Semantic Policy Routing](active/goal-gated-semantic-policy-routing.md)
-is the active implementation boundary. It makes Calculator solves opt into the
-existing zero-goal-progress reforge restriction, records structured policy
-scope, and compiles solved policies by final executable region while
-preserving mechanics, exact partial-progress behavior, caps, and the
-unrestricted engine default. The completed
+[HANDOFF](../HANDOFF.md) records no active implementation boundary; Oliver must
+select the next chunk before implementation resumes. The completed
+[Goal-Gated Semantic Policy Routing](archive/2026-08-04-goal-gated-semantic-policy-routing/README.md)
+milestone makes Calculator solves opt into the existing zero-goal-progress
+reforge restriction, records structured policy scope, compiles policies by
+final executable region, and enforces complete compiler-memory accounting
+while preserving mechanics, exact partial-progress behavior, caps, V3
+semantics, and the unrestricted engine default. The preceding completed
 [Versioned Reforge Resource Accounting And V3 Production Qualification](archive/2026-08-04-versioned-reforge-resource-accounting/README.md)
 milestone makes `max_reforge_work` a stable V1-equivalent logical envelope,
 reports V1/V2/V3 implementation effort separately, enforces remaining budgets

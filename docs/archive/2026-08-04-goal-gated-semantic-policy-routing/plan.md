@@ -1,10 +1,10 @@
 # Goal-Gated Semantic Policy Routing
 
-**Status: Gates 0-4 are complete; Gate 5 is active.**
+**Status: completed and archived 2026-08-04.**
 
 Owner: Oliver
 
-Parent: [Active work](README.md)
+Parent: [Archive entry](README.md)
 
 Starting commit: `cf67fd982e649193821424a0d8b85ea614027cf3`.
 
@@ -54,7 +54,7 @@ modifier, fixture, or action family.
 **Completed.** The retained condition and deterministic U/J/M/S definitions,
 A/B measurements, policy and strategy hashes, 10,000-run results, and
 old/corrected memory columns are recorded in
-[`goal-gated-semantic-policy-routing-gate0.json`](../../fixtures/solver-reliability/v1/evidence/goal-gated-semantic-policy-routing-gate0.json).
+[`goal-gated-semantic-policy-routing-gate0.json`](../../../fixtures/solver-reliability/v1/evidence/goal-gated-semantic-policy-routing-gate0.json).
 The exact supplied condition is retained verbatim beside it, and the uniform
 case input is frozen separately. U and J are not the same solve. Point C stays
 empty until the new compiler exists, preserving A-to-B gating attribution and
@@ -143,7 +143,7 @@ hashes. Exact evaluation reconciles and 10,000 simulations have zero failures
 and zero off-policy. Stale witness data, conflicting reachable operations,
 and observation-owned policies remain on the general compiler. The complete
 measurement is retained in
-[`goal-gated-semantic-policy-routing-gate2.json`](../../fixtures/solver-reliability/v1/evidence/goal-gated-semantic-policy-routing-gate2.json).
+[`goal-gated-semantic-policy-routing-gate2.json`](../../../fixtures/solver-reliability/v1/evidence/goal-gated-semantic-policy-routing-gate2.json).
 
 Extend the existing primitive-renewal compiler and proof machinery. When all
 policy-reachable non-goal carriers select one identical state-independent
@@ -173,7 +173,7 @@ same quotient-feature minimizer; exact-state serialization remains its final
 fallback. Structured observation-owned routes keep their prior independent
 path. Focused compile and solve suites pass, and the measurements are retained
 in
-[`goal-gated-semantic-policy-routing-gate3.json`](../../fixtures/solver-reliability/v1/evidence/goal-gated-semantic-policy-routing-gate3.json).
+[`goal-gated-semantic-policy-routing-gate3.json`](../../../fixtures/solver-reliability/v1/evidence/goal-gated-semantic-policy-routing-gate3.json).
 
 Generalize the existing quotient-feature and policy-route DAG path so its
 classification target is the final `policy_region_by_state`:
@@ -203,7 +203,7 @@ compiled artifacts. A focused cap regression proves that a limit fitting only
 the historic estimate is rejected. U, J, and the protected body-armour case
 remain below their unchanged caps with exact evaluation reconciled. Results
 are retained in
-[`goal-gated-semantic-policy-routing-gate4.json`](../../fixtures/solver-reliability/v1/evidence/goal-gated-semantic-policy-routing-gate4.json).
+[`goal-gated-semantic-policy-routing-gate4.json`](../../../fixtures/solver-reliability/v1/evidence/goal-gated-semantic-policy-routing-gate4.json).
 
 After routing lands, enforce the Gate 0 audited complete compiler-owned memory
 accounting while retaining both old and corrected telemetry columns. If an
@@ -214,7 +214,15 @@ Commit Gate 4 separately.
 
 ## Gate 5 — qualification
 
-**Active.**
+**Completed.** U and J satisfy their structural and size gates; M preserves
+both semantic operations and the explicit off-policy default; structured and
+state-local S routing remains independent. The focused gated V1/V3 suite
+passes 5,355 checks. The 48-case portfolio ran exactly 10,000 simulations for
+each of 38 compiled strategies (380,000 total) with zero off-policy failures.
+The only two expectation failures are the pre-existing rare-renewal exact-cost
+reconciliation cases excluded from this milestone. Release WASM and focused
+worker/Calculator/model regressions pass. Final web and repository acceptance
+are recorded in [the report](report.md) and tracked Gate 5 evidence.
 
 Case acceptance:
 

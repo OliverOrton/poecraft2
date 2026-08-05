@@ -88,8 +88,11 @@ The Solve surface is distinct from one-action odds:
 3. Keep only candidates whose complete price vectors resolve. If priced
    Fracture is relevant, require an explicit `base` price because miss recovery
    uses Restart.
-4. Open a fresh scoped solve handle and run the stateful native
-   begin/step/finish API in the worker with progress and cancellation.
+4. Open a fresh scoped solve handle with
+   `goal_progress_gated_reforges: true` and run the stateful native
+   begin/step/finish API in the worker with progress and cancellation. This is
+   the Calculator product scope; the native/WASM option remains optional and
+   other callers retain their explicit scope or the unrestricted default.
 5. Compile whenever the result has `policy_available`, including bounded cap
    and target-gap results. Transfer the compiled document as one byte buffer,
    decode/parse it once on the main thread, assign missing board positions,
@@ -122,6 +125,13 @@ bound can make the certificate pessimistic.
 
 Automatic options remain native planner operators and compile into primitive
 strategy nodes; the web app does not execute opaque macros.
+
+Every solver-generated document records its non-executable scope as optional
+`solver_policy_scope` metadata. Calculator results use
+`zero_progress_reroll_policy_restriction`; unrestricted callers use
+`unrestricted`. Legacy authored documents may omit the field. The metadata is
+provenance for presentation and persistence, never simulator routing
+authority.
 
 The product publishes a Strategy Board document only when the selected policy
 has exact executable identity. When a coarse-parent action or downstream route

@@ -963,6 +963,18 @@ void run_synthetic_gate() {
         PC_CHECK(compilation.total_condition_bytes > 0);
         PC_CHECK(compilation.max_condition_bytes > 0);
 
+        const double expected = solved.values[solved.start_state];
+        const StrategyEvalResult exact =
+            evaluate_compiled(session, json, prices);
+        PC_CHECK(exact.converged);
+        PC_CHECK(exact.cost_complete);
+        PC_CHECK(exact.success_probability > 1.0 - 1e-9);
+        PC_CHECK(exact.failure_probability < 1e-12);
+        PC_CHECK(exact.action_not_applied_probability < 1e-12);
+        PC_CHECK(exact.no_matching_edge_probability < 1e-12);
+        PC_CHECK(exact.unresolved_probability < 1e-12);
+        PC_CHECK(std::fabs(
+                     exact.total_expected_cost - expected) < 1e-9);
         const SimulationSummaryInternal summary =
             run_compiled(session, json, prices, 10000, 42);
         PC_CHECK(summary.completed_runs == 10000);
@@ -971,7 +983,6 @@ void run_synthetic_gate() {
         const double mean =
             summary.known_total_cost /
             static_cast<double>(summary.completed_runs);
-        const double expected = solved.values[solved.start_state];
         std::printf("solver compile alt-spam: V=%.4f empirical=%.4f\n",
                     expected, mean);
         PC_CHECK(std::fabs(mean - expected) < 0.15);
@@ -1007,6 +1018,23 @@ void run_synthetic_gate() {
         auto strict_strategy = compile_strategy_json(
             session, strict_json.data(), strict_json.size());
         PC_CHECK(strict_strategy != nullptr);
+        const StrategyEvalResult strict_exact =
+            evaluate_compiled(session, strict_json, prices);
+        PC_CHECK(strict_exact.converged);
+        PC_CHECK(strict_exact.cost_complete);
+        PC_CHECK(strict_exact.success_probability > 1.0 - 1e-9);
+        PC_CHECK(strict_exact.failure_probability < 1e-12);
+        PC_CHECK(strict_exact.action_not_applied_probability < 1e-12);
+        PC_CHECK(strict_exact.no_matching_edge_probability < 1e-12);
+        PC_CHECK(strict_exact.unresolved_probability < 1e-12);
+        PC_CHECK(std::fabs(
+                     strict_exact.total_expected_cost - expected) < 1e-9);
+        const SimulationSummaryInternal strict_summary =
+            run_compiled(session, strict_json, prices, 10000, 420042);
+        PC_CHECK(strict_summary.completed_runs == 10000);
+        PC_CHECK(strict_summary.success_count == 10000);
+        PC_CHECK(strict_summary.failure_count == 0);
+        PC_CHECK(strict_summary.no_matching_edge_count == 0);
     }
 
     /* Price flip: the compiled strategy must include restart operations
