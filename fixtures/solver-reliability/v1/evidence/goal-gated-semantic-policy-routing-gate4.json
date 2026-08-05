@@ -1,0 +1,68 @@
+{
+  "schema_version": "goal_gated_semantic_policy_routing_gate4_v1",
+  "source_gate3_commit": "35bebd7e6321ac174e0367e237b9813b28d37915",
+  "contract": {
+    "peak_owned_bytes": "audited complete compiler-owned peak",
+    "cap_enforcement": "audited complete compiler-owned peak",
+    "previously_accounted_peak_owned_bytes": "retained historic partial estimate for attribution only",
+    "complete_peak_owned_bytes": "audited complete compiler-owned peak",
+    "cap_name": "max_solver_owned_bytes",
+    "cap_increases": 0
+  },
+  "accepted_cases": [
+    {
+      "id": "goal-gated-uniform-alteration",
+      "policy_value": 8.070144284128844,
+      "nodes": 4,
+      "edges": 4,
+      "strategy_json_bytes": 1205,
+      "total_condition_bytes": 154,
+      "previously_accounted_peak_owned_bytes": 1206,
+      "corrected_complete_peak_owned_bytes": 1817,
+      "reported_peak_owned_bytes": 1817,
+      "max_solver_owned_bytes": 268435456,
+      "cap_hit": null,
+      "exact_cost_reconciled": true,
+      "off_policy_mass": 0.0
+    },
+    {
+      "id": "reliability-selected-gloves-10k",
+      "policy_value": 0.3684,
+      "nodes": 4,
+      "edges": 4,
+      "strategy_json_bytes": 1181,
+      "total_condition_bytes": 141,
+      "previously_accounted_peak_owned_bytes": 1185,
+      "corrected_complete_peak_owned_bytes": 1748,
+      "reported_peak_owned_bytes": 1748,
+      "max_solver_owned_bytes": 1073741824,
+      "cap_hit": null,
+      "exact_cost_reconciled": true,
+      "off_policy_mass": 0.0
+    },
+    {
+      "id": "reliability-class-body-armour",
+      "policy_value": 8.341181986595203,
+      "nodes": 14,
+      "edges": 31,
+      "strategy_json_bytes": 723701,
+      "total_condition_bytes": 719918,
+      "previously_accounted_peak_owned_bytes": 2559976,
+      "corrected_complete_peak_owned_bytes": 2562154,
+      "reported_peak_owned_bytes": 2562154,
+      "max_solver_owned_bytes": 1073741824,
+      "cap_hit": null,
+      "exact_cost_reconciled": true,
+      "off_policy_mass": 0.0
+    }
+  ],
+  "focused_native_tests": {
+    "compile_checks": 771,
+    "compile_failures": 0,
+    "solve_checks": 98305,
+    "solve_failures": 0,
+    "historic_only_cap_now_rejected": true,
+    "retained_artifact_columns_propagated": true
+  },
+  "portfolio_status": "Representative full-portfolio qualification with exactly 10000 simulations per verified strategy remains Gate 5."
+}

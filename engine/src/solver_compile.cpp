@@ -22,45 +22,45 @@ std::string compile_policy_strategy_json(
     const std::uint64_t strategy_json_limit = std::min(
         result.options.max_strategy_json_bytes,
         max_strategy_json_bytes);
-    std::uint64_t compiler_peak_owned_bytes = 0;
+    std::uint64_t compiler_previously_accounted_peak_owned_bytes = 0;
     std::uint64_t compiler_complete_peak_owned_bytes = 0;
+    const auto publish_and_enforce_compiler_owned = [&]() {
+        if (telemetry != nullptr) {
+            telemetry->peak_owned_bytes =
+                compiler_complete_peak_owned_bytes;
+            telemetry->previously_accounted_peak_owned_bytes =
+                compiler_previously_accounted_peak_owned_bytes;
+            telemetry->complete_peak_owned_bytes =
+                compiler_complete_peak_owned_bytes;
+        }
+        if (compiler_complete_peak_owned_bytes >
+            max_compiler_owned_bytes) {
+            if (telemetry != nullptr) {
+                telemetry->cap_hit = "max_solver_owned_bytes";
+            }
+            throw SolverResourceLimit(
+                "max_solver_owned_bytes",
+                max_compiler_owned_bytes);
+        }
+    };
     const auto observe_compiler_owned =
         [&](const std::uint64_t bytes) {
-            compiler_peak_owned_bytes =
-                std::max(compiler_peak_owned_bytes, bytes);
+            compiler_previously_accounted_peak_owned_bytes = std::max(
+                compiler_previously_accounted_peak_owned_bytes, bytes);
             compiler_complete_peak_owned_bytes = std::max(
                 compiler_complete_peak_owned_bytes, bytes);
-            if (telemetry != nullptr) {
-                telemetry->peak_owned_bytes =
-                    compiler_peak_owned_bytes;
-                telemetry->previously_accounted_peak_owned_bytes =
-                    compiler_peak_owned_bytes;
-                telemetry->complete_peak_owned_bytes =
-                    compiler_complete_peak_owned_bytes;
-            }
-            if (bytes > max_compiler_owned_bytes) {
-                if (telemetry != nullptr) {
-                    telemetry->cap_hit =
-                        "max_solver_owned_bytes";
-                }
-                throw SolverResourceLimit(
-                    "max_solver_owned_bytes",
-                    max_compiler_owned_bytes);
-            }
+            publish_and_enforce_compiler_owned();
         };
     const auto observe_complete_compiler_owned =
         [&](const std::uint64_t previously_accounted,
             const std::uint64_t complete) {
-            /* Gate 0 is deliberately observational: only the historic
-             * partial estimate reaches the cap check above. */
-            observe_compiler_owned(previously_accounted);
+            compiler_previously_accounted_peak_owned_bytes = std::max(
+                compiler_previously_accounted_peak_owned_bytes,
+                previously_accounted);
             compiler_complete_peak_owned_bytes = std::max(
                 compiler_complete_peak_owned_bytes,
                 std::max(previously_accounted, complete));
-            if (telemetry != nullptr) {
-                telemetry->complete_peak_owned_bytes =
-                    compiler_complete_peak_owned_bytes;
-            }
+            publish_and_enforce_compiler_owned();
         };
     if (!result.refined_policy_artifact.strategy_json.empty()) {
         if (result.refined_policy_artifact.strategy_json.size() >

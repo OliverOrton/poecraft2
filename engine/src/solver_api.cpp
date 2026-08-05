@@ -1765,15 +1765,15 @@ pc_result pc_solver_compile_strategy(
                 telemetry.exact_state_fallbacks =
                     refined.exact_state_fallbacks;
                 telemetry.junk_predicates = refined.junk_predicates;
-                telemetry.peak_owned_bytes = std::max(
+                telemetry.previously_accounted_peak_owned_bytes = std::max(
                     refined.previously_accounted_peak_owned_bytes,
                     refined.strategy_json.capacity() + 1);
-                telemetry.previously_accounted_peak_owned_bytes =
-                    telemetry.peak_owned_bytes;
                 telemetry.complete_peak_owned_bytes =
                     std::max(
                         refined.complete_peak_owned_bytes,
-                        telemetry.peak_owned_bytes);
+                        telemetry.previously_accounted_peak_owned_bytes);
+                telemetry.peak_owned_bytes =
+                    telemetry.complete_peak_owned_bytes;
             }
             return copy_text(
                 refined.strategy_json, buffer, capacity, out_length,

@@ -1,6 +1,6 @@
 # Goal-Gated Semantic Policy Routing
 
-**Status: Gates 0-3 are complete; Gate 4 is active.**
+**Status: Gates 0-4 are complete; Gate 5 is active.**
 
 Owner: Oliver
 
@@ -196,7 +196,14 @@ and continuations. Commit Gate 3 separately.
 
 ## Gate 4 — corrected compiler-owned memory contract
 
-**Active.**
+**Completed.** `peak_owned_bytes` and `max_solver_owned_bytes` enforcement now
+use the audited complete compiler-owned peak. The historic partial estimate
+remains separately reported for attributable comparisons, including retained
+compiled artifacts. A focused cap regression proves that a limit fitting only
+the historic estimate is rejected. U, J, and the protected body-armour case
+remain below their unchanged caps with exact evaluation reconciled. Results
+are retained in
+[`goal-gated-semantic-policy-routing-gate4.json`](../../fixtures/solver-reliability/v1/evidence/goal-gated-semantic-policy-routing-gate4.json).
 
 After routing lands, enforce the Gate 0 audited complete compiler-owned memory
 accounting while retaining both old and corrected telemetry columns. If an
@@ -206,6 +213,8 @@ duplication, or lifetimes. Do not raise the cap or restore under-counting.
 Commit Gate 4 separately.
 
 ## Gate 5 — qualification
+
+**Active.**
 
 Case acceptance:
 

@@ -1009,7 +1009,7 @@ void run_alt_spam_tests() {
         compilation_sample.max_condition_bytes = 272;
         compilation_sample.exact_state_fallbacks = 2;
         compilation_sample.junk_predicates = 273;
-        compilation_sample.peak_owned_bytes = 28;
+        compilation_sample.peak_owned_bytes = 280;
         compilation_sample.previously_accounted_peak_owned_bytes = 28;
         compilation_sample.complete_peak_owned_bytes = 280;
         const std::string refinement_telemetry =
@@ -1110,7 +1110,7 @@ void run_alt_spam_tests() {
                      "\"max_condition_bytes\":272,"
                      "\"exact_state_fallbacks\":2,"
                      "\"junk_predicates\":273,"
-                     "\"peak_owned_bytes\":28,"
+                     "\"peak_owned_bytes\":280,"
                      "\"previously_accounted_peak_owned_bytes\":28,"
                      "\"complete_peak_owned_bytes\":280,"
                      "\"cap_hit\":null}") !=
@@ -2083,6 +2083,16 @@ void run_policy_guided_exact_lift_tests() {
     PC_CHECK(
         retained_telemetry.edges ==
         solved.refined_policy_artifact.edges);
+    PC_CHECK(
+        retained_telemetry.previously_accounted_peak_owned_bytes ==
+        solved.refined_policy_artifact
+            .previously_accounted_peak_owned_bytes);
+    PC_CHECK(
+        retained_telemetry.complete_peak_owned_bytes ==
+        solved.refined_policy_artifact.complete_peak_owned_bytes);
+    PC_CHECK(
+        retained_telemetry.peak_owned_bytes ==
+        retained_telemetry.complete_peak_owned_bytes);
 
     const std::shared_ptr<StrategyImpl> retained_strategy =
         compile_strategy_json(

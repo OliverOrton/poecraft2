@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Status: Goal-Gated Semantic Policy Routing is active at Gate 4.**
+**Status: Goal-Gated Semantic Policy Routing is active at Gate 5.**
 
 Active plan:
 [Goal-Gated Semantic Policy Routing](docs/active/goal-gated-semantic-policy-routing.md).
@@ -50,15 +50,21 @@ structured observation-owned routing remains unchanged. Focused compile and
 solve suites pass, and the evidence records the generic before/after and the
 protected body-armour B-to-C result.
 
-Gate 4 is in progress:
+Gate 4 is complete in its separate local commit. Audited complete
+compiler-owned bytes now drive both `peak_owned_bytes` and the existing
+`max_solver_owned_bytes` cap. The historic partial estimate remains a separate
+telemetry column, including retained compiled artifacts. A cap fitting only
+the old estimate is rejected; U, J, and body-armour remain below unchanged
+caps with reconciled exact evaluation. Focused compile and solve suites pass.
 
-- make audited complete compiler-owned bytes the enforced cap value and the
-  public `peak_owned_bytes` value;
-- retain `previously_accounted_peak_owned_bytes` and
-  `complete_peak_owned_bytes` as separate telemetry columns;
-- propagate the corrected contract through retained compiled artifacts and
-  policy assertions; and
-- keep accepted cases under their existing caps without raising limits.
+Gate 5 is in progress:
+
+- add and run the focused V1/V3 gated-outcome equivalence subset without a
+  separate full 252,997-check matrix run;
+- run the representative reliability workflow with exactly 10,000 simulations
+  per verified strategy and compare routing/condition/JSON/memory telemetry;
+- rebuild release WASM and run worker/Calculator plus web acceptance; and
+- run `scripts/test.ps1` exactly once after all implementation is final.
 
 ## Preserved boundaries
 

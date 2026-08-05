@@ -590,7 +590,7 @@ void run_structured_observation_route_tests() {
             telemetry.peak_owned_bytes >=
             strategy.capacity() + 1);
         PC_CHECK(
-            telemetry.previously_accounted_peak_owned_bytes ==
+            telemetry.complete_peak_owned_bytes ==
             telemetry.peak_owned_bytes);
         PC_CHECK(
             telemetry.complete_peak_owned_bytes >=
@@ -603,21 +603,26 @@ void run_structured_observation_route_tests() {
                 fixture.session, strategy.data(), strategy.size()) !=
             nullptr);
 
-        /* Gate 0's complete audit is observational. A limit equal to the
-         * historic estimate must still accept byte-identical output even
-         * when the corrected column is higher. */
-        PolicyCompilationTelemetry observational;
-        const std::string observational_strategy =
-            compile_policy_strategy_json(
+        /* Gate 4 enforces the complete audit. A limit equal to the historic
+         * partial estimate must reject when complete ownership is higher. */
+        PolicyCompilationTelemetry corrected_cap;
+        bool corrected_capped = false;
+        try {
+            (void)compile_policy_strategy_json(
                 *fixture.calc, fixture.solved,
-                "structured observation route", &observational,
+                "structured observation route", &corrected_cap,
                 std::numeric_limits<std::uint64_t>::max(),
                 &fixture.routing,
                 telemetry.previously_accounted_peak_owned_bytes);
-        PC_CHECK(observational_strategy == strategy);
+        } catch (const SolverResourceLimit& error) {
+            corrected_capped =
+                error.cap_name() == "max_solver_owned_bytes";
+        }
+        PC_CHECK(corrected_capped);
+        PC_CHECK(corrected_cap.cap_hit == "max_solver_owned_bytes");
         PC_CHECK(
-            observational.complete_peak_owned_bytes >=
-            observational.previously_accounted_peak_owned_bytes);
+            corrected_cap.complete_peak_owned_bytes >
+            telemetry.previously_accounted_peak_owned_bytes);
 
         StructuredRouteFixture remapped =
             make_structured_route_fixture();
@@ -950,7 +955,7 @@ void run_synthetic_gate() {
         PC_CHECK(region_route_count == compilation.policy_regions);
         PC_CHECK(compilation.strategy_json_bytes == json.size());
         PC_CHECK(
-            compilation.previously_accounted_peak_owned_bytes ==
+            compilation.complete_peak_owned_bytes ==
             compilation.peak_owned_bytes);
         PC_CHECK(
             compilation.complete_peak_owned_bytes >=

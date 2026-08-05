@@ -770,9 +770,9 @@ struct PolicyCompilationTelemetry {
      * SolveResult charged by the caller. Structured refinement includes its
      * parent/member condition programs as well as the growing JSON document. */
     std::uint64_t peak_owned_bytes = 0;
-    /* Gate 0 keeps the historic partial estimate and the audited complete
-     * compiler-owned estimate side by side. The complete column is initially
-     * observational and therefore cannot influence cap decisions. */
+    /* Keep the historic partial estimate and audited complete estimate side
+     * by side. `peak_owned_bytes` and cap enforcement use the complete value;
+     * the historic column exists only for attributable before/after reports. */
     std::uint64_t previously_accounted_peak_owned_bytes = 0;
     std::uint64_t complete_peak_owned_bytes = 0;
     std::string cap_hit;
