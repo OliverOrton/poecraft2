@@ -1,0 +1,112 @@
+{
+  "schema_version": "goal_gated_semantic_policy_routing_gate3_v1",
+  "source_gate2_commit": "cb1ae7318c3c35fa3def2d3dd9736b8088ed39e3",
+  "classification_target": "policy_region_by_state",
+  "generic_routing_contract": {
+    "represented_member_mapping": "strict state -> behavioral representative -> final executable operation/continuation region",
+    "minimized_against": "states assigned to a different final region or off-policy",
+    "single_region_partition": "stop and minimize the complete region with the existing quotient-feature index",
+    "unknown_default": "existing off-policy or bounded fallback",
+    "last_resort": "exact-state serialization",
+    "structured_route_scope": "unchanged"
+  },
+  "case_J": {
+    "case": "../cases/reliability-selected-gloves-10k.json",
+    "before": {
+      "source": "build/acceptance/certified-fallback-and-terminal-reforge-factorization/gate8/native-reliability-48.json",
+      "nodes": 5,
+      "edges": 5,
+      "strategy_json_bytes": 38457,
+      "compile_ms": 1.8628,
+      "exact_evaluation_ms": 159.8041,
+      "policy_value": 0.3684,
+      "strategy_sha256": "09AB5F9EEB534A3716CA435C612B9302CB09C93DBBD5C39C25E80D6D2D51F908"
+    },
+    "after": {
+      "source": "build/acceptance/goal-gated-semantic-policy-routing/gate3-gloves/report.json",
+      "solver_policy_scope": "zero_progress_reroll_policy_restriction",
+      "nodes": 4,
+      "edges": 4,
+      "strategy_json_bytes": 1181,
+      "total_condition_bytes": 141,
+      "maximum_condition_bytes": 141,
+      "compile_ms": 0.5889,
+      "previously_accounted_peak_owned_bytes": 1185,
+      "audited_complete_peak_owned_bytes": 1748,
+      "exact_evaluation_ms": 152.6251,
+      "policy_value": 0.3684,
+      "strategy_sha256": "2EA35F11254309EE97A78C9004FAE1D232B165ED5AA2B5A454DEEAB25D673BAA",
+      "exact_cost_reconciled": true,
+      "off_policy_mass": 0.0
+    },
+    "strategy_json_reduction_percent": 96.92903762643992,
+    "acceptance_threshold_percent": 95.0,
+    "threshold_met": true,
+    "attribution": "The exact solved policy qualifies for Gate 2's certified uniform renewal form; Gate 3 leaves that semantic region compact and introduces no carrier split."
+  },
+  "generic_strict_region_regression": {
+    "fixture": "engine/tests/test_solver_compile.cpp::run_synthetic_gate::alt-spam-strict",
+    "final_regions": 2,
+    "before_gate3": {
+      "total_condition_bytes": 4808,
+      "strategy_json_bytes": 7368
+    },
+    "after_gate3": {
+      "total_condition_bytes": 3076,
+      "strategy_json_bytes": 4775,
+      "total_condition_reduction_percent": 36.02329450915141,
+      "strategy_json_reduction_percent": 35.19272529858849
+    },
+    "semantics": "Both executable operations remain present, exact compilation succeeds, and unknown inputs retain the router's off-policy default."
+  },
+  "case_M": {
+    "fixture": "engine/tests/test_solver_compile.cpp::run_synthetic_gate::alt-spam",
+    "operations_preserved": [
+      "transmute",
+      "alteration"
+    ],
+    "root_routes_equal_final_policy_regions": true,
+    "explicit_off_policy_default": true,
+    "simulations": 10000,
+    "successes": 10000
+  },
+  "case_S_and_primary_B_to_C": {
+    "case": "../cases/reliability-class-body-armour.json",
+    "route_kind": "structured observation-owned",
+    "before": {
+      "policy_value": 8.341181986595203,
+      "nodes": 14,
+      "edges": 31,
+      "strategy_json_bytes": 723637,
+      "total_condition_bytes": 719918,
+      "maximum_condition_bytes": 525989,
+      "compile_ms": 8.8035,
+      "previously_accounted_peak_owned_bytes": 2559848,
+      "audited_complete_peak_owned_bytes": 2562026
+    },
+    "after": {
+      "source": "build/acceptance/goal-gated-semantic-policy-routing/gate3-body-armour/report.json",
+      "policy_value": 8.341181986595203,
+      "nodes": 14,
+      "edges": 31,
+      "strategy_json_bytes": 723701,
+      "strategy_json_metadata_delta_bytes": 64,
+      "total_condition_bytes": 719918,
+      "maximum_condition_bytes": 525989,
+      "compile_ms": 8.6186,
+      "previously_accounted_peak_owned_bytes": 2559976,
+      "audited_complete_peak_owned_bytes": 2562154,
+      "exact_evaluation_ms": 200.3139,
+      "exact_cost_reconciled": true,
+      "off_policy_mass": 0.0
+    },
+    "protection": "Structured observation signatures, state-local semantic recipes, and continuations were not generalized or merged. The only JSON growth is Gate 1's structured solver_policy_scope metadata."
+  },
+  "focused_native_tests": {
+    "compile_checks": 770,
+    "compile_failures": 0,
+    "solve_checks": 98302,
+    "solve_failures": 0
+  },
+  "verification_status": "Gate 3 exact evaluation is complete; final exactly-10000 simulation qualification remains Gate 5."
+}

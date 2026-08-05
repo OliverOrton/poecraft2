@@ -1187,16 +1187,6 @@ std::string compile_policy_strategy_json(
                 state_id,
                 refined_condition_by_class[
                     policy_class->second->class_id]);
-        } else if (!result.behavioral_representative_by_state.empty()) {
-            state_conditions.emplace(
-                state_id,
-                quotient_class_condition(
-                    calc, vocabulary, state_id,
-                    quotient_members.at(state_id), feature_index,
-                    result.behavioral_representative_by_state,
-                    telemetry == nullptr
-                        ? nullptr
-                        : &telemetry->exact_state_fallbacks));
         }
     }
     if (structured_refined_route) {
@@ -1222,8 +1212,7 @@ std::string compile_policy_strategy_json(
     std::sort(
         compiled_states.begin(), compiled_states.end(),
         [&](const std::uint32_t left, const std::uint32_t right) {
-            if (structured_refined_route ||
-                !result.behavioral_representative_by_state.empty()) {
+            if (structured_refined_route) {
                 const std::string& left_condition = state_conditions.at(left);
                 const std::string& right_condition = state_conditions.at(right);
                 if (left_condition != right_condition) {
@@ -1373,6 +1362,49 @@ std::string compile_policy_strategy_json(
         gated_retry_state_by_state.emplace(
             state_id, retry_policy_state);
     }
+    if (!structured_refined_route &&
+        !result.behavioral_representative_by_state.empty()) {
+        std::map<std::uint32_t, std::vector<std::uint32_t>>
+            strict_members_by_region;
+        for (std::uint32_t state = 0;
+             state < result.values.size(); ++state) {
+            if (calc.is_goal_state(calc.state(state))) {
+                continue;
+            }
+            const std::uint32_t representative =
+                result.behavioral_representative_by_state[state];
+            if (representative == kNoId ||
+                representative >= policy_region_by_state.size()) {
+                continue;
+            }
+            const std::uint32_t region =
+                policy_region_by_state[representative];
+            if (region == kNoId) continue;
+            policy_region_by_state[state] = region;
+            strict_members_by_region[region].push_back(state);
+        }
+        for (const std::uint32_t leader : emitted_states) {
+            std::vector<std::uint32_t>& members =
+                strict_members_by_region[leader];
+            std::sort(members.begin(), members.end());
+            members.erase(
+                std::unique(members.begin(), members.end()),
+                members.end());
+            if (members.empty() ||
+                !std::binary_search(
+                    members.begin(), members.end(), leader)) {
+                gap("emitted policy region has no represented strict member");
+            }
+            state_conditions.emplace(
+                leader,
+                policy_region_condition(
+                    calc, vocabulary, leader, members,
+                    feature_index, policy_region_by_state,
+                    telemetry == nullptr
+                        ? nullptr
+                        : &telemetry->exact_state_fallbacks));
+        }
+    }
     const auto expected_cost_annotation =
         [&](const std::uint32_t leader) -> std::string {
         const auto found = region_expected_cost.find(leader);
@@ -1508,6 +1540,29 @@ std::string compile_policy_strategy_json(
         [&](const std::vector<PolicyRouteEntry>& entries,
             const std::vector<std::size_t>& features) -> PolicyRouteBranch {
         if (entries.empty()) gap("empty exact policy route partition");
+        const std::uint32_t partition_leader =
+            entries.front().leader;
+        const bool one_region = std::all_of(
+            entries.begin() + 1, entries.end(),
+            [&](const PolicyRouteEntry& entry) {
+                return entry.leader == partition_leader;
+            });
+        if (one_region) {
+            /* Stop once the partition selects one executable region. Minimize
+             * that complete region against every differently routed or
+             * off-policy strict state; the helper retains exact-state
+             * serialization when no safe quotient predicate exists. */
+            const std::vector<std::uint32_t>& members =
+                states_by_leader.at(partition_leader);
+            return {
+                state_node(partition_leader),
+                policy_region_condition(
+                    calc, vocabulary, partition_leader, members,
+                    feature_index, policy_region_by_state,
+                    telemetry == nullptr
+                        ? nullptr
+                        : &telemetry->exact_state_fallbacks)};
+        }
         std::vector<std::string> constants;
         std::vector<std::size_t> varying;
         varying.reserve(features.size());
@@ -1528,15 +1583,7 @@ std::string compile_policy_strategy_json(
         }
         const std::string guard = all_of(constants);
         if (varying.empty()) {
-            const std::uint32_t leader = entries.front().leader;
-            if (!std::all_of(
-                    entries.begin() + 1, entries.end(),
-                    [&](const PolicyRouteEntry& entry) {
-                        return entry.leader == leader;
-                    })) {
-                gap("identical exact policy states select different regions");
-            }
-            return {state_node(leader), guard};
+            gap("identical exact policy states select different regions");
         }
 
         /* Prefer the widest, then most balanced exact partition. This keeps
@@ -2342,25 +2389,27 @@ std::string compile_policy_strategy_json(
                 router_id, policy_route_default_node,
                 route_priority, "", true);
         }
-    } else {
-        std::set<std::pair<std::string, std::string>>
-            emitted_refined_routes;
+    } else if (structured_refined_route) {
+        std::set<std::pair<std::string, std::string>> emitted_routes;
         for (const std::uint32_t leader : emitted_states) {
             for (const std::uint32_t state : states_by_leader.at(leader)) {
                 if (calc.state(state).goal_progress_retry_basin != 0) {
                     continue;
                 }
                 const std::pair<std::string, std::string> route{
-                    state_node(leader),
-                    state_conditions.at(state)};
-                if (structured_refined_route &&
-                    !emitted_refined_routes.insert(route).second) {
-                    continue;
-                }
-                edge(
-                    "router", route.first, 1,
-                    route.second, false);
+                    state_node(leader), state_conditions.at(state)};
+                if (!emitted_routes.insert(route).second) continue;
+                edge("router", route.first, 1, route.second, false);
             }
+        }
+    } else {
+        for (const std::uint32_t leader : emitted_states) {
+            if (calc.state(leader).goal_progress_retry_basin != 0) {
+                continue;
+            }
+            edge(
+                "router", state_node(leader), 1,
+                state_conditions.at(leader), false);
         }
     }
     edge(

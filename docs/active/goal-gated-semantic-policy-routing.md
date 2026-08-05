@@ -1,6 +1,6 @@
 # Goal-Gated Semantic Policy Routing
 
-**Status: Gates 0-2 are complete; Gate 3 is active.**
+**Status: Gates 0-3 are complete; Gate 4 is active.**
 
 Owner: Oliver
 
@@ -164,7 +164,16 @@ separately.
 
 ## Gate 3 — route by final executable policy region
 
-**Active.**
+**Completed.** Generic behavioral-quotient and strict-policy routes now target
+the final executable `policy_region_by_state`. Represented strict members are
+grouped by final operation/continuation region, minimized only against other
+regions and off-policy states, and emitted once per final region. A strict
+decision-DAG partition stops as soon as it selects one region and invokes the
+same quotient-feature minimizer; exact-state serialization remains its final
+fallback. Structured observation-owned routes keep their prior independent
+path. Focused compile and solve suites pass, and the measurements are retained
+in
+[`goal-gated-semantic-policy-routing-gate3.json`](../../fixtures/solver-reliability/v1/evidence/goal-gated-semantic-policy-routing-gate3.json).
 
 Generalize the existing quotient-feature and policy-route DAG path so its
 classification target is the final `policy_region_by_state`:
@@ -186,6 +195,8 @@ state-local fixed options. Merge only identical complete executable recipes
 and continuations. Commit Gate 3 separately.
 
 ## Gate 4 — corrected compiler-owned memory contract
+
+**Active.**
 
 After routing lands, enforce the Gate 0 audited complete compiler-owned memory
 accounting while retaining both old and corrected telemetry columns. If an

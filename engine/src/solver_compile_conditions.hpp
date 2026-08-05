@@ -698,13 +698,16 @@ struct QuotientFeatureIndex {
     }
 };
 
-std::string quotient_class_condition(
+/* Minimize one executable policy region against every represented non-goal
+ * state assigned to another region or to off-policy. `members` is the union
+ * of strict states whose behavioral representatives select `target`. */
+std::string policy_region_condition(
     const CalcContext& calc,
     const std::vector<SlotVocabulary>& vocabulary,
     const std::uint32_t representative,
     const std::vector<std::uint32_t>& members,
     const QuotientFeatureIndex& feature_index,
-    const std::vector<std::uint32_t>& class_by_state,
+    const std::vector<std::uint32_t>& region_by_state,
     std::uint64_t* exact_state_fallbacks = nullptr) {
     const SessionImpl& session = calc.session();
     const AbstractLayout& layout = calc.layout();
@@ -743,6 +746,8 @@ std::string quotient_class_condition(
     std::vector<std::size_t> selected;
     std::vector<std::uint8_t> used(constant.size(), 0);
 
+    const std::uint32_t target = region_by_state.at(representative);
+    if (target == kNoId) return exact_fallback();
     const std::size_t class_size = members.size();
     const std::size_t outsider_count =
         feature_index.non_goal_states - class_size;
@@ -789,7 +794,7 @@ std::string quotient_class_condition(
             representative_values[first]);
     remaining.reserve(first_remaining);
     for (const std::uint32_t state : first_bucket) {
-        if (class_by_state[state] != representative) {
+        if (region_by_state[state] != target) {
             remaining.push_back(state);
         }
     }

@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Status: Goal-Gated Semantic Policy Routing is active at Gate 3.**
+**Status: Goal-Gated Semantic Policy Routing is active at Gate 4.**
 
 Active plan:
 [Goal-Gated Semantic Policy Routing](docs/active/goal-gated-semantic-policy-routing.md).
@@ -40,17 +40,25 @@ simulations have zero failures/off-policy. Bounded witnessed renewal remains
 4/4. Stale signatures, conflicting carriers, and observation-owned behavior
 fall through to the general compiler.
 
-Gate 3 is in progress:
+Gate 3 is complete in its separate local commit. Generic quotient and strict
+policy routers now classify final executable operation/continuation regions,
+minimize only against different regions or off-policy, and emit one root route
+per final region. Strict DAG partitions stop when one region remains and use
+the existing quotient minimizer with exact-state fallback. Multi-operation
+tests preserve Transmute and Alteration plus the explicit off-policy default;
+structured observation-owned routing remains unchanged. Focused compile and
+solve suites pass, and the evidence records the generic before/after and the
+protected body-armour B-to-C result.
 
-- form final executable operation/continuation regions before generic route
-  condition minimization;
-- classify represented strict members by final region rather than behavioral
-  representative;
-- stop splitting when a partition has one executable region and consider only
-  features that distinguish different regions;
-- preserve off-policy/bounded defaults and exact-state fallback; and
-- keep complete recipe/continuation identity for gated retry, Unveil,
-  Fracture, Imprint, protected repeat, and other state-local options.
+Gate 4 is in progress:
+
+- make audited complete compiler-owned bytes the enforced cap value and the
+  public `peak_owned_bytes` value;
+- retain `previously_accounted_peak_owned_bytes` and
+  `complete_peak_owned_bytes` as separate telemetry columns;
+- propagate the corrected contract through retained compiled artifacts and
+  policy assertions; and
+- keep accepted cases under their existing caps without raising limits.
 
 ## Preserved boundaries
 

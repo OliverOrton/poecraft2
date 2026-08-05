@@ -928,8 +928,26 @@ void run_synthetic_gate() {
         PC_CHECK(json.find("\"type\":\"restart\"") == std::string::npos);
         PC_CHECK(json.find("\"expected_cost\":") != std::string::npos);
         PC_CHECK(compilation.working_states > 0);
+        PC_CHECK(compilation.behavioral_classes >=
+                 compilation.policy_regions);
         PC_CHECK(compilation.nodes > 0);
         PC_CHECK(compilation.edges > compilation.nodes);
+        PC_CHECK(json.find("\"type\":\"transmute\"") !=
+                 std::string::npos);
+        PC_CHECK(json.find("\"type\":\"alteration\"") !=
+                 std::string::npos);
+        PC_CHECK(json.find(
+                     "\"from\":\"router\",\"to\":\"offpolicy\"") !=
+                 std::string::npos);
+        std::size_t region_route_count = 0;
+        std::size_t route_at = 0;
+        while ((route_at = json.find(
+                    "\"from\":\"router\",\"to\":\"s", route_at)) !=
+               std::string::npos) {
+            ++region_route_count;
+            ++route_at;
+        }
+        PC_CHECK(region_route_count == compilation.policy_regions);
         PC_CHECK(compilation.strategy_json_bytes == json.size());
         PC_CHECK(
             compilation.previously_accounted_peak_owned_bytes ==
@@ -972,6 +990,15 @@ void run_synthetic_gate() {
                  std::string::npos);
         PC_CHECK(strict_compilation.policy_regions > 0);
         PC_CHECK(strict_compilation.nodes <= strict.options.max_compiled_nodes);
+        std::printf(
+            "solver compile alt-spam strict: %llu regions, %llu condition "
+            "bytes, %llu JSON bytes\n",
+            static_cast<unsigned long long>(
+                strict_compilation.policy_regions),
+            static_cast<unsigned long long>(
+                strict_compilation.total_condition_bytes),
+            static_cast<unsigned long long>(
+                strict_compilation.strategy_json_bytes));
         auto strict_strategy = compile_strategy_json(
             session, strict_json.data(), strict_json.size());
         PC_CHECK(strict_strategy != nullptr);
@@ -1109,8 +1136,13 @@ void run_synthetic_gate() {
         rare.rarity = PC_RARITY_RARE;
         const SolveResult solved = solve(perfect_calc, rare, prices);
         PC_CHECK(solved.converged);
+        PolicyCompilationTelemetry compilation;
         const std::string json = compile_policy_strategy_json(
-            perfect_calc, solved, "six-slot all-T1 perfect item");
+            perfect_calc, solved, "six-slot all-T1 perfect item",
+            &compilation);
+        PC_CHECK(compilation.behavioral_classes >
+                 compilation.policy_regions);
+        PC_CHECK(compilation.policy_regions == 1);
         PC_CHECK(json.find("\"type\":\"has_mod_group\"") !=
                  std::string::npos);
         PC_CHECK(json.find("\"min_tier\":1") != std::string::npos);
@@ -1121,8 +1153,17 @@ void run_synthetic_gate() {
         const double mean = summary.known_total_cost /
                             static_cast<double>(summary.completed_runs);
         std::printf(
-            "solver compile perfect item: V=%.4f empirical=%.4f (%u states)\n",
-            expected, mean, perfect_calc.state_count());
+            "solver compile perfect item: V=%.4f empirical=%.4f "
+            "(%u states, %llu classes, %llu regions, %llu condition "
+            "bytes, %llu JSON bytes)\n",
+            expected, mean, perfect_calc.state_count(),
+            static_cast<unsigned long long>(
+                compilation.behavioral_classes),
+            static_cast<unsigned long long>(compilation.policy_regions),
+            static_cast<unsigned long long>(
+                compilation.total_condition_bytes),
+            static_cast<unsigned long long>(
+                compilation.strategy_json_bytes));
         PC_CHECK(std::fabs(mean - expected) < 2.0);
     }
 
