@@ -23,13 +23,20 @@ std::string compile_policy_strategy_json(
         result.options.max_strategy_json_bytes,
         max_strategy_json_bytes);
     std::uint64_t compiler_peak_owned_bytes = 0;
+    std::uint64_t compiler_complete_peak_owned_bytes = 0;
     const auto observe_compiler_owned =
         [&](const std::uint64_t bytes) {
             compiler_peak_owned_bytes =
                 std::max(compiler_peak_owned_bytes, bytes);
+            compiler_complete_peak_owned_bytes = std::max(
+                compiler_complete_peak_owned_bytes, bytes);
             if (telemetry != nullptr) {
                 telemetry->peak_owned_bytes =
                     compiler_peak_owned_bytes;
+                telemetry->previously_accounted_peak_owned_bytes =
+                    compiler_peak_owned_bytes;
+                telemetry->complete_peak_owned_bytes =
+                    compiler_complete_peak_owned_bytes;
             }
             if (bytes > max_compiler_owned_bytes) {
                 if (telemetry != nullptr) {
@@ -39,6 +46,20 @@ std::string compile_policy_strategy_json(
                 throw SolverResourceLimit(
                     "max_solver_owned_bytes",
                     max_compiler_owned_bytes);
+            }
+        };
+    const auto observe_complete_compiler_owned =
+        [&](const std::uint64_t previously_accounted,
+            const std::uint64_t complete) {
+            /* Gate 0 is deliberately observational: only the historic
+             * partial estimate reaches the cap check above. */
+            observe_compiler_owned(previously_accounted);
+            compiler_complete_peak_owned_bytes = std::max(
+                compiler_complete_peak_owned_bytes,
+                std::max(previously_accounted, complete));
+            if (telemetry != nullptr) {
+                telemetry->complete_peak_owned_bytes =
+                    compiler_complete_peak_owned_bytes;
             }
         };
     if (!result.refined_policy_artifact.strategy_json.empty()) {
@@ -53,15 +74,33 @@ std::string compile_policy_strategy_json(
         if (telemetry != nullptr) {
             telemetry->working_states =
                 result.refined_policy_artifact.working_states;
+            telemetry->behavioral_classes =
+                result.refined_policy_artifact.behavioral_classes;
             telemetry->policy_regions =
                 result.refined_policy_artifact.policy_regions;
             telemetry->nodes = result.refined_policy_artifact.nodes;
             telemetry->edges = result.refined_policy_artifact.edges;
             telemetry->strategy_json_bytes =
                 result.refined_policy_artifact.strategy_json.size();
+            telemetry->total_condition_bytes =
+                result.refined_policy_artifact.total_condition_bytes;
+            telemetry->max_condition_bytes =
+                result.refined_policy_artifact.max_condition_bytes;
+            telemetry->exact_state_fallbacks =
+                result.refined_policy_artifact.exact_state_fallbacks;
+            telemetry->junk_predicates =
+                result.refined_policy_artifact.junk_predicates;
         }
-        observe_compiler_owned(
+        const std::uint64_t previously_accounted = std::max(
+            result.refined_policy_artifact
+                .previously_accounted_peak_owned_bytes,
             result.refined_policy_artifact.strategy_json.size() + 1);
+        observe_complete_compiler_owned(
+            previously_accounted,
+            std::max(
+                result.refined_policy_artifact
+                    .complete_peak_owned_bytes,
+                previously_accounted));
         return result.refined_policy_artifact.strategy_json;
     }
     const SessionImpl& session = calc.session();
@@ -313,15 +352,31 @@ std::string compile_policy_strategy_json(
             gap("compiled fixed renewal exceeded "
                 "max_strategy_json_bytes");
         }
-        observe_compiler_owned(
-            owned_string_bytes(json));
+        std::uint64_t complete_owned = owned_string_bytes(json);
+        add_owned_bytes(
+            complete_owned, owned_string_bytes(goal_condition));
+        add_owned_bytes(
+            complete_owned,
+            static_cast<std::uint64_t>(vocabulary.capacity()) *
+                sizeof(SlotVocabulary));
+        for (const SlotVocabulary& slot : vocabulary) {
+            add_owned_bytes(
+                complete_owned, owned_string_bytes(slot.member));
+            add_owned_bytes(
+                complete_owned, owned_string_bytes(slot.satisfied));
+        }
+        observe_complete_compiler_owned(
+            owned_string_bytes(json), complete_owned);
         if (telemetry != nullptr) {
             telemetry->working_states =
                 static_cast<std::uint32_t>(working_states);
+            telemetry->behavioral_classes = 1;
             telemetry->policy_regions = 1;
             telemetry->nodes = kNodes;
             telemetry->edges = kEdges;
             telemetry->strategy_json_bytes = json.size();
+            telemetry->total_condition_bytes = goal_condition.size();
+            telemetry->max_condition_bytes = goal_condition.size();
         }
         return json;
     }
@@ -1044,7 +1099,10 @@ std::string compile_policy_strategy_json(
                 quotient_class_condition(
                     calc, vocabulary, state_id,
                     quotient_members.at(state_id), feature_index,
-                    result.behavioral_representative_by_state));
+                    result.behavioral_representative_by_state,
+                    telemetry == nullptr
+                        ? nullptr
+                        : &telemetry->exact_state_fallbacks));
         }
     }
     if (structured_refined_route) {
@@ -1480,6 +1538,207 @@ std::string compile_policy_strategy_json(
         }
         compiled_option_kernels.emplace(state_id, kernel);
     }
+    const auto audited_compiler_owned_bytes =
+        [&](const std::string* growing_json) {
+            std::uint64_t bytes = 0;
+            const auto add_u32_vector =
+                [&](const std::vector<std::uint32_t>& values) {
+                    add_owned_bytes(
+                        bytes,
+                        static_cast<std::uint64_t>(values.capacity()) *
+                            sizeof(std::uint32_t));
+                };
+            const auto add_string = [&](const std::string& value) {
+                add_owned_bytes(bytes, owned_string_bytes(value));
+            };
+            const auto add_map_nodes =
+                [&](const std::size_t count,
+                    const std::size_t payload) {
+                    add_owned_bytes(
+                        bytes,
+                        static_cast<std::uint64_t>(count) *
+                            (payload + 3 * sizeof(void*)));
+                };
+
+            add_owned_bytes(
+                bytes,
+                static_cast<std::uint64_t>(vocabulary.capacity()) *
+                    sizeof(SlotVocabulary));
+            for (const SlotVocabulary& slot : vocabulary) {
+                add_string(slot.member);
+                add_string(slot.satisfied);
+            }
+            add_u32_vector(compiled_states);
+            add_map_nodes(
+                state_conditions.size(),
+                sizeof(std::uint32_t) + sizeof(std::string));
+            for (const auto& [unused, condition] : state_conditions) {
+                (void)unused;
+                add_string(condition);
+            }
+            add_map_nodes(
+                quotient_members.size(),
+                sizeof(std::uint32_t) +
+                    sizeof(std::vector<std::uint32_t>));
+            for (const auto& [unused, members] : quotient_members) {
+                (void)unused;
+                add_u32_vector(members);
+            }
+            add_owned_bytes(
+                bytes,
+                static_cast<std::uint64_t>(
+                    feature_index.values.capacity()) *
+                    sizeof(std::uint32_t));
+            add_owned_bytes(
+                bytes,
+                static_cast<std::uint64_t>(
+                    feature_index.non_goal_buckets.capacity()) *
+                    sizeof(feature_index.non_goal_buckets.front()));
+            for (const auto& buckets : feature_index.non_goal_buckets) {
+                add_owned_bytes(
+                    bytes,
+                    static_cast<std::uint64_t>(buckets.bucket_count()) *
+                        sizeof(void*));
+                add_map_nodes(
+                    buckets.size(),
+                    sizeof(std::uint32_t) +
+                        sizeof(std::vector<std::uint32_t>));
+                for (const auto& [unused, members] : buckets) {
+                    (void)unused;
+                    add_u32_vector(members);
+                }
+            }
+            add_owned_bytes(bytes, refined_route_owned_bytes());
+            add_u32_vector(canonical_state_ids);
+            add_map_nodes(
+                leaders_by_key.size(),
+                sizeof(std::string) +
+                    sizeof(std::vector<std::uint32_t>));
+            for (const auto& [key, leaders] : leaders_by_key) {
+                add_string(key);
+                add_u32_vector(leaders);
+            }
+            add_map_nodes(
+                states_by_leader.size(),
+                sizeof(std::uint32_t) +
+                    sizeof(std::vector<std::uint32_t>));
+            for (const auto& [unused, states] : states_by_leader) {
+                (void)unused;
+                add_u32_vector(states);
+            }
+            add_u32_vector(emitted_states);
+            add_u32_vector(policy_region_by_state);
+            add_map_nodes(
+                region_expected_cost.size(),
+                sizeof(std::uint32_t) +
+                    sizeof(std::optional<std::string>));
+            for (const auto& [unused, value] : region_expected_cost) {
+                (void)unused;
+                if (value.has_value()) add_string(*value);
+            }
+            add_map_nodes(
+                gated_retry_state_by_state.size(),
+                2 * sizeof(std::uint32_t));
+            add_owned_bytes(
+                bytes,
+                static_cast<std::uint64_t>(
+                    policy_route_entries.capacity()) *
+                    sizeof(PolicyRouteEntry));
+            add_owned_bytes(
+                bytes,
+                static_cast<std::uint64_t>(
+                    feature_condition_cache.capacity()) *
+                    sizeof(feature_condition_cache.front()));
+            for (const auto& cache : feature_condition_cache) {
+                add_map_nodes(
+                    cache.size(),
+                    sizeof(std::uint32_t) + sizeof(std::string));
+                for (const auto& [unused, condition] : cache) {
+                    (void)unused;
+                    add_string(condition);
+                }
+            }
+            add_owned_bytes(
+                bytes,
+                static_cast<std::uint64_t>(
+                    policy_route_nodes.capacity()) *
+                    sizeof(PolicyRouteNode));
+            for (const PolicyRouteNode& node : policy_route_nodes) {
+                add_string(node.id);
+                add_owned_bytes(
+                    bytes,
+                    static_cast<std::uint64_t>(node.edges.capacity()) *
+                        sizeof(PolicyRouteEdge));
+                for (const PolicyRouteEdge& route_edge : node.edges) {
+                    add_string(route_edge.to);
+                    add_string(route_edge.condition);
+                }
+            }
+            add_map_nodes(
+                policy_route_node_by_signature.size(),
+                2 * sizeof(std::string));
+            for (const auto& [signature, node] :
+                 policy_route_node_by_signature) {
+                add_string(signature);
+                add_string(node);
+            }
+            add_owned_bytes(
+                bytes,
+                static_cast<std::uint64_t>(route_features.capacity()) *
+                    sizeof(std::size_t));
+            add_string(policy_route_root.to);
+            add_string(policy_route_root.guard);
+            add_map_nodes(
+                compiled_option_kernels.size(),
+                sizeof(std::uint32_t) + sizeof(OptionKernel));
+            for (const auto& [unused, kernel] :
+                 compiled_option_kernels) {
+                (void)unused;
+                add_owned_bytes(
+                    bytes,
+                    static_cast<std::uint64_t>(
+                        kernel.expected_resources.capacity()) *
+                        sizeof(std::pair<std::string, double>));
+                for (const auto& [key, quantity] :
+                     kernel.expected_resources) {
+                    (void)quantity;
+                    add_string(key);
+                }
+                add_owned_bytes(
+                    bytes,
+                    static_cast<std::uint64_t>(kernel.exits.capacity()) *
+                        sizeof(OutcomeEntry));
+                add_owned_bytes(
+                    bytes,
+                    static_cast<std::uint64_t>(
+                        kernel.observation_choice_groups.capacity()) *
+                        sizeof(OutcomeChoiceGroup));
+                for (const OutcomeChoiceGroup& group :
+                     kernel.observation_choice_groups) {
+                    add_u32_vector(group.states);
+                }
+                add_owned_bytes(
+                    bytes,
+                    static_cast<std::uint64_t>(
+                        kernel.observation_choice_options.capacity()) *
+                        sizeof(OutcomeChoiceOption));
+                add_u32_vector(kernel.retry_states);
+                add_u32_vector(kernel.continuation_states);
+                add_owned_bytes(
+                    bytes,
+                    static_cast<std::uint64_t>(
+                        kernel.automatic_candidate_attempt_entries
+                            .capacity()) *
+                        sizeof(OutcomeEntry));
+                add_string(kernel.automatic.legality_result);
+                add_string(kernel.automatic.reason);
+            }
+            if (growing_json != nullptr) add_string(*growing_json);
+            return bytes;
+        };
+    observe_complete_compiler_owned(
+        retained_compile_condition_bytes,
+        audited_compiler_owned_bytes(nullptr));
     std::uint32_t node_count =
         4 + static_cast<std::uint32_t>(policy_route_nodes.size()) +
         static_cast<std::uint32_t>(
@@ -1836,7 +2095,8 @@ std::string compile_policy_strategy_json(
             retained_compile_condition_bytes;
         add_owned_bytes(
             owned, owned_string_bytes(json));
-        observe_compiler_owned(owned);
+        observe_complete_compiler_owned(
+            owned, audited_compiler_owned_bytes(&json));
     }
 
     std::uint32_t edge_counter = 0;
@@ -1858,6 +2118,32 @@ std::string compile_policy_strategy_json(
         } else {
             json += ",\"condition\":";
             json += condition;
+            if (telemetry != nullptr) {
+                add_owned_bytes(
+                    telemetry->total_condition_bytes,
+                    condition.size());
+                telemetry->max_condition_bytes = std::max(
+                    telemetry->max_condition_bytes,
+                    static_cast<std::uint64_t>(condition.size()));
+                const auto count_predicates =
+                    [&](const std::string& needle) {
+                        std::uint64_t count = 0;
+                        std::size_t position = 0;
+                        while ((position = condition.find(
+                                    needle, position)) !=
+                               std::string::npos) {
+                            ++count;
+                            position += needle.size();
+                        }
+                        return count;
+                    };
+                add_owned_bytes(
+                    telemetry->junk_predicates,
+                    count_predicates(
+                        "\"type\":\"mod_count\"") +
+                        count_predicates(
+                            "\"type\":\"mod_family_count\""));
+            }
         }
         if (accounting_role != nullptr) {
             json += ",\"accounting_roles\":[\"";
@@ -1882,7 +2168,8 @@ std::string compile_policy_strategy_json(
             retained_compile_condition_bytes;
         add_owned_bytes(
             owned, owned_string_bytes(json));
-        observe_compiler_owned(owned);
+        observe_complete_compiler_owned(
+            owned, audited_compiler_owned_bytes(&json));
     };
 
     edge("start", "router", 0, "", true);
@@ -2288,11 +2575,32 @@ std::string compile_policy_strategy_json(
             retained_compile_condition_bytes;
         add_owned_bytes(
             owned, owned_string_bytes(json));
-        observe_compiler_owned(owned);
+        observe_complete_compiler_owned(
+            owned, audited_compiler_owned_bytes(&json));
     }
     if (telemetry != nullptr) {
         telemetry->working_states = static_cast<std::uint32_t>(
             compiled_states.size());
+        if (structured_refined_route) {
+            telemetry->behavioral_classes =
+                static_cast<std::uint32_t>(std::count_if(
+                    refined_routing->classes.begin(),
+                    refined_routing->classes.end(),
+                    [](const refinement::RefinedPolicyCompileClass& value) {
+                        return !value.terminal;
+                    }));
+        } else if (!result.behavioral_representative_by_state.empty()) {
+            telemetry->behavioral_classes =
+                static_cast<std::uint32_t>(std::count_if(
+                    quotient_members.begin(), quotient_members.end(),
+                    [&](const auto& value) {
+                        return value.first < result.goal_states.size() &&
+                               !result.goal_states[value.first];
+                    }));
+        } else {
+            telemetry->behavioral_classes =
+                static_cast<std::uint32_t>(compiled_states.size());
+        }
         telemetry->policy_regions = static_cast<std::uint32_t>(
             emitted_states.size());
         telemetry->nodes = node_count;

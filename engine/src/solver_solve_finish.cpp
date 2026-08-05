@@ -1978,12 +1978,30 @@ SolveResult SolveWork::Impl::finish() {
                     std::move(certificate.compiled.strategy_json);
                 artifact.working_states =
                     certificate.compiled.compilation.working_states;
+                artifact.behavioral_classes =
+                    certificate.compiled.compilation.behavioral_classes;
                 artifact.policy_regions =
                     certificate.compiled.compilation.policy_regions;
                 artifact.nodes =
                     certificate.compiled.compilation.nodes;
                 artifact.edges =
                     certificate.compiled.compilation.edges;
+                artifact.total_condition_bytes =
+                    certificate.compiled.compilation.total_condition_bytes;
+                artifact.max_condition_bytes =
+                    certificate.compiled.compilation.max_condition_bytes;
+                artifact.exact_state_fallbacks =
+                    certificate.compiled.compilation.exact_state_fallbacks;
+                artifact.junk_predicates =
+                    certificate.compiled.compilation.junk_predicates;
+                artifact.peak_owned_bytes =
+                    certificate.compiled.compilation.peak_owned_bytes;
+                artifact.previously_accounted_peak_owned_bytes =
+                    certificate.compiled.compilation
+                        .previously_accounted_peak_owned_bytes;
+                artifact.complete_peak_owned_bytes =
+                    certificate.compiled.compilation
+                        .complete_peak_owned_bytes;
                 result.refined_policy_artifact =
                     std::move(artifact);
                 telemetry.retained_artifact_bytes =

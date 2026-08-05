@@ -596,9 +596,17 @@ struct PrimitiveRenewalWitness {
 struct RetainedCompiledPolicyArtifact {
     std::string strategy_json;
     std::uint32_t working_states = 0;
+    std::uint32_t behavioral_classes = 0;
     std::uint32_t policy_regions = 0;
     std::uint32_t nodes = 0;
     std::uint32_t edges = 0;
+    std::uint64_t total_condition_bytes = 0;
+    std::uint64_t max_condition_bytes = 0;
+    std::uint64_t exact_state_fallbacks = 0;
+    std::uint64_t junk_predicates = 0;
+    std::uint64_t peak_owned_bytes = 0;
+    std::uint64_t previously_accounted_peak_owned_bytes = 0;
+    std::uint64_t complete_peak_owned_bytes = 0;
 };
 
 /*
@@ -749,14 +757,24 @@ std::string serialize_solve_log(
 struct PolicyCompilationTelemetry {
     std::uint64_t duration_ns = 0;
     std::uint32_t working_states = 0;
+    std::uint32_t behavioral_classes = 0;
     std::uint32_t policy_regions = 0;
     std::uint32_t nodes = 0;
     std::uint32_t edges = 0;
     std::uint64_t strategy_json_bytes = 0;
+    std::uint64_t total_condition_bytes = 0;
+    std::uint64_t max_condition_bytes = 0;
+    std::uint64_t exact_state_fallbacks = 0;
+    std::uint64_t junk_predicates = 0;
     /* Peak compiler-owned buffers, excluding the retained CalcContext and
      * SolveResult charged by the caller. Structured refinement includes its
      * parent/member condition programs as well as the growing JSON document. */
     std::uint64_t peak_owned_bytes = 0;
+    /* Gate 0 keeps the historic partial estimate and the audited complete
+     * compiler-owned estimate side by side. The complete column is initially
+     * observational and therefore cannot influence cap decisions. */
+    std::uint64_t previously_accounted_peak_owned_bytes = 0;
+    std::uint64_t complete_peak_owned_bytes = 0;
     std::string cap_hit;
 };
 

@@ -704,13 +704,17 @@ std::string quotient_class_condition(
     const std::uint32_t representative,
     const std::vector<std::uint32_t>& members,
     const QuotientFeatureIndex& feature_index,
-    const std::vector<std::uint32_t>& class_by_state) {
+    const std::vector<std::uint32_t>& class_by_state,
+    std::uint64_t* exact_state_fallbacks = nullptr) {
     const SessionImpl& session = calc.session();
     const AbstractLayout& layout = calc.layout();
     const std::vector<QuotientFeature> representative_features =
         quotient_features(
             session, layout, vocabulary, calc.state(representative));
     const auto exact_fallback = [&]() {
+        if (exact_state_fallbacks != nullptr) {
+            ++*exact_state_fallbacks;
+        }
         std::vector<std::string> conditions;
         conditions.reserve(members.size());
         for (const std::uint32_t member : members) {

@@ -1068,10 +1068,27 @@ bool SolveWork::Impl::certify_incumbent_for_fallback(
         }
         incumbent.compiled_artifact.working_states =
             compilation.working_states;
+        incumbent.compiled_artifact.behavioral_classes =
+            compilation.behavioral_classes;
         incumbent.compiled_artifact.policy_regions =
             compilation.policy_regions;
         incumbent.compiled_artifact.nodes = compilation.nodes;
         incumbent.compiled_artifact.edges = compilation.edges;
+        incumbent.compiled_artifact.total_condition_bytes =
+            compilation.total_condition_bytes;
+        incumbent.compiled_artifact.max_condition_bytes =
+            compilation.max_condition_bytes;
+        incumbent.compiled_artifact.exact_state_fallbacks =
+            compilation.exact_state_fallbacks;
+        incumbent.compiled_artifact.junk_predicates =
+            compilation.junk_predicates;
+        incumbent.compiled_artifact.peak_owned_bytes =
+            compilation.peak_owned_bytes;
+        incumbent.compiled_artifact
+            .previously_accounted_peak_owned_bytes =
+            compilation.previously_accounted_peak_owned_bytes;
+        incumbent.compiled_artifact.complete_peak_owned_bytes =
+            compilation.complete_peak_owned_bytes;
         incumbent.compilation_provenance =
             "compiled_primitive_renewal_exact_kernel_v1";
         incumbent.proper = true;

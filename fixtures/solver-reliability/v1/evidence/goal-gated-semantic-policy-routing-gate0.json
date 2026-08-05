@@ -1,0 +1,217 @@
+{
+  "schema_version": "goal_gated_semantic_policy_routing_gate0_v1",
+  "captured_at_utc": "2026-08-04T00:00:00Z",
+  "source_commit": "cf67fd9",
+  "comparison_contract": {
+    "A": "ungated solve plus current compiler",
+    "B": "gated solve plus current compiler",
+    "C": "gated solve plus new compiler; intentionally pending until Gate 3",
+    "attribution_rule": "A-to-B is gating; B-to-C is compiler routing. A-to-C is never attributed solely to the compiler."
+  },
+  "frozen_cases": {
+    "U": {
+      "kind": "uniform one-mod destructive-renewal policy",
+      "case": "goal-gated-semantic-policy-routing-uniform-case.json",
+      "operation": "alteration",
+      "status": "exact"
+    },
+    "J": {
+      "kind": "junk-route reproduction",
+      "case": "../cases/reliability-class-body-armour.json",
+      "retained_condition": "goal-gated-semantic-policy-routing-junk-condition.txt",
+      "retained_condition_bytes": 435441,
+      "retained_condition_sha256": "5D639CAF69E699186475B823BC86D24DB5643F24E3D2719183319806E5109520",
+      "relationship_to_reproducible_case": "The retained 55-carrier condition is the exact supplied product artifact. The body-armour case reproduces the same exact-state junk-fingerprint route family and is the deterministic A/B/C solve."
+    },
+    "M": {
+      "kind": "genuine multi-operation policy",
+      "case": "../cases/reliability-class-body-armour.json",
+      "baseline_final_operation_regions": 4,
+      "protection": "Every distinct executable operation and continuation remains a separate final region."
+    },
+    "S": {
+      "kind": "state-local observation-owned option",
+      "fixture": "engine/tests/test_solver_compile.cpp::run_structured_observation_route_tests",
+      "protection": "Observation signatures, semantic decision keys, and continuations must remain distinct."
+    }
+  },
+  "u_and_j_are_same_solve": false,
+  "primary_case": "reliability-class-body-armour",
+  "primary_comparison": {
+    "A": {
+      "solve_options": {
+        "goal_progress_gated_reforges": false,
+        "absolute_optimality_gap": 5.0,
+        "relative_optimality_gap": 0.1
+      },
+      "result_scope": "executable_returned_policy",
+      "policy": {
+        "status": "bounded_feasible",
+        "lower_bound": 0.0,
+        "upper_bound": 6.874526556412887,
+        "value": 6.874526556412887,
+        "policy_hash": "8141563caf0ff716",
+        "transition_hash": "72dba448b4f028ec",
+        "strategy_sha256": "218113D819CD14F6C85F719B110439ECC33C2FD997B41446AA69884FB2E2FC79"
+      },
+      "renewal_witness": {
+        "status": "absent",
+        "candidates": 0,
+        "validated_non_goal_states": 0,
+        "witness_hash": "0000000000000000"
+      },
+      "states": {
+        "discovered": 38,
+        "expanded": 38,
+        "policy_reachable": 25,
+        "behavioral_classes": 25,
+        "final_operation_regions": 5
+      },
+      "compilation": {
+        "nodes": 18,
+        "edges": 51,
+        "strategy_json_bytes": 4766346,
+        "duration_ms": 53.7456,
+        "total_condition_bytes": 4761052,
+        "maximum_condition_bytes": 2616644,
+        "exact_state_fallbacks": 0,
+        "junk_predicates": 31448,
+        "previously_accounted_peak_owned_bytes": 14652036,
+        "audited_complete_peak_owned_bytes": 14655286
+      },
+      "exact_evaluation": {
+        "cost_reconciled": true,
+        "off_policy_mass": 0.0
+      },
+      "simulation": {
+        "runs": 10000,
+        "successes": 10000,
+        "off_policy_failures": 0
+      }
+    },
+    "B": {
+      "solve_options": {
+        "goal_progress_gated_reforges": true,
+        "absolute_optimality_gap": 5.0,
+        "relative_optimality_gap": 0.1
+      },
+      "result_scope": "zero_progress_reroll_policy_restriction",
+      "policy": {
+        "status": "bounded_feasible",
+        "lower_bound": 0.0,
+        "upper_bound": 8.341181986595203,
+        "value": 8.341181986595203,
+        "policy_hash": "539e9bdc63f5ffc0",
+        "transition_hash": "98ffeb183e0e31b7",
+        "strategy_sha256": "F678A730F034FC397C1DCD6C4E3FBBD10CA0C0343D94AE1A73A5BF1949B968E1"
+      },
+      "renewal_witness": {
+        "status": "valid",
+        "candidates": 1,
+        "rejections": 0,
+        "validated_non_goal_states": 2,
+        "success_probability": 0.05978234746473211,
+        "witness_hash": "740266bfbc4d12f7"
+      },
+      "states": {
+        "discovered": 51,
+        "expanded": 51,
+        "policy_reachable": 13,
+        "behavioral_classes": 13,
+        "final_operation_regions": 4
+      },
+      "compilation": {
+        "nodes": 14,
+        "edges": 31,
+        "strategy_json_bytes": 723637,
+        "duration_ms": 8.8035,
+        "total_condition_bytes": 719918,
+        "maximum_condition_bytes": 525989,
+        "exact_state_fallbacks": 0,
+        "junk_predicates": 4666,
+        "previously_accounted_peak_owned_bytes": 2559848,
+        "audited_complete_peak_owned_bytes": 2562026
+      },
+      "exact_evaluation": {
+        "cost_reconciled": true,
+        "off_policy_mass": 0.0
+      },
+      "simulation": {
+        "runs": 10000,
+        "successes": 10000,
+        "off_policy_failures": 0
+      }
+    },
+    "C": null
+  },
+  "uniform_case_baseline": {
+    "solve_options": {
+      "goal_progress_gated_reforges": true,
+      "absolute_optimality_gap": 0.0,
+      "relative_optimality_gap": 0.0
+    },
+    "result_scope": "zero_progress_reroll_policy_restriction",
+    "policy": {
+      "status": "exact",
+      "lower_bound": 8.070144284128844,
+      "upper_bound": 8.070144284128844,
+      "value": 8.070144284128844,
+      "policy_hash": "d55715dd93adc9b9",
+      "transition_hash": "d4a614f015dc678b",
+      "strategy_sha256": "8F88B1CC3EB81384857F417AEBAFDDA7A04D5E7C785ACB639679B5C4BD81ABC5"
+    },
+    "renewal_witness": {
+      "status": "valid",
+      "candidates": 1,
+      "rejections": 0,
+      "validated_non_goal_states": 2,
+      "success_probability": 0.012391352183958631,
+      "witness_hash": "4b4af5c111dc3214"
+    },
+    "states": {
+      "discovered": 4,
+      "expanded": 4,
+      "policy_reachable": 2,
+      "behavioral_classes": 3,
+      "final_operation_regions": 2
+    },
+    "compilation": {
+      "nodes": 8,
+      "edges": 10,
+      "strategy_json_bytes": 2232,
+      "duration_ms": 0.5931,
+      "total_condition_bytes": 431,
+      "maximum_condition_bytes": 154,
+      "exact_state_fallbacks": 0,
+      "junk_predicates": 0,
+      "previously_accounted_peak_owned_bytes": 2817,
+      "audited_complete_peak_owned_bytes": 13952
+    },
+    "exact_evaluation": {
+      "cost_reconciled": true,
+      "off_policy_mass": 0.0
+    },
+    "simulation": {
+      "runs": 10000,
+      "successes": 10000,
+      "off_policy_failures": 0
+    }
+  },
+  "memory_headroom": {
+    "accepted_case_cap_bytes": 1073741824,
+    "A_complete_peak_percent_of_cap": 1.3648808002471924,
+    "A_headroom_percent": 98.63511919975281,
+    "B_complete_peak_percent_of_cap": 0.23860447108745575,
+    "B_headroom_percent": 99.76139552891254,
+    "authorization": "The corrected audit has ample accepted-portfolio headroom. Gate 0 remains observational; Gate 4 may switch enforcement after routing lands."
+  },
+  "observational_invariance": {
+    "focused_native_compile_checks": 761,
+    "focused_native_compile_failures": 0,
+    "strategy_json_byte_identical_before_after_telemetry": true,
+    "A_strategy_sha256_before_after": "218113D819CD14F6C85F719B110439ECC33C2FD997B41446AA69884FB2E2FC79",
+    "B_strategy_sha256_before_after": "F678A730F034FC397C1DCD6C4E3FBBD10CA0C0343D94AE1A73A5BF1949B968E1",
+    "cap_decision_changed": false,
+    "policy_behavior_changed": false
+  }
+}

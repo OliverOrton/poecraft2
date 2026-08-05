@@ -1,76 +1,56 @@
 # Session Handoff
 
-**Status: no implementation boundary is active. Oliver must choose the next
-chunk before implementation resumes.**
+**Status: Goal-Gated Semantic Policy Routing is active at Gate 1.**
 
-Latest completed milestone:
-[Versioned Reforge Resource Accounting And V3 Production Qualification](docs/archive/2026-08-04-versioned-reforge-resource-accounting/README.md).
+Active plan:
+[Goal-Gated Semantic Policy Routing](docs/active/goal-gated-semantic-policy-routing.md).
 
-Final report:
-[Versioned Reforge Resource Accounting Final Report](docs/archive/2026-08-04-versioned-reforge-resource-accounting/report.md).
+Starting commit: `cf67fd982e649193821424a0d8b85ea614027cf3`.
 
-Historical audit:
-[Versioned Reforge Resource Accounting Historical Audit](docs/archive/2026-08-04-versioned-reforge-resource-accounting/audit.md).
+Current branch: `codex/goal-gated-semantic-policy-routing`.
 
-Current branch: `codex/reforge-resource-accounting-v3-qualification`
+## Objective
 
-Milestone commits:
+Make normal Calculator solves request the existing zero-goal-progress reforge
+scope, record that scope as structured non-executable strategy provenance, and
+compile solved policies by final executable region rather than irrelevant
+junk-carrier identity. The simple goal-or-selected-reforge loop must be proved
+from the solved policy and existing renewal machinery.
 
-- Gate 0: `a683b8c`
-- Gate 1: `50bc7be`
-- Gate 2: `7d15639`
-- Gate 3: `8fe0112`
-- Gate 4: `5c5ffc0`
-- Gate 5: `7c7f462`
-- Gate 6: the local archive/release commit that contains this handoff
+## Current boundary
 
-## Released boundary
+Gate 0 is complete in its separate local commit. The supplied condition is
+retained byte-for-byte with its required hash; U/J/M/S and A/B are frozen;
+focused compile tests pass; and old versus complete compiler-memory telemetry
+is observational and leaves strategy hashes unchanged. Point C remains
+intentionally unfilled until the new compiler is measured.
 
-- Logical reforge work is the resource contract and cap basis. Evaluator effort
-  is separately reported diagnostic work.
-- Production strict selected/alternative evaluation uses exact V3. Coarse
-  evaluation remains V1. Raw V1 remains available as the rollback path, and V2
-  remains diagnostic only.
-- Exact family equivalence passed 252,997 checks with zero failures.
-- The 48-case reliability portfolio retained 46 expected passes and the same
-  two known rare-renewal misses. Its 38 compiled strategies completed 380,000
-  simulations with zero off-policy failures.
-- The reserved selected-only 100M run completed exactly 40 selected rows under
-  the unchanged logical envelope. The canonical hard 20M run preserved bounds,
-  hashes, and its byte-identical fallback; both retained fallbacks compiled,
-  exact-evaluated, and completed the required 10,000 simulations with zero
-  off-policy failures.
-- Release WASM preserves the frozen binding hashes and bounds, satisfies the
-  worker slice/cancellation contracts, and is committed.
-- Gate 6 native, artifact, binding, web, TypeScript, and full acceptance checks
-  passed. The full `scripts/test.ps1` pipeline ran exactly once at final
-  acceptance and reported 3,002,456 engine checks with zero failures.
+Gate 1 is in progress:
 
-Tracked qualification evidence:
+- centralize normal Calculator solve-option construction and always request
+  `goal_progress_gated_reforges: true`, with or without gap targets;
+- preserve the optional WASM/native field and unrestricted engine default;
+- add optional structured `solver_policy_scope` provenance to compiled
+  strategies and preserve it through TypeScript cloning and persistence; and
+- prove zero-progress retry, exact partial progress, alternative-family
+  admission, scope agreement, and unchanged cancellation/progress behavior.
 
-- [Gate 5](fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate5.json)
-- [Gate 6](fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate6.json)
+## Preserved boundaries
 
-## Remaining boundaries
+- No mechanic, price, action-filter, Bellman, V3, abstraction, quotient, cap,
+  or unrestricted engine-default changes.
+- Partial-progress outcomes remain exact; ordinary, Essence, Harvest, and
+  Fossil alternatives remain discoverable.
+- Unknown, conflicting, state-local, observation-owned, or unproved routing
+  keeps the existing off-policy/bounded fallback.
+- No cap increase, push, merge, visual review, five-goal watchdog,
+  rare-renewal reconciliation, checkpoint/replay, or general solver scaling.
+- Final changed-strategy verification uses exactly 10,000 simulations. The
+  full `scripts/test.ps1` pipeline runs exactly once at final acceptance.
 
-- The two known rare-renewal expectation misses remain unresolved.
-- The standalone five-goal watchdog case remains unresolved and was not rerun.
-- The archived V1 whole-population scaling projection remains historical V1-only
-  evidence; no current whole-population V3 run was authorized or required.
-- Frontier reachability, selected-policy density, certified fallback scope, and
-  broader alternative-generation work remain separate future milestones.
-- Deterministic checkpoint/replay remains deferred.
+## Handoff discipline
 
-## Exact next step
-
-No exact next step is authorized. Oliver must select the next milestone before
-implementation resumes.
-
-## Repository rules
-
-- Local commits only unless Oliver explicitly requests a push.
-- End commits with the active agent's co-author line.
-- SQLite is canonical and the compiled artifact is derived; never hand-edit
-  either.
-- Any mechanic ambiguity requires Oliver's ruling rather than research or a
-  guess.
+Update this file at every stopping point. Each Gate 0-4 boundary receives its
+own local commit, all ending with the active agent co-author line. On final
+completion, archive the plan/evidence/report, update stable docs, clear this
+file to no active boundary, and leave the tree clean.

@@ -1000,11 +1000,18 @@ void run_alt_spam_tests() {
         refinement.refusal_cause_samples_omitted = 22;
         PolicyCompilationTelemetry compilation_sample;
         compilation_sample.working_states = 23;
+        compilation_sample.behavioral_classes = 22;
         compilation_sample.policy_regions = 24;
         compilation_sample.nodes = 25;
         compilation_sample.edges = 26;
         compilation_sample.strategy_json_bytes = 27;
+        compilation_sample.total_condition_bytes = 271;
+        compilation_sample.max_condition_bytes = 272;
+        compilation_sample.exact_state_fallbacks = 2;
+        compilation_sample.junk_predicates = 273;
         compilation_sample.peak_owned_bytes = 28;
+        compilation_sample.previously_accounted_peak_owned_bytes = 28;
+        compilation_sample.complete_peak_owned_bytes = 280;
         const std::string refinement_telemetry =
             serialize_solver_telemetry(
                 calc, &refinement_sample, nullptr, std::nullopt,
@@ -1094,10 +1101,19 @@ void run_alt_spam_tests() {
                  std::string::npos);
         PC_CHECK(refinement_telemetry.find(
                      "\"compilation\":{\"available\":true,"
-                     "\"working_states\":23,\"policy_regions\":24,"
+                     "\"working_states\":23,"
+                     "\"behavioral_classes\":22,"
+                     "\"policy_regions\":24,"
                      "\"nodes\":25,\"edges\":26,"
                      "\"strategy_json_bytes\":27,"
-                     "\"peak_owned_bytes\":28,\"cap_hit\":null}") !=
+                     "\"total_condition_bytes\":271,"
+                     "\"max_condition_bytes\":272,"
+                     "\"exact_state_fallbacks\":2,"
+                     "\"junk_predicates\":273,"
+                     "\"peak_owned_bytes\":28,"
+                     "\"previously_accounted_peak_owned_bytes\":28,"
+                     "\"complete_peak_owned_bytes\":280,"
+                     "\"cap_hit\":null}") !=
                  std::string::npos);
         refinement.status = "resource_cap";
         refinement.resource_cap = "max_sweeps";

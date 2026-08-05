@@ -590,9 +590,34 @@ void run_structured_observation_route_tests() {
             telemetry.peak_owned_bytes >=
             strategy.capacity() + 1);
         PC_CHECK(
+            telemetry.previously_accounted_peak_owned_bytes ==
+            telemetry.peak_owned_bytes);
+        PC_CHECK(
+            telemetry.complete_peak_owned_bytes >=
+            telemetry.previously_accounted_peak_owned_bytes);
+        PC_CHECK(telemetry.total_condition_bytes > 0);
+        PC_CHECK(telemetry.max_condition_bytes > 0);
+        PC_CHECK(telemetry.behavioral_classes > 0);
+        PC_CHECK(
             compile_strategy_json(
                 fixture.session, strategy.data(), strategy.size()) !=
             nullptr);
+
+        /* Gate 0's complete audit is observational. A limit equal to the
+         * historic estimate must still accept byte-identical output even
+         * when the corrected column is higher. */
+        PolicyCompilationTelemetry observational;
+        const std::string observational_strategy =
+            compile_policy_strategy_json(
+                *fixture.calc, fixture.solved,
+                "structured observation route", &observational,
+                std::numeric_limits<std::uint64_t>::max(),
+                &fixture.routing,
+                telemetry.previously_accounted_peak_owned_bytes);
+        PC_CHECK(observational_strategy == strategy);
+        PC_CHECK(
+            observational.complete_peak_owned_bytes >=
+            observational.previously_accounted_peak_owned_bytes);
 
         StructuredRouteFixture remapped =
             make_structured_route_fixture();
@@ -902,6 +927,14 @@ void run_synthetic_gate() {
         PC_CHECK(compilation.nodes > 0);
         PC_CHECK(compilation.edges > compilation.nodes);
         PC_CHECK(compilation.strategy_json_bytes == json.size());
+        PC_CHECK(
+            compilation.previously_accounted_peak_owned_bytes ==
+            compilation.peak_owned_bytes);
+        PC_CHECK(
+            compilation.complete_peak_owned_bytes >=
+            compilation.previously_accounted_peak_owned_bytes);
+        PC_CHECK(compilation.total_condition_bytes > 0);
+        PC_CHECK(compilation.max_condition_bytes > 0);
 
         const SimulationSummaryInternal summary =
             run_compiled(session, json, prices, 10000, 42);

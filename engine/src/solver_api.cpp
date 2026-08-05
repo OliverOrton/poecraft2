@@ -1751,13 +1751,29 @@ pc_result pc_solver_compile_strategy(
                 solver::PolicyCompilationTelemetry& telemetry =
                     *solver->compilation;
                 telemetry.working_states = refined.working_states;
+                telemetry.behavioral_classes =
+                    refined.behavioral_classes;
                 telemetry.policy_regions = refined.policy_regions;
                 telemetry.nodes = refined.nodes;
                 telemetry.edges = refined.edges;
                 telemetry.strategy_json_bytes =
                     refined.strategy_json.size();
-                telemetry.peak_owned_bytes =
-                    refined.strategy_json.capacity() + 1;
+                telemetry.total_condition_bytes =
+                    refined.total_condition_bytes;
+                telemetry.max_condition_bytes =
+                    refined.max_condition_bytes;
+                telemetry.exact_state_fallbacks =
+                    refined.exact_state_fallbacks;
+                telemetry.junk_predicates = refined.junk_predicates;
+                telemetry.peak_owned_bytes = std::max(
+                    refined.previously_accounted_peak_owned_bytes,
+                    refined.strategy_json.capacity() + 1);
+                telemetry.previously_accounted_peak_owned_bytes =
+                    telemetry.peak_owned_bytes;
+                telemetry.complete_peak_owned_bytes =
+                    std::max(
+                        refined.complete_peak_owned_bytes,
+                        telemetry.peak_owned_bytes);
             }
             return copy_text(
                 refined.strategy_json, buffer, capacity, out_length,

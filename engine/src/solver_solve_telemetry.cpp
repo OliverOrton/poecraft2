@@ -3812,22 +3812,44 @@ std::string serialize_solver_telemetry(
     json += ",\"compilation\":{";
     if (compilation == nullptr) {
         json += "\"available\":false,\"working_states\":null";
+        json += ",\"behavioral_classes\":null";
         json += ",\"policy_regions\":null";
         json += ",\"nodes\":null,\"edges\":null";
         json += ",\"strategy_json_bytes\":null";
+        json += ",\"total_condition_bytes\":null";
+        json += ",\"max_condition_bytes\":null";
+        json += ",\"exact_state_fallbacks\":null";
+        json += ",\"junk_predicates\":null";
         json += ",\"peak_owned_bytes\":null";
+        json += ",\"previously_accounted_peak_owned_bytes\":null";
+        json += ",\"complete_peak_owned_bytes\":null";
         json += ",\"cap_hit\":null";
     } else {
         json += "\"available\":true,\"working_states\":" +
                 std::to_string(compilation->working_states);
+        json += ",\"behavioral_classes\":" +
+                std::to_string(compilation->behavioral_classes);
         json += ",\"policy_regions\":" +
                 std::to_string(compilation->policy_regions);
         json += ",\"nodes\":" + std::to_string(compilation->nodes);
         json += ",\"edges\":" + std::to_string(compilation->edges);
         json += ",\"strategy_json_bytes\":" +
                 std::to_string(compilation->strategy_json_bytes);
+        json += ",\"total_condition_bytes\":" +
+                std::to_string(compilation->total_condition_bytes);
+        json += ",\"max_condition_bytes\":" +
+                std::to_string(compilation->max_condition_bytes);
+        json += ",\"exact_state_fallbacks\":" +
+                std::to_string(compilation->exact_state_fallbacks);
+        json += ",\"junk_predicates\":" +
+                std::to_string(compilation->junk_predicates);
         json += ",\"peak_owned_bytes\":" +
                 std::to_string(compilation->peak_owned_bytes);
+        json += ",\"previously_accounted_peak_owned_bytes\":" +
+                std::to_string(
+                    compilation->previously_accounted_peak_owned_bytes);
+        json += ",\"complete_peak_owned_bytes\":" +
+                std::to_string(compilation->complete_peak_owned_bytes);
         json += ",\"cap_hit\":";
         if (compilation->cap_hit.empty()) {
             json += "null";
