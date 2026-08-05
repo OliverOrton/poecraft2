@@ -1,6 +1,6 @@
 # Goal-Gated Semantic Policy Routing
 
-**Status: Gate 0 is complete; Gate 1 is active.**
+**Status: Gates 0-1 are complete; Gate 2 is active.**
 
 Owner: Oliver
 
@@ -101,7 +101,15 @@ telemetry, and baselines separately.
 
 ## Gate 1 — Calculator scope and structured provenance
 
-**Active.**
+**Completed.** `calculatorSolveOptions` is the normal Calculator's single
+option builder and always requests gated reforges, independently of optional
+gap targets. Native and WASM defaults remain optional/unrestricted. Compiled
+strategies now own optional `solver_policy_scope` metadata using the existing
+telemetry spelling, while authored legacy strategies may omit it. Focused web
+model/presentation tests and native compile/solve suites pass; those native
+tests also preserve absent and below-tier retry aggregation, exact
+partial-progress states, admitted alternatives, and cancellation/progress
+contracts.
 
 Centralize Calculator solve-option construction and make normal Calculator
 solves send `goal_progress_gated_reforges: true`, including when both gap
@@ -113,7 +121,7 @@ Add optional, non-executable strategy metadata following existing naming
 conventions, provisionally:
 
 ```json
-"solver_policy_scope": "unrestricted" | "zero_progress_reroll_restriction"
+"solver_policy_scope": "unrestricted" | "zero_progress_reroll_policy_restriction"
 ```
 
 Preserve it through the native result, WASM/TypeScript strategy model,
@@ -126,6 +134,8 @@ result/strategy provenance; and unchanged progress/cancellation behavior.
 Commit Gate 1 separately.
 
 ## Gate 2 — compact certified uniform-region compilation
+
+**Active.**
 
 Extend the existing primitive-renewal compiler and proof machinery. When all
 policy-reachable non-goal carriers select one identical state-independent

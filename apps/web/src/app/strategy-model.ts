@@ -244,6 +244,11 @@ export interface StrategyViewport {
     zoom: number;
 }
 
+/** Non-executable provenance for the solver MDP that produced a strategy. */
+export type SolverPolicyScope =
+    | "unrestricted"
+    | "zero_progress_reroll_policy_restriction";
+
 export interface StrategyDocument {
     version: "v1";
     name: string;
@@ -252,6 +257,7 @@ export interface StrategyDocument {
     base_state: StrategyBaseState;
     nodes: StrategyNode[];
     edges: StrategyEdge[];
+    solver_policy_scope?: SolverPolicyScope;
     economy?: EconomyIdentity;
     ui?: {
         viewport?: StrategyViewport;
@@ -292,12 +298,18 @@ export function isStrategyDocument(value: unknown): value is StrategyDocument {
         return false;
     }
     const candidate = value as Partial<StrategyDocument>;
+    const validSolverPolicyScope =
+        candidate.solver_policy_scope === undefined ||
+        candidate.solver_policy_scope === "unrestricted" ||
+        candidate.solver_policy_scope ===
+            "zero_progress_reroll_policy_restriction";
     return (
         candidate.version === "v1" &&
         Array.isArray(candidate.nodes) &&
         Array.isArray(candidate.edges) &&
         typeof candidate.start_node_id === "string" &&
-        Boolean(candidate.base_state)
+        Boolean(candidate.base_state) &&
+        validSolverPolicyScope
     );
 }
 

@@ -4181,18 +4181,35 @@ void run_goal_progress_gated_reforge_tests() {
     std::unordered_map<std::uint32_t, double> partial_probability;
     double terminal_probability = 0.0;
     double retry_probability = 0.0;
+    double absent_retry_probability = 0.0;
+    double below_tier_retry_probability = 0.0;
     for (const OutcomeEntry& entry : unrestricted_entries) {
         const AbstractState& state = calc.state(entry.state);
         if (calc.is_goal_state(state)) {
             terminal_probability += entry.probability;
         } else if (satisfied_goal_count(state, goal) == 0) {
             retry_probability += entry.probability;
+            bool any_below_tier = false;
+            for (std::size_t slot = 0; slot < goal.slots.size(); ++slot) {
+                any_below_tier =
+                    any_below_tier ||
+                    state.slot_status[slot] ==
+                        static_cast<std::uint8_t>(
+                            GoalSlotStatus::PresentBelowTier);
+            }
+            if (any_below_tier) {
+                below_tier_retry_probability += entry.probability;
+            } else {
+                absent_retry_probability += entry.probability;
+            }
         } else {
             partial_probability[entry.state] += entry.probability;
         }
     }
     PC_CHECK(terminal_probability > 0.0);
     PC_CHECK(retry_probability > 0.0);
+    PC_CHECK(absent_retry_probability > 0.0);
+    PC_CHECK(below_tier_retry_probability > 0.0);
     PC_CHECK(!partial_probability.empty());
 
     const OutcomeDistribution& gated =
@@ -4215,6 +4232,10 @@ void run_goal_progress_gated_reforge_tests() {
     PC_CHECK(near(
         gated.gated_retry_probability,
         retry_probability, 1e-12));
+    PC_CHECK(near(
+        gated.gated_retry_probability,
+        absent_retry_probability + below_tier_retry_probability,
+        1e-12));
 
     double total_probability = 0.0;
     double partial_total = 0.0;
@@ -4412,6 +4433,11 @@ void run_goal_progress_gated_reforge_tests() {
     PC_CHECK(restricted_json.find(
                  "\"description\":\"Exact within the "
                  "zero-progress-reroll policy restriction") !=
+             std::string::npos);
+    PC_CHECK(restricted.options.goal_progress_gated_reforges);
+    PC_CHECK(restricted_json.find(
+                 "\"solver_policy_scope\":\""
+                 "zero_progress_reroll_policy_restriction\"") !=
              std::string::npos);
     PC_CHECK(restricted_json.find("_gated_route") !=
              std::string::npos);
@@ -4655,6 +4681,10 @@ void run_goal_progress_gated_reforge_tests() {
                  "\"description\":\"Bounded executable fixed "
                  "destructive-renewal policy exact within the "
                  "zero-progress-reroll restriction") !=
+             std::string::npos);
+    PC_CHECK(early_json.find(
+                 "\"solver_policy_scope\":\""
+                 "zero_progress_reroll_policy_restriction\"") !=
              std::string::npos);
     PC_CHECK(early_json.find("_gated_route") == std::string::npos);
     const std::shared_ptr<StrategyImpl> early_strategy =

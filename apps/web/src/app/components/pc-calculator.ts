@@ -90,7 +90,7 @@ import {
 import {
     certifiedFactorLabel,
     shouldCompileSolvePolicy,
-    solveGapTargetOptions,
+    calculatorSolveOptions,
     solveResultMarkup,
     solveTerminationDetail,
 } from "../solver-result-presentation";
@@ -758,7 +758,7 @@ export class PcCalculator extends HTMLElement {
                 solveGoal,
             );
             economy = await this.client.loadEconomy(pinned.snapshot);
-            const solveOptions = solveGapTargetOptions(
+            const solveOptions = calculatorSolveOptions(
                 this.solveAbsoluteGapTarget,
                 this.solveRelativeGapPercentTarget,
             );

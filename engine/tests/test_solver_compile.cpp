@@ -921,6 +921,10 @@ void run_synthetic_gate() {
         PolicyCompilationTelemetry compilation;
         const std::string json = compile_policy_strategy_json(
             calc, solved, "alt-spam", &compilation);
+        PC_CHECK(!solved.options.goal_progress_gated_reforges);
+        PC_CHECK(json.find(
+                     "\"solver_policy_scope\":\"unrestricted\"") !=
+                 std::string::npos);
         PC_CHECK(json.find("\"type\":\"restart\"") == std::string::npos);
         PC_CHECK(json.find("\"expected_cost\":") != std::string::npos);
         PC_CHECK(compilation.working_states > 0);

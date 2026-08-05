@@ -15,6 +15,7 @@ import {
     strategyEdgeLabel,
     strategyEdgeLabelLines,
     strategyNodeLabel,
+    isStrategyDocument,
     validateStrategy,
     type ConditionGroupNode,
     type ConditionLeaf,
@@ -48,6 +49,8 @@ import type { Catalog } from "../src/app/engine-protocol";
 
 {
     const strategy = createDefaultStrategy();
+    strategy.solver_policy_scope =
+        "zero_progress_reroll_policy_restriction";
     strategy.nodes[1].position = { x: 913, y: 417 };
     strategy.edges[1].condition = {
         type: "all",
@@ -59,7 +62,18 @@ import type { Catalog } from "../src/app/engine-protocol";
     const reopened = JSON.parse(JSON.stringify(cloneStrategy(strategy)));
     assert.deepEqual(reopened.nodes[1].position, { x: 913, y: 417 });
     assert.deepEqual(reopened.edges[1].condition, strategy.edges[1].condition);
-    console.log("  ok - strategy layout and semantics round-trip");
+    assert.equal(
+        reopened.solver_policy_scope,
+        "zero_progress_reroll_policy_restriction",
+    );
+    assert.equal(isStrategyDocument(reopened), true);
+    assert.equal(
+        isStrategyDocument({ ...reopened, solver_policy_scope: "invalid" }),
+        false,
+    );
+    delete reopened.solver_policy_scope;
+    assert.equal(isStrategyDocument(reopened), true);
+    console.log("  ok - strategy layout, semantics, and optional solver provenance round-trip");
 }
 
 {

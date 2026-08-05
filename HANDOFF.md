@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Status: Goal-Gated Semantic Policy Routing is active at Gate 1.**
+**Status: Goal-Gated Semantic Policy Routing is active at Gate 2.**
 
 Active plan:
 [Goal-Gated Semantic Policy Routing](docs/active/goal-gated-semantic-policy-routing.md).
@@ -25,15 +25,22 @@ focused compile tests pass; and old versus complete compiler-memory telemetry
 is observational and leaves strategy hashes unchanged. Point C remains
 intentionally unfilled until the new compiler is measured.
 
-Gate 1 is in progress:
+Gate 1 is complete in its separate local commit. Normal Calculator solves now
+always send `goal_progress_gated_reforges: true`, including without gap
+targets. The native/WASM option remains optional and defaults unrestricted.
+Compiled strategies carry optional non-executable `solver_policy_scope`
+metadata, preserved by the TypeScript model, cloning, persistence, and
+comparison path. Focused web tests and native compile/solve suites pass.
 
-- centralize normal Calculator solve-option construction and always request
-  `goal_progress_gated_reforges: true`, with or without gap targets;
-- preserve the optional WASM/native field and unrestricted engine default;
-- add optional structured `solver_policy_scope` provenance to compiled
-  strategies and preserve it through TypeScript cloning and persistence; and
-- prove zero-progress retry, exact partial progress, alternative-family
-  admission, scope agreement, and unchanged cancellation/progress behavior.
+Gate 2 is in progress:
+
+- extend the existing primitive-renewal proof path to exact as well as bounded
+  executable uniform policies;
+- prove identical operation, legality, engine kernel signature, closure,
+  properness, and goal-owned terminal exits over every reachable carrier;
+- emit the existing compact 4-node/4-edge loop when certified; and
+- refuse compaction for conflicting, incompatible, state-local, or unproved
+  cases and retain the general compiler.
 
 ## Preserved boundaries
 

@@ -4,7 +4,7 @@ import type { SolveSummary } from "../src/app/engine-protocol";
 import {
     certifiedFactorLabel,
     shouldCompileSolvePolicy,
-    solveGapTargetOptions,
+    calculatorSolveOptions,
     solveResultMarkup,
     solveTerminationDetail,
 } from "../src/app/solver-result-presentation";
@@ -55,13 +55,18 @@ import {
 }
 
 {
-    assert.deepEqual(solveGapTargetOptions(5, 10), {
+    assert.deepEqual(calculatorSolveOptions(5, 10), {
+        goal_progress_gated_reforges: true,
         max_absolute_optimality_gap: 5,
         max_relative_optimality_gap: 0.1,
     });
-    assert.equal(solveGapTargetOptions(0, -1), undefined);
-    assert.equal(solveGapTargetOptions(Number.NaN, 0), undefined);
-    console.log("  ok - product target inputs map to optional engine targets");
+    assert.deepEqual(calculatorSolveOptions(0, -1), {
+        goal_progress_gated_reforges: true,
+    });
+    assert.deepEqual(calculatorSolveOptions(Number.NaN, 0), {
+        goal_progress_gated_reforges: true,
+    });
+    console.log("  ok - Calculator solves always opt into gated reforges and map optional targets");
 }
 
 {

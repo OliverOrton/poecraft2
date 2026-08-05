@@ -130,18 +130,21 @@ export function shouldCompileSolvePolicy(summary: SolveSummary): boolean {
     return summary.policy_available;
 }
 
-export function solveGapTargetOptions(
+/** Build the complete solve-option contract for normal Calculator solves. */
+export function calculatorSolveOptions(
     absoluteGap: number,
     relativeGapPercent: number,
-): SolveOptions | undefined {
-    const options: SolveOptions = {};
+): SolveOptions {
+    const options: SolveOptions = {
+        goal_progress_gated_reforges: true,
+    };
     if (Number.isFinite(absoluteGap) && absoluteGap > 0) {
         options.max_absolute_optimality_gap = absoluteGap;
     }
     if (Number.isFinite(relativeGapPercent) && relativeGapPercent > 0) {
         options.max_relative_optimality_gap = relativeGapPercent / 100;
     }
-    return Object.keys(options).length > 0 ? options : undefined;
+    return options;
 }
 
 /** Describe a stop without turning a bounded policy into an exactness claim. */

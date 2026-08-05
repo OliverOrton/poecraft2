@@ -249,6 +249,8 @@ std::string compile_policy_strategy_json(
             "\",\"description\":\"Bounded executable fixed "
             "destructive-renewal policy exact within the "
             "zero-progress-reroll restriction; not a global optimum\","
+            "\"solver_policy_scope\":\""
+            "zero_progress_reroll_policy_restriction\","
             "\"base_state\":{\"base_key\":\"" +
             json_escape(
                 data.string_at(
@@ -1771,6 +1773,10 @@ std::string compile_policy_strategy_json(
             "policy restriction; excluded zero-progress salvage routes are "
             "not globally optimized";
     }
+    json += result.options.goal_progress_gated_reforges
+                ? "\",\"solver_policy_scope\":\""
+                  "zero_progress_reroll_policy_restriction"
+                : "\",\"solver_policy_scope\":\"unrestricted";
     json += "\",\"base_state\":{\"base_key\":\"";
     json += json_escape(
         data.string_at(data.base_metadata_path_sid[session.base_index]));
