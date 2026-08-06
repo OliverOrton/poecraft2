@@ -1,6 +1,7 @@
 #include "solver_quotient_bellman.hpp"
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <map>
 #include <set>
@@ -18,6 +19,15 @@ using solve_detail::WideFloat;
 
 constexpr std::uint64_t kNoRow =
     std::numeric_limits<std::uint64_t>::max();
+constexpr std::uint64_t kTransitionHashOffset = 1469598103934665603ull;
+constexpr std::uint64_t kTransitionHashPrime = 1099511628211ull;
+
+void hash_transition_token(
+        std::uint64_t& hash,
+        const std::uint64_t token) {
+    hash ^= token;
+    hash *= kTransitionHashPrime;
+}
 
 std::uint64_t saturated_add(
         const std::uint64_t left,
@@ -98,6 +108,67 @@ QuotientBellmanGraph::QuotientBellmanGraph(
         const std::uint64_t max_owned_bytes) {
     transition_cache_.quotient_proofs =
         std::make_shared<ProofStore>(max_owned_bytes);
+}
+
+QuotientBellmanResult
+QuotientBellmanGraph::project_unique_certified_policy(
+        const std::vector<std::uint32_t>& entry_cell_ids) const {
+    QuotientBellmanResult out;
+    out.selected_rows_by_state.assign(cell_by_state_.size(), kNoRow);
+    std::set<std::uint32_t> pending;
+    std::set<std::uint32_t> reachable;
+    for (const std::uint32_t cell_id : entry_cell_ids) {
+        const std::optional<std::uint32_t> state = state_for_cell(cell_id);
+        if (!state.has_value()) {
+            out.status = QuotientBellmanStatus::InvalidCell;
+            out.failure_reason =
+                "selected-policy projection names an unknown entry cell";
+            return out;
+        }
+        pending.insert(*state);
+    }
+    while (!pending.empty()) {
+        const std::uint32_t state = *pending.begin();
+        pending.erase(pending.begin());
+        if (!reachable.insert(state).second) continue;
+        const CellRecord& cell = cells_.at(cell_by_state_.at(state));
+        if (cell.cell.terminal) continue;
+        std::uint64_t selected = kNoRow;
+        for (const std::uint64_t row :
+             state_row_indices(transition_cache_, state)) {
+            if (!transition_cache_.rows.at(row).admitted ||
+                !row_certificate_current(row)) {
+                continue;
+            }
+            if (selected != kNoRow) {
+                out.status = QuotientBellmanStatus::InvalidRow;
+                out.failure_reason =
+                    "selected-policy projection has multiple certified rows";
+                return out;
+            }
+            selected = row;
+        }
+        if (selected == kNoRow) {
+            out.status =
+                QuotientBellmanStatus::MissingReachableCertificate;
+            out.failure_reason =
+                "selected-policy projection lacks a reachable certified row";
+            return out;
+        }
+        out.selected_rows_by_state[state] = selected;
+        const SparseRow& sparse = transition_cache_.rows.at(selected);
+        for (std::uint32_t index = 0;
+             index < sparse.transition_count; ++index) {
+            pending.insert(transition_cache_.successors.at(
+                sparse.transition_offset + index));
+        }
+    }
+    out.reachable_cell_ids.reserve(reachable.size());
+    for (const std::uint32_t state : reachable) {
+        out.reachable_cell_ids.push_back(cell_by_state_.at(state));
+    }
+    out.status = QuotientBellmanStatus::Complete;
+    return out;
 }
 
 std::optional<std::uint32_t> QuotientBellmanGraph::state_for_cell(
@@ -256,9 +327,42 @@ std::uint64_t QuotientBellmanGraph::append_row(
         row.proof_identity = std::move(canonical);
     }
 
+    std::uint64_t transition_hash = kTransitionHashOffset;
+    hash_transition_token(transition_hash, sparse.transitions.size());
+    for (const SparsePolicyTransitionInput& transition : sparse.transitions) {
+        hash_transition_token(transition_hash, transition.successor);
+        hash_transition_token(
+            transition_hash,
+            std::bit_cast<std::uint64_t>(transition.probability));
+    }
+    std::optional<solve_detail::SharedSparseTransitionSpan> shared_span;
+    auto& transition_bucket = transition_span_buckets_[transition_hash];
+    for (const std::uint64_t candidate_id : transition_bucket) {
+        const SparseRow& candidate = transition_cache_.rows.at(candidate_id);
+        if (candidate.transition_count != sparse.transitions.size()) continue;
+        bool equal = true;
+        for (std::size_t index = 0; index < sparse.transitions.size(); ++index) {
+            const std::uint64_t offset = candidate.transition_offset + index;
+            if (transition_cache_.successors.at(offset) !=
+                    sparse.transitions[index].successor ||
+                std::bit_cast<std::uint64_t>(
+                    transition_cache_.probabilities.at(offset)) !=
+                    std::bit_cast<std::uint64_t>(
+                        sparse.transitions[index].probability)) {
+                equal = false;
+                break;
+            }
+        }
+        if (equal) {
+            shared_span = solve_detail::SharedSparseTransitionSpan{
+                candidate.transition_offset, candidate.transition_count};
+            break;
+        }
+    }
     const std::uint64_t stable_row =
         solve_detail::append_sparse_policy_row(
-            transition_cache_, priced_rows_, sparse);
+            transition_cache_, priced_rows_, sparse, shared_span);
+    if (!shared_span.has_value()) transition_bucket.push_back(stable_row);
     if (row.certified) {
         auto [payload, inserted] =
             transition_cache_.quotient_proofs->intern_payload(
@@ -385,6 +489,21 @@ void QuotientBellmanGraph::refresh_row_kernel_bytes() {
     bytes = saturated_add(
         bytes,
         saturated_product(
+            cells_.size(),
+            sizeof(std::pair<const std::uint32_t, CellRecord>) +
+                3 * sizeof(void*) + sizeof(StableKey) +
+                2 * sizeof(void*)));
+    for (const auto& [cell_id, record] : cells_) {
+        (void)cell_id;
+        bytes = saturated_add(
+            bytes,
+            saturated_product(
+                record.cell.semantic_identity.capacity(),
+                sizeof(std::uint64_t)));
+    }
+    bytes = saturated_add(
+        bytes,
+        saturated_product(
             reverse_predecessors_.capacity(),
             sizeof(std::vector<std::uint32_t>)));
     for (const std::vector<std::uint32_t>& predecessors :
@@ -393,6 +512,20 @@ void QuotientBellmanGraph::refresh_row_kernel_bytes() {
             bytes,
             saturated_product(
                 predecessors.capacity(), sizeof(std::uint32_t)));
+    }
+    bytes = saturated_add(
+        bytes,
+        saturated_product(
+            transition_span_buckets_.size(),
+            sizeof(std::pair<
+                const std::uint64_t,
+                std::vector<std::uint64_t>>) +
+                3 * sizeof(void*)));
+    for (const auto& [hash, rows] : transition_span_buckets_) {
+        (void)hash;
+        bytes = saturated_add(
+            bytes,
+            saturated_product(rows.capacity(), sizeof(std::uint64_t)));
     }
     transition_cache_.quotient_proofs->ledger().set_owned_bytes(
         ProofMemoryCategory::RowKernel, bytes);
@@ -726,8 +859,8 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
                 refinement::RefinedPolicyClass& cls = fixed.classes[local];
                 cls.class_id = local;
                 cls.coarse_state = cell.cell.cell_id;
-                cls.coarse_state_key = cell.cell.semantic_identity;
-                cls.exact_members = {cell.cell.semantic_identity};
+                cls.coarse_state_key = cell.cell.semantic_identity.value();
+                cls.exact_members = {cell.cell.semantic_identity.value()};
                 cls.goal = cell.cell.terminal;
                 cls.terminal = cell.cell.terminal;
                 if (cell.cell.terminal) continue;

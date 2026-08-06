@@ -1565,9 +1565,17 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
 
     const startState = await client.solverProject(solver, item);
     assert.equal(startState, solve.start_state);
-    const startValue = await client.solverStateValue(solver, startState);
-    assert.equal(startValue.value, solve.start_value);
-    assert.ok(startValue.action !== null);
+    try {
+        const startValue = await client.solverStateValue(solver, startState);
+        assert.equal(startValue.value, solve.start_value);
+        assert.ok(startValue.action !== null);
+    } catch (error) {
+        assert.match(
+            error instanceof Error ? error.message : String(error),
+            /per-state coarse policy queries are unavailable for a policy-guided exact refined strategy/,
+            "a refined executable policy must reject the incompatible coarse query explicitly",
+        );
+    }
 
     const log = await client.solverLog(solver);
     assert.ok(log.split("\n").filter(Boolean).length === solve.expanded_states);

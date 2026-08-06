@@ -502,7 +502,10 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
         const ClosedPartitionReplayFunction& replay,
         const std::vector<std::uint32_t>& previous_partition,
         const bool retain_member_keys,
-        const ClosedPartitionLimits limits) {
+        const ClosedPartitionLimits limits,
+        const bool arc_sources_absent,
+        const std::vector<std::optional<std::uint32_t>>*
+            known_arc_sources) {
     ClosedPartitionResult result;
     if (node_count == 0) {
         result.failure_reason =
@@ -512,6 +515,9 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
     if (!replay ||
         (!previous_partition.empty() &&
          previous_partition.size() != node_count) ||
+        (known_arc_sources != nullptr &&
+         (arc_sources_absent ||
+          known_arc_sources->size() != node_count)) ||
         !std::isfinite(limits.probability_sum_tolerance) ||
         limits.probability_sum_tolerance < 0.0) {
         result.status = ClosedPartitionStatus::InvalidGraph;
@@ -537,16 +543,76 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
             3 * sizeof(std::uint32_t) + sizeof(std::uint64_t)));
     if (fail_memory(dense_bytes)) return result;
 
+    std::vector<std::optional<std::uint32_t>> replay_arc_sources(
+        node_count);
+    if (known_arc_sources != nullptr) {
+        replay_arc_sources = *known_arc_sources;
+    }
+    std::vector<bool> shared_arc_authority(node_count, false);
+    try {
+        for (std::uint32_t index = 0;
+             !arc_sources_absent && known_arc_sources == nullptr &&
+             index < node_count;
+             ++index) {
+            const ClosedPartitionNode input = replay(index);
+            if (input.arc_source.has_value() &&
+                (*input.arc_source >= node_count ||
+                 *input.arc_source == index || !input.arcs.empty())) {
+                throw std::invalid_argument(
+                    "replayed closed node has invalid shared arc authority");
+            }
+            if (input.observation_source.has_value() ||
+                input.immediate_source.has_value()) {
+                throw std::invalid_argument(
+                    "replayed closed node has unsupported shared key authority");
+            }
+            if (input.terminal && input.arc_source.has_value()) {
+                throw std::invalid_argument(
+                    "replayed terminal closed node has outgoing arcs");
+            }
+            replay_arc_sources[index] = input.arc_source;
+        }
+        for (std::uint32_t index = 0; index < node_count; ++index) {
+            if (!replay_arc_sources[index].has_value()) continue;
+            const std::uint32_t source = *replay_arc_sources[index];
+            if (source >= node_count || source == index) {
+                throw std::invalid_argument(
+                    "replayed closed node has invalid shared arc authority");
+            }
+            if (replay_arc_sources[source].has_value()) {
+                throw std::invalid_argument(
+                    "replayed closed node has nested shared arc authority");
+            }
+            shared_arc_authority[source] = true;
+        }
+    } catch (const std::exception& error) {
+        result.status = ClosedPartitionStatus::InvalidGraph;
+        result.failure_reason = error.what();
+        return result;
+    }
+
+    std::vector<std::uint32_t> replay_order;
+    replay_order.reserve(node_count);
+    for (std::uint32_t node = 0; node < node_count; ++node) {
+        if (shared_arc_authority[node]) replay_order.push_back(node);
+    }
+    for (std::uint32_t node = 0; node < node_count; ++node) {
+        if (!shared_arc_authority[node]) replay_order.push_back(node);
+    }
+
     const auto canonical_node = [&](const std::uint32_t index) {
         ClosedPartitionNode input = replay(index);
         if (input.stable_key.empty() || input.observation_key.empty() ||
-            input.immediate_key.empty() || input.arc_source.has_value() ||
+            input.immediate_key.empty() ||
+            input.arc_source != replay_arc_sources[index] ||
             input.observation_source.has_value() ||
             input.immediate_source.has_value()) {
             throw std::invalid_argument(
                 "replayed closed node has invalid identity authority");
         }
-        if (input.terminal && !input.arcs.empty()) {
+        if ((input.arc_source.has_value() && !input.arcs.empty()) ||
+            (input.terminal &&
+             (!input.arcs.empty() || input.arc_source.has_value()))) {
             throw std::invalid_argument(
                 "replayed terminal closed node has outgoing arcs");
         }
@@ -566,7 +632,7 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
             accumulated[{arc.label, arc.successor}].add(arc.probability);
             total.add(arc.probability);
         }
-        if (!input.terminal &&
+        if (!input.terminal && !input.arc_source.has_value() &&
             (accumulated.empty() ||
              std::fabs(total.value() - 1.0) >
                  limits.probability_sum_tolerance)) {
@@ -579,12 +645,51 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
         out.observation_key = std::move(input.observation_key);
         out.immediate_key = std::move(input.immediate_key);
         out.terminal = input.terminal;
+        out.arc_source = input.arc_source;
         out.arcs.reserve(accumulated.size());
         for (auto& [key, probability] : accumulated) {
             out.arcs.push_back({
                 std::move(key.first), key.second, probability});
         }
         return out;
+    };
+    std::vector<std::uint32_t> retained_authority_by_node(
+        node_count, kNoId);
+    std::vector<CanonicalClosedNode> retained_authorities;
+    retained_authorities.reserve(std::count(
+        shared_arc_authority.begin(),
+        shared_arc_authority.end(), true));
+    try {
+        for (std::uint32_t node = 0; node < node_count; ++node) {
+            if (!shared_arc_authority[node]) continue;
+            retained_authority_by_node[node] =
+                static_cast<std::uint32_t>(
+                    retained_authorities.size());
+            retained_authorities.push_back(canonical_node(node));
+        }
+    } catch (const std::exception& error) {
+        result.status = ClosedPartitionStatus::InvalidGraph;
+        result.failure_reason = error.what();
+        return result;
+    }
+    const std::uint64_t retained_authority_bytes = saturated_add(
+        estimate_canonical_closed_nodes_memory(retained_authorities),
+        saturated_product(
+            retained_authority_by_node.capacity(),
+            sizeof(std::uint32_t)));
+    const std::uint64_t replay_base_bytes = saturated_add(
+        dense_bytes, retained_authority_bytes);
+    if (fail_memory(replay_base_bytes)) return result;
+    const auto retained_authority =
+            [&](const std::uint32_t node)
+                -> const CanonicalClosedNode& {
+        const std::uint32_t retained =
+            retained_authority_by_node.at(node);
+        if (retained == kNoId) {
+            throw std::invalid_argument(
+                "replayed shared arc authority was not retained");
+        }
+        return retained_authorities.at(retained);
     };
     const auto projection = [&](const CanonicalClosedNode& node,
                                 const std::vector<std::uint32_t>& partition) {
@@ -615,21 +720,106 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
         std::map<ClosedPartitionKey, std::uint32_t> temporary;
         assigned.assign(node_count, 0);
         std::uint64_t key_bytes = 0;
-        for (std::uint32_t node = 0; node < node_count; ++node) {
-            CanonicalClosedNode canonical = canonical_node(node);
+        std::map<ClosedPartitionKey, std::uint32_t>
+            projection_ids;
+        std::vector<std::uint32_t> projection_id_by_authority;
+        std::uint64_t projection_key_bytes = 0;
+        if (!initial) {
+            projection_id_by_authority.assign(node_count, kNoId);
+            projection_key_bytes = saturated_product(
+                projection_id_by_authority.capacity(),
+                sizeof(std::uint32_t));
+            for (const std::uint32_t node : replay_order) {
+                CanonicalClosedNode replayed;
+                const CanonicalClosedNode* canonical = nullptr;
+                if (shared_arc_authority[node]) {
+                    canonical = &retained_authority(node);
+                } else {
+                    replayed = canonical_node(node);
+                    canonical = &replayed;
+                }
+                const std::uint32_t authority =
+                    canonical->arc_source.value_or(node);
+                if (authority != node) continue;
+                const std::vector<ClosedProjectionEntry> projected =
+                    projection(*canonical, *current);
+                ClosedPartitionKey projection_key =
+                    closed_projection_key(projected);
+                const std::uint64_t transient_projection_bytes =
+                    estimate_closed_projection_memory(projected) +
+                    saturated_product(
+                        projection_key.capacity(),
+                        sizeof(std::uint64_t));
+                if (fail_memory(saturated_add(
+                        saturated_add(
+                            replay_base_bytes,
+                            projection_key_bytes),
+                        transient_projection_bytes))) {
+                    return false;
+                }
+                auto [stored, inserted] = projection_ids.emplace(
+                    std::move(projection_key),
+                    static_cast<std::uint32_t>(
+                        projection_ids.size()));
+                projection_id_by_authority[node] = stored->second;
+                if (inserted) {
+                    projection_key_bytes = saturated_add(
+                        projection_key_bytes,
+                        saturated_product(
+                            stored->first.capacity(),
+                            sizeof(std::uint64_t)));
+                    projection_key_bytes = saturated_add(
+                        projection_key_bytes,
+                        sizeof(decltype(projection_ids)::value_type) +
+                            3 * sizeof(void*));
+                    if (fail_memory(saturated_add(
+                            replay_base_bytes,
+                            projection_key_bytes))) {
+                        return false;
+                    }
+                }
+            }
+            std::vector<std::uint32_t> canonical_projection_id(
+                projection_ids.size());
+            std::uint32_t next_projection_id = 0;
+            for (const auto& [unused, temporary_id] :
+                 projection_ids) {
+                (void)unused;
+                canonical_projection_id[temporary_id] =
+                    next_projection_id++;
+            }
+            for (std::uint32_t& id : projection_id_by_authority) {
+                if (id != kNoId) id = canonical_projection_id[id];
+            }
+        }
+        for (const std::uint32_t node : replay_order) {
+            CanonicalClosedNode replayed;
+            const CanonicalClosedNode* canonical = nullptr;
+            if (shared_arc_authority[node]) {
+                canonical = &retained_authority(node);
+            } else {
+                replayed = canonical_node(node);
+                canonical = &replayed;
+            }
             ClosedPartitionKey key;
             if (initial) {
                 if (!previous_partition.empty()) {
                     key.push_back(previous_partition[node]);
                 }
-                key.push_back(canonical.terminal ? 1u : 0u);
-                append_tokens(key, canonical.observation_key);
+                key.push_back(canonical->terminal ? 1u : 0u);
+                append_tokens(key, canonical->observation_key);
             } else {
-                const std::vector<ClosedProjectionEntry> projected =
-                    projection(canonical, *current);
-                key = closed_refined_key(
-                    std::vector<CanonicalClosedNode>{canonical},
-                    canonical, (*current)[node], projected);
+                const std::uint32_t authority =
+                    canonical->arc_source.value_or(node);
+                if (authority >= projection_id_by_authority.size() ||
+                    projection_id_by_authority[authority] == kNoId) {
+                    throw std::invalid_argument(
+                        "replayed row has no exact projection identity");
+                }
+                key.push_back((*current)[node]);
+                append_tokens(key, canonical->immediate_key);
+                key.push_back(
+                    projection_id_by_authority[authority]);
             }
             auto [found, inserted] = temporary.emplace(
                 std::move(key),
@@ -645,7 +835,9 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
                     sizeof(decltype(temporary)::value_type) +
                         3 * sizeof(void*));
                 if (temporary.size() > limits.max_classes ||
-                    fail_memory(saturated_add(dense_bytes, key_bytes))) {
+                    fail_memory(saturated_add(
+                        saturated_add(replay_base_bytes, key_bytes),
+                        projection_key_bytes))) {
                     if (result.status != ClosedPartitionStatus::ResourceCap) {
                         result.status = ClosedPartitionStatus::ResourceCap;
                         result.resource_cap = "max_classes";
@@ -716,18 +908,155 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
             ++member_counts[cls];
         }
         result.classes.resize(result.final_class_count);
+        std::vector<std::uint32_t> final_projection_id_by_authority(
+            node_count, kNoId);
+        const std::uint64_t final_projection_id_bytes =
+            saturated_product(
+                final_projection_id_by_authority.capacity(),
+                sizeof(std::uint32_t));
+        {
+            std::map<ClosedPartitionKey, std::uint32_t>
+                final_projection_ids;
+            std::uint64_t final_projection_key_bytes =
+                final_projection_id_bytes;
+            for (const std::uint32_t node : replay_order) {
+                CanonicalClosedNode replayed;
+                const CanonicalClosedNode* canonical = nullptr;
+                if (shared_arc_authority[node]) {
+                    canonical = &retained_authority(node);
+                } else {
+                    replayed = canonical_node(node);
+                    canonical = &replayed;
+                }
+                const std::uint32_t authority =
+                    canonical->arc_source.value_or(node);
+                if (authority != node) continue;
+                const std::vector<ClosedProjectionEntry> projected =
+                    projection(*canonical, partition);
+                ClosedPartitionKey projection_key =
+                    closed_projection_key(projected);
+                const std::uint64_t transient_projection_bytes =
+                    estimate_closed_projection_memory(projected) +
+                    saturated_product(
+                        projection_key.capacity(),
+                        sizeof(std::uint64_t));
+                if (fail_memory(saturated_add(
+                        saturated_add(
+                            replay_base_bytes,
+                            final_projection_key_bytes),
+                        transient_projection_bytes))) {
+                    return result;
+                }
+                auto [stored, inserted] =
+                    final_projection_ids.emplace(
+                        std::move(projection_key),
+                        static_cast<std::uint32_t>(
+                            final_projection_ids.size()));
+                final_projection_id_by_authority[node] =
+                    stored->second;
+                if (inserted) {
+                    final_projection_key_bytes = saturated_add(
+                        final_projection_key_bytes,
+                        saturated_product(
+                            stored->first.capacity(),
+                            sizeof(std::uint64_t)));
+                    final_projection_key_bytes = saturated_add(
+                        final_projection_key_bytes,
+                        sizeof(decltype(final_projection_ids)::value_type) +
+                            3 * sizeof(void*));
+                    if (fail_memory(saturated_add(
+                            replay_base_bytes,
+                            final_projection_key_bytes))) {
+                        return result;
+                    }
+                }
+            }
+            std::vector<std::uint32_t> canonical_projection_id(
+                final_projection_ids.size());
+            std::uint32_t next_projection_id = 0;
+            for (const auto& [unused, temporary_id] :
+                 final_projection_ids) {
+                (void)unused;
+                canonical_projection_id[temporary_id] =
+                    next_projection_id++;
+            }
+            for (std::uint32_t& id :
+                 final_projection_id_by_authority) {
+                if (id != kNoId) id = canonical_projection_id[id];
+            }
+        }
+        std::vector<std::uint32_t> class_projection_id(
+            result.final_class_count, kNoId);
+        std::map<std::uint32_t,
+                 std::vector<ClosedProjectionEntry>>
+            final_shared_projections;
+        std::uint64_t final_shared_projection_bytes = 0;
+        const auto final_shared_projection =
+                [&](const std::uint32_t node,
+                    const CanonicalClosedNode& canonical)
+                    -> const std::vector<ClosedProjectionEntry>& {
+            const std::uint32_t authority =
+                canonical.arc_source.value_or(node);
+            auto [cached, inserted] =
+                final_shared_projections.try_emplace(authority);
+            if (inserted) {
+                const CanonicalClosedNode& source =
+                    authority == node
+                        ? canonical
+                        : retained_authority(authority);
+                cached->second = projection(source, partition);
+                final_shared_projection_bytes = saturated_add(
+                    final_shared_projection_bytes,
+                    estimate_closed_projection_memory(
+                        cached->second));
+                if (fail_memory(saturated_add(
+                        saturated_add(
+                            replay_base_bytes,
+                            final_projection_id_bytes),
+                        final_shared_projection_bytes))) {
+                    throw std::bad_alloc();
+                }
+            }
+            return cached->second;
+        };
         for (std::uint32_t cls = 0;
              cls < result.final_class_count; ++cls) {
-            CanonicalClosedNode authority =
-                canonical_node(representatives[cls]);
-            const std::vector<ClosedProjectionEntry> projected =
-                projection(authority, partition);
+            const std::uint32_t representative = representatives[cls];
+            CanonicalClosedNode replayed_authority;
+            const CanonicalClosedNode* authority = nullptr;
+            if (shared_arc_authority[representative]) {
+                authority = &retained_authority(representative);
+            } else {
+                replayed_authority = canonical_node(representative);
+                authority = &replayed_authority;
+            }
+            std::vector<ClosedProjectionEntry> local_projection;
+            const std::vector<ClosedProjectionEntry>* projected = nullptr;
+            if (authority->arc_source.has_value() ||
+                shared_arc_authority[representative]) {
+                projected = &final_shared_projection(
+                    representative, *authority);
+            } else {
+                local_projection = projection(*authority, partition);
+                projected = &local_projection;
+            }
+            const std::uint32_t row_authority =
+                authority->arc_source.value_or(representative);
+            if (row_authority >=
+                    final_projection_id_by_authority.size() ||
+                final_projection_id_by_authority[row_authority] ==
+                    kNoId) {
+                throw std::invalid_argument(
+                    "final replayed class has no projection identity");
+            }
+            class_projection_id[cls] =
+                final_projection_id_by_authority[row_authority];
             ClosedPartitionClass& output = result.classes[cls];
             output.class_id = cls;
-            output.observation_key = authority.observation_key;
-            output.immediate_key = authority.immediate_key;
-            output.terminal = authority.terminal;
-            for (const ClosedProjectionEntry& arc : projected) {
+            output.observation_key = authority->observation_key;
+            output.immediate_key = authority->immediate_key;
+            output.terminal = authority->terminal;
+            for (const ClosedProjectionEntry& arc : *projected) {
                 output.arcs.push_back({
                     arc.label, arc.successor_class,
                     arc.probability.value()});
@@ -738,22 +1067,31 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
         }
         for (std::uint32_t node = 0; node < node_count; ++node) {
             const std::uint32_t cls = partition[node];
-            CanonicalClosedNode candidate = canonical_node(node);
+            CanonicalClosedNode replayed_candidate;
+            const CanonicalClosedNode* candidate = nullptr;
+            if (shared_arc_authority[node]) {
+                candidate = &retained_authority(node);
+            } else {
+                replayed_candidate = canonical_node(node);
+                candidate = &replayed_candidate;
+            }
             const ClosedPartitionClass& authority = result.classes[cls];
-            const std::vector<ClosedProjectionEntry> projected =
-                projection(candidate, partition);
-            std::vector<ClosedPartitionProjectedArc> candidate_arcs;
-            candidate_arcs.reserve(projected.size());
-            for (const ClosedProjectionEntry& arc : projected) {
-                candidate_arcs.push_back({
-                    arc.label, arc.successor_class,
-                    arc.probability.value()});
+            const std::uint32_t row_authority =
+                candidate->arc_source.value_or(node);
+            if (row_authority >=
+                    final_projection_id_by_authority.size() ||
+                final_projection_id_by_authority[row_authority] ==
+                    kNoId ||
+                class_projection_id[cls] == kNoId) {
+                throw std::invalid_argument(
+                    "final replayed member has no projection identity");
             }
             ++result.lumpability_checks;
-            if (candidate.terminal != authority.terminal ||
-                candidate.observation_key != authority.observation_key ||
-                candidate.immediate_key != authority.immediate_key ||
-                candidate_arcs != authority.arcs) {
+            if (candidate->terminal != authority.terminal ||
+                candidate->observation_key != authority.observation_key ||
+                candidate->immediate_key != authority.immediate_key ||
+                final_projection_id_by_authority[row_authority] !=
+                    class_projection_id[cls]) {
                 result.status = ClosedPartitionStatus::NonLumpable;
                 result.failure_reason =
                     "replay-backed closed partition failed final proof";
@@ -761,19 +1099,30 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
             }
             if (retain_member_keys) {
                 result.classes[cls].member_keys.push_back(
-                    std::move(candidate.stable_key));
+                    candidate->stable_key);
             }
         }
         result.estimated_memory_bytes = saturated_add(
-            dense_bytes,
-            estimate_closed_partition_result_memory(result));
+            replay_base_bytes,
+            saturated_add(
+                final_projection_id_bytes,
+                saturated_add(
+                    saturated_product(
+                        class_projection_id.capacity(),
+                        sizeof(std::uint32_t)),
+                    saturated_add(
+                        final_shared_projection_bytes,
+                        estimate_closed_partition_result_memory(
+                            result)))));
         if (fail_memory(result.estimated_memory_bytes)) return result;
         result.status = ClosedPartitionStatus::Complete;
         result.lumpable = true;
         return result;
     } catch (const std::exception& error) {
-        result.status = ClosedPartitionStatus::InvalidGraph;
-        result.failure_reason = error.what();
+        if (result.status != ClosedPartitionStatus::ResourceCap) {
+            result.status = ClosedPartitionStatus::InvalidGraph;
+            result.failure_reason = error.what();
+        }
         return result;
     }
 }

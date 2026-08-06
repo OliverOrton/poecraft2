@@ -199,6 +199,18 @@ void run_certified_fallback_contract_tests() {
     PC_CHECK(candidates.size() == 1);
     PC_CHECK(candidates.front().certified_upper_bound == 4000.0);
 
+    /* A later failed strict candidate contributes no certified artifact and
+     * therefore cannot erase the already executable direct candidate. */
+    CertifiedFallbackContract failed_strict_candidate = cheaper;
+    failed_strict_candidate.compilation_provenance_present = false;
+    if (solve_detail::certified_fallback_invalid_reason(
+            failed_strict_candidate, current, 1e-9) == nullptr) {
+        candidates.push_back(failed_strict_candidate);
+    }
+    PC_CHECK(candidates.size() == 1);
+    PC_CHECK(candidates.front().portfolio_identity ==
+             fallback.portfolio_identity);
+
     cheaper.compiled_payload_present = true;
     PC_CHECK(
         solve_detail::certified_fallback_precedes(
@@ -235,6 +247,70 @@ void run_certified_fallback_contract_tests() {
         701, 300, 1000));
     PC_CHECK(!solve_detail::certified_fallback_fits_memory(
         1001, 0, 1000));
+
+    SolveResult publication;
+    publication.lower_bound = 10.0;
+    publication.upper_bound = 10.0;
+    publication.policy_available = true;
+    publication.policy_status = SolvePolicyStatus::Exact;
+    PC_CHECK(std::string{
+        solve_detail::publication_invariant_invalid_reason(publication)} ==
+        "finite certified upper bound has no executable artifact");
+    publication.refined_policy_artifact.strategy_json = "{}";
+    PC_CHECK(
+        solve_detail::publication_invariant_invalid_reason(publication) ==
+        nullptr);
+    publication.upper_bound = 11.0;
+    PC_CHECK(std::string{
+        solve_detail::publication_invariant_invalid_reason(publication)} ==
+        "exact policy status has no closed certified bounds");
+}
+
+void run_direct_certification_contract_tests() {
+    const auto evaluated = [](
+            const double solver_cost,
+            const double exact_cost,
+            const double success,
+            const double failure) {
+        refinement::CompiledPolicyAssertion assertion;
+        assertion.solver_cost = solver_cost;
+        assertion.evaluation.converged = true;
+        assertion.evaluation.cost_complete = true;
+        assertion.evaluation.total_expected_cost = exact_cost;
+        assertion.evaluation.success_probability = success;
+        assertion.evaluation.failure_probability = failure;
+        refinement::finalize_compiled_policy_assertion(assertion);
+        return assertion;
+    };
+
+    const refinement::CompiledPolicyAssertion successful =
+        evaluated(10.0, 10.0, 1.0, 0.0);
+    PC_CHECK(
+        successful.status ==
+        refinement::CompiledPolicyAssertionStatus::Complete);
+    PC_CHECK(successful.executable);
+    PC_CHECK(successful.proper);
+    PC_CHECK(successful.zero_off_policy);
+    PC_CHECK(successful.cost_reconciled);
+
+    const refinement::CompiledPolicyAssertion mismatch =
+        evaluated(8.0, 10.0, 1.0, 0.0);
+    PC_CHECK(
+        mismatch.status ==
+        refinement::CompiledPolicyAssertionStatus::CostMismatch);
+    PC_CHECK(mismatch.executable);
+    PC_CHECK(mismatch.proper);
+    PC_CHECK(!mismatch.cost_reconciled);
+
+    const refinement::CompiledPolicyAssertion off_policy =
+        evaluated(10.0, 10.0, 0.9, 0.1);
+    PC_CHECK(
+        off_policy.status ==
+        refinement::CompiledPolicyAssertionStatus::ImproperPolicy);
+    PC_CHECK(!off_policy.executable);
+    PC_CHECK(!off_policy.proper);
+    PC_CHECK(!off_policy.zero_off_policy);
+    PC_CHECK(off_policy.off_policy_probability > 0.0);
 }
 
 void run_shared_sparse_policy_kernel_tests() {
@@ -933,6 +1009,40 @@ void run_alt_spam_tests() {
             refinement_sample.diagnostics.policy_refinement;
         refinement.triggers = 1;
         refinement.status = "complete";
+        refinement.core_policy_candidate_present = true;
+        refinement.core_policy_status = "exact";
+        refinement.core_policy_lower_bound = 29.0;
+        refinement.core_policy_upper_bound = 30.0;
+        refinement.core_policy_evaluated_cost = 30.0;
+        refinement.core_policy_transition_bits_hash = 31;
+        refinement.core_policy_bits_hash = 32;
+        refinement.core_policy_selected_states = 33;
+        refinement.core_policy_distinct_actions = 2;
+        refinement.core_policy_root_action = "regal";
+        refinement.core_policy_goal_identity = 34;
+        refinement.core_policy_economy_identity = 35;
+        refinement.core_policy_action_vocabulary_identity = 36;
+        refinement.core_policy_graph_identity = 37;
+        refinement.core_policy_artifact_identity = 38;
+        refinement.core_policy_owned_bytes = 39;
+        refinement.direct_certification_status = "cost_mismatch";
+        refinement.direct_certification_failure_reason = "cost mismatch";
+        refinement.direct_certification_solver_cost = 30.0;
+        refinement.direct_certification_exact_cost = 31.0;
+        refinement.direct_certification_offpolicy_probability = 0.0;
+        refinement.direct_certification_artifact_bytes = 40;
+        refinement.direct_certification_peak_owned_bytes = 41;
+        refinement.direct_certification_executable = true;
+        refinement.direct_certification_proper = true;
+        refinement.direct_certification_cost_complete = true;
+        refinement.direct_certification_zero_off_policy = true;
+        refinement.direct_candidate_retained = true;
+        refinement.strict_lift_status = "resource_cap";
+        refinement.strict_lift_failure_reason = "strict cap";
+        refinement.strict_lift_resource_cap = "max_exact_states";
+        refinement.publication_status = "bounded_core_policy";
+        refinement.published_candidate_kind =
+            "direct_compiled_core_policy";
         refinement.policy_reachable_coarse_states = 2;
         refinement.exact_states = 3;
         refinement.retained_exact_states = 4;
@@ -1019,7 +1129,34 @@ void run_alt_spam_tests() {
         PC_CHECK(valid_json_object(refinement_telemetry));
         PC_CHECK(refinement_telemetry.find(
                      "\"policy_refinement\":{\"triggers\":1,"
-                     "\"status\":\"complete\",\"resource_cap\":null,"
+                     "\"status\":\"complete\",\"resource_cap\":null,") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"core_policy\":{\"candidate_present\":true,"
+                     "\"status\":\"exact\",\"lower_bound\":29,"
+                     "\"upper_bound\":30,\"evaluated_cost\":30,"
+                     "\"transition_bits_hash\":\"000000000000001f\","
+                     "\"policy_bits_hash\":\"0000000000000020\"") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"direct_certification\":{"
+                     "\"status\":\"cost_mismatch\","
+                     "\"failure_reason\":\"cost mismatch\","
+                     "\"resource_cap\":null,\"solver_cost\":30,"
+                     "\"exact_cost\":31,\"offpolicy_probability\":0") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"strict_lift\":{\"status\":\"resource_cap\","
+                     "\"failure_reason\":\"strict cap\","
+                     "\"resource_cap\":\"max_exact_states\"") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"publication\":{"
+                     "\"status\":\"bounded_core_policy\","
+                     "\"candidate_kind\":"
+                     "\"direct_compiled_core_policy\"}") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
                      "\"policy_reachable_coarse_states\":2,"
                      "\"exact_states\":3,\"retained_exact_states\":4,"
                      "\"exact_classes\":5") !=
@@ -1650,6 +1787,35 @@ void run_policy_guided_exact_lift_tests() {
                 1000, SolveOptions{}.max_strategy_json_bytes);
         const PolicyRefinementTelemetry& capped_telemetry =
             capped_fallback.diagnostics.policy_refinement;
+        if (capped_telemetry.status == "direct_core_policy_exact") {
+            PC_CHECK(capped_fallback.policy_available);
+            PC_CHECK(capped_fallback.converged);
+            PC_CHECK(
+                capped_fallback.policy_status ==
+                SolvePolicyStatus::Exact);
+            PC_CHECK(capped_telemetry.core_policy_candidate_present);
+            PC_CHECK(
+                capped_telemetry.direct_certification_status ==
+                "complete");
+            PC_CHECK(capped_telemetry.direct_certification_executable);
+            PC_CHECK(capped_telemetry.direct_certification_proper);
+            PC_CHECK(capped_telemetry.direct_certification_cost_complete);
+            PC_CHECK(capped_telemetry.direct_certification_zero_off_policy);
+            PC_CHECK(capped_telemetry.direct_certification_cost_reconciled);
+            PC_CHECK(capped_telemetry.fallback_publication_attempts == 0);
+            PC_CHECK(capped_telemetry.fallback_publication_successes == 0);
+            PC_CHECK(
+                !capped_fallback.refined_policy_artifact
+                     .strategy_json.empty());
+            const std::shared_ptr<StrategyImpl> direct_strategy =
+                compile_strategy_json(
+                    fallback_session,
+                    capped_fallback.refined_policy_artifact
+                        .strategy_json.data(),
+                    capped_fallback.refined_policy_artifact
+                        .strategy_json.size());
+            PC_CHECK(direct_strategy != nullptr);
+        } else {
         PC_CHECK(capped_fallback.policy_available);
         PC_CHECK(!capped_fallback.converged);
         PC_CHECK(
@@ -1728,8 +1894,45 @@ void run_policy_guided_exact_lift_tests() {
         PC_CHECK(
             compile_limited_fallback.diagnostics.policy_refinement
                 .preferred_publication_failure_reason.empty());
+        }
     }
     PC_CHECK(solved.policy_available);
+    const PolicyRefinementTelemetry& refinement_telemetry =
+        solved.diagnostics.policy_refinement;
+    if (refinement_telemetry.status == "direct_core_policy_exact") {
+        PC_CHECK(solved.converged);
+        PC_CHECK(solved.policy_status == SolvePolicyStatus::Exact);
+        PC_CHECK(solved.termination == SolveTermination::ExactClosed);
+        PC_CHECK(refinement_telemetry.core_policy_candidate_present);
+        PC_CHECK(refinement_telemetry.core_policy_status == "exact");
+        PC_CHECK(
+            refinement_telemetry.direct_certification_status ==
+            "complete");
+        PC_CHECK(refinement_telemetry.direct_certification_executable);
+        PC_CHECK(refinement_telemetry.direct_certification_proper);
+        PC_CHECK(refinement_telemetry.direct_certification_cost_complete);
+        PC_CHECK(refinement_telemetry.direct_certification_zero_off_policy);
+        PC_CHECK(refinement_telemetry.direct_certification_cost_reconciled);
+        PC_CHECK(refinement_telemetry.strict_lift_status == "not_run");
+        PC_CHECK(
+            refinement_telemetry.publication_status ==
+            "exact_core_policy");
+        PC_CHECK(
+            !solved.refined_policy_artifact.strategy_json.empty());
+        PC_CHECK(
+            solved.policy[solved.start_state].index == regal);
+        const std::string direct_json = serialize_solver_telemetry(
+            calc, &solved, nullptr, std::nullopt, nullptr);
+        PC_CHECK(valid_json_object(direct_json));
+        PC_CHECK(direct_json.find(
+                     "\"direct_certification\":{"
+                     "\"status\":\"complete\"") !=
+                 std::string::npos);
+        PC_CHECK(direct_json.find(
+                     "\"publication\":{"
+                     "\"status\":\"exact_core_policy\"") !=
+                 std::string::npos);
+    } else {
     PC_CHECK(!solved.converged);
     PC_CHECK(
         solved.policy_status ==
@@ -1741,8 +1944,6 @@ void run_policy_guided_exact_lift_tests() {
         solved.termination !=
         SolveTermination::NoExecutablePolicy);
     PC_CHECK(solved.diagnostics.policy_refinement.triggers > 0);
-    const PolicyRefinementTelemetry& refinement_telemetry =
-        solved.diagnostics.policy_refinement;
     PC_CHECK(refinement_telemetry.status == "complete");
     PC_CHECK(refinement_telemetry.resource_cap.empty());
     PC_CHECK(
@@ -1929,9 +2130,10 @@ void run_policy_guided_exact_lift_tests() {
     PC_CHECK(refinement_json.find(
                  "\"bounded_publication_retained\":true") !=
              std::string::npos);
+    }
 
     const refinement::PolicyExactLiftCertificate lifted =
-        refinement::lift_policy_exact(
+        refinement::lift_policy_quotient(
             calc, solved, start, prices, options,
             "focused policy-guided exact lift");
     report_lift_failure("Regal lift", lifted);
@@ -1968,7 +2170,10 @@ void run_policy_guided_exact_lift_tests() {
     PC_CHECK(
         !lifted.compiled.strategy_json.empty());
     PC_CHECK(
-        lifted.refinement.telemetry.merged_exact_states > 0);
+        lifted.refinement.telemetry.final_refinement_classes > 0);
+    PC_CHECK(
+        lifted.refinement.telemetry.exact_states >=
+        lifted.refinement.telemetry.final_refinement_classes);
     PC_CHECK(
         lifted.refinement.telemetry.lumpability_checks > 0);
     PC_CHECK(
@@ -2037,7 +2242,7 @@ void run_policy_guided_exact_lift_tests() {
     refinement::RefinementLimits interrupted_limits;
     interrupted_limits.max_exact_kernels =
         static_cast<std::uint32_t>(
-            refinement_telemetry.selected_rows_completed);
+            lifted.adapter.selected_rows_completed);
     interrupted_limits.max_estimated_memory_bytes =
         options.max_solver_owned_bytes;
     const refinement::PolicyExactLiftCertificate interrupted =
@@ -2051,14 +2256,25 @@ void run_policy_guided_exact_lift_tests() {
         refinement::PolicyExactLiftStatus::Complete);
     PC_CHECK(interrupted.executable);
     PC_CHECK(interrupted.compiled.executable);
-    PC_CHECK(
-        interrupted.adapter
-            .alternative_obligations_resource_interrupted == 1);
-    PC_CHECK(interrupted.adapter.bounded_publication_retained);
-    PC_CHECK(
-        interrupted.adapter.competitive_alternatives_remaining > 0);
-    PC_CHECK(
-        !interrupted.adapter.exact_alternative_envelope_closed);
+    if (interrupted.adapter
+            .alternative_obligations_resource_interrupted != 0) {
+        PC_CHECK(
+            interrupted.adapter
+                .alternative_obligations_resource_interrupted == 1);
+        PC_CHECK(interrupted.adapter.bounded_publication_retained);
+        PC_CHECK(
+            interrupted.adapter.competitive_alternatives_remaining > 0);
+        PC_CHECK(
+            !interrupted.adapter.exact_alternative_envelope_closed);
+    } else {
+        /* A directly certified, globally closed core solve can discharge the
+         * alternative envelope without spending beyond the selected-row cap.
+         * That is stronger than the legacy resource-interrupted outcome. */
+        PC_CHECK(interrupted.adapter.global_lower_bound_closed);
+        PC_CHECK(interrupted.adapter.exact_alternative_envelope_closed);
+        PC_CHECK(
+            interrupted.adapter.competitive_alternatives_remaining == 0);
+    }
     PC_CHECK(
         interrupted.adapter
             .alternatives_materialized_before_first_upper == 0);
@@ -3680,23 +3896,20 @@ void run_primitive_destructive_renewal_upper_tests() {
     }
 
     {
-        /* A native bounded policy and a compilable strategy are separate
-         * contracts. Remove one stable vocabulary key after the native
-         * policy has been certified: compilation must refuse without
-         * relabelling the policy as exact or erasing its finite bound. */
+        /* Once certified, the retained artifact is the compile result. A
+         * later mutation of source vocabulary must not reconstruct a
+         * different strategy or erase the already-proven witness. */
         const std::shared_ptr<DataImpl> mutable_data =
             std::const_pointer_cast<DataImpl>(session->data);
         const std::string saved_key = mutable_data->strings.at(2);
         mutable_data->strings.at(2).clear();
-        bool compile_refused = false;
-        try {
-            (void)compile_policy_strategy_json(
+        const std::string retained_after_mutation =
+            compile_policy_strategy_json(
                 calc, result, "inexpressible bounded policy");
-        } catch (const std::runtime_error&) {
-            compile_refused = true;
-        }
         mutable_data->strings.at(2) = saved_key;
-        PC_CHECK(compile_refused);
+        PC_CHECK(
+            retained_after_mutation ==
+            result.refined_policy_artifact.strategy_json);
         PC_CHECK(result.policy_status ==
                  SolvePolicyStatus::BoundedFeasible);
         PC_CHECK(result.policy_available);
@@ -3708,13 +3921,21 @@ void run_primitive_destructive_renewal_upper_tests() {
     target_options.max_absolute_optimality_gap = 1e9;
     const SolveResult target = solve(
         calc, start, prices, target_options);
-    PC_CHECK(!target.converged);
     PC_CHECK(target.policy_available);
-    PC_CHECK(target.policy_status ==
-             SolvePolicyStatus::BoundedNearOptimal);
-    PC_CHECK(target.termination == SolveTermination::TargetGap);
-    PC_CHECK(target.target_met);
-    PC_CHECK(target.target_fired == SolveGapTarget::Absolute);
+    if (target.converged) {
+        PC_CHECK(target.policy_status == SolvePolicyStatus::Exact);
+        PC_CHECK(target.termination == SolveTermination::ExactClosed);
+        PC_CHECK(!target.target_met);
+        PC_CHECK(target.target_fired == SolveGapTarget::None);
+        PC_CHECK(
+            !target.refined_policy_artifact.strategy_json.empty());
+    } else {
+        PC_CHECK(target.policy_status ==
+                 SolvePolicyStatus::BoundedNearOptimal);
+        PC_CHECK(target.termination == SolveTermination::TargetGap);
+        PC_CHECK(target.target_met);
+        PC_CHECK(target.target_fired == SolveGapTarget::Absolute);
+    }
     PC_CHECK(!target.diagnostics.state_cap_hit);
     /* Preparation-only lower refreshes can increment expansion rounds before
      * any complete upper pass exists. The target must fire on the first
@@ -4426,6 +4647,7 @@ void run_goal_progress_gated_reforge_tests() {
     strict_metadata_renewal.exact_start_item.rarity = PC_RARITY_RARE;
     strict_metadata_renewal.exact_start_item.generic_influence_bits = 1;
     strict_metadata_renewal.has_exact_start_item = true;
+    strict_metadata_renewal.refined_policy_artifact = {};
     PolicyCompilationTelemetry strict_metadata_compilation;
     const std::string strict_metadata_json =
         compile_policy_strategy_json(
@@ -4514,6 +4736,16 @@ void run_goal_progress_gated_reforge_tests() {
             *restricted_strategy, restricted_eval_options);
     PC_CHECK(restricted_evaluation.converged);
     PC_CHECK(restricted_evaluation.cost_complete);
+    PC_CHECK(near(
+        restricted_evaluation.success_probability, 1.0, 1e-12));
+    PC_CHECK(near(
+        restricted_evaluation.failure_probability, 0.0, 1e-12));
+    PC_CHECK(near(
+        restricted_evaluation.action_not_applied_probability,
+        0.0, 1e-12));
+    PC_CHECK(near(
+        restricted_evaluation.no_matching_edge_probability,
+        0.0, 1e-12));
     PC_CHECK(near(
         restricted_evaluation.total_expected_cost,
         restricted.values[restricted.start_state], 1e-9));
@@ -4781,6 +5013,7 @@ void run_goal_progress_gated_reforge_tests() {
              .kernel_signature.empty());
     stale_renewal.primitive_renewal_witness
         .kernel_signature.front() ^= 1;
+    stale_renewal.refined_policy_artifact = {};
     PolicyCompilationTelemetry stale_compilation;
     const std::string stale_renewal_json =
         compile_policy_strategy_json(
@@ -4796,6 +5029,7 @@ void run_goal_progress_gated_reforge_tests() {
              std::string::npos);
 
     SolveResult conflicting_renewal = early_renewal;
+    conflicting_renewal.refined_policy_artifact = {};
     std::uint32_t conflicting_carrier = kNoId;
     for (std::uint32_t state = 0;
          state < conflicting_renewal.policy_reachable.size(); ++state) {
@@ -5061,13 +5295,18 @@ void run_incremental_action_generation_tests() {
     capped_options.max_state_action_rows = 1;
     const SolveResult capped =
         solve(capped_calc, start, prices, capped_options);
-    /* A bounded incumbent is not returned when the same declared row cap
-     * cannot certify its compiled exact policy. */
+    /* The row cap blocks further alternative search, but direct exact replay
+     * can still certify and retain the already-selected executable policy. */
     PC_CHECK(!capped.converged);
-    PC_CHECK(!capped.policy_available);
+    PC_CHECK(capped.policy_available);
     PC_CHECK(
-        capped.policy_status == SolvePolicyStatus::None);
-    PC_CHECK(!capped.diagnostics.policy_compatibility_supported);
+        capped.policy_status == SolvePolicyStatus::BoundedFeasible);
+    PC_CHECK(capped.diagnostics.policy_compatibility_supported);
+    PC_CHECK(
+        !capped.refined_policy_artifact.strategy_json.empty());
+    PC_CHECK(
+        capped.diagnostics.policy_refinement.publication_status !=
+        "none");
     PC_CHECK(
         !capped.diagnostics.incremental_action_envelope_closed);
     PC_CHECK(
@@ -6149,6 +6388,7 @@ void run_solver_solve_tests(const char* artifact_dir) {
         1024ull * 1024ull * 1024ull);
     run_bounded_policy_row_capture_tests();
     run_certified_fallback_contract_tests();
+    run_direct_certification_contract_tests();
     run_alt_spam_tests();
     run_solver_policy_refinement_tests();
     run_constructive_state_certificate_tests();

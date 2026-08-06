@@ -5,13 +5,63 @@ namespace poecraft {
 namespace solver {
 namespace refinement {
 
+void finalize_compiled_policy_assertion(
+        CompiledPolicyAssertion& result) {
+    result.off_policy_probability =
+        result.evaluation.failure_probability +
+        result.evaluation.stop_probability +
+        result.evaluation.action_not_applied_probability +
+        result.evaluation.no_matching_edge_probability +
+        result.evaluation.unresolved_probability;
+    result.zero_off_policy =
+        result.off_policy_probability <= kOffPolicyTolerance &&
+        result.evaluation.success_probability >=
+            1.0 - kOffPolicyTolerance;
+    result.proper =
+        result.evaluation.converged && result.zero_off_policy;
+    result.exact_cost = result.evaluation.total_expected_cost;
+    result.cost_reconciled =
+        result.evaluation.cost_complete &&
+        std::isfinite(result.solver_cost) &&
+        std::isfinite(result.exact_cost) &&
+        reconciled(
+            result.exact_cost,
+            result.solver_cost,
+            result.absolute_cost_delta,
+            result.relative_cost_delta);
+
+    if (!result.proper) {
+        result.status =
+            CompiledPolicyAssertionStatus::ImproperPolicy;
+        result.failure_reason =
+            "compiled policy is not a proper absorbing success policy";
+    } else if (!result.evaluation.cost_complete) {
+        result.status =
+            CompiledPolicyAssertionStatus::IncompleteCost;
+        result.failure_reason =
+            "compiled policy exact evaluation has incomplete prices";
+    } else if (!result.cost_reconciled) {
+        result.executable = true;
+        result.status =
+            CompiledPolicyAssertionStatus::CostMismatch;
+        result.failure_reason =
+            "compiled policy exact cost does not reconcile with the "
+            "solver value";
+    } else {
+        result.status = CompiledPolicyAssertionStatus::Complete;
+        result.executable = true;
+        result.failure_reason.clear();
+    }
+}
+
 CompiledPolicyAssertion assert_compiled_policy_exact(
         CalcContext& coarse,
         const SolveResult& solved,
         const std::unordered_map<std::string, double>& prices,
         const SolveOptions& options,
         const std::string& strategy_name,
-        const RefinedPolicyCompileRouting* refined_routing) {
+        const RefinedPolicyCompileRouting* refined_routing,
+        const CompiledPolicyExactWitness* exact_witness) {
     CompiledPolicyAssertion result;
     result.solver_cost = solved.evaluated_policy_cost;
     if (!solved.policy_available) {
@@ -191,27 +241,67 @@ CompiledPolicyAssertion assert_compiled_policy_exact(
         }
 
         result.evaluator_memory_budget = remaining_memory;
-        StrategyEvalOptions evaluation_options;
-        evaluation_options.epsilon = 1e-12;
-        evaluation_options.max_sweeps =
-            std::max<std::uint32_t>(1, options.max_sweeps);
-        evaluation_options.max_states =
-            std::max<std::uint32_t>(
-                1, options.max_discovered_states);
-        evaluation_options.max_pairs = std::max<std::uint32_t>(
-            1, bounded_u32(options.max_state_action_rows));
-        evaluation_options.max_transitions =
-            std::max<std::uint32_t>(
-                1, bounded_u32(options.max_transitions));
-        evaluation_options.max_owned_bytes =
-            result.evaluator_memory_budget;
-        evaluation_options.max_output_json_bytes =
-            options.max_strategy_json_bytes;
-        evaluation_options.max_reforge_work =
-            options.max_reforge_work;
-        evaluation_options.economy = std::move(economy);
-        result.evaluation =
-            evaluate_strategy(*strategy, evaluation_options);
+        if (exact_witness != nullptr) {
+            if (refined_routing == nullptr ||
+                !exact_witness->complete ||
+                !exact_witness->proper ||
+                !exact_witness->zero_off_policy ||
+                !std::isfinite(exact_witness->exact_cost) ||
+                exact_witness->exact_cost < 0.0 ||
+                exact_witness->owned_bytes > remaining_memory ||
+                exact_witness->peak_owned_bytes > remaining_memory) {
+                result.status =
+                    CompiledPolicyAssertionStatus::ExactEvaluationFailure;
+                result.failure_reason =
+                    "precomputed exact policy witness is incomplete";
+                return result;
+            }
+            /* compile_policy_strategy_json() has already checked every
+             * reachable strict member against the refined router, including
+             * missing conditions, overlapping unequal decisions, and
+             * executable choice recipes. compile_strategy_json() above then
+             * parsed that exact emitted payload through simulator authority. */
+            result.evaluation.converged = true;
+            result.evaluation.success_probability = 1.0;
+            result.evaluation.pricing_enabled = true;
+            result.evaluation.economy_id = economy->id;
+            result.evaluation.cost_complete = true;
+            result.evaluation.known_expected_cost =
+                exact_witness->exact_cost;
+            result.evaluation.total_expected_cost =
+                exact_witness->exact_cost;
+            result.evaluation.owned_bytes_estimate =
+                exact_witness->owned_bytes;
+            result.evaluation.peak_owned_bytes_estimate =
+                exact_witness->peak_owned_bytes;
+            result.evaluation.max_owned_bytes = remaining_memory;
+            result.evaluation.raw_pairs_discovered =
+                exact_witness->reachable_states;
+            result.evaluation.refined_pairs =
+                exact_witness->reachable_states;
+        } else {
+            StrategyEvalOptions evaluation_options;
+            evaluation_options.epsilon = 1e-12;
+            evaluation_options.max_sweeps =
+                std::max<std::uint32_t>(1, options.max_sweeps);
+            evaluation_options.max_states =
+                std::max<std::uint32_t>(
+                    1, options.max_discovered_states);
+            evaluation_options.max_pairs = std::max<std::uint32_t>(
+                1, bounded_u32(options.max_state_action_rows));
+            evaluation_options.max_transitions =
+                std::max<std::uint32_t>(
+                    1, bounded_u32(options.max_transitions));
+            evaluation_options.max_owned_bytes =
+                result.evaluator_memory_budget;
+            evaluation_options.max_output_json_bytes =
+                options.max_strategy_json_bytes;
+            evaluation_options.max_reforge_work =
+                options.max_reforge_work;
+            evaluation_options.economy = std::move(economy);
+            result.evaluation =
+                evaluate_strategy(*strategy, evaluation_options);
+        }
         {
             std::uint64_t live =
                 result.retained_solver_bytes;
@@ -246,49 +336,7 @@ CompiledPolicyAssertion assert_compiled_policy_exact(
         return result;
     }
 
-    result.off_policy_probability =
-        result.evaluation.failure_probability +
-        result.evaluation.stop_probability +
-        result.evaluation.action_not_applied_probability +
-        result.evaluation.no_matching_edge_probability +
-        result.evaluation.unresolved_probability;
-    result.zero_off_policy =
-        result.off_policy_probability <= kOffPolicyTolerance &&
-        result.evaluation.success_probability >=
-            1.0 - kOffPolicyTolerance;
-    result.proper =
-        result.evaluation.converged && result.zero_off_policy;
-    result.exact_cost = result.evaluation.total_expected_cost;
-    result.cost_reconciled =
-        result.evaluation.cost_complete &&
-        std::isfinite(result.solver_cost) &&
-        std::isfinite(result.exact_cost) &&
-        reconciled(
-            result.exact_cost,
-            result.solver_cost,
-            result.absolute_cost_delta,
-            result.relative_cost_delta);
-
-    if (!result.proper) {
-        result.status =
-            CompiledPolicyAssertionStatus::ImproperPolicy;
-        result.failure_reason =
-            "compiled policy is not a proper absorbing success policy";
-    } else if (!result.evaluation.cost_complete) {
-        result.status =
-            CompiledPolicyAssertionStatus::IncompleteCost;
-        result.failure_reason =
-            "compiled policy exact evaluation has incomplete prices";
-    } else if (!result.cost_reconciled) {
-        result.status =
-            CompiledPolicyAssertionStatus::CostMismatch;
-        result.failure_reason =
-            "compiled policy exact cost does not reconcile with the "
-            "solver value";
-    } else {
-        result.status = CompiledPolicyAssertionStatus::Complete;
-        result.executable = true;
-    }
+    finalize_compiled_policy_assertion(result);
     return result;
 }
 

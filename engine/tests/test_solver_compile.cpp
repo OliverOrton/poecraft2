@@ -425,6 +425,13 @@ StructuredRouteFixture make_structured_route_fixture() {
     fixture.solved.goal_states[fixture.goal_state] = 1;
     fixture.solved.policy_reachable[fixture.goal_state] = 1;
 
+    const refinement::StableKey working_parent_key =
+        exact_abstract_state_key(
+            fixture.calc->state(fixture.left_state), 0);
+    const refinement::StableKey terminal_parent_key =
+        exact_abstract_state_key(
+            fixture.calc->state(fixture.goal_state), 0);
+
     const refinement::ObservationRequirement requirement =
         exclusion_requirement();
     fixture.routing.classes.resize(3);
@@ -434,7 +441,7 @@ StructuredRouteFixture make_structured_route_fixture() {
             refinement::RefinedPolicyCompileClass policy_class;
             policy_class.class_id = class_id;
             policy_class.coarse_state = 0;
-            policy_class.coarse_state_key = {0};
+            policy_class.coarse_state_key = working_parent_key;
             policy_class.representative_state = state;
             policy_class.strict_members = {state};
             policy_class.required_observations = requirement;
@@ -454,12 +461,18 @@ StructuredRouteFixture make_structured_route_fixture() {
         working_class(1, fixture.right_state);
     fixture.routing.classes[2].class_id = 2;
     fixture.routing.classes[2].coarse_state = 1;
-    fixture.routing.classes[2].coarse_state_key = {1};
+    fixture.routing.classes[2].coarse_state_key = terminal_parent_key;
     fixture.routing.classes[2].representative_state =
         fixture.goal_state;
     fixture.routing.classes[2].strict_members = {
         fixture.goal_state};
     fixture.routing.classes[2].terminal = true;
+    fixture.routing.parents = {
+        {0, working_parent_key,
+         fixture.calc->state(fixture.left_state)},
+        {1, terminal_parent_key,
+         fixture.calc->state(fixture.goal_state)}};
+    fixture.routing.parent_layout = &fixture.calc->layout();
     return fixture;
 }
 
@@ -513,7 +526,8 @@ StructuredRouteFixture make_structured_fixed_route_fixture() {
     refinement::RefinedPolicyCompileClass working;
     working.class_id = 0;
     working.coarse_state = 0;
-    working.coarse_state_key = {0};
+    working.coarse_state_key =
+        fixture.routing.parents[0].coarse_state_key;
     working.representative_state = fixture.left_state;
     working.strict_members = {
         fixture.left_state, fixture.right_state};
@@ -526,7 +540,8 @@ StructuredRouteFixture make_structured_fixed_route_fixture() {
     refinement::RefinedPolicyCompileClass terminal;
     terminal.class_id = 1;
     terminal.coarse_state = 1;
-    terminal.coarse_state_key = {1};
+    terminal.coarse_state_key =
+        fixture.routing.parents[1].coarse_state_key;
     terminal.representative_state = fixture.goal_state;
     terminal.strict_members = {fixture.goal_state};
     terminal.terminal = true;
@@ -561,6 +576,11 @@ void expect_structured_route_refusal(
                 expected.c_str(), error.what());
         }
     }
+    if (!refused) {
+        std::printf(
+            "structured route refusal was accepted: expected=%s\n",
+            expected.c_str());
+    }
     PC_CHECK(refused);
 }
 
@@ -568,6 +588,11 @@ void run_structured_observation_route_tests() {
     {
         StructuredRouteFixture fixture =
             make_structured_route_fixture();
+        fixture.solved.policy[fixture.right_state] =
+            PolicyOperatorRef{fixture.chaos};
+        fixture.routing.classes[1].selected_action =
+            compile_selected_operator(
+                *fixture.calc, fixture.chaos);
         PolicyCompilationTelemetry telemetry;
         const std::string strategy =
             compile_policy_strategy_json(
@@ -626,11 +651,18 @@ void run_structured_observation_route_tests() {
 
         StructuredRouteFixture remapped =
             make_structured_route_fixture();
+        remapped.solved.policy[remapped.right_state] =
+            PolicyOperatorRef{remapped.chaos};
+        remapped.routing.classes[1].selected_action =
+            compile_selected_operator(
+                *remapped.calc, remapped.chaos);
         for (refinement::RefinedPolicyCompileClass& policy_class :
              remapped.routing.classes) {
             policy_class.coarse_state =
                 policy_class.terminal ? 37 : 91;
         }
+        remapped.routing.parents[0].coarse_state = 91;
+        remapped.routing.parents[1].coarse_state = 37;
         const std::string remapped_strategy =
             compile_policy_strategy_json(
                 *remapped.calc, remapped.solved,
@@ -685,7 +717,7 @@ void run_structured_observation_route_tests() {
                 std::numeric_limits<std::uint64_t>::max(),
                 &fixture.routing);
         PC_CHECK(
-            strategy.find("\"type\":\"observation_signature\"") !=
+            strategy.find("\"type\":\"observation_signature\"") ==
             std::string::npos);
     }
 
@@ -708,46 +740,54 @@ void run_structured_observation_route_tests() {
             fixture.routing.classes[0].coarse_state_key.clear();
             fixture.routing.classes[1].coarse_state_key.clear();
         },
-        "no deterministic semantic key");
+        "lost its canonical coarse parent");
     expect_structured_route_refusal(
         [](StructuredRouteFixture& fixture) {
             fixture.routing.classes[1].coarse_state_key = {9};
         },
-        "inconsistent semantic keys");
+        "lost its canonical coarse parent");
     expect_structured_route_refusal(
         [](StructuredRouteFixture& fixture) {
             fixture.routing.classes[1].coarse_state = 2;
         },
-        "share one semantic key");
-    expect_structured_route_refusal(
-        [](StructuredRouteFixture& fixture) {
-            AbstractState retry =
-                fixture.calc->state(fixture.left_state);
-            retry.goal_progress_retry_basin = 1;
-            const std::uint32_t retry_state =
-                fixture.calc->intern_state(retry);
-            const std::size_t state_count =
-                fixture.calc->state_count();
-            fixture.solved.values.resize(state_count, 1.0);
-            fixture.solved.policy.resize(state_count);
-            fixture.solved.expanded.resize(state_count, 0);
-            fixture.solved.goal_states.resize(state_count, 0);
-            fixture.solved.policy_reachable.resize(state_count, 0);
-            fixture.solved.behavioral_representative_by_state.resize(
-                state_count, kNoId);
-            fixture.solved.policy[retry_state] =
-                PolicyOperatorRef{fixture.scour};
-            fixture.solved.expanded[retry_state] = 1;
-            fixture.solved.policy_reachable[retry_state] = 1;
-            fixture.solved.behavioral_representative_by_state[
-                retry_state] = fixture.left_state;
-            fixture.routing.classes[0].strict_members.push_back(
-                retry_state);
-            std::sort(
-                fixture.routing.classes[0].strict_members.begin(),
-                fixture.routing.classes[0].strict_members.end());
-        },
-        "mixes ordinary and retry-basin");
+        "lost its canonical coarse parent");
+    {
+        StructuredRouteFixture fixture =
+            make_structured_route_fixture();
+        AbstractState retry =
+            fixture.calc->state(fixture.left_state);
+        retry.goal_progress_retry_basin = 1;
+        const std::uint32_t retry_state =
+            fixture.calc->intern_state(retry);
+        const std::size_t state_count = fixture.calc->state_count();
+        fixture.solved.values.resize(state_count, 1.0);
+        fixture.solved.policy.resize(state_count);
+        fixture.solved.expanded.resize(state_count, 0);
+        fixture.solved.goal_states.resize(state_count, 0);
+        fixture.solved.policy_reachable.resize(state_count, 0);
+        fixture.solved.behavioral_representative_by_state.resize(
+            state_count, kNoId);
+        fixture.solved.policy[retry_state] =
+            PolicyOperatorRef{fixture.scour};
+        fixture.solved.expanded[retry_state] = 1;
+        fixture.solved.behavioral_representative_by_state[retry_state] =
+            fixture.left_state;
+        fixture.routing.classes[0].strict_members.push_back(
+            retry_state);
+        std::sort(
+            fixture.routing.classes[0].strict_members.begin(),
+            fixture.routing.classes[0].strict_members.end());
+        fixture.solved.policy[fixture.right_state] =
+            PolicyOperatorRef{fixture.chaos};
+        fixture.routing.classes[1].selected_action =
+            compile_selected_operator(*fixture.calc, fixture.chaos);
+        const std::string strategy = compile_policy_strategy_json(
+            *fixture.calc, fixture.solved,
+            "structured route with hidden retry-basin member", nullptr,
+            std::numeric_limits<std::uint64_t>::max(),
+            &fixture.routing);
+        PC_CHECK(!strategy.empty());
+    }
 
     /* Identical/overlapping observations may not choose a different
      * executable semantic operation. */
@@ -819,8 +859,13 @@ void run_structured_observation_route_tests() {
         [](StructuredRouteFixture& fixture) {
             fixture.routing.classes[0].observation_signature =
                 fixture.routing.classes[1].observation_signature;
+            fixture.solved.policy[fixture.right_state] =
+                PolicyOperatorRef{fixture.chaos};
+            fixture.routing.classes[1].selected_action =
+                compile_selected_operator(
+                    *fixture.calc, fixture.chaos);
         },
-        "incomplete_refined_policy_observation_signature");
+        "indistinguishable_refined_policy_actions");
 
     expect_structured_route_refusal(
         [](StructuredRouteFixture& fixture) {
@@ -941,13 +986,21 @@ void run_synthetic_gate() {
                  std::string::npos);
         PC_CHECK(json.find("\"type\":\"alteration\"") !=
                  std::string::npos);
+        const std::string route_source =
+            json.find("\"id\":\"policy_route_root\"") !=
+                    std::string::npos
+                ? "policy_route_root"
+                : "router";
         PC_CHECK(json.find(
-                     "\"from\":\"router\",\"to\":\"offpolicy\"") !=
+                     "\"from\":\"" + route_source +
+                     "\",\"to\":\"offpolicy\"") !=
                  std::string::npos);
         std::size_t region_route_count = 0;
         std::size_t route_at = 0;
         while ((route_at = json.find(
-                    "\"from\":\"router\",\"to\":\"s", route_at)) !=
+                    "\"from\":\"" + route_source +
+                        "\",\"to\":\"s",
+                    route_at)) !=
                std::string::npos) {
             ++region_route_count;
             ++route_at;

@@ -54,6 +54,9 @@
             refinement.classes.size() *
             sizeof(RefinedPolicyCompileClass));
         add(
+            refinement.classes.size() *
+            sizeof(RefinedPolicyCompileParent));
+        add(
             states * sizeof(std::uint32_t));
         for (const RefinedPolicyClass& policy_class :
              refinement.classes) {
@@ -148,7 +151,10 @@
         if (refined_routing != nullptr) {
             refined_routing->classes.clear();
             refined_routing->classes.resize(refinement.classes.size());
+            refined_routing->parents.clear();
+            refined_routing->parent_layout = &coarse_.layout();
         }
+        std::set<std::uint32_t> retained_compile_parents;
         for (const RefinedPolicyClass& policy_class :
              refinement.classes) {
             if (policy_class.class_id >=
@@ -189,6 +195,13 @@
                         PolicyExactLiftStatus::InvalidSolveState,
                         "refinement class semantic coarse-state key "
                         "disagrees with its numeric parent");
+                }
+                if (retained_compile_parents.insert(
+                        compile_class.coarse_state).second) {
+                    refined_routing->parents.push_back({
+                        compile_class.coarse_state,
+                        compile_class.coarse_state_key,
+                        coarse_.state(compile_class.coarse_state)});
                 }
                 compile_class.representative_state =
                     representative->second.strict_state;
@@ -420,6 +433,11 @@
         }
         SolveResult lifted = make_lifted_solve_result(
             representatives, evaluation, refined_routing);
+        for (const RefinedPolicyClass& cls : representatives.classes) {
+            const StableKey& representative = cls.exact_members.front();
+            exact_policy_.erase(representative);
+            quotient_release_carrier(representative);
+        }
 
         std::vector<double> value_by_class(
             refinement.classes.size(),
@@ -467,7 +485,6 @@
                 if (strict_state == authored_start) {
                     streamed_start = representative;
                 }
-                ExactState state = quotient_materialize_locator(strict_state);
                 lifted.expanded[strict_state] = 1;
                 lifted.goal_states[strict_state] = cls.goal ? 1 : 0;
                 lifted.values[strict_state] = value_by_class[cls.class_id];
@@ -479,8 +496,6 @@
                             PolicyExactLiftStatus::InvalidSolveState,
                             "streamed class has no selected operator");
                     }
-                    exact_policy_[state.stable_key] =
-                        *cls.selected_action;
                     const auto streamed_recipe =
                         quotient_streamed_recipes_.find(
                             cls.selected_action->semantic_key);
@@ -490,16 +505,18 @@
                             PolicyExactLiftStatus::InvalidSolveState,
                             "streamed selected decision has no retained recipe");
                     }
-                    store_choice_recipe(
-                        state.stable_key,
-                        cls.selected_action->semantic_key,
-                        streamed_recipe->second);
                     const PlannerOperator& planner = strict_->operators().at(
                         cls.selected_action->action_id);
                     lifted.policy[strict_state] = PolicyOperatorRef{
                         planner.kind, cls.selected_action->action_id};
-                    const ExactChoiceRecipe& recipe = choice_recipe(
-                        state.stable_key, *cls.selected_action);
+                    /* The streamed quotient already retained one immutable
+                     * recipe per semantic decision.  Compilation routes by
+                     * the refined class and consumes that same decision;
+                     * duplicating the recipe into CalcContext for every
+                     * covered strict state is neither a proof dependency nor
+                     * a runtime requirement. */
+                    const ExactChoiceRecipe& recipe =
+                        streamed_recipe->second;
                     if (planner.kind == PlannerOperatorKind::Primitive) {
                         if (recipe.kind ==
                             ExactChoiceRecipeKind::PrimitiveObservedChoice) {
@@ -511,8 +528,6 @@
                             recipe.option_preferences;
                     }
                 }
-                exact_policy_.erase(state.stable_key);
-                quotient_release_carrier(state.stable_key);
             }
         }
         if (streamed_start == kNoId) {

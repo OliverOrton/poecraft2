@@ -9,6 +9,16 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-08-05
+
+- [Core Policy Preservation And Direct Certification](2026-08-05-core-policy-publication-recovery/README.md) —
+  retains the core-selected policy before publication work, attempts direct
+  compiler/exact certification before strict lift, targets strict repair from
+  concrete failure evidence, enforces artifact/bound publication invariants,
+  and recovers the frozen five- and two-goal strategies under unchanged caps;
+  its unavailable three-goal input and non-green single wrapper invocation are
+  archived as explicit acceptance limitations.
+
 ## 2026-08-04
 
 - [Goal-Gated Semantic Policy Routing](2026-08-04-goal-gated-semantic-policy-routing/README.md) —

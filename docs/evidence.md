@@ -100,6 +100,40 @@ Selected compact records are:
   The unchanged normal-cap request did not enter Bellman in the 30-second time
   box. No cap was raised.
 
+## Core Policy Publication Recovery
+
+The [tracked recovery evidence](../fixtures/solver-reliability/v1/evidence/core-policy-publication-recovery.json)
+and [archived report](archive/2026-08-05-core-policy-publication-recovery/report.md)
+localize the five-goal regression and preserve final native/release-WASM
+qualification.
+
+- Historical WASM and current core search agree at
+  `984705.7127622988` with transition/policy hashes
+  `d3300c001dda774c` / `d030150696da20a8`; the pre-repair current path lost
+  that candidate during strict refinement and returned no public policy.
+- The repaired five-goal path records the improper direct graph, completes
+  targeted strict repair, and independently exact-evaluates the published
+  bounded graph at `923509.244023527` with success probability `1` and zero
+  off-policy mass in native and WASM.
+- The recovered two-goal path retains a proper direct cost-mismatch candidate
+  and publishes a bounded exact-evaluated Exalt/Opulent Fossil strategy.
+  Native and WASM both complete 10,000/10,000 seeded simulations with no
+  off-policy failure.
+- The five-goal 10,000-run sample preserves 7,479 action-cap failures under
+  the frozen 100,000-action limit in each runtime. This is disclosed rather
+  than rewritten as a statistical pass or answered by raising the cap.
+- The exact requested three-goal serialized input was absent. No synthetic
+  replacement was used, so that real-case qualification remains explicitly
+  unproven.
+- The full pipeline wrapper was invoked exactly once. Its Python/data/binding
+  stages passed before five stale native API assertions stopped the wrapper.
+  After those test-only expectations were corrected, the focused API suite
+  passed 549/549 checks, all 12 CTest targets passed, and web/WASM plus
+  TypeScript acceptance passed. The wrapper was not invoked a second time.
+
+No mechanic, price, objective, action filter, goal semantic, abstraction,
+strategy vocabulary, cap, or watchdog changed.
+
 ## Exact Solver State Scaling Q0-Q5
 
 The [solver-scaling v1 guide](../fixtures/solver-scaling/v1/README.md) owns the

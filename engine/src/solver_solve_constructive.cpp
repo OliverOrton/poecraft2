@@ -942,7 +942,6 @@ const char* SolveWork::Impl::certified_incumbent_invalid_reason(
         candidate.graph_prefix_identity =
             incumbent.graph_prefix_identity;
         candidate.complete_policy_or_witness =
-            incumbent.primitive_renewal_witness.valid &&
             incumbent.policy_materialized && !incumbent.policy.empty();
         candidate.compiled_payload_present =
             !incumbent.compiled_artifact.strategy_json.empty();

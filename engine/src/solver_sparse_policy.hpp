@@ -38,6 +38,11 @@ struct SparsePolicyRowInput {
     std::vector<SparsePolicyChoiceInput> choices;
 };
 
+struct SharedSparseTransitionSpan {
+    std::uint64_t offset = 0;
+    std::uint32_t count = 0;
+};
+
 /*
  * Materialize a precomputed exact probability row into the same index-stable
  * sparse arenas consumed by the broad solver. The caller remains responsible
@@ -46,7 +51,9 @@ struct SparsePolicyRowInput {
 std::uint64_t append_sparse_policy_row(
     SolveTransitionCache& graph,
     std::vector<PricedSparseRow>& priced_rows,
-    const SparsePolicyRowInput& input);
+    const SparsePolicyRowInput& input,
+    std::optional<SharedSparseTransitionSpan> shared_transitions =
+        std::nullopt);
 
 /*
  * Evaluate one sparse Bellman row, including row-local self loops and
@@ -187,7 +194,8 @@ std::uint64_t sparse_policy_component_scratch_bytes(
  */
 SparsePolicyComponentResult advance_sparse_policy_component(
     const SparsePolicyComponentView& view,
-    std::unique_ptr<SparsePolicyResume>& resume);
+    std::unique_ptr<SparsePolicyResume>& resume,
+    std::vector<WideFloat>* exact_values = nullptr);
 
 } // namespace solve_detail
 } // namespace solver

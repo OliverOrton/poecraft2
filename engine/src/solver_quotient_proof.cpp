@@ -146,6 +146,100 @@ void sort_unique_ids(std::vector<T>& values) {
     values.erase(std::unique(values.begin(), values.end()), values.end());
 }
 
+void replace_capacity(
+        std::uint64_t& total,
+        const std::size_t previous,
+        const std::size_t current) {
+    if (current >= previous) {
+        total = checked_add(total, current - previous);
+    } else {
+        total -= previous - current;
+    }
+}
+
+void add_payload_identity_storage(
+        ProofStoreStorageStats& stats,
+        const CertifiedRowIdentity& identity) {
+    const auto add_payload_key = [&](const StableKey& key) {
+        stats.payload_key_u64_capacity = checked_add(
+            stats.payload_key_u64_capacity, key.capacity());
+    };
+    add_payload_key(identity.source_coarse_parent);
+    add_payload_key(identity.semantic_action_identity);
+    add_payload_key(identity.runtime_contract_program_identity);
+    add_payload_key(identity.exact_choice_recipe_identity);
+    add_payload_key(identity.session_identity);
+    add_payload_key(identity.layout_identity);
+    add_payload_key(identity.goal_identity);
+    add_payload_key(identity.artifact_identity);
+    add_payload_key(identity.start_identity);
+    add_payload_key(identity.solver_options_identity);
+    stats.requirement_tag_capacity = checked_add(
+        stats.requirement_tag_capacity,
+        identity.observation_requirement.modifier_tag_ids.capacity());
+    stats.requirement_affix_capacity = checked_add(
+        stats.requirement_affix_capacity,
+        identity.observation_requirement.affix_observations.capacity());
+    for (const RefinementAffixObservation& observation :
+         identity.observation_requirement.affix_observations) {
+        stats.requirement_selector_tag_capacity = checked_add(
+            stats.requirement_selector_tag_capacity,
+            observation.selector.required_tag_ids.capacity());
+    }
+    stats.feature_capacity = checked_add(
+        stats.feature_capacity, identity.observed_features.capacity());
+    for (const refinement::FeatureAtom& atom : identity.observed_features) {
+        stats.feature_value_u64_capacity = checked_add(
+            stats.feature_value_u64_capacity, atom.value.capacity());
+        stats.feature_tag_capacity = checked_add(
+            stats.feature_tag_capacity, atom.modifier_tag_ids.capacity());
+    }
+    stats.coverage_range_capacity = checked_add(
+        stats.coverage_range_capacity, identity.coverage.ranges.capacity());
+    stats.coverage_key_u64_capacity = checked_add(
+        stats.coverage_key_u64_capacity,
+        identity.coverage.strict_kernel_identity.capacity());
+    stats.coverage_key_u64_capacity = checked_add(
+        stats.coverage_key_u64_capacity,
+        identity.coverage.replay_authority_identity.capacity());
+    stats.coverage_key_u64_capacity = checked_add(
+        stats.coverage_key_u64_capacity,
+        identity.coverage.normalized_enumeration_identity.capacity());
+    for (const CoverageRange& range : identity.coverage.ranges) {
+        stats.coverage_key_u64_capacity = checked_add(
+            stats.coverage_key_u64_capacity,
+            range.range_identity.capacity());
+    }
+}
+
+void add_obligation_identity_storage(
+        ProofStoreStorageStats& stats,
+        const UnresolvedAlternativeObligationIdentity& identity) {
+    const auto add_key = [&](const StableKey& key) {
+        stats.obligation_key_u64_capacity = checked_add(
+            stats.obligation_key_u64_capacity, key.capacity());
+    };
+    add_key(identity.action.semantic_action_identity);
+    add_key(identity.action.runtime_contract_program_identity);
+    add_key(identity.action.exact_choice_recipe_identity);
+    add_key(identity.price_identity);
+    add_key(identity.vocabulary_identity);
+    add_key(identity.optimistic_lower.authority_identity());
+    add_key(identity.resumable_work_identity);
+    stats.obligation_requirement_tag_capacity = checked_add(
+        stats.obligation_requirement_tag_capacity,
+        identity.observation_requirement.modifier_tag_ids.capacity());
+    stats.obligation_requirement_affix_capacity = checked_add(
+        stats.obligation_requirement_affix_capacity,
+        identity.observation_requirement.affix_observations.capacity());
+    for (const RefinementAffixObservation& observation :
+         identity.observation_requirement.affix_observations) {
+        stats.obligation_requirement_selector_tag_capacity = checked_add(
+            stats.obligation_requirement_selector_tag_capacity,
+            observation.selector.required_tag_ids.capacity());
+    }
+}
+
 } // namespace
 
 ProofMemoryLimit::ProofMemoryLimit(
@@ -173,7 +267,9 @@ void ProofMemoryLedger::refresh_total_and_peak() {
     for (const std::uint64_t bytes : value_.bytes) {
         total = checked_add(total, bytes);
     }
-    if (total > cap_bytes_) throw ProofMemoryLimit(total, cap_bytes_);
+    if (total > cap_bytes_) {
+        throw ProofMemoryLimit(total, cap_bytes_);
+    }
     value_.total_bytes = total;
     value_.peak_total_bytes = std::max(value_.peak_total_bytes, total);
 }
@@ -448,7 +544,7 @@ CoverageReplaySlice replay_coverage(
 CarrierWideOptimisticLowerQ::CarrierWideOptimisticLowerQ(
         const OptimisticLowerQProvenanceKind kind,
         StableKey authority_identity,
-        StableKey source_cell_identity,
+        SharedStableKey source_cell_identity,
         const std::uint64_t exact_carriers_covered,
         const double exact_probability_mass,
         const double lower_q)
@@ -462,7 +558,15 @@ CarrierWideOptimisticLowerQ::CarrierWideOptimisticLowerQ(
 CarrierWideOptimisticLowerQ trivial_carrier_wide_lower_q(
         const StableKey& source_cell_identity,
         const CoverageDescriptor& coverage) {
-    require_identity(source_cell_identity, "lower-Q source cell identity");
+    return trivial_carrier_wide_lower_q(
+        SharedStableKey{source_cell_identity}, coverage);
+}
+
+CarrierWideOptimisticLowerQ trivial_carrier_wide_lower_q(
+        const SharedStableKey& source_cell_identity,
+        const CoverageDescriptor& coverage) {
+    require_identity(
+        source_cell_identity.value(), "lower-Q source cell identity");
     const CoverageDescriptor canonical =
         canonical_coverage_descriptor(coverage);
     return {
@@ -525,7 +629,7 @@ CarrierWideOptimisticLowerQ certify_carrier_wide_lower_q(
     return {
         OptimisticLowerQProvenanceKind::CarrierWideWitness,
         std::move(authority_identity),
-        source_cell_identity,
+        SharedStableKey{source_cell_identity},
         canonical.exact_source_count,
         canonical.exact_total_probability,
         minimum};
@@ -549,7 +653,7 @@ UnresolvedAlternativeObligationIdentity
 canonical_unresolved_alternative_obligation_identity(
         UnresolvedAlternativeObligationIdentity value) {
     require_identity(
-        value.source_cell_identity,
+        value.source_cell_identity.value(),
         "alternative source cell identity");
     require_identity(value.price_identity, "alternative price identity");
     require_identity(
@@ -565,7 +669,7 @@ canonical_unresolved_alternative_obligation_identity(
         canonical_alternative_action_identity(std::move(value.action));
     const CarrierWideOptimisticLowerQ& lower = value.optimistic_lower;
     require_identity(lower.authority_identity(), "lower-Q authority identity");
-    if (lower.source_cell_identity() != value.source_cell_identity ||
+    if (lower.source_cell_identity() != value.source_cell_identity.value() ||
         lower.exact_carriers_covered() == 0 ||
         !valid_probability(lower.exact_probability_mass()) ||
         lower.exact_probability_mass() <= 0.0 ||
@@ -590,7 +694,7 @@ std::uint64_t unresolved_alternative_obligation_identity_hash(
         const UnresolvedAlternativeObligationIdentity& identity) {
     std::uint64_t hash = kFnvOffset;
     hash_token(hash, identity.source_cell_id);
-    hash_key(hash, identity.source_cell_identity);
+    hash_key(hash, identity.source_cell_identity.value());
     hash_requirement(hash, identity.observation_requirement);
     hash_token(hash, identity.action.action_id);
     hash_key(hash, identity.action.semantic_action_identity);
@@ -668,7 +772,8 @@ CertifiedRowIdentity canonical_certified_row_identity(
         throw std::invalid_argument("certified row coverage/row mass mismatch");
     }
     for (const ProofProjectedArc& arc : value.projected_arcs) {
-        require_identity(arc.target_cell_identity, "projected target identity");
+        require_identity(
+            arc.target_cell_identity.value(), "projected target identity");
         if (!valid_probability(arc.probability)) {
             throw std::invalid_argument("invalid projected arc probability");
         }
@@ -693,7 +798,7 @@ CertifiedRowIdentity canonical_certified_row_identity(
         }
     }
     if (probability_sum(
-            value.projected_arcs,
+            value.projected_arcs.value(),
             [](const ProofProjectedArc& arc) { return arc.probability; }) !=
         value.exact_total_probability) {
         throw std::invalid_argument("certified row projected mass mismatch");
@@ -736,7 +841,7 @@ std::uint64_t certified_row_identity_hash(
     hash_token(hash, identity.projected_arcs.size());
     for (const ProofProjectedArc& arc : identity.projected_arcs) {
         hash_key(hash, arc.label);
-        hash_key(hash, arc.target_cell_identity);
+        hash_key(hash, arc.target_cell_identity.value());
         hash_token(hash, std::bit_cast<std::uint64_t>(arc.probability));
     }
     return hash;
@@ -751,6 +856,41 @@ std::pair<std::uint32_t, bool> ProofStore::intern_payload(
         CertifiedRowIdentity identity,
         const std::optional<std::uint64_t> forced_hash_for_test) {
     identity = canonical_certified_row_identity(std::move(identity));
+    std::uint64_t projected_hash = kFnvOffset;
+    hash_token(projected_hash, identity.projected_arcs.size());
+    for (const ProofProjectedArc& arc : identity.projected_arcs) {
+        hash_key(projected_hash, arc.label);
+        hash_key(projected_hash, arc.target_cell_identity.value());
+        hash_token(
+            projected_hash,
+            std::bit_cast<std::uint64_t>(arc.probability));
+    }
+    auto& projected_bucket = projected_arc_buckets_[projected_hash];
+    const auto projected = std::find_if(
+        projected_bucket.begin(), projected_bucket.end(),
+        [&](const auto& candidate) {
+            return candidate != nullptr &&
+                   *candidate == identity.projected_arcs.value();
+        });
+    if (projected != projected_bucket.end()) {
+        identity.projected_arcs = SharedProjectedArcs{*projected};
+    } else {
+        const std::size_t previous_capacity = projected_bucket.capacity();
+        projected_bucket.push_back(identity.projected_arcs.shared_value());
+        replace_capacity(
+            storage_stats_.projected_arc_bucket_pointer_capacity,
+            previous_capacity, projected_bucket.capacity());
+        storage_stats_.projected_arc_bucket_count =
+            projected_arc_buckets_.size();
+        storage_stats_.arc_capacity = checked_add(
+            storage_stats_.arc_capacity,
+            identity.projected_arcs.capacity());
+        for (const ProofProjectedArc& arc : identity.projected_arcs) {
+            storage_stats_.arc_key_u64_capacity = checked_add(
+                storage_stats_.arc_key_u64_capacity,
+                arc.label.capacity());
+        }
+    }
     const std::uint64_t semantic_hash = certified_row_identity_hash(identity);
     const std::uint64_t bucket_hash =
         forced_hash_for_test.value_or(semantic_hash);
@@ -770,16 +910,26 @@ std::pair<std::uint32_t, bool> ProofStore::intern_payload(
         bucket = payload_buckets_.insert(
             bucket, ProofPayloadHashBucket{bucket_hash, {}});
     }
+    storage_stats_.payload_bucket_capacity = payload_buckets_.capacity();
     const std::uint32_t payload_id =
         static_cast<std::uint32_t>(payloads_.size());
     payloads_.push_back(std::make_shared<const CertifiedRowPayload>(
         CertifiedRowPayload{std::move(identity), semantic_hash}));
+    storage_stats_.payload_pointer_capacity = payloads_.capacity();
+    ++storage_stats_.payload_object_count;
+    add_payload_identity_storage(
+        storage_stats_, payloads_.back()->identity);
     bucket = std::lower_bound(
         payload_buckets_.begin(), payload_buckets_.end(), bucket_hash,
         [](const ProofPayloadHashBucket& candidate, const std::uint64_t hash) {
             return candidate.hash < hash;
         });
+    const std::size_t previous_bucket_capacity =
+        bucket->payload_ids.capacity();
     bucket->payload_ids.push_back(payload_id);
+    replace_capacity(
+        storage_stats_.payload_bucket_id_capacity,
+        previous_bucket_capacity, bucket->payload_ids.capacity());
     refresh_owned_bytes();
     return {payload_id, false};
 }
@@ -824,19 +974,35 @@ void ProofStore::attach_row(
         }
     }
     if (row_id >= use_sites_.size()) use_sites_.resize(row_id + 1);
+    storage_stats_.use_site_capacity = use_sites_.capacity();
+    const std::size_t previous_dependency_capacity =
+        use_sites_[row_id].target_dependencies.capacity();
     if (use_sites_[row_id].present) detach_row_indexes(use_sites_[row_id]);
     if (source_cell_id >= source_rows_.size()) {
         source_rows_.resize(static_cast<std::size_t>(source_cell_id) + 1);
     }
+    storage_stats_.source_index_outer_capacity = source_rows_.capacity();
+    const std::size_t previous_source_capacity =
+        source_rows_[source_cell_id].capacity();
     source_rows_[source_cell_id].push_back(row_id);
     sort_unique_ids(source_rows_[source_cell_id]);
+    replace_capacity(
+        storage_stats_.source_index_row_capacity,
+        previous_source_capacity, source_rows_[source_cell_id].capacity());
     for (const TargetGenerationDependency& dependency : target_dependencies) {
         if (dependency.cell_id >= target_rows_.size()) {
             target_rows_.resize(
                 static_cast<std::size_t>(dependency.cell_id) + 1);
         }
+        storage_stats_.target_index_outer_capacity = target_rows_.capacity();
+        const std::size_t previous_target_capacity =
+            target_rows_[dependency.cell_id].capacity();
         target_rows_[dependency.cell_id].push_back(row_id);
         sort_unique_ids(target_rows_[dependency.cell_id]);
+        replace_capacity(
+            storage_stats_.target_index_row_capacity,
+            previous_target_capacity,
+            target_rows_[dependency.cell_id].capacity());
     }
     use_sites_[row_id] = RowProofUseSite{
         true,
@@ -848,6 +1014,10 @@ void ProofStore::attach_row(
         std::move(target_dependencies),
         action_generation,
         admission_generation};
+    replace_capacity(
+        storage_stats_.use_target_dependency_capacity,
+        previous_dependency_capacity,
+        use_sites_[row_id].target_dependencies.capacity());
     refresh_owned_bytes();
 }
 
@@ -1103,6 +1273,8 @@ std::pair<std::uint32_t, bool> ProofStore::intern_alternative_obligation(
         bucket = alternative_buckets_.insert(
             bucket, AlternativeObligationHashBucket{bucket_hash, {}});
     }
+    storage_stats_.obligation_bucket_capacity =
+        alternative_buckets_.capacity();
     const std::uint32_t obligation_id =
         static_cast<std::uint32_t>(alternative_obligations_.size());
     alternative_obligations_.push_back({
@@ -1114,6 +1286,10 @@ std::pair<std::uint32_t, bool> ProofStore::intern_alternative_obligation(
         std::nullopt,
         std::nullopt,
         0});
+    storage_stats_.obligation_capacity =
+        alternative_obligations_.capacity();
+    add_obligation_identity_storage(
+        storage_stats_, alternative_obligations_.back().identity);
     bucket = std::lower_bound(
         alternative_buckets_.begin(), alternative_buckets_.end(),
         bucket_hash,
@@ -1121,7 +1297,12 @@ std::pair<std::uint32_t, bool> ProofStore::intern_alternative_obligation(
            const std::uint64_t hash) {
             return candidate.hash < hash;
         });
+    const std::size_t previous_bucket_capacity =
+        bucket->obligation_ids.capacity();
     bucket->obligation_ids.push_back(obligation_id);
+    replace_capacity(
+        storage_stats_.obligation_bucket_id_capacity,
+        previous_bucket_capacity, bucket->obligation_ids.capacity());
     refresh_owned_bytes();
     return {obligation_id, false};
 }
@@ -1239,7 +1420,8 @@ ProofStore::validate_alternative_obligation(
     }
     const UnresolvedAlternativeObligationIdentity& identity =
         obligation.identity;
-    if (identity.source_cell_identity != context.source_cell_identity) {
+    if (identity.source_cell_identity.value() !=
+        context.source_cell_identity) {
         return AlternativeObligationValidationStatus::StaleSourceIdentity;
     }
     if (identity.price_identity != context.price_identity) {
@@ -1525,6 +1707,22 @@ ProofStoreStorageStats ProofStore::storage_stats() const {
         stats.payload_bucket_id_capacity = checked_add(
             stats.payload_bucket_id_capacity, bucket.payload_ids.capacity());
     }
+    stats.projected_arc_bucket_count = projected_arc_buckets_.size();
+    for (const auto& [hash, bucket] : projected_arc_buckets_) {
+        (void)hash;
+        stats.projected_arc_bucket_pointer_capacity = checked_add(
+            stats.projected_arc_bucket_pointer_capacity,
+            bucket.capacity());
+        for (const auto& shared : bucket) {
+            if (shared == nullptr) continue;
+            stats.arc_capacity = checked_add(
+                stats.arc_capacity, shared->capacity());
+            for (const ProofProjectedArc& arc : *shared) {
+                stats.arc_key_u64_capacity = checked_add(
+                    stats.arc_key_u64_capacity, arc.label.capacity());
+            }
+        }
+    }
     stats.payload_object_count = payloads_.size();
     for (const auto& shared : payloads_) {
         if (shared == nullptr) continue;
@@ -1562,14 +1760,6 @@ ProofStoreStorageStats ProofStore::storage_stats() const {
                 stats.feature_value_u64_capacity, atom.value.capacity());
             stats.feature_tag_capacity = checked_add(
                 stats.feature_tag_capacity, atom.modifier_tag_ids.capacity());
-        }
-        stats.arc_capacity = checked_add(
-            stats.arc_capacity, identity.projected_arcs.capacity());
-        for (const ProofProjectedArc& arc : identity.projected_arcs) {
-            stats.arc_key_u64_capacity = checked_add(
-                stats.arc_key_u64_capacity,
-                checked_add(arc.label.capacity(),
-                            arc.target_cell_identity.capacity()));
         }
         stats.coverage_range_capacity = checked_add(
             stats.coverage_range_capacity, identity.coverage.ranges.capacity());
@@ -1620,14 +1810,12 @@ ProofStoreStorageStats ProofStore::storage_stats() const {
             stats.obligation_key_u64_capacity = checked_add(
                 stats.obligation_key_u64_capacity, key.capacity());
         };
-        add_key(identity.source_cell_identity);
         add_key(identity.action.semantic_action_identity);
         add_key(identity.action.runtime_contract_program_identity);
         add_key(identity.action.exact_choice_recipe_identity);
         add_key(identity.price_identity);
         add_key(identity.vocabulary_identity);
         add_key(identity.optimistic_lower.authority_identity());
-        add_key(identity.optimistic_lower.source_cell_identity());
         add_key(identity.resumable_work_identity);
         stats.obligation_requirement_tag_capacity = checked_add(
             stats.obligation_requirement_tag_capacity,
@@ -1646,7 +1834,7 @@ ProofStoreStorageStats ProofStore::storage_stats() const {
 }
 
 void ProofStore::refresh_owned_bytes() {
-    const ProofStoreStorageStats stats = storage_stats();
+    const ProofStoreStorageStats& stats = storage_stats_;
     std::uint64_t payload_bytes = sizeof(*this);
     payload_bytes = checked_add(
         payload_bytes,
@@ -1698,6 +1886,20 @@ void ProofStore::refresh_owned_bytes() {
     payload_bytes = checked_add(
         payload_bytes,
         checked_multiply(stats.arc_key_u64_capacity, sizeof(std::uint64_t)));
+    payload_bytes = checked_add(
+        payload_bytes,
+        checked_multiply(
+            stats.projected_arc_bucket_count,
+            sizeof(std::pair<
+                const std::uint64_t,
+                std::vector<std::shared_ptr<
+                    SharedProjectedArcs::Container>>>) +
+                3 * sizeof(void*)));
+    payload_bytes = checked_add(
+        payload_bytes,
+        checked_multiply(
+            stats.projected_arc_bucket_pointer_capacity,
+            sizeof(std::shared_ptr<SharedProjectedArcs::Container>)));
 
     const std::uint64_t certificate_bytes = checked_multiply(
         stats.use_site_capacity, sizeof(RowProofUseSite));
@@ -1778,6 +1980,10 @@ void ProofStore::clear_and_release() {
     }
     std::vector<std::shared_ptr<const CertifiedRowPayload>>().swap(payloads_);
     std::vector<ProofPayloadHashBucket>().swap(payload_buckets_);
+    std::map<
+        std::uint64_t,
+        std::vector<std::shared_ptr<SharedProjectedArcs::Container>>>()
+        .swap(projected_arc_buckets_);
     std::vector<RowProofUseSite>().swap(use_sites_);
     std::vector<std::vector<std::uint64_t>>().swap(source_rows_);
     std::vector<std::vector<std::uint64_t>>().swap(target_rows_);
@@ -1785,6 +1991,7 @@ void ProofStore::clear_and_release() {
         alternative_obligations_);
     std::vector<AlternativeObligationHashBucket>().swap(
         alternative_buckets_);
+    storage_stats_ = {};
     price_generation_ = 0;
     q_generation_ = 0;
     policy_generation_ = 0;

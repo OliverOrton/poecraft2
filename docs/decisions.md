@@ -424,3 +424,29 @@ contexts receive remaining budget before execution, and an interrupted row
 cannot publish. No second evaluator-safety cap or public ABI change is needed.
 V1/V2/V3 counters are explanatory only; performance qualification uses wall
 time, selected-owned memory, and cooperative latency.
+
+## 2026-08-05 — Executable Certification Precedes Strict Optimality Proof
+
+**Decision:** Freeze the core-selected policy before strict refinement and
+attempt the existing compiler plus exact assertion directly. Parsing, proper
+absorption, complete exact-cost accounting, and zero off-policy mass establish
+an executable candidate. Global lower-bound closure is additionally required
+for `exact`; an executable candidate with an open gap remains bounded.
+
+Strict policy-guided refinement is a targeted repair/proof stage after a
+demonstrated direct incompatibility, improper component, or cost mismatch. It
+cannot erase a previously certified executable artifact, and the public
+compiler returns the retained asserted bytes rather than rebuilding the policy.
+
+**Context:** The
+[completed recovery milestone](archive/2026-08-05-core-policy-publication-recovery/README.md)
+localized a real five-goal regression: current core hashes and value matched
+the historical exact solve, but the policy was discarded after the core stage.
+The repair also recovers the frozen two-goal request as an exact-evaluated
+bounded strategy under the unchanged caps.
+
+**Consequences:** Equal scalar bounds are no longer sufficient publication
+evidence. Telemetry preserves the core candidate, direct assertion, strict
+lift, and final publication identities and reasons. No mechanic, price,
+objective, action scope, abstraction, strategy vocabulary, or resource limit
+changes under this decision.

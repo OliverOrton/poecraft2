@@ -3,9 +3,11 @@
 #include "solver_refinement.hpp"
 
 #include <array>
+#include <compare>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <initializer_list>
 #include <limits>
 #include <map>
 #include <memory>
@@ -21,6 +23,44 @@ namespace quotient {
 using refinement::FeatureSignature;
 using refinement::ObservationRequirement;
 using refinement::StableKey;
+
+/*
+ * Collision-free shared ownership for an already-canonical stable key. The
+ * pointee is compared, never its address; sharing changes storage only.
+ */
+class SharedStableKey {
+public:
+    SharedStableKey() = default;
+    SharedStableKey(StableKey value)
+        : value_(std::make_shared<const StableKey>(std::move(value))) {}
+    SharedStableKey(std::initializer_list<std::uint64_t> value)
+        : SharedStableKey(StableKey{value}) {}
+    explicit SharedStableKey(std::shared_ptr<const StableKey> value)
+        : value_(std::move(value)) {}
+
+    const StableKey& value() const {
+        static const StableKey empty;
+        return value_ == nullptr ? empty : *value_;
+    }
+    operator const StableKey&() const { return value(); }
+    bool empty() const { return value().empty(); }
+    std::size_t capacity() const { return value().capacity(); }
+    void push_back(const std::uint64_t token) {
+        StableKey copy = value();
+        copy.push_back(token);
+        value_ = std::make_shared<const StableKey>(std::move(copy));
+    }
+
+    bool operator==(const SharedStableKey& other) const {
+        return value() == other.value();
+    }
+    auto operator<=>(const SharedStableKey& other) const {
+        return value() <=> other.value();
+    }
+
+private:
+    std::shared_ptr<const StableKey> value_;
+};
 
 enum class ProofMemoryCategory : std::uint8_t {
     ProofPayload = 0,
@@ -214,7 +254,7 @@ public:
         return authority_identity_;
     }
     const StableKey& source_cell_identity() const {
-        return source_cell_identity_;
+        return source_cell_identity_.value();
     }
     std::uint64_t exact_carriers_covered() const {
         return exact_carriers_covered_;
@@ -230,7 +270,7 @@ private:
     OptimisticLowerQProvenanceKind kind_ =
         OptimisticLowerQProvenanceKind::TrivialNonnegativeCost;
     StableKey authority_identity_;
-    StableKey source_cell_identity_;
+    SharedStableKey source_cell_identity_;
     std::uint64_t exact_carriers_covered_ = 0;
     double exact_probability_mass_ = 0.0;
     double lower_q_ = 0.0;
@@ -238,13 +278,16 @@ private:
     CarrierWideOptimisticLowerQ(
         OptimisticLowerQProvenanceKind kind,
         StableKey authority_identity,
-        StableKey source_cell_identity,
+        SharedStableKey source_cell_identity,
         std::uint64_t exact_carriers_covered,
         double exact_probability_mass,
         double lower_q);
 
     friend CarrierWideOptimisticLowerQ trivial_carrier_wide_lower_q(
         const StableKey&,
+        const CoverageDescriptor&);
+    friend CarrierWideOptimisticLowerQ trivial_carrier_wide_lower_q(
+        const SharedStableKey&,
         const CoverageDescriptor&);
     friend CarrierWideOptimisticLowerQ certify_carrier_wide_lower_q(
         const StableKey&,
@@ -255,6 +298,10 @@ private:
 
 CarrierWideOptimisticLowerQ trivial_carrier_wide_lower_q(
     const StableKey& source_cell_identity,
+    const CoverageDescriptor& coverage);
+
+CarrierWideOptimisticLowerQ trivial_carrier_wide_lower_q(
+    const SharedStableKey& source_cell_identity,
     const CoverageDescriptor& coverage);
 
 CarrierWideOptimisticLowerQ certify_carrier_wide_lower_q(
@@ -277,7 +324,7 @@ AlternativeActionIdentity canonical_alternative_action_identity(
 
 struct UnresolvedAlternativeObligationIdentity {
     std::uint32_t source_cell_id = 0;
-    StableKey source_cell_identity;
+    SharedStableKey source_cell_identity;
     ObservationRequirement observation_requirement;
     AlternativeActionIdentity action;
     StableKey price_identity;
@@ -401,10 +448,63 @@ struct AlternativeActionAccountingAudit {
 
 struct ProofProjectedArc {
     StableKey label;
-    StableKey target_cell_identity;
+    SharedStableKey target_cell_identity;
     double probability = 0.0;
 
     bool operator==(const ProofProjectedArc&) const = default;
+};
+
+class SharedProjectedArcs {
+public:
+    using Container = std::vector<ProofProjectedArc>;
+    using iterator = Container::iterator;
+    using const_iterator = Container::const_iterator;
+
+    SharedProjectedArcs() = default;
+    SharedProjectedArcs(Container value)
+        : value_(std::make_shared<Container>(std::move(value))) {}
+    SharedProjectedArcs(std::initializer_list<ProofProjectedArc> value)
+        : SharedProjectedArcs(Container{value}) {}
+    explicit SharedProjectedArcs(std::shared_ptr<Container> value)
+        : value_(std::move(value)) {}
+
+    const Container& value() const {
+        static const Container empty;
+        return value_ == nullptr ? empty : *value_;
+    }
+    const std::shared_ptr<Container>& shared_value() const { return value_; }
+    bool empty() const { return value().empty(); }
+    std::size_t size() const { return value().size(); }
+    std::size_t capacity() const { return value().capacity(); }
+    const_iterator begin() const { return value().begin(); }
+    const_iterator end() const { return value().end(); }
+    iterator begin() { return mutable_value().begin(); }
+    iterator end() { return mutable_value().end(); }
+    void push_back(ProofProjectedArc arc) {
+        mutable_value().push_back(std::move(arc));
+    }
+    const ProofProjectedArc& operator[](const std::size_t index) const {
+        return value().at(index);
+    }
+    ProofProjectedArc& operator[](const std::size_t index) {
+        return mutable_value().at(index);
+    }
+
+    bool operator==(const SharedProjectedArcs& other) const {
+        return value() == other.value();
+    }
+
+private:
+    std::shared_ptr<Container> value_;
+
+    Container& mutable_value() {
+        if (value_ == nullptr) {
+            value_ = std::make_shared<Container>();
+        } else if (value_.use_count() != 1) {
+            value_ = std::make_shared<Container>(*value_);
+        }
+        return *value_;
+    }
 };
 
 /*
@@ -429,7 +529,7 @@ struct CertifiedRowIdentity {
     StableKey solver_options_identity;
     CoverageDescriptor coverage;
     double exact_total_probability = 0.0;
-    std::vector<ProofProjectedArc> projected_arcs;
+    SharedProjectedArcs projected_arcs;
 
     bool operator==(const CertifiedRowIdentity&) const = default;
 };
@@ -498,6 +598,8 @@ struct ProofStoreStorageStats {
     std::uint64_t feature_tag_capacity = 0;
     std::uint64_t arc_capacity = 0;
     std::uint64_t arc_key_u64_capacity = 0;
+    std::uint64_t projected_arc_bucket_count = 0;
+    std::uint64_t projected_arc_bucket_pointer_capacity = 0;
     std::uint64_t coverage_range_capacity = 0;
     std::uint64_t coverage_key_u64_capacity = 0;
     std::uint64_t use_site_capacity = 0;
@@ -606,6 +708,11 @@ public:
 
 private:
     ProofMemoryLedger ledger_;
+    ProofStoreStorageStats storage_stats_;
+    std::map<
+        std::uint64_t,
+        std::vector<std::shared_ptr<SharedProjectedArcs::Container>>>
+        projected_arc_buckets_;
     std::vector<std::shared_ptr<const CertifiedRowPayload>> payloads_;
     std::vector<ProofPayloadHashBucket> payload_buckets_;
     std::vector<RowProofUseSite> use_sites_;

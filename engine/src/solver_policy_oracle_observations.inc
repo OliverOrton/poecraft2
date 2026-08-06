@@ -261,6 +261,9 @@
         exact.goal =
             strict_->is_goal_state(strict_->state(strict_state));
         exact.terminal = exact.goal;
+        const bool witness_parent =
+            enable_local_reoptimization_ &&
+            reoptimization_parents_.contains(parent);
         if (exact.goal !=
             coarse_.is_goal_state(coarse_.state(parent))) {
             throw AdapterFailure(
@@ -272,8 +275,7 @@
                 strict_->session(),
                 strict_->layout(),
                 strict_->state(strict_state),
-                (enable_local_reoptimization_ &&
-                 reoptimization_parents_.contains(parent)) ||
+                witness_parent ||
                         exact_policy_.contains(raw_key) ||
                         !policy->second.observations_propagated
                     ? carrier_requirement_
@@ -291,6 +293,7 @@
             policy_collapse_key(
                 strict_state, exact.coarse_state_key,
                 exact.terminal, exact.features,
+                witness_parent,
                 policy->second);
         if (collapse_key.has_value()) {
             exact.stable_key = *collapse_key;
@@ -298,8 +301,7 @@
         }
         if (!exact.terminal) {
             if (!policy->second.selected.has_value() &&
-                !(enable_local_reoptimization_ &&
-                  reoptimization_parents_.contains(parent))) {
+                !witness_parent) {
                 throw AdapterFailure(
                     PolicyExactLiftStatus::InvalidSolveState,
                     "non-terminal strict carrier has no coarse policy "
@@ -345,12 +347,18 @@
                         PolicyExactLiftStatus::ObservationUnavailable,
                         "collision-free strict state identity changed");
                 }
-                existing->second.equivalent_strict_states.push_back(
-                    strict_state);
-                require_local_memory(
-                    existing->second.equivalent_strict_states.capacity() *
-                        sizeof(std::uint32_t),
-                    "contract-proved policy carrier collapse");
+                /* Goal-terminal carriers are absorbing and compilation never
+                 * routes from them. Their coarse-key terminal authority is
+                 * sufficient; retaining every concrete terminal locator
+                 * would eagerly reconstruct an irrelevant carrier graph. */
+                if (!exact.terminal) {
+                    existing->second.equivalent_strict_states.push_back(
+                        strict_state);
+                    require_local_memory(
+                        existing->second.equivalent_strict_states.capacity() *
+                            sizeof(std::uint32_t),
+                        "contract-proved policy carrier collapse");
+                }
             } else if (existing->second.policy_collapsed &&
                        existing->second.collapsed_features !=
                            exact.features) {

@@ -188,11 +188,18 @@ The native stages are:
 3. price operators against the pinned economy;
 4. optimize cyclic components using SCC-based policy iteration with the
    documented fallback;
-5. lift any coarse selected-policy region through native policy-guided exact
-   refinement, locally re-optimize counterexample classes when required, and
-   prove selected-kernel lumpability; and
-6. finalize values, executable policy, bounds, diagnostics, telemetry, and
-   hashes.
+5. freeze the core-selected policy, reachable closure, values, bounds,
+   identities, transition/policy hashes, and owned memory before publication
+   work can mutate or revoke it;
+6. compile and exact-assert that retained candidate directly, requiring parse,
+   proper absorption, complete exact pricing, zero off-policy mass, and cost
+   reconciliation, while charging its work to the shared unchanged caps;
+7. only when that direct assertion demonstrates an incompatibility, improper
+   component, or mismatch, lift the affected policy region through native
+   policy-guided exact refinement and prove selected-kernel lumpability; and
+8. publish the best certified retained artifact, preserving the core and
+   direct-stage identities and reasons in telemetry even when strict repair
+   wins or no candidate can be published.
 
 Callers may opt into `goal_progress_gated_reforges`. In that scope, primitive
 reforge rows fold goal outcomes to one terminal exit and zero-goal-progress
@@ -238,10 +245,13 @@ bounded abandoned telemetry for diagnosis.
 
 Resource exhaustion, unsupported input, or a native error is surfaced as a
 boundary/error. Termination and policy quality are separate: an exact close is
-`exact`, a cap can retain `bounded_feasible`, and an enabled post-round gap can
-return `bounded_near_optimal`. Compilation is allowed only when
-`policy_available`; a non-converged result without an executable proper
-fallback is not compiled.
+`exact` only with a globally closed lower bound and a certified artifact; a
+cap or open gap can retain `bounded_feasible`, and an enabled post-round gap
+can return `bounded_near_optimal`. A finite certified upper always names its
+retained executable witness. Equal certified bounds without certified strategy
+JSON are rejected as a publication-invariant failure. Compilation is allowed
+only when `policy_available` and returns the already asserted artifact; a
+non-converged result without an executable proper candidate is not compiled.
 
 Calculator renders the returned policy's exact evaluated cost separately from
 the optimal-cost lower bound and certified upper bound. It also shows absolute

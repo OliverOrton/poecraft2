@@ -24,6 +24,56 @@ function objectRecord(value: unknown): Record<string, unknown> | null {
         : null;
 }
 
+function recordString(
+    record: Record<string, unknown> | null,
+    key: string,
+): string | null {
+    const value = record?.[key];
+    return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function readableStageStatus(value: string): string {
+    return value.replace(/_/g, " ");
+}
+
+function certificationStageDetail(
+    label: string,
+    stage: Record<string, unknown> | null,
+): string | null {
+    const status = recordString(stage, "status");
+    if (status === null || status === "not_attempted" || status === "none") {
+        return null;
+    }
+    const resourceCap = recordString(stage, "resource_cap");
+    const failureReason = recordString(stage, "failure_reason");
+    const outcome = resourceCap !== null
+        ? `${readableStageStatus(status)} (${resourceCap})`
+        : readableStageStatus(status);
+    return `${label} reached ${outcome}${failureReason !== null ? `: ${failureReason}` : ""}`;
+}
+
+function retainedCoreCertificationDetail(telemetry: unknown): string | null {
+    const root = objectRecord(telemetry);
+    const refinement = objectRecord(root?.policy_refinement);
+    const core = objectRecord(refinement?.core_policy);
+    if (core?.candidate_present !== true) {
+        return null;
+    }
+
+    const direct = certificationStageDetail(
+        "direct certification",
+        objectRecord(refinement?.direct_certification),
+    );
+    const strict = certificationStageDetail(
+        "strict refinement",
+        objectRecord(refinement?.strict_lift),
+    );
+    const stages = [direct, strict].filter((value): value is string => value !== null);
+    return stages.length > 0
+        ? `Core policy found; executable certification incomplete. ${stages.join("; ")}. No executable policy was published.`
+        : "Core policy found; executable certification did not produce a publishable artifact. No executable policy was published.";
+}
+
 function finiteCost(value: number | null, unavailable: string): string {
     return value !== null && Number.isFinite(value) && value < 1e12
         ? formatChaosValue(value)
@@ -161,9 +211,13 @@ export function solveTerminationDetail(
         : [];
     if (summary.termination === "refused_resource_cap") {
         const cap = capHits.length > 0 ? ` (${capHits.join(", ")})` : "";
+        const retainedCoreDetail = summary.policy_available
+            ? null
+            : retainedCoreCertificationDetail(telemetry);
         return summary.policy_available
             ? `The solve reached a resource cap${cap}. The returned executable policy remains bounded; the cap is not an exactness claim.`
-            : `The solve reached a resource cap${cap} before it could certify an executable policy.`;
+            : retainedCoreDetail ??
+                  `The solve reached a resource cap${cap} before it could certify an executable policy.`;
     }
     if (summary.termination === "target_gap") {
         return "The solve stopped after a completed lower/upper round satisfied the requested certificate target.";
@@ -174,7 +228,8 @@ export function solveTerminationDetail(
             : "Broad coarse discovery closed, then exact state refinement produced the returned bounded executable policy. Its displayed lower and upper bounds are authoritative.";
     }
     if (summary.termination === "no_executable_policy") {
-        return "The solver could not establish a proper executable fallback, so no finite policy upper bound is claimed.";
+        return retainedCoreCertificationDetail(telemetry) ??
+            "The solver could not establish a proper executable fallback, so no finite policy upper bound is claimed.";
     }
     return "The solve stopped without a classified termination reason.";
 }

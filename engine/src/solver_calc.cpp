@@ -1413,6 +1413,19 @@ void CalcContext::set_solve_resource_caps(
     state_ids_by_hash_.reserve(practical_reserve);
 }
 
+void CalcContext::refresh_solve_owned_bytes_cap(
+    const std::optional<std::uint64_t> max_owned_bytes) {
+    solve_owned_bytes_cap_ = max_owned_bytes;
+    if (automatic_comparison_context_ != nullptr) {
+        automatic_comparison_context_->refresh_solve_owned_bytes_cap(
+            max_owned_bytes);
+    }
+    for (auto& [unused_key, context] : automatic_admission_contexts_) {
+        (void)unused_key;
+        context->refresh_solve_owned_bytes_cap(max_owned_bytes);
+    }
+}
+
 void CalcContext::consume_reforge_work(
     const std::uint64_t active_amount,
     const std::uint64_t logical_v1_amount) {
@@ -1637,7 +1650,8 @@ void CalcContext::release_outcome(
 void CalcContext::release_published_outcome_storage(
     const std::uint32_t state_id,
     const std::uint32_t action_index,
-    bool goal_progress_gated) {
+    bool goal_progress_gated,
+    const bool retain_stable_shared_kernel) {
     goal_progress_gated =
         goal_progress_gated &&
         action_transition_facts(
@@ -1650,6 +1664,15 @@ void CalcContext::release_published_outcome_storage(
         cached->second;
     account_distribution_cache_erase(key);
     distribution_cache_.erase(cached);
+
+    /* A stable shared kernel has no query-state-dependent fallback. Keep the
+     * reforge memo (and its existing ownership-ledger charge) during policy
+     * certification so another exact carrier can reuse the immutable row.
+     * The state-local distribution cache entry above is still released. */
+    if (retain_stable_shared_kernel &&
+        published->stable_shared_kernel) {
+        return;
+    }
 
     /* Keep each bucket's capacity: a later exact row with the same memo hash
      * may reuse that allocation, and the fast ownership ledger already

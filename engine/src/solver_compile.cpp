@@ -571,23 +571,45 @@ std::string compile_policy_strategy_json(
         std::uint32_t,
         const refinement::RefinedPolicyCompileClass*>
         refined_class_by_representative;
-    std::vector<std::string> refined_condition_by_class;
+    std::map<std::string, std::uint32_t> refined_condition_intern;
+    std::vector<const std::string*> refined_condition_by_class;
     std::map<std::uint32_t, std::vector<std::uint32_t>>
         refined_classes_by_coarse_parent;
+    std::map<
+        std::uint32_t,
+        const refinement::RefinedPolicyCompileParent*>
+        refined_parent_by_id;
+    std::set<std::uint32_t> uniform_refined_parents;
     std::vector<std::uint32_t> refined_parent_order;
     std::map<std::uint32_t, std::string>
         refined_parent_condition;
     std::map<std::uint32_t, std::string>
         refined_parent_router;
+    std::vector<SlotVocabulary> refined_parent_vocabulary;
     const auto refined_route_owned_bytes = [&]() {
         std::uint64_t bytes = 0;
         add_owned_bytes(
             bytes,
             static_cast<std::uint64_t>(
+                refined_parent_vocabulary.capacity()) *
+                sizeof(SlotVocabulary));
+        for (const SlotVocabulary& slot : refined_parent_vocabulary) {
+            add_owned_bytes(bytes, owned_string_bytes(slot.member));
+            add_owned_bytes(bytes, owned_string_bytes(slot.satisfied));
+        }
+        add_owned_bytes(
+            bytes,
+            static_cast<std::uint64_t>(
                 refined_condition_by_class.capacity()) *
-                sizeof(std::string));
-        for (const std::string& condition :
-             refined_condition_by_class) {
+                sizeof(const std::string*));
+        add_owned_bytes(
+            bytes,
+            static_cast<std::uint64_t>(refined_condition_intern.size()) *
+                (sizeof(std::string) + sizeof(std::uint32_t) +
+                 3 * sizeof(void*)));
+        for (const auto& [condition, unused] :
+             refined_condition_intern) {
+            (void)unused;
             add_owned_bytes(
                 bytes, owned_string_bytes(condition));
         }
@@ -637,7 +659,26 @@ std::string compile_policy_strategy_json(
         add_string_map(refined_parent_router);
         return bytes;
     };
+    const auto refined_condition =
+        [&](const std::uint32_t class_id) -> const std::string& {
+            const std::string* condition =
+                refined_condition_by_class.at(class_id);
+            if (condition == nullptr) {
+                gap("refined policy class has no compiled condition");
+            }
+            return *condition;
+        };
     if (structured_refined_route) {
+        if (refined_routing->parent_layout == nullptr ||
+            refined_routing->parent_layout->slots.size() !=
+                layout.slots.size()) {
+            gap("refined policy has no canonical parent layout");
+        }
+        for (std::size_t i = 0;
+             i < refined_routing->parent_layout->slots.size(); ++i) {
+            refined_parent_vocabulary.push_back(slot_vocabulary(
+                session, refined_routing->parent_layout->slots[i], i));
+        }
         if (result.policy.size() != result.values.size() ||
             result.expanded.size() != result.values.size() ||
             result.goal_states.size() != result.values.size() ||
@@ -650,6 +691,19 @@ std::string compile_policy_strategy_json(
         }
         refined_condition_by_class.resize(
             refined_routing->classes.size());
+        for (const refinement::RefinedPolicyCompileParent& parent :
+             refined_routing->parents) {
+            if (parent.coarse_state == kNoId ||
+                parent.coarse_state_key.empty() ||
+                parent.coarse_state_key !=
+                    exact_abstract_state_key(parent.state, 0) ||
+                !refined_parent_by_id.emplace(
+                    parent.coarse_state, &parent).second) {
+                gap(
+                    "refined policy compile parent sidecar is not "
+                    "canonical");
+            }
+        }
         std::vector<std::uint32_t> refined_member_owner(
             result.values.size(), kNoId);
         std::vector<std::vector<std::uint64_t>>
@@ -690,6 +744,15 @@ std::string compile_policy_strategy_json(
                 gap(
                     "refined policy compile sidecar is not canonical");
             }
+            const auto compile_parent = refined_parent_by_id.find(
+                policy_class.coarse_state);
+            if (compile_parent == refined_parent_by_id.end() ||
+                compile_parent->second->coarse_state_key !=
+                    policy_class.coarse_state_key) {
+                gap(
+                    "refined policy class lost its canonical coarse "
+                    "parent");
+            }
             const auto [unused, inserted] =
                 refined_class_by_representative.emplace(
                     policy_class.representative_state,
@@ -710,19 +773,11 @@ std::string compile_policy_strategy_json(
                 refined_member_owner[member] =
                     policy_class.class_id;
             }
-            refined_condition_by_class[policy_class.class_id] =
-                observation_signature_condition(
-                    session,
-                    layout,
-                    policy_class.required_observations,
-                    policy_class.observation_signature);
             if (!policy_class.terminal) {
                 refined_classes_by_coarse_parent[
                     policy_class.coarse_state]
                         .push_back(policy_class.class_id);
             }
-            observe_compiler_owned(
-                refined_route_owned_bytes());
             for (const refinement::ProjectedTransition& transition :
                  policy_class.transitions) {
                 if (transition.successor_class >=
@@ -765,9 +820,9 @@ std::string compile_policy_strategy_json(
          * The shared refinement engine deliberately scopes selected-action
          * separation to one coarse policy location. Preserve that control
          * flow in the executable graph instead of flattening every exact
-         * subclass onto one router. A parent guard is the union of all
-         * policy-reachable strict semantic states represented by that coarse
-         * location; no representative modifier identity is selected.
+         * subclass onto one router. A parent guard is the canonical coarse
+         * state whose full collision-free key was retained by the proof
+         * adapter; no representative strict modifier identity is selected.
          *
          * These guards are re-evaluated after every operation. An action that
          * destroys an observed feature therefore routes directly into the
@@ -873,77 +928,42 @@ std::string compile_policy_strategy_json(
                     "semantic key");
             }
 
-            std::vector<std::string> member_conditions;
-            std::optional<bool> retry_basin;
-            for (const std::uint32_t class_id : class_ids) {
-                const refinement::RefinedPolicyCompileClass& policy_class =
-                    refined_routing->classes.at(class_id);
-                for (const std::uint32_t member :
-                     policy_class.strict_members) {
-                    const bool member_retry_basin =
-                        calc.state(member).goal_progress_retry_basin != 0;
-                    if (retry_basin.has_value() &&
-                        *retry_basin != member_retry_basin) {
-                        gap(
-                            "refined coarse parent mixes ordinary and "
-                            "retry-basin control states");
-                    }
-                    retry_basin = member_retry_basin;
-                    const std::string condition =
-                        abstract_state_condition(
-                            session, layout, vocabulary,
-                            calc.state(member));
-                    if (!member_retry_basin) {
-                        const auto [owner, inserted] =
-                            globally_routed_member_owner.emplace(
-                                condition, coarse_state);
-                        if (!inserted &&
-                            owner->second != coarse_state) {
-                            gap(
-                                "overlapping refined coarse-parent "
-                                "guards");
-                        }
-                    }
-                    member_conditions.push_back(condition);
-                }
+            const auto parent = refined_parent_by_id.find(coarse_state);
+            if (parent == refined_parent_by_id.end() ||
+                parent->second->coarse_state_key != coarse_state_key) {
+                gap("refined coarse parent has no canonical state");
             }
-            std::sort(
-                member_conditions.begin(), member_conditions.end());
-            member_conditions.erase(
-                std::unique(
-                    member_conditions.begin(),
-                    member_conditions.end()),
-                member_conditions.end());
-            if (member_conditions.empty()) {
-                gap(
-                    "refined coarse parent has no represented strict "
-                    "member");
-            }
+            const bool retry_basin =
+                parent->second->state.goal_progress_retry_basin != 0;
+            const std::string condition = abstract_state_condition(
+                session, *refined_routing->parent_layout,
+                refined_parent_vocabulary, parent->second->state);
             /*
              * Retry-basin identity is policy memory, not an observable item
              * predicate. It is entered only through the gated reforge's local
              * control-flow edge, so publishing it on the global item router
              * would overlap the ordinary parent with identical item state.
              */
-            if (!retry_basin.value_or(false)) {
+            if (!retry_basin) {
+                const auto [owner, inserted] =
+                    globally_routed_member_owner.emplace(
+                        condition, coarse_state);
+                if (!inserted && owner->second != coarse_state) {
+                    gap("overlapping refined coarse-parent guards");
+                }
                 refined_parent_condition.emplace(
-                    coarse_state, any_of(member_conditions));
+                    coarse_state, condition);
                 ordered_parents.emplace_back(
                     coarse_state_key, coarse_state);
             }
             observe_compiler_owned(
-                parent_build_owned_bytes(&member_conditions));
+                parent_build_owned_bytes(nullptr));
         }
         std::sort(ordered_parents.begin(), ordered_parents.end());
-        std::uint32_t parent_router_index = 0;
         for (const auto& [unused_key, coarse_state] :
              ordered_parents) {
             (void)unused_key;
             refined_parent_order.push_back(coarse_state);
-            refined_parent_router.emplace(
-                coarse_state,
-                "refined_parent_" +
-                    std::to_string(parent_router_index++));
         }
         observe_compiler_owned(
             parent_build_owned_bytes(nullptr));
@@ -1097,6 +1117,98 @@ std::string compile_policy_strategy_json(
                            refined_recipe_by_class[
                                right.class_id];
             };
+        const auto gated_retry_targets =
+            [&](const refinement::RefinedPolicyCompileClass& cls) {
+                std::vector<std::uint32_t> targets;
+                if (!gated_primitive_reforge(
+                        cls.representative_state)) {
+                    return targets;
+                }
+                for (const refinement::ProjectedTransition& transition :
+                     cls.transitions) {
+                    const auto& successor =
+                        refined_routing->classes.at(
+                            transition.successor_class);
+                    if (calc.state(successor.representative_state)
+                            .goal_progress_retry_basin != 0) {
+                        targets.push_back(transition.successor_class);
+                    }
+                }
+                std::sort(targets.begin(), targets.end());
+                targets.erase(
+                    std::unique(targets.begin(), targets.end()),
+                    targets.end());
+                return targets;
+            };
+        const auto retry_targets_repeat_decision =
+            [&](const refinement::RefinedPolicyCompileClass& source) {
+                for (const std::uint32_t target :
+                     gated_retry_targets(source)) {
+                    const auto& retry =
+                        refined_routing->classes.at(target);
+                    if (retry.terminal ||
+                        !same_refined_decision(source, retry)) {
+                        return false;
+                    }
+                }
+                return true;
+            };
+        for (const auto& [coarse_state, class_ids] :
+             refined_classes_by_coarse_parent) {
+            if (class_ids.empty()) continue;
+            const auto& first =
+                refined_routing->classes.at(class_ids.front());
+            const PlannerOperator& first_planner =
+                calc.operators().at(
+                    first.selected_action->action_id);
+            bool uniform = class_ids.size() == 1 ||
+                (first_planner.kind == PlannerOperatorKind::Primitive &&
+                 first_planner.automatic_kind !=
+                     AutomaticCandidateKind::Fracture);
+            uniform = uniform &&
+                retry_targets_repeat_decision(first);
+            for (std::size_t index = 1;
+                 uniform && index < class_ids.size(); ++index) {
+                const auto& candidate =
+                    refined_routing->classes.at(class_ids[index]);
+                uniform =
+                    same_refined_decision(first, candidate) &&
+                    retry_targets_repeat_decision(candidate);
+            }
+            if (uniform) {
+                uniform_refined_parents.insert(coarse_state);
+            }
+        }
+        std::uint32_t parent_router_index = 0;
+        for (const std::uint32_t coarse_state : refined_parent_order) {
+            if (uniform_refined_parents.contains(coarse_state)) continue;
+            refined_parent_router.emplace(
+                coarse_state,
+                "refined_parent_" +
+                    std::to_string(parent_router_index++));
+        }
+        observe_compiler_owned(parent_build_owned_bytes(nullptr));
+        for (const refinement::RefinedPolicyCompileClass& policy_class :
+             refined_routing->classes) {
+            if (policy_class.terminal) continue;
+            const bool uniform = uniform_refined_parents.contains(
+                policy_class.coarse_state);
+            std::string condition = uniform
+                ? std::string{}
+                : observation_signature_condition(
+                      session,
+                      layout,
+                      policy_class.required_observations,
+                      policy_class.observation_signature);
+            auto [stored, inserted] = refined_condition_intern.emplace(
+                std::move(condition),
+                static_cast<std::uint32_t>(
+                    refined_condition_intern.size()));
+            (void)inserted;
+            refined_condition_by_class[policy_class.class_id] =
+                &stored->first;
+            observe_compiler_owned(refined_route_owned_bytes());
+        }
         std::map<
             std::pair<std::uint32_t, std::string>,
             std::uint32_t>
@@ -1104,8 +1216,12 @@ std::string compile_policy_strategy_json(
         for (const refinement::RefinedPolicyCompileClass& policy_class :
              refined_routing->classes) {
             if (policy_class.terminal) continue;
+            if (uniform_refined_parents.contains(
+                    policy_class.coarse_state)) {
+                continue;
+            }
             const std::string& condition =
-                refined_condition_by_class[policy_class.class_id];
+                refined_condition(policy_class.class_id);
             const auto [found, inserted] =
                 first_class_by_condition.emplace(
                     std::pair{
@@ -1133,6 +1249,10 @@ std::string compile_policy_strategy_json(
         for (const refinement::RefinedPolicyCompileClass& owner :
              refined_routing->classes) {
             if (owner.terminal) continue;
+            if (uniform_refined_parents.contains(
+                    owner.coarse_state)) {
+                continue;
+            }
             for (const std::uint32_t member :
                  owner.strict_members) {
                 if (member >= result.values.size()) {
@@ -1165,10 +1285,8 @@ std::string compile_policy_strategy_json(
                         candidate.observation_signature) {
                         matched_owner_condition =
                             matched_owner_condition ||
-                            refined_condition_by_class[
-                                candidate.class_id] ==
-                                refined_condition_by_class[
-                                    owner.class_id];
+                            refined_condition(candidate.class_id) ==
+                                refined_condition(owner.class_id);
                         conflicting_decision =
                             conflicting_decision ||
                             !same_refined_decision(owner, candidate);
@@ -1217,40 +1335,9 @@ std::string compile_policy_strategy_json(
             }
         }
     }
-    for (const std::uint32_t state_id : compiled_states) {
-        if (structured_refined_route) {
-            const auto policy_class =
-                refined_class_by_representative.find(state_id);
-            if (policy_class ==
-                    refined_class_by_representative.end() ||
-                policy_class->second->terminal) {
-                gap(
-                    "lifted working state has no refined routing "
-                    "class");
-            }
-            state_conditions.emplace(
-                state_id,
-                refined_condition_by_class[
-                    policy_class->second->class_id]);
-        }
-    }
     if (structured_refined_route) {
         retained_compile_condition_bytes =
             refined_route_owned_bytes();
-        add_owned_bytes(
-            retained_compile_condition_bytes,
-            static_cast<std::uint64_t>(
-                state_conditions.size()) *
-                (sizeof(std::uint32_t) +
-                 sizeof(std::string) +
-                 3 * sizeof(void*)));
-        for (const auto& [unused, condition] :
-             state_conditions) {
-            (void)unused;
-            add_owned_bytes(
-                retained_compile_condition_bytes,
-                owned_string_bytes(condition));
-        }
         observe_compiler_owned(
             retained_compile_condition_bytes);
     }
@@ -1258,8 +1345,18 @@ std::string compile_policy_strategy_json(
         compiled_states.begin(), compiled_states.end(),
         [&](const std::uint32_t left, const std::uint32_t right) {
             if (structured_refined_route) {
-                const std::string& left_condition = state_conditions.at(left);
-                const std::string& right_condition = state_conditions.at(right);
+                const auto left_class =
+                    refined_class_by_representative.find(left);
+                const auto right_class =
+                    refined_class_by_representative.find(right);
+                if (left_class == refined_class_by_representative.end() ||
+                    right_class == refined_class_by_representative.end()) {
+                    gap("lifted working state has no refined routing class");
+                }
+                const std::string& left_condition = refined_condition(
+                    left_class->second->class_id);
+                const std::string& right_condition = refined_condition(
+                    right_class->second->class_id);
                 if (left_condition != right_condition) {
                     return left_condition < right_condition;
                 }
@@ -1294,78 +1391,6 @@ std::string compile_policy_strategy_json(
         return "s" + std::to_string(canonical_state_ids[state_id]);
     };
 
-    /* Exact policy-region compression. States may share one emitted
-     * continuation when the selected program is state-independent. Expected
-     * cost is only an annotation, so omit it for a shared region whose member
-     * values differ. Observation-owned and state-local retry options remain
-     * singleton regions so their concrete routing recipes cannot be
-     * conflated. */
-    std::map<std::string, std::vector<std::uint32_t>> leaders_by_key;
-    std::map<std::uint32_t, std::vector<std::uint32_t>> states_by_leader;
-    std::vector<std::uint32_t> emitted_states;
-    for (const std::uint32_t state_id : compiled_states) {
-        const PlannerOperator& planner =
-            calc.operators().at(result.policy[state_id]);
-        const bool primitive_observed_choice =
-            primitive_observes_modifier_offer(planner);
-        const bool product_local_fracture =
-            calc.product_solver_parent() &&
-            planner.kind == PlannerOperatorKind::Primitive &&
-            planner.automatic_kind == AutomaticCandidateKind::Fracture;
-        const bool state_local_option =
-            planner.kind == PlannerOperatorKind::FixedOption &&
-            (planner.option_kind == FixedOptionKind::Renewal ||
-             planner.option_kind == FixedOptionKind::ProtectedRepeat ||
-             planner.option_kind == FixedOptionKind::TemporaryBenchRepeat ||
-             planner.option_kind == FixedOptionKind::FracturePrepare ||
-             planner.option_kind == FixedOptionKind::ImprintRetry);
-        std::uint32_t leader = state_id;
-        if (!primitive_observed_choice && !product_local_fracture &&
-            !state_local_option &&
-            !gated_primitive_reforge(state_id)) {
-            const std::string key =
-                std::to_string(result.policy[state_id].index);
-            std::vector<std::uint32_t>& leaders = leaders_by_key[key];
-            if (leaders.empty()) {
-                leaders.push_back(state_id);
-                emitted_states.push_back(state_id);
-            }
-            leader = leaders.back();
-        } else {
-            emitted_states.push_back(state_id);
-        }
-        states_by_leader[leader].push_back(state_id);
-    }
-    std::vector<std::uint32_t> policy_region_by_state(
-        result.values.size(), kNoId);
-    std::map<std::uint32_t, std::optional<std::string>> region_expected_cost;
-    std::uint32_t restart_region_leader = kNoId;
-    for (const std::uint32_t leader : emitted_states) {
-        const std::vector<std::uint32_t>& members =
-            states_by_leader.at(leader);
-        for (const std::uint32_t member : members) {
-            policy_region_by_state[member] = leader;
-        }
-        const std::string first_value = number(result.values[members.front()]);
-        const bool uniform = std::all_of(
-            members.begin() + 1, members.end(),
-            [&](const std::uint32_t member) {
-                return number(result.values[member]) == first_value;
-            });
-        region_expected_cost.emplace(
-            leader, uniform ? std::optional<std::string>{first_value}
-                            : std::nullopt);
-        const PlannerOperator& planner =
-            calc.operators().at(result.policy[leader]);
-        if (planner.kind == PlannerOperatorKind::Primitive &&
-            planner.primitive_action < calc.registry().actions.size() &&
-            calc.registry().actions[planner.primitive_action].synthetic) {
-            if (restart_region_leader != kNoId) {
-                gap("policy produced multiple Restart regions");
-            }
-            restart_region_leader = leader;
-        }
-    }
     std::map<std::uint32_t, std::uint32_t> gated_retry_state_by_state;
     for (const std::uint32_t state_id : compiled_states) {
         if (!gated_primitive_reforge(state_id)) continue;
@@ -1406,6 +1431,97 @@ std::string compile_policy_strategy_json(
         }
         gated_retry_state_by_state.emplace(
             state_id, retry_policy_state);
+    }
+
+    /* Exact policy-region compression. States may share one emitted
+     * continuation when the selected program is state-independent. Expected
+     * cost is only an annotation, so omit it for a shared region whose member
+     * values differ. Observation-owned and state-local retry options remain
+     * singleton regions so their concrete routing recipes cannot be
+     * conflated. */
+    std::map<std::string, std::vector<std::uint32_t>> leaders_by_key;
+    std::map<std::uint32_t, std::vector<std::uint32_t>> states_by_leader;
+    std::vector<std::uint32_t> emitted_states;
+    std::set<std::uint32_t> shared_gated_repeat_leaders;
+    for (const std::uint32_t state_id : compiled_states) {
+        const PlannerOperator& planner =
+            calc.operators().at(result.policy[state_id]);
+        const bool primitive_observed_choice =
+            primitive_observes_modifier_offer(planner);
+        const bool product_local_fracture =
+            calc.product_solver_parent() &&
+            planner.kind == PlannerOperatorKind::Primitive &&
+            planner.automatic_kind == AutomaticCandidateKind::Fracture;
+        const bool state_local_option =
+            planner.kind == PlannerOperatorKind::FixedOption &&
+            (planner.option_kind == FixedOptionKind::Renewal ||
+             planner.option_kind == FixedOptionKind::ProtectedRepeat ||
+             planner.option_kind == FixedOptionKind::TemporaryBenchRepeat ||
+             planner.option_kind == FixedOptionKind::FracturePrepare ||
+             planner.option_kind == FixedOptionKind::ImprintRetry);
+        const auto gated_retry =
+            gated_retry_state_by_state.find(state_id);
+        bool shareable_gated_repeat = false;
+        if (gated_retry != gated_retry_state_by_state.end()) {
+            const std::uint32_t retry_state = gated_retry->second;
+            const PlannerOperator& retry_planner =
+                calc.operators().at(result.policy[retry_state]);
+            shareable_gated_repeat =
+                gated_primitive_reforge(retry_state) &&
+                planner_operator_semantic_key(planner) ==
+                    planner_operator_semantic_key(retry_planner);
+        }
+        std::uint32_t leader = state_id;
+        if (!primitive_observed_choice && !product_local_fracture &&
+            !state_local_option &&
+            (!gated_primitive_reforge(state_id) ||
+             shareable_gated_repeat)) {
+            const std::string key =
+                std::to_string(result.policy[state_id].index) +
+                (shareable_gated_repeat ? ":gated_repeat" : "");
+            std::vector<std::uint32_t>& leaders = leaders_by_key[key];
+            if (leaders.empty()) {
+                leaders.push_back(state_id);
+                emitted_states.push_back(state_id);
+            }
+            leader = leaders.back();
+            if (shareable_gated_repeat) {
+                shared_gated_repeat_leaders.insert(leader);
+            }
+        } else {
+            emitted_states.push_back(state_id);
+        }
+        states_by_leader[leader].push_back(state_id);
+    }
+    std::vector<std::uint32_t> policy_region_by_state(
+        result.values.size(), kNoId);
+    std::map<std::uint32_t, std::optional<std::string>> region_expected_cost;
+    std::uint32_t restart_region_leader = kNoId;
+    for (const std::uint32_t leader : emitted_states) {
+        const std::vector<std::uint32_t>& members =
+            states_by_leader.at(leader);
+        for (const std::uint32_t member : members) {
+            policy_region_by_state[member] = leader;
+        }
+        const std::string first_value = number(result.values[members.front()]);
+        const bool uniform = std::all_of(
+            members.begin() + 1, members.end(),
+            [&](const std::uint32_t member) {
+                return number(result.values[member]) == first_value;
+            });
+        region_expected_cost.emplace(
+            leader, uniform ? std::optional<std::string>{first_value}
+                            : std::nullopt);
+        const PlannerOperator& planner =
+            calc.operators().at(result.policy[leader]);
+        if (planner.kind == PlannerOperatorKind::Primitive &&
+            planner.primitive_action < calc.registry().actions.size() &&
+            calc.registry().actions[planner.primitive_action].synthetic) {
+            if (restart_region_leader != kNoId) {
+                gap("policy produced multiple Restart regions");
+            }
+            restart_region_leader = leader;
+        }
     }
     if (!structured_refined_route &&
         !result.behavioral_representative_by_state.empty()) {
@@ -1574,6 +1690,275 @@ std::string compile_policy_strategy_json(
     };
     std::vector<PolicyRouteNode> policy_route_nodes;
     std::map<std::string, std::string> policy_route_node_by_signature;
+    struct RefinedParentRouteEntry {
+        std::uint32_t row = kNoId;
+        std::string to;
+    };
+    std::vector<RefinedParentRouteEntry> refined_parent_route_entries;
+    std::vector<
+        const refinement::RefinedPolicyCompileParent*>
+        refined_parent_route_states;
+    std::size_t refined_parent_feature_width = 0;
+    std::vector<std::uint32_t> refined_parent_feature_values;
+    std::vector<std::map<std::uint32_t, std::string>>
+        refined_parent_feature_condition_cache;
+    PolicyRouteBranch refined_parent_route_root;
+    bool use_refined_parent_tree = false;
+    if (structured_refined_route && !refined_parent_order.empty()) {
+        refined_parent_route_entries.reserve(
+            refined_parent_order.size());
+        refined_parent_route_states.reserve(
+            refined_parent_order.size());
+        for (const std::uint32_t coarse_state :
+             refined_parent_order) {
+            const auto parent = refined_parent_by_id.find(
+                coarse_state);
+            if (parent == refined_parent_by_id.end()) {
+                gap(
+                    "refined policy parent route has no canonical "
+                    "state");
+            }
+            const std::uint32_t row = static_cast<std::uint32_t>(
+                refined_parent_route_states.size());
+            refined_parent_route_states.push_back(parent->second);
+            std::string target;
+            if (uniform_refined_parents.contains(coarse_state)) {
+                const auto& policy_class =
+                    refined_routing->classes.at(
+                        refined_classes_by_coarse_parent
+                            .at(coarse_state).front());
+                const std::uint32_t leader =
+                    policy_region_by_state.at(
+                        policy_class.representative_state);
+                if (leader == kNoId) {
+                    gap(
+                        "uniform refined parent has no emitted policy "
+                        "region");
+                }
+                target = state_node(leader);
+            } else {
+                target = refined_parent_router.at(coarse_state);
+            }
+            refined_parent_route_entries.push_back(
+                {row, std::move(target)});
+            const std::vector<std::uint32_t> values =
+                quotient_feature_values(
+                    *refined_routing->parent_layout,
+                    parent->second->state);
+            if (row == 0) {
+                refined_parent_feature_width = values.size();
+                refined_parent_feature_condition_cache.resize(
+                    values.size());
+            } else if (values.size() !=
+                       refined_parent_feature_width) {
+                gap(
+                    "refined parent route feature width changed within "
+                    "one policy");
+            }
+            refined_parent_feature_values.insert(
+                refined_parent_feature_values.end(),
+                values.begin(), values.end());
+        }
+        const auto refined_parent_feature_value =
+            [&](const std::uint32_t row,
+                const std::size_t feature) {
+                return refined_parent_feature_values.at(
+                    static_cast<std::size_t>(row) *
+                        refined_parent_feature_width +
+                    feature);
+            };
+        const auto refined_parent_feature_condition =
+            [&](const std::uint32_t row,
+                const std::size_t feature) -> const std::string& {
+                const std::uint32_t value =
+                    refined_parent_feature_value(row, feature);
+                auto& cache =
+                    refined_parent_feature_condition_cache.at(feature);
+                const auto found = cache.find(value);
+                if (found != cache.end()) return found->second;
+                const std::vector<QuotientFeature> features =
+                    quotient_features(
+                        session,
+                        *refined_routing->parent_layout,
+                        refined_parent_vocabulary,
+                        refined_parent_route_states.at(row)->state);
+                if (features.size() !=
+                    refined_parent_feature_width) {
+                    gap(
+                        "refined parent route condition width changed "
+                        "within one policy");
+                }
+                for (std::size_t index = 0;
+                     index < features.size(); ++index) {
+                    refined_parent_feature_condition_cache[index]
+                        .try_emplace(
+                            static_cast<std::uint32_t>(
+                                features[index].value),
+                            features[index].condition);
+                }
+                return refined_parent_feature_condition_cache
+                    .at(feature)
+                    .at(value);
+            };
+        std::function<PolicyRouteBranch(
+            const std::vector<RefinedParentRouteEntry>&,
+            const std::vector<std::size_t>&)>
+            build_refined_parent_route;
+        build_refined_parent_route =
+            [&](const std::vector<RefinedParentRouteEntry>& entries,
+                const std::vector<std::size_t>& features)
+                -> PolicyRouteBranch {
+                if (entries.empty()) {
+                    gap("empty refined parent route partition");
+                }
+                const std::string& first_target = entries.front().to;
+                const bool one_target = std::all_of(
+                    entries.begin() + 1, entries.end(),
+                    [&](const RefinedParentRouteEntry& entry) {
+                        return entry.to == first_target;
+                    });
+                std::vector<std::string> constants;
+                std::vector<std::size_t> varying;
+                varying.reserve(features.size());
+                for (const std::size_t feature : features) {
+                    const std::uint32_t first =
+                        refined_parent_feature_value(
+                            entries.front().row, feature);
+                    const bool constant = std::all_of(
+                        entries.begin() + 1, entries.end(),
+                        [&](const RefinedParentRouteEntry& entry) {
+                            return refined_parent_feature_value(
+                                       entry.row, feature) == first;
+                        });
+                    if (constant) {
+                        constants.push_back(
+                            refined_parent_feature_condition(
+                                entries.front().row, feature));
+                    } else {
+                        varying.push_back(feature);
+                    }
+                }
+                const std::string guard = all_of(constants);
+                if (varying.empty()) {
+                    if (!one_target) {
+                        gap(
+                            "identical refined parent states select "
+                            "different executable routes");
+                    }
+                    return {first_target, guard};
+                }
+
+                /* Keep splitting even when every current member selects the
+                 * same operation. The route is an exact domain proof, so an
+                 * unrepresented value must still take the node's off-policy
+                 * default instead of being admitted by action equality. */
+                std::size_t selected = varying.front();
+                std::size_t selected_distinct = 0;
+                std::uint64_t selected_square_sum =
+                    std::numeric_limits<std::uint64_t>::max();
+                for (const std::size_t feature : varying) {
+                    std::map<std::uint32_t, std::uint32_t> counts;
+                    for (const RefinedParentRouteEntry& entry : entries) {
+                        ++counts[refined_parent_feature_value(
+                            entry.row, feature)];
+                    }
+                    std::uint64_t square_sum = 0;
+                    for (const auto& [value, member_count] : counts) {
+                        (void)value;
+                        square_sum +=
+                            static_cast<std::uint64_t>(member_count) *
+                            member_count;
+                    }
+                    if (counts.size() > selected_distinct ||
+                        (counts.size() == selected_distinct &&
+                         square_sum < selected_square_sum)) {
+                        selected = feature;
+                        selected_distinct = counts.size();
+                        selected_square_sum = square_sum;
+                    }
+                }
+                std::vector<std::size_t> child_features;
+                child_features.reserve(varying.size() - 1);
+                for (const std::size_t feature : varying) {
+                    if (feature != selected) {
+                        child_features.push_back(feature);
+                    }
+                }
+                std::map<
+                    std::uint32_t,
+                    std::vector<RefinedParentRouteEntry>>
+                    groups;
+                for (const RefinedParentRouteEntry& entry : entries) {
+                    groups[refined_parent_feature_value(
+                        entry.row, selected)]
+                        .push_back(entry);
+                }
+                std::vector<PolicyRouteEdge> edges;
+                edges.reserve(groups.size());
+                for (auto& [value, members] : groups) {
+                    (void)value;
+                    const PolicyRouteBranch child =
+                        build_refined_parent_route(
+                            members, child_features);
+                    edges.push_back({
+                        child.to,
+                        all_of({
+                            refined_parent_feature_condition(
+                                members.front().row, selected),
+                            child.guard})});
+                }
+                std::string signature;
+                for (const PolicyRouteEdge& route_edge : edges) {
+                    signature +=
+                        std::to_string(route_edge.to.size()) + ":" +
+                        route_edge.to + ":" +
+                        std::to_string(route_edge.condition.size()) +
+                        ":" + route_edge.condition + ";";
+                }
+                const auto shared =
+                    policy_route_node_by_signature.find(signature);
+                if (shared !=
+                    policy_route_node_by_signature.end()) {
+                    return {shared->second, guard};
+                }
+                const std::string node_id =
+                    "policy_route_" +
+                    std::to_string(policy_route_nodes.size());
+                policy_route_nodes.push_back(
+                    {node_id, std::move(edges)});
+                policy_route_node_by_signature.emplace(
+                    std::move(signature), node_id);
+                if (policy_route_nodes.size() + 4 >
+                    result.options.max_compiled_nodes) {
+                    if (telemetry != nullptr) {
+                        telemetry->cap_hit = "max_compiled_nodes";
+                    }
+                    gap(
+                        "refined parent router exceeded "
+                        "max_compiled_nodes (" +
+                        std::to_string(
+                            result.options.max_compiled_nodes) +
+                        ")");
+                }
+                return {node_id, guard};
+            };
+        std::vector<std::size_t> parent_route_features(
+            refined_parent_feature_width);
+        for (std::size_t feature = 0;
+             feature < parent_route_features.size(); ++feature) {
+            parent_route_features[feature] = feature;
+        }
+        refined_parent_route_root =
+            build_refined_parent_route(
+                refined_parent_route_entries,
+                parent_route_features);
+        use_refined_parent_tree = true;
+        refined_parent_condition.clear();
+        retained_compile_condition_bytes =
+            refined_route_owned_bytes();
+        observe_compiler_owned(
+            retained_compile_condition_bytes);
+    }
     std::vector<std::size_t> route_features(feature_index.width);
     for (std::size_t feature = 0; feature < route_features.size(); ++feature) {
         route_features[feature] = feature;
@@ -1813,6 +2198,9 @@ std::string compile_policy_strategy_json(
                 add_u32_vector(states);
             }
             add_u32_vector(emitted_states);
+            add_map_nodes(
+                shared_gated_repeat_leaders.size(),
+                sizeof(std::uint32_t));
             add_u32_vector(policy_region_by_state);
             add_map_nodes(
                 region_expected_cost.size(),
@@ -1830,6 +2218,45 @@ std::string compile_policy_strategy_json(
                 static_cast<std::uint64_t>(
                     policy_route_entries.capacity()) *
                     sizeof(PolicyRouteEntry));
+            add_owned_bytes(
+                bytes,
+                static_cast<std::uint64_t>(
+                    refined_parent_route_entries.capacity()) *
+                    sizeof(RefinedParentRouteEntry));
+            for (const RefinedParentRouteEntry& entry :
+                 refined_parent_route_entries) {
+                add_string(entry.to);
+            }
+            add_owned_bytes(
+                bytes,
+                static_cast<std::uint64_t>(
+                    refined_parent_route_states.capacity()) *
+                    sizeof(
+                        const refinement::
+                            RefinedPolicyCompileParent*));
+            add_owned_bytes(
+                bytes,
+                static_cast<std::uint64_t>(
+                    refined_parent_feature_values.capacity()) *
+                    sizeof(std::uint32_t));
+            add_owned_bytes(
+                bytes,
+                static_cast<std::uint64_t>(
+                    refined_parent_feature_condition_cache.capacity()) *
+                    sizeof(
+                        refined_parent_feature_condition_cache.front()));
+            for (const auto& cache :
+                 refined_parent_feature_condition_cache) {
+                add_map_nodes(
+                    cache.size(),
+                    sizeof(std::uint32_t) + sizeof(std::string));
+                for (const auto& [unused, condition] : cache) {
+                    (void)unused;
+                    add_string(condition);
+                }
+            }
+            add_string(refined_parent_route_root.to);
+            add_string(refined_parent_route_root.guard);
             add_owned_bytes(
                 bytes,
                 static_cast<std::uint64_t>(
@@ -2007,7 +2434,9 @@ std::string compile_policy_strategy_json(
     start_mods("suffixes", start_item.suffixes, start_item.suffix_count);
     json += "},\"start_node_id\":\"start\",\"nodes\":[";
     json += "{\"id\":\"start\",\"kind\":\"start\"},";
-    json += "{\"id\":\"router\",\"kind\":\"router\"},";
+    const std::string root_router_id = "policy_route_root";
+    json += "{\"id\":\"" + root_router_id +
+            "\",\"kind\":\"router\"},";
     json +=
         "{\"id\":\"goal\",\"kind\":\"terminal\",\"terminal\":\"success\"},";
     json += "{\"id\":\"offpolicy\",\"kind\":\"terminal\",\"terminal\":"
@@ -2034,6 +2463,7 @@ std::string compile_policy_strategy_json(
     }
     for (const std::uint32_t coarse_state :
          refined_parent_order) {
+        if (uniform_refined_parents.contains(coarse_state)) continue;
         const std::string& router_id =
             refined_parent_router.at(coarse_state);
         json += ",{\"id\":\"" + router_id +
@@ -2046,7 +2476,8 @@ std::string compile_policy_strategy_json(
             primitive_observes_modifier_offer(planner);
         const auto gated_retry =
             gated_retry_state_by_state.find(state_id);
-        if (gated_retry != gated_retry_state_by_state.end()) {
+        if (gated_retry != gated_retry_state_by_state.end() &&
+            !shared_gated_repeat_leaders.contains(state_id)) {
             json += ",{\"id\":\"" + state_node(state_id) +
                     "_gated_route\",\"kind\":\"router\"}";
             ++node_count;
@@ -2362,7 +2793,7 @@ std::string compile_policy_strategy_json(
             owned, audited_compiler_owned_bytes(&json));
     };
 
-    edge("start", "router", 0, "", true);
+    edge("start", root_router_id, 0, "", true);
 
     /* Goal first: the configured number of satisfied slots at the finished
      * rarity succeeds regardless of junk. */
@@ -2377,29 +2808,58 @@ std::string compile_policy_strategy_json(
                 ? all_of(satisfied)
                 : at_least(calc.goal().required_satisfied_slots(),
                            satisfied));
-        edge("router", "goal", 0, all_of(parts), false);
+        edge(root_router_id, "goal", 0, all_of(parts), false);
     }
 
     int root_default_priority = 2;
     if (strict_policy_route) {
         if (use_exact_policy_tree) {
             edge(
-                "router", policy_route_root.to, 1,
+                root_router_id, policy_route_root.to, 1,
                 policy_route_root.guard, false);
         }
     } else if (structured_refined_route) {
-        int parent_priority = 1;
-        for (const std::uint32_t coarse_state :
-             refined_parent_order) {
-            const std::string& router_id =
-                refined_parent_router.at(coarse_state);
+        if (use_refined_parent_tree) {
             edge(
-                "router", router_id, parent_priority++,
-                refined_parent_condition.at(coarse_state), false);
+                root_router_id, refined_parent_route_root.to, 1,
+                refined_parent_route_root.guard, false);
+        } else {
+            int parent_priority = 1;
+            for (const std::uint32_t coarse_state :
+                 refined_parent_order) {
+                if (uniform_refined_parents.contains(coarse_state)) {
+                    const auto& policy_class =
+                        refined_routing->classes.at(
+                            refined_classes_by_coarse_parent
+                                .at(coarse_state).front());
+                    const std::uint32_t leader =
+                        policy_region_by_state.at(
+                            policy_class.representative_state);
+                    if (leader == kNoId) {
+                        gap(
+                            "uniform refined parent has no emitted "
+                            "policy region");
+                    }
+                    edge(
+                        root_router_id, state_node(leader),
+                        parent_priority++,
+                        refined_parent_condition.at(coarse_state),
+                        false);
+                } else {
+                    const std::string& router_id =
+                        refined_parent_router.at(coarse_state);
+                    edge(
+                        root_router_id, router_id,
+                        parent_priority++,
+                        refined_parent_condition.at(coarse_state),
+                        false);
+                }
+            }
+            root_default_priority = parent_priority;
         }
-        root_default_priority = parent_priority;
         for (const std::uint32_t coarse_state :
              refined_parent_order) {
+            if (uniform_refined_parents.contains(coarse_state)) continue;
             const std::vector<std::uint32_t>& class_ids =
                 refined_classes_by_coarse_parent.at(coarse_state);
             const std::string& router_id =
@@ -2422,7 +2882,7 @@ std::string compile_policy_strategy_json(
                 }
                 const std::pair<std::string, std::string> route{
                     state_node(leader),
-                    refined_condition_by_class[class_id]};
+                    refined_condition(class_id)};
                 if (!emitted_routes.insert(route).second) {
                     continue;
                 }
@@ -2444,7 +2904,7 @@ std::string compile_policy_strategy_json(
                 const std::pair<std::string, std::string> route{
                     state_node(leader), state_conditions.at(state)};
                 if (!emitted_routes.insert(route).second) continue;
-                edge("router", route.first, 1, route.second, false);
+                edge(root_router_id, route.first, 1, route.second, false);
             }
         }
     } else {
@@ -2453,12 +2913,12 @@ std::string compile_policy_strategy_json(
                 continue;
             }
             edge(
-                "router", state_node(leader), 1,
+                root_router_id, state_node(leader), 1,
                 state_conditions.at(leader), false);
         }
     }
     edge(
-        "router", policy_route_default_node,
+        root_router_id, policy_route_default_node,
         root_default_priority, "", true);
     for (const PolicyRouteNode& route : policy_route_nodes) {
         int priority = 0;
@@ -2470,10 +2930,12 @@ std::string compile_policy_strategy_json(
         edge(route.id, policy_route_default_node, priority, "", true);
     }
     if (bounded_default_restart_action != kNoId) {
-        edge("bounded_default_restart", "router", 0, "", true);
+        edge("bounded_default_restart", root_router_id, 0, "", true);
     }
     if (dedicated_product_fracture_restart) {
-        edge("product_fracture_restart", "router", 0, "", true, "retry");
+        edge(
+            "product_fracture_restart", root_router_id,
+            0, "", true, "retry");
     }
     for (std::uint32_t state_id : emitted_states) {
         const PlannerOperator& planner =
@@ -2506,7 +2968,7 @@ std::string compile_policy_strategy_json(
                     false);
             }
             edge(
-                route, "router",
+                route, root_router_id,
                 static_cast<int>(kernel.retry_states.size()), "", true);
             edge(base + "_restore", base, 0, "", true, "retry");
             continue;
@@ -2582,7 +3044,7 @@ std::string compile_policy_strategy_json(
                             operation,
                             retry_choice
                                 ? state_node(state_id)
-                                : "router",
+                                : root_router_id,
                             0, "", true);
                     }
                     edge(
@@ -2594,7 +3056,7 @@ std::string compile_policy_strategy_json(
                 /* No-offer and other expressible stopped paths are exits,
                  * not fabricated option failures. */
                 edge(
-                    dispatcher, "router",
+                    dispatcher, root_router_id,
                     static_cast<int>(preferences.size()), "", true);
             } else {
                 const OptionKernel& kernel =
@@ -2614,7 +3076,7 @@ std::string compile_policy_strategy_json(
                             : "retry");
                 }
                 edge(
-                    retry, "router",
+                    retry, root_router_id,
                     static_cast<int>(kernel.retry_states.size()), "", true);
             }
             continue;
@@ -2624,7 +3086,7 @@ std::string compile_policy_strategy_json(
             const OptionKernel& kernel =
                 compiled_option_kernels.at(state_id);
             if (kernel.entry_continues) {
-                edge(state_node(state_id), "router", 0, "", true);
+                edge(state_node(state_id), root_router_id, 0, "", true);
                 continue;
             }
             for (std::size_t step = 0;
@@ -2661,9 +3123,9 @@ std::string compile_policy_strategy_json(
                         calc.state(retry_state)),
                     false, "retry");
             }
-            edge(route, "router", priority, "", true);
+            edge(route, root_router_id, priority, "", true);
             edge(
-                state_node(state_id) + "_fracture", "router",
+                state_node(state_id) + "_fracture", root_router_id,
                 0, "", true);
             continue;
         }
@@ -2692,7 +3154,9 @@ std::string compile_policy_strategy_json(
             const std::string base = state_node(state_id);
             const std::string route = base + "_fracture_route";
             edge(base, route, 0, "", true);
-            edge(route, "router", 0, any_of(acceptable_hits), false);
+            edge(
+                route, root_router_id, 0,
+                any_of(acceptable_hits), false);
             edge(
                 route, product_fracture_restart_node,
                 1, "", true, "retry");
@@ -2703,19 +3167,42 @@ std::string compile_policy_strategy_json(
                  step < planner.primitive_program.size(); ++step) {
                 std::string from = state_node(state_id);
                 if (step > 0) from += "_o" + std::to_string(step);
-                std::string to = "router";
+                const bool final_shared_gated_repeat =
+                    step + 1 == planner.primitive_program.size() &&
+                    gated_retry_state_by_state.count(state_id) != 0 &&
+                    shared_gated_repeat_leaders.contains(state_id);
+                if (final_shared_gated_repeat) {
+                    std::vector<std::string> satisfied;
+                    satisfied.reserve(vocabulary.size());
+                    for (const SlotVocabulary& slot : vocabulary) {
+                        satisfied.push_back(slot.satisfied);
+                    }
+                    const std::string zero_progress =
+                        satisfied.empty()
+                            ? "{\"type\":\"always\"}"
+                            : not_of(any_of(satisfied));
+                    edge(
+                        from, state_node(state_id), 0,
+                        zero_progress, false, "retry");
+                    edge(
+                        from, root_router_id, 1, "", true);
+                    continue;
+                }
+                std::string to = root_router_id;
                 if (step + 1 < planner.primitive_program.size()) {
                     to = state_node(state_id) + "_o" +
                          std::to_string(step + 1);
                 } else if (
-                    gated_retry_state_by_state.count(state_id) != 0) {
+                    gated_retry_state_by_state.count(state_id) != 0 &&
+                    !shared_gated_repeat_leaders.contains(state_id)) {
                     to = state_node(state_id) + "_gated_route";
                 }
                 edge(from, to, 0, "", true);
             }
             const auto gated_retry =
                 gated_retry_state_by_state.find(state_id);
-            if (gated_retry != gated_retry_state_by_state.end()) {
+            if (gated_retry != gated_retry_state_by_state.end() &&
+                !shared_gated_repeat_leaders.contains(state_id)) {
                 std::vector<std::string> satisfied;
                 satisfied.reserve(vocabulary.size());
                 for (const SlotVocabulary& slot : vocabulary) {
@@ -2736,7 +3223,7 @@ std::string compile_policy_strategy_json(
                     zero_progress, false, "retry");
                 edge(
                     state_node(state_id) + "_gated_route",
-                    "router", 1, "", true);
+                    root_router_id, 1, "", true);
             }
             continue;
         }
@@ -2751,7 +3238,7 @@ std::string compile_policy_strategy_json(
                 "\"}";
             edge(state_node(state_id), operation,
                  static_cast<int>(option), condition, false);
-            edge(operation, "router", 0, "", true);
+            edge(operation, root_router_id, 0, "", true);
         }
         edge(state_node(state_id), "offpolicy",
              static_cast<int>(preferences.size()), "", true);

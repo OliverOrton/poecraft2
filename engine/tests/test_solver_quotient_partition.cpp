@@ -467,6 +467,38 @@ void run_replay_backed_shared_partition_tests() {
     PC_CHECK(replayed.classes == materialized.classes);
     PC_CHECK(peak == 1);
 
+    std::vector<refinement::ClosedPartitionNode> shared_materialized_nodes =
+        nodes;
+    shared_materialized_nodes[1].arcs =
+        shared_materialized_nodes[0].arcs;
+    const refinement::ClosedPartitionResult shared_materialized =
+        refinement::refine_closed_probabilistic_partition(
+            shared_materialized_nodes);
+    std::vector<refinement::ClosedPartitionNode> shared_nodes =
+        shared_materialized_nodes;
+    shared_nodes[1].arcs.clear();
+    shared_nodes[1].arc_source = 0;
+    std::vector<std::optional<std::uint32_t>> known_sources(
+        shared_nodes.size());
+    known_sources[1] = 0;
+    std::uint32_t authority_arc_replays = 0;
+    const refinement::ClosedPartitionResult known_authority =
+        refinement::refine_closed_probabilistic_partition_replay(
+            static_cast<std::uint32_t>(shared_nodes.size()),
+            [&](const std::uint32_t index) {
+                if (!shared_nodes.at(index).arcs.empty()) {
+                    ++authority_arc_replays;
+                }
+                return shared_nodes.at(index);
+            },
+            {}, true, {}, false, &known_sources);
+    PC_CHECK(known_authority.status ==
+             refinement::ClosedPartitionStatus::Complete);
+    PC_CHECK(known_authority.lumpable);
+    PC_CHECK(known_authority.class_by_node ==
+             shared_materialized.class_by_node);
+    PC_CHECK(authority_arc_replays > 0);
+
     std::vector<refinement::ClosedPartitionNode> observed = nodes;
     observed[1].observation_key = {101};
     const refinement::ClosedPartitionResult split =

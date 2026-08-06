@@ -54,27 +54,20 @@ struct StrategyEvalWork::Impl {
     struct PolicyRouteResolution {
         std::uint32_t target_node = kNoId;
         std::uint32_t failure_node = kNoId;
+        std::uint32_t trace = kNoId;
         bool resolved = false;
     };
 
     struct FallbackState {
         std::uint32_t component = kNoId;
         std::vector<std::uint32_t> members;
-        std::vector<std::uint32_t> local_index_by_pair;
-        std::vector<double> wave;
-        std::vector<double> visits;
+        std::vector<std::int32_t> local_index_by_pair;
+        std::vector<solve_detail::PolicyRow> transpose_rows;
+        std::vector<solve_detail::PolicyEdge> transpose_edges;
         std::vector<double> incoming;
-        std::vector<double> shadow;
-        std::vector<double> direction;
-        std::vector<double> image;
-        std::vector<double> intermediate;
-        std::vector<double> image_intermediate;
-        std::vector<double> diagonal;
+        std::vector<double> previous_values;
+        std::unique_ptr<solve_detail::SparsePolicyResume> resume;
         double input_mass = 0.0;
-        double rho_previous = 1.0;
-        double alpha = 1.0;
-        double omega = 1.0;
-        std::uint32_t sweeps = 0;
     };
 
     std::shared_ptr<const StrategyImpl> strategy;
@@ -102,6 +95,8 @@ struct StrategyEvalWork::Impl {
     std::vector<EvalPair> attribution_pairs;
     std::vector<EvalRow> attribution_rows;
     std::vector<std::uint32_t> attribution_class_by_pair;
+    std::vector<solve_detail::WideFloat>
+        attribution_exact_row_visits;
     std::uint32_t attribution_start_pair = kNoId;
     std::uint64_t attribution_row_payload_owned_bytes = 0;
     std::map<
@@ -154,6 +149,10 @@ struct StrategyEvalWork::Impl {
     bool compress_policy_routes = false;
     std::uint32_t compressed_policy_root = kNoId;
     std::vector<PolicyRouteResolution> policy_route_cache;
+    std::map<refinement::StableKey, std::uint32_t>
+        policy_route_trace_by_key;
+    std::vector<refinement::StableKey> policy_route_traces;
+    std::uint64_t policy_route_trace_payload_owned_bytes = 0;
     std::vector<ObservationRequirement>
         node_observation_requirements;
 
@@ -333,6 +332,8 @@ struct StrategyEvalWork::Impl {
         bytes += attribution_rows.capacity() * sizeof(EvalRow);
         bytes += attribution_class_by_pair.capacity() *
                  sizeof(std::uint32_t);
+        bytes += attribution_exact_row_visits.capacity() *
+                 sizeof(solve_detail::WideFloat);
         for (const EvalRow& row : attribution_rows) {
             bytes += row.transitions.capacity() * sizeof(EvalTransition);
             bytes += row.absorptions.capacity() * sizeof(EvalAbsorption);
@@ -359,16 +360,34 @@ struct StrategyEvalWork::Impl {
             bytes += sizeof(FallbackState);
             bytes += fallback->members.capacity() * sizeof(std::uint32_t);
             bytes += fallback->local_index_by_pair.capacity() *
-                     sizeof(std::uint32_t);
-            bytes += fallback->wave.capacity() * sizeof(double);
-            bytes += fallback->visits.capacity() * sizeof(double);
+                     sizeof(std::int32_t);
+            bytes += fallback->transpose_rows.capacity() *
+                     sizeof(solve_detail::PolicyRow);
+            bytes += fallback->transpose_edges.capacity() *
+                     sizeof(solve_detail::PolicyEdge);
             bytes += fallback->incoming.capacity() * sizeof(double);
-            bytes += fallback->shadow.capacity() * sizeof(double);
-            bytes += fallback->direction.capacity() * sizeof(double);
-            bytes += fallback->image.capacity() * sizeof(double);
-            bytes += fallback->intermediate.capacity() * sizeof(double);
-            bytes += fallback->image_intermediate.capacity() * sizeof(double);
-            bytes += fallback->diagonal.capacity() * sizeof(double);
+            bytes += fallback->previous_values.capacity() * sizeof(double);
+            if (fallback->resume != nullptr) {
+                bytes += sizeof(solve_detail::SparsePolicyResume);
+                bytes += fallback->resume->members.capacity() *
+                         sizeof(std::uint32_t);
+                bytes += fallback->resume->b.capacity() *
+                         sizeof(solve_detail::WideFloat);
+                bytes += fallback->resume->x.capacity() *
+                         sizeof(solve_detail::WideFloat);
+                bytes += fallback->resume->r.capacity() *
+                         sizeof(solve_detail::WideFloat);
+                bytes += fallback->resume->r0.capacity() *
+                         sizeof(solve_detail::WideFloat);
+                bytes += fallback->resume->p.capacity() *
+                         sizeof(solve_detail::WideFloat);
+                bytes += fallback->resume->v.capacity() *
+                         sizeof(solve_detail::WideFloat);
+                bytes += fallback->resume->s.capacity() *
+                         sizeof(solve_detail::WideFloat);
+                bytes += fallback->resume->t.capacity() *
+                         sizeof(solve_detail::WideFloat);
+            }
         }
         bytes += terminal_mass.capacity() * sizeof(double);
         bytes += action_not_applied.capacity() * sizeof(double);
@@ -397,6 +416,18 @@ struct StrategyEvalWork::Impl {
         bytes += edge_traversals.capacity() * sizeof(double);
         bytes += policy_route_cache.capacity() *
                  sizeof(PolicyRouteResolution);
+        bytes += policy_route_trace_by_key.size() *
+                 (sizeof(decltype(policy_route_trace_by_key)::value_type) +
+                  3 * sizeof(void*));
+        for (const auto& [trace, unused] : policy_route_trace_by_key) {
+            (void)unused;
+            bytes += trace.capacity() * sizeof(std::uint64_t);
+        }
+        bytes += policy_route_traces.capacity() *
+                 sizeof(refinement::StableKey);
+        for (const refinement::StableKey& trace : policy_route_traces) {
+            bytes += trace.capacity() * sizeof(std::uint64_t);
+        }
         bytes += output_owned_bytes();
         return bytes;
     }
@@ -440,6 +471,8 @@ struct StrategyEvalWork::Impl {
         bytes += attribution_rows.capacity() * sizeof(EvalRow);
         bytes += attribution_class_by_pair.capacity() *
                  sizeof(std::uint32_t);
+        bytes += attribution_exact_row_visits.capacity() *
+                 sizeof(solve_detail::WideFloat);
         bytes += attribution_row_payload_owned_bytes;
         bytes += row_by_distribution.size() *
                  (sizeof(decltype(row_by_distribution)::value_type) +
@@ -461,16 +494,34 @@ struct StrategyEvalWork::Impl {
             bytes += sizeof(FallbackState);
             bytes += fallback->members.capacity() * sizeof(std::uint32_t);
             bytes += fallback->local_index_by_pair.capacity() *
-                     sizeof(std::uint32_t);
-            bytes += fallback->wave.capacity() * sizeof(double);
-            bytes += fallback->visits.capacity() * sizeof(double);
+                     sizeof(std::int32_t);
+            bytes += fallback->transpose_rows.capacity() *
+                     sizeof(solve_detail::PolicyRow);
+            bytes += fallback->transpose_edges.capacity() *
+                     sizeof(solve_detail::PolicyEdge);
             bytes += fallback->incoming.capacity() * sizeof(double);
-            bytes += fallback->shadow.capacity() * sizeof(double);
-            bytes += fallback->direction.capacity() * sizeof(double);
-            bytes += fallback->image.capacity() * sizeof(double);
-            bytes += fallback->intermediate.capacity() * sizeof(double);
-            bytes += fallback->image_intermediate.capacity() * sizeof(double);
-            bytes += fallback->diagonal.capacity() * sizeof(double);
+            bytes += fallback->previous_values.capacity() * sizeof(double);
+            if (fallback->resume != nullptr) {
+                bytes += sizeof(solve_detail::SparsePolicyResume);
+                bytes += fallback->resume->members.capacity() *
+                         sizeof(std::uint32_t);
+                bytes += fallback->resume->b.capacity() *
+                         sizeof(solve_detail::WideFloat);
+                bytes += fallback->resume->x.capacity() *
+                         sizeof(solve_detail::WideFloat);
+                bytes += fallback->resume->r.capacity() *
+                         sizeof(solve_detail::WideFloat);
+                bytes += fallback->resume->r0.capacity() *
+                         sizeof(solve_detail::WideFloat);
+                bytes += fallback->resume->p.capacity() *
+                         sizeof(solve_detail::WideFloat);
+                bytes += fallback->resume->v.capacity() *
+                         sizeof(solve_detail::WideFloat);
+                bytes += fallback->resume->s.capacity() *
+                         sizeof(solve_detail::WideFloat);
+                bytes += fallback->resume->t.capacity() *
+                         sizeof(solve_detail::WideFloat);
+            }
         }
         bytes += terminal_mass.capacity() * sizeof(double);
         bytes += action_not_applied.capacity() * sizeof(double);
@@ -485,6 +536,12 @@ struct StrategyEvalWork::Impl {
         bytes += edge_traversals.capacity() * sizeof(double);
         bytes += policy_route_cache.capacity() *
                  sizeof(PolicyRouteResolution);
+        bytes += policy_route_trace_by_key.size() *
+                 (sizeof(decltype(policy_route_trace_by_key)::value_type) +
+                  3 * sizeof(void*));
+        bytes += policy_route_traces.capacity() *
+                 sizeof(refinement::StableKey);
+        bytes += policy_route_trace_payload_owned_bytes;
         bytes += output_owned_bytes();
         return bytes;
     }
@@ -512,7 +569,23 @@ struct StrategyEvalWork::Impl {
         if (live > options.max_owned_bytes) {
             throw std::length_error(
                 "strategy evaluation exceeded max_owned_bytes (" +
-                std::to_string(options.max_owned_bytes) + ")");
+                std::to_string(options.max_owned_bytes) +
+                "; owned=" + std::to_string(owned) +
+                ", transient=" + std::to_string(transient_bytes) +
+                ", calc=" +
+                    std::to_string(
+                        model.calc == nullptr
+                            ? 0
+                            : model.calc->fast_estimated_owned_bytes()) +
+                ", states=" +
+                    std::to_string(
+                        model.calc == nullptr ? 0 : model.calc->state_count()) +
+                ", pairs=" + std::to_string(pairs.size()) +
+                ", rows=" + std::to_string(rows.size()) +
+                ", transitions=" + std::to_string(stored_transitions) +
+                ", phase=" +
+                    std::to_string(static_cast<int>(phase)) +
+                ")");
         }
     }
 
@@ -561,7 +634,23 @@ struct StrategyEvalWork::Impl {
         if (live > options.max_owned_bytes) {
             throw std::length_error(
                 "strategy evaluation exceeded max_owned_bytes (" +
-                std::to_string(options.max_owned_bytes) + ")");
+                std::to_string(options.max_owned_bytes) +
+                "; owned=" + std::to_string(owned) +
+                ", transient=" + std::to_string(transient_bytes) +
+                ", calc=" +
+                    std::to_string(
+                        model.calc == nullptr
+                            ? 0
+                            : model.calc->fast_estimated_owned_bytes()) +
+                ", states=" +
+                    std::to_string(
+                        model.calc == nullptr ? 0 : model.calc->state_count()) +
+                ", pairs=" + std::to_string(pairs.size()) +
+                ", rows=" + std::to_string(rows.size()) +
+                ", transitions=" + std::to_string(stored_transitions) +
+                ", phase=" +
+                    std::to_string(static_cast<int>(phase)) +
+                ")");
         }
     }
 
@@ -633,7 +722,6 @@ struct StrategyEvalWork::Impl {
         compress_policy_routes = policy_roots.size() == 1;
         if (compress_policy_routes) {
             compressed_policy_root = policy_roots.front();
-            policy_route_cache.reserve(options.max_states);
         }
         terminal_mass.assign(node_count, 0.0);
         action_not_applied.assign(node_count, 0.0);
@@ -788,6 +876,65 @@ struct StrategyEvalWork::Impl {
         return fallback_edge;
     }
 
+    PolicyRouteResolution& resolve_policy_route(
+            const std::uint32_t state) {
+        if (!compress_policy_routes ||
+            compressed_policy_root == kNoId) {
+            throw std::logic_error(
+                "policy route resolution requested without a compressed "
+                "root");
+        }
+        if (policy_route_cache.size() <= state) {
+            policy_route_cache.resize(
+                static_cast<std::size_t>(state) + 1);
+        }
+        PolicyRouteResolution& resolution =
+            policy_route_cache[state];
+        if (resolution.resolved) return resolution;
+
+        refinement::StableKey trace;
+        std::uint32_t cursor = compressed_policy_root;
+        std::size_t policy_steps = 0;
+        while (is_policy_route_node(cursor)) {
+            if (++policy_steps > strategy->nodes.size()) {
+                throw std::logic_error(
+                    "compiled policy router contains a cycle");
+            }
+            const StrategyEdge* route_edge =
+                select_edge(strategy->nodes[cursor], state);
+            if (route_edge == nullptr) {
+                resolution.failure_node = cursor;
+                trace.push_back(0); /* no-matching-edge trace */
+                trace.push_back(cursor);
+                break;
+            }
+            trace.push_back(1); /* selected router edge */
+            trace.push_back(edge_index_by_id.at(route_edge->id));
+            cursor = route_edge->target;
+        }
+        if (resolution.failure_node == kNoId) {
+            trace.push_back(2); /* resolved non-router target */
+            trace.push_back(cursor);
+        }
+        const std::uint32_t candidate =
+            static_cast<std::uint32_t>(policy_route_traces.size());
+        const auto [stored, inserted] =
+            policy_route_trace_by_key.emplace(
+                std::move(trace), candidate);
+        if (inserted) {
+            policy_route_trace_payload_owned_bytes +=
+                stored->first.capacity() * sizeof(std::uint64_t);
+            policy_route_traces.push_back(stored->first);
+            policy_route_trace_payload_owned_bytes +=
+                policy_route_traces.back().capacity() *
+                sizeof(std::uint64_t);
+        }
+        resolution.target_node = cursor;
+        resolution.trace = stored->second;
+        resolution.resolved = true;
+        return resolution;
+    }
+
     bool node_observes_modifier_offer(const StrategyNode& node) const {
         const std::function<bool(const CompiledCondition&)> contains =
             [&](const CompiledCondition& condition) {
@@ -859,16 +1006,18 @@ struct StrategyEvalWork::Impl {
         bool consumes = false;
         std::uint32_t action_index = kNoId;
         const OutcomeDistribution* shared_distribution = nullptr;
+        bool release_operation_outcome = false;
+        bool release_goal_progress_gated_outcome = false;
         std::map<
             std::tuple<
                 std::uint32_t, std::uint32_t, std::uint32_t,
                 std::uint32_t>,
-            double> transitions;
+            solve_detail::WideFloat> transitions;
         std::map<
             std::tuple<
                 int, std::uint32_t, std::uint32_t, std::uint32_t,
                 std::uint32_t>,
-            double> absorptions;
+            solve_detail::WideFloat> absorptions;
 
         const auto add_transition = [&](const std::tuple<
                                             std::uint32_t,
@@ -882,10 +1031,12 @@ struct StrategyEvalWork::Impl {
                     transitions.size() + absorptions.size() + 1);
                 check_owned_projection(
                     owned_before_expansion,
-                    (transitions.size() + absorptions.size() + 1) * 96ull);
-                transitions.emplace(key, probability);
+                    (transitions.size() + absorptions.size() + 1) * 104ull);
+                transitions.emplace(
+                    key, solve_detail::WideFloat{probability});
             } else {
-                found->second += probability;
+                found->second +=
+                    solve_detail::WideFloat{probability};
             }
         };
         const auto add_absorption = [&](const std::tuple<
@@ -901,10 +1052,12 @@ struct StrategyEvalWork::Impl {
                     transitions.size() + absorptions.size() + 1);
                 check_owned_projection(
                     owned_before_expansion,
-                    (transitions.size() + absorptions.size() + 1) * 112ull);
-                absorptions.emplace(key, probability);
+                    (transitions.size() + absorptions.size() + 1) * 120ull);
+                absorptions.emplace(
+                    key, solve_detail::WideFloat{probability});
             } else {
-                found->second += probability;
+                found->second +=
+                    solve_detail::WideFloat{probability};
             }
         };
 
@@ -934,31 +1087,8 @@ struct StrategyEvalWork::Impl {
             if (compress_policy_routes &&
                 target_node == compressed_policy_root) {
                 policy_route = target_node;
-                if (policy_route_cache.size() <= state) {
-                    policy_route_cache.resize(
-                        static_cast<std::size_t>(state) + 1);
-                }
                 PolicyRouteResolution& resolution =
-                    policy_route_cache[state];
-                if (!resolution.resolved) {
-                    std::uint32_t cursor = target_node;
-                    std::size_t policy_steps = 0;
-                    while (is_policy_route_node(cursor)) {
-                        if (++policy_steps > strategy->nodes.size()) {
-                            throw std::logic_error(
-                                "compiled policy router contains a cycle");
-                        }
-                        const StrategyEdge* route_edge =
-                            select_edge(strategy->nodes[cursor], state);
-                        if (route_edge == nullptr) {
-                            resolution.failure_node = cursor;
-                            break;
-                        }
-                        cursor = route_edge->target;
-                    }
-                    resolution.target_node = cursor;
-                    resolution.resolved = true;
-                }
+                    resolve_policy_route(state);
                 if (resolution.failure_node != kNoId) {
                     add_absorption(
                         {static_cast<int>(
@@ -1066,6 +1196,10 @@ struct StrategyEvalWork::Impl {
                                 node.id + "'");
                         }
                     }
+                    if (!outcomes.stable_shared_kernel) {
+                        model.calc->release_outcome(
+                            state_id, observed_action, false);
+                    }
                 }
             }
         } else {
@@ -1115,8 +1249,47 @@ struct StrategyEvalWork::Impl {
                         1.0);
                 } else {
                     consumes = true;
+                    const OutcomeDistribution* selected_outcomes = nullptr;
+                    const bool may_repeat_directly = std::any_of(
+                        node.edges.begin(), node.edges.end(),
+                        [&](const StrategyEdge& edge) {
+                            return edge.target == node_index;
+                        });
+                    /* A compiled shared gated-renewal region deliberately
+                     * observes only whether this action made goal progress:
+                     * every zero-progress physical outcome immediately
+                     * repeats the same operation. Use the calculator's exact
+                     * gated kernel when that retry state selects this node.
+                     * Expanding and then re-merging the unobserved physical
+                     * junk would be algebraically equivalent, but its stored
+                     * double normalization can accumulate across a very long
+                     * renewal and drift away from the solver's kernel bits. */
+                    if (may_repeat_directly) {
+                        const OutcomeDistribution& gated_candidate =
+                            model.calc->outcomes(
+                                state_id, action_index, true);
+                        if (gated_candidate.supported &&
+                            gated_candidate.goal_progress_gated &&
+                            gated_candidate.gated_retry_probability > 0.0 &&
+                            gated_candidate.gated_retry_state != kNoId &&
+                            gated_candidate.gated_retry_state <
+                                model.calc->state_count()) {
+                            const StrategyEdge* retry = select_edge(
+                                node,
+                                gated_candidate.gated_retry_state,
+                                nullptr);
+                            if (retry != nullptr &&
+                                retry->target == node_index) {
+                                selected_outcomes = &gated_candidate;
+                            }
+                        }
+                    }
+                    if (selected_outcomes == nullptr) {
+                        selected_outcomes = &model.calc->outcomes(
+                            state_id, action_index, false);
+                    }
                     const OutcomeDistribution& outcomes =
-                        model.calc->outcomes(state_id, action_index);
+                        *selected_outcomes;
                     if (!outcomes.supported) {
                         throw StrategyEvalUnsupported(
                             "strategy evaluation unsupported:\n- node '" +
@@ -1125,15 +1298,22 @@ struct StrategyEvalWork::Impl {
                             "state");
                     }
                     ensure_state_limit();
-                    const auto shared = row_by_distribution.find(
-                        {node_index, checkpoint_state_id, &outcomes});
-                    if (shared != row_by_distribution.end()) {
-                        EvalPair& pair = pairs.at(pair_id);
-                        pair.operation = operation;
-                        pair.consumes = consumes;
-                        pair.action = action_index;
-                        pair.row = shared->second;
-                        return;
+                    if (outcomes.stable_shared_kernel) {
+                        const auto shared = row_by_distribution.find(
+                            {node_index, checkpoint_state_id, &outcomes});
+                        if (shared != row_by_distribution.end()) {
+                            EvalPair& pair = pairs.at(pair_id);
+                            pair.operation = operation;
+                            pair.consumes = consumes;
+                            pair.action = action_index;
+                            pair.row = shared->second;
+                            return;
+                        }
+                        shared_distribution = &outcomes;
+                    } else {
+                        release_operation_outcome = true;
+                        release_goal_progress_gated_outcome =
+                            outcomes.goal_progress_gated;
                     }
                     double distribution_mass = 0.0;
                     const std::uint32_t successor_checkpoint =
@@ -1174,7 +1354,6 @@ struct StrategyEvalWork::Impl {
                             successor, 1.0, nullptr,
                             successor_checkpoint);
                     } else {
-                        shared_distribution = &outcomes;
                         for (const OutcomeEntry& outcome : outcomes.entries) {
                             distribution_mass += outcome.probability;
                             route(
@@ -1199,24 +1378,28 @@ struct StrategyEvalWork::Impl {
         row.transitions.reserve(transitions.size());
         for (const auto& [key, probability] : transitions) {
             row.transitions.push_back(
-                {std::get<0>(key), probability, std::get<1>(key), kNoId,
+                {std::get<0>(key), probability.value(),
+                 std::get<1>(key), kNoId,
                  std::get<2>(key), std::get<3>(key)});
         }
         row.absorptions.reserve(absorptions.size());
         for (const auto& [key, probability] : absorptions) {
             row.absorptions.push_back(
                 {static_cast<EvalAbsorptionKind>(std::get<0>(key)),
-                  std::get<1>(key), std::get<2>(key), probability,
+                  std::get<1>(key), std::get<2>(key),
+                  probability.value(),
                   std::get<3>(key), std::get<4>(key)});
         }
-        double row_mass = 0.0;
+        solve_detail::WideFloat row_mass = 0.0;
         for (const EvalTransition& transition : row.transitions) {
-            row_mass += transition.probability;
+            row_mass +=
+                solve_detail::WideFloat{transition.probability};
         }
         for (const EvalAbsorption& absorption : row.absorptions) {
-            row_mass += absorption.probability;
+            row_mass +=
+                solve_detail::WideFloat{absorption.probability};
         }
-        if (std::fabs(row_mass - 1.0) > 1e-9) {
+        if (std::fabs(row_mass.value() - 1.0) > 1e-9) {
             throw std::runtime_error(
                 "strategy evaluation transition row does not sum to one at "
                 "node '" + node.id + "'");
@@ -1233,6 +1416,11 @@ struct StrategyEvalWork::Impl {
                     node_index, checkpoint_state_id,
                     shared_distribution),
                 pair.row);
+        }
+        if (release_operation_outcome) {
+            model.calc->release_outcome(
+                state_id, action_index,
+                release_goal_progress_gated_outcome);
         }
     }
 
@@ -1260,26 +1448,23 @@ struct StrategyEvalWork::Impl {
             throw std::logic_error(
                 "compressed policy trace has no exact state");
         }
-        std::uint32_t cursor = root;
-        std::size_t steps = 0;
-        while (is_policy_route_node(cursor)) {
-            if (++steps > strategy->nodes.size()) {
-                throw std::logic_error(
-                    "compiled policy router contains a cycle");
-            }
-            const StrategyEdge* selected =
-                select_edge(strategy->nodes[cursor], state);
-            if (selected == nullptr) {
-                key.push_back(0); /* no-matching-edge trace */
-                key.push_back(cursor);
-                return;
-            }
-            key.push_back(1); /* selected router edge */
-            key.push_back(edge_index_by_id.at(selected->id));
-            cursor = selected->target;
+        if (root != compressed_policy_root ||
+            state >= policy_route_cache.size()) {
+            throw std::logic_error(
+                "compressed policy trace is outside its route cache");
         }
-        key.push_back(2); /* resolved non-router target */
-        key.push_back(cursor);
+        const PolicyRouteResolution& resolution =
+            policy_route_cache[state];
+        if (!resolution.resolved ||
+            resolution.trace >= policy_route_traces.size()) {
+            throw std::logic_error(
+                "compressed policy trace was not resolved during "
+                "discovery");
+        }
+        /* Trace ids are interned only after full edge-path equality. The
+         * partition needs equality, not a second copy of every path token. */
+        key.push_back(3);
+        key.push_back(resolution.trace);
     }
 
     refinement::StableKey raw_pair_stable_key(
@@ -1316,6 +1501,12 @@ struct StrategyEvalWork::Impl {
         const EvalPair& pair) const {
         const ObservationRequirement& requirement =
             node_observation_requirements.at(pair.node);
+        if (requirement.item_features == 0 &&
+            requirement.modifier_tag_ids.empty() &&
+            requirement.affix_observations.empty()) {
+            return refinement::StableKey{
+                0x6576616c6f627330ull}; /* "evalobs0" */
+        }
         const refinement::AbstractFeatureExtraction extraction =
             refinement::extract_strict_abstract_features(
                 model.calc->session(),
@@ -1418,53 +1609,136 @@ struct StrategyEvalWork::Impl {
                     key.capacity(), sizeof(std::uint64_t));
             };
 
+        const std::uint64_t peak_before_refinement =
+            peak_owned_bytes_value;
+        bool identity_graph_intact = true;
+        try {
+
+        const bool use_replay_partition = pairs.size() > 100000;
+        std::vector<ClosedPartitionNode> closed;
+        std::uint64_t stable_keys_owned_bytes = 0;
+        if (!use_replay_partition) {
+
         /*
-         * `closed` is transferred into the shared partitioner, while
-         * `stable_keys` remains live in this caller for representative
-         * selection. Track those two ownership domains separately so the
-         * shared cap receives the exact caller-retained amount and does not
-         * rely on a heuristic multiplier.
+         * Small graphs use the materialized shared partition path. Large
+         * graphs replay exact retained evaluator rows so the partition proof
+         * never owns a second complete carrier graph.
          */
         const std::uint64_t projected_closed_outer =
             saturated_product(
                 pairs.size(), sizeof(ClosedPartitionNode));
-        const std::uint64_t projected_stable_outer =
-            saturated_product(
-                pairs.size(), sizeof(refinement::StableKey));
-        check_owned_cap(saturated_add(
-            projected_closed_outer, projected_stable_outer));
-        std::vector<ClosedPartitionNode> closed;
+        check_owned_cap(projected_closed_outer);
         closed.reserve(pairs.size());
-        std::vector<refinement::StableKey> stable_keys;
-        stable_keys.reserve(pairs.size());
         std::uint64_t closed_owned_bytes =
             saturated_product(
                 closed.capacity(), sizeof(ClosedPartitionNode));
-        std::uint64_t stable_keys_owned_bytes =
-            saturated_product(
-                stable_keys.capacity(), sizeof(refinement::StableKey));
-        check_owned_cap(saturated_add(
-            closed_owned_bytes, stable_keys_owned_bytes));
+        check_owned_cap(closed_owned_bytes);
+        using KeyAuthorityMap =
+            std::map<std::uint64_t, std::vector<std::uint32_t>>;
+        KeyAuthorityMap observation_authority_by_hash;
+        KeyAuthorityMap immediate_authority_by_hash;
+        std::map<refinement::StableKey, std::uint32_t>
+            partition_label_by_key;
+        const std::uint64_t authority_map_node_bytes =
+            sizeof(KeyAuthorityMap::value_type) + 3 * sizeof(void*);
+        const std::uint64_t label_map_node_bytes =
+            sizeof(decltype(partition_label_by_key)::value_type) +
+            3 * sizeof(void*);
+        const auto intern_partition_label = [&](
+                refinement::StableKey key) {
+            const std::uint32_t candidate =
+                static_cast<std::uint32_t>(
+                    partition_label_by_key.size());
+            const auto [stored, inserted] =
+                partition_label_by_key.emplace(
+                    std::move(key), candidate);
+            if (inserted) {
+                stable_keys_owned_bytes = saturated_add(
+                    stable_keys_owned_bytes,
+                    label_map_node_bytes);
+                stable_keys_owned_bytes = saturated_add(
+                    stable_keys_owned_bytes,
+                    stable_key_bytes(stored->first));
+            }
+            return refinement::StableKey{
+                0x6576616c6c626c31ull, /* "evallbl1" */
+                stored->second};
+        };
+        const auto intern_partition_key = [&]<typename AuthorityKey>(
+                refinement::StableKey key,
+                KeyAuthorityMap& authorities,
+                refinement::StableKey& stored_key,
+                std::optional<std::uint32_t>& source,
+                AuthorityKey&& authority_key) {
+            std::uint64_t hash = 1469598103934665603ull;
+            for (const std::uint64_t token : key) {
+                hash ^= token;
+                hash *= 1099511628211ull;
+            }
+            auto [bucket, inserted] =
+                authorities.try_emplace(hash);
+            if (inserted) {
+                stable_keys_owned_bytes = saturated_add(
+                    stable_keys_owned_bytes,
+                    authority_map_node_bytes);
+            }
+            for (const std::uint32_t candidate : bucket->second) {
+                if (authority_key(closed.at(candidate)) == key) {
+                    source = candidate;
+                    return;
+                }
+            }
+            const std::size_t capacity_before =
+                bucket->second.capacity();
+            bucket->second.push_back(
+                static_cast<std::uint32_t>(closed.size()));
+            stable_keys_owned_bytes = saturated_add(
+                stable_keys_owned_bytes,
+                saturated_product(
+                    bucket->second.capacity() - capacity_before,
+                    sizeof(std::uint32_t)));
+            stored_key = std::move(key);
+            closed_owned_bytes = saturated_add(
+                closed_owned_bytes,
+                stable_key_bytes(stored_key));
+        };
         for (std::uint32_t pair_id = 0;
              pair_id < pairs.size(); ++pair_id) {
             const EvalPair& pair = pairs[pair_id];
             ClosedPartitionNode node;
-            node.stable_key = raw_pair_stable_key(pair);
+            /* The closed partition needs only a unique deterministic node
+             * order here. Full semantic pair identity remains authoritative
+             * in `pairs` and is recomputed below when choosing each class's
+             * representative; the partition result's member keys are not
+             * consumed by the evaluator. */
+            node.stable_key = refinement::StableKey{
+                0x6576616c72617731ull, /* "evalraw1" */
+                pair_id};
             closed_owned_bytes = saturated_add(
                 closed_owned_bytes,
                 stable_key_bytes(node.stable_key));
             check_owned_cap(saturated_add(
                 closed_owned_bytes, stable_keys_owned_bytes));
-            node.observation_key = pair_observation_key(pair);
-            closed_owned_bytes = saturated_add(
-                closed_owned_bytes,
-                stable_key_bytes(node.observation_key));
+            intern_partition_key(
+                pair_observation_key(pair),
+                observation_authority_by_hash,
+                node.observation_key,
+                node.observation_source,
+                [](const ClosedPartitionNode& authority)
+                    -> const refinement::StableKey& {
+                    return authority.observation_key;
+                });
             check_owned_cap(saturated_add(
                 closed_owned_bytes, stable_keys_owned_bytes));
-            node.immediate_key = pair_immediate_key(pair);
-            closed_owned_bytes = saturated_add(
-                closed_owned_bytes,
-                stable_key_bytes(node.immediate_key));
+            intern_partition_key(
+                pair_immediate_key(pair),
+                immediate_authority_by_hash,
+                node.immediate_key,
+                node.immediate_source,
+                [](const ClosedPartitionNode& authority)
+                    -> const refinement::StableKey& {
+                    return authority.immediate_key;
+                });
             check_owned_cap(saturated_add(
                 closed_owned_bytes, stable_keys_owned_bytes));
             const EvalRow& row = pair_row(pair_id);
@@ -1487,7 +1761,8 @@ struct StrategyEvalWork::Impl {
             for (const EvalTransition& transition :
                  row.transitions) {
                 refinement::StableKey label =
-                    transition_partition_label(transition);
+                    intern_partition_label(
+                        transition_partition_label(transition));
                 const std::uint64_t label_bytes =
                     stable_key_bytes(label);
                 check_owned_cap(saturated_add(
@@ -1509,7 +1784,8 @@ struct StrategyEvalWork::Impl {
             for (const EvalAbsorption& absorption :
                  row.absorptions) {
                 refinement::StableKey label =
-                    absorption_partition_label(absorption);
+                    intern_partition_label(
+                        absorption_partition_label(absorption));
                 const std::uint64_t label_bytes =
                     stable_key_bytes(label);
                 check_owned_cap(saturated_add(
@@ -1527,19 +1803,76 @@ struct StrategyEvalWork::Impl {
                 check_owned_cap(saturated_add(
                     closed_owned_bytes, stable_keys_owned_bytes));
             }
-            check_owned_cap(saturated_add(
-                saturated_add(
-                    closed_owned_bytes, stable_keys_owned_bytes),
-                saturated_product(
-                    node.stable_key.size(),
-                    sizeof(std::uint64_t))));
-            stable_keys.push_back(node.stable_key);
-            stable_keys_owned_bytes = saturated_add(
-                stable_keys_owned_bytes,
-                stable_key_bytes(stable_keys.back()));
             closed.push_back(std::move(node));
             check_owned_cap(saturated_add(
                 closed_owned_bytes, stable_keys_owned_bytes));
+        }
+        KeyAuthorityMap{}.swap(observation_authority_by_hash);
+        KeyAuthorityMap{}.swap(immediate_authority_by_hash);
+        decltype(partition_label_by_key){}.swap(
+            partition_label_by_key);
+        stable_keys_owned_bytes = 0;
+        }
+
+        std::vector<std::uint32_t> replay_observation_id;
+        std::vector<std::uint32_t> replay_immediate_id;
+        std::vector<std::optional<std::uint32_t>> replay_arc_source;
+        std::uint64_t replay_key_cache_owned_bytes = 0;
+        if (use_replay_partition) {
+            replay_observation_id.resize(pairs.size());
+            replay_immediate_id.resize(pairs.size());
+            replay_arc_source.resize(pairs.size());
+            std::vector<std::uint32_t> first_pair_by_row(
+                rows.size(), kNoId);
+            std::map<refinement::StableKey, std::uint32_t>
+                observation_ids;
+            std::map<refinement::StableKey, std::uint32_t>
+                immediate_ids;
+            for (std::uint32_t pair_id = 0;
+                 pair_id < pairs.size(); ++pair_id) {
+                const EvalPair& pair = pairs[pair_id];
+                const auto [observation, observation_inserted] =
+                    observation_ids.emplace(
+                        pair_observation_key(pair),
+                        static_cast<std::uint32_t>(
+                            observation_ids.size()));
+                (void)observation_inserted;
+                replay_observation_id[pair_id] =
+                    observation->second;
+                const auto [immediate, immediate_inserted] =
+                    immediate_ids.emplace(
+                        pair_immediate_key(pair),
+                        static_cast<std::uint32_t>(
+                            immediate_ids.size()));
+                (void)immediate_inserted;
+                replay_immediate_id[pair_id] = immediate->second;
+                const std::uint32_t row = pair.row;
+                if (row >= first_pair_by_row.size()) {
+                    throw std::logic_error(
+                        "strategy evaluation pair has no retained row");
+                }
+                if (first_pair_by_row[row] == kNoId) {
+                    first_pair_by_row[row] = pair_id;
+                } else {
+                    replay_arc_source[pair_id] =
+                        first_pair_by_row[row];
+                }
+            }
+            decltype(observation_ids){}.swap(observation_ids);
+            decltype(immediate_ids){}.swap(immediate_ids);
+            replay_key_cache_owned_bytes = saturated_add(
+                saturated_product(
+                    replay_observation_id.capacity(),
+                    sizeof(std::uint32_t)),
+                saturated_product(
+                    replay_immediate_id.capacity(),
+                    sizeof(std::uint32_t)));
+            replay_key_cache_owned_bytes = saturated_add(
+                replay_key_cache_owned_bytes,
+                saturated_product(
+                    replay_arc_source.capacity(),
+                    sizeof(std::optional<std::uint32_t>)));
+            check_owned_cap(replay_key_cache_owned_bytes);
         }
 
         ClosedPartitionLimits limits;
@@ -1548,13 +1881,61 @@ struct StrategyEvalWork::Impl {
         limits.retained_estimated_memory_bytes =
             saturated_add(
                 fast_estimated_owned_bytes(),
-                stable_keys_owned_bytes);
+                saturated_add(
+                    stable_keys_owned_bytes,
+                    replay_key_cache_owned_bytes));
         limits.max_estimated_memory_bytes =
             options.max_owned_bytes;
         limits.probability_sum_tolerance = 1e-9;
-        ClosedPartitionResult refined =
-            refinement::refine_closed_probabilistic_partition(
-                std::move(closed), limits);
+        const auto replay_pair = [&](const std::uint32_t pair_id) {
+            const EvalPair& pair = pairs.at(pair_id);
+            ClosedPartitionNode node;
+            node.stable_key = refinement::StableKey{
+                0x6576616c72617731ull, /* "evalraw1" */
+                pair_id};
+            node.observation_key = use_replay_partition
+                ? refinement::StableKey{
+                      0x6576616c6f627332ull, /* "evalobs2" */
+                      replay_observation_id.at(pair_id)}
+                : pair_observation_key(pair);
+            node.immediate_key = use_replay_partition
+                ? refinement::StableKey{
+                      0x6576616c696d6d32ull, /* "evalimm2" */
+                      replay_immediate_id.at(pair_id)}
+                : pair_immediate_key(pair);
+            if (use_replay_partition) {
+                node.arc_source = replay_arc_source.at(pair_id);
+                if (node.arc_source.has_value()) return node;
+            }
+            const EvalRow& row = pair_row(pair_id);
+            node.arcs.reserve(
+                row.transitions.size() + row.absorptions.size());
+            for (const EvalTransition& transition : row.transitions) {
+                node.arcs.push_back({
+                    transition_partition_label(transition),
+                    std::optional<std::uint32_t>{transition.target},
+                    transition.probability});
+            }
+            for (const EvalAbsorption& absorption : row.absorptions) {
+                node.arcs.push_back({
+                    absorption_partition_label(absorption),
+                    std::nullopt,
+                    absorption.probability});
+            }
+            return node;
+        };
+        ClosedPartitionResult refined = use_replay_partition
+            ? refinement::refine_closed_probabilistic_partition_replay(
+                  static_cast<std::uint32_t>(pairs.size()),
+                  replay_pair, {}, false, limits, false,
+                  &replay_arc_source)
+            : refinement::refine_closed_probabilistic_partition(
+                  std::move(closed), limits);
+        std::vector<std::uint32_t>{}.swap(replay_observation_id);
+        std::vector<std::uint32_t>{}.swap(replay_immediate_id);
+        std::vector<std::optional<std::uint32_t>>{}.swap(
+            replay_arc_source);
+        replay_key_cache_owned_bytes = 0;
         peak_owned_bytes_value = std::max(
             peak_owned_bytes_value,
             refined.peak_estimated_memory_bytes);
@@ -1633,7 +2014,8 @@ struct StrategyEvalWork::Impl {
                 refined.class_by_node.at(raw);
             std::uint32_t& selected = representative.at(class_id);
             if (selected == kNoId ||
-                stable_keys[raw] < stable_keys[selected]) {
+                raw_pair_stable_key(pairs[raw]) <
+                    raw_pair_stable_key(pairs[selected])) {
                 selected = raw;
             }
         }
@@ -1643,7 +2025,6 @@ struct StrategyEvalWork::Impl {
         std::vector<std::uint32_t> class_by_node =
             std::move(refined.class_by_node);
         refined = ClosedPartitionResult{};
-        std::vector<refinement::StableKey>().swap(stable_keys);
         const auto conversion_local_bytes = [&]() {
             return saturated_add(
                 saturated_product(
@@ -1656,6 +2037,7 @@ struct StrategyEvalWork::Impl {
         check_owned_cap(conversion_local_bytes());
 
         {
+            identity_graph_intact = false;
             std::vector<EvalPair> raw_pairs = std::move(pairs);
             std::vector<EvalRow> raw_rows = std::move(rows);
             attribution_start_pair = start_pair;
@@ -1862,6 +2244,29 @@ struct StrategyEvalWork::Impl {
             check_owned_cap();
         }
         check_owned_cap();
+        } catch (const std::length_error& ex) {
+            const std::string message = ex.what();
+            if (!identity_graph_intact ||
+                pairs.size() > options.max_pairs ||
+                message.find("max_owned_bytes") == std::string::npos) {
+                throw;
+            }
+            /* The unquotiented pair graph is itself an exact, trivially
+             * lumpable identity partition. If the optional behavioral
+             * quotient's proof scratch does not fit but that identity
+             * partition is already inside max_pairs, retain it instead of
+             * rejecting an otherwise bounded exact evaluation. */
+            output.refined_pairs =
+                static_cast<std::uint32_t>(pairs.size());
+            output.pair_refinement_rounds = 0;
+            output.pair_lumpability_checks = 0;
+            peak_owned_bytes_value = std::max(
+                peak_before_refinement,
+                fast_estimated_owned_bytes());
+            output.peak_owned_bytes_estimate =
+                peak_owned_bytes_value;
+            check_owned_cap();
+        }
     }
 
     /* Fold deterministic pass-through pairs â€” exactly one outgoing
@@ -2304,6 +2709,279 @@ struct StrategyEvalWork::Impl {
         return true;
     }
 
+    bool shared_row_solve(
+        const std::uint32_t component,
+        const std::vector<std::uint32_t>& members,
+        const std::vector<double>& incoming,
+        std::vector<double>& visits) {
+        using solve_detail::PolicyEdge;
+        using solve_detail::PolicyRow;
+        using solve_detail::SparsePolicyComponentResult;
+        using solve_detail::SparsePolicyComponentStatus;
+        using solve_detail::SparsePolicyComponentView;
+        using solve_detail::SparsePolicyResume;
+
+        if (members.size() < 2 || incoming.size() != members.size()) {
+            return false;
+        }
+
+        std::vector<std::int32_t> row_local_by_id(rows.size(), -1);
+        std::vector<std::int32_t> pair_local_by_id(pairs.size(), -1);
+        std::vector<std::uint32_t> unique_rows;
+        unique_rows.reserve(members.size());
+        for (std::size_t local = 0; local < members.size(); ++local) {
+            const std::uint32_t pair = members[local];
+            pair_local_by_id[pair] = static_cast<std::int32_t>(local);
+            const std::uint32_t row = pairs[pair].row;
+            if (row_local_by_id[row] < 0) {
+                row_local_by_id[row] =
+                    static_cast<std::int32_t>(unique_rows.size());
+                unique_rows.push_back(row);
+            }
+        }
+        /* With no sharing this is exactly the ordinary pair system, so keep
+         * the established fallback path. The compact solve matters when an
+         * exact kernel row is reused by many concrete occupancy states. */
+        if (unique_rows.size() == members.size()) return false;
+
+        const std::size_t row_count = unique_rows.size();
+        if (row_count > std::numeric_limits<std::uint32_t>::max()) {
+            throw std::length_error(
+                "strategy evaluation shared-row component is too large");
+        }
+
+        std::uint64_t edge_count = 0;
+        std::vector<std::uint32_t> incoming_counts(row_count, 0);
+        for (std::uint32_t source = 0; source < row_count; ++source) {
+            for (const EvalTransition& transition :
+                 rows[unique_rows[source]].transitions) {
+                if (component_by_pair[transition.target] != component) {
+                    continue;
+                }
+                const std::uint32_t target_row =
+                    pairs[transition.target].row;
+                const std::int32_t target_local =
+                    row_local_by_id[target_row];
+                if (target_local < 0) {
+                    throw std::logic_error(
+                        "strategy evaluation shared-row component target "
+                        "is missing");
+                }
+                std::uint32_t& count = incoming_counts[
+                    static_cast<std::size_t>(target_local)];
+                if (count == std::numeric_limits<std::uint32_t>::max()) {
+                    throw std::length_error(
+                        "strategy evaluation shared-row component edge "
+                        "count overflowed");
+                }
+                ++count;
+                edge_count = capped_add(edge_count, 1);
+            }
+        }
+        if (edge_count > std::numeric_limits<std::uint32_t>::max()) {
+            throw std::length_error(
+                "strategy evaluation shared-row component edge count "
+                "overflowed");
+        }
+
+        std::vector<PolicyRow> transpose_rows(row_count);
+        std::vector<PolicyEdge> transpose_edges(
+            static_cast<std::size_t>(edge_count));
+        std::vector<std::uint32_t> cursors(row_count, 0);
+        std::uint64_t offset = 0;
+        for (std::uint32_t target = 0; target < row_count; ++target) {
+            transpose_rows[target].edge_offset = offset;
+            transpose_rows[target].edge_count = incoming_counts[target];
+            cursors[target] = static_cast<std::uint32_t>(offset);
+            offset += incoming_counts[target];
+        }
+        for (std::uint32_t source = 0; source < row_count; ++source) {
+            for (const EvalTransition& transition :
+                 rows[unique_rows[source]].transitions) {
+                if (component_by_pair[transition.target] != component) {
+                    continue;
+                }
+                const std::int32_t target_local =
+                    row_local_by_id[pairs[transition.target].row];
+                transpose_edges[cursors[
+                    static_cast<std::size_t>(target_local)]++] = {
+                    source, transition.probability};
+            }
+        }
+
+        std::vector<solve_detail::WideFloat> rhs_wide(
+            row_count, solve_detail::WideFloat{0.0});
+        for (std::size_t local = 0; local < members.size(); ++local) {
+            const std::int32_t row_local =
+                row_local_by_id[pairs[members[local]].row];
+            rhs_wide[static_cast<std::size_t>(row_local)] +=
+                solve_detail::WideFloat{incoming[local]};
+        }
+        std::vector<double> rhs(row_count, 0.0);
+        std::vector<double> previous_values(row_count, 0.0);
+        std::vector<std::uint32_t> row_members(row_count);
+        std::vector<std::uint32_t> row_component(row_count, 0);
+        std::vector<std::int32_t> row_local(row_count, -1);
+        for (std::uint32_t row = 0; row < row_count; ++row) {
+            rhs[row] = rhs_wide[row].value();
+            row_members[row] = row;
+            row_local[row] = static_cast<std::int32_t>(row);
+        }
+
+        const auto transient_bytes = [&](const std::uint64_t scratch = 0) {
+            std::uint64_t bytes = scratch;
+            const auto add_vector = [&](const auto& values) {
+                using Value = typename std::decay_t<
+                    decltype(values)>::value_type;
+                bytes = capped_add(
+                    bytes,
+                    capped_product(values.capacity(), sizeof(Value)));
+            };
+            add_vector(row_local_by_id);
+            add_vector(pair_local_by_id);
+            add_vector(unique_rows);
+            add_vector(incoming_counts);
+            add_vector(transpose_rows);
+            add_vector(transpose_edges);
+            add_vector(cursors);
+            add_vector(rhs_wide);
+            add_vector(rhs);
+            add_vector(previous_values);
+            add_vector(row_members);
+            add_vector(row_component);
+            add_vector(row_local);
+            return bytes;
+        };
+
+        std::unique_ptr<SparsePolicyResume> resume;
+        SparsePolicyComponentResult solved;
+        std::vector<solve_detail::WideFloat> solved_wide;
+        do {
+            std::uint64_t scratch =
+                solve_detail::sparse_policy_component_scratch_bytes(
+                    row_count, true);
+            scratch = capped_add(
+                scratch,
+                capped_product(
+                    row_count,
+                    sizeof(double) + sizeof(std::uint32_t)));
+            check_owned_cap(transient_bytes(scratch));
+            solved = solve_detail::advance_sparse_policy_component(
+                SparsePolicyComponentView{
+                    row_members, 0, row_component, row_local,
+                    transpose_rows, transpose_edges, rhs,
+                    previous_values, options.max_sweeps},
+                resume, &solved_wide);
+        } while (solved.status ==
+                 SparsePolicyComponentStatus::Incomplete);
+
+        if (solved.status ==
+            SparsePolicyComponentStatus::DidNotConverge) {
+            throw std::length_error(
+                "strategy evaluation shared-row component reached "
+                "max_sweeps (" + std::to_string(options.max_sweeps) +
+                ")");
+        }
+        if (solved.status != SparsePolicyComponentStatus::Complete ||
+            solved.values.size() != row_count ||
+            solved_wide.size() != row_count) {
+            throw std::runtime_error(
+                "strategy evaluation shared-row component solve failed");
+        }
+
+        for (std::uint32_t target = 0; target < row_count; ++target) {
+            solve_detail::WideFloat expected = rhs_wide[target];
+            const PolicyRow& row = transpose_rows[target];
+            for (std::uint32_t edge_index = 0;
+                 edge_index < row.edge_count; ++edge_index) {
+                const PolicyEdge& edge = transpose_edges.at(
+                    row.edge_offset + edge_index);
+                expected += solved_wide[edge.target] *
+                            solve_detail::WideFloat{edge.probability};
+            }
+            const double residual = std::fabs(
+                (solved_wide[target] - expected).value());
+            const double scale = std::max(
+                {1.0, std::fabs(solved.values[target]),
+                 std::fabs(expected.value())});
+            const double tolerance =
+                std::max(
+                    options.epsilon,
+                    8.0 * std::numeric_limits<double>::epsilon()) *
+                scale;
+            if (!std::isfinite(residual) || residual > tolerance) {
+                throw std::runtime_error(
+                    "strategy evaluation shared-row component residual "
+                    "exceeded epsilon");
+            }
+        }
+
+        std::vector<solve_detail::WideFloat> reconstructed;
+        reconstructed.reserve(members.size());
+        for (const double value : incoming) {
+            reconstructed.emplace_back(value);
+        }
+        for (std::uint32_t source = 0; source < row_count; ++source) {
+            for (const EvalTransition& transition :
+                 rows[unique_rows[source]].transitions) {
+                if (component_by_pair[transition.target] != component) {
+                    continue;
+                }
+                const std::int32_t target_local =
+                    pair_local_by_id[transition.target];
+                if (target_local < 0) {
+                    throw std::logic_error(
+                        "strategy evaluation shared-row raw target is "
+                        "missing");
+                }
+                reconstructed[static_cast<std::size_t>(target_local)] +=
+                    solved_wide[source] *
+                    solve_detail::WideFloat{transition.probability};
+            }
+        }
+        std::vector<solve_detail::WideFloat> checked_rows(
+            row_count, solve_detail::WideFloat{0.0});
+        visits.resize(members.size());
+        for (std::size_t local = 0; local < members.size(); ++local) {
+            const double value = reconstructed[local].value();
+            if (!std::isfinite(value) || value < -1e-10) {
+                throw std::runtime_error(
+                    "strategy evaluation shared-row component produced "
+                    "an invalid occupancy");
+            }
+            visits[local] = std::max(0.0, value);
+            const std::int32_t row_id =
+                row_local_by_id[pairs[members[local]].row];
+            checked_rows[static_cast<std::size_t>(row_id)] +=
+                solve_detail::WideFloat{visits[local]};
+        }
+        for (std::uint32_t row = 0; row < row_count; ++row) {
+            const double residual = std::fabs(
+                (checked_rows[row] - solved_wide[row]).value());
+            const double scale = std::max(
+                {1.0, std::fabs(checked_rows[row].value()),
+                 std::fabs(solved.values[row])});
+            const double tolerance =
+                std::max(
+                    options.epsilon,
+                    8.0 * std::numeric_limits<double>::epsilon()) *
+                scale;
+            if (!std::isfinite(residual) || residual > tolerance) {
+                throw std::runtime_error(
+                    "strategy evaluation shared-row raw reconstruction "
+                    "does not preserve row occupancy");
+            }
+        }
+        check_owned_cap(transient_bytes(capped_add(
+            capped_product(
+                reconstructed.capacity(),
+                sizeof(solve_detail::WideFloat)),
+            capped_product(
+                checked_rows.capacity(),
+                sizeof(solve_detail::WideFloat)))));
+        return true;
+    }
+
     void add_absorption(const EvalAbsorption& absorption, double mass) {
         if (!(mass > 0.0)) return;
         if (absorption.edge != kNoId) {
@@ -2374,35 +3052,72 @@ struct StrategyEvalWork::Impl {
         fallback = std::make_unique<FallbackState>();
         fallback->component = component;
         fallback->members = members;
-        fallback->local_index_by_pair.assign(pairs.size(), kNoId);
+        fallback->local_index_by_pair.assign(pairs.size(), -1);
         fallback->incoming = incoming;
-        fallback->visits.assign(members.size(), 0.0);
         for (std::size_t i = 0; i < members.size(); ++i) {
             fallback->local_index_by_pair[members[i]] =
-                static_cast<std::uint32_t>(i);
+                static_cast<std::int32_t>(i);
             fallback->input_mass += incoming[i];
         }
-        fallback->diagonal.assign(members.size(), 1.0);
-        for (std::size_t source = 0; source < members.size(); ++source) {
+
+        std::vector<std::uint32_t> incoming_counts(pairs.size(), 0);
+        std::uint64_t internal_edges = 0;
+        for (const std::uint32_t source : members) {
             for (const EvalTransition& transition :
-                 pair_row(members[source]).transitions) {
-                if (transition.target == members[source]) {
-                    fallback->diagonal[source] -= transition.probability;
+                 pair_row(source).transitions) {
+                if (component_by_pair[transition.target] != component) {
+                    continue;
                 }
-            }
-            if (!(fallback->diagonal[source] > 1e-14)) {
-                fallback->diagonal[source] = 1.0;
+                if (incoming_counts[transition.target] ==
+                    std::numeric_limits<std::uint32_t>::max()) {
+                    throw std::length_error(
+                        "strategy evaluation fallback edge count overflowed");
+                }
+                ++incoming_counts[transition.target];
+                ++internal_edges;
             }
         }
-        fallback->wave.resize(members.size());
-        for (std::size_t i = 0; i < members.size(); ++i) {
-            fallback->wave[i] = incoming[i] / fallback->diagonal[i];
+        check_owned_cap(
+            capped_add(
+                capped_product(
+                    incoming_counts.capacity(), sizeof(std::uint32_t)),
+                capped_add(
+                    capped_product(
+                        pairs.size(), sizeof(solve_detail::PolicyRow)),
+                    capped_add(
+                        capped_product(
+                            pairs.size(), sizeof(double)),
+                        capped_product(
+                            internal_edges,
+                            sizeof(solve_detail::PolicyEdge))))));
+        fallback->transpose_rows.assign(
+            pairs.size(), solve_detail::PolicyRow{});
+        fallback->transpose_edges.resize(
+            static_cast<std::size_t>(internal_edges));
+        fallback->previous_values.assign(pairs.size(), 0.0);
+        std::vector<std::uint32_t> cursors(pairs.size(), 0);
+        std::uint64_t offset = 0;
+        for (const std::uint32_t target : members) {
+            fallback->transpose_rows[target].edge_offset = offset;
+            fallback->transpose_rows[target].edge_count =
+                incoming_counts[target];
+            cursors[target] = static_cast<std::uint32_t>(offset);
+            offset += incoming_counts[target];
         }
-        fallback->shadow = fallback->wave;
-        fallback->direction.assign(members.size(), 0.0);
-        fallback->image.assign(members.size(), 0.0);
-        fallback->intermediate.assign(members.size(), 0.0);
-        fallback->image_intermediate.assign(members.size(), 0.0);
+        for (const std::uint32_t source : members) {
+            for (const EvalTransition& transition :
+                 pair_row(source).transitions) {
+                if (component_by_pair[transition.target] != component) {
+                    continue;
+                }
+                fallback->transpose_edges[cursors[transition.target]++] = {
+                    source, transition.probability};
+            }
+        }
+        check_owned_cap(capped_add(
+            capped_product(cursors.capacity(), sizeof(std::uint32_t)),
+            capped_product(
+                incoming_counts.capacity(), sizeof(std::uint32_t))));
         phase = StrategyEvalPhase::Fallback;
     }
 
@@ -2466,6 +3181,9 @@ struct StrategyEvalWork::Impl {
         } else if (rank_one_solve(
                        component, members, incoming, visits)) {
             solved = true;
+        } else if (shared_row_solve(
+                       component, members, incoming, visits)) {
+            solved = true;
         } else if (members.size() <= 64) {
             solved = dense_solve(component, members, incoming, visits);
         }
@@ -2479,147 +3197,46 @@ struct StrategyEvalWork::Impl {
 
     void run_fallback_batch() {
         FallbackState& state = *fallback;
-        constexpr std::uint32_t kBatchSweeps = 4;
-        const auto dot = [](const std::vector<double>& left,
-                            const std::vector<double>& right) {
-            long double value = 0.0L;
-            for (std::size_t i = 0; i < left.size(); ++i) {
-                value += static_cast<long double>(left[i]) * right[i];
-            }
-            return static_cast<double>(value);
-        };
-        const auto norm = [](const std::vector<double>& values) {
-            double value = 0.0;
-            for (const double entry : values) {
-                value = std::max(value, std::fabs(entry));
-            }
-            return value;
-        };
-        const auto apply = [&](const std::vector<double>& input,
-                               std::vector<double>& result) {
-            result = input;
-            for (std::size_t source = 0; source < state.members.size();
-                 ++source) {
-                if (input[source] == 0.0) continue;
-                for (const EvalTransition& transition :
-                     pair_row(state.members[source]).transitions) {
-                    if (component_by_pair[transition.target] !=
-                        state.component) {
-                        continue;
-                    }
-                    const std::uint32_t target =
-                        state.local_index_by_pair[transition.target];
-                    result[target] -=
-                        transition.probability * input[source];
-                }
-            }
-            for (std::size_t i = 0; i < result.size(); ++i) {
-                result[i] /= state.diagonal[i];
-            }
-        };
-        const double tolerance =
-            options.epsilon * std::max(1.0, state.input_mass);
-        bool finished = false;
-        bool failed = false;
-        for (std::uint32_t batch = 0;
-             batch < kBatchSweeps && state.sweeps < options.max_sweeps;
-             ++batch) {
-            const double rho = dot(state.shadow, state.wave);
-            if (!std::isfinite(rho) || std::fabs(rho) <= 1e-30 ||
-                !std::isfinite(state.omega) ||
-                std::fabs(state.omega) <= 1e-30) {
-                failed = true;
-                break;
-            }
-            if (state.sweeps == 0) {
-                state.direction = state.wave;
-            } else {
-                const double beta =
-                    (rho / state.rho_previous) *
-                    (state.alpha / state.omega);
-                for (std::size_t i = 0; i < state.direction.size(); ++i) {
-                    state.direction[i] =
-                        state.wave[i] +
-                        beta * (state.direction[i] -
-                                state.omega * state.image[i]);
-                }
-            }
-            apply(state.direction, state.image);
-            const double denominator = dot(state.shadow, state.image);
-            if (!std::isfinite(denominator) ||
-                std::fabs(denominator) <= 1e-30) {
-                failed = true;
-                break;
-            }
-            state.alpha = rho / denominator;
-            for (std::size_t i = 0; i < state.wave.size(); ++i) {
-                state.intermediate[i] =
-                    state.wave[i] - state.alpha * state.image[i];
-            }
-            if (norm(state.intermediate) <= tolerance) {
-                for (std::size_t i = 0; i < state.visits.size(); ++i) {
-                    state.visits[i] += state.alpha * state.direction[i];
-                }
-                state.wave = state.intermediate;
-                finished = true;
-                ++state.sweeps;
-                ++fallback_sweeps;
-                break;
-            }
-            apply(state.intermediate, state.image_intermediate);
-            const double image_norm =
-                dot(state.image_intermediate, state.image_intermediate);
-            if (!std::isfinite(image_norm) || image_norm <= 1e-30) {
-                failed = true;
-                break;
-            }
-            state.omega =
-                dot(state.image_intermediate, state.intermediate) /
-                image_norm;
-            if (!std::isfinite(state.omega)) {
-                failed = true;
-                break;
-            }
-            for (std::size_t i = 0; i < state.visits.size(); ++i) {
-                state.visits[i] +=
-                    state.alpha * state.direction[i] +
-                    state.omega * state.intermediate[i];
-                state.wave[i] =
-                    state.intermediate[i] -
-                    state.omega * state.image_intermediate[i];
-            }
-            state.rho_previous = rho;
-            ++state.sweeps;
-            ++fallback_sweeps;
-            if (norm(state.wave) <= tolerance) {
-                finished = true;
-                break;
-            }
-        }
-        if (!finished && !failed && state.sweeps < options.max_sweeps) {
+        const std::uint64_t scratch =
+            solve_detail::sparse_policy_component_scratch_bytes(
+                state.members.size(), false);
+        check_owned_cap(scratch);
+        solve_detail::SparsePolicyComponentResult solved =
+            solve_detail::advance_sparse_policy_component(
+                solve_detail::SparsePolicyComponentView{
+                    state.members,
+                    state.component,
+                    component_by_pair,
+                    state.local_index_by_pair,
+                    state.transpose_rows,
+                    state.transpose_edges,
+                    state.incoming,
+                    state.previous_values,
+                    options.max_sweeps},
+                state.resume);
+        fallback_sweeps += solved.iterations;
+        check_owned_cap();
+        if (solved.status ==
+            solve_detail::SparsePolicyComponentStatus::Incomplete) {
             return;
         }
 
-        std::vector<double> checked;
-        apply(state.visits, checked);
-        double residual = 0.0;
-        for (std::size_t i = 0; i < checked.size(); ++i) {
-            const double rhs = state.incoming[i] / state.diagonal[i];
-            residual = std::max(residual, std::fabs(checked[i] - rhs));
-        }
-        if (!failed && residual <= tolerance * 10.0) {
-            for (double& visit : state.visits) {
-                if (visit < -1e-8 || !std::isfinite(visit)) {
-                    failed = true;
+        bool complete =
+            solved.status ==
+                solve_detail::SparsePolicyComponentStatus::Complete &&
+            solved.values.size() == state.members.size();
+        if (complete) {
+            for (double& visit : solved.values) {
+                if (!std::isfinite(visit) || visit < -1e-10) {
+                    complete = false;
                     break;
                 }
                 visit = std::max(0.0, visit);
             }
-        } else {
-            failed = true;
         }
-        if (!failed) {
-            commit_component(state.component, state.members, state.visits);
+        if (complete) {
+            commit_component(
+                state.component, state.members, solved.values);
         } else {
             for (std::size_t i = 0; i < state.members.size(); ++i) {
                 pair_visits[state.members[i]] += state.incoming[i];
@@ -2628,6 +3245,590 @@ struct StrategyEvalWork::Impl {
         }
         fallback.reset();
         finish_component();
+    }
+
+    void validate_exact_attribution_quotient(
+            const std::vector<double>& exact_visits,
+            const std::uint64_t retained_scratch_bytes) {
+        const std::size_t count = attribution_pairs.size();
+        if (exact_visits.size() != count) {
+            throw std::logic_error(
+                "strategy evaluation exact attribution result is incomplete");
+        }
+        std::vector<double> visits_by_class(pairs.size(), 0.0);
+        check_owned_cap(capped_add(
+            retained_scratch_bytes,
+            capped_product(
+                visits_by_class.capacity(), sizeof(double))));
+        for (std::size_t raw = 0; raw < count; ++raw) {
+            const std::uint32_t class_id =
+                attribution_class_by_pair[raw];
+            if (class_id >= visits_by_class.size()) {
+                throw std::logic_error(
+                    "strategy evaluation exact attribution class is "
+                    "missing");
+            }
+            visits_by_class[class_id] += exact_visits[raw];
+        }
+        const std::uint32_t start_class = start_pair;
+        if (start_class >= pairs.size()) {
+            throw std::logic_error(
+                "strategy evaluation exact attribution start class is "
+                "missing");
+        }
+        check_owned_cap(capped_add(
+            retained_scratch_bytes,
+            capped_add(
+                capped_product(
+                    visits_by_class.capacity(), sizeof(double)),
+                capped_product(
+                    pairs.size(), sizeof(solve_detail::WideFloat)))));
+        std::vector<solve_detail::WideFloat> quotient_expected(
+            pairs.size(), solve_detail::WideFloat{0.0});
+        quotient_expected[start_class] = solve_detail::WideFloat{1.0};
+        for (std::uint32_t source = 0; source < pairs.size(); ++source) {
+            if (source < pair_contracted.size() &&
+                pair_contracted[source]) {
+                if (chain_next[source] >= quotient_expected.size()) {
+                    throw std::logic_error(
+                        "strategy evaluation contracted quotient target is "
+                        "missing");
+                }
+                quotient_expected[chain_next[source]] +=
+                    solve_detail::WideFloat{visits_by_class[source]};
+                continue;
+            }
+            for (const EvalTransition& transition :
+                 pair_row(source).transitions) {
+                const std::uint32_t target =
+                    transition.via != kNoId
+                        ? transition.via
+                        : transition.target;
+                if (target >= quotient_expected.size()) {
+                    throw std::logic_error(
+                        "strategy evaluation behavioral quotient target is "
+                        "missing");
+                }
+                quotient_expected[target] +=
+                    solve_detail::WideFloat{visits_by_class[source]} *
+                    solve_detail::WideFloat{transition.probability};
+            }
+        }
+        for (std::size_t class_id = 0;
+             class_id < visits_by_class.size(); ++class_id) {
+            const double expected = quotient_expected[class_id].value();
+            const double residual = std::fabs(
+                (solve_detail::WideFloat{visits_by_class[class_id]} -
+                 quotient_expected[class_id])
+                    .value());
+            const double scale = std::max(
+                {1.0, std::fabs(visits_by_class[class_id]),
+                 std::fabs(expected)});
+            const double tolerance =
+                std::max(
+                    options.epsilon,
+                    8.0 * std::numeric_limits<double>::epsilon()) *
+                scale;
+            if (!std::isfinite(residual) || residual > tolerance) {
+                std::ostringstream detail;
+                detail << std::setprecision(17)
+                       << "strategy evaluation exact attribution does not "
+                          "satisfy the behavioral quotient flow equation "
+                          "(class="
+                       << class_id
+                       << ", visits=" << visits_by_class[class_id]
+                       << ", expected=" << expected
+                       << ", residual=" << residual
+                       << ", tolerance=" << tolerance << ')';
+                throw std::runtime_error(detail.str());
+            }
+        }
+    }
+
+    std::vector<double> solve_shared_row_exact_attribution() {
+        using solve_detail::PolicyEdge;
+        using solve_detail::PolicyRow;
+        using solve_detail::SparsePolicyComponentResult;
+        using solve_detail::SparsePolicyComponentStatus;
+        using solve_detail::SparsePolicyComponentView;
+        using solve_detail::SparsePolicyComponentWorkspace;
+        using solve_detail::SparsePolicyResume;
+        using solve_detail::SparsePolicyTarjanView;
+        const std::size_t count = attribution_pairs.size();
+        const std::size_t row_count = attribution_rows.size();
+        std::vector<solve_detail::WideFloat> row_visits(
+            row_count, solve_detail::WideFloat{0.0});
+        {
+            std::uint64_t edge_count = 0;
+            for (const EvalRow& row : attribution_rows) {
+                edge_count = capped_add(
+                    edge_count, row.transitions.size());
+                for (const EvalTransition& transition : row.transitions) {
+                    if (transition.target >= count ||
+                        attribution_pairs[transition.target].row >=
+                            row_count) {
+                        throw std::logic_error(
+                            "strategy evaluation exact attribution row "
+                            "target is missing");
+                    }
+                }
+            }
+            if (edge_count >
+                std::numeric_limits<std::uint32_t>::max()) {
+                throw std::length_error(
+                    "strategy evaluation exact row attribution edge count "
+                    "overflowed");
+            }
+            check_owned_cap(capped_add(
+                capped_product(edge_count, sizeof(PolicyEdge)),
+                capped_product(
+                    row_count,
+                    sizeof(PolicyRow) +
+                        5 * sizeof(std::uint32_t) +
+                        2 * sizeof(std::uint8_t) +
+                        3 * sizeof(double))));
+
+            std::vector<std::uint32_t> incoming_counts(row_count, 0);
+            for (const EvalRow& row : attribution_rows) {
+                for (const EvalTransition& transition : row.transitions) {
+                    const std::uint32_t target_row =
+                        attribution_pairs[transition.target].row;
+                    if (incoming_counts[target_row] ==
+                        std::numeric_limits<std::uint32_t>::max()) {
+                        throw std::length_error(
+                            "strategy evaluation exact row attribution "
+                            "incoming edge count overflowed");
+                    }
+                    ++incoming_counts[target_row];
+                }
+            }
+
+            std::vector<PolicyRow> transpose_rows(row_count);
+            std::vector<PolicyEdge> transpose_edges(
+                static_cast<std::size_t>(edge_count));
+            std::vector<std::uint32_t> cursors(row_count, 0);
+            std::uint64_t offset = 0;
+            for (std::uint32_t target = 0;
+                 target < row_count; ++target) {
+                transpose_rows[target].edge_offset = offset;
+                transpose_rows[target].edge_count =
+                    incoming_counts[target];
+                cursors[target] = static_cast<std::uint32_t>(offset);
+                offset += incoming_counts[target];
+            }
+            for (std::uint32_t source = 0;
+                 source < row_count; ++source) {
+                for (const EvalTransition& transition :
+                     attribution_rows[source].transitions) {
+                    const std::uint32_t target_row =
+                        attribution_pairs[transition.target].row;
+                    transpose_edges[cursors[target_row]++] = {
+                        source, transition.probability};
+                }
+            }
+
+            std::vector<std::uint32_t> active_states(row_count);
+            std::vector<std::uint8_t> active(row_count, 1);
+            std::vector<std::uint8_t> terminal(row_count, 0);
+            std::vector<std::uint64_t> policy_rows(row_count);
+            for (std::uint32_t row = 0; row < row_count; ++row) {
+                active_states[row] = row;
+                policy_rows[row] = row;
+            }
+            const std::vector<std::uint32_t> no_representatives;
+            SparsePolicyComponentWorkspace workspace;
+            std::vector<double> external_incoming(row_count, 0.0);
+            std::vector<double> previous_values(row_count, 0.0);
+            std::vector<std::uint32_t> raw_pairs_by_class(
+                pairs.size(), 0);
+            if (pair_visits.size() != pairs.size() ||
+                attribution_class_by_pair.size() != count) {
+                throw std::logic_error(
+                    "strategy evaluation exact row attribution quotient "
+                    "seed is incomplete");
+            }
+            for (std::uint32_t raw = 0; raw < count; ++raw) {
+                const std::uint32_t class_id =
+                    attribution_class_by_pair[raw];
+                if (class_id >= raw_pairs_by_class.size()) {
+                    throw std::logic_error(
+                        "strategy evaluation exact row attribution class "
+                        "seed is missing");
+                }
+                ++raw_pairs_by_class[class_id];
+            }
+            /* The quotient solve has already proved each behavioral class's
+             * exact total visits. Distribute that total deterministically
+             * across its raw members, then aggregate by shared exact row.
+             * This is only the Krylov/Gauss-Seidel initial iterate: the row
+             * equations, reconstructed raw equations, and quotient equations
+             * below remain the acceptance authority. Seeding the already
+             * solved aggregate modes avoids relearning a near-renewal visit
+             * total through millions of repeated raw transitions. */
+            for (std::uint32_t raw = 0; raw < count; ++raw) {
+                const std::uint32_t class_id =
+                    attribution_class_by_pair[raw];
+                const std::uint32_t class_size =
+                    raw_pairs_by_class[class_id];
+                if (class_size == 0) {
+                    throw std::logic_error(
+                        "strategy evaluation exact row attribution class "
+                        "seed is empty");
+                }
+                previous_values.at(attribution_pairs[raw].row) +=
+                    pair_visits[class_id] /
+                    static_cast<double>(class_size);
+            }
+            external_incoming.at(
+                attribution_pairs.at(attribution_start_pair).row) = 1.0;
+
+            const auto transient_bytes =
+                [&](const std::uint64_t scratch = 0) {
+                    std::uint64_t bytes = scratch;
+                    const auto add_vector = [&](const auto& values) {
+                        using Value = typename std::decay_t<
+                            decltype(values)>::value_type;
+                        bytes = capped_add(
+                            bytes,
+                            capped_product(
+                                values.capacity(), sizeof(Value)));
+                    };
+                    add_vector(incoming_counts);
+                    add_vector(transpose_rows);
+                    add_vector(transpose_edges);
+                    add_vector(cursors);
+                    add_vector(active_states);
+                    add_vector(active);
+                    add_vector(terminal);
+                    add_vector(policy_rows);
+                    add_vector(workspace.components);
+                    for (const auto& component : workspace.components) {
+                        add_vector(component);
+                    }
+                    add_vector(workspace.component_by_state);
+                    add_vector(workspace.local);
+                    add_vector(workspace.tarjan_index);
+                    add_vector(workspace.tarjan_lowlink);
+                    add_vector(workspace.tarjan_on_stack);
+                    add_vector(workspace.tarjan_stack);
+                    add_vector(workspace.tarjan_dfs);
+                    add_vector(external_incoming);
+                    add_vector(row_visits);
+                    add_vector(previous_values);
+                    add_vector(raw_pairs_by_class);
+                    return bytes;
+                };
+            check_owned_cap(transient_bytes());
+            const SparsePolicyTarjanView tarjan{
+                active_states, active, terminal, policy_rows,
+                no_representatives, transpose_rows, transpose_edges};
+            while (!solve_detail::advance_sparse_policy_components(
+                tarjan, workspace, 65536)) {
+                check_owned_cap(transient_bytes());
+            }
+            check_owned_cap(transient_bytes());
+
+            for (std::uint32_t component = 0;
+                 component < workspace.components.size(); ++component) {
+                const std::vector<std::uint32_t>& members =
+                    workspace.components[component];
+                std::vector<double> rhs;
+                rhs.reserve(members.size());
+                double input_mass = 0.0;
+                for (std::size_t local = 0;
+                     local < members.size(); ++local) {
+                    const std::uint32_t row = members[local];
+                    workspace.local[row] =
+                        static_cast<std::int32_t>(local);
+                    rhs.push_back(external_incoming[row]);
+                    input_mass += rhs.back();
+                }
+                if (!(input_mass > 0.0)) continue;
+
+                bool has_exit = false;
+                for (const std::uint32_t source : members) {
+                    const EvalRow& row = attribution_rows[source];
+                    if (!row.absorptions.empty()) has_exit = true;
+                    for (const EvalTransition& transition :
+                         row.transitions) {
+                        const std::uint32_t target_row =
+                            attribution_pairs[transition.target].row;
+                        if (workspace.component_by_state[target_row] !=
+                            component) {
+                            has_exit = true;
+                        }
+                    }
+                }
+                if (!has_exit) {
+                    for (std::size_t local = 0;
+                         local < members.size(); ++local) {
+                        row_visits[members[local]] +=
+                            solve_detail::WideFloat{rhs[local]};
+                    }
+                    continue;
+                }
+
+                std::unique_ptr<SparsePolicyResume> resume;
+                SparsePolicyComponentResult solved;
+                std::vector<solve_detail::WideFloat> solved_wide;
+                do {
+                    const std::uint64_t scratch = capped_add(
+                        solve_detail::
+                            sparse_policy_component_scratch_bytes(
+                                members.size(), true),
+                        capped_product(
+                            members.size(),
+                            sizeof(double) + sizeof(std::uint32_t)));
+                    std::uint64_t solve_transient = capped_add(
+                        transient_bytes(), scratch);
+                    solve_transient = capped_add(
+                        solve_transient,
+                        capped_product(
+                            rhs.capacity(), sizeof(double)));
+                    check_owned_cap(solve_transient);
+                    solved =
+                        solve_detail::advance_sparse_policy_component(
+                            SparsePolicyComponentView{
+                                members, component,
+                                workspace.component_by_state,
+                                workspace.local, transpose_rows,
+                                transpose_edges, rhs, previous_values,
+                                options.max_sweeps},
+                            resume, &solved_wide);
+                    std::uint64_t retained_solve = capped_add(
+                        transient_bytes(),
+                        capped_add(
+                            capped_product(
+                                rhs.capacity(), sizeof(double)),
+                            capped_product(
+                                solved.values.capacity(),
+                                sizeof(double))));
+                    if (resume != nullptr) {
+                        retained_solve = capped_add(
+                            retained_solve,
+                            sizeof(SparsePolicyResume));
+                        retained_solve = capped_add(
+                            retained_solve,
+                            capped_product(
+                                resume->members.capacity(),
+                                sizeof(std::uint32_t)));
+                        const auto add_wide = [&](const auto& values) {
+                            retained_solve = capped_add(
+                                retained_solve,
+                                capped_product(
+                                    values.capacity(),
+                                    sizeof(solve_detail::WideFloat)));
+                        };
+                        add_wide(resume->b);
+                        add_wide(resume->x);
+                        add_wide(resume->r);
+                        add_wide(resume->r0);
+                        add_wide(resume->p);
+                        add_wide(resume->v);
+                        add_wide(resume->s);
+                        add_wide(resume->t);
+                    }
+                    retained_solve = capped_add(
+                        retained_solve,
+                        capped_product(
+                            solved_wide.capacity(),
+                            sizeof(solve_detail::WideFloat)));
+                    check_owned_cap(retained_solve);
+                } while (solved.status ==
+                         SparsePolicyComponentStatus::Incomplete);
+                if (solved.status ==
+                    SparsePolicyComponentStatus::DidNotConverge) {
+                    throw std::length_error(
+                        "strategy evaluation exact row attribution reached "
+                        "max_sweeps (" +
+                        std::to_string(options.max_sweeps) + ")");
+                }
+                if (solved.status !=
+                        SparsePolicyComponentStatus::Complete ||
+                    solved.values.size() != members.size() ||
+                    solved_wide.size() != members.size()) {
+                    throw std::runtime_error(
+                        "strategy evaluation exact row attribution solve "
+                        "failed (component_size=" +
+                        std::to_string(members.size()) +
+                        ", status=" +
+                        std::to_string(static_cast<unsigned int>(
+                            solved.status)) +
+                        ", iterations=" +
+                        std::to_string(solved.total_iterations) + ")");
+                }
+                for (std::size_t local = 0;
+                     local < members.size(); ++local) {
+                    solve_detail::WideFloat expected = rhs[local];
+                    const PolicyRow& row =
+                        transpose_rows[members[local]];
+                    for (std::uint32_t edge_index = 0;
+                         edge_index < row.edge_count; ++edge_index) {
+                        const PolicyEdge& edge = transpose_edges.at(
+                            row.edge_offset + edge_index);
+                        if (workspace.component_by_state[edge.target] !=
+                            component) {
+                            continue;
+                        }
+                        const std::int32_t source_local =
+                            workspace.local.at(edge.target);
+                        if (source_local < 0) {
+                            throw std::logic_error(
+                                "strategy evaluation exact row attribution "
+                                "has an invalid component-local source");
+                        }
+                        expected +=
+                            solve_detail::WideFloat{edge.probability} *
+                            solve_detail::WideFloat{
+                                solved.values[
+                                    static_cast<std::size_t>(
+                                        source_local)]};
+                    }
+                    const double residual = std::fabs(
+                        (solve_detail::WideFloat{solved.values[local]} -
+                         expected)
+                            .value());
+                    const double scale = std::max(
+                        {1.0, std::fabs(solved.values[local]),
+                         std::fabs(expected.value())});
+                    const double tolerance =
+                        std::max(
+                            options.epsilon,
+                            8.0 * std::numeric_limits<double>::epsilon()) *
+                        scale;
+                    if (!std::isfinite(residual) ||
+                        residual > tolerance) {
+                        throw std::runtime_error(
+                            "strategy evaluation exact row attribution "
+                            "component residual exceeded epsilon");
+                    }
+                }
+                for (std::size_t local = 0;
+                     local < members.size(); ++local) {
+                    const double value = solved.values[local];
+                    if (!std::isfinite(value) || value < -1e-10) {
+                        throw std::runtime_error(
+                            "strategy evaluation exact row attribution "
+                            "produced an invalid occupancy");
+                    }
+                    row_visits[members[local]] =
+                        value < 0.0
+                            ? solve_detail::WideFloat{0.0}
+                            : solved_wide[local];
+                }
+                for (const std::uint32_t source : members) {
+                    for (const EvalTransition& transition :
+                         attribution_rows[source].transitions) {
+                        const std::uint32_t target_row =
+                            attribution_pairs[transition.target].row;
+                        if (workspace.component_by_state[target_row] !=
+                            component) {
+                            external_incoming[target_row] +=
+                                row_visits[source].value() *
+                                transition.probability;
+                        }
+                    }
+                }
+            }
+        }
+
+        check_owned_cap(capped_add(
+            capped_product(
+                row_visits.capacity(),
+                sizeof(solve_detail::WideFloat)),
+            capped_product(
+                count,
+                sizeof(double) +
+                    2 * sizeof(solve_detail::WideFloat))));
+        std::vector<double> exact_visits(count, 0.0);
+        std::vector<solve_detail::WideFloat> reconstructed(
+            count, solve_detail::WideFloat{0.0});
+        reconstructed[attribution_start_pair] =
+            solve_detail::WideFloat{1.0};
+        for (std::uint32_t row_id = 0; row_id < row_count; ++row_id) {
+            const double value = row_visits[row_id].value();
+            if (!std::isfinite(value) || value < -1e-10) {
+                throw std::runtime_error(
+                    "strategy evaluation shared-row exact attribution "
+                    "produced an invalid row occupancy");
+            }
+            for (const EvalTransition& transition :
+                 attribution_rows[row_id].transitions) {
+                reconstructed.at(transition.target) +=
+                    (value < 0.0
+                         ? solve_detail::WideFloat{0.0}
+                         : row_visits[row_id]) *
+                    solve_detail::WideFloat{transition.probability};
+            }
+        }
+        for (std::uint32_t state = 0; state < count; ++state) {
+            const double value = reconstructed[state].value();
+            if (!std::isfinite(value) || value < -1e-10) {
+                throw std::runtime_error(
+                    "strategy evaluation shared-row exact attribution "
+                    "produced an invalid raw occupancy");
+            }
+            exact_visits[state] = std::max(0.0, value);
+        }
+
+        std::vector<solve_detail::WideFloat> checked_row_mass(
+            row_count, solve_detail::WideFloat{0.0});
+        for (std::uint32_t source = 0; source < count; ++source) {
+            checked_row_mass.at(attribution_pairs[source].row) +=
+                solve_detail::WideFloat{exact_visits[source]};
+        }
+        std::fill(
+            reconstructed.begin(), reconstructed.end(),
+            solve_detail::WideFloat{0.0});
+        reconstructed[attribution_start_pair] =
+            solve_detail::WideFloat{1.0};
+        for (std::uint32_t row_id = 0; row_id < row_count; ++row_id) {
+            for (const EvalTransition& transition :
+                 attribution_rows[row_id].transitions) {
+                reconstructed.at(transition.target) +=
+                    checked_row_mass[row_id] *
+                    solve_detail::WideFloat{transition.probability};
+            }
+        }
+        for (std::uint32_t state = 0; state < count; ++state) {
+            const double expected_value = reconstructed[state].value();
+            const double residual = std::fabs(
+                (solve_detail::WideFloat{exact_visits[state]} -
+                 reconstructed[state])
+                    .value());
+            const double scale = std::max(
+                {1.0, std::fabs(exact_visits[state]),
+                 std::fabs(expected_value)});
+            const double tolerance =
+                std::max(
+                    options.epsilon,
+                    8.0 * std::numeric_limits<double>::epsilon()) *
+                scale;
+            if (!std::isfinite(residual) || residual > tolerance) {
+                throw std::runtime_error(
+                    "strategy evaluation shared-row exact attribution raw "
+                    "residual exceeded epsilon");
+            }
+        }
+        std::uint64_t retained_scratch = capped_product(
+            row_visits.capacity(), sizeof(solve_detail::WideFloat));
+        retained_scratch = capped_add(
+            retained_scratch,
+            capped_product(exact_visits.capacity(), sizeof(double)));
+        retained_scratch = capped_add(
+            retained_scratch,
+            capped_product(
+                checked_row_mass.capacity(),
+                sizeof(solve_detail::WideFloat)));
+        retained_scratch = capped_add(
+            retained_scratch,
+            capped_product(
+                reconstructed.capacity(),
+                sizeof(solve_detail::WideFloat)));
+        validate_exact_attribution_quotient(
+            exact_visits, retained_scratch);
+        attribution_exact_row_visits = std::move(row_visits);
+        return exact_visits;
     }
 
     std::vector<double> solve_exact_attribution() {
@@ -2648,20 +3849,33 @@ struct StrategyEvalWork::Impl {
                 "strategy evaluation exact attribution graph is incomplete");
         }
 
-        std::vector<std::uint32_t> incoming_counts(count, 0);
         std::uint64_t edge_count = 0;
-        for (const EvalPair& pair : attribution_pairs) {
-            if (pair.row >= attribution_rows.size()) {
-                throw std::logic_error(
-                    "strategy evaluation exact attribution row is missing");
-            }
-            for (const EvalTransition& transition :
-                 attribution_rows[pair.row].transitions) {
+        for (const EvalRow& row : attribution_rows) {
+            for (const EvalTransition& transition : row.transitions) {
                 if (transition.target >= count) {
                     throw std::logic_error(
                         "strategy evaluation exact attribution target is "
                         "missing");
                 }
+            }
+        }
+        for (const EvalPair& pair : attribution_pairs) {
+            if (pair.row >= attribution_rows.size()) {
+                throw std::logic_error(
+                    "strategy evaluation exact attribution row is missing");
+            }
+            edge_count = capped_add(
+                edge_count,
+                attribution_rows[pair.row].transitions.size());
+        }
+        if (edge_count > std::numeric_limits<std::uint32_t>::max()) {
+            return solve_shared_row_exact_attribution();
+        }
+
+        std::vector<std::uint32_t> incoming_counts(count, 0);
+        for (const EvalPair& pair : attribution_pairs) {
+            for (const EvalTransition& transition :
+                 attribution_rows[pair.row].transitions) {
                 if (incoming_counts[transition.target] ==
                     std::numeric_limits<std::uint32_t>::max()) {
                     throw std::length_error(
@@ -2669,14 +3883,7 @@ struct StrategyEvalWork::Impl {
                         "overflowed");
                 }
                 ++incoming_counts[transition.target];
-                ++edge_count;
             }
-        }
-        if (edge_count > std::numeric_limits<std::size_t>::max() ||
-            edge_count > std::numeric_limits<std::uint32_t>::max()) {
-            throw std::length_error(
-                "strategy evaluation exact attribution edge count "
-                "overflowed");
         }
 
         std::vector<PolicyRow> transpose_rows(count);
@@ -3056,12 +4263,67 @@ struct StrategyEvalWork::Impl {
             }
             terminal_incoming_owned_bytes = 0;
             compressed_policy_incoming_owned_bytes = 0;
-            for (std::size_t raw = 0;
-                 raw < attribution_pairs.size(); ++raw) {
-                const double visits = exact_pair_visits->at(raw);
+            const bool exact_row_visits_available =
+                !attribution_exact_row_visits.empty();
+            std::vector<solve_detail::WideFloat> visits_by_row;
+            if (!exact_row_visits_available) {
+                visits_by_row.assign(
+                    attribution_rows.size(),
+                    solve_detail::WideFloat{0.0});
+            } else {
+                if (attribution_exact_row_visits.size() !=
+                    attribution_rows.size()) {
+                    throw std::logic_error(
+                        "strategy evaluation exact row occupancy is "
+                        "incomplete");
+                }
+                visits_by_row =
+                    std::move(attribution_exact_row_visits);
+            }
+            std::vector<solve_detail::WideFloat> exact_terminal_mass(
+                terminal_mass.size(), solve_detail::WideFloat{0.0});
+            std::vector<solve_detail::WideFloat>
+                exact_action_not_applied(
+                    action_not_applied.size(),
+                    solve_detail::WideFloat{0.0});
+            std::vector<solve_detail::WideFloat>
+                exact_no_matching_edge(
+                    no_matching_edge.size(),
+                    solve_detail::WideFloat{0.0});
+            check_owned_cap(capped_add(
+                capped_product(
+                    exact_pair_visits_owned.capacity(),
+                    sizeof(double)),
+                capped_add(
+                    capped_product(
+                        visits_by_row.capacity(),
+                        sizeof(solve_detail::WideFloat)),
+                    capped_product(
+                        exact_terminal_mass.capacity() +
+                            exact_action_not_applied.capacity() +
+                            exact_no_matching_edge.capacity(),
+                        sizeof(solve_detail::WideFloat)))));
+            if (!exact_row_visits_available) {
+                for (std::size_t raw = 0;
+                     raw < attribution_pairs.size(); ++raw) {
+                    const double visits = exact_pair_visits->at(raw);
+                    if (!(visits > 0.0)) continue;
+                    visits_by_row.at(attribution_pairs[raw].row) +=
+                        solve_detail::WideFloat{visits};
+                }
+            }
+            /* Shared exact rows are identical transition/absorption
+             * authorities. Aggregate their reconstructed raw occupancy and
+             * replay each row once; iterating the same wide reforge row once
+             * per raw pair is algebraically redundant and can multiply
+             * finalization work by orders of magnitude. */
+            for (std::size_t row_id = 0;
+                 row_id < attribution_rows.size(); ++row_id) {
+                const solve_detail::WideFloat wide_visits =
+                    visits_by_row[row_id];
+                const double visits = wide_visits.value();
                 if (!(visits > 0.0)) continue;
-                const EvalRow& row = attribution_rows.at(
-                    attribution_pairs[raw].row);
+                const EvalRow& row = attribution_rows[row_id];
                 for (const EvalTransition& transition : row.transitions) {
                     add_compressed_policy_incoming(
                         transition.policy_route,
@@ -3069,20 +4331,44 @@ struct StrategyEvalWork::Impl {
                         visits * transition.probability);
                 }
                 for (const EvalAbsorption& absorption : row.absorptions) {
-                    const double mass = visits * absorption.probability;
+                    const solve_detail::WideFloat wide_mass =
+                        wide_visits *
+                        solve_detail::WideFloat{
+                            absorption.probability};
+                    const double mass = wide_mass.value();
                     add_compressed_policy_incoming(
                         absorption.policy_route,
                         absorption.state, mass);
                     if (absorption.kind == EvalAbsorptionKind::Terminal) {
+                        exact_terminal_mass.at(absorption.node) +=
+                            wide_mass;
                         add_terminal_incoming(
                             absorption.node, absorption.state, mass);
+                    } else if (absorption.kind ==
+                               EvalAbsorptionKind::ActionNotApplied) {
+                        exact_action_not_applied.at(absorption.node) +=
+                            wide_mass;
+                    } else {
+                        exact_no_matching_edge.at(absorption.node) +=
+                            wide_mass;
                     }
                 }
-                if ((raw & 255u) == 255u) {
+                if ((row_id & 255u) == 255u) {
                     check_owned_cap(capped_product(
-                        exact_pair_visits_owned.capacity(),
-                        sizeof(double)));
+                        visits_by_row.capacity() +
+                            exact_terminal_mass.capacity() +
+                            exact_action_not_applied.capacity() +
+                            exact_no_matching_edge.capacity(),
+                        sizeof(solve_detail::WideFloat)));
                 }
+            }
+            for (std::size_t node = 0;
+                 node < terminal_mass.size(); ++node) {
+                terminal_mass[node] = exact_terminal_mass[node].value();
+                action_not_applied[node] =
+                    exact_action_not_applied[node].value();
+                no_matching_edge[node] =
+                    exact_no_matching_edge[node].value();
             }
         }
         CalcContext& calc = *model.calc;
@@ -3243,6 +4529,55 @@ struct StrategyEvalWork::Impl {
             }
             if ((pair & 255u) == 255u) {
                 check_owned_cap(finalization_transient_floor);
+            }
+        }
+        if (!attribution_pairs.empty() && !hard_unresolved &&
+            output.residual_mass < options.epsilon) {
+            solve_detail::WideFloat absorbed = 0.0;
+            for (const double mass : terminal_mass) {
+                absorbed += solve_detail::WideFloat{mass};
+            }
+            for (const double mass : action_not_applied) {
+                absorbed += solve_detail::WideFloat{mass};
+            }
+            for (const double mass : no_matching_edge) {
+                absorbed += solve_detail::WideFloat{mass};
+            }
+            const double correction =
+                (solve_detail::WideFloat{1.0} - absorbed).value();
+            const double accumulated_roundoff_tolerance = std::max(
+                1e-8,
+                256.0 * std::numeric_limits<double>::epsilon() *
+                    std::max(1.0, output.expected_actions));
+            if (std::isfinite(correction) &&
+                std::fabs(correction) <=
+                    accumulated_roundoff_tolerance) {
+                std::uint32_t terminal = kNoId;
+                for (std::uint32_t node = 0;
+                     node < strategy->nodes.size(); ++node) {
+                    if (strategy->nodes[node].kind !=
+                        StrategyNodeKind::Terminal) {
+                        continue;
+                    }
+                    if (terminal == kNoId ||
+                        terminal_mass[node] > terminal_mass[terminal]) {
+                        terminal = node;
+                    }
+                }
+                if (terminal != kNoId &&
+                    terminal_mass[terminal] + correction >= 0.0) {
+                    /* Exact row equations are solved in WideFloat, while
+                     * public terminal fields are doubles. Near-renewal
+                     * policies can amplify the unavoidable stored-double
+                     * row-sum residue across hundreds of thousands of
+                     * expected actions. Close only that bounded roundoff on
+                     * the dominant reached terminal after all raw and
+                     * quotient flow equations have independently passed. */
+                    terminal_mass[terminal] += correction;
+                    output.max_mass_conservation_error = std::max(
+                        output.max_mass_conservation_error,
+                        std::fabs(correction));
+                }
             }
         }
         std::vector<EvalPair>().swap(attribution_pairs);
@@ -3848,9 +5183,12 @@ struct StrategyEvalWork::Impl {
         value.total_sccs = components.size();
         value.fallback_sweeps = fallback_sweeps;
         if (fallback != nullptr) {
-            for (const double mass : fallback->wave) {
-                value.residual += std::fabs(mass);
-            }
+            value.residual =
+                fallback->resume != nullptr &&
+                        std::isfinite(
+                            fallback->resume->last_true_residual)
+                    ? fallback->resume->last_true_residual
+                    : fallback->input_mass;
         } else {
             for (const double mass : unresolved_pair) value.residual += mass;
         }

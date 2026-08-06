@@ -995,6 +995,10 @@ bool exact_closed_partition(
     }
     std::vector<std::uint32_t> partition(node_count);
     std::uint32_t next = 0;
+    std::uint64_t classes_owned_bytes = 0;
+    const std::uint64_t class_map_node_bytes =
+        sizeof(typename decltype(classes)::value_type) +
+        3 * sizeof(void*);
     for (std::uint32_t node = 0; node < node_count; ++node) {
         ClosedPartitionKey key = signature(node);
         std::uint64_t live = retained_owned_memory;
@@ -1003,9 +1007,7 @@ bool exact_closed_partition(
             live,
             saturated_product(
                 partition.capacity(), sizeof(std::uint32_t)));
-        add_bytes(
-            live,
-            estimate_closed_partition_map_memory(classes));
+        add_bytes(live, classes_owned_bytes);
         add_bytes(live, estimate_stable_key_bytes(key));
         if (!check_closed_partition_memory(
                 result, limits, live)) {
@@ -1013,7 +1015,13 @@ bool exact_closed_partition(
         }
         const auto [it, inserted] =
             classes.emplace(std::move(key), next);
-        if (inserted) ++next;
+        if (inserted) {
+            ++next;
+            add_bytes(classes_owned_bytes, class_map_node_bytes);
+            add_bytes(
+                classes_owned_bytes,
+                estimate_stable_key_bytes(it->first));
+        }
         partition[node] = it->second;
         live = retained_owned_memory;
         add_bytes(live, per_signature_scratch);
@@ -1021,9 +1029,7 @@ bool exact_closed_partition(
             live,
             saturated_product(
                 partition.capacity(), sizeof(std::uint32_t)));
-        add_bytes(
-            live,
-            estimate_closed_partition_map_memory(classes));
+        add_bytes(live, classes_owned_bytes);
         if (!check_closed_partition_memory(
                 result, limits, live)) {
             return false;

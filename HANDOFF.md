@@ -1,31 +1,44 @@
 # Session Handoff
 
-**Status: Core Policy Preservation And Direct Certification is active.**
+**Status: no active implementation boundary.**
 
-Oliver selected the active
-[Core Policy Preservation And Direct Certification](docs/active/core-policy-publication-recovery.md)
-boundary on 2026-08-05 from clean commit `9b2bcfb` on
-`codex/core-policy-publication-recovery`.
+The implemented
+[Core Policy Preservation And Direct Certification](docs/archive/2026-08-05-core-policy-publication-recovery/README.md)
+milestone is archived with its plan, report, and tracked deterministic
+evidence. Its requested acceptance is not marked complete: the exact three-goal
+input was unavailable, and the single permitted pipeline-wrapper invocation
+stopped at stale API expectations before the corrected constituent suites
+passed.
 
-The milestone must localize a cross-version regression where core solving may
-select a finite policy before strict refinement, compilation, or publication
-loses it. The selected candidate will be retained before lift, compiled and
-exact-asserted directly with the existing machinery, and refined only when a
-deterministic incompatibility witness requires it. Publication still requires
-parsing, properness, complete exact-cost evaluation, zero off-policy mass, and
-global lower-bound closure for `exact` status.
+The solver now retains the core-selected policy before publication work,
+attempts the existing compiler and exact assertion directly, targets strict
+refinement only after demonstrated incompatibility/improperness/mismatch, and
+publishes only a retained certified artifact. A finite certified upper owns an
+executable witness; equal certified bounds without certified JSON are rejected;
+and `exact` additionally requires global lower-bound closure. Calculator
+presentation consumes these native stage/result fields without gaining rule or
+policy authority.
 
-No mechanics, prices, objectives, action filtering, goals, state abstraction,
-strategy vocabulary, caps, or watchdog limits may change. Routine acceptance
-runs once at the end; required compiled strategies receive 10,000 simulations;
-release WASM is rebuilt; rendered browser review remains excluded; commits are
-local-only.
+The real five-goal regression is repaired in native and release WASM under the
+unchanged caps. The recovered two-goal request publishes an exact-evaluated
+bounded policy and completes 10,000/10,000 simulations in both runtimes. The
+five-goal sample honestly retains 7,479 frozen action-cap failures and zero
+off-policy failures per runtime.
 
-Implementation has not started. The next boundary is Gate 0: recover/freeze
-the real historical exact case plus the current two- and three-goal degraded
-cases, replay byte-identical requests across matching historical/current
-engines, add bounded pipeline telemetry, and prove where the core-selected
-policy is lost.
+One requested acceptance input remains unavailable: the exact serialized
+three-goal Chaos-loop regression was absent from the supplied attachments,
+repository, and saved workspace/session artifacts. No synthetic substitute was
+used. Its real-case replay requires Oliver to supply that serialized request.
+
+The full pipeline wrapper was invoked exactly once. Its Python, data, and
+binding stages passed before five stale native API expectations stopped the
+wrapper. After that test-only correction, focused API acceptance passed
+549/549 checks, all 12 CTest targets passed, and web/WASM plus TypeScript
+acceptance passed. The wrapper was not invoked a second time.
+
+No mechanic, price, objective, action filter, goal semantic, abstraction,
+strategy vocabulary, cap, or watchdog changed. Oliver must choose the next
+implementation chunk before work resumes.
 
 ## Preceding completed milestone
 

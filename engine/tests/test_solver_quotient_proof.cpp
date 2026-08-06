@@ -860,6 +860,14 @@ independent_store_bytes(
     payload += stats.feature_tag_capacity * sizeof(std::uint32_t);
     payload += stats.arc_capacity * sizeof(ProofProjectedArc);
     payload += stats.arc_key_u64_capacity * sizeof(std::uint64_t);
+    payload += stats.projected_arc_bucket_count *
+               (sizeof(std::pair<
+                    const std::uint64_t,
+                    std::vector<std::shared_ptr<
+                        SharedProjectedArcs::Container>>>) +
+                3 * sizeof(void*));
+    payload += stats.projected_arc_bucket_pointer_capacity *
+               sizeof(std::shared_ptr<SharedProjectedArcs::Container>);
     expected[index(ProofMemoryCategory::ProofPayload)] = payload;
     expected[index(ProofMemoryCategory::Certificate)] =
         stats.use_site_capacity * sizeof(RowProofUseSite);

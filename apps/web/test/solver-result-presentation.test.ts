@@ -140,6 +140,42 @@ import {
 
 {
     const summary = solveSummary({
+        policy_available: false,
+        policy_status: "none",
+        termination: "refused_resource_cap",
+        stop_cause: "memory_cap",
+    });
+    const detail = solveTerminationDetail(summary, {
+        policy_refinement: {
+            core_policy: {
+                candidate_present: true,
+                status: "exact",
+            },
+            direct_certification: {
+                status: "resource_cap",
+                resource_cap: "max_discovered_states",
+                failure_reason: "solver exceeded max_discovered_states (200000)",
+            },
+            strict_lift: {
+                status: "resource_cap",
+                resource_cap: "max_estimated_memory_bytes",
+                failure_reason: "replay-backed closed partition reached memory cap",
+            },
+            publication: {
+                status: "none",
+            },
+        },
+    });
+    assert.match(detail, /^Core policy found;/);
+    assert.match(detail, /direct certification reached resource cap \(max_discovered_states\)/);
+    assert.match(detail, /strict refinement reached resource cap \(max_estimated_memory_bytes\)/);
+    assert.match(detail, /No executable policy was published/);
+    assert.doesNotMatch(detail, /solver found no policy/i);
+    console.log("  ok - retained core candidates report the certification stage that stopped publication");
+}
+
+{
+    const summary = solveSummary({
         converged: false,
         policy_available: true,
         policy_status: "bounded_feasible",

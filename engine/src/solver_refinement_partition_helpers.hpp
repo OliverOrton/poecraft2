@@ -146,6 +146,24 @@ ClosedPartitionKey closed_refined_key(
     return out;
 }
 
+ClosedPartitionKey closed_projection_key(
+        const std::vector<ClosedProjectionEntry>& projected) {
+    ClosedPartitionKey out;
+    out.push_back(projected.size());
+    for (const ClosedProjectionEntry& arc : projected) {
+        append_tokens(out, arc.label);
+        out.push_back(arc.successor_class.has_value() ? 1u : 0u);
+        if (arc.successor_class.has_value()) {
+            out.push_back(*arc.successor_class);
+        }
+        out.push_back(
+            std::bit_cast<std::uint64_t>(arc.probability.high));
+        out.push_back(
+            std::bit_cast<std::uint64_t>(arc.probability.low));
+    }
+    return out;
+}
+
 bool canonicalize_closed_partition_graph(
         std::vector<ClosedPartitionNode> input,
         const ClosedPartitionLimits& limits,

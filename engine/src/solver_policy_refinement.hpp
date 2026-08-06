@@ -74,6 +74,7 @@ struct PolicyLiftAdapterTelemetry {
     std::uint64_t competitive_alternatives_remaining = 0;
     std::uint64_t alternative_policy_improvements = 0;
     bool bounded_publication_retained = false;
+    bool global_lower_bound_closed = false;
     bool exact_alternative_envelope_closed = false;
     std::uint32_t local_reoptimization_rounds = 0;
     std::uint64_t local_state_action_rows_scheduled = 0;
@@ -120,11 +121,20 @@ struct RefinedPolicyCompileClass {
     FeatureSignature observation_signature;
     std::optional<SelectedAction> selected_action;
     double action_cost = 0.0;
-    std::vector<ProjectedTransition> transitions;
+    SharedProjectedTransitions transitions;
+};
+
+struct RefinedPolicyCompileParent {
+    std::uint32_t coarse_state = kNoId;
+    StableKey coarse_state_key;
+    AbstractState state;
 };
 
 struct RefinedPolicyCompileRouting {
     std::vector<RefinedPolicyCompileClass> classes;
+    std::vector<RefinedPolicyCompileParent> parents;
+    /* Call-scoped authority owned by the outer coarse CalcContext. */
+    const AbstractLayout* parent_layout = nullptr;
 };
 
 enum class CompiledPolicyAssertionStatus : std::uint8_t {
@@ -163,6 +173,28 @@ struct CompiledPolicyAssertion {
     std::uint64_t publication_peak_owned_bytes = 0;
 };
 
+/* A strict refinement already owns an exact, proper fixed-policy solve over
+ * every reachable routing class. The compiler independently proves that its
+ * emitted conditions cover those strict members without conflicting actions,
+ * and the parser still validates the ordinary strategy artifact. Reusing this
+ * witness avoids rebuilding the same expensive mechanics kernels solely to
+ * rediscover the cost that the strict fixed-policy evaluator just proved. */
+struct CompiledPolicyExactWitness {
+    bool complete = false;
+    bool proper = false;
+    bool zero_off_policy = false;
+    double exact_cost = std::numeric_limits<double>::infinity();
+    std::uint32_t reachable_states = 0;
+    std::uint64_t owned_bytes = 0;
+    std::uint64_t peak_owned_bytes = 0;
+};
+
+/* Pure final classification shared by the production assertion and focused
+ * contract tests. The supplied evaluation must already be the parsed
+ * strategy's exact result. */
+void finalize_compiled_policy_assertion(
+    CompiledPolicyAssertion& assertion);
+
 /*
  * Compile the supplied policy/layout, parse the emitted strategy through
  * simulator authority, and exact-evaluate it under the remaining solve
@@ -178,7 +210,8 @@ CompiledPolicyAssertion assert_compiled_policy_exact(
     const std::unordered_map<std::string, double>& prices,
     const SolveOptions& options,
     const std::string& strategy_name,
-    const RefinedPolicyCompileRouting* refined_routing = nullptr);
+    const RefinedPolicyCompileRouting* refined_routing = nullptr,
+    const CompiledPolicyExactWitness* exact_witness = nullptr);
 
 enum class PolicyExactLiftStatus : std::uint8_t {
     Complete = 0,
@@ -202,6 +235,7 @@ struct PolicyExactLiftCertificate {
     bool lumpable = false;
     bool policy_changed = false;
     bool coarse_value_reconciled = false;
+    bool global_lower_bound_closed = false;
     std::string failure_reason;
     std::string resource_cap;
     double exact_start_cost = std::numeric_limits<double>::infinity();

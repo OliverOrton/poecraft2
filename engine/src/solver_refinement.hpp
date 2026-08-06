@@ -6,7 +6,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <initializer_list>
 #include <limits>
+#include <memory>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -347,7 +349,10 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
     const ClosedPartitionReplayFunction& replay,
     const std::vector<std::uint32_t>& previous_partition = {},
     bool retain_member_keys = false,
-    ClosedPartitionLimits limits = {});
+    ClosedPartitionLimits limits = {},
+    bool arc_sources_absent = false,
+    const std::vector<std::optional<std::uint32_t>>*
+        known_arc_sources = nullptr);
 
 /*
  * Collision-free operation/state key for evaluator row collapse. Returns
@@ -515,6 +520,59 @@ struct ProjectedTransition {
     bool operator==(const ProjectedTransition&) const = default;
 };
 
+class SharedProjectedTransitions {
+public:
+    using Container = std::vector<ProjectedTransition>;
+    using iterator = Container::iterator;
+    using const_iterator = Container::const_iterator;
+
+    SharedProjectedTransitions() = default;
+    SharedProjectedTransitions(Container value)
+        : value_(std::make_shared<Container>(std::move(value))) {}
+    SharedProjectedTransitions(
+        std::initializer_list<ProjectedTransition> value)
+        : SharedProjectedTransitions(Container{value}) {}
+
+    bool empty() const { return value().empty(); }
+    std::size_t size() const { return value().size(); }
+    std::size_t capacity() const { return value().capacity(); }
+    const void* storage_identity() const { return value_.get(); }
+    const_iterator begin() const { return value().begin(); }
+    const_iterator end() const { return value().end(); }
+    iterator begin() { return mutable_value().begin(); }
+    iterator end() { return mutable_value().end(); }
+    void reserve(const std::size_t count) { mutable_value().reserve(count); }
+    void clear() { mutable_value().clear(); }
+    void push_back(ProjectedTransition transition) {
+        mutable_value().push_back(std::move(transition));
+    }
+    const ProjectedTransition& operator[](const std::size_t index) const {
+        return value().at(index);
+    }
+    ProjectedTransition& operator[](const std::size_t index) {
+        return mutable_value().at(index);
+    }
+    bool operator==(const SharedProjectedTransitions& other) const {
+        return value() == other.value();
+    }
+
+private:
+    std::shared_ptr<Container> value_;
+
+    const Container& value() const {
+        static const Container empty;
+        return value_ == nullptr ? empty : *value_;
+    }
+    Container& mutable_value() {
+        if (value_ == nullptr) {
+            value_ = std::make_shared<Container>();
+        } else if (value_.use_count() != 1) {
+            value_ = std::make_shared<Container>(*value_);
+        }
+        return *value_;
+    }
+};
+
 struct RefinedPolicyClass {
     std::uint32_t class_id = 0;
     std::uint32_t coarse_state = 0;
@@ -528,7 +586,7 @@ struct RefinedPolicyClass {
     FeatureSignature observation_signature;
     std::optional<SelectedAction> selected_action;
     double action_cost = 0.0;
-    std::vector<ProjectedTransition> transitions;
+    SharedProjectedTransitions transitions;
     StableKey coarse_state_key;
 };
 

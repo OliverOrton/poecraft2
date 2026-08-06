@@ -518,6 +518,7 @@ std::uint64_t refinement_result_bytes(
              sizeof(StateClassAssignment);
     bytes += result.classes.capacity() *
              sizeof(RefinedPolicyClass);
+    std::set<const void*> transition_storage;
     for (const RefinedPolicyClass& policy_class :
          result.classes) {
         bytes += stable_key_bytes(
@@ -538,8 +539,15 @@ std::uint64_t refinement_result_bytes(
             bytes += selected_action_bytes(
                 *policy_class.selected_action);
         }
-        bytes += policy_class.transitions.capacity() *
-                 sizeof(ProjectedTransition);
+        const void* identity =
+            policy_class.transitions.storage_identity();
+        if (identity != nullptr &&
+            transition_storage.insert(identity).second) {
+            bytes += sizeof(SharedProjectedTransitions::Container) +
+                     2 * sizeof(void*) +
+                     policy_class.transitions.capacity() *
+                         sizeof(ProjectedTransition);
+        }
     }
     bytes += result.counterexamples.capacity() *
              sizeof(RefinementCounterexample);
@@ -558,6 +566,12 @@ std::uint64_t refined_compile_routing_bytes(
     std::uint64_t bytes =
         routing.classes.capacity() *
         sizeof(RefinedPolicyCompileClass);
+    bytes += routing.parents.capacity() *
+             sizeof(RefinedPolicyCompileParent);
+    for (const RefinedPolicyCompileParent& parent : routing.parents) {
+        bytes += stable_key_bytes(parent.coarse_state_key);
+    }
+    std::set<const void*> transition_storage;
     for (const RefinedPolicyCompileClass& policy_class :
          routing.classes) {
         bytes += stable_key_bytes(
@@ -572,8 +586,15 @@ std::uint64_t refined_compile_routing_bytes(
             bytes += selected_action_bytes(
                 *policy_class.selected_action);
         }
-        bytes += policy_class.transitions.capacity() *
-                 sizeof(ProjectedTransition);
+        const void* identity =
+            policy_class.transitions.storage_identity();
+        if (identity != nullptr &&
+            transition_storage.insert(identity).second) {
+            bytes += sizeof(SharedProjectedTransitions::Container) +
+                     2 * sizeof(void*) +
+                     policy_class.transitions.capacity() *
+                         sizeof(ProjectedTransition);
+        }
     }
     return bytes;
 }

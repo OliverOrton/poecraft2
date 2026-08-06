@@ -104,6 +104,20 @@ action vocabulary and candidates, exact Restart/Eldritch legality,
 serialization, and low-/high-item-level session isolation. Failures name the
 base, class, and violated contract.
 
+Core-policy publication addendum: the solver now freezes the selected coarse
+policy and its identities before any strict work, compiles and exact-asserts
+that candidate first, and retains any resulting executable artifact. Strict
+refinement runs only when direct certification demonstrates a concrete
+incompatibility, improper component, or cost mismatch. A later strict failure
+cannot erase an already certified executable candidate. Publication is exact
+only when the retained artifact is proper, completely priced, has zero
+off-policy mass, reconciles with its selected value, and closes the admissible
+global lower bound. Otherwise a certified artifact remains honestly bounded.
+The final compiler returns the retained bytes that were asserted; it does not
+reconstruct a second policy after certification. The measured repair and
+cross-version evidence are archived under
+[Core Policy Preservation And Direct Certification](../archive/2026-08-05-core-policy-publication-recovery/README.md).
+
 ## Purpose
 
 The solver turns a concrete start item, a goal, an action scope, and an

@@ -1711,8 +1711,14 @@ CaseResult run_case(
                                     evaluation_started +
                                     std::chrono::seconds(10);
                                 while (!evaluation_progress.done) {
+                                    /* Match the native evaluator's bounded
+                                     * batch cadence. A one-item C-ABI step
+                                     * recomputes aggregate progress after
+                                     * every pair and makes large exact
+                                     * qualification replays needlessly
+                                     * quadratic in reporting work. */
                                     result = pc_strategy_eval_step(
-                                        handles.strategy_evaluation, 1,
+                                        handles.strategy_evaluation, 4096,
                                         &evaluation_progress, &error);
                                     if (result != PC_RESULT_OK) break;
                                     const auto now = Clock::now();

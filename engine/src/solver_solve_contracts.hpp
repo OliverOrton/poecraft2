@@ -164,6 +164,51 @@ struct PolicyRefinementTelemetry {
     std::string status = "not_run";
     /* Canonical public Solve cap name, never an internal refinement alias. */
     std::string resource_cap;
+    /* Publication pipeline stages are recorded separately so a later strict
+     * refinement refusal cannot erase the selected core-policy evidence. */
+    bool core_policy_candidate_present = false;
+    std::string core_policy_status = "not_run";
+    double core_policy_lower_bound =
+        std::numeric_limits<double>::infinity();
+    double core_policy_upper_bound =
+        std::numeric_limits<double>::infinity();
+    double core_policy_evaluated_cost =
+        std::numeric_limits<double>::infinity();
+    std::uint64_t core_policy_transition_bits_hash = 0;
+    std::uint64_t core_policy_bits_hash = 0;
+    std::uint64_t core_policy_selected_states = 0;
+    std::uint64_t core_policy_distinct_actions = 0;
+    std::string core_policy_root_action;
+    std::uint64_t core_policy_goal_identity = 0;
+    std::uint64_t core_policy_economy_identity = 0;
+    std::uint64_t core_policy_action_vocabulary_identity = 0;
+    std::uint64_t core_policy_graph_identity = 0;
+    std::uint64_t core_policy_artifact_identity = 0;
+    std::uint64_t core_policy_owned_bytes = 0;
+    std::string direct_certification_status = "not_run";
+    std::string direct_certification_failure_reason;
+    std::string direct_certification_resource_cap;
+    double direct_certification_solver_cost =
+        std::numeric_limits<double>::infinity();
+    double direct_certification_exact_cost =
+        std::numeric_limits<double>::infinity();
+    double direct_certification_offpolicy_probability =
+        std::numeric_limits<double>::infinity();
+    std::uint64_t direct_certification_reforge_work = 0;
+    std::uint64_t direct_certification_artifact_bytes = 0;
+    std::uint64_t direct_certification_peak_owned_bytes = 0;
+    bool direct_certification_executable = false;
+    bool direct_certification_proper = false;
+    bool direct_certification_cost_complete = false;
+    bool direct_certification_zero_off_policy = false;
+    bool direct_certification_cost_reconciled = false;
+    bool direct_candidate_retained = false;
+    std::string strict_lift_status = "not_run";
+    std::string strict_lift_failure_reason;
+    std::string strict_lift_resource_cap;
+    bool strict_global_lower_bound_closed = false;
+    std::string publication_status = "not_run";
+    std::string published_candidate_kind;
     std::uint64_t policy_reachable_coarse_states = 0;
     /* Cumulative strict carrier materializations across lift/re-opt passes. */
     std::uint64_t exact_states = 0;
@@ -216,6 +261,7 @@ struct PolicyRefinementTelemetry {
     std::uint64_t competitive_alternatives_remaining = 0;
     std::uint64_t alternative_policy_improvements = 0;
     bool bounded_publication_retained = false;
+    bool global_lower_bound_closed = false;
     bool exact_alternative_envelope_closed = false;
     std::uint64_t memory_bytes = 0;
     std::uint64_t peak_memory_bytes = 0;
@@ -661,6 +707,15 @@ struct SolveResult {
     SolveDiagnostics diagnostics;
     SolveOptions options;
 };
+
+namespace solve_detail {
+
+/* Returns null only when every public scalar/result-status claim has the
+ * executable artifact required to witness it. */
+const char* publication_invariant_invalid_reason(
+    const SolveResult& result);
+
+} // namespace solve_detail
 
 enum class SolvePhase {
     Expanding,

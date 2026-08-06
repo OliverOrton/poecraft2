@@ -1038,6 +1038,9 @@ void merge_adapter_telemetry(
     total.bounded_publication_retained =
         total.bounded_publication_retained ||
         pass.bounded_publication_retained;
+    total.global_lower_bound_closed =
+        total.global_lower_bound_closed ||
+        pass.global_lower_bound_closed;
     total.exact_alternative_envelope_closed =
         pass.exact_alternative_envelope_closed;
     if (!total.work_to_first_partition.has_value() &&

@@ -71,13 +71,10 @@
             return std::nullopt;
         }
         const std::uint32_t action = planner.primitive_action;
-        std::optional<StableKey> key = stable_reforge_reuse_key(
+        std::optional<StableKey> signature_key = stable_reforge_reuse_key(
             known->second.strict_state, action);
-        if (!key.has_value()) {
+        if (!signature_key.has_value()) {
             return std::nullopt;
-        }
-        if (stable_kernel_reuse_keys_.contains(*key)) {
-            return key;
         }
         refresh_strict_resource_cap(
             "strict shared-kernel reuse proof");
@@ -91,12 +88,23 @@
             !distribution.choice_options.empty()) {
             return std::nullopt;
         }
-        require_local_memory(
-            sizeof(StableKey) + 3 * sizeof(void*) +
-                stable_key_bytes(*key),
-            "strict shared-kernel reuse proof");
-        stable_kernel_reuse_keys_.insert(*key);
-        return key;
+        if (!stable_kernel_reuse_keys_.contains(*signature_key)) {
+            require_local_memory(
+                sizeof(StableKey) + 3 * sizeof(void*) +
+                    stable_key_bytes(*signature_key),
+                "strict shared-kernel reuse proof");
+            stable_kernel_reuse_keys_.insert(*signature_key);
+        }
+        /* The exact reforge memo is collision-checked by its complete
+         * preserved-base observation and returns the same immutable object
+         * for a hit. Object identity is therefore the collision-free row
+         * identity required by the refinement graph. The memo is retained
+         * for this certification lifetime, so the address cannot be reused
+         * while the graph's transient reuse index is live. */
+        return StableKey{
+            0x7063726b6f626a31ull, /* "pcrkobj1" */
+            static_cast<std::uint64_t>(
+                reinterpret_cast<std::uintptr_t>(&distribution))};
     }
 
     void note_exact_kernel_reuse() override {
@@ -256,7 +264,8 @@
             strict_->release_published_outcome_storage(
                 known->second.strict_state,
                 planner.primitive_action,
-                options_.goal_progress_gated_reforges);
+                options_.goal_progress_gated_reforges,
+                true);
         } else {
             strict_->release_option_kernel(
                 known->second.strict_state,
@@ -675,15 +684,17 @@
             const StableKey& coarse_key,
             const bool terminal,
             const FeatureSignature& features,
+            const bool witness_parent,
             const CoarsePolicyNode& policy) const {
-        if (enable_local_reoptimization_ ||
-            force_semantic_strict_identity_) return std::nullopt;
         if (terminal) {
             StableKey key{
                 0x7063727465726d31ull, /* "pcrterm1" */
                 coarse_key.size()};
             key.insert(key.end(), coarse_key.begin(), coarse_key.end());
             return key;
+        }
+        if (witness_parent || force_semantic_strict_identity_) {
+            return std::nullopt;
         }
         if (!policy.selected.has_value() ||
             policy.selected->action_id >= strict_->operators().size()) {

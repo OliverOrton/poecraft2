@@ -564,6 +564,14 @@ void run_public_solver_gate(const char* artifact_dir) {
             "\"solution_scope\":"
             "\"policy_guided_exact_refinement_bounded\"") !=
         std::string::npos;
+    const bool retained_exact_strategy =
+        solved_telemetry.find(
+            "\"publication\":{\"status\":\"exact_core_policy\","
+            "\"candidate_kind\":\"direct_compiled_core_policy\"}") !=
+            std::string::npos ||
+        solved_telemetry.find(
+            "\"candidate_kind\":\"policy_guided_exact_refinement\"}") !=
+            std::string::npos;
     PC_CHECK(
         stepped_policy_guided_refined ==
         policy_guided_refined);
@@ -616,7 +624,7 @@ void run_public_solver_gate(const char* artifact_dir) {
         pc_solver_state_value(
             solver, start_state, &start_value,
             &start_action, &error);
-    if (policy_guided_refined) {
+    if (retained_exact_strategy) {
         PC_CHECK(
             state_value_result ==
             PC_RESULT_UNSUPPORTED_FEATURE);
@@ -682,8 +690,14 @@ void run_public_solver_gate(const char* artifact_dir) {
     } else {
         PC_CHECK(solved_telemetry.find(
                      "\"policy_refinement\":{\"triggers\":0,"
-                     "\"status\":\"exact_assertion_complete\","
+                     "\"status\":\"direct_core_policy_exact\","
                      "\"resource_cap\":null") !=
+                 std::string::npos);
+        PC_CHECK(solved_telemetry.find(
+                     "\"publication\":{"
+                     "\"status\":\"exact_core_policy\","
+                     "\"candidate_kind\":"
+                     "\"direct_compiled_core_policy\"}") !=
                  std::string::npos);
     }
     PC_CHECK(solved_telemetry.find(
@@ -704,7 +718,7 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(pc_solver_memory_stats(
                  solver, &memory_after_length_query, &error) ==
              PC_RESULT_OK);
-    if (policy_refinement_triggered) {
+    if (retained_exact_strategy) {
         PC_CHECK(
             memory_after_length_query.serialized_output_bytes ==
             memory_before_compile.serialized_output_bytes);
@@ -763,7 +777,7 @@ void run_public_solver_gate(const char* artifact_dir) {
         simulation_summary.known_total_cost /
         static_cast<double>(simulation_summary.completed_runs);
     const char* policy_label =
-        policy_guided_refined ? "refined-router" : start_action;
+        retained_exact_strategy ? "exact-router" : start_action;
     std::printf(
         "solver api gate: V=%.4f empirical=%.4f (%u states, policy %s)\n",
         solve_summary.start_value, empirical, solve_summary.expanded_states,
@@ -789,7 +803,7 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(
         replacement_memory.serialized_output_bytes <=
         memory_after_strategy_copy.serialized_output_bytes);
-    if (!policy_refinement_triggered) {
+    if (!retained_exact_strategy) {
         PC_CHECK(
             replacement_memory.serialized_output_bytes <
             memory_after_strategy_copy.serialized_output_bytes);

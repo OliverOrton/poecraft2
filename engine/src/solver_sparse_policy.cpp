@@ -60,7 +60,8 @@ constexpr double kFixedPolicyRelativeTolerance = 1e-18;
 std::uint64_t append_sparse_policy_row(
         SolveTransitionCache& graph,
         std::vector<PricedSparseRow>& priced_rows,
-        const SparsePolicyRowInput& input) {
+        const SparsePolicyRowInput& input,
+        const std::optional<SharedSparseTransitionSpan> shared_transitions) {
     if (input.owner_state == kNoId) {
         throw std::invalid_argument(
             "sparse policy row has no owner state");
@@ -78,21 +79,42 @@ std::uint64_t append_sparse_policy_row(
     SparseRow row;
     row.owner_state = input.owner_state;
     row.admitted = input.admitted;
-    row.transition_offset = graph.successors.size();
-    for (const SparsePolicyTransitionInput& transition :
-         input.transitions) {
+    row.transition_offset = shared_transitions.has_value()
+                                ? shared_transitions->offset
+                                : graph.successors.size();
+    if (shared_transitions.has_value() &&
+        (shared_transitions->count != input.transitions.size() ||
+         shared_transitions->offset > graph.successors.size() ||
+         shared_transitions->count >
+             graph.successors.size() - shared_transitions->offset)) {
+        throw std::invalid_argument(
+            "shared sparse transition span does not match the row");
+    }
+    for (std::size_t index = 0; index < input.transitions.size(); ++index) {
+        const SparsePolicyTransitionInput& transition =
+            input.transitions[index];
         if (transition.successor == kNoId) {
             throw std::invalid_argument(
                 "sparse policy transition has no successor");
         }
-        graph.successors.push_back(transition.successor);
-        graph.probabilities.push_back(transition.probability);
+        if (shared_transitions.has_value()) {
+            const std::uint64_t offset =
+                shared_transitions->offset + index;
+            if (graph.successors.at(offset) != transition.successor ||
+                graph.probabilities.at(offset) != transition.probability) {
+                throw std::invalid_argument(
+                    "shared sparse transition span changed its exact row");
+            }
+        } else {
+            graph.successors.push_back(transition.successor);
+            graph.probabilities.push_back(transition.probability);
+        }
         if (transition.successor == input.owner_state) {
             row.self_probability += transition.probability;
         }
     }
     row.transition_count = static_cast<std::uint32_t>(
-        graph.successors.size() - row.transition_offset);
+        input.transitions.size());
     row.embedded_self_probability = row.self_probability;
     row.self_probability_embedded =
         row.embedded_self_probability > 0.0;
@@ -480,8 +502,10 @@ std::uint64_t sparse_policy_component_scratch_bytes(
 
 SparsePolicyComponentResult advance_sparse_policy_component(
         const SparsePolicyComponentView& view,
-        std::unique_ptr<SparsePolicyResume>& resume) {
+        std::unique_ptr<SparsePolicyResume>& resume,
+        std::vector<WideFloat>* exact_values) {
     SparsePolicyComponentResult result;
+    if (exact_values != nullptr) exact_values->clear();
     const std::size_t n = view.members.size();
     result.values.assign(n, 0.0);
 
@@ -614,6 +638,9 @@ SparsePolicyComponentResult advance_sparse_policy_component(
                 result.values.clear();
                 return result;
             }
+        }
+        if (exact_values != nullptr) {
+            *exact_values = std::move(solved_wide);
         }
         resume.reset();
         return result;
@@ -964,6 +991,9 @@ SparsePolicyComponentResult advance_sparse_policy_component(
     }
     for (std::size_t i = 0; i < n; ++i) {
         result.values[i] = x[i].value();
+    }
+    if (exact_values != nullptr) {
+        *exact_values = std::move(x);
     }
     return result;
 }

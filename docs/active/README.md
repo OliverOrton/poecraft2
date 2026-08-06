@@ -1,15 +1,14 @@
 # Active Work
 
-**Status: Core Policy Preservation And Direct Certification is active.**
+**Status: no active implementation boundary.**
 
 Parent: [Documentation map](../README.md)
 
-Oliver selected [Core Policy Preservation And Direct Certification](core-policy-publication-recovery.md)
-on 2026-08-05. The active boundary freezes the cross-version publication
-regression, retains the selected core policy before strict refinement, attempts
-existing compilation and exact assertion directly, and uses strict refinement
-only for a demonstrated incompatibility. It changes no mechanics, action
-scope, objectives, caps, state abstraction, or strategy vocabulary.
+The implemented milestone
+[Core Policy Preservation And Direct Certification](../archive/2026-08-05-core-policy-publication-recovery/README.md)
+is archived with its unavailable three-goal input and single-wrapper result
+recorded as acceptance limitations. Oliver must select the next chunk before
+implementation resumes.
 
 The completed
 [Goal-Gated Semantic Policy Routing](../archive/2026-08-04-goal-gated-semantic-policy-routing/README.md)

@@ -116,6 +116,27 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
                sizeof(std::uint32_t) +
            diagnostics.policy_refinement.status.capacity() + 1 +
            diagnostics.policy_refinement.resource_cap.capacity() + 1 +
+           diagnostics.policy_refinement.core_policy_status.capacity() + 1 +
+           diagnostics.policy_refinement.core_policy_root_action.capacity() +
+               1 +
+           diagnostics.policy_refinement
+                   .direct_certification_status.capacity() +
+               1 +
+           diagnostics.policy_refinement
+                   .direct_certification_failure_reason.capacity() +
+               1 +
+           diagnostics.policy_refinement
+                   .direct_certification_resource_cap.capacity() +
+               1 +
+           diagnostics.policy_refinement.strict_lift_status.capacity() + 1 +
+           diagnostics.policy_refinement
+                   .strict_lift_failure_reason.capacity() +
+               1 +
+           diagnostics.policy_refinement.strict_lift_resource_cap.capacity() +
+               1 +
+           diagnostics.policy_refinement.publication_status.capacity() + 1 +
+           diagnostics.policy_refinement.published_candidate_kind.capacity() +
+               1 +
            diagnostics.policy_refinement
                    .published_fallback_kind.capacity() +
                1 +
@@ -1122,6 +1143,14 @@ std::string telemetry_finite_json(const double value) {
     return buffer;
 }
 
+std::string telemetry_hex_u64(const std::uint64_t value) {
+    char buffer[17];
+    std::snprintf(
+        buffer, sizeof(buffer), "%016llx",
+        static_cast<unsigned long long>(value));
+    return buffer;
+}
+
 std::string serialize_solver_telemetry(
     const CalcContext& calc,
     const SolveResult* result,
@@ -1336,6 +1365,31 @@ std::string serialize_solver_telemetry(
     json += ",\"policy_refinement\":{";
     if (diagnostics == nullptr) {
         json += "\"triggers\":null,\"status\":null,\"resource_cap\":null";
+        json += ",\"core_policy\":{"
+                "\"candidate_present\":null,\"status\":null,"
+                "\"lower_bound\":null,\"upper_bound\":null,"
+                "\"evaluated_cost\":null,\"transition_bits_hash\":null,"
+                "\"policy_bits_hash\":null,\"selected_states\":null,"
+                "\"distinct_actions\":null,\"root_action\":null,"
+                "\"goal_identity\":null,\"economy_identity\":null,"
+                "\"action_vocabulary_identity\":null,"
+                "\"graph_identity\":null,\"artifact_identity\":null,"
+                "\"owned_bytes\":null}";
+        json += ",\"direct_certification\":{"
+                "\"status\":null,\"failure_reason\":null,"
+                "\"resource_cap\":null,\"solver_cost\":null,"
+                "\"exact_cost\":null,\"offpolicy_probability\":null,"
+                "\"reforge_work\":null,\"artifact_bytes\":null,"
+                "\"peak_owned_bytes\":null,\"executable\":null,"
+                "\"proper\":null,\"cost_complete\":null,"
+                "\"zero_off_policy\":null,\"cost_reconciled\":null,"
+                "\"candidate_retained\":null}";
+        json += ",\"strict_lift\":{"
+                "\"status\":null,\"failure_reason\":null,"
+                "\"resource_cap\":null,"
+                "\"global_lower_bound_closed\":null}";
+        json += ",\"publication\":{"
+                "\"status\":null,\"candidate_kind\":null}";
         json += ",\"policy_reachable_coarse_states\":null";
         json += ",\"exact_states\":null,\"retained_exact_states\":null";
         json += ",\"exact_classes\":null";
@@ -1370,6 +1424,7 @@ std::string serialize_solver_telemetry(
                 "\"competitive_alternatives_remaining\":null,"
                 "\"policy_improvements\":null,"
                 "\"bounded_publication_retained\":null,"
+                "\"global_lower_bound_closed\":null,"
                 "\"exact_alternative_envelope_closed\":null}";
         json += ",\"memory_bytes\":null,\"peak_memory_bytes\":null";
         json += ",\"memory_limit_bytes\":null";
@@ -1449,6 +1504,153 @@ std::string serialize_solver_telemetry(
         } else {
             append_telemetry_json_string(json, refinement.resource_cap);
         }
+        json += ",\"core_policy\":{\"candidate_present\":" +
+                std::string(bool_json(
+                    refinement.core_policy_candidate_present));
+        json += ",\"status\":";
+        append_telemetry_json_string(
+            json, refinement.core_policy_status);
+        json += ",\"lower_bound\":" +
+                telemetry_finite_json(
+                    refinement.core_policy_lower_bound);
+        json += ",\"upper_bound\":" +
+                telemetry_finite_json(
+                    refinement.core_policy_upper_bound);
+        json += ",\"evaluated_cost\":" +
+                telemetry_finite_json(
+                    refinement.core_policy_evaluated_cost);
+        json += ",\"transition_bits_hash\":";
+        append_telemetry_json_string(
+            json,
+            telemetry_hex_u64(
+                refinement.core_policy_transition_bits_hash));
+        json += ",\"policy_bits_hash\":";
+        append_telemetry_json_string(
+            json,
+            telemetry_hex_u64(refinement.core_policy_bits_hash));
+        json += ",\"selected_states\":" +
+                std::to_string(
+                    refinement.core_policy_selected_states);
+        json += ",\"distinct_actions\":" +
+                std::to_string(
+                    refinement.core_policy_distinct_actions);
+        json += ",\"root_action\":";
+        if (refinement.core_policy_root_action.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json, refinement.core_policy_root_action);
+        }
+        json += ",\"goal_identity\":";
+        append_telemetry_json_string(
+            json,
+            telemetry_hex_u64(refinement.core_policy_goal_identity));
+        json += ",\"economy_identity\":";
+        append_telemetry_json_string(
+            json,
+            telemetry_hex_u64(refinement.core_policy_economy_identity));
+        json += ",\"action_vocabulary_identity\":";
+        append_telemetry_json_string(
+            json,
+            telemetry_hex_u64(
+                refinement.core_policy_action_vocabulary_identity));
+        json += ",\"graph_identity\":";
+        append_telemetry_json_string(
+            json,
+            telemetry_hex_u64(refinement.core_policy_graph_identity));
+        json += ",\"artifact_identity\":";
+        append_telemetry_json_string(
+            json,
+            telemetry_hex_u64(refinement.core_policy_artifact_identity));
+        json += ",\"owned_bytes\":" +
+                std::to_string(refinement.core_policy_owned_bytes) + "}";
+        json += ",\"direct_certification\":{\"status\":";
+        append_telemetry_json_string(
+            json, refinement.direct_certification_status);
+        json += ",\"failure_reason\":";
+        if (refinement.direct_certification_failure_reason.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json,
+                refinement.direct_certification_failure_reason);
+        }
+        json += ",\"resource_cap\":";
+        if (refinement.direct_certification_resource_cap.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json, refinement.direct_certification_resource_cap);
+        }
+        json += ",\"solver_cost\":" +
+                telemetry_finite_json(
+                    refinement.direct_certification_solver_cost);
+        json += ",\"exact_cost\":" +
+                telemetry_finite_json(
+                    refinement.direct_certification_exact_cost);
+        json += ",\"offpolicy_probability\":" +
+                telemetry_finite_json(
+                    refinement
+                        .direct_certification_offpolicy_probability);
+        json += ",\"reforge_work\":" +
+                std::to_string(
+                    refinement.direct_certification_reforge_work);
+        json += ",\"artifact_bytes\":" +
+                std::to_string(
+                    refinement.direct_certification_artifact_bytes);
+        json += ",\"peak_owned_bytes\":" +
+                std::to_string(
+                    refinement.direct_certification_peak_owned_bytes);
+        json += ",\"executable\":" +
+                std::string(bool_json(
+                    refinement.direct_certification_executable));
+        json += ",\"proper\":" +
+                std::string(bool_json(
+                    refinement.direct_certification_proper));
+        json += ",\"cost_complete\":" +
+                std::string(bool_json(
+                    refinement.direct_certification_cost_complete));
+        json += ",\"zero_off_policy\":" +
+                std::string(bool_json(
+                    refinement.direct_certification_zero_off_policy));
+        json += ",\"cost_reconciled\":" +
+                std::string(bool_json(
+                    refinement.direct_certification_cost_reconciled));
+        json += ",\"candidate_retained\":" +
+                std::string(bool_json(
+                    refinement.direct_candidate_retained)) + "}";
+        json += ",\"strict_lift\":{\"status\":";
+        append_telemetry_json_string(
+            json, refinement.strict_lift_status);
+        json += ",\"failure_reason\":";
+        if (refinement.strict_lift_failure_reason.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json, refinement.strict_lift_failure_reason);
+        }
+        json += ",\"resource_cap\":";
+        if (refinement.strict_lift_resource_cap.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json, refinement.strict_lift_resource_cap);
+        }
+        json += ",\"global_lower_bound_closed\":" +
+                std::string(bool_json(
+                    refinement.strict_global_lower_bound_closed)) +
+                "}";
+        json += ",\"publication\":{\"status\":";
+        append_telemetry_json_string(
+            json, refinement.publication_status);
+        json += ",\"candidate_kind\":";
+        if (refinement.published_candidate_kind.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json, refinement.published_candidate_kind);
+        }
+        json += "}";
         json += ",\"policy_reachable_coarse_states\":" +
                 std::to_string(
                     refinement.policy_reachable_coarse_states);
@@ -1576,6 +1778,9 @@ std::string serialize_solver_telemetry(
         json += ",\"bounded_publication_retained\":" +
                 std::string(bool_json(
                     refinement.bounded_publication_retained));
+        json += ",\"global_lower_bound_closed\":" +
+                std::string(bool_json(
+                    refinement.global_lower_bound_closed));
         json += ",\"exact_alternative_envelope_closed\":" +
                 std::string(bool_json(
                     refinement.exact_alternative_envelope_closed)) +

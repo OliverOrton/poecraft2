@@ -807,6 +807,8 @@ class CalcContext {
         std::uint64_t max_reforge_work,
         bool reserve_storage = true,
         std::optional<std::uint64_t> max_owned_bytes = std::nullopt);
+    void refresh_solve_owned_bytes_cap(
+        std::optional<std::uint64_t> max_owned_bytes);
     void consume_reforge_work(
         std::uint64_t active_amount,
         std::uint64_t logical_v1_amount);
@@ -836,13 +838,14 @@ class CalcContext {
         std::uint32_t state_id,
         std::uint32_t action_index,
         bool goal_progress_gated = false);
-    /* Release one published primitive row and, when that row is backed by a
-     * retained stable reforge memo, release only that memo's payload. Other
-     * already-paid transition rows remain available to the solve. */
+    /* Release one published primitive row. Policy certification may retain
+     * an immutable shared reforge memo after dropping the state-local cache
+     * entry so a later exact carrier can reuse already-paid work. */
     void release_published_outcome_storage(
         std::uint32_t state_id,
         std::uint32_t action_index,
-        bool goal_progress_gated = false);
+        bool goal_progress_gated = false,
+        bool retain_stable_shared_kernel = false);
     void release_option_kernel(
         std::uint32_t state_id,
         std::uint32_t operator_index);

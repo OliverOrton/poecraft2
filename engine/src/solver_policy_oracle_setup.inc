@@ -246,6 +246,13 @@
         return known->second.strict_state;
     }
 
+    std::uint32_t quotient_canonical_locator(
+            const std::uint32_t strict_state) {
+        auto [exact, inserted] = intern_strict_state(strict_state);
+        (void)inserted;
+        return known_.at(exact.stable_key).strict_state;
+    }
+
     ExactState quotient_materialize_locator(
             const std::uint32_t strict_state) {
         auto [state, inserted] = intern_strict_state(strict_state);
@@ -672,6 +679,28 @@
             "proof-carrying quotient carrier has no certified admitted row");
     }
 
+    std::optional<StableKey> quotient_selected_compact_row_identity(
+            const ExactState& state) {
+        if (state.terminal) return std::nullopt;
+        const std::optional<SelectedAction> selected =
+            selected_action(state);
+        if (!selected.has_value()) return std::nullopt;
+        std::optional<StableKey> identity =
+            exact_kernel_reuse_key(state, *selected);
+        if (!identity.has_value()) return std::nullopt;
+        const StableKey runtime =
+            canonical_selected_runtime_contract_identity(*selected);
+        identity->push_back(selected->semantic_key.size());
+        identity->insert(
+            identity->end(), selected->semantic_key.begin(),
+            selected->semantic_key.end());
+        identity->push_back(runtime.size());
+        identity->insert(
+            identity->end(), runtime.begin(), runtime.end());
+        release_published_kernel_storage(state, *selected);
+        return identity;
+    }
+
     void quotient_install_streamed_recipe(
             const SelectedAction& selected,
             const ExactChoiceRecipe& recipe) {
@@ -996,6 +1025,34 @@
                 remaining_options.max_reforge_work);
         remaining_options.max_reforge_work -=
             strict_reforge_work;
+        /* Strict discovery temporarily narrows the child CalcContext budget
+         * while partition scratch is live.  That scratch has been released
+         * before artifact construction, and required_before_lift plus the
+         * refined routing above have already debited every still-live
+         * external owner.  Refresh the child to exactly that accounted
+         * remainder so a stale earlier peak cannot masquerade as the public
+         * max_solver_owned_bytes cap. */
+        strict_->set_solve_resource_caps(
+            std::max<std::uint32_t>(1, limits_.max_exact_states),
+            remaining_options.max_reforge_work,
+            false,
+            remaining_options.max_solver_owned_bytes);
+        strict_->refresh_solve_owned_bytes_cap(
+            remaining_options.max_solver_owned_bytes);
+        CompiledPolicyExactWitness exact_witness;
+        exact_witness.complete =
+            evaluation.status == PolicyEvaluationStatus::Complete &&
+            evaluation.converged &&
+            evaluation.start_values.size() == 1;
+        exact_witness.proper = evaluation.proper;
+        exact_witness.zero_off_policy = exact_witness.complete;
+        if (exact_witness.complete) {
+            exact_witness.exact_cost = evaluation.start_values.front();
+        }
+        exact_witness.reachable_states = evaluation.reachable_classes;
+        exact_witness.owned_bytes = evaluation.estimated_memory_bytes;
+        exact_witness.peak_owned_bytes =
+            evaluation.peak_estimated_memory_bytes;
         CompiledPolicyAssertion compiled =
             assert_compiled_policy_exact(
             *strict_,
@@ -1003,7 +1060,8 @@
             prices_,
             remaining_options,
             strategy_name,
-            &refined_routing);
+            &refined_routing,
+            &exact_witness);
         std::uint64_t publication_compile_peak =
             required_before_lift;
         saturating_add(

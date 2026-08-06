@@ -18,7 +18,7 @@ namespace quotient {
 struct QuotientBellmanCellInput {
     std::uint32_t cell_id = 0;
     std::uint64_t generation = 0;
-    StableKey semantic_identity;
+    SharedStableKey semantic_identity;
     bool terminal = false;
 
     bool operator==(const QuotientBellmanCellInput&) const = default;
@@ -133,6 +133,12 @@ public:
         std::uint32_t max_component_iterations = 100000,
         double improvement_epsilon = 1e-12);
 
+    /* Structural selected-policy projection only. This deliberately makes no
+     * properness or executable claim; exact evaluation and compiled assertion
+     * remain the publication authorities. */
+    QuotientBellmanResult project_unique_certified_policy(
+        const std::vector<std::uint32_t>& entry_cell_ids) const;
+
     const SolveTransitionCache& transition_cache() const {
         return transition_cache_;
     }
@@ -152,6 +158,14 @@ public:
                    ? std::optional<std::uint32_t>{cell_by_state_[state]}
                    : std::nullopt;
     }
+    const StableKey& semantic_identity_for_cell(
+            const std::uint32_t cell_id) const {
+        return cells_.at(cell_id).cell.semantic_identity.value();
+    }
+    const SharedStableKey& shared_semantic_identity_for_cell(
+            const std::uint32_t cell_id) const {
+        return cells_.at(cell_id).cell.semantic_identity;
+    }
     std::shared_ptr<ProofStore> proof_store() const {
         return transition_cache_.quotient_proofs;
     }
@@ -169,6 +183,8 @@ private:
     std::map<std::uint32_t, CellRecord> cells_;
     std::vector<std::uint32_t> cell_by_state_;
     std::vector<std::vector<std::uint32_t>> reverse_predecessors_;
+    std::map<std::uint64_t, std::vector<std::uint64_t>>
+        transition_span_buckets_;
     std::uint64_t action_generation_ = 1;
     std::uint64_t admission_generation_ = 1;
     std::uint64_t external_row_kernel_bytes_ = 0;

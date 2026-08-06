@@ -1,0 +1,139 @@
+{
+  "schema_version": "core_policy_publication_recovery_v1",
+  "acceptance_status": "incomplete",
+  "acceptance_limitations": [
+    "the exact requested three-goal serialized input was unavailable",
+    "the single permitted full-pipeline wrapper invocation stopped at stale native API assertions before post-fix constituent acceptance passed"
+  ],
+  "starting_commit": "9b2bcfb82c694df0a77858c8c63fdae20d8b4f68",
+  "boundary_commit": "18a87a07aee942b04624f89ee2c8f2d087c4df9e",
+  "artifact": {
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "source_data_hash": "93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615",
+    "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "strings_sha256": "654a55489b47740672aea5a27ef52f01e23efc3bf5ce337be5a58756b72f955c",
+    "release_wasm_sha256": "5cd3fa531abb4c0bc0afc094b9831d6a6c1bbf93db5317ef19d2d5899dfab2ad"
+  },
+  "frozen_inputs": {
+    "primary": {
+      "id": "runic-gauntlets-partial-five",
+      "base": "Metadata/Items/Armours/Gloves/GlovesExpedition3",
+      "item_level": 86,
+      "start_mods": [
+        "AddedPhysicalDamage4",
+        "LifeRegeneration8_",
+        "ReducedLocalAttributeRequirements2",
+        "LocalBaseWardAndLife2"
+      ],
+      "added_goal": "ColdResistance:any_tier",
+      "priced_actions": ["chaos", "exalt", "annul", "scour", "restart"],
+      "economy": {"base": 1.0, "chaos": 1.0, "exalt": 6.49, "annul": 29.91, "scour": 1.19},
+      "caps": {"states": 200000, "rows": 1215000, "transitions": 10000000, "reforge_work": 20000000, "owned_bytes": 1073741824},
+      "verification": {"runs": 10000, "seed": 20260806, "max_actions_per_run": 100000}
+    },
+    "two_goal": {
+      "id": "dire-pelt-two-t1-original",
+      "base": "Metadata/Items/Armours/Helmets/HelmetDex11",
+      "item_level": 86,
+      "start_mods": [],
+      "goals": ["ItemFoundRarityIncreasePrefix3:T1", "IncreasedLife9:T1"],
+      "priced_action_count": 23,
+      "economy_snapshot_sha256": "9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+      "caps": {"states": 100000, "rows": 1000000, "transitions": 10000000, "reforge_work": 10000000, "owned_bytes": 1073741824},
+      "verification": {"runs": 10000, "seed": 20260806, "max_actions_per_run": 1000000}
+    },
+    "frontend_option_difference": {
+      "historical_goal_progress_gated_reforges": false,
+      "current_goal_progress_gated_reforges": true
+    }
+  },
+  "gate0": {
+    "historical_primary_wasm": {
+      "status": "exact",
+      "value": 984705.7127622988,
+      "transition_bits_hash": "d3300c001dda774c",
+      "policy_bits_hash": "d030150696da20a8",
+      "compiled": {"nodes": 936, "edges": 2140, "json_bytes": 2999738}
+    },
+    "current_before_repair": {
+      "core_value": 984705.71276229876,
+      "transition_bits_hash": "d3300c001dda774c",
+      "policy_bits_hash": "d030150696da20a8",
+      "expanded_states": 937,
+      "policy_sweeps": 6,
+      "final_status": "refused_resource_cap",
+      "strict_resource_cap": "max_reforge_work",
+      "strict_logical_reforge_work": 19051550,
+      "public_policy": false
+    },
+    "conclusion": "the current core policy was unchanged and was lost after core search during mandatory strict refinement/publication"
+  },
+  "final_qualifications": {
+    "primary": {
+      "core": {"value": 984705.71276229876, "transition_bits_hash": "d3300c001dda774c", "policy_bits_hash": "d030150696da20a8", "selected_states": 935, "distinct_actions": 3, "artifact_identity": "402dc7016a5697cc"},
+      "direct": {"status": "improper_policy", "exact_cost": 121.66891655289717, "off_policy_probability": 0.83735237141173724, "executable": false},
+      "strict": {"status": "complete", "states": 19503, "classes": 19501, "transitions": 350906, "kernels": 19035, "global_lower_bound_closed": false},
+      "publication": {"status": "bounded_strict_policy", "candidate_kind": "policy_guided_exact_refinement", "upper": 923509.24399211595, "nodes": 195, "edges": 723, "json_bytes": 358092, "native_strategy_sha256": "9a5e2790327d7805fe965c8a7534a57072cfc8b3bda31d0dfcdceaa7b5ae8bcb"},
+      "native_exact": {"status": "matched", "cost": 923509.244023527, "success_probability": 1.0, "off_policy_mass": 0.0},
+      "native_simulation": {"runs": 10000, "successes": 2521, "action_cap_failures": 7479, "off_policy_failures": 0, "mean_cost": 96248.82788500404, "frozen_minimum_success_expectation_met": false},
+      "wasm": {"upper": 923509.243992116, "exact_cost": 923509.244023527, "success_probability": 1.0, "off_policy_mass": 0.0, "nodes": 195, "edges": 723, "json_bytes": 358092, "simulations": 10000, "successes": 2521, "action_cap_failures": 7479, "off_policy_failures": 0, "worker_max_slice_ms": 157.824, "process_working_set_peak_bytes": 2326638592, "wasm_heap_growth_bytes": 1518141440, "frozen_minimum_success_expectation_met": false}
+    },
+    "two_goal": {
+      "native_core": {"value": 240.49226451842537, "transition_bits_hash": "c5d91b791cc063ac", "policy_bits_hash": "e4b3e825e1435f37", "selected_states": 147, "distinct_actions": 6, "artifact_identity": "fda90270aa3f0f10"},
+      "native_direct": {"status": "cost_mismatch", "exact_cost": 232.02487923415782, "off_policy_probability": 0.0, "executable": true, "proper": true, "cost_complete": true},
+      "native_strict": {"status": "complete", "states": 4027, "classes": 4027, "transitions": 50104, "kernels": 4005, "global_lower_bound_closed": false},
+      "native_publication": {"status": "bounded_strict_policy", "upper": 232.02487923416101, "exact_cost": 232.02487923415782, "success_probability": 0.9999999999991992, "off_policy_mass": 0.0, "nodes": 18, "edges": 50, "json_bytes": 98067, "strategy_sha256": "1f935c82416a50005f608f314aedfab4adc0de75675756131a2d918dbbfb787f"},
+      "native_simulation": {"runs": 10000, "successes": 10000, "failures": 0, "off_policy_failures": 0, "mean_cost": 228.8322602500004},
+      "wasm": {"upper": 232.02487923461015, "exact_cost": 232.02487923461, "success_probability": 1.000000000000828, "off_policy_mass": 0.0, "strict_states": 4051, "strict_classes": 4051, "strict_transitions": 86320, "nodes": 25, "edges": 77, "json_bytes": 134762, "simulations": 10000, "successes": 10000, "failures": 0, "off_policy_failures": 0, "mean_cost": 228.83226025, "worker_max_slice_ms": 59.068, "process_working_set_peak_bytes": 2077581312, "wasm_heap_growth_bytes": 1109852160},
+      "platform_note": "native and WASM exact costs agree within the frozen tolerance; a floating-point tie selects structurally different but independently certified strict graphs"
+    }
+  },
+  "missing_required_input": {
+    "id": "three_goal_chaos_loop_regression",
+    "status": "not_available",
+    "searched": ["supplied attachments", "repository", "saved workspace/session artifacts"],
+    "reason": "the exact serialized request was absent; inventing mechanics, start state, prices, goal, or action scope was forbidden",
+    "synthetic_substitute_used": false
+  },
+  "focused_acceptance": {
+    "native_build": "passed",
+    "policy_refinement": {"checks": 4875, "failures": 0},
+    "compiler": {"checks": 791, "failures": 0},
+    "exact_evaluator": {"checks": 16761, "failures": 0},
+    "quotient_proof": {"checks": 357, "failures": 0},
+    "solve": {"checks": 98247, "failures": 0},
+    "release_wasm": "passed",
+    "npm_test": "passed",
+    "typescript_no_emit": "passed",
+    "full_test_pipeline_once": {
+      "invocations": 1,
+      "status": "failed_stale_solver_api_assertions",
+      "passed_before_failure": [
+        "ingest_tests",
+        "economy_tests",
+        "canonical_database_validation",
+        "spec_fixture_validation",
+        "runtime_artifact_compile_validate",
+        "python_binding_tests"
+      ],
+      "native_api_failures": 5,
+      "post_fix_solver_api": {"checks": 549, "failures": 0},
+      "post_fix_ctest": {"targets": 12, "failures": 0},
+      "post_fix_benchmark_corpus_validation": "passed_in_ctest",
+      "wrapper_rerun": false,
+      "wrapper_rerun_reason": "preserved the exactly-once invocation constraint"
+    },
+    "rendered_browser_review": "not_run_by_instruction"
+  },
+  "unchanged_contracts": {
+    "crafting_mechanics": true,
+    "prices": true,
+    "objectives": true,
+    "action_filtering": true,
+    "goal_semantics": true,
+    "state_abstraction": true,
+    "strategy_vocabulary": true,
+    "resource_caps": true,
+    "watchdogs": true
+  }
+}
