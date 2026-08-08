@@ -1,14 +1,20 @@
 # Active Work
 
-**Status: no active implementation boundary.**
+**Status: Verified Best Executable Strategy Publication is active.**
 
 Parent: [Documentation map](../README.md)
 
-The implemented milestone
+Oliver selected
+[Verified Best Executable Strategy Publication](verified-best-policy-publication.md)
+on 2026-08-08. The milestone restores every eligible incumbent, independently
+evaluates the exact final JSON graph for every publication path, normalizes
+bounds centrally, and publishes the cheapest verified strategy without
+weakening exactness or changing solver/mechanic scope.
+
+The implemented
 [Core Policy Preservation And Direct Certification](../archive/2026-08-05-core-policy-publication-recovery/README.md)
-is archived with its unavailable three-goal input and single-wrapper result
-recorded as acceptance limitations. Oliver must select the next chunk before
-implementation resumes.
+milestone remains the preceding candidate-retention and direct-certification
+authority.
 
 The completed
 [Goal-Gated Semantic Policy Routing](../archive/2026-08-04-goal-gated-semantic-policy-routing/README.md)

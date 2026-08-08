@@ -1,6 +1,37 @@
 # Session Handoff
 
-**Status: no active implementation boundary.**
+**Status: Verified Best Executable Strategy Publication is active.**
+
+Oliver selected the active
+[Verified Best Executable Strategy Publication](docs/active/verified-best-policy-publication.md)
+boundary on 2026-08-08 from clean commit `c2d47d8` on
+`codex/verified-best-policy-publication`.
+
+The solver must publish the cheapest independently evaluated executable final
+JSON graph found during a solve. Its final graph cost is the authoritative
+upper; exact status additionally requires a matching valid global lower-bound
+certificate. Cost mismatch blocks optimality rather than executability.
+
+The milestone restores every retained incumbent on non-exact exits, debits
+only direct-certification reforge work actually consumed, independently
+evaluates direct/strict/fallback graphs, centralizes bound normalization and
+publication invariants, compares all verified portfolio candidates, and adds
+bounded diagnostics for strict mapping and exact-evaluator memory refusals.
+
+No mechanic, goal, price, action filtering, Bellman comparison, abstraction,
+cap, tolerance, strategy vocabulary, watchdog, or simulator action limit may
+change. Routine acceptance runs once at the end, required compiled strategies
+receive 10,000 simulations, release WASM is rebuilt, rendered review remains
+excluded, and commits are local-only.
+
+Implementation has not started. The next boundary is Gate 0: freeze or reuse
+provenance-matched evidence for the named reliability/natural-T1 cases and the
+Dire Pelt, Runic Gauntlets, and direct one-goal controls; then map the current
+candidate restoration, resource transfer, final-graph evaluation, bound
+normalization, portfolio selection, and diagnostic ownership before editing
+production source.
+
+## Preceding completed milestone
 
 The implemented
 [Core Policy Preservation And Direct Certification](docs/archive/2026-08-05-core-policy-publication-recovery/README.md)
