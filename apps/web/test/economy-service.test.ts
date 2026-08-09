@@ -339,3 +339,66 @@ test("browser verification accepts the Python canonical hash fixture", async () 
     ) as EconomySnapshot;
     await verifyEconomySnapshot(snapshot, snapshot.metadata.content_sha256!);
 });
+
+test("checked-in publication defaults to Allflame and preserves archived Mirage selection", async () => {
+    const economyRoot = new URL("../public/economy/", import.meta.url);
+    const index = JSON.parse(
+        readFileSync(new URL("league-index.json", economyRoot), "utf8"),
+    ) as LeagueIndex;
+    const fetcher = async (input: string | URL): Promise<Response> => {
+        const url = new URL(String(input));
+        const file = url.pathname.endsWith("/league-index.json")
+            ? new URL("league-index.json", economyRoot)
+            : new URL(`snapshots/${url.pathname.split("/").at(-1)}`, economyRoot);
+        try {
+            return new Response(readFileSync(file, "utf8"), {
+                status: 200,
+                headers: { "content-type": "application/json" },
+            });
+        } catch {
+            return new Response("missing", { status: 404 });
+        }
+    };
+
+    const fresh = new EconomyService({
+        indexUrl: "https://economy.test/league-index.json",
+        fetch: fetcher,
+        storage: new TestStorage(),
+        cache: new MemoryEconomyCache(),
+        broadcast: false,
+    });
+    await fresh.initialize();
+    assert.equal(fresh.getState().selectedProfile, "allflame");
+    const pinned = fresh.pin(["chaos", "fracture"]);
+    assert.equal(
+        pinned.sourceSnapshotId,
+        "economy:allflame:a122cad9494aa3361016b6f9c542e029e7aa1465de6d04bd6b5b150b5d26c485",
+    );
+    assert.equal(pinned.snapshot.prices.chaos, 1);
+    assert.equal(pinned.snapshot.prices.fracture, 403.9);
+
+    const historicalStorage = new TestStorage();
+    historicalStorage.setItem("poecraft.economy.selected.v1", "mirage");
+    const historical = new EconomyService({
+        indexUrl: "https://economy.test/league-index.json",
+        fetch: fetcher,
+        storage: historicalStorage,
+        cache: new MemoryEconomyCache(),
+        broadcast: false,
+    });
+    await historical.initialize();
+    assert.equal(historical.getState().selectedProfile, "mirage");
+    assert.equal(
+        historical.pin().sourceSnapshotId,
+        "economy:mirage:9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+    );
+
+    assert.ok(
+        index.leagues.some(
+            (league) =>
+                league.league_key === "mirage" &&
+                !league.active &&
+                league.archived,
+        ),
+    );
+});

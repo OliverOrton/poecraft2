@@ -6,10 +6,12 @@ secrets still control activation.
 
 Parent: [Economy](README.md)
 
-Verified against code: 2026-07-19 @ d5e38e3. Scope:
+Verified against code and local publication: 2026-08-09 @ e810a9f plus the
+Allflame data refresh. Scope:
 `.github/workflows/economy-refresh.yml`, the checkpoint module, CLI commands,
-and publication ordering. External buckets, credentials, provider responses,
-DNS/CDN state, and a live workflow run were not verified.
+publication ordering, live provider responses, and local staged publication.
+External buckets, credentials, DNS/CDN state, and a live workflow run were not
+activated or verified.
 
 ## Workflow
 
@@ -78,10 +80,17 @@ py -3 -m poecraft_economy publish --output data/economy/published
 These commands are documented operations; they were not run during the
 documentation restructuring.
 
+The 2026-08-09 Allflame refresh deliberately used a new database, raw-response
+root, and staging output under the operating-system temporary directory. It
+did not read publication state from `data/economy/poecraft-economy.db`, upload
+to R2, alter Cloudflare resources, or replace any external index. The validated
+local output was merged into `apps/web/public/economy` only after every
+index-selected content hash resolved to a matching immutable snapshot.
+
 ## Current Coverage Warning
 
-The scheduled refresh selects only `CategoryCapability.required` entries. At
-d5e38e3 those are Currency, Fossil, Resonator, and Essence. Beast is optional,
+The scheduled refresh selects only `CategoryCapability.required` entries.
+Those are Currency, Fossil, Resonator, and Essence. Beast is optional,
 so the implemented Imprint mapping does not receive a scheduled Craicic
 Chimeral quote even after R2 activation. Rare beasts are manual-only. See
 [Economy Data](data.md) and [Economy Notes](NOTES.md).

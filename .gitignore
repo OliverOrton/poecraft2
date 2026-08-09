@@ -51,8 +51,7 @@ __pycache__/
 # Generated web data bundle (rebuilt by apps/web predev/prebuild)
 /apps/web/public/poecraft-data.json
 
-# Locally published economy artifacts served at /economy in dev
-/apps/web/public/economy/
+# Checked-in product economy publication served at /economy in dev
 
 # OS cruft
 Thumbs.db

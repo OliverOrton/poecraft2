@@ -4,10 +4,10 @@
 
 Parent: [Economy](README.md)
 
-Verified against code: 2026-07-19 @ d5e38e3. Scope:
-`tools/economy`, the economy schema/catalog/fixtures, static publication, and
-the web economy service. No live network refresh or external storage check was
-performed.
+Verified against code and data: 2026-08-09 @ e810a9f plus the Allflame live
+refresh. Scope: `tools/economy`, the economy schema/catalog/fixtures, isolated
+live ingest, checked-in static publication, the web economy service, and one
+native pricing smoke. No external storage activation was performed.
 
 ## Separation And Ownership
 
@@ -17,7 +17,9 @@ Crafting rules and prices have different authorities and lifecycles:
 - `data/economy/poecraft-economy.db` is the ignored canonical local economy
   store;
 - `data/economy/raw/<source>/<sha256>.json` stores exact fetched bytes;
-- published snapshots and the league index are derived static JSON; and
+- published snapshots and the league index are derived static JSON, with the
+  current local product publication checked in under
+  `apps/web/public/economy`; and
 - the engine consumes an immutable v1 economy but never fetches market data.
 
 The Python package lives under `tools/economy/poecraft_economy`. Its CLI
@@ -128,6 +130,54 @@ visible stale/error entry rather than acquiring empty or zero prices.
 
 Code authority: `core.py::_snapshot_content`, `_compile_snapshot`,
 `publish_artifacts`, and the JSON schemas under `schemas/economy/`.
+
+### 2026-08-09 Allflame publication
+
+The product snapshot was built from a fresh database and raw-response root
+outside `data/economy`, published to an isolated staging directory, validated,
+and only then copied into the checked-in static publication. The fixture-backed
+`data/economy/poecraft-economy.db` was not used.
+
+| League | State | Snapshot content hash | Cutoff | Priced / missing / low |
+| --- | --- | --- | --- | --- |
+| Allflame | active temporary softcore | `a122cad9494aa3361016b6f9c542e029e7aa1465de6d04bd6b5b150b5d26c485` | `2026-08-09T16:44:10Z` | 861 / 585 / 28 |
+| Hardcore Allflame | active temporary hardcore | `b199684d293012331b8d4a57dea44a1f7241d5d4664ba6579de94848d82f0cff` | `2026-08-09T16:44:10Z` | 797 / 649 / 98 |
+| Standard | active permanent | `ff59e7f60886430318976be46a4ea971fc20c8381274be2ef18c8a92193feb82` | `2026-08-09T16:44:10Z` | 794 / 652 / 256 |
+| Hardcore | active permanent, stale | `49d5d98e06d6271a6d799a7cee2b8c79f3b7d0319321ed9df90289033a6db615` | `2026-07-15T21:08:07Z` | 271 / 1175 / 270 |
+
+The Allflame snapshot contains all core currency action keys, 25 Fossil keys,
+4 Resonator keys, 101 Essence keys, and the derived canonical key
+`harvest_reforge:defences`. It does not contain the stale singular
+`harvest_reforge:defence`. Every absent supported/manual key is listed in
+`metadata.missing_keys`; specifically, no Beast, rare-beast, or base price was
+invented.
+
+Representative chaos-equivalent prices changed as follows from the preserved
+Mirage snapshot/raw evidence to Allflame:
+
+| Representative price | Mirage | Allflame |
+| --- | ---: | ---: |
+| Divine Orb | 643.8 | 211.5 |
+| Exalted Orb (`exalt`) | 6.49 | 1.8 |
+| Orb of Annulment (`annul`) | 29.91 | 9.48 |
+| Fracturing Orb (`fracture`) | 431.4 | 403.9 |
+| Eldritch Chaos Orb | 96.06 | 38.96 |
+| Eldritch Orb of Annulment | 80.9 | 40.08 |
+| Dense Fossil | 13.75 | 11.63 |
+| Deafening Essence of Greed | 7.7 | 2.23 |
+
+The narrow validation commands are:
+
+```powershell
+$env:PYTHONPATH = "tools/ingest;tools/economy"
+py -3 -m poecraft_economy validate --database <isolated-economy.db> --json
+py -3 -m unittest discover -s tools/economy/tests -p "test_*.py"
+
+Set-Location apps/web
+npx tsx test/economy-service.test.ts
+npx tsc --noEmit
+npx tsx test/allflame-economy-smoke.ts
+```
 
 ## Retention
 
