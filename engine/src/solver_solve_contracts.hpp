@@ -283,6 +283,17 @@ struct PolicyRefinementTelemetry {
     std::uint64_t published_fallback_witness_hash = 0;
     std::string published_fallback_kind;
     std::string preferred_publication_failure_reason;
+    /* Complete JSON objects, bounded jointly by diagnostic sample count and
+     * one quarter of the telemetry byte cap. */
+    std::vector<std::string> publication_candidate_samples;
+    std::uint64_t publication_candidate_samples_omitted = 0;
+    std::uint64_t publication_candidate_sample_bytes = 0;
+    std::vector<std::string> structural_failure_samples;
+    std::uint64_t structural_failure_samples_omitted = 0;
+    std::uint64_t structural_failure_sample_bytes = 0;
+    std::vector<std::string> evaluator_memory_samples;
+    std::uint64_t evaluator_memory_samples_omitted = 0;
+    std::uint64_t evaluator_memory_sample_bytes = 0;
     /* Exact-state interner reuse is not an identity-destruction collapse. */
     std::uint64_t exact_state_reuses = 0;
     std::uint64_t collapse_events = 0;
@@ -709,6 +720,10 @@ struct SolveResult {
 };
 
 namespace solve_detail {
+
+/* One final normalizer shared by direct, strict, and fallback publication.
+ * Equality without Exact status is not a global closure certificate. */
+void normalize_publication_result(SolveResult& result);
 
 /* Returns null only when every public scalar/result-status claim has the
  * executable artifact required to witness it. */

@@ -61,7 +61,8 @@ CompiledPolicyAssertion assert_compiled_policy_exact(
         const SolveOptions& options,
         const std::string& strategy_name,
         const RefinedPolicyCompileRouting* refined_routing,
-        const CompiledPolicyExactWitness* exact_witness) {
+        const std::string* emitted_strategy_json,
+        const PolicyCompilationTelemetry* emitted_compilation) {
     CompiledPolicyAssertion result;
     result.solver_cost = solved.evaluated_policy_cost;
     if (!solved.policy_available) {
@@ -100,11 +101,27 @@ CompiledPolicyAssertion assert_compiled_policy_exact(
     const bool json_limited_by_memory =
         compilation_json_limit <
         options.max_strategy_json_bytes;
-    try {
-        result.strategy_json = compile_policy_strategy_json(
-            coarse, solved, strategy_name, &result.compilation,
-            compilation_json_limit, refined_routing,
-            compilation_memory);
+    if (emitted_strategy_json != nullptr) {
+        if (emitted_strategy_json->empty()) {
+            result.status =
+                CompiledPolicyAssertionStatus::CompilationFailure;
+            result.failure_reason =
+                "precompiled policy assertion received empty JSON";
+            return result;
+        }
+        if (emitted_strategy_json->size() > compilation_json_limit) {
+            result.status = CompiledPolicyAssertionStatus::ResourceCap;
+            result.resource_cap = json_limited_by_memory
+                ? "max_solver_owned_bytes"
+                : "max_strategy_json_bytes";
+            result.failure_reason =
+                "precompiled policy reached " + result.resource_cap;
+            return result;
+        }
+        result.strategy_json = *emitted_strategy_json;
+        if (emitted_compilation != nullptr) {
+            result.compilation = *emitted_compilation;
+        }
         {
             std::uint64_t live =
                 result.retained_solver_bytes;
@@ -118,53 +135,95 @@ CompiledPolicyAssertion assert_compiled_policy_exact(
                     result.publication_peak_owned_bytes,
                     live);
         }
-        if (!result.compilation.cap_hit.empty()) {
-            result.status =
-                CompiledPolicyAssertionStatus::ResourceCap;
+    } else {
+        try {
+            result.strategy_json = compile_policy_strategy_json(
+                coarse, solved, strategy_name, &result.compilation,
+                compilation_json_limit, refined_routing,
+                compilation_memory);
+            {
+                std::uint64_t live =
+                    result.retained_solver_bytes;
+                saturating_add(
+                    live,
+                    std::max<std::uint64_t>(
+                        result.compilation.peak_owned_bytes,
+                        result.strategy_json.capacity() + 1));
+                result.publication_peak_owned_bytes =
+                    std::max(
+                        result.publication_peak_owned_bytes,
+                        live);
+            }
+            if (!result.compilation.cap_hit.empty()) {
+                result.status =
+                    CompiledPolicyAssertionStatus::ResourceCap;
+                result.resource_cap =
+                    json_limited_by_memory &&
+                            result.compilation.cap_hit ==
+                                "max_strategy_json_bytes"
+                        ? "max_solver_owned_bytes"
+                        : result.compilation.cap_hit;
+                result.failure_reason =
+                    "compiled policy reached " +
+                    result.resource_cap;
+                return result;
+            }
+        } catch (const SolverResourceLimit& error) {
+            std::uint64_t live =
+                result.retained_solver_bytes;
+            saturating_add(
+                live, result.compilation.peak_owned_bytes);
+            result.publication_peak_owned_bytes =
+                std::max(
+                    result.publication_peak_owned_bytes, live);
+            result.status = CompiledPolicyAssertionStatus::ResourceCap;
+            result.resource_cap = error.cap_name();
+            result.failure_reason = error.what();
+            return result;
+        } catch (const std::length_error& error) {
+            result.status = CompiledPolicyAssertionStatus::ResourceCap;
+            result.resource_cap =
+                resource_cap_from_message(error.what());
+            result.failure_reason = error.what();
+            return result;
+        } catch (const std::exception& error) {
+            result.status = result.compilation.cap_hit.empty()
+                                ? CompiledPolicyAssertionStatus::
+                                      CompilationFailure
+                                : CompiledPolicyAssertionStatus::ResourceCap;
             result.resource_cap =
                 json_limited_by_memory &&
                         result.compilation.cap_hit ==
                             "max_strategy_json_bytes"
                     ? "max_solver_owned_bytes"
                     : result.compilation.cap_hit;
-            result.failure_reason =
-                "compiled policy reached " +
-                result.resource_cap;
+            result.failure_reason = error.what();
             return result;
         }
-    } catch (const SolverResourceLimit& error) {
-        std::uint64_t live =
-            result.retained_solver_bytes;
-        saturating_add(
-            live, result.compilation.peak_owned_bytes);
-        result.publication_peak_owned_bytes =
-            std::max(
-                result.publication_peak_owned_bytes, live);
-        result.status = CompiledPolicyAssertionStatus::ResourceCap;
-        result.resource_cap = error.cap_name();
-        result.failure_reason = error.what();
-        return result;
-    } catch (const std::length_error& error) {
-        result.status = CompiledPolicyAssertionStatus::ResourceCap;
-        result.resource_cap =
-            resource_cap_from_message(error.what());
-        result.failure_reason = error.what();
-        return result;
-    } catch (const std::exception& error) {
-        result.status = result.compilation.cap_hit.empty()
-                            ? CompiledPolicyAssertionStatus::
-                                  CompilationFailure
-                            : CompiledPolicyAssertionStatus::ResourceCap;
-        result.resource_cap =
-            json_limited_by_memory &&
-                    result.compilation.cap_hit ==
-                        "max_strategy_json_bytes"
-                ? "max_solver_owned_bytes"
-                : result.compilation.cap_hit;
-        result.failure_reason = error.what();
-        return result;
     }
 
+    const auto failure_with_graph_context =
+        [&](const char* message) {
+            return std::string{message} +
+                "; compilation_nodes=" +
+                std::to_string(result.compilation.nodes) +
+                ", compilation_edges=" +
+                std::to_string(result.compilation.edges) +
+                ", policy_regions=" +
+                std::to_string(result.compilation.policy_regions) +
+                ", reachable_states=" +
+                std::to_string(result.evaluation.raw_pairs_discovered) +
+                ", state_action_pairs=" +
+                std::to_string(result.evaluation.refined_pairs) +
+                ", evaluator_owned=" +
+                std::to_string(
+                    result.evaluation.owned_bytes_estimate) +
+                ", evaluator_peak=" +
+                std::to_string(
+                    result.evaluation.peak_owned_bytes_estimate) +
+                ", evaluator_budget=" +
+                std::to_string(result.evaluator_memory_budget);
+        };
     try {
         const std::uint64_t strategy_json_bytes =
             result.strategy_json.capacity() + 1;
@@ -241,67 +300,37 @@ CompiledPolicyAssertion assert_compiled_policy_exact(
         }
 
         result.evaluator_memory_budget = remaining_memory;
-        if (exact_witness != nullptr) {
-            if (refined_routing == nullptr ||
-                !exact_witness->complete ||
-                !exact_witness->proper ||
-                !exact_witness->zero_off_policy ||
-                !std::isfinite(exact_witness->exact_cost) ||
-                exact_witness->exact_cost < 0.0 ||
-                exact_witness->owned_bytes > remaining_memory ||
-                exact_witness->peak_owned_bytes > remaining_memory) {
-                result.status =
-                    CompiledPolicyAssertionStatus::ExactEvaluationFailure;
-                result.failure_reason =
-                    "precomputed exact policy witness is incomplete";
-                return result;
+        StrategyEvalOptions evaluation_options;
+        evaluation_options.epsilon = 1e-12;
+        evaluation_options.max_sweeps =
+            std::max<std::uint32_t>(1, options.max_sweeps);
+        evaluation_options.max_states =
+            std::max<std::uint32_t>(
+                1, options.max_discovered_states);
+        evaluation_options.max_pairs = std::max<std::uint32_t>(
+            1, bounded_u32(options.max_state_action_rows));
+        evaluation_options.max_transitions =
+            std::max<std::uint32_t>(
+                1, bounded_u32(options.max_transitions));
+        evaluation_options.max_owned_bytes =
+            result.evaluator_memory_budget;
+        evaluation_options.max_output_json_bytes =
+            options.max_strategy_json_bytes;
+        evaluation_options.max_reforge_work =
+            options.max_reforge_work;
+        evaluation_options.economy = std::move(economy);
+        StrategyEvalWork evaluation_work(
+            strategy, evaluation_options);
+        try {
+            while (!evaluation_work.progress().done) {
+                evaluation_work.step(4096);
             }
-            /* compile_policy_strategy_json() has already checked every
-             * reachable strict member against the refined router, including
-             * missing conditions, overlapping unequal decisions, and
-             * executable choice recipes. compile_strategy_json() above then
-             * parsed that exact emitted payload through simulator authority. */
-            result.evaluation.converged = true;
-            result.evaluation.success_probability = 1.0;
-            result.evaluation.pricing_enabled = true;
-            result.evaluation.economy_id = economy->id;
-            result.evaluation.cost_complete = true;
-            result.evaluation.known_expected_cost =
-                exact_witness->exact_cost;
-            result.evaluation.total_expected_cost =
-                exact_witness->exact_cost;
-            result.evaluation.owned_bytes_estimate =
-                exact_witness->owned_bytes;
-            result.evaluation.peak_owned_bytes_estimate =
-                exact_witness->peak_owned_bytes;
-            result.evaluation.max_owned_bytes = remaining_memory;
-            result.evaluation.raw_pairs_discovered =
-                exact_witness->reachable_states;
-            result.evaluation.refined_pairs =
-                exact_witness->reachable_states;
-        } else {
-            StrategyEvalOptions evaluation_options;
-            evaluation_options.epsilon = 1e-12;
-            evaluation_options.max_sweeps =
-                std::max<std::uint32_t>(1, options.max_sweeps);
-            evaluation_options.max_states =
-                std::max<std::uint32_t>(
-                    1, options.max_discovered_states);
-            evaluation_options.max_pairs = std::max<std::uint32_t>(
-                1, bounded_u32(options.max_state_action_rows));
-            evaluation_options.max_transitions =
-                std::max<std::uint32_t>(
-                    1, bounded_u32(options.max_transitions));
-            evaluation_options.max_owned_bytes =
-                result.evaluator_memory_budget;
-            evaluation_options.max_output_json_bytes =
-                options.max_strategy_json_bytes;
-            evaluation_options.max_reforge_work =
-                options.max_reforge_work;
-            evaluation_options.economy = std::move(economy);
+        } catch (...) {
             result.evaluation =
-                evaluate_strategy(*strategy, evaluation_options);
+                evaluation_work.diagnostic_result();
+            throw;
         }
+        result.evaluation = evaluation_work.result();
         {
             std::uint64_t live =
                 result.retained_solver_bytes;
@@ -321,18 +350,21 @@ CompiledPolicyAssertion assert_compiled_policy_exact(
     } catch (const SolverResourceLimit& error) {
         result.status = CompiledPolicyAssertionStatus::ResourceCap;
         result.resource_cap = error.cap_name();
-        result.failure_reason = error.what();
+        result.failure_reason =
+            failure_with_graph_context(error.what());
         return result;
     } catch (const std::length_error& error) {
         result.status = CompiledPolicyAssertionStatus::ResourceCap;
         result.resource_cap =
             resource_cap_from_message(error.what());
-        result.failure_reason = error.what();
+        result.failure_reason =
+            failure_with_graph_context(error.what());
         return result;
     } catch (const std::exception& error) {
         result.status =
             CompiledPolicyAssertionStatus::ExactEvaluationFailure;
-        result.failure_reason = error.what();
+        result.failure_reason =
+            failure_with_graph_context(error.what());
         return result;
     }
 

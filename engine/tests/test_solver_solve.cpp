@@ -165,19 +165,22 @@ void run_certified_fallback_contract_tests() {
     changed = fallback;
     changed.compiled_payload_present = false;
     PC_CHECK(invalid_reason(changed) ==
-             "executable_provenance_missing");
+             "retained_artifact_provenance_missing");
     changed = fallback;
     changed.compilation_provenance_present = false;
     PC_CHECK(invalid_reason(changed) ==
-             "executable_provenance_missing");
+             "retained_artifact_provenance_missing");
     changed = fallback;
     changed.complete_policy_or_witness = false;
     PC_CHECK(invalid_reason(changed) ==
-             "executable_provenance_missing");
+             "retained_artifact_provenance_missing");
     changed = fallback;
     changed.independently_evaluated = false;
     PC_CHECK(invalid_reason(changed) ==
-             "executable_provenance_missing");
+             "final_graph_not_independently_evaluated");
+    PC_CHECK(
+        solve_detail::retained_fallback_invalid_reason(
+            changed, current) == nullptr);
 
     /* A cheaper candidate without executable provenance cannot displace the
      * more expensive certified fallback. A cheaper certified policy can. */
@@ -253,6 +256,8 @@ void run_certified_fallback_contract_tests() {
     publication.upper_bound = 10.0;
     publication.policy_available = true;
     publication.policy_status = SolvePolicyStatus::Exact;
+    publication.converged = true;
+    publication.evaluated_policy_cost = 10.0;
     PC_CHECK(std::string{
         solve_detail::publication_invariant_invalid_reason(publication)} ==
         "finite certified upper bound has no executable artifact");
@@ -261,9 +266,36 @@ void run_certified_fallback_contract_tests() {
         solve_detail::publication_invariant_invalid_reason(publication) ==
         nullptr);
     publication.upper_bound = 11.0;
+    publication.evaluated_policy_cost = 11.0;
     PC_CHECK(std::string{
         solve_detail::publication_invariant_invalid_reason(publication)} ==
         "exact policy status has no closed certified bounds");
+
+    SolveResult tiny_inversion;
+    tiny_inversion.policy_status = SolvePolicyStatus::Exact;
+    tiny_inversion.lower_bound = 10.0 + 5e-8;
+    tiny_inversion.upper_bound = 10.0;
+    solve_detail::normalize_publication_result(tiny_inversion);
+    PC_CHECK(tiny_inversion.lower_bound == 10.0);
+    PC_CHECK(tiny_inversion.absolute_optimality_gap == 0.0);
+
+    SolveResult material_inversion;
+    material_inversion.policy_status =
+        SolvePolicyStatus::BoundedFeasible;
+    material_inversion.lower_bound = 11.0;
+    material_inversion.upper_bound = 10.0;
+    solve_detail::normalize_publication_result(material_inversion);
+    PC_CHECK(material_inversion.lower_bound == 0.0);
+    PC_CHECK(material_inversion.absolute_optimality_gap == 10.0);
+
+    SolveResult bounded_equality;
+    bounded_equality.policy_status =
+        SolvePolicyStatus::BoundedFeasible;
+    bounded_equality.lower_bound = 10.0;
+    bounded_equality.upper_bound = 10.0;
+    solve_detail::normalize_publication_result(bounded_equality);
+    PC_CHECK(bounded_equality.lower_bound == 0.0);
+    PC_CHECK(std::isinf(bounded_equality.relative_optimality_gap));
 }
 
 void run_direct_certification_contract_tests() {
@@ -1108,6 +1140,21 @@ void run_alt_spam_tests() {
         refinement.refusal_cause_samples = {
             "max_exact_states"};
         refinement.refusal_cause_samples_omitted = 22;
+        refinement.publication_candidate_samples = {
+            "{\"identity\":1,\"disposition\":\"selected_for_publication\"}"};
+        refinement.publication_candidate_samples_omitted = 1;
+        refinement.publication_candidate_sample_bytes =
+            refinement.publication_candidate_samples.front().size();
+        refinement.structural_failure_samples = {
+            "{\"status\":\"coarse_mapping_failure\"}"};
+        refinement.structural_failure_samples_omitted = 2;
+        refinement.structural_failure_sample_bytes =
+            refinement.structural_failure_samples.front().size();
+        refinement.evaluator_memory_samples = {
+            "{\"stage\":\"strict_final_graph_evaluation\",\"nodes\":3}"};
+        refinement.evaluator_memory_samples_omitted = 3;
+        refinement.evaluator_memory_sample_bytes =
+            refinement.evaluator_memory_samples.front().size();
         PolicyCompilationTelemetry compilation_sample;
         compilation_sample.working_states = 23;
         compilation_sample.behavioral_classes = 22;
@@ -1155,6 +1202,21 @@ void run_alt_spam_tests() {
                      "\"status\":\"bounded_core_policy\","
                      "\"candidate_kind\":"
                      "\"direct_compiled_core_policy\"}") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"publication_candidates\":{"
+                     "\"samples\":[{\"identity\":1,") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"structural_failures\":{"
+                     "\"samples\":[{\"status\":"
+                     "\"coarse_mapping_failure\"}]") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"evaluator_memory\":{"
+                     "\"samples\":[{\"stage\":"
+                     "\"strict_final_graph_evaluation\","
+                     "\"nodes\":3}]") !=
                  std::string::npos);
         PC_CHECK(refinement_telemetry.find(
                      "\"policy_reachable_coarse_states\":2,"
@@ -3930,11 +3992,16 @@ void run_primitive_destructive_renewal_upper_tests() {
         PC_CHECK(
             !target.refined_policy_artifact.strategy_json.empty());
     } else {
+        /* A bounded equality without global lower closure is normalized to
+         * lower zero, so it cannot retain a pre-normalization gap claim. */
         PC_CHECK(target.policy_status ==
-                 SolvePolicyStatus::BoundedNearOptimal);
+                 SolvePolicyStatus::BoundedFeasible);
+        /* Termination preserves the coarse event that stopped discovery;
+         * target metadata describes the normalized final certificate. */
         PC_CHECK(target.termination == SolveTermination::TargetGap);
-        PC_CHECK(target.target_met);
-        PC_CHECK(target.target_fired == SolveGapTarget::Absolute);
+        PC_CHECK(!target.target_met);
+        PC_CHECK(target.target_fired == SolveGapTarget::None);
+        PC_CHECK(target.lower_bound == 0.0);
     }
     PC_CHECK(!target.diagnostics.state_cap_hit);
     /* Preparation-only lower refreshes can increment expansion rounds before
@@ -5295,18 +5362,29 @@ void run_incremental_action_generation_tests() {
     capped_options.max_state_action_rows = 1;
     const SolveResult capped =
         solve(capped_calc, start, prices, capped_options);
-    /* The row cap blocks further alternative search, but direct exact replay
-     * can still certify and retain the already-selected executable policy. */
+    /* The row cap also bounds final-graph evaluator pairs. Compilation is
+     * retained diagnostically, but an unverified graph cannot publish. */
     PC_CHECK(!capped.converged);
-    PC_CHECK(capped.policy_available);
+    PC_CHECK(!capped.policy_available);
+    PC_CHECK(capped.policy_status == SolvePolicyStatus::None);
+    PC_CHECK(!capped.diagnostics.policy_compatibility_supported);
+    PC_CHECK(capped.refined_policy_artifact.strategy_json.empty());
     PC_CHECK(
-        capped.policy_status == SolvePolicyStatus::BoundedFeasible);
-    PC_CHECK(capped.diagnostics.policy_compatibility_supported);
-    PC_CHECK(
-        !capped.refined_policy_artifact.strategy_json.empty());
-    PC_CHECK(
-        capped.diagnostics.policy_refinement.publication_status !=
+        capped.diagnostics.policy_refinement.publication_status ==
         "none");
+    PC_CHECK(
+        capped.diagnostics.policy_publication_failure_reason.find(
+            "max_pairs (1)") != std::string::npos);
+    PC_CHECK(
+        std::any_of(
+            capped.diagnostics.policy_refinement
+                .publication_candidate_samples.begin(),
+            capped.diagnostics.policy_refinement
+                .publication_candidate_samples.end(),
+            [](const std::string& sample) {
+                return sample.find("compiled_unverified") !=
+                       std::string::npos;
+            }));
     PC_CHECK(
         !capped.diagnostics.incremental_action_envelope_closed);
     PC_CHECK(

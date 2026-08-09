@@ -103,7 +103,18 @@
                     throw AdapterFailure(
                         PolicyExactLiftStatus::CoarseMappingFailure,
                         "one strict junk class spans multiple coarse "
-                        "parents");
+                        "parents (strict_class=" +
+                        std::to_string(exact_class) +
+                        ", modifier=" + std::to_string(mod) +
+                        ", first_parent=" + std::to_string(parent) +
+                        ", conflicting_parent=" +
+                        std::to_string(candidate) +
+                        ", strict_class_count=" +
+                        std::to_string(
+                            strict_layout.junk_classes.size()) +
+                        ", coarse_class_count=" +
+                        std::to_string(
+                            coarse_layout.junk_classes.size()) + ")");
                 }
             }
             if (!saw_member) {

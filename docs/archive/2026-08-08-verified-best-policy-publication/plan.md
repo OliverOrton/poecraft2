@@ -1,10 +1,10 @@
 # Verified Best Executable Strategy Publication
 
-**Status: active implementation boundary selected 2026-08-08.**
+**Status: completed and archived 2026-08-08.**
 
 Owner: Oliver
 
-Parent: [Active work](README.md)
+Parent: [archive entry](README.md)
 
 Starting commit: `c2d47d86143b2381189c6bcba47d288315ad9929`.
 

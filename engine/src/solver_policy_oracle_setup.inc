@@ -1039,20 +1039,6 @@
             remaining_options.max_solver_owned_bytes);
         strict_->refresh_solve_owned_bytes_cap(
             remaining_options.max_solver_owned_bytes);
-        CompiledPolicyExactWitness exact_witness;
-        exact_witness.complete =
-            evaluation.status == PolicyEvaluationStatus::Complete &&
-            evaluation.converged &&
-            evaluation.start_values.size() == 1;
-        exact_witness.proper = evaluation.proper;
-        exact_witness.zero_off_policy = exact_witness.complete;
-        if (exact_witness.complete) {
-            exact_witness.exact_cost = evaluation.start_values.front();
-        }
-        exact_witness.reachable_states = evaluation.reachable_classes;
-        exact_witness.owned_bytes = evaluation.estimated_memory_bytes;
-        exact_witness.peak_owned_bytes =
-            evaluation.peak_estimated_memory_bytes;
         CompiledPolicyAssertion compiled =
             assert_compiled_policy_exact(
             *strict_,
@@ -1060,8 +1046,7 @@
             prices_,
             remaining_options,
             strategy_name,
-            &refined_routing,
-            &exact_witness);
+            &refined_routing);
         std::uint64_t publication_compile_peak =
             required_before_lift;
         saturating_add(

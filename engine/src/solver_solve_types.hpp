@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <bit>
+#include <charconv>
 #include <chrono>
 #include <cmath>
 #include <deque>
@@ -608,6 +609,10 @@ const char* certified_fallback_invalid_reason(
     const CertifiedFallbackCurrentContext& current,
     double epsilon);
 
+const char* retained_fallback_invalid_reason(
+    const CertifiedFallbackContract& candidate,
+    const CertifiedFallbackCurrentContext& current);
+
 bool certified_fallback_precedes(
     const CertifiedFallbackContract& left,
     const CertifiedFallbackContract& right);
@@ -967,6 +972,9 @@ struct SolveWork::Impl {
         std::uint64_t portfolio_identity = 0;
         std::uint64_t retained_owned_bytes = 0;
         std::string compilation_provenance;
+        std::string final_graph_verification_failure;
+        double reconciliation_absolute_delta = kInfinity;
+        double reconciliation_relative_delta = kInfinity;
         bool strict_state_provenance = true;
         bool policy_materialized = false;
         bool independently_certified = false;
@@ -1112,6 +1120,9 @@ struct SolveWork::Impl {
         const BoundedPolicyIncumbent& right) const;
 
     const char* certified_incumbent_invalid_reason(
+        const BoundedPolicyIncumbent& incumbent) const;
+
+    const char* retained_incumbent_invalid_reason(
         const BoundedPolicyIncumbent& incumbent) const;
 
     bool certify_incumbent_for_fallback(

@@ -9,6 +9,15 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-08-08
+
+- [Verified Best Executable Strategy Publication](2026-08-08-verified-best-policy-publication/README.md) —
+  restores eligible incumbents on every non-exact exit, independently
+  evaluates the exact emitted JSON for direct, strict, and renewal candidates,
+  normalizes bounds centrally, publishes the cheapest verified graph, and
+  attributes the remaining structural and evaluator-memory refusals without
+  changing mechanics, semantics, caps, tolerances, or simulator limits.
+
 ## 2026-08-05
 
 - [Core Policy Preservation And Direct Certification](2026-08-05-core-policy-publication-recovery/README.md) —

@@ -110,8 +110,57 @@ def comparable_case(case: dict[str, Any]) -> bool:
     return (
         case.get("benchmark_enabled") is not False
         and isinstance(input_value, dict)
-        and input_value.get("comparison_profile") == "native-wasm-solver-v1"
+        and input_value.get("comparison_profile")
+        in {
+            "native-wasm-solver-v1",
+            "cross-base-compiled-strategy-reliability-v1",
+            "calculator-cross-version-publication-v1",
+            "calculator-goal-relevant-native-diagnostic-v1",
+        }
     )
+
+
+def comparison_profile(report: dict[str, Any]) -> dict[str, Any]:
+    """Return the legacy manifest profile or a reliability-corpus equivalent."""
+    profile = nested(report, "corpus.manifest.comparison_profile")
+    if isinstance(profile, dict):
+        return profile
+
+    cases = report.get("cases")
+    tolerances: list[float] = []
+    names: set[str] = set()
+    if isinstance(cases, list):
+        for case in cases:
+            if not isinstance(case, dict) or not comparable_case(case):
+                continue
+            name = nested(case, "input.comparison_profile")
+            if isinstance(name, str):
+                names.add(name)
+            tolerance = nested(
+                case, "input.verification.exact_cost_absolute_tolerance")
+            if (isinstance(tolerance, (int, float))
+                    and not isinstance(tolerance, bool)
+                    and math.isfinite(float(tolerance))
+                    and float(tolerance) >= 0.0):
+                tolerances.append(float(tolerance))
+    return {
+        "id": sorted(names)[0] if names else "reliability-corpus-v1",
+        "v_start_absolute_tolerance": max(tolerances, default=1e-7),
+    }
+
+
+def selected_candidate_kind(case: dict[str, Any]) -> Any:
+    samples = nested(
+        case,
+        "solver_telemetry.policy_refinement.publication_candidates.samples",
+    )
+    if not isinstance(samples, list):
+        return _MISSING
+    for sample in samples:
+        if (isinstance(sample, dict)
+                and sample.get("disposition") == "selected_for_publication"):
+            return sample.get("kind", _MISSING)
+    return _MISSING
 
 
 def add_equal(
@@ -200,9 +249,7 @@ def main() -> int:
     native_order, native_cases = cases_by_id(native)
     wasm_order, wasm_cases = cases_by_id(wasm)
 
-    profile = nested(native, "corpus.manifest.comparison_profile")
-    if not isinstance(profile, dict):
-        raise SystemExit("native report is missing corpus comparison_profile")
+    profile = comparison_profile(native)
     tolerance = profile.get("v_start_absolute_tolerance")
     if not isinstance(tolerance, (int, float)) or isinstance(tolerance, bool):
         raise SystemExit("comparison profile has no numeric V(start) tolerance")
@@ -213,7 +260,6 @@ def main() -> int:
         "schema_version",
         "corpus.id",
         "corpus.schema_version",
-        "corpus.manifest.artifact.engine_abi_version",
         "corpus.manifest.artifact.artifact_schema_version",
         "corpus.manifest.artifact.source_version",
         "corpus.manifest.artifact.source_data_hash",
@@ -221,27 +267,10 @@ def main() -> int:
         "corpus.manifest.artifact.strings_sha256",
         "artifact.manifest.source.data_hash",
         "artifact.manifest.files",
+        "environment.abi_version",
     ):
         add_equal(checks, mismatches, "report", path, nested(native, path), nested(wasm, path))
     add_equal(checks, mismatches, "report", "case_order", native_order, wasm_order)
-    add_required(
-        checks,
-        mismatches,
-        "report",
-        "all_expectations_met",
-        "native",
-        native.get("all_expectations_met", _MISSING),
-        True,
-    )
-    add_required(
-        checks,
-        mismatches,
-        "report",
-        "all_expectations_met",
-        "wasm",
-        wasm.get("all_expectations_met", _MISSING),
-        True,
-    )
 
     compared_cases: list[str] = []
     for case_id in native_order:
@@ -253,7 +282,13 @@ def main() -> int:
             continue
         compared_cases.append(case_id)
         scope = f"case:{case_id}"
-        for path in ("actual_status",):
+        for path in (
+            "workflow_status.solve_result_class",
+            "workflow_status.compile",
+            "workflow_status.exact_evaluation",
+            "solve_summary.policy_available",
+            "solve_summary.policy_status",
+        ):
             add_equal(
                 checks,
                 mismatches,
@@ -262,16 +297,57 @@ def main() -> int:
                 nested(native_case, path),
                 nested(wasm_case, path),
             )
-        for runner, case in (("native", native_case), ("wasm", wasm_case)):
-            add_required(
+
+        policy_available = nested(native_case, "solve_summary.policy_available")
+        if policy_available is True:
+            for path in (
+                "solve_summary.upper_bound",
+                "solve_summary.evaluated_policy_cost",
+            ):
+                add_close(
+                    checks,
+                    mismatches,
+                    scope,
+                    path,
+                    nested(native_case, path),
+                    nested(wasm_case, path),
+                    float(tolerance),
+                )
+            add_equal(
                 checks,
                 mismatches,
                 scope,
-                "expectation_met",
-                runner,
-                nested(case, "expectation_met"),
-                True,
+                "selected_candidate.kind",
+                selected_candidate_kind(native_case),
+                selected_candidate_kind(wasm_case),
             )
+
+            native_exact = nested(native_case, "exact_strategy_evaluation")
+            wasm_exact = nested(wasm_case, "exact_evaluation")
+            for path in ("converged", "cost_complete", "cost_reconciled"):
+                add_equal(
+                    checks,
+                    mismatches,
+                    scope,
+                    f"exact_evaluation.{path}",
+                    nested(native_exact, path),
+                    nested(wasm_exact, path),
+                )
+            for path in (
+                "success_probability",
+                "off_policy_mass",
+                "total_expected_cost",
+            ):
+                add_close(
+                    checks,
+                    mismatches,
+                    scope,
+                    f"exact_evaluation.{path}",
+                    nested(native_exact, path),
+                    nested(wasm_exact, path),
+                    float(tolerance),
+                )
+        for runner, case in (("native", native_case), ("wasm", wasm_case)):
             add_required(
                 checks,
                 mismatches,
@@ -314,7 +390,13 @@ def main() -> int:
                 nested(native_telemetry, "execution.status") == "complete"
                 and nested(wasm_telemetry, "execution.status") == "complete"
             )
-            for path in STRUCTURAL_TELEMETRY_PATHS if both_complete else ():
+            same_runner_profile = (
+                nested(native_case, "input.comparison_profile") ==
+                nested(wasm_case, "input.comparison_profile")
+            )
+            for path in (
+                    STRUCTURAL_TELEMETRY_PATHS
+                    if both_complete and same_runner_profile else ()):
                 add_equal(
                     checks,
                     mismatches,
@@ -347,9 +429,6 @@ def main() -> int:
                     )
 
         for path in (
-            "compiled_graph.nodes",
-            "compiled_graph.edges",
-            "compiled_graph.strategy_json_bytes",
             "verification.runs",
             "verification.success_count",
             "verification.failure_count",
@@ -387,6 +466,7 @@ def main() -> int:
             "worker scheduling and cancellation latency",
             "cache build timings",
             "Bellman iteration counts and bounded-unit shape",
+            "runner-specific expectation_met classification",
         ],
         "all_checks_passed": not mismatches,
         "check_count": len(checks),

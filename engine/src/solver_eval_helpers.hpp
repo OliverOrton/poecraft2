@@ -439,7 +439,9 @@ derive_node_observation_requirements(
             direct_bytes,
             observation_requirement_payload_bytes(requirement));
     }
-    check_memory(direct_bytes);
+    check_memory(
+        direct_bytes, "observation_direct_requirements",
+        node_count, sizeof(ObservationRequirement));
 
     std::vector<refinement::PolicyObservationNode> nodes;
     nodes.reserve(node_count);
@@ -546,7 +548,9 @@ derive_node_observation_requirements(
         capped_product(
             node_count,
             capped_product(one_requirement_bytes, 3)));
-    check_memory(propagation_peak);
+    check_memory(
+        propagation_peak, "observation_fixed_point_dense_nodes",
+        node_count, one_requirement_bytes);
     refinement::PolicyObservationFixedPoint fixed =
         refinement::propagate_policy_observations(
             std::move(nodes), max_rounds);
@@ -575,7 +579,10 @@ derive_node_observation_requirements(
             conversion_bytes,
             observation_requirement_payload_bytes(assignment.required));
     }
-    check_memory(conversion_bytes);
+    check_memory(
+        conversion_bytes, "observation_assignment_conversion",
+        fixed.assignments.size(),
+        sizeof(refinement::PolicyObservationAssignment));
     for (refinement::PolicyObservationAssignment& assignment :
          fixed.assignments) {
         required.at(assignment.state_id) =

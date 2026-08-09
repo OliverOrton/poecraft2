@@ -1,0 +1,335 @@
+{
+  "schema_version": "verified_best_policy_publication_v1",
+  "acceptance_status": "complete",
+  "starting_commit": "c2d47d86143b2381189c6bcba47d288315ad9929",
+  "boundary_commit": "cf33ee4",
+  "branch": "codex/verified-best-policy-publication",
+  "artifact": {
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "source_data_hash": "93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615",
+    "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "strings_sha256": "654a55489b47740672aea5a27ef52f01e23efc3bf5ce337be5a58756b72f955c",
+    "native_dll": {
+      "bytes": 9322102,
+      "sha256": "55b9757b7887a8861f870c09aa4e3b5f4822dac9c51aa4c9c465371eccc1233a"
+    },
+    "native_benchmark": {
+      "bytes": 9599183,
+      "sha256": "b999bf8ab7544ac11a9ce515d4848558d3e616fed56476b3d3a20c4276beb2b1"
+    },
+    "release_wasm_loader": {
+      "bytes": 42115,
+      "sha256": "cf648f0ccdc3156b30fe0d0163e1065fbf460d2f5b15d519d36b1de66f01f23a"
+    },
+    "release_wasm_module": {
+      "bytes": 4960151,
+      "sha256": "ae6b8d733aeb5966a129128f1970a897756548356a28357fd23266c41e25a1de"
+    }
+  },
+  "publication_contract": {
+    "authoritative_artifact": "the exact final emitted strategy JSON that was parsed and independently evaluated",
+    "executable_requirements": [
+      "evaluation_converged",
+      "eventual_success_probability_one",
+      "cost_complete",
+      "zero_off_policy_mass",
+      "finite_expected_cost"
+    ],
+    "upper_bound_source": "independently evaluated final graph cost",
+    "exact_additional_requirement": "valid global lower bound reconciles with the evaluated final graph cost within the existing tolerance",
+    "mismatch_semantics": "blocks optimality but not executability",
+    "candidate_selection": "cheapest independently evaluated executable final graph",
+    "compiled_unverified_semantics": "diagnostic only; no finite upper or public policy authority"
+  },
+  "case_matrix": {
+    "reliability-class-fishingrod": {
+      "before": "retained renewal near 16.482913436844125 with zero publication attempts and no policy",
+      "after": {
+        "status": "bounded_feasible",
+        "lower": 7.8747601236763485,
+        "upper": 16.482913436819231,
+        "evaluated_cost": 16.482913436819231,
+        "selected_candidate": "gated_primitive_destructive_renewal",
+        "direct_candidate_cost": 16.482913436844086,
+        "nodes": 6,
+        "edges": 7,
+        "success_probability": 1.0,
+        "off_policy_mass": 0.0,
+        "simulation": {"runs": 100, "successes": 100, "failures": 0}
+      }
+    },
+    "reliability-class-ring": {
+      "before": "direct certification consumed about 5.07M scoped work and strict received zero",
+      "after": {
+        "policy_available": false,
+        "direct": {
+          "verification": "compiled_unverified",
+          "attempted_cap_value": 5074391,
+          "committed_logical_work": 5074364,
+          "estimate": 489.92007247360095
+        },
+        "strict": {
+          "status": "resource_cap",
+          "resource_cap": "max_reforge_work",
+          "received_work": 27
+        },
+        "aggregate_logical_work_v1": 19999973,
+        "legacy_active_work": 20000027
+      }
+    },
+    "reliability-class-amulet": {
+      "before": "core artifact existed, final verification did not complete, nothing published",
+      "after": {
+        "policy_available": false,
+        "direct": {"verification": "compiled_unverified", "estimate": 144.88045459604126, "reforge_work": 19999980},
+        "strict": {
+          "status": "coarse_mapping_failure",
+          "coarse_states": 3,
+          "solved_policy_size": 3,
+          "partition_identity": "10669586994360195773",
+          "mapping_identity": "3930739389334436728",
+          "selected_operator": "chaos",
+          "first_violated_invariant": "strict_class=23 modifier=156 spans coarse parents 0 and 2; strict_class_count=117, coarse_class_count=21"
+        }
+      }
+    },
+    "natural-t1-representative-three-bd85c8c40df7": {
+      "before": "core estimate about 13098 could not verify; renewal about 14.28M published",
+      "after": {
+        "status": "bounded_feasible",
+        "lower": 13098.303701763865,
+        "upper": 14280275.642902469,
+        "evaluated_cost": 14280275.642902469,
+        "selected_candidate": "gated_primitive_destructive_renewal",
+        "source_estimate_delta_absolute": 3.7958980854600668,
+        "nodes": 6,
+        "edges": 7,
+        "success_probability": 1.0,
+        "off_policy_mass": 0.0,
+        "simulation": {"runs": 100, "successes": 1, "action_cap_failures": 99},
+        "direct": {"verification": "compiled_unverified", "estimate": 13098.303701763865},
+        "strict": {
+          "status": "invalid_solve_state",
+          "partition_identity": "3159694671182813452",
+          "mapping_identity": "873597559450091416",
+          "first_violated_invariant": "source_state=3 reaches successor_state=421 at solved_policy_size=421 while calc_state_count=422; operator=224; planner_id=fracture"
+        }
+      }
+    },
+    "natural-t1-representative-three-60546fa5c271": {
+      "before": "working retained-core recovery control",
+      "after": {
+        "status": "bounded_feasible",
+        "lower": 0.0,
+        "upper": 1873.2170927467109,
+        "selected_candidate": "direct_compiled_core_policy",
+        "renewal_candidate_cost": 88650.863329981585,
+        "source_estimate_delta_absolute": 3.6590103810981418,
+        "source_estimate_delta_relative": 0.0019495215347461725,
+        "nodes": 109,
+        "edges": 222,
+        "success_probability": 1.0000000000001918,
+        "off_policy_mass": 0.0
+      }
+    },
+    "natural-t1-representative-three-d0a2115efe54": {
+      "before": "tiny lower-above-upper inversion",
+      "after": {
+        "status": "bounded_feasible",
+        "lower": 0.0,
+        "upper": 18323.486578591921,
+        "selected_candidate": "direct_compiled_core_policy",
+        "source_estimate_delta_absolute": 9.901486919261515e-8,
+        "source_estimate_delta_relative": 5.403713358120568e-12,
+        "nodes": 4,
+        "edges": 4,
+        "success_probability": 1.0,
+        "off_policy_mass": 0.0
+      }
+    },
+    "natural-t1-deep-four-dense-a64d3d932590": {
+      "before": "material lower-above-upper publication",
+      "after": {
+        "status": "bounded_feasible",
+        "lower": 0.0,
+        "upper": 36618614.140514001,
+        "selected_candidate": "direct_compiled_core_policy",
+        "renewal_candidate_cost": 39967846.540786296,
+        "source_estimate_delta_absolute": 3349234.0927994847,
+        "source_estimate_delta_relative": 0.08379820883146455,
+        "nodes": 19,
+        "edges": 36,
+        "success_probability": 1.0,
+        "off_policy_mass": 0.0,
+        "simulation": {"runs": 100, "successes": 0, "action_cap_failures": 100}
+      }
+    },
+    "natural-t1-breadth-two-c4c462fd3d77": {
+      "before": "strict graph independently projected about 4.5GB",
+      "after": {
+        "status": "bounded_feasible",
+        "lower": 0.0,
+        "upper": 695.22599151909276,
+        "selected_candidate": "direct_compiled_core_policy",
+        "renewal_candidate_cost": 1393.0422018933812,
+        "source_estimate_delta_absolute": 30.229439807584072,
+        "source_estimate_delta_relative": 0.04166960298622615,
+        "nodes": 29,
+        "edges": 45,
+        "success_probability": 1.0,
+        "off_policy_mass": 0.0,
+        "strict": {"verification": "compiled_unverified", "estimate": 695.22599151987072, "nodes": 3030, "edges": 3820}
+      }
+    },
+    "reliability-class-belt": {
+      "role": "simple direct exact control",
+      "after": {
+        "status": "exact",
+        "lower": 9.143792577895411,
+        "upper": 9.143792577895411,
+        "selected_candidate": "direct_compiled_core_policy",
+        "nodes": 10,
+        "edges": 14,
+        "success_probability": 1.0,
+        "off_policy_mass": 0.0,
+        "simulation": {"runs": 100, "successes": 100, "failures": 0}
+      }
+    }
+  },
+  "evaluator_memory": {
+    "natural-t1-representative-three-bd85c8c40df7": {
+      "stage": "direct_final_graph_evaluation",
+      "classification": "avoidable_dense_work_not_accounting_error",
+      "graph": {"nodes": 256, "edges": 504, "policy_regions": 101},
+      "reachable_states": 53526,
+      "state_action_pairs": 53526,
+      "evaluator_states": 104575,
+      "transitions": 2291128,
+      "components": 2319,
+      "largest_component": 6011,
+      "path": "sparse_component",
+      "probe": "exact_attribution_expanded_transpose",
+      "probe_units": 2258468374,
+      "probe_unit_bytes": 16,
+      "row_payload_bytes": 73316096,
+      "attribution_row_payload_bytes": 73844512,
+      "owned_bytes": 268387959,
+      "transient_bytes": 36139723168,
+      "calculation_bytes": 93106537,
+      "estimated_peak_bytes": 36408111127,
+      "budget_bytes": 849068603
+    },
+    "natural-t1-breadth-two-c4c462fd3d77": {
+      "stage": "strict_final_graph_evaluation",
+      "classification": "avoidable_dense_work_not_accounting_error",
+      "graph": {"nodes": 3030, "edges": 3820, "policy_regions": 756},
+      "path": "pre_component",
+      "probe": "observation_fixed_point_dense_nodes",
+      "probe_units": 3030,
+      "probe_unit_bytes": 493944,
+      "owned_bytes": 51828345,
+      "transient_bytes": 4491886960,
+      "calculation_bytes": 51788465,
+      "budget_bytes": 895501968
+    }
+  },
+  "required_controls": {
+    "runic-gauntlets-partial-five": {
+      "native_wasm_semantics": "matched",
+      "status": "bounded_feasible",
+      "lower": 0.0,
+      "upper": 923509.244023527,
+      "selected_candidate": "policy_guided_exact_refinement",
+      "nodes": 195,
+      "edges": 723,
+      "success_probability": 1.0,
+      "off_policy_mass": 0.0,
+      "native_simulation": {"runs": 10000, "successes": 2521, "action_cap_failures": 7479, "off_policy_failures": 0},
+      "wasm_simulation": {"runs": 10000, "successes": 2521, "action_cap_failures": 7479, "off_policy_failures": 0}
+    },
+    "dire-pelt-two-t1-original": {
+      "native_wasm_semantics": "matched",
+      "status": "bounded_feasible",
+      "lower": 0.0,
+      "upper": 232.02487923461,
+      "selected_candidate": "direct_compiled_core_policy",
+      "nodes": 6,
+      "edges": 7,
+      "success_probability": 1.000000000000828,
+      "off_policy_mass": 0.0,
+      "native_simulation": {"runs": 10000, "successes": 10000, "failures": 0, "off_policy_failures": 0},
+      "wasm_simulation": {"runs": 10000, "successes": 10000, "failures": 0, "off_policy_failures": 0}
+    }
+  },
+  "reliability_acceptance": {
+    "corpus_id": "poecraft2-cross-base-reliability-v1",
+    "enabled_cases_per_runtime": 49,
+    "published_policies_per_runtime": 45,
+    "independently_matched_final_graphs_per_runtime": 45,
+    "runner_errors_per_runtime": 0,
+    "simulation_runs_per_runtime": 14400,
+    "simulation_successes_per_runtime": 13834,
+    "action_cap_failures_per_runtime": 566,
+    "off_policy_failures_per_runtime": 0,
+    "legacy_simulation_expectation_misses_per_runtime": 6,
+    "native_wasm_comparison": {"checks": 1320, "mismatches": 0},
+    "runic_native_wasm_comparison": {"checks": 40, "mismatches": 0},
+    "dire_pelt_native_wasm_comparison": {"checks": 40, "mismatches": 0},
+    "comparison_scope_note": "runner-specific expectation_met and complete structural telemetry equality are excluded; publication and final-graph semantics are compared"
+  },
+  "report_sha256": {
+    "native_reliability_gated": "6cb6b43d6ae018961403c80d2287ef62d00985fd7ef27b5c85c635ce68a88e72",
+    "wasm_reliability": "694209faa8d44af1f13a4648cac9510fc851f4e35204820c10f17bd65b42f8a5",
+    "native_wasm_reliability_comparison": "216d3bed1f3c7b2a9f5ae5c328e281dd8b85ba620f9611a8e11b2d961288dcd1",
+    "native_runic_10k": "0ecc506e327080313e9ae9253aee9a4841ce2e6d277124cd56e15672212b3332",
+    "wasm_runic_10k": "27db64b8b8f0fef523bc3b73dbfe6e4169dca04059f332c149fc7fa58d88f240",
+    "native_wasm_runic_comparison": "8b2ab2c6d4518f75d3151df06b73330d17112cbe4278742d55c6298698c9bf14",
+    "native_dire_pelt_10k": "e9399e86646e0e669c6499cd241b1994491962e0717e4ec09ccad2b96b62fc43",
+    "wasm_dire_pelt_10k": "080e63a93305d3869450458c65d7e7384ef3d50196245cb320f005908f79607d",
+    "native_wasm_dire_pelt_comparison": "f7d9dfd59a3c10bc36b7bcc3627d223513d7263aa8d3af6f7da9824ce9f85499"
+  },
+  "focused_acceptance": {
+    "native_release_build": "passed",
+    "solver_calc": {"checks": 253642, "failures": 0},
+    "exact_evaluator": {"checks": 16761, "failures": 0},
+    "policy_refinement": {"checks": 4875, "failures": 0},
+    "solve": {"checks": 98260, "failures": 0},
+    "solver_api": {"checks": 549, "failures": 0},
+    "ctest_once": {
+      "initial_targets_passed": 10,
+      "initial_targets_total": 11,
+      "failed_target": "solver_s8_3",
+      "failure_class": "stale_test_expectation_for_corrected_logical_counter_semantics",
+      "corrected_target": {"checks": 367, "failures": 0},
+      "full_invocation_repeated": false
+    },
+    "release_wasm_rebuild": "passed",
+    "npm_test": "passed_after_one_floating_tolerance_test_correction",
+    "engine_worker_smoke": {"checks": 27, "failures": 0},
+    "typescript_no_emit": "passed",
+    "rendered_browser_review": "not_run_by_instruction"
+  },
+  "acceptance_disclosures": [
+    "the first direct native portfolio report omitted an explicit CLI flag; it is excluded and the accepted report is the explicit gated rerun",
+    "the full reliability samples retain six legacy minimum-success expectation misses caused by the unchanged simulator action cap; exact evaluation is authoritative",
+    "the direct harness does not enforce the external corpus runner's configured 900-second per-case watchdog; no timeout changed"
+  ],
+  "unchanged_contracts": {
+    "crafting_mechanics": true,
+    "prices": true,
+    "goals": true,
+    "action_filtering": true,
+    "bellman_comparison": true,
+    "state_abstraction": true,
+    "strategy_vocabulary": true,
+    "resource_caps": true,
+    "reconciliation_tolerance": true,
+    "watchdogs": true,
+    "simulator_action_limit": true
+  },
+  "recommended_next_milestone": {
+    "primary": "shared-row or budget-projected sparse exact attribution for the measured dense evaluator probes",
+    "separate_follow_up": "repair strict-partition invariants for the Amulet coarse-parent collision and bd85 solved-policy escape",
+    "active_boundary_selected": false
+  }
+}

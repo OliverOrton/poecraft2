@@ -173,22 +173,6 @@ struct CompiledPolicyAssertion {
     std::uint64_t publication_peak_owned_bytes = 0;
 };
 
-/* A strict refinement already owns an exact, proper fixed-policy solve over
- * every reachable routing class. The compiler independently proves that its
- * emitted conditions cover those strict members without conflicting actions,
- * and the parser still validates the ordinary strategy artifact. Reusing this
- * witness avoids rebuilding the same expensive mechanics kernels solely to
- * rediscover the cost that the strict fixed-policy evaluator just proved. */
-struct CompiledPolicyExactWitness {
-    bool complete = false;
-    bool proper = false;
-    bool zero_off_policy = false;
-    double exact_cost = std::numeric_limits<double>::infinity();
-    std::uint32_t reachable_states = 0;
-    std::uint64_t owned_bytes = 0;
-    std::uint64_t peak_owned_bytes = 0;
-};
-
 /* Pure final classification shared by the production assertion and focused
  * contract tests. The supplied evaluation must already be the parsed
  * strategy's exact result. */
@@ -199,8 +183,10 @@ void finalize_compiled_policy_assertion(
  * Compile the supplied policy/layout, parse the emitted strategy through
  * simulator authority, and exact-evaluate it under the remaining solve
  * resource budget. The production lift calls this with its strict context and
- * a policy populated for every reached strict carrier, so success certifies
- * the lifted artifact rather than merely rechecking the coarse policy.
+ * a policy populated for every reached strict carrier. Every call parses and
+ * independently evaluates the exact emitted JSON graph; a strict class-policy
+ * witness cannot substitute for this final assertion. A caller may supply an
+ * already emitted document and its compiler telemetry for final verification.
  * Reconciliation uses the portfolio contract: absolute error <= 1e-7 OR
  * relative error <= 1e-9.
  */
@@ -211,7 +197,8 @@ CompiledPolicyAssertion assert_compiled_policy_exact(
     const SolveOptions& options,
     const std::string& strategy_name,
     const RefinedPolicyCompileRouting* refined_routing = nullptr,
-    const CompiledPolicyExactWitness* exact_witness = nullptr);
+    const std::string* emitted_strategy_json = nullptr,
+    const PolicyCompilationTelemetry* emitted_compilation = nullptr);
 
 enum class PolicyExactLiftStatus : std::uint8_t {
     Complete = 0,

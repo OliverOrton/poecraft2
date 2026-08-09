@@ -6,28 +6,13 @@ namespace solver {
 
 using namespace solve_detail;
 
-const char* solve_detail::certified_fallback_invalid_reason(
+const char* solve_detail::retained_fallback_invalid_reason(
         const CertifiedFallbackContract& candidate,
-        const CertifiedFallbackCurrentContext& current,
-        const double epsilon) {
+        const CertifiedFallbackCurrentContext& current) {
         if (!candidate.complete_policy_or_witness ||
             !candidate.compiled_payload_present ||
-            !candidate.compilation_provenance_present ||
-            !candidate.independently_evaluated) {
-            return "executable_provenance_missing";
-        }
-        if (!candidate.proper) return "improper_policy";
-        if (!candidate.executable) return "policy_not_executable";
-        if (!std::isfinite(candidate.certified_upper_bound) ||
-            !std::isfinite(candidate.evaluated_policy_cost) ||
-            candidate.evaluated_policy_cost < 0.0 ||
-            candidate.evaluated_policy_cost >
-                candidate.certified_upper_bound +
-                    epsilon * std::max(
-                        1.0,
-                        std::abs(candidate.certified_upper_bound)) *
-                        10.0) {
-            return "evaluated_cost_invalid";
+            !candidate.compilation_provenance_present) {
+            return "retained_artifact_provenance_missing";
         }
         if (candidate.goal_identity != current.goal_identity) {
             return "goal_identity_changed";
@@ -51,6 +36,33 @@ const char* solve_detail::certified_fallback_invalid_reason(
         if (candidate.graph_prefix_identity !=
             current.graph_prefix_identity) {
             return "graph_prefix_changed";
+        }
+        return nullptr;
+    }
+
+const char* solve_detail::certified_fallback_invalid_reason(
+        const CertifiedFallbackContract& candidate,
+        const CertifiedFallbackCurrentContext& current,
+        const double epsilon) {
+        if (const char* retained =
+                retained_fallback_invalid_reason(candidate, current)) {
+            return retained;
+        }
+        if (!candidate.independently_evaluated) {
+            return "final_graph_not_independently_evaluated";
+        }
+        if (!candidate.proper) return "improper_policy";
+        if (!candidate.executable) return "policy_not_executable";
+        if (!std::isfinite(candidate.certified_upper_bound) ||
+            !std::isfinite(candidate.evaluated_policy_cost) ||
+            candidate.evaluated_policy_cost < 0.0 ||
+            candidate.evaluated_policy_cost >
+                candidate.certified_upper_bound +
+                    epsilon * std::max(
+                        1.0,
+                        std::abs(candidate.certified_upper_bound)) *
+                        10.0) {
+            return "evaluated_cost_invalid";
         }
         return nullptr;
     }
@@ -844,7 +856,8 @@ std::uint64_t SolveWork::Impl::incumbent_owned_bytes(
         const BoundedPolicyIncumbent& incumbent) const {
         std::uint64_t bytes = sizeof(BoundedPolicyIncumbent) +
             incumbent.kind.capacity() + 1 +
-            incumbent.compilation_provenance.capacity() + 1;
+            incumbent.compilation_provenance.capacity() + 1 +
+            incumbent.final_graph_verification_failure.capacity() + 1;
         bytes += incumbent.values.capacity() * sizeof(double);
         bytes += incumbent.policy_rows.capacity() * sizeof(std::uint64_t);
         bytes += incumbent.policy_row_costs.capacity() * sizeof(double);
@@ -923,7 +936,7 @@ bool SolveWork::Impl::incumbent_precedes(
             contract(left), contract(right));
     }
 
-const char* SolveWork::Impl::certified_incumbent_invalid_reason(
+const char* SolveWork::Impl::retained_incumbent_invalid_reason(
         const BoundedPolicyIncumbent& incumbent) const {
         CertifiedFallbackContract candidate;
         candidate.certified_upper_bound =
@@ -947,12 +960,6 @@ const char* SolveWork::Impl::certified_incumbent_invalid_reason(
             !incumbent.compiled_artifact.strategy_json.empty();
         candidate.compilation_provenance_present =
             !incumbent.compilation_provenance.empty();
-        candidate.independently_evaluated =
-            incumbent.independently_certified &&
-            incumbent.independently_evaluated;
-        candidate.proper = incumbent.proper;
-        candidate.executable = incumbent.executable;
-
         CertifiedFallbackCurrentContext current;
         current.goal_identity = goal_identity();
         current.economy_identity = economy_identity();
@@ -972,8 +979,34 @@ const char* SolveWork::Impl::certified_incumbent_invalid_reason(
                 incumbent.graph_choice_count,
                 incumbent.graph_choice_successor_count,
                 incumbent.graph_choice_option_count);
-        return certified_fallback_invalid_reason(
-            candidate, current, options.epsilon);
+        return solve_detail::retained_fallback_invalid_reason(
+            candidate, current);
+    }
+
+const char* SolveWork::Impl::certified_incumbent_invalid_reason(
+        const BoundedPolicyIncumbent& incumbent) const {
+        if (const char* retained =
+                retained_incumbent_invalid_reason(incumbent)) {
+            return retained;
+        }
+        if (!incumbent.independently_certified ||
+            !incumbent.independently_evaluated) {
+            return "final_graph_not_independently_evaluated";
+        }
+        if (!incumbent.proper) return "improper_policy";
+        if (!incumbent.executable) return "policy_not_executable";
+        if (!std::isfinite(incumbent.certified_upper_bound) ||
+            !std::isfinite(incumbent.evaluated_policy_cost) ||
+            incumbent.evaluated_policy_cost < 0.0 ||
+            incumbent.evaluated_policy_cost >
+                incumbent.certified_upper_bound +
+                    options.epsilon * std::max(
+                        1.0,
+                        std::abs(incumbent.certified_upper_bound)) *
+                        10.0) {
+            return "evaluated_cost_invalid";
+        }
+        return nullptr;
     }
 
 bool SolveWork::Impl::certify_incumbent_for_fallback(
@@ -1007,7 +1040,7 @@ bool SolveWork::Impl::certify_incumbent_for_fallback(
                   .fallback_portfolio_invalidations;
             return false;
         }
-        incumbent.evaluated_policy_cost = evaluated_cost;
+        incumbent.evaluated_policy_cost = kInfinity;
         SolveResult proof;
         proof.policy_available = true;
         proof.policy_status = SolvePolicyStatus::BoundedFeasible;
@@ -1089,11 +1122,11 @@ bool SolveWork::Impl::certify_incumbent_for_fallback(
         incumbent.compiled_artifact.complete_peak_owned_bytes =
             compilation.complete_peak_owned_bytes;
         incumbent.compilation_provenance =
-            "compiled_primitive_renewal_exact_kernel_v1";
-        incumbent.proper = true;
-        incumbent.executable = true;
-        incumbent.independently_certified = true;
-        incumbent.independently_evaluated = true;
+            "compiled_primitive_renewal_pending_final_graph_evaluation_v1";
+        incumbent.proper = false;
+        incumbent.executable = false;
+        incumbent.independently_certified = false;
+        incumbent.independently_evaluated = false;
         incumbent.retained_owned_bytes = incumbent_owned_bytes(incumbent);
         return true;
     }
@@ -1103,7 +1136,7 @@ bool SolveWork::Impl::retain_certified_incumbent(
         PolicyRefinementTelemetry& telemetry =
             result.diagnostics.policy_refinement;
         if (const char* reason =
-                certified_incumbent_invalid_reason(incumbent)) {
+                retained_incumbent_invalid_reason(incumbent)) {
             (void)reason;
             ++telemetry.fallback_portfolio_invalidations;
             return false;
@@ -1177,7 +1210,7 @@ bool SolveWork::Impl::retain_certified_incumbent(
 
 bool SolveWork::Impl::retain_current_certified_incumbent() {
         if (!output_incumbent.has_value() ||
-            !output_incumbent->independently_certified) {
+            output_incumbent->compiled_artifact.strategy_json.empty()) {
             return true;
         }
         return retain_certified_incumbent(*output_incumbent);
@@ -1189,11 +1222,16 @@ auto SolveWork::Impl::best_current_certified_fallback()
             result.diagnostics.policy_refinement;
         for (auto candidate = certified_fallback_portfolio.begin();
              candidate != certified_fallback_portfolio.end();) {
-            if (certified_incumbent_invalid_reason(*candidate) == nullptr) {
-                ++candidate;
-            } else {
+            const char* retained_reason =
+                retained_incumbent_invalid_reason(*candidate);
+            if (retained_reason != nullptr) {
                 ++telemetry.fallback_portfolio_invalidations;
                 candidate = certified_fallback_portfolio.erase(candidate);
+            } else if (certified_incumbent_invalid_reason(*candidate) ==
+                       nullptr) {
+                ++candidate;
+            } else {
+                ++candidate;
             }
         }
         telemetry.fallback_portfolio_candidates =
@@ -1204,15 +1242,23 @@ auto SolveWork::Impl::best_current_certified_fallback()
             telemetry.fallback_portfolio_owned_bytes +=
                 incumbent_owned_bytes(retained);
         }
-        return certified_fallback_portfolio.empty()
-                   ? nullptr
-                   : &certified_fallback_portfolio.front();
+        BoundedPolicyIncumbent* best = nullptr;
+        for (BoundedPolicyIncumbent& retained :
+             certified_fallback_portfolio) {
+            if (certified_incumbent_invalid_reason(retained) != nullptr) {
+                continue;
+            }
+            if (best == nullptr || incumbent_precedes(retained, *best)) {
+                best = &retained;
+            }
+        }
+        return best;
     }
 
 void SolveWork::Impl::commit_output_incumbent(
         BoundedPolicyIncumbent candidate) {
         if (output_incumbent.has_value() &&
-            output_incumbent->independently_certified &&
+            !output_incumbent->compiled_artifact.strategy_json.empty() &&
             output_incumbent->portfolio_identity !=
                 candidate.portfolio_identity &&
             !retain_certified_incumbent(*output_incumbent) &&
@@ -1366,7 +1412,7 @@ void SolveWork::Impl::install_output_incumbent(
                 std::abs(upper - incumbent_upper) <= options.epsilon &&
                 incumbent_precedes(candidate, *output_incumbent);
             if (!strictly_better && !replace_equal) {
-                if (candidate.independently_certified) {
+                if (!candidate.compiled_artifact.strategy_json.empty()) {
                     (void)retain_certified_incumbent(candidate);
                 }
                 return;

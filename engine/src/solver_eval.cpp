@@ -1,6 +1,7 @@
 #include "solver_eval_helpers.hpp"
 
 #include <iomanip>
+#include <numeric>
 #include <sstream>
 
 namespace poecraft {
@@ -112,6 +113,9 @@ struct StrategyEvalWork::Impl {
     std::uint64_t terminal_incoming_owned_bytes = 0;
     std::uint64_t compressed_policy_incoming_owned_bytes = 0;
     std::uint64_t observation_requirement_owned_bytes = 0;
+    const char* memory_probe_stage = "steady_state";
+    std::uint64_t memory_probe_units = 0;
+    std::uint64_t memory_probe_unit_bytes = 0;
     std::size_t discover_index = 0;
     std::uint32_t start_pair = kNoId;
 
@@ -583,6 +587,51 @@ struct StrategyEvalWork::Impl {
                 ", pairs=" + std::to_string(pairs.size()) +
                 ", rows=" + std::to_string(rows.size()) +
                 ", transitions=" + std::to_string(stored_transitions) +
+                ", graph_nodes=" +
+                    std::to_string(strategy == nullptr
+                                       ? 0
+                                       : strategy->nodes.size()) +
+                ", graph_edges=" +
+                    std::to_string(
+                        strategy == nullptr
+                            ? 0
+                            : std::accumulate(
+                                  strategy->nodes.begin(),
+                                  strategy->nodes.end(),
+                                  std::uint64_t{0},
+                                  [](const std::uint64_t total,
+                                     const StrategyNode& node) {
+                                      return total + node.edges.size();
+                                  })) +
+                ", component_count=" +
+                    std::to_string(components.size()) +
+                ", largest_component=" +
+                    std::to_string(
+                        components.empty()
+                            ? 0
+                            : std::max_element(
+                                  components.begin(), components.end(),
+                                  [](const auto& left, const auto& right) {
+                                      return left.size() < right.size();
+                                  })->size()) +
+                ", path=" +
+                    (components.empty()
+                         ? std::string{"pre_component"}
+                         : std::string{"sparse_component"}) +
+                ", probe=" + memory_probe_stage +
+                ", probe_units=" +
+                    std::to_string(memory_probe_units) +
+                ", probe_unit_bytes=" +
+                    std::to_string(memory_probe_unit_bytes) +
+                ", row_payload=" +
+                    std::to_string(row_payload_owned_bytes) +
+                ", attribution_row_payload=" +
+                    std::to_string(attribution_row_payload_owned_bytes) +
+                ", observation_requirements=" +
+                    std::to_string(observation_requirement_owned_bytes) +
+                ", component_payload=" +
+                    std::to_string(component_payload_owned_bytes) +
+                ", output=" + std::to_string(output_owned_bytes()) +
                 ", phase=" +
                     std::to_string(static_cast<int>(phase)) +
                 ")");
@@ -648,6 +697,51 @@ struct StrategyEvalWork::Impl {
                 ", pairs=" + std::to_string(pairs.size()) +
                 ", rows=" + std::to_string(rows.size()) +
                 ", transitions=" + std::to_string(stored_transitions) +
+                ", graph_nodes=" +
+                    std::to_string(strategy == nullptr
+                                       ? 0
+                                       : strategy->nodes.size()) +
+                ", graph_edges=" +
+                    std::to_string(
+                        strategy == nullptr
+                            ? 0
+                            : std::accumulate(
+                                  strategy->nodes.begin(),
+                                  strategy->nodes.end(),
+                                  std::uint64_t{0},
+                                  [](const std::uint64_t total,
+                                     const StrategyNode& node) {
+                                      return total + node.edges.size();
+                                  })) +
+                ", component_count=" +
+                    std::to_string(components.size()) +
+                ", largest_component=" +
+                    std::to_string(
+                        components.empty()
+                            ? 0
+                            : std::max_element(
+                                  components.begin(), components.end(),
+                                  [](const auto& left, const auto& right) {
+                                      return left.size() < right.size();
+                                  })->size()) +
+                ", path=" +
+                    (components.empty()
+                         ? std::string{"pre_component"}
+                         : std::string{"sparse_component"}) +
+                ", probe=" + memory_probe_stage +
+                ", probe_units=" +
+                    std::to_string(memory_probe_units) +
+                ", probe_unit_bytes=" +
+                    std::to_string(memory_probe_unit_bytes) +
+                ", row_payload=" +
+                    std::to_string(row_payload_owned_bytes) +
+                ", attribution_row_payload=" +
+                    std::to_string(attribution_row_payload_owned_bytes) +
+                ", observation_requirements=" +
+                    std::to_string(observation_requirement_owned_bytes) +
+                ", component_payload=" +
+                    std::to_string(component_payload_owned_bytes) +
+                ", output=" + std::to_string(output_owned_bytes()) +
                 ", phase=" +
                     std::to_string(static_cast<int>(phase)) +
                 ")");
@@ -696,9 +790,18 @@ struct StrategyEvalWork::Impl {
         node_observation_requirements =
             derive_node_observation_requirements(
                 *strategy, model, options.max_sweeps,
-                [&](const std::uint64_t transient_bytes) {
+                [&](const std::uint64_t transient_bytes,
+                    const char* stage,
+                    const std::uint64_t units,
+                    const std::uint64_t unit_bytes) {
+                    memory_probe_stage = stage;
+                    memory_probe_units = units;
+                    memory_probe_unit_bytes = unit_bytes;
                     check_owned_cap(transient_bytes);
                 });
+        memory_probe_stage = "steady_state";
+        memory_probe_units = 0;
+        memory_probe_unit_bytes = 0;
         for (const ObservationRequirement& requirement :
              node_observation_requirements) {
             observation_requirement_owned_bytes +=
@@ -3872,6 +3975,29 @@ struct StrategyEvalWork::Impl {
             return solve_shared_row_exact_attribution();
         }
 
+        /* The raw attribution transpose expands every shared row once per
+         * pair. Preflight that representation before allocating it: the
+         * bd85 control projects billions of PolicyEdge entries even though
+         * the retained shared-row payload is comparatively small. This probe
+         * diagnoses the existing algorithmic choice without changing the
+         * evaluator path or its configured memory limit. */
+        memory_probe_stage =
+            "exact_attribution_expanded_transpose";
+        memory_probe_units = edge_count;
+        memory_probe_unit_bytes = sizeof(PolicyEdge);
+        std::uint64_t transpose_projection = capped_product(
+            edge_count, sizeof(PolicyEdge));
+        transpose_projection = capped_add(
+            transpose_projection,
+            capped_product(
+                count,
+                sizeof(std::uint32_t) + sizeof(PolicyRow) +
+                    sizeof(std::uint32_t)));
+        check_owned_cap(transpose_projection);
+        memory_probe_stage = "steady_state";
+        memory_probe_units = 0;
+        memory_probe_unit_bytes = 0;
+
         std::vector<std::uint32_t> incoming_counts(count, 0);
         for (const EvalPair& pair : attribution_pairs) {
             for (const EvalTransition& transition :
@@ -5219,6 +5345,38 @@ const StrategyEvalResult& StrategyEvalWork::result() const {
         throw std::logic_error("strategy evaluation is not finished");
     }
     return impl_->output;
+}
+
+const StrategyEvalResult& StrategyEvalWork::diagnostic_result() {
+    StrategyEvalResult& output = impl_->output;
+    if (impl_->model.calc != nullptr) {
+        const CalcTelemetry& telemetry =
+            impl_->model.calc->telemetry();
+        output.reforge_work = telemetry.reforge_frontier_work;
+        output.reforge_logical_work_v1 =
+            telemetry.reforge_logical_work_v1;
+        output.reforge_evaluator_work_v1 =
+            telemetry.reforge_raw_equivalent_work;
+        output.reforge_evaluator_work_v2 =
+            telemetry.reforge_projected_work;
+        output.reforge_evaluator_work_v3 =
+            telemetry.reforge_factored_work;
+        output.reforge_effort = telemetry.reforge_effort;
+        output.reforge_row_samples = telemetry.reforge_row_samples;
+        output.reforge_row_samples_omitted =
+            telemetry.reforge_row_samples_omitted;
+    }
+    output.raw_pairs_discovered = static_cast<std::uint32_t>(
+        std::min<std::size_t>(
+            impl_->pairs.size(),
+            std::numeric_limits<std::uint32_t>::max()));
+    output.refined_pairs = output.raw_pairs_discovered;
+    output.owned_bytes_estimate =
+        impl_->fast_estimated_owned_bytes();
+    output.peak_owned_bytes_estimate = std::max(
+        impl_->peak_owned_bytes_value,
+        output.owned_bytes_estimate);
+    return output;
 }
 
 std::uint64_t StrategyEvalWork::live_owned_bytes() const {

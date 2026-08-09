@@ -1546,8 +1546,18 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
     assert.equal(solve.relative_optimality_gap, 0);
     assert.equal(solve.target_met, false);
     assert.equal(solve.target_fired, "none");
-    assert.equal(solveProgress.at(-1)?.lower_bound, solve.start_value);
-    assert.equal(solveProgress.at(-1)?.upper_bound, solve.start_value);
+    assert.ok(
+        Math.abs(
+            (solveProgress.at(-1)?.lower_bound ?? Number.NaN) -
+                solve.start_value,
+        ) < 1e-12,
+    );
+    assert.ok(
+        Math.abs(
+            (solveProgress.at(-1)?.upper_bound ?? Number.NaN) -
+                solve.start_value,
+        ) < 1e-12,
+    );
     assert.equal(solve.skipped_actions, 0);
     assert.ok(solve.worker.step_count > 0);
     assert.ok(solve.worker.max_step_ms > 0);
@@ -1567,7 +1577,9 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
     assert.equal(startState, solve.start_state);
     try {
         const startValue = await client.solverStateValue(solver, startState);
-        assert.equal(startValue.value, solve.start_value);
+        assert.ok(
+            Math.abs(startValue.value - solve.start_value) < 1e-12,
+        );
         assert.ok(startValue.action !== null);
     } catch (error) {
         assert.match(

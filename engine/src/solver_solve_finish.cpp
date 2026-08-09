@@ -73,11 +73,61 @@ const char* solve_detail::publication_invariant_invalid_reason(
     if (result.policy_available && !has_artifact) {
         return "published executable policy has no retained exact artifact";
     }
+    if (finite_upper &&
+        (!std::isfinite(result.evaluated_policy_cost) ||
+         std::abs(
+             result.upper_bound - result.evaluated_policy_cost) >
+             result.options.epsilon *
+                 std::max(1.0, std::abs(result.upper_bound)) * 10.0)) {
+        return "finite upper bound differs from final graph evaluated cost";
+    }
+    if (finite_upper &&
+        (!std::isfinite(result.lower_bound) ||
+         result.lower_bound < 0.0 ||
+         result.lower_bound > result.upper_bound)) {
+        return "published bounds are not normalized";
+    }
     if (result.policy_status == SolvePolicyStatus::Exact &&
         !equal_finite_bounds) {
         return "exact policy status has no closed certified bounds";
     }
+    if (result.policy_status == SolvePolicyStatus::Exact &&
+        !result.converged) {
+        return "exact policy status has no global lower-bound closure";
+    }
     return nullptr;
+}
+
+void solve_detail::normalize_publication_result(SolveResult& result) {
+    if (!std::isfinite(result.upper_bound)) {
+        result.absolute_optimality_gap = kInfinity;
+        result.relative_optimality_gap = kInfinity;
+        return;
+    }
+    const double tolerance =
+        result.options.epsilon *
+        std::max(1.0, std::abs(result.upper_bound)) * 10.0;
+    if (!std::isfinite(result.lower_bound) ||
+        result.lower_bound < 0.0) {
+        result.lower_bound = 0.0;
+    } else if (result.lower_bound > result.upper_bound) {
+        result.lower_bound =
+            result.lower_bound <= result.upper_bound + tolerance
+                ? result.upper_bound
+                : 0.0;
+    }
+    if (result.policy_status != SolvePolicyStatus::Exact &&
+        std::abs(result.upper_bound - result.lower_bound) <= tolerance) {
+        /* A bounded label means global lower closure was not established.
+         * Do not render an equality-grade 1.00x claim from that scalar. */
+        result.lower_bound = 0.0;
+    }
+    result.absolute_optimality_gap =
+        result.upper_bound - result.lower_bound;
+    result.relative_optimality_gap =
+        result.lower_bound > 0.0
+            ? result.upper_bound / result.lower_bound - 1.0
+            : kInfinity;
 }
 
 void SolveWork::Impl::count_policy_actions(
@@ -191,10 +241,59 @@ SolveResult SolveWork::Impl::finish() {
         const bool sweep_cap_hit =
             sweeps >= options.max_sweeps && !optimization_converged();
         if (sweep_cap_hit) record_cap("max_sweeps");
+        /* Ordinary non-convergence may leave the executable incumbent only
+         * in the retained portfolio. Promote the best structurally valid
+         * artifact only when the normal output slot is empty. If a current
+         * incumbent exists, preserve both for final evaluated-cost selection
+         * instead of displacing either by an unverified estimate. */
+        if (!certified_fallback_portfolio.empty()) {
+            auto best_retained = std::min_element(
+                certified_fallback_portfolio.begin(),
+                certified_fallback_portfolio.end(),
+                [&](const BoundedPolicyIncumbent& left,
+                    const BoundedPolicyIncumbent& right) {
+                    return incumbent_precedes(left, right);
+                });
+            if (!output_incumbent.has_value()) {
+                output_incumbent = std::move(*best_retained);
+                certified_fallback_portfolio.erase(best_retained);
+            }
+            PolicyRefinementTelemetry& portfolio =
+                result.diagnostics.policy_refinement;
+            portfolio.fallback_portfolio_candidates =
+                certified_fallback_portfolio.size();
+            portfolio.fallback_portfolio_owned_bytes = 0;
+            for (const BoundedPolicyIncumbent& retained :
+                 certified_fallback_portfolio) {
+                portfolio.fallback_portfolio_owned_bytes +=
+                    incumbent_owned_bytes(retained);
+            }
+        }
+        bool pre_extraction_full_non_goal_closure = true;
+        for (std::uint32_t state = 0; state < result.values.size(); ++state) {
+            if (!result.behavioral_representative_by_state.empty() &&
+                result.behavioral_representative_by_state[state] != state) {
+                continue;
+            }
+            if (!result.expanded[state] && !result.goal_states[state]) {
+                pre_extraction_full_non_goal_closure = false;
+                break;
+            }
+        }
+        const bool current_policy_can_still_be_exact =
+            optimization_converged() &&
+            !result.diagnostics.state_cap_hit &&
+            !result.diagnostics.resource_cap_hit &&
+            (!result.diagnostics.focused_expansion ||
+             focused_bound_proved ||
+             full_closure_after_focused_fallback ||
+             pre_extraction_full_non_goal_closure ||
+             (focused_closure_proved &&
+              result.diagnostics.focused_optimality_gap <=
+                  exact_gap_proof_tolerance()));
         const bool restore_output_incumbent =
             output_incumbent.has_value() &&
-            (target_gap_stop || result.diagnostics.state_cap_hit ||
-             result.diagnostics.resource_cap_hit || sweep_cap_hit);
+            !current_policy_can_still_be_exact;
         std::vector<double> restored_policy_row_costs;
         std::vector<std::uint8_t> restored_policy_reachable;
         bool explicit_restored_policy_reachable = false;
@@ -1259,8 +1358,7 @@ SolveResult SolveWork::Impl::finish() {
             result.evaluated_policy_cost = exact_value;
             result.absolute_optimality_gap = 0.0;
             result.relative_optimality_gap = 0.0;
-        } else if (executable_policy_abstraction_supported &&
-                   restore_output_incumbent &&
+        } else if (restore_output_incumbent &&
                    reachable_policy_complete && !finalization_capped) {
             const BoundedPolicyIncumbent& incumbent = *output_incumbent;
             result.policy_available = true;
@@ -1279,7 +1377,9 @@ SolveResult SolveWork::Impl::finish() {
                 result.diagnostics.focused_lower_bound;
             result.upper_bound = incumbent.certified_upper_bound;
             result.evaluated_policy_cost =
-                incumbent.evaluated_policy_cost;
+                incumbent.independently_evaluated
+                    ? incumbent.evaluated_policy_cost
+                    : incumbent.certified_upper_bound;
             const double bracket_tolerance =
                 value_comparison_tolerance(result.upper_bound);
             if (result.lower_bound > result.evaluated_policy_cost +
@@ -1417,10 +1517,314 @@ SolveResult SolveWork::Impl::finish() {
                 result.absolute_optimality_gap = kInfinity;
                 result.relative_optimality_gap = kInfinity;
             };
+        const auto diagnostic_json_escape =
+            [](const std::string& value) {
+                std::string escaped;
+                escaped.reserve(value.size());
+                for (const unsigned char ch : value) {
+                    switch (ch) {
+                    case '\\': escaped += "\\\\"; break;
+                    case '"': escaped += "\\\""; break;
+                    case '\n': escaped += "\\n"; break;
+                    case '\r': escaped += "\\r"; break;
+                    case '\t': escaped += "\\t"; break;
+                    default:
+                        if (ch >= 0x20) {
+                            escaped.push_back(static_cast<char>(ch));
+                        }
+                        break;
+                    }
+                }
+                return escaped;
+            };
+        const auto diagnostic_finite_double =
+            [](const double value) {
+                if (!std::isfinite(value)) return std::string{"null"};
+                char buffer[64];
+                const auto [end, error] = std::to_chars(
+                    buffer, buffer + sizeof(buffer), value,
+                    std::chars_format::general,
+                    std::numeric_limits<double>::max_digits10);
+                if (error != std::errc{}) return std::string{"null"};
+                return std::string(buffer, end);
+            };
+        const auto retain_bounded_json_sample =
+            [&](std::vector<std::string>& samples,
+                std::uint64_t& omitted,
+                std::uint64_t& retained_bytes,
+                std::string sample) {
+                PolicyRefinementTelemetry& telemetry =
+                    result.diagnostics.policy_refinement;
+                const std::uint64_t shared_bytes =
+                    telemetry.publication_candidate_sample_bytes +
+                    telemetry.structural_failure_sample_bytes +
+                    telemetry.evaluator_memory_sample_bytes;
+                const std::uint64_t byte_limit =
+                    options.max_telemetry_json_bytes / 4;
+                if (samples.size() >=
+                        result.diagnostics.diagnostic_sample_limit ||
+                    sample.size() > byte_limit ||
+                    shared_bytes > byte_limit - sample.size()) {
+                    ++omitted;
+                    return;
+                }
+                retained_bytes += sample.size();
+                samples.push_back(std::move(sample));
+            };
+        const auto record_candidate_sample =
+            [&](const BoundedPolicyIncumbent& candidate,
+                const std::string& stage,
+                const std::string& disposition,
+                const std::string& reason) {
+                PolicyRefinementTelemetry& telemetry =
+                    result.diagnostics.policy_refinement;
+                retain_bounded_json_sample(
+                    telemetry.publication_candidate_samples,
+                    telemetry.publication_candidate_samples_omitted,
+                    telemetry.publication_candidate_sample_bytes,
+                    "{\"identity\":\"" +
+                        std::to_string(candidate.portfolio_identity) +
+                        "\",\"kind\":\"" +
+                        diagnostic_json_escape(candidate.kind) +
+                        "\",\"stage\":\"" +
+                        diagnostic_json_escape(stage) +
+                        "\",\"verification\":\"" +
+                        (candidate.independently_evaluated
+                             ? std::string{"independently_evaluated"}
+                             : std::string{"compiled_unverified"}) +
+                        "\",\"evaluated_cost\":" +
+                        diagnostic_finite_double(
+                            candidate.evaluated_policy_cost) +
+                        ",\"estimate_cost\":" +
+                        diagnostic_finite_double(
+                            candidate.certified_upper_bound) +
+                        ",\"reconciliation_absolute_delta\":" +
+                        diagnostic_finite_double(
+                            candidate.reconciliation_absolute_delta) +
+                        ",\"reconciliation_relative_delta\":" +
+                        diagnostic_finite_double(
+                            candidate.reconciliation_relative_delta) +
+                        ",\"disposition\":\"" +
+                        diagnostic_json_escape(disposition) +
+                        "\",\"selection_reason\":\"" +
+                        diagnostic_json_escape(reason) + "\"}");
+            };
+        const auto publication_options_for_live =
+            [&](const std::uint64_t live_bytes)
+                -> std::optional<SolveOptions> {
+                if (live_bytes >=
+                    options.max_solver_owned_bytes) {
+                    return std::nullopt;
+                }
+                const std::uint64_t retained =
+                    estimated_retained_solver_bytes(calc, &result);
+                const std::uint64_t external_live =
+                    live_bytes > retained
+                        ? live_bytes - retained
+                        : 0;
+                if (external_live >=
+                    options.max_solver_owned_bytes) {
+                    return std::nullopt;
+                }
+                SolveOptions scoped = options;
+                scoped.max_solver_owned_bytes =
+                    options.max_solver_owned_bytes - external_live;
+                const std::uint64_t consumed_reforge_work =
+                    std::min(
+                        result.diagnostics.reforge_logical_work_v1,
+                        options.max_reforge_work);
+                scoped.max_reforge_work =
+                    options.max_reforge_work - consumed_reforge_work;
+                return scoped;
+            };
+        const auto saturated_publication_add =
+            [](const std::uint64_t left, const std::uint64_t right) {
+                return right >
+                               std::numeric_limits<std::uint64_t>::max() -
+                                   left
+                    ? std::numeric_limits<std::uint64_t>::max()
+                    : left + right;
+            };
+        const auto compilation_from_artifact =
+            [](const RetainedCompiledPolicyArtifact& artifact) {
+                PolicyCompilationTelemetry compilation;
+                compilation.working_states = artifact.working_states;
+                compilation.behavioral_classes =
+                    artifact.behavioral_classes;
+                compilation.policy_regions = artifact.policy_regions;
+                compilation.nodes = artifact.nodes;
+                compilation.edges = artifact.edges;
+                compilation.total_condition_bytes =
+                    artifact.total_condition_bytes;
+                compilation.max_condition_bytes =
+                    artifact.max_condition_bytes;
+                compilation.exact_state_fallbacks =
+                    artifact.exact_state_fallbacks;
+                compilation.junk_predicates =
+                    artifact.junk_predicates;
+                compilation.peak_owned_bytes =
+                    artifact.peak_owned_bytes;
+                compilation.previously_accounted_peak_owned_bytes =
+                    artifact.previously_accounted_peak_owned_bytes;
+                compilation.complete_peak_owned_bytes =
+                    artifact.complete_peak_owned_bytes;
+                return compilation;
+            };
+        const auto verify_retained_final_graph =
+            [&](BoundedPolicyIncumbent& candidate) {
+                if (certified_incumbent_invalid_reason(candidate) ==
+                    nullptr) {
+                    return true;
+                }
+                if (!candidate.final_graph_verification_failure.empty()) {
+                    return false;
+                }
+                if (retained_incumbent_invalid_reason(candidate) !=
+                    nullptr) {
+                    return false;
+                }
+                const std::optional<SolveOptions> scoped =
+                    publication_options_for_live(
+                        estimated_owned_bytes());
+                if (!scoped.has_value()) {
+                    candidate.final_graph_verification_failure =
+                        "compiled_unverified: no remaining solver memory "
+                        "for final graph evaluation";
+                    candidate.independently_certified = false;
+                    candidate.independently_evaluated = false;
+                    candidate.proper = false;
+                    candidate.executable = false;
+                    candidate.evaluated_policy_cost = kInfinity;
+                    record_candidate_sample(
+                        candidate, "final_graph_evaluation",
+                        "retained_diagnostic_only",
+                        candidate.final_graph_verification_failure);
+                    return false;
+                }
+                SolveResult proof;
+                proof.policy_available = true;
+                proof.policy_status = SolvePolicyStatus::BoundedFeasible;
+                proof.evaluated_policy_cost =
+                    candidate.certified_upper_bound;
+                const PolicyCompilationTelemetry compilation =
+                    compilation_from_artifact(
+                        candidate.compiled_artifact);
+                refinement::CompiledPolicyAssertion assertion =
+                    refinement::assert_compiled_policy_exact(
+                        calc, proof, prices, *scoped,
+                        "retained publication candidate", nullptr,
+                        &candidate.compiled_artifact.strategy_json,
+                        &compilation);
+                result.diagnostics.reforge_frontier_work =
+                    saturated_publication_add(
+                        result.diagnostics.reforge_frontier_work,
+                        assertion.evaluation.reforge_work);
+                result.diagnostics.reforge_logical_work_v1 =
+                    std::min(
+                        options.max_reforge_work,
+                        saturated_publication_add(
+                            result.diagnostics.reforge_logical_work_v1,
+                            assertion.evaluation
+                                .reforge_logical_work_v1));
+                candidate.reconciliation_absolute_delta =
+                    assertion.absolute_cost_delta;
+                candidate.reconciliation_relative_delta =
+                    assertion.relative_cost_delta;
+                if (assertion.executable && assertion.proper &&
+                    assertion.evaluation.cost_complete &&
+                    assertion.zero_off_policy &&
+                    std::isfinite(assertion.exact_cost) &&
+                    assertion.exact_cost >= 0.0) {
+                    candidate.certified_upper_bound =
+                        assertion.exact_cost;
+                    candidate.evaluated_policy_cost =
+                        assertion.exact_cost;
+                    candidate.independently_certified = true;
+                    candidate.independently_evaluated = true;
+                    candidate.proper = true;
+                    candidate.executable = true;
+                    candidate.final_graph_verification_failure.clear();
+                    candidate.compilation_provenance +=
+                        "+independent_final_graph_evaluation_v1";
+                    candidate.retained_owned_bytes =
+                        incumbent_owned_bytes(candidate);
+                    record_candidate_sample(
+                        candidate, "final_graph_evaluation",
+                        "eligible_verified_candidate",
+                        assertion.cost_reconciled
+                            ? "final graph cost reconciled"
+                            : "executable cost mismatch blocks exactness");
+                    return true;
+                }
+                candidate.final_graph_verification_failure =
+                    "compiled_unverified: " +
+                    (assertion.failure_reason.empty()
+                         ? std::string{"final graph evaluation failed"}
+                         : assertion.failure_reason);
+                candidate.independently_certified = false;
+                candidate.independently_evaluated = false;
+                candidate.proper = false;
+                candidate.executable = false;
+                candidate.evaluated_policy_cost = kInfinity;
+                record_candidate_sample(
+                    candidate, "final_graph_evaluation",
+                    "retained_diagnostic_only",
+                    candidate.final_graph_verification_failure);
+                if (assertion.resource_cap ==
+                        "max_solver_owned_bytes" ||
+                    assertion.failure_reason.find(
+                        "max_owned_bytes") != std::string::npos) {
+                    PolicyRefinementTelemetry& telemetry =
+                        result.diagnostics.policy_refinement;
+                    retain_bounded_json_sample(
+                        telemetry.evaluator_memory_samples,
+                        telemetry.evaluator_memory_samples_omitted,
+                        telemetry.evaluator_memory_sample_bytes,
+                        "{\"candidate_identity\":\"" +
+                            std::to_string(
+                                candidate.portfolio_identity) +
+                            "\",\"stage\":\"final_graph_evaluation\","
+                            "\"nodes\":" +
+                            std::to_string(
+                                candidate.compiled_artifact.nodes) +
+                            ",\"edges\":" +
+                            std::to_string(
+                                candidate.compiled_artifact.edges) +
+                            ",\"policy_regions\":" +
+                            std::to_string(
+                                candidate.compiled_artifact
+                                    .policy_regions) +
+                            ",\"calculation\":\"" +
+                            diagnostic_json_escape(
+                                assertion.failure_reason) + "\"}");
+                }
+                return false;
+            };
+        const auto verify_retained_portfolio = [&] {
+            for (BoundedPolicyIncumbent& candidate :
+                 certified_fallback_portfolio) {
+                (void)verify_retained_final_graph(candidate);
+            }
+            std::sort(
+                certified_fallback_portfolio.begin(),
+                certified_fallback_portfolio.end(),
+                [&](const BoundedPolicyIncumbent& left,
+                    const BoundedPolicyIncumbent& right) {
+                    const bool left_verified =
+                        certified_incumbent_invalid_reason(left) == nullptr;
+                    const bool right_verified =
+                        certified_incumbent_invalid_reason(right) == nullptr;
+                    if (left_verified != right_verified) {
+                        return left_verified;
+                    }
+                    return incumbent_precedes(left, right);
+                });
+        };
         const auto publish_certified_fallback =
             [&](const SolveTermination coarse_solve_termination) {
                 PolicyRefinementTelemetry& telemetry =
                     result.diagnostics.policy_refinement;
+                verify_retained_portfolio();
                 BoundedPolicyIncumbent* retained =
                     best_current_certified_fallback();
                 if (retained == nullptr) return false;
@@ -1429,6 +1833,25 @@ SolveResult SolveWork::Impl::finish() {
                 const bool direct_core_policy =
                     fallback.compilation_provenance ==
                     "direct_compiled_policy_assertion_v1";
+                record_candidate_sample(
+                    fallback, "publication",
+                    "selected_for_publication",
+                    "cheapest independently evaluated candidate within "
+                    "the existing tolerance");
+                for (const BoundedPolicyIncumbent& candidate :
+                     certified_fallback_portfolio) {
+                    if (candidate.portfolio_identity ==
+                        fallback.portfolio_identity) {
+                        continue;
+                    }
+                    record_candidate_sample(
+                        candidate, "publication", "not_selected",
+                        candidate.independently_evaluated
+                            ? "a cheaper independently evaluated candidate "
+                              "won publication"
+                            : "final graph evaluation did not establish an "
+                              "executable cost");
+                }
                 certified_fallback_portfolio.clear();
                 certified_fallback_portfolio.shrink_to_fit();
                 telemetry.fallback_portfolio_candidates = 0;
@@ -1533,7 +1956,8 @@ SolveResult SolveWork::Impl::finish() {
                         ? "direct_core_policy_retained_after_strict_lift"
                         : "certified_fallback_retained";
                 telemetry.bounded_publication_retained = true;
-                telemetry.direct_candidate_retained = false;
+                telemetry.direct_candidate_retained =
+                    direct_core_policy;
                 telemetry.publication_status =
                     direct_core_policy
                         ? "bounded_core_policy"
@@ -1555,35 +1979,6 @@ SolveResult SolveWork::Impl::finish() {
                     result.diagnostics.upper_policy_action_states);
                 executable_policy_abstraction_supported = true;
                 return true;
-            };
-        const auto publication_options_for_live =
-            [&](const std::uint64_t live_bytes)
-                -> std::optional<SolveOptions> {
-                if (live_bytes >=
-                    options.max_solver_owned_bytes) {
-                    return std::nullopt;
-                }
-                const std::uint64_t retained =
-                    estimated_retained_solver_bytes(calc, &result);
-                const std::uint64_t external_live =
-                    live_bytes > retained
-                        ? live_bytes - retained
-                        : 0;
-                if (external_live >=
-                    options.max_solver_owned_bytes) {
-                    return std::nullopt;
-                }
-                SolveOptions scoped = options;
-                scoped.max_solver_owned_bytes =
-                    options.max_solver_owned_bytes - external_live;
-                const std::uint64_t consumed_reforge_work =
-                    std::min(
-                        result.diagnostics.reforge_logical_work_v1,
-                        options.max_reforge_work);
-                scoped.max_reforge_work =
-                    options.max_reforge_work -
-                    consumed_reforge_work;
-                return scoped;
             };
         if (result.policy_available &&
             std::isfinite(result.evaluated_policy_cost)) {
@@ -1648,6 +2043,127 @@ SolveResult SolveWork::Impl::finish() {
                     assertion.compilation.complete_peak_owned_bytes;
                 return artifact;
             };
+        const auto retain_compiled_unverified =
+            [&](refinement::CompiledPolicyAssertion& assertion,
+                const std::string& kind,
+                const std::string& stage,
+                const std::string& failure_reason) {
+                if (assertion.strategy_json.empty()) return;
+                BoundedPolicyIncumbent candidate;
+                if (output_incumbent.has_value() &&
+                    !output_incumbent->policy.empty()) {
+                    candidate = std::move(*output_incumbent);
+                    output_incumbent.reset();
+                } else {
+                    candidate.values = result.values;
+                    candidate.policy = result.policy;
+                    candidate.unveil_preferences =
+                        result.unveil_preferences;
+                    candidate.option_unveil_preferences =
+                        result.option_unveil_preferences;
+                    candidate.behavioral_representative_by_state =
+                        result.behavioral_representative_by_state;
+                    candidate.policy_reachable = result.policy_reachable;
+                    candidate.primitive_renewal_witness =
+                        result.primitive_renewal_witness;
+                    candidate.policy_rows = policy_rows;
+                    candidate.policy_rows.resize(
+                        candidate.values.size(),
+                        std::numeric_limits<std::uint64_t>::max());
+                    candidate.policy_row_costs.assign(
+                        candidate.values.size(), kInfinity);
+                    for (std::size_t state = 0;
+                         state < candidate.policy_rows.size(); ++state) {
+                        const std::uint64_t row =
+                            candidate.policy_rows[state];
+                        if (row ==
+                            std::numeric_limits<std::uint64_t>::max()) {
+                            continue;
+                        }
+                        if (state < restored_policy_row_costs.size()) {
+                            candidate.policy_row_costs[state] =
+                                restored_policy_row_costs[state];
+                        } else if (row < priced_rows.size()) {
+                            candidate.policy_row_costs[state] =
+                                priced_rows[row].cost;
+                        }
+                    }
+                    candidate.restart_operator = restart_operator_index;
+                    candidate.restart_state = restart_state;
+                    candidate.round =
+                        result.diagnostics.focused_expansion_rounds;
+                    candidate.goal_identity = goal_identity();
+                    candidate.economy_identity = economy_identity();
+                    candidate.action_vocabulary_identity =
+                        action_vocabulary_identity();
+                    candidate.action_vocabulary_size = operators.size();
+                    candidate.graph_identity = graph_identity();
+                    candidate.artifact_identity = artifact_identity();
+                    candidate.source_generation =
+                        transition_cache->rows.size();
+                    candidate.target_generation = calc.state_count();
+                    candidate.graph_row_count =
+                        transition_cache->rows.size();
+                    candidate.graph_priced_row_count = priced_rows.size();
+                    candidate.graph_successor_count =
+                        transition_cache->successors.size();
+                    candidate.graph_probability_count =
+                        transition_cache->probabilities.size();
+                    candidate.graph_choice_count =
+                        transition_cache->choices.size();
+                    candidate.graph_choice_successor_count =
+                        transition_cache->choice_successors.size();
+                    candidate.graph_choice_option_count =
+                        transition_cache->choice_options.size();
+                    candidate.graph_prefix_identity =
+                        incumbent_graph_prefix_identity(
+                            candidate.graph_row_count,
+                            candidate.graph_priced_row_count,
+                            candidate.graph_successor_count,
+                            candidate.graph_probability_count,
+                            candidate.graph_choice_count,
+                            candidate.graph_choice_successor_count,
+                            candidate.graph_choice_option_count);
+                    candidate.policy_materialized =
+                        !candidate.policy.empty();
+                }
+                candidate.certified_upper_bound =
+                    std::isfinite(assertion.solver_cost) &&
+                            assertion.solver_cost >= 0.0
+                        ? assertion.solver_cost
+                        : kInfinity;
+                candidate.evaluated_policy_cost = kInfinity;
+                candidate.compiled_artifact =
+                    retained_artifact_from_assertion(assertion);
+                candidate.kind = kind;
+                candidate.compilation_provenance =
+                    "compiled_unverified_" + stage + "_v1";
+                candidate.final_graph_verification_failure =
+                    "compiled_unverified: " + failure_reason;
+                candidate.independently_certified = false;
+                candidate.independently_evaluated = false;
+                candidate.proper = false;
+                candidate.executable = false;
+                std::uint64_t identity = 1469598103934665603ULL;
+                identity_mix(identity, candidate.goal_identity);
+                identity_mix(identity, candidate.economy_identity);
+                identity_mix(identity, candidate.artifact_identity);
+                identity_mix(identity, candidate.graph_prefix_identity);
+                identity_mix_string(identity, candidate.kind);
+                identity_mix_string(
+                    identity,
+                    candidate.compiled_artifact.strategy_json);
+                candidate.portfolio_identity = identity;
+                candidate.retained_owned_bytes =
+                    incumbent_owned_bytes(candidate);
+                const bool retained =
+                    retain_certified_incumbent(candidate);
+                record_candidate_sample(
+                    candidate, stage,
+                    retained ? "retained_diagnostic_only"
+                             : "diagnostic_retention_refused",
+                    candidate.final_graph_verification_failure);
+            };
         const auto saturated_add =
             [](const std::uint64_t lhs, const std::uint64_t rhs) {
                 return rhs >
@@ -1695,6 +2211,18 @@ SolveResult SolveWork::Impl::finish() {
         };
         bool skip_strict_lift = false;
         bool direct_certification_requires_strict_lift = false;
+        {
+            PolicyRefinementTelemetry& telemetry =
+                result.diagnostics.policy_refinement;
+            telemetry.core_policy_candidate_present =
+                result.policy_available || output_incumbent.has_value() ||
+                !certified_fallback_portfolio.empty();
+            if (!result.policy_available &&
+                telemetry.core_policy_candidate_present) {
+                telemetry.core_policy_status =
+                    "retained_candidate_not_yet_published";
+            }
+        }
         if (result.policy_available) {
             PolicyRefinementTelemetry& telemetry =
                 result.diagnostics.policy_refinement;
@@ -1814,14 +2342,12 @@ SolveResult SolveWork::Impl::finish() {
                 result.diagnostics.reforge_frontier_work,
                 assertion.evaluation.reforge_work);
             result.diagnostics.reforge_logical_work_v1 =
-                assertion.resource_cap == "max_reforge_work"
-                    ? options.max_reforge_work
-                    : std::min(
-                          options.max_reforge_work,
-                          saturated_add(
-                              result.diagnostics.reforge_logical_work_v1,
-                              assertion.evaluation
-                                  .reforge_logical_work_v1));
+                std::min(
+                    options.max_reforge_work,
+                    saturated_add(
+                        result.diagnostics.reforge_logical_work_v1,
+                        assertion.evaluation
+                            .reforge_logical_work_v1));
             telemetry.direct_certification_status =
                 assertion_status_name(assertion.status);
             telemetry.direct_certification_failure_reason =
@@ -1851,6 +2377,33 @@ SolveResult SolveWork::Impl::finish() {
                 assertion.zero_off_policy;
             telemetry.direct_certification_cost_reconciled =
                 assertion.cost_reconciled;
+            if ((assertion.resource_cap ==
+                     "max_solver_owned_bytes" ||
+                 assertion.failure_reason.find(
+                     "max_owned_bytes") != std::string::npos) &&
+                !assertion.failure_reason.empty()) {
+                retain_bounded_json_sample(
+                    telemetry.evaluator_memory_samples,
+                    telemetry.evaluator_memory_samples_omitted,
+                    telemetry.evaluator_memory_sample_bytes,
+                    "{\"stage\":\"direct_final_graph_evaluation\","
+                        "\"nodes\":" +
+                        std::to_string(assertion.compilation.nodes) +
+                        ",\"edges\":" +
+                        std::to_string(assertion.compilation.edges) +
+                        ",\"policy_regions\":" +
+                        std::to_string(
+                            assertion.compilation.policy_regions) +
+                        ",\"reachable_states\":" +
+                        std::to_string(
+                            assertion.evaluation.raw_pairs_discovered) +
+                        ",\"state_action_pairs\":" +
+                        std::to_string(
+                            assertion.evaluation.refined_pairs) +
+                        ",\"calculation\":\"" +
+                        diagnostic_json_escape(
+                            assertion.failure_reason) + "\"}");
+            }
             telemetry.compiled_assertion_checked =
                 assertion.status !=
                 refinement::CompiledPolicyAssertionStatus::NotRun;
@@ -1960,6 +2513,10 @@ SolveResult SolveWork::Impl::finish() {
                 candidate.independently_evaluated = true;
                 candidate.proper = true;
                 candidate.executable = true;
+                candidate.reconciliation_absolute_delta =
+                    assertion.absolute_cost_delta;
+                candidate.reconciliation_relative_delta =
+                    assertion.relative_cost_delta;
                 std::uint64_t identity = 1469598103934665603ULL;
                 identity_mix(
                     identity,
@@ -1977,6 +2534,12 @@ SolveResult SolveWork::Impl::finish() {
                 candidate.portfolio_identity = identity;
                 candidate.retained_owned_bytes =
                     incumbent_owned_bytes(candidate);
+                record_candidate_sample(
+                    candidate, "direct_certification",
+                    "eligible_verified_candidate",
+                    assertion.cost_reconciled
+                        ? "final graph cost reconciled"
+                        : "executable cost mismatch blocks exactness");
 
                 const double direct_lower_delta = std::abs(
                     candidate.evaluated_policy_cost -
@@ -1997,6 +2560,21 @@ SolveResult SolveWork::Impl::finish() {
                     (direct_lower_delta <= 1e-7 ||
                      direct_lower_relative <= 1e-9);
                 if (exact_without_refinement) {
+                    record_candidate_sample(
+                        candidate, "publication",
+                        "selected_for_publication",
+                        "independent graph cost matches the valid global "
+                        "lower certificate");
+                    result.lower_bound =
+                        candidate.evaluated_policy_cost;
+                    result.upper_bound =
+                        candidate.evaluated_policy_cost;
+                    result.evaluated_policy_cost =
+                        candidate.evaluated_policy_cost;
+                    if (result.start_state < result.values.size()) {
+                        result.values[result.start_state] =
+                            candidate.evaluated_policy_cost;
+                    }
                     result.refined_policy_artifact =
                         std::move(candidate.compiled_artifact);
                     telemetry.retained_artifact_bytes =
@@ -2008,65 +2586,94 @@ SolveResult SolveWork::Impl::finish() {
                     telemetry.published_candidate_kind = candidate.kind;
                     telemetry.status =
                         "direct_core_policy_exact";
+                    executable_policy_abstraction_supported = true;
+                    for (const BoundedPolicyIncumbent& retained :
+                         certified_fallback_portfolio) {
+                        record_candidate_sample(
+                            retained, "publication", "not_selected",
+                            retained.independently_evaluated
+                                ? "the globally exact direct graph was not "
+                                  "more expensive beyond tolerance"
+                                : "final graph evaluation did not establish "
+                                  "an executable cost");
+                    }
                     certified_fallback_portfolio.clear();
                     certified_fallback_portfolio.shrink_to_fit();
                     telemetry.fallback_portfolio_candidates = 0;
                     telemetry.fallback_portfolio_owned_bytes = 0;
                     skip_strict_lift = true;
                 } else if (telemetry.triggers == 0) {
-                    result.refined_policy_artifact =
-                        std::move(candidate.compiled_artifact);
-                    telemetry.retained_artifact_bytes =
-                        result.refined_policy_artifact
-                                .strategy_json.capacity() +
-                        1;
-                    const double exact_cost =
-                        candidate.evaluated_policy_cost;
-                    result.converged = false;
-                    result.lower_bound =
-                        std::isfinite(result.lower_bound) &&
-                                result.lower_bound <=
-                                    exact_cost +
-                                        value_comparison_tolerance(
-                                            exact_cost)
-                            ? std::max(0.0, result.lower_bound)
-                            : 0.0;
-                    result.upper_bound = exact_cost;
-                    result.evaluated_policy_cost = exact_cost;
-                    result.absolute_optimality_gap = std::max(
-                        0.0, exact_cost - result.lower_bound);
-                    result.relative_optimality_gap =
-                        result.lower_bound > 0.0
-                            ? std::max(
-                                  0.0,
-                                  exact_cost / result.lower_bound - 1.0)
-                            : kInfinity;
-                    result.termination =
-                        successful_refined_publication_termination(
-                            core_solve_termination,
-                            result.diagnostics.resource_cap_hit);
-                    classify_bounded_publication();
-                    result.diagnostics.solution_scope =
-                        "direct_certified_core_policy_bounded";
-                    result.diagnostics.incumbent_kind = candidate.kind;
-                    result.diagnostics
-                        .policy_publication_failure_reason.clear();
-                    result.diagnostics.policy_compatibility_supported =
-                        true;
-                    telemetry.bounded_publication_retained = true;
-                    telemetry.publication_status =
-                        "bounded_core_policy";
-                    telemetry.published_candidate_kind = candidate.kind;
-                    telemetry.status =
-                        "direct_core_policy_bounded";
-                    certified_fallback_portfolio.clear();
-                    certified_fallback_portfolio.shrink_to_fit();
-                    telemetry.fallback_portfolio_candidates = 0;
-                    telemetry.fallback_portfolio_owned_bytes = 0;
-                    skip_strict_lift = true;
+                    if (retain_certified_incumbent(candidate)) {
+                        telemetry.direct_candidate_retained = true;
+                        skip_strict_lift =
+                            publish_certified_fallback(
+                                core_solve_termination);
+                    } else {
+                        record_candidate_sample(
+                            candidate, "publication",
+                            "selected_for_publication",
+                            "only verified direct candidate fit the live "
+                            "publication memory budget");
+                        result.refined_policy_artifact =
+                            std::move(candidate.compiled_artifact);
+                        telemetry.retained_artifact_bytes =
+                            result.refined_policy_artifact
+                                    .strategy_json.capacity() +
+                            1;
+                        result.converged = false;
+                        result.lower_bound =
+                            std::isfinite(result.lower_bound) &&
+                                    result.lower_bound <=
+                                        candidate.evaluated_policy_cost +
+                                            value_comparison_tolerance(
+                                                candidate
+                                                    .evaluated_policy_cost)
+                                ? std::max(0.0, result.lower_bound)
+                                : 0.0;
+                        result.upper_bound =
+                            candidate.evaluated_policy_cost;
+                        result.evaluated_policy_cost =
+                            candidate.evaluated_policy_cost;
+                        result.termination =
+                            successful_refined_publication_termination(
+                                core_solve_termination,
+                                result.diagnostics.resource_cap_hit);
+                        classify_bounded_publication();
+                        result.diagnostics.solution_scope =
+                            "direct_certified_core_policy_bounded";
+                        result.diagnostics.incumbent_kind =
+                            candidate.kind;
+                        result.diagnostics
+                            .policy_publication_failure_reason.clear();
+                        result.diagnostics
+                            .policy_compatibility_supported = true;
+                        telemetry.bounded_publication_retained = true;
+                        telemetry.publication_status =
+                            "bounded_core_policy";
+                        telemetry.published_candidate_kind =
+                            candidate.kind;
+                        telemetry.status =
+                            "direct_core_policy_bounded";
+                        executable_policy_abstraction_supported = true;
+                        skip_strict_lift = true;
+                    }
                 } else if (retain_certified_incumbent(candidate)) {
                     telemetry.direct_candidate_retained = true;
                 } else {
+                    verify_retained_portfolio();
+                    BoundedPolicyIncumbent* retained =
+                        best_current_certified_fallback();
+                    if (retained != nullptr &&
+                        incumbent_precedes(*retained, candidate)) {
+                        skip_strict_lift =
+                            publish_certified_fallback(
+                                core_solve_termination);
+                    } else {
+                    record_candidate_sample(
+                        candidate, "publication",
+                        "selected_for_publication",
+                        "verified direct candidate is cheaper than every "
+                        "retained verified fallback");
                     /* The asserted artifact itself already fit the live solve
                      * cap. If duplicating the complete incumbent for a later
                      * strict-lift fallback does not fit, publish it now rather
@@ -2116,9 +2723,11 @@ SolveResult SolveWork::Impl::finish() {
                     telemetry.published_candidate_kind = candidate.kind;
                     telemetry.status =
                         "direct_core_policy_bounded";
+                    executable_policy_abstraction_supported = true;
                     skip_strict_lift = true;
+                    }
                 }
-            } else if (telemetry.triggers == 0) {
+            } else {
                 const std::string reason =
                     "policy_direct_certification_" +
                     telemetry.direct_certification_status;
@@ -2126,13 +2735,22 @@ SolveResult SolveWork::Impl::finish() {
                     assertion.failure_reason.empty()
                         ? reason
                         : reason + ": " + assertion.failure_reason;
-                direct_certification_requires_strict_lift = true;
+                retain_compiled_unverified(
+                    assertion, "direct_compiled_core_policy",
+                    "direct_final_graph_evaluation",
+                    telemetry.preferred_publication_failure_reason);
+                direct_certification_requires_strict_lift =
+                    telemetry.triggers == 0;
             }
         }
         if (result.policy_available &&
             (result.diagnostics.policy_refinement.triggers != 0 ||
              direct_certification_requires_strict_lift) &&
             !skip_strict_lift) {
+            /* Final-graph verification of already retained fallbacks happens
+             * before optional strict work so a later lift cannot consume the
+             * remaining allowance and erase an executable candidate. */
+            verify_retained_portfolio();
             /*
              * Exact lifting changes the publication proof, not the stopping
              * cause of the coarse solve that supplied the incumbent.
@@ -2188,6 +2806,79 @@ SolveResult SolveWork::Impl::finish() {
                 certificate.global_lower_bound_closed;
             telemetry.global_lower_bound_closed =
                 certificate.adapter.global_lower_bound_closed;
+            if (certificate.status ==
+                    refinement::PolicyExactLiftStatus::InvalidSolveState ||
+                certificate.status ==
+                    refinement::PolicyExactLiftStatus::CoarseMappingFailure ||
+                certificate.status ==
+                    refinement::PolicyExactLiftStatus::ObservationUnavailable) {
+                retain_bounded_json_sample(
+                    telemetry.structural_failure_samples,
+                    telemetry.structural_failure_samples_omitted,
+                    telemetry.structural_failure_sample_bytes,
+                    "{\"status\":\"" +
+                        std::string{
+                            refinement::policy_exact_lift_status_name(
+                                certificate.status)} +
+                        "\",\"coarse_states\":" +
+                        std::to_string(
+                            certificate.adapter.coarse_policy_states) +
+                        ",\"strict_states\":" +
+                        std::to_string(
+                            certificate.adapter.strict_states_discovered) +
+                        ",\"strict_carriers\":" +
+                        std::to_string(
+                            certificate.adapter
+                                .strict_carriers_materialized) +
+                        ",\"solved_policy_size\":" +
+                        std::to_string(result.policy.size()) +
+                        ",\"partition_identity\":" +
+                        std::to_string(
+                            telemetry.core_policy_bits_hash) +
+                        ",\"mapping_identity\":" +
+                        std::to_string(
+                            telemetry
+                                .core_policy_transition_bits_hash) +
+                        ",\"selected_operator\":\"" +
+                        diagnostic_json_escape(
+                            telemetry.core_policy_root_action) +
+                        "\",\"first_violated_invariant\":\"" +
+                        diagnostic_json_escape(
+                            certificate.failure_reason) + "\"}");
+            }
+            if ((certificate.compiled.resource_cap ==
+                     "max_solver_owned_bytes" ||
+                 certificate.compiled.failure_reason.find(
+                     "max_owned_bytes") != std::string::npos) &&
+                !certificate.compiled.failure_reason.empty()) {
+                retain_bounded_json_sample(
+                    telemetry.evaluator_memory_samples,
+                    telemetry.evaluator_memory_samples_omitted,
+                    telemetry.evaluator_memory_sample_bytes,
+                    "{\"stage\":\"strict_final_graph_evaluation\","
+                        "\"nodes\":" +
+                        std::to_string(
+                            certificate.compiled.compilation.nodes) +
+                        ",\"edges\":" +
+                        std::to_string(
+                            certificate.compiled.compilation.edges) +
+                        ",\"policy_regions\":" +
+                        std::to_string(
+                            certificate.compiled.compilation
+                                .policy_regions) +
+                        ",\"reachable_states\":" +
+                        std::to_string(
+                            certificate.compiled.evaluation
+                                .raw_pairs_discovered) +
+                        ",\"state_action_pairs\":" +
+                        std::to_string(
+                            certificate.compiled.evaluation
+                                .refined_pairs) +
+                        ",\"calculation\":\"" +
+                        diagnostic_json_escape(
+                            certificate.compiled.failure_reason) +
+                        "\"}");
+            }
             telemetry.memory_limit_bytes =
                 options.max_solver_owned_bytes;
             telemetry.policy_reachable_coarse_states =
@@ -2477,17 +3168,15 @@ SolveResult SolveWork::Impl::finish() {
                         certificate.adapter.strict_reforge_work,
                         certificate.compiled.evaluation.reforge_work));
             result.diagnostics.reforge_logical_work_v1 =
-                certificate.resource_cap == "max_reforge_work"
-                    ? options.max_reforge_work
-                    : std::min(
-                          options.max_reforge_work,
-                          saturated_add(
-                              result.diagnostics.reforge_logical_work_v1,
-                              saturated_add(
-                                  certificate.adapter
-                                      .strict_reforge_logical_work_v1,
-                                  certificate.compiled.evaluation
-                                      .reforge_logical_work_v1)));
+                std::min(
+                    options.max_reforge_work,
+                    saturated_add(
+                        result.diagnostics.reforge_logical_work_v1,
+                        saturated_add(
+                            certificate.adapter
+                                .strict_reforge_logical_work_v1,
+                            certificate.compiled.evaluation
+                                .reforge_logical_work_v1)));
             const std::uint64_t adapter_memory = std::max(
                 certificate.adapter.adapter_owned_bytes,
                 certificate.adapter.strict_calc_owned_bytes);
@@ -2611,22 +3300,85 @@ SolveResult SolveWork::Impl::finish() {
                     lift_complete = false;
                 }
                 if (lift_complete) {
-                    /* The strict artifact proves the selected fixed policy.
-                     * It is globally exact only when that exact cost also
-                     * meets the core solver's already-proven admissible
-                     * complete-envelope lower bound. Otherwise retain it as
-                     * an honest bounded executable upper. */
+                    /* The independently evaluated emitted graph owns the
+                     * executable cost. The strict class-policy value remains
+                     * internal reconciliation evidence only. */
                     if (!std::isfinite(
-                            certificate.exact_start_cost) ||
-                        certificate.exact_start_cost < 0.0) {
+                            certificate.compiled.exact_cost) ||
+                        certificate.compiled.exact_cost < 0.0) {
                         throw std::logic_error(
                             "completed exact policy refinement returned "
-                            "an invalid start cost");
+                            "an invalid final graph cost");
                     }
                     const double exact_policy_cost =
-                        certificate.exact_start_cost;
+                        certificate.compiled.exact_cost;
+                    BoundedPolicyIncumbent strict_candidate_record;
+                    strict_candidate_record.certified_upper_bound =
+                        exact_policy_cost;
+                    strict_candidate_record.evaluated_policy_cost =
+                        exact_policy_cost;
+                    strict_candidate_record.kind =
+                        "policy_guided_exact_refinement";
+                    strict_candidate_record.independently_certified = true;
+                    strict_candidate_record.independently_evaluated = true;
+                    strict_candidate_record.proper = true;
+                    strict_candidate_record.executable = true;
+                    strict_candidate_record
+                        .reconciliation_absolute_delta =
+                        certificate.compiled.absolute_cost_delta;
+                    strict_candidate_record
+                        .reconciliation_relative_delta =
+                        certificate.compiled.relative_cost_delta;
+                    strict_candidate_record.portfolio_identity =
+                        telemetry.core_policy_bits_hash;
+                    identity_mix(
+                        strict_candidate_record.portfolio_identity,
+                        std::bit_cast<std::uint64_t>(
+                            exact_policy_cost));
+                    identity_mix_string(
+                        strict_candidate_record.portfolio_identity,
+                        strict_candidate_record.kind);
+                    record_candidate_sample(
+                        strict_candidate_record,
+                        "strict_final_graph_evaluation",
+                        "eligible_verified_candidate",
+                        certificate.compiled.cost_reconciled
+                            ? "final graph cost reconciled"
+                            : "executable cost mismatch blocks exactness");
                     const bool globally_exact =
-                        certificate.global_lower_bound_closed;
+                        certificate.global_lower_bound_closed &&
+                        certificate.compiled.cost_reconciled &&
+                        std::isfinite(result.lower_bound) &&
+                        std::abs(
+                            result.lower_bound - exact_policy_cost) <=
+                            value_comparison_tolerance(
+                                exact_policy_cost);
+                    verify_retained_portfolio();
+                    BoundedPolicyIncumbent* cheaper_verified =
+                        best_current_certified_fallback();
+                    const bool strict_superseded =
+                        cheaper_verified != nullptr &&
+                        cheaper_verified->evaluated_policy_cost <
+                            exact_policy_cost -
+                                value_comparison_tolerance(
+                                    exact_policy_cost) &&
+                        publish_certified_fallback(
+                            coarse_solve_termination);
+                    if (strict_superseded) {
+                        record_candidate_sample(
+                            strict_candidate_record, "publication",
+                            "not_selected",
+                            "a cheaper independently evaluated retained "
+                            "candidate won publication");
+                        telemetry.status =
+                            "strict_lift_complete_cheaper_verified_"
+                            "candidate_selected";
+                    } else {
+                    record_candidate_sample(
+                        strict_candidate_record, "publication",
+                        "selected_for_publication",
+                        "no retained independently evaluated candidate was "
+                        "cheaper beyond tolerance");
                     const double retained_lower =
                         std::isfinite(result.lower_bound) &&
                                 result.lower_bound <=
@@ -2688,10 +3440,21 @@ SolveResult SolveWork::Impl::finish() {
                     if (!globally_exact) {
                         classify_bounded_publication();
                     }
+                    for (const BoundedPolicyIncumbent& candidate :
+                         certified_fallback_portfolio) {
+                        record_candidate_sample(
+                            candidate, "publication", "not_selected",
+                            candidate.independently_evaluated
+                                ? "strict final graph was not more expensive "
+                                  "beyond tolerance"
+                                : "final graph evaluation did not establish "
+                                  "an executable cost");
+                    }
                     certified_fallback_portfolio.clear();
                     certified_fallback_portfolio.shrink_to_fit();
                     telemetry.fallback_portfolio_candidates = 0;
                     telemetry.fallback_portfolio_owned_bytes = 0;
+                    }
                 }
             }
             if (!lift_complete) {
@@ -2701,6 +3464,16 @@ SolveResult SolveWork::Impl::finish() {
                 telemetry.status = status;
                 const std::string reason =
                     "policy_exact_refinement_" + status;
+                if (!certificate.compiled.strategy_json.empty()) {
+                    retain_compiled_unverified(
+                        certificate.compiled,
+                        "policy_guided_exact_refinement",
+                        "strict_final_graph_evaluation",
+                        certificate.failure_reason.empty()
+                            ? reason
+                            : reason + ": " +
+                                  certificate.failure_reason);
+                }
                 record_refinement_refusal(reason);
                 revoke_publication(
                     certificate.failure_reason.empty()
@@ -2715,6 +3488,15 @@ SolveResult SolveWork::Impl::finish() {
                 (void)publish_certified_fallback(
                     coarse_solve_termination);
             }
+        }
+        solve_detail::normalize_publication_result(result);
+        if (result.policy_available) {
+            result.diagnostics.focused_lower_bound = result.lower_bound;
+            result.diagnostics.focused_upper_bound = result.upper_bound;
+            result.diagnostics.focused_partial_policy_upper_bound =
+                result.upper_bound;
+            result.diagnostics.focused_optimality_gap =
+                result.absolute_optimality_gap;
         }
         /*
          * The first pass retains and accounts diagnostic payloads before the

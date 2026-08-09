@@ -112,6 +112,15 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
                diagnostics.policy_refinement.counterexample_samples) +
            string_vector_owned_bytes(
                diagnostics.policy_refinement.refusal_cause_samples) +
+           string_vector_owned_bytes(
+               diagnostics.policy_refinement
+                   .publication_candidate_samples) +
+           string_vector_owned_bytes(
+               diagnostics.policy_refinement
+                   .structural_failure_samples) +
+           string_vector_owned_bytes(
+               diagnostics.policy_refinement
+                   .evaluator_memory_samples) +
            diagnostics.policy_refinement.trigger_coarse_states.capacity() *
                sizeof(std::uint32_t) +
            diagnostics.policy_refinement.status.capacity() + 1 +
@@ -1491,6 +1500,15 @@ std::string serialize_solver_telemetry(
         json += ",\"refusal_causes\":{"
                 "\"count\":null,\"samples\":[],\"retained\":null,"
                 "\"omitted\":null,\"limit\":null}";
+        json += ",\"publication_candidates\":{"
+                "\"samples\":[],\"retained\":null,\"omitted\":null,"
+                "\"retained_bytes\":null,\"limit\":null}";
+        json += ",\"structural_failures\":{"
+                "\"samples\":[],\"retained\":null,\"omitted\":null,"
+                "\"retained_bytes\":null,\"limit\":null}";
+        json += ",\"evaluator_memory\":{"
+                "\"samples\":[],\"retained\":null,\"omitted\":null,"
+                "\"retained_bytes\":null,\"limit\":null}";
     } else {
         const PolicyRefinementTelemetry& refinement =
             diagnostics->policy_refinement;
@@ -2491,6 +2509,41 @@ std::string serialize_solver_telemetry(
         json += ",\"limit\":" +
                 std::to_string(diagnostics->diagnostic_sample_limit) +
                 "}";
+        const auto append_json_samples =
+            [&](const char* name,
+                const std::vector<std::string>& samples,
+                const std::uint64_t omitted,
+                const std::uint64_t retained_bytes) {
+                json += ",\"" + std::string{name} +
+                    "\":{\"samples\":[";
+                for (std::size_t i = 0; i < samples.size(); ++i) {
+                    if (i != 0) json.push_back(',');
+                    json += samples[i];
+                }
+                json += "],\"retained\":" +
+                    std::to_string(samples.size()) +
+                    ",\"omitted\":" + std::to_string(omitted) +
+                    ",\"retained_bytes\":" +
+                    std::to_string(retained_bytes) +
+                    ",\"limit\":" +
+                    std::to_string(
+                        diagnostics->diagnostic_sample_limit) + "}";
+            };
+        append_json_samples(
+            "publication_candidates",
+            refinement.publication_candidate_samples,
+            refinement.publication_candidate_samples_omitted,
+            refinement.publication_candidate_sample_bytes);
+        append_json_samples(
+            "structural_failures",
+            refinement.structural_failure_samples,
+            refinement.structural_failure_samples_omitted,
+            refinement.structural_failure_sample_bytes);
+        append_json_samples(
+            "evaluator_memory",
+            refinement.evaluator_memory_samples,
+            refinement.evaluator_memory_samples_omitted,
+            refinement.evaluator_memory_sample_bytes);
     }
     json += "}";
 

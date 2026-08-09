@@ -504,24 +504,13 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(solve_progress.live_owned_bytes > 0);
     PC_CHECK(solve_progress.peak_owned_bytes >=
              solve_progress.live_owned_bytes);
-    if (policy_guided_refined) {
-        /*
-         * Progress is the completed coarse discovery snapshot. Exact
-         * publication refinement runs during finish and may replace its
-         * bounds with the refined feasible certificate.
-         */
-        PC_CHECK(solve_progress.lower_bound >= 0.0);
-        PC_CHECK(
-            solve_progress.upper_bound >=
-            solve_progress.lower_bound);
-    } else {
-        PC_CHECK(
-            solve_progress.lower_bound ==
-            solve_summary.start_value);
-        PC_CHECK(
-            solve_progress.upper_bound ==
-            solve_summary.start_value);
-    }
+    /* Progress is the completed discovery snapshot. Finalization parses and
+     * independently evaluates the exact emitted JSON for direct, refined,
+     * and fallback policies, then may replace and normalize these bounds. */
+    PC_CHECK(solve_progress.lower_bound >= 0.0);
+    PC_CHECK(
+        solve_progress.upper_bound >=
+        solve_progress.lower_bound);
 
     pc_solve_summary stepped_summary{};
     PC_CHECK(pc_solver_solve_finish(solver, &stepped_summary, &error) ==

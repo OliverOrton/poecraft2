@@ -1527,6 +1527,31 @@ slower, V1 slopes as evaluator-version-only, fallback/frontier/density results
 as unchanged, and selected alternatives, rare renewals, and five-goal scale as
 unresolved.
 
+## Verified Best Executable Strategy Publication
+
+The 2026-08-08
+[tracked evidence](../fixtures/solver-reliability/v1/evidence/verified-best-policy-publication.json)
+and [completion report](archive/2026-08-08-verified-best-policy-publication/report.md)
+qualify final-JSON publication. Direct, strict-refinement, and renewal graphs
+are parsed and independently evaluated before they can carry a public upper;
+the cheapest verified candidate wins, and estimate mismatch blocks optimality
+rather than executability.
+
+The 49-case native and release-WASM portfolios each publish and independently
+evaluate 45 graphs with complete cost, success probability one, and zero
+off-policy mass. Their semantic comparison passes 1,320 checks with zero
+mismatches. Native and WASM also complete the required 10,000-run Runic
+Gauntlets and Dire Pelt controls with zero off-policy failures. Six legacy
+Monte Carlo success expectations remain action-cap misses; exact final-graph
+evaluation, not completed-run sampling, is authoritative.
+
+The evidence records the Fishing Rod incumbent recovery, corrected Ring work
+transfer, centralized lower/upper normalization, candidate costs and
+dispositions, Amulet and `bd85` strict invariant witnesses, and the exact
+36.4GB and 4.49GB dense evaluator projections. Those allocations are
+classified as avoidable dense work rather than accounting errors; their
+larger representation fix is explicitly deferred.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

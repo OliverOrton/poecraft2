@@ -682,6 +682,10 @@ void run_protected_price_flip() {
         capped_reforge_work);
     PC_CHECK(
         capped_repeat_telemetry.reforge_logical_work_v1 ==
+        capped_repeat_telemetry.reforge_effort
+            .nested_automatic_child_logical_work);
+    PC_CHECK(
+        capped_repeat_telemetry.reforge_logical_work_v1 <
         capped_reforge_work);
     PC_CHECK(
         capped_repeat_telemetry.reforge_effort

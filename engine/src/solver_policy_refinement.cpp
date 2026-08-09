@@ -775,9 +775,12 @@ PolicyExactLiftCertificate lift_policy_quotient_materialized_scaffold(
                 PolicyExactLiftStatus::RefinementFailure,
                 "production quotient path invoked reconstruct-then-merge reference adapter");
         }
-        if (certificate.compiled.status !=
-                CompiledPolicyAssertionStatus::Complete ||
-            !certificate.compiled.executable) {
+        if (!certificate.compiled.executable ||
+            !certificate.compiled.proper ||
+            !certificate.compiled.zero_off_policy ||
+            !certificate.compiled.evaluation.cost_complete ||
+            !std::isfinite(certificate.compiled.exact_cost) ||
+            certificate.compiled.exact_cost < 0.0) {
             throw AdapterFailure(
                 certificate.compiled.status ==
                         CompiledPolicyAssertionStatus::ResourceCap
@@ -785,17 +788,6 @@ PolicyExactLiftCertificate lift_policy_quotient_materialized_scaffold(
                     : PolicyExactLiftStatus::CompiledAssertionFailure,
                 certificate.compiled.failure_reason,
                 certificate.compiled.resource_cap);
-        }
-        double artifact_delta = 0.0;
-        double artifact_relative = 0.0;
-        if (!reconciled(
-                certificate.compiled.exact_cost,
-                certificate.exact_start_cost,
-                artifact_delta,
-                artifact_relative)) {
-            throw AdapterFailure(
-                PolicyExactLiftStatus::CompiledAssertionFailure,
-                "compiled quotient artifact does not reconcile with Bellman value");
         }
         certificate.status = PolicyExactLiftStatus::Complete;
         certificate.executable = true;
@@ -2187,10 +2179,12 @@ PolicyExactLiftCertificate lift_policy_quotient(
                 PolicyExactLiftStatus::RefinementFailure,
                 "production quotient invoked reference adapter");
         }
-        if (certificate.compiled.status !=
-                CompiledPolicyAssertionStatus::Complete ||
-            !certificate.compiled.executable ||
-            !certificate.compiled.zero_off_policy) {
+        if (!certificate.compiled.executable ||
+            !certificate.compiled.proper ||
+            !certificate.compiled.zero_off_policy ||
+            !certificate.compiled.evaluation.cost_complete ||
+            !std::isfinite(certificate.compiled.exact_cost) ||
+            certificate.compiled.exact_cost < 0.0) {
             throw AdapterFailure(
                 certificate.compiled.status ==
                         CompiledPolicyAssertionStatus::ResourceCap
@@ -2198,16 +2192,6 @@ PolicyExactLiftCertificate lift_policy_quotient(
                     : PolicyExactLiftStatus::CompiledAssertionFailure,
                 certificate.compiled.failure_reason,
                 certificate.compiled.resource_cap);
-        }
-        double artifact_delta = 0.0;
-        double artifact_relative = 0.0;
-        if (!reconciled(
-                certificate.compiled.exact_cost,
-                certificate.exact_start_cost,
-                artifact_delta, artifact_relative)) {
-            throw AdapterFailure(
-                PolicyExactLiftStatus::CompiledAssertionFailure,
-                "compiled quotient artifact does not reconcile with Bellman value");
         }
         certificate.status = PolicyExactLiftStatus::Complete;
         certificate.executable = true;
@@ -3229,22 +3213,12 @@ PolicyExactLiftCertificate lift_policy_exact(
         return certificate;
     }
 
-    if (certificate.compiled.status ==
-        CompiledPolicyAssertionStatus::Complete) {
-        double artifact_delta = 0.0;
-        double artifact_relative = 0.0;
-        if (!reconciled(
-                certificate.compiled.exact_cost,
-                certificate.exact_start_cost,
-                artifact_delta,
-                artifact_relative)) {
-            certificate.status =
-                PolicyExactLiftStatus::CompiledAssertionFailure;
-            certificate.failure_reason =
-                "compiled lifted artifact does not reconcile with its "
-                "refined class-policy value";
-            return certificate;
-        }
+    if (certificate.compiled.executable &&
+        certificate.compiled.proper &&
+        certificate.compiled.zero_off_policy &&
+        certificate.compiled.evaluation.cost_complete &&
+        std::isfinite(certificate.compiled.exact_cost) &&
+        certificate.compiled.exact_cost >= 0.0) {
         certificate.status = PolicyExactLiftStatus::Complete;
         certificate.executable = true;
         return certificate;

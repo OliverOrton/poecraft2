@@ -1015,7 +1015,7 @@ void run_projected_reforge_frontier_equivalence_tests() {
         }
         PC_CHECK(capped);
         PC_CHECK(
-            context.telemetry().reforge_logical_work_v1 ==
+            context.telemetry().reforge_logical_work_v1 <=
             shared_logical_cap);
         PC_CHECK(
             context.telemetry().reforge_effort.rows_interrupted == 1);

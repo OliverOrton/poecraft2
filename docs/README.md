@@ -29,12 +29,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[Verified Best Executable Strategy Publication](active/verified-best-policy-publication.md)
-is the active Oliver-selected boundary. It restores every eligible incumbent,
-independently evaluates each exact final JSON graph, separates executability
-from cost reconciliation and optimality, normalizes public bounds, and selects
-the cheapest verified candidate across direct, strict, and fallback paths. The
-completed
+There is no active implementation boundary. Oliver must choose the next chunk
+before implementation resumes. The completed
+[Verified Best Executable Strategy Publication](archive/2026-08-08-verified-best-policy-publication/README.md)
+milestone restores every eligible incumbent, independently evaluates each
+exact final JSON graph, separates executability from cost reconciliation and
+optimality, normalizes public bounds, and selects the cheapest verified
+candidate across direct, strict, and fallback paths. The completed
 [Goal-Gated Semantic Policy Routing](archive/2026-08-04-goal-gated-semantic-policy-routing/README.md)
 milestone makes Calculator solves opt into the existing zero-goal-progress
 reforge restriction, records structured policy scope, compiles policies by

@@ -287,7 +287,12 @@
             !kernel.terminates_almost_surely) {
             throw AdapterFailure(
                 PolicyExactLiftStatus::ObservationUnavailable,
-                "selected planner option has no legal exact kernel");
+                "selected planner option has no legal exact kernel "
+                "(entry_state=" + std::to_string(entry_state) +
+                ", operator=" + std::to_string(operator_index) +
+                ", planner_id=" + planner.id +
+                ", calc_states=" +
+                std::to_string(source.state_count()) + ")");
         }
         recipe.kind = ExactChoiceRecipeKind::FixedOption;
         recipe.option_preferences =
@@ -351,7 +356,12 @@
             !kernel.terminates_almost_surely) {
             throw AdapterFailure(
                 PolicyExactLiftStatus::ObservationUnavailable,
-                "selected planner option has no legal exact kernel");
+                "selected planner option has no legal exact kernel "
+                "(entry_state=" + std::to_string(entry_state) +
+                ", operator=" + std::to_string(operator_index) +
+                ", planner_id=" + planner.id +
+                ", calc_states=" +
+                std::to_string(source.state_count()) + ")");
         }
         key.push_back(2);
         try {
@@ -750,7 +760,17 @@
                         throw AdapterFailure(
                             PolicyExactLiftStatus::InvalidSolveState,
                             "coarse primitive kernel escapes the solved "
-                            "policy table");
+                            "policy table (source_state=" +
+                            std::to_string(state) +
+                            ", successor_state=" +
+                            std::to_string(successor) +
+                            ", solved_policy_size=" +
+                            std::to_string(solved_.policy.size()) +
+                            ", calc_state_count=" +
+                            std::to_string(coarse_.state_count()) +
+                            ", operator=" +
+                            std::to_string(node.coarse_operator) +
+                            ", planner_id=" + planner.id + ")");
                     }
                     pending.insert(successor);
                     require_local_memory(

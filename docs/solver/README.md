@@ -118,6 +118,21 @@ reconstruct a second policy after certification. The measured repair and
 cross-version evidence are archived under
 [Core Policy Preservation And Direct Certification](../archive/2026-08-05-core-policy-publication-recovery/README.md).
 
+Verified-best publication addendum: final publication authority now belongs
+to the exact emitted strategy JSON, not to its source class-policy estimate.
+Every direct, strict-refinement, and fallback graph considered for publication
+is parsed and independently evaluated. A candidate is executable only when
+that evaluation converges with eventual success probability one, complete
+pricing, zero off-policy mass, and finite expected cost. The evaluator cost is
+the candidate's authoritative upper bound. An estimate mismatch therefore
+blocks an exact claim but does not discard an otherwise executable graph.
+Among all such candidates, the solver publishes the cheapest evaluated graph;
+exact status additionally requires a matching valid global lower certificate.
+Compiled graphs whose evaluation is refused remain bounded diagnostic
+evidence only and carry no finite public upper. The measured implementation,
+case matrix, and acceptance evidence are archived under
+[Verified Best Executable Strategy Publication](../archive/2026-08-08-verified-best-policy-publication/README.md).
+
 ## Purpose
 
 The solver turns a concrete start item, a goal, an action scope, and an
@@ -989,14 +1004,15 @@ action. The compatibility audit is a final assertion that every selected
 action and continuation has an exact route. An exclusion-identity witness
 feeds refinement rather than serving as the normal completed result.
 
-A resource-capped renewal without the exact fixed-renewal witness is refused
-with `coarse_parent_capped_renewal_without_exact_witness`. A witnessed
-primitive renewal whose expected action count exceeds the product Simulator's
-100,000-action run limit is refused with
-`primitive_renewal_expected_actions_exceed_simulator_cap`. These checks do not
-remove candidates, alter transitions, or change the solver objective; they
-prevent an abstract policy from being advertised as an executable concrete
-strategy.
+Compilation establishes an executable graph shape; it is not publication
+certification. Finalization parses and evaluates the exact emitted JSON before
+the graph can carry a public finite upper. A witnessed primitive renewal whose
+expected action count exceeds the product Simulator's unchanged 100,000-action
+run limit is diagnosed during finalization as
+`primitive_renewal_expected_actions_exceed_simulator_cap`. General executable
+graphs remain independently evaluable even when a sampled simulator run can
+reach that limit: truncation is corroborating sample evidence, not a rewrite
+of the exact graph result.
 
 Code authority: `engine/src/solver_compile.cpp`,
 `engine/src/solver_solve_finish.cpp`, and `engine/src/simulator.cpp`.
@@ -1035,6 +1051,24 @@ An authored selection absent from its sampled offer is refused rather than
 resampled or approximated. The stateful API has
 begin/step/finish/destroy calls, cooperative progress, owned/output byte caps,
 and live/peak memory statistics.
+
+The evaluator is also the final publication assertion. Direct, strict, and
+fallback candidates all use the same path over their exact emitted JSON.
+Successful evaluation stores its expected cost as the executable upper;
+failed or resource-refused evaluation retains only a `compiled_unverified`
+diagnostic artifact. A class-policy value or successful compiler return cannot
+substitute for this result. Candidate selection compares independently
+evaluated costs, so later strict work cannot replace a cheaper verified direct
+or fallback graph merely because its source estimate was lower.
+
+Publication bounds are normalized once after candidate selection. A finite
+upper requires a retained verified artifact and must reconcile with its stored
+evaluation cost. Invalid or materially inverted lowers are discarded to zero;
+a tolerance-sized inversion clamps to the upper. A bounded equality without a
+global exact-closure certificate also discards the lower, preventing a false
+`1.00x` display. Absolute and relative gaps are then recomputed from the
+normalized pair. Exact publication requires equality within the existing
+tolerance and the solver's global lower-closure signal.
 
 For a clean start and a compiled graph whose shared action contracts destroy
 every downstream-observed explicit feature before routing (including Restart
@@ -1170,6 +1204,18 @@ and engine-owned refusal strings obey the diagnostic sample cap and report
 retained, omitted, and limit counts. These fields describe exact work and
 named limits; they do not authorize a frontend fallback or weaken cost
 reconciliation.
+
+Three bounded diagnostic arrays make final publication decisions auditable.
+`publication_candidates` records candidate identity, direct/strict/fallback
+stage, verification state, source estimate, exact evaluated cost,
+reconciliation delta, disposition, and selection reason.
+`structural_failures` records the first strict mapping or successor invariant
+with state, policy, partition, operator, and mapping identities.
+`evaluator_memory` records graph and reachable-pair sizes, component shape,
+dense/sparse phase, retained and projected transient allocations, the declared
+budget, and the exact refusal calculation. Each array enforces both sample and
+byte limits and reports omissions. These fields are diagnostic only; they do
+not relax caps, tolerances, evaluator semantics, or policy eligibility.
 
 Local repair work is explicit: `local_state_action_rows_scheduled` counts
 witness-selected exact rows offered to repair,

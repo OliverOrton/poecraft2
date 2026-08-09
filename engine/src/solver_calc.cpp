@@ -1433,9 +1433,11 @@ void CalcContext::consume_reforge_work(
         logical_v1_amount > *solve_reforge_work_cap_ -
                      std::min(telemetry_.reforge_logical_work_v1,
                               *solve_reforge_work_cap_)) {
-        telemetry_.reforge_logical_work_v1 = *solve_reforge_work_cap_;
-        /* Raw V1 historically saturated its active ledger at the cap. Keep
-         * that observable behavior while V2/V3 retain honest active effort. */
+        /* The requested unit did not execute. Preserve the committed logical
+         * ledger so a parent scope debits only work actually consumed and can
+         * pass the genuine remainder to later publication stages. Raw V1's
+         * legacy active ledger remains saturated as refusal proximity; the
+         * versioned logical ledger is the cross-stage allowance authority. */
         if (!use_projected_reforge_frontier_) {
             telemetry_.reforge_frontier_work = *solve_reforge_work_cap_;
         }
