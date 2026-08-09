@@ -3,6 +3,31 @@
 namespace poecraft {
 namespace solver {
 
+namespace {
+
+std::uint32_t temporary_tag_id(
+    const SessionImpl& session,
+    const char* name) {
+    const auto found = session.data->tag_id_by_name.find(name);
+    return found == session.data->tag_id_by_name.end()
+               ? kNoId
+               : found->second;
+}
+
+bool temporary_mod_has_tag(
+    const SessionImpl& session,
+    const std::uint32_t mod,
+    const std::uint32_t tag) {
+    if (mod >= session.mod_count || tag == kNoId) return false;
+    for (std::uint32_t row = session.class_offsets[mod];
+         row < session.class_offsets[mod + 1]; ++row) {
+        if (session.class_tag_ids[row] == tag) return true;
+    }
+    return false;
+}
+
+} // namespace
+
 void CalcContext::initialize_temporary_bench_effect_classes() {
     const auto started = std::chrono::steady_clock::now();
     automatic_goal_bench_actions_.clear();
@@ -17,18 +42,22 @@ void CalcContext::initialize_temporary_bench_effect_classes() {
         return;
     }
 
-    std::vector<std::uint32_t> ordinary_bench;
+    std::vector<std::uint32_t> temporary_bench;
     for (std::uint32_t index = 0; index < registry_.actions.size(); ++index) {
         const ActionDescriptor& action = registry_.actions[index];
         if (action.params.type != ActionType::Bench ||
-            action.params.mod_id >= session_->metamod_type.size() ||
-            session_->metamod_type[action.params.mod_id] >= 0) {
+            action.params.mod_id >= session_->metamod_type.size()) {
             continue;
         }
-        if (goal_mask_for_mod(*session_, goal_, action.params.mod_id) != 0) {
+        const int metamod = session_->metamod_type[action.params.mod_id];
+        const bool cannot_roll =
+            metamod == session_->data->metamod_no_attack_code ||
+            metamod == session_->data->metamod_no_caster_code;
+        if (metamod < 0 &&
+            goal_mask_for_mod(*session_, goal_, action.params.mod_id) != 0) {
             automatic_goal_bench_actions_.push_back(index);
-        } else {
-            ordinary_bench.push_back(index);
+        } else if (metamod < 0 || cannot_roll) {
+            temporary_bench.push_back(index);
         }
     }
 
@@ -48,15 +77,30 @@ void CalcContext::initialize_temporary_bench_effect_classes() {
         for (std::uint32_t slot = 0; slot < goal_.slots.size(); ++slot) {
             const std::int8_t target_side =
                 goal_slot_side(*session_, goal_.slots[slot]);
-            for (const std::uint32_t blocker_index : ordinary_bench) {
+            for (const std::uint32_t blocker_index : temporary_bench) {
                 const ActionDescriptor& blocker =
                     registry_.actions[blocker_index];
                 const std::uint32_t blocker_mod = blocker.params.mod_id;
                 std::vector<std::uint64_t> conflict_mask(
                     session_->words, 0);
+                const int metamod = session_->metamod_type[blocker_mod];
+                const bool pool_tag_blocker =
+                    metamod == session_->data->metamod_no_attack_code ||
+                    metamod == session_->data->metamod_no_caster_code;
+                const std::uint32_t blocked_tag = pool_tag_blocker
+                    ? temporary_tag_id(
+                          *session_,
+                          metamod == session_->data->metamod_no_attack_code
+                              ? "attack"
+                              : "caster")
+                    : kNoId;
                 bool conflicts_positive = false;
                 for (std::uint32_t mod = 0; mod < session_->mod_count; ++mod) {
-                    if (!mods_conflict(*session_, blocker_mod, mod)) continue;
+                    const bool blocked = pool_tag_blocker
+                        ? blocked_tag != kNoId &&
+                              temporary_mod_has_tag(*session_, mod, blocked_tag)
+                        : mods_conflict(*session_, blocker_mod, mod);
+                    if (!blocked) continue;
                     pc_bitset_set(conflict_mask.data(), mod);
                     conflicts_positive |=
                         mod < session_->base_roll_weight.size() &&
@@ -78,6 +122,7 @@ void CalcContext::initialize_temporary_bench_effect_classes() {
                         return candidate.followup_action == followup &&
                                candidate.goal_slot == slot &&
                                candidate.blocker_side == blocker_side &&
+                               candidate.pool_tag_blocker == pool_tag_blocker &&
                                candidate.conflict_mask == conflict_mask;
                     });
                 if (existing == temporary_bench_effect_classes_.end()) {
@@ -85,6 +130,7 @@ void CalcContext::initialize_temporary_bench_effect_classes() {
                     effect.followup_action = followup;
                     effect.goal_slot = slot;
                     effect.blocker_side = blocker_side;
+                    effect.pool_tag_blocker = pool_tag_blocker;
                     effect.conflict_mask = std::move(conflict_mask);
                     effect.target_mask = target_masks[slot];
                     temporary_bench_effect_classes_.push_back(

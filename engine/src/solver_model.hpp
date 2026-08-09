@@ -77,6 +77,7 @@ enum class AutomaticCandidateKind : std::uint8_t {
     Imprint = 6,
     ConstructiveRenewal = 7,
     EldritchSide = 8,
+    CannotRoll = 9,
 };
 
 /* R3A retention/accounting categories. These are deliberately independent
@@ -93,7 +94,8 @@ enum class AutomaticTelemetryKind : std::uint8_t {
     MultimodFinish = 6,
     PrimitiveFracture = 7,
     EldritchSide = 8,
-    Count = 9,
+    CannotRoll = 9,
+    Count = 10,
     None = 255,
 };
 
@@ -114,6 +116,24 @@ enum class PrimitiveTelemetryFamily : std::uint8_t {
 
 inline constexpr std::size_t kPrimitiveTelemetryFamilyCount =
     static_cast<std::size_t>(PrimitiveTelemetryFamily::Count);
+
+/* Product goal filtering classifies every native primitive into exactly one
+ * of these roles. Candidate and dependency rows remain in the registry;
+ * filtered rows are retained only as compact admission evidence. */
+enum class ProductActionRole : std::uint8_t {
+    Candidate = 0,
+    AutomaticDependency = 1,
+    Filtered = 2,
+};
+
+inline constexpr std::size_t kProductActionRoleCount = 3;
+
+struct ProductActionAdmissionRecord {
+    std::string id;
+    PrimitiveTelemetryFamily family = PrimitiveTelemetryFamily::Other;
+    ProductActionRole role = ProductActionRole::Filtered;
+    std::string reason;
+};
 
 struct AutomaticKindTelemetry {
     std::uint64_t candidates = 0;
@@ -192,6 +212,7 @@ enum AutomaticKernelMechanism : std::uint32_t {
     kAutomaticDeterministicFinish = 1u << 5,
     kAutomaticImprintCheckpoint = 1u << 6,
     kAutomaticEldritchDominance = 1u << 7,
+    kAutomaticMetamodPoolBlock = 1u << 8,
 };
 
 /*
@@ -629,10 +650,11 @@ struct ActionDescriptor {
     /* Reserved for future two-item techniques (imprint/recombinator inside
      * the item-level solver). Nothing planned sets it; see plan. */
     bool uses_companion_state = false;
-    /* Retained in a goal-relevant registry only as an automatic option
-     * dependency. It participates in abstraction and exact evaluation but is
-     * not independently selectable unless the caller explicitly names it. */
-    bool automatic_dependency_only = false;
+    /* Engine-owned product role. Dependencies enter abstraction and exact
+     * evaluation only through a materialized automatic option and never
+     * enter the independently selectable candidate list. */
+    ProductActionRole product_role = ProductActionRole::Candidate;
+    std::string product_admission_reason = "candidate_unfiltered";
 };
 
 inline bool action_observes_modifier_offer(
@@ -650,6 +672,15 @@ struct ActionRegistry {
     std::uint32_t fossil_loadouts_deferred = 0;
     bool fossil_generation_lazy = false;
     bool fossil_generation_goal_relevant = false;
+    bool product_goal_filtering = false;
+    std::array<std::uint32_t, kProductActionRoleCount>
+        product_role_counts{};
+    std::array<
+        std::array<std::uint32_t, kPrimitiveTelemetryFamilyCount>,
+        kProductActionRoleCount>
+        product_role_family_counts{};
+    std::map<std::string, std::uint32_t> product_reason_counts;
+    std::vector<ProductActionAdmissionRecord> product_filtered_actions;
 };
 
 struct ActionRegistryBuildOptions {
@@ -667,6 +698,7 @@ struct ActionRegistryBuildOptions {
     bool needs_multimod = false;
     bool needs_fracture = false;
     bool automatic_candidates = false;
+    std::uint32_t required_satisfied_slots = 0;
     std::vector<std::vector<std::uint32_t>> fossil_goal_mod_ids;
 };
 

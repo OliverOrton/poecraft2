@@ -225,6 +225,7 @@ struct DataImpl {
     std::uint32_t essence_count = 0;
     std::vector<std::uint32_t> essence_key_sids;
     std::vector<std::int32_t> essence_item_level_restrictions;
+    std::vector<std::int32_t> essence_is_corruption_only;
     std::vector<std::uint32_t> essence_mod_offsets;
     std::vector<std::uint32_t> essence_class_key_sids;
     std::vector<std::int32_t> essence_linked_global_mod_ids;

@@ -1,6 +1,6 @@
 # Essences
 
-**Status: current implemented mechanic reference with a product/backend boundary.**
+**Status: current implemented mechanic reference.**
 
 Parent: [Mechanics](README.md)
 
@@ -52,7 +52,8 @@ has a resolvable guaranteed modifier.
 - `tools/ingest/poecraft_ingest/compiled_data.py` — compiled Essence arrays,
   including `is_corruption_only` in the artifact.
 - `engine/src/data_loader.cpp` and `engine/src/engine_internal.hpp` — fields
-  loaded into native `DataImpl`; the corruption-only array is not retained.
+  loaded into native `DataImpl`, including the validated parallel
+  `is_corruption_only` array.
 - `engine/src/session_builder.cpp` — item-class guaranteed-mod resolution.
 - `engine/src/api.cpp` — `essence_key` request parsing.
 - `engine/src/actions_basic.cpp` — sampled guaranteed-mod reforge.
@@ -71,10 +72,12 @@ from this picker.
 ## Solver Support
 
 The solver registry and exact calculator support the ordinary guaranteed-mod
-reforge for each resolvable session Essence. Because native `DataImpl` does not
-retain `is_corruption_only`, the backend registry cannot itself distinguish
-those rows from ordinary Essences. Product requests normally avoid them through
-catalog filtering.
+reforge for each resolvable non-corruption Essence. Product goal filtering
+keeps only an ordinary Essence whose guaranteed modifier exactly matches a goal
+family and records unrelated Essences under a stable filtered reason.
+Corruption-only rows are rejected while the native registry is built, before
+they can become ordinary Essence candidates, and product telemetry records
+`filtered_corruption_only_essence`.
 
 Protected-side solver options deliberately do not admit Essence as the
 protected renewal, because the dated owner ruling says it ignores every
@@ -89,14 +92,7 @@ calculator.
 ## Explicitly Unsupported Behavior
 
 - Corruption-only Essence transformation behavior is not implemented.
-- The web product hides corruption-only rows, but a caller that already knows
-  such a raw key can currently reach the ordinary native Essence reforge path.
-  That backend exposure is not evidence that the corruption mechanic is
-  supported.
+- The web product hides corruption-only rows, and the native ordinary-Essence
+  registry rejects those compiled keys as well. This is a support-boundary
+  rejection, not an implementation of corruption Essence mechanics.
 - Essence rolls do not preserve or obey any metamod effect.
-
-## Open Questions Requiring Oliver
-
-- Should the native C ABI and solver registry explicitly reject compiled rows
-  marked `is_corruption_only`, or is product-level filtering the intended
-  permanent boundary until their behavior is implemented?

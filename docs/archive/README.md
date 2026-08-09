@@ -11,6 +11,14 @@ selected active work.
 
 ## 2026-08-08
 
+- [Product Action Dependency Reachability](2026-08-08-product-action-dependency-reachability/README.md) —
+  separates selectable candidates from engine-owned automatic dependencies,
+  restores public native/release-WASM Eldritch reachability, adds bounded
+  Cannot Roll and cleanup routes, preserves narrow Harvest/Essence/Fossil
+  discovery, rejects corruption-only Essences natively, and adds compact
+  Calculator scope disclosure without changing mechanics, Bellman semantics,
+  state abstraction, or caps.
+
 - [Verified Best Executable Strategy Publication](2026-08-08-verified-best-policy-publication/README.md) —
   restores eligible incumbents on every non-exact exit, independently
   evaluates the exact emitted JSON for direct, strict, and renewal candidates,

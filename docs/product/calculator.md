@@ -84,7 +84,9 @@ The Solve surface is distinct from one-action odds:
 
 1. Pin the effective workspace economy, including action price provenance.
 2. Open a native `action_mode: "goal_relevant"` envelope, which enables the
-   current automatic-candidate substrate.
+   current automatic-candidate substrate. Native action classification retains
+   automatic dependencies separately; the descriptor list returned to the web
+   app contains independently selectable candidates only.
 3. Keep only candidates whose complete price vectors resolve. If priced
    Fracture is relevant, require an explicit `base` price because miss recovery
    uses Restart.
@@ -125,6 +127,14 @@ bound can make the certificate pessimistic.
 
 Automatic options remain native planner operators and compile into primitive
 strategy nodes; the web app does not execute opaque macros.
+
+Near policy quality, the result discloses the actual product scope without
+listing every action: goal-relevant action discovery, the zero-progress
+destructive-reforge retry restriction, admitted priced counts grouped by
+family, missing-price exclusions, deferred Veiled crafting, and any unresolved
+action obligations left by a resource stop. Detailed admitted action IDs stay
+in the existing collapsible section. Solver telemetry is therefore retrieved
+for successful exact results as well as bounded or refused results.
 
 Every solver-generated document records its non-executable scope as optional
 `solver_policy_scope` metadata. Calculator results use

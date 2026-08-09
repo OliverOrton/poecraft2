@@ -34,6 +34,11 @@ import {
         hasCompiledStrategy: true,
         busy: false,
         verification: null,
+        telemetry: {
+            incremental_action_envelope: {
+                remaining_action_envelope: 2,
+            },
+        },
     });
     assert.match(markup, /data-policy-status="bounded_near_optimal"/);
     assert.match(markup, /Returned policy expected cost/);
@@ -48,6 +53,11 @@ import {
     assert.match(markup, /bench:&lt;unsafe&gt;/);
     assert.match(markup, /Open in Strategy Board/);
     assert.match(markup, /Verify 10,000 runs/);
+    assert.match(markup, /Product goal-relevant action scope/);
+    assert.match(markup, /Zero-progress outcomes retry through destructive reforges only/);
+    assert.match(markup, /Admitted priced families: Bench 1 \/ Currency \/ structural 1/);
+    assert.match(markup, /Explicitly deferred: Veiled crafting/);
+    assert.match(markup, /2 action obligations remained unresolved/);
     assert.doesNotMatch(markup, /is 10% suboptimal/i);
     assert.doesNotMatch(markup, /upper bound[^<]*optimum/i);
     assert.doesNotMatch(markup, /Did not converge/);

@@ -1079,7 +1079,11 @@ void SolveWork::Impl::finish_focused_upper_solve(const bool succeeded) {
                 return;
             } else if (!schedule_next_incremental_alternative()) {
                 if (!schedule_incremental_refinement(true)) {
-                    phase = SolvePhase::Done;
+                    if (incremental_envelope_closed) {
+                        finish_focused_lower_solve();
+                    } else {
+                        phase = SolvePhase::Done;
+                    }
                 }
             }
             return;
@@ -1160,7 +1164,19 @@ void SolveWork::Impl::run_focused_lower_unit() {
                     return;
                 } else if (!schedule_next_incremental_alternative()) {
                     if (!schedule_incremental_refinement(true)) {
-                        phase = SolvePhase::Done;
+                        /*
+                         * classify_incremental_alternatives() may close the
+                         * last delayed-action envelope in this optimized
+                         * focused round. Give the now-complete graph its
+                         * normal focused closure/direct-upper proof instead
+                         * of finalizing with an exact value but no publishable
+                         * policy.
+                         */
+                        if (incremental_envelope_closed) {
+                            finish_focused_lower_solve();
+                        } else {
+                            phase = SolvePhase::Done;
+                        }
                     }
                 }
             } else {

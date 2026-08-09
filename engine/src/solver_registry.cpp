@@ -121,35 +121,211 @@ bool goal_has_influence(
         });
 }
 
-bool action_is_goal_relevant(
+PrimitiveTelemetryFamily product_family(const ActionType type) {
+    switch (type) {
+    case ActionType::Essence: return PrimitiveTelemetryFamily::Essence;
+    case ActionType::Fossil: return PrimitiveTelemetryFamily::Fossil;
+    case ActionType::HarvestReforge:
+    case ActionType::HarvestAugment:
+    case ActionType::HarvestResist:
+        return PrimitiveTelemetryFamily::Harvest;
+    case ActionType::Bench:
+    case ActionType::RemoveCraftedModifiers:
+        return PrimitiveTelemetryFamily::Bench;
+    case ActionType::Fracture: return PrimitiveTelemetryFamily::Fracture;
+    case ActionType::Transmute:
+    case ActionType::Augment:
+    case ActionType::Alteration:
+    case ActionType::Regal:
+    case ActionType::Alchemy:
+    case ActionType::Chaos:
+    case ActionType::Exalt:
+    case ActionType::Annul:
+    case ActionType::Scour:
+        return PrimitiveTelemetryFamily::Currency;
+    default: return PrimitiveTelemetryFamily::Other;
+    }
+}
+
+bool mods_conflict_for_admission(
+    const SessionImpl& session,
+    const std::uint32_t left,
+    const std::uint32_t right) {
+    if (left >= session.mod_count || right >= session.mod_count) return true;
+    for (std::uint32_t a = session.group_offsets[left];
+         a < session.group_offsets[left + 1]; ++a) {
+        for (std::uint32_t b = session.group_offsets[right];
+             b < session.group_offsets[right + 1]; ++b) {
+            if (session.group_ids[a] == session.group_ids[b]) return true;
+        }
+    }
+    return false;
+}
+
+std::int8_t goal_slot_side_for_admission(
+    const SessionImpl& session,
+    const std::vector<std::uint32_t>& mods) {
+    std::int8_t side = -1;
+    for (const std::uint32_t mod : mods) {
+        if (mod >= session.gen_type.size() || session.gen_type[mod] > 1) {
+            continue;
+        }
+        if (side < 0) side = session.gen_type[mod];
+        if (side != session.gen_type[mod]) return -1;
+    }
+    return side;
+}
+
+bool temporary_followup_can_target_goal(
     const SessionImpl& session,
     const ActionRegistryBuildOptions& options,
+    const ActionDescriptor& action,
+    const std::vector<std::uint32_t>& goal_mods) {
+    switch (action.params.type) {
+    case ActionType::Augment:
+    case ActionType::Regal:
+    case ActionType::Exalt:
+        return std::any_of(
+            goal_mods.begin(), goal_mods.end(), [&](std::uint32_t mod) {
+                return mod < session.base_roll_weight.size() &&
+                       session.base_roll_weight[mod] > 0;
+            });
+    case ActionType::HarvestAugment:
+        return std::any_of(
+            goal_mods.begin(), goal_mods.end(), [&](std::uint32_t mod) {
+                return mod_has_tag(session, mod, action.params.target_tag_id);
+            });
+    case ActionType::InfluenceExalt:
+        return std::any_of(
+            goal_mods.begin(), goal_mods.end(), [&](std::uint32_t mod) {
+                return mod < session.influence_code.size() &&
+                       session.influence_code[mod] ==
+                           action.params.influence_code;
+            });
+    default:
+        return false;
+    }
+}
+
+bool ordinary_bench_has_automatic_effect(
+    const SessionImpl& session,
+    const ActionRegistryBuildOptions& options,
+    const ActionRegistry& registry,
+    const ActionDescriptor& blocker) {
+    if (blocker.params.mod_id >= session.mod_count) return false;
+    for (const auto& goal_mods : options.fossil_goal_mod_ids) {
+        if (std::any_of(
+                goal_mods.begin(), goal_mods.end(), [&](std::uint32_t mod) {
+                    return mods_conflict_for_admission(
+                        session, blocker.params.mod_id, mod);
+                })) {
+            continue;
+        }
+        bool conflicts_positive = false;
+        for (std::uint32_t mod = 0; mod < session.mod_count; ++mod) {
+            conflicts_positive |=
+                mod < session.base_roll_weight.size() &&
+                session.base_roll_weight[mod] > 0 &&
+                mods_conflict_for_admission(
+                    session, blocker.params.mod_id, mod);
+        }
+        const std::int8_t target_side =
+            goal_slot_side_for_admission(session, goal_mods);
+        const bool changes_capacity = target_side >= 0 &&
+            session.gen_type[blocker.params.mod_id] != target_side;
+        if (!conflicts_positive && !changes_capacity) continue;
+        if (std::any_of(
+                registry.actions.begin(), registry.actions.end(),
+                [&](const ActionDescriptor& followup) {
+                    return temporary_followup_can_target_goal(
+                        session, options, followup, goal_mods);
+                })) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool cannot_roll_metamod_has_automatic_effect(
+    const SessionImpl& session,
+    const ActionRegistryBuildOptions& options,
+    const int metamod) {
+    const DataImpl& data = *session.data;
+    const char* blocked_tag_name =
+        metamod == data.metamod_no_attack_code ? "attack" :
+        metamod == data.metamod_no_caster_code ? "caster" : nullptr;
+    if (blocked_tag_name == nullptr) return false;
+    const std::uint32_t blocked_tag = tag_id(session, blocked_tag_name);
+    if (blocked_tag == kNoId) return false;
+    bool removable_competitor = false;
+    for (std::uint32_t mod = 0; mod < session.mod_count; ++mod) {
+        removable_competitor |=
+            mod < session.base_roll_weight.size() &&
+            session.base_roll_weight[mod] > 0 &&
+            mod_has_tag(session, mod, blocked_tag);
+    }
+    return removable_competitor && std::any_of(
+        options.fossil_goal_mod_ids.begin(),
+        options.fossil_goal_mod_ids.end(), [&](const auto& slot) {
+            return std::any_of(
+                slot.begin(), slot.end(), [&](std::uint32_t mod) {
+                    return !mod_has_tag(session, mod, blocked_tag) &&
+                           mod < session.base_roll_weight.size() &&
+                           session.base_roll_weight[mod] > 0;
+                });
+        });
+}
+
+struct ProductAdmissionDecision {
+    ProductActionRole role = ProductActionRole::Filtered;
+    const char* reason = "filtered_not_goal_relevant";
+};
+
+ProductAdmissionDecision classify_goal_relevant_action(
+    const SessionImpl& session,
+    const ActionRegistryBuildOptions& options,
+    const ActionRegistry& registry,
     const ActionDescriptor& action) {
     if (std::find(
             options.option_dependency_action_ids.begin(),
             options.option_dependency_action_ids.end(), action.id) !=
         options.option_dependency_action_ids.end()) {
-        return true;
+        return {ProductActionRole::AutomaticDependency,
+                "authored_option_dependency"};
     }
-    if (action.synthetic) return true;
+    if (action.synthetic) {
+        return {ProductActionRole::Candidate, "candidate_structural_restart"};
+    }
     switch (action.params.type) {
-    case ActionType::Essence:
-        return action.params.essence_index <
-                   session.essence_guaranteed_mod_ids.size() &&
-               goal_contains_exact_mod(
-                   options,
-                   session.essence_guaranteed_mod_ids[
-                       action.params.essence_index]);
+    case ActionType::Essence: {
+        const std::uint32_t essence = action.params.essence_index;
+        if (essence < session.data->essence_is_corruption_only.size() &&
+            session.data->essence_is_corruption_only[essence] != 0) {
+            return {ProductActionRole::Filtered,
+                    "filtered_corruption_only_essence"};
+        }
+        return essence < session.essence_guaranteed_mod_ids.size() &&
+                       goal_contains_exact_mod(
+                           options,
+                           session.essence_guaranteed_mod_ids[essence])
+                   ? ProductAdmissionDecision{
+                         ProductActionRole::Candidate,
+                         "candidate_exact_essence_goal"}
+                   : ProductAdmissionDecision{
+                         ProductActionRole::Filtered,
+                         "filtered_essence_without_exact_goal_mod"};
+    }
     case ActionType::Fossil:
-        return true;
+        return {ProductActionRole::Candidate,
+                "candidate_bounded_goal_relevant_fossil"};
     case ActionType::Bench:
-        /* Direct goal crafts can terminate a route. Structural metamods enter
-         * product planning only as dependencies of bounded options, not as
-         * standalone flag setters. */
         if (action.params.mod_id < session.metamod_type.size()) {
-            if (options.automatic_candidates) return true;
-            const int metamod =
-                session.metamod_type[action.params.mod_id];
+            if (goal_contains_mod_family(
+                    session, options, action.params.mod_id)) {
+                return {ProductActionRole::Candidate,
+                        "candidate_direct_goal_bench"};
+            }
+            const int metamod = session.metamod_type[action.params.mod_id];
             const DataImpl& data = *session.data;
             if ((options.needs_prefix_lock &&
                  metamod == data.metamod_prefixes_locked_code) ||
@@ -157,44 +333,131 @@ bool action_is_goal_relevant(
                  metamod == data.metamod_suffixes_locked_code) ||
                 (options.needs_multimod &&
                  metamod == data.metamod_multimod_code)) {
-                return true;
+                return {ProductActionRole::AutomaticDependency,
+                        "authored_metamod_dependency"};
             }
-            return goal_contains_mod_family(
-                session, options, action.params.mod_id);
+            if (!options.automatic_candidates) {
+                return {ProductActionRole::Filtered,
+                        "filtered_bench_without_goal_role"};
+            }
+            bool prefix_goal = false;
+            bool suffix_goal = false;
+            for (const auto& slot : options.fossil_goal_mod_ids) {
+                prefix_goal |= goal_slot_side_for_admission(session, slot) == 0;
+                suffix_goal |= goal_slot_side_for_admission(session, slot) == 1;
+            }
+            if (((metamod == data.metamod_prefixes_locked_code &&
+                  prefix_goal && suffix_goal) ||
+                 (metamod == data.metamod_suffixes_locked_code &&
+                  prefix_goal && suffix_goal))) {
+                return {ProductActionRole::AutomaticDependency,
+                        "automatic_protected_side_dependency"};
+            }
+            if (metamod == data.metamod_multimod_code &&
+                options.required_satisfied_slots >= 2) {
+                const std::size_t goal_benches = std::count_if(
+                    registry.actions.begin(), registry.actions.end(),
+                    [&](const ActionDescriptor& candidate) {
+                        return candidate.params.type == ActionType::Bench &&
+                            candidate.params.mod_id < session.metamod_type.size() &&
+                            session.metamod_type[candidate.params.mod_id] < 0 &&
+                            goal_contains_mod_family(
+                                session, options, candidate.params.mod_id);
+                    });
+                if (goal_benches >= 2) {
+                    return {ProductActionRole::AutomaticDependency,
+                            "automatic_multimod_dependency"};
+                }
+            }
+            if (cannot_roll_metamod_has_automatic_effect(
+                    session, options, metamod)) {
+                return {ProductActionRole::AutomaticDependency,
+                        "automatic_cannot_roll_dependency"};
+            }
+            if (metamod < 0 && ordinary_bench_has_automatic_effect(
+                    session, options, registry, action)) {
+                return {ProductActionRole::AutomaticDependency,
+                        "automatic_temporary_bench_dependency"};
+            }
+            return {ProductActionRole::Filtered,
+                    "filtered_bench_without_option_effect"};
         }
-        return false;
+        return {ProductActionRole::Filtered,
+                "filtered_invalid_bench_mod"};
     case ActionType::VeiledChaos:
     case ActionType::VeiledExalt:
     case ActionType::Unveil:
+        return {ProductActionRole::Filtered,
+                "filtered_veiled_option_deferred"};
     case ActionType::EldritchEmber:
     case ActionType::EldritchIchor:
-    case ActionType::EldritchExalt:
     case ActionType::EldritchChaos:
     case ActionType::EldritchAnnul:
-        /* These mechanics cannot directly satisfy the explicit natural-mod
-         * goal slots accepted by the current product solver. Keeping their
-         * setup flags in every solve materially widens the abstract state. */
-        return false;
+        return options.automatic_candidates
+                   ? ProductAdmissionDecision{
+                         ProductActionRole::AutomaticDependency,
+                         "automatic_eldritch_side_dependency"}
+                   : ProductAdmissionDecision{
+                         ProductActionRole::Filtered,
+                         "filtered_eldritch_without_automatic_options"};
+    case ActionType::EldritchExalt:
+        return {ProductActionRole::Filtered,
+                "filtered_eldritch_exalt_not_in_automatic_family"};
     case ActionType::HarvestReforge:
     case ActionType::HarvestAugment:
     case ActionType::HarvestResist:
-        return goal_has_tag(session, options, action.params.target_tag_id);
+        return goal_has_tag(session, options, action.params.target_tag_id)
+                   ? ProductAdmissionDecision{
+                         ProductActionRole::Candidate,
+                         "candidate_goal_tag_harvest"}
+                   : ProductAdmissionDecision{
+                         ProductActionRole::Filtered,
+                         "filtered_harvest_without_goal_tag"};
     case ActionType::InfluenceExalt:
-        return goal_has_influence(
-            session, options, action.params.influence_code);
+        return goal_has_influence(session, options, action.params.influence_code)
+                   ? ProductAdmissionDecision{
+                         ProductActionRole::Candidate,
+                         "candidate_goal_influence"}
+                   : ProductAdmissionDecision{
+                         ProductActionRole::Filtered,
+                         "filtered_influence_without_goal_mod"};
     case ActionType::Fracture:
-        return options.needs_fracture || options.automatic_candidates;
+        return options.needs_fracture || options.automatic_candidates
+                   ? ProductAdmissionDecision{
+                         ProductActionRole::Candidate,
+                         "candidate_fracture"}
+                   : ProductAdmissionDecision{
+                         ProductActionRole::Filtered,
+                         "filtered_fracture_without_option"};
     case ActionType::RemoveCraftedModifiers:
-        /* Crafted cleanup remains outside the product envelope; Fracture is
-         * now an ordinary product candidate, but cleanup remains structural
-         * support for exact authored/automatic option routes. Exposing this
-         * unfinished primitive to the product MDP creates flag/tag state
-         * combinations that exhaust the normal state cap before iteration. */
-        return options.automatic_candidates;
+        if (!options.automatic_candidates) {
+            return {ProductActionRole::Filtered,
+                    "filtered_cleanup_without_automatic_options"};
+        }
+        return std::any_of(
+                   registry.actions.begin(), registry.actions.end(),
+                   [&](const ActionDescriptor& candidate) {
+                       if (candidate.params.type != ActionType::Bench ||
+                           candidate.params.mod_id >= session.metamod_type.size()) {
+                           return false;
+                       }
+                       const int metamod =
+                           session.metamod_type[candidate.params.mod_id];
+                       return (metamod < 0 &&
+                               ordinary_bench_has_automatic_effect(
+                                   session, options, registry, candidate)) ||
+                              cannot_roll_metamod_has_automatic_effect(
+                                  session, options, metamod);
+                   })
+                   ? ProductAdmissionDecision{
+                         ProductActionRole::AutomaticDependency,
+                         "automatic_crafted_cleanup_dependency"}
+                   : ProductAdmissionDecision{
+                         ProductActionRole::Filtered,
+                         "filtered_cleanup_without_materializable_family"};
     default:
-        /* General currency and restart are structural ways to reach any
-         * explicit goal. */
-        return true;
+        return {ProductActionRole::Candidate,
+                "candidate_general_currency"};
     }
 }
 
@@ -202,30 +465,54 @@ void retain_goal_relevant_actions(
     const SessionImpl& session,
     const ActionRegistryBuildOptions& options,
     ActionRegistry& registry) {
-    if (!options.goal_relevant_actions) return;
+    if (!options.goal_relevant_actions) {
+        registry.product_role_counts[
+            static_cast<std::size_t>(ProductActionRole::Candidate)] =
+            static_cast<std::uint32_t>(registry.actions.size());
+        for (ActionDescriptor& action : registry.actions) {
+            action.product_role = ProductActionRole::Candidate;
+            action.product_admission_reason = "candidate_unfiltered";
+            ++registry.product_role_family_counts[0][
+                static_cast<std::size_t>(product_family(action.params.type))];
+        }
+        registry.product_reason_counts["candidate_unfiltered"] =
+            static_cast<std::uint32_t>(registry.actions.size());
+        return;
+    }
+    registry.product_goal_filtering = true;
     const std::size_t before = registry.actions.size();
-    registry.actions.erase(
-        std::remove_if(
-            registry.actions.begin(), registry.actions.end(),
-            [&](const ActionDescriptor& action) {
-                return !action_is_goal_relevant(session, options, action);
-            }),
-        registry.actions.end());
+    std::vector<ProductAdmissionDecision> decisions;
+    decisions.reserve(before);
+    for (const ActionDescriptor& action : registry.actions) {
+        decisions.push_back(
+            classify_goal_relevant_action(session, options, registry, action));
+    }
+    std::vector<ActionDescriptor> retained;
+    retained.reserve(before);
+    for (std::size_t action_index = 0; action_index < before; ++action_index) {
+        ActionDescriptor& action = registry.actions[action_index];
+        const ProductAdmissionDecision decision = decisions[action_index];
+        const std::size_t role = static_cast<std::size_t>(decision.role);
+        const std::size_t family = static_cast<std::size_t>(
+            product_family(action.params.type));
+        ++registry.product_role_counts[role];
+        ++registry.product_role_family_counts[role][family];
+        ++registry.product_reason_counts[decision.reason];
+        if (decision.role == ProductActionRole::Filtered) {
+            registry.product_filtered_actions.push_back(
+                {action.id, product_family(action.params.type),
+                 decision.role, decision.reason});
+            continue;
+        }
+        action.product_role = decision.role;
+        action.product_admission_reason = decision.reason;
+        retained.push_back(std::move(action));
+    }
+    registry.actions = std::move(retained);
     registry.goal_relevant_actions_pruned =
         static_cast<std::uint32_t>(before - registry.actions.size());
     registry.index_by_id.clear();
     for (std::uint32_t index = 0; index < registry.actions.size(); ++index) {
-        ActionDescriptor& action = registry.actions[index];
-        if (options.automatic_candidates) {
-            if (action.params.type == ActionType::Bench) {
-                action.automatic_dependency_only =
-                    !goal_contains_mod_family(
-                        session, options, action.params.mod_id);
-            } else if (action.params.type ==
-                       ActionType::RemoveCraftedModifiers) {
-                action.automatic_dependency_only = true;
-            }
-        }
         registry.index_by_id.emplace(registry.actions[index].id, index);
     }
 }
@@ -1526,9 +1813,32 @@ void add_basic_currency(ActionRegistry& registry) {
     }
 }
 
-void add_essences(const SessionImpl& session, ActionRegistry& registry) {
+void add_essences(
+    const SessionImpl& session,
+    ActionRegistry& registry,
+    const ActionRegistryBuildOptions& options) {
     const DataImpl& data = *session.data;
     for (std::uint32_t i = 0; i < data.essence_count; ++i) {
+        if (i < data.essence_is_corruption_only.size() &&
+            data.essence_is_corruption_only[i] != 0) {
+            if (options.goal_relevant_actions) {
+                const std::string id = "essence:" +
+                    data.string_at(data.essence_key_sids[i]);
+                const std::size_t filtered = static_cast<std::size_t>(
+                    ProductActionRole::Filtered);
+                const std::size_t essence = static_cast<std::size_t>(
+                    PrimitiveTelemetryFamily::Essence);
+                ++registry.product_role_counts[filtered];
+                ++registry.product_role_family_counts[filtered][essence];
+                ++registry.product_reason_counts[
+                    "filtered_corruption_only_essence"];
+                registry.product_filtered_actions.push_back(
+                    {id, PrimitiveTelemetryFamily::Essence,
+                     ProductActionRole::Filtered,
+                     "filtered_corruption_only_essence"});
+            }
+            continue;
+        }
         if (i >= session.essence_guaranteed_mod_ids.size() ||
             session.essence_guaranteed_mod_ids[i] == kNoId) {
             continue;
@@ -2477,7 +2787,7 @@ ActionRegistry build_action_registry(
     const ActionRegistryBuildOptions& options) {
     ActionRegistry registry;
     add_basic_currency(registry);
-    add_essences(session, registry);
+    add_essences(session, registry, options);
     add_fossils(session, registry, options);
     add_bench(session, registry);
     add_veiled(session, registry);

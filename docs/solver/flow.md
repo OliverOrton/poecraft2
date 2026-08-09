@@ -142,10 +142,13 @@ Pressing Solve creates a scoped, priced request before native optimization:
    at least one priced action. A priced Fracture action also requires `base`
    pricing because miss recovery uses Restart.
 3. Calculator opens a short-lived `action_mode: "goal_relevant"` envelope
-   solver and reads its native action descriptors.
-4. TypeScript keeps only descriptors whose complete cost-key vectors resolve
-   in the pinned economy. Missing prices exclude an action; they never make it
-   free.
+   solver and reads its native candidate descriptors. The native registry also
+   retains engine-declared automatic dependencies, but
+   `pc_solver_candidates` never returns those dependency-only primitives.
+4. TypeScript keeps only candidate descriptors whose complete cost-key vectors
+   resolve in the pinned economy. Missing prices exclude a candidate; they
+   never make it free. Dependencies remain native and are price-checked when a
+   carrier-local option tries to materialize them.
 5. The envelope solver closes. Calculator builds a second goal containing the
    priced action IDs.
 6. Calculator opens a fresh scoped solver for that priced goal. It is not
@@ -158,6 +161,14 @@ Pressing Solve creates a scoped, priced request before native optimization:
 Candidate generation and descriptors remain native. TypeScript filters by
 price completeness but does not decide mechanic legality or synthesize planner
 operators.
+
+Within each native goal-relevant registry, every action has one deterministic
+role and reason: candidate, automatic dependency, or filtered. The parent
+abstract layout contains candidates plus dependencies of fixed options already
+present. Automatic admission creates a local exact carrier context and adds
+only the dependencies used by the option it materializes; retaining a possible
+dependency does not widen every state. Role/family/reason counts, parent layout
+width, and materialized dependency counts are reported in solver telemetry.
 
 Code authority:
 `apps/web/src/app/components/pc-calculator.ts`,
@@ -183,7 +194,8 @@ The native stages are:
    observation/preservation/destruction contract for every candidate action;
    reject incomplete descriptors before admission, then project the concrete
    start item and expand reachable abstract states;
-2. admit state-local primitive and automatic operators and build exact sparse
+2. admit state-local primitive and automatic operators, resolve each automatic
+   program's declared dependency-only primitives, and build exact sparse
    transition rows within configured work/memory/output caps;
 3. price operators against the pinned economy;
 4. optimize cyclic components using SCC-based policy iteration with the

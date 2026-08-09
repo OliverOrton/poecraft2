@@ -377,7 +377,11 @@ std::vector<PlannerOperator> build_planner_operators(
         case FixedOptionKind::TemporaryBenchRepeat: {
             if (spec.setup_action_ids.size() != 1 ||
                 spec.exit_goal_slots.size() != 1 ||
-                spec.exit_min_satisfied != 1) {
+                spec.exit_min_satisfied != 1 ||
+                (!spec.program_action_ids.empty() &&
+                 spec.program_action_ids !=
+                     std::vector<std::string>{
+                         "remove_crafted_modifiers"})) {
                 throw std::runtime_error(
                     "fixed option: temporary bench repeat needs one blocker "
                     "and one exact goal-slot exit");
@@ -385,12 +389,19 @@ std::vector<PlannerOperator> build_planner_operators(
             std::uint32_t blocker_index = kNoId;
             const ActionDescriptor& blocker = require_action(
                 registry, spec.setup_action_ids.front(), blocker_index);
+            const int blocker_metamod =
+                blocker.params.mod_id < session.metamod_type.size()
+                    ? session.metamod_type[blocker.params.mod_id]
+                    : -2;
+            const bool supported_pool_blocker =
+                blocker_metamod == session.data->metamod_no_attack_code ||
+                blocker_metamod == session.data->metamod_no_caster_code;
             if (blocker.params.type != ActionType::Bench ||
                 blocker.params.mod_id >= session.metamod_type.size() ||
-                session.metamod_type[blocker.params.mod_id] >= 0) {
+                (blocker_metamod >= 0 && !supported_pool_blocker)) {
                 throw std::runtime_error(
                     "fixed option: temporary blocker must be an ordinary "
-                    "bench craft");
+                    "bench craft or supported Cannot Roll metamod");
             }
             std::uint32_t followup_index = kNoId;
             const ActionDescriptor& followup = require_action(
@@ -403,8 +414,12 @@ std::vector<PlannerOperator> build_planner_operators(
             std::uint32_t cleanup_index = kNoId;
             require_action(
                 registry, "remove_crafted_modifiers", cleanup_index);
-            option.primitive_program = {
-                blocker_index, followup_index, cleanup_index};
+            option.primitive_program = spec.program_action_ids.empty()
+                ? std::vector<std::uint32_t>{
+                      blocker_index, followup_index, cleanup_index}
+                : std::vector<std::uint32_t>{
+                      cleanup_index, blocker_index, followup_index,
+                      cleanup_index};
             option.setup_action = blocker_index;
             option.followup_action = followup_index;
             option.cleanup_action = cleanup_index;

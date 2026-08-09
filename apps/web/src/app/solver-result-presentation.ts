@@ -16,6 +16,7 @@ export interface SolveResultMarkupOptions {
     hasCompiledStrategy: boolean;
     busy: boolean;
     verification: SolveVerificationPresentation | null;
+    telemetry?: unknown;
 }
 
 function objectRecord(value: unknown): Record<string, unknown> | null {
@@ -265,6 +266,41 @@ function stopCauseLabel(summary: SolveSummary): string {
     }
 }
 
+function actionFamily(id: string): string {
+    if (id.startsWith("essence:")) return "Essence";
+    if (id.startsWith("fossil:")) return "Fossil";
+    if (id.startsWith("harvest_")) return "Harvest";
+    if (id.startsWith("bench:") || id === "remove_crafted_modifiers") {
+        return "Bench";
+    }
+    if (id.startsWith("bestiary:")) return "Bestiary";
+    if (id === "fracture") return "Fracture";
+    if (id.startsWith("influence_exalt:")) return "Influence";
+    return "Currency / structural";
+}
+
+function admittedFamilyLabel(ids: readonly string[]): string {
+    const counts = new Map<string, number>();
+    for (const id of ids) {
+        const family = actionFamily(id);
+        counts.set(family, (counts.get(family) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([family, count]) => `${family} ${count.toLocaleString()}`)
+        .join(" / ") || "None";
+}
+
+function unresolvedActionCount(telemetry: unknown): number {
+    const envelope = objectRecord(
+        objectRecord(telemetry)?.incremental_action_envelope,
+    );
+    const value = envelope?.remaining_action_envelope;
+    return typeof value === "number" && Number.isFinite(value) && value > 0
+        ? value
+        : 0;
+}
+
 /** Stable DOM contract for exact and bounded solver results. */
 export function solveResultMarkup(options: SolveResultMarkupOptions): string {
     const {
@@ -276,6 +312,7 @@ export function solveResultMarkup(options: SolveResultMarkupOptions): string {
         hasCompiledStrategy,
         busy,
         verification,
+        telemetry,
     } = options;
     const evaluatedPolicyCost = finiteCost(
         summary.evaluated_policy_cost,
@@ -294,6 +331,8 @@ export function solveResultMarkup(options: SolveResultMarkupOptions): string {
     const admitted = admittedActionIds
         .map((id) => `<li><code>${escapeHtml(id)}</code></li>`)
         .join("");
+    const admittedFamilies = admittedFamilyLabel(admittedActionIds);
+    const unresolvedActions = unresolvedActionCount(telemetry);
 
     return `<section class="pc-calc-solve-result" data-policy-status="${summary.policy_status}" data-termination="${summary.termination}" data-stop-cause="${summary.stop_cause}">
         <div class="pc-calc-solve-headline">
@@ -307,6 +346,14 @@ export function solveResultMarkup(options: SolveResultMarkupOptions): string {
             &middot; residual ${summary.residual.toExponential(2)}
         </div>
         <p class="pc-calc-solve-certificate" data-solve-result="certificate">${escapeHtml(certificateText(summary))}</p>
+        <div class="pc-calc-solve-scope" data-solve-result="scope">
+            <strong>Product goal-relevant action scope</strong>
+            <span>Zero-progress outcomes retry through destructive reforges only.</span>
+            <span>Admitted priced families: ${escapeHtml(admittedFamilies)}.</span>
+            <span>Missing prices excluded ${excludedActions.toLocaleString()} actions before Solve and ${summary.skipped_missing_price_actions.toLocaleString()} inside native planning.</span>
+            <span>Explicitly deferred: Veiled crafting.</span>
+            ${unresolvedActions > 0 ? `<span class="is-warning">${unresolvedActions.toLocaleString()} action obligations remained unresolved when the solve stopped.</span>` : ""}
+        </div>
         <dl class="pc-calc-solve-bounds">
             <div><dt>Optimal-cost lower bound</dt><dd data-solve-result="lower-bound">${lowerBound}</dd></div>
             <div><dt>Certified policy upper bound</dt><dd data-solve-result="upper-bound">${upperBound}</dd></div>

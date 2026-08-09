@@ -1,11 +1,13 @@
 # Product Action Dependency Reachability
 
-**Status: active implementation boundary selected by Oliver on 2026-08-08.**
+**Status: completed.**
 
 Parent: [Documentation index](../../README.md)
 
 - [Plan](plan.md)
 - [Gate 0 baseline](evidence/gate0-baseline.md)
+- [Implementation report](report.md)
+- [Final evidence](evidence/final-evidence.md)
 
 ## Objective
 
@@ -20,5 +22,8 @@ The governing contract is:
 > admitted as a candidate, retained as an automatic-option dependency, or
 > rejected with a correct deterministic reason.
 
-Implementation, final evidence, stable documentation, and the completed
-handoff will be added in the second and final milestone commit.
+The implementation preserves the narrow Harvest, Essence, and bounded Fossil
+filters; separates candidates from engine-owned dependencies; makes automatic
+Eldritch reachable through native and release-WASM product paths; adds bounded
+Cannot Roll and cleanup compositions; rejects corruption-only Essences
+natively; and discloses the scoped solve compactly in Calculator results.

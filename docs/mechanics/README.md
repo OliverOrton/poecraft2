@@ -146,9 +146,10 @@ are not additional crafting rules.
 
 ## Known Cross-Surface Boundaries
 
-- The Emulator and Calculator intentionally filter corruption-only Essences
-  from their catalog, while the native data/session path does not retain that
-  flag. Corruption-only Essence behavior is not implemented.
+- The Emulator and Calculator filter corruption-only Essences from their
+  catalog, and the native data/registry path retains the compiled flag and
+  rejects those keys from ordinary Essence solving. Corruption-only Essence
+  behavior remains unimplemented.
 - The visual Strategy Builder exposes fewer condition leaf types than the JSON
   compiler/simulator accepts.
 - The exact single-action calculator supports every primitive. Whole-graph
@@ -163,5 +164,5 @@ are not additional crafting rules.
 
 Open mechanic questions are kept in the family files that own them. The
 current code-inspection audit found questions about double-side-lock Scour,
-raw normal-item Annulment, corruption-only Essence rejection, and whether the
-implemented partial fossil special effects are the intended permanent contract.
+raw normal-item Annulment, and whether the implemented partial fossil special
+effects are the intended permanent contract.

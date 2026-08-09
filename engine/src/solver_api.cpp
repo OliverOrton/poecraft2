@@ -241,6 +241,13 @@ solver::ActionRegistryBuildOptions registry_build_options(
             }
             options.fossil_goal_mod_ids.push_back(std::move(satisfying));
         }
+        const Value* minimum = root.find("min_satisfied_slots");
+        options.required_satisfied_slots =
+            minimum != nullptr && minimum->type == Type::Number &&
+                    minimum->number >= 1
+                ? static_cast<std::uint32_t>(minimum->number)
+                : static_cast<std::uint32_t>(
+                      options.fossil_goal_mod_ids.size());
     }
     return options;
 }
@@ -360,6 +367,12 @@ solver::GoalSpec parse_goal(
             if (it == registry.index_by_id.end()) {
                 throw std::runtime_error(
                     "goal: unknown action: " + entry.string);
+            }
+            if (registry.actions[it->second].product_role ==
+                solver::ProductActionRole::AutomaticDependency) {
+                throw std::runtime_error(
+                    "goal: action is automatic-option dependency-only: " +
+                    entry.string);
             }
             out_candidates.push_back(it->second);
         }

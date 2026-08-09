@@ -20,6 +20,16 @@ These fixtures are mechanic/data evidence. Current explanatory authority lives
 in [Mechanics](mechanics/README.md), [Engine](engine/README.md), and
 [Economy](economy/README.md).
 
+## Product Action Dependency Reachability
+
+The 2026-08-08
+[implementation report](archive/2026-08-08-product-action-dependency-reachability/report.md)
+and [final evidence](archive/2026-08-08-product-action-dependency-reachability/evidence/final-evidence.md)
+record the candidate/dependency/filter contract, public family matrix, bounded
+Fossil counts, layout and memory comparison, unchanged deterministic control
+hashes, compiled forced winners, exact evaluation, 10,000-run native and
+release-WASM Eldritch qualification, and explicit deferred work.
+
 ## Browser Transfer And Solver Lifetime R4
 
 The 2026-07-26

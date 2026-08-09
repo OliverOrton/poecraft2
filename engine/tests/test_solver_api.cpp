@@ -6,11 +6,14 @@
 #include "poecraft/simulator.h"
 #include "poecraft/solver.h"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -27,6 +30,956 @@ std::string solver_telemetry_json(
                                  error) == PC_RESULT_OK);
     json.resize(length);
     return json;
+}
+
+std::string solver_economy_json(
+    const std::map<std::string, double>& prices) {
+    std::string json =
+        "{\"version\":\"v1\",\"id\":\"product-action-matrix\","
+        "\"prices\":{";
+    bool first = true;
+    for (const auto& [key, value] : prices) {
+        if (!first) json.push_back(',');
+        first = false;
+        json += '\"' + key + "\":" + std::to_string(value);
+    }
+    json += "}}";
+    return json;
+}
+
+std::string compile_and_exact_evaluate_public_policy(
+    pc_session_handle session,
+    pc_solver_handle solver,
+    pc_economy_handle economy,
+    pc_error_info* error) {
+    std::size_t strategy_length = 0;
+    PC_CHECK(pc_solver_compile_strategy(
+                 solver, nullptr, 0, &strategy_length,
+                 error) == PC_RESULT_OK);
+    std::string strategy_json(strategy_length + 1, '\0');
+    PC_CHECK(pc_solver_compile_strategy(
+                 solver, strategy_json.data(), strategy_json.size(),
+                 &strategy_length, error) == PC_RESULT_OK);
+    strategy_json.resize(strategy_length);
+    pc_strategy_handle strategy = nullptr;
+    PC_CHECK(pc_strategy_compile_json(
+                 session, strategy_json.c_str(), strategy_json.size(),
+                 &strategy, error) == PC_RESULT_OK);
+    if (strategy != nullptr) {
+        pc_strategy_eval_options eval_options{};
+        eval_options.struct_size = sizeof(eval_options);
+        eval_options.abi_version = PC_ABI_VERSION;
+        eval_options.economy = economy;
+        std::size_t eval_length = 0;
+        PC_CHECK(pc_strategy_evaluate(
+                     strategy, &eval_options, nullptr, 0, &eval_length,
+                     error) == PC_RESULT_OK);
+        std::string eval_json(eval_length + 1, '\0');
+        PC_CHECK(pc_strategy_evaluate(
+                     strategy, &eval_options, eval_json.data(),
+                     eval_json.size(), &eval_length,
+                     error) == PC_RESULT_OK);
+        PC_CHECK(eval_json.find("\"success\":1") != std::string::npos);
+        pc_strategy_destroy(strategy);
+    }
+    return strategy_json;
+}
+
+void run_public_product_eldritch_gate(const char* artifact_dir) {
+    pc_error_info error;
+    pc_error_info_init(&error);
+    pc_data_handle data = nullptr;
+    const std::string manifest =
+        std::string(artifact_dir) + "/manifest.json";
+    PC_CHECK(pc_data_load_file(
+                 manifest.c_str(), &data, &error) == PC_RESULT_OK);
+    if (data == nullptr) return;
+
+    pc_session_options session_options{};
+    session_options.struct_size = sizeof(session_options);
+    session_options.abi_version = PC_ABI_VERSION;
+    session_options.base_metadata_path =
+        "Metadata/Items/Armours/BodyArmours/BodyInt17";
+    session_options.item_level = 86;
+    pc_session_handle session = nullptr;
+    PC_CHECK(pc_session_create(
+                 data, &session_options, &session, &error) == PC_RESULT_OK);
+    if (session == nullptr) {
+        pc_data_destroy(data);
+        return;
+    }
+
+    pc_action_context_options context_options{};
+    context_options.struct_size = sizeof(context_options);
+    context_options.abi_version = PC_ABI_VERSION;
+    context_options.seed = 17;
+    pc_action_context_handle context = nullptr;
+    PC_CHECK(pc_action_context_create(
+                 session, &context_options, &context, &error) == PC_RESULT_OK);
+    pc_item_state empty{};
+    pc_item_init_options item_options{};
+    item_options.struct_size = sizeof(item_options);
+    item_options.abi_version = PC_ABI_VERSION;
+    item_options.rarity = PC_RARITY_RARE;
+    item_options.with_implicits = 0;
+    PC_CHECK(pc_item_init(
+                 session, &item_options, &empty, &error) == PC_RESULT_OK);
+
+    std::vector<pc_pool_entry> pool(4096);
+    std::uint32_t pool_count = 0;
+    PC_CHECK(pc_action_context_debug_pool(
+                 context, &empty, -1, pool.data(),
+                 static_cast<std::uint32_t>(pool.size()), &pool_count,
+                 &error) == PC_RESULT_OK);
+    std::uint32_t prefix_goal = UINT32_MAX;
+    std::uint32_t suffix_goal = UINT32_MAX;
+    pc_mod_info prefix_info{};
+    pc_mod_info suffix_info{};
+    pc_mod_info multimod_prefix_info{};
+    bool found_multimod_prefix = false;
+    std::vector<std::pair<std::uint32_t, pc_mod_info>> prefix_junk;
+    std::vector<std::pair<std::uint32_t, pc_mod_info>> suffix_junk;
+    std::uint32_t session_mod_count = 0;
+    PC_CHECK(pc_session_get_mod_count(
+                 session, &session_mod_count, &error) == PC_RESULT_OK);
+    std::map<std::uint32_t, std::uint8_t> family_side_masks;
+    for (std::uint32_t mod = 0; mod < session_mod_count; ++mod) {
+        pc_mod_info info{};
+        PC_CHECK(pc_session_get_mod_info(
+                     session, mod, &info, &error) == PC_RESULT_OK);
+        if (info.generation_type == PC_SIDE_PREFIX) {
+            family_side_masks[info.family_id] |= 1u;
+        } else if (info.generation_type == PC_SIDE_SUFFIX) {
+            family_side_masks[info.family_id] |= 2u;
+        }
+        if (std::string(info.key) == "EinharMasterColdResist3__") {
+            suffix_goal = mod;
+            suffix_info = info;
+        } else if (std::string(info.key) ==
+                   "EinharMasterIncreasedLife5_") {
+            multimod_prefix_info = info;
+            found_multimod_prefix = true;
+        }
+    }
+    for (std::uint32_t i = 0; i < pool_count; ++i) {
+        pc_mod_info info{};
+        PC_CHECK(pc_session_get_mod_info(
+                     session, pool[i].session_mod_id, &info,
+                     &error) == PC_RESULT_OK);
+        const std::uint8_t family_sides = family_side_masks[info.family_id];
+        if (pool[i].generation_type == PC_SIDE_PREFIX &&
+            family_sides == 1u && prefix_goal == UINT32_MAX) {
+            prefix_goal = pool[i].session_mod_id;
+            prefix_info = info;
+        } else if (pool[i].generation_type == PC_SIDE_PREFIX &&
+                   prefix_junk.size() < 3 && found_multimod_prefix &&
+                   info.family_id != multimod_prefix_info.family_id &&
+                   info.primary_group_id !=
+                       multimod_prefix_info.primary_group_id &&
+                   std::none_of(
+                       prefix_junk.begin(), prefix_junk.end(),
+                       [&](const auto& existing) {
+                           return existing.second.primary_group_id ==
+                               info.primary_group_id;
+                       })) {
+            prefix_junk.emplace_back(pool[i].session_mod_id, info);
+        } else if (pool[i].generation_type == PC_SIDE_SUFFIX &&
+                   suffix_junk.size() < 3 && suffix_goal != UINT32_MAX &&
+                   info.family_id != suffix_info.family_id &&
+                   info.primary_group_id != suffix_info.primary_group_id &&
+                   std::none_of(
+                       suffix_junk.begin(), suffix_junk.end(),
+                       [&](const auto& existing) {
+                           return existing.second.primary_group_id ==
+                               info.primary_group_id;
+                       })) {
+            suffix_junk.emplace_back(pool[i].session_mod_id, info);
+        }
+        if (prefix_goal != UINT32_MAX && suffix_goal != UINT32_MAX &&
+            prefix_junk.size() == 3 && suffix_junk.size() == 3) {
+            break;
+        }
+    }
+    PC_CHECK(prefix_goal != UINT32_MAX);
+    PC_CHECK(suffix_goal != UINT32_MAX);
+    PC_CHECK(suffix_junk.size() == 3);
+    PC_CHECK(prefix_junk.size() == 3);
+    PC_CHECK(found_multimod_prefix);
+    if (prefix_goal == UINT32_MAX || suffix_goal == UINT32_MAX ||
+        prefix_junk.size() != 3 || suffix_junk.size() != 3) {
+        pc_action_context_destroy(context);
+        pc_session_destroy(session);
+        pc_data_destroy(data);
+        return;
+    }
+
+    const std::string goal =
+        std::string(
+            "{\"version\":\"v1\",\"rarity\":\"rare\","
+            "\"action_mode\":\"goal_relevant\","
+            "\"fossil_mode\":\"goal_relevant\","
+            "\"min_satisfied_slots\":1,\"slots\":["
+            "{\"family_mod_key\":\"") +
+        suffix_info.key + "\",\"min_tier\":0}]}";
+    pc_solver_handle solver = nullptr;
+    PC_CHECK(pc_solver_create(
+                 session, goal.c_str(), goal.size(), &solver,
+                 &error) == PC_RESULT_OK);
+    if (solver == nullptr) {
+        pc_action_context_destroy(context);
+        pc_session_destroy(session);
+        pc_data_destroy(data);
+        return;
+    }
+
+    std::uint32_t candidate_count = 0;
+    PC_CHECK(pc_solver_candidates(
+                 solver, nullptr, 0, &candidate_count,
+                 &error) == PC_RESULT_OK);
+    std::vector<std::uint32_t> candidates(candidate_count);
+    PC_CHECK(pc_solver_candidates(
+                 solver, candidates.data(), candidate_count,
+                 &candidate_count, &error) == PC_RESULT_OK);
+    PC_CHECK(candidate_count == 19);
+    std::set<std::string> candidate_ids;
+    for (const std::uint32_t candidate : candidates) {
+        pc_solver_action_info info{};
+        PC_CHECK(pc_solver_get_action_info(
+                     solver, candidate, &info, &error) == PC_RESULT_OK);
+        candidate_ids.insert(info.id);
+    }
+    for (const char* dependency : {
+             "eldritch_ember:1", "eldritch_ichor:1",
+             "eldritch_chaos", "eldritch_annul"}) {
+        std::uint32_t index = 0;
+        PC_CHECK(pc_solver_find_action(
+                     solver, dependency, &index, &error) == PC_RESULT_OK);
+        PC_CHECK(!candidate_ids.contains(dependency));
+    }
+    std::uint32_t corruption_essence = 0;
+    PC_CHECK(pc_solver_find_action(
+                 solver,
+                 "essence:Metadata/Items/Currency/CurrencyEssenceHorror1",
+                 &corruption_essence, &error) == PC_RESULT_NOT_FOUND);
+    const std::string create_telemetry =
+        solver_telemetry_json(solver, &error);
+    PC_CHECK(create_telemetry.find(
+                 "\"product_admission\":{\"goal_filtering\":true") !=
+             std::string::npos);
+    PC_CHECK(create_telemetry.find(
+                 "\"automatic_eldritch_side_dependency\":") !=
+             std::string::npos);
+    PC_CHECK(create_telemetry.find("\"layout_primitives\":19") !=
+             std::string::npos);
+    PC_CHECK(create_telemetry.find(
+                 "\"fossil_loadouts\":{\"possible\":15275,"
+                 "\"generated\":0,\"deferred\":15275") !=
+             std::string::npos);
+    PC_CHECK(create_telemetry.find(
+                 "\"filtered_corruption_only_essence\":4") !=
+             std::string::npos);
+
+    pc_item_state start = empty;
+    PC_CHECK(pc_item_add_mod(
+                 &start, PC_SIDE_PREFIX, prefix_goal,
+                 static_cast<std::uint16_t>(prefix_info.primary_group_id),
+                 0, nullptr) == PC_RESULT_OK);
+    for (const auto& [mod, info] : suffix_junk) {
+        PC_CHECK(pc_item_add_mod(
+                     &start, PC_SIDE_SUFFIX, mod,
+                     static_cast<std::uint16_t>(info.primary_group_id),
+                     0, nullptr) == PC_RESULT_OK);
+    }
+    start.searing_exarch_tier = 1;
+    start.eater_of_worlds_tier = 2;
+
+    std::map<std::string, double> forced_prices{
+        {"eldritch_chaos", 1.0},
+        {"eldritch_annul", 1.0},
+        {"eldritch_ember:1", 0.1},
+        {"eldritch_ember:2", 0.1},
+        {"eldritch_ember:3", 0.1},
+        {"eldritch_ember:4", 0.1},
+        {"eldritch_ichor:1", 0.1},
+        {"eldritch_ichor:2", 0.1},
+        {"eldritch_ichor:3", 0.1},
+        {"eldritch_ichor:4", 0.1}};
+    for (const std::uint32_t candidate : candidates) {
+        pc_solver_action_info info{};
+        PC_CHECK(pc_solver_get_action_info(
+                     solver, candidate, &info, &error) == PC_RESULT_OK);
+        if (!std::string(info.id).starts_with("bench:")) continue;
+        for (std::uint32_t key = 0; key < info.cost_key_count; ++key) {
+            forced_prices[info.cost_keys[key]] = 0.1;
+        }
+    }
+    forced_prices["base"] = 1000.0;
+    const std::string economy_json = solver_economy_json(forced_prices);
+    pc_economy_handle economy = nullptr;
+    PC_CHECK(pc_economy_load_json(
+                 economy_json.c_str(), economy_json.size(), &economy,
+                 &error) == PC_RESULT_OK);
+    pc_solve_options solve_options{};
+    solve_options.struct_size = sizeof(solve_options);
+    solve_options.abi_version = PC_ABI_VERSION;
+    solve_options.max_discovered_states = 200000;
+    solve_options.max_expanded_states = 25000;
+    solve_options.max_state_action_rows = 300000;
+    solve_options.max_transitions = 10000000;
+    solve_options.max_reforge_work = 100000000;
+    solve_options.max_solver_owned_bytes = 512ull * 1024ull * 1024ull;
+    solve_options.max_diagnostic_samples = 64;
+    solve_options.max_telemetry_json_bytes = 64ull * 1024ull * 1024ull;
+    solve_options.solver_flags =
+        PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES;
+    pc_solve_summary summary{};
+    PC_CHECK(pc_solver_solve(
+                 solver, &start, economy, &solve_options, &summary,
+                 &error) == PC_RESULT_OK);
+    PC_CHECK(summary.policy_available == 1);
+    const std::string solved_telemetry =
+        solver_telemetry_json(solver, &error);
+    PC_CHECK(solved_telemetry.find(
+                 "\"candidate_kind\":\"eldritch_side\"") !=
+             std::string::npos);
+    PC_CHECK(solved_telemetry.find(
+                 "\"automatic_candidates\":{\"enabled\":true,"
+                 "\"operators\":6,\"dependency_primitives\":2") !=
+             std::string::npos);
+    PC_CHECK(solved_telemetry.find(
+                 "\"zero_off_policy\":true") != std::string::npos);
+
+    std::size_t strategy_length = 0;
+    PC_CHECK(pc_solver_compile_strategy(
+                 solver, nullptr, 0, &strategy_length,
+                 &error) == PC_RESULT_OK);
+    std::string strategy_json(strategy_length + 1, '\0');
+    PC_CHECK(pc_solver_compile_strategy(
+                 solver, strategy_json.data(), strategy_json.size(),
+                 &strategy_length, &error) == PC_RESULT_OK);
+    PC_CHECK(strategy_json.find("eldritch_annul") != std::string::npos ||
+             strategy_json.find("eldritch_chaos") != std::string::npos);
+    pc_strategy_handle strategy = nullptr;
+    PC_CHECK(pc_strategy_compile_json(
+                 session, strategy_json.c_str(), strategy_length,
+                 &strategy, &error) == PC_RESULT_OK);
+    pc_strategy_eval_options eval_options{};
+    eval_options.struct_size = sizeof(eval_options);
+    eval_options.abi_version = PC_ABI_VERSION;
+    eval_options.economy = economy;
+    std::size_t eval_length = 0;
+    PC_CHECK(pc_strategy_evaluate(
+                 strategy, &eval_options, nullptr, 0, &eval_length,
+                 &error) == PC_RESULT_OK);
+    std::string eval_json(eval_length + 1, '\0');
+    PC_CHECK(pc_strategy_evaluate(
+                 strategy, &eval_options, eval_json.data(), eval_json.size(),
+                 &eval_length, &error) == PC_RESULT_OK);
+    PC_CHECK(eval_json.find("\"success\":1") != std::string::npos);
+
+    pc_simulator_handle simulator = nullptr;
+    PC_CHECK(pc_simulator_create(
+                 session, strategy, economy, &simulator,
+                 &error) == PC_RESULT_OK);
+    pc_simulation_options simulation_options{};
+    simulation_options.struct_size = sizeof(simulation_options);
+    simulation_options.abi_version = PC_ABI_VERSION;
+    simulation_options.target_runs = 10000;
+    simulation_options.seed = 20260808;
+    simulation_options.max_actions_per_run = 100000;
+    pc_simulation_progress progress{};
+    PC_CHECK(pc_simulator_run_chunk(
+                 simulator, &simulation_options, 10000, &progress,
+                 &error) == PC_RESULT_OK);
+    pc_simulation_summary simulation{};
+    PC_CHECK(pc_simulator_get_summary(
+                 simulator, &simulation, &error) == PC_RESULT_OK);
+    PC_CHECK(simulation.completed_runs == 10000);
+    PC_CHECK(simulation.success_count == simulation.completed_runs);
+    PC_CHECK(simulation.failure_count == 0);
+    PC_CHECK(simulation.missing_price_run_count == 0);
+    std::printf(
+        "solver API product Eldritch: V=%.6f states=%u runs=%llu\n",
+        summary.start_value, summary.expanded_states,
+        static_cast<unsigned long long>(simulation.completed_runs));
+
+    pc_simulator_destroy(simulator);
+    pc_strategy_destroy(strategy);
+
+    std::map<std::string, double> missing_eldritch_prices = forced_prices;
+    missing_eldritch_prices.erase("eldritch_annul");
+    missing_eldritch_prices.erase("eldritch_chaos");
+    const std::string missing_economy_json =
+        solver_economy_json(missing_eldritch_prices);
+    pc_economy_handle missing_economy = nullptr;
+    PC_CHECK(pc_economy_load_json(
+                 missing_economy_json.c_str(), missing_economy_json.size(),
+                 &missing_economy, &error) == PC_RESULT_OK);
+    pc_solve_summary missing_summary{};
+    PC_CHECK(pc_solver_solve(
+                 solver, &start, missing_economy, &solve_options,
+                 &missing_summary, &error) == PC_RESULT_OK);
+    PC_CHECK(missing_summary.policy_available == 0);
+    const std::string missing_telemetry =
+        solver_telemetry_json(solver, &error);
+    PC_CHECK(missing_telemetry.find(
+                 "automatic_candidate_missing_price") !=
+             std::string::npos);
+    PC_CHECK(missing_summary.skipped_missing_price_count > 0);
+    pc_economy_destroy(missing_economy);
+
+    pc_item_state influenced_start = start;
+    influenced_start.generic_influence_bits = 1;
+    pc_solve_summary influenced_summary{};
+    PC_CHECK(pc_solver_solve(
+                 solver, &influenced_start, economy, &solve_options,
+                 &influenced_summary, &error) == PC_RESULT_OK);
+    PC_CHECK(influenced_summary.policy_available == 0);
+    const std::string influenced_telemetry =
+        solver_telemetry_json(solver, &error);
+    PC_CHECK(influenced_telemetry.find(
+                 "setup_or_first_step_illegal") !=
+                 std::string::npos ||
+             influenced_telemetry.find(
+                 "eldritch_side_influenced_carrier_illegal") !=
+                 std::string::npos);
+
+    const std::string prefix_eldritch_goal =
+        std::string(
+            "{\"version\":\"v1\",\"rarity\":\"rare\","
+            "\"action_mode\":\"goal_relevant\","
+            "\"fossil_mode\":\"goal_relevant\",\"slots\":["
+            "{\"family_mod_key\":\"") +
+        multimod_prefix_info.key + "\",\"min_tier\":0}]}";
+    pc_solver_handle prefix_solver = nullptr;
+    PC_CHECK(pc_solver_create(
+                 session, prefix_eldritch_goal.c_str(),
+                 prefix_eldritch_goal.size(), &prefix_solver,
+                 &error) == PC_RESULT_OK);
+    if (prefix_solver != nullptr) {
+        pc_item_state prefix_start = empty;
+        for (const auto& [mod, info] : prefix_junk) {
+            PC_CHECK(pc_item_add_mod(
+                         &prefix_start, PC_SIDE_PREFIX, mod,
+                         static_cast<std::uint16_t>(info.primary_group_id),
+                         0, nullptr) == PC_RESULT_OK);
+        }
+        prefix_start.searing_exarch_tier = 2;
+        prefix_start.eater_of_worlds_tier = 1;
+        std::map<std::string, double> prefix_prices{
+            {"base", 1000.0},
+            {"eldritch_chaos", 1.0},
+            {"eldritch_annul", 1.0},
+            {"eldritch_ember:1", 0.1},
+            {"eldritch_ember:2", 0.1},
+            {"eldritch_ember:3", 0.1},
+            {"eldritch_ember:4", 0.1},
+            {"eldritch_ichor:1", 0.1},
+            {"eldritch_ichor:2", 0.1},
+            {"eldritch_ichor:3", 0.1},
+            {"eldritch_ichor:4", 0.1}};
+        std::uint32_t prefix_candidate_count = 0;
+        PC_CHECK(pc_solver_candidates(
+                     prefix_solver, nullptr, 0, &prefix_candidate_count,
+                     &error) == PC_RESULT_OK);
+        std::vector<std::uint32_t> prefix_candidates(
+            prefix_candidate_count);
+        PC_CHECK(pc_solver_candidates(
+                     prefix_solver, prefix_candidates.data(),
+                     prefix_candidate_count, &prefix_candidate_count,
+                     &error) == PC_RESULT_OK);
+        for (const std::uint32_t candidate : prefix_candidates) {
+            pc_solver_action_info info{};
+            PC_CHECK(pc_solver_get_action_info(
+                         prefix_solver, candidate, &info,
+                         &error) == PC_RESULT_OK);
+            if (!std::string(info.id).starts_with("bench:")) continue;
+            for (std::uint32_t key = 0; key < info.cost_key_count; ++key) {
+                prefix_prices[info.cost_keys[key]] = 0.1;
+            }
+        }
+        const std::string prefix_economy_json =
+            solver_economy_json(prefix_prices);
+        pc_economy_handle prefix_economy = nullptr;
+        PC_CHECK(pc_economy_load_json(
+                     prefix_economy_json.c_str(), prefix_economy_json.size(),
+                     &prefix_economy, &error) == PC_RESULT_OK);
+        pc_solve_summary prefix_summary{};
+        PC_CHECK(pc_solver_solve(
+                     prefix_solver, &prefix_start, prefix_economy,
+                     &solve_options, &prefix_summary,
+                     &error) == PC_RESULT_OK);
+        PC_CHECK(prefix_summary.policy_available == 1);
+        const std::string prefix_telemetry =
+            solver_telemetry_json(prefix_solver, &error);
+        PC_CHECK(prefix_telemetry.find(
+                     "\"eldritch_side\":{\"candidates\":") !=
+                 std::string::npos);
+        PC_CHECK(prefix_telemetry.find(
+                     "\"zero_off_policy\":true") !=
+                 std::string::npos);
+        std::size_t prefix_strategy_length = 0;
+        PC_CHECK(pc_solver_compile_strategy(
+                     prefix_solver, nullptr, 0, &prefix_strategy_length,
+                     &error) == PC_RESULT_OK);
+        std::string prefix_strategy(prefix_strategy_length + 1, '\0');
+        PC_CHECK(pc_solver_compile_strategy(
+                     prefix_solver, prefix_strategy.data(),
+                     prefix_strategy.size(), &prefix_strategy_length,
+                     &error) == PC_RESULT_OK);
+        PC_CHECK(prefix_strategy.find("eldritch_annul") !=
+                     std::string::npos ||
+                 prefix_strategy.find("eldritch_chaos") !=
+                     std::string::npos);
+        pc_economy_destroy(prefix_economy);
+        pc_solver_destroy(prefix_solver);
+    }
+
+    const std::string dependency_matrix_goal =
+        std::string(
+            "{\"version\":\"v1\",\"rarity\":\"rare\","
+            "\"action_mode\":\"goal_relevant\","
+            "\"fossil_mode\":\"goal_relevant\","
+            "\"min_satisfied_slots\":2,\"slots\":["
+            "{\"family_mod_key\":\"") +
+        prefix_info.key +
+        "\",\"min_tier\":0},{\"family_mod_key\":\"" +
+        suffix_junk.front().second.key + "\",\"min_tier\":0}]}";
+    pc_solver_handle dependency_solver = nullptr;
+    PC_CHECK(pc_solver_create(
+                 session, dependency_matrix_goal.c_str(),
+                 dependency_matrix_goal.size(), &dependency_solver,
+                 &error) == PC_RESULT_OK);
+    if (dependency_solver != nullptr) {
+        std::uint32_t dependency_candidate_count = 0;
+        PC_CHECK(pc_solver_candidates(
+                     dependency_solver, nullptr, 0,
+                     &dependency_candidate_count, &error) == PC_RESULT_OK);
+        std::vector<std::uint32_t> dependency_candidates(
+            dependency_candidate_count);
+        PC_CHECK(pc_solver_candidates(
+                     dependency_solver, dependency_candidates.data(),
+                     dependency_candidate_count,
+                     &dependency_candidate_count, &error) == PC_RESULT_OK);
+        std::set<std::uint32_t> dependency_candidate_set(
+            dependency_candidates.begin(), dependency_candidates.end());
+        for (const char* id : {
+                 "bench:DexMasterItemGenerationCannotChangeSuffixes",
+                 "bench:StrMasterItemGenerationCannotChangePrefixes",
+                 "bench:IntMasterItemGenerationCannotRollAttackAffixes",
+                 "bench:StrDexMasterItemGenerationCannotRollCasterAffixes",
+                 "remove_crafted_modifiers"}) {
+            std::uint32_t index = 0;
+            PC_CHECK(pc_solver_find_action(
+                         dependency_solver, id, &index,
+                         &error) == PC_RESULT_OK);
+            PC_CHECK(!dependency_candidate_set.contains(index));
+        }
+        const std::string dependency_telemetry =
+            solver_telemetry_json(dependency_solver, &error);
+        PC_CHECK(dependency_telemetry.find(
+                     "automatic_protected_side_dependency") !=
+                 std::string::npos);
+        PC_CHECK(dependency_telemetry.find(
+                     "automatic_cannot_roll_dependency") !=
+                 std::string::npos);
+        PC_CHECK(dependency_telemetry.find(
+                     "automatic_temporary_bench_dependency") !=
+                 std::string::npos);
+        pc_solver_destroy(dependency_solver);
+    }
+    if (found_multimod_prefix) {
+        const std::string multimod_goal =
+            std::string(
+                "{\"version\":\"v1\",\"rarity\":\"rare\","
+                "\"action_mode\":\"goal_relevant\","
+                "\"fossil_mode\":\"goal_relevant\","
+                "\"min_satisfied_slots\":2,\"slots\":["
+                "{\"family_mod_key\":\"") +
+            multimod_prefix_info.key +
+            "\",\"min_tier\":0},{\"family_mod_key\":\"" +
+            suffix_info.key + "\",\"min_tier\":0}]}";
+        pc_solver_handle multimod_solver = nullptr;
+        PC_CHECK(pc_solver_create(
+                     session, multimod_goal.c_str(), multimod_goal.size(),
+                     &multimod_solver, &error) == PC_RESULT_OK);
+        if (multimod_solver != nullptr) {
+            std::uint32_t multimod = 0;
+            PC_CHECK(pc_solver_find_action(
+                         multimod_solver,
+                         "bench:StrIntMasterItemGenerationCanHaveMultipleCraftedMods",
+                         &multimod, &error) == PC_RESULT_OK);
+            std::uint32_t multimod_candidate_count = 0;
+            PC_CHECK(pc_solver_candidates(
+                         multimod_solver, nullptr, 0,
+                         &multimod_candidate_count,
+                         &error) == PC_RESULT_OK);
+            std::vector<std::uint32_t> multimod_candidates(
+                multimod_candidate_count);
+            PC_CHECK(pc_solver_candidates(
+                         multimod_solver, multimod_candidates.data(),
+                         multimod_candidate_count,
+                         &multimod_candidate_count,
+                         &error) == PC_RESULT_OK);
+            PC_CHECK(std::find(
+                         multimod_candidates.begin(),
+                         multimod_candidates.end(), multimod) ==
+                     multimod_candidates.end());
+            const std::string multimod_telemetry =
+                solver_telemetry_json(multimod_solver, &error);
+            PC_CHECK(multimod_telemetry.find(
+                         "automatic_multimod_dependency") !=
+                     std::string::npos);
+            pc_solver_destroy(multimod_solver);
+        }
+    }
+
+    pc_solve_summary bench_summary{};
+    PC_CHECK(pc_solver_solve(
+                 solver, &empty, economy, &solve_options,
+                 &bench_summary, &error) == PC_RESULT_OK);
+    PC_CHECK(bench_summary.policy_available == 1);
+    const std::string bench_strategy =
+        compile_and_exact_evaluate_public_policy(
+            session, solver, economy, &error);
+    (void)bench_strategy;
+    PC_CHECK(bench_summary.start_value < 1.0);
+
+    pc_economy_destroy(economy);
+    pc_solver_destroy(solver);
+    pc_action_context_destroy(context);
+    pc_session_destroy(session);
+
+    pc_session_options ring_options{};
+    ring_options.struct_size = sizeof(ring_options);
+    ring_options.abi_version = PC_ABI_VERSION;
+    ring_options.base_metadata_path =
+        "Metadata/Items/Rings/Ring1";
+    ring_options.item_level = 86;
+    pc_session_handle ring_session = nullptr;
+    PC_CHECK(pc_session_create(
+                 data, &ring_options, &ring_session, &error) == PC_RESULT_OK);
+    if (ring_session != nullptr) {
+        pc_action_context_handle ring_context = nullptr;
+        PC_CHECK(pc_action_context_create(
+                     ring_session, &context_options, &ring_context,
+                     &error) == PC_RESULT_OK);
+        pc_item_state ring_item{};
+        PC_CHECK(pc_item_init(
+                     ring_session, &item_options, &ring_item,
+                     &error) == PC_RESULT_OK);
+        std::uint32_t ring_pool_count = 0;
+        PC_CHECK(pc_action_context_debug_pool(
+                     ring_context, &ring_item, -1, pool.data(),
+                     static_cast<std::uint32_t>(pool.size()),
+                     &ring_pool_count, &error) == PC_RESULT_OK);
+        PC_CHECK(ring_pool_count > 0);
+        if (ring_pool_count > 0) {
+            pc_mod_info ring_goal_mod{};
+            PC_CHECK(pc_session_get_mod_info(
+                         ring_session, pool[0].session_mod_id,
+                         &ring_goal_mod, &error) == PC_RESULT_OK);
+            const std::string ring_goal =
+                std::string(
+                    "{\"version\":\"v1\",\"rarity\":\"rare\","
+                    "\"action_mode\":\"goal_relevant\","
+                    "\"fossil_mode\":\"goal_relevant\",\"slots\":["
+                    "{\"family_mod_key\":\"") +
+                ring_goal_mod.key + "\",\"min_tier\":0}]}";
+            pc_solver_handle ring_solver = nullptr;
+            PC_CHECK(pc_solver_create(
+                         ring_session, ring_goal.c_str(), ring_goal.size(),
+                         &ring_solver, &error) == PC_RESULT_OK);
+            if (ring_solver != nullptr) {
+                std::uint32_t eldritch = 0;
+                PC_CHECK(pc_solver_find_action(
+                             ring_solver, "eldritch_annul", &eldritch,
+                             &error) == PC_RESULT_NOT_FOUND);
+                const std::string ring_telemetry =
+                    solver_telemetry_json(ring_solver, &error);
+                PC_CHECK(ring_telemetry.find(
+                             "automatic_eldritch_side_dependency") ==
+                         std::string::npos);
+                pc_solver_destroy(ring_solver);
+            }
+        }
+        pc_action_context_destroy(ring_context);
+        pc_session_destroy(ring_session);
+    }
+    pc_data_destroy(data);
+}
+
+void run_public_product_reforge_family_gate(const char* artifact_dir) {
+    pc_error_info error;
+    pc_error_info_init(&error);
+    pc_data_handle data = nullptr;
+    const std::string manifest =
+        std::string(artifact_dir) + "/manifest.json";
+    PC_CHECK(pc_data_load_file(
+                 manifest.c_str(), &data, &error) == PC_RESULT_OK);
+    if (data == nullptr) return;
+
+    pc_session_options session_options{};
+    session_options.struct_size = sizeof(session_options);
+    session_options.abi_version = PC_ABI_VERSION;
+    session_options.base_metadata_path =
+        "Metadata/Items/Armours/BodyArmours/BodyInt17";
+    session_options.item_level = 86;
+    pc_session_handle session = nullptr;
+    PC_CHECK(pc_session_create(
+                 data, &session_options, &session, &error) == PC_RESULT_OK);
+    if (session == nullptr) {
+        pc_data_destroy(data);
+        return;
+    }
+    pc_action_context_options context_options{};
+    context_options.struct_size = sizeof(context_options);
+    context_options.abi_version = PC_ABI_VERSION;
+    context_options.seed = 20260808;
+    pc_action_context_handle context = nullptr;
+    PC_CHECK(pc_action_context_create(
+                 session, &context_options, &context,
+                 &error) == PC_RESULT_OK);
+    pc_item_init_options item_options{};
+    item_options.struct_size = sizeof(item_options);
+    item_options.abi_version = PC_ABI_VERSION;
+    item_options.rarity = PC_RARITY_RARE;
+    item_options.with_implicits = 0;
+    pc_item_state start{};
+    PC_CHECK(pc_item_init(
+                 session, &item_options, &start,
+                 &error) == PC_RESULT_OK);
+
+    pc_solve_options solve_options{};
+    solve_options.struct_size = sizeof(solve_options);
+    solve_options.abi_version = PC_ABI_VERSION;
+    solve_options.max_discovered_states = 200000;
+    solve_options.max_expanded_states = 25000;
+    solve_options.max_state_action_rows = 300000;
+    solve_options.max_transitions = 10000000;
+    solve_options.max_reforge_work = 100000000;
+    solve_options.max_solver_owned_bytes = 512ull * 1024ull * 1024ull;
+    solve_options.max_diagnostic_samples = 64;
+    solve_options.max_telemetry_json_bytes = 64ull * 1024ull * 1024ull;
+    solve_options.solver_flags =
+        PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES;
+
+    const auto run_forced_winner = [&](const std::string& goal,
+                                       const std::string& action_id,
+                                       const std::string& strategy_token) {
+        std::string solve_goal = goal;
+        const std::string product_fossil_mode =
+            ",\"fossil_mode\":\"goal_relevant\"";
+        if (const std::size_t fossil_mode =
+                solve_goal.find(product_fossil_mode);
+            fossil_mode != std::string::npos) {
+            solve_goal.erase(fossil_mode, product_fossil_mode.size());
+        }
+        PC_CHECK(!solve_goal.empty() && solve_goal.back() == '}');
+        if (!solve_goal.empty() && solve_goal.back() == '}') {
+            solve_goal.pop_back();
+            solve_goal += ",\"actions\":[\"" + action_id +
+                          "\",\"chaos\",\"restart\"]}";
+        }
+        pc_solver_handle solver = nullptr;
+        PC_CHECK(pc_solver_create(
+                     session, solve_goal.c_str(), solve_goal.size(), &solver,
+                     &error) == PC_RESULT_OK);
+        if (solver == nullptr) return;
+        std::uint32_t action = 0;
+        PC_CHECK(pc_solver_find_action(
+                     solver, action_id.c_str(), &action,
+                     &error) == PC_RESULT_OK);
+        std::uint32_t candidate_count = 0;
+        PC_CHECK(pc_solver_candidates(
+                     solver, nullptr, 0, &candidate_count,
+                     &error) == PC_RESULT_OK);
+        std::vector<std::uint32_t> candidates(candidate_count);
+        PC_CHECK(pc_solver_candidates(
+                     solver, candidates.data(), candidate_count,
+                     &candidate_count, &error) == PC_RESULT_OK);
+        PC_CHECK(std::find(
+                     candidates.begin(), candidates.end(), action) !=
+                 candidates.end());
+        pc_solver_action_info info{};
+        PC_CHECK(pc_solver_get_action_info(
+                     solver, action, &info, &error) == PC_RESULT_OK);
+        std::uint32_t outcome_count = 0;
+        pc_calc_summary outcome_summary{};
+        PC_CHECK(pc_calc_action_outcomes(
+                     solver, &start, action, nullptr, 0, &outcome_count,
+                     &outcome_summary, &error) == PC_RESULT_OK);
+        PC_CHECK(outcome_summary.supported == 1);
+        PC_CHECK(outcome_summary.legal == 1);
+        PC_CHECK(outcome_summary.success_probability > 0.0);
+        std::map<std::string, double> prices{
+            {"base", 1.0e6}, {"chaos", 1.0e6}};
+        for (std::uint32_t key = 0; key < info.cost_key_count; ++key) {
+            prices[info.cost_keys[key]] = 1.0;
+        }
+        const std::string economy_json = solver_economy_json(prices);
+        pc_economy_handle economy = nullptr;
+        PC_CHECK(pc_economy_load_json(
+                     economy_json.c_str(), economy_json.size(), &economy,
+                     &error) == PC_RESULT_OK);
+        pc_solve_summary summary{};
+        PC_CHECK(pc_solver_solve(
+                     solver, &start, economy, &solve_options, &summary,
+                     &error) == PC_RESULT_OK);
+        PC_CHECK(summary.policy_available == 1);
+        PC_CHECK(std::isfinite(summary.start_value));
+        PC_CHECK(summary.start_value < 1.0e6);
+        if (summary.policy_available == 1) {
+            const std::string strategy =
+                compile_and_exact_evaluate_public_policy(
+                    session, solver, economy, &error);
+            PC_CHECK(strategy.find(strategy_token) != std::string::npos);
+        }
+        pc_economy_destroy(economy);
+        pc_solver_destroy(solver);
+    };
+
+    const std::string energy_shield_goal =
+        R"({"version":"v1","rarity":"rare","action_mode":"goal_relevant","fossil_mode":"goal_relevant","min_satisfied_slots":1,"slots":[{"family_mod_key":"LocalIncreasedEnergyShield11","min_tier":1}]})";
+    pc_solver_handle filter_solver = nullptr;
+    PC_CHECK(pc_solver_create(
+                 session, energy_shield_goal.c_str(),
+                 energy_shield_goal.size(), &filter_solver,
+                 &error) == PC_RESULT_OK);
+    if (filter_solver != nullptr) {
+        std::uint32_t unused = 0;
+        PC_CHECK(pc_solver_find_action(
+                     filter_solver, "harvest_reforge:defences", &unused,
+                     &error) == PC_RESULT_OK);
+        PC_CHECK(pc_solver_find_action(
+                     filter_solver, "harvest_reforge:fire", &unused,
+                     &error) == PC_RESULT_NOT_FOUND);
+        PC_CHECK(pc_solver_find_action(
+                     filter_solver,
+                     "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+                     &unused, &error) == PC_RESULT_OK);
+        PC_CHECK(pc_solver_find_action(
+                     filter_solver,
+                     "essence:Metadata/Items/Currency/CurrencyEssenceHorror1",
+                     &unused, &error) == PC_RESULT_NOT_FOUND);
+        const std::string telemetry =
+            solver_telemetry_json(filter_solver, &error);
+        PC_CHECK(telemetry.find("candidate_goal_tag_harvest") !=
+                 std::string::npos);
+        PC_CHECK(telemetry.find("filtered_harvest_without_goal_tag") !=
+                 std::string::npos);
+        PC_CHECK(telemetry.find(
+                     "candidate_bounded_goal_relevant_fossil") !=
+                 std::string::npos);
+        PC_CHECK(telemetry.find("\"layout_primitives\":17") !=
+                 std::string::npos);
+        PC_CHECK(telemetry.find(
+                     "\"fossil_loadouts\":{\"possible\":15275,"
+                     "\"generated\":4,\"deferred\":15271") !=
+                 std::string::npos);
+        PC_CHECK(telemetry.find("filtered_corruption_only_essence") !=
+                 std::string::npos);
+        pc_solver_destroy(filter_solver);
+    }
+    run_forced_winner(
+        energy_shield_goal, "harvest_reforge:defences",
+        "harvest_reforge");
+    run_forced_winner(
+        energy_shield_goal,
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "fossil");
+
+    pc_item_state essence_item{};
+    item_options.rarity = PC_RARITY_NORMAL;
+    PC_CHECK(pc_item_init(
+                 session, &item_options, &essence_item,
+                 &error) == PC_RESULT_OK);
+    pc_action_request essence_request{};
+    essence_request.struct_size = sizeof(essence_request);
+    essence_request.abi_version = PC_ABI_VERSION;
+    essence_request.action_type = PC_ACTION_ESSENCE;
+    essence_request.essence_key =
+        "Metadata/Items/Currency/CurrencyEssenceAnguish2";
+    pc_action_result essence_result{};
+    PC_CHECK(pc_apply_action(
+                 context, &essence_item, &essence_request, &essence_result,
+                 &error) == PC_RESULT_OK);
+    PC_CHECK(essence_result.applied == 1);
+    std::string essence_goal_key;
+    const auto inspect_essence_mod = [&](const pc_mod_slot& slot) {
+        if (!essence_goal_key.empty() || slot.mod_id == PC_MOD_NONE) return;
+        pc_mod_info info{};
+        PC_CHECK(pc_session_get_mod_info(
+                     session, slot.mod_id, &info,
+                     &error) == PC_RESULT_OK);
+        if (info.reach_kind == PC_MOD_REACH_ESSENCE) {
+            essence_goal_key = info.key;
+        }
+    };
+    for (std::uint8_t i = 0; i < essence_item.prefix_count; ++i) {
+        inspect_essence_mod(essence_item.prefixes[i]);
+    }
+    for (std::uint8_t i = 0; i < essence_item.suffix_count; ++i) {
+        inspect_essence_mod(essence_item.suffixes[i]);
+    }
+    PC_CHECK(!essence_goal_key.empty());
+    if (!essence_goal_key.empty()) {
+        const std::string essence_goal =
+            std::string(
+                "{\"version\":\"v1\",\"rarity\":\"rare\","
+                "\"action_mode\":\"goal_relevant\","
+                "\"fossil_mode\":\"goal_relevant\","
+                "\"min_satisfied_slots\":1,\"slots\":[{"
+                "\"family_mod_key\":\"") +
+            essence_goal_key + "\",\"min_tier\":1}]}";
+        pc_solver_handle essence_solver = nullptr;
+        PC_CHECK(pc_solver_create(
+                     session, essence_goal.c_str(), essence_goal.size(),
+                     &essence_solver, &error) == PC_RESULT_OK);
+        std::string relevant_essence;
+        if (essence_solver != nullptr) {
+            std::uint32_t essence_candidate_count = 0;
+            PC_CHECK(pc_solver_candidates(
+                         essence_solver, nullptr, 0,
+                         &essence_candidate_count,
+                         &error) == PC_RESULT_OK);
+            std::vector<std::uint32_t> essence_candidates(
+                essence_candidate_count);
+            PC_CHECK(pc_solver_candidates(
+                         essence_solver, essence_candidates.data(),
+                         essence_candidate_count,
+                         &essence_candidate_count,
+                         &error) == PC_RESULT_OK);
+            for (const std::uint32_t candidate : essence_candidates) {
+                pc_solver_action_info info{};
+                PC_CHECK(pc_solver_get_action_info(
+                             essence_solver, candidate, &info,
+                             &error) == PC_RESULT_OK);
+                if (std::string(info.id).starts_with("essence:")) {
+                    relevant_essence = info.id;
+                    break;
+                }
+            }
+            const std::string essence_telemetry =
+                solver_telemetry_json(essence_solver, &error);
+            PC_CHECK(essence_telemetry.find(
+                         "candidate_exact_essence_goal") !=
+                     std::string::npos);
+            PC_CHECK(essence_telemetry.find(
+                         "filtered_essence_without_exact_goal_mod") !=
+                     std::string::npos);
+            pc_solver_destroy(essence_solver);
+        }
+        PC_CHECK(!relevant_essence.empty());
+        if (!relevant_essence.empty()) {
+            run_forced_winner(
+                essence_goal, relevant_essence, "essence");
+        }
+    }
+
+    pc_action_context_destroy(context);
+    pc_session_destroy(session);
+    pc_data_destroy(data);
 }
 
 /*
@@ -548,6 +1501,12 @@ void run_public_solver_gate(const char* artifact_dir) {
     solve_summary = stepped_summary;
     const std::string solved_telemetry =
         solver_telemetry_json(solver, &error);
+    PC_CHECK(solved_telemetry.find(
+                 "\"transition_bits_hash\":\"e9f2ba9132f51c8c\"") !=
+             std::string::npos);
+    PC_CHECK(solved_telemetry.find(
+                 "\"policy_bits_hash\":\"bfcb25789b4f99ae\"") !=
+             std::string::npos);
     const bool stepped_policy_guided_refined =
         solved_telemetry.find(
             "\"solution_scope\":"
@@ -931,6 +1890,8 @@ void run_solver_api_tests(const char* artifact_dir) {
         return;
     }
     run_public_solver_gate(artifact_dir);
+    run_public_product_eldritch_gate(artifact_dir);
+    run_public_product_reforge_family_gate(artifact_dir);
     run_natural_t1_feasibility_gate(artifact_dir);
 }
 

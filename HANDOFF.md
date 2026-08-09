@@ -1,56 +1,40 @@
 # Session Handoff
 
-**Status: Product Action Dependency Reachability is active.**
-
-Oliver selected the
-[active plan](docs/archive/2026-08-08-product-action-dependency-reachability/plan.md)
-on 2026-08-08 from clean starting commit
-`c95359663088d515982ba33e83fe2d15f89438ee`.
-
-The first required commit freezes the current product action/filtering path and
-focused native evidence. Implementation may proceed only within the plan's
-candidate/dependency/filter roles, bounded automatic families, preserved
-Harvest/Essence/Fossil relevance, unchanged mechanics and caps, final release
-WASM acceptance, and exactly-two-local-commit boundary.
-
-The deterministic starting defect is isolated: goal-relevant product filtering
-removes Ember, Ichor, Eldritch Chaos, and Eldritch Annul before automatic
-Eldritch option construction, while the unrestricted internal suite passes
-compilation, exact evaluation, and 10,000 Simulator runs. The current automatic
-bench path has the inverse scope problem: it retains every bench primitive and
-does not transport dependency-only status to Calculator's priced candidate
-selection.
-
-The preceding completed publication baseline is preserved below and its
-49-case native/release-WASM portfolio is not rerun at Gate 0.
+**Status: no active implementation boundary.**
 
 The completed
+[Product Action Dependency Reachability](docs/archive/2026-08-08-product-action-dependency-reachability/README.md)
+milestone is archived with its plan, implementation report, before/after
+matrix, deterministic telemetry, layout/resource comparison, compiled-policy
+evidence, native/release-WASM 10,000-run qualification, and final acceptance.
+
+The Calculator's native goal-relevant registry now assigns every action one
+explicit candidate, automatic-dependency, or filtered role with stable reason
+codes. Dependency-only primitives never appear as standalone candidates and
+enter only the exact carrier-local context of an automatic option that
+materializes. Public native and release-WASM Eldritch salvage reaches solving,
+wins, compiles, exact-evaluates, and simulates successfully. Bounded Cannot
+Roll and cleanup routes are implemented; narrow Harvest, ordinary Essence, and
+Fossil discovery is preserved; corruption-only Essences are rejected natively;
+and Calculator results disclose their product scope compactly.
+
+The unchanged public solver control preserves 24 states, 92 state/action rows,
+86 transitions, 2,720 logical reforge work, transition hash
+`e9f2ba9132f51c8c`, and policy hash `bfcb25789b4f99ae`. Selected-allocation
+peak increased by 0.807% for the new role/reason bookkeeping; live bytes
+increased by 0.091%. No unrelated action/state expansion was observed.
+
+The preceding completed
 [Verified Best Executable Strategy Publication](docs/archive/2026-08-08-verified-best-policy-publication/README.md)
-milestone is archived with its plan, report, and tracked deterministic
-evidence. The solver restores eligible incumbents on every non-exact exit,
-independently evaluates the exact emitted JSON for direct, strict, and renewal
-candidates, normalizes public bounds centrally, and publishes the cheapest
-verified executable graph.
+baseline remains intact. Its 49-case native/release-WASM portfolios each
+publish and independently verify 45 policies. Ring/Amulet evaluator attribution
+and strict-partition repairs remain separate deferred work, as does Veiled
+automatic crafting. The larger real-carrier Multimod public winner remains
+outside the existing resource/strict-materialization boundary; public role
+retention and the exact synthetic forced-winner control are green.
 
-The complete 49-case native and release-WASM portfolios each publish 45
-policies, and all 45 independently converge with complete cost, eventual
-success probability one, and zero off-policy mass. Their semantic comparison
-passes 1,320 checks with zero mismatches. The required Runic Gauntlets and Dire
-Pelt controls each completed 10,000 simulator runs in both runtimes with zero
-off-policy failures. Six legacy Monte Carlo success expectations remain honest
-action-cap misses; exact graph evaluation is authoritative.
+No crafting mechanic, price, Bellman comparison, state abstraction, strategy
+vocabulary, resource cap, watchdog, reconciliation tolerance, or simulator
+limit changed. Rendered/visual review was not run.
 
-Ring and Amulet remain unavailable because no retained graph completes final
-evaluation under the unchanged caps. The `bd85` and `c4c4` evaluator refusals
-now identify avoidable dense exact-attribution and observation-fixed-point
-allocations; separate Amulet and `bd85` diagnostics identify strict-partition
-invariant violations. The archived report recommends sparse/shared evaluator
-attribution as the next primary milestone and treats strict-partition repair as
-a separate follow-up.
-
-No crafting mechanic, price, goal, action filter, Bellman comparison, state
-abstraction, strategy vocabulary, resource cap, reconciliation tolerance,
-watchdog, or simulator action limit changed. Rendered review was not run.
-
-Next: make the plan/HANDOFF boundary commit, then implement Phase 1 without
-changing mechanics or broadening unrelated action/state space.
+Oliver must choose the next implementation chunk before work resumes.

@@ -34,7 +34,9 @@ constexpr std::uint32_t kBenchNeutral = 12;
 constexpr std::uint32_t kSuffixJunk = 13;
 constexpr std::uint32_t kBenchPrefixNeutral = 14;
 constexpr std::uint32_t kBenchTemporaryAlt = 15;
-constexpr std::uint32_t kModCount = 16;
+constexpr std::uint32_t kCannotRollAttack = 16;
+constexpr std::uint32_t kCannotRollCaster = 17;
+constexpr std::uint32_t kModCount = 18;
 
 std::shared_ptr<SessionImpl> make_automatic_session(
     const bool renewal_retry_pool = false) {
@@ -68,10 +70,12 @@ std::shared_ptr<SessionImpl> make_automatic_session(
     data->metamod_no_caster_code = 3;
     data->metamod_prefixes_locked_code = 4;
     data->metamod_suffixes_locked_code = 5;
+    data->tag_id_by_name.emplace("attack", 0);
+    data->tag_id_by_name.emplace("caster", 1);
 
     const std::vector<std::uint32_t> groups = {
         10, 20, 21, 30, 31, 20, 10, 20, 21, 40, 41, 42, 50, 22,
-        51, 21};
+        51, 21, 52, 53};
     data->group_key_sids.assign(64, 0);
     for (const std::uint32_t group : groups) {
         if (data->group_key_sids[group] != 0) continue;
@@ -97,7 +101,8 @@ std::shared_ptr<SessionImpl> make_automatic_session(
         PC_SIDE_PREFIX, PC_SIDE_SUFFIX, PC_SIDE_SUFFIX, PC_SIDE_PREFIX,
         PC_SIDE_PREFIX, PC_SIDE_SUFFIX, PC_SIDE_PREFIX, PC_SIDE_SUFFIX,
         PC_SIDE_SUFFIX, PC_SIDE_SUFFIX, PC_SIDE_PREFIX, PC_SIDE_SUFFIX,
-        PC_SIDE_SUFFIX, PC_SIDE_SUFFIX, PC_SIDE_PREFIX, PC_SIDE_SUFFIX};
+        PC_SIDE_SUFFIX, PC_SIDE_SUFFIX, PC_SIDE_PREFIX, PC_SIDE_SUFFIX,
+        PC_SIDE_SUFFIX, PC_SIDE_SUFFIX};
     session->primary_group = groups;
     session->required_level.assign(kModCount, 1);
     session->group_offsets.resize(kModCount + 1);
@@ -113,23 +118,36 @@ std::shared_ptr<SessionImpl> make_automatic_session(
         static_cast<std::uint32_t>(session->group_ids.size());
     session->family_id = {
         100, 101, 102, 103, 104, 105, 100, 101, 108, 109, 110, 111,
-        112, 113, 114, 115};
+        112, 113, 114, 115, 116, 117};
     session->family_tier_index.assign(kModCount, 1);
     session->metamod_type.assign(kModCount, -1);
     session->metamod_type[kPrefixLock] = 4;
     session->metamod_type[kSuffixLock] = 5;
     session->metamod_type[kMultimod] = 1;
+    session->metamod_type[kCannotRollAttack] = 2;
+    session->metamod_type[kCannotRollCaster] = 3;
     session->special_kind.assign(kModCount, -1);
     session->flags.assign(kModCount, 0);
     for (const std::uint32_t mod : {
              kTargetBlocker, kBenchGoalPrefix, kBenchGoalSuffix,
              kBenchTemporary, kPrefixLock, kSuffixLock, kMultimod,
-             kBenchNeutral, kBenchPrefixNeutral, kBenchTemporaryAlt}) {
+             kBenchNeutral, kBenchPrefixNeutral, kBenchTemporaryAlt,
+             kCannotRollAttack, kCannotRollCaster}) {
         session->flags[mod] = 1 << 1;
         session->bench_mod_ids.push_back(mod);
     }
     session->influence_code.assign(kModCount, -1);
-    session->class_offsets.assign(kModCount + 1, 0);
+    session->class_offsets.resize(kModCount + 1);
+    for (std::uint32_t mod = 0; mod < kModCount; ++mod) {
+        session->class_offsets[mod] =
+            static_cast<std::uint32_t>(session->class_tag_ids.size());
+        if (mod == kSuffixCompetitor) {
+            session->class_tag_ids.push_back(0);
+            session->class_tag_ids.push_back(1);
+        }
+    }
+    session->class_offsets[kModCount] =
+        static_cast<std::uint32_t>(session->class_tag_ids.size());
     session->rare_affix_cap = 3;
     session->base_spawn_weight.assign(kModCount, 0);
     session->base_spawn_weight[kGoalSuffix] = 100;
@@ -149,7 +167,12 @@ std::shared_ptr<SessionImpl> make_automatic_session(
     session->suffix_mask.assign(session->words, 0);
     session->unveiled_mask.assign(session->words, 0);
     session->unveiled_generic_mask.assign(session->words, 0);
-    session->implicit_tag_masks.assign(1, {});
+    session->implicit_tag_masks.assign(
+        2, std::vector<std::uint64_t>(session->words, 0));
+    pc_bitset_set(
+        session->implicit_tag_masks[0].data(), kSuffixCompetitor);
+    pc_bitset_set(
+        session->implicit_tag_masks[1].data(), kSuffixCompetitor);
     session->group_masks.assign(64, {});
     session->influence_masks.assign(
         1, std::vector<std::uint64_t>(session->words, 0));
@@ -547,6 +570,225 @@ void run_temporary_blocker_price_flip() {
         calc, low, "s8.3-automatic-temporary-blocker");
     PC_CHECK(strategy.find("remove_crafted_modifiers") != std::string::npos);
     run_compiled(session, strategy, prices(2.0), 64, 8301);
+
+    pc_item_state obsolete_craft = start;
+    obsolete_craft.suffixes[0].flags |= PC_MOD_SLOT_CRAFTED;
+    CalcContext cleanup_calc(
+        session, goal, registry, {exalt, restart},
+        false, true, true);
+    const std::uint32_t cleanup_state =
+        cleanup_calc.intern_item(obsolete_craft);
+    const StateLocalAutomaticBatch cleanup_batch = admit_automatic(
+        cleanup_calc, cleanup_state, prices(2.0));
+    const std::uint32_t cleanup_blocker = operator_by_fragment(
+        cleanup_calc, blocker_id);
+    PC_CHECK(cleanup_blocker != kNoId);
+    PC_CHECK(std::find(
+                 cleanup_batch.admitted_operators.begin(),
+                 cleanup_batch.admitted_operators.end(), cleanup_blocker) !=
+             cleanup_batch.admitted_operators.end());
+    if (cleanup_blocker != kNoId) {
+        const PlannerOperator& cleanup_planner =
+            cleanup_calc.operators().at(cleanup_blocker);
+        PC_CHECK(cleanup_planner.primitive_program.size() == 4);
+        PC_CHECK(cleanup_planner.primitive_program.front() ==
+                 cleanup_planner.cleanup_action);
+        PC_CHECK(cleanup_planner.primitive_program.back() ==
+                 cleanup_planner.cleanup_action);
+        const OptionKernel& cleanup_kernel = cleanup_calc.option_kernel(
+            cleanup_state, cleanup_blocker);
+        PC_CHECK(cleanup_kernel.legal);
+        PC_CHECK(cleanup_kernel.automatic.setup_complete);
+        PC_CHECK(cleanup_kernel.automatic.cleanup_complete);
+        PC_CHECK(cleanup_kernel.automatic.kernel_changed);
+        const SolveResult cleanup_winner = solve(
+            cleanup_calc, obsolete_craft, prices(2.0));
+        PC_CHECK(cleanup_winner.converged);
+        PC_CHECK(cleanup_winner.policy[cleanup_winner.start_state].index ==
+                 cleanup_blocker);
+        const std::string cleanup_strategy = compile_policy_strategy_json(
+            cleanup_calc, cleanup_winner,
+            "s8.3-automatic-precleanup-temporary-blocker");
+        PC_CHECK(cleanup_strategy.find("remove_crafted_modifiers") !=
+                 std::string::npos);
+        run_compiled(
+            session, cleanup_strategy, prices(2.0), 64, 8311);
+    }
+}
+
+void run_cannot_roll_price_flip() {
+    auto session = make_automatic_session();
+    ActionRegistry registry = build_action_registry(*session);
+    GoalSpec goal = automatic_goal(false, true);
+    const std::uint32_t exalt = registry.index_by_id.at("exalt");
+    const std::uint32_t restart = registry.index_by_id.at("restart");
+
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    for (const std::uint32_t mod :
+         {kGoalPrefix, kPrefixJunkA, kPrefixJunkB, kSuffixJunk}) {
+        add_mod(start, *session, mod);
+    }
+
+    const auto exercise = [&](const std::uint32_t blocker_mod,
+                              const std::uint64_t seed) {
+        CalcContext calc(
+            session, goal, registry, {exalt, restart},
+            false, true, true);
+        const std::uint32_t state = calc.intern_item(start);
+        const std::string blocker_id =
+            "bench:s83_mod_" + std::to_string(blocker_mod);
+        const auto prices = std::unordered_map<std::string, double>{
+            {"exalt", 10.0},
+            {"base", 100.0},
+            {"scour", 1.0},
+            {blocker_id, 2.0}};
+        const StateLocalAutomaticBatch batch =
+            admit_automatic(calc, state, prices);
+        const std::uint32_t option = operator_by_fragment(
+            calc,
+            "option:temporary_bench_repeat:" + blocker_id + ":exalt");
+        PC_CHECK(option != kNoId);
+        PC_CHECK(std::find(
+                     batch.admitted_operators.begin(),
+                     batch.admitted_operators.end(), option) !=
+                 batch.admitted_operators.end());
+        if (option == kNoId) return;
+        const PlannerOperator& planner = calc.operators().at(option);
+        PC_CHECK(planner.automatic_kind ==
+                 AutomaticCandidateKind::CannotRoll);
+        const OptionKernel& kernel = calc.option_kernel(state, option);
+        PC_CHECK(kernel.legal);
+        PC_CHECK(kernel.automatic.kernel_changed);
+        PC_CHECK(kernel.automatic.setup_complete);
+        PC_CHECK(kernel.automatic.cleanup_complete);
+        PC_CHECK((kernel.automatic.kernel_change_mechanisms &
+                  kAutomaticMetamodPoolBlock) != 0);
+
+        const SolveResult winner = solve(calc, start, prices);
+        PC_CHECK(winner.converged);
+        PC_CHECK(winner.policy[winner.start_state].index == option);
+        PC_CHECK(std::fabs(winner.values[winner.start_state] - 13.0) <
+                 1e-9);
+        const std::string telemetry = serialize_solver_telemetry(
+            calc, &winner, nullptr, std::nullopt, nullptr);
+        PC_CHECK(telemetry.find(
+                     "\"candidate_kind\":\"cannot_roll\"") !=
+                 std::string::npos);
+        const std::string strategy = compile_policy_strategy_json(
+            calc, winner,
+            "s8.3-automatic-cannot-roll-" +
+                std::to_string(blocker_mod));
+        PC_CHECK(strategy.find(
+                     "s83_mod_" + std::to_string(blocker_mod)) !=
+                 std::string::npos);
+        run_compiled(session, strategy, prices, 64, seed);
+    };
+
+    exercise(kCannotRollAttack, 8312);
+    exercise(kCannotRollCaster, 8313);
+
+    CalcContext missing_price_calc(
+        session, goal, registry, {exalt, restart},
+        false, true, true);
+    const std::uint32_t missing_price_state =
+        missing_price_calc.intern_item(start);
+    const StateLocalAutomaticBatch missing_price = admit_automatic(
+        missing_price_calc, missing_price_state,
+        {{"exalt", 10.0}, {"base", 100.0}, {"scour", 1.0}});
+    PC_CHECK(std::none_of(
+        missing_price.admitted_operators.begin(),
+        missing_price.admitted_operators.end(),
+        [&](const std::uint32_t option) {
+            return missing_price_calc.operators()[option].automatic_kind ==
+                   AutomaticCandidateKind::CannotRoll;
+        }));
+
+    pc_item_state full_suffix = start;
+    add_mod(full_suffix, *session, kSuffixCompetitor);
+    add_mod(full_suffix, *session, kTargetBlocker);
+    CalcContext illegal_carrier_calc(
+        session, goal, registry, {exalt, restart},
+        false, true, true);
+    const std::uint32_t illegal_state =
+        illegal_carrier_calc.intern_item(full_suffix);
+    const StateLocalAutomaticBatch illegal = admit_automatic(
+        illegal_carrier_calc, illegal_state,
+        {{"exalt", 10.0},
+         {"base", 100.0},
+         {"scour", 1.0},
+         {"bench:s83_mod_16", 2.0},
+         {"bench:s83_mod_17", 2.0}});
+    PC_CHECK(std::none_of(
+        illegal.admitted_operators.begin(), illegal.admitted_operators.end(),
+        [&](const std::uint32_t option) {
+            return illegal_carrier_calc.operators()[option].automatic_kind ==
+                   AutomaticCandidateKind::CannotRoll;
+        }));
+}
+
+void run_multimod_finish_price_flip() {
+    auto session = make_automatic_session();
+    ActionRegistry registry = build_action_registry(*session);
+    GoalSpec goal = automatic_goal(true, true);
+    const std::uint32_t restart = registry.index_by_id.at("restart");
+    CalcContext calc(
+        session, goal, registry, {restart},
+        false, true, true);
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    const std::uint32_t state = calc.intern_item(start);
+    const auto prices = std::unordered_map<std::string, double>{
+        {"base", 100.0},
+        {"bench:s83_mod_6", 2.0},
+        {"bench:s83_mod_7", 3.0},
+        {"bench:s83_mod_11", 1.0}};
+    const StateLocalAutomaticBatch batch =
+        admit_automatic(calc, state, prices);
+    const std::uint32_t multimod = operator_by_fragment(
+        calc,
+        "option:multimod_finish:bench:s83_mod_6+bench:s83_mod_7");
+    PC_CHECK(multimod != kNoId);
+    PC_CHECK(std::find(
+                 batch.admitted_operators.begin(),
+                 batch.admitted_operators.end(), multimod) !=
+             batch.admitted_operators.end());
+    if (multimod == kNoId) return;
+    const OptionKernel& kernel = calc.option_kernel(state, multimod);
+    PC_CHECK(kernel.legal);
+    PC_CHECK(kernel.automatic.kernel_changed);
+    PC_CHECK(kernel.automatic.setup_complete);
+    PC_CHECK(kernel.automatic.cleanup_complete);
+    PC_CHECK((kernel.automatic.kernel_change_mechanisms &
+              kAutomaticDeterministicFinish) != 0);
+    const SolveResult winner = solve(calc, start, prices);
+    PC_CHECK(winner.converged);
+    PC_CHECK(winner.policy[winner.start_state].index == multimod);
+    PC_CHECK(std::fabs(winner.values[winner.start_state] - 6.0) < 1e-9);
+    const std::string strategy = compile_policy_strategy_json(
+        calc, winner, "s8.3-automatic-multimod-finish");
+    PC_CHECK(strategy.find("s83_mod_11") != std::string::npos);
+    PC_CHECK(strategy.find("s83_mod_6") != std::string::npos);
+    PC_CHECK(strategy.find("s83_mod_7") != std::string::npos);
+    run_compiled(session, strategy, prices, 64, 8314);
+
+    CalcContext missing_calc(
+        session, goal, registry, {restart},
+        false, true, true);
+    const std::uint32_t missing_state = missing_calc.intern_item(start);
+    const StateLocalAutomaticBatch missing = admit_automatic(
+        missing_calc, missing_state,
+        {{"base", 100.0},
+         {"bench:s83_mod_6", 2.0},
+         {"bench:s83_mod_7", 3.0}});
+    PC_CHECK(std::none_of(
+        missing.admitted_operators.begin(), missing.admitted_operators.end(),
+        [&](const std::uint32_t option) {
+            return missing_calc.operators()[option].automatic_kind ==
+                   AutomaticCandidateKind::MultimodFinish;
+        }));
 }
 
 void run_protected_price_flip() {
@@ -1656,6 +1898,8 @@ void run_planner_operator_import_authority() {
 
 void run_solver_s8_3_tests() {
     run_temporary_blocker_price_flip();
+    run_cannot_roll_price_flip();
+    run_multimod_finish_price_flip();
     run_protected_price_flip();
     run_protected_producibility_filter();
     run_fracture_price_flip();

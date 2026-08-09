@@ -133,6 +133,20 @@ evidence only and carry no finite public upper. The measured implementation,
 case matrix, and acceptance evidence are archived under
 [Verified Best Executable Strategy Publication](../archive/2026-08-08-verified-best-policy-publication/README.md).
 
+Product-action reachability addendum: the goal-relevant registry now assigns
+every action one explicit product role: independently selectable candidate,
+automatic-option dependency, or filtered. Dependency-only descriptors remain
+resolvable by native automatic builders but never appear in
+`pc_solver_candidates`; a carrier-local option adds only the dependencies of
+the option it actually materializes. Stable reason codes and counts by role and
+family are exposed in `action_control.product_admission`, while
+`automatic_candidates.dependency_primitives` counts dependencies used by
+materialized options. Harvest target-tag relevance, exact Essence-goal
+matching, and the bounded positive-relevance Fossil beam are unchanged.
+Corruption-only Essences are rejected from native ordinary-Essence discovery.
+The public-path implementation and measurements are archived under
+[Product Action Dependency Reachability](../archive/2026-08-08-product-action-dependency-reachability/README.md).
+
 ## Purpose
 
 The solver turns a concrete start item, a goal, an action scope, and an
@@ -311,10 +325,24 @@ base state.
 Callers may name an explicit primitive subset and fixed option programs. The
 product `action_mode: "goal_relevant"` instead builds a bounded,
 price-independent envelope and enables state-local automatic candidates.
-Those candidates cover relevant primitive Fracture, permanent bench
-finishes, temporary bench blockers, protected metamod routes, Multimod
+The registry first classifies relevant candidates, automatic dependencies, and
+filtered actions. Only relevant candidates are returned by
+`pc_solver_candidates` and may compete as primitive Bellman actions.
+Dependency-only primitives can be resolved only by declared fixed or automatic
+programs. Those programs cover automatic Eldritch side salvage, relevant
+primitive Fracture, permanent bench finishes, temporary bench blockers,
+protected metamod and Cannot Roll routes, cleanup compositions, Multimod
 finishes, and automatic Imprint attempt/restore programs. Imprint programs are
 not user-authored in product mode.
+
+The parent layout starts from selectable candidates and dependencies of fixed
+options already present in the request. Dynamic admission evaluates a carrier
+in a local exact context and adds only the primitive dependencies of the option
+materialized there. Retaining a dependency descriptor in the product registry
+does not put it in every parent state layout. `action_control.layout_primitives`
+reports the parent action count; `dependency_primitives` and
+`automatic_candidates.dependency_primitives` report fixed and materialized
+automatic dependencies separately.
 
 Permanent-bench admission evaluates its deterministic successor on the
 already materialized exact carrier. It does not depend on a temporary abstract
@@ -340,12 +368,12 @@ overlapping goal satisfaction, or non-uniform persistent identity. No
 fractured-junk miss state is interned. Compilation uses the existing Fracture,
 condition-router, and Restart vocabulary; primitive Fracture remains exact.
 
-The goal-relevant product envelope intentionally excludes Veiled and Eldritch
-families at this commit even though their primitive actions and exact
-evaluators exist for explicit/manual scopes. The registry makes that a bounded
-product-scope choice rather than an absence of primitive engine support. It is
-recorded as deferred scope work in the
-[solver roadmap](../future/solver-roadmap.md).
+The goal-relevant product envelope intentionally excludes Veiled crafting and
+standalone Eldritch primitive use. Ember, Ichor, Eldritch Chaos, and Eldritch
+Annul are retained only as dependencies of bounded side-salvage options on
+eligible carriers. Eldritch Exalt and arbitrary implicit rolling remain
+outside product scope. Influence Exalts keep their existing goal-influence
+filter and are not part of automatic Eldritch side salvage.
 
 Code authority:
 `engine/src/solver_registry.cpp`, the `engine/src/solver_options*.cpp` owners,
@@ -679,10 +707,18 @@ and retry-basin carriers, and are generated only when the targeted or
 preserved side can affect the remaining explicit goal. Bellman chooses among
 them and every other admitted action; no route is prescribed.
 
-Automatic standalone Ember, Ichor, Eldritch Exalt, arbitrary implicit
-rolling, Veiled crafting, and Influence Exalt remain outside this scope.
-Manual actions and user-authored `eldritch_side_intent` options retain their
-existing behavior.
+The product registry retains Ember tiers, Ichor tiers, Eldritch Chaos, and
+Eldritch Annul under the stable
+`automatic_eldritch_side_dependency` reason. They remain absent from the
+candidate list and the parent layout until a useful carrier-local option is
+materialized. Missing setup or final prices reject the compound option
+explicitly. Generic influence or another illegal carrier state rejects it
+before kernel admission.
+
+Automatic standalone Ember, Ichor, Eldritch Exalt, arbitrary implicit rolling,
+and Veiled crafting remain outside this scope. Influence Exalts retain their
+separate goal-influence candidate rule. Manual actions and user-authored
+`eldritch_side_intent` options retain their existing behavior.
 
 ## Solve And Reprice
 
@@ -928,6 +964,8 @@ Action accounting is also categorical: registry actions, solver candidates,
 evaluator-supported actions, supported priced actions, missing-price skips,
 and unsupported-vocabulary skips are separate counts. The older combined
 `skipped_action_count` remains only for compatibility.
+For product goals, registry accounting additionally separates candidate,
+automatic-dependency, and filtered roles by family and stable reason code.
 
 Unsupported mechanic or graph vocabulary, structural unreachability/no proper
 fallback, compilation refusal, exact-evaluation failure, and simulation

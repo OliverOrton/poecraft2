@@ -116,6 +116,11 @@ const OptionKernel& CalcContext::option_kernel(
             }
             return stored;
         };
+        const bool cleanup_before_setup =
+            option.option_kind == FixedOptionKind::TemporaryBenchRepeat &&
+            option.primitive_program.size() == 4 &&
+            option.primitive_program.front() == option.cleanup_action &&
+            option.primitive_program[1] == option.setup_action;
         if (option.primitive_program.empty() ||
             (option.option_kind != FixedOptionKind::FracturePrepare &&
              !action_legal(
@@ -163,7 +168,8 @@ const OptionKernel& CalcContext::option_kernel(
             }
         }
         if (option.option_kind == FixedOptionKind::TemporaryBenchRepeat &&
-            state_has_unfractured_crafted(state(state_id))) {
+            state_has_unfractured_crafted(state(state_id)) &&
+            !cleanup_before_setup) {
             result->legal = false;
             result->terminates_almost_surely = false;
             result->automatic.reason =
@@ -279,7 +285,14 @@ const OptionKernel& CalcContext::option_kernel(
                     attempt.entries;
             } else {
                 const AttemptKernel baseline = execute_attempt(
-                    *this, {option.followup_action}, state_id);
+                    *this,
+                    cleanup_before_setup
+                        ? std::vector<std::uint32_t>{
+                              option.cleanup_action,
+                              option.followup_action}
+                        : std::vector<std::uint32_t>{
+                              option.followup_action},
+                    state_id);
                 if (option.option_kind == FixedOptionKind::ProtectedRepeat) {
                     telemetry_.protected_baseline_ns +=
                         static_cast<std::uint64_t>(
@@ -297,14 +310,30 @@ const OptionKernel& CalcContext::option_kernel(
                     baseline.supported && baseline.fully_legal &&
                     !same_attempt_outcomes(baseline, attempt);
             }
-            result->automatic.setup_complete = setup_applies_exactly(
-                *this, state_id, option.setup_action,
-                option.option_kind == FixedOptionKind::ProtectedRepeat
-                    ? static_cast<std::uint32_t>(
-                          option.intended_side == PC_SIDE_PREFIX
-                              ? kFlagPrefixesLocked
-                              : kFlagSuffixesLocked)
-                    : std::uint32_t{0});
+            if (cleanup_before_setup) {
+                const AttemptKernel prepared = execute_attempt(
+                    *this,
+                    {option.cleanup_action, option.setup_action},
+                    state_id);
+                result->automatic.setup_complete =
+                    prepared.supported && prepared.fully_legal &&
+                    !prepared.entries.empty() &&
+                    std::all_of(
+                        prepared.entries.begin(), prepared.entries.end(),
+                        [&](const OutcomeEntry& exit) {
+                            return state_has_unfractured_crafted(
+                                state(exit.state));
+                        });
+            } else {
+                result->automatic.setup_complete = setup_applies_exactly(
+                    *this, state_id, option.setup_action,
+                    option.option_kind == FixedOptionKind::ProtectedRepeat
+                        ? static_cast<std::uint32_t>(
+                              option.intended_side == PC_SIDE_PREFIX
+                                  ? kFlagPrefixesLocked
+                                  : kFlagSuffixesLocked)
+                        : std::uint32_t{0});
+            }
 
             bool carrier_relevant = true;
             bool cleanup_complete = true;
@@ -333,6 +362,15 @@ const OptionKernel& CalcContext::option_kernel(
                 cleanup_complete = all_exits_cleaned(*this, attempt.entries);
                 const ActionDescriptor& blocker =
                     registry_.actions.at(option.setup_action);
+                if (blocker.params.mod_id < session().metamod_type.size()) {
+                    const int metamod =
+                        session().metamod_type[blocker.params.mod_id];
+                    if (metamod == session().data->metamod_no_attack_code ||
+                        metamod == session().data->metamod_no_caster_code) {
+                        result->automatic.kernel_change_mechanisms |=
+                            kAutomaticMetamodPoolBlock;
+                    }
+                }
                 if (blocker.params.mod_id < session().mod_count &&
                     session().group_offsets[blocker.params.mod_id] <
                         session().group_offsets[blocker.params.mod_id + 1]) {
@@ -829,8 +867,10 @@ const OptionKernel& CalcContext::option_kernel(
                 if (option.automatic_kind ==
                     AutomaticCandidateKind::EldritchSide) {
                     result->automatic.reason =
-                        "eldritch_side_intended_dominance_illegal:" +
-                        action.id;
+                        (abstract.flags & kFlagInfluenced) != 0
+                            ? "eldritch_side_influenced_carrier_illegal"
+                            : "eldritch_side_intended_dominance_illegal:" +
+                                  action.id;
                 }
                 frontier.clear();
                 break;

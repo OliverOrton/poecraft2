@@ -340,11 +340,28 @@ static std::shared_ptr<DataImpl> build_data_impl(
         read_u32(*essences, "key_string_ids", data->essence_key_sids);
         read_i32(*essences, "item_level_restrictions",
                  data->essence_item_level_restrictions);
+        if (essences->find("is_corruption_only") != nullptr) {
+            read_i32(*essences, "is_corruption_only",
+                     data->essence_is_corruption_only);
+        } else {
+            /* Backward-compatible for small synthetic native fixtures. The
+             * canonical compiled artifact always supplies this column. */
+            data->essence_is_corruption_only.assign(
+                data->essence_count, 0);
+        }
         read_u32(*essences, "mod_offsets", data->essence_mod_offsets);
         read_u32(*essences, "item_class_key_string_ids",
                  data->essence_class_key_sids);
         read_i32(*essences, "linked_global_mod_ids",
                  data->essence_linked_global_mod_ids);
+        if (data->essence_key_sids.size() != data->essence_count ||
+            data->essence_item_level_restrictions.size() !=
+                data->essence_count ||
+            data->essence_is_corruption_only.size() !=
+                data->essence_count) {
+            throw std::runtime_error(
+                "essence scalar columns must match essence count");
+        }
         for (std::uint32_t i = 0; i < data->essence_count; ++i) {
             data->essence_by_key.emplace(
                 data->string_at(data->essence_key_sids[i]), i);

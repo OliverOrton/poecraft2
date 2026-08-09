@@ -1855,6 +1855,169 @@ test("calculator picker: full-registry solver, filtered actions, fossil combos",
     await client.closeItem(item);
 });
 
+test("product Eldritch dependency wins through release WASM", async () => {
+    const item = await client.createItem(sessionId, {
+        rarity: "rare",
+        withImplicits: false,
+    });
+    for (let slot = 0; slot < 3; slot += 1) {
+        const suffixPool = await client.debugPool(contextId, item, {
+            action: { type: "exalt" },
+            side: "suffix",
+        });
+        assert.ok(suffixPool.entries.length > 0);
+        const junk = await client.modInfo(
+            sessionId,
+            suffixPool.entries[0].session_mod_id,
+        );
+        await client.addMod(item, sessionId, { key: junk.key });
+    }
+    assert.equal(
+        (
+            await client.apply(contextId, item, {
+                type: "eldritch_ember",
+                tier: 1,
+            })
+        ).applied,
+        true,
+    );
+    assert.equal(
+        (
+            await client.apply(contextId, item, {
+                type: "eldritch_ichor",
+                tier: 2,
+            })
+        ).applied,
+        true,
+    );
+
+    const solver = await client.openSolver(sessionId, {
+        version: "v1",
+        rarity: "rare",
+        action_mode: "goal_relevant",
+        fossil_mode: "goal_relevant",
+        min_satisfied_slots: 1,
+        slots: [
+            {
+                family_mod_key: "EinharMasterColdResist3__",
+                min_tier: 1,
+            },
+        ],
+    });
+    const actions = await client.solverActions(solver);
+    for (const dependency of [
+        "eldritch_ember:1",
+        "eldritch_ichor:1",
+        "eldritch_chaos",
+        "eldritch_annul",
+    ]) {
+        assert.ok(
+            !actions.some((action) => action.id === dependency),
+            `${dependency} must remain dependency-only`,
+        );
+    }
+    const economySpec = {
+        version: "v1",
+        id: "wasm-product-eldritch-forced-winner",
+        prices: {
+            base: 1000,
+            "bench:EinharMasterColdResist3__": 0.1,
+            eldritch_chaos: 1,
+            eldritch_annul: 1,
+            "eldritch_ember:1": 0.1,
+            "eldritch_ember:2": 0.1,
+            "eldritch_ember:3": 0.1,
+            "eldritch_ember:4": 0.1,
+            "eldritch_ichor:1": 0.1,
+            "eldritch_ichor:2": 0.1,
+            "eldritch_ichor:3": 0.1,
+            "eldritch_ichor:4": 0.1,
+        },
+    };
+    const economy = await client.loadEconomy(economySpec);
+    const solve = await client.solverSolve(solver, item, economy, {
+        max_discovered_states: 200000,
+        max_expanded_states: 25000,
+        max_state_action_rows: 300000,
+        max_transitions: 10000000,
+        max_reforge_work: 100000000,
+        max_solver_owned_bytes: 512 * 1024 * 1024,
+        max_telemetry_json_bytes: 64 * 1024 * 1024,
+        goal_progress_gated_reforges: true,
+    });
+    assert.equal(solve.cancelled, false);
+    assert.equal(solve.policy_available, true, JSON.stringify(solve));
+    assert.notEqual(solve.start_value, null);
+    if (solve.start_value === null) {
+        throw new Error("product Eldritch winner has no start value");
+    }
+    assert.ok(
+        solve.start_value > 0 &&
+            solve.start_value < economySpec.prices.base,
+        JSON.stringify(solve),
+    );
+    const telemetry = await client.solverTelemetry(solver);
+    const admission = (
+        telemetry.action_control as Record<string, unknown>
+    ).product_admission as Record<string, unknown>;
+    const roles = admission.roles as Record<
+        string,
+        Record<string, number>
+    >;
+    assert.equal(admission.goal_filtering, true);
+    assert.ok(roles.automatic_dependency.total > 0);
+
+    const compiled = prepareSolverStrategy(
+        await client.solverCompileStrategy(solver),
+    );
+    assert.ok(
+        compiled.nodes.some(
+            (node) =>
+                node.kind === "operation" &&
+                (node.operation?.type === "eldritch_annul" ||
+                    node.operation?.type === "eldritch_chaos"),
+        ),
+    );
+    const exact = await client.strategyEvaluate(
+        sessionId,
+        compiled,
+        undefined,
+        { economy: economySpec },
+    );
+    assert.equal(exact.converged, true);
+    assert.ok(exact.terminals.success > 1 - 1e-12);
+    assert.ok(exact.terminals.failure < 1e-12);
+    assert.ok(exact.terminals.action_not_applied < 1e-12);
+    assert.ok(exact.terminals.no_matching_edge < 1e-12);
+    assert.ok(exact.terminals.unresolved < 1e-12);
+    assert.equal(exact.accounting.totals.per_invocation.cost_complete, true);
+
+    const strategy = await client.compileStrategy(sessionId, compiled);
+    const simulator = await client.createSimulator(
+        sessionId,
+        strategy,
+        economy,
+    );
+    const run = await client.runStrategy(simulator, {
+        target_runs: 10000,
+        seed: 20260808,
+        max_actions_per_run: 100000,
+    });
+    assert.equal(run.cancelled, false);
+    assert.equal(run.summary.completed_runs, 10000);
+    assert.equal(run.summary.success_count, 10000);
+    assert.equal(run.summary.failure_count, 0);
+    assert.equal(run.summary.action_not_applied_count, 0);
+    assert.equal(run.summary.no_matching_edge_count, 0);
+    assert.equal(run.summary.missing_price_run_count, 0);
+
+    await client.closeSimulator(simulator);
+    await client.closeStrategy(strategy);
+    await client.closeEconomy(economy);
+    await client.closeSolver(solver);
+    await client.closeItem(item);
+});
+
 test("automatic S8.3 bench selects and executes through WASM", async () => {
     const item = await client.createItem(sessionId, {
         rarity: "rare",

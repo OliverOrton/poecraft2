@@ -102,6 +102,22 @@ goal bench, a temporary blocker/repeat, a protected metamod route, or a
 Multimod finish when its exact kernel and dependencies are complete. These
 options compile to ordinary `bench`, follow-up, cleanup, and routing nodes.
 
+Product goal filtering classifies direct goal crafts as candidates and keeps
+ordinary blockers, side locks, Cannot Roll crafts, Multimod, and cleanup only
+as dependencies of bounded automatic routes. Dependency-only bench crafts are
+not standalone Bellman actions. A carrier-local builder admits Cannot Roll
+Attack/Caster only when its tag block changes a supported follow-up pool, the
+remaining goal can benefit, the craft is legal, and setup, follow-up, and any
+cleanup resources are priced. The option compiles to the real bench craft,
+follow-up, and cleanup operations.
+
+`remove_crafted_modifiers` is retained as a dependency only. When an obsolete
+crafted mod prevents a relevant blocker, metamod, or goal craft, the automatic
+program may compose cleanup before setup and cleanup again after the
+continuation. It is not added as a universal state action. Multimod finishing
+likewise remains a bounded program over Multimod plus relevant goal bench
+crafts, subject to exact legality, conflict, slot, and price checks.
+
 ## Calculator Support
 
 The Calculator’s visible craft-panel tabs do not include a Bench panel. Bench

@@ -23,6 +23,8 @@ namespace poecraft {
 namespace solver {
 namespace {
 
+bool state_has_unfractured_crafted(const AbstractState& state);
+
 AutomaticTelemetryKind telemetry_kind_for_candidate(
     const AutomaticCandidateKind kind) {
     switch (kind) {
@@ -42,6 +44,8 @@ AutomaticTelemetryKind telemetry_kind_for_candidate(
         return AutomaticTelemetryKind::Renewal;
     case AutomaticCandidateKind::EldritchSide:
         return AutomaticTelemetryKind::EldritchSide;
+    case AutomaticCandidateKind::CannotRoll:
+        return AutomaticTelemetryKind::CannotRoll;
     case AutomaticCandidateKind::None:
         return AutomaticTelemetryKind::None;
     }
@@ -158,6 +162,7 @@ bool intended_eldritch_action_legal(
     const ActionDescriptor& action,
     const std::int8_t side,
     const std::uint32_t state_id) {
+    if ((state.flags & kFlagInfluenced) != 0) return false;
     if (!eldritch_dominates(state, side)) return false;
     if (action.params.type == ActionType::EldritchExalt) {
         const std::uint8_t count = side == PC_SIDE_PREFIX
@@ -294,6 +299,7 @@ struct TemporaryBenchCandidateGroup {
     std::uint32_t representative_blocker = kNoId;
     std::uint32_t followup_action = kNoId;
     std::uint32_t goal_slot = kNoId;
+    bool pool_tag_blocker = false;
     std::vector<std::uint32_t> blocker_variants;
 };
 
@@ -381,6 +387,7 @@ bool temporary_blocker_applies(
         }
         return false;
     };
+    if (effect.pool_tag_blocker) return true;
     return !conflicts(carrier.prefixes, carrier.prefix_count) &&
            !conflicts(carrier.suffixes, carrier.suffix_count);
 }
@@ -451,9 +458,11 @@ AutomaticOptionSynthesis synthesize_automatic_options(
                 double best_cost =
                     std::numeric_limits<double>::infinity();
                 std::vector<std::string> best;
+                std::vector<std::string> deterministic_fallback;
                 const auto consider =
                     [&](std::vector<std::string> ids) {
                         double cost = 0.0;
+                        bool complete = true;
                         for (const std::string& id : ids) {
                             const auto found =
                                 registry.index_by_id.find(id);
@@ -461,9 +470,14 @@ AutomaticOptionSynthesis synthesize_automatic_options(
                                 return;
                             }
                             const double part = action_cost(found->second);
-                            if (!std::isfinite(part)) return;
+                            if (!std::isfinite(part)) complete = false;
                             cost += part;
                         }
+                        if (deterministic_fallback.empty() ||
+                            ids < deterministic_fallback) {
+                            deterministic_fallback = ids;
+                        }
+                        if (!complete) return;
                         if (cost < best_cost ||
                             (cost == best_cost &&
                              (best.empty() || ids < best))) {
@@ -490,8 +504,11 @@ AutomaticOptionSynthesis synthesize_automatic_options(
                                 std::to_string(desired_tier)});
                     }
                 }
-                if (!std::isfinite(best_cost)) return std::nullopt;
-                return best;
+                if (std::isfinite(best_cost)) return best;
+                if (!deterministic_fallback.empty()) {
+                    return deterministic_fallback;
+                }
+                return std::nullopt;
             };
 
         const std::uint32_t satisfied = satisfied_goal_mask(state);
@@ -536,8 +553,7 @@ AutomaticOptionSynthesis synthesize_automatic_options(
                  {"eldritch_annul", "eldritch_chaos"}) {
                 const auto final =
                     registry.index_by_id.find(final_id);
-                if (final == registry.index_by_id.end() ||
-                    !action_has_prices(final->second)) {
+                if (final == registry.index_by_id.end()) {
                     continue;
                 }
                 FixedOptionSpec option;
@@ -596,9 +612,28 @@ AutomaticOptionSynthesis synthesize_automatic_options(
 
     const auto cleanup = registry.index_by_id.find(
         "remove_crafted_modifiers");
+    const bool cleanup_before_setup =
+        state_has_unfractured_crafted(state) &&
+        state.crafted_goal_mask == 0;
     if (cleanup != registry.index_by_id.end() &&
         action_has_prices(cleanup->second) &&
-        (state.flags & kFlagCraftedMod) == 0) {
+        (!state_has_unfractured_crafted(state) || cleanup_before_setup)) {
+        pc_item_state temporary_carrier = carrier;
+        if (cleanup_before_setup) {
+            for (int side : {PC_SIDE_PREFIX, PC_SIDE_SUFFIX}) {
+                pc_mod_slot* mods = side == PC_SIDE_PREFIX
+                                        ? temporary_carrier.prefixes
+                                        : temporary_carrier.suffixes;
+                std::uint8_t& count = side == PC_SIDE_PREFIX
+                                          ? temporary_carrier.prefix_count
+                                          : temporary_carrier.suffix_count;
+                for (std::uint8_t i = count; i > 0; --i) {
+                    if ((mods[i - 1].flags & PC_MOD_SLOT_CRAFTED) != 0) {
+                        pc_item_remove_at(&temporary_carrier, side, i - 1);
+                    }
+                }
+            }
+        }
         const auto enumeration_started = std::chrono::steady_clock::now();
         const auto& precompiled = calc.temporary_bench_effect_classes();
         synthesis.temporary_precompiled_classes = precompiled.size();
@@ -607,6 +642,7 @@ AutomaticOptionSynthesis synthesize_automatic_options(
                 std::uint32_t,
                 std::uint32_t,
                 std::int8_t,
+                bool,
                 std::vector<std::uint64_t>>,
             std::size_t>
             group_by_effect;
@@ -618,7 +654,8 @@ AutomaticOptionSynthesis synthesize_automatic_options(
                 !action_legal(
                     session, registry.actions.at(effect.followup_action),
                     state) ||
-                !temporary_blocker_applies(session, carrier, effect)) {
+                !temporary_blocker_applies(
+                    session, temporary_carrier, effect)) {
                 continue;
             }
             const auto blocker_usable = [&](const std::uint32_t blocker) {
@@ -638,7 +675,7 @@ AutomaticOptionSynthesis synthesize_automatic_options(
                 effect.followup_action);
             if (inserted) {
                 eligible->second = calc.temporary_followup_eligible_mask(
-                    carrier, effect.followup_action);
+                    temporary_carrier, effect.followup_action);
             }
             if (!mask_intersects(eligible->second, effect.target_mask)) {
                 continue;
@@ -658,9 +695,9 @@ AutomaticOptionSynthesis synthesize_automatic_options(
                 rarity_affix_cap(session, followup_rarity);
             const bool closes_blocker_side =
                 (effect.blocker_side == PC_SIDE_PREFIX &&
-                 carrier.prefix_count + 1 >= cap) ||
+                 temporary_carrier.prefix_count + 1 >= cap) ||
                 (effect.blocker_side == PC_SIDE_SUFFIX &&
-                 carrier.suffix_count + 1 >= cap);
+                 temporary_carrier.suffix_count + 1 >= cap);
             if (closes_blocker_side) {
                 const std::vector<std::uint64_t>& side_mask =
                     effect.blocker_side == PC_SIDE_PREFIX
@@ -677,7 +714,7 @@ AutomaticOptionSynthesis synthesize_automatic_options(
             auto [found, effect_inserted] = group_by_effect.emplace(
                 std::make_tuple(
                     effect.followup_action, effect.goal_slot,
-                    effect.blocker_side, blocked),
+                    effect.blocker_side, effect.pool_tag_blocker, blocked),
                 synthesis.temporary_groups.size());
             TemporaryBenchCandidateGroup* group = nullptr;
             if (effect_inserted) {
@@ -686,6 +723,7 @@ AutomaticOptionSynthesis synthesize_automatic_options(
                     *representative;
                 created.followup_action = effect.followup_action;
                 created.goal_slot = effect.goal_slot;
+                created.pool_tag_blocker = effect.pool_tag_blocker;
                 synthesis.temporary_groups.push_back(std::move(created));
                 group = &synthesis.temporary_groups.back();
             } else {
@@ -722,11 +760,16 @@ AutomaticOptionSynthesis synthesize_automatic_options(
             FixedOptionSpec option;
             option.kind = FixedOptionKind::TemporaryBenchRepeat;
             option.setup_action_ids = {blocker.id};
+            if (cleanup_before_setup) {
+                option.program_action_ids = {
+                    "remove_crafted_modifiers"};
+            }
             option.action_id = followup.id;
             option.exit_goal_slots = {group.goal_slot};
             option.exit_min_satisfied = 1;
-            option.automatic_kind =
-                AutomaticCandidateKind::TemporaryBenchBlocker;
+            option.automatic_kind = group.pool_tag_blocker
+                ? AutomaticCandidateKind::CannotRoll
+                : AutomaticCandidateKind::TemporaryBenchBlocker;
             option.relevant_goal_mask = 1u << group.goal_slot;
             result.push_back(std::move(option));
         }
@@ -1137,7 +1180,7 @@ ImprintDiscoveryResult discover_automatic_imprint_options(
     for (const std::uint32_t index : calc.candidates()) {
         const ActionDescriptor& action = calc.registry().actions.at(index);
         if (action.synthetic || action.uses_companion_state ||
-            action.automatic_dependency_only ||
+            action.product_role == ProductActionRole::AutomaticDependency ||
             action_observes_modifier_offer(action) ||
             !calc_supports(action) ||
             !resource_keys_available(action.cost_keys, limits.prices)) {

@@ -44,6 +44,8 @@ const char* automatic_telemetry_kind_name(
         return "primitive_fracture";
     case AutomaticTelemetryKind::EldritchSide:
         return "eldritch_side";
+    case AutomaticTelemetryKind::CannotRoll:
+        return "cannot_roll";
     case AutomaticTelemetryKind::Count:
     case AutomaticTelemetryKind::None:
         return "none";
@@ -2552,8 +2554,44 @@ std::string serialize_solver_telemetry(
         calc.action_control().explicit_envelope));
     json += ",\"dependency_primitives\":" + std::to_string(
         calc.action_control().dependency_primitives);
+    json += ",\"layout_primitives\":" + std::to_string(
+        calc.action_control().layout_primitives);
     json += ",\"goal_relevant_pruned\":" + std::to_string(
         calc.action_control().pruned_outside_goal_relevance);
+    json += ",\"product_admission\":{\"goal_filtering\":" +
+            std::string(bool_json(calc.registry().product_goal_filtering));
+    json += ",\"roles\":{";
+    constexpr const char* product_role_names[] = {
+        "candidate", "automatic_dependency", "filtered"};
+    for (std::size_t role = 0; role < kProductActionRoleCount; ++role) {
+        if (role != 0) json.push_back(',');
+        json += '\"';
+        json += product_role_names[role];
+        json += "\":{\"total\":" + std::to_string(
+            calc.registry().product_role_counts[role]);
+        json += ",\"by_family\":{";
+        for (std::size_t family = 0;
+             family < kPrimitiveTelemetryFamilyCount; ++family) {
+            if (family != 0) json.push_back(',');
+            json += '\"';
+            json += primitive_telemetry_family_name(
+                static_cast<PrimitiveTelemetryFamily>(family));
+            json += "\":" + std::to_string(
+                calc.registry().product_role_family_counts[role][family]);
+        }
+        json += "}}";
+    }
+    json += "},\"reasons\":{";
+    bool first_product_reason = true;
+    for (const auto& [reason, count] :
+         calc.registry().product_reason_counts) {
+        if (!first_product_reason) json.push_back(',');
+        first_product_reason = false;
+        json += '\"';
+        json += reason;
+        json += "\":" + std::to_string(count);
+    }
+    json += "}}";
     if (diagnostics == nullptr) {
         json += ",\"preservation_rows\":null";
         json += ",\"constructive_state_certificates\":null";

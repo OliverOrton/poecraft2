@@ -218,6 +218,7 @@ export class PcCalculator extends HTMLElement {
     private solveExcludedActions = 0;
     private solveAdmittedActionIds: string[] = [];
     private solveStopDetail = "";
+    private solveTelemetry: unknown = null;
     private solveAbsoluteGapTarget = 0;
     private solveRelativeGapPercentTarget = 0;
     private solveRunning = false;
@@ -510,6 +511,7 @@ export class PcCalculator extends HTMLElement {
         this.solveExcludedActions = 0;
         this.solveAdmittedActionIds = [];
         this.solveStopDetail = "";
+        this.solveTelemetry = null;
         this.solveProgress = null;
         this.solveCancelled = false;
     }
@@ -789,16 +791,15 @@ export class PcCalculator extends HTMLElement {
             result.economy = pinned.identity;
             this.solveSummary = result;
             let telemetry: unknown = null;
-            if (!result.converged || result.termination !== "exact_closed") {
-                try {
-                    telemetry = await this.client.solverTelemetry(
-                        solveSolver,
-                    );
-                } catch {
-                    // The solve summary remains usable if telemetry retrieval
-                    // itself fails.
-                }
+            try {
+                telemetry = await this.client.solverTelemetry(
+                    solveSolver,
+                );
+            } catch {
+                // The solve summary remains usable if telemetry retrieval
+                // itself fails.
             }
+            this.solveTelemetry = telemetry;
             this.solveStopDetail = solveTerminationDetail(result, telemetry);
             if (!shouldCompileSolvePolicy(result)) {
                 this.solveError = {
@@ -1814,6 +1815,7 @@ export class PcCalculator extends HTMLElement {
                   hasCompiledStrategy: this.solvedStrategy !== null,
                   busy: this.busy,
                   verification: this.verification,
+                  telemetry: this.solveTelemetry,
               })
             : "";
         const errorMarkup = this.solveError

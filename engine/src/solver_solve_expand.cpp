@@ -36,7 +36,9 @@ AutomaticTelemetryKind automatic_telemetry_kind(
         case FixedOptionKind::ProtectedRepeat:
             return AutomaticTelemetryKind::ProtectedSide;
         case FixedOptionKind::TemporaryBenchRepeat:
-            return AutomaticTelemetryKind::TemporaryBench;
+            return planner.automatic_kind == AutomaticCandidateKind::CannotRoll
+                       ? AutomaticTelemetryKind::CannotRoll
+                       : AutomaticTelemetryKind::TemporaryBench;
         case FixedOptionKind::FracturePrepare:
             return AutomaticTelemetryKind::FracturePrepare;
         case FixedOptionKind::MultimodFinish:
@@ -68,6 +70,8 @@ AutomaticTelemetryKind automatic_telemetry_kind(
         return AutomaticTelemetryKind::Renewal;
     case AutomaticCandidateKind::EldritchSide:
         return AutomaticTelemetryKind::EldritchSide;
+    case AutomaticCandidateKind::CannotRoll:
+        return AutomaticTelemetryKind::CannotRoll;
     case AutomaticCandidateKind::None:
         break;
     }
@@ -1306,6 +1310,8 @@ std::string SolveWork::Impl::preservation_witness_json(
             return "constructive_renewal";
         case AutomaticCandidateKind::EldritchSide:
             return "eldritch_side";
+        case AutomaticCandidateKind::CannotRoll:
+            return "cannot_roll";
         case AutomaticCandidateKind::None:
             return "none";
         }
@@ -1330,6 +1336,7 @@ std::string SolveWork::Impl::preservation_witness_json(
         add(kAutomaticDeterministicFinish, "deterministic_finish");
         add(kAutomaticImprintCheckpoint, "imprint_checkpoint_restore");
         add(kAutomaticEldritchDominance, "eldritch_dominance");
+        add(kAutomaticMetamodPoolBlock, "metamod_pool_block");
         out.push_back(']');
         return out;
     }

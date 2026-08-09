@@ -106,6 +106,13 @@ Eldritch Chaos Prefix/Suffix. Session eligibility remains owned by
 `session_builder.cpp` and is true only for helmets, body armour, gloves, and
 boots.
 
+In product `goal_relevant` scope, the required Ember tiers, Ichor tiers,
+Eldritch Chaos, and Eldritch Annul descriptors are retained as
+automatic-option dependencies. They are not returned as standalone candidates
+and do not enter the parent state layout merely because they were retained.
+The native carrier-local builder resolves and admits only the dependencies of
+a useful materialized side option.
+
 Each automatic candidate reads the carrier's real implicit tiers. Existing
 requested-side dominance avoids setup. Missing dominance uses the cheapest
 priced legal real Ember/Ichor sequence supported by the same side-intent
@@ -119,6 +126,11 @@ chooses the route. Automatic standalone Ember, Ichor, Eldritch Exalt,
 arbitrary implicit rolling, Veiled crafting, and Influence Exalt are not
 added. Eldritch Chaos is excluded from the gated zero-progress retry basin
 because its preserved side observes the discarded carrier.
+
+Generic influence or any other carrier state rejected by the existing
+Eldritch legality checks prevents automatic admission. Missing setup or final
+currency prices reject the option with an explicit missing-price reason; they
+do not make a dependency free.
 
 ## Calculator Support
 

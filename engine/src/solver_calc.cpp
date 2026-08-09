@@ -498,7 +498,8 @@ CalcContext::CalcContext(
     if (candidates_.empty() && empty_actions_mean_all) {
         candidates_.reserve(registry_.actions.size());
         for (std::uint32_t i = 0; i < registry_.actions.size(); ++i) {
-            if (!registry_.actions[i].automatic_dependency_only) {
+            if (registry_.actions[i].product_role !=
+                ProductActionRole::AutomaticDependency) {
                 candidates_.push_back(i);
             }
         }
@@ -535,11 +536,16 @@ CalcContext::CalcContext(
         goal_.primitive_actions_explicit
             ? 0
             : registry_.fossil_loadouts_deferred;
-    /* Option dependencies participate in abstraction without silently widening
-     * an explicit primitive candidate subset. Callers can select the option
-     * alone, or list any dependency in actions when it should also remain an
-     * independently selectable primitive. */
+    /* Dependencies of fixed options already authored in this request
+     * participate in abstraction without widening the independently
+     * selectable primitive candidate subset. */
     std::vector<std::uint32_t> layout_actions = candidates_;
+    /* Dynamic admission creates a carrier-local CalcContext whose authored
+     * fixed option adds exactly its materialized dependencies below. The
+     * parent registry may retain more dependency descriptors for discovery,
+     * but those descriptors do not widen this carrier's layout merely by
+     * existing. Eldritch side intents intentionally evaluate their exact raw
+     * primitives against the already-projected parent goal/tier state. */
     for (std::uint32_t operator_index =
              static_cast<std::uint32_t>(registry_.actions.size());
          operator_index < operators_.size(); ++operator_index) {
@@ -560,6 +566,8 @@ CalcContext::CalcContext(
             ++action_control_.dependency_primitives;
         }
     }
+    action_control_.layout_primitives = static_cast<std::uint32_t>(
+        layout_actions.size());
     candidate_operators_ = candidates_;
     for (std::uint32_t operator_index =
              static_cast<std::uint32_t>(registry_.actions.size());

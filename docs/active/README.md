@@ -1,18 +1,16 @@
 # Active Work
 
-**Status: Product Action Dependency Reachability is active.**
+**Status: no active implementation boundary.**
 
 Parent: [Documentation map](../README.md)
 
-Oliver selected
 [Product Action Dependency Reachability](../archive/2026-08-08-product-action-dependency-reachability/README.md)
-on 2026-08-08. The milestone preserves narrow Harvest, Essence, and Fossil
-relevance while separating independently selectable candidates from bounded
-automatic-option dependencies, repairing public-path Eldritch reachability,
-auditing bench/metamod/cleanup compositions, and disclosing the scoped solve.
+completed and was archived on 2026-08-08. The product solver now separates
+selectable candidates from bounded engine-owned dependencies, reaches automatic
+Eldritch through native and release-WASM Calculator paths, preserves narrow
+Harvest/Essence/Fossil filtering, and discloses its scoped solve compactly.
 
-The preceding
-[Verified Best Executable Strategy Publication](../archive/2026-08-08-verified-best-policy-publication/README.md)
-milestone remains the frozen publication baseline. Unselected possibilities
-remain in [Future work](../future/README.md); neither archive nor future
-documents override the active plan.
+Oliver must choose the next implementation chunk before work resumes.
+Completed work is indexed in the [documentation archive](../archive/README.md).
+Unselected possibilities remain in [Future work](../future/README.md); neither
+archive nor future documents are current execution authority.

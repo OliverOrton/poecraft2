@@ -546,6 +546,7 @@ struct ActionControlSummary {
     std::uint32_t registry_actions = 0;
     std::uint32_t included_primitives = 0;
     std::uint32_t dependency_primitives = 0;
+    std::uint32_t layout_primitives = 0;
     std::uint32_t pruned_outside_goal_relevance = 0;
     std::uint32_t pruned_outside_envelope = 0;
     std::uint32_t deferred_fossil_loadouts = 0;
@@ -618,6 +619,7 @@ struct TemporaryBenchEffectClass {
     std::uint32_t followup_action = kNoId;
     std::uint32_t goal_slot = kNoId;
     std::int8_t blocker_side = -1;
+    bool pool_tag_blocker = false;
     std::vector<std::uint64_t> conflict_mask;
     std::vector<std::uint64_t> target_mask;
     std::vector<std::uint32_t> blocker_actions;

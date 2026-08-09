@@ -190,6 +190,10 @@ std::string temporary_evaluation_key(
         std::to_string(planner.cleanup_action) + ':' +
         std::to_string(planner.exit_min_satisfied) + ':' +
         std::to_string(
+            planner.primitive_program.size() == 4 &&
+            planner.primitive_program.front() == planner.cleanup_action) + ':' +
+        std::to_string(session.metamod_type[blocker.params.mod_id]) + ':' +
+        std::to_string(
             static_cast<int>(session.gen_type[blocker.params.mod_id])) + ':';
     for (const std::uint32_t slot : planner.exit_goal_slots) {
         key += std::to_string(slot) + ',';
@@ -221,7 +225,13 @@ PlannerOperator temporary_variant_planner(
         registry.actions.at(representative.followup_action);
     variant.setup_action = blocker_action;
     if (!variant.primitive_program.empty()) {
-        variant.primitive_program.front() = blocker_action;
+        const std::size_t blocker_position =
+            variant.primitive_program.size() == 4 &&
+                    variant.primitive_program.front() ==
+                        variant.cleanup_action
+                ? 1
+                : 0;
+        variant.primitive_program[blocker_position] = blocker_action;
     }
     variant.id = "option:temporary_bench_repeat:" + blocker.id + ':' +
                  followup.id + ":until:" +

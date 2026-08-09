@@ -124,15 +124,15 @@ bool SolveWork::Impl::schedule_next_incremental_alternative() {
         const std::uint32_t state =
             incremental_carriers[incremental_carrier_cursor];
         std::uint32_t operator_index = kNoId;
-        if (incremental_operator_cursor < delayed_operator_indices.size()) {
-            operator_index =
-                delayed_operator_indices[incremental_operator_cursor++];
-        } else if (!incremental_dynamic_prepared) {
+        if (!incremental_dynamic_prepared) {
             /*
              * State-local compound candidates are deliberately synthesized
-             * only after the Chaos-anchored restricted graph has usable
-             * values. prepare_state_expansion() returns anchors plus the
-             * newly admitted local operators; keep only the latter.
+             * after the Chaos-anchored restricted graph has usable values but
+             * before delayed action-family rows. Otherwise a bounded product
+             * solve can finish a complete focused round without ever making
+             * its automatic dependencies reachable. The returned set is
+             * anchors plus newly admitted local operators; keep only the
+             * latter.
              */
             try {
                 prepare_state_expansion(state, true);
@@ -157,10 +157,15 @@ bool SolveWork::Impl::schedule_next_incremental_alternative() {
                 incremental_dynamic_operator_indices.size();
             expansion_operator_indices.clear();
             continue;
-        } else if (incremental_dynamic_operator_cursor <
-                   incremental_dynamic_operator_indices.size()) {
+        }
+        if (incremental_dynamic_operator_cursor <
+            incremental_dynamic_operator_indices.size()) {
             operator_index = incremental_dynamic_operator_indices[
                 incremental_dynamic_operator_cursor++];
+        } else if (incremental_operator_cursor <
+                   delayed_operator_indices.size()) {
+            operator_index =
+                delayed_operator_indices[incremental_operator_cursor++];
         } else {
             ++incremental_carrier_cursor;
             incremental_operator_cursor = 0;
@@ -990,13 +995,50 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
         ++incremental_rows_reconsidered;
         candidate.lower_q = sparse_row_q_for_values(
             candidate.row_index, certified_lower);
-        candidate.upper_q =
-            upper_values == nullptr
-                ? kInfinity
-                : sparse_row_q_for_values(
-                      candidate.row_index, *upper_values);
         const SparseRow& row =
             transition_cache->rows.at(candidate.row_index);
+        bool has_terminal_exit = false;
+        bool terminal_or_self_only = true;
+        for (std::uint32_t i = 0; i < row.transition_count; ++i) {
+            const std::uint32_t successor =
+                transition_cache->successors.at(
+                    row.transition_offset + i);
+            if (successor == row.owner_state) continue;
+            const bool terminal =
+                calc.is_goal_state(calc.state(successor));
+            has_terminal_exit = has_terminal_exit || terminal;
+            terminal_or_self_only = terminal_or_self_only && terminal;
+        }
+        for (std::uint32_t i = 0; i < row.choice_count; ++i) {
+            const SparseChoiceGroup& group =
+                transition_cache->choices.at(row.choice_offset + i);
+            for (std::uint32_t s = 0; s < group.successor_count; ++s) {
+                const std::uint32_t successor =
+                    transition_cache->choice_successors.at(
+                        group.successor_offset + s);
+                const bool terminal =
+                    calc.is_goal_state(calc.state(successor));
+                has_terminal_exit = has_terminal_exit || terminal;
+                terminal_or_self_only = terminal_or_self_only && terminal;
+            }
+        }
+        /*
+         * A fully materialized row whose only exits are goal terminals has an
+         * exact Q even when the restricted anchor graph has no executable
+         * incumbent. This is the common shape of a guaranteed Essence goal:
+         * withholding its finite upper until an unrelated Chaos fringe closes
+         * leaves the only executable policy stranded in the delayed envelope.
+         * Self probability is already solved exactly by
+         * sparse_row_q_for_values(), so publishing this bound changes neither
+         * the row nor the Bellman comparison.
+         */
+        candidate.upper_q =
+            terminal_or_self_only && has_terminal_exit
+                ? candidate.lower_q
+                : (upper_values == nullptr
+                       ? kInfinity
+                       : sparse_row_q_for_values(
+                             candidate.row_index, *upper_values));
         const auto unexpanded_delta =
             [&](const std::uint32_t successor) {
                 return !calc.is_goal_state(calc.state(successor)) &&
