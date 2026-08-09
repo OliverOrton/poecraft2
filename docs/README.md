@@ -29,8 +29,11 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-There is no active implementation boundary. Oliver must choose the next chunk
-before implementation resumes. The completed
+[Product Action Dependency Reachability](archive/2026-08-08-product-action-dependency-reachability/README.md)
+is the active implementation boundary selected by Oliver on 2026-08-08. It
+preserves the current narrow product action-family filters while separating
+independent candidates from bounded automatic dependencies and repairing the
+real Calculator -> WASM -> native reachability path. The completed
 [Verified Best Executable Strategy Publication](archive/2026-08-08-verified-best-policy-publication/README.md)
 milestone restores every eligible incumbent, independently evaluates each
 exact final JSON graph, separates executability from cost reconciliation and

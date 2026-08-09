@@ -1,15 +1,18 @@
 # Active Work
 
-**Status: no active implementation boundary.**
+**Status: Product Action Dependency Reachability is active.**
 
 Parent: [Documentation map](../README.md)
 
-[Verified Best Executable Strategy Publication](../archive/2026-08-08-verified-best-policy-publication/README.md)
-completed and was archived on 2026-08-08. The solver now independently
-evaluates every final candidate graph, normalizes public bounds centrally, and
-publishes the cheapest verified executable strategy.
+Oliver selected
+[Product Action Dependency Reachability](../archive/2026-08-08-product-action-dependency-reachability/README.md)
+on 2026-08-08. The milestone preserves narrow Harvest, Essence, and Fossil
+relevance while separating independently selectable candidates from bounded
+automatic-option dependencies, repairing public-path Eldritch reachability,
+auditing bench/metamod/cleanup compositions, and disclosing the scoped solve.
 
-Oliver must choose the next implementation chunk before work resumes.
-Completed work is indexed in the [documentation archive](../archive/README.md).
-Unselected possibilities remain in [Future work](../future/README.md); neither
-archive nor future documents are current execution authority.
+The preceding
+[Verified Best Executable Strategy Publication](../archive/2026-08-08-verified-best-policy-publication/README.md)
+milestone remains the frozen publication baseline. Unselected possibilities
+remain in [Future work](../future/README.md); neither archive nor future
+documents override the active plan.

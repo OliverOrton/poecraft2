@@ -1,6 +1,28 @@
 # Session Handoff
 
-**Status: no active implementation boundary.**
+**Status: Product Action Dependency Reachability is active.**
+
+Oliver selected the
+[active plan](docs/archive/2026-08-08-product-action-dependency-reachability/plan.md)
+on 2026-08-08 from clean starting commit
+`c95359663088d515982ba33e83fe2d15f89438ee`.
+
+The first required commit freezes the current product action/filtering path and
+focused native evidence. Implementation may proceed only within the plan's
+candidate/dependency/filter roles, bounded automatic families, preserved
+Harvest/Essence/Fossil relevance, unchanged mechanics and caps, final release
+WASM acceptance, and exactly-two-local-commit boundary.
+
+The deterministic starting defect is isolated: goal-relevant product filtering
+removes Ember, Ichor, Eldritch Chaos, and Eldritch Annul before automatic
+Eldritch option construction, while the unrestricted internal suite passes
+compilation, exact evaluation, and 10,000 Simulator runs. The current automatic
+bench path has the inverse scope problem: it retains every bench primitive and
+does not transport dependency-only status to Calculator's priced candidate
+selection.
+
+The preceding completed publication baseline is preserved below and its
+49-case native/release-WASM portfolio is not rerun at Gate 0.
 
 The completed
 [Verified Best Executable Strategy Publication](docs/archive/2026-08-08-verified-best-policy-publication/README.md)
@@ -30,4 +52,5 @@ No crafting mechanic, price, goal, action filter, Bellman comparison, state
 abstraction, strategy vocabulary, resource cap, reconciliation tolerance,
 watchdog, or simulator action limit changed. Rendered review was not run.
 
-Oliver must choose the next implementation chunk before work resumes.
+Next: make the plan/HANDOFF boundary commit, then implement Phase 1 without
+changing mechanics or broadening unrelated action/state space.
