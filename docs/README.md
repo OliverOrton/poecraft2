@@ -29,8 +29,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-There is no active implementation boundary. Oliver must choose the next chunk
-before implementation resumes. The completed
+Oliver selected the active
+[Solver Goal Realignment And End-To-End Capability Recovery](active/2026-08-09-solver-goal-realignment/plan.md)
+milestone on 2026-08-09. It starts from clean commit `c00c181` and restores the
+complete supported product path from goal/action/price admission through exact
+solving, compilation, independent evaluation, Simulator execution, and honest
+presentation. Its primary gate is an exact verified four-natural-T1 Conquest
+Lamellar Allflame policy within five minutes. The completed
 [Product Action Dependency Reachability](archive/2026-08-08-product-action-dependency-reachability/README.md)
 milestone preserves narrow product action-family filters while separating
 independent candidates from bounded automatic dependencies, repairing the real

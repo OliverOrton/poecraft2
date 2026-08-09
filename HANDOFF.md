@@ -1,61 +1,47 @@
 # Session Handoff
 
-**Status: no active implementation boundary.**
+**Status: active implementation boundary.**
 
-The Allflame economy-data refresh is complete on
-`codex/allflame-economy-snapshot`, based on clean commit `e810a9f`. It changes
-no solver mechanics, action filtering, price semantics, caps, compiler,
-evaluator, engine/WASM source, strategy vocabulary, or compiled game data.
-WASM was not rebuilt and nothing was uploaded or externally published.
+Oliver selected
+[Solver Goal Realignment And End-To-End Capability Recovery](docs/active/2026-08-09-solver-goal-realignment/plan.md)
+on 2026-08-09. Work starts from clean commit
+`c00c18133f88151dc971955c161d01e2178aef4b` on branch
+`codex/solver-goal-realignment`.
 
-The checked-in product default for a fresh profile is now Allflame:
+The milestone's product objective is an anytime minimum-expected-chaos solver
+that retains every relevant supported action family end to end, publishes the
+cheapest independently verified executable policy at a bounded stop, and
+claims exactness only when every improvement obligation closes. The primary
+acceptance case is a new Allflame Conquest Lamellar item-level-86 fixture with
+four required natural T1 modifiers and an explicit five-chaos base price. It
+must close exact with a compiled independently evaluated policy within five
+minutes; a cap-stopped Chaos incumbent is not success.
 
-- snapshot id:
-  `economy:allflame:a122cad9494aa3361016b6f9c542e029e7aa1465de6d04bd6b5b150b5d26c485`;
-- source cutoff: `2026-08-09T16:44:10Z`;
-- coverage: 861 priced, 585 explicitly missing, 28 low-confidence;
-- required live evidence: Currency, Fossil, Resonator, and Essence all
-  succeeded;
-- canonical Harvest identity: `harvest_reforge:defences` is priced and the
-  stale singular `harvest_reforge:defence` is absent; and
-- Beast/Imprint and base prices remain absent: Beast is still optional,
-  `beast:rare` and `base` are manual-only, and no values were invented.
+The active work includes:
 
-Hardcore Allflame is the active temporary hardcore profile at content hash
-`b199684d293012331b8d4a57dea44a1f7241d5d4664ba6579de94848d82f0cff`.
-Standard refreshed at
-`ff59e7f60886430318976be46a4ea971fc20c8381274be2ef18c8a92193feb82`.
-The current poe.ninja Hardcore Currency payload omitted a numeric
-`primaryValue` for its chaos reference row; the adapter rejected it without a
-semantics change, so the prior Hardcore snapshot remains selectable and is
-marked stale.
+- a complete product-path action-family matrix and focused before evidence;
+- Craicic Croaker live Beast pricing and an overridable one-chaos generic
+  rare-beast owner default in a fresh isolated Allflame snapshot;
+- bounded automatic Veiled and Eldritch Exalt planning;
+- multi-action scheduling, Q completion, bound closure, and anytime policy
+  repairs required by the primary case;
+- all-base feasibility and Ring/Amulet exact-evaluator/publication recovery;
+- compiler, exact evaluator, Simulator, and frontend integrity; and
+- one final native/release-WASM acceptance and semantic comparison.
 
-Mirage, Hardcore Mirage, Ancestors, and HC Ancestors are archived rather than
-active. Their immutable snapshot files and all benchmark manifests/expected
-results remain unchanged. The economy service regression proves a fresh
-profile chooses Allflame while an explicit stored Mirage selection remains
-Mirage until the user changes it.
+Preserve `goal_progress_gated_reforges`, complete salvage on partial-progress
+states, distinct natural/crafted goal identity, narrow Harvest/Essence/Fossil
+filters, generated-data authority, and local-only commits. Do not research or
+guess any further mechanic rule; ask Oliver if an ambiguity appears. Do not
+upload or publish externally, and do not perform rendered/visual review.
 
-The refresh used the fresh isolated database and raw root under
-`C:\Users\Oliver\AppData\Local\Temp\poecraft2-allflame-e836e1ca9a3648aa9d71193b9fc490c8`.
-Database validation passed with 546/546 source rows accounted, zero unresolved
-rows, three completed fresh snapshots, and database content hash
-`9343afaec510777b2b8db17729db60e4a3baddf61257be50a53b0d019cd95d61`.
-The fixture-backed `data/economy/poecraft-economy.db` was not used for
-publication.
+The inherited Allflame snapshot remains
+`economy:allflame:a122cad9494aa3361016b6f9c542e029e7aa1465de6d04bd6b5b150b5d26c485`
+until Gate 2 deliberately replaces it from a fresh isolated economy database.
+Historical Mirage fixtures and the completed native/release-WASM portfolio
+evidence remain frozen. Gate 0 must record current native/WASM/data/economy
+identities and focused baselines; it must not rerun the complete portfolios.
 
-Narrow acceptance passed:
-
-- isolated `poecraft_economy validate`;
-- 8/8 economy provider/ingest unit tests;
-- 10/10 `apps/web/test/economy-service.test.ts` tests;
-- `npx tsc --noEmit`;
-- `apps/web/test/allflame-economy-smoke.ts`, which loaded the checked-in
-  Allflame snapshot through `EconomyService`, pinned Chaos at 1, loaded that
-  economy into the existing native/WASM engine, and completed a one-action
-  native Solve with one supported priced action and no missing-price skip; and
-- a final index/content-hash audit for every active and archived entry.
-
-The full pipeline, complete web tests, solver portfolios, reliability corpus,
-benchmark corpora, WASM rebuild, and simulations were intentionally not run.
-Oliver must choose the next implementation chunk before work resumes.
+Next action after this boundary commit: freeze identities, add the focused
+baseline fixtures/harness, capture Gate 0 evidence, then perform the fresh-eyes
+end-to-end audit before broad solver optimization.

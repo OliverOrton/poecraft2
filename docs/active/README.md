@@ -1,16 +1,21 @@
 # Active Work
 
-**Status: no active implementation boundary.**
+**Status: active implementation boundary.**
 
 Parent: [Documentation map](../README.md)
 
-[Product Action Dependency Reachability](../archive/2026-08-08-product-action-dependency-reachability/README.md)
-completed and was archived on 2026-08-08. The product solver now separates
-selectable candidates from bounded engine-owned dependencies, reaches automatic
-Eldritch through native and release-WASM Calculator paths, preserves narrow
-Harvest/Essence/Fossil filtering, and discloses its scoped solve compactly.
+Oliver selected
+[Solver Goal Realignment And End-To-End Capability Recovery](2026-08-09-solver-goal-realignment/plan.md)
+on 2026-08-09. Work starts from clean commit `c00c181` on
+`codex/solver-goal-realignment` and continues through the plan's audit,
+economy/action recovery, solver completeness, cross-base/evaluator repair,
+compiler/presentation integrity, and final native/release-WASM acceptance.
 
-Oliver must choose the next implementation chunk before work resumes.
-Completed work is indexed in the [documentation archive](../archive/README.md).
+The primary acceptance condition is an exact, independently verified compiled
+policy for the frozen four-natural-T1 Conquest Lamellar Allflame case within
+five minutes. A bounded incumbent or cap-stopped Chaos fallback does not
+satisfy that condition.
+
+Completed work remains indexed in the [documentation archive](../archive/README.md).
 Unselected possibilities remain in [Future work](../future/README.md); neither
-archive nor future documents are current execution authority.
+archive nor future documents override the active plan.
