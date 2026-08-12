@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Status: active milestone; Gate 7 is the current implementation boundary.**
+**Status: active milestone; Gate 8 is the current acceptance boundary.**
 
 Oliver selected
 [Solver Goal Realignment And End-To-End Capability Recovery](docs/active/2026-08-09-solver-goal-realignment/plan.md)
@@ -107,10 +107,21 @@ fresh-base setup and arbitrary priced-Restart starts without relaxing any cap.
 Evidence is in
 [gate6-ring-amulet-evaluator-recovery.md](docs/active/2026-08-09-solver-goal-realignment/evidence/gate6-ring-amulet-evaluator-recovery.md).
 
-The current boundary is Gate 7: complete the non-visual compiler, exact-
-evaluator, Simulator, and frontend integrity qualification. Then run the single
-full native/release-WASM acceptance sequence in Gate 8. Do not run the full
-acceptance pipeline before Gate 8.
+Gate 7 is complete. Native Solve/compiler/evaluator suites and focused
+non-visual frontend presentation, workspace, Strategy Board, Calculator-mode,
+goal-item, corpus-contract, and TypeScript checks pass. The same engine-authored
+strategy document retains provenance across compilation, exact evaluation,
+Simulator, and Strategy Board. Exact, bounded, cap-stopped, and no-policy
+authority remain distinct, including the equal-bounds-without-policy and open-
+action-envelope hard guards. Evidence is in
+[gate7-compiler-presentation-integrity.md](docs/active/2026-08-09-solver-goal-realignment/evidence/gate7-compiler-presentation-integrity.md).
+
+The current boundary is Gate 8. Run the final sequence once: native build,
+release-WASM build, complete repository acceptance, native/release-WASM
+primary, representative five-mod ten-minute case, every-base matrix, selected
+10,000-run Veiled/Eldritch/Imprint/primary verifications, semantic comparison,
+and the single 49-case portfolio comparison. Do not perform rendered or visual
+review.
 
 The five-mod fixture now has a machine-enforced bounded-policy contract: exact
 closure is accepted, while a bounded result must expose a named resource stop,

@@ -328,6 +328,15 @@ Focused acceptance: [Ring/Amulet evaluator recovery](evidence/gate6-ring-amulet-
 
 ## Gate 7 - compiler and presentation integrity
 
+Gate 7 is complete. Focused native Solve/compiler/evaluator suites and the
+non-visual frontend presentation, workspace, strategy-model, Calculator-mode,
+goal-item, corpus-contract, and TypeScript checks pass. Exact, bounded,
+cap-stopped, and no-policy authority remain distinct; an open action envelope
+or absent executable policy blocks exact presentation even if numeric bounds
+are equal. Strategy Builder round-trips the engine-authored policy and router
+provenance. Evidence is recorded in
+[Gate 7 compiler and presentation integrity](evidence/gate7-compiler-presentation-integrity.md).
+
 For every headline strategy, compile the actual selected policy, retain action
 and policy provenance, reconcile compiled expected cost with solver cost,
 require eventual success probability one, and require zero failure,
