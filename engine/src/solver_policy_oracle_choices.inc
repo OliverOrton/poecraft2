@@ -616,6 +616,28 @@
     std::vector<std::uint32_t> chosen_successors(
             const std::uint32_t coarse_state,
             const PlannerOperator& planner) {
+        if (planner.automatic_kind ==
+                AutomaticCandidateKind::Fracture &&
+            coarse_.product_solver_parent()) {
+            const ProductFractureKernel kernel =
+                solve_detail::build_product_fracture_kernel(
+                    coarse_, coarse_state,
+                    planner.relevant_goal_mask);
+            if (!kernel.eligible || kernel.exits.empty()) {
+                throw AdapterFailure(
+                    PolicyExactLiftStatus::InvalidSolveState,
+                    "selected product-local Fracture row has no exact "
+                    "coarse quotient kernel");
+            }
+            std::vector<std::uint32_t> result;
+            result.reserve(kernel.exits.size());
+            for (const OutcomeEntry& exit : kernel.exits) {
+                if (exit.probability != 0.0) {
+                    result.push_back(exit.state);
+                }
+            }
+            return result;
+        }
         if (planner.kind == PlannerOperatorKind::FixedOption) {
             const std::uint32_t operator_index =
                 solved_.policy.at(coarse_state).index;

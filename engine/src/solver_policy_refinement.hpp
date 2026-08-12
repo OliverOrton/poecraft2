@@ -135,6 +135,14 @@ struct RefinedPolicyCompileRouting {
     std::vector<RefinedPolicyCompileParent> parents;
     /* Call-scoped authority owned by the outer coarse CalcContext. */
     const AbstractLayout* parent_layout = nullptr;
+    /*
+     * The lifted CalcContext is physically strict, but selected Fracture
+     * rows may still execute the outer product solver's proven
+     * goal-hit/Restart quotient. Preserve that parent semantic explicitly so
+     * compilation emits the same conditional restart route certified by the
+     * refinement kernel.
+     */
+    bool product_solver_parent = false;
 };
 
 enum class CompiledPolicyAssertionStatus : std::uint8_t {

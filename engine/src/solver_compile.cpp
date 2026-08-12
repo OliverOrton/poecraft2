@@ -577,6 +577,10 @@ std::string compile_policy_strategy_json(
     std::uint64_t retained_compile_condition_bytes = 0;
     const bool structured_refined_route =
         refined_routing != nullptr;
+    const bool product_solver_policy =
+        calc.product_solver_parent() ||
+        (structured_refined_route &&
+         refined_routing->product_solver_parent);
     std::map<
         std::uint32_t,
         const refinement::RefinedPolicyCompileClass*>
@@ -1459,7 +1463,7 @@ std::string compile_policy_strategy_json(
         const bool primitive_observed_choice =
             primitive_observes_modifier_offer(planner);
         const bool product_local_fracture =
-            calc.product_solver_parent() &&
+            product_solver_policy &&
             planner.kind == PlannerOperatorKind::Primitive &&
             planner.automatic_kind == AutomaticCandidateKind::Fracture;
         const bool state_local_option =
@@ -1647,7 +1651,7 @@ std::string compile_policy_strategy_json(
         [&](const std::uint32_t state) {
             const PlannerOperator& planner =
                 calc.operators().at(result.policy[state]);
-            return calc.product_solver_parent() &&
+            return product_solver_policy &&
                    planner.kind == PlannerOperatorKind::Primitive &&
                    planner.automatic_kind ==
                        AutomaticCandidateKind::Fracture;
@@ -2674,7 +2678,7 @@ std::string compile_policy_strategy_json(
             continue;
         }
         const bool product_local_fracture =
-            calc.product_solver_parent() &&
+            product_solver_policy &&
             planner.kind == PlannerOperatorKind::Primitive &&
             planner.automatic_kind == AutomaticCandidateKind::Fracture;
         if (product_local_fracture) {
@@ -3140,7 +3144,7 @@ std::string compile_policy_strategy_json(
             continue;
         }
         const bool product_local_fracture =
-            calc.product_solver_parent() &&
+            product_solver_policy &&
             planner.kind == PlannerOperatorKind::Primitive &&
             planner.automatic_kind == AutomaticCandidateKind::Fracture;
         if (product_local_fracture) {

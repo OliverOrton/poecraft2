@@ -94,12 +94,14 @@
     "worker_step_ms": 20000,
     "cancel_ack_ms": 250,
     "goal_progress_gated_reforges": true,
+    "high_impact_executable_uppers": true,
     "full_evidence": true
   },
   "verification": {
     "runs": 10000,
     "seed": 20260809,
     "max_actions_per_run": 100000,
+    "max_graph_steps_per_run": 4000000,
     "minimum_success_rate": 1.0,
     "exact_evaluation": true,
     "exact_max_states": 1000000,

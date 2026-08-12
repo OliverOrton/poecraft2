@@ -1579,6 +1579,8 @@ async function verifyStrategy(
         target_runs: verificationRuns,
         seed: spec.verification.seed,
         max_actions_per_run: spec.verification.max_actions_per_run,
+        max_graph_steps_per_run:
+            spec.verification.max_graph_steps_per_run ?? 0,
     }, { signal });
     if (run.cancelled) throw new Error("simulation verification was cancelled");
     const completed = run.summary.completed_runs;

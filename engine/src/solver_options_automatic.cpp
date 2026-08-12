@@ -237,11 +237,13 @@ bool CalcContext::advance_state_local_automatic_candidates(
                 StateLocalAutomaticBatchStatus::ResourceDeferred) {
                 rollback_state_local_automatic_transaction(cursor);
             }
+            deactivate_automatic_admission_context();
             state_local_automatic_admission_cursor_.reset();
             return true;
         }
     } catch (...) {
         rollback_state_local_automatic_transaction(cursor);
+        deactivate_automatic_admission_context();
         state_local_automatic_admission_cursor_.reset();
         throw;
     }
@@ -256,6 +258,7 @@ void CalcContext::cancel_state_local_automatic_candidates(
     }
     rollback_state_local_automatic_transaction(
         *state_local_automatic_admission_cursor_);
+    deactivate_automatic_admission_context();
     state_local_automatic_admission_cursor_.reset();
 }
 
@@ -263,6 +266,7 @@ void CalcContext::cancel_state_local_automatic_candidates() {
     if (!state_local_automatic_admission_cursor_.has_value()) return;
     rollback_state_local_automatic_transaction(
         *state_local_automatic_admission_cursor_);
+    deactivate_automatic_admission_context();
     state_local_automatic_admission_cursor_.reset();
 }
 
@@ -923,7 +927,8 @@ CalcContext::build_state_local_automatic_candidates(
     CalcContext* local_pointer = nullptr;
     const auto retained = automatic_admission_contexts_.find(context_key);
     if (retained != automatic_admission_contexts_.end()) {
-        local_pointer = retained->second.get();
+        local_pointer = retained->second.context.get();
+        activate_automatic_admission_context(local_pointer);
         local_pointer->reset_solve_telemetry();
     } else {
         auto created = std::make_unique<CalcContext>(
@@ -933,9 +938,18 @@ CalcContext::build_state_local_automatic_candidates(
         admission_context_created = true;
         if (automatic_admission_contexts_.size() <
             kRetainedAutomaticAdmissionContexts) {
-            local_pointer = created.get();
-            automatic_admission_contexts_.emplace(
-                context_key, std::move(created));
+            const auto [inserted, did_insert] =
+                automatic_admission_contexts_.emplace(
+                    context_key,
+                    AutomaticAdmissionContext{std::move(created), 0});
+            if (!did_insert) {
+                throw std::logic_error(
+                    "automatic admission context key insertion failed");
+            }
+            automatic_admission_context_key_bytes_ +=
+                inserted->first.capacity() + 1;
+            local_pointer = inserted->second.context.get();
+            activate_automatic_admission_context(local_pointer);
         } else {
             transient_context = std::move(created);
             local_pointer = transient_context.get();

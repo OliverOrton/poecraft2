@@ -2774,6 +2774,23 @@ PolicyExactLiftCertificate lift_policy_quotient(
                 "competitive alternative scheduler lost admitted-action accounting");
         }
         telemetry.action_accounting_complete = true;
+        const bool exact_alternative_envelope_closed =
+            final_action_audit.exact_alternative_envelope_closed &&
+            !publication_blocked_after_improvement;
+        /*
+         * Reconciliation with an already-exact coarse lower is the cheap
+         * closure path above. When a strict quotient changes that value, the
+         * complete action-accounting audit is the independent closure proof:
+         * every admitted action is either a carrier-wide certified row or is
+         * dominated by a carrier-wide lower-Q certificate at the published
+         * Q generation. With no blocked improved publication, the proper
+         * exact class policy is therefore the global Bellman fixed point.
+         */
+        certificate.global_lower_bound_closed =
+            certificate.global_lower_bound_closed ||
+            exact_alternative_envelope_closed;
+        telemetry.global_lower_bound_closed =
+            certificate.global_lower_bound_closed;
         telemetry.unresolved_alternative_obligations =
             final_action_audit.unresolved_actions;
         telemetry.competitive_alternatives_remaining =
@@ -2786,8 +2803,7 @@ PolicyExactLiftCertificate lift_policy_quotient(
         }
         telemetry.exact_alternative_envelope_closed =
             certificate.global_lower_bound_closed ||
-            (final_action_audit.exact_alternative_envelope_closed &&
-             !publication_blocked_after_improvement);
+            exact_alternative_envelope_closed;
         telemetry.bounded_publication_retained =
             telemetry.bounded_publication_retained ||
             (certificate.executable &&

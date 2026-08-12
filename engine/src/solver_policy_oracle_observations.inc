@@ -455,7 +455,78 @@
                     "selected primitive has no strict exact kernel");
             }
             action_cost = primitive_action_cost(descriptor);
-            if (distribution.choice_groups.empty()) {
+            if (planner.automatic_kind ==
+                    AutomaticCandidateKind::Fracture &&
+                coarse_.product_solver_parent()) {
+                /*
+                 * The product parent deliberately solves Fracture as an
+                 * exact observable quotient: acceptable goal hits retain
+                 * their physical strict successors, while every other hit
+                 * immediately consumes a replacement base and returns to the
+                 * fresh carrier. Replaying the raw primitive distribution
+                 * here would invent junk-fracture carriers that the solved
+                 * quotient neither owns nor executes.
+                 *
+                 * Classify the strict physical outcomes against the shared
+                 * coarse row rather than re-deriving acceptable-hit rules.
+                 * This also proves that every retained strict hit has the
+                 * same coarse successor used during policy discovery.
+                 */
+                const ProductFractureKernel quotient =
+                    solve_detail::build_product_fracture_kernel(
+                        coarse_, known.coarse_state,
+                        planner.relevant_goal_mask);
+                if (!quotient.eligible ||
+                    quotient.restart_state == kNoId) {
+                    throw AdapterFailure(
+                        PolicyExactLiftStatus::InvalidSolveState,
+                        "selected product-local Fracture row has no exact "
+                        "restart quotient");
+                }
+                std::set<StableKey> acceptable_successors;
+                for (const OutcomeEntry& exit : quotient.exits) {
+                    if (exit.state != quotient.restart_state &&
+                        exit.probability != 0.0) {
+                        acceptable_successors.insert(
+                            abstract_state_key(
+                                coarse_.state(exit.state)));
+                    }
+                }
+                pc_item_state fresh;
+                pc_item_clear(&fresh);
+                const std::uint32_t strict_restart =
+                    strict_->intern_item(fresh);
+                std::map<std::uint32_t, double> projected;
+                for (const OutcomeEntry& entry :
+                     distribution.entries) {
+                    if (entry.probability == 0.0) continue;
+                    const std::uint32_t successor =
+                        entry.state == kNoId
+                            ? known.strict_state
+                            : entry.state;
+                    const StableKey parent_key =
+                        abstract_state_key(
+                            coarsen(strict_->state(successor)));
+                    projected[
+                        acceptable_successors.contains(parent_key)
+                            ? successor
+                            : strict_restart] += entry.probability;
+                }
+                if (!distribution.choice_groups.empty() ||
+                    !distribution.choice_options.empty()) {
+                    throw AdapterFailure(
+                        PolicyExactLiftStatus::
+                            UnsupportedPrimitiveKernel,
+                        "product-local Fracture unexpectedly produced an "
+                        "observed-choice kernel");
+                }
+                for (const auto& [successor, probability] :
+                     projected) {
+                    append(successor, probability);
+                }
+                action_cost += resource_cost(
+                    {{"base", quotient.miss_probability}});
+            } else if (distribution.choice_groups.empty()) {
                 for (const OutcomeEntry& entry :
                      distribution.entries) {
                     append(entry.state, entry.probability);

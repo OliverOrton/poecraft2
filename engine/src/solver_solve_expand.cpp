@@ -653,6 +653,17 @@ bool SolveWork::Impl::prepare_state_expansion(
             retain_certified_upper(
                 incremental_certified_upper_values[state]);
         }
+        if (restart_operator_index != kNoId &&
+            restart_state < incremental_certified_upper_values.size() &&
+            std::isfinite(restart_cost)) {
+            /* The closed restricted policy remains executable after later
+             * actions are admitted. Restart followed by that exact policy is
+             * therefore a carrier-local upper even when this carrier itself
+             * was outside the restricted policy's proper finite region. */
+            retain_certified_upper(
+                restart_cost +
+                incremental_certified_upper_values[restart_state]);
+        }
         if (focused_fallback_policy) {
             const FocusedFallbackPolicy& fallback =
                 *focused_fallback_policy;
@@ -2617,7 +2628,8 @@ std::pair<bool, std::uint64_t> SolveWork::Impl::append_sparse_row(
             static_cast<std::uint64_t>(stored_row_index)};
     }
 
-ProductFractureKernel SolveWork::Impl::product_fracture_kernel(
+ProductFractureKernel solve_detail::build_product_fracture_kernel(
+        CalcContext& calc,
         const std::uint32_t state,
         const std::uint32_t relevant_goal_mask) {
     if (!calc.product_solver_parent()) {
@@ -2625,6 +2637,7 @@ ProductFractureKernel SolveWork::Impl::product_fracture_kernel(
             "product Fracture quotient requested outside product parent");
     }
 
+    const SessionImpl& session = calc.session();
     const AbstractState source = calc.state(state);
     ProductFractureKernel kernel;
     kernel.raw_affix_count =
@@ -2744,7 +2757,6 @@ ProductFractureKernel SolveWork::Impl::product_fracture_kernel(
     pc_item_state fresh;
     pc_item_clear(&fresh);
     kernel.restart_state = calc.intern_item(fresh);
-    restart_state = kernel.restart_state;
     if (kernel.miss_probability > 0.0) {
         kernel.exits.push_back(
             {kernel.restart_state, kernel.miss_probability});
@@ -2772,6 +2784,17 @@ ProductFractureKernel SolveWork::Impl::product_fracture_kernel(
             "coarse product Fracture probabilities do not normalize");
     }
     kernel.eligible = true;
+    return kernel;
+}
+
+ProductFractureKernel SolveWork::Impl::product_fracture_kernel(
+        const std::uint32_t state,
+        const std::uint32_t relevant_goal_mask) {
+    ProductFractureKernel kernel = build_product_fracture_kernel(
+        calc, state, relevant_goal_mask);
+    if (kernel.restart_state != kNoId) {
+        restart_state = kernel.restart_state;
+    }
     return kernel;
 }
 
@@ -3446,8 +3469,20 @@ bool SolveWork::Impl::expand_one_unit() {
                         requests >= hits ? requests - hits : 0;
                     incremental_carrier_kernel_reuses += hits;
                 }
+                const auto [search_position, search_inserted] =
+                    result.diagnostics.action_search_costs.try_emplace(
+                        planner.id);
+                if (search_inserted) {
+                    result.diagnostics.action_search_costs_owned_bytes +=
+                        sizeof(std::pair<
+                               const std::string,
+                               SolveDiagnostics::ActionSearchCost>) +
+                        search_position->first.capacity() + 1 +
+                        search_position->second.last_interrupted_cap.capacity() +
+                        1;
+                }
                 SolveDiagnostics::ActionSearchCost& search =
-                    result.diagnostics.action_search_costs[planner.id];
+                    search_position->second;
                 search.rows += search_row_retained ? 1 : 0;
                 search.raw_outcomes += search_raw_outcomes;
                 search.retained_transitions += search_retained_transitions;
@@ -3542,8 +3577,20 @@ bool SolveWork::Impl::expand_one_unit() {
                         requests >= hits ? requests - hits : 0;
                     incremental_carrier_kernel_reuses += hits;
                 }
+                const auto [search_position, search_inserted] =
+                    result.diagnostics.action_search_costs.try_emplace(
+                        planner.id);
+                if (search_inserted) {
+                    result.diagnostics.action_search_costs_owned_bytes +=
+                        sizeof(std::pair<
+                               const std::string,
+                               SolveDiagnostics::ActionSearchCost>) +
+                        search_position->first.capacity() + 1 +
+                        search_position->second.last_interrupted_cap.capacity() +
+                        1;
+                }
                 SolveDiagnostics::ActionSearchCost& search =
-                    result.diagnostics.action_search_costs[planner.id];
+                    search_position->second;
                 search.reforge_work +=
                     search_after.reforge_frontier_work -
                     row_attempt_reforge_work;
@@ -3568,7 +3615,14 @@ bool SolveWork::Impl::expand_one_unit() {
                 search.last_interrupted_cursor = row_attempt_cursor;
                 search.last_interrupted_root =
                     state == result.start_state;
+                const std::size_t prior_cap_bytes =
+                    search.last_interrupted_cap.capacity() + 1;
                 search.last_interrupted_cap = limit.cap_name();
+                result.diagnostics.action_search_costs_owned_bytes +=
+                    search.last_interrupted_cap.capacity() + 1 -
+                    std::min(
+                        prior_cap_bytes,
+                        search.last_interrupted_cap.capacity() + 1);
                 const AutomaticTelemetryKind telemetry_kind =
                     automatic_telemetry_kind(planner);
                 if (telemetry_kind != AutomaticTelemetryKind::None) {

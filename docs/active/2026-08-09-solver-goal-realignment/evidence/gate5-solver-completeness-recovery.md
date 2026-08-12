@@ -3,10 +3,10 @@
 Date: 2026-08-09
 
 This evidence records focused native runs only. The killed partial runs below
-are not acceptance evidence. The latest Warlord control does publish a bounded,
-compiled, independently evaluated policy, but it is not an exact solve and does
-not satisfy that fixture's strict expectation. The runs assign each obstruction
-to the resource or lifecycle that actually owns it before the primary is rerun.
+are diagnostic history, not acceptance evidence. The final Warlord control and
+primary case both close exactly, compile, independently evaluate, and complete
+10,000 native Simulator runs. The runs assign each obstruction to the resource
+or lifecycle that actually owns it before recording the final Gate 5 result.
 
 ## Retained graph versus automatic-admission work
 
@@ -228,5 +228,78 @@ Post-proof Warlord artifacts:
 - final partial SHA-256:
   `13175fdf8e6babe326d0f57e52f340e4a0d862c71bc21b110754fc69dafef744`.
 
-Gate 5 remains open until the primary reaches exact lower/upper equality and
-publishes a compiled independently evaluated policy within five minutes.
+## Final exact closure
+
+The no-incumbent boundary was closed without weakening the Imprint proof.
+Automatic admission now installs a finite carrier-local renewal-plus-finisher
+upper before price-bounded program enumeration. The enumerator checks extension
+legality before charging program work, caches child-context and action-diagnostic
+owned-byte accounting, and retains exact resource-vector dominance. A focused
+mixed-action seven-step program proves that the finite grammar can extend beyond
+the former depth boundary and that a renewal/finisher certificate closes it.
+
+The final Warlord control is at
+`build/solver-goal-realignment/gate5/warlord-final-10000`. It used benchmark
+executable SHA-256
+`24495734c0f54368a38bb1323129fcbc91ae53c424640be744e26019c67ba043`
+and returned exact lower/upper equality at `224.12385889724871` chaos. The
+compiled policy independently evaluated to the same value and completed 10,000
+of 10,000 Simulator runs with zero action-limit, graph-step-limit, or off-policy
+failures. Total wall time was 2.778 seconds, including 2.179 seconds of solve
+time. Its artifacts are:
+
+- ledger SHA-256:
+  `8b36164b5c1c5b702aa15d1085932090eb6df4d60ccd0b2a0f2273476666df5a`;
+- report SHA-256:
+  `430322c053ecd197f74cf66f1962807c9efa6eac58c1481a72da05564f0347b6`;
+  and
+- compiled strategy SHA-256:
+  `234feb0b2dbc7145fd5be766722cdebc395920749c7509aa47dc10334aec331b`.
+
+The primary exposed two further proof-boundary defects. First, the coarse
+product Fracture abstraction could not safely retain physical acceptable hits
+while quotienting all misses back to a fresh product state. A shared product
+Fracture kernel now makes that quotient explicit in discovery, strict lifting,
+compilation, and evaluation. Second, a complete audited strict alternative
+action envelope was not being promoted to global lower-bound authority. Exact
+refinement now closes that certificate only when every alternative obligation
+is resolved; the finish path consumes that certificate instead of requiring a
+stale coarse value to equal the strict value.
+
+The final primary result is at
+`build/solver-goal-realignment/gate5/primary-final-10000-v2`. The 1,207-state
+coarse solve and 5,820-state strict lift closed exactly at
+`3745.7309340083884` chaos. The coarse value
+`3759.5969190423507` is deliberately recorded as unreconciled; it supplies no
+strict lower-bound authority. The strict action-envelope certificate instead
+reports zero unresolved obligations and closes the global lower bound. The
+compiled policy contains 1,813 nodes and 3,832 edges, independently evaluates
+to the exact solve value, and has success probability one and zero off-policy
+mass.
+
+The first 10,000-run primary verification had six graph-step-limit failures,
+with zero action-limit or off-policy failures. This was a Simulator harness
+limit rather than a policy defect. The benchmark contract now exposes the
+engine's existing `max_graph_steps_per_run` option in both native and WASM
+drivers, and the primary fixture pins the engine maximum of 4,000,000 while
+retaining its 100,000-action cap. The final rerun completed 10,000 of 10,000
+runs with no failures; its sampled mean cost was `3738.9538811199136` chaos.
+Total wall time was 139.631 seconds, including 0.625 seconds for the coarse
+solve and 6.115 seconds for independent exact evaluation. Peak evaluator-owned
+memory was 843,290,832 bytes.
+
+Final primary artifacts:
+
+- ledger SHA-256:
+  `422b70401ebf66ad3d1f2e9eff128146e2702952a68f37af4149026da80f6357`;
+- report SHA-256:
+  `912ca313893a18ca176dece878d2674a9da9169d01ceae5654c90cf25dc44b6c`;
+  and
+- compiled strategy SHA-256:
+  `908a617ca0f704b39d644a09e71c88d8f6e5724eaea6178a27ac17f87041325c`.
+
+The final focused native qualification was green: Solve 98,796 checks,
+dedicated Imprint 60, automatic Eldritch 545, quotient proof 357, and compiler
+804, all with zero failures. The native build, TypeScript no-emit check, and
+diff whitespace check also pass. Gate 5 is closed. The full acceptance pipeline
+is intentionally deferred to Gate 8.

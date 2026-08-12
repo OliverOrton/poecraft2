@@ -34,7 +34,35 @@ void finalize_compiled_policy_assertion(
         result.status =
             CompiledPolicyAssertionStatus::ImproperPolicy;
         result.failure_reason =
-            "compiled policy is not a proper absorbing success policy";
+            "compiled policy is not a proper absorbing success policy "
+            "(converged=" +
+            std::string{result.evaluation.converged ? "true" : "false"} +
+            ", success=" +
+            std::to_string(result.evaluation.success_probability) +
+            ", failure=" +
+            std::to_string(result.evaluation.failure_probability) +
+            ", stop=" +
+            std::to_string(result.evaluation.stop_probability) +
+            ", action_not_applied=" +
+            std::to_string(
+                result.evaluation.action_not_applied_probability) +
+            ", no_matching_edge=" +
+            std::to_string(
+                result.evaluation.no_matching_edge_probability) +
+            ", unresolved=" +
+            std::to_string(result.evaluation.unresolved_probability) +
+            ")";
+        if (!result.evaluation.terminal_nodes.empty()) {
+            result.failure_reason += "; terminals=";
+            for (std::size_t index = 0;
+                 index < result.evaluation.terminal_nodes.size(); ++index) {
+                if (index != 0) result.failure_reason += ',';
+                const StrategyEvalTerminalNode& terminal =
+                    result.evaluation.terminal_nodes[index];
+                result.failure_reason += terminal.node_id + ':' +
+                    std::to_string(terminal.probability);
+            }
+        }
     } else if (!result.evaluation.cost_complete) {
         result.status =
             CompiledPolicyAssertionStatus::IncompleteCost;

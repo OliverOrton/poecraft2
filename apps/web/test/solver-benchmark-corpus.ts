@@ -123,6 +123,7 @@ export interface SolverBenchmarkCase {
         runs: number;
         seed: number;
         max_actions_per_run: number;
+        max_graph_steps_per_run?: number;
         mean_cost_absolute_tolerance?: number;
         mean_cost_relative_tolerance?: number;
         minimum_success_rate?: number;

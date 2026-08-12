@@ -2,6 +2,7 @@
 
 #include "../src/json.hpp"
 #include "../src/solver_compile_contracts.hpp"
+#include "../src/solver_options_helpers.hpp"
 #include "../src/solver_policy_refinement.hpp"
 #include "../src/solver_sparse_policy.hpp"
 #include "../src/solver_solve_types.hpp"
@@ -2446,10 +2447,10 @@ void run_policy_guided_exalt_lift_tests() {
         solve(calc, start, prices, options);
 
     PC_CHECK(solved.policy_available);
-    PC_CHECK(!solved.converged);
+    PC_CHECK(solved.converged);
     PC_CHECK(
         solved.policy_status ==
-        SolvePolicyStatus::BoundedFeasible);
+        SolvePolicyStatus::Exact);
     PC_CHECK(
         solved.termination ==
         SolveTermination::ExactClosed);
@@ -2460,6 +2461,14 @@ void run_policy_guided_exalt_lift_tests() {
         solved.policy[solved.start_state].index == exalt);
     PC_CHECK(
         solved.diagnostics.policy_refinement.triggers > 0);
+    PC_CHECK(
+        solved.diagnostics.policy_refinement
+            .global_lower_bound_closed);
+    PC_CHECK(
+        solved.diagnostics.policy_refinement
+            .exact_alternative_envelope_closed);
+    PC_CHECK(near(
+        solved.lower_bound, solved.upper_bound, 1e-12));
     PC_CHECK(
         solved.diagnostics.policy_compatibility_supported);
     PC_CHECK(
@@ -4244,6 +4253,42 @@ void run_primitive_destructive_renewal_upper_tests() {
         product_fracture_result.diagnostics.action_search_costs.at(
             "chaos").root_retained_transitions ==
         product_chaos_kernel.entries.size());
+
+    /* A strict policy lift must preserve the product Fracture quotient all
+     * the way through executable compilation. Raw non-goal physical fracture
+     * outcomes are the priced fresh-base branch, not off-policy strict junk
+     * carriers. */
+    const refinement::PolicyExactLiftCertificate product_fracture_lift =
+        refinement::lift_policy_quotient(
+            product_fracture_calc, product_fracture_result, start,
+            fracture_prices, product_fracture_options,
+            "product Fracture strict restart quotient");
+    report_lift_failure(
+        "Product Fracture lift", product_fracture_lift);
+    PC_CHECK(
+        product_fracture_lift.status ==
+        refinement::PolicyExactLiftStatus::Complete);
+    PC_CHECK(product_fracture_lift.executable);
+    PC_CHECK(product_fracture_lift.compiled.executable);
+    PC_CHECK(product_fracture_lift.compiled.proper);
+    PC_CHECK(product_fracture_lift.compiled.zero_off_policy);
+    PC_CHECK(product_fracture_lift.compiled.cost_reconciled);
+    PC_CHECK(
+        product_fracture_lift.compiled.strategy_json.find(
+            "_fracture_route") != std::string::npos);
+    PC_CHECK(
+        product_fracture_lift.compiled.strategy_json.find(
+            "\"type\":\"restart\"") != std::string::npos);
+    PC_CHECK(
+        product_fracture_lift.compiled.evaluation
+            .expected_consumption.contains("base"));
+    if (product_fracture_lift.compiled.evaluation
+            .expected_consumption.contains("base")) {
+        PC_CHECK(
+            product_fracture_lift.compiled.evaluation
+                .expected_consumption.at("base") > 0.0);
+    }
+
     std::uint64_t zero_hit_rows = 0;
     std::uint64_t single_hit_rows = 0;
     std::uint64_t multiple_hit_rows = 0;
@@ -6194,6 +6239,46 @@ void run_automatic_imprint_cooperative_tests() {
         PC_CHECK(can_hit_missing_goal);
     }
 
+    /* Prefix composition must remain bit-identical to replay for a longer
+     * mixed-rarity program, not only for repeated renewals. This seven-step
+     * Alteration/Scour/Transmute control crosses magic and normal legality
+     * boundaries three times and compares the complete exact support after
+     * every one-step continuation with a single full-program execution. */
+    const std::uint32_t mixed_alteration =
+        registry.index_by_id.at("alteration");
+    const std::uint32_t mixed_scour =
+        registry.index_by_id.at("scour");
+    const std::uint32_t mixed_transmute =
+        registry.index_by_id.at("transmute");
+    const std::vector<std::uint32_t> mixed_program{
+        mixed_alteration, mixed_scour, mixed_transmute,
+        mixed_alteration, mixed_scour, mixed_transmute,
+        mixed_alteration};
+    CalcContext mixed_calc(
+        session, goal, registry,
+        {mixed_alteration, mixed_scour, mixed_transmute},
+        false, true, false, std::nullopt, {}, false);
+    const std::uint32_t mixed_entry = mixed_calc.intern_item(magic);
+    const AttemptKernel mixed_replay = execute_attempt(
+        mixed_calc, mixed_program, mixed_entry);
+    PC_CHECK(mixed_replay.supported);
+    PC_CHECK(mixed_replay.fully_legal);
+    std::vector<OutcomeEntry> mixed_support{{mixed_entry, 1.0}};
+    for (const std::uint32_t action : mixed_program) {
+        auto task = execute_attempt_cooperatively(
+            mixed_calc, {action}, std::move(mixed_support));
+        while (!task.resume()) {
+        }
+        AttemptKernel extension = task.take_result();
+        task.reset();
+        PC_CHECK(extension.supported);
+        PC_CHECK(extension.fully_legal);
+        PC_CHECK(extension.choice_groups.empty());
+        PC_CHECK(extension.choice_options.empty());
+        mixed_support = std::move(extension.entries);
+    }
+    PC_CHECK(mixed_replay.entries == mixed_support);
+
     /* A second state-independent Alteration exactly erases the first but
      * consumes a strict superset of its resources. Bit-identical per-carrier
      * and composed canonical entries are an exact dominance certificate, so
@@ -6222,6 +6307,42 @@ void run_automatic_imprint_cooperative_tests() {
             return program ==
                    std::vector<std::string>{"alteration"};
         }));
+
+    /* With a one-slot rare goal, repeat Alteration until the exact target is
+     * present and then Regal is a proper carrier-local policy. Its exact
+     * renewal signature, downward-rounded success probability, fully
+     * goal-terminal Regal support, and outward-rounded prices certify an
+     * upper without a pre-existing sparse-row incumbent. The checkpoint
+     * route is already dearer at its mandatory first step and closes before
+     * an Imprint program leaf is evaluated. */
+    GoalSpec renewal_finish_goal;
+    renewal_finish_goal.rarity = PC_RARITY_RARE;
+    renewal_finish_goal.automatic_candidates = true;
+    renewal_finish_goal.slots = {target};
+    const std::vector<std::uint32_t> renewal_finish_candidates{
+        registry.index_by_id.at("alteration"),
+        registry.index_by_id.at("regal")};
+    AutomaticAdmissionLimits renewal_finish_limits = limits;
+    renewal_finish_limits.max_imprint_program_depth = 1;
+    renewal_finish_limits.max_imprint_program_work = 64;
+    CalcContext renewal_finish_calc(
+        session, renewal_finish_goal, registry,
+        renewal_finish_candidates,
+        false, true, false, std::nullopt, {}, false);
+    const StateLocalAutomaticBatch renewal_finish_batch =
+        renewal_finish_calc.admit_state_local_automatic_candidates(
+            renewal_finish_calc.intern_item(magic),
+            renewal_finish_limits);
+    PC_CHECK(
+        renewal_finish_batch.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+    PC_CHECK(
+        renewal_finish_batch.phases
+            .imprint_price_bound_complete_carriers == 1);
+    PC_CHECK(
+        renewal_finish_batch.phases.imprint_price_pruned_programs > 0);
+    PC_CHECK(
+        renewal_finish_batch.phases.imprint_programs_evaluated == 0);
 
     /* A finite certified carrier upper plus strictly positive grammar prices
      * replaces an arbitrary depth cutoff. Depth one is intentionally too

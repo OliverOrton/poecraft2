@@ -184,12 +184,7 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
            diagnostics.destructive_renewal_action_id.capacity() + 1 +
            diagnostics.progressive_fracture_roll_action_id.capacity() + 1 +
            diagnostics.progressive_fracture_status.capacity() + 1;
-    for (const auto& [id, unused] : diagnostics.action_search_costs) {
-        bytes += sizeof(std::pair<const std::string,
-                                  SolveDiagnostics::ActionSearchCost>) +
-                 id.capacity() + 1 +
-                 unused.last_interrupted_cap.capacity() + 1;
-    }
+    bytes += diagnostics.action_search_costs_owned_bytes;
     for (const auto& [id, unused] :
          diagnostics.lower_policy_action_states) {
         (void)unused;

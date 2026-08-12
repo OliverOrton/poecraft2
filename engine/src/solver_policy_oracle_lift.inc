@@ -153,6 +153,8 @@
             refined_routing->classes.resize(refinement.classes.size());
             refined_routing->parents.clear();
             refined_routing->parent_layout = &coarse_.layout();
+            refined_routing->product_solver_parent =
+                coarse_.product_solver_parent();
         }
         std::set<std::uint32_t> retained_compile_parents;
         for (const RefinedPolicyClass& policy_class :

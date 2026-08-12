@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Status: active implementation boundary.**
+**Status: active milestone; Gate 6 is the current implementation boundary.**
 
 Oliver selected
 [Solver Goal Realignment And End-To-End Capability Recovery](docs/active/2026-08-09-solver-goal-realignment/plan.md)
@@ -81,18 +81,26 @@ tree builds; focused Solve and dedicated Imprint gates pass 98,783 and 60
 checks respectively. The accumulated implementation is checkpointed locally at
 `29a3b05e`.
 
-The post-proof Warlord rerun is now the active boundary. Its 60.354-second
-watchdog expired without a survivor after 8,943 returned cooperative solve
-slices. All 698 retained parent states were expanded and the frontier was
-empty, but the solve remained in iteration round zero with no completed sweep,
-no incumbent, and no finite upper. Its final sample retained 5,081 rows, 3,719
-transitions, and 2,555,093 reforge-work units; the solver live-byte estimate was
-414,639,888 bytes under the selected 1 GiB limit. Because Warlord never acquired
-a certified carrier-local upper, the price proof was correctly dormant and the
-no-incumbent Imprint fallback did not finish the first Bellman sweep within the
-watchdog. No final report, compiled strategy, or exact-closure claim exists.
-Characterize and close that fallback, then rerun Warlord. Do not start the
-mixed-action seven-step follow-up or the primary case from this boundary.
+Gate 5 is complete. The no-incumbent Imprint fallback now bootstraps a certified
+carrier-local renewal/finisher upper, program extension is legality-first, and
+the finite price-bounded proof retains exact terminal/resource-vector
+dominance. The focused mixed-action seven-step and renewal/finisher controls are
+green. Product Fracture has an explicit strict quotient, and a complete audited
+strict alternative-action envelope is now authoritative for global lower-bound
+closure. The final Warlord control closes exactly at
+`224.12385889724871` chaos and completes 10,000/10,000 native Simulator runs.
+The primary closes exactly at `3745.7309340083884` chaos in 139.631 seconds,
+compiles, independently evaluates to the same value, and completes
+10,000/10,000 native Simulator runs after the benchmark contract exposes and
+the fixture pins the engine's 4,000,000 graph-step maximum. Gate 5 evidence is
+in
+[gate5-solver-completeness-recovery.md](docs/active/2026-08-09-solver-goal-realignment/evidence/gate5-solver-completeness-recovery.md).
+
+The current boundary is Gate 6: qualify the every-base matrix and the two
+isolated current-product metamod/full-junk salvage controls. Then complete the
+non-visual compiler/evaluator/Simulator/frontend integrity work in Gate 7 and
+run the single full native/release-WASM acceptance sequence in Gate 8. Do not
+run the full acceptance pipeline before Gate 8.
 
 The five-mod fixture now has a machine-enforced bounded-policy contract: exact
 closure is accepted, while a bounded result must expose a named resource stop,

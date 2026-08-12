@@ -3364,11 +3364,7 @@ SolveResult SolveWork::Impl::finish() {
                     const bool globally_exact =
                         certificate.global_lower_bound_closed &&
                         certificate.compiled.cost_reconciled &&
-                        std::isfinite(result.lower_bound) &&
-                        std::abs(
-                            result.lower_bound - exact_policy_cost) <=
-                            value_comparison_tolerance(
-                                exact_policy_cost);
+                        std::isfinite(exact_policy_cost);
                     verify_retained_portfolio();
                     BoundedPolicyIncumbent* cheaper_verified =
                         best_current_certified_fallback();

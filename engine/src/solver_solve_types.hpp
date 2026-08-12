@@ -77,6 +77,11 @@ struct ProductFractureKernel {
     std::vector<OutcomeEntry> exits;
 };
 
+ProductFractureKernel build_product_fracture_kernel(
+    CalcContext& calc,
+    std::uint32_t state,
+    std::uint32_t relevant_goal_mask);
+
 struct SparseChoiceGroup {
     std::uint64_t successor_offset = 0;
     std::uint32_t successor_count = 0;

@@ -699,11 +699,13 @@ std::uint64_t CalcContext::fast_estimated_owned_bytes() const {
     bytes += automatic_admission_contexts_.bucket_count() * sizeof(void*);
     bytes += automatic_admission_contexts_.size() *
              (sizeof(std::pair<const std::string,
-                               std::unique_ptr<CalcContext>>) +
+                               AutomaticAdmissionContext>) +
               2 * sizeof(void*));
-    for (const auto& [key, context] : automatic_admission_contexts_) {
-        bytes += key.capacity() + 1;
-        bytes += context->fast_estimated_owned_bytes();
+    bytes += automatic_admission_context_key_bytes_;
+    bytes += inactive_automatic_admission_context_owned_bytes_;
+    if (active_automatic_admission_context_ != nullptr) {
+        bytes += active_automatic_admission_context_
+                     ->fast_estimated_owned_bytes();
     }
     ++telemetry_.owned_byte_ledger_requests;
     telemetry_.owned_byte_ledger_ns += static_cast<std::uint64_t>(
@@ -724,6 +726,65 @@ std::uint64_t CalcContext::fast_estimated_owned_bytes() const {
 void CalcContext::account_new_operator(const PlannerOperator& value) {
     owned_added_operator_nested_bytes_ +=
         planner_operator_nested_bytes(value);
+}
+
+void CalcContext::activate_automatic_admission_context(
+    CalcContext* const context) {
+    if (context == nullptr ||
+        active_automatic_admission_context_ == context) {
+        return;
+    }
+    if (active_automatic_admission_context_ != nullptr) {
+        throw std::logic_error(
+            "CalcContext already has an automatic admission context active");
+    }
+    for (auto& [unused_key, retained] : automatic_admission_contexts_) {
+        (void)unused_key;
+        if (retained.context.get() != context) continue;
+        inactive_automatic_admission_context_owned_bytes_ -= std::min(
+            inactive_automatic_admission_context_owned_bytes_,
+            retained.inactive_owned_bytes);
+        retained.inactive_owned_bytes = 0;
+        active_automatic_admission_context_ = context;
+        return;
+    }
+    throw std::logic_error(
+        "automatic admission context is not retained by its parent");
+}
+
+void CalcContext::deactivate_automatic_admission_context() {
+    if (active_automatic_admission_context_ == nullptr) return;
+    for (auto& [unused_key, retained] : automatic_admission_contexts_) {
+        (void)unused_key;
+        if (retained.context.get() !=
+            active_automatic_admission_context_) {
+            continue;
+        }
+        retained.inactive_owned_bytes =
+            retained.context->fast_estimated_owned_bytes();
+        inactive_automatic_admission_context_owned_bytes_ +=
+            retained.inactive_owned_bytes;
+        active_automatic_admission_context_ = nullptr;
+        return;
+    }
+    throw std::logic_error(
+        "active automatic admission context is not retained by its parent");
+}
+
+void CalcContext::refresh_automatic_admission_context_owned_bytes() {
+    inactive_automatic_admission_context_owned_bytes_ = 0;
+    for (auto& [unused_key, retained] : automatic_admission_contexts_) {
+        (void)unused_key;
+        if (retained.context.get() ==
+            active_automatic_admission_context_) {
+            retained.inactive_owned_bytes = 0;
+            continue;
+        }
+        retained.inactive_owned_bytes =
+            retained.context->fast_estimated_owned_bytes();
+        inactive_automatic_admission_context_owned_bytes_ +=
+            retained.inactive_owned_bytes;
+    }
 }
 
 void CalcContext::initialize_state_local_automatic_transaction(
@@ -1681,10 +1742,11 @@ void CalcContext::reset_solve_telemetry() {
     if (automatic_comparison_context_ != nullptr) {
         automatic_comparison_context_->reset_solve_telemetry();
     }
-    for (auto& [unused_key, context] : automatic_admission_contexts_) {
+    for (auto& [unused_key, retained] : automatic_admission_contexts_) {
         (void)unused_key;
-        context->reset_solve_telemetry();
+        retained.context->reset_solve_telemetry();
     }
+    refresh_automatic_admission_context_owned_bytes();
 }
 
 void CalcContext::set_reforge_resource_accounting(const bool enabled) {
@@ -1693,9 +1755,9 @@ void CalcContext::set_reforge_resource_accounting(const bool enabled) {
         automatic_comparison_context_->set_reforge_resource_accounting(
             enabled);
     }
-    for (auto& [unused_key, context] : automatic_admission_contexts_) {
+    for (auto& [unused_key, retained] : automatic_admission_contexts_) {
         (void)unused_key;
-        context->set_reforge_resource_accounting(enabled);
+        retained.context->set_reforge_resource_accounting(enabled);
     }
 }
 
@@ -1721,9 +1783,9 @@ void CalcContext::refresh_solve_owned_bytes_cap(
         automatic_comparison_context_->refresh_solve_owned_bytes_cap(
             max_owned_bytes);
     }
-    for (auto& [unused_key, context] : automatic_admission_contexts_) {
+    for (auto& [unused_key, retained] : automatic_admission_contexts_) {
         (void)unused_key;
-        context->refresh_solve_owned_bytes_cap(max_owned_bytes);
+        retained.context->refresh_solve_owned_bytes_cap(max_owned_bytes);
     }
 }
 
@@ -1941,10 +2003,11 @@ void CalcContext::release_solve_transition_caches() {
     if (automatic_comparison_context_ != nullptr) {
         automatic_comparison_context_->release_solve_transition_caches();
     }
-    for (auto& [unused_key, context] : automatic_admission_contexts_) {
+    for (auto& [unused_key, retained] : automatic_admission_contexts_) {
         (void)unused_key;
-        context->release_solve_transition_caches();
+        retained.context->release_solve_transition_caches();
     }
+    refresh_automatic_admission_context_owned_bytes();
     telemetry_rows_.clear();
 }
 
@@ -2279,11 +2342,11 @@ std::uint64_t CalcContext::calculate_owned_bytes() const {
     bytes += automatic_admission_contexts_.bucket_count() * sizeof(void*);
     bytes += automatic_admission_contexts_.size() *
              (sizeof(std::pair<const std::string,
-                               std::unique_ptr<CalcContext>>) +
+                               AutomaticAdmissionContext>) +
               2 * sizeof(void*));
-    for (const auto& [key, context] : automatic_admission_contexts_) {
+    for (const auto& [key, retained] : automatic_admission_contexts_) {
         bytes += key.capacity() + 1;
-        bytes += context->calculate_owned_bytes();
+        bytes += retained.context->calculate_owned_bytes();
     }
     return bytes;
 }

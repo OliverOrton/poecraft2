@@ -628,6 +628,10 @@ struct SolveDiagnostics {
         std::string last_interrupted_cap;
     };
     std::map<std::string, ActionSearchCost> action_search_costs;
+    /* Exact nested allocation ledger for action_search_costs. The product
+     * envelope can contain tens of thousands of actions, so cap checkpoints
+     * must not rescan every diagnostic row. */
+    std::uint64_t action_search_costs_owned_bytes = 0;
     std::map<std::string, std::uint64_t> lower_policy_action_states;
     std::map<std::string, std::uint64_t> upper_policy_action_states;
     std::uint32_t diagnostic_sample_limit = 0;

@@ -1036,8 +1036,15 @@ class CalcContext {
     std::unordered_map<std::uint64_t, std::uint8_t> telemetry_rows_;
     std::shared_ptr<SolveTransitionCache> solve_transition_cache_;
     std::unique_ptr<CalcContext> automatic_comparison_context_;
-    std::unordered_map<std::string, std::unique_ptr<CalcContext>>
+    struct AutomaticAdmissionContext {
+        std::unique_ptr<CalcContext> context;
+        std::uint64_t inactive_owned_bytes = 0;
+    };
+    std::unordered_map<std::string, AutomaticAdmissionContext>
         automatic_admission_contexts_;
+    CalcContext* active_automatic_admission_context_ = nullptr;
+    std::uint64_t automatic_admission_context_key_bytes_ = 0;
+    std::uint64_t inactive_automatic_admission_context_owned_bytes_ = 0;
     std::uint64_t layout_build_ns_ = 0;
     std::uint64_t planner_build_ns_ = 0;
     std::uint64_t owned_byte_ledger_init_ns_ = 0;
@@ -1071,6 +1078,9 @@ class CalcContext {
     void initialize_owned_bytes_ledger();
     std::uint64_t calculate_owned_bytes() const;
     std::uint64_t dynamic_shallow_owned_bytes() const;
+    void activate_automatic_admission_context(CalcContext* context);
+    void deactivate_automatic_admission_context();
+    void refresh_automatic_admission_context_owned_bytes();
     void account_new_operator(const PlannerOperator& value);
     void rollback_staged_automatic_operators(
         std::uint32_t state_id,

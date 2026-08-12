@@ -2905,6 +2905,10 @@ CaseResult run_case(
                                 simulation_options.max_actions_per_run =
                                     optional_u32(verification,
                                                  "max_actions_per_run", 100000);
+                                simulation_options.max_graph_steps_per_run =
+                                    optional_u32(
+                                        verification,
+                                        "max_graph_steps_per_run", 0);
                                 pc_simulation_progress simulation_progress{};
                                 const auto simulation_started = Clock::now();
                                 const auto requested_simulation_deadline =
