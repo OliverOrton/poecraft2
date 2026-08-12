@@ -612,6 +612,9 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
                  sizeof(std::uint32_t);
         bytes += incremental_alternative_rows.capacity() *
                  sizeof(IncrementalAlternativeRow);
+        bytes += incremental_completed_pairs.bucket_count() * sizeof(void*);
+        bytes += incremental_completed_pairs.size() *
+                 (sizeof(std::uint64_t) + 2 * sizeof(void*));
         bytes += incremental_chaos_support.capacity() *
                  sizeof(std::uint8_t);
         bytes += incremental_nonchaos_states_seen.capacity() *
@@ -772,6 +775,9 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
                  sizeof(std::uint32_t);
         bytes += incremental_alternative_rows.capacity() *
                  sizeof(IncrementalAlternativeRow);
+        bytes += incremental_completed_pairs.bucket_count() * sizeof(void*);
+        bytes += incremental_completed_pairs.size() *
+                 (sizeof(std::uint64_t) + 2 * sizeof(void*));
         bytes += incremental_chaos_support.capacity() *
                  sizeof(std::uint8_t);
         bytes += incremental_nonchaos_states_seen.capacity() *

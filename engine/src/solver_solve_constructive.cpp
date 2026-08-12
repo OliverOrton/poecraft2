@@ -615,10 +615,17 @@ const char* SolveWork::Impl::retained_fallback_invalid_reason(
             }
             if (fallback.renewal_row != no_row &&
                 (!operator_valid(fallback.renewal_operator) ||
+                 fallback.renewal_row >= transition_cache->rows.size() ||
                  !row_valid(
-                     fallback.renewal_row, result.start_state,
-                     fallback.renewal_operator))) {
-                return "renewal_row_changed";
+                     fallback.renewal_row,
+                     transition_cache->rows[
+                         fallback.renewal_row].owner_state,
+                     fallback.renewal_operator) ||
+                 !renewal_fallback_eligible(
+                     transition_cache->rows[
+                         fallback.renewal_row].owner_state,
+                     fallback))) {
+                return "renewal_row_or_signature_changed";
             }
             if (fallback.renewal_operator != kNoId &&
                 !operator_valid(fallback.renewal_operator)) {
@@ -2250,11 +2257,17 @@ void SolveWork::Impl::try_install_gated_root_renewal_incumbent(
         }
 
         ++result.diagnostics.gated_root_renewal_candidates;
+        const auto reject = [&](const char* reason) {
+            ++result.diagnostics.gated_root_renewal_rejections;
+            retain_action_reason(
+                "rejected:gated_root_primitive_destructive_renewal:" +
+                planner.id + ":" + reason);
+        };
         std::vector<std::uint64_t> kernel_signature;
         if (!calc.exact_reforge_kernel_signature(
                 state, action_index, kernel_signature) ||
             kernel_signature.empty()) {
-            ++result.diagnostics.gated_root_renewal_rejections;
+            reject("missing_exact_retry_signature");
             return;
         }
 
@@ -2294,7 +2307,12 @@ void SolveWork::Impl::try_install_gated_root_renewal_incumbent(
                 success_probability -
                 kernel.gated_terminal_probability) >
                 probability_tolerance) {
-            ++result.diagnostics.gated_root_renewal_rejections;
+            reject(
+                !exact_retry
+                    ? "nonterminal_retry_signature_changed"
+                    : !(success_probability > 0.0)
+                          ? "no_terminal_success_probability"
+                          : "terminal_probability_mismatch");
             return;
         }
         const double value =
@@ -2303,7 +2321,7 @@ void SolveWork::Impl::try_install_gated_root_renewal_incumbent(
                 .value();
         if (!std::isfinite(value) || value < 0.0 ||
             value >= kValueCeiling) {
-            ++result.diagnostics.gated_root_renewal_rejections;
+            reject("invalid_geometric_value");
             return;
         }
 
@@ -3503,38 +3521,69 @@ auto SolveWork::Impl::magic_regal_fallback() -> std::optional<FocusedFallbackPol
 auto SolveWork::Impl::primitive_destructive_renewal_fallback() -> std::optional<FocusedFallbackPolicy> {
         if (restart_state == kNoId || restart_state >= calc.state_count() ||
             result.start_state >= calc.state_count() ||
-            result.start_state >= transition_cache->state_rows.size() ||
             restart_state >= transition_cache->state_rows.size()) {
             return std::nullopt;
         }
         const AbstractState& anchor = calc.state(restart_state);
-        const AbstractState& renewal_entry = calc.state(result.start_state);
         if (anchor.rarity != PC_RARITY_NORMAL ||
             anchor.prefix_count != 0 || anchor.suffix_count != 0 ||
             (anchor.flags & (kFlagCraftedMod | kProtectionFlags)) != 0 ||
             anchor.fractured_goal_mask != 0 ||
-            anchor.fractured_metamod_flags != 0 ||
-            calc.is_goal_state(renewal_entry)) {
+            anchor.fractured_metamod_flags != 0) {
             return std::nullopt;
         }
         FocusedFallbackPolicy best;
         best.anchor_state = restart_state;
         double best_start = kInfinity;
-        std::unordered_set<std::uint32_t> inspected_renewals;
-        for (const std::uint64_t absolute :
-             state_row_indices(*transition_cache, result.start_state)) {
-            const SparseRow& row = transition_cache->rows.at(absolute);
-            if (!row.admitted) continue;
-            if (row.choice_count != 0) continue;
-            for (std::uint32_t variant_offset = 0;
-                 variant_offset < row.variant_count; ++variant_offset) {
+        std::unordered_set<std::uint64_t> inspected_renewals;
+        std::unordered_set<std::uint64_t> materialized_alternatives;
+        materialized_alternatives.reserve(
+            incremental_alternative_rows.size());
+        for (const IncrementalAlternativeRow& alternative :
+             incremental_alternative_rows) {
+            if (alternative.row_index < transition_cache->rows.size() &&
+                alternative.row_index < priced_rows.size()) {
+                materialized_alternatives.insert(alternative.row_index);
+            }
+        }
+        std::vector<std::uint32_t> renewal_sources;
+        renewal_sources.reserve(transition_cache->state_rows.size());
+        if (result.start_state < transition_cache->state_rows.size()) {
+            renewal_sources.push_back(result.start_state);
+        }
+        for (std::uint32_t state = 0;
+             state < transition_cache->state_rows.size(); ++state) {
+            if (state == result.start_state || state >= expanded.size() ||
+                !expanded[state] || calc.is_goal_state(calc.state(state))) {
+                continue;
+            }
+            renewal_sources.push_back(state);
+        }
+        for (const std::uint32_t renewal_source : renewal_sources) {
+            const AbstractState& renewal_entry =
+                calc.state(renewal_source);
+            for (const std::uint64_t absolute :
+                 state_row_indices(
+                     *transition_cache, renewal_source)) {
+                const SparseRow& row =
+                    transition_cache->rows.at(absolute);
+                if (!row.admitted &&
+                    !materialized_alternatives.contains(absolute)) {
+                    continue;
+                }
+                if (row.choice_count != 0) continue;
+                for (std::uint32_t variant_offset = 0;
+                     variant_offset < row.variant_count;
+                     ++variant_offset) {
                 const SparseVariant& variant =
                     transition_cache->variant_arena->variants.at(
                         transition_cache->variant_arena
                             ->row_variant_indices.at(
                                 row.variant_offset + variant_offset));
-                if (!inspected_renewals.insert(
-                        variant.operator_index).second) {
+                const std::uint64_t inspected_key =
+                    (static_cast<std::uint64_t>(renewal_source) << 32) |
+                    variant.operator_index;
+                if (!inspected_renewals.insert(inspected_key).second) {
                     continue;
                 }
                 const PlannerOperator& renewal =
@@ -3559,7 +3608,7 @@ auto SolveWork::Impl::primitive_destructive_renewal_fallback() -> std::optional<
                     continue;
                 }
                 const OutcomeDistribution& kernel = calc.outcomes(
-                    result.start_state, renewal_action,
+                    renewal_source, renewal_action,
                     options.goal_progress_gated_reforges);
                 if (!kernel.supported || !kernel.stable_shared_kernel ||
                     !kernel.choice_groups.empty() ||
@@ -3568,7 +3617,7 @@ auto SolveWork::Impl::primitive_destructive_renewal_fallback() -> std::optional<
                 }
                 std::vector<std::uint64_t> kernel_signature;
                 if (!calc.exact_reforge_kernel_signature(
-                        result.start_state, renewal_action,
+                        renewal_source, renewal_action,
                         kernel_signature)) {
                     continue;
                 }
@@ -3593,7 +3642,8 @@ auto SolveWork::Impl::primitive_destructive_renewal_fallback() -> std::optional<
                         break;
                     }
                 }
-                if (!exact_retry || success_probability <= 1e-15) continue;
+                if (!exact_retry) continue;
+                if (success_probability <= 1e-15) continue;
                 const double renewal_value =
                     renewal_cost / success_probability;
                 if (!std::isfinite(renewal_value) ||
@@ -3717,6 +3767,7 @@ auto SolveWork::Impl::primitive_destructive_renewal_fallback() -> std::optional<
                     best = std::move(candidate);
                 }
             }
+        }
         }
         if (!std::isfinite(best.anchor_state_value)) return std::nullopt;
         const PlannerOperator& chosen =

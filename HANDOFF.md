@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Status: active milestone; Gate 6 is the current implementation boundary.**
+**Status: active milestone; Gate 7 is the current implementation boundary.**
 
 Oliver selected
 [Solver Goal Realignment And End-To-End Capability Recovery](docs/active/2026-08-09-solver-goal-realignment/plan.md)
@@ -96,11 +96,21 @@ the fixture pins the engine's 4,000,000 graph-step maximum. Gate 5 evidence is
 in
 [gate5-solver-completeness-recovery.md](docs/active/2026-08-09-solver-goal-realignment/evidence/gate5-solver-completeness-recovery.md).
 
-The current boundary is Gate 6: qualify the every-base matrix and the two
-isolated current-product metamod/full-junk salvage controls. Then complete the
-non-visual compiler/evaluator/Simulator/frontend integrity work in Gate 7 and
-run the single full native/release-WASM acceptance sequence in Gate 8. Do not
-run the full acceptance pipeline before Gate 8.
+Gate 6 is complete. The every-base matrix builds and validates all 979 ordinary
+bases with 2,811,093 checks and zero failures. The current-product metamod start
+and full-junk suffix-salvage controls both close exact, compile, independently
+evaluate, and complete 10,000/10,000 native Simulator runs. The final costs are
+`61.3644166136243` and `69.871075553584731` chaos respectively. The repair adds
+an exact completed state/operator-pair ledger for late-discovered incremental
+carriers and composes a stationary strict renewal carrier through the real
+fresh-base setup and arbitrary priced-Restart starts without relaxing any cap.
+Evidence is in
+[gate6-ring-amulet-evaluator-recovery.md](docs/active/2026-08-09-solver-goal-realignment/evidence/gate6-ring-amulet-evaluator-recovery.md).
+
+The current boundary is Gate 7: complete the non-visual compiler, exact-
+evaluator, Simulator, and frontend integrity qualification. Then run the single
+full native/release-WASM acceptance sequence in Gate 8. Do not run the full
+acceptance pipeline before Gate 8.
 
 The five-mod fixture now has a machine-enforced bounded-policy contract: exact
 closure is accepted, while a bounded result must expose a named resource stop,

@@ -3654,6 +3654,12 @@ bool SolveWork::Impl::expand_one_unit() {
                                expansion_operator_cursor >=
                                    expansion_operator_indices.size();
         if (completed && expansion_is_incremental_alternative) {
+            if (!row_resource_limited &&
+                !expansion_operator_indices.empty()) {
+                incremental_completed_pairs.insert(
+                    (static_cast<std::uint64_t>(state) << 32) |
+                    expansion_operator_indices.front());
+            }
             if (expansion_appended_row !=
                 std::numeric_limits<std::uint64_t>::max()) {
                 IncrementalAlternativeRow candidate;

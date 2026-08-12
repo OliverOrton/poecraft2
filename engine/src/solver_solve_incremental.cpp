@@ -69,6 +69,12 @@ bool SolveWork::Impl::schedule_next_incremental_alternative() {
         return false;
     }
     if (options.high_impact_executable_uppers) {
+        const auto pair_key = [](
+            const std::uint32_t state,
+            const std::uint32_t operator_index) {
+            return (static_cast<std::uint64_t>(state) << 32) |
+                operator_index;
+        };
         const std::size_t carrier_checkpoint =
             std::min<std::size_t>(
                 options.max_expanded_states,
@@ -99,11 +105,15 @@ bool SolveWork::Impl::schedule_next_incremental_alternative() {
                 }
                 phase = SolvePhase::Expanding;
             };
-        if (incremental_priority_task_cursor <
-            incremental_priority_tasks.size()) {
+        while (incremental_priority_task_cursor <
+               incremental_priority_tasks.size()) {
             const IncrementalPriorityTask task =
                 incremental_priority_tasks[
                     incremental_priority_task_cursor++];
+            if (incremental_completed_pairs.contains(
+                    pair_key(task.state, task.operator_index))) {
+                continue;
+            }
             schedule_pair(task.state, task.operator_index);
             return true;
         }
@@ -151,9 +161,29 @@ bool SolveWork::Impl::schedule_next_incremental_alternative() {
                 incremental_carriers[incremental_carrier_cursor++];
             const std::uint32_t operator_index =
                 delayed_operator_indices[incremental_operator_cursor];
+            if (incremental_completed_pairs.contains(
+                    pair_key(state, operator_index))) {
+                continue;
+            }
             schedule_pair(state, operator_index);
             return true;
         }
+        /* Carrier discovery is monotonic and may continue after an operator
+         * sweep. Close the exact Cartesian ledger before reporting that no
+         * alternative remains; this scan is reached only after the fast
+         * operator-major cursors are exhausted. */
+        for (const std::uint32_t operator_index :
+             delayed_operator_indices) {
+            for (const std::uint32_t state : incremental_carriers) {
+                if (incremental_completed_pairs.contains(
+                        pair_key(state, operator_index))) {
+                    continue;
+                }
+                schedule_pair(state, operator_index);
+                return true;
+            }
+        }
+        incremental_unevaluated_actions = 0;
         return false;
     }
     while (incremental_carrier_cursor < incremental_carriers.size()) {

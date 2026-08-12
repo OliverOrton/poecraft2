@@ -1,9 +1,10 @@
 # Gate 6 Ring/Amulet evaluator recovery
 
-**Measured:** 2026-08-09 on `codex/solver-goal-realignment` from the shared
-dirty milestone tree. This evidence covers the focused Ring/Amulet
-publication and independent-evaluator boundary only; it does not claim the
-every-base matrix or final Gate 8 acceptance.
+**Measured:** 2026-08-09 through 2026-08-12 on
+`codex/solver-goal-realignment`. This evidence covers the Ring/Amulet
+publication recovery, the complete every-base matrix, and the two focused
+current-product arbitrary-start controls. It does not claim final Gate 8
+acceptance.
 
 Parent: [active plan](../plan.md)
 
@@ -202,6 +203,67 @@ Raw workspace-local evidence is retained under:
 - `build/solver-goal-realignment/gate6/frozen-v2`; and
 - `build/solver-goal-realignment/gate6/frozen-v3`.
 
-The V2 executable and reports remained untouched during V3. Final full native,
-release-WASM, every-base, frontend, primary-case, and portfolio acceptance are
-owned by the later milestone gates.
+The V2 executable and reports remained untouched during V3.
+
+## Every-base matrix and arbitrary starts
+
+The final direct session-builder audit constructed every 979 compiled ordinary
+base at item level 86. All 979 had a reachable natural-family feasibility
+witness, fully accounted price vocabulary, a legal one-action transition, and
+a compiling and exact-evaluating one-operation strategy. The audit completed
+2,811,093 checks with zero failures and covered every represented item class,
+low/high item-level workspace switching, influence masks, Eldritch eligibility,
+implicit initialization, and normal/magic/rare action vocabulary.
+
+The two current-product fixtures initially exposed two independent boundaries.
+The full-junk-prefix suffix-salvage control found a 69.871-chaos core policy but
+the strict compiler/evaluator refinement exhausted the joint 1 GiB owned-memory
+budget. The metamod start completed the restricted graph but had no executable
+upper while delayed action rows remained open. Enabling the already-audited
+`high_impact_executable_uppers` work scheduler closed the salvage case without
+raising a cap. The metamod case then proved that operator-major incremental
+scheduling had skipped carriers discovered after an earlier operator sweep.
+
+High-impact scheduling now maintains an exact completed state/operator-pair
+ledger and closes its full delayed-action Cartesian product before declaring
+the envelope exhausted. The ledger is included in solver-owned memory
+accounting. The constructive renewal proof also accepts a stationary exact
+renewal kernel on any already-expanded strict carrier, composes it through the
+real fresh-base setup row, and prefixes an arbitrary start with priced Restart.
+It never treats the original protected carrier as the fresh carrier. Renewal
+row retention validates the original row owner and exact retry signature.
+
+The final native qualification is retained under
+`build/solver-goal-realignment/gate6/final-native-v3-20260812`. Both cases use
+the same explicit 1 GiB cap, close the complete action envelope with no open
+obligations, compile, independently exact-evaluate to their solve value with
+success probability one and zero off-policy mass, and complete 10,000 of
+10,000 Simulator runs:
+
+| Case | Exact cost | Solve | Graph | Sample mean |
+| --- | ---: | ---: | ---: | ---: |
+| `vaal-regalia-allflame-metamod-start` | `61.3644166136243` | 26.752 s | 169 nodes / 333 edges | `60.89687999999893` |
+| `vaal-regalia-allflame-full-prefix-suffix-salvage` | `69.871075553584731` | 8.259 s | 3 nodes / 3 edges | `69.911720000000187` |
+
+The metamod policy's proper bootstrap is an exact
+`essence:Metadata/Items/Currency/CurrencyEssenceAnger6` renewal at
+`69.04447612985625`, composed through a `68.9992115216657` fresh-base anchor
+and the arbitrary protected start. Its complete policy improves that bootstrap
+to the exact 61.364-chaos optimum. The root Chaos candidate is explicitly and
+correctly rejected because its nonterminal retry signature changes after the
+protected start is consumed.
+
+Final artifact hashes from the qualifying reports are:
+
+| Artifact | SHA-256 |
+| --- | --- |
+| Native benchmark executable | `07fa9eaf4e01bd271ebc9555dc0c01dc53d96bb6ca5c156a00d443465d9e4faf` |
+| Gate 6 ledger | `01b418b3ad9f8800350ba11150a50c2564cb77c2d80fd552884315fe5049a897` |
+| Metamod report | `af25ae5a7bfd76eb41a90f2341045727f77705000d2895704700355bfae3e292` |
+| Metamod strategy | `bd83cca8c5eecbaed334cf50468e0efc8efe69db76ff1f2a38e8f352b63912a2` |
+| Salvage report | `94c31b11f3916b10e2a0662f637c56635d7ab614a9d2f821e3e26445a9a96cea` |
+| Salvage strategy | `c150aa57a763c96c00257e036f150d4ed44692f5e28813e9d81fc904d3860c89` |
+
+The final focused native suites were Solve 6,672 checks, compiler 804, and
+evaluator 1,174, all with zero failures. Gate 6 is closed. Release-WASM,
+frontend, primary, and portfolio acceptance remain owned by Gate 8.

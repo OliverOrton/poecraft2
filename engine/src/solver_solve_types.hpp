@@ -721,6 +721,10 @@ struct SolveWork::Impl {
         std::uint32_t states_added = 0;
     };
     std::vector<IncrementalAlternativeRow> incremental_alternative_rows;
+    /* High-impact operator-major scheduling can discover carriers after an
+     * earlier operator sweep. Track exact completed pairs so those late
+     * carriers are revisited without replaying already materialized rows. */
+    std::unordered_set<std::uint64_t> incremental_completed_pairs;
     std::uint64_t incremental_unevaluated_actions = 0;
     std::uint64_t incremental_inapplicable_actions = 0;
     std::uint64_t incremental_resource_unresolved_actions = 0;

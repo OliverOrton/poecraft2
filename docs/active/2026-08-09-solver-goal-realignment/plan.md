@@ -293,19 +293,22 @@ exact lower/upper equality with a compiled independently verified policy.
 
 ## Gate 6 - all-base correctness and evaluator recovery
 
-The Ring/Amulet publication and independent-evaluator repair is complete in
+Gate 6 is complete. The Ring/Amulet publication and independent-evaluator
+repair is recorded in
 [Gate 6 evaluator recovery](evidence/gate6-ring-amulet-evaluator-recovery.md).
 Both cases now publish honest bounded executable policies whose emitted
 three-node/three-edge graphs exact-evaluate with success probability one and
 zero off-policy or unresolved mass. Amulet completes in 1.634 seconds at
 `144.88045459605041`; exact exchangeable-family compression reduced its
 previously interrupted row from 20,000,025 to 1,043,760 logical work without
-raising a cap or weakening probability semantics. The lightweight every-base
-matrix is implemented but still needs its final direct acceptance run. Two
-isolated current-product controls now cover a real Prefixes Cannot Be Changed
-start and a full-junk-prefix carrier preserving one useful suffix while adding
-the other; their manifest validates, but focused solve/compile/evaluator/
-Simulator qualification remains pending.
+raising a cap or weakening probability semantics. The direct every-base matrix
+passes 2,811,093 checks over all 979 ordinary bases. The isolated current-
+product Prefixes Cannot Be Changed start and full-junk-prefix suffix-salvage
+controls both close exactly, compile, independently evaluate, and complete
+10,000/10,000 native Simulator runs. Late-discovered incremental carriers now
+have a complete state/operator-pair ledger, and constructive renewal can
+compose a stationary strict carrier through the real fresh-base setup and an
+arbitrary priced-Restart start.
 
 Run lightweight generated checks over every compiled mechanically achievable
 base for session creation, feasibility, rarity, modifier availability, action
