@@ -1,0 +1,109 @@
+{
+  "schema_version": "solver_product_imprint_current_v1",
+  "fixture_id": "current-allflame-public-product-imprint",
+  "scope": "Current product-path public C API discovery, solve, compilation, exact evaluation, and Simulator verification",
+  "historical_fixture_policy": "Additive current-product coverage only. Do not modify the historical solver-regressions/s8.4r/v1 fixture or evidence.",
+  "session": {
+    "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+    "base_name": "Vaal Regalia",
+    "item_level": 86,
+    "artifact": "data/compiled/current"
+  },
+  "selection": {
+    "carrier": "positive-weight natural prefix family with the lowest total live-pool weight",
+    "intermediate_target": "positive-weight natural suffix family with the highest total live-pool weight after adding the carrier",
+    "purpose": "Make preservation of the legal magic carrier valuable while keeping the Imprint retry simulation bounded."
+  },
+  "start": {
+    "rarity": "magic",
+    "generic_influence_bits": 0,
+    "mods": [
+      "selected carrier prefix"
+    ]
+  },
+  "goal": {
+    "rarity": "rare",
+    "min_satisfied_slots": 2,
+    "slots": [
+      "selected carrier prefix family",
+      "selected intermediate suffix family"
+    ],
+    "action_mode": "goal_relevant",
+    "fossil_mode": "goal_relevant",
+    "automatic_candidates": true,
+    "explicit_action_allowlist": [
+      "augment",
+      "regal"
+    ],
+    "registry_contract": "action_mode goal_relevant keeps automatic assembly on the normal bounded product registry; the explicit primitive envelope limits this focused forced-winner solve to the Imprint attempt and continuation actions"
+  },
+  "economy": {
+    "snapshot_relative_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+    "expected_snapshot_id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "expected_coverage": {
+      "priced": 863,
+      "missing": 583,
+      "low_confidence": 29
+    },
+    "recipe_components": [
+      {
+        "price_key": "beast:craicic-croaker",
+        "quantity": 1,
+        "chaos_value": 66.0,
+        "source": "quote"
+      },
+      {
+        "price_key": "beast:rare",
+        "quantity": 3,
+        "chaos_value": 1.0,
+        "source": "owner_default"
+      }
+    ],
+    "forced_winner_overrides": [
+      {
+        "price_key": "eldritch_chaos",
+        "snapshot_chaos_value": 39.21,
+        "forced_chaos_value": 1000.0,
+        "reason": "Force the eligible Imprint retry to beat the otherwise selected Eldritch Chaos retry route while preserving every Bestiary component and primitive continuation price."
+      },
+      {
+        "price_key": "eldritch_annul",
+        "snapshot_chaos_value": 40.53,
+        "forced_chaos_value": 1000.0,
+        "reason": "Force the eligible Imprint retry to beat the alternate Eldritch Annul retry route exposed after pricing out Eldritch Chaos."
+      }
+    ],
+    "override_disclosure": "Only two non-Bestiary retry inputs are overridden: Eldritch Chaos Orb from the checked-in 39.21-chaos quote to 1000 chaos and Eldritch Orb of Annulment from 40.53 chaos to 1000 chaos. Craicic Croaker remains the 66-chaos quote, each generic rare beast remains the overridable 1-chaos owner default, and all primitive continuation prices retain their snapshot quotes."
+  },
+  "solve_limits": {
+    "max_discovered_states": 200000,
+    "max_expanded_states": 25000,
+    "max_state_action_rows": 300000,
+    "max_transitions": 10000000,
+    "max_reforge_work": 100000000,
+    "max_solver_owned_bytes": 536870912,
+    "max_diagnostic_samples": 64,
+    "max_telemetry_json_bytes": 67108864
+  },
+  "expected": {
+    "automatic_kind": "imprint",
+    "automatic_missing_price": 0,
+    "selected_carrier_mod_key": "LocalBaseEnergyShieldAndLife1",
+    "selected_target_mod_key": "LifeRegeneration1",
+    "benchmark_case_relative_path": "fixtures/solver-goal-realignment/v1/cases/vaal-regalia-allflame-imprint-retry.json",
+    "compiled_operations": [
+      "bestiary:imprint",
+      "bestiary:restore_imprint"
+    ],
+    "exact_pricing_status": "complete",
+    "rare_to_croaker_consumption_ratio": 3
+  },
+  "simulation": {
+    "runs": 10000,
+    "seed": 20260809,
+    "max_actions_per_run": 100000,
+    "expected_successes": 10000,
+    "expected_failures": 0,
+    "expected_missing_price_runs": 0
+  }
+}

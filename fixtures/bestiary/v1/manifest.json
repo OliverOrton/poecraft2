@@ -4,7 +4,7 @@
   "contract_id": "poecraft2-b1-bestiary-v1",
   "phase": "B1.0",
   "approval": {
-    "status": "approved_owner_2026-07-17",
+    "status": "approved_owner_2026-08-09",
     "owner": "Oliver",
     "mechanic_authority": "owner_decisions_only"
   },
@@ -36,6 +36,10 @@
     "beast_price_key": "beast:<kebab-case-beast-id>",
     "cost_vector": "One price key per consumed beast; repeated keys encode quantity."
   },
+  "current_owner_decisions": [
+    "Craicic Croaker is the specific beast consumed by Imprint creation.",
+    "Each of the three generic rare beasts has an overridable one-chaos owner default with non-market provenance."
+  ],
   "files": [
     "recipes/imprint.json",
     "expected-outcomes/imprint.json"

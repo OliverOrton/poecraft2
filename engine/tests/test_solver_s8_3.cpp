@@ -7,6 +7,7 @@
 
 #include <cmath>
 #include <algorithm>
+#include <limits>
 #include <memory>
 #include <numeric>
 #include <string>
@@ -266,10 +267,8 @@ StateLocalAutomaticBatch admit_automatic(
     const std::uint32_t state,
     const std::unordered_map<std::string, double>& prices) {
     AutomaticAdmissionLimits limits;
-    limits.max_discovered_states = 100000;
     limits.max_state_action_rows = 100000;
     limits.max_transitions = 1000000;
-    limits.max_reforge_work = 1000000;
     limits.max_solver_owned_bytes = 1073741824;
     limits.prices = &prices;
     return calc.admit_state_local_automatic_candidates(state, limits);
@@ -453,10 +452,8 @@ void run_temporary_blocker_price_flip() {
         false, true, true);
     const std::uint32_t capped_state = capped_calc.intern_item(start);
     AutomaticAdmissionLimits capped_limits;
-    capped_limits.max_discovered_states = 100000;
     capped_limits.max_state_action_rows = 100000;
     capped_limits.max_transitions = 1000000;
-    capped_limits.max_reforge_work = 1000000;
     capped_limits.max_solver_owned_bytes =
         capped_calc.fast_estimated_owned_bytes();
     const auto capped_prices = std::unordered_map<std::string, double>{
@@ -874,15 +871,19 @@ void run_protected_price_flip() {
     PC_CHECK(
         repeat_calc.telemetry().owned_byte_ledger_max_recursion_depth > 0);
     const CalcTelemetry& repeat_telemetry = repeat_calc.telemetry();
-    PC_CHECK(repeat_telemetry.reforge_frontier_work > 1);
+    PC_CHECK(
+        repeat_telemetry.automatic_admission_reforge_active_work > 1);
+    PC_CHECK(repeat_telemetry.reforge_frontier_work == 0);
+    PC_CHECK(repeat_telemetry.reforge_logical_work_v1 == 0);
     PC_CHECK(
         repeat_telemetry.reforge_effort
             .nested_automatic_child_active_work ==
-        repeat_telemetry.reforge_frontier_work);
+        repeat_telemetry.automatic_admission_reforge_active_work);
     PC_CHECK(
         repeat_telemetry.reforge_effort
             .nested_automatic_child_logical_work ==
-        repeat_telemetry.reforge_logical_work_v1);
+        repeat_telemetry
+            .automatic_admission_reforge_logical_work_v1);
     PC_CHECK(!repeat_telemetry.reforge_row_samples.empty());
     PC_CHECK(std::all_of(
         repeat_telemetry.reforge_row_samples.begin(),
@@ -892,8 +893,11 @@ void run_protected_price_flip() {
                    ReforgeRowFamily::AutomaticOption;
         }));
 
-    const std::uint64_t capped_reforge_work =
-        repeat_telemetry.reforge_frontier_work - 1;
+    constexpr std::uint64_t capped_reforge_work = 1;
+    PC_CHECK(
+        repeat_telemetry
+            .automatic_admission_reforge_logical_work_v1 >
+        capped_reforge_work);
     CalcContext capped_repeat_calc(
         session, goal, registry,
         {restart, chaos, bench_prefix, bench_suffix});
@@ -908,34 +912,43 @@ void run_protected_price_flip() {
             {"bench:s83_mod_7", 3.0},
             {"bench:s83_mod_9", 10.0}};
     AutomaticAdmissionLimits capped_repeat_limits;
-    capped_repeat_limits.max_discovered_states = 100000;
     capped_repeat_limits.max_state_action_rows = 100000;
     capped_repeat_limits.max_transitions = 1000000;
-    capped_repeat_limits.max_reforge_work = capped_reforge_work;
     capped_repeat_limits.max_solver_owned_bytes = 1073741824;
     capped_repeat_limits.prices = &capped_repeat_prices;
+    capped_repeat_calc.set_solve_resource_caps(
+        std::numeric_limits<std::uint32_t>::max(),
+        capped_reforge_work, false,
+        capped_repeat_limits.max_solver_owned_bytes);
     const StateLocalAutomaticBatch capped_repeat_batch =
         capped_repeat_calc.admit_state_local_automatic_candidates(
             capped_repeat_state, capped_repeat_limits);
     const CalcTelemetry& capped_repeat_telemetry =
         capped_repeat_calc.telemetry();
     PC_CHECK(
-        capped_repeat_telemetry.reforge_frontier_work ==
-        capped_reforge_work);
+        capped_repeat_batch.status ==
+        StateLocalAutomaticBatchStatus::Complete);
     PC_CHECK(
-        capped_repeat_telemetry.reforge_logical_work_v1 ==
+        capped_repeat_telemetry.reforge_frontier_work == 0);
+    PC_CHECK(
+        capped_repeat_telemetry.reforge_logical_work_v1 == 0);
+    PC_CHECK(
+        capped_repeat_telemetry
+            .automatic_admission_reforge_logical_work_v1 ==
         capped_repeat_telemetry.reforge_effort
             .nested_automatic_child_logical_work);
     PC_CHECK(
-        capped_repeat_telemetry.reforge_logical_work_v1 <
+        capped_repeat_telemetry
+            .automatic_admission_reforge_logical_work_v1 >
         capped_reforge_work);
     PC_CHECK(
         capped_repeat_telemetry.reforge_effort
             .nested_automatic_child_active_work ==
-        capped_repeat_telemetry.reforge_frontier_work);
+        capped_repeat_telemetry
+            .automatic_admission_reforge_active_work);
     PC_CHECK(
-        capped_repeat_telemetry.reforge_effort.rows_interrupted > 0);
-    PC_CHECK(std::any_of(
+        capped_repeat_telemetry.reforge_effort.rows_interrupted == 0);
+    PC_CHECK(std::none_of(
         capped_repeat_telemetry.reforge_row_samples.begin(),
         capped_repeat_telemetry.reforge_row_samples.end(),
         [](const ReforgeRowTelemetry& row) {
@@ -943,7 +956,7 @@ void run_protected_price_flip() {
                    row.disposition ==
                        ReforgeRowDisposition::Interrupted;
         }));
-    PC_CHECK(std::any_of(
+    PC_CHECK(std::none_of(
         capped_repeat_batch.decisions.begin(),
         capped_repeat_batch.decisions.end(),
         [](const StateLocalAutomaticCandidate& decision) {

@@ -73,6 +73,16 @@ void append_u64(std::string& out, std::uint64_t value) {
     out += std::to_string(value);
 }
 
+void append_double(std::string& out, double value) {
+    char buffer[64]{};
+    const int written = std::snprintf(buffer, sizeof(buffer), "%.17g", value);
+    if (written <= 0 || static_cast<std::size_t>(written) >= sizeof(buffer)) {
+        out += "null";
+        return;
+    }
+    out.append(buffer, static_cast<std::size_t>(written));
+}
+
 // --- handle registries ------------------------------------------------------
 
 std::unordered_map<std::uint32_t, pc_data_handle> g_data;
@@ -2172,7 +2182,8 @@ const char* pcw_simulator_result(uint32_t simulator_id) {
     append_u64(out, summary.costed_action_count);
     out += ",\"missing_price_action_count\":";
     append_u64(out, summary.missing_price_action_count);
-    out += ",\"known_total_cost\":" + std::to_string(summary.known_total_cost);
+    out += ",\"known_total_cost\":";
+    append_double(out, summary.known_total_cost);
     out += ",\"cost_status\":";
     append_escaped(
         out,
@@ -2340,8 +2351,8 @@ const char* pcw_simulator_result(uint32_t simulator_id) {
             append_escaped(out, example.terminal_node_id);
             out += ",\"action_count\":";
             append_u64(out, example.action_count);
-            out += ",\"known_total_cost\":" +
-                   std::to_string(example.known_total_cost);
+            out += ",\"known_total_cost\":";
+            append_double(out, example.known_total_cost);
             out += ",\"cost_complete\":";
             out += example.cost_complete ? "true" : "false";
             out += ",\"item\":";

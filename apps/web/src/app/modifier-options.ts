@@ -7,6 +7,7 @@
 
 import { Catalog, ModInfo } from "./engine-protocol";
 import { visibleModTags } from "./item-display";
+import { genericInfluenceDisplayName } from "./influence-presentation";
 
 export interface ModifierTierOption {
     tier: number;
@@ -34,10 +35,7 @@ function modSourceLabel(mod: ModInfo): string {
         case REACH_INFLUENCE: {
             const parts = mod.reach_via.split(":");
             const key = (parts[parts.length - 1] || "influenced").toLowerCase();
-            if (key === "adjudicator") return "Warlord";
-            if (key === "basilisk") return "Redeemer";
-            if (key === "eyrie") return "Hunter";
-            return titleCase(key);
+            return genericInfluenceDisplayName(key);
         }
         case REACH_CRAFTED:
             return "Bench";

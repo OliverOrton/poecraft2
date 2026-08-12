@@ -418,7 +418,11 @@ const labelCatalog: Catalog = {
         { key: "fire", name: "Fire" },
         { key: "cold", name: "Cold" },
     ],
-    influences: [{ key: "adjudicator", name: "Warlord" }],
+    influences: [
+        { key: "warlord", name: "Warlord" },
+        { key: "hunter", name: "Hunter" },
+        { key: "redeemer", name: "Redeemer" },
+    ],
 };
 
 const labelContext = {
@@ -471,6 +475,20 @@ const labelContext = {
             labelContext,
         ),
         "Influence Exalt: Warlord",
+    );
+    assert.equal(
+        operationLabel(
+            { type: "influence_exalt", params: { influence: "basilisk" } },
+            labelContext,
+        ),
+        "Influence Exalt: Hunter",
+    );
+    assert.equal(
+        operationLabel(
+            { type: "influence_exalt", params: { influence: "eyrie" } },
+            labelContext,
+        ),
+        "Influence Exalt: Redeemer",
     );
     assert.equal(
         operationLabel(

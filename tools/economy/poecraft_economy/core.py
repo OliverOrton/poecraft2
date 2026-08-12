@@ -29,13 +29,19 @@ from .provider import (
 
 
 TOOL_VERSION = "0.1.0"
+SCHEMA_VERSION = 2
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_DATABASE = REPO_ROOT / "data" / "economy" / "poecraft-economy.db"
 DEFAULT_RAW_ROOT = REPO_ROOT / "data" / "economy" / "raw"
 DEFAULT_SCHEMA = REPO_ROOT / "schemas" / "economy" / "001_initial.sql"
+DEFAULT_MIGRATIONS = {
+    1: REPO_ROOT / "schemas" / "economy" / "002_owner_defaults.sql",
+}
 DEFAULT_CATALOG = REPO_ROOT / "fixtures" / "economy" / "price-key-catalog-v1.json"
 DEFAULT_RECIPES = REPO_ROOT / "fixtures" / "economy" / "harvest-recipes-v1.json"
-DEFAULT_FIXTURE = REPO_ROOT / "fixtures" / "economy" / "poe-ninja" / "manifest.json"
+DEFAULT_FIXTURE = (
+    REPO_ROOT / "fixtures" / "economy" / "poe-ninja-current" / "manifest.json"
+)
 DEFAULT_GAME_DATABASE = REPO_ROOT / "data" / "sqlite" / "poecraft.db"
 DEFAULT_PUBLISH_DIR = REPO_ROOT / "data" / "economy" / "published"
 
@@ -98,6 +104,31 @@ def _connect(database: Path) -> sqlite3.Connection:
     connection.execute("PRAGMA foreign_keys = ON")
     connection.execute("PRAGMA busy_timeout = 30000")
     return connection
+
+
+def _ensure_database_schema(connection: sqlite3.Connection) -> int:
+    manifest = connection.execute(
+        "SELECT schema_version FROM economy_manifest WHERE singleton = 1"
+    ).fetchone()
+    if manifest is None:
+        raise ValueError("economy database manifest is missing")
+    version = int(manifest[0])
+    if version > SCHEMA_VERSION:
+        raise ValueError(
+            f"economy database schema {version} is newer than supported {SCHEMA_VERSION}"
+        )
+    while version < SCHEMA_VERSION:
+        migration = DEFAULT_MIGRATIONS.get(version)
+        if migration is None:
+            raise ValueError(f"no economy database migration from schema {version}")
+        connection.executescript(migration.read_text(encoding="utf-8"))
+        migrated = connection.execute(
+            "SELECT schema_version FROM economy_manifest WHERE singleton = 1"
+        ).fetchone()
+        if migrated is None or int(migrated[0]) <= version:
+            raise ValueError(f"economy migration did not advance schema {version}")
+        version = int(migrated[0])
+    return version
 
 
 def _upsert_price_key(
@@ -193,6 +224,18 @@ def _seed_catalog(
     version = str(catalog["catalog_version"])
     game_hash = _game_data_hash(game_database)
 
+    # Restored checkpoints retain the source row from the run that created
+    # them. Refreshing under a newer parser must record the adapter that now
+    # owns normalization and required-key validation.
+    connection.execute(
+        """
+        UPDATE economy_source
+        SET display_name = ?, adapter_version = ?, terms_url = ?
+        WHERE source_key = ?
+        """,
+        (SOURCE_NAME, ADAPTER_VERSION, SOURCE_TERMS_URL, SOURCE_KEY),
+    )
+
     direct: Mapping[str, str] = catalog["direct"]
     for key, source_item_id in direct.items():
         is_component = key.startswith("lifeforce:")
@@ -210,6 +253,44 @@ def _seed_catalog(
         _upsert_price_key(connection, key, "zero_cost")
     for key in catalog["manual_only"]:
         _upsert_price_key(connection, key, "manual_only")
+    owner_default_keys: list[str] = []
+    for key, raw_default in catalog.get("owner_defaults", {}).items():
+        if not isinstance(raw_default, Mapping):
+            raise ValueError(f"owner default must be an object: {key}")
+        value = float(raw_default.get("chaos_value", math.nan))
+        decision_id = str(raw_default.get("decision_id", "")).strip()
+        decision_note = str(raw_default.get("decision_note", "")).strip()
+        overridable = raw_default.get("overridable")
+        if not math.isfinite(value) or value < 0:
+            raise ValueError(f"owner default must be finite and non-negative: {key}")
+        if not decision_id or not decision_note or overridable is not True:
+            raise ValueError(
+                f"owner default requires a decision id, note, and overridable=true: {key}"
+            )
+        _upsert_price_key(connection, key, "manual_only")
+        connection.execute(
+            """
+            INSERT INTO economy_owner_default(
+                canonical_price_key, chaos_value, decision_id,
+                decision_note, overridable
+            ) VALUES (?, ?, ?, ?, 1)
+            ON CONFLICT(canonical_price_key) DO UPDATE SET
+                chaos_value = excluded.chaos_value,
+                decision_id = excluded.decision_id,
+                decision_note = excluded.decision_note,
+                overridable = excluded.overridable
+            """,
+            (key, value, decision_id, decision_note),
+        )
+        owner_default_keys.append(key)
+    if owner_default_keys:
+        placeholders = ",".join("?" for _ in owner_default_keys)
+        connection.execute(
+            f"DELETE FROM economy_owner_default WHERE canonical_price_key NOT IN ({placeholders})",
+            owner_default_keys,
+        )
+    else:
+        connection.execute("DELETE FROM economy_owner_default")
     for source_item_id, key in catalog["resonators"].items():
         _upsert_price_key(connection, key, "market_quote")
         _upsert_mapping(
@@ -243,6 +324,18 @@ def _seed_catalog(
         WHERE source_key = ? AND mapping_kind = 'catalog' AND mapping_version != ?
         """,
         (SOURCE_KEY, version),
+    )
+    # A corrected catalog mapping must retire the old runtime key as well as
+    # its source mapping. Historical snapshots keep their frozen rows.
+    connection.execute(
+        """
+        UPDATE economy_price_key SET active = 0
+        WHERE kind = 'market_quote'
+          AND NOT EXISTS (
+              SELECT 1 FROM economy_source_mapping AS m
+              WHERE m.canonical_price_key = economy_price_key.canonical_price_key
+          )
+        """
     )
 
     components: Mapping[str, str] = recipes["components"]
@@ -417,6 +510,7 @@ def initialize_database(
                 "INSERT INTO economy_source VALUES (?, ?, ?, ?)",
                 (SOURCE_KEY, SOURCE_NAME, ADAPTER_VERSION, SOURCE_TERMS_URL),
             )
+            _ensure_database_schema(connection)
             game_hash = _seed_catalog(
                 connection, Path(catalog), Path(recipes), game_database
             )
@@ -429,7 +523,7 @@ def initialize_database(
             temporary.unlink()
     return {
         "database": str(database),
-        "schema_version": 1,
+        "schema_version": SCHEMA_VERSION,
         "game_data_hash": game_hash,
     }
 
@@ -580,6 +674,53 @@ def _insert_fetch(
     return int(cursor.lastrowid)
 
 
+def _mapped_price_key_for_row(
+    connection: sqlite3.Connection, row: ParsedRow
+) -> str | None:
+    mapping = connection.execute(
+        """
+        SELECT canonical_price_key FROM economy_source_mapping
+        WHERE source_key = ? AND source_category = ? AND source_item_id = ?
+        """,
+        (SOURCE_KEY, row.category, row.item_id),
+    ).fetchone()
+    if mapping is None and row.row_key != row.item_id:
+        mapping = connection.execute(
+            """
+            SELECT canonical_price_key FROM economy_source_mapping
+            WHERE source_key = ? AND source_category = ? AND source_item_id = ?
+            """,
+            (SOURCE_KEY, row.category, row.row_key),
+        ).fetchone()
+    return None if mapping is None else str(mapping["canonical_price_key"])
+
+
+REQUIRED_PRICE_KEYS_BY_CATEGORY: dict[str, tuple[str, ...]] = {
+    "Beast": ("beast:craicic-croaker",),
+}
+
+
+def _require_category_price_keys(
+    connection: sqlite3.Connection,
+    category: str,
+    rows: Sequence[ParsedRow],
+) -> None:
+    required = REQUIRED_PRICE_KEYS_BY_CATEGORY.get(category, ())
+    if not required:
+        return
+    present = {
+        key
+        for row in rows
+        if (key := _mapped_price_key_for_row(connection, row)) is not None
+    }
+    missing = [key for key in required if key not in present]
+    if missing:
+        raise ValueError(
+            f"{category} response is missing required runtime price keys: "
+            + ", ".join(missing)
+        )
+
+
 def _ingest_rows(
     connection: sqlite3.Connection,
     fetch_id: int,
@@ -613,22 +754,8 @@ def _ingest_rows(
                 row.volume,
             ),
         )
-        mapping = connection.execute(
-            """
-            SELECT canonical_price_key FROM economy_source_mapping
-            WHERE source_key = ? AND source_category = ? AND source_item_id = ?
-            """,
-            (SOURCE_KEY, row.category, row.item_id),
-        ).fetchone()
-        if mapping is None and row.row_key != row.item_id:
-            mapping = connection.execute(
-                """
-                SELECT canonical_price_key FROM economy_source_mapping
-                WHERE source_key = ? AND source_category = ? AND source_item_id = ?
-                """,
-                (SOURCE_KEY, row.category, row.row_key),
-            ).fetchone()
-        if mapping is None:
+        price_key = _mapped_price_key_for_row(connection, row)
+        if price_key is None:
             potential = row.category in {"Fossil", "Resonator", "Essence"}
             disposition = "unresolved" if potential else "not_runtime_input"
             reason = "stable_mapping_missing" if potential else "not_in_price_catalog"
@@ -638,7 +765,6 @@ def _ingest_rows(
             )
             counts["unresolved" if potential else "ignored"] += 1
         else:
-            price_key = str(mapping["canonical_price_key"])
             connection.execute(
                 "INSERT INTO economy_row_account VALUES (?, ?, 'mapped_quote', 'stable_mapping', ?)",
                 (fetch_id, row.row_key, price_key),
@@ -753,6 +879,20 @@ def _compile_snapshot(
     for row in zero_keys:
         prices[str(row[0])] = 0.0
 
+    owner_default_rows = connection.execute(
+        """
+        SELECT d.canonical_price_key, d.chaos_value, d.decision_id,
+               d.decision_note, d.overridable
+        FROM economy_owner_default AS d
+        JOIN economy_price_key AS k USING (canonical_price_key)
+        WHERE k.active = 1
+        ORDER BY d.canonical_price_key
+        """
+    ).fetchall()
+    owner_defaults = {str(row["canonical_price_key"]): row for row in owner_default_rows}
+    for key, row in owner_defaults.items():
+        prices[key] = float(row["chaos_value"])
+
     recipes = connection.execute(
         """
         SELECT output_price_key, component_price_key, quantity
@@ -817,7 +957,13 @@ def _compile_snapshot(
         )
     ]
     runtime_prices = {key: prices[key] for key in active if key in prices}
-    missing = sorted([key for key in active if key not in prices] + manual)
+    runtime_prices.update(
+        {key: prices[key] for key in owner_defaults if key in prices}
+    )
+    missing = sorted(
+        [key for key in active if key not in prices]
+        + [key for key in manual if key not in owner_defaults]
+    )
     low = sorted(
         key for key in runtime_prices if confidence.get(key) == "low"
     )
@@ -829,7 +975,9 @@ def _compile_snapshot(
     }
     price_sources = {
         key: (
-            "zero"
+            "owner_default"
+            if key in owner_defaults
+            else "zero"
             if key_kind[key] == "zero_cost"
             else "recipe"
             if key in derived_components
@@ -909,6 +1057,25 @@ def _compile_snapshot(
         ),
     )
     for key, value in sorted(runtime_prices.items()):
+        if key in owner_defaults:
+            default = owner_defaults[key]
+            connection.execute(
+                """
+                INSERT INTO economy_snapshot_owner_default_price(
+                    snapshot_id, canonical_price_key, chaos_value,
+                    decision_id, decision_note, overridable
+                ) VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    snapshot_id,
+                    key,
+                    value,
+                    str(default["decision_id"]),
+                    str(default["decision_note"]),
+                    int(default["overridable"]),
+                ),
+            )
+            continue
         if key_kind[key] == "zero_cost":
             provenance = "zero"
             quote_id = None
@@ -1100,6 +1267,7 @@ def refresh_all_leagues(
     run_id = f"refresh:{started}:{uuid.uuid4().hex[:12]}"
     connection = _connect(database)
     try:
+        _ensure_database_schema(connection)
         _seed_catalog(
             connection, DEFAULT_CATALOG, DEFAULT_RECIPES, game_database
         )
@@ -1148,20 +1316,58 @@ def refresh_all_leagues(
     try:
         for shape in shapes:
             source_id = shape["source_id"]
-            failures = [
-                name
-                for name in capability_by_name
-                if isinstance(fetched[(source_id, name)], Exception)
-            ]
+            normalized: dict[
+                str,
+                tuple[
+                    FetchResult | None,
+                    tuple[str, int, str] | None,
+                    list[ParsedRow] | None,
+                    str | None,
+                ],
+            ] = {}
+            failure_details: dict[str, str] = {}
+            for category, capability in capability_by_name.items():
+                outcome = fetched[(source_id, category)]
+                if isinstance(outcome, Exception):
+                    detail = f"{type(outcome).__name__}: {outcome}"
+                    failure_details[category] = detail
+                    normalized[category] = (None, None, None, detail)
+                    continue
+                raw: tuple[str, int, str] | None = None
+                try:
+                    _, previous = tasks[(source_id, category)]
+                    if outcome.status == 304:
+                        if previous is None:
+                            raise ValueError(
+                                "provider returned 304 without a cached response"
+                            )
+                        raw = (
+                            str(previous["raw_sha256"]),
+                            int(previous["raw_byte_size"]),
+                            str(previous["raw_path"]),
+                        )
+                        body = _resolve_raw_path(database, raw[2]).read_bytes()
+                    else:
+                        body = outcome.body or b""
+                        raw = _store_raw(database, Path(raw_root), body)
+                    rows = adapter.parse_rows(capability, body)
+                    _require_category_price_keys(connection, category, rows)
+                    normalized[category] = (outcome, raw, rows, None)
+                except Exception as error:
+                    detail = f"{type(error).__name__}: {error}"
+                    failure_details[category] = detail
+                    normalized[category] = (outcome, raw, None, detail)
+            failures = list(failure_details)
             report = {
                 "league_key": shape["league_key"],
                 "status": "failed" if failures else "complete",
                 "failed_categories": failures,
+                "failure_details": failure_details,
             }
-            for category, capability in capability_by_name.items():
-                outcome = fetched[(source_id, category)]
+            for category in capability_by_name:
+                outcome, raw, rows, error = normalized[category]
                 requested = started
-                if isinstance(outcome, Exception):
+                if error is not None:
                     _insert_fetch(
                         connection,
                         run_id=run_id,
@@ -1169,24 +1375,12 @@ def refresh_all_leagues(
                         category=category,
                         requested_at=requested,
                         response_at=completed,
-                        result=None,
-                        raw=None,
-                        error=f"{type(outcome).__name__}: {outcome}",
+                        result=outcome,
+                        raw=raw,
+                        error=error,
                     )
                     continue
-                _, previous = tasks[(source_id, category)]
-                if outcome.status == 304:
-                    if previous is None:
-                        raise ValueError("provider returned 304 without a cached response")
-                    raw = (
-                        str(previous["raw_sha256"]),
-                        int(previous["raw_byte_size"]),
-                        str(previous["raw_path"]),
-                    )
-                    body = _resolve_raw_path(database, raw[2]).read_bytes()
-                else:
-                    body = outcome.body or b""
-                    raw = _store_raw(database, Path(raw_root), body)
+                assert outcome is not None and raw is not None and rows is not None
                 fetch_id = _insert_fetch(
                     connection,
                     run_id=run_id,
@@ -1202,11 +1396,14 @@ def refresh_all_leagues(
                     fetch_id,
                     shape["league_key"],
                     completed,
-                    adapter.parse_rows(capability, body),
+                    rows,
                     persist_quotes=not failures,
                 )
             if failures:
-                message = "required category failure: " + ", ".join(failures)
+                message = "required category failure: " + "; ".join(
+                    f"{category} ({failure_details[category]})"
+                    for category in failures
+                )
                 connection.execute(
                     """
                     UPDATE economy_league_status
@@ -1270,6 +1467,7 @@ def compile_all_snapshots(
     timestamp = utc_now()
     artifacts: list[dict[str, Any]] = []
     try:
+        _ensure_database_schema(connection)
         _seed_catalog(
             connection, DEFAULT_CATALOG, DEFAULT_RECIPES, game_database
         )
@@ -1316,6 +1514,10 @@ def _database_content_hash(connection: sqlite3.Connection) -> str:
             "output_price_key", "component_price_key", "quantity",
             "recipe_source", "game_data_hash",
         ),
+        "economy_owner_default": (
+            "canonical_price_key", "chaos_value", "decision_id",
+            "decision_note", "overridable",
+        ),
         "economy_source_row": (
             "source_row_key", "source_item_id", "source_name", "source_category",
             "source_value", "source_payload_json", "listing_count", "volume",
@@ -1331,6 +1533,14 @@ def _database_content_hash(connection: sqlite3.Connection) -> str:
             "snapshot_id", "league_key", "game_data_hash", "price_count",
             "missing_count", "low_confidence_count", "content_sha256", "artifact_json",
             "status",
+        ),
+        "economy_snapshot_price": (
+            "snapshot_id", "canonical_price_key", "chaos_value",
+            "provenance_kind", "provenance_quote_id",
+        ),
+        "economy_snapshot_owner_default_price": (
+            "snapshot_id", "canonical_price_key", "chaos_value",
+            "decision_id", "decision_note", "overridable",
         ),
     }
     content: dict[str, Any] = {}
@@ -1350,6 +1560,7 @@ def validate_database(database: Path = DEFAULT_DATABASE) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
     try:
+        _ensure_database_schema(connection)
         integrity = str(connection.execute("PRAGMA integrity_check").fetchone()[0])
         if integrity != "ok":
             errors.append(f"integrity_check: {integrity}")
@@ -1400,28 +1611,88 @@ def validate_database(database: Path = DEFAULT_DATABASE) -> dict[str, Any]:
                 errors.append(f"snapshot content hash mismatch: {row['snapshot_id']}")
             if artifact.get("version") != "v1":
                 errors.append(f"snapshot runtime version is not v1: {row['snapshot_id']}")
-            price_rows = int(
+            ordinary_price_rows = int(
                 connection.execute(
                     "SELECT COUNT(*) FROM economy_snapshot_price WHERE snapshot_id = ?",
                     (row["snapshot_id"],),
                 ).fetchone()[0]
             )
-            if price_rows != int(row["price_count"]):
-                errors.append(f"snapshot price count mismatch: {row['snapshot_id']}")
-            evidence_rows = int(
+            owner_default_price_rows = int(
                 connection.execute(
-                    "SELECT COUNT(*) FROM economy_snapshot_fetch WHERE snapshot_id = ?",
+                    """
+                    SELECT COUNT(*) FROM economy_snapshot_owner_default_price
+                    WHERE snapshot_id = ?
+                    """,
                     (row["snapshot_id"],),
                 ).fetchone()[0]
             )
-            required_fetches = sum(
-                1 for capability in CATEGORY_CAPABILITIES if capability.required
+            price_rows = ordinary_price_rows + owner_default_price_rows
+            if price_rows != int(row["price_count"]):
+                errors.append(f"snapshot price count mismatch: {row['snapshot_id']}")
+            artifact_sources = artifact.get("sources")
+            database_sources = {
+                str(source_row["canonical_price_key"]): str(
+                    source_row["provenance_kind"]
+                )
+                for source_row in connection.execute(
+                    """
+                    SELECT canonical_price_key, provenance_kind
+                    FROM economy_snapshot_price WHERE snapshot_id = ?
+                    UNION ALL
+                    SELECT canonical_price_key, 'owner_default'
+                    FROM economy_snapshot_owner_default_price
+                    WHERE snapshot_id = ?
+                    """,
+                    (row["snapshot_id"], row["snapshot_id"]),
+                )
+            }
+            if artifact_sources is not None and artifact_sources != database_sources:
+                errors.append(
+                    f"snapshot price-source provenance mismatch: {row['snapshot_id']}"
+                )
+            if artifact_sources is not None and set(artifact_sources) != set(
+                artifact.get("prices", {})
+            ):
+                errors.append(
+                    f"snapshot price/source key coverage mismatch: {row['snapshot_id']}"
+                )
+            current_owner_contract = (
+                isinstance(artifact_sources, dict)
+                and artifact_sources.get("beast:rare") == "owner_default"
             )
-            if evidence_rows < required_fetches:
+            required_categories = {
+                capability.name
+                for capability in CATEGORY_CAPABILITIES
+                if capability.required
+                and (current_owner_contract or capability.name != "Beast")
+            }
+            evidence_categories = {
+                str(fetch[0])
+                for fetch in connection.execute(
+                    """
+                    SELECT f.category FROM economy_snapshot_fetch AS sf
+                    JOIN economy_fetch AS f USING (fetch_id)
+                    WHERE sf.snapshot_id = ?
+                    """,
+                    (row["snapshot_id"],),
+                )
+            }
+            missing_evidence = sorted(required_categories - evidence_categories)
+            if missing_evidence:
                 errors.append(
                     "snapshot raw-evidence coverage is incomplete: "
-                    f"{row['snapshot_id']} ({evidence_rows} fetches)"
+                    f"{row['snapshot_id']} ({', '.join(missing_evidence)})"
                 )
+            if current_owner_contract:
+                prices = artifact.get("prices", {})
+                if artifact_sources.get("beast:craicic-croaker") != "quote":
+                    errors.append(
+                        f"snapshot Croaker quote provenance is missing: {row['snapshot_id']}"
+                    )
+                if prices.get("beast:rare") != 1:
+                    errors.append(
+                        f"snapshot rare-beast owner default is not one chaos: {row['snapshot_id']}"
+                    )
         for row in connection.execute(
             """
             SELECT fetch_id, raw_sha256, raw_byte_size, raw_path
@@ -1516,6 +1787,7 @@ def publish_artifacts(
     entries: list[dict[str, Any]] = []
     written = 0
     try:
+        _ensure_database_schema(connection)
         # Re-materialize every snapshot still retained by the canonical DB so a
         # clean object-store restore includes detailed-window, weekly, and
         # explicitly pinned artifacts. Merely emitting a live economy artifact
@@ -1618,6 +1890,7 @@ def retention_report(
     cutoff_text = cutoff.replace(microsecond=0).isoformat().replace("+00:00", "Z")
     connection = _connect(database)
     try:
+        _ensure_database_schema(connection)
         latest = {
             str(row[0])
             for row in connection.execute(
@@ -1700,6 +1973,13 @@ def retention_report(
                 )
                 connection.execute(
                     "DELETE FROM economy_snapshot_price_component WHERE snapshot_id = ?",
+                    (snapshot_id,),
+                )
+                connection.execute(
+                    """
+                    DELETE FROM economy_snapshot_owner_default_price
+                    WHERE snapshot_id = ?
+                    """,
                     (snapshot_id,),
                 )
                 connection.execute(

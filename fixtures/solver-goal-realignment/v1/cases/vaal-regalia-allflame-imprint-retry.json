@@ -1,0 +1,178 @@
+{
+  "schema_version": "solver_benchmark_case_v1",
+  "id": "vaal-regalia-allflame-imprint-retry",
+  "category": "solver_goal_realignment_imprint_acceptance",
+  "approval_status": "owner_pinned_2026_08_09",
+  "benchmark_enabled": true,
+  "benchmark_mode": "exact_product_acceptance",
+  "description": "Magic item-level-86 Vaal Regalia using the current public-product gate's frozen lowest-weight natural prefix carrier and highest-weight compatible natural suffix target; the exact compiled policy must create and restore Imprints under the pinned Allflame economy.",
+  "selection_provenance": {
+    "source_fixture": "fixtures/bestiary/v1/solver-product-imprint-current.json",
+    "dynamic_gate": "run_public_product_imprint_current_gate",
+    "carrier_rule": "lowest total live-pool weight natural prefix family, family-id tie break ascending",
+    "target_rule": "highest total live-pool weight compatible natural suffix family, family-id tie break ascending",
+    "carrier_mod_key": "LocalBaseEnergyShieldAndLife1",
+    "target_mod_key": "LifeRegeneration1"
+  },
+  "comparison_profile": "solver-goal-realignment-native-wasm-v1",
+  "watchdog_seconds": 300,
+  "session": {
+    "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+    "base_name": "Vaal Regalia",
+    "item_class_key": "Body Armour",
+    "item_level": 86,
+    "minimum_item_level": 86
+  },
+  "start": {
+    "rarity": "magic",
+    "with_implicits": false,
+    "generic_influence_bits": 0,
+    "mods": [
+      {
+        "key": "LocalBaseEnergyShieldAndLife1",
+        "flags": []
+      }
+    ]
+  },
+  "goal": {
+    "version": "v1",
+    "rarity": "rare",
+    "action_mode": "goal_relevant",
+    "fossil_mode": "goal_relevant",
+    "requested_fossil_actions": [],
+    "min_satisfied_slots": 2,
+    "slots": [
+      {
+        "family_mod_key": "LocalBaseEnergyShieldAndLife1",
+        "min_tier": 0
+      },
+      {
+        "family_mod_key": "LifeRegeneration1",
+        "min_tier": 0
+      }
+    ],
+    "actions": [
+      "augment",
+      "regal"
+    ]
+  },
+  "product_action_envelope": {
+    "mode": "calculator_goal_relevant_priced_v1",
+    "envelope_goal": {
+      "version": "v1",
+      "rarity": "rare",
+      "action_mode": "goal_relevant",
+      "fossil_mode": "goal_relevant",
+      "requested_fossil_actions": [],
+      "min_satisfied_slots": 2,
+      "slots": [
+        {
+          "family_mod_key": "LocalBaseEnergyShieldAndLife1",
+          "min_tier": 0
+        },
+        {
+          "family_mod_key": "LifeRegeneration1",
+          "min_tier": 0
+        }
+      ],
+      "actions": [
+        "augment",
+        "regal"
+      ]
+    },
+    "pricing_filter": "all_declared_cost_keys_present"
+  },
+  "allowed_mechanic_families": [
+    "calculator_goal_relevant_product_envelope"
+  ],
+  "compiled_operation_contracts": [
+    {
+      "type": "bestiary:imprint",
+      "required_string_parameters": {}
+    },
+    {
+      "type": "bestiary:restore_imprint",
+      "required_string_parameters": {}
+    }
+  ],
+  "material_ratio_contract": {
+    "numerator_price_key": "beast:rare",
+    "denominator_price_key": "beast:craicic-croaker",
+    "expected_ratio": 3,
+    "require_positive_denominator": true,
+    "require_complete_pricing": true
+  },
+  "market_price_override_contracts": [
+    {
+      "price_key": "eldritch_chaos",
+      "snapshot_chaos_value": 39.21,
+      "override_chaos_value": 1000,
+      "purpose": "Exclude the competing Eldritch Chaos retry route while preserving every Bestiary recipe-component price."
+    },
+    {
+      "price_key": "eldritch_annul",
+      "snapshot_chaos_value": 40.53,
+      "override_chaos_value": 1000,
+      "purpose": "Exclude the competing Eldritch Annul retry route while preserving every Bestiary recipe-component price."
+    }
+  ],
+  "economy": {
+    "version": "v1",
+    "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+    "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+    "league_key": "allflame",
+    "league_name": "Allflame",
+    "manual_overrides": {
+      "eldritch_chaos": 1000,
+      "eldritch_annul": 1000
+    },
+    "override_purpose": "synthetic_forced_winner_gate_not_market_quote",
+    "fallback_price": null,
+    "manual_override_decisions": {
+      "eldritch_chaos": "synthetic_1000_chaos_retry_route_exclusion_snapshot_quote_39.21",
+      "eldritch_annul": "synthetic_1000_chaos_retry_route_exclusion_snapshot_quote_40.53"
+    }
+  },
+  "expected": {
+    "solve_status": "converged",
+    "optimality_status": "exact",
+    "compile_status": "compiled",
+    "verification_status": "run"
+  },
+  "caps": {
+    "max_states": 200000,
+    "max_sweeps": 100000,
+    "solve_step_work_items": 1024,
+    "max_discovered_states": 200000,
+    "max_expanded_states": 25000,
+    "max_state_action_rows": 300000,
+    "max_transitions": 10000000,
+    "max_reforge_work": 100000000,
+    "max_solver_owned_bytes": 536870912,
+    "max_diagnostic_samples": 64,
+    "max_telemetry_json_bytes": 67108864,
+    "max_compiled_nodes": 100000,
+    "max_compiled_edges": 400000,
+    "max_strategy_json_bytes": 67108864,
+    "worker_step_ms": 20000,
+    "cancel_ack_ms": 250,
+    "goal_progress_gated_reforges": true,
+    "full_evidence": true
+  },
+  "verification": {
+    "runs": 10000,
+    "seed": 20260809,
+    "max_actions_per_run": 100000,
+    "minimum_success_rate": 1.0,
+    "mean_cost_relative_tolerance": 0.1,
+    "exact_evaluation": true,
+    "exact_max_states": 1000000,
+    "exact_max_pairs": 5000000,
+    "exact_max_transitions": 20000000,
+    "exact_max_owned_bytes": 1073741824,
+    "exact_cost_absolute_tolerance": 1e-7,
+    "exact_cost_relative_tolerance": 1e-9
+  }
+}

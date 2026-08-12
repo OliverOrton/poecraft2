@@ -155,6 +155,30 @@ std::string family_tier_strategy(
 })JSON";
 }
 
+std::string influence_exalt_strategy(const std::string& influence) {
+    return std::string(R"JSON({
+  "version":"v1",
+  "name":"Influence Exalt alias",
+  "start_node_id":"start",
+  "base_state":{
+    "base_key":"Metadata/Items/Armours/BodyArmours/BodyInt17",
+    "item_level":86,
+    "rarity":"rare"
+  },
+  "nodes":[
+    {"id":"start","kind":"start"},
+    {"id":"craft","kind":"operation","operation":{
+      "type":"influence_exalt","params":{"influence":")JSON") +
+           influence + R"JSON("}}},
+    {"id":"success","kind":"terminal","terminal":"success"}
+  ],
+  "edges":[
+    {"id":"begin","from":"start","to":"craft"},
+    {"id":"done","from":"craft","to":"success"}
+  ]
+})JSON";
+}
+
 std::string family_count_strategy(
     const std::string& family_key,
     const std::string& item_mod_key,
@@ -309,6 +333,64 @@ void run_simulator_tests(const char* artifact_dir) {
     PC_CHECK(example.item.prefix_count == 3);
 
     pc_simulator_destroy(simulator);
+
+    /* Legacy internal names parse, but accounting is normalized to the
+     * canonical public currency key. Elder and Shaper remain generic
+     * influences rather than synthetic currency operations. */
+    {
+        const std::string alias_json =
+            influence_exalt_strategy("adjudicator");
+        pc_strategy_handle alias_strategy = nullptr;
+        PC_CHECK(pc_strategy_compile_json(
+                     session, alias_json.data(), alias_json.size(),
+                     &alias_strategy, &error) == PC_RESULT_OK);
+        const std::string influence_economy_json =
+            R"JSON({"version":"v1","prices":{"influence_exalt:warlord":7.0}})JSON";
+        pc_economy_handle influence_economy = nullptr;
+        PC_CHECK(pc_economy_load_json(
+                     influence_economy_json.data(),
+                     influence_economy_json.size(), &influence_economy,
+                     &error) == PC_RESULT_OK);
+        pc_simulator_handle alias_simulator = nullptr;
+        PC_CHECK(pc_simulator_create(
+                     session, alias_strategy, influence_economy,
+                     &alias_simulator, &error) == PC_RESULT_OK);
+        auto alias_options = options(1);
+        PC_CHECK(pc_simulator_run_chunk(
+                     alias_simulator, &alias_options, 1, &progress,
+                     &error) == PC_RESULT_OK);
+        PC_CHECK(pc_simulator_get_summary(
+                     alias_simulator, &summary, &error) == PC_RESULT_OK);
+        PC_CHECK(summary.success_count == 1);
+        PC_CHECK(summary.cost_status == PC_COST_COMPLETE);
+        PC_CHECK(std::abs(summary.known_total_cost - 7.0) < 1e-12);
+        std::uint32_t material_count = 0;
+        PC_CHECK(pc_simulator_material_distribution_query(
+                     alias_simulator, nullptr, 0, &material_count,
+                     &error) == PC_RESULT_BUFFER_TOO_SMALL);
+        PC_CHECK(material_count == 1);
+        pc_material_sample_entry material{};
+        PC_CHECK(pc_simulator_material_distribution_query(
+                     alias_simulator, &material, 1, &material_count,
+                     &error) == PC_RESULT_OK);
+        PC_CHECK(std::string(material.price_key) ==
+                 "influence_exalt:warlord");
+        PC_CHECK(material.count == 1);
+        pc_simulator_destroy(alias_simulator);
+        pc_economy_destroy(influence_economy);
+        pc_strategy_destroy(alias_strategy);
+
+        for (const char* unsupported : {"elder", "shaper"}) {
+            const std::string unsupported_json =
+                influence_exalt_strategy(unsupported);
+            pc_strategy_handle unsupported_strategy = nullptr;
+            PC_CHECK(pc_strategy_compile_json(
+                         session, unsupported_json.data(),
+                         unsupported_json.size(), &unsupported_strategy,
+                         &error) == PC_RESULT_DATA_ERROR);
+            PC_CHECK(unsupported_strategy == nullptr);
+        }
+    }
 
     /* S8.2 owner correction through the compiled Simulator path: both
      * renewal operations destroy the two ordinary lock crafts, while the

@@ -98,7 +98,8 @@ export function influenceLabels(
     catalog: Catalog | null,
 ): string[] {
     const labels: string[] = [];
-    for (const influence of catalog?.influences ?? []) {
+    for (const influence of
+        catalog?.genericInfluences ?? catalog?.influences ?? []) {
         const code = influence.code ?? 0;
         if (code > 0 && (genericBits & (1 << (code - 1))) !== 0) {
             labels.push(influence.name);

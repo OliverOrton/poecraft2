@@ -1,7 +1,7 @@
 {
   "schema_version": "bestiary_expected_outcomes_v1",
   "fixture_version": 1,
-  "approval_status": "approved_owner_2026-07-17",
+  "approval_status": "approved_owner_2026-08-09",
   "fixture_id": "bestiary-imprint-focused-outcomes",
   "recipe_id": "bestiary:imprint",
   "oracle": "owner_approved_b1_contract",
@@ -26,7 +26,7 @@
         "checkpoint_bound_to": "item-a",
         "checkpoint_state": "exactly_equals:item_a_checkpoint_state",
         "consumed_price_keys": [
-          "beast:craicic-chimeral",
+          "beast:craicic-croaker",
           "beast:rare",
           "beast:rare",
           "beast:rare"

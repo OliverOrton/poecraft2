@@ -172,7 +172,8 @@
             limits_.use_projected_reforge_frontier ||
                 limits_.use_factored_terminal_reforge,
             false,
-            limits_.use_factored_terminal_reforge);
+            limits_.use_factored_terminal_reforge,
+            &coarse_.layout());
         strict_->set_reforge_resource_accounting(
             options_.reforge_resource_accounting);
         strict_->set_reforge_provenance_context(
@@ -1019,12 +1020,12 @@
         }
         remaining_options.max_solver_owned_bytes -=
             refined_routing_bytes;
-        const std::uint64_t strict_reforge_work =
-            std::min(
-                strict_->telemetry().reforge_logical_work_v1,
-                remaining_options.max_reforge_work);
-        remaining_options.max_reforge_work -=
-            strict_reforge_work;
+        /* Strict carrier discovery and independent evaluation of the emitted
+         * graph are separate proof stages. The public work ceiling applies
+         * independently to each stage; their individual ledgers remain
+         * visible in the lift and evaluator telemetry. */
+        remaining_options.max_reforge_work =
+            options_.max_reforge_work;
         /* Strict discovery temporarily narrows the child CalcContext budget
          * while partition scratch is live.  That scratch has been released
          * before artifact construction, and required_before_lift plus the

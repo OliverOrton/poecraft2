@@ -110,6 +110,26 @@ static std::shared_ptr<DataImpl> build_data_impl(
         data->influence_code_by_name[member.first] =
             static_cast<int>(member.second.as_int());
     }
+    data->influence_exalt_name_by_code.assign(
+        data->influence_name_by_code.size(), std::string());
+    const auto add_influence_exalt_alias =
+        [&](const char* internal_name, const char* public_name) {
+            const auto found =
+                data->influence_code_by_name.find(internal_name);
+            if (found == data->influence_code_by_name.end() ||
+                found->second <= 0) {
+                return;
+            }
+            const int code = found->second;
+            data->influence_exalt_name_by_code[
+                static_cast<std::size_t>(code)] = public_name;
+            data->influence_exalt_code_by_name[public_name] = code;
+            data->influence_exalt_code_by_name[internal_name] = code;
+        };
+    add_influence_exalt_alias("adjudicator", "warlord");
+    add_influence_exalt_alias("basilisk", "hunter");
+    add_influence_exalt_alias("crusader", "crusader");
+    add_influence_exalt_alias("eyrie", "redeemer");
     const Value& metamod_enum = enums.at("metamod_type");
     for (const auto& member : metamod_enum.object) {
         const int code = static_cast<int>(member.second.as_int());

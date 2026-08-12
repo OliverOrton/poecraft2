@@ -55,7 +55,7 @@ class BindingTests(unittest.TestCase):
         self.assertEqual(
             actions[0].cost_keys,
             (
-                "beast:craicic-chimeral",
+                "beast:craicic-croaker",
                 "beast:rare",
                 "beast:rare",
                 "beast:rare",

@@ -47,8 +47,9 @@ function makeSnapshot(
     leagueKey: string,
     leagueName: string,
     prices: Record<string, number>,
+    sources?: EconomySnapshot["sources"],
 ): EconomySnapshot {
-    const content = canonical({
+    const contentValue: Record<string, unknown> = {
         schema_version: 1,
         league_key: leagueKey,
         game_data_hash: "game-hash",
@@ -59,7 +60,9 @@ function makeSnapshot(
         ),
         missing_keys: ["base"],
         low_confidence_keys: [],
-    });
+    };
+    if (sources) contentValue.sources = sources;
+    const content = canonical(contentValue);
     const hash = createHash("sha256").update(JSON.stringify(content)).digest("hex");
     return {
         version: "v1",
@@ -80,6 +83,7 @@ function makeSnapshot(
             content_sha256: hash,
         },
         prices,
+        ...(sources ? { sources } : {}),
     };
 }
 
@@ -107,7 +111,12 @@ function entry(
 }
 
 function fixture() {
-    const mirage = makeSnapshot("mirage", "Mirage", { chaos: 1, alteration: 0.18 });
+    const mirage = makeSnapshot(
+        "mirage",
+        "Mirage",
+        { chaos: 1, alteration: 0.18, "beast:rare": 1 },
+        { chaos: "quote", alteration: "quote", "beast:rare": "owner_default" },
+    );
     const hardcore = makeSnapshot("hardcore-mirage", "Hardcore Mirage", {
         chaos: 1,
         alteration: 0.28,
@@ -231,6 +240,36 @@ test("engine-key fallback is non-zero, lower priority than overrides, and pinned
         service.resolveActionPrice("unquoted-real-action").value,
         undefined,
     );
+});
+
+test("owner defaults retain provenance and clear overrides back to the default", async () => {
+    const data = fixture();
+    const service = new EconomyService({
+        indexUrl: "https://economy.test/league-index.json",
+        fetch: data.fetcher,
+        storage: new TestStorage(),
+        cache: new MemoryEconomyCache(),
+        broadcast: false,
+    });
+    await service.initialize();
+    assert.deepEqual(service.resolveActionPrice("beast:rare"), {
+        value: 1,
+        source: "owner_default",
+    });
+    assert.equal(
+        service.pin(["beast:rare"]).identity.price_sources?.["beast:rare"],
+        "owner_default",
+    );
+    service.setPrice("beast:rare", 2);
+    assert.deepEqual(service.resolveActionPrice("beast:rare"), {
+        value: 2,
+        source: "override",
+    });
+    service.setPrice("beast:rare", null);
+    assert.deepEqual(service.resolveActionPrice("beast:rare"), {
+        value: 1,
+        source: "owner_default",
+    });
 });
 
 test("offline startup uses the last verified cached snapshot", async () => {
@@ -372,10 +411,14 @@ test("checked-in publication defaults to Allflame and preserves archived Mirage 
     const pinned = fresh.pin(["chaos", "fracture"]);
     assert.equal(
         pinned.sourceSnapshotId,
-        "economy:allflame:a122cad9494aa3361016b6f9c542e029e7aa1465de6d04bd6b5b150b5d26c485",
+        "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
     );
     assert.equal(pinned.snapshot.prices.chaos, 1);
-    assert.equal(pinned.snapshot.prices.fracture, 403.9);
+    assert.equal(pinned.snapshot.prices.fracture, 405.1);
+    assert.equal(pinned.snapshot.prices["beast:craicic-croaker"], 66);
+    assert.equal(pinned.snapshot.sources?.["beast:craicic-croaker"], "quote");
+    assert.equal(pinned.snapshot.prices["beast:rare"], 1);
+    assert.equal(pinned.snapshot.sources?.["beast:rare"], "owner_default");
 
     const historicalStorage = new TestStorage();
     historicalStorage.setItem("poecraft.economy.selected.v1", "mirage");

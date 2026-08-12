@@ -335,6 +335,20 @@ protected metamod and Cannot Roll routes, cleanup compositions, Multimod
 finishes, and automatic Imprint attempt/restore programs. Imprint programs are
 not user-authored in product mode.
 
+Automatic Imprint discovery closes an otherwise open supported-program grammar
+only from mechanical certificates. Exact terminal-kernel equality plus
+componentwise primitive-resource dominance removes a word only when every
+suffix has the same behavior and consumes no fewer nonnegative resources. A
+separate price certificate is available when the current carrier has a finite
+proper-policy upper, checkpoint creation has a finite nonnegative price, and
+every grammar step has a finite strictly positive price. Mandatory costs are
+rounded downward and the resulting maximum useful depth is rounded outward, so
+programs above that depth cannot tie or improve the carrier-local incumbent.
+Static reachability is used only for conservative suffix-cost lower bounds;
+exact terminal outcomes remain the exit authority. A missing or nonfinite
+price, a zero-price step, an absent carrier-local upper, or the independent work
+limit disables that certificate and retains an honest open-envelope refusal.
+
 The parent layout starts from selectable candidates and dependencies of fixed
 options already present in the request. Dynamic admission evaluates a carrier
 in a local exact context and adds only the primitive dependencies of the option
@@ -369,9 +383,9 @@ fractured-junk miss state is interned. Compilation uses the existing Fracture,
 condition-router, and Restart vocabulary; primitive Fracture remains exact.
 
 The goal-relevant product envelope intentionally excludes Veiled crafting and
-standalone Eldritch primitive use. Ember, Ichor, Eldritch Chaos, and Eldritch
-Annul are retained only as dependencies of bounded side-salvage options on
-eligible carriers. Eldritch Exalt and arbitrary implicit rolling remain
+standalone Eldritch primitive use. Ember, Ichor, Eldritch Exalt, Eldritch
+Chaos, and Eldritch Annul are retained only as dependencies of bounded
+side-salvage options on eligible carriers. Arbitrary implicit rolling remains
 outside product scope. Influence Exalts keep their existing goal-influence
 filter and are not part of automatic Eldritch side salvage.
 
@@ -684,13 +698,15 @@ remains unexpanded.
 #### Automatic Eldritch side options
 
 When automatic candidates are requested, an engine-certified
-Eldritch-eligible rare carrier may synthesize at most four goal-relevant
+Eldritch-eligible rare carrier may synthesize at most six goal-relevant
 compound options:
 
 - Eldritch Annul Prefix;
 - Eldritch Annul Suffix;
-- Eldritch Chaos Prefix; and
-- Eldritch Chaos Suffix.
+- Eldritch Chaos Prefix;
+- Eldritch Chaos Suffix;
+- Eldritch Exalt Prefix; and
+- Eldritch Exalt Suffix.
 
 The carrier's stored implicit tiers determine dominance. If the requested
 side already dominates, the option contains only the real final currency.
@@ -698,7 +714,7 @@ Otherwise the solver chooses the cheapest priced legal real Ember/Ichor setup
 that establishes dominance, charges it, then performs the real final
 currency. The option retains the resulting implicit tiers and full item state.
 Compilation emits each real setup operation followed by real Eldritch Annul
-or Chaos.
+Chaos, or Exalt.
 
 These options are evaluated directly against the parent exact carrier rather
 than an option-specific temporary abstraction, so preserved-side support
@@ -707,18 +723,25 @@ and retry-basin carriers, and are generated only when the targeted or
 preserved side can affect the remaining explicit goal. Bellman chooses among
 them and every other admitted action; no route is prescribed.
 
-The product registry retains Ember tiers, Ichor tiers, Eldritch Chaos, and
-Eldritch Annul under the stable
+Eldritch Exalt uses the narrower carrier-local admission predicate: the target
+side must have capacity, at least one unmet goal on that side must intersect
+the native ordinary-roll pool on the exact carrier, and the opposite side must
+already carry useful satisfied goal progress. Generic influence, absent setup
+or final prices, and any target-side pool conflict reject the option.
+
+The product registry retains Ember tiers, Ichor tiers, Eldritch Exalt,
+Eldritch Chaos, and Eldritch Annul under the stable
 `automatic_eldritch_side_dependency` reason. They remain absent from the
 candidate list and the parent layout until a useful carrier-local option is
 materialized. Missing setup or final prices reject the compound option
 explicitly. Generic influence or another illegal carrier state rejects it
 before kernel admission.
 
-Automatic standalone Ember, Ichor, Eldritch Exalt, arbitrary implicit rolling,
-and Veiled crafting remain outside this scope. Influence Exalts retain their
-separate goal-influence candidate rule. Manual actions and user-authored
-`eldritch_side_intent` options retain their existing behavior.
+Automatic standalone Ember, Ichor, arbitrary implicit rolling, and Veiled
+crafting remain outside this scope. Eldritch Exalt is reachable only inside
+its admitted side compound, not as a primitive Bellman candidate. Influence
+Exalts retain their separate goal-influence candidate rule. Manual actions and
+user-authored `eldritch_side_intent` options retain their existing behavior.
 
 ## Solve And Reprice
 

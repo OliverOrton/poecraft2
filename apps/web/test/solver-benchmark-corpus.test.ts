@@ -18,6 +18,20 @@ const RELIABILITY_MANIFEST = new URL(
     "../../../fixtures/solver-reliability/v1/manifest.json",
     import.meta.url,
 );
+const GOAL_REALIGNMENT_MANIFESTS = [
+    new URL(
+        "../../../fixtures/solver-goal-realignment/v1/manifest.json",
+        import.meta.url,
+    ),
+    new URL(
+        "../../../fixtures/solver-goal-realignment/v1/five-mod-manifest.json",
+        import.meta.url,
+    ),
+    new URL(
+        "../../../fixtures/solver-goal-realignment/v1/gate6-manifest.json",
+        import.meta.url,
+    ),
+];
 
 test("S7 solver benchmark corpus is versioned, unique, and explicitly gated", () => {
     const corpus = loadSolverBenchmarkCorpus(fileURLToPath(MANIFEST));
@@ -80,6 +94,198 @@ test("state-scaling corpus materializes its pinned economy snapshot", () => {
     );
     assert.equal(goal.actions?.length, 32);
     assert.ok(goal.actions?.includes("restart"));
+});
+
+test("goal-realignment corpora validate every current case and economy", () => {
+    const repoRoot = fileURLToPath(new URL("../../../", import.meta.url));
+    const artifactPath = fileURLToPath(
+        new URL("../../../data/compiled/current/manifest.json", import.meta.url),
+    );
+    const artifact = JSON.parse(readFileSync(artifactPath, "utf8")) as unknown;
+    const loaded = GOAL_REALIGNMENT_MANIFESTS.map((manifestUrl) =>
+        loadSolverBenchmarkCorpus(fileURLToPath(manifestUrl)));
+
+    assert.deepEqual(
+        loaded.map((corpus) => corpus.manifest.corpus_id),
+        [
+            "poecraft2-solver-goal-realignment-v1",
+            "poecraft2-solver-goal-realignment-five-mod-v1",
+            "poecraft2-solver-goal-realignment-gate6-v1",
+        ],
+    );
+    assert.deepEqual(loaded.map((corpus) => corpus.cases.length), [4, 1, 2]);
+
+    const cases = loaded.flatMap((corpus) => {
+        validateCorpusArtifactPins(corpus.manifest, artifact, 2);
+        const profile = corpus.manifest.comparison_profile;
+        assert.ok(profile);
+        assert.equal(typeof profile.maximum_wall_seconds, "number");
+        const maximumWallSeconds = profile.maximum_wall_seconds ?? 0;
+        for (const entry of corpus.cases) {
+            assert.equal(entry.comparison_profile, profile.id);
+            assert.ok((entry.watchdog_seconds ?? 0) > 0);
+            assert.ok(
+                (entry.watchdog_seconds ?? Number.POSITIVE_INFINITY) <=
+                    maximumWallSeconds,
+            );
+        }
+        return corpus.cases;
+    });
+    const economies = new Map(cases.map((entry) => [
+        entry.id,
+        materializeSolverBenchmarkEconomy(entry, repoRoot) as {
+            id: string;
+            prices: Record<string, number>;
+            sources?: Record<string, string>;
+            manual_overrides?: Record<string, number>;
+            missing_price_decisions?: Record<string, string>;
+            manual_override_decisions?: Record<string, string>;
+        },
+    ]));
+
+    assert.equal(
+        economies.get("conquest-lamellar-allflame-four-natural-t1")
+            ?.prices.base,
+        5,
+    );
+    assert.equal(
+        economies.get("vaal-regalia-allflame-warlord-exalt-goal")
+            ?.prices.base,
+        1,
+    );
+    assert.deepEqual(
+        cases.find(
+            (entry) =>
+                entry.id === "vaal-regalia-allflame-warlord-exalt-goal",
+        )?.compiled_operation_contract,
+        {
+            type: "influence_exalt",
+            required_string_parameters: { influence: "warlord" },
+        },
+    );
+    const forced = economies.get(
+        "vaal-regalia-allflame-automatic-eldritch-exalt",
+    );
+    assert.equal(forced?.prices.base, 1000);
+    assert.equal(forced?.prices.eldritch_exalt, 0.001);
+    assert.equal(forced?.sources?.eldritch_exalt, "quote");
+    assert.equal(forced?.manual_overrides?.eldritch_exalt, 0.001);
+    assert.match(
+        forced?.missing_price_decisions?.base ?? "",
+        /owner_fixture_input/,
+    );
+    assert.match(
+        forced?.manual_override_decisions?.eldritch_exalt ?? "",
+        /forced_winner/,
+    );
+    assert.equal(
+        economies.get("runic-gauntlets-allflame-partial-five")?.prices.base,
+        1,
+    );
+
+    const imprint = cases.find(
+        (entry) => entry.id === "vaal-regalia-allflame-imprint-retry",
+    );
+    assert.ok(imprint);
+    const publicGateFixture = JSON.parse(readFileSync(
+        fileURLToPath(new URL(
+            "../../../fixtures/bestiary/v1/solver-product-imprint-current.json",
+            import.meta.url,
+        )),
+        "utf8",
+    )) as {
+        expected: {
+            selected_carrier_mod_key: string;
+            selected_target_mod_key: string;
+        };
+    };
+    assert.equal(
+        imprint.start.mods[0]?.key,
+        publicGateFixture.expected.selected_carrier_mod_key,
+    );
+    assert.deepEqual(
+        imprint.goal.slots.map((slot) =>
+            "family_mod_key" in slot ? slot.family_mod_key : null),
+        [
+            publicGateFixture.expected.selected_carrier_mod_key,
+            publicGateFixture.expected.selected_target_mod_key,
+        ],
+    );
+    assert.deepEqual(
+        imprint.compiled_operation_contracts?.map((contract) => contract.type),
+        ["bestiary:imprint", "bestiary:restore_imprint"],
+    );
+    assert.deepEqual(imprint.material_ratio_contract, {
+        numerator_price_key: "beast:rare",
+        denominator_price_key: "beast:craicic-croaker",
+        expected_ratio: 3,
+        require_positive_denominator: true,
+        require_complete_pricing: true,
+    });
+    const imprintEconomy = economies.get(imprint.id);
+    assert.equal(imprintEconomy?.prices["beast:craicic-croaker"], 66);
+    assert.equal(imprintEconomy?.sources?.["beast:craicic-croaker"], "quote");
+    assert.equal(imprintEconomy?.prices["beast:rare"], 1);
+    assert.equal(imprintEconomy?.sources?.["beast:rare"], "owner_default");
+    assert.equal(imprintEconomy?.manual_overrides?.["beast:rare"], undefined);
+    assert.equal(imprintEconomy?.prices.eldritch_chaos, 1000);
+    assert.equal(imprintEconomy?.prices.eldritch_annul, 1000);
+
+    const fiveMod = cases.find(
+        (entry) => entry.id === "runic-gauntlets-allflame-partial-five",
+    );
+    assert.ok(fiveMod);
+    assert.deepEqual(fiveMod.bounded_best_policy_contract, {
+        allow_exact: true,
+        bounded_requires_named_stop: true,
+        bounded_requires_strict_gap: true,
+        bounded_requires_open_obligations: true,
+        require_evaluated_upper: true,
+        require_cheapest_independently_evaluated_incumbent: true,
+    });
+});
+
+test("goal-realignment materialization rejects undisclosed market overrides", () => {
+    const repoRoot = fileURLToPath(new URL("../../../", import.meta.url));
+    const corpus = loadSolverBenchmarkCorpus(
+        fileURLToPath(GOAL_REALIGNMENT_MANIFESTS[0]),
+    );
+    const primary = corpus.cases.find(
+        (entry) => entry.id === "conquest-lamellar-allflame-four-natural-t1",
+    );
+    const eldritch = corpus.cases.find(
+        (entry) => entry.id ===
+            "vaal-regalia-allflame-automatic-eldritch-exalt",
+    );
+    assert.ok(primary);
+    assert.ok(eldritch);
+
+    const undisclosed = structuredClone(primary);
+    undisclosed.economy.manual_overrides = {
+        ...(undisclosed.economy.manual_overrides ?? {}),
+        chaos: 0.001,
+    };
+    assert.throws(
+        () => materializeSolverBenchmarkEconomy(undisclosed, repoRoot),
+        /undisclosed market-price override/,
+    );
+
+    const mismatchedForcedValue = structuredClone(eldritch);
+    mismatchedForcedValue.economy.manual_overrides = {
+        ...(mismatchedForcedValue.economy.manual_overrides ?? {}),
+        eldritch_exalt: 0.002,
+    };
+    assert.throws(
+        () => materializeSolverBenchmarkEconomy(mismatchedForcedValue, repoRoot),
+        /forced-winner overrides do not match/,
+    );
+
+    const missingDecision = structuredClone(eldritch);
+    missingDecision.economy.manual_override_decisions = {};
+    assert.throws(
+        () => materializeSolverBenchmarkEconomy(missingDecision, repoRoot),
+        /manual_override_decisions\.eldritch_exalt/,
+    );
 });
 
 test("cross-base reliability corpus covers every class and authored start", () => {

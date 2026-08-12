@@ -932,7 +932,8 @@ bool contract_preserves_fresh_exclusion_identity(
 
 EvalModel derive_model(
     const StrategyImpl& strategy,
-    std::optional<std::uint32_t> state_cap) {
+    std::optional<std::uint32_t> state_cap,
+    const bool use_exact_exchangeable_family_compression) {
     const auto session = strategy.session;
     ActionRegistry registry = build_action_registry(*session);
     std::vector<std::string> gaps;
@@ -1118,6 +1119,12 @@ EvalModel derive_model(
         !clean_start_carrier ||
         direct_router_observes_fresh_exclusion ||
         operation_preserves_fresh_exclusion;
+    /* This flag selects an exact calculator implementation, not a solver-row
+     * reuse path. Keep strict/identity-observing strategies on physical
+     * families even when the focused evaluator compression is enabled. */
+    const bool product_exact_reforge_carrier =
+        use_exact_exchangeable_family_compression &&
+        !semantic_strict_carrier;
 
     EvalModel model;
     model.operation_by_node = std::move(operation_by_node);
@@ -1147,9 +1154,14 @@ EvalModel derive_model(
             false, /* no operations must not mean the full registry */
             semantic_strict_carrier,
             /* observer-conditioned exact carrier when required */
-            state_cap, count_observations, false,
+            state_cap, count_observations,
+            product_exact_reforge_carrier,
             exact_start_mods,
-            false); /* observer-derived semantic strict carrier */
+            false, /* observer-derived semantic strict carrier */
+            false, /* reforge attribution is reported by the evaluator */
+            false, /* do not alter physical frontier enumeration */
+            false, /* retain canonical bucket order */
+            true); /* factor unobserved terminal mass in gated renewals */
     } catch (const std::exception& ex) {
         std::string origin;
         for (const TargetEntry& target : target_entries) {
@@ -1166,11 +1178,14 @@ EvalModel derive_model(
 
 EvalModel derive_checked_model(
     const std::shared_ptr<const StrategyImpl>& strategy,
-    std::uint32_t max_states) {
+    std::uint32_t max_states,
+    const bool use_exact_exchangeable_family_compression) {
     if (strategy == nullptr) {
         throw std::invalid_argument("invalid compiled strategy");
     }
-    return derive_model(*strategy, max_states);
+    return derive_model(
+        *strategy, max_states,
+        use_exact_exchangeable_family_compression);
 }
 
 std::size_t layout_slot_for(

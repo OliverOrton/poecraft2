@@ -1,0 +1,30 @@
+{
+  "schema_version": "solver_benchmark_corpus_v1",
+  "corpus_id": "poecraft2-solver-goal-realignment-five-mod-v1",
+  "artifact": {
+    "manifest_relative_path": "data/compiled/current/manifest.json",
+    "canonical_source": "data/sqlite/poecraft.db",
+    "engine_abi_version": 2,
+    "artifact_schema_version": 4,
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+    "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+  },
+  "comparison_profile": {
+    "id": "solver-goal-realignment-five-mod-v1",
+    "product_scope": "calculator_goal_relevant_with_zero_progress_gated_reforges",
+    "exact_required": false,
+    "maximum_wall_seconds": 600,
+    "compiled_exact_evaluation_required": true,
+    "verification_runs": 10000
+  },
+  "owner_decisions": [
+    "This case promotes the historical Runic Gauntlets four-of-five partial-state control into a tracked current-economy corpus without modifying its archived evidence.",
+    "The case uses the pinned Allflame snapshot plus an explicit one-chaos base input; the base value is a fixture input rather than a universal default.",
+    "Exact closure is preferred. A bounded result qualifies only when it publishes the cheapest available executable policy, compiles it, independently exact-evaluates it, completes 10,000 Simulator runs, and reports honest bounds and unresolved obligations within ten minutes."
+  ],
+  "cases": [
+    "cases/runic-gauntlets-allflame-partial-five.json"
+  ]
+}

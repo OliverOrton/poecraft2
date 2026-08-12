@@ -6,8 +6,8 @@ secrets still control activation.
 
 Parent: [Economy](README.md)
 
-Verified against code and local publication: 2026-08-09 @ e810a9f plus the
-Allflame data refresh. Scope:
+Verified against code and local publication: 2026-08-09 through the Gate 2
+Allflame/Bestiary refresh. Scope:
 `.github/workflows/economy-refresh.yml`, the checkpoint module, CLI commands,
 publication ordering, live provider responses, and local staged publication.
 External buckets, credentials, DNS/CDN state, and a live workflow run were not
@@ -22,8 +22,9 @@ from replacing the same index concurrently.
 The job:
 
 1. checks out the repository and builds the current canonical game-data DB;
-2. restores the latest private economy checkpoint and verifies byte size and
-   SHA-256, or initializes a new DB when no pointer exists;
+2. restores the latest private economy checkpoint and verifies byte size,
+   SHA-256, and, for newly written manifests, the actual economy DB schema
+   version, or initializes a new DB when no pointer exists;
 3. refreshes every provider-discovered league for the categories currently
    marked required;
 4. validates, publishes static output, applies retention, and writes a new
@@ -32,9 +33,13 @@ The job:
    to the private bucket; and
 6. uploads immutable public snapshots before replacing `league-index.json`.
 
-One league/category failure leaves that league's previous snapshot pointer in
-place and marks it stale while other successful leagues can advance. A
-malformed/hash-mismatched private checkpoint fails closed.
+One required league/category fetch, parse, or mapped-key failure leaves that
+league's previous snapshot pointer in place and marks it stale while other
+successful leagues can advance. A malformed, hash-mismatched, or attested
+schema-mismatched private checkpoint fails closed. Older checkpoint manifests
+without `database_schema_version` remain accepted after their original size
+and hash checks; the restored v1 database is then migrated in order to v2
+before refresh.
 
 ## Required GitHub Actions Secrets
 
@@ -86,11 +91,16 @@ did not read publication state from `data/economy/poecraft-economy.db`, upload
 to R2, alter Cloudflare resources, or replace any external index. The validated
 local output was merged into `apps/web/public/economy` only after every
 index-selected content hash resolved to a matching immutable snapshot.
+The Gate 2 rerun used the same isolated process and advanced Allflame,
+Hardcore Allflame, and Standard to new Croaker/owner-default identities. All
+previous hash-named snapshots and archived historical artifacts were retained.
 
-## Current Coverage Warning
+## Current Coverage Contract
 
 The scheduled refresh selects only `CategoryCapability.required` entries.
-Those are Currency, Fossil, Resonator, and Essence. Beast is optional,
-so the implemented Imprint mapping does not receive a scheduled Craicic
-Chimeral quote even after R2 activation. Rare beasts are manual-only. See
-[Economy Data](data.md) and [Economy Notes](NOTES.md).
+Those are Currency, Fossil, Resonator, Essence, and Beast. The Beast catalog
+maps Craicic Croaker for Imprint without turning every fetched Beast into a
+solver action. Each of the three generic rare beasts uses the explicit,
+overridable one-chaos owner default and keeps `owner_default` rather than
+provider-quote provenance. `BaseType` stays optional and `base` stays
+manual-only. See [Economy Data](data.md) and [Economy Notes](NOTES.md).

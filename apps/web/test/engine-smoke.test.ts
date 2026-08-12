@@ -557,14 +557,25 @@ test("catalog exposes mod groups, essences, and fossils as usable keys", async (
         1,
     );
     assert.ok(!catalog.harvestTags.some((entry) => entry.key === "resistance"));
-    assert.ok(catalog.influences.some((entry) => entry.key === "crusader"));
-    assert.equal(
-        catalog.influences.find((entry) => entry.key === "shaper")?.code,
-        6,
+    assert.deepEqual(
+        catalog.influences.map((entry) => [entry.key, entry.code]),
+        [
+            ["crusader", 3],
+            ["warlord", 1],
+            ["redeemer", 5],
+            ["hunter", 2],
+        ],
     );
-    assert.equal(
-        catalog.influences.find((entry) => entry.key === "adjudicator")?.code,
-        1,
+    assert.deepEqual(
+        catalog.genericInfluences?.map((entry) => [entry.key, entry.name]),
+        [
+            ["shaper", "Shaper"],
+            ["elder", "Elder"],
+            ["crusader", "Crusader"],
+            ["adjudicator", "Warlord"],
+            ["basilisk", "Hunter"],
+            ["eyrie", "Redeemer"],
+        ],
     );
     assert.ok(catalog.essences.every((entry) => entry.key && entry.name));
     assert.ok(catalog.fossils.every((entry) => entry.key && entry.name));

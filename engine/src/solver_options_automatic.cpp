@@ -3,32 +3,852 @@
 namespace poecraft {
 namespace solver {
 
+namespace {
+
+bool same_automatic_admission_limits(
+    const AutomaticAdmissionLimits& left,
+    const AutomaticAdmissionLimits& right) {
+    return left.max_state_action_rows == right.max_state_action_rows &&
+           left.max_transitions == right.max_transitions &&
+           left.max_solver_owned_bytes == right.max_solver_owned_bytes &&
+           left.max_imprint_program_depth ==
+               right.max_imprint_program_depth &&
+           left.max_imprint_program_work ==
+               right.max_imprint_program_work &&
+           left.prices == right.prices &&
+           left.incumbent_upper_bound == right.incumbent_upper_bound;
+}
+
+std::uint64_t automatic_cursor_add(
+    const std::uint64_t left,
+    const std::uint64_t right) {
+    return right > std::numeric_limits<std::uint64_t>::max() - left
+               ? std::numeric_limits<std::uint64_t>::max()
+               : left + right;
+}
+
+std::uint64_t automatic_cursor_string_bytes(const std::string& value) {
+    return value.capacity() + 1;
+}
+
+std::uint64_t fixed_option_spec_nested_bytes(
+    const FixedOptionSpec& spec) {
+    std::uint64_t bytes = automatic_cursor_string_bytes(spec.action_id);
+    bytes = automatic_cursor_add(
+        bytes, automatic_cursor_string_bytes(
+                   spec.constructive_finish_action_id));
+    const auto strings = [&](const std::vector<std::string>& values) {
+        std::uint64_t selected =
+            values.capacity() * sizeof(std::string);
+        for (const std::string& value : values) {
+            selected = automatic_cursor_add(
+                selected, automatic_cursor_string_bytes(value));
+        }
+        return selected;
+    };
+    bytes = automatic_cursor_add(bytes, strings(spec.setup_action_ids));
+    bytes = automatic_cursor_add(bytes, strings(spec.bench_craft_ids));
+    bytes = automatic_cursor_add(bytes, strings(spec.program_action_ids));
+    return automatic_cursor_add(
+        bytes,
+        spec.exit_goal_slots.capacity() * sizeof(std::uint32_t));
+}
+
+std::uint64_t goal_spec_cursor_bytes(const GoalSpec& goal) {
+    std::uint64_t bytes =
+        goal.slots.capacity() * sizeof(GoalSlot) +
+        goal.fixed_options.capacity() * sizeof(FixedOptionSpec);
+    for (const FixedOptionSpec& spec : goal.fixed_options) {
+        bytes = automatic_cursor_add(
+            bytes, fixed_option_spec_nested_bytes(spec));
+    }
+    return bytes;
+}
+
+std::uint64_t planner_operator_cursor_bytes(
+    const PlannerOperator& planner) {
+    std::uint64_t bytes = 0;
+    const std::array<const std::string*, 12> strings{
+        &planner.id,
+        &planner.display_name,
+        &planner.primitive_action_id,
+        &planner.conditional_action_id,
+        &planner.bestiary_create_action_id,
+        &planner.bestiary_restore_action_id,
+        &planner.setup_action_id,
+        &planner.followup_action_id,
+        &planner.cleanup_action_id,
+        &planner.constructive_finish_action_id,
+        nullptr,
+        nullptr};
+    for (const std::string* value : strings) {
+        if (value != nullptr) {
+            bytes = automatic_cursor_add(
+                bytes, automatic_cursor_string_bytes(*value));
+        }
+    }
+    bytes = automatic_cursor_add(
+        bytes,
+        planner.primitive_program.capacity() * sizeof(std::uint32_t));
+    bytes = automatic_cursor_add(
+        bytes,
+        planner.exit_goal_slots.capacity() * sizeof(std::uint32_t));
+    bytes = automatic_cursor_add(
+        bytes,
+        planner.primitive_program_action_ids.capacity() *
+            sizeof(std::string));
+    for (const std::string& value :
+         planner.primitive_program_action_ids) {
+        bytes = automatic_cursor_add(
+            bytes, automatic_cursor_string_bytes(value));
+    }
+    bytes = automatic_cursor_add(
+        bytes,
+        planner.resource_quantities.capacity() *
+            sizeof(std::pair<std::string, double>));
+    for (const auto& [key, unused_quantity] :
+         planner.resource_quantities) {
+        (void)unused_quantity;
+        bytes = automatic_cursor_add(
+            bytes, automatic_cursor_string_bytes(key));
+    }
+    return bytes;
+}
+
+std::uint64_t automatic_decisions_cursor_bytes(
+    const std::vector<StateLocalAutomaticCandidate>& decisions) {
+    std::uint64_t bytes = decisions.capacity() *
+        sizeof(StateLocalAutomaticCandidate);
+    for (const StateLocalAutomaticCandidate& decision : decisions) {
+        bytes = automatic_cursor_add(
+            bytes, automatic_cursor_string_bytes(decision.id));
+        bytes = automatic_cursor_add(
+            bytes,
+            automatic_cursor_string_bytes(
+                decision.evidence.legality_result));
+        bytes = automatic_cursor_add(
+            bytes,
+            automatic_cursor_string_bytes(decision.evidence.reason));
+    }
+    return bytes;
+}
+
+std::uint64_t automatic_batch_cursor_bytes(
+    const StateLocalAutomaticBatch& batch) {
+    std::uint64_t bytes = automatic_decisions_cursor_bytes(batch.decisions);
+    bytes = automatic_cursor_add(
+        bytes,
+        batch.admitted_operators.capacity() * sizeof(std::uint32_t));
+    bytes = automatic_cursor_add(
+        bytes, automatic_cursor_string_bytes(batch.resource_cap));
+    bytes = automatic_cursor_add(
+        bytes, automatic_cursor_string_bytes(batch.resource_reason));
+    return bytes;
+}
+
+std::uint64_t synthesis_cursor_bytes(
+    const AutomaticOptionSynthesis& synthesis) {
+    std::uint64_t bytes =
+        synthesis.specs.capacity() * sizeof(FixedOptionSpec) +
+        synthesis.temporary_groups.capacity() *
+            sizeof(TemporaryBenchCandidateGroup);
+    for (const FixedOptionSpec& spec : synthesis.specs) {
+        bytes = automatic_cursor_add(
+            bytes, fixed_option_spec_nested_bytes(spec));
+    }
+    for (const TemporaryBenchCandidateGroup& group :
+         synthesis.temporary_groups) {
+        bytes = automatic_cursor_add(
+            bytes,
+            group.blocker_variants.capacity() * sizeof(std::uint32_t));
+    }
+    return bytes;
+}
+
+} // namespace
+
 StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
     const std::uint32_t state_id,
     const AutomaticAdmissionLimits& limits) {
+    StateLocalAutomaticBatch completed;
+    while (!advance_state_local_automatic_candidates(
+        state_id, limits, completed,
+        std::numeric_limits<std::uint32_t>::max())) {
+    }
+    return completed;
+}
+
+bool CalcContext::advance_state_local_automatic_candidates(
+    const std::uint32_t state_id,
+    const AutomaticAdmissionLimits& limits,
+    StateLocalAutomaticBatch& completed,
+    const std::uint32_t max_checkpoints) {
+    if (!state_local_automatic_admission_cursor_.has_value()) {
+        StateLocalAutomaticAdmissionCursor created;
+        created.state_id = state_id;
+        created.limits = limits;
+        created.first_operator = operators_.size();
+        initialize_state_local_automatic_transaction(created);
+        created.task = build_state_local_automatic_candidates(
+            state_id, limits);
+        state_local_automatic_admission_cursor_ = std::move(created);
+    } else if (state_local_automatic_admission_cursor_->state_id !=
+               state_id) {
+        throw std::logic_error(
+            "CalcContext already has a different carrier-local automatic "
+            "admission in flight");
+    } else if (!same_automatic_admission_limits(
+                   state_local_automatic_admission_cursor_->limits,
+                   limits)) {
+        throw std::invalid_argument(
+            "state-local automatic admission resumed with different limits");
+    }
+    StateLocalAutomaticAdmissionCursor& cursor =
+        *state_local_automatic_admission_cursor_;
+
+    const std::uint32_t checkpoints =
+        std::max<std::uint32_t>(1, max_checkpoints);
+    try {
+        for (std::uint32_t i = 0; i < checkpoints; ++i) {
+            const auto slice_started = std::chrono::steady_clock::now();
+            const bool done = cursor.task.resume();
+            const std::uint64_t slice_ns = static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - slice_started)
+                    .count());
+            ++cursor.resumes;
+            cursor.max_slice_ns = std::max(cursor.max_slice_ns, slice_ns);
+            if (!done) {
+                ++cursor.suspensions;
+                if (limits.max_solver_owned_bytes != 0 &&
+                    fast_estimated_owned_bytes() >
+                        limits.max_solver_owned_bytes) {
+                    throw SolverResourceLimit(
+                        "max_solver_owned_bytes",
+                        limits.max_solver_owned_bytes);
+                }
+                continue;
+            }
+            completed = cursor.task.take_result();
+            completed.continuation_resumes = cursor.resumes;
+            completed.continuation_suspensions = cursor.suspensions;
+            completed.max_continuation_slice_ns = cursor.max_slice_ns;
+            if (completed.status ==
+                StateLocalAutomaticBatchStatus::ResourceDeferred) {
+                rollback_state_local_automatic_transaction(cursor);
+            }
+            state_local_automatic_admission_cursor_.reset();
+            return true;
+        }
+    } catch (...) {
+        rollback_state_local_automatic_transaction(cursor);
+        state_local_automatic_admission_cursor_.reset();
+        throw;
+    }
+    return false;
+}
+
+void CalcContext::cancel_state_local_automatic_candidates(
+    const std::uint32_t state_id) {
+    if (!state_local_automatic_admission_cursor_.has_value() ||
+        state_local_automatic_admission_cursor_->state_id != state_id) {
+        return;
+    }
+    rollback_state_local_automatic_transaction(
+        *state_local_automatic_admission_cursor_);
+    state_local_automatic_admission_cursor_.reset();
+}
+
+void CalcContext::cancel_state_local_automatic_candidates() {
+    if (!state_local_automatic_admission_cursor_.has_value()) return;
+    rollback_state_local_automatic_transaction(
+        *state_local_automatic_admission_cursor_);
+    state_local_automatic_admission_cursor_.reset();
+}
+
+std::uint64_t CalcContext::automatic_admission_cursor_bytes() const {
+    if (!state_local_automatic_admission_cursor_.has_value()) return 0;
+    const StateLocalAutomaticAdmissionCursor& cursor =
+        *state_local_automatic_admission_cursor_;
+    std::uint64_t bytes = cursor.task.retained_bytes();
+    bytes = automatic_cursor_add(
+        bytes,
+        cursor.distribution_cache_keys_before.capacity() *
+            sizeof(std::uint64_t));
+    bytes = automatic_cursor_add(
+        bytes,
+        cursor.option_cache_keys_before.capacity() *
+            sizeof(std::uint64_t));
+    bytes = automatic_cursor_add(
+        bytes,
+        cursor.distribution_cache_keys_inserted.capacity() *
+            sizeof(std::uint64_t));
+    bytes = automatic_cursor_add(
+        bytes,
+        cursor.option_cache_keys_inserted.capacity() *
+            sizeof(std::uint64_t));
+    bytes = automatic_cursor_add(
+        bytes,
+        cursor.option_template_hit_keys_before.capacity() *
+            sizeof(std::uint64_t));
+    bytes = automatic_cursor_add(
+        bytes,
+        cursor.option_template_buckets_before.capacity() *
+            sizeof(AutomaticTemplateBucketCheckpoint));
+    bytes = automatic_cursor_add(
+        bytes,
+        cursor.transition_template_buckets_before.capacity() *
+            sizeof(AutomaticTemplateBucketCheckpoint));
+    bytes = automatic_cursor_add(
+        bytes,
+        cursor.operator_template_buckets_before.capacity() *
+            sizeof(AutomaticTemplateBucketCheckpoint));
+    return automatic_cursor_add(
+        bytes,
+        cursor.reforge_buckets_before.capacity() *
+            sizeof(AutomaticReforgeBucketCheckpoint));
+}
+
+solve_detail::CooperativeTask<StateLocalAutomaticBatch>
+CalcContext::build_state_local_automatic_candidates(
+    const std::uint32_t state_id,
+    AutomaticAdmissionLimits limits) {
     StateLocalAutomaticBatch batch;
+    struct PublicationStaging {
+        std::vector<std::uint32_t> candidate_operators;
+        std::unordered_set<std::uint32_t> state_local_indices;
+        std::unordered_set<std::uint32_t> dependencies;
+        std::unordered_map<
+            std::uint32_t, std::vector<std::uint32_t>> carrier_operators;
+        std::size_t state_local_target_buckets = 0;
+        std::size_t dependency_target_buckets = 0;
+        std::size_t carrier_target_buckets = 0;
+        std::size_t state_local_parent_bucket_upper = 0;
+        std::size_t dependency_parent_bucket_upper = 0;
+        std::size_t carrier_parent_bucket_upper = 0;
+        std::uint64_t projected_parent_bucket_growth = 0;
+        std::uint64_t automatic_option_additions = 0;
+        std::uint64_t automatic_dependency_additions = 0;
+        bool replace_candidate_operators = false;
+    };
+    const auto unique_missing_count = []<typename Parent>(
+        const std::vector<std::uint32_t>& values,
+        const Parent& parent) {
+        std::size_t count = 0;
+        for (std::size_t position = 0; position < values.size(); ++position) {
+            const std::uint32_t value = values[position];
+            if constexpr (requires { parent.contains(value); }) {
+                if (parent.contains(value)) continue;
+            } else {
+                if (std::find(parent.begin(), parent.end(), value) !=
+                    parent.end()) {
+                    continue;
+                }
+            }
+            if (std::find(
+                    values.begin(), values.begin() + position, value) ==
+                values.begin() + position) {
+                ++count;
+            }
+        }
+        return count;
+    };
+    /* The concrete native/WASM standard libraries both select a bucket count
+     * below four times the minimum requested count. Keep a deliberately loose
+     * selected-allocation authority and verify the implementation result after
+     * staging, so no staging allocation can silently escape this preflight. */
+    const auto publication_bucket_upper = [](
+        const std::size_t elements,
+        const float max_load_factor) {
+        if (elements == 0) return std::size_t{0};
+        const long double load =
+            std::isfinite(max_load_factor) && max_load_factor > 0.0f
+                ? static_cast<long double>(max_load_factor)
+                : 1.0L;
+        const long double minimum =
+            static_cast<long double>(elements) / load;
+        const std::size_t requested = minimum >=
+                static_cast<long double>(
+                    std::numeric_limits<std::size_t>::max())
+            ? std::numeric_limits<std::size_t>::max()
+            : static_cast<std::size_t>(minimum) + 1;
+        if (requested >
+            (std::numeric_limits<std::size_t>::max() - 64) / 4) {
+            return std::numeric_limits<std::size_t>::max();
+        }
+        return 4 * requested + 64;
+    };
+    const auto publication_vector_upper = [](
+        const std::size_t elements) {
+        if (elements == 0) return std::size_t{0};
+        if (elements >
+            (std::numeric_limits<std::size_t>::max() - 16) / 2) {
+            return std::numeric_limits<std::size_t>::max();
+        }
+        return 2 * elements + 16;
+    };
+    const auto publication_staging_projection = [&]
+        (const std::vector<std::uint32_t>& admitted,
+         const std::vector<std::uint32_t>& state_local,
+         const std::vector<std::uint32_t>& dependencies) {
+        const std::size_t candidate_additions = unique_missing_count(
+            admitted, candidate_operators_);
+        const std::size_t state_local_additions = unique_missing_count(
+            state_local, state_local_automatic_operator_indices_);
+        const std::size_t dependency_additions = unique_missing_count(
+            dependencies, admitted_automatic_dependencies_);
+        const std::size_t state_local_elements =
+            state_local_automatic_operator_indices_.size() +
+            state_local_additions;
+        const std::size_t dependency_elements =
+            admitted_automatic_dependencies_.size() +
+            dependency_additions;
+        const std::size_t carrier_elements =
+            state_local_automatic_operators_.size() + 1;
+        const std::size_t state_local_bucket_upper =
+            state_local_additions == 0
+                ? 0
+                : publication_bucket_upper(
+                      state_local_elements,
+                      state_local_automatic_operator_indices_
+                          .max_load_factor());
+        const std::size_t dependency_bucket_upper =
+            dependency_additions == 0
+                ? 0
+                : publication_bucket_upper(
+                      dependency_elements,
+                      admitted_automatic_dependencies_.max_load_factor());
+        const std::size_t carrier_bucket_upper =
+            publication_bucket_upper(
+                carrier_elements,
+                state_local_automatic_operators_.max_load_factor());
+        std::uint64_t bytes = 0;
+        const auto add_product = [&]
+            (const std::size_t count, const std::size_t width) {
+            if (count >
+                std::numeric_limits<std::uint64_t>::max() / width) {
+                bytes = std::numeric_limits<std::uint64_t>::max();
+                return;
+            }
+            bytes = automatic_cursor_add(
+                bytes, static_cast<std::uint64_t>(count) * width);
+        };
+        /* new_candidates and its final candidate copy coexist until the
+         * staging call returns. */
+        add_product(
+            publication_vector_upper(candidate_additions),
+            sizeof(std::uint32_t));
+        if (candidate_additions != 0) {
+            add_product(
+                publication_vector_upper(
+                    candidate_operators_.size() + candidate_additions),
+                sizeof(std::uint32_t));
+        }
+        add_product(state_local_bucket_upper, sizeof(void*));
+        add_product(
+            state_local_additions,
+            sizeof(std::uint32_t) + 2 * sizeof(void*));
+        add_product(dependency_bucket_upper, sizeof(void*));
+        add_product(
+            dependency_additions,
+            sizeof(std::uint32_t) + 2 * sizeof(void*));
+        add_product(carrier_bucket_upper, sizeof(void*));
+        add_product(
+            1,
+            sizeof(std::pair<
+                const std::uint32_t, std::vector<std::uint32_t>>) +
+                2 * sizeof(void*));
+        add_product(
+            publication_vector_upper(admitted.size()),
+            sizeof(std::uint32_t));
+        /* The old parent bucket arrays are already in fast owned bytes. A
+         * growing rehash transiently allocates the complete new array while
+         * those old arrays remain live. */
+        if (state_local_bucket_upper >
+            state_local_automatic_operator_indices_.bucket_count()) {
+            add_product(state_local_bucket_upper, sizeof(void*));
+        }
+        if (dependency_bucket_upper >
+            admitted_automatic_dependencies_.bucket_count()) {
+            add_product(dependency_bucket_upper, sizeof(void*));
+        }
+        if (carrier_bucket_upper >
+            state_local_automatic_operators_.bucket_count()) {
+            add_product(carrier_bucket_upper, sizeof(void*));
+        }
+        return bytes;
+    };
+    const auto stage_publication = [&]
+        (const std::vector<std::uint32_t>& admitted,
+         const std::vector<std::uint32_t>& state_local,
+         const std::vector<std::uint32_t>& dependencies) {
+        PublicationStaging staged;
+        const std::size_t candidate_additions = unique_missing_count(
+            admitted, candidate_operators_);
+        std::vector<std::uint32_t> new_candidates;
+        new_candidates.reserve(candidate_additions);
+        for (const std::uint32_t index : admitted) {
+            if (std::find(
+                    candidate_operators_.begin(),
+                    candidate_operators_.end(), index) ==
+                    candidate_operators_.end() &&
+                std::find(
+                    new_candidates.begin(), new_candidates.end(), index) ==
+                    new_candidates.end()) {
+                new_candidates.push_back(index);
+            }
+        }
+        if (!new_candidates.empty()) {
+            staged.candidate_operators.reserve(
+                candidate_operators_.size() + new_candidates.size());
+            staged.candidate_operators.insert(
+                staged.candidate_operators.end(),
+                candidate_operators_.begin(), candidate_operators_.end());
+            staged.candidate_operators.insert(
+                staged.candidate_operators.end(),
+                new_candidates.begin(), new_candidates.end());
+            staged.automatic_option_additions = new_candidates.size();
+            staged.replace_candidate_operators = true;
+        }
+        if (new_candidates.capacity() >
+                publication_vector_upper(candidate_additions) ||
+            staged.candidate_operators.capacity() >
+                publication_vector_upper(
+                    candidate_operators_.size() + candidate_additions)) {
+            throw std::logic_error(
+                "automatic publication vector projection was exceeded");
+        }
+
+        staged.state_local_indices.max_load_factor(
+            state_local_automatic_operator_indices_.max_load_factor());
+        const std::size_t state_local_additions = unique_missing_count(
+            state_local, state_local_automatic_operator_indices_);
+        if (state_local_additions != 0) {
+            staged.state_local_indices.reserve(
+                state_local_automatic_operator_indices_.size() +
+                state_local_additions);
+        }
+        for (const std::uint32_t index : state_local) {
+            if (!state_local_automatic_operator_indices_.contains(index)) {
+                staged.state_local_indices.insert(index);
+            }
+        }
+        staged.state_local_target_buckets =
+            staged.state_local_indices.empty()
+                ? state_local_automatic_operator_indices_.bucket_count()
+                : std::max(
+                      state_local_automatic_operator_indices_.bucket_count(),
+                      staged.state_local_indices.bucket_count());
+
+        staged.dependencies.max_load_factor(
+            admitted_automatic_dependencies_.max_load_factor());
+        const std::size_t dependency_additions = unique_missing_count(
+            dependencies, admitted_automatic_dependencies_);
+        if (dependency_additions != 0) {
+            staged.dependencies.reserve(
+                admitted_automatic_dependencies_.size() +
+                dependency_additions);
+        }
+        for (const std::uint32_t action : dependencies) {
+            if (!admitted_automatic_dependencies_.contains(action)) {
+                staged.dependencies.insert(action);
+            }
+        }
+        staged.dependency_target_buckets =
+            staged.dependencies.empty()
+                ? admitted_automatic_dependencies_.bucket_count()
+                : std::max(
+                      admitted_automatic_dependencies_.bucket_count(),
+                      staged.dependencies.bucket_count());
+        staged.automatic_dependency_additions =
+            staged.dependencies.size();
+
+        staged.carrier_operators.max_load_factor(
+            state_local_automatic_operators_.max_load_factor());
+        staged.carrier_operators.reserve(
+            state_local_automatic_operators_.size() + 1);
+        std::vector<std::uint32_t> carrier_copy;
+        carrier_copy.reserve(admitted.size());
+        carrier_copy.insert(
+            carrier_copy.end(), admitted.begin(), admitted.end());
+        staged.carrier_operators.emplace(
+            state_id, std::move(carrier_copy));
+        staged.carrier_target_buckets = std::max(
+            state_local_automatic_operators_.bucket_count(),
+            staged.carrier_operators.bucket_count());
+
+        staged.state_local_parent_bucket_upper = std::max(
+            state_local_automatic_operator_indices_.bucket_count(),
+            state_local_additions == 0
+                ? std::size_t{0}
+                : publication_bucket_upper(
+                      state_local_automatic_operator_indices_.size() +
+                          state_local_additions,
+                      state_local_automatic_operator_indices_
+                          .max_load_factor()));
+        staged.dependency_parent_bucket_upper = std::max(
+            admitted_automatic_dependencies_.bucket_count(),
+            dependency_additions == 0
+                ? std::size_t{0}
+                : publication_bucket_upper(
+                      admitted_automatic_dependencies_.size() +
+                          dependency_additions,
+                      admitted_automatic_dependencies_.max_load_factor()));
+        staged.carrier_parent_bucket_upper = std::max(
+            state_local_automatic_operators_.bucket_count(),
+            publication_bucket_upper(
+                state_local_automatic_operators_.size() + 1,
+                state_local_automatic_operators_.max_load_factor()));
+
+        const auto add_rehash_peak = [&]
+            (const std::size_t before,
+             const std::size_t after,
+             const std::size_t upper) {
+            if (after <= before) return;
+            /* unordered rehash allocates the complete new bucket array while
+             * the old parent array is still live. The parent ledger already
+             * owns the old array, so the checkpoint must add the full target
+             * array, not merely the eventual net growth. */
+            staged.projected_parent_bucket_growth =
+                automatic_cursor_add(
+                    staged.projected_parent_bucket_growth,
+                    upper >
+                            std::numeric_limits<std::uint64_t>::max() /
+                                sizeof(void*)
+                        ? std::numeric_limits<std::uint64_t>::max()
+                        : static_cast<std::uint64_t>(upper) *
+                              sizeof(void*));
+        };
+        add_rehash_peak(
+            state_local_automatic_operator_indices_.bucket_count(),
+            staged.state_local_target_buckets,
+            staged.state_local_parent_bucket_upper);
+        add_rehash_peak(
+            admitted_automatic_dependencies_.bucket_count(),
+            staged.dependency_target_buckets,
+            staged.dependency_parent_bucket_upper);
+        add_rehash_peak(
+            state_local_automatic_operators_.bucket_count(),
+            staged.carrier_target_buckets,
+            staged.carrier_parent_bucket_upper);
+        if ((state_local_additions != 0 &&
+             staged.state_local_indices.bucket_count() >
+                publication_bucket_upper(
+                    state_local_automatic_operator_indices_.size() +
+                        state_local_additions,
+                    staged.state_local_indices.max_load_factor())) ||
+            (dependency_additions != 0 &&
+             staged.dependencies.bucket_count() >
+                publication_bucket_upper(
+                    admitted_automatic_dependencies_.size() +
+                        dependency_additions,
+                    staged.dependencies.max_load_factor())) ||
+            staged.carrier_operators.bucket_count() >
+                publication_bucket_upper(
+                    state_local_automatic_operators_.size() + 1,
+                    staged.carrier_operators.max_load_factor())) {
+            throw std::logic_error(
+                "automatic publication bucket projection was exceeded");
+        }
+        const auto carrier_entry =
+            staged.carrier_operators.find(state_id);
+        if (carrier_entry == staged.carrier_operators.end() ||
+            carrier_entry->second.capacity() >
+                publication_vector_upper(admitted.size())) {
+            throw std::logic_error(
+                "automatic publication carrier vector projection was "
+                "exceeded");
+        }
+        return staged;
+    };
+    const auto publication_staging_bytes = [&]
+        (const PublicationStaging& staged) {
+        std::uint64_t bytes =
+            staged.candidate_operators.capacity() *
+            sizeof(std::uint32_t);
+        if (!staged.state_local_indices.empty()) {
+            bytes = automatic_cursor_add(
+                bytes,
+                staged.state_local_indices.bucket_count() * sizeof(void*) +
+                    staged.state_local_indices.size() *
+                        (sizeof(std::uint32_t) + 2 * sizeof(void*)));
+        }
+        if (!staged.dependencies.empty()) {
+            bytes = automatic_cursor_add(
+                bytes,
+                staged.dependencies.bucket_count() * sizeof(void*) +
+                    staged.dependencies.size() *
+                        (sizeof(std::uint32_t) + 2 * sizeof(void*)));
+        }
+        bytes = automatic_cursor_add(
+            bytes,
+            staged.carrier_operators.bucket_count() * sizeof(void*) +
+                staged.carrier_operators.size() *
+                    (sizeof(std::pair<
+                         const std::uint32_t,
+                         std::vector<std::uint32_t>>) +
+                     2 * sizeof(void*)));
+        for (const auto& [unused, indices] :
+             staged.carrier_operators) {
+            (void)unused;
+            bytes = automatic_cursor_add(
+                bytes,
+                indices.capacity() * sizeof(std::uint32_t));
+        }
+        return automatic_cursor_add(
+            bytes, staged.projected_parent_bucket_growth);
+    };
+    const auto commit_publication = [&]
+        (PublicationStaging& staged) {
+        if (staged.state_local_target_buckets >
+            state_local_automatic_operator_indices_.bucket_count()) {
+            state_local_automatic_operator_indices_.rehash(
+                staged.state_local_target_buckets);
+        }
+        if (staged.dependency_target_buckets >
+            admitted_automatic_dependencies_.bucket_count()) {
+            admitted_automatic_dependencies_.rehash(
+                staged.dependency_target_buckets);
+        }
+        if (staged.carrier_target_buckets >
+            state_local_automatic_operators_.bucket_count()) {
+            state_local_automatic_operators_.rehash(
+                staged.carrier_target_buckets);
+        }
+        if (state_local_automatic_operator_indices_.bucket_count() >
+                staged.state_local_parent_bucket_upper ||
+            admitted_automatic_dependencies_.bucket_count() >
+                staged.dependency_parent_bucket_upper ||
+            state_local_automatic_operators_.bucket_count() >
+                staged.carrier_parent_bucket_upper) {
+            throw std::logic_error(
+                "automatic publication parent bucket projection was "
+                "exceeded");
+        }
+        if (staged.replace_candidate_operators) {
+            candidate_operators_.swap(staged.candidate_operators);
+            action_control_.automatic_options +=
+                staged.automatic_option_additions;
+        }
+        state_local_automatic_operator_indices_.merge(
+            staged.state_local_indices);
+        admitted_automatic_dependencies_.merge(staged.dependencies);
+        action_control_.automatic_dependency_primitives +=
+            staged.automatic_dependency_additions;
+        state_local_automatic_operators_.merge(
+            staged.carrier_operators);
+        if (!staged.state_local_indices.empty() ||
+            !staged.dependencies.empty() ||
+            !staged.carrier_operators.empty()) {
+            throw std::logic_error(
+                "automatic publication node merge was not allocation-free");
+        }
+        const auto stored =
+            state_local_automatic_operators_.find(state_id);
+        if (stored == state_local_automatic_operators_.end()) {
+            throw std::logic_error(
+                "automatic publication omitted carrier cache entry");
+        }
+        account_state_local_operators(stored->second);
+    };
+    const std::vector<std::uint32_t> empty_publication_members;
     const auto cached = state_local_automatic_operators_.find(state_id);
     if (cached != state_local_automatic_operators_.end()) {
         batch.cached = true;
-        batch.admitted_operators = cached->second;
-        return batch;
+        const std::size_t cached_capacity_upper =
+            publication_vector_upper(cached->second.size());
+        const std::uint64_t cached_copy_projection =
+            cached_capacity_upper >
+                    std::numeric_limits<std::uint64_t>::max() /
+                        sizeof(std::uint32_t)
+                ? std::numeric_limits<std::uint64_t>::max()
+                : static_cast<std::uint64_t>(cached_capacity_upper) *
+                      sizeof(std::uint32_t);
+        co_await solve_detail::CooperativeCheckpoint{
+            automatic_cursor_add(
+                automatic_batch_cursor_bytes(batch),
+                cached_copy_projection)};
+        batch.admitted_operators.reserve(cached->second.size());
+        if (batch.admitted_operators.capacity() >
+            cached_capacity_upper) {
+            throw std::logic_error(
+                "automatic cached batch vector projection was exceeded");
+        }
+        batch.admitted_operators.insert(
+            batch.admitted_operators.end(),
+            cached->second.begin(), cached->second.end());
+        co_await solve_detail::CooperativeCheckpoint{
+            automatic_batch_cursor_bytes(batch)};
+        co_return batch;
     }
     if (!goal_.automatic_candidates || is_goal_state(state(state_id))) {
-        const auto [stored, inserted] =
-            state_local_automatic_operators_.emplace(
-            state_id, std::vector<std::uint32_t>{});
-        if (inserted) account_state_local_operators(stored->second);
-        return batch;
+        co_await solve_detail::CooperativeCheckpoint{
+            automatic_cursor_add(
+                automatic_batch_cursor_bytes(batch),
+                publication_staging_projection(
+                    batch.admitted_operators,
+                    empty_publication_members,
+                    empty_publication_members))};
+        PublicationStaging publication = stage_publication(
+            batch.admitted_operators, empty_publication_members,
+            empty_publication_members);
+        co_await solve_detail::CooperativeCheckpoint{
+            automatic_cursor_add(
+                automatic_batch_cursor_bytes(batch),
+                publication_staging_bytes(publication))};
+        commit_publication(publication);
+        co_return batch;
     }
 
     pc_item_state carrier;
     if (!materialize(state_id, carrier)) {
-        const auto [stored, inserted] =
-            state_local_automatic_operators_.emplace(
-            state_id, std::vector<std::uint32_t>{});
-        if (inserted) account_state_local_operators(stored->second);
-        return batch;
+        co_await solve_detail::CooperativeCheckpoint{
+            automatic_cursor_add(
+                automatic_batch_cursor_bytes(batch),
+                publication_staging_projection(
+                    batch.admitted_operators,
+                    empty_publication_members,
+                    empty_publication_members))};
+        PublicationStaging publication = stage_publication(
+            batch.admitted_operators, empty_publication_members,
+            empty_publication_members);
+        co_await solve_detail::CooperativeCheckpoint{
+            automatic_cursor_add(
+                automatic_batch_cursor_bytes(batch),
+                publication_staging_bytes(publication))};
+        commit_publication(publication);
+        co_return batch;
     }
+
+    const std::uint64_t admission_rows_before =
+        telemetry_.state_action_rows;
+    const std::uint64_t admission_transitions_before =
+        telemetry_.transition_entries;
+    const std::uint64_t admission_states_before =
+        telemetry_.automatic_admission_discovered_states;
+    const std::uint64_t admission_reforge_active_before =
+        telemetry_.automatic_admission_reforge_active_work;
+    const std::uint64_t admission_reforge_logical_before =
+        telemetry_.automatic_admission_reforge_logical_work_v1;
+    const auto finalize_batch_work = [&] {
+        const auto delta = [](const std::uint64_t before,
+                              const std::uint64_t after) {
+            return after >= before ? after - before : after;
+        };
+        batch.phases.state_action_rows = delta(
+            admission_rows_before, telemetry_.state_action_rows);
+        batch.phases.transition_entries = delta(
+            admission_transitions_before, telemetry_.transition_entries);
+        batch.phases.discovered_states = delta(
+            admission_states_before,
+            telemetry_.automatic_admission_discovered_states);
+        batch.phases.reforge_active_work = delta(
+            admission_reforge_active_before,
+            telemetry_.automatic_admission_reforge_active_work);
+        batch.phases.reforge_logical_work_v1 = delta(
+            admission_reforge_logical_before,
+            telemetry_.automatic_admission_reforge_logical_work_v1);
+    };
 
     const auto shared_started = std::chrono::steady_clock::now();
     const auto synthesis_started = std::chrono::steady_clock::now();
@@ -41,7 +861,7 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
      * through the temporary admission context: an option-specific finer junk
      * partition can choose a different representative and fail to
      * rematerialize even though the parent raw actions are exact. Evaluate
-     * these four one-shot compounds directly on the parent state lifecycle.
+     * these one-shot compounds directly on the parent state lifecycle.
      */
     std::vector<FixedOptionSpec> parent_eldritch_specs;
     for (auto it = synthesis.specs.begin();
@@ -122,6 +942,7 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
         }
     }
     CalcContext& local = *local_pointer;
+    const std::uint32_t local_states_before = local.state_count();
     local.set_defer_automatic_protected_baseline(true);
     local.set_reforge_resource_accounting(
         reforge_resource_accounting_);
@@ -145,20 +966,9 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
         batch.phases.local_context_ns > local_attributed_ns
             ? batch.phases.local_context_ns - local_attributed_ns
             : 0;
-    const std::uint64_t parent_reforge_limit =
-        limits.max_reforge_work == 0
-            ? std::numeric_limits<std::uint64_t>::max()
-            : limits.max_reforge_work;
-    const auto remaining_parent_reforge_work = [&]() {
-        return parent_reforge_limit - std::min(
-            telemetry_.reforge_logical_work_v1,
-            parent_reforge_limit);
-    };
     local.set_solve_resource_caps(
-        limits.max_discovered_states == 0
-            ? std::numeric_limits<std::uint32_t>::max()
-            : limits.max_discovered_states,
-        remaining_parent_reforge_work(),
+        std::numeric_limits<std::uint32_t>::max(),
+        std::numeric_limits<std::uint64_t>::max(),
         false,
         limits.max_solver_owned_bytes == 0
             ? std::nullopt
@@ -211,17 +1021,6 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
         seen_primitive_kernels;
 
     const auto check_limits = [&](const bool force_bytes = false) {
-        const CalcTelemetry& work = local.telemetry();
-        if (limits.max_state_action_rows != 0 &&
-            work.state_action_rows > limits.max_state_action_rows) {
-            throw SolverResourceLimit(
-                "max_state_action_rows", limits.max_state_action_rows);
-        }
-        if (limits.max_transitions != 0 &&
-            work.transition_entries > limits.max_transitions) {
-            throw SolverResourceLimit(
-                "max_transitions", limits.max_transitions);
-        }
         if (limits.max_solver_owned_bytes == 0) return;
         if (!force_bytes) return;
         const std::uint64_t owned_bytes = fast_estimated_owned_bytes() +
@@ -235,21 +1034,28 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
         }
     };
 
+    std::vector<std::uint32_t> staged_dependencies;
+    std::vector<std::uint32_t> staged_state_local_operators;
     const auto add_dependency = [&](const std::uint32_t action) {
         if (std::find(candidates_.begin(), candidates_.end(), action) ==
                 candidates_.end() &&
-            admitted_automatic_dependencies_.insert(action).second) {
-            ++action_control_.automatic_dependency_primitives;
+            !admitted_automatic_dependencies_.contains(action) &&
+            std::find(
+                staged_dependencies.begin(), staged_dependencies.end(),
+                action) == staged_dependencies.end()) {
+            staged_dependencies.push_back(action);
         }
     };
     const auto admit_operator = [&](const std::uint32_t index) {
-        if (std::find(
-                candidate_operators_.begin(), candidate_operators_.end(),
-                index) == candidate_operators_.end()) {
-            candidate_operators_.push_back(index);
-            ++action_control_.automatic_options;
-        }
         batch.admitted_operators.push_back(index);
+    };
+    const auto stage_state_local_operator = [&](const std::uint32_t index) {
+        if (std::find(
+                staged_state_local_operators.begin(),
+                staged_state_local_operators.end(), index) ==
+            staged_state_local_operators.end()) {
+            staged_state_local_operators.push_back(index);
+        }
     };
     const auto has_prices = [&](const PlannerOperator& planner) {
         if (limits.prices == nullptr) return true;
@@ -276,6 +1082,125 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                (planner.conditional_action == kNoId ||
                 action_has_prices(planner.conditional_action));
     };
+    std::unordered_map<
+        std::string,
+        std::shared_ptr<const OptionKernel>>
+        temporary_evaluation_memo;
+    struct ProtectedKernelComparison {
+        bool supported = false;
+        bool fully_legal = false;
+        bool changed = false;
+        std::uint64_t baseline_hash = 0;
+        std::uint64_t candidate_hash = 0;
+    };
+    std::map<
+        std::pair<std::uint32_t, std::uint32_t>,
+        ProtectedKernelComparison>
+        protected_kernel_comparisons;
+    const auto retained_cursor_nested_bytes = [&]() {
+        std::uint64_t bytes = automatic_batch_cursor_bytes(batch);
+        bytes = automatic_cursor_add(
+            bytes, synthesis_cursor_bytes(synthesis));
+        bytes = automatic_cursor_add(
+            bytes, goal_spec_cursor_bytes(local_goal));
+        bytes = automatic_cursor_add(
+            bytes,
+            parent_eldritch_specs.capacity() * sizeof(FixedOptionSpec));
+        for (const FixedOptionSpec& spec : parent_eldritch_specs) {
+            bytes = automatic_cursor_add(
+                bytes, fixed_option_spec_nested_bytes(spec));
+        }
+        bytes = automatic_cursor_add(
+            bytes,
+            permanent_benches.capacity() * sizeof(std::uint32_t));
+        bytes = automatic_cursor_add(
+            bytes,
+            local_candidates.capacity() * sizeof(std::uint32_t));
+        bytes = automatic_cursor_add(
+            bytes,
+            local_option_indices.capacity() * sizeof(std::uint32_t));
+        bytes = automatic_cursor_add(
+            bytes, automatic_cursor_string_bytes(context_key));
+        if (transient_context != nullptr) {
+            bytes = automatic_cursor_add(
+                bytes, local.fast_estimated_owned_bytes());
+        }
+        bytes = automatic_cursor_add(
+            bytes,
+            mapped_states.bucket_count() * sizeof(void*) +
+                mapped_states.size() *
+                    (sizeof(std::pair<const std::uint32_t, std::uint32_t>) +
+                     2 * sizeof(void*)));
+        bytes = automatic_cursor_add(
+            bytes,
+            seen_option_kernels.capacity() * sizeof(const OptionKernel*));
+        bytes = automatic_cursor_add(
+            bytes,
+            seen_primitive_kernels.capacity() *
+                sizeof(decltype(seen_primitive_kernels)::value_type));
+        for (const auto& [unused_kernel, resources] :
+             seen_primitive_kernels) {
+            (void)unused_kernel;
+            bytes = automatic_cursor_add(
+                bytes,
+                resources.capacity() *
+                    sizeof(std::pair<std::string, double>));
+            for (const auto& [key, unused_quantity] : resources) {
+                (void)unused_quantity;
+                bytes = automatic_cursor_add(
+                    bytes, automatic_cursor_string_bytes(key));
+            }
+        }
+        bytes = automatic_cursor_add(
+            bytes,
+            staged_dependencies.capacity() * sizeof(std::uint32_t));
+        bytes = automatic_cursor_add(
+            bytes,
+            staged_state_local_operators.capacity() *
+                sizeof(std::uint32_t));
+        bytes = automatic_cursor_add(
+            bytes,
+            temporary_evaluation_memo.bucket_count() * sizeof(void*) +
+                temporary_evaluation_memo.size() *
+                    (sizeof(decltype(
+                         temporary_evaluation_memo)::value_type) +
+                     2 * sizeof(void*)));
+        for (const auto& [key, unused_kernel] :
+             temporary_evaluation_memo) {
+            (void)unused_kernel;
+            bytes = automatic_cursor_add(
+                bytes, automatic_cursor_string_bytes(key));
+        }
+        bytes = automatic_cursor_add(
+            bytes,
+            protected_kernel_comparisons.size() *
+                (sizeof(decltype(
+                     protected_kernel_comparisons)::value_type) +
+                 3 * sizeof(void*)));
+        return bytes;
+    };
+    const auto mark_resource_deferred = [&batch](
+        const SolverResourceLimit& limit,
+        std::string id,
+        std::string reason_prefix) {
+        batch.status =
+            StateLocalAutomaticBatchStatus::ResourceDeferred;
+        batch.resource_cap = limit.cap_name();
+        batch.resource_limit = limit.limit();
+        batch.resource_reason =
+            std::move(reason_prefix) + limit.cap_name();
+        batch.admitted_operators.clear();
+        for (StateLocalAutomaticCandidate& decision : batch.decisions) {
+            decision.admitted = false;
+        }
+        StateLocalAutomaticCandidate deferred;
+        deferred.id = std::move(id);
+        deferred.deferred = true;
+        deferred.evidence.candidate = true;
+        deferred.evidence.legality_result = "deferred_resource_cap";
+        deferred.evidence.reason = batch.resource_reason;
+        batch.decisions.push_back(std::move(deferred));
+    };
     if (!parent_eldritch_specs.empty()) {
         GoalSpec parent_goal = goal_;
         parent_goal.automatic_candidates = false;
@@ -284,115 +1209,154 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
         std::vector<PlannerOperator> parent_options =
             build_planner_operators(
                 *session_, parent_goal, registry_, candidates_);
-        for (std::uint32_t local_index =
-                 static_cast<std::uint32_t>(registry_.actions.size());
-             local_index < parent_options.size(); ++local_index) {
-            PlannerOperator& proposed =
-                parent_options[local_index];
-            if (proposed.option_kind !=
-                    FixedOptionKind::EldritchSideIntent ||
-                proposed.automatic_kind !=
-                    AutomaticCandidateKind::EldritchSide) {
-                continue;
+        const std::size_t first_staged_operator = operators_.size();
+        std::vector<StateLocalAutomaticCandidate> staged_decisions;
+        const auto parent_eldritch_cursor_bytes = [&]() {
+            std::uint64_t cursor_bytes =
+                retained_cursor_nested_bytes();
+            cursor_bytes = automatic_cursor_add(
+                cursor_bytes,
+                parent_options.capacity() * sizeof(PlannerOperator));
+            for (const PlannerOperator& planner : parent_options) {
+                cursor_bytes = automatic_cursor_add(
+                    cursor_bytes,
+                    planner_operator_cursor_bytes(planner));
             }
-            StateLocalAutomaticCandidate decision;
-            decision.id = proposed.id;
-            decision.kind =
-                AutomaticCandidateKind::EldritchSide;
-            decision.telemetry_kind =
-                AutomaticTelemetryKind::EldritchSide;
-            const auto existing = std::find_if(
-                operators_.begin(), operators_.end(),
-                [&](const PlannerOperator& candidate) {
-                    return candidate.id == proposed.id &&
-                           candidate.kind == proposed.kind &&
-                           candidate.option_kind ==
-                               proposed.option_kind &&
-                           candidate.intended_side ==
-                               proposed.intended_side &&
-                           candidate.primitive_program ==
-                               proposed.primitive_program;
-                });
-            std::uint32_t operator_index = kNoId;
-            if (existing == operators_.end()) {
-                operator_index = static_cast<std::uint32_t>(
-                    operators_.size());
-                operators_.push_back(std::move(proposed));
-                account_new_operator(operators_.back());
-                decision.selected_bytes =
-                    sizeof(PlannerOperator);
-            } else {
-                operator_index = static_cast<std::uint32_t>(
-                    std::distance(operators_.begin(), existing));
+            cursor_bytes = automatic_cursor_add(
+                cursor_bytes, goal_spec_cursor_bytes(parent_goal));
+            return automatic_cursor_add(
+                cursor_bytes,
+                automatic_decisions_cursor_bytes(staged_decisions));
+        };
+        bool parent_eldritch_resource_deferred = false;
+        try {
+            for (std::uint32_t local_index =
+                     static_cast<std::uint32_t>(registry_.actions.size());
+                 local_index < parent_options.size(); ++local_index) {
+                co_await solve_detail::CooperativeCheckpoint{
+                    parent_eldritch_cursor_bytes()};
+                PlannerOperator& proposed =
+                    parent_options[local_index];
+                if (proposed.option_kind !=
+                        FixedOptionKind::EldritchSideIntent ||
+                    proposed.automatic_kind !=
+                        AutomaticCandidateKind::EldritchSide) {
+                    continue;
+                }
+                StateLocalAutomaticCandidate decision;
+                decision.id = proposed.id;
+                decision.kind =
+                    AutomaticCandidateKind::EldritchSide;
+                decision.telemetry_kind =
+                    AutomaticTelemetryKind::EldritchSide;
+                const auto existing = std::find_if(
+                    operators_.begin(), operators_.end(),
+                    [&](const PlannerOperator& candidate) {
+                        return candidate.id == proposed.id &&
+                               candidate.kind == proposed.kind &&
+                               candidate.option_kind ==
+                                   proposed.option_kind &&
+                               candidate.intended_side ==
+                                   proposed.intended_side &&
+                               candidate.primitive_program ==
+                                   proposed.primitive_program;
+                    });
+                std::uint32_t operator_index = kNoId;
+                if (existing == operators_.end()) {
+                    operator_index = static_cast<std::uint32_t>(
+                        operators_.size());
+                    operators_.push_back(std::move(proposed));
+                    account_new_operator(operators_.back());
+                    decision.selected_bytes =
+                        sizeof(PlannerOperator);
+                } else {
+                    operator_index = static_cast<std::uint32_t>(
+                        std::distance(operators_.begin(), existing));
+                }
+                decision.operator_index = operator_index;
+                const PlannerOperator& planner =
+                    operators_.at(operator_index);
+                const auto kernel_started =
+                    std::chrono::steady_clock::now();
+                const ReforgeProvenanceCheckpoint provenance =
+                    begin_reforge_provenance(
+                        reforge_row_owner_,
+                        ReforgeRowFamily::AutomaticOption);
+                const OptionKernel* kernel_pointer = nullptr;
+                ++automatic_admission_reforge_scope_depth_;
+                try {
+                    kernel_pointer =
+                        &option_kernel(state_id, operator_index);
+                    --automatic_admission_reforge_scope_depth_;
+                    finish_reforge_provenance(
+                        provenance,
+                        ReforgeRowDisposition::Completed);
+                } catch (...) {
+                    --automatic_admission_reforge_scope_depth_;
+                    finish_reforge_provenance(
+                        provenance,
+                        ReforgeRowDisposition::Discarded);
+                    throw;
+                }
+                const OptionKernel& kernel = *kernel_pointer;
+                decision.kernel_evaluation_ns =
+                    static_cast<std::uint64_t>(
+                        std::chrono::duration_cast<
+                            std::chrono::nanoseconds>(
+                            std::chrono::steady_clock::now() -
+                            kernel_started)
+                            .count());
+                decision.raw_outcomes = outcome_count(kernel);
+                decision.evidence = kernel.automatic;
+                decision.selected_bytes +=
+                    option_kernel_selected_bytes(kernel);
+                if (!program_has_prices(planner)) {
+                    decision.missing_price = true;
+                    decision.evidence.eligible = false;
+                    decision.evidence.legality_result =
+                        "not_admitted_missing_price";
+                    decision.evidence.reason =
+                        "automatic_candidate_missing_price";
+                } else if (decision.evidence.eligible) {
+                    decision.admitted = true;
+                }
+                staged_decisions.push_back(std::move(decision));
+                check_limits(true);
             }
-            decision.operator_index = operator_index;
-            const PlannerOperator& planner =
-                operators_.at(operator_index);
-            const auto kernel_started =
-                std::chrono::steady_clock::now();
-            const OptionKernel& kernel =
-                option_kernel(state_id, operator_index);
-            decision.kernel_evaluation_ns =
-                static_cast<std::uint64_t>(
-                    std::chrono::duration_cast<
-                        std::chrono::nanoseconds>(
-                        std::chrono::steady_clock::now() -
-                        kernel_started)
-                        .count());
-            decision.raw_outcomes = outcome_count(kernel);
-            decision.evidence = kernel.automatic;
-            decision.selected_bytes +=
-                option_kernel_selected_bytes(kernel);
-            if (!program_has_prices(planner)) {
-                decision.missing_price = true;
-                decision.evidence.eligible = false;
-                decision.evidence.legality_result =
-                    "not_admitted_missing_price";
-                decision.evidence.reason =
-                    "automatic_candidate_missing_price";
-            } else if (decision.evidence.eligible) {
-                decision.admitted = true;
-                admit_operator(operator_index);
-                state_local_automatic_operator_indices_.insert(
-                    operator_index);
+        } catch (const SolverResourceLimit& limit) {
+            rollback_staged_automatic_operators(
+                state_id, first_staged_operator);
+            mark_resource_deferred(
+                limit, "automatic:parent_eldritch_generation",
+                "parent_eldritch_kernel_generation_");
+            finalize_batch_work();
+            parent_eldritch_resource_deferred = true;
+        }
+        if (parent_eldritch_resource_deferred) {
+            co_await solve_detail::CooperativeCheckpoint{
+                parent_eldritch_cursor_bytes()};
+            co_return batch;
+        }
+        for (StateLocalAutomaticCandidate& decision : staged_decisions) {
+            if (decision.admitted && decision.operator_index != kNoId) {
+                admit_operator(decision.operator_index);
+                stage_state_local_operator(decision.operator_index);
+                const PlannerOperator& planner =
+                    operators_.at(decision.operator_index);
                 for (const std::uint32_t dependency :
                      planner.primitive_program) {
                     add_dependency(dependency);
                 }
             }
             batch.decisions.push_back(std::move(decision));
-            if (limits.max_state_action_rows != 0 &&
-                telemetry_.state_action_rows >
-                    limits.max_state_action_rows) {
-                throw SolverResourceLimit(
-                    "max_state_action_rows",
-                    limits.max_state_action_rows);
-            }
-            if (limits.max_transitions != 0 &&
-                telemetry_.transition_entries >
-                    limits.max_transitions) {
-                throw SolverResourceLimit(
-                    "max_transitions", limits.max_transitions);
-            }
-            check_limits(true);
         }
     }
     bool local_work_merged = false;
     const auto merge_local_work = [&]() {
         if (local_work_merged) return;
         const CalcTelemetry& work = local.telemetry();
-        std::optional<std::pair<const char*, std::uint64_t>> merge_cap;
-        const auto add_bounded = [&](std::uint64_t& target,
-                                     const std::uint64_t amount,
-                                     const std::uint64_t limit,
-                                     const char* cap) {
-            if (limit != 0 && amount > limit - std::min(target, limit)) {
-                target = limit;
-                if (!merge_cap.has_value()) {
-                    merge_cap = std::pair{cap, limit};
-                }
-                return;
-            }
+        const auto add_saturated = [](std::uint64_t& target,
+                                      const std::uint64_t amount) {
             target = amount >
                              std::numeric_limits<std::uint64_t>::max() -
                                  target
@@ -403,12 +1367,21 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
         telemetry_.distribution_hits += work.distribution_hits;
         telemetry_.distribution_misses += work.distribution_misses;
         telemetry_.distribution_build_ns += work.distribution_build_ns;
-        add_bounded(
-            telemetry_.state_action_rows, work.state_action_rows,
-            limits.max_state_action_rows, "max_state_action_rows");
-        add_bounded(
-            telemetry_.transition_entries, work.transition_entries,
-            limits.max_transitions, "max_transitions");
+        add_saturated(
+            telemetry_.state_action_rows, work.state_action_rows);
+        add_saturated(
+            telemetry_.transition_entries, work.transition_entries);
+        const std::uint64_t local_discovered_states =
+            local.state_count() >= local_states_before
+                ? static_cast<std::uint64_t>(
+                      local.state_count() - local_states_before)
+                : static_cast<std::uint64_t>(local.state_count());
+        add_saturated(
+            telemetry_.automatic_admission_discovered_states,
+            local_discovered_states);
+        add_saturated(
+            batch.phases.discovered_states,
+            local_discovered_states);
         telemetry_.outcome_entries += work.outcome_entries;
         telemetry_.choice_groups += work.choice_groups;
         telemetry_.choice_successor_entries +=
@@ -454,54 +1427,65 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
             target.row_ns += source.row_ns;
             target.selected_bytes += source.selected_bytes;
         }
-        try {
-            consume_reforge_work(
-                work.reforge_frontier_work,
-                work.reforge_logical_work_v1);
-        } catch (const SolverResourceLimit& limit) {
-            (void)limit;
-            if (!merge_cap.has_value()) {
-                merge_cap = std::pair{
-                    "max_reforge_work", parent_reforge_limit};
-            }
-        }
+        add_saturated(
+            telemetry_.automatic_admission_reforge_active_work,
+            work.reforge_frontier_work);
+        add_saturated(
+            telemetry_.automatic_admission_reforge_logical_work_v1,
+            work.reforge_logical_work_v1);
         merge_nested_reforge_telemetry(work);
         local_work_merged = true;
-        if (merge_cap.has_value()) {
-            throw SolverResourceLimit(
-                merge_cap->first, merge_cap->second);
-        }
     };
 
     try {
         const auto imprint_started = std::chrono::steady_clock::now();
+        auto imprint_task =
+            discover_automatic_imprint_options_cooperatively(
+                local, local_state, limits);
+        while (!imprint_task.resume()) {
+            co_await solve_detail::CooperativeCheckpoint{
+                automatic_cursor_add(
+                    retained_cursor_nested_bytes(),
+                    imprint_task.retained_bytes())};
+        }
         const ImprintDiscoveryResult imprint =
-            discover_automatic_imprint_options(
-                local, local_state, limits, check_limits);
+            imprint_task.take_result();
+        imprint_task.reset();
+        batch.phases.imprint_programs_evaluated =
+            imprint.work_used;
+        batch.phases.imprint_programs_pruned =
+            imprint.programs_pruned;
+        batch.phases.imprint_distribution_dominated_programs =
+            imprint.distribution_dominated_programs;
+        batch.phases.imprint_price_pruned_programs =
+            imprint.price_pruned_programs;
+        batch.phases.imprint_price_bound_max_program_depth =
+            imprint.price_bound_max_program_depth;
+        batch.phases.imprint_max_evaluated_depth =
+            imprint.max_evaluated_depth;
+        batch.phases.imprint_max_frontier_size =
+            imprint.max_frontier_size;
+        batch.phases.imprint_price_bound_complete_carriers =
+            imprint.price_bound_complete ? 1 : 0;
+        batch.phases.imprint_action_state_evaluations =
+            imprint.action_state_evaluations;
+        batch.phases.imprint_outcomes_merged =
+            imprint.outcomes_merged;
+        batch.phases.imprint_max_atomic_outcomes_ns =
+            imprint.max_atomic_outcomes_ns;
+        const auto retained_imprint_cursor_bytes = [&]() {
+            return automatic_cursor_add(
+                retained_cursor_nested_bytes(),
+                imprint_discovery_result_nested_bytes(imprint));
+        };
+        co_await solve_detail::CooperativeCheckpoint{
+            retained_imprint_cursor_bytes()};
         const std::uint64_t imprint_discovery_ns =
             static_cast<std::uint64_t>(
                 std::chrono::duration_cast<std::chrono::nanoseconds>(
                     std::chrono::steady_clock::now() - imprint_started)
                     .count());
         bool imprint_time_attributed = false;
-        if (!imprint.specs.empty()) {
-            GoalSpec imprint_goal = local_goal;
-            imprint_goal.fixed_options = imprint.specs;
-            std::vector<PlannerOperator> imprint_operators =
-                build_planner_operators(
-                    *session_, imprint_goal, registry_, local_candidates);
-            for (std::uint32_t index =
-                     static_cast<std::uint32_t>(registry_.actions.size());
-                 index < imprint_operators.size(); ++index) {
-                local.operators_.push_back(
-                    std::move(imprint_operators[index]));
-                local.account_new_operator(local.operators_.back());
-                local_option_indices.push_back(
-                    static_cast<std::uint32_t>(
-                        local.operators_.size() - 1));
-            }
-            check_limits();
-        }
         if (imprint.missing_price) {
             StateLocalAutomaticCandidate missing;
             missing.id = "automatic:imprint_discovery";
@@ -533,9 +1517,20 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                 kAutomaticImprintCheckpoint;
             deferred.evidence.legality_result = "deferred_resource_cap";
             deferred.evidence.reason =
-                std::string("price_independent_kernel_generation_") + cap +
+                std::string("automatic_imprint_program_generation_") + cap +
                 "_limit_" + std::to_string(limit) + "_work_" +
                 std::to_string(imprint.work_used);
+            if (std::string_view(cap) ==
+                    "max_imprint_program_depth" &&
+                !imprint.depth_deferred_samples.empty()) {
+                deferred.evidence.reason += "_frontier_samples_";
+                for (std::size_t i = 0;
+                     i < imprint.depth_deferred_samples.size(); ++i) {
+                    if (i != 0) deferred.evidence.reason += ',';
+                    deferred.evidence.reason +=
+                        imprint.depth_deferred_samples[i];
+                }
+            }
             batch.decisions.push_back(std::move(deferred));
         };
         if (imprint.depth_deferred) {
@@ -546,8 +1541,50 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
             add_imprint_boundary(
                 "max_imprint_program_work", imprint.work_limit);
         }
+        if (imprint.depth_deferred || imprint.work_deferred) {
+            batch.status =
+                StateLocalAutomaticBatchStatus::ResourceDeferred;
+            batch.resource_cap = imprint.work_deferred
+                                     ? "max_imprint_program_work"
+                                     : "max_imprint_program_depth";
+            batch.resource_limit = imprint.work_deferred
+                                       ? imprint.work_limit
+                                       : imprint.depth_limit;
+            batch.resource_reason =
+                "automatic_imprint_program_generation_" +
+                batch.resource_cap;
+            batch.admitted_operators.clear();
+            for (StateLocalAutomaticCandidate& decision : batch.decisions) {
+                decision.admitted = false;
+            }
+            merge_local_work();
+            finalize_batch_work();
+            co_await solve_detail::CooperativeCheckpoint{
+                retained_imprint_cursor_bytes()};
+            co_return batch;
+        }
+        if (!imprint.specs.empty()) {
+            GoalSpec imprint_goal = local_goal;
+            imprint_goal.fixed_options = imprint.specs;
+            std::vector<PlannerOperator> imprint_operators =
+                build_planner_operators(
+                    *session_, imprint_goal, registry_, local_candidates);
+            for (std::uint32_t index =
+                     static_cast<std::uint32_t>(registry_.actions.size());
+                 index < imprint_operators.size(); ++index) {
+                local.operators_.push_back(
+                    std::move(imprint_operators[index]));
+                local.account_new_operator(local.operators_.back());
+                local_option_indices.push_back(
+                    static_cast<std::uint32_t>(
+                        local.operators_.size() - 1));
+            }
+            check_limits();
+        }
 
         for (const std::uint32_t action_index : permanent_benches) {
+            co_await solve_detail::CooperativeCheckpoint{
+                retained_imprint_cursor_bytes()};
             const auto candidate_started = std::chrono::steady_clock::now();
             StateLocalAutomaticCandidate decision;
             const PlannerOperator& planner = operators_.at(action_index);
@@ -640,21 +1677,6 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
             check_limits();
         }
 
-        std::unordered_map<
-            std::string,
-            std::shared_ptr<const OptionKernel>>
-            temporary_evaluation_memo;
-        struct ProtectedKernelComparison {
-            bool supported = false;
-            bool fully_legal = false;
-            bool changed = false;
-            std::uint64_t baseline_hash = 0;
-            std::uint64_t candidate_hash = 0;
-        };
-        std::map<
-            std::pair<std::uint32_t, std::uint32_t>,
-            ProtectedKernelComparison>
-            protected_kernel_comparisons;
         const auto temporary_group_for = [&](const PlannerOperator& planner)
             -> const TemporaryBenchCandidateGroup* {
             if (planner.option_kind !=
@@ -678,6 +1700,8 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                        : &*found;
         };
         for (const std::uint32_t local_operator : local_option_indices) {
+            co_await solve_detail::CooperativeCheckpoint{
+                retained_imprint_cursor_bytes()};
             const auto candidate_started = std::chrono::steady_clock::now();
             const PlannerOperator& local_planner =
                 local.operators().at(local_operator);
@@ -825,8 +1849,7 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                         automatic_comparison_context_ =
                             std::make_unique<CalcContext>(
                                 session_, comparison_goal, registry_,
-                                candidates_, false, false, true,
-                                solve_discovered_state_cap_);
+                                candidates_, false, false, true);
                     }
                     CalcContext& comparison_context =
                         *automatic_comparison_context_;
@@ -835,26 +1858,13 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                     comparison_context.set_reforge_provenance_context(
                         reforge_row_owner_,
                         ReforgeRowFamily::AutomaticOption);
+                    const std::uint32_t comparison_states_before =
+                        comparison_context.state_count();
                     const CalcTelemetry comparison_before =
                         comparison_context.telemetry();
-                    const std::uint64_t local_reforge_work =
-                        local.telemetry().reforge_logical_work_v1;
-                    const std::uint64_t parent_remaining =
-                        remaining_parent_reforge_work();
-                    const std::uint64_t comparison_allowance =
-                        parent_remaining - std::min(
-                            local_reforge_work, parent_remaining);
-                    const std::uint64_t comparison_reforge_cap =
-                        comparison_allowance >
-                                std::numeric_limits<std::uint64_t>::max() -
-                                    comparison_before.reforge_logical_work_v1
-                            ? std::numeric_limits<std::uint64_t>::max()
-                            : comparison_before.reforge_logical_work_v1 +
-                                  comparison_allowance;
                     comparison_context.set_solve_resource_caps(
-                        solve_discovered_state_cap_.value_or(
-                            std::numeric_limits<std::uint32_t>::max()),
-                        comparison_reforge_cap, false,
+                        std::numeric_limits<std::uint32_t>::max(),
+                        std::numeric_limits<std::uint64_t>::max(), false,
                         solve_owned_bytes_cap_);
                     bool comparison_work_merged = false;
                     const auto merge_comparison_work = [&]() {
@@ -894,31 +1904,61 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                         telemetry_.reforge_build_ns +=
                             comparison_after.reforge_build_ns -
                             comparison_before.reforge_build_ns;
-                        std::optional<SolverResourceLimit> comparison_cap;
-                        try {
-                            consume_reforge_work(
-                                comparison_after.reforge_frontier_work -
-                                    comparison_before.reforge_frontier_work,
-                                comparison_after.reforge_logical_work_v1 -
-                                    comparison_before.reforge_logical_work_v1);
-                        } catch (const SolverResourceLimit& limit) {
-                            comparison_cap = limit;
-                        }
+                        const std::uint64_t discovered_states =
+                            comparison_context.state_count() >=
+                                    comparison_states_before
+                                ? static_cast<std::uint64_t>(
+                                      comparison_context.state_count() -
+                                      comparison_states_before)
+                                : static_cast<std::uint64_t>(
+                                      comparison_context.state_count());
+                        const auto add_saturated = [](
+                                                       std::uint64_t& target,
+                                                       const std::uint64_t
+                                                           amount) {
+                            target = amount >
+                                             std::numeric_limits<
+                                                 std::uint64_t>::max() -
+                                                 target
+                                         ? std::numeric_limits<
+                                               std::uint64_t>::max()
+                                         : target + amount;
+                        };
+                        add_saturated(
+                            telemetry_.state_action_rows,
+                            comparison_after.state_action_rows -
+                                comparison_before.state_action_rows);
+                        add_saturated(
+                            telemetry_.transition_entries,
+                            comparison_after.transition_entries -
+                                comparison_before.transition_entries);
+                        add_saturated(
+                            telemetry_
+                                .automatic_admission_discovered_states,
+                            discovered_states);
+                        add_saturated(
+                            batch.phases.discovered_states,
+                            discovered_states);
+                        add_saturated(
+                            telemetry_
+                                .automatic_admission_reforge_active_work,
+                            comparison_after.reforge_frontier_work -
+                                comparison_before.reforge_frontier_work);
+                        add_saturated(
+                            telemetry_
+                                .automatic_admission_reforge_logical_work_v1,
+                            comparison_after.reforge_logical_work_v1 -
+                                comparison_before.reforge_logical_work_v1);
                         merge_nested_reforge_telemetry(
                             comparison_after, &comparison_before);
                         comparison_work_merged = true;
                         local.set_solve_resource_caps(
-                            limits.max_discovered_states == 0
-                                ? std::numeric_limits<std::uint32_t>::max()
-                                : limits.max_discovered_states,
-                            remaining_parent_reforge_work(), false,
+                            std::numeric_limits<std::uint32_t>::max(),
+                            std::numeric_limits<std::uint64_t>::max(), false,
                             limits.max_solver_owned_bytes == 0
                                 ? std::nullopt
                                 : std::optional<std::uint64_t>{
                                       limits.max_solver_owned_bytes});
-                        if (comparison_cap.has_value()) {
-                            throw *comparison_cap;
-                        }
                     };
                     const std::uint32_t comparison_state =
                         comparison_context.intern_item(carrier);
@@ -1322,8 +2362,7 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                 if (decision.template_hit) {
                     option_kernel_template_hit_keys_.insert(key);
                 }
-                state_local_automatic_operator_indices_.insert(
-                    operator_index);
+                stage_state_local_operator(operator_index);
                 decision.operator_index = operator_index;
                 decision.admitted = true;
                 admit_operator(operator_index);
@@ -1384,14 +2423,9 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                  * the operation that first stopped admission. */
             }
         }
-        StateLocalAutomaticCandidate deferred;
-        deferred.id = "automatic:state_local_generation";
-        deferred.deferred = true;
-        deferred.evidence.candidate = true;
-        deferred.evidence.legality_result = "deferred_resource_cap";
-        deferred.evidence.reason =
-            "price_independent_kernel_generation_" + limit.cap_name();
-        batch.decisions.push_back(std::move(deferred));
+        mark_resource_deferred(
+            limit, "automatic:state_local_generation",
+            "price_independent_kernel_generation_");
     }
     std::sort(
         batch.admitted_operators.begin(), batch.admitted_operators.end());
@@ -1400,11 +2434,33 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
             batch.admitted_operators.begin(),
             batch.admitted_operators.end()),
         batch.admitted_operators.end());
-    const auto [stored, inserted] =
-        state_local_automatic_operators_.emplace(
-            state_id, batch.admitted_operators);
-    if (inserted) account_state_local_operators(stored->second);
-    return batch;
+    if (batch.status == StateLocalAutomaticBatchStatus::Complete) {
+        /* Guard the temporary allocation peak before stage_publication itself
+         * allocates candidate copies, staging nodes, or sizing buckets. */
+        co_await solve_detail::CooperativeCheckpoint{
+            automatic_cursor_add(
+                retained_cursor_nested_bytes(),
+                publication_staging_projection(
+                    batch.admitted_operators,
+                    staged_state_local_operators,
+                    staged_dependencies))};
+        PublicationStaging publication = stage_publication(
+            batch.admitted_operators, staged_state_local_operators,
+            staged_dependencies);
+        /* The checkpoint owns every staged node/vector allocation plus the
+         * exact parent bucket growth needed by the subsequent allocation-free
+         * swaps and node merges. No outer membership is visible before it. */
+        co_await solve_detail::CooperativeCheckpoint{
+            automatic_cursor_add(
+                retained_cursor_nested_bytes(),
+                publication_staging_bytes(publication))};
+        commit_publication(publication);
+    } else {
+        co_await solve_detail::CooperativeCheckpoint{
+            retained_cursor_nested_bytes()};
+    }
+    finalize_batch_work();
+    co_return batch;
 }
 
 } // namespace solver

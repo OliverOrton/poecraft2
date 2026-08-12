@@ -7,6 +7,7 @@ import {
     formatExpectedAttempts,
     formatProbabilityExact,
     formatRawProbability,
+    priceSourceLabel,
     presentExpectedConsumption,
 } from "../src/app/odds-presentation";
 
@@ -37,5 +38,6 @@ assert.deepEqual(priced.missingKeys, ["regal"]);
 assert.ok(Math.abs(priced.total - 15.94028856) < 1e-9);
 assert.match(priced.rowsHtml, /79\.7014 × alteration/);
 assert.match(priced.rowsHtml, /Missing price/);
+assert.equal(priceSourceLabel("owner_default"), "Owner default");
 
 console.log("  ok - odds precision and per-success cost stay explicit");

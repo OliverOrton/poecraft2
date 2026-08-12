@@ -1,5 +1,7 @@
 #include "solver_calc_types.hpp"
 
+#include "solver_action_family_contract.hpp"
+
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -48,36 +50,6 @@ std::uint64_t distribution_cache_key(
         action_index |
         (goal_progress_gated ? kGoalProgressGatedCacheBit : 0u);
     return (static_cast<std::uint64_t>(state_id) << 32) | keyed_action;
-}
-
-PrimitiveTelemetryFamily primitive_family(const ActionType type) {
-    switch (type) {
-    case ActionType::Essence:
-        return PrimitiveTelemetryFamily::Essence;
-    case ActionType::Fossil:
-        return PrimitiveTelemetryFamily::Fossil;
-    case ActionType::HarvestReforge:
-    case ActionType::HarvestAugment:
-    case ActionType::HarvestResist:
-        return PrimitiveTelemetryFamily::Harvest;
-    case ActionType::Bench:
-    case ActionType::RemoveCraftedModifiers:
-        return PrimitiveTelemetryFamily::Bench;
-    case ActionType::Fracture:
-        return PrimitiveTelemetryFamily::Fracture;
-    case ActionType::Transmute:
-    case ActionType::Augment:
-    case ActionType::Alteration:
-    case ActionType::Regal:
-    case ActionType::Alchemy:
-    case ActionType::Chaos:
-    case ActionType::Exalt:
-    case ActionType::Annul:
-    case ActionType::Scour:
-        return PrimitiveTelemetryFamily::Currency;
-    default:
-        return PrimitiveTelemetryFamily::Other;
-    }
 }
 
 std::uint64_t selected_string_bytes(const std::string& value) {
@@ -470,7 +442,8 @@ CalcContext::CalcContext(
     const bool capture_reforge_attribution,
     const bool use_projected_reforge_frontier,
     const bool reverse_reforge_bucket_enumeration,
-    const bool use_factored_terminal_reforge)
+    const bool use_factored_terminal_reforge,
+    const AbstractLayout* refinement_parent_layout)
     : session_(std::move(session)),
       goal_(goal),
       registry_(std::move(registry)),
@@ -589,7 +562,8 @@ CalcContext::CalcContext(
         *session_, goal_, registry_, layout_actions, allow_empty_goal,
         false, exact_group_effects, count_observations,
         required_reachable_mod_mask,
-        distinguish_modifier_identity);
+        distinguish_modifier_identity,
+        refinement_parent_layout);
     layout_build_ns_ = static_cast<std::uint64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
             std::chrono::steady_clock::now() - layout_started)
@@ -621,6 +595,7 @@ std::uint64_t CalcContext::dynamic_shallow_owned_bytes() const {
              (sizeof(std::pair<const std::uint32_t,
                                std::vector<std::uint32_t>>) +
               2 * sizeof(void*));
+    bytes += automatic_admission_cursor_bytes();
     bytes += admitted_automatic_dependencies_.bucket_count() * sizeof(void*);
     bytes += admitted_automatic_dependencies_.size() *
              (sizeof(std::uint32_t) + 2 * sizeof(void*));
@@ -751,6 +726,288 @@ void CalcContext::account_new_operator(const PlannerOperator& value) {
         planner_operator_nested_bytes(value);
 }
 
+void CalcContext::initialize_state_local_automatic_transaction(
+    StateLocalAutomaticAdmissionCursor& cursor) {
+    const auto carrier_key = [state_id = cursor.state_id](
+                                 const std::uint64_t key) {
+        return static_cast<std::uint32_t>(key >> 32) == state_id;
+    };
+    for (const auto& [key, unused] : distribution_cache_) {
+        (void)unused;
+        if (carrier_key(key)) {
+            cursor.distribution_cache_keys_before.push_back(key);
+        }
+    }
+    for (const auto& [key, unused] : option_kernel_cache_) {
+        (void)unused;
+        if (carrier_key(key)) {
+            cursor.option_cache_keys_before.push_back(key);
+        }
+    }
+    for (const std::uint64_t key : option_kernel_template_hit_keys_) {
+        if (carrier_key(key)) {
+            cursor.option_template_hit_keys_before.push_back(key);
+        }
+    }
+    for (const auto& [key, bucket] : option_kernel_templates_) {
+        cursor.option_template_buckets_before.push_back(
+            {key, bucket.size()});
+    }
+    for (const auto& [key, bucket] : option_transition_templates_) {
+        cursor.transition_template_buckets_before.push_back(
+            {key, bucket.size()});
+    }
+    for (const auto& [key, bucket] : option_operator_templates_) {
+        cursor.operator_template_buckets_before.push_back(
+            {key, bucket.size()});
+    }
+    std::sort(
+        cursor.distribution_cache_keys_before.begin(),
+        cursor.distribution_cache_keys_before.end());
+    std::sort(
+        cursor.option_cache_keys_before.begin(),
+        cursor.option_cache_keys_before.end());
+    std::sort(
+        cursor.option_template_hit_keys_before.begin(),
+        cursor.option_template_hit_keys_before.end());
+    const auto sort_buckets = [](
+                                  std::vector<
+                                      AutomaticTemplateBucketCheckpoint>&
+                                      checkpoints) {
+        std::sort(
+            checkpoints.begin(), checkpoints.end(),
+            [](const AutomaticTemplateBucketCheckpoint& left,
+               const AutomaticTemplateBucketCheckpoint& right) {
+                return left.key < right.key;
+            });
+    };
+    sort_buckets(cursor.option_template_buckets_before);
+    sort_buckets(cursor.transition_template_buckets_before);
+    sort_buckets(cursor.operator_template_buckets_before);
+}
+
+void CalcContext::reconcile_option_storage_owned_bytes() noexcept {
+    const auto clear_retained = [](const auto& value) {
+        if (value != nullptr) value->retained_template_storage = false;
+    };
+    for (const auto& [unused, kernel] : option_kernel_cache_) {
+        (void)unused;
+        clear_retained(kernel);
+    }
+    for (const auto& [unused, bucket] : option_kernel_templates_) {
+        (void)unused;
+        for (const OptionKernelTemplateMemo& memo : bucket) {
+            clear_retained(memo.kernel);
+        }
+    }
+    for (const auto& [unused, bucket] : option_transition_templates_) {
+        (void)unused;
+        for (const auto& kernel : bucket) clear_retained(kernel);
+    }
+
+    owned_option_cache_payload_bytes_ = 0;
+    owned_option_template_nested_bytes_ = 0;
+    owned_transition_template_nested_bytes_ = 0;
+    owned_operator_template_nested_bytes_ = 0;
+    for (const auto& [unused, bucket] : option_kernel_templates_) {
+        (void)unused;
+        owned_option_template_nested_bytes_ +=
+            bucket.capacity() * sizeof(OptionKernelTemplateMemo);
+        for (const OptionKernelTemplateMemo& memo : bucket) {
+            owned_option_template_nested_bytes_ +=
+                memo.expected_resources.capacity() *
+                sizeof(std::pair<std::string, double>);
+            for (const auto& [key, unused_quantity] :
+                 memo.expected_resources) {
+                (void)unused_quantity;
+                owned_option_template_nested_bytes_ +=
+                    selected_string_bytes(key);
+            }
+            if (memo.kernel != nullptr &&
+                !memo.kernel->retained_template_storage) {
+                memo.kernel->retained_template_storage = true;
+                owned_option_template_nested_bytes_ +=
+                    option_kernel_selected_bytes_for_ledger(*memo.kernel);
+            }
+        }
+    }
+    for (const auto& [unused, bucket] : option_transition_templates_) {
+        (void)unused;
+        owned_transition_template_nested_bytes_ +=
+            bucket.capacity() *
+            sizeof(std::shared_ptr<const OptionKernel>);
+        for (const auto& kernel : bucket) {
+            if (kernel != nullptr &&
+                !kernel->retained_template_storage) {
+                kernel->retained_template_storage = true;
+                owned_transition_template_nested_bytes_ +=
+                    option_kernel_selected_bytes_for_ledger(*kernel);
+            }
+        }
+    }
+    for (const auto& [unused, bucket] : option_operator_templates_) {
+        (void)unused;
+        owned_operator_template_nested_bytes_ +=
+            bucket.capacity() * sizeof(std::uint32_t);
+    }
+    for (const auto& [unused, kernel] : option_kernel_cache_) {
+        (void)unused;
+        if (kernel != nullptr && !kernel->retained_template_storage) {
+            owned_option_cache_payload_bytes_ +=
+                option_kernel_selected_bytes_for_ledger(*kernel);
+        }
+    }
+}
+
+void CalcContext::rollback_state_local_automatic_transaction(
+    StateLocalAutomaticAdmissionCursor& cursor) noexcept {
+    /* Destroy the frame before removing any staged parent ownership. Its
+     * local shared_ptrs and planner vectors must not keep rolled-back kernels
+     * alive, and no coroutine code may observe the restoration below. */
+    cursor.task.reset();
+    const auto checkpoint_size = [](
+                                     const std::vector<
+                                         AutomaticTemplateBucketCheckpoint>&
+                                         checkpoints,
+                                     const std::uint64_t key)
+        -> std::optional<std::size_t> {
+        const auto found = std::lower_bound(
+            checkpoints.begin(), checkpoints.end(), key,
+            [](const AutomaticTemplateBucketCheckpoint& checkpoint,
+               const std::uint64_t wanted) {
+                return checkpoint.key < wanted;
+            });
+        if (found == checkpoints.end() || found->key != key) {
+            return std::nullopt;
+        }
+        return found->size;
+    };
+    const auto restore_buckets = [&checkpoint_size](
+                                     auto& buckets,
+                                     const std::vector<
+                                         AutomaticTemplateBucketCheckpoint>&
+                                         checkpoints) {
+        for (auto it = buckets.begin(); it != buckets.end();) {
+            const std::optional<std::size_t> original_size =
+                checkpoint_size(checkpoints, it->first);
+            if (!original_size.has_value()) {
+                it = buckets.erase(it);
+                continue;
+            }
+            if (it->second.size() > *original_size) {
+                it->second.resize(*original_size);
+            }
+            ++it;
+        }
+    };
+    restore_buckets(
+        option_kernel_templates_, cursor.option_template_buckets_before);
+    restore_buckets(
+        option_transition_templates_,
+        cursor.transition_template_buckets_before);
+    restore_buckets(
+        option_operator_templates_, cursor.operator_template_buckets_before);
+
+    for (const std::uint64_t key :
+         cursor.distribution_cache_keys_inserted) {
+        account_distribution_cache_erase(key);
+        distribution_cache_.erase(key);
+    }
+    for (const std::uint64_t key : cursor.option_cache_keys_inserted) {
+        account_option_cache_erase(key);
+        option_kernel_cache_.erase(key);
+        option_kernel_template_hit_keys_.erase(key);
+    }
+    for (const AutomaticReforgeBucketCheckpoint& checkpoint :
+         cursor.reforge_buckets_before) {
+        const auto found = reforge_cache_.find(checkpoint.key);
+        if (found == reforge_cache_.end()) continue;
+        std::vector<ReforgeCacheMemo>& bucket = found->second;
+        while (bucket.size() > checkpoint.size) {
+            release_distribution_payload(bucket.back().distribution);
+            bucket.pop_back();
+        }
+        if (checkpoint.size == 0) reforge_cache_.erase(found);
+    }
+    owned_reforge_payload_bytes_ = 0;
+    retained_reforge_distribution_bytes_ = 0;
+    for (const auto& [unused, bucket] : reforge_cache_) {
+        (void)unused;
+        owned_reforge_payload_bytes_ +=
+            bucket.capacity() * sizeof(ReforgeCacheMemo);
+        for (const ReforgeCacheMemo& memo : bucket) {
+            owned_reforge_payload_bytes_ +=
+                memo.observation_signature.capacity() *
+                sizeof(std::uint64_t);
+            retained_reforge_distribution_bytes_ +=
+                distribution_selected_bytes(*memo.distribution);
+        }
+    }
+
+    const auto retained_key = [](const std::vector<std::uint64_t>& keys,
+                                 const std::uint64_t key) {
+        return std::binary_search(keys.begin(), keys.end(), key);
+    };
+    const auto carrier_key = [state_id = cursor.state_id](
+                                 const std::uint64_t key) {
+        return static_cast<std::uint32_t>(key >> 32) == state_id;
+    };
+    for (auto it = distribution_cache_.begin();
+         it != distribution_cache_.end();) {
+        if (carrier_key(it->first) &&
+            !retained_key(
+                cursor.distribution_cache_keys_before, it->first)) {
+            account_distribution_cache_erase(it->first);
+            it = distribution_cache_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    for (auto it = option_kernel_cache_.begin();
+         it != option_kernel_cache_.end();) {
+        if (carrier_key(it->first) &&
+            !retained_key(cursor.option_cache_keys_before, it->first)) {
+            account_option_cache_erase(it->first);
+            it = option_kernel_cache_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    for (auto it = option_kernel_template_hit_keys_.begin();
+         it != option_kernel_template_hit_keys_.end();) {
+        if (carrier_key(*it) &&
+            !retained_key(
+                cursor.option_template_hit_keys_before, *it)) {
+            it = option_kernel_template_hit_keys_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    rollback_staged_automatic_operators(
+        cursor.state_id, cursor.first_operator);
+    reconcile_option_storage_owned_bytes();
+}
+
+void CalcContext::rollback_staged_automatic_operators(
+    const std::uint32_t state_id,
+    const std::size_t first_operator) {
+    if (first_operator >= operators_.size()) return;
+    for (std::size_t index = first_operator;
+         index < operators_.size(); ++index) {
+        const std::uint64_t key =
+            (static_cast<std::uint64_t>(state_id) << 32) |
+            static_cast<std::uint32_t>(index);
+        account_option_cache_erase(key);
+        option_kernel_cache_.erase(key);
+        option_kernel_template_hit_keys_.erase(key);
+        const std::uint64_t nested =
+            planner_operator_nested_bytes(operators_[index]);
+        owned_added_operator_nested_bytes_ -= std::min(
+            owned_added_operator_nested_bytes_, nested);
+    }
+    operators_.resize(first_operator);
+}
+
 void CalcContext::account_state_local_operators(
     const std::vector<std::uint32_t>& values) {
     owned_state_local_operator_bytes_ +=
@@ -761,6 +1018,15 @@ void CalcContext::account_distribution_cache_insert(
     const std::uint64_t key,
     const std::shared_ptr<const OutcomeDistribution>& value) {
     const auto existing = distribution_cache_.find(key);
+    if (existing == distribution_cache_.end() &&
+        state_local_automatic_admission_cursor_.has_value()) {
+        auto& inserted = state_local_automatic_admission_cursor_
+                             ->distribution_cache_keys_inserted;
+        if (std::find(inserted.begin(), inserted.end(), key) ==
+            inserted.end()) {
+            inserted.push_back(key);
+        }
+    }
     if (existing != distribution_cache_.end()) {
         release_distribution_payload(existing->second);
     }
@@ -803,6 +1069,15 @@ void CalcContext::account_option_cache_insert(
     const std::uint64_t key,
     const std::shared_ptr<const OptionKernel>& value) {
     const auto existing = option_kernel_cache_.find(key);
+    if (existing == option_kernel_cache_.end() &&
+        state_local_automatic_admission_cursor_.has_value()) {
+        auto& inserted = state_local_automatic_admission_cursor_
+                             ->option_cache_keys_inserted;
+        if (std::find(inserted.begin(), inserted.end(), key) ==
+            inserted.end()) {
+            inserted.push_back(key);
+        }
+    }
     if (existing != option_kernel_cache_.end() &&
         !existing->second->retained_template_storage) {
         owned_option_cache_payload_bytes_ -=
@@ -870,9 +1145,26 @@ void CalcContext::account_operator_template_insert(
 }
 
 void CalcContext::account_reforge_cache_insert(
+    const std::tuple<std::uint32_t, std::uint64_t, bool>& key,
     const std::size_t old_capacity,
     const std::size_t new_capacity,
     const ReforgeCacheMemo& value) {
+    if (state_local_automatic_admission_cursor_.has_value()) {
+        auto& checkpoints = state_local_automatic_admission_cursor_
+                                ->reforge_buckets_before;
+        const auto existing = std::find_if(
+            checkpoints.begin(), checkpoints.end(),
+            [&](const AutomaticReforgeBucketCheckpoint& checkpoint) {
+                return checkpoint.key == key;
+            });
+        if (existing == checkpoints.end()) {
+            const auto bucket = reforge_cache_.find(key);
+            const std::size_t current_size =
+                bucket == reforge_cache_.end() ? 0 : bucket->second.size();
+            checkpoints.push_back(
+                {key, current_size == 0 ? 0 : current_size - 1});
+        }
+    }
     owned_reforge_payload_bytes_ +=
         (new_capacity - old_capacity) * sizeof(ReforgeCacheMemo);
     owned_reforge_payload_bytes_ +=
@@ -1316,7 +1608,8 @@ const OutcomeDistribution& CalcContext::outcomes(
     ++telemetry_.distribution_requests;
     PrimitiveFamilyTelemetry& family =
         telemetry_.primitive_families.at(static_cast<std::size_t>(
-            primitive_family(registry_.actions.at(action_index).params.type)));
+            primitive_family_for_action(
+                registry_.actions.at(action_index).params.type)));
     ++family.requests;
     const auto cached = distribution_cache_.find(key);
     const OutcomeDistribution* result = nullptr;
@@ -1437,6 +1730,17 @@ void CalcContext::refresh_solve_owned_bytes_cap(
 void CalcContext::consume_reforge_work(
     const std::uint64_t active_amount,
     const std::uint64_t logical_v1_amount) {
+    if (automatic_admission_reforge_scope_depth_ != 0) {
+        telemetry_.automatic_admission_reforge_active_work =
+            saturated_counter_add(
+                telemetry_.automatic_admission_reforge_active_work,
+                active_amount);
+        telemetry_.automatic_admission_reforge_logical_work_v1 =
+            saturated_counter_add(
+                telemetry_.automatic_admission_reforge_logical_work_v1,
+                logical_v1_amount);
+        return;
+    }
     if (solve_reforge_work_cap_.has_value() &&
         logical_v1_amount > *solve_reforge_work_cap_ -
                      std::min(telemetry_.reforge_logical_work_v1,
@@ -1608,7 +1912,8 @@ void CalcContext::record_primitive_row_time(
     const std::uint64_t elapsed_ns) {
     PrimitiveFamilyTelemetry& family =
         telemetry_.primitive_families.at(static_cast<std::size_t>(
-            primitive_family(registry_.actions.at(action_index).params.type)));
+            primitive_family_for_action(
+                registry_.actions.at(action_index).params.type)));
     family.row_ns += elapsed_ns;
 }
 
@@ -1767,6 +2072,7 @@ std::uint64_t CalcContext::calculate_owned_bytes() const {
              (sizeof(std::pair<const std::uint32_t,
                                std::vector<std::uint32_t>>) +
               2 * sizeof(void*));
+    bytes += automatic_admission_cursor_bytes();
     for (const auto& [unused, indices] :
          state_local_automatic_operators_) {
         (void)unused;

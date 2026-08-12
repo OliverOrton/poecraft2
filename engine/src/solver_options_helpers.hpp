@@ -1,6 +1,7 @@
 #pragma once
 
 #include "solver_calc_types.hpp"
+#include "solver_action_family_contract.hpp"
 
 #include "poecraft/bitset.h"
 
@@ -10,6 +11,7 @@
 #include <cmath>
 #include <functional>
 #include <iterator>
+#include <limits>
 #include <map>
 #include <numeric>
 #include <set>
@@ -27,29 +29,7 @@ bool state_has_unfractured_crafted(const AbstractState& state);
 
 AutomaticTelemetryKind telemetry_kind_for_candidate(
     const AutomaticCandidateKind kind) {
-    switch (kind) {
-    case AutomaticCandidateKind::Imprint:
-        return AutomaticTelemetryKind::Imprint;
-    case AutomaticCandidateKind::TemporaryBenchBlocker:
-        return AutomaticTelemetryKind::TemporaryBench;
-    case AutomaticCandidateKind::ProtectedMetamod:
-        return AutomaticTelemetryKind::ProtectedSide;
-    case AutomaticCandidateKind::MultimodFinish:
-        return AutomaticTelemetryKind::MultimodFinish;
-    case AutomaticCandidateKind::PermanentBench:
-        return AutomaticTelemetryKind::PermanentBench;
-    case AutomaticCandidateKind::Fracture:
-        return AutomaticTelemetryKind::PrimitiveFracture;
-    case AutomaticCandidateKind::ConstructiveRenewal:
-        return AutomaticTelemetryKind::Renewal;
-    case AutomaticCandidateKind::EldritchSide:
-        return AutomaticTelemetryKind::EldritchSide;
-    case AutomaticCandidateKind::CannotRoll:
-        return AutomaticTelemetryKind::CannotRoll;
-    case AutomaticCandidateKind::None:
-        return AutomaticTelemetryKind::None;
-    }
-    return AutomaticTelemetryKind::None;
+    return automatic_telemetry_kind_for_candidate(kind);
 }
 
 std::uint64_t outcome_count(const OutcomeDistribution& distribution) {
@@ -195,6 +175,28 @@ bool approved_renewal_roll(const ActionDescriptor& action) {
     case ActionType::HarvestReforge:
     case ActionType::VeiledChaos:
         return action.kind == TransitionKind::Reforge;
+    default:
+        return false;
+    }
+}
+
+bool imprint_action_may_roll_influence_pool(
+    const ActionDescriptor& action) {
+    switch (action.params.type) {
+    case ActionType::Transmute:
+    case ActionType::Augment:
+    case ActionType::Alteration:
+    case ActionType::Regal:
+    case ActionType::Alchemy:
+    case ActionType::Chaos:
+    case ActionType::Exalt:
+    case ActionType::Essence:
+    case ActionType::Fossil:
+    case ActionType::HarvestReforge:
+    case ActionType::HarvestAugment:
+    case ActionType::HarvestResist:
+    case ActionType::VeiledChaos:
+        return true;
     default:
         return false;
     }
@@ -415,7 +417,7 @@ AutomaticOptionSynthesis synthesize_automatic_options(
         calc.automatic_goal_bench_actions();
 
     /*
-     * Product Eldritch planning exposes only four state-local side intents.
+     * Product Eldritch planning exposes state-local side intents.
      * Setup is selected here because prices and the exact carrier dominance
      * are both available. The resulting fixed option is still an ordinary
      * sequence of real currency operations; no hidden dominance flag enters
@@ -514,24 +516,45 @@ AutomaticOptionSynthesis synthesize_automatic_options(
         const std::uint32_t satisfied = satisfied_goal_mask(state);
         const std::uint8_t cap =
             rarity_affix_cap(session, state.rarity);
+        std::vector<std::uint64_t> ordinary_exalt_eligible;
+        const auto ordinary_exalt = registry.index_by_id.find("exalt");
+        if (ordinary_exalt != registry.index_by_id.end()) {
+            /* Eldritch Exalt samples the same ordinary explicit pool as
+             * Exalt, constrained to its dominant side. Querying the native
+             * Exalt pool here keeps group conflicts, spawn weights, and the
+             * exact carrier authoritative instead of re-deriving them. */
+            ordinary_exalt_eligible =
+                calc.temporary_followup_eligible_mask(
+                    carrier, ordinary_exalt->second);
+        }
         for (const std::int8_t side :
              {static_cast<std::int8_t>(PC_SIDE_PREFIX),
               static_cast<std::int8_t>(PC_SIDE_SUFFIX)}) {
             std::uint32_t side_goal_mask = 0;
             std::uint32_t opposite_goal_mask = 0;
+            std::uint32_t strict_opposite_goal_mask = 0;
             for (std::uint32_t slot = 0;
                  slot < goal.slots.size(); ++slot) {
-                if (goal_slot_side(
-                        session, goal.slots[slot]) == side) {
+                const std::int8_t slot_side =
+                    goal_slot_side(session, goal.slots[slot]);
+                if (slot_side == side) {
                     side_goal_mask |= 1u << slot;
                 } else {
                     opposite_goal_mask |= 1u << slot;
+                }
+                if (slot_side ==
+                    (side == PC_SIDE_PREFIX
+                         ? PC_SIDE_SUFFIX
+                         : PC_SIDE_PREFIX)) {
+                    strict_opposite_goal_mask |= 1u << slot;
                 }
             }
             const std::uint32_t missing =
                 side_goal_mask & ~satisfied;
             const std::uint32_t preserved =
                 opposite_goal_mask & satisfied;
+            const std::uint32_t strictly_preserved =
+                strict_opposite_goal_mask & satisfied;
             const std::uint8_t count =
                 side == PC_SIDE_PREFIX
                     ? state.prefix_count
@@ -568,6 +591,42 @@ AutomaticOptionSynthesis synthesize_automatic_options(
                     side_goal_mask | preserved;
                 result.push_back(std::move(option));
             }
+
+            /* Eldritch Exalt is narrower than the destructive side actions:
+             * it may only spend preserved opposite-side progress to add into
+             * real target-side capacity when the carrier-local ordinary pool
+             * can still roll an unmet goal on that side. */
+            if (count >= cap || strictly_preserved == 0 || missing == 0 ||
+                ordinary_exalt_eligible.empty()) {
+                continue;
+            }
+            std::uint32_t rollable_missing = 0;
+            for (std::uint32_t slot = 0;
+                 slot < goal.slots.size(); ++slot) {
+                const std::uint32_t bit = 1u << slot;
+                if ((missing & bit) == 0 ||
+                    slot >= calc.layout().slots.size() ||
+                    !mask_intersects(
+                        ordinary_exalt_eligible,
+                        calc.layout().slots[slot].satisfying_mask)) {
+                    continue;
+                }
+                rollable_missing |= bit;
+            }
+            if (rollable_missing == 0) continue;
+            const auto final =
+                registry.index_by_id.find("eldritch_exalt");
+            if (final == registry.index_by_id.end()) continue;
+            FixedOptionSpec exalt;
+            exalt.kind = FixedOptionKind::EldritchSideIntent;
+            exalt.side = side;
+            exalt.action_id = "eldritch_exalt";
+            exalt.setup_action_ids = *setup;
+            exalt.automatic_kind =
+                AutomaticCandidateKind::EldritchSide;
+            exalt.relevant_goal_mask =
+                rollable_missing | strictly_preserved;
+            result.push_back(std::move(exalt));
         }
     }
 
@@ -990,16 +1049,108 @@ struct AttemptKernel {
     std::vector<OutcomeEntry> entries;
     std::vector<OutcomeChoiceGroup> choice_groups;
     std::vector<OutcomeChoiceOption> choice_options;
+    std::uint64_t action_state_evaluations = 0;
+    std::uint64_t outcomes_merged = 0;
+    std::uint64_t max_atomic_outcomes_ns = 0;
+    /* Transient exact certificate used only while discovering one automatic
+     * Imprint envelope. When every positive-mass carrier reaching the final
+     * action has bit-identical canonical outcomes, retain that exact kernel.
+     * It is never serialized, hashed, cached, or adopted by an operator. */
+    std::vector<OutcomeEntry> terminal_uniform_entries;
 };
 
-AttemptKernel execute_attempt(
+std::uint64_t imprint_cursor_add(
+    const std::uint64_t left,
+    const std::uint64_t right) {
+    return right > std::numeric_limits<std::uint64_t>::max() - left
+               ? std::numeric_limits<std::uint64_t>::max()
+               : left + right;
+}
+
+std::uint64_t imprint_attempt_kernel_nested_bytes(
+    const AttemptKernel& attempt) {
+    std::uint64_t bytes =
+        attempt.expected_resources.capacity() *
+            sizeof(std::pair<std::string, double>) +
+        attempt.entries.capacity() * sizeof(OutcomeEntry) +
+        attempt.terminal_uniform_entries.capacity() * sizeof(OutcomeEntry) +
+        attempt.choice_groups.capacity() * sizeof(OutcomeChoiceGroup) +
+        attempt.choice_options.capacity() * sizeof(OutcomeChoiceOption);
+    for (const auto& [key, unused_quantity] :
+         attempt.expected_resources) {
+        (void)unused_quantity;
+        bytes = imprint_cursor_add(bytes, key.capacity() + 1);
+    }
+    for (const OutcomeChoiceGroup& group : attempt.choice_groups) {
+        bytes = imprint_cursor_add(
+            bytes,
+            group.states.capacity() * sizeof(std::uint32_t));
+    }
+    return bytes;
+}
+
+std::uint64_t imprint_resource_map_bytes(
+    const std::map<std::string, double>& resources) {
+    std::uint64_t bytes = resources.size() *
+        (sizeof(std::pair<const std::string, double>) +
+         3 * sizeof(void*));
+    for (const auto& [key, unused_quantity] : resources) {
+        (void)unused_quantity;
+        bytes = imprint_cursor_add(bytes, key.capacity() + 1);
+    }
+    return bytes;
+}
+
+/*
+ * One Imprint program can fan out through hundreds of thousands of exact
+ * Calculator states even though the outer discovery budget counts it as one
+ * program. Keep that fanout as flat, trivially destructible storage and
+ * checkpoint its state/outcome aggregation. This makes cancellation cheap
+ * and preserves the old std::map numeric order: active states and final
+ * outputs remain ascending by state id, and contributions are accumulated in
+ * the same active-state/distribution-entry order.
+ *
+ * calc.outcomes() remains one atomic exact-kernel leaf. The caller records its
+ * maximum duration so a fixture can prove whether the deeper reforge cursor
+ * is needed; every potentially much larger merge/scan around it is resumable.
+ */
+solve_detail::CooperativeTask<AttemptKernel>
+execute_attempt_cooperatively(
     CalcContext& calc,
-    const std::vector<std::uint32_t>& program,
+    std::vector<std::uint32_t> program,
     const std::uint32_t entry_state) {
     AttemptKernel result;
     std::map<std::string, double> resources;
-    std::map<std::uint32_t, double> active{{entry_state, 1.0}};
-    std::map<std::uint32_t, double> stopped;
+    std::vector<std::pair<std::uint32_t, double>> active{
+        {entry_state, 1.0}};
+    std::vector<std::pair<std::uint32_t, double>> next_active;
+    std::vector<double> next_probability;
+    std::vector<std::uint32_t> next_generation;
+    std::vector<double> stopped_probability;
+    std::uint32_t generation = 0;
+    const auto retained_bytes = [&]() {
+        std::uint64_t bytes =
+            program.capacity() * sizeof(std::uint32_t);
+        bytes = imprint_cursor_add(
+            bytes, imprint_attempt_kernel_nested_bytes(result));
+        bytes = imprint_cursor_add(
+            bytes, imprint_resource_map_bytes(resources));
+        bytes = imprint_cursor_add(
+            bytes,
+            active.capacity() * sizeof(decltype(active)::value_type));
+        bytes = imprint_cursor_add(
+            bytes,
+            next_active.capacity() *
+                sizeof(decltype(next_active)::value_type));
+        bytes = imprint_cursor_add(
+            bytes, next_probability.capacity() * sizeof(double));
+        bytes = imprint_cursor_add(
+            bytes,
+            next_generation.capacity() * sizeof(std::uint32_t));
+        return imprint_cursor_add(
+            bytes, stopped_probability.capacity() * sizeof(double));
+    };
+    constexpr std::size_t kCheckpointItems = 128;
     for (std::size_t step = 0; step < program.size(); ++step) {
         const std::uint32_t action_index = program[step];
         const ActionDescriptor& action =
@@ -1009,56 +1160,205 @@ AttemptKernel execute_attempt(
             result.supported = false;
             break;
         }
-        std::map<std::uint32_t, double> next;
-        for (const auto& [state_id, path_probability] : active) {
+        if (++generation == 0) {
+            std::fill(
+                next_generation.begin(), next_generation.end(), 0);
+            generation = 1;
+        }
+        next_active.clear();
+        const bool final_step = step + 1 == program.size();
+        result.terminal_uniform_entries.clear();
+        bool terminal_kernel_initialized = false;
+        bool terminal_kernel_uniform = final_step;
+        for (std::size_t active_index = 0;
+             active_index < active.size(); ++active_index) {
+            co_await solve_detail::CooperativeCheckpoint{
+                retained_bytes()};
+            const auto [state_id, path_probability] =
+                active[active_index];
             if (!action_legal(calc.session(), action, calc.state(state_id))) {
                 result.fully_legal = false;
-                stopped[state_id] += path_probability;
+                if (stopped_probability.size() <= state_id) {
+                    stopped_probability.resize(
+                        static_cast<std::size_t>(state_id) + 1, 0.0);
+                }
+                stopped_probability[state_id] += path_probability;
                 continue;
             }
             result.expected_primitive_actions += path_probability;
             for (const std::string& key : action.cost_keys) {
                 resources[key] += path_probability;
             }
+            const auto outcomes_started =
+                std::chrono::steady_clock::now();
             const OutcomeDistribution& distribution =
                 calc.outcomes(state_id, action_index);
+            const std::uint64_t outcomes_ns =
+                static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() -
+                        outcomes_started)
+                        .count());
+            result.action_state_evaluations = imprint_cursor_add(
+                result.action_state_evaluations, 1);
+            result.max_atomic_outcomes_ns = std::max(
+                result.max_atomic_outcomes_ns, outcomes_ns);
+            const std::size_t state_count = calc.state_count();
+            if (next_probability.size() < state_count) {
+                next_probability.resize(state_count, 0.0);
+                next_generation.resize(state_count, 0);
+            }
+            if (stopped_probability.size() < state_count) {
+                stopped_probability.resize(state_count, 0.0);
+            }
+            co_await solve_detail::CooperativeCheckpoint{
+                retained_bytes()};
             if (!distribution.supported ||
                 (!observed && !distribution.choice_groups.empty())) {
                 result.supported = false;
                 break;
             }
+            if (final_step && terminal_kernel_uniform) {
+                if (!distribution.choice_groups.empty() ||
+                    !distribution.choice_options.empty() ||
+                    distribution.entries.empty()) {
+                    terminal_kernel_uniform = false;
+                    result.terminal_uniform_entries.clear();
+                } else if (!terminal_kernel_initialized) {
+                    result.terminal_uniform_entries = distribution.entries;
+                    terminal_kernel_initialized = true;
+                } else if (result.terminal_uniform_entries !=
+                           distribution.entries) {
+                    terminal_kernel_uniform = false;
+                    result.terminal_uniform_entries.clear();
+                }
+            }
             if (observed && !distribution.choice_groups.empty()) {
-                for (const OutcomeChoiceGroup& group :
-                     distribution.choice_groups) {
+                for (std::size_t group_index = 0;
+                     group_index < distribution.choice_groups.size();
+                     ++group_index) {
+                    const OutcomeChoiceGroup& group =
+                        distribution.choice_groups[group_index];
                     result.choice_groups.push_back(
                         {path_probability * group.probability,
                          group.states, state_id});
+                    result.outcomes_merged = imprint_cursor_add(
+                        result.outcomes_merged, group.states.size());
+                    co_await solve_detail::CooperativeCheckpoint{
+                        retained_bytes()};
                 }
-                for (const OutcomeChoiceOption& choice :
-                     distribution.choice_options) {
+                for (std::size_t choice_index = 0;
+                     choice_index < distribution.choice_options.size();
+                     ++choice_index) {
+                    const OutcomeChoiceOption& choice =
+                        distribution.choice_options[choice_index];
                     result.choice_options.push_back(
                         {choice.mod_id, choice.state, state_id,
                          choice.state});
+                    result.outcomes_merged = imprint_cursor_add(
+                        result.outcomes_merged, 1);
+                    if ((choice_index + 1) % kCheckpointItems == 0) {
+                        co_await solve_detail::CooperativeCheckpoint{
+                            retained_bytes()};
+                    }
                 }
             } else {
-                for (const OutcomeEntry& outcome : distribution.entries) {
-                    next[outcome.state] +=
+                for (std::size_t outcome_index = 0;
+                     outcome_index < distribution.entries.size();
+                     ++outcome_index) {
+                    const OutcomeEntry& outcome =
+                        distribution.entries[outcome_index];
+                    if (outcome.state >= next_probability.size()) {
+                        const std::size_t needed =
+                            static_cast<std::size_t>(outcome.state) + 1;
+                        next_probability.resize(needed, 0.0);
+                        next_generation.resize(needed, 0);
+                        stopped_probability.resize(needed, 0.0);
+                    }
+                    if (next_generation[outcome.state] != generation) {
+                        next_generation[outcome.state] = generation;
+                        next_probability[outcome.state] = 0.0;
+                    }
+                    next_probability[outcome.state] +=
                         path_probability * outcome.probability;
+                    result.outcomes_merged = imprint_cursor_add(
+                        result.outcomes_merged, 1);
+                    if ((outcome_index + 1) % kCheckpointItems == 0) {
+                        co_await solve_detail::CooperativeCheckpoint{
+                            retained_bytes()};
+                    }
                 }
             }
         }
         if (!result.supported) break;
-        active = std::move(next);
+        if (!(final_step && terminal_kernel_uniform &&
+              terminal_kernel_initialized)) {
+            result.terminal_uniform_entries.clear();
+        }
+        for (std::size_t state_id = 0;
+             state_id < next_generation.size(); ++state_id) {
+            if (next_generation[state_id] == generation) {
+                next_active.push_back({
+                    static_cast<std::uint32_t>(state_id),
+                    next_probability[state_id]});
+            }
+            if ((state_id + 1) % kCheckpointItems == 0) {
+                co_await solve_detail::CooperativeCheckpoint{
+                    retained_bytes()};
+            }
+        }
+        active.swap(next_active);
     }
     if (result.supported) {
-        for (const auto& [state, probability] : stopped) {
-            active[state] += probability;
-        }
-        for (const auto& [state, probability] : active) {
-            result.entries.push_back({state, probability});
+        if (result.fully_legal &&
+            !result.terminal_uniform_entries.empty()) {
+            /* Exact algebraic canonicalization: composing any probability
+             * distribution with a carrier-independent terminal kernel K is
+             * K. Use the Calculator's canonical entries directly instead of
+             * retaining roundoff from summing p(carrier) * K repeatedly. */
+            result.entries = result.terminal_uniform_entries;
+        } else {
+            std::size_t active_cursor = 0;
+            const std::size_t state_count = std::max(
+                stopped_probability.size(),
+                active.empty()
+                    ? std::size_t{0}
+                    : static_cast<std::size_t>(active.back().first) + 1);
+            for (std::size_t state_id = 0;
+                 state_id < state_count; ++state_id) {
+                double probability = state_id < stopped_probability.size()
+                                         ? stopped_probability[state_id]
+                                         : 0.0;
+                if (active_cursor < active.size() &&
+                    active[active_cursor].first == state_id) {
+                    probability += active[active_cursor].second;
+                    ++active_cursor;
+                }
+                if (probability != 0.0) {
+                    result.entries.push_back({
+                        static_cast<std::uint32_t>(state_id), probability});
+                }
+                if ((state_id + 1) % kCheckpointItems == 0) {
+                    co_await solve_detail::CooperativeCheckpoint{
+                        retained_bytes()};
+                }
+            }
         }
         result.expected_resources.assign(resources.begin(), resources.end());
     }
+    co_return result;
+}
+
+AttemptKernel execute_attempt(
+    CalcContext& calc,
+    const std::vector<std::uint32_t>& program,
+    const std::uint32_t entry_state) {
+    auto task = execute_attempt_cooperatively(
+        calc, program, entry_state);
+    while (!task.resume()) {
+    }
+    AttemptKernel result = task.take_result();
+    task.reset();
     return result;
 }
 
@@ -1114,13 +1414,127 @@ std::uint64_t attempt_kernel_hash(const AttemptKernel& attempt) {
 
 struct ImprintDiscoveryResult {
     std::vector<FixedOptionSpec> specs;
+    /* Bounded evidence for a mechanically open depth frontier. These are
+     * diagnostic witnesses only; they never participate in admission or
+     * cache identity. */
+    std::vector<std::string> depth_deferred_samples;
     bool missing_price = false;
     bool depth_deferred = false;
     bool work_deferred = false;
     std::uint32_t depth_limit = 0;
     std::uint64_t work_limit = 0;
     std::uint64_t work_used = 0;
+    std::uint64_t programs_pruned = 0;
+    std::uint64_t distribution_dominated_programs = 0;
+    std::uint64_t price_pruned_programs = 0;
+    std::uint64_t price_bound_max_program_depth = 0;
+    std::uint64_t max_evaluated_depth = 0;
+    std::uint64_t max_frontier_size = 0;
+    bool price_bound_complete = false;
+    std::uint64_t action_state_evaluations = 0;
+    std::uint64_t outcomes_merged = 0;
+    std::uint64_t max_atomic_outcomes_ns = 0;
 };
+
+struct ImprintProgramPrefix {
+    std::vector<std::uint32_t> program;
+    /* A deliberately downward-rounded lower bound on the fixed resource
+     * price paid by every fully legal execution of this prefix. */
+    double scalar_cost_lower = 0.0;
+};
+
+struct ImprintKernelParetoRepresentative {
+    std::uint64_t kernel_hash = 0;
+    /* Exact primitive multiplicities, sorted by registry action index. A
+     * componentwise-smaller word consumes no more of any primitive resource
+     * under every economy; unlike a rounded scalar price, this remains a
+     * mechanically exact subtree-dominance certificate. */
+    std::vector<std::pair<std::uint32_t, std::uint64_t>> primitive_counts;
+    std::vector<OutcomeEntry> entries;
+};
+
+struct ImprintScalarPrice {
+    double exact = 0.0;
+    double lower = 0.0;
+    bool finite_nonnegative = true;
+};
+
+struct ImprintProducerLower {
+    /* Mechanical possibility is independent of whether the owning resource
+     * has a usable scalar price. Conflating the two would falsely close an
+     * open grammar when a possible producer has a missing/nonfinite price. */
+    bool mechanically_possible = false;
+    double priced_lower = std::numeric_limits<double>::infinity();
+};
+
+double imprint_downward_add(
+    const double left,
+    const double right) {
+    if (right == 0.0) return left;
+    const double sum = left + right;
+    if (!std::isfinite(sum)) return sum;
+    return std::nextafter(
+        sum, -std::numeric_limits<double>::infinity());
+}
+
+ImprintScalarPrice imprint_price_keys(
+    const std::vector<std::string>& keys,
+    const std::unordered_map<std::string, double>* prices) {
+    ImprintScalarPrice result;
+    if (prices == nullptr) {
+        result.finite_nonnegative = false;
+        return result;
+    }
+    for (const std::string& key : keys) {
+        const auto found = prices->find(key);
+        if (found == prices->end() || !std::isfinite(found->second) ||
+            found->second < 0.0) {
+            result.finite_nonnegative = false;
+            return result;
+        }
+        result.exact += found->second;
+        result.lower = imprint_downward_add(
+            result.lower, found->second);
+        if (!std::isfinite(result.exact) ||
+            !std::isfinite(result.lower)) {
+            result.finite_nonnegative = false;
+            return result;
+        }
+    }
+    return result;
+}
+
+std::vector<std::pair<std::uint32_t, std::uint64_t>>
+imprint_primitive_counts(const std::vector<std::uint32_t>& program) {
+    std::map<std::uint32_t, std::uint64_t> counts;
+    for (const std::uint32_t action : program) {
+        std::uint64_t& count = counts[action];
+        if (count == std::numeric_limits<std::uint64_t>::max()) {
+            throw std::overflow_error(
+                "Imprint primitive multiplicity exceeds uint64");
+        }
+        ++count;
+    }
+    return {counts.begin(), counts.end()};
+}
+
+bool imprint_primitive_counts_dominate(
+    const std::vector<std::pair<std::uint32_t, std::uint64_t>>& left,
+    const std::vector<std::pair<std::uint32_t, std::uint64_t>>& right) {
+    std::size_t right_offset = 0;
+    for (const auto& [left_action, left_count] : left) {
+        while (right_offset < right.size() &&
+               right[right_offset].first < left_action) {
+            ++right_offset;
+        }
+        if (right_offset == right.size() ||
+            right[right_offset].first != left_action ||
+            right[right_offset].second < left_count) {
+            return false;
+        }
+    }
+    return true;
+}
 
 bool resource_keys_available(
     const std::vector<std::string>& keys,
@@ -1148,11 +1562,77 @@ bool native_imprint_checkpoint_creation_legal(
                *calc.session().data, craft, found->second).applied;
 }
 
-ImprintDiscoveryResult discover_automatic_imprint_options(
+std::uint64_t imprint_fixed_option_nested_bytes(
+    const FixedOptionSpec& spec) {
+    std::uint64_t bytes = spec.action_id.capacity() + 1;
+    bytes = imprint_cursor_add(
+        bytes, spec.constructive_finish_action_id.capacity() + 1);
+    const auto strings = [&](const std::vector<std::string>& values) {
+        std::uint64_t selected =
+            values.capacity() * sizeof(std::string);
+        for (const std::string& value : values) {
+            selected = imprint_cursor_add(
+                selected, value.capacity() + 1);
+        }
+        return selected;
+    };
+    bytes = imprint_cursor_add(bytes, strings(spec.setup_action_ids));
+    bytes = imprint_cursor_add(bytes, strings(spec.bench_craft_ids));
+    bytes = imprint_cursor_add(bytes, strings(spec.program_action_ids));
+    return imprint_cursor_add(
+        bytes,
+        spec.exit_goal_slots.capacity() * sizeof(std::uint32_t));
+}
+
+std::uint64_t imprint_discovery_result_nested_bytes(
+    const ImprintDiscoveryResult& result) {
+    std::uint64_t bytes =
+        result.specs.capacity() * sizeof(FixedOptionSpec) +
+        result.depth_deferred_samples.capacity() * sizeof(std::string);
+    for (const FixedOptionSpec& spec : result.specs) {
+        bytes = imprint_cursor_add(
+            bytes, imprint_fixed_option_nested_bytes(spec));
+    }
+    for (const std::string& sample : result.depth_deferred_samples) {
+        bytes = imprint_cursor_add(bytes, sample.capacity() + 1);
+    }
+    return bytes;
+}
+
+std::uint64_t imprint_program_frontier_bytes(
+    const std::vector<ImprintProgramPrefix>& frontier) {
+    std::uint64_t bytes =
+        frontier.capacity() * sizeof(ImprintProgramPrefix);
+    for (const ImprintProgramPrefix& prefix : frontier) {
+        bytes = imprint_cursor_add(
+            bytes,
+            prefix.program.capacity() * sizeof(std::uint32_t));
+    }
+    return bytes;
+}
+
+std::uint64_t imprint_kernel_pareto_bytes(
+    const std::vector<ImprintKernelParetoRepresentative>& representatives) {
+    std::uint64_t bytes = representatives.capacity() *
+        sizeof(ImprintKernelParetoRepresentative);
+    for (const ImprintKernelParetoRepresentative& representative :
+         representatives) {
+        bytes = imprint_cursor_add(
+            bytes,
+            representative.primitive_counts.capacity() *
+                sizeof(std::pair<std::uint32_t, std::uint64_t>));
+        bytes = imprint_cursor_add(
+            bytes,
+            representative.entries.capacity() * sizeof(OutcomeEntry));
+    }
+    return bytes;
+}
+
+solve_detail::CooperativeTask<ImprintDiscoveryResult>
+discover_automatic_imprint_options_cooperatively(
     CalcContext& calc,
     const std::uint32_t state_id,
-    const AutomaticAdmissionLimits& limits,
-    const std::function<void()>& check_limits) {
+    AutomaticAdmissionLimits limits) {
     ImprintDiscoveryResult result;
     result.depth_limit = limits.max_imprint_program_depth == 0
                              ? kDefaultImprintProgramDepth
@@ -1161,19 +1641,19 @@ ImprintDiscoveryResult discover_automatic_imprint_options(
                             ? kDefaultImprintProgramWork
                             : limits.max_imprint_program_work;
     if (!native_imprint_checkpoint_creation_legal(calc, state_id)) {
-        return result;
+        co_return result;
     }
 
     const auto create = calc.session().data->bestiary_action_by_id.find(
         "bestiary:imprint");
     if (create == calc.session().data->bestiary_action_by_id.end()) {
-        return result;
+        co_return result;
     }
     if (!resource_keys_available(
             calc.session().data->bestiary_actions.at(create->second).cost_keys,
             limits.prices)) {
         result.missing_price = true;
-        return result;
+        co_return result;
     }
 
     std::vector<std::uint32_t> actions;
@@ -1193,32 +1673,354 @@ ImprintDiscoveryResult discover_automatic_imprint_options(
         return calc.registry().actions.at(left).id <
                calc.registry().actions.at(right).id;
     });
-    if (actions.empty()) return result;
+    if (actions.empty()) co_return result;
 
-    const AbstractState& entry = calc.state(state_id);
     const std::uint32_t goal_mask = calc.goal().slots.size() == 32
                                         ? 0xffffffffu
                                         : (1u << calc.goal().slots.size()) - 1u;
     const std::uint32_t missing_mask =
-        goal_mask & ~satisfied_goal_mask(entry);
-    if (missing_mask == 0) return result;
+        goal_mask & ~satisfied_goal_mask(calc.state(state_id));
+    if (missing_mask == 0) co_return result;
 
-    std::vector<std::vector<std::uint32_t>> frontier(1);
-    for (std::uint32_t depth = 1;
-         depth <= result.depth_limit && !frontier.empty(); ++depth) {
-        std::vector<std::vector<std::uint32_t>> next;
-        for (const std::vector<std::uint32_t>& prefix : frontier) {
-            for (const std::uint32_t action : actions) {
+    /* These masks become a carrier-support-aware suffix-cost authority, never
+     * an exit gate. A statically nonproducing final action can preserve a goal
+     * made by an earlier step, so exact terminal outcomes below always decide
+     * exits. For ordinary pool rolls, goal influence membership is combined
+     * with exact active carrier bits rather than the base-tag positive mask;
+     * the latter can contain an inactive influence row or omit an active
+     * selector-only row. */
+    std::vector<std::vector<std::uint64_t>> action_base_reachable_masks;
+    action_base_reachable_masks.reserve(actions.size());
+    for (const std::uint32_t action_index : actions) {
+        action_base_reachable_masks.push_back(
+            action_explicit_affix_reachable_mask(
+                calc.session(),
+                calc.registry().actions.at(action_index)));
+    }
+    bool missing_goal_has_normal_mod = false;
+    std::uint8_t missing_goal_influence_bits = 0;
+    for (std::uint32_t slot = 0;
+         slot < calc.goal().slots.size(); ++slot) {
+        if ((missing_mask & (1u << slot)) == 0) continue;
+        pc_bitset_for_each(
+            calc.layout().slots.at(slot).satisfying_mask.data(),
+            calc.session().words,
+            [&](const std::size_t mod) {
+                const int influence = mod < calc.session().influence_code.size()
+                    ? calc.session().influence_code[mod]
+                    : -1;
+                if (influence > 0 && influence <= 8) {
+                    missing_goal_influence_bits |= static_cast<std::uint8_t>(
+                        1u << (influence - 1));
+                } else {
+                    missing_goal_has_normal_mod = true;
+                }
+            });
+    }
+
+    const BestiaryActionDescriptor& create_descriptor =
+        calc.session().data->bestiary_actions.at(create->second);
+    const ImprintScalarPrice checkpoint_price = imprint_price_keys(
+        create_descriptor.cost_keys, limits.prices);
+    std::vector<ImprintScalarPrice> action_prices;
+    action_prices.reserve(actions.size());
+    double minimum_step_cost_lower =
+        std::numeric_limits<double>::infinity();
+    bool all_steps_strictly_positive = true;
+    for (std::size_t offset = 0; offset < actions.size(); ++offset) {
+        const ImprintScalarPrice price = imprint_price_keys(
+            calc.registry().actions.at(actions[offset]).cost_keys,
+            limits.prices);
+        action_prices.push_back(price);
+        all_steps_strictly_positive &=
+            price.finite_nonnegative && price.lower > 0.0;
+        if (price.finite_nonnegative && price.lower > 0.0) {
+            minimum_step_cost_lower = std::min(
+                minimum_step_cost_lower, price.lower);
+        }
+    }
+    const auto minimum_direct_producer_cost_lower =
+        [&](const std::vector<OutcomeEntry>& support) {
+            std::uint8_t active_influence_bits = 0;
+            for (const OutcomeEntry& outcome : support) {
+                if (outcome.probability <= 0.0) continue;
+                active_influence_bits |=
+                    calc.state(outcome.state).influence_bits;
+            }
+            ImprintProducerLower producer;
+            for (std::size_t offset = 0; offset < actions.size(); ++offset) {
+                const ActionDescriptor& descriptor =
+                    calc.registry().actions.at(actions[offset]);
+                const bool direct_mask_intersects = [&] {
+                    for (std::uint32_t slot = 0;
+                         slot < calc.goal().slots.size(); ++slot) {
+                        if ((missing_mask & (1u << slot)) != 0 &&
+                            mask_intersects(
+                                action_base_reachable_masks[offset],
+                                calc.layout().slots.at(slot).satisfying_mask)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }();
+                bool can_advance = false;
+                if (descriptor.params.type == ActionType::InfluenceExalt) {
+                    /* Generic influence is monotone throughout the supported
+                     * Imprint grammar, and Influence Exalt forbids any active
+                     * bit. Mixed influenced/uninfluenced support therefore
+                     * cannot execute it as a fully legal common suffix. */
+                    can_advance = active_influence_bits == 0 &&
+                                  direct_mask_intersects;
+                } else if (imprint_action_may_roll_influence_pool(
+                               descriptor)) {
+                    can_advance = missing_goal_has_normal_mod ||
+                        (missing_goal_influence_bits &
+                         active_influence_bits) != 0;
+                    /* Essence guarantees and Fossil forced modifiers bypass
+                     * the ordinary weighted pool. Do not reuse the full
+                     * action reach mask here: it also contains the rolled
+                     * pool and can include inactive base-positive influence
+                     * rows. */
+                    std::vector<std::uint32_t> direct_mods;
+                    if (descriptor.params.type == ActionType::Essence &&
+                        descriptor.params.essence_index <
+                            calc.session().essence_guaranteed_mod_ids.size()) {
+                        direct_mods.push_back(
+                            calc.session().essence_guaranteed_mod_ids[
+                                descriptor.params.essence_index]);
+                    } else if (descriptor.params.type == ActionType::Fossil) {
+                        for (const std::uint32_t fossil :
+                             descriptor.params.fossil_indices) {
+                            if (fossil >=
+                                calc.session().fossil_forced_mod_ids.size()) {
+                                continue;
+                            }
+                            direct_mods.insert(
+                                direct_mods.end(),
+                                calc.session().fossil_forced_mod_ids[fossil]
+                                    .begin(),
+                                calc.session().fossil_forced_mod_ids[fossil]
+                                    .end());
+                        }
+                    }
+                    for (const std::uint32_t mod : direct_mods) {
+                        if (mod == kNoId || mod >= calc.session().mod_count) {
+                            continue;
+                        }
+                        for (std::uint32_t slot = 0;
+                             slot < calc.goal().slots.size(); ++slot) {
+                            if ((missing_mask & (1u << slot)) != 0 &&
+                                pc_bitset_test(
+                                    calc.layout().slots.at(slot)
+                                        .satisfying_mask.data(),
+                                    mod)) {
+                                can_advance = true;
+                            }
+                        }
+                    }
+                } else {
+                    can_advance = direct_mask_intersects;
+                }
+                producer.mechanically_possible |= can_advance;
+                if (can_advance &&
+                    action_prices[offset].finite_nonnegative) {
+                    producer.priced_lower = std::min(
+                        producer.priced_lower,
+                        action_prices[offset].lower);
+                }
+            }
+            return producer;
+        };
+    const bool price_closure_enabled =
+        std::isfinite(limits.incumbent_upper_bound) &&
+        checkpoint_price.finite_nonnegative &&
+        all_steps_strictly_positive &&
+        std::isfinite(minimum_step_cost_lower);
+    if (price_closure_enabled) {
+        if (limits.incumbent_upper_bound > checkpoint_price.lower) {
+            /* Outward rounding plus ceil deliberately overestimates the last
+             * economically possible depth. Enforcing this integer boundary
+             * makes positive-price termination independent of repeated
+             * floating addition (which can stagnate once a step is below the
+             * running sum's ULP). */
+            const double remaining_upper = std::nextafter(
+                limits.incumbent_upper_bound - checkpoint_price.lower,
+                std::numeric_limits<double>::infinity());
+            const double quotient_upper = std::nextafter(
+                remaining_upper / minimum_step_cost_lower,
+                std::numeric_limits<double>::infinity());
+            const double depth = std::ceil(std::max(0.0, quotient_upper));
+            result.price_bound_max_program_depth =
+                !std::isfinite(depth) ||
+                        depth >= static_cast<double>(
+                             std::numeric_limits<std::uint64_t>::max())
+                    ? std::numeric_limits<std::uint64_t>::max()
+                    : static_cast<std::uint64_t>(depth);
+        }
+    }
+
+    /* Exact full-kernel equality makes every common suffix identical. A
+     * componentwise-smaller exact primitive-count vector therefore dominates
+     * the entire dearer subtree under every economy. Hashes only shortlist
+     * candidates; entry vectors remain the authority. Seed the entry kernel
+     * so any exact return cycle is removed immediately. */
+    std::vector<ImprintKernelParetoRepresentative>
+        kernel_pareto_representatives;
+    {
+        const std::vector<OutcomeEntry> entry_support{{state_id, 1.0}};
+        AttemptKernel entry_attempt;
+        entry_attempt.supported = true;
+        entry_attempt.fully_legal = true;
+        entry_attempt.entries = entry_support;
+        kernel_pareto_representatives.push_back({
+            attempt_kernel_hash(entry_attempt), {}, entry_support});
+
+        const ImprintProducerLower root_producer =
+            minimum_direct_producer_cost_lower(entry_support);
+        if (!root_producer.mechanically_possible) {
+            ++result.programs_pruned;
+            co_return result;
+        }
+        if (price_closure_enabled) {
+            if (!std::isfinite(root_producer.priced_lower) ||
+                imprint_downward_add(
+                    checkpoint_price.lower,
+                    root_producer.priced_lower) >
+                    limits.incumbent_upper_bound ||
+                result.price_bound_max_program_depth == 0) {
+                ++result.programs_pruned;
+                ++result.price_pruned_programs;
+                result.price_bound_complete = true;
+                co_return result;
+            }
+        }
+    }
+
+    std::vector<ImprintProgramPrefix> frontier(1);
+    std::vector<ImprintProgramPrefix> next;
+    result.max_frontier_size = 1;
+    std::vector<std::uint32_t> program;
+    AttemptKernel attempt;
+    constexpr std::size_t kMaxDepthDeferredSamples = 8;
+    const auto retain_depth_deferred_sample = [&]
+        (const std::vector<std::uint32_t>& prefix,
+         const std::uint32_t final_action,
+         const char* classification) {
+        std::string sample;
+        for (const std::uint32_t step : prefix) {
+            if (!sample.empty()) sample += '>';
+            sample += calc.registry().actions.at(step).id;
+        }
+        if (!sample.empty()) sample += '>';
+        sample += calc.registry().actions.at(final_action).id;
+        sample += ':';
+        sample += classification;
+        const std::string class_suffix =
+            std::string(":") + classification;
+        const auto same_class = [&](const std::string& existing) {
+            return existing.size() >= class_suffix.size() &&
+                   existing.compare(
+                       existing.size() - class_suffix.size(),
+                       class_suffix.size(), class_suffix) == 0;
+        };
+        if (result.depth_deferred_samples.size() >=
+            kMaxDepthDeferredSamples) {
+            if (std::any_of(
+                    result.depth_deferred_samples.begin(),
+                    result.depth_deferred_samples.end(), same_class)) {
+                return;
+            }
+            /* Preserve at least one concrete witness from each frontier
+             * class. In particular, early lexicographic nonproducing samples
+             * must not hide the first actually evaluated changed program. */
+            result.depth_deferred_samples.back() = std::move(sample);
+            return;
+        }
+        result.depth_deferred_samples.push_back(std::move(sample));
+    };
+    const auto retained_bytes = [&]() {
+        std::uint64_t bytes =
+            imprint_discovery_result_nested_bytes(result);
+        bytes = imprint_cursor_add(
+            bytes, actions.capacity() * sizeof(std::uint32_t));
+        bytes = imprint_cursor_add(
+            bytes,
+            action_base_reachable_masks.capacity() *
+                sizeof(std::vector<std::uint64_t>));
+        for (const std::vector<std::uint64_t>& mask :
+             action_base_reachable_masks) {
+            bytes = imprint_cursor_add(
+                bytes, mask.capacity() * sizeof(std::uint64_t));
+        }
+        bytes = imprint_cursor_add(
+            bytes,
+            action_prices.capacity() * sizeof(ImprintScalarPrice));
+        bytes = imprint_cursor_add(
+            bytes,
+            imprint_kernel_pareto_bytes(
+                kernel_pareto_representatives));
+        bytes = imprint_cursor_add(
+            bytes, imprint_program_frontier_bytes(frontier));
+        bytes = imprint_cursor_add(
+            bytes, imprint_program_frontier_bytes(next));
+        bytes = imprint_cursor_add(
+            bytes, program.capacity() * sizeof(std::uint32_t));
+        return imprint_cursor_add(
+            bytes, imprint_attempt_kernel_nested_bytes(attempt));
+    };
+    constexpr std::size_t kCheckpointItems = 128;
+    for (std::uint64_t depth = 1; !frontier.empty(); ++depth) {
+        next.clear();
+        for (std::size_t prefix_index = 0;
+             prefix_index < frontier.size(); ++prefix_index) {
+            for (std::size_t action_offset = 0;
+                 action_offset < actions.size(); ++action_offset) {
+                const std::uint32_t action = actions[action_offset];
+                double candidate_cost_lower =
+                    frontier[prefix_index].scalar_cost_lower;
+                if (action_prices[action_offset].finite_nonnegative) {
+                    candidate_cost_lower = imprint_downward_add(
+                        candidate_cost_lower,
+                        action_prices[action_offset].lower);
+                }
+                const double immediate_lower = imprint_downward_add(
+                    checkpoint_price.lower, candidate_cost_lower);
+                if (price_closure_enabled &&
+                    immediate_lower > limits.incumbent_upper_bound) {
+                    ++result.programs_pruned;
+                    ++result.price_pruned_programs;
+                    continue;
+                }
                 if (result.work_used >= result.work_limit) {
                     result.work_deferred = true;
-                    return result;
+                    co_return result;
                 }
-                std::vector<std::uint32_t> program = prefix;
+                program = frontier[prefix_index].program;
                 program.push_back(action);
                 ++result.work_used;
-                const AttemptKernel attempt = execute_attempt(
+                result.max_evaluated_depth = std::max(
+                    result.max_evaluated_depth, depth);
+                auto attempt_task = execute_attempt_cooperatively(
                     calc, program, state_id);
-                check_limits();
+                while (!attempt_task.resume()) {
+                    co_await solve_detail::CooperativeCheckpoint{
+                        imprint_cursor_add(
+                            retained_bytes(),
+                            attempt_task.retained_bytes())};
+                }
+                attempt = attempt_task.take_result();
+                attempt_task.reset();
+                result.action_state_evaluations = imprint_cursor_add(
+                    result.action_state_evaluations,
+                    attempt.action_state_evaluations);
+                result.outcomes_merged = imprint_cursor_add(
+                    result.outcomes_merged,
+                    attempt.outcomes_merged);
+                result.max_atomic_outcomes_ns = std::max(
+                    result.max_atomic_outcomes_ns,
+                    attempt.max_atomic_outcomes_ns);
+                co_await solve_detail::CooperativeCheckpoint{
+                    retained_bytes()};
                 if (!attempt.supported || !attempt.fully_legal ||
                     !attempt.choice_groups.empty() ||
                     !attempt.choice_options.empty() ||
@@ -1226,14 +2028,67 @@ ImprintDiscoveryResult discover_automatic_imprint_options(
                     continue;
                 }
 
+                {
+                    const std::uint64_t kernel_hash =
+                        attempt_kernel_hash(attempt);
+                    auto primitive_counts =
+                        imprint_primitive_counts(program);
+                    bool distribution_dominated = false;
+                    for (const ImprintKernelParetoRepresentative&
+                             representative :
+                         kernel_pareto_representatives) {
+                        if (representative.kernel_hash == kernel_hash &&
+                            representative.entries == attempt.entries &&
+                            imprint_primitive_counts_dominate(
+                                representative.primitive_counts,
+                                primitive_counts)) {
+                            distribution_dominated = true;
+                            break;
+                        }
+                    }
+                    if (distribution_dominated) {
+                        ++result.programs_pruned;
+                        ++result.distribution_dominated_programs;
+                        continue;
+                    }
+                    std::erase_if(
+                        kernel_pareto_representatives,
+                        [&](const ImprintKernelParetoRepresentative&
+                                representative) {
+                            return representative.kernel_hash == kernel_hash &&
+                                   representative.entries == attempt.entries &&
+                                   imprint_primitive_counts_dominate(
+                                       primitive_counts,
+                                       representative.primitive_counts);
+                        });
+                    kernel_pareto_representatives.push_back({
+                        kernel_hash, std::move(primitive_counts),
+                        attempt.entries});
+                }
+                /* The Pareto representative owns a potentially large copy of
+                 * the exact entry vector. Reconcile retained bytes before any
+                 * later publication so cancellation or a memory refusal rolls
+                 * the whole admission transaction back. */
+                co_await solve_detail::CooperativeCheckpoint{
+                    retained_bytes()};
+
                 std::uint32_t relevant_exit_mask = 0;
                 bool changed = false;
-                for (const OutcomeEntry& outcome : attempt.entries) {
+                for (std::size_t outcome_index = 0;
+                     outcome_index < attempt.entries.size();
+                     ++outcome_index) {
+                    const OutcomeEntry& outcome =
+                        attempt.entries[outcome_index];
                     if (outcome.probability <= 0.0) continue;
                     changed |= outcome.state != state_id;
                     relevant_exit_mask |=
-                        satisfied_goal_mask(calc.state(outcome.state)) &
+                        satisfied_goal_mask(
+                            calc.state(outcome.state)) &
                         missing_mask;
+                    if ((outcome_index + 1) % kCheckpointItems == 0) {
+                        co_await solve_detail::CooperativeCheckpoint{
+                            retained_bytes()};
+                    }
                 }
                 if (relevant_exit_mask != 0) {
                     FixedOptionSpec option;
@@ -1253,16 +2108,68 @@ ImprintDiscoveryResult discover_automatic_imprint_options(
                     option.relevant_goal_mask = relevant_exit_mask;
                     result.specs.push_back(std::move(option));
                 }
-                if (changed && depth < result.depth_limit) {
-                    next.push_back(std::move(program));
-                } else if (changed && depth == result.depth_limit) {
+                if (!changed) continue;
+                ImprintProducerLower producer;
+                if (relevant_exit_mask == 0) {
+                    producer = minimum_direct_producer_cost_lower(
+                        attempt.entries);
+                    if (!producer.mechanically_possible) {
+                        ++result.programs_pruned;
+                        continue;
+                    }
+                }
+                if (price_closure_enabled) {
+                    if (depth >=
+                        result.price_bound_max_program_depth) {
+                        ++result.programs_pruned;
+                        ++result.price_pruned_programs;
+                        continue;
+                    }
+                    const double suffix_cost_lower =
+                        relevant_exit_mask != 0
+                            ? minimum_step_cost_lower
+                            : producer.priced_lower;
+                    if (std::isfinite(suffix_cost_lower)) {
+                        const double extension_lower =
+                            imprint_downward_add(
+                                immediate_lower, suffix_cost_lower);
+                        if (extension_lower <=
+                            limits.incumbent_upper_bound) {
+                            next.push_back({
+                                program, candidate_cost_lower});
+                        } else {
+                            ++result.programs_pruned;
+                            ++result.price_pruned_programs;
+                        }
+                    } else {
+                        /* Exact zero exits plus an empty conservative producer
+                         * universe proves that no descendant can become a
+                         * useful Imprint program. */
+                        ++result.programs_pruned;
+                        ++result.price_pruned_programs;
+                    }
+                } else if (depth < result.depth_limit) {
+                    next.push_back({program, candidate_cost_lower});
+                } else {
                     result.depth_deferred = true;
+                    retain_depth_deferred_sample(
+                        frontier[prefix_index].program, action,
+                        relevant_exit_mask != 0
+                            ? "evaluated_changed_goal_capable"
+                            : "evaluated_changed_no_exit");
                 }
             }
         }
-        frontier = std::move(next);
+        frontier.swap(next);
+        result.max_frontier_size = std::max<std::uint64_t>(
+            result.max_frontier_size, frontier.size());
+        co_await solve_detail::CooperativeCheckpoint{
+            retained_bytes()};
     }
-    return result;
+    result.price_bound_complete =
+        price_closure_enabled && !result.work_deferred &&
+        !result.depth_deferred;
+    co_return result;
 }
 
 bool state_has_unfractured_crafted(const AbstractState& state) {

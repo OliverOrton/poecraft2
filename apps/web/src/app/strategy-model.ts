@@ -1,5 +1,9 @@
 import { ItemSnapshot, itemSnapshotRarity } from "./workspace/persistence";
 import type { Catalog, CatalogEntry, EconomyIdentity } from "./engine-protocol";
+import {
+    canonicalInfluenceExaltKey,
+    genericInfluenceDisplayName,
+} from "./influence-presentation";
 
 export const DEFAULT_STRATEGY_BASE =
     "Metadata/Items/Armours/BodyArmours/BodyInt17";
@@ -502,6 +506,18 @@ function titleCaseKey(key: string): string {
         .join(" ");
 }
 
+function influenceExaltDisplayName(
+    entries: CatalogEntry[] | undefined,
+    key: string,
+): string {
+    const canonical = canonicalInfluenceExaltKey(key);
+    return (
+        entryName(entries, canonical) ||
+        entryName(entries, key) ||
+        genericInfluenceDisplayName(canonical)
+    );
+}
+
 export function operationLabel(
     operation?: StrategyOperation,
     context: StrategyLabelContext = {},
@@ -565,7 +581,7 @@ export function operationLabel(
         }
         case "influence_exalt": {
             const key = stringParam(params, "influence");
-            const name = keyedDisplayName(catalog?.influences, key);
+            const name = influenceExaltDisplayName(catalog?.influences, key);
             return key ? `Influence Exalt: ${name}` : "Influence Exalt";
         }
         case "eldritch_ember":

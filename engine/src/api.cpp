@@ -257,10 +257,11 @@ pc_result parse_action_request(
             return PC_RESULT_INVALID_ARGUMENT;
         }
         const auto influence =
-            d.influence_code_by_name.find(request.influence);
-        if (influence == d.influence_code_by_name.end() ||
+            d.influence_exalt_code_by_name.find(request.influence);
+        if (influence == d.influence_exalt_code_by_name.end() ||
             influence->second <= 0) {
-            set_error(error, PC_RESULT_NOT_FOUND, "influence not found");
+            set_error(error, PC_RESULT_NOT_FOUND,
+                      "Influence Exalt currency not found");
             return PC_RESULT_NOT_FOUND;
         }
         out_action.influence_code = influence->second;

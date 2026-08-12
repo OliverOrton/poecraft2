@@ -1,5 +1,7 @@
 #include "tests.hpp"
 
+#include "../src/json.hpp"
+#include "../src/solver_action_family_contract.hpp"
 #include "../src/solver_internal.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
@@ -7,11 +9,13 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <filesystem>
 #include <fstream>
 #include <limits>
 #include <map>
 #include <memory>
 #include <sstream>
+#include <set>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -1972,6 +1976,251 @@ bool read_text_file(const std::string& path, std::string& out) {
     return true;
 }
 
+const char* snapshot_source_for_provenance(
+    const ExpectedPriceProvenance provenance) {
+    switch (provenance) {
+    case ExpectedPriceProvenance::Quote: return "quote";
+    case ExpectedPriceProvenance::Recipe: return "recipe";
+    case ExpectedPriceProvenance::Zero: return "zero";
+    case ExpectedPriceProvenance::OwnerDefault: return "owner_default";
+    case ExpectedPriceProvenance::Manual: return nullptr;
+    case ExpectedPriceProvenance::Mixed: return nullptr;
+    }
+    return nullptr;
+}
+
+void check_action_family_contract(
+    const SessionImpl& session,
+    const ActionRegistry& registry,
+    const std::string& artifact_dir) {
+    validate_action_registry_family_contract(registry);
+
+    std::array<bool, kActionTypeCount> emitted_types{};
+    bool emitted_restart = false;
+    for (const ActionDescriptor& action : registry.actions) {
+        const ResolvedRegistryIdentity resolved =
+            resolve_registry_identity_contract(action.id);
+        if (action.synthetic) {
+            emitted_restart = true;
+            PC_CHECK(resolved.synthetic);
+            PC_CHECK(resolved.price_provenance ==
+                     ExpectedPriceProvenance::Manual);
+            continue;
+        }
+        const ActionFamilyContract& contract =
+            action_family_contract(action.params.type);
+        const std::size_t type =
+            static_cast<std::size_t>(action.params.type);
+        emitted_types[type] = true;
+        PC_CHECK(resolved.family == contract.telemetry_family);
+        PC_CHECK(resolved.price_provenance == contract.price_provenance);
+        PC_CHECK(contract.telemetry_family !=
+                 PrimitiveTelemetryFamily::Other);
+        PC_CHECK(support_paths_are_complete(contract.support_paths));
+        if (contract.product_reason_group == ProductReasonGroup::Veiled) {
+            PC_CHECK(veiled_support_paths_are_deferred(
+                contract.support_paths));
+        }
+        PC_CHECK(action_identity_matches_contract(contract, action.id));
+        PC_CHECK(action_cost_keys_match_contract(action, contract));
+    }
+    PC_CHECK(emitted_restart);
+    for (const bool emitted : emitted_types) PC_CHECK(emitted);
+
+    PC_CHECK(primitive_family_for_action(ActionType::EldritchEmber) ==
+             PrimitiveTelemetryFamily::EldritchSetup);
+    PC_CHECK(primitive_family_for_action(ActionType::EldritchIchor) ==
+             PrimitiveTelemetryFamily::EldritchSetup);
+    PC_CHECK(primitive_family_for_action(ActionType::EldritchChaos) ==
+             PrimitiveTelemetryFamily::EldritchChaos);
+    PC_CHECK(primitive_family_for_action(ActionType::EldritchAnnul) ==
+             PrimitiveTelemetryFamily::EldritchAnnul);
+    PC_CHECK(primitive_family_for_action(ActionType::EldritchExalt) ==
+             PrimitiveTelemetryFamily::EldritchExalt);
+    PC_CHECK(primitive_family_for_action(ActionType::InfluenceExalt) ==
+             PrimitiveTelemetryFamily::InfluenceExalt);
+    PC_CHECK(primitive_family_for_action(ActionType::VeiledChaos) ==
+             PrimitiveTelemetryFamily::VeiledChaos);
+    PC_CHECK(primitive_family_for_action(ActionType::VeiledExalt) ==
+             PrimitiveTelemetryFamily::VeiledExalt);
+    PC_CHECK(primitive_family_for_action(ActionType::Unveil) ==
+             PrimitiveTelemetryFamily::Unveil);
+
+    std::set<std::string_view> automatic_identities;
+    constexpr std::array<std::string_view,
+                         kAutomaticCandidateKindCount>
+        expected_automatic_identities{{
+            "none", "fracture", "permanent_bench",
+            "temporary_bench_blocker", "protected_metamod",
+            "multimod_finish", "imprint", "constructive_renewal",
+            "eldritch_side", "cannot_roll"}};
+    PC_CHECK(automatic_telemetry_kind_for_candidate(
+                 AutomaticCandidateKind::None) ==
+             AutomaticTelemetryKind::None);
+    PC_CHECK(kAutomaticFamilyContracts[0].candidate_identity ==
+             expected_automatic_identities[0]);
+    for (std::size_t index = 1;
+         index < kAutomaticFamilyContracts.size(); ++index) {
+        const AutomaticFamilyContract& contract =
+            kAutomaticFamilyContracts[index];
+        PC_CHECK(static_cast<std::size_t>(contract.candidate_kind) == index);
+        PC_CHECK(contract.candidate_identity ==
+                 expected_automatic_identities[index]);
+        PC_CHECK(contract.telemetry_kind != AutomaticTelemetryKind::None);
+        PC_CHECK(automatic_telemetry_kind_for_candidate(
+                     contract.candidate_kind) == contract.telemetry_kind);
+        PC_CHECK(support_paths_are_complete(contract.support_paths));
+        PC_CHECK(contract.support_paths.carrier_generation ==
+                 CarrierGenerationPath::CarrierLocalAutomatic);
+        PC_CHECK(contract.support_paths.scheduler_admission ==
+                 SchedulerAdmissionPath::CarrierLocalAutomatic);
+        PC_CHECK(contract.support_paths.row_completion ==
+                 RowCompletionPath::AutomaticOption);
+        PC_CHECK(contract.support_paths.bellman_q ==
+                 BellmanQPath::AutomaticOption);
+        PC_CHECK(
+            automatic_identities.insert(contract.candidate_identity).second);
+    }
+
+    ActionRegistryBuildOptions product_options;
+    product_options.exhaustive_fossils = false;
+    product_options.goal_relevant_actions = true;
+    product_options.automatic_candidates = true;
+    const ActionRegistry product_registry =
+        build_action_registry(session, product_options);
+    validate_action_registry_family_contract(product_registry);
+    const auto veiled = product_registry.product_reason_counts.find(
+        "filtered_veiled_option_deferred");
+    PC_CHECK(veiled != product_registry.product_reason_counts.end());
+    if (veiled != product_registry.product_reason_counts.end()) {
+        PC_CHECK(veiled->second == 3);
+    }
+    for (const PrimitiveTelemetryFamily family : {
+             PrimitiveTelemetryFamily::VeiledChaos,
+             PrimitiveTelemetryFamily::VeiledExalt,
+             PrimitiveTelemetryFamily::Unveil}) {
+        PC_CHECK(product_registry.product_role_family_counts[
+                     static_cast<std::size_t>(ProductActionRole::Filtered)]
+                    [static_cast<std::size_t>(family)] == 1);
+    }
+
+    namespace fs = std::filesystem;
+    const fs::path repo_root =
+        fs::absolute(fs::path(artifact_dir))
+            .parent_path()
+            .parent_path()
+            .parent_path();
+    const fs::path snapshot_path =
+        repo_root / "apps" / "web" / "public" / "economy" /
+        "snapshots" /
+        "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json";
+    std::string snapshot_text;
+    PC_CHECK(read_text_file(snapshot_path.string(), snapshot_text));
+    if (snapshot_text.empty()) return;
+
+    const json::Value snapshot =
+        json::Parser(snapshot_text.data(), snapshot_text.size()).parse();
+    PC_CHECK(snapshot.at("metadata").at("content_sha256").as_string() ==
+             "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0");
+    std::map<std::string, std::string> sources;
+    for (const auto& [key, source] : snapshot.at("sources").object) {
+        sources.emplace(key, source.as_string());
+    }
+    std::set<std::string> missing;
+    for (const json::Value& key :
+         snapshot.at("metadata").at("missing_keys").array) {
+        missing.insert(key.as_string());
+    }
+
+    std::array<bool, 6> observed_provenance{};
+    for (const ActionDescriptor& action : registry.actions) {
+        const ExpectedPriceProvenance expected =
+            expected_price_provenance_for_action(action);
+        if (action.synthetic) {
+            PC_CHECK(action.cost_keys.size() == 1 &&
+                     action.cost_keys.front() == "base");
+            PC_CHECK(!sources.contains("base"));
+            PC_CHECK(missing.contains("base"));
+            observed_provenance[static_cast<std::size_t>(
+                ExpectedPriceProvenance::Manual)] = true;
+            continue;
+        }
+        if (action.cost_keys.empty()) {
+            PC_CHECK(expected == ExpectedPriceProvenance::Zero);
+            const ActionFamilyContract& contract =
+                action_family_contract(action.params.type);
+            const auto source = sources.find(
+                std::string(contract.operation_id));
+            PC_CHECK(source != sources.end());
+            if (source != sources.end()) {
+                PC_CHECK(source->second == "zero");
+                observed_provenance[static_cast<std::size_t>(expected)] =
+                    true;
+            }
+            continue;
+        }
+        const char* expected_source =
+            snapshot_source_for_provenance(expected);
+        PC_CHECK(expected_source != nullptr);
+        for (const std::string& key : action.cost_keys) {
+            const auto source = sources.find(key);
+            if (source == sources.end()) {
+                PC_CHECK(missing.contains(key));
+                continue;
+            }
+            PC_CHECK(source->second == expected_source);
+            observed_provenance[static_cast<std::size_t>(expected)] = true;
+        }
+    }
+
+    PC_CHECK(kSeparateOperationFamilyContracts[0].operation_id ==
+             "bestiary:imprint");
+    PC_CHECK(kSeparateOperationFamilyContracts[1].operation_id ==
+             "bestiary:restore_imprint");
+    for (const SeparateOperationFamilyContract& contract :
+         kSeparateOperationFamilyContracts) {
+        PC_CHECK(contract.telemetry_family ==
+                 PrimitiveTelemetryFamily::Bestiary);
+        PC_CHECK(support_paths_are_complete(contract.support_paths));
+        PC_CHECK(contract.support_paths.compiler ==
+                 CompilerCoveragePath::DedicatedSeparateOperation);
+        PC_CHECK(contract.support_paths.exact_evaluator ==
+                 ExactEvaluatorCoveragePath::DedicatedSeparateOperation);
+        PC_CHECK(contract.support_paths.simulator ==
+                 SimulatorCoveragePath::DedicatedSeparateOperation);
+        PC_CHECK(contract.support_paths.c_api ==
+                 CApiCoveragePath::DedicatedBestiaryFacade);
+    }
+    for (const SeparateOperationPriceComponentContract& component :
+         kSeparateOperationPriceComponentContracts) {
+        if (component.price_key.empty()) {
+            PC_CHECK(component.price_provenance ==
+                     ExpectedPriceProvenance::Zero);
+            continue;
+        }
+        const auto source = sources.find(std::string(component.price_key));
+        PC_CHECK(source != sources.end());
+        const char* expected_source =
+            snapshot_source_for_provenance(component.price_provenance);
+        PC_CHECK(expected_source != nullptr);
+        if (source != sources.end() && expected_source != nullptr) {
+            PC_CHECK(source->second == expected_source);
+            observed_provenance[static_cast<std::size_t>(
+                component.price_provenance)] = true;
+        }
+    }
+    PC_CHECK(observed_provenance[
+        static_cast<std::size_t>(ExpectedPriceProvenance::Quote)]);
+    PC_CHECK(observed_provenance[
+        static_cast<std::size_t>(ExpectedPriceProvenance::Recipe)]);
+    PC_CHECK(observed_provenance[
+        static_cast<std::size_t>(ExpectedPriceProvenance::Zero)]);
+    PC_CHECK(observed_provenance[
+        static_cast<std::size_t>(ExpectedPriceProvenance::OwnerDefault)]);
+    PC_CHECK(observed_provenance[
+        static_cast<std::size_t>(ExpectedPriceProvenance::Manual)]);
+}
+
 /*
  * Monte Carlo cross-check on the real artifact: sample the engine action
  * from the state's own representative item and compare the histogram of
@@ -2431,6 +2680,7 @@ void run_artifact_calc_tests(const char* artifact_dir) {
     }
 
     ActionRegistry registry = build_action_registry(*session);
+    check_action_family_contract(*session, registry, dir);
     GoalSpec goal;
     /* The goal group must be positively weighted under this base's tag
      * signature, not merely present in the roll mask, or no action can
@@ -3155,6 +3405,44 @@ void run_artifact_calc_tests(const char* artifact_dir) {
 }
 
 } // namespace
+
+void run_solver_action_family_contract_tests(const char* artifact_dir) {
+    if (artifact_dir == nullptr) {
+        std::printf(
+            "solver family-contract test skipped (missing artifact path)\n");
+        return;
+    }
+    const std::string dir = artifact_dir;
+    std::string manifest_text;
+    std::string strings_text;
+    std::string game_text;
+    if (!read_text_file(dir + "/manifest.json", manifest_text) ||
+        !read_text_file(dir + "/strings.json", strings_text) ||
+        !read_text_file(dir + "/game-data.json", game_text)) {
+        std::printf(
+            "solver family-contract test skipped (unreadable artifact)\n");
+        PC_CHECK(false);
+        return;
+    }
+    try {
+        const std::shared_ptr<DataImpl> data =
+            load_data_impl(manifest_text, strings_text, game_text);
+        const auto base = data->base_by_path.find(
+            "Metadata/Items/Armours/BodyArmours/BodyInt17");
+        PC_CHECK(base != data->base_by_path.end());
+        if (base == data->base_by_path.end()) return;
+        auto session = std::make_shared<SessionImpl>();
+        session->data = data;
+        session->base_index = base->second;
+        session->item_level = 86;
+        build_session(*session);
+        const ActionRegistry registry = build_action_registry(*session);
+        check_action_family_contract(*session, registry, dir);
+    } catch (const std::exception& ex) {
+        std::printf("solver family-contract test: %s\n", ex.what());
+        PC_CHECK(false);
+    }
+}
 
 void run_solver_calc_tests(const char* artifact_dir) {
     run_exact_goal_member_materialization_test();

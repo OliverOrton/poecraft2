@@ -4,8 +4,8 @@
 
 Parent: [Mechanics](README.md)
 
-Verified against code: 2026-07-31 through Policy-Guided Exact State
-Refinement.
+Verified against code and checked-in economy artifacts: 2026-08-09 through
+Gate 2 action and price availability.
 
 Verification scope: approved Bestiary fixtures, canonical/compiled recipe
 descriptors, native companion-state actions and exact calculation, WASM facade,
@@ -31,7 +31,16 @@ implicits, enchantments, quality, sockets, and links do not prevent creation.
 
 Creation stores one full mutable-item-state snapshot in companion Bestiary
 state, bound to the same live item identity. The cost vector is one
-`beast:craicic-chimeral` plus three `beast:rare`. Only one checkpoint may exist.
+`beast:craicic-croaker` plus three `beast:rare`. Only one checkpoint may exist.
+
+Craicic Croaker is a required Beast-market input and uses `quote` provenance.
+Each generic rare beast has an owner-approved one-chaos default, so the three
+repeated rare keys contribute three chaos. That unit default is explicitly
+user-overridable and uses `owner_default` provenance; it is never presented as
+a poe.ninja quote. Older immutable economy snapshots retain their historical
+price keys and missing-price state rather than being rewritten. On the current
+Allflame snapshot both Imprint price identities are present, so the complete
+four-entry action cost can be pinned without a fallback or manual override.
 
 Restore Imprint is deterministic and requires a checkpoint bound to the same
 live item. The current live item must be non-corrupted and non-mirrored, but it
@@ -55,6 +64,10 @@ Bestiary companion state, so cloning does not duplicate a checkpoint.
   automatic Imprint solver route may target a rare final goal; final-goal magic
   is not an eligibility condition. This correction is recorded in the archived
   [S8/B1 plan](../archive/2026-07-19-bestiary-solver-s8/plan.md).
+- **2026-08-09:** Oliver replaced the specific Imprint beast with Craicic
+  Croaker and set each of the three generic rare beasts to an explicit,
+  overridable one-chaos owner default with non-market provenance. The current
+  Bestiary fixtures carry `approved_owner_2026-08-09`.
 
 ## Engine Coverage And Code Pointers
 

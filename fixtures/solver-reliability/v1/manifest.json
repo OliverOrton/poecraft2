@@ -3,10 +3,10 @@
     "artifact_schema_version": 4,
     "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
     "manifest_relative_path": "data/compiled/current/manifest.json",
-    "manifest_sha256": "ba1feb596d6f07903dfa992d4ba42184bee30c18660ab56c84dad1c5cadc8a27",
-    "source_data_hash": "93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615",
+    "manifest_sha256": "eae9043a1631fabf706729e355aa828afe7eadc4e8e7846a9eab67e7ad7598c1",
+    "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
     "source_version": "repoe-e4eaf06c20e1ddb4",
-    "strings_sha256": "654a55489b47740672aea5a27ef52f01e23efc3bf5ce337be5a58756b72f955c"
+    "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
   },
   "case_counts": {
     "breadth": 6,

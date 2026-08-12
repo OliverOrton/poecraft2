@@ -521,7 +521,7 @@ bool SolveWork::Impl::incremental_alternative_type(
         }
     }
 
-void SolveWork::Impl::prepare_state_expansion(
+bool SolveWork::Impl::prepare_state_expansion(
         const std::uint32_t state,
         const bool include_state_local_automatic) {
         const auto prepare_started = std::chrono::steady_clock::now();
@@ -554,7 +554,7 @@ void SolveWork::Impl::prepare_state_expansion(
                     std::chrono::duration_cast<std::chrono::nanoseconds>(
                         std::chrono::steady_clock::now() -
                         prepare_started).count());
-            return;
+            return true;
         }
         expansion_operator_indices.erase(
             std::remove_if(
@@ -610,13 +610,9 @@ void SolveWork::Impl::prepare_state_expansion(
                         std::chrono::steady_clock::now() -
                         prepare_started)
                         .count());
-            return;
+            return true;
         }
         AutomaticAdmissionLimits limits;
-        limits.max_discovered_states = options.max_discovered_states;
-        limits.max_state_action_rows = options.max_state_action_rows;
-        limits.max_transitions = options.max_transitions;
-        limits.max_reforge_work = options.max_reforge_work;
         const auto byte_audit_started = std::chrono::steady_clock::now();
         const std::uint64_t calc_bytes =
             calc.fast_estimated_owned_bytes();
@@ -639,32 +635,128 @@ void SolveWork::Impl::prepare_state_expansion(
         limits.max_imprint_program_work =
             options.max_imprint_program_work;
         limits.prices = &prices;
-        if (state < focused_previous_upper_values.size() &&
-            std::isfinite(focused_previous_upper_values[state])) {
-            limits.incumbent_upper_bound =
-                focused_previous_upper_values[state];
-        } else if (focused_fallback_policy) {
+        const auto retain_certified_upper = [&](const double upper) {
+            if (!std::isfinite(upper) || upper < 0.0 ||
+                upper >= kValueCeiling) {
+                return;
+            }
+            const double margin = value_comparison_tolerance(upper);
+            const double outward = std::nextafter(
+                upper + margin,
+                std::numeric_limits<double>::infinity());
+            if (std::isfinite(outward)) {
+                limits.incumbent_upper_bound = std::min(
+                    limits.incumbent_upper_bound, outward);
+            }
+        };
+        if (state < incremental_certified_upper_values.size()) {
+            retain_certified_upper(
+                incremental_certified_upper_values[state]);
+        }
+        if (focused_fallback_policy) {
             const FocusedFallbackPolicy& fallback =
                 *focused_fallback_policy;
             const double terminal =
                 fallback_terminal_upper(state, fallback);
-            limits.incumbent_upper_bound =
+            retain_certified_upper(
                 state == fallback.anchor_state
                     ? fallback.anchor_state_value
                     : std::min(
                           terminal,
-                          restart_cost + fallback.anchor_state_value);
+                          restart_cost + fallback.anchor_state_value));
         }
+        if (output_incumbent.has_value() &&
+            output_incumbent->independently_certified &&
+            output_incumbent->independently_evaluated &&
+            output_incumbent->proper && output_incumbent->executable) {
+            const BoundedPolicyIncumbent& incumbent = *output_incumbent;
+            if (state < incumbent.values.size() &&
+                state < incumbent.policy_reachable.size() &&
+                incumbent.policy_reachable[state]) {
+                retain_certified_upper(incumbent.values[state]);
+            }
+            if (restart_operator_index != kNoId &&
+                restart_state < incumbent.values.size() &&
+                restart_state < incumbent.policy_reachable.size() &&
+                incumbent.policy_reachable[restart_state] &&
+                std::isfinite(restart_cost)) {
+                retain_certified_upper(
+                    restart_cost + incumbent.values[restart_state]);
+            }
+        }
+        AutomaticAdmissionPhaseTelemetry& phases =
+            transition_cache->automatic_admission_phases;
+        const CalcTelemetry automatic_work_before = calc.telemetry();
+        bool automatic_work_recorded = false;
+        const auto record_automatic_work = [&] {
+            if (automatic_work_recorded) return;
+            automatic_work_recorded = true;
+            const CalcTelemetry& after = calc.telemetry();
+            const auto add_delta = [](std::uint64_t& target,
+                                      const std::uint64_t before,
+                                      const std::uint64_t current) {
+                const std::uint64_t amount =
+                    current >= before ? current - before : current;
+                target = amount >
+                                 std::numeric_limits<std::uint64_t>::max() -
+                                     target
+                             ? std::numeric_limits<std::uint64_t>::max()
+                             : target + amount;
+            };
+            add_delta(
+                phases.state_action_rows,
+                automatic_work_before.state_action_rows,
+                after.state_action_rows);
+            add_delta(
+                phases.transition_entries,
+                automatic_work_before.transition_entries,
+                after.transition_entries);
+            add_delta(
+                phases.discovered_states,
+                automatic_work_before
+                    .automatic_admission_discovered_states,
+                after.automatic_admission_discovered_states);
+            add_delta(
+                phases.reforge_active_work,
+                automatic_work_before
+                    .automatic_admission_reforge_active_work,
+                after.automatic_admission_reforge_active_work);
+            add_delta(
+                phases.reforge_logical_work_v1,
+                automatic_work_before
+                    .automatic_admission_reforge_logical_work_v1,
+                after.automatic_admission_reforge_logical_work_v1);
+        };
         const auto admission_started = std::chrono::steady_clock::now();
-        StateLocalAutomaticBatch batch =
-            calc.admit_state_local_automatic_candidates(state, limits);
+        StateLocalAutomaticBatch batch;
+        bool admission_complete = false;
+        try {
+            admission_complete =
+                calc.advance_state_local_automatic_candidates(
+                    state, limits, batch, 1);
+        } catch (...) {
+            record_automatic_work();
+            result.diagnostics.expansion_prepare_admission_ns +=
+                static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() - admission_started)
+                        .count());
+            throw;
+        }
+        record_automatic_work();
         result.diagnostics.expansion_prepare_admission_ns +=
             static_cast<std::uint64_t>(
                 std::chrono::duration_cast<std::chrono::nanoseconds>(
                     std::chrono::steady_clock::now() - admission_started)
                     .count());
-        AutomaticAdmissionPhaseTelemetry& phases =
-            transition_cache->automatic_admission_phases;
+        if (!admission_complete) {
+            result.diagnostics.expansion_prepare_ns +=
+                static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() - prepare_started)
+                        .count());
+            return false;
+        }
         phases.carriers += batch.phases.carriers;
         phases.synthesis_ns += batch.phases.synthesis_ns;
         phases.local_context_ns += batch.phases.local_context_ns;
@@ -676,6 +768,47 @@ void SolveWork::Impl::prepare_state_expansion(
             batch.phases.local_ledger_init_ns;
         phases.local_context_other_ns +=
             batch.phases.local_context_other_ns;
+        const auto add_saturated = [](std::uint64_t& target,
+                                      const std::uint64_t amount) {
+            target = amount >
+                             std::numeric_limits<std::uint64_t>::max() -
+                                 target
+                         ? std::numeric_limits<std::uint64_t>::max()
+                         : target + amount;
+        };
+        add_saturated(
+            phases.imprint_programs_evaluated,
+            batch.phases.imprint_programs_evaluated);
+        add_saturated(
+            phases.imprint_programs_pruned,
+            batch.phases.imprint_programs_pruned);
+        add_saturated(
+            phases.imprint_distribution_dominated_programs,
+            batch.phases.imprint_distribution_dominated_programs);
+        add_saturated(
+            phases.imprint_price_pruned_programs,
+            batch.phases.imprint_price_pruned_programs);
+        phases.imprint_price_bound_max_program_depth = std::max(
+            phases.imprint_price_bound_max_program_depth,
+            batch.phases.imprint_price_bound_max_program_depth);
+        phases.imprint_max_evaluated_depth = std::max(
+            phases.imprint_max_evaluated_depth,
+            batch.phases.imprint_max_evaluated_depth);
+        phases.imprint_max_frontier_size = std::max(
+            phases.imprint_max_frontier_size,
+            batch.phases.imprint_max_frontier_size);
+        add_saturated(
+            phases.imprint_price_bound_complete_carriers,
+            batch.phases.imprint_price_bound_complete_carriers);
+        add_saturated(
+            phases.imprint_action_state_evaluations,
+            batch.phases.imprint_action_state_evaluations);
+        add_saturated(
+            phases.imprint_outcomes_merged,
+            batch.phases.imprint_outcomes_merged);
+        phases.imprint_max_atomic_outcomes_ns = std::max(
+            phases.imprint_max_atomic_outcomes_ns,
+            batch.phases.imprint_max_atomic_outcomes_ns);
         const auto diagnostics_started = std::chrono::steady_clock::now();
         if (batch.temporary_precompiled_classes != 0 ||
             batch.temporary_precompile_ns != 0 ||
@@ -732,6 +865,42 @@ void SolveWork::Impl::prepare_state_expansion(
                 std::chrono::duration_cast<std::chrono::nanoseconds>(
                     std::chrono::steady_clock::now() - diagnostics_started)
                     .count());
+        if (batch.status ==
+            StateLocalAutomaticBatchStatus::ResourceDeferred) {
+            if (batch.resource_cap.empty()) {
+                throw std::logic_error(
+                    "resource-deferred automatic admission omitted its cap");
+            }
+            const auto deferred = std::find_if(
+                batch.decisions.begin(), batch.decisions.end(),
+                [](const StateLocalAutomaticCandidate& decision) {
+                    return decision.deferred;
+                });
+            add_action_reason(
+                "deferred",
+                deferred == batch.decisions.end()
+                    ? "automatic:state_local_generation"
+                    : deferred->id,
+                batch.resource_reason);
+            /* No row from a truncated state-local action envelope can be
+             * exact. Record the unresolved carrier here because admission
+             * can also be requested by upper-policy construction before the
+             * dynamic-alternative cursor reaches this state. */
+            if (incremental_action_generation ||
+                options.goal_progress_gated_reforges) {
+                incremental_action_generation = true;
+                ++incremental_resource_unresolved_actions;
+                incremental_envelope_closed = false;
+                expansion_incremental_resource_limited = true;
+                result.diagnostics.incremental_action_generation = true;
+                result.diagnostics.incremental_action_envelope_closed =
+                    false;
+                result.diagnostics.incremental_actions_unresolved =
+                    incremental_resource_unresolved_actions;
+            }
+            throw SolverResourceLimit(
+                batch.resource_cap, batch.resource_limit);
+        }
         const auto pricing_started = std::chrono::steady_clock::now();
         for (const std::uint32_t index : batch.admitted_operators) {
             if (ensure_priced_operator(index) &&
@@ -804,6 +973,7 @@ void SolveWork::Impl::prepare_state_expansion(
                 std::chrono::duration_cast<std::chrono::nanoseconds>(
                     std::chrono::steady_clock::now() - prepare_started)
                     .count());
+        return true;
     }
 
 void SolveWork::Impl::enqueue(const std::uint32_t state) {
@@ -1035,6 +1205,11 @@ auto SolveWork::Impl::preservation_decision(
     }
 
 bool SolveWork::Impl::preservation_prunes(const std::uint64_t row_index) const {
+        /* A price-bound prune is valid for optimal search but cannot remove a
+         * completed legal row from an anytime proper-policy proof. The latter
+         * is only trying to establish an executable upper bound after the
+         * requested search was interrupted. */
+        if (anytime_policy_scratch_bytes != 0) return false;
         return preservation_decision(row_index).disposition ==
                PreservationDisposition::PrunedByRestartBound;
     }
@@ -1377,6 +1552,9 @@ std::string SolveWork::Impl::automatic_candidate_witness_json(
                std::to_string(carrier.prefix_count) +
                ",\"suffix_count\":" +
                std::to_string(carrier.suffix_count) +
+               ",\"flags\":" + std::to_string(state.flags) +
+               ",\"influence_bits\":" +
+               std::to_string(state.influence_bits) +
                ",\"crafted_goal_mask\":" +
                std::to_string(carrier.crafted_goal_mask) +
                ",\"fractured_goal_mask\":" +
@@ -1578,10 +1756,45 @@ void SolveWork::Impl::retain_automatic_candidate_record(
             kind.max_rows_per_carrier = std::max(
                 kind.max_rows_per_carrier, carrier->second.rows);
         }
-        if (record.count_candidate &&
-            transition_cache->automatic_candidate_samples.size() <
-            options.max_diagnostic_samples) {
-            transition_cache->retain_automatic_sample(std::move(record));
+        if (record.count_candidate) {
+            auto& samples =
+                transition_cache->automatic_candidate_samples;
+            if (samples.size() < options.max_diagnostic_samples) {
+                transition_cache->retain_automatic_sample(
+                    std::move(record));
+            } else if (record.deferred &&
+                       options.max_diagnostic_samples != 0) {
+                /* A resource-deferred automatic envelope is the authority
+                 * preventing exact closure. Preserve one such witness even
+                 * when earlier routine rejections filled the bounded sample;
+                 * replace rather than grow so max_diagnostic_samples remains
+                 * the exact retention cap. */
+                const auto replacement = std::find_if(
+                    samples.rbegin(), samples.rend(),
+                    [](const SolveTransitionCache::AutomaticCandidateRecord&
+                           sample) {
+                        return !sample.deferred;
+                    });
+                if (replacement != samples.rend()) {
+                    const std::uint64_t removed =
+                        SolveTransitionCache::automatic_sample_nested_bytes(
+                            *replacement);
+                    const std::uint64_t added =
+                        SolveTransitionCache::automatic_sample_nested_bytes(
+                            record);
+                    if (transition_cache
+                            ->owned_automatic_sample_nested_bytes < removed) {
+                        throw std::logic_error(
+                            "automatic diagnostic sample byte ledger "
+                            "underflow");
+                    }
+                    transition_cache->owned_automatic_sample_nested_bytes =
+                        transition_cache
+                            ->owned_automatic_sample_nested_bytes -
+                        removed + added;
+                    *replacement = std::move(record);
+                }
+            }
         }
     }
 
@@ -2603,8 +2816,16 @@ bool SolveWork::Impl::expand_one_unit() {
 
         try {
             if (!expansion_prepared) {
-                prepare_state_expansion(
-                    state, !incremental_action_generation);
+                if (!prepare_state_expansion(
+                        state, !incremental_action_generation)) {
+                    result.diagnostics.expansion_ns +=
+                        static_cast<std::uint64_t>(
+                            std::chrono::duration_cast<
+                                std::chrono::nanoseconds>(
+                                std::chrono::steady_clock::now() - started)
+                                .count());
+                    return false;
+                }
                 expansion_prepared = true;
             }
             if (expansion_operator_cursor <

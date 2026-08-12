@@ -30,9 +30,12 @@ struct SolveOptions {
     std::uint32_t focused_expansion_batch_states = 256;
     std::uint32_t focused_lower_batch_states = 64;
     double focused_goal_progress_priority_multiplier = 256.0;
-    /* Automatic Imprint discovery is deliberately bounded search, not a
-     * mechanic-validity limit. Exhaustion is reported as a deferred solver
-     * resource boundary in the automatic-candidate diagnostics. */
+    /* Automatic Imprint discovery uses a certified incumbent/positive-price
+     * proof depth when available. max_imprint_program_depth is deliberately a
+     * fallback refusal boundary only for grammars without that proof (no
+     * finite upper or a nonpositive reachable step); it does not truncate a
+     * proved finite grammar. max_imprint_program_work remains an unconditional
+     * cooperative work refusal, including during price-proved search. */
     std::uint32_t max_imprint_program_depth = kDefaultImprintProgramDepth;
     std::uint64_t max_imprint_program_work = kDefaultImprintProgramWork;
     /* White-box oracle comparison switch. Product/API solves leave exact
@@ -274,6 +277,11 @@ struct PolicyRefinementTelemetry {
     std::uint64_t fallback_portfolio_owned_bytes = 0;
     std::uint64_t fallback_publication_attempts = 0;
     std::uint64_t fallback_publication_successes = 0;
+    /* Authoritative, non-sampled publication contract. Candidate samples are
+     * bounded diagnostics and may be omitted; harnesses use this bit to prove
+     * that the published result was selected from the complete independently
+     * evaluated portfolio by the canonical cost/tolerance ordering. */
+    bool cheapest_independently_evaluated_selected = false;
     double preferred_candidate_upper =
         std::numeric_limits<double>::infinity();
     double published_fallback_upper =
@@ -721,6 +729,13 @@ struct SolveResult {
 
 namespace solve_detail {
 
+/* A Bellman optimum over a strict subset of delayed actions is scheduling
+ * evidence, not a certificate for the requested full action envelope. */
+double globally_certified_action_envelope_lower_bound(
+    double restricted_lower_bound,
+    bool incremental_action_generation,
+    bool incremental_action_envelope_closed);
+
 /* One final normalizer shared by direct, strict, and fallback publication.
  * Equality without Exact status is not a global closure certificate. */
 void normalize_publication_result(SolveResult& result);
@@ -794,6 +809,7 @@ class SolveWork {
     std::uint64_t peak_owned_bytes() const;
 
   private:
+    friend struct SolveWorkTestAccess;
     struct Impl;
     std::unique_ptr<Impl> impl_;
 };

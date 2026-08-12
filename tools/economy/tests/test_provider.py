@@ -11,7 +11,7 @@ class ProviderAdapterTests(unittest.TestCase):
         capabilities = {item.name: item for item in CATEGORY_CAPABILITIES}
         self.assertEqual(
             [item.name for item in CATEGORY_CAPABILITIES if item.required],
-            ["Currency", "Fossil", "Resonator", "Essence"],
+            ["Currency", "Fossil", "Resonator", "Essence", "Beast"],
         )
         self.assertEqual(capabilities["Fossil"].surface, "exchange")
         self.assertEqual(capabilities["Beast"].surface, "stash")
@@ -35,8 +35,8 @@ class ProviderAdapterTests(unittest.TestCase):
             "lines": [
                 {
                     "id": 42,
-                    "detailsId": "craicic-chimeral",
-                    "name": "Craicic Chimeral",
+                    "detailsId": "craicic-croaker",
+                    "name": "Craicic Croaker",
                     "chaosValue": 75.5,
                     "count": 8,
                     "listingCount": 19,
@@ -45,7 +45,7 @@ class ProviderAdapterTests(unittest.TestCase):
         }
         beast = next(item for item in CATEGORY_CAPABILITIES if item.name == "Beast")
         row = adapter.parse_rows(beast, json.dumps(stash).encode())[0]
-        self.assertEqual(row.row_key, "craicic-chimeral")
+        self.assertEqual(row.row_key, "craicic-croaker")
         self.assertEqual(row.item_id, "42")
         self.assertEqual(row.confidence, "low")
 

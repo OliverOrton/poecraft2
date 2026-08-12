@@ -594,7 +594,113 @@ void run_closed_form_tests() {
       ]
     })JSON";
     const StrategyEvalResult exact = evaluate_strategy(*loop_strategy, options);
+    StrategyEvalOptions raw_family_options = options;
+    raw_family_options.use_exact_exchangeable_family_compression = false;
+    const StrategyEvalResult raw_family_exact =
+        evaluate_strategy(*loop_strategy, raw_family_options);
     PC_CHECK(exact.converged);
+    PC_CHECK(raw_family_exact.converged);
+    /* Both runs are independent exact evaluations. The default evaluator may
+     * compress only proved exchangeable junk families; disabling that proof
+     * reconstructs the physical family frontier. Raw probability-bit hashes
+     * retain their distinct summation paths; the compiler's witness/runtime
+     * contract checks each path bitwise elsewhere. Here require all public
+     * mass, cost, and edge semantics to agree at the evaluator tolerance while
+     * proving the compressed work path is actually exercised. */
+    PC_CHECK(exact.reforge_gated_first_kernel_bits_hash != 0);
+    PC_CHECK(raw_family_exact.reforge_gated_first_kernel_bits_hash != 0);
+    PC_CHECK(
+        exact.reforge_gated_first_kernel_bits_hash !=
+        raw_family_exact.reforge_gated_first_kernel_bits_hash);
+    std::printf(
+        "solver eval exchangeable-family A/B: compressed_hash=%016llx "
+        "raw_hash=%016llx\n",
+        static_cast<unsigned long long>(
+            exact.reforge_gated_first_kernel_bits_hash),
+        static_cast<unsigned long long>(
+            raw_family_exact.reforge_gated_first_kernel_bits_hash));
+    PC_CHECK(near(
+        exact.success_probability,
+        raw_family_exact.success_probability, 1e-12));
+    PC_CHECK(near(
+        exact.failure_probability,
+        raw_family_exact.failure_probability, 1e-12));
+    PC_CHECK(near(
+        exact.stop_probability,
+        raw_family_exact.stop_probability, 1e-12));
+    PC_CHECK(near(
+        exact.action_not_applied_probability,
+        raw_family_exact.action_not_applied_probability, 1e-12));
+    PC_CHECK(near(
+        exact.no_matching_edge_probability,
+        raw_family_exact.no_matching_edge_probability, 1e-12));
+    PC_CHECK(near(
+        exact.unresolved_probability,
+        raw_family_exact.unresolved_probability, 1e-12));
+    PC_CHECK(near(
+        exact.expected_actions,
+        raw_family_exact.expected_actions, 1e-12));
+    PC_CHECK(near(
+        exact.known_expected_cost,
+        raw_family_exact.known_expected_cost, 1e-12));
+    PC_CHECK(near(
+        exact.total_expected_cost,
+        raw_family_exact.total_expected_cost, 1e-12));
+    PC_CHECK(near(
+        exact.occupancy_expected_reward,
+        raw_family_exact.occupancy_expected_reward, 1e-12));
+    PC_CHECK(exact.cost_complete == raw_family_exact.cost_complete);
+    PC_CHECK(
+        exact.expected_consumption.size() ==
+        raw_family_exact.expected_consumption.size());
+    for (const auto& [key, quantity] : exact.expected_consumption) {
+        PC_CHECK(near(
+            quantity,
+            raw_family_exact.expected_consumption.at(key), 1e-12));
+    }
+    PC_CHECK(exact.edges.size() == raw_family_exact.edges.size());
+    for (const StrategyEvalEdge& edge : exact.edges) {
+        PC_CHECK(near(
+            edge.expected_traversals,
+            edge_value(raw_family_exact, edge.id), 1e-12));
+    }
+    const double compressed_goal_probability =
+        edge_value(exact, "hit") / exact.expected_actions;
+    const double compressed_retry_probability =
+        edge_value(exact, "repeat") / exact.expected_actions;
+    const double raw_goal_probability =
+        edge_value(raw_family_exact, "hit") /
+        raw_family_exact.expected_actions;
+    const double raw_retry_probability =
+        edge_value(raw_family_exact, "repeat") /
+        raw_family_exact.expected_actions;
+    PC_CHECK(near(
+        compressed_goal_probability, raw_goal_probability, 1e-12));
+    PC_CHECK(near(
+        compressed_retry_probability, raw_retry_probability, 1e-12));
+    PC_CHECK(near(compressed_goal_probability, p, 1e-12));
+    PC_CHECK(near(compressed_retry_probability, 1.0 - p, 1e-12));
+    PC_CHECK(near(
+        compressed_goal_probability + compressed_retry_probability,
+        1.0, 1e-12));
+    PC_CHECK(
+        exact.reforge_effort.physical_families_built ==
+        raw_family_exact.reforge_effort.physical_families_built);
+    PC_CHECK(
+        exact.reforge_effort.roll_buckets_built <
+        raw_family_exact.reforge_effort.roll_buckets_built);
+    PC_CHECK(
+        exact.reforge_effort.frontier_nodes <
+        raw_family_exact.reforge_effort.frontier_nodes);
+    PC_CHECK(
+        exact.reforge_logical_work_v1 <
+        raw_family_exact.reforge_logical_work_v1);
+    PC_CHECK(std::all_of(
+        raw_family_exact.reforge_row_samples.begin(),
+        raw_family_exact.reforge_row_samples.end(),
+        [](const ReforgeRowTelemetry& row) {
+            return row.owner == ReforgeRowOwner::ExactEvaluation;
+        }));
     PC_CHECK(exact.reforge_work > 0);
     PC_CHECK(exact.reforge_logical_work_v1 > 0);
     PC_CHECK(exact.reforge_effort.rows_completed > 0);

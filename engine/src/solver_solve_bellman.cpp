@@ -702,6 +702,20 @@ bool SolveWork::Impl::evaluate_fixed_policy() {
         const std::size_t state_count = result.values.size();
         const std::uint64_t no_row =
             std::numeric_limits<std::uint64_t>::max();
+        const auto byte_product = [](
+            const std::size_t count, const std::size_t width) {
+            return count >
+                    std::numeric_limits<std::uint64_t>::max() / width
+                ? std::numeric_limits<std::uint64_t>::max()
+                : static_cast<std::uint64_t>(count) * width;
+        };
+        const auto byte_add = [](
+            const std::uint64_t left, const std::uint64_t right) {
+            return right >
+                    std::numeric_limits<std::uint64_t>::max() - left
+                ? std::numeric_limits<std::uint64_t>::max()
+                : left + right;
+        };
 
         /* Exact fixed-policy quotient. A policy state's value equation is
          * determined entirely by its immediate cost and full transition row.
@@ -712,6 +726,24 @@ bool SolveWork::Impl::evaluate_fixed_policy() {
          * probability, carrier distinction, action, or policy choice. */
         if (policy_kernel_preparation == nullptr ||
             policy_kernel_preparation->state_count != state_count) {
+            policy_kernel_preparation.reset();
+            sparse_policy_resume.reset();
+            current_policy_scratch_bytes = 0;
+            std::uint64_t initial_projection =
+                sizeof(PolicyKernelPreparation);
+            initial_projection = byte_add(
+                initial_projection,
+                byte_product(expanded_count, sizeof(std::uint32_t)));
+            initial_projection = byte_add(
+                initial_projection,
+                byte_product(state_count, sizeof(std::uint32_t)));
+            initial_projection = byte_add(
+                initial_projection,
+                byte_product(
+                    state_count, sizeof(std::vector<PolicyEdge>)));
+            if (check_solver_byte_cap_fast(initial_projection)) {
+                return fail("fixed_policy_preparation_exceeds_byte_cap");
+            }
             policy_kernel_preparation =
                 std::make_unique<PolicyKernelPreparation>();
             policy_kernel_preparation->state_count = state_count;
@@ -730,6 +762,149 @@ bool SolveWork::Impl::evaluate_fixed_policy() {
         }
         PolicyKernelPreparation& preparation =
             *policy_kernel_preparation;
+        const auto refresh_policy_scratch = [&]() {
+            std::uint64_t bytes = sizeof(PolicyKernelPreparation);
+            const auto add = [&](const std::uint64_t amount) {
+                bytes = amount >
+                                std::numeric_limits<std::uint64_t>::max() -
+                                    bytes
+                            ? std::numeric_limits<std::uint64_t>::max()
+                            : bytes + amount;
+            };
+            const auto add_vector = [&]
+                (const std::size_t capacity,
+                 const std::size_t element_size) {
+                add(capacity >
+                            std::numeric_limits<std::uint64_t>::max() /
+                                element_size
+                        ? std::numeric_limits<std::uint64_t>::max()
+                        : static_cast<std::uint64_t>(capacity) *
+                              element_size);
+            };
+            add_vector(
+                preparation.active_states.capacity(),
+                sizeof(std::uint32_t));
+            add_vector(
+                preparation.kernel_owner.capacity(),
+                sizeof(std::uint32_t));
+            add_vector(
+                preparation.full_kernel.capacity(),
+                sizeof(std::vector<PolicyEdge>));
+            for (const auto& kernel : preparation.full_kernel) {
+                add_vector(kernel.capacity(), sizeof(PolicyEdge));
+            }
+            add_vector(
+                preparation.representative.capacity(),
+                sizeof(std::uint32_t));
+            add_vector(
+                preparation.group_members.capacity(),
+                sizeof(std::vector<std::uint32_t>));
+            for (const auto& members : preparation.group_members) {
+                add_vector(members.capacity(), sizeof(std::uint32_t));
+            }
+            add_vector(preparation.rows.capacity(), sizeof(PolicyRow));
+            add_vector(preparation.edges.capacity(), sizeof(PolicyEdge));
+            add_vector(
+                preparation.component_by_state.capacity(),
+                sizeof(std::uint32_t));
+            add_vector(preparation.local.capacity(), sizeof(std::int32_t));
+            add_vector(
+                preparation.components.capacity(),
+                sizeof(std::vector<std::uint32_t>));
+            for (const auto& component : preparation.components) {
+                add_vector(component.capacity(), sizeof(std::uint32_t));
+            }
+            add_vector(
+                preparation.tarjan_index.capacity(),
+                sizeof(std::uint32_t));
+            add_vector(
+                preparation.tarjan_lowlink.capacity(),
+                sizeof(std::uint32_t));
+            add_vector(
+                preparation.tarjan_on_stack.capacity(),
+                sizeof(std::uint8_t));
+            add_vector(
+                preparation.tarjan_stack.capacity(),
+                sizeof(std::uint32_t));
+            add_vector(
+                preparation.tarjan_dfs.capacity(),
+                sizeof(PolicyTarjanFrame));
+            add(
+                preparation.representatives_by_hash.bucket_count() *
+                sizeof(void*));
+            add(
+                preparation.representatives_by_hash.size() *
+                (sizeof(decltype(
+                     preparation.representatives_by_hash)::value_type) +
+                 2 * sizeof(void*)));
+            for (const auto& [unused, entries] :
+                 preparation.representatives_by_hash) {
+                (void)unused;
+                add_vector(entries.capacity(), sizeof(std::uint32_t));
+            }
+            add(
+                preparation.shared_transition_representatives
+                    .bucket_count() * sizeof(void*));
+            add(
+                preparation.shared_transition_representatives.size() *
+                (sizeof(decltype(
+                     preparation.shared_transition_representatives)::
+                            value_type) +
+                 2 * sizeof(void*)));
+            for (const auto& [unused, entries] :
+                 preparation.shared_transition_representatives) {
+                (void)unused;
+                add_vector(
+                    entries.capacity(),
+                    sizeof(SharedPolicyKernelRepresentative));
+                for (const SharedPolicyKernelRepresentative& entry :
+                     entries) {
+                    add_vector(
+                        entry.exact_signature.capacity(),
+                        sizeof(std::uint64_t));
+                }
+            }
+            if (sparse_policy_resume != nullptr) {
+                add(sizeof(SparsePolicyResume));
+                add_vector(
+                    sparse_policy_resume->members.capacity(),
+                    sizeof(std::uint32_t));
+                const auto add_wide = [&](const auto& values) {
+                    add_vector(values.capacity(), sizeof(WideFloat));
+                };
+                add_wide(sparse_policy_resume->b);
+                add_wide(sparse_policy_resume->x);
+                add_wide(sparse_policy_resume->r);
+                add_wide(sparse_policy_resume->r0);
+                add_wide(sparse_policy_resume->p);
+                add_wide(sparse_policy_resume->v);
+                add_wide(sparse_policy_resume->s);
+                add_wide(sparse_policy_resume->t);
+            }
+            current_policy_scratch_bytes = bytes;
+            peak_policy_scratch_bytes = std::max(
+                peak_policy_scratch_bytes, bytes);
+            return bytes;
+        };
+        const auto policy_scratch_within_cap = [&]
+            (const std::uint64_t transient_bytes = 0) {
+                const std::uint64_t retained = refresh_policy_scratch();
+                peak_policy_scratch_bytes = std::max(
+                    peak_policy_scratch_bytes,
+                    byte_add(retained, transient_bytes));
+                if (!check_solver_byte_cap_fast(transient_bytes)) {
+                    return true;
+                }
+                /* A byte refusal is terminal for this fixed-policy attempt.
+                 * Never continue to install an incumbent after a preparation
+                 * or component scratch check has failed. */
+                policy_evaluation_incomplete = false;
+                policy_kernel_preparation.reset();
+                sparse_policy_resume.reset();
+                current_policy_scratch_bytes = 0;
+                return false;
+            };
+        if (!policy_scratch_within_cap()) return false;
         std::vector<std::uint32_t>& kernel_owner =
             preparation.kernel_owner;
         std::vector<std::vector<PolicyEdge>>& full_kernel =
@@ -764,6 +939,28 @@ bool SolveWork::Impl::evaluate_fixed_policy() {
         const std::uint32_t kernel_end = std::min<std::uint32_t>(
             static_cast<std::uint32_t>(preparation.active_states.size()),
             preparation.cursor + kKernelStatesPerWorkUnit);
+        std::uint64_t kernel_transient = 0;
+        for (std::uint32_t active = preparation.cursor;
+             active < kernel_end; ++active) {
+            const std::uint32_t state = preparation.active_states[active];
+            if (!result.expanded[state] || result.goal_states[state] ||
+                policy_rows[state] == no_row) {
+                continue;
+            }
+            const SparseRow& sparse = transition_cache->rows.at(
+                policy_rows[state]);
+            const std::uint64_t selected =
+                static_cast<std::uint64_t>(sparse.choice_count) *
+                    sizeof(std::uint32_t) +
+                static_cast<std::uint64_t>(
+                    6 + 2 * sparse.choice_count) *
+                    sizeof(std::uint64_t) +
+                static_cast<std::uint64_t>(
+                    sparse.transition_count + sparse.choice_count + 1) *
+                    sizeof(PolicyEdge);
+            kernel_transient = std::max(kernel_transient, selected);
+        }
+        if (!policy_scratch_within_cap(kernel_transient)) return false;
         for (std::uint32_t active = preparation.cursor;
              active < kernel_end; ++active) {
             const std::uint32_t state = preparation.active_states[active];
@@ -894,12 +1091,19 @@ bool SolveWork::Impl::evaluate_fixed_policy() {
             kernel_owner[state] = owner;
         }
         preparation.cursor = kernel_end;
+        if (!policy_scratch_within_cap()) return false;
         if (preparation.cursor < preparation.active_states.size()) {
             policy_evaluation_incomplete = true;
             return false;
         }
 
         if (preparation.representative.empty()) {
+            const std::uint64_t projected =
+                static_cast<std::uint64_t>(state_count) *
+                (2 * sizeof(std::uint32_t) + sizeof(PolicyRow) +
+                 sizeof(std::vector<std::uint32_t>) +
+                 sizeof(PolicyEdge));
+            if (!policy_scratch_within_cap(projected)) return false;
             preparation.representative = kernel_owner;
             preparation.group_members.resize(state_count);
             preparation.rows.resize(state_count);
@@ -935,6 +1139,7 @@ bool SolveWork::Impl::evaluate_fixed_policy() {
             }
         }
         preparation.grouping_cursor = grouping_end;
+        if (!policy_scratch_within_cap()) return false;
         if (preparation.grouping_cursor < preparation.active_states.size()) {
             policy_evaluation_incomplete = true;
             return false;
@@ -943,6 +1148,18 @@ bool SolveWork::Impl::evaluate_fixed_policy() {
         const std::uint32_t quotient_end = std::min<std::uint32_t>(
             static_cast<std::uint32_t>(preparation.active_states.size()),
             preparation.quotient_cursor + kQuotientStatesPerWorkUnit);
+        std::uint64_t quotient_transient = 0;
+        for (std::uint32_t active = preparation.quotient_cursor;
+             active < quotient_end; ++active) {
+            const std::uint32_t state = preparation.active_states[active];
+            if (representative[state] != state) continue;
+            quotient_transient = std::max(
+                quotient_transient,
+                static_cast<std::uint64_t>(
+                    full_kernel[kernel_owner[state]].size()) *
+                    sizeof(PolicyEdge));
+        }
+        if (!policy_scratch_within_cap(quotient_transient)) return false;
         for (std::uint32_t active = preparation.quotient_cursor;
              active < quotient_end; ++active) {
             const std::uint32_t state = preparation.active_states[active];
@@ -995,6 +1212,7 @@ bool SolveWork::Impl::evaluate_fixed_policy() {
                 edges.size() - row.edge_offset);
         }
         preparation.quotient_cursor = quotient_end;
+        if (!policy_scratch_within_cap()) return false;
         if (preparation.quotient_cursor < preparation.active_states.size()) {
             policy_evaluation_incomplete = true;
             return false;
@@ -1026,74 +1244,16 @@ bool SolveWork::Impl::evaluate_fixed_policy() {
             if (!advance_sparse_policy_components(
                     tarjan_view, preparation,
                     kTarjanWorkPerUnit)) {
+                if (!policy_scratch_within_cap()) return false;
                 policy_evaluation_incomplete = true;
                 return false;
             }
         }
+        if (!policy_scratch_within_cap()) return false;
         std::vector<std::uint32_t>& component_by_state =
             preparation.component_by_state;
         std::vector<std::int32_t>& local = preparation.local;
-        std::uint64_t policy_scratch =
-            preparation.active_states.capacity() * sizeof(std::uint32_t) +
-            preparation.kernel_owner.capacity() * sizeof(std::uint32_t) +
-            preparation.full_kernel.capacity() *
-                sizeof(std::vector<PolicyEdge>) +
-            preparation.representative.capacity() * sizeof(std::uint32_t) +
-            preparation.group_members.capacity() *
-                sizeof(std::vector<std::uint32_t>) +
-            rows.capacity() * sizeof(PolicyRow) +
-            edges.capacity() * sizeof(PolicyEdge) +
-            component_by_state.capacity() * sizeof(std::uint32_t) +
-            local.capacity() * sizeof(std::int32_t) +
-            components.capacity() * sizeof(std::vector<std::uint32_t>) +
-            preparation.tarjan_index.capacity() * sizeof(std::uint32_t) +
-            preparation.tarjan_lowlink.capacity() * sizeof(std::uint32_t) +
-            preparation.tarjan_on_stack.capacity() * sizeof(std::uint8_t) +
-            preparation.tarjan_stack.capacity() * sizeof(std::uint32_t) +
-            preparation.tarjan_dfs.capacity() * sizeof(PolicyTarjanFrame);
-        for (const auto& kernel : preparation.full_kernel) {
-            policy_scratch += kernel.capacity() * sizeof(PolicyEdge);
-        }
-        for (const auto& members : preparation.group_members) {
-            policy_scratch += members.capacity() * sizeof(std::uint32_t);
-        }
-        for (const auto& component : components) {
-            policy_scratch += component.capacity() * sizeof(std::uint32_t);
-        }
-        const auto map_vectors_bytes = [](const auto& values) {
-            std::uint64_t bytes = values.bucket_count() * sizeof(void*);
-            bytes += values.size() *
-                     (sizeof(typename std::decay_t<decltype(values)>::value_type) +
-                      2 * sizeof(void*));
-            for (const auto& [unused, entries] : values) {
-                (void)unused;
-                bytes += entries.capacity() * sizeof(std::uint32_t);
-            }
-            return bytes;
-        };
-        policy_scratch += map_vectors_bytes(
-            preparation.representatives_by_hash);
-        policy_scratch +=
-            preparation.shared_transition_representatives.bucket_count() *
-            sizeof(void*);
-        policy_scratch +=
-            preparation.shared_transition_representatives.size() *
-            (sizeof(decltype(preparation.shared_transition_representatives)::
-                        value_type) +
-             2 * sizeof(void*));
-        for (const auto& [unused, entries] :
-             preparation.shared_transition_representatives) {
-            (void)unused;
-            policy_scratch += entries.capacity() *
-                              sizeof(SharedPolicyKernelRepresentative);
-            for (const SharedPolicyKernelRepresentative& entry : entries) {
-                policy_scratch += entry.exact_signature.capacity() *
-                                  sizeof(std::uint64_t);
-            }
-        }
-        current_policy_scratch_bytes = policy_scratch;
-        peak_policy_scratch_bytes = std::max(
-            peak_policy_scratch_bytes, policy_scratch);
+        refresh_policy_scratch();
         constexpr std::uint32_t kComponentsPerWorkUnit = 64;
         const std::uint32_t component_end = std::min<std::uint32_t>(
             static_cast<std::uint32_t>(components.size()),
@@ -1130,6 +1290,33 @@ bool SolveWork::Impl::evaluate_fixed_policy() {
             }
             for (std::size_t i = 0; i < n; ++i) local[members[i]] =
                 static_cast<std::int32_t>(i);
+            const std::uint64_t rhs_bytes =
+                byte_product(n, sizeof(double));
+            std::uint64_t solve_scratch =
+                sparse_policy_component_scratch_bytes(n, false);
+            if (n > kDensePolicyComponentLimit &&
+                sparse_policy_resume != nullptr) {
+                /* The shared helper includes a worst-case retained resume.
+                 * That resume is already in current_policy_scratch_bytes, so
+                 * remove only its n-sized projection before adding the helper
+                 * as transient call storage. Any excess retained capacities
+                 * remain counted by refresh_policy_scratch(). */
+                std::uint64_t retained_resume_projection =
+                    sizeof(SparsePolicyResume);
+                retained_resume_projection = byte_add(
+                    retained_resume_projection,
+                    byte_product(n, sizeof(std::uint32_t)));
+                retained_resume_projection = byte_add(
+                    retained_resume_projection,
+                    byte_product(n, 8 * sizeof(WideFloat)));
+                solve_scratch = solve_scratch > retained_resume_projection
+                    ? solve_scratch - retained_resume_projection
+                    : 0;
+            }
+            if (!policy_scratch_within_cap(
+                    byte_add(rhs_bytes, solve_scratch))) {
+                return false;
+            }
             /* Keep policy numerics identical on native and wasm32. On x86,
              * long double uses an 80-bit accumulator while WebAssembly maps
              * it to 64-bit double, which made otherwise identical fixed
@@ -1175,12 +1362,6 @@ bool SolveWork::Impl::evaluate_fixed_policy() {
                 rhs[i] = rows[state].cost + external_sum;
             }
 
-            const std::uint64_t solve_scratch =
-                sparse_policy_component_scratch_bytes(n, false);
-            check_solver_byte_cap_fast(solve_scratch);
-            peak_policy_scratch_bytes = std::max(
-                peak_policy_scratch_bytes,
-                policy_scratch + solve_scratch);
             const SparsePolicyComponentView component_view{
                 members,
                 component,
@@ -1194,6 +1375,11 @@ bool SolveWork::Impl::evaluate_fixed_policy() {
             SparsePolicyComponentResult component_result =
                 advance_sparse_policy_component(
                     component_view, sparse_policy_resume);
+            if (!policy_scratch_within_cap(byte_product(
+                    component_result.values.capacity(),
+                    sizeof(double)))) {
+                return false;
+            }
             if (n > kDensePolicyComponentLimit) {
                 result.diagnostics.sparse_policy_iterations +=
                     component_result.iterations;
@@ -1252,6 +1438,16 @@ bool SolveWork::Impl::evaluate_fixed_policy() {
 
 bool SolveWork::Impl::repair_improper_policy() {
         if (improper_policy_states.empty()) return false;
+        const std::uint64_t projected_repair_bytes =
+            result.values.size() >
+                    std::numeric_limits<std::uint64_t>::max() /
+                        (sizeof(std::uint8_t) + sizeof(double))
+                ? std::numeric_limits<std::uint64_t>::max()
+                : static_cast<std::uint64_t>(result.values.size()) *
+                      (sizeof(std::uint8_t) + sizeof(double));
+        if (check_solver_byte_cap_fast(projected_repair_bytes)) {
+            return false;
+        }
         std::vector<std::uint8_t> in_component(result.values.size(), 0);
         for (const std::uint32_t state : improper_policy_states) {
             in_component[state] = 1;
@@ -1268,9 +1464,14 @@ bool SolveWork::Impl::repair_improper_policy() {
         for (const std::uint32_t state : improper_policy_states) {
             repair_values[state] = kInfinity;
         }
-        check_solver_byte_cap_fast(
-            in_component.capacity() * sizeof(std::uint8_t) +
-            repair_values.capacity() * sizeof(double));
+        const std::uint64_t actual_repair_bytes =
+            static_cast<std::uint64_t>(in_component.capacity()) *
+                sizeof(std::uint8_t) +
+            static_cast<std::uint64_t>(repair_values.capacity()) *
+                sizeof(double);
+        if (check_solver_byte_cap_fast(actual_repair_bytes)) {
+            return false;
+        }
         bool repaired = false;
         for (const std::uint32_t state : improper_policy_states) {
             const SparsePolicyRowSelection selected =
@@ -1600,6 +1801,23 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
         std::uint32_t remaining = std::max<std::uint32_t>(1, max_work_items);
         while (remaining > 0 && phase != SolvePhase::Done) {
             if (phase == SolvePhase::Expanding) {
+                if (incremental_dynamic_prepare_active) {
+                    const bool preparation_complete =
+                        advance_incremental_dynamic_preparation();
+                    --remaining;
+                    if (!preparation_complete) continue;
+                    if (schedule_next_incremental_alternative()) continue;
+                    if (schedule_incremental_refinement()) {
+                        incremental_restricted_values_ready = false;
+                        continue;
+                    }
+                    if (schedule_incremental_refinement(true)) {
+                        incremental_restricted_values_ready = false;
+                        continue;
+                    }
+                    phase = SolvePhase::Done;
+                    break;
+                }
                 if (target_gap_stop) {
                     prepare_iteration();
                     phase = SolvePhase::Done;

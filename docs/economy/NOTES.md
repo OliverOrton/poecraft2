@@ -31,6 +31,12 @@ sessions at Allflame, and the Mirage snapshot files remain byte-identical.
 `data/economy/poecraft-economy.db` itself still contains fixture data and must
 not be used for future publication.
 
+The later Gate 2 isolated refresh added required Craicic Croaker quotes and the
+generic rare-beast owner default to new current Allflame-family and Standard
+snapshots. It did not make the ignored fixture-backed local database safe for
+publication, and it did not replace the prior content-addressed snapshots or
+historical raw evidence.
+
 ### 2026-08-09 — #provider — Hardcore Currency reference row
 
 Status: open upstream compatibility observation; no price-semantics change was
@@ -44,14 +50,16 @@ synthetic chaos quote or raw-response edit was introduced.
 
 ### 2026-07-19 — #debt — Scheduled Beast coverage
 
-Status: open.
+Status: closed on 2026-08-09 by the Gate 2 Bestiary/economy repair.
 
-`fixtures/economy/price-key-catalog-v1.json` maps Craicic Chimeral to
-`beast:craicic-chimeral`, but `PoeNinjaAdapter` marks Beast optional and
-`refresh_all_leagues` fetches required capabilities only. Scheduled snapshots
-therefore do not currently receive the Imprint beast quote. `beast:rare`
-remains intentionally manual-only. Documentation must not describe production
-Imprint pricing as complete until code and acceptance evidence close this gap.
+`fixtures/economy/price-key-catalog-v1.json` now maps Craicic Croaker to
+`beast:craicic-croaker`, `PoeNinjaAdapter` marks Beast required, and a missing
+or malformed required Beast category fails only the affected league while its
+last successful snapshot remains selected. `beast:rare` is a separately
+recorded, user-overridable one-chaos owner default with non-market provenance;
+Imprint repeats that unit key three times. Schema v2 and new immutable
+snapshots preserve that evidence without rewriting schema-v1/historical
+artifacts.
 
 ### 2026-07-19 — #debt — External production activation
 

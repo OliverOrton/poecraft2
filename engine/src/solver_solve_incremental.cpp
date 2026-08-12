@@ -28,6 +28,42 @@ void SolveWork::Impl::retain_incremental_carrier(
     incremental_unevaluated_actions += delayed_operator_indices.size();
 }
 
+bool SolveWork::Impl::advance_incremental_dynamic_preparation() {
+    if (incremental_carrier_cursor >= incremental_carriers.size()) {
+        throw std::logic_error(
+            "incremental automatic preparation lost its carrier");
+    }
+    const std::uint32_t state =
+        incremental_carriers[incremental_carrier_cursor];
+    const std::uint64_t unresolved_before =
+        incremental_resource_unresolved_actions;
+    try {
+        if (!prepare_state_expansion(state, true)) return false;
+    } catch (const SolverResourceLimit&) {
+        if (incremental_resource_unresolved_actions == unresolved_before) {
+            ++incremental_resource_unresolved_actions;
+        }
+        incremental_envelope_closed = false;
+        throw;
+    }
+    incremental_dynamic_operator_indices.clear();
+    for (const std::uint32_t candidate : expansion_operator_indices) {
+        if (std::find(
+                static_operator_indices.begin(),
+                static_operator_indices.end(),
+                candidate) == static_operator_indices.end()) {
+            incremental_dynamic_operator_indices.push_back(candidate);
+        }
+    }
+    incremental_dynamic_prepared = true;
+    incremental_dynamic_prepare_active = false;
+    incremental_dynamic_operator_cursor = 0;
+    incremental_unevaluated_actions +=
+        incremental_dynamic_operator_indices.size();
+    expansion_operator_indices.clear();
+    return true;
+}
+
 bool SolveWork::Impl::schedule_next_incremental_alternative() {
     if (!incremental_action_generation || incremental_envelope_closed) {
         return false;
@@ -133,30 +169,10 @@ bool SolveWork::Impl::schedule_next_incremental_alternative() {
              * its automatic dependencies reachable. The returned set is
              * anchors plus newly admitted local operators; keep only the
              * latter.
-             */
-            try {
-                prepare_state_expansion(state, true);
-            } catch (const SolverResourceLimit&) {
-                ++incremental_resource_unresolved_actions;
-                throw;
-            }
-            incremental_dynamic_operator_indices.clear();
-            for (const std::uint32_t candidate :
-                 expansion_operator_indices) {
-                if (std::find(
-                        static_operator_indices.begin(),
-                        static_operator_indices.end(),
-                        candidate) == static_operator_indices.end()) {
-                    incremental_dynamic_operator_indices.push_back(
-                        candidate);
-                }
-            }
-            incremental_dynamic_prepared = true;
-            incremental_dynamic_operator_cursor = 0;
-            incremental_unevaluated_actions +=
-                incremental_dynamic_operator_indices.size();
-            expansion_operator_indices.clear();
-            continue;
+            */
+            incremental_dynamic_prepare_active = true;
+            phase = SolvePhase::Expanding;
+            return true;
         }
         if (incremental_dynamic_operator_cursor <
             incremental_dynamic_operator_indices.size()) {
@@ -170,6 +186,7 @@ bool SolveWork::Impl::schedule_next_incremental_alternative() {
             ++incremental_carrier_cursor;
             incremental_operator_cursor = 0;
             incremental_dynamic_prepared = false;
+            incremental_dynamic_prepare_active = false;
             incremental_dynamic_operator_cursor = 0;
             incremental_dynamic_operator_indices.clear();
             continue;
@@ -558,26 +575,32 @@ double SolveWork::Impl::sparse_row_q_for_values(
 
 std::vector<double>
 SolveWork::Impl::certified_incremental_lower_values() {
-    std::vector<double> lower = result.values;
-    lower.resize(calc.state_count(), 0.0);
+    std::vector<double> lower(calc.state_count(), 0.0);
+    const bool full_action_envelope =
+        !incremental_action_generation || incremental_envelope_closed;
     for (std::uint32_t state = 0; state < lower.size(); ++state) {
         if (calc.is_goal_state(calc.state(state))) {
             lower[state] = 0.0;
             continue;
         }
         /*
-         * An exact partial graph can be improper under its currently
-         * admitted actions even though a delayed action or Restart gives the
-         * concrete state a finite continuation. Infinity in that restricted
-         * graph is therefore not a global lower bound while the action
-         * envelope remains open. Replace only unavailable values with the
-         * independently admissible state heuristic (or its zero fallback);
-         * retain every finite Bellman lift.
+         * Finite values from the admitted-row problem are no more global
+         * than infinite ones while delayed actions remain: minimizing over a
+         * strict subset of actions can only overestimate the full-envelope
+         * optimum. Using those values as candidate lower-Qs can therefore
+         * falsely certify a genuinely improving delayed row as
+         * NonImproving. Reserve restricted values for scheduling. Delayed
+         * row classification uses only the independently admissible state
+         * heuristic (or its universal zero fallback) until the envelope is
+         * complete.
          */
-        if (!std::isfinite(lower[state]) ||
-            lower[state] >= kValueCeiling) {
-            lower[state] =
-                optimistic_completion_cost_for_state(state);
+        if (full_action_envelope && state < result.values.size() &&
+            std::isfinite(result.values[state]) &&
+            result.values[state] >= 0.0 &&
+            result.values[state] < kValueCeiling) {
+            lower[state] = result.values[state];
+        } else {
+            lower[state] = optimistic_completion_cost_for_state(state);
         }
     }
     return lower;
@@ -970,6 +993,30 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
          (focused_bound_proved || !focused_mode));
     if (exact_restricted_values) {
         upper_values = &result.values;
+        /* Only a stable, exactly evaluated proper selected policy owns a
+         * carrier upper for later automatic grammar pruning. A residual-only
+         * Bellman fallback or an improper policy must not populate this
+         * authority. Adding actions later cannot invalidate the feasibility
+         * of this restricted policy, so the snapshot remains a valid upper. */
+        if (!policy_iteration_failed && policy_initialized && policy_stable &&
+            improper_policy_states.empty()) {
+            if (incremental_certified_upper_values.capacity() <
+                result.values.size()) {
+                const std::uint64_t added =
+                    static_cast<std::uint64_t>(
+                        result.values.size() -
+                        incremental_certified_upper_values.capacity()) *
+                    sizeof(double);
+                if (check_solver_byte_cap_fast(added)) {
+                    throw SolverResourceLimit(
+                        "max_solver_owned_bytes",
+                        options.max_solver_owned_bytes);
+                }
+                incremental_certified_upper_values.reserve(
+                    result.values.size());
+            }
+            incremental_certified_upper_values = result.values;
+        }
     } else if (output_incumbent.has_value()) {
         upper_values = &output_incumbent->values;
     }

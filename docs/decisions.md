@@ -342,11 +342,18 @@ values change; do not recompute their probability kernels. Exceptional-
 support successors must be expanded before their action is admitted or
 rejected. An open or overlapping envelope remains bounded and incomplete.
 
-Expose exactly four automatic goal-relevant Eldritch compound candidates on
-engine-certified eligible rare armour: Annul Prefix/Suffix and Chaos
-Prefix/Suffix. Existing dominance uses the final currency directly. Missing
-dominance must use and charge real Ember/Ichor setup, preserve the resulting
-implicit tiers, and compile to every real operation.
+At this milestone, expose four automatic goal-relevant Eldritch compound
+candidates on engine-certified eligible rare armour: Annul Prefix/Suffix and
+Chaos Prefix/Suffix. Existing dominance uses the final currency directly.
+Missing dominance must use and charge real Ember/Ichor setup, preserve the
+resulting implicit tiers, and compile to every real operation.
+
+**2026-08-09 amendment:** The product surface now also admits Eldritch Exalt
+Prefix/Suffix as dependency-only carrier-local compounds. Exalt requires real
+target-side capacity, an unmet goal still rollable on that side, useful
+satisfied goal progress on the opposite side, legal Eldritch state, and every
+setup/final price. The original July evidence remains historical evidence for
+the four options then implemented.
 
 **Context:** [Final report](archive/2026-07-28-q-directed-eldritch-side-actions/report.md),
 [Solver](solver/README.md),

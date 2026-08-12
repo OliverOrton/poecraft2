@@ -83,6 +83,15 @@ int main(int argc, char** argv) {
         return pctest::g_failures == 0 ? 0 : 1;
     }
     if (argc > 1 &&
+        std::string(argv[1]) == "--solver-family-contract-only") {
+        run_solver_action_family_contract_tests(
+            argc > 2 ? argv[2] : nullptr);
+        std::printf(
+            "solver family-contract tests: %d checks, %d failures\n",
+            pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
+    if (argc > 1 &&
         std::string(argv[1]) ==
             "--solver-calc-gated-equivalence-only") {
         run_solver_calc_gated_equivalence_tests();

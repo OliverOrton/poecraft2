@@ -1,5 +1,6 @@
 #include "solver_solve_types.hpp"
 #include "solver_compile_contracts.hpp"
+#include "solver_sparse_policy.hpp"
 
 namespace poecraft {
 namespace solver {
@@ -173,13 +174,29 @@ std::uint64_t SolveWork::Impl::goal_identity() const {
     }
 
 std::uint64_t SolveWork::Impl::economy_identity() const {
-        std::vector<std::pair<std::string, double>> ordered(
-            prices.begin(), prices.end());
-        std::sort(ordered.begin(), ordered.end());
         std::uint64_t hash = 1469598103934665603ULL;
-        for (const auto& [key, price] : ordered) {
-            identity_mix_string(hash, key);
-            identity_mix(hash, std::bit_cast<std::uint64_t>(price));
+        /* Preserve the original lexicographic key/value identity without
+         * allocating a sorted copy. This path can run while a resource-stop
+         * candidate and fixed-policy scratch are simultaneously live. */
+        std::string_view previous;
+        bool have_previous = false;
+        for (std::size_t mixed = 0; mixed < prices.size(); ++mixed) {
+            const std::pair<const std::string, double>* next = nullptr;
+            for (const auto& entry : prices) {
+                if (have_previous && !(previous < entry.first)) continue;
+                if (next == nullptr || entry.first < next->first) {
+                    next = &entry;
+                }
+            }
+            if (next == nullptr) {
+                throw std::logic_error(
+                    "economy identity ordering did not consume every key");
+            }
+            identity_mix_string(hash, next->first);
+            identity_mix(
+                hash, std::bit_cast<std::uint64_t>(next->second));
+            previous = next->first;
+            have_previous = true;
         }
         return hash;
     }
@@ -794,8 +811,60 @@ void SolveWork::Impl::populate_incumbent_policy(
             throw std::logic_error(
                 "bounded incumbent captured policy size changed");
         }
-        candidate.unveil_preferences.assign(state_count, {});
-        candidate.option_unveil_preferences.assign(state_count, {});
+        const auto vector_capacity_upper = [](
+            const std::size_t elements) {
+            if (elements == 0) return std::size_t{0};
+            if (elements >
+                (std::numeric_limits<std::size_t>::max() - 16) / 2) {
+                return std::numeric_limits<std::size_t>::max();
+            }
+            return 2 * elements + 16;
+        };
+        candidate.unveil_preferences.clear();
+        candidate.unveil_preferences.reserve(state_count);
+        candidate.unveil_preferences.resize(state_count);
+        candidate.option_unveil_preferences.clear();
+        candidate.option_unveil_preferences.reserve(state_count);
+        candidate.option_unveil_preferences.resize(state_count);
+        if (candidate.unveil_preferences.capacity() >
+                vector_capacity_upper(state_count) ||
+            candidate.option_unveil_preferences.capacity() >
+                vector_capacity_upper(state_count)) {
+            throw std::logic_error(
+                "bounded incumbent preference outer-vector projection was "
+                "exceeded");
+        }
+        const auto order_choice_range = [&]<typename Iterator>(
+            const ActionDescriptor& action,
+            const Iterator first,
+            const Iterator last) {
+            if (!action_observes_modifier_offer(action)) {
+                throw std::logic_error(
+                    "observed-choice finalization requires an admitted "
+                    "outcome-observation contract");
+            }
+            std::sort(
+                first, last,
+                [&](const OutcomeChoiceOption& left,
+                    const OutcomeChoiceOption& right) {
+                    if (left.state >= candidate.values.size() ||
+                        right.state >= candidate.values.size()) {
+                        throw std::logic_error(
+                            "observed-choice finalization references a "
+                            "state outside the value table");
+                    }
+                    const double left_value =
+                        candidate.values[left.state];
+                    const double right_value =
+                        candidate.values[right.state];
+                    if (left.state == right.state) {
+                        return left.mod_id < right.mod_id;
+                    }
+                    return sparse_policy_choice_precedes(
+                        left_value, left.state,
+                        right_value, right.state);
+                });
+        };
         for (BoundedPolicyIncumbent::ChoiceSource& source :
              candidate.choice_sources) {
             const std::uint32_t state = source.state;
@@ -814,37 +883,96 @@ void SolveWork::Impl::populate_incumbent_policy(
                     calc.registry().actions[
                         planner.primitive_action],
                     source.choices, candidate.values);
+                std::vector<std::uint32_t>& preferences =
+                    candidate.unveil_preferences[state];
+                preferences.reserve(source.choices.size());
+                if (preferences.capacity() >
+                    vector_capacity_upper(source.choices.size())) {
+                    throw std::logic_error(
+                        "bounded incumbent primitive preference projection "
+                        "was exceeded");
+                }
                 for (const OutcomeChoiceOption& choice : source.choices) {
-                    candidate.unveil_preferences[state].push_back(
-                        choice.mod_id);
+                    preferences.push_back(choice.mod_id);
                 }
             } else if (planner.kind == PlannerOperatorKind::FixedOption &&
                        !source.choices.empty()) {
-                std::map<std::uint32_t, std::vector<OutcomeChoiceOption>>
-                    by_observation;
-                for (const OutcomeChoiceOption& choice : source.choices) {
-                    by_observation[choice.observation_state].push_back(choice);
+                if (planner.primitive_program.empty() ||
+                    planner.primitive_program.back() >=
+                        calc.registry().actions.size()) {
+                    throw std::logic_error(
+                        "bounded observed-choice option has no final "
+                        "primitive action");
                 }
-                for (auto& [observation_state, choices] : by_observation) {
-                    if (planner.primitive_program.empty() ||
-                        planner.primitive_program.back() >=
-                            calc.registry().actions.size()) {
-                        throw std::logic_error(
-                            "bounded observed-choice option has no final "
-                            "primitive action");
+                std::sort(
+                    source.choices.begin(), source.choices.end(),
+                    [](const OutcomeChoiceOption& left,
+                       const OutcomeChoiceOption& right) {
+                        return std::tie(
+                                   left.observation_state, left.mod_id,
+                                   left.state, left.actual_state) <
+                            std::tie(
+                                   right.observation_state, right.mod_id,
+                                   right.state, right.actual_state);
+                    });
+                std::size_t group_count = 0;
+                for (std::size_t begin = 0;
+                     begin < source.choices.size();) {
+                    ++group_count;
+                    const std::uint32_t observation =
+                        source.choices[begin].observation_state;
+                    do {
+                        ++begin;
+                    } while (begin < source.choices.size() &&
+                             source.choices[begin].observation_state ==
+                                 observation);
+                }
+                std::vector<ObservedUnveilPreference>& preferences =
+                    candidate.option_unveil_preferences[state];
+                preferences.reserve(group_count);
+                if (preferences.capacity() >
+                    vector_capacity_upper(group_count)) {
+                    throw std::logic_error(
+                        "bounded incumbent option preference projection was "
+                        "exceeded");
+                }
+                const ActionDescriptor& final_action =
+                    calc.registry().actions[
+                        planner.primitive_program.back()];
+                for (std::size_t begin = 0;
+                     begin < source.choices.size();) {
+                    std::size_t end = begin + 1;
+                    const std::uint32_t observation_state =
+                        source.choices[begin].observation_state;
+                    while (end < source.choices.size() &&
+                           source.choices[end].observation_state ==
+                               observation_state) {
+                        ++end;
                     }
-                    order_observed_modifier_choices(
-                        calc.registry().actions[
-                            planner.primitive_program.back()],
-                        choices, candidate.values);
+                    order_choice_range(
+                        final_action,
+                        source.choices.begin() +
+                            static_cast<std::ptrdiff_t>(begin),
+                        source.choices.begin() +
+                            static_cast<std::ptrdiff_t>(end));
                     ObservedUnveilPreference preference;
                     preference.observation_state = observation_state;
-                    for (const OutcomeChoiceOption& choice : choices) {
+                    preference.choices.reserve(end - begin);
+                    if (preference.choices.capacity() >
+                        vector_capacity_upper(end - begin)) {
+                        throw std::logic_error(
+                            "bounded incumbent observed-choice projection "
+                            "was exceeded");
+                    }
+                    for (std::size_t position = begin;
+                         position < end; ++position) {
+                        const OutcomeChoiceOption& choice =
+                            source.choices[position];
                         preference.choices.push_back(
                             {choice.mod_id, choice.state, choice.actual_state});
                     }
-                    candidate.option_unveil_preferences[state].push_back(
-                        std::move(preference));
+                    preferences.push_back(std::move(preference));
+                    begin = end;
                 }
             }
         }
@@ -1045,7 +1173,7 @@ bool SolveWork::Impl::certify_incumbent_for_fallback(
         proof.policy_available = true;
         proof.policy_status = SolvePolicyStatus::BoundedFeasible;
         proof.termination = SolveTermination::RefusedResourceCap;
-        proof.lower_bound = result.diagnostics.focused_lower_bound;
+        proof.lower_bound = certified_global_lower_bound();
         proof.upper_bound = incumbent.certified_upper_bound;
         proof.evaluated_policy_cost = incumbent.evaluated_policy_cost;
         proof.start_state = result.start_state;
@@ -1132,7 +1260,8 @@ bool SolveWork::Impl::certify_incumbent_for_fallback(
     }
 
 bool SolveWork::Impl::retain_certified_incumbent(
-        const BoundedPolicyIncumbent& incumbent) {
+        const BoundedPolicyIncumbent& incumbent,
+        const std::uint64_t additional_live_bytes) {
         PolicyRefinementTelemetry& telemetry =
             result.diagnostics.policy_refinement;
         if (const char* reason =
@@ -1158,16 +1287,13 @@ bool SolveWork::Impl::retain_certified_incumbent(
             incumbent_owned_bytes(incumbent) -
             sizeof(BoundedPolicyIncumbent);
         std::uint64_t current_bytes = fast_estimated_owned_bytes();
+        current_bytes = additional_live_bytes >
+                std::numeric_limits<std::uint64_t>::max() - current_bytes
+            ? std::numeric_limits<std::uint64_t>::max()
+            : current_bytes + additional_live_bytes;
         std::uint64_t added_bytes = candidate_dynamic_bytes;
-        if (certified_fallback_portfolio.size() >= kMaximumFallbacks) {
-            const std::uint64_t replaced_dynamic_bytes =
-                incumbent_owned_bytes(
-                    certified_fallback_portfolio.back()) -
-                sizeof(BoundedPolicyIncumbent);
-            current_bytes = current_bytes >= replaced_dynamic_bytes
-                                ? current_bytes - replaced_dynamic_bytes
-                                : 0;
-        } else if (certified_fallback_portfolio.capacity() <
+        if (certified_fallback_portfolio.size() < kMaximumFallbacks &&
+            certified_fallback_portfolio.capacity() <
                    kMaximumFallbacks) {
             added_bytes +=
                 (kMaximumFallbacks -
@@ -1255,18 +1381,25 @@ auto SolveWork::Impl::best_current_certified_fallback()
         return best;
     }
 
-void SolveWork::Impl::commit_output_incumbent(
+bool SolveWork::Impl::commit_output_incumbent(
         BoundedPolicyIncumbent candidate) {
+        const std::uint64_t candidate_owned =
+            incumbent_owned_bytes(candidate);
+        const std::uint64_t candidate_dynamic =
+            candidate_owned >= sizeof(BoundedPolicyIncumbent)
+                ? candidate_owned - sizeof(BoundedPolicyIncumbent)
+                : candidate_owned;
         if (output_incumbent.has_value() &&
             !output_incumbent->compiled_artifact.strategy_json.empty() &&
             output_incumbent->portfolio_identity !=
                 candidate.portfolio_identity &&
-            !retain_certified_incumbent(*output_incumbent) &&
+            !retain_certified_incumbent(
+                *output_incumbent, candidate_dynamic) &&
             !candidate.independently_certified) {
             /* Memory pressure cannot let an uncertified preferred policy
              * destroy the only executable result. Keep the old fallback as
              * the selected output instead. */
-            return;
+            return false;
         }
         output_incumbent = std::move(candidate);
         result.diagnostics.incumbent_kind = output_incumbent->kind;
@@ -1287,6 +1420,7 @@ void SolveWork::Impl::commit_output_incumbent(
             output_incumbent->strict_state_provenance;
         result.diagnostics.policy_refinement.preferred_candidate_upper =
             output_incumbent->certified_upper_bound;
+        return true;
     }
 
 void SolveWork::Impl::install_output_incumbent(
@@ -1298,21 +1432,151 @@ void SolveWork::Impl::install_output_incumbent(
         std::string kind,
         const std::vector<std::uint8_t>* policy_reachable,
         const PrimitiveRenewalWitness* primitive_renewal_witness,
-        const bool replace_equal_incumbent) {
+        const bool replace_equal_incumbent,
+        const bool record_memory_refusal) {
         if (!std::isfinite(upper) || upper < 0.0 ||
             result.start_state >= values.size()) {
             return;
         }
+        const auto saturated_product = [](
+            const std::size_t count, const std::size_t width) {
+            return count >
+                    std::numeric_limits<std::uint64_t>::max() / width
+                ? std::numeric_limits<std::uint64_t>::max()
+                : static_cast<std::uint64_t>(count) * width;
+        };
+        const auto saturated_add = [](
+            const std::uint64_t left, const std::uint64_t right) {
+            return right >
+                    std::numeric_limits<std::uint64_t>::max() - left
+                ? std::numeric_limits<std::uint64_t>::max()
+                : left + right;
+        };
+        const auto doubled = [&](const std::uint64_t value) {
+            return saturated_add(value, value);
+        };
+        const auto vector_capacity_upper = [](
+            const std::size_t elements) {
+            if (elements == 0) return std::size_t{0};
+            if (elements >
+                (std::numeric_limits<std::size_t>::max() - 16) / 2) {
+                return std::numeric_limits<std::size_t>::max();
+            }
+            return 2 * elements + 16;
+        };
+        const std::size_t state_count = values.size();
+        std::uint64_t candidate_projection = 0;
+        const auto add_projection = [&](const std::uint64_t value) {
+            candidate_projection = saturated_add(
+                candidate_projection, value);
+        };
+        /* Candidate construction coexists with the source vectors and with
+         * resource-stop saved scratch. Reserve a conservative two-times
+         * vector-growth authority before allocating any candidate member;
+         * the exact selected walk below is the commit authority. */
+        add_projection(saturated_product(
+            vector_capacity_upper(state_count), sizeof(double)));
+        add_projection(saturated_product(
+            vector_capacity_upper(
+                std::max(state_count, selected_rows.size())),
+            sizeof(std::uint64_t)));
+        add_projection(saturated_product(
+            vector_capacity_upper(
+                std::max(state_count, frontier_operators.size())),
+            sizeof(std::uint32_t)));
+        add_projection(saturated_product(
+            vector_capacity_upper(state_count),
+            sizeof(PolicyOperatorRef)));
+        add_projection(saturated_product(
+            vector_capacity_upper(state_count), sizeof(double)));
+        add_projection(saturated_product(
+            vector_capacity_upper(state_count),
+            sizeof(BoundedPolicyIncumbent::ChoiceSource)));
+        const std::uint64_t choice_capacity_elements = saturated_add(
+            saturated_product(
+                transition_cache->choice_options.size(), 2),
+            saturated_product(state_count, 16));
+        add_projection(
+            choice_capacity_elements >
+                    std::numeric_limits<std::size_t>::max()
+                ? std::numeric_limits<std::uint64_t>::max()
+                : saturated_product(
+                      static_cast<std::size_t>(choice_capacity_elements),
+                      sizeof(OutcomeChoiceOption)));
+        add_projection(saturated_product(
+            vector_capacity_upper(
+                result.behavioral_representative_by_state.size()),
+            sizeof(std::uint32_t)));
+        if (policy_reachable != nullptr) {
+            add_projection(saturated_product(
+                vector_capacity_upper(policy_reachable->size()),
+                sizeof(std::uint8_t)));
+        }
+        if (primitive_renewal_witness != nullptr) {
+            add_projection(saturated_product(
+                vector_capacity_upper(
+                    primitive_renewal_witness->kernel_signature.size()),
+                sizeof(std::uint64_t)));
+        }
+        add_projection(doubled(
+            static_cast<std::uint64_t>(kind.size() + 1)));
+        const auto candidate_bytes_fit = [&](const std::uint64_t added) {
+            const std::uint64_t current = fast_estimated_owned_bytes();
+            const std::uint64_t projected = saturated_add(current, added);
+            if (projected <= options.max_solver_owned_bytes) {
+                peak_owned_bytes = std::max(peak_owned_bytes, projected);
+                return true;
+            }
+            (void)check_solver_byte_cap_fast(added);
+            return false;
+        };
+        if (record_memory_refusal &&
+            !candidate_bytes_fit(candidate_projection)) {
+            return;
+        }
         BoundedPolicyIncumbent candidate;
+        if (record_memory_refusal) {
+            candidate.values.reserve(state_count);
+            candidate.policy_rows.reserve(
+                std::max(state_count, selected_rows.size()));
+            candidate.frontier_operators.reserve(
+                std::max(state_count, frontier_operators.size()));
+            candidate.behavioral_representative_by_state.reserve(
+                result.behavioral_representative_by_state.size());
+            if (policy_reachable != nullptr) {
+                candidate.policy_reachable.reserve(
+                    policy_reachable->size());
+            }
+            candidate.policy.reserve(state_count);
+            candidate.policy_row_costs.reserve(state_count);
+            candidate.choice_sources.reserve(state_count);
+        }
         candidate.certified_upper_bound = upper;
         candidate.evaluated_policy_cost = upper;
-        candidate.values = values;
+        if (record_memory_refusal) {
+            candidate.values.insert(
+                candidate.values.end(), values.begin(), values.end());
+        } else {
+            candidate.values = values;
+        }
         candidate.values[result.start_state] = upper;
-        candidate.policy_rows = selected_rows;
+        if (record_memory_refusal) {
+            candidate.policy_rows.insert(
+                candidate.policy_rows.end(),
+                selected_rows.begin(), selected_rows.end());
+        } else {
+            candidate.policy_rows = selected_rows;
+        }
         candidate.policy_rows.resize(
             candidate.values.size(),
             std::numeric_limits<std::uint64_t>::max());
-        candidate.frontier_operators = frontier_operators;
+        if (record_memory_refusal) {
+            candidate.frontier_operators.insert(
+                candidate.frontier_operators.end(),
+                frontier_operators.begin(), frontier_operators.end());
+        } else {
+            candidate.frontier_operators = frontier_operators;
+        }
         candidate.frontier_operators.resize(candidate.values.size(), kNoId);
         candidate.fallback = fallback;
         candidate.restart_operator = restart_operator_index;
@@ -1350,15 +1614,28 @@ void SolveWork::Impl::install_output_incumbent(
                 candidate.graph_choice_count,
                 candidate.graph_choice_successor_count,
                 candidate.graph_choice_option_count);
-        candidate.behavioral_representative_by_state =
-            result.behavioral_representative_by_state;
+        if (record_memory_refusal) {
+            candidate.behavioral_representative_by_state.insert(
+                candidate.behavioral_representative_by_state.end(),
+                result.behavioral_representative_by_state.begin(),
+                result.behavioral_representative_by_state.end());
+        } else {
+            candidate.behavioral_representative_by_state =
+                result.behavioral_representative_by_state;
+        }
         if (policy_reachable != nullptr) {
             if (policy_reachable->size() != candidate.values.size() ||
                 !(*policy_reachable)[result.start_state]) {
                 throw std::logic_error(
                     "bounded incumbent reachability witness is invalid");
             }
-            candidate.policy_reachable = *policy_reachable;
+            if (record_memory_refusal) {
+                candidate.policy_reachable.insert(
+                    candidate.policy_reachable.end(),
+                    policy_reachable->begin(), policy_reachable->end());
+            } else {
+                candidate.policy_reachable = *policy_reachable;
+            }
         }
         if (primitive_renewal_witness != nullptr) {
             candidate.primitive_renewal_witness =
@@ -1371,6 +1648,41 @@ void SolveWork::Impl::install_output_incumbent(
          * output remain deferred, but finish() must never reinterpret an
          * incumbent through a replacement graph or a repriced row variant. */
         capture_incumbent_policy(candidate);
+        if (record_memory_refusal) {
+            const auto capacity_exceeded = [&]<typename T>(
+                const std::vector<T>& vector,
+                const std::size_t requested) {
+                return vector.capacity() >
+                    vector_capacity_upper(requested);
+            };
+            std::uint64_t choice_capacity = 0;
+            for (const BoundedPolicyIncumbent::ChoiceSource& source :
+                 candidate.choice_sources) {
+                choice_capacity = saturated_add(
+                    choice_capacity, source.choices.capacity());
+            }
+            if (capacity_exceeded(candidate.values, state_count) ||
+                capacity_exceeded(
+                    candidate.policy_rows,
+                    std::max(state_count, selected_rows.size())) ||
+                capacity_exceeded(
+                    candidate.frontier_operators,
+                    std::max(state_count, frontier_operators.size())) ||
+                capacity_exceeded(candidate.policy, state_count) ||
+                capacity_exceeded(candidate.policy_row_costs, state_count) ||
+                capacity_exceeded(candidate.choice_sources, state_count) ||
+                capacity_exceeded(
+                    candidate.behavioral_representative_by_state,
+                    result.behavioral_representative_by_state.size()) ||
+                (policy_reachable != nullptr &&
+                 capacity_exceeded(
+                     candidate.policy_reachable,
+                     policy_reachable->size())) ||
+                choice_capacity > choice_capacity_elements) {
+                throw std::logic_error(
+                    "resource-stop incumbent vector projection was exceeded");
+            }
+        }
         std::uint64_t identity = 1469598103934665603ULL;
         identity_mix(
             identity,
@@ -1402,6 +1714,12 @@ void SolveWork::Impl::install_output_incumbent(
         identity_mix_string(identity, candidate.kind);
         candidate.portfolio_identity = identity;
         (void)certify_incumbent_for_fallback(candidate);
+        const std::uint64_t candidate_owned =
+            incumbent_owned_bytes(candidate);
+        const std::uint64_t candidate_dynamic =
+            candidate_owned >= sizeof(BoundedPolicyIncumbent)
+                ? candidate_owned - sizeof(BoundedPolicyIncumbent)
+                : candidate_owned;
         if (output_incumbent.has_value()) {
             const double incumbent_upper =
                 output_incumbent->certified_upper_bound;
@@ -1413,10 +1731,15 @@ void SolveWork::Impl::install_output_incumbent(
                 incumbent_precedes(candidate, *output_incumbent);
             if (!strictly_better && !replace_equal) {
                 if (!candidate.compiled_artifact.strategy_json.empty()) {
-                    (void)retain_certified_incumbent(candidate);
+                    (void)retain_certified_incumbent(
+                        candidate, candidate_dynamic);
                 }
                 return;
             }
+        }
+        if (record_memory_refusal &&
+            !candidate_bytes_fit(candidate_dynamic)) {
+            return;
         }
         commit_output_incumbent(std::move(candidate));
     }
@@ -1540,6 +1863,360 @@ void SolveWork::Impl::install_direct_output_incumbent(
         commit_output_incumbent(std::move(candidate));
     }
 
+bool SolveWork::Impl::try_install_resource_stop_reachable_incumbent() {
+        if (!result.diagnostics.resource_cap_hit ||
+            output_incumbent.has_value() || transition_cache == nullptr ||
+            result.start_state == kNoId ||
+            result.start_state >= calc.state_count() ||
+            transition_cache->rows.empty() || priced_rows.empty()) {
+            return false;
+        }
+
+        const std::size_t state_count = calc.state_count();
+        const std::uint64_t no_row =
+            std::numeric_limits<std::uint64_t>::max();
+        const std::uint64_t predicted_scratch =
+            static_cast<std::uint64_t>(state_count) *
+                (2 * sizeof(double) + 2 * sizeof(std::uint64_t) +
+                 5 * sizeof(std::uint8_t) + 2 * sizeof(std::uint32_t)) +
+            static_cast<std::uint64_t>(transition_cache->rows.size()) *
+                (sizeof(std::uint8_t) + sizeof(std::uint64_t));
+        if (check_solver_byte_cap_fast(predicted_scratch)) return false;
+
+        std::vector<std::uint8_t> completed(
+            transition_cache->rows.size(), 0);
+        std::vector<std::uint64_t> temporarily_admitted;
+        for (std::uint64_t row = 0;
+             row < transition_cache->rows.size(); ++row) {
+            completed[row] = transition_cache->rows[row].admitted ? 1 : 0;
+        }
+        /* An IncrementalAlternativeRow is appended only after its exact row
+         * has been fully materialized. PendingValues/Unresolved describe its
+         * optimization classification, not an incomplete kernel. Such a row
+         * is therefore legal evidence for an executable upper even while it
+         * remains outside the admitted minimization problem. */
+        for (const IncrementalAlternativeRow& alternative :
+             incremental_alternative_rows) {
+            if (alternative.row_index >= completed.size() ||
+                alternative.row_index >= priced_rows.size()) {
+                continue;
+            }
+            completed[alternative.row_index] = 1;
+            if (!transition_cache->rows[alternative.row_index].admitted) {
+                transition_cache->rows[alternative.row_index].admitted = true;
+                temporarily_admitted.push_back(alternative.row_index);
+            }
+        }
+
+        std::vector<double> saved_values = std::move(result.values);
+        std::vector<std::uint8_t> saved_expanded =
+            std::move(result.expanded);
+        std::vector<std::uint64_t> saved_policy_rows =
+            std::move(policy_rows);
+        std::vector<std::uint32_t> saved_improper_policy_states =
+            std::move(improper_policy_states);
+        const std::string saved_policy_evaluation_failure =
+            result.diagnostics.policy_evaluation_failure;
+        const bool saved_focused_lower_mode = focused_lower_mode;
+        const bool saved_policy_evaluation_incomplete =
+            policy_evaluation_incomplete;
+
+        std::vector<std::uint8_t> reachable(state_count, 0);
+        std::vector<std::uint8_t> prior_reachable;
+        std::vector<std::uint32_t> walk;
+        const auto refresh_scratch_bytes = [&] {
+            anytime_policy_scratch_bytes = 1;
+            const auto add = [&](const std::uint64_t value) {
+                anytime_policy_scratch_bytes =
+                    value > std::numeric_limits<std::uint64_t>::max() -
+                                    anytime_policy_scratch_bytes
+                        ? std::numeric_limits<std::uint64_t>::max()
+                        : anytime_policy_scratch_bytes + value;
+            };
+            add(saved_values.capacity() * sizeof(double));
+            add(saved_expanded.capacity() * sizeof(std::uint8_t));
+            add(saved_policy_rows.capacity() * sizeof(std::uint64_t));
+            add(saved_improper_policy_states.capacity() *
+                sizeof(std::uint32_t));
+            add(saved_policy_evaluation_failure.capacity() + 1);
+            add(completed.capacity() * sizeof(std::uint8_t));
+            add(temporarily_admitted.capacity() * sizeof(std::uint64_t));
+            add(reachable.capacity() * sizeof(std::uint8_t));
+            add(prior_reachable.capacity() * sizeof(std::uint8_t));
+            add(walk.capacity() * sizeof(std::uint32_t));
+        };
+        refresh_scratch_bytes();
+
+        bool installed = false;
+        const auto restore = [&](const bool preserve_success_diagnostic) {
+            reset_policy_iteration_units();
+            result.values = std::move(saved_values);
+            result.expanded = std::move(saved_expanded);
+            policy_rows = std::move(saved_policy_rows);
+            improper_policy_states =
+                std::move(saved_improper_policy_states);
+            focused_lower_mode = saved_focused_lower_mode;
+            policy_evaluation_incomplete =
+                saved_policy_evaluation_incomplete;
+            if (!preserve_success_diagnostic) {
+                result.diagnostics.policy_evaluation_failure =
+                    saved_policy_evaluation_failure;
+            }
+            for (const std::uint64_t row : temporarily_admitted) {
+                transition_cache->rows.at(row).admitted = false;
+            }
+            anytime_policy_scratch_bytes = 0;
+        };
+
+        try {
+            result.values = saved_values;
+            result.values.resize(state_count, kValueCeiling);
+            result.expanded.assign(state_count, 0);
+            policy_rows.assign(state_count, no_row);
+            if (result.goal_states.size() < state_count) {
+                result.goal_states.resize(state_count, 0);
+                for (std::uint32_t state = 0; state < state_count; ++state) {
+                    result.goal_states[state] =
+                        calc.is_goal_state(calc.state(state)) ? 1 : 0;
+                }
+            }
+            for (std::uint32_t state = 0; state < state_count; ++state) {
+                if (result.goal_states[state]) {
+                    result.values[state] = 0.0;
+                } else if (!std::isfinite(result.values[state]) ||
+                           result.values[state] < 0.0) {
+                    result.values[state] = kValueCeiling;
+                }
+            }
+            focused_lower_mode = false;
+            reset_policy_iteration_units();
+
+            const auto row_goal_probability =
+                [&](const std::uint32_t owner,
+                    const std::uint64_t row_index) {
+                    const SparseRow& row =
+                        transition_cache->rows.at(row_index);
+                    WideFloat probability{0.0};
+                    for (std::uint32_t i = 0;
+                         i < row.transition_count; ++i) {
+                        const std::uint64_t offset =
+                            row.transition_offset + i;
+                        const std::uint32_t successor =
+                            transition_cache->successors.at(offset);
+                        if (successor < result.goal_states.size() &&
+                            result.goal_states[successor]) {
+                            probability += WideFloat{
+                                transition_cache->probabilities.at(offset)};
+                        }
+                    }
+                    for (std::uint32_t i = 0; i < row.choice_count; ++i) {
+                        const SparseChoiceGroup& group =
+                            transition_cache->choices.at(
+                                row.choice_offset + i);
+                        bool can_choose_goal = false;
+                        for (std::uint32_t option = 0;
+                             option < group.successor_count; ++option) {
+                            const std::uint32_t successor =
+                                transition_cache->choice_successors.at(
+                                    group.successor_offset + option);
+                            can_choose_goal |=
+                                successor < result.goal_states.size() &&
+                                result.goal_states[successor];
+                        }
+                        if (can_choose_goal) {
+                            probability += WideFloat{group.probability};
+                        }
+                    }
+                    (void)owner;
+                    return probability.value();
+                };
+
+            const auto select_initial_row =
+                [&](const std::uint32_t state) {
+                    std::uint64_t best = no_row;
+                    std::tuple<int, double, double, std::uint64_t> best_key{
+                        std::numeric_limits<int>::max(), kInfinity,
+                        kInfinity, no_row};
+                    for (const std::uint64_t row_index :
+                         state_row_indices(*transition_cache, state)) {
+                        if (row_index >= completed.size() ||
+                            !completed[row_index] ||
+                            row_index >= priced_rows.size()) {
+                            continue;
+                        }
+                        const PricedSparseRow& priced =
+                            priced_rows[row_index];
+                        if (priced.operator_index == kNoId ||
+                            priced.operator_index >= calc.operators().size() ||
+                            !std::isfinite(priced.cost) || priced.cost < 0.0) {
+                            continue;
+                        }
+                        const double goal_probability =
+                            row_goal_probability(state, row_index);
+                        const bool restart =
+                            priced.operator_index == restart_operator_index;
+                        const int class_rank =
+                            state == result.start_state &&
+                                    goal_probability > 0.0
+                                ? 0
+                                : state != result.start_state && restart
+                                      ? 0
+                                      : goal_probability > 0.0 ? 1 : 2;
+                        const double attempt_cost =
+                            goal_probability > 0.0
+                                ? priced.cost / goal_probability
+                                : priced.cost;
+                        const auto key = std::tuple{
+                            class_rank, attempt_cost,
+                            -goal_probability, row_index};
+                        if (key < best_key) {
+                            best_key = key;
+                            best = row_index;
+                        }
+                    }
+                    return best;
+                };
+
+            const auto row_is_completed = [&](const std::uint32_t state,
+                                               const std::uint64_t row) {
+                return row < completed.size() && completed[row] &&
+                    row < priced_rows.size() &&
+                    transition_cache->rows[row].owner_state == state &&
+                    priced_rows[row].operator_index != kNoId;
+            };
+
+            const auto rebuild_reachable =
+                [&](std::uint64_t& choice_identity) {
+                    reachable.assign(state_count, 0);
+                    walk.clear();
+                    walk.push_back(result.start_state);
+                    choice_identity = 1469598103934665603ULL;
+                    const auto mix = [&](const std::uint64_t value) {
+                        choice_identity ^= value;
+                        choice_identity *= 1099511628211ULL;
+                    };
+                    for (std::size_t cursor = 0;
+                         cursor < walk.size(); ++cursor) {
+                        const std::uint32_t state = walk[cursor];
+                        if (state >= state_count) return false;
+                        if (reachable[state]) continue;
+                        reachable[state] = 1;
+                        if (result.goal_states[state]) continue;
+                        if (!row_is_completed(state, policy_rows[state])) {
+                            policy_rows[state] = select_initial_row(state);
+                        }
+                        if (!row_is_completed(state, policy_rows[state])) {
+                            return false;
+                        }
+                        const std::uint64_t row_index = policy_rows[state];
+                        const SparseRow& row =
+                            transition_cache->rows.at(row_index);
+                        mix(state);
+                        mix(row_index);
+                        const auto route = [&](const std::uint32_t successor) {
+                            if (successor >= state_count) return false;
+                            if (!reachable[successor]) {
+                                walk.push_back(successor);
+                            }
+                            return true;
+                        };
+                        for (std::uint32_t i = 0;
+                             i < row.transition_count; ++i) {
+                            const std::uint64_t offset =
+                                row.transition_offset + i;
+                            if (transition_cache->probabilities.at(offset) <=
+                                0.0) {
+                                continue;
+                            }
+                            if (!route(
+                                    transition_cache->successors.at(offset))) {
+                                return false;
+                            }
+                        }
+                        for (std::uint32_t i = 0;
+                             i < row.choice_count; ++i) {
+                            const SparseChoiceGroup& choice =
+                                transition_cache->choices.at(
+                                    row.choice_offset + i);
+                            if (choice.probability <= 0.0) continue;
+                            const std::uint32_t selected =
+                                select_sparse_policy_choice_successor(
+                                    *transition_cache, choice, state,
+                                    result.values);
+                            if (selected == kNoId) return false;
+                            mix(selected);
+                            if (!route(selected)) return false;
+                        }
+                    }
+                    result.expanded = reachable;
+                    refresh_scratch_bytes();
+                    return !check_solver_byte_cap_fast();
+                };
+
+            const std::size_t maximum_rounds = std::min<std::size_t>(
+                4096, state_count + transition_cache->rows.size() + 1);
+            std::uint64_t prior_choice_identity = 0;
+            for (std::size_t round = 0; round < maximum_rounds; ++round) {
+                std::uint64_t choice_identity = 0;
+                if (!rebuild_reachable(choice_identity)) break;
+                prior_reachable = reachable;
+                prior_choice_identity = choice_identity;
+                reset_policy_iteration_units();
+                bool evaluated = false;
+                const std::size_t maximum_units = std::min<std::size_t>(
+                    1000000,
+                    std::max<std::size_t>(
+                        1024, walk.size() * 32 + 1024));
+                for (std::size_t unit = 0; unit < maximum_units; ++unit) {
+                    if (evaluate_fixed_policy()) {
+                        evaluated = true;
+                        break;
+                    }
+                    if (!policy_evaluation_incomplete) break;
+                }
+                if (evaluated) {
+                    std::uint64_t evaluated_choice_identity = 0;
+                    if (!rebuild_reachable(evaluated_choice_identity)) break;
+                    if (reachable != prior_reachable ||
+                        evaluated_choice_identity != prior_choice_identity) {
+                        continue;
+                    }
+                    const double upper =
+                        result.values.at(result.start_state);
+                    if (!std::isfinite(upper) || upper < 0.0 ||
+                        upper >= kValueCeiling) {
+                        break;
+                    }
+                    result.diagnostics.policy_evaluation_failure.clear();
+                    install_output_incumbent(
+                        upper, result.values, policy_rows, {}, {},
+                        "resource_stop_reachable_proper_policy",
+                        &reachable, nullptr, true, true);
+                    installed = output_incumbent.has_value();
+                    break;
+                }
+                if (improper_policy_states.empty() ||
+                    !repair_improper_policy()) {
+                    break;
+                }
+            }
+        } catch (const SolverResourceLimit& limit) {
+            record_cap(
+                limit.cap_name(),
+                limit.cap_name() == "max_discovered_states");
+        } catch (...) {
+            restore(false);
+            throw;
+        }
+
+        restore(installed);
+        if (installed) {
+            retain_action_reason(
+                "included:resource_stop_start_reachable_proper_policy");
+        }
+        return installed;
+    }
+
 void SolveWork::Impl::try_install_gated_root_renewal_incumbent(
         const std::uint32_t state,
         const std::uint64_t row,
@@ -1581,7 +2258,7 @@ void SolveWork::Impl::try_install_gated_root_renewal_incumbent(
             return;
         }
 
-        double success_probability = 0.0;
+        WideFloat success_probability_mass{0.0};
         std::vector<std::uint8_t> policy_reachable(
             calc.state_count(), 0);
         policy_reachable[state] = 1;
@@ -1593,7 +2270,8 @@ void SolveWork::Impl::try_install_gated_root_renewal_incumbent(
             }
             policy_reachable[outcome.state] = 1;
             if (calc.is_goal_state(calc.state(outcome.state))) {
-                success_probability += outcome.probability;
+                success_probability_mass +=
+                    WideFloat{outcome.probability};
                 continue;
             }
             std::vector<std::uint64_t> retry_signature;
@@ -1606,6 +2284,8 @@ void SolveWork::Impl::try_install_gated_root_renewal_incumbent(
                 break;
             }
         }
+        const double success_probability =
+            success_probability_mass.value();
         const double probability_tolerance =
             1e-12 * std::max(
                 1.0, std::abs(kernel.gated_terminal_probability));
@@ -1617,7 +2297,10 @@ void SolveWork::Impl::try_install_gated_root_renewal_incumbent(
             ++result.diagnostics.gated_root_renewal_rejections;
             return;
         }
-        const double value = priced.cost / success_probability;
+        const double value =
+            (WideFloat{priced.cost} /
+             success_probability_mass)
+                .value();
         if (!std::isfinite(value) || value < 0.0 ||
             value >= kValueCeiling) {
             ++result.diagnostics.gated_root_renewal_rejections;
@@ -1699,9 +2382,39 @@ void SolveWork::Impl::try_install_gated_root_renewal_incumbent(
             std::to_string(validated_non_goal_states));
     }
 
+double solve_detail::globally_certified_action_envelope_lower_bound(
+        const double restricted_lower_bound,
+        const bool incremental_action_generation,
+        const bool incremental_action_envelope_closed) {
+        /*
+         * A focused solve over the currently admitted rows is a useful
+         * scheduling relaxation, but removing delayed actions from a
+         * minimization can only raise its optimum. Until every delayed row
+         * has been evaluated and classified, that restricted optimum is not
+         * a lower bound for the requested full action envelope. Zero is the
+         * universal independently admissible floor; keep the restricted
+         * value in diagnostics for scheduling only.
+         */
+        if (incremental_action_generation &&
+            !incremental_action_envelope_closed) {
+            return 0.0;
+        }
+        return std::isfinite(restricted_lower_bound) &&
+                       restricted_lower_bound >= 0.0
+            ? restricted_lower_bound
+            : 0.0;
+    }
+
+double SolveWork::Impl::certified_global_lower_bound() const {
+        return globally_certified_action_envelope_lower_bound(
+            result.diagnostics.focused_lower_bound,
+            incremental_action_generation,
+            incremental_envelope_closed);
+    }
+
 SolveGapTarget SolveWork::Impl::satisfied_gap_target() const {
         if (!output_incumbent.has_value()) return SolveGapTarget::None;
-        const double lower = result.diagnostics.focused_lower_bound;
+        const double lower = certified_global_lower_bound();
         const double upper = output_incumbent->certified_upper_bound;
         if (!std::isfinite(lower) || !std::isfinite(upper) ||
             lower > upper + value_comparison_tolerance(upper)) {

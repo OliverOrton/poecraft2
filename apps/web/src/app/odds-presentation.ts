@@ -69,6 +69,7 @@ export type DisplayPriceSource =
     | "quote"
     | "recipe"
     | "zero"
+    | "owner_default"
     | "fallback";
 
 export function priceSourceLabel(source: DisplayPriceSource): string {
@@ -79,6 +80,8 @@ export function priceSourceLabel(source: DisplayPriceSource): string {
             return "Certified recipe";
         case "zero":
             return "Certified zero";
+        case "owner_default":
+            return "Owner default";
         case "fallback":
             return "User fallback";
         default:

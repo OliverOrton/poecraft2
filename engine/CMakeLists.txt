@@ -253,6 +253,9 @@ if(BUILD_TESTING)
     add_test(NAME poecraft_solver_calc
         COMMAND poecraft_engine_tests --solver-calc-only
             "${POECRAFT_COMPILED_ARTIFACT}")
+    add_test(NAME poecraft_solver_family_contract
+        COMMAND poecraft_engine_tests --solver-family-contract-only
+            "${POECRAFT_COMPILED_ARTIFACT}")
     add_test(NAME poecraft_solver_solve
         COMMAND poecraft_engine_tests --solver-solve-only
             "${POECRAFT_COMPILED_ARTIFACT}")
@@ -277,6 +280,7 @@ if(BUILD_TESTING)
         poecraft_core
         poecraft_solver_abstract
         poecraft_solver_calc
+        poecraft_solver_family_contract
         poecraft_solver_solve
         poecraft_solver_compile
         poecraft_solver_eval
@@ -288,6 +292,7 @@ if(BUILD_TESTING)
     set_tests_properties(
         poecraft_solver_abstract
         poecraft_solver_calc
+        poecraft_solver_family_contract
         poecraft_solver_solve
         poecraft_solver_compile
         poecraft_solver_eval
@@ -309,5 +314,34 @@ if(BUILD_TESTING)
             --corpus "${CMAKE_CURRENT_SOURCE_DIR}/../fixtures/solver-benchmarks/v1/manifest.json"
             --validate-only
     )
+    add_test(
+        NAME poecraft_solver_goal_realignment_validate
+        COMMAND poecraft_solver_benchmark
+            --artifact "${CMAKE_CURRENT_SOURCE_DIR}/../data/compiled/current"
+            --corpus "${CMAKE_CURRENT_SOURCE_DIR}/../fixtures/solver-goal-realignment/v1/manifest.json"
+            --validate-only
+    )
+    add_test(
+        NAME poecraft_solver_goal_realignment_five_mod_validate
+        COMMAND poecraft_solver_benchmark
+            --artifact "${CMAKE_CURRENT_SOURCE_DIR}/../data/compiled/current"
+            --corpus "${CMAKE_CURRENT_SOURCE_DIR}/../fixtures/solver-goal-realignment/v1/five-mod-manifest.json"
+            --validate-only
+    )
+    add_test(
+        NAME poecraft_solver_goal_realignment_gate6_validate
+        COMMAND poecraft_solver_benchmark
+            --artifact "${CMAKE_CURRENT_SOURCE_DIR}/../data/compiled/current"
+            --corpus "${CMAKE_CURRENT_SOURCE_DIR}/../fixtures/solver-goal-realignment/v1/gate6-manifest.json"
+            --validate-only
+    )
+    set_tests_properties(
+        poecraft_solver_benchmark_validate
+        poecraft_solver_goal_realignment_validate
+        poecraft_solver_goal_realignment_five_mod_validate
+        poecraft_solver_goal_realignment_gate6_validate
+        PROPERTIES
+            LABELS "native;solver;solver-corpus-validation"
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/..")
 
 endif()

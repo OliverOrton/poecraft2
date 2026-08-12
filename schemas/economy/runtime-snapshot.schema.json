@@ -47,6 +47,13 @@
       "type": "object",
       "propertyNames": { "minLength": 1 },
       "additionalProperties": { "type": "number", "minimum": 0 }
+    },
+    "sources": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "enum": ["quote", "recipe", "zero", "owner_default"]
+      }
     }
   }
 }

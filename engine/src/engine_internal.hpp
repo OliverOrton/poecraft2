@@ -256,6 +256,13 @@ struct DataImpl {
     std::unordered_map<std::string, int> domain_code_by_name;
     std::vector<std::string> influence_name_by_code;  // reverse influence enum
     std::unordered_map<std::string, int> influence_code_by_name;
+    /* Public Influence Exalt currency vocabulary. RePoE's influence enum
+     * uses internal names for three Conquerors and also includes Elder and
+     * Shaper, which do not have matching Exalted Orb actions. The forward
+     * map accepts canonical currency names plus supported legacy internal
+     * aliases; the reverse map always emits the canonical public name. */
+    std::vector<std::string> influence_exalt_name_by_code;
+    std::unordered_map<std::string, int> influence_exalt_code_by_name;
     int gen_prefix_code = -1;
     int gen_suffix_code = -1;
     int gen_corrupted_code = -1;

@@ -29,18 +29,54 @@ import {
         summary,
         admittedActionIds: ["chaos", "bench:<unsafe>"],
         excludedActions: 3,
+        missingPriceKeys: ["currency:<missing>"],
         economyLabel: "Settlers & pinned",
         terminationDetail: solveTerminationDetail(summary, null),
+        productActionScope: "goal_relevant",
+        goalProgressGatedReforges: true,
         hasCompiledStrategy: true,
+        compiledOperationTypes: ["chaos"],
         busy: false,
         verification: null,
         telemetry: {
             incremental_action_envelope: {
+                enabled: true,
+                closed: false,
                 remaining_action_envelope: 2,
+                actions: {
+                    unevaluated: 1,
+                    evaluating: 0,
+                    unresolved: 1,
+                },
+            },
+            action_control: {
+                automatic_candidates: {
+                    enabled: true,
+                    by_kind: {
+                        eldritch_side: {
+                            eligible: 2,
+                            rows: 2,
+                            deferred: 1,
+                            missing_price: 1,
+                        },
+                        veiled: {
+                            eligible: 1,
+                            rows: 1,
+                            missing_price: 0,
+                        },
+                        cannot_roll: {
+                            eligible: 1,
+                            rows: 0,
+                            missing_price: 0,
+                        },
+                    },
+                },
             },
         },
     });
     assert.match(markup, /data-policy-status="bounded_near_optimal"/);
+    assert.match(markup, /data-policy-available="true"/);
+    assert.match(markup, /data-exact-authority="false"/);
     assert.match(markup, /Returned policy expected cost/);
     assert.match(markup, /Optimal-cost lower bound/);
     assert.match(markup, /Certified policy upper bound/);
@@ -53,11 +89,17 @@ import {
     assert.match(markup, /bench:&lt;unsafe&gt;/);
     assert.match(markup, /Open in Strategy Board/);
     assert.match(markup, /Verify 10,000 runs/);
-    assert.match(markup, /Product goal-relevant action scope/);
-    assert.match(markup, /Zero-progress outcomes retry through destructive reforges only/);
-    assert.match(markup, /Admitted priced families: Bench 1 \/ Currency \/ structural 1/);
-    assert.match(markup, /Explicitly deferred: Veiled crafting/);
-    assert.match(markup, /2 action obligations remained unresolved/);
+    assert.match(markup, /Product goal-relevant, supported priced action scope/);
+    assert.match(markup, /Goal-progress-gated reforges enabled: zero-progress outcomes retry through destructive reforges only/);
+    assert.match(markup, /Admitted priced primitive families: Bench 1 \/ Currency \/ structural 1/);
+    assert.match(markup, /Admitted automatic families: Cannot Roll 1 eligible candidate, 0 completed rows \/ Eldritch Side 2 eligible candidates, 2 completed rows \/ Veiled 1 eligible candidate, 1 completed row/);
+    assert.match(markup, /Automatic candidates rejected for missing prices: Eldritch Side 1/);
+    assert.match(markup, /Automatic candidates left deferred: Eldritch Side 1/);
+    assert.match(markup, /Pre-solve primitive missing-price identity/);
+    assert.match(markup, /2 action obligations remained open when the solve stopped \(1 unevaluated, 0 evaluating, 1 unresolved\)/);
+    assert.match(markup, /currency:&lt;missing&gt;/);
+    assert.match(markup, /Chaos-only policy authority: executable incumbent only/);
+    assert.doesNotMatch(markup, /Explicitly deferred: Veiled crafting/);
     assert.doesNotMatch(markup, /is 10% suboptimal/i);
     assert.doesNotMatch(markup, /upper bound[^<]*optimum/i);
     assert.doesNotMatch(markup, /Did not converge/);
@@ -103,16 +145,34 @@ import {
         summary,
         admittedActionIds: ["chaos"],
         excludedActions: 0,
+        missingPriceKeys: [],
         economyLabel: "Test economy",
         terminationDetail: detail,
+        productActionScope: "goal_relevant",
+        goalProgressGatedReforges: true,
         hasCompiledStrategy: true,
+        compiledOperationTypes: ["chaos"],
         busy: false,
         verification: null,
+        telemetry: {
+            optimization: { cap_hits: ["max_transitions"] },
+            incremental_action_envelope: {
+                enabled: true,
+                closed: false,
+                actions: {
+                    unevaluated: 3,
+                    evaluating: 1,
+                    unresolved: 2,
+                },
+            },
+        },
     });
     assert.match(markup, /Bounded feasible policy/);
     assert.match(markup, /Resource cap reached/);
     assert.match(markup, /Transition cap/);
+    assert.match(markup, /max_transitions/);
     assert.match(markup, /Certified within 5\.00x of optimal\./);
+    assert.match(markup, /6 action obligations remained open/);
     console.log("  ok - capped bounded policies stay executable and non-exact");
 }
 
@@ -131,21 +191,97 @@ import {
         summary,
         admittedActionIds: [],
         excludedActions: 0,
+        missingPriceKeys: [],
         economyLabel: null,
         terminationDetail: solveTerminationDetail(summary, null),
+        productActionScope: "goal_relevant",
+        goalProgressGatedReforges: true,
         hasCompiledStrategy: false,
+        compiledOperationTypes: [],
         busy: false,
         verification: null,
     });
     assert.match(markup, /No executable policy certificate was returned/);
     assert.match(markup, /before it could certify an executable policy/i);
-    assert.match(markup, /No policy returned/);
-    assert.match(markup, /Not certified/);
+    assert.match(markup, /No executable policy/);
+    assert.match(markup, /Numeric search bounds cannot authorize compilation/);
+    assert.match(markup, /Unavailable: no executable policy/);
     assert.match(markup, /No economy selected/);
     assert.match(markup, /State cap/);
     assert.doesNotMatch(markup, /Open in Strategy Board/);
     assert.doesNotMatch(markup, />Unavailable</);
     console.log("  ok - capped no-policy results retain their stopping cause");
+}
+
+{
+    const summary = solveSummary({
+        converged: true,
+        policy_available: false,
+        policy_status: "exact",
+        termination: "exact_closed",
+        stop_cause: "exact_closed",
+        start_value: 42,
+        lower_bound: 42,
+        upper_bound: 42,
+        evaluated_policy_cost: 42,
+        absolute_optimality_gap: 0,
+        relative_optimality_gap: 0,
+    });
+    assert.equal(shouldCompileSolvePolicy(summary), false);
+    const telemetry = {
+        incremental_action_envelope: {
+            enabled: true,
+            closed: true,
+            actions: {
+                unevaluated: 0,
+                evaluating: 0,
+                unresolved: 0,
+            },
+        },
+    };
+    const markup = solveResultMarkup({
+        summary,
+        admittedActionIds: ["chaos"],
+        excludedActions: 0,
+        missingPriceKeys: [],
+        economyLabel: "Test economy",
+        terminationDetail: solveTerminationDetail(summary, telemetry),
+        productActionScope: "goal_relevant",
+        goalProgressGatedReforges: true,
+        hasCompiledStrategy: true,
+        compiledOperationTypes: ["chaos"],
+        busy: false,
+        verification: {
+            completedRuns: 10_000,
+            empiricalCost: 42,
+            delta: 0,
+        },
+        telemetry,
+    });
+    assert.match(markup, /data-policy-available="false"/);
+    assert.match(markup, /data-exact-authority="false"/);
+    assert.match(
+        markup,
+        /data-solve-result="lower-bound">42c/,
+    );
+    assert.match(
+        markup,
+        /data-solve-result="upper-bound">Unavailable: no executable policy/,
+    );
+    assert.match(
+        markup,
+        /data-solve-result="absolute-gap">Unavailable: no executable policy/,
+    );
+    assert.match(
+        markup,
+        /data-solve-result="multiplicative-factor">Unavailable: no executable policy/,
+    );
+    assert.match(markup, /Closed numeric bounds without executable policy/);
+    assert.doesNotMatch(markup, /Exact optimal policy/);
+    assert.doesNotMatch(markup, /Exact optimum certified/);
+    assert.doesNotMatch(markup, /Open in Strategy Board/);
+    assert.doesNotMatch(markup, /10,000-run empirical mean/);
+    console.log("  ok - equal numeric bounds cannot create executable-policy or exactness authority");
 }
 
 {
@@ -203,9 +339,13 @@ import {
         summary,
         admittedActionIds: ["regal"],
         excludedActions: 0,
+        missingPriceKeys: [],
         economyLabel: "Test economy",
         terminationDetail: detail,
+        productActionScope: "goal_relevant",
+        goalProgressGatedReforges: true,
         hasCompiledStrategy: true,
+        compiledOperationTypes: ["regal"],
         busy: false,
         verification: null,
     });
@@ -234,17 +374,93 @@ import {
         summary,
         admittedActionIds: ["chaos"],
         excludedActions: 0,
+        missingPriceKeys: [],
         economyLabel: "Test economy",
-        terminationDetail: solveTerminationDetail(summary, null),
+        terminationDetail: solveTerminationDetail(summary, {
+            incremental_action_envelope: {
+                enabled: true,
+                closed: true,
+                actions: {
+                    unevaluated: 0,
+                    evaluating: 0,
+                    unresolved: 0,
+                },
+            },
+        }),
+        productActionScope: "goal_relevant",
+        goalProgressGatedReforges: true,
         hasCompiledStrategy: true,
+        compiledOperationTypes: ["chaos"],
         busy: false,
         verification: null,
+        telemetry: {
+            incremental_action_envelope: {
+                enabled: true,
+                closed: true,
+                actions: {
+                    unevaluated: 0,
+                    evaluating: 0,
+                    unresolved: 0,
+                },
+            },
+        },
     });
     assert.match(markup, /Exact optimal policy/);
-    assert.match(markup, /Exact optimum certified\./);
+    assert.match(markup, /Exact optimum certified within the displayed product scope\./);
     assert.match(markup, /Exact proof closed/);
+    assert.match(markup, /Chaos-only policy authority: exact within the displayed scope/);
+    assert.match(markup, /Action obligations closed/);
     assert.equal(certifiedFactorLabel(0.104), "1.11x");
     console.log("  ok - exact results remain exact and factors round conservatively");
+}
+
+{
+    const summary = solveSummary({
+        converged: true,
+        policy_available: true,
+        policy_status: "exact",
+        termination: "exact_closed",
+        stop_cause: "exact_closed",
+        lower_bound: 90,
+        upper_bound: 90,
+        evaluated_policy_cost: 90,
+        absolute_optimality_gap: 0,
+        relative_optimality_gap: 0,
+    });
+    const telemetry = {
+        incremental_action_envelope: {
+            enabled: true,
+            closed: false,
+            actions: {
+                unevaluated: 0,
+                evaluating: 0,
+                unresolved: 1,
+            },
+        },
+    };
+    const markup = solveResultMarkup({
+        summary,
+        admittedActionIds: ["chaos"],
+        excludedActions: 0,
+        missingPriceKeys: [],
+        economyLabel: "Test economy",
+        terminationDetail: solveTerminationDetail(summary, telemetry),
+        productActionScope: "goal_relevant",
+        goalProgressGatedReforges: true,
+        hasCompiledStrategy: true,
+        compiledOperationTypes: ["chaos"],
+        busy: false,
+        verification: null,
+        telemetry,
+    });
+    assert.match(markup, /data-exact-authority="false"/);
+    assert.match(markup, /Executable policy; exactness not established/);
+    assert.match(markup, /exactness metadata is inconsistent/);
+    assert.match(markup, /Unavailable: exactness not established/);
+    assert.match(markup, /1 action obligations remained open/);
+    assert.match(markup, /Chaos-only policy authority: executable incumbent only/);
+    assert.doesNotMatch(markup, /Exact optimal policy/);
+    console.log("  ok - an explicitly open action envelope blocks exact presentation");
 }
 
 function solveSummary(overrides: Partial<SolveSummary>): SolveSummary {

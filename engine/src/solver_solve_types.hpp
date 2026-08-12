@@ -674,6 +674,10 @@ struct SolveWork::Impl {
     bool incremental_action_generation = false;
     bool incremental_envelope_closed = false;
     bool incremental_restricted_values_ready = false;
+    /* Exactly optimized values of a closed restricted action graph. They are
+     * feasible per-carrier uppers after later actions are added; never use
+     * focused heuristic/lower values here. */
+    std::vector<double> incremental_certified_upper_values;
     bool incremental_reclassify_all = false;
     bool incremental_high_impact_continuation_refined = false;
     struct IncrementalPriorityTask {
@@ -691,6 +695,7 @@ struct SolveWork::Impl {
     std::size_t incremental_carrier_cursor = 0;
     std::size_t incremental_operator_cursor = 0;
     bool incremental_dynamic_prepared = false;
+    bool incremental_dynamic_prepare_active = false;
     std::size_t incremental_dynamic_operator_cursor = 0;
     std::vector<std::uint32_t> incremental_dynamic_operator_indices;
     struct IncrementalAlternativeRow {
@@ -821,6 +826,12 @@ struct SolveWork::Impl {
     double policy_selection_residual = 0.0;
     std::uint64_t peak_policy_scratch_bytes = 0;
     std::uint64_t current_policy_scratch_bytes = 0;
+    /* Resource-stop anytime construction temporarily retains the completed
+     * lower-policy snapshot while the shared fixed-policy evaluator proves a
+     * start-reachable executable policy. Those local vectors are outside the
+     * ordinary result/policy fields and therefore need their own selected-byte
+     * authority while the proof is live. */
+    std::uint64_t anytime_policy_scratch_bytes = 0;
     std::uint64_t owned_prices_nested_bytes = 0;
     std::uint64_t owned_operators_nested_bytes = 0;
     std::uint64_t owned_kernel_row_bucket_bytes = 0;
@@ -1045,6 +1056,7 @@ struct SolveWork::Impl {
         const pc_item_state& start_item,
         const std::unordered_map<std::string, double>& prices,
         const SolveOptions& solve_options);
+    ~Impl();
 
     static void identity_mix(
         std::uint64_t& hash, const std::uint64_t value);
@@ -1129,13 +1141,14 @@ struct SolveWork::Impl {
         BoundedPolicyIncumbent& incumbent);
 
     bool retain_certified_incumbent(
-        const BoundedPolicyIncumbent& incumbent);
+        const BoundedPolicyIncumbent& incumbent,
+        std::uint64_t additional_live_bytes = 0);
 
     bool retain_current_certified_incumbent();
 
     BoundedPolicyIncumbent* best_current_certified_fallback();
 
-    void commit_output_incumbent(BoundedPolicyIncumbent candidate);
+    bool commit_output_incumbent(BoundedPolicyIncumbent candidate);
 
     void install_output_incumbent(
         const double upper,
@@ -1146,7 +1159,8 @@ struct SolveWork::Impl {
         std::string kind,
         const std::vector<std::uint8_t>* policy_reachable = nullptr,
         const PrimitiveRenewalWitness* primitive_renewal_witness = nullptr,
-        bool replace_equal_incumbent = false);
+        bool replace_equal_incumbent = false,
+        bool record_memory_refusal = false);
 
     void install_fallback_output_incumbent(
         const FocusedFallbackWitness& witness);
@@ -1154,11 +1168,15 @@ struct SolveWork::Impl {
     void install_direct_output_incumbent(
         const double upper, const std::uint64_t row);
 
+    bool try_install_resource_stop_reachable_incumbent();
+
     void try_install_gated_root_renewal_incumbent(
         std::uint32_t state,
         std::uint64_t row,
         const PricedOperator& priced,
         const OutcomeDistribution& kernel);
+
+    double certified_global_lower_bound() const;
 
     SolveGapTarget satisfied_gap_target() const;
 
@@ -1211,9 +1229,11 @@ struct SolveWork::Impl {
         const std::uint32_t state,
         const StateLocalAutomaticCandidate& decision) const;
 
-    void prepare_state_expansion(
+    bool prepare_state_expansion(
         const std::uint32_t state,
         bool include_state_local_automatic = true);
+
+    bool advance_incremental_dynamic_preparation();
 
     double acceptable_residual() const;
 

@@ -25,7 +25,12 @@ export interface EconomyIdentity {
     /** Price provenance pinned for the engine-listed action keys in this work. */
     price_sources?: Record<
         string,
-        "override" | "quote" | "recipe" | "zero" | "fallback"
+        | "override"
+        | "quote"
+        | "recipe"
+        | "zero"
+        | "owner_default"
+        | "fallback"
     >;
     /** User fallback at pin time; null means unquoted actions stayed excluded. */
     fallback_price?: number | null;
@@ -808,7 +813,11 @@ export interface Catalog {
     fossils: CatalogEntry[];
     bench: CatalogEntry[];
     harvestTags: CatalogEntry[];
+    /** Public currency choices for Influence Exalt operations. */
     influences: CatalogEntry[];
+    /** Complete generic influence-bit display catalog, including Elder and
+     * Shaper. Optional for persisted/test catalogs created before the split. */
+    genericInfluences?: CatalogEntry[];
 }
 
 export interface ItemInfo {

@@ -902,6 +902,25 @@ void run_integration_tests(const char* artifact_dir) {
                  PC_RESULT_OK);
         PC_CHECK(result.applied == 1);
         PC_CHECK(item.generic_influence_bits != 0);
+
+        /* Public currency names resolve to RePoE's internal influence codes;
+         * legacy compiled inputs remain accepted for the four real
+         * Conqueror currencies only. */
+        for (const char* influence : {"warlord", "adjudicator"}) {
+            item = make_item(session, PC_RARITY_RARE);
+            req.influence = influence;
+            PC_CHECK(pc_apply_action(ctx, &item, &req, &result, &error) ==
+                     PC_RESULT_OK);
+            PC_CHECK(result.applied == 1);
+            PC_CHECK(item.generic_influence_bits != 0);
+        }
+        for (const char* unsupported : {"elder", "shaper"}) {
+            item = make_item(session, PC_RARITY_RARE);
+            req.influence = unsupported;
+            PC_CHECK(pc_apply_action(ctx, &item, &req, &result, &error) ==
+                     PC_RESULT_NOT_FOUND);
+            PC_CHECK(item.generic_influence_bits == 0);
+        }
     }
 
     // Native batch application parses once and reuses one context/cache.

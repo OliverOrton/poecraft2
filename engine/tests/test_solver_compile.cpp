@@ -1414,6 +1414,101 @@ void run_artifact_gate(const char* artifact_dir) {
 
     ActionRegistry registry = build_action_registry(*session);
 
+    /* The registry and compiler share the public currency vocabulary even
+     * though the compiled data retains RePoE's internal influence enum. */
+    const std::set<std::string> expected_influence_exalts{
+        "influence_exalt:crusader",
+        "influence_exalt:hunter",
+        "influence_exalt:redeemer",
+        "influence_exalt:warlord"};
+    std::set<std::string> actual_influence_exalts;
+    for (const ActionDescriptor& action : registry.actions) {
+        if (action.params.type == ActionType::InfluenceExalt) {
+            actual_influence_exalts.insert(action.id);
+            PC_CHECK(action.cost_keys ==
+                     std::vector<std::string>{action.id});
+        }
+    }
+    PC_CHECK(actual_influence_exalts == expected_influence_exalts);
+
+    {
+        const std::uint32_t warlord_action =
+            registry.index_by_id.at("influence_exalt:warlord");
+        const int warlord_code =
+            data->influence_exalt_code_by_name.at("warlord");
+        GoalSpec influence_goal;
+        influence_goal.rarity = PC_RARITY_RARE;
+        GoalSlot influence_slot;
+        for (std::uint32_t mod = 0; mod < session->mod_count; ++mod) {
+            if (session->influence_code[mod] == warlord_code) {
+                influence_slot.family_id = session->family_id[mod];
+                break;
+            }
+        }
+        PC_CHECK(influence_slot.family_id != kNoId);
+        if (influence_slot.family_id != kNoId) {
+            influence_goal.slots.push_back(influence_slot);
+            CalcContext influence_calc(
+                session, influence_goal, registry, {warlord_action});
+            pc_item_state rare;
+            pc_item_clear(&rare);
+            rare.rarity = PC_RARITY_RARE;
+            const std::uint32_t start_state =
+                influence_calc.intern_item(rare);
+            const OutcomeDistribution& outcomes = influence_calc.outcomes(
+                start_state, warlord_action, true);
+            PC_CHECK(outcomes.supported);
+            PC_CHECK(!outcomes.entries.empty());
+
+            SolveResult authored;
+            authored.converged = true;
+            authored.policy_available = true;
+            authored.policy_status = SolvePolicyStatus::Exact;
+            authored.termination = SolveTermination::ExactClosed;
+            authored.start_state = start_state;
+            authored.has_exact_start_item = true;
+            authored.exact_start_item = rare;
+            const std::size_t state_count = influence_calc.state_count();
+            authored.values.assign(state_count, 1.0);
+            authored.policy.assign(state_count, PolicyOperatorRef{});
+            authored.expanded.assign(state_count, 0);
+            authored.goal_states.assign(state_count, 0);
+            authored.policy_reachable.assign(state_count, 0);
+            authored.policy[start_state] = {
+                PlannerOperatorKind::Primitive, warlord_action};
+            authored.expanded[start_state] = 1;
+            authored.policy_reachable[start_state] = 1;
+            for (const OutcomeEntry& outcome : outcomes.entries) {
+                if (influence_calc.is_goal_state(
+                        influence_calc.state(outcome.state))) {
+                    authored.goal_states[outcome.state] = 1;
+                }
+            }
+            const std::string influence_strategy =
+                compile_policy_strategy_json(
+                    influence_calc, authored,
+                    "canonical-influence-exalt");
+            PC_CHECK(influence_strategy.find(
+                         "\"type\":\"influence_exalt\","
+                         "\"influence\":\"warlord\"") !=
+                     std::string::npos);
+            PC_CHECK(influence_strategy.find(
+                         "\"influence\":\"adjudicator\"") ==
+                     std::string::npos);
+            auto compiled_influence = compile_strategy_json(
+                session, influence_strategy.data(),
+                influence_strategy.size());
+            bool saw_canonical_price = false;
+            for (const StrategyNode& node : compiled_influence->nodes) {
+                if (node.action.type != ActionType::InfluenceExalt) continue;
+                PC_CHECK(node.price_keys == std::vector<std::string>{
+                             "influence_exalt:warlord"});
+                saw_canonical_price = true;
+            }
+            PC_CHECK(saw_canonical_price);
+        }
+    }
+
     /* Pick a goal group whose members are all single-group so no blocker
      * states arise (hybrid blockers need conditions v2). */
     GoalSpec goal;
@@ -2006,8 +2101,6 @@ void run_imprint_gate(const char* artifact_dir) {
     GoalSlot target;
     target.group_id = session->primary_group[target_mod];
     goal.slots = {carrier, target};
-    CalcContext calc(session, goal, registry);
-
     pc_item_state magic;
     pc_item_clear(&magic);
     magic.rarity = PC_RARITY_MAGIC;
@@ -2020,11 +2113,32 @@ void run_imprint_gate(const char* artifact_dir) {
     const std::unordered_map<std::string, double> prices{
         {"augment", 0.1},
         {"regal", 100.0},
-        {"beast:craicic-chimeral", 0.01},
+        {"beast:craicic-croaker", 0.01},
         {"beast:rare", 0.01},
     };
+
+    /* Without a prior certified carrier upper, a depth-one fallback is an
+     * honest open grammar rather than permission to publish the first useful
+     * Imprint program. Keep that refusal separate from the mechanically closed
+     * compiler fixture below. */
+    CalcContext depth_limited_calc(session, goal, registry);
+    SolveOptions depth_limited_options;
+    depth_limited_options.max_imprint_program_depth = 1;
+    depth_limited_options.max_imprint_program_work = 16;
+    const SolveResult depth_limited = solve(
+        depth_limited_calc, magic, prices, depth_limited_options);
+    PC_CHECK(!depth_limited.converged);
+    PC_CHECK(std::any_of(
+        depth_limited.diagnostics.automatic_candidate_witnesses.begin(),
+        depth_limited.diagnostics.automatic_candidate_witnesses.end(),
+        [](const std::string& witness) {
+            return witness.find("max_imprint_program_depth") !=
+                   std::string::npos;
+        }));
+
+    CalcContext calc(session, goal, registry);
     SolveOptions solve_options;
-    solve_options.max_imprint_program_depth = 1;
+    solve_options.max_imprint_program_depth = 3;
     solve_options.max_imprint_program_work = 16;
     const SolveResult solved = solve(calc, magic, prices, solve_options);
     report_compile_solve_issue("automatic imprint retry", solved);
@@ -2066,16 +2180,8 @@ void run_imprint_gate(const char* artifact_dir) {
         return 0.0;
     };
     PC_CHECK(quantity("augment") == 1.0);
-    PC_CHECK(quantity("beast:craicic-chimeral") == 1.0);
+    PC_CHECK(quantity("beast:craicic-croaker") == 1.0);
     PC_CHECK(quantity("beast:rare") == 3.0);
-    PC_CHECK(std::any_of(
-        solved.diagnostics.automatic_candidate_witnesses.begin(),
-        solved.diagnostics.automatic_candidate_witnesses.end(),
-        [](const std::string& witness) {
-            return witness.find("max_imprint_program_depth") !=
-                   std::string::npos;
-        }));
-
     CalcContext work_limited_calc(session, goal, registry);
     SolveOptions work_limited_options;
     work_limited_options.max_imprint_program_depth = 3;
@@ -2144,11 +2250,11 @@ void run_imprint_gate(const char* artifact_dir) {
                  exact.total_expected_cost -
                  solved.values[solved.start_state]) < 1e-8);
     PC_CHECK(exact.expected_consumption.at(
-                 "beast:craicic-chimeral") > 1.0);
+                 "beast:craicic-croaker") > 1.0);
     PC_CHECK(std::fabs(
                  exact.expected_consumption.at("beast:rare") -
                  3.0 * exact.expected_consumption.at(
-                           "beast:craicic-chimeral")) < 1e-8);
+                           "beast:craicic-croaker")) < 1e-8);
     PC_CHECK(std::any_of(
         exact.action_totals.begin(), exact.action_totals.end(),
         [](const StrategyEvalActionTotal& action) {
@@ -2193,7 +2299,7 @@ void run_imprint_gate(const char* artifact_dir) {
              imprint_count);
     PC_CHECK(simulator.action_descriptor_counts[
                  "bestiary:restore_imprint"] == restore_count);
-    PC_CHECK(simulator.material_counts["beast:craicic-chimeral"] ==
+    PC_CHECK(simulator.material_counts["beast:craicic-croaker"] ==
              imprint_count);
     PC_CHECK(simulator.material_counts["beast:rare"] == 3 * imprint_count);
     std::printf(

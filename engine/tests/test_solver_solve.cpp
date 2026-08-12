@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <array>
 #include <bit>
+#include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <deque>
@@ -25,6 +26,14 @@
 
 using namespace poecraft;
 using namespace poecraft::solver;
+
+namespace poecraft::solver {
+
+struct SolveWorkTestAccess {
+    using Impl = SolveWork::Impl;
+};
+
+} // namespace poecraft::solver
 
 namespace {
 
@@ -1096,6 +1105,7 @@ void run_alt_spam_tests() {
         refinement.fallback_portfolio_owned_bytes = 6;
         refinement.fallback_publication_attempts = 7;
         refinement.fallback_publication_successes = 1;
+        refinement.cheapest_independently_evaluated_selected = true;
         refinement.preferred_candidate_upper = 30.0;
         refinement.published_fallback_upper = 40.0;
         refinement.published_fallback_evaluated_cost = 40.0;
@@ -1240,6 +1250,7 @@ void run_alt_spam_tests() {
                      "\"memory_rejections\":5,\"owned_bytes\":6,"
                      "\"publication_attempts\":7,"
                      "\"publication_successes\":1,"
+                     "\"cheapest_independently_evaluated_selected\":true,"
                      "\"preferred_candidate_upper\":30,"
                      "\"published_upper\":40,"
                      "\"published_evaluated_cost\":40,"
@@ -4686,11 +4697,23 @@ void run_goal_progress_gated_reforge_tests() {
             restricted_calc, restricted,
             "exact gated destructive renewal",
             &restricted_compilation);
-    PC_CHECK(restricted_compilation.nodes == 4);
-    PC_CHECK(restricted_compilation.edges == 4);
+    PC_CHECK(restricted_compilation.nodes == 3);
+    PC_CHECK(restricted_compilation.edges == 3);
     PC_CHECK(restricted_compilation.policy_regions == 1);
     PC_CHECK(restricted_compilation.junk_predicates == 0);
     PC_CHECK(restricted_compact_json.size() < 8192);
+    PC_CHECK(restricted_compact_json.find(
+                 "\"from\":\"start\",\"to\":\"renewal\"") !=
+             std::string::npos);
+    PC_CHECK(restricted_compact_json.find(
+                 "\"from\":\"renewal\",\"to\":\"goal\"") !=
+             std::string::npos);
+    PC_CHECK(restricted_compact_json.find(
+                 "\"from\":\"renewal\",\"to\":\"renewal\"") !=
+             std::string::npos);
+    PC_CHECK(restricted_compact_json.find(
+                 "\"id\":\"router\",\"kind\":\"router\"") ==
+             std::string::npos);
     PC_CHECK(restricted_compact_json.find(
                  "\"description\":\"Exact executable fixed "
                  "destructive-renewal policy within the "
@@ -5032,9 +5055,17 @@ void run_goal_progress_gated_reforge_tests() {
             early_renewal_calc, early_renewal,
             "early gated destructive renewal",
             &early_compilation);
-    PC_CHECK(early_compilation.nodes == 4);
-    PC_CHECK(early_compilation.edges == 4);
+    PC_CHECK(early_compilation.nodes == 3);
+    PC_CHECK(early_compilation.edges == 3);
     PC_CHECK(early_compilation.policy_regions == 1);
+    PC_CHECK(early_renewal.primitive_renewal_witness.gated_kernel_bits_hash ==
+             early_renewal_calc.outcomes(
+                 early_renewal.start_state,
+                 early_renewal.primitive_renewal_witness.primitive_action,
+                 true).gated_kernel_bits_hash);
+    PC_CHECK(early_json.find(
+                 "\"from\":\"renewal\",\"to\":\"renewal\"") !=
+             std::string::npos);
     PC_CHECK(early_json.find(
                  "\"description\":\"Bounded executable fixed "
                  "destructive-renewal policy exact within the "
@@ -5208,6 +5239,13 @@ void run_goal_progress_gated_reforge_tests() {
 }
 
 void run_incremental_action_generation_tests() {
+    PC_CHECK(
+        solve_detail::globally_certified_action_envelope_lower_bound(
+            3759.5969190413853, true, false) == 0.0);
+    PC_CHECK(near(
+        solve_detail::globally_certified_action_envelope_lower_bound(
+            3759.5969190413853, true, true),
+        3759.5969190413853));
     PC_CHECK(near(
         q_directed_uncertainty_contribution(
             0.9, 10.0, 12.0),
@@ -5247,7 +5285,51 @@ void run_incremental_action_generation_tests() {
     SolveOptions options;
     options.goal_progress_gated_reforges = true;
     options.focused_expansion_queue_threshold = 1000000;
-    const SolveResult result = solve(calc, start, prices, options);
+    SolveWork incremental_work(calc, start, prices, options);
+    SolveProgress incremental_progress = incremental_work.progress();
+    double prior_published_lower = incremental_progress.lower_bound;
+    bool saw_open_envelope = false;
+    std::string open_snapshot_telemetry;
+    std::uint32_t incremental_work_units = 0;
+    while (!incremental_progress.done &&
+           incremental_work_units < 100000) {
+        incremental_work.step(1);
+        incremental_progress = incremental_work.progress();
+        const SolveTelemetrySnapshot snapshot =
+            incremental_work.telemetry_snapshot();
+        PC_CHECK(
+            incremental_progress.lower_bound + 1e-9 >=
+            prior_published_lower);
+        prior_published_lower = incremental_progress.lower_bound;
+        if (!saw_open_envelope &&
+            snapshot.diagnostics.incremental_action_generation &&
+            !snapshot.diagnostics.incremental_action_envelope_closed) {
+            saw_open_envelope = true;
+            PC_CHECK(incremental_progress.lower_bound == 0.0);
+            if (std::isfinite(incremental_progress.upper_bound)) {
+                PC_CHECK(near(
+                    incremental_progress.absolute_optimality_gap,
+                    incremental_progress.upper_bound, 1e-9));
+            }
+            open_snapshot_telemetry = serialize_solver_telemetry(
+                calc, nullptr, &snapshot, std::nullopt, nullptr);
+        }
+        ++incremental_work_units;
+    }
+    PC_CHECK(incremental_progress.done);
+    PC_CHECK(saw_open_envelope);
+    PC_CHECK(valid_json_object(open_snapshot_telemetry));
+    PC_CHECK(
+        open_snapshot_telemetry.find(
+            "\"lower_bound_scope\":\"independent_global_floor\"") !=
+        std::string::npos);
+    PC_CHECK(
+        open_snapshot_telemetry.find(
+            "\"restricted_action_envelope_lower_bound\":") !=
+        std::string::npos);
+    const SolveResult result = incremental_progress.done
+        ? incremental_work.finish()
+        : SolveResult{};
     std::printf(
         "solver incremental action oracle: converged=%d closed=%d "
         "admitted=%llu rejected=%llu unresolved=%llu unevaluated=%llu "
@@ -5314,6 +5396,83 @@ void run_incremental_action_generation_tests() {
         PC_CHECK(
             sample.find("\"proper\":true") !=
             std::string::npos);
+    }
+
+    /*
+     * A cheap delayed Essence can improve only as a cooperative multi-row
+     * renewal: it guarantees the prefix goal, then retries until the suffix
+     * goal rolls. The Chaos-only restricted solve assigns finite values to
+     * those partial carriers, but those values are not full-envelope lower
+     * bounds. Using them to classify the delayed rows certifies the whole
+     * improving Essence family NonImproving and closes on the wrong Chaos
+     * policy. While the envelope is open, public progress must retain the
+     * independent global floor even though the restricted scheduling value
+     * is positive; after complete admission the exact policy must select the
+     * Essence at the root.
+     */
+    auto cooperative_session = make_solve_session(
+        {"incremental_cooperative"});
+    cooperative_session->essence_guaranteed_mod_ids = {0};
+    ActionRegistry cooperative_registry =
+        build_action_registry(*cooperative_session);
+    const std::uint32_t cooperative_chaos =
+        cooperative_registry.index_by_id.at("chaos");
+    const std::uint32_t cooperative_essence =
+        cooperative_registry.index_by_id.at(
+            "essence:incremental_cooperative");
+    GoalSpec cooperative_goal;
+    cooperative_goal.rarity = PC_RARITY_RARE;
+    for (const std::uint32_t family : {100u, 104u}) {
+        GoalSlot cooperative_slot;
+        cooperative_slot.family_id = family;
+        cooperative_slot.min_tier = 1;
+        cooperative_goal.slots.push_back(cooperative_slot);
+    }
+    CalcContext cooperative_calc(
+        cooperative_session, cooperative_goal,
+        cooperative_registry,
+        {cooperative_chaos, cooperative_essence});
+    SolveOptions cooperative_options = options;
+    cooperative_options.max_diagnostic_samples = 1024;
+    SolveWork cooperative_work(
+        cooperative_calc, start,
+        {{"chaos", 100.0},
+         {"essence:incremental_cooperative", 1.0}},
+        cooperative_options);
+    SolveProgress cooperative_progress = cooperative_work.progress();
+    double cooperative_prior_lower = cooperative_progress.lower_bound;
+    std::uint32_t cooperative_work_units = 0;
+    while (!cooperative_progress.done &&
+           cooperative_work_units < 100000) {
+        cooperative_work.step(1);
+        cooperative_progress = cooperative_work.progress();
+        PC_CHECK(
+            cooperative_progress.lower_bound + 1e-9 >=
+            cooperative_prior_lower);
+        cooperative_prior_lower = cooperative_progress.lower_bound;
+        ++cooperative_work_units;
+    }
+    PC_CHECK(cooperative_progress.done);
+    if (cooperative_progress.done) {
+        const SolveResult cooperative = cooperative_work.finish();
+        PC_CHECK(cooperative.converged);
+        PC_CHECK(
+            cooperative.diagnostics.incremental_action_envelope_closed);
+        PC_CHECK(
+            cooperative.policy[cooperative.start_state].index ==
+            cooperative_essence);
+        PC_CHECK(std::any_of(
+            cooperative.diagnostics.incremental_action_witnesses.begin(),
+            cooperative.diagnostics.incremental_action_witnesses.end(),
+            [&](const std::string& witness) {
+                return witness.find(
+                           "\"state\":" +
+                           std::to_string(cooperative.start_state) +
+                           ",\"action\":\"essence:incremental_cooperative\"") !=
+                           std::string::npos &&
+                       witness.find("\"status\":\"admitted\"") !=
+                           std::string::npos;
+            }));
     }
     CalcContext repeat_calc(
         session, goal, registry,
@@ -5516,6 +5675,228 @@ void run_incremental_action_generation_tests() {
         varying_alteration);
 }
 
+void run_resource_stop_reachable_policy_tests() {
+    /* A completed stochastic attempt has a goal branch and a retry branch.
+     * Restart is an admitted self-loop on the fresh carrier, while the
+     * delayed Essence row exhausts the work cap. The completed Transmute row
+     * must still yield a bounded executable incumbent while the exact action
+     * envelope remains open. */
+    auto session = make_solve_session({"anytime_unresolved"});
+    session->essence_guaranteed_mod_ids = {3};
+
+    ActionRegistry registry = build_action_registry(*session);
+    const std::uint32_t transmute =
+        registry.index_by_id.at("transmute");
+    const std::uint32_t alchemy =
+        registry.index_by_id.at("alchemy");
+    const std::uint32_t restart = registry.index_by_id.at("restart");
+    const std::uint32_t delayed =
+        registry.index_by_id.at("essence:anytime_unresolved");
+
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_MAGIC;
+    GoalSlot slot;
+    slot.family_id = 100;
+    slot.min_tier = 1;
+    goal.slots.push_back(slot);
+    pc_item_state start;
+    pc_item_clear(&start);
+
+    CalcContext calc(
+        session, goal, registry,
+        {transmute, alchemy, restart, delayed});
+    SolveOptions options;
+    options.goal_progress_gated_reforges = true;
+    options.state_certificate_control = false;
+    options.focused_expansion_queue_threshold = 1000000;
+    options.max_expanded_states = 4;
+    options.max_sweeps = 4096;
+    const std::unordered_map<std::string, double> prices{
+        {"transmute", 10.0},
+        {"alchemy", 1000.0},
+        {"base", 1.0},
+        {"essence:anytime_unresolved", 1000.0}};
+    const SolveResult result = solve(
+        calc, start, prices, options);
+
+    PC_CHECK(!result.converged);
+    PC_CHECK(result.diagnostics.resource_cap_hit);
+    PC_CHECK(std::find(
+                 result.diagnostics.cap_hits.begin(),
+                 result.diagnostics.cap_hits.end(),
+                 "max_expanded_states") !=
+             result.diagnostics.cap_hits.end());
+    PC_CHECK(
+        !result.diagnostics.incremental_action_envelope_closed);
+    PC_CHECK(
+        result.diagnostics.incremental_actions_unevaluated +
+            result.diagnostics.incremental_actions_unresolved >
+        0);
+    PC_CHECK(result.policy_available);
+    PC_CHECK(
+        result.policy_status == SolvePolicyStatus::BoundedFeasible);
+    PC_CHECK(
+        result.termination == SolveTermination::RefusedResourceCap);
+    PC_CHECK(result.lower_bound == 0.0);
+    PC_CHECK(std::isfinite(result.upper_bound));
+    PC_CHECK(near(result.upper_bound, result.evaluated_policy_cost, 1e-9));
+    PC_CHECK(result.start_state < result.policy.size());
+    PC_CHECK(result.policy[result.start_state].index == transmute);
+    PC_CHECK(!result.refined_policy_artifact.strategy_json.empty());
+    PC_CHECK(
+        result.diagnostics.policy_refinement
+            .direct_certification_proper);
+    PC_CHECK(
+        result.diagnostics.policy_refinement
+            .direct_certification_zero_off_policy);
+    PC_CHECK(
+        result.diagnostics.policy_refinement
+            .direct_certification_cost_reconciled);
+    PC_CHECK(
+        result.diagnostics.policy_refinement
+            .bounded_publication_retained);
+    PC_CHECK(
+        result.diagnostics.policy_refinement
+            .cheapest_independently_evaluated_selected);
+    PC_CHECK(result.diagnostics.expanded_states == 4);
+    PC_CHECK(result.diagnostics.policy_reachable_states == 3);
+    PC_CHECK(
+        result.diagnostics.policy_reachable_states <
+        result.diagnostics.expanded_states);
+    PC_CHECK(std::find(
+                 result.diagnostics.action_inclusion_reasons.begin(),
+                 result.diagnostics.action_inclusion_reasons.end(),
+                 "included:resource_stop_start_reachable_proper_policy") !=
+             result.diagnostics.action_inclusion_reasons.end());
+
+    /* The outer resource-stop estimate is only an entry preflight; the shared
+     * fixed-policy evaluator owns larger kernel/component scratch. A cap equal
+     * to that entry projection must pass the first check, then stop the actual
+     * proof without installing an over-budget incumbent. */
+    CalcContext scratch_cap_calc(
+        session, goal, registry,
+        {transmute, alchemy, restart, delayed});
+    SolveWorkTestAccess::Impl scratch_cap_work(
+        scratch_cap_calc, start, prices, options);
+    while (!scratch_cap_work.progress().done) {
+        scratch_cap_work.step(4096);
+    }
+    PC_CHECK(std::find(
+                 scratch_cap_work.result.diagnostics.cap_hits.begin(),
+                 scratch_cap_work.result.diagnostics.cap_hits.end(),
+                 "max_expanded_states") !=
+             scratch_cap_work.result.diagnostics.cap_hits.end());
+    PC_CHECK(!scratch_cap_work.output_incumbent.has_value());
+    const std::size_t scratch_state_count =
+        scratch_cap_calc.state_count();
+    const std::uint64_t outer_preflight =
+        static_cast<std::uint64_t>(scratch_state_count) *
+            (2 * sizeof(double) + 2 * sizeof(std::uint64_t) +
+             5 * sizeof(std::uint8_t) + 2 * sizeof(std::uint32_t)) +
+        static_cast<std::uint64_t>(
+            scratch_cap_work.transition_cache->rows.size()) *
+            (sizeof(std::uint8_t) + sizeof(std::uint64_t));
+    const std::uint64_t scratch_live =
+        scratch_cap_work.fast_estimated_owned_bytes();
+    PC_CHECK(
+        outer_preflight <=
+        std::numeric_limits<std::uint64_t>::max() - scratch_live);
+    const std::uint64_t scratch_cap = scratch_live + outer_preflight;
+    scratch_cap_work.options.max_solver_owned_bytes = scratch_cap;
+    scratch_cap_work.result.options.max_solver_owned_bytes = scratch_cap;
+    scratch_cap_work.transition_cache->max_solver_owned_bytes = scratch_cap;
+    scratch_cap_calc.refresh_solve_owned_bytes_cap(scratch_cap);
+    PC_CHECK(!scratch_cap_work.check_solver_byte_cap_fast(
+        outer_preflight));
+    PC_CHECK(
+        !scratch_cap_work.try_install_resource_stop_reachable_incumbent());
+    PC_CHECK(!scratch_cap_work.output_incumbent.has_value());
+    PC_CHECK(std::find(
+                 scratch_cap_work.result.diagnostics.cap_hits.begin(),
+                 scratch_cap_work.result.diagnostics.cap_hits.end(),
+                 "max_solver_owned_bytes") !=
+             scratch_cap_work.result.diagnostics.cap_hits.end());
+    PC_CHECK(std::find(
+                 scratch_cap_work.result.diagnostics.cap_hits.begin(),
+                 scratch_cap_work.result.diagnostics.cap_hits.end(),
+                 "max_expanded_states") !=
+             scratch_cap_work.result.diagnostics.cap_hits.end());
+    PC_CHECK(std::find(
+                 scratch_cap_work.result.diagnostics
+                     .action_inclusion_reasons.begin(),
+                 scratch_cap_work.result.diagnostics
+                     .action_inclusion_reasons.end(),
+                 "included:resource_stop_start_reachable_proper_policy") ==
+             scratch_cap_work.result.diagnostics
+                 .action_inclusion_reasons.end());
+    const SolveResult scratch_capped = scratch_cap_work.finish();
+    PC_CHECK(!scratch_capped.policy_available);
+    PC_CHECK(scratch_capped.policy_status == SolvePolicyStatus::None);
+    PC_CHECK(
+        scratch_capped.termination ==
+        SolveTermination::RefusedResourceCap);
+    PC_CHECK(!std::isfinite(scratch_capped.upper_bound));
+    PC_CHECK(!std::isfinite(scratch_capped.evaluated_policy_cost));
+    PC_CHECK(std::find(
+                 scratch_capped.diagnostics.cap_hits.begin(),
+                 scratch_capped.diagnostics.cap_hits.end(),
+                 "max_solver_owned_bytes") !=
+             scratch_capped.diagnostics.cap_hits.end());
+
+    /* A second adaptive cap sits one byte below the measured successful
+     * candidate-construction peak. The identical evaluator must finish (same
+     * retained scratch peak), while transactional incumbent construction is
+     * refused before publication. */
+    CalcContext candidate_probe_calc(
+        session, goal, registry,
+        {transmute, alchemy, restart, delayed});
+    SolveWorkTestAccess::Impl candidate_probe_work(
+        candidate_probe_calc, start, prices, options);
+    while (!candidate_probe_work.progress().done) {
+        candidate_probe_work.step(4096);
+    }
+    const std::uint64_t probe_peak_before =
+        candidate_probe_work.peak_owned_bytes;
+    PC_CHECK(
+        candidate_probe_work
+            .try_install_resource_stop_reachable_incumbent());
+    PC_CHECK(candidate_probe_work.output_incumbent.has_value());
+    const std::uint64_t candidate_construction_peak =
+        candidate_probe_work.peak_owned_bytes;
+    const std::uint64_t evaluator_scratch_peak =
+        candidate_probe_work.peak_policy_scratch_bytes;
+    PC_CHECK(candidate_construction_peak > probe_peak_before);
+    PC_CHECK(evaluator_scratch_peak > 0);
+
+    CalcContext candidate_cap_calc(
+        session, goal, registry,
+        {transmute, alchemy, restart, delayed});
+    SolveWorkTestAccess::Impl candidate_cap_work(
+        candidate_cap_calc, start, prices, options);
+    while (!candidate_cap_work.progress().done) {
+        candidate_cap_work.step(4096);
+    }
+    const std::uint64_t candidate_cap =
+        candidate_construction_peak - 1;
+    candidate_cap_work.options.max_solver_owned_bytes = candidate_cap;
+    candidate_cap_work.result.options.max_solver_owned_bytes = candidate_cap;
+    candidate_cap_work.transition_cache->max_solver_owned_bytes =
+        candidate_cap;
+    candidate_cap_calc.refresh_solve_owned_bytes_cap(candidate_cap);
+    PC_CHECK(
+        !candidate_cap_work
+            .try_install_resource_stop_reachable_incumbent());
+    PC_CHECK(!candidate_cap_work.output_incumbent.has_value());
+    PC_CHECK(
+        candidate_cap_work.peak_policy_scratch_bytes ==
+        evaluator_scratch_peak);
+    PC_CHECK(std::find(
+                 candidate_cap_work.result.diagnostics.cap_hits.begin(),
+                 candidate_cap_work.result.diagnostics.cap_hits.end(),
+                 "max_solver_owned_bytes") !=
+             candidate_cap_work.result.diagnostics.cap_hits.end());
+}
+
 void run_mixed_side_rare_cap_reporting_regression() {
     auto session = make_solve_session();
     ActionRegistry registry = build_action_registry(*session);
@@ -5613,13 +5994,17 @@ void run_mixed_side_rare_cap_reporting_regression() {
             break;
         }
     }
-    if (!prompt_progress.done &&
-        prompt_progress.expanded_states ==
-            prompt_options.max_expanded_states) {
+    std::uint32_t prompt_finalization_units = 0;
+    while (!prompt_progress.done &&
+           prompt_progress.expanded_states ==
+               prompt_options.max_expanded_states &&
+           prompt_finalization_units < 4096) {
         prompt_work.step(1);
         prompt_progress = prompt_work.progress();
         ++prompt_work_units;
+        ++prompt_finalization_units;
     }
+    PC_CHECK(prompt_finalization_units < 4096);
     PC_CHECK(
         prompt_progress.expanded_states ==
         prompt_options.max_expanded_states);
@@ -5634,6 +6019,943 @@ void run_mixed_side_rare_cap_reporting_regression() {
                      "max_expanded_states") !=
                  prompt_result.diagnostics.cap_hits.end());
     }
+}
+
+void run_automatic_imprint_cooperative_tests() {
+    const auto make_imprint_session = [](
+        const std::vector<std::string>& essence_keys) {
+        auto session = make_solve_session(essence_keys);
+        auto data = std::make_shared<DataImpl>(*session->data);
+        BestiaryActionDescriptor create;
+        create.global_action_id = 20;
+        create.global_recipe_id = 10;
+        create.id = "bestiary:imprint";
+        create.display_name = "Create Imprint";
+        create.operation = BestiaryOperationKind::Create;
+        create.rarity_mask = 1u << PC_RARITY_MAGIC;
+        create.forbidden_item_flags =
+            PC_ITEM_CORRUPTED | PC_ITEM_MIRRORED;
+        create.checkpoint_requirement =
+            BestiaryCheckpointRequirement::Absent;
+        create.checkpoint_effect = BestiaryCheckpointEffect::Create;
+        create.identity_requirement =
+            BestiaryIdentityRequirement::CurrentItem;
+        create.cost_keys = {
+            "beast:craicic-croaker", "beast:rare", "beast:rare",
+            "beast:rare"};
+        BestiaryActionDescriptor restore;
+        restore.global_action_id = 21;
+        restore.global_recipe_id = 10;
+        restore.id = "bestiary:restore_imprint";
+        restore.display_name = "Restore Imprint";
+        restore.operation = BestiaryOperationKind::Restore;
+        restore.rarity_mask = 0x7;
+        restore.forbidden_item_flags =
+            PC_ITEM_CORRUPTED | PC_ITEM_MIRRORED;
+        restore.checkpoint_requirement =
+            BestiaryCheckpointRequirement::Present;
+        restore.checkpoint_effect = BestiaryCheckpointEffect::Consume;
+        restore.identity_requirement =
+            BestiaryIdentityRequirement::SameItem;
+        data->bestiary_actions = {create, restore};
+        data->bestiary_action_by_id = {
+            {"bestiary:imprint", 0},
+            {"bestiary:restore_imprint", 1}};
+        data->count_bestiary_actions = 2;
+        session->data = std::move(data);
+        return session;
+    };
+
+    auto session = make_imprint_session({});
+    ActionRegistry registry = build_action_registry(*session);
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    goal.automatic_candidates = true;
+    GoalSlot carrier;
+    carrier.group_id = session->primary_group.at(0);
+    GoalSlot target;
+    target.family_id = session->family_id.at(5);
+    goal.slots = {carrier, target};
+    const std::vector<std::uint32_t> candidates{
+        registry.index_by_id.at("augment"),
+        registry.index_by_id.at("regal")};
+    const std::unordered_map<std::string, double> prices{
+        {"augment", 0.1},
+        {"alteration", 0.2},
+        {"chaos", 1.0},
+        {"regal", 1.0},
+        {"scour", 0.05},
+        {"beast:craicic-croaker", 10.0},
+        {"beast:rare", 0.01}};
+    AutomaticAdmissionLimits limits;
+    limits.max_solver_owned_bytes = 256ull * 1024ull * 1024ull;
+    limits.max_imprint_program_depth = 3;
+    limits.max_imprint_program_work = 16;
+    limits.prices = &prices;
+    pc_item_state magic;
+    pc_item_clear(&magic);
+    magic.rarity = PC_RARITY_MAGIC;
+    place(
+        &magic, PC_SIDE_PREFIX, 0,
+        static_cast<std::uint16_t>(session->primary_group.at(0)));
+
+    const auto admitted_imprint_programs = [](
+        const CalcContext& calc,
+        const StateLocalAutomaticBatch& batch) {
+        std::vector<std::vector<std::string>> programs;
+        for (const StateLocalAutomaticCandidate& decision :
+             batch.decisions) {
+            if (!decision.admitted ||
+                decision.kind != AutomaticCandidateKind::Imprint ||
+                decision.operator_index == kNoId ||
+                decision.operator_index >= calc.operators().size()) {
+                continue;
+            }
+            programs.push_back(
+                calc.operators()
+                    .at(decision.operator_index)
+                    .primitive_program_action_ids);
+        }
+        std::sort(programs.begin(), programs.end());
+        return programs;
+    };
+    const auto find_imprint_operator = [](
+        const CalcContext& calc,
+        const StateLocalAutomaticBatch& batch,
+        const std::vector<std::string>& program) {
+        for (const StateLocalAutomaticCandidate& decision :
+             batch.decisions) {
+            if (!decision.admitted ||
+                decision.kind != AutomaticCandidateKind::Imprint ||
+                decision.operator_index == kNoId ||
+                decision.operator_index >= calc.operators().size()) {
+                continue;
+            }
+            if (calc.operators()
+                    .at(decision.operator_index)
+                    .primitive_program_action_ids == program) {
+                return decision.operator_index;
+            }
+        }
+        return kNoId;
+    };
+    const auto success_probability = [](const OptionKernel& kernel) {
+        double success = 0.0;
+        for (const OutcomeEntry& exit : kernel.exits) {
+            if (exit.state != kNoId) success += exit.probability;
+        }
+        return success;
+    };
+
+    /* Use the strict parent as the deterministic complete-envelope reference.
+     * The retained local admission context always distinguishes exclusion
+     * effects independently of its parent's product setting. */
+    CalcContext strict_calc(
+        session, goal, registry, candidates,
+        false, true, false, std::nullopt, {}, false);
+    const std::uint32_t strict_state = strict_calc.intern_item(magic);
+    const StateLocalAutomaticBatch strict_batch =
+        strict_calc.admit_state_local_automatic_candidates(
+            strict_state, limits);
+    PC_CHECK(
+        strict_batch.status == StateLocalAutomaticBatchStatus::Complete);
+    PC_CHECK(!strict_batch.cached);
+    PC_CHECK(strict_batch.phases.imprint_programs_evaluated > 0);
+    PC_CHECK(strict_batch.phases.imprint_action_state_evaluations > 0);
+    PC_CHECK(strict_batch.phases.imprint_outcomes_merged > 0);
+    PC_CHECK(strict_batch.phases.imprint_max_atomic_outcomes_ns > 0);
+
+    const std::vector<std::string> augment_program{"augment"};
+    const std::vector<std::string> augment_regal_program{
+        "augment", "regal"};
+    const std::uint32_t strict_augment = find_imprint_operator(
+        strict_calc, strict_batch, augment_program);
+    const std::uint32_t strict_augment_regal = find_imprint_operator(
+        strict_calc, strict_batch, augment_regal_program);
+    PC_CHECK(strict_augment != kNoId);
+    PC_CHECK(strict_augment_regal != kNoId);
+    if (strict_augment != kNoId && strict_augment_regal != kNoId) {
+        const OptionKernel& one_step = strict_calc.option_kernel(
+            strict_state, strict_augment);
+        const OptionKernel& two_step = strict_calc.option_kernel(
+            strict_state, strict_augment_regal);
+        PC_CHECK(success_probability(one_step) > 0.0);
+        PC_CHECK(success_probability(two_step) >
+                 success_probability(one_step));
+    }
+    for (const std::uint32_t action : candidates) {
+        bool can_hit_missing_goal = false;
+        for (const OutcomeEntry& outcome :
+             strict_calc.outcomes(strict_state, action).entries) {
+            can_hit_missing_goal |=
+                strict_calc.state(outcome.state).slot_status[1] ==
+                static_cast<std::uint8_t>(GoalSlotStatus::Satisfied);
+        }
+        PC_CHECK(can_hit_missing_goal);
+    }
+
+    /* A second state-independent Alteration exactly erases the first but
+     * consumes a strict superset of its resources. Bit-identical per-carrier
+     * and composed canonical entries are an exact dominance certificate, so
+     * the repeated prefix and every extension disappear without a depth
+     * claim. */
+    const std::vector<std::uint32_t> renewal_candidates{
+        registry.index_by_id.at("alteration")};
+    CalcContext renewal_calc(
+        session, goal, registry, renewal_candidates,
+        false, true, false, std::nullopt, {}, false);
+    const StateLocalAutomaticBatch renewal_batch =
+        renewal_calc.admit_state_local_automatic_candidates(
+            renewal_calc.intern_item(magic), limits);
+    PC_CHECK(
+        renewal_batch.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+    PC_CHECK(
+        renewal_batch.phases
+            .imprint_distribution_dominated_programs > 0);
+    const auto renewal_programs =
+        admitted_imprint_programs(renewal_calc, renewal_batch);
+    PC_CHECK(!renewal_programs.empty());
+    PC_CHECK(std::all_of(
+        renewal_programs.begin(), renewal_programs.end(),
+        [](const std::vector<std::string>& program) {
+            return program ==
+                   std::vector<std::string>{"alteration"};
+        }));
+
+    /* A finite certified carrier upper plus strictly positive grammar prices
+     * replaces an arbitrary depth cutoff. Depth one is intentionally too
+     * small to see the repeated Alteration representative; exact full-kernel
+     * Pareto dominance closes its subtree at depth two. */
+    AutomaticAdmissionLimits price_closed_limits = limits;
+    price_closed_limits.max_imprint_program_depth = 1;
+    price_closed_limits.incumbent_upper_bound = 10.5;
+    CalcContext price_closed_calc(
+        session, goal, registry, renewal_candidates,
+        false, true, false, std::nullopt, {}, false);
+    const StateLocalAutomaticBatch price_closed_batch =
+        price_closed_calc.admit_state_local_automatic_candidates(
+            price_closed_calc.intern_item(magic), price_closed_limits);
+    PC_CHECK(
+        price_closed_batch.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+    PC_CHECK(
+        price_closed_batch.phases
+            .imprint_price_bound_complete_carriers == 1);
+    PC_CHECK(
+        price_closed_batch.phases
+            .imprint_price_bound_max_program_depth >= 2);
+    PC_CHECK(
+        price_closed_batch.phases.imprint_max_evaluated_depth >= 2);
+    PC_CHECK(
+        price_closed_batch.phases.imprint_max_evaluated_depth <=
+        price_closed_batch.phases
+            .imprint_price_bound_max_program_depth);
+    PC_CHECK(
+        price_closed_batch.phases
+            .imprint_distribution_dominated_programs > 0);
+    PC_CHECK(
+        price_closed_batch.phases.imprint_max_frontier_size > 0);
+
+    /* The checkpoint plus the first primitive already exceeds this certified
+     * upper. Close without evaluating an outcome leaf and expose the exact
+     * branch-and-bound decision separately from kernel Pareto pruning. */
+    AutomaticAdmissionLimits price_pruned_limits = price_closed_limits;
+    price_pruned_limits.incumbent_upper_bound = 10.15;
+    CalcContext price_pruned_calc(
+        session, goal, registry, renewal_candidates,
+        false, true, false, std::nullopt, {}, false);
+    const StateLocalAutomaticBatch price_pruned_batch =
+        price_pruned_calc.admit_state_local_automatic_candidates(
+            price_pruned_calc.intern_item(magic), price_pruned_limits);
+    PC_CHECK(
+        price_pruned_batch.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+    PC_CHECK(
+        price_pruned_batch.phases.imprint_price_pruned_programs > 0);
+    PC_CHECK(
+        price_pruned_batch.phases.imprint_programs_evaluated == 0);
+    PC_CHECK(
+        price_pruned_batch.phases
+            .imprint_price_bound_complete_carriers == 1);
+
+    /* A nonpositive reachable grammar step cannot use the finite-price proof.
+     * The ordinary depth boundary remains honest and transactional: no
+     * partial option is adopted or cached. */
+    auto zero_prices = prices;
+    zero_prices["alteration"] = 0.0;
+    AutomaticAdmissionLimits zero_price_limits = price_closed_limits;
+    zero_price_limits.prices = &zero_prices;
+    CalcContext zero_price_calc(
+        session, goal, registry, renewal_candidates,
+        false, true, false, std::nullopt, {}, false);
+    const StateLocalAutomaticBatch zero_price_batch =
+        zero_price_calc.admit_state_local_automatic_candidates(
+            zero_price_calc.intern_item(magic), zero_price_limits);
+    PC_CHECK(
+        zero_price_batch.status ==
+        StateLocalAutomaticBatchStatus::ResourceDeferred);
+    PC_CHECK(
+        zero_price_batch.resource_cap ==
+        "max_imprint_program_depth");
+    PC_CHECK(zero_price_batch.admitted_operators.empty());
+    PC_CHECK(
+        zero_price_batch.phases
+            .imprint_price_bound_complete_carriers == 0);
+
+    /* Static direct-producer reachability is only a future suffix-cost lower
+     * bound. It must not gate exact terminal exits: the deterministic cleanup
+     * cannot create the target, but it preserves target hits made by Augment.
+     * A depth-one safety setting must still discover the length-two program
+     * when the positive-price proof owns closure. */
+    const std::uint32_t remove_crafted =
+        registry.index_by_id.at("remove_crafted_modifiers");
+    pc_item_state crafted_magic = magic;
+    crafted_magic.prefixes[0].flags |= PC_MOD_SLOT_CRAFTED;
+    CalcContext preserver_calc(
+        session, goal, registry,
+        {registry.index_by_id.at("augment"), remove_crafted},
+        false, true, false, std::nullopt, {}, false);
+    AutomaticAdmissionLimits preserver_limits = limits;
+    preserver_limits.max_imprint_program_depth = 1;
+    preserver_limits.max_imprint_program_work = 64;
+    preserver_limits.incumbent_upper_bound = 10.5;
+    const StateLocalAutomaticBatch preserver_batch =
+        preserver_calc.admit_state_local_automatic_candidates(
+            preserver_calc.intern_item(crafted_magic),
+            preserver_limits);
+    PC_CHECK(
+        preserver_batch.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+    const auto preserver_programs =
+        admitted_imprint_programs(preserver_calc, preserver_batch);
+    PC_CHECK(std::find(
+                 preserver_programs.begin(), preserver_programs.end(),
+                 std::vector<std::string>{
+                     "augment", "remove_crafted_modifiers"}) !=
+             preserver_programs.end());
+    PC_CHECK(
+        preserver_batch.phases.imprint_max_evaluated_depth >= 2);
+
+    /* The influence-only target has default weight zero but a positive active
+     * selector row. The global base-positive reachability mask therefore
+     * omits it even though an influenced carrier can produce it exactly. */
+    auto influenced_session = make_imprint_session({});
+    auto influenced_data =
+        std::const_pointer_cast<DataImpl>(influenced_session->data);
+    influenced_data->spawn_offsets = {0, 1, 2, 3, 4, 5, 7, 8, 9};
+    influenced_data->spawn_tag_ids = {0, 0, 0, 0, 0, 42, 0, 0, 0};
+    influenced_data->spawn_weights =
+        {100, 100, 100, 100, 100, 100, 0, 100, 400};
+    influenced_data->influence_exalt_name_by_code = {"", "warlord"};
+    influenced_data->gen_offsets = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+    influenced_data->gen_tag_ids.assign(8, 0);
+    influenced_data->gen_weights.assign(8, 100);
+    influenced_session->influence_code[5] = 1;
+    influenced_session->base_spawn_weight[5] = 0;
+    influenced_session->base_roll_weight[5] = 0;
+    pc_bitset_clear(
+        influenced_session->positive_spawn_weight_mask.data(), 5);
+    pc_bitset_clear(
+        influenced_session->positive_base_weight_mask.data(), 5);
+    influenced_session->selector_tag_by_influence = {-1, 42};
+    influenced_session->influence_masks.resize(
+        2, std::vector<std::uint64_t>(influenced_session->words, 0));
+    pc_bitset_clear(
+        influenced_session->influence_masks[0].data(), 5);
+    pc_bitset_set(
+        influenced_session->influence_masks[1].data(), 5);
+    ActionRegistry influenced_registry =
+        build_action_registry(*influenced_session);
+    const std::uint32_t influenced_alteration =
+        influenced_registry.index_by_id.at("alteration");
+    const std::vector<std::uint64_t> base_reachability =
+        action_explicit_affix_reachable_mask(
+            *influenced_session,
+            influenced_registry.actions.at(influenced_alteration));
+    PC_CHECK(!pc_bitset_test(base_reachability.data(), 5));
+    pc_item_state influenced_magic = magic;
+    influenced_magic.generic_influence_bits = 1;
+    CalcContext influenced_calc(
+        influenced_session, goal, influenced_registry,
+        {influenced_alteration},
+        false, true, false, std::nullopt, {}, false);
+    const std::uint32_t influenced_state =
+        influenced_calc.intern_item(influenced_magic);
+    bool exact_influenced_target = false;
+    for (const OutcomeEntry& outcome :
+         influenced_calc.outcomes(
+             influenced_state, influenced_alteration).entries) {
+        exact_influenced_target |=
+            influenced_calc.state(outcome.state).slot_status[1] ==
+            static_cast<std::uint8_t>(GoalSlotStatus::Satisfied);
+    }
+    PC_CHECK(exact_influenced_target);
+    const StateLocalAutomaticBatch influenced_batch =
+        influenced_calc.admit_state_local_automatic_candidates(
+            influenced_state, limits);
+    PC_CHECK(
+        influenced_batch.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+    const auto influenced_programs =
+        admitted_imprint_programs(influenced_calc, influenced_batch);
+    PC_CHECK(std::find(
+                 influenced_programs.begin(),
+                 influenced_programs.end(),
+                 std::vector<std::string>{"alteration"}) !=
+             influenced_programs.end());
+    PC_CHECK(
+        influenced_batch.phases
+            .imprint_distribution_dominated_programs > 0);
+
+    /* A certified upper may exceed the fallback safety depth on an already
+     * influenced carrier: the active selector makes cheap Alteration a real
+     * direct producer, so exact discovery must retain it and close by the
+     * economic/Pareto proof rather than falsely requiring another Influence
+     * Exalt. */
+    AutomaticAdmissionLimits influenced_price_limits = limits;
+    influenced_price_limits.max_imprint_program_depth = 1;
+    influenced_price_limits.incumbent_upper_bound = 10.5;
+    CalcContext influenced_price_calc(
+        influenced_session, goal, influenced_registry,
+        {influenced_alteration},
+        false, true, false, std::nullopt, {}, false);
+    const StateLocalAutomaticBatch influenced_price_batch =
+        influenced_price_calc.admit_state_local_automatic_candidates(
+            influenced_price_calc.intern_item(influenced_magic),
+            influenced_price_limits);
+    PC_CHECK(
+        influenced_price_batch.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+    PC_CHECK(
+        influenced_price_batch.phases
+            .imprint_price_bound_complete_carriers == 1);
+    const auto influenced_price_programs = admitted_imprint_programs(
+        influenced_price_calc, influenced_price_batch);
+    PC_CHECK(std::find(
+                 influenced_price_programs.begin(),
+                 influenced_price_programs.end(),
+                 std::vector<std::string>{"alteration"}) !=
+             influenced_price_programs.end());
+
+    /* Conversely, an uninfluenced carrier cannot use an ordinary pool roll
+     * to reach an influence-only target until the corresponding Influence
+     * Exalt has been paid. Keep mod5 in the base-positive reachability mask to
+     * reproduce canonical rows that look globally positive while mask0 still
+     * excludes them at runtime. The carrier-aware producer lower must price
+     * Warlord Exalt, prune the root, and evaluate no program leaf. */
+    /* The active-selector controls above are complete; reuse their synthetic
+     * session for the complementary uninfluenced/base-positive control rather
+     * than relying on SessionImpl copyability. */
+    auto uninfluenced_bound_session = influenced_session;
+    uninfluenced_bound_session->base_spawn_weight[5] = 100;
+    uninfluenced_bound_session->base_roll_weight[5] = 100;
+    pc_bitset_set(
+        uninfluenced_bound_session->positive_spawn_weight_mask.data(), 5);
+    pc_bitset_set(
+        uninfluenced_bound_session->positive_base_weight_mask.data(), 5);
+    ActionRegistry uninfluenced_bound_registry =
+        build_action_registry(*uninfluenced_bound_session);
+    const std::uint32_t uninfluenced_alteration =
+        uninfluenced_bound_registry.index_by_id.at("alteration");
+    const std::uint32_t uninfluenced_regal =
+        uninfluenced_bound_registry.index_by_id.at("regal");
+    const std::uint32_t warlord_exalt =
+        uninfluenced_bound_registry.index_by_id.at(
+            "influence_exalt:warlord");
+    const std::vector<std::uint64_t> misleading_global_reach =
+        action_explicit_affix_reachable_mask(
+            *uninfluenced_bound_session,
+            uninfluenced_bound_registry.actions.at(
+                uninfluenced_alteration));
+    PC_CHECK(pc_bitset_test(misleading_global_reach.data(), 5));
+    CalcContext uninfluenced_exact_calc(
+        uninfluenced_bound_session, goal,
+        uninfluenced_bound_registry,
+        {uninfluenced_alteration, uninfluenced_regal, warlord_exalt},
+        false, true, false, std::nullopt, {}, false);
+    const std::uint32_t uninfluenced_magic_state =
+        uninfluenced_exact_calc.intern_item(magic);
+    const OutcomeDistribution& uninfluenced_alteration_outcomes =
+        uninfluenced_exact_calc.outcomes(
+            uninfluenced_magic_state, uninfluenced_alteration);
+    PC_CHECK(std::none_of(
+        uninfluenced_alteration_outcomes.entries.begin(),
+        uninfluenced_alteration_outcomes.entries.end(),
+        [&](const OutcomeEntry& outcome) {
+            return uninfluenced_exact_calc.state(outcome.state)
+                       .slot_status[1] ==
+                   static_cast<std::uint8_t>(
+                       GoalSlotStatus::Satisfied);
+        }));
+    auto uninfluenced_prices = prices;
+    uninfluenced_prices["influence_exalt:warlord"] = 5.0;
+    AutomaticAdmissionLimits uninfluenced_bound_limits = limits;
+    uninfluenced_bound_limits.prices = &uninfluenced_prices;
+    uninfluenced_bound_limits.max_imprint_program_depth = 1;
+    uninfluenced_bound_limits.max_imprint_program_work = 64;
+    uninfluenced_bound_limits.incumbent_upper_bound = 15.0;
+    CalcContext uninfluenced_bound_calc(
+        uninfluenced_bound_session, goal,
+        uninfluenced_bound_registry,
+        {uninfluenced_alteration, uninfluenced_regal, warlord_exalt},
+        false, true, false, std::nullopt, {}, false);
+    const StateLocalAutomaticBatch uninfluenced_bound_batch =
+        uninfluenced_bound_calc.admit_state_local_automatic_candidates(
+            uninfluenced_bound_calc.intern_item(magic),
+            uninfluenced_bound_limits);
+    PC_CHECK(
+        uninfluenced_bound_batch.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+    PC_CHECK(
+        uninfluenced_bound_batch.phases.imprint_programs_evaluated == 0);
+    PC_CHECK(
+        uninfluenced_bound_batch.phases.imprint_price_pruned_programs > 0);
+    PC_CHECK(
+        uninfluenced_bound_batch.phases
+            .imprint_price_bound_complete_carriers == 1);
+    AutomaticAdmissionLimits uninfluenced_open_limits =
+        uninfluenced_bound_limits;
+    uninfluenced_open_limits.incumbent_upper_bound = 20.0;
+    CalcContext uninfluenced_open_calc(
+        uninfluenced_bound_session, goal,
+        uninfluenced_bound_registry,
+        {uninfluenced_alteration, uninfluenced_regal, warlord_exalt},
+        false, true, false, std::nullopt, {}, false);
+    const StateLocalAutomaticBatch uninfluenced_open_batch =
+        uninfluenced_open_calc.admit_state_local_automatic_candidates(
+            uninfluenced_open_calc.intern_item(magic),
+            uninfluenced_open_limits);
+    PC_CHECK(
+        uninfluenced_open_batch.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+    const auto uninfluenced_open_programs = admitted_imprint_programs(
+        uninfluenced_open_calc, uninfluenced_open_batch);
+    PC_CHECK(std::find(
+                 uninfluenced_open_programs.begin(),
+                 uninfluenced_open_programs.end(),
+                 std::vector<std::string>{
+                     "regal", "influence_exalt:warlord"}) !=
+             uninfluenced_open_programs.end());
+
+    const auto drive_state_local_preparation = [](
+        SolveWorkTestAccess::Impl& work,
+        const std::uint32_t state) {
+        std::pair<bool, std::string> terminal;
+        for (std::uint32_t resume = 0; resume < 4096; ++resume) {
+            try {
+                if (work.prepare_state_expansion(state, true)) {
+                    terminal.first = true;
+                    return terminal;
+                }
+            } catch (const SolverResourceLimit& limit) {
+                terminal.second = limit.cap_name();
+                return terminal;
+            }
+        }
+        throw std::runtime_error(
+            "state-local automatic preparation did not terminate");
+    };
+
+    /* A focused lower vector can contain finite optimistic values for
+     * carriers outside its selected policy. It is never a feasible carrier
+     * upper: with no other certificate, the fallback depth must remain an
+     * honest refusal rather than using the injected zero to price-prune the
+     * Imprint grammar closed. */
+    SolveOptions focused_lower_options;
+    focused_lower_options.max_imprint_program_depth = 1;
+    focused_lower_options.max_imprint_program_work = 64;
+    focused_lower_options.max_solver_owned_bytes =
+        256ull * 1024ull * 1024ull;
+    CalcContext focused_lower_calc(
+        session, goal, registry, candidates,
+        false, true, false, std::nullopt, {}, false);
+    SolveWorkTestAccess::Impl focused_lower_work(
+        focused_lower_calc, magic, prices, focused_lower_options);
+    focused_lower_work.focused_previous_upper_values.assign(
+        focused_lower_calc.state_count(), 0.0);
+    const auto focused_lower_terminal =
+        drive_state_local_preparation(
+            focused_lower_work,
+            focused_lower_work.result.start_state);
+    PC_CHECK(!focused_lower_terminal.first);
+    PC_CHECK(
+        focused_lower_terminal.second ==
+        "max_imprint_program_depth");
+    PC_CHECK(
+        focused_lower_work.transition_cache
+            ->automatic_admission_phases
+            .imprint_price_bound_complete_carriers == 0);
+
+    /* Restart reaches restart_state, not the original solve start. A partial
+     * start can be much cheaper than the fresh restart state, so only the
+     * independently certified value at restart_state owns the generic
+     * carrier route. The deliberately tiny V(start) below must not root-prune
+     * the Imprint grammar: at least one exact program is evaluated under
+     * Restart + V(restart). */
+    auto restart_upper_prices = prices;
+    restart_upper_prices["base"] = 1.0;
+    const std::vector<std::uint32_t> restart_upper_candidates{
+        registry.index_by_id.at("augment"),
+        registry.index_by_id.at("regal"),
+        registry.index_by_id.at("restart")};
+    CalcContext restart_upper_calc(
+        session, goal, registry, restart_upper_candidates,
+        false, true, false, std::nullopt, {}, false);
+    pc_item_state partial_start = magic;
+    partial_start.rarity = PC_RARITY_RARE;
+    SolveWorkTestAccess::Impl restart_upper_work(
+        restart_upper_calc, partial_start,
+        restart_upper_prices, focused_lower_options);
+    pc_item_state fresh_restart;
+    pc_item_clear(&fresh_restart);
+    const std::uint32_t fresh_restart_state =
+        restart_upper_calc.intern_item(fresh_restart);
+    const std::uint32_t restart_carrier_state =
+        restart_upper_calc.intern_item(magic);
+    restart_upper_work.restart_state = fresh_restart_state;
+    SolveWorkTestAccess::Impl::BoundedPolicyIncumbent restart_incumbent;
+    restart_incumbent.certified_upper_bound = 0.0;
+    restart_incumbent.evaluated_policy_cost = 0.0;
+    restart_incumbent.values.assign(
+        restart_upper_calc.state_count(), kInfinity);
+    restart_incumbent.policy_reachable.assign(
+        restart_upper_calc.state_count(), 0);
+    restart_incumbent.values[restart_upper_work.result.start_state] = 0.0;
+    restart_incumbent.values[fresh_restart_state] = 9.5;
+    restart_incumbent.policy_reachable[
+        restart_upper_work.result.start_state] = 1;
+    restart_incumbent.policy_reachable[fresh_restart_state] = 1;
+    restart_incumbent.independently_certified = true;
+    restart_incumbent.independently_evaluated = true;
+    restart_incumbent.proper = true;
+    restart_incumbent.executable = true;
+    restart_upper_work.output_incumbent =
+        std::move(restart_incumbent);
+    (void)drive_state_local_preparation(
+        restart_upper_work, restart_carrier_state);
+    PC_CHECK(
+        restart_upper_work.transition_cache
+            ->automatic_admission_phases
+            .imprint_programs_evaluated > 0);
+
+    /* Solve scheduling must provide the certified restricted-policy upper to
+     * automatic admission before any resource stop. The per-carrier authority
+     * is the stable exact restricted-policy snapshot. No fallback or
+     * pre-finish incumbent exists yet; a deliberately tiny fallback depth
+     * would defer without the snapshot. */
+    auto scheduled_session =
+        make_imprint_session({"imprint_delayed"});
+    scheduled_session->essence_guaranteed_mod_ids = {3};
+    ActionRegistry scheduled_registry =
+        build_action_registry(*scheduled_session);
+    const std::uint32_t scheduled_transmute =
+        scheduled_registry.index_by_id.at("transmute");
+    const std::uint32_t scheduled_alteration =
+        scheduled_registry.index_by_id.at("alteration");
+    const std::uint32_t scheduled_augment =
+        scheduled_registry.index_by_id.at("augment");
+    const std::uint32_t scheduled_regal =
+        scheduled_registry.index_by_id.at("regal");
+    const std::uint32_t scheduled_restart =
+        scheduled_registry.index_by_id.at("restart");
+    const std::uint32_t scheduled_delayed =
+        scheduled_registry.index_by_id.at("essence:imprint_delayed");
+    GoalSpec scheduled_goal = goal;
+    scheduled_goal.slots[0].group_id = kNoId;
+    scheduled_goal.slots[0].family_id =
+        scheduled_session->family_id.at(0);
+    CalcContext scheduled_calc(
+        scheduled_session, scheduled_goal, scheduled_registry,
+        {scheduled_transmute, scheduled_alteration,
+         scheduled_augment, scheduled_regal,
+         scheduled_restart, scheduled_delayed});
+    SolveOptions scheduled_options;
+    scheduled_options.goal_progress_gated_reforges = true;
+    scheduled_options.state_certificate_control = false;
+    scheduled_options.focused_expansion_queue_threshold = 1000000;
+    scheduled_options.max_imprint_program_depth = 1;
+    scheduled_options.max_imprint_program_work = 64;
+    scheduled_options.max_expanded_states = 128;
+    scheduled_options.max_sweeps = 4096;
+    auto scheduled_prices = prices;
+    scheduled_prices["transmute"] = 0.5;
+    scheduled_prices["base"] = 1.0;
+    scheduled_prices["beast:craicic-croaker"] = 100.0;
+    scheduled_prices["essence:imprint_delayed"] = 1000.0;
+    pc_item_state scheduled_start;
+    pc_item_clear(&scheduled_start);
+    SolveWorkTestAccess::Impl scheduled_work(
+        scheduled_calc, scheduled_start,
+        scheduled_prices, scheduled_options);
+    while (!scheduled_work.progress().done) {
+        scheduled_work.step(4096);
+    }
+    PC_CHECK(std::any_of(
+        scheduled_work.incremental_certified_upper_values.begin(),
+        scheduled_work.incremental_certified_upper_values.end(),
+        [](const double value) {
+            return std::isfinite(value) && value >= 0.0 &&
+                value < kValueCeiling;
+    }));
+    PC_CHECK(!scheduled_work.focused_fallback_policy);
+    PC_CHECK(!scheduled_work.output_incumbent.has_value());
+    PC_CHECK(
+        scheduled_work.transition_cache
+            ->automatic_admission_phases
+            .imprint_price_bound_complete_carriers > 0);
+    const SolveResult scheduled = scheduled_work.finish();
+    PC_CHECK(std::find(
+                 scheduled.diagnostics.cap_hits.begin(),
+                 scheduled.diagnostics.cap_hits.end(),
+                 "max_imprint_program_depth") ==
+             scheduled.diagnostics.cap_hits.end());
+    PC_CHECK(
+        scheduled.diagnostics.automatic_admission_phases
+            .imprint_price_bound_complete_carriers > 0);
+
+    /* Resuming one cooperative checkpoint at a time must produce the same
+     * complete envelope without replaying a discovery unit. Every returned
+     * worker slice and every still-atomic Calc outcomes leaf stays below the
+     * 20-second worker contract. */
+    CalcContext resumed_calc(
+        session, goal, registry, candidates,
+        false, true, false, std::nullopt, {}, false);
+    const std::uint32_t resumed_state = resumed_calc.intern_item(magic);
+    StateLocalAutomaticBatch resumed_batch;
+    bool resumed_complete = false;
+    std::uint64_t resume_calls = 0;
+    std::uint64_t measured_max_slice_ns = 0;
+    while (!resumed_complete && resume_calls < 100000) {
+        const auto started = std::chrono::steady_clock::now();
+        resumed_complete =
+            resumed_calc.advance_state_local_automatic_candidates(
+                resumed_state, limits, resumed_batch, 1);
+        measured_max_slice_ns = std::max(
+            measured_max_slice_ns,
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - started)
+                    .count()));
+        ++resume_calls;
+        if (!resumed_complete) {
+            PC_CHECK(
+                resumed_calc.automatic_admission_cursor_bytes() > 0);
+            PC_CHECK(
+                resumed_calc.fast_estimated_owned_bytes() >=
+                resumed_calc.audited_estimated_owned_bytes());
+        }
+    }
+    PC_CHECK(resumed_complete);
+    PC_CHECK(resume_calls > 2);
+    PC_CHECK(
+        admitted_imprint_programs(resumed_calc, resumed_batch) ==
+        admitted_imprint_programs(strict_calc, strict_batch));
+    PC_CHECK(
+        resumed_batch.phases.imprint_programs_evaluated ==
+        strict_batch.phases.imprint_programs_evaluated);
+    PC_CHECK(
+        resumed_batch.phases.imprint_action_state_evaluations ==
+        strict_batch.phases.imprint_action_state_evaluations);
+    PC_CHECK(
+        resumed_batch.phases.imprint_outcomes_merged ==
+        strict_batch.phases.imprint_outcomes_merged);
+    constexpr std::uint64_t kWorkerSliceNs = 20'000'000'000ull;
+    PC_CHECK(measured_max_slice_ns < kWorkerSliceNs);
+    PC_CHECK(resumed_batch.max_continuation_slice_ns < kWorkerSliceNs);
+    PC_CHECK(
+        resumed_batch.phases.imprint_max_atomic_outcomes_ns <
+        kWorkerSliceNs);
+
+    /* Cancellation after one completed atomic outcome exposes no complete
+     * batch or adopted parent operator. Destruction rolls back the suspended
+     * transaction; retry then deterministically publishes the complete
+     * envelope once. */
+    CalcContext cancelled_calc(
+        session, goal, registry, candidates,
+        false, true, false, std::nullopt, {}, false);
+    const std::uint32_t cancelled_state =
+        cancelled_calc.intern_item(magic);
+    const std::size_t cancelled_operator_count =
+        cancelled_calc.operators().size();
+    const std::size_t cancelled_candidate_count =
+        cancelled_calc.candidate_operators().size();
+    const std::size_t cancelled_distribution_count =
+        cancelled_calc.cached_distribution_count();
+    const std::size_t cancelled_reforge_count =
+        cancelled_calc.cached_reforge_count();
+    StateLocalAutomaticBatch unpublished;
+    PC_CHECK(!cancelled_calc.advance_state_local_automatic_candidates(
+        cancelled_state, limits, unpublished, 1));
+    PC_CHECK(!cancelled_calc.advance_state_local_automatic_candidates(
+        cancelled_state, limits, unpublished, 1));
+    PC_CHECK(unpublished.admitted_operators.empty());
+    PC_CHECK(unpublished.decisions.empty());
+    PC_CHECK(cancelled_calc.operators().size() == cancelled_operator_count);
+    PC_CHECK(
+        cancelled_calc.candidate_operators().size() ==
+        cancelled_candidate_count);
+    PC_CHECK(cancelled_calc.automatic_admission_cursor_bytes() > 0);
+    cancelled_calc.cancel_state_local_automatic_candidates(cancelled_state);
+    PC_CHECK(cancelled_calc.automatic_admission_cursor_bytes() == 0);
+    PC_CHECK(cancelled_calc.operators().size() == cancelled_operator_count);
+    PC_CHECK(
+        cancelled_calc.candidate_operators().size() ==
+        cancelled_candidate_count);
+    PC_CHECK(
+        cancelled_calc.cached_distribution_count() ==
+        cancelled_distribution_count);
+    PC_CHECK(
+        cancelled_calc.cached_reforge_count() ==
+        cancelled_reforge_count);
+    const StateLocalAutomaticBatch cancelled_retry =
+        cancelled_calc.admit_state_local_automatic_candidates(
+            cancelled_state, limits);
+    PC_CHECK(!cancelled_retry.cached);
+    PC_CHECK(
+        cancelled_retry.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+    PC_CHECK(
+        admitted_imprint_programs(cancelled_calc, cancelled_retry) ==
+        admitted_imprint_programs(strict_calc, strict_batch));
+
+    /* A depth boundary retains a bounded concrete frontier witness so a real
+     * product report identifies the exact action grammar that remains open. */
+    CalcContext depth_deferred_calc(
+        session, goal, registry, candidates,
+        false, true, false, std::nullopt, {}, false);
+    const std::uint32_t depth_deferred_state =
+        depth_deferred_calc.intern_item(magic);
+    AutomaticAdmissionLimits depth_deferred_limits = limits;
+    depth_deferred_limits.max_imprint_program_depth = 1;
+    const StateLocalAutomaticBatch depth_deferred_batch =
+        depth_deferred_calc.admit_state_local_automatic_candidates(
+            depth_deferred_state, depth_deferred_limits);
+    PC_CHECK(
+        depth_deferred_batch.status ==
+        StateLocalAutomaticBatchStatus::ResourceDeferred);
+    PC_CHECK(
+        depth_deferred_batch.resource_cap ==
+        "max_imprint_program_depth");
+    const auto depth_boundary = std::find_if(
+        depth_deferred_batch.decisions.begin(),
+        depth_deferred_batch.decisions.end(),
+        [](const StateLocalAutomaticCandidate& decision) {
+            return decision.deferred &&
+                   decision.kind == AutomaticCandidateKind::Imprint;
+        });
+    PC_CHECK(depth_boundary != depth_deferred_batch.decisions.end());
+    if (depth_boundary != depth_deferred_batch.decisions.end()) {
+        PC_CHECK(
+            depth_boundary->evidence.reason.find(
+                "frontier_samples_") != std::string::npos);
+        PC_CHECK(
+            depth_boundary->evidence.reason.find(
+                "augment:evaluated_changed") != std::string::npos);
+    }
+    CalcContext sampled_depth_calc(
+        session, goal, registry, candidates,
+        false, true, false, std::nullopt, {}, false);
+    SolveOptions sampled_depth_options;
+    sampled_depth_options.max_imprint_program_depth = 1;
+    sampled_depth_options.max_imprint_program_work = 16;
+    sampled_depth_options.max_diagnostic_samples = 1;
+    sampled_depth_options.max_solver_owned_bytes =
+        256ull * 1024ull * 1024ull;
+    sampled_depth_options.goal_progress_gated_reforges = true;
+    sampled_depth_options.state_certificate_control = false;
+    const SolveResult sampled_depth = solve(
+        sampled_depth_calc, magic, prices, sampled_depth_options);
+    PC_CHECK(!sampled_depth.converged);
+    PC_CHECK(std::find(
+                 sampled_depth.diagnostics.cap_hits.begin(),
+                 sampled_depth.diagnostics.cap_hits.end(),
+                 "max_imprint_program_depth") !=
+             sampled_depth.diagnostics.cap_hits.end());
+    PC_CHECK(
+        sampled_depth.diagnostics.automatic_candidate_witnesses.size() ==
+        1);
+    if (!sampled_depth.diagnostics
+             .automatic_candidate_witnesses.empty()) {
+        const std::string& witness =
+            sampled_depth.diagnostics
+                .automatic_candidate_witnesses.front();
+        PC_CHECK(
+            witness.find("\"disposition\":\"deferred\"") !=
+            std::string::npos);
+        PC_CHECK(
+            witness.find("frontier_samples_") !=
+            std::string::npos);
+        PC_CHECK(
+            witness.find("\"influence_bits\":0") !=
+            std::string::npos);
+        PC_CHECK(
+            witness.find("augment:evaluated_changed") !=
+            std::string::npos);
+    }
+
+    /* A truncated grammar is an explicit unresolved resource boundary, never
+     * a cacheable complete envelope. Retrying with room regenerates and then
+     * caches only the deterministic complete result. */
+    CalcContext deferred_calc(
+        session, goal, registry, candidates,
+        false, true, false, std::nullopt, {}, false);
+    const std::uint32_t deferred_state = deferred_calc.intern_item(magic);
+    const std::size_t deferred_operator_count = deferred_calc.operators().size();
+    const std::size_t deferred_candidate_count =
+        deferred_calc.candidate_operators().size();
+    AutomaticAdmissionLimits deferred_limits = limits;
+    deferred_limits.max_imprint_program_work = 1;
+    const StateLocalAutomaticBatch deferred_batch =
+        deferred_calc.admit_state_local_automatic_candidates(
+            deferred_state, deferred_limits);
+    PC_CHECK(
+        deferred_batch.status ==
+        StateLocalAutomaticBatchStatus::ResourceDeferred);
+    PC_CHECK(!deferred_batch.cached);
+    PC_CHECK(deferred_batch.resource_cap == "max_imprint_program_work");
+    PC_CHECK(deferred_batch.resource_limit == 1);
+    PC_CHECK(deferred_batch.phases.imprint_programs_evaluated == 1);
+    PC_CHECK(
+        deferred_batch.phases.imprint_action_state_evaluations > 0);
+    PC_CHECK(deferred_batch.admitted_operators.empty());
+    PC_CHECK(deferred_calc.operators().size() == deferred_operator_count);
+    PC_CHECK(
+        deferred_calc.candidate_operators().size() ==
+        deferred_candidate_count);
+    const StateLocalAutomaticBatch deferred_retry =
+        deferred_calc.admit_state_local_automatic_candidates(
+            deferred_state, limits);
+    PC_CHECK(!deferred_retry.cached);
+    PC_CHECK(
+        deferred_retry.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+    PC_CHECK(
+        admitted_imprint_programs(deferred_calc, deferred_retry) ==
+        admitted_imprint_programs(strict_calc, strict_batch));
+    const StateLocalAutomaticBatch deferred_cached =
+        deferred_calc.admit_state_local_automatic_candidates(
+            deferred_state, limits);
+    PC_CHECK(deferred_cached.cached);
+    PC_CHECK(
+        deferred_cached.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+
+    std::printf(
+        "automatic Imprint cooperative: resumes=%llu max_slice_ms=%.3f "
+        "max_atomic_ms=%.3f programs=%llu action_states=%llu "
+        "outcomes=%llu\n",
+        static_cast<unsigned long long>(resume_calls),
+        static_cast<double>(measured_max_slice_ns) / 1000000.0,
+        static_cast<double>(
+            resumed_batch.phases.imprint_max_atomic_outcomes_ns) /
+            1000000.0,
+        static_cast<unsigned long long>(
+            resumed_batch.phases.imprint_programs_evaluated),
+        static_cast<unsigned long long>(
+            resumed_batch.phases.imprint_action_state_evaluations),
+        static_cast<unsigned long long>(
+            resumed_batch.phases.imprint_outcomes_merged));
 }
 
 void run_automatic_eldritch_side_tests() {
@@ -5663,6 +6985,7 @@ void run_automatic_eldritch_side_tests() {
     std::unordered_map<std::string, double> prices{
         {"chaos", 10.0},
         {"annul", 10.0},
+        {"eldritch_exalt", 0.001},
         {"eldritch_chaos", 3.0},
         {"eldritch_annul", 2.0},
         {"eldritch_ember:1", 9.0},
@@ -5673,22 +6996,54 @@ void run_automatic_eldritch_side_tests() {
         {"eldritch_ichor:2", 1.5},
         {"eldritch_ichor:3", 4.5},
         {"eldritch_ichor:4", 5.5}};
+    constexpr std::uint64_t kFocusedRetainedReforgeWork = 1000000;
     AutomaticAdmissionLimits limits;
-    limits.max_discovered_states = 10000;
     limits.max_state_action_rows = 10000;
     limits.max_transitions = 100000;
-    limits.max_reforge_work = 1000000;
     limits.max_solver_owned_bytes = 256ull * 1024ull * 1024ull;
     limits.max_imprint_program_depth = 3;
     limits.max_imprint_program_work = 256;
     limits.prices = &prices;
+    const auto decision_is_eldritch_exalt = [](
+        const CalcContext& context,
+        const StateLocalAutomaticCandidate& decision) {
+        if (decision.kind != AutomaticCandidateKind::EldritchSide ||
+            decision.operator_index == kNoId ||
+            decision.operator_index >= context.operators().size()) {
+            return false;
+        }
+        const PlannerOperator& planner =
+            context.operators().at(decision.operator_index);
+        return !planner.primitive_program.empty() &&
+               context.registry().actions.at(
+                   planner.primitive_program.back()).params.type ==
+                   ActionType::EldritchExalt;
+    };
+    const auto admitted_ids = [](
+        const CalcContext& context,
+        const StateLocalAutomaticBatch& batch,
+        const AutomaticCandidateKind kind) {
+        std::vector<std::string> ids;
+        for (const StateLocalAutomaticCandidate& decision :
+             batch.decisions) {
+            if (!decision.admitted || decision.kind != kind ||
+                decision.operator_index == kNoId ||
+                decision.operator_index >= context.operators().size()) {
+                continue;
+            }
+            ids.push_back(
+                context.operators().at(decision.operator_index).id);
+        }
+        std::sort(ids.begin(), ids.end());
+        return ids;
+    };
 
     pc_item_state repair_prefix;
     pc_item_clear(&repair_prefix);
     repair_prefix.rarity = PC_RARITY_RARE;
     place(
-        &repair_prefix, PC_SIDE_PREFIX, 2,
-        session->primary_group[2]);
+        &repair_prefix, PC_SIDE_PREFIX, 3,
+        session->primary_group[3]);
     place(
         &repair_prefix, PC_SIDE_SUFFIX, 5,
         session->primary_group[5]);
@@ -5709,9 +7064,10 @@ void run_automatic_eldritch_side_tests() {
             prefix_eldritch.push_back(decision.operator_index);
         }
     }
-    PC_CHECK(prefix_eldritch.size() == 2);
+    PC_CHECK(prefix_eldritch.size() == 3);
     bool saw_prefix_annul = false;
     bool saw_prefix_chaos = false;
+    bool saw_prefix_exalt = false;
     for (const std::uint32_t op : prefix_eldritch) {
         const PlannerOperator& planner =
             prefix_calc.operators().at(op);
@@ -5726,6 +7082,10 @@ void run_automatic_eldritch_side_tests() {
             planner.primitive_program.back()).params.type;
         saw_prefix_annul |= final == ActionType::EldritchAnnul;
         saw_prefix_chaos |= final == ActionType::EldritchChaos;
+        saw_prefix_exalt |= final == ActionType::EldritchExalt;
+        if (final == ActionType::EldritchExalt) {
+            PC_CHECK(planner.display_name == "Eldritch Exalt Prefix");
+        }
         const OptionKernel& kernel =
             prefix_calc.option_kernel(prefix_state, op);
         PC_CHECK(kernel.automatic.eligible);
@@ -5750,6 +7110,629 @@ void run_automatic_eldritch_side_tests() {
     }
     PC_CHECK(saw_prefix_annul);
     PC_CHECK(saw_prefix_chaos);
+    PC_CHECK(saw_prefix_exalt);
+
+    /* Carrier-local automatic preparation is one resumable transaction. A
+     * one-checkpoint advance must never replay a completed candidate, every
+     * suspension must reconcile the selected-owned-byte ledger, and no leaf
+     * may monopolize the worker beyond the public 20 second slice contract. */
+    constexpr std::uint64_t kWorkerSliceLimitNs =
+        20ull * 1000ull * 1000ull * 1000ull;
+    CalcContext resumed_calc(
+        session, goal, registry, candidates);
+    const std::uint32_t resumed_state =
+        resumed_calc.intern_item(repair_prefix);
+    StateLocalAutomaticBatch resumed_batch;
+    std::vector<std::uint64_t> suspended_owned_bytes;
+    std::uint64_t measured_max_slice_ns = 0;
+    std::uint64_t resume_calls = 0;
+    bool resumed_complete = false;
+    bool single_flight_rejected = false;
+    while (!resumed_complete && resume_calls < 4096) {
+        const auto resume_started = std::chrono::steady_clock::now();
+        resumed_complete =
+            resumed_calc.advance_state_local_automatic_candidates(
+                resumed_state, limits, resumed_batch, 1);
+        measured_max_slice_ns = std::max(
+            measured_max_slice_ns,
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - resume_started)
+                    .count()));
+        ++resume_calls;
+        if (resumed_complete) continue;
+        PC_CHECK(resumed_calc.automatic_admission_cursor_bytes() > 0);
+        const std::uint64_t audited =
+            resumed_calc.audited_estimated_owned_bytes();
+        const std::uint64_t fast =
+            resumed_calc.fast_estimated_owned_bytes();
+        PC_CHECK(fast >= audited);
+        PC_CHECK(
+            fast >= resumed_calc.automatic_admission_cursor_bytes());
+        suspended_owned_bytes.push_back(fast);
+        if (!single_flight_rejected) {
+            StateLocalAutomaticBatch conflicting;
+            try {
+                (void)resumed_calc
+                    .advance_state_local_automatic_candidates(
+                        resumed_state + 1, limits, conflicting, 1);
+            } catch (const std::logic_error&) {
+                single_flight_rejected = true;
+            }
+        }
+    }
+    PC_CHECK(resumed_complete);
+    PC_CHECK(single_flight_rejected);
+    PC_CHECK(!suspended_owned_bytes.empty());
+    PC_CHECK(resumed_calc.automatic_admission_cursor_bytes() == 0);
+    PC_CHECK(resumed_batch.continuation_resumes == resume_calls);
+    PC_CHECK(
+        resumed_batch.continuation_suspensions + 1 ==
+        resumed_batch.continuation_resumes);
+    PC_CHECK(
+        resumed_batch.continuation_suspensions ==
+        suspended_owned_bytes.size());
+    PC_CHECK(
+        resumed_batch.max_continuation_slice_ns <=
+        measured_max_slice_ns);
+    PC_CHECK(
+        resumed_batch.max_continuation_slice_ns <
+        kWorkerSliceLimitNs);
+    PC_CHECK(measured_max_slice_ns < kWorkerSliceLimitNs);
+    PC_CHECK(
+        resumed_calc.audited_estimated_owned_bytes() <=
+        resumed_calc.fast_estimated_owned_bytes());
+    PC_CHECK(
+        resumed_batch.decisions.size() ==
+        prefix_batch.decisions.size());
+    if (resumed_batch.decisions.size() ==
+        prefix_batch.decisions.size()) {
+        for (std::size_t i = 0;
+             i < resumed_batch.decisions.size(); ++i) {
+            const StateLocalAutomaticCandidate& resumed =
+                resumed_batch.decisions[i];
+            const StateLocalAutomaticCandidate& synchronous =
+                prefix_batch.decisions[i];
+            PC_CHECK(resumed.id == synchronous.id);
+            PC_CHECK(resumed.kind == synchronous.kind);
+            PC_CHECK(resumed.admitted == synchronous.admitted);
+            PC_CHECK(resumed.deferred == synchronous.deferred);
+            PC_CHECK(resumed.collapsed == synchronous.collapsed);
+            PC_CHECK(resumed.missing_price == synchronous.missing_price);
+            PC_CHECK(resumed.raw_outcomes == synchronous.raw_outcomes);
+            PC_CHECK(
+                resumed.evidence.legality_result ==
+                synchronous.evidence.legality_result);
+            PC_CHECK(
+                resumed.evidence.reason ==
+                synchronous.evidence.reason);
+            if (resumed.operator_index != kNoId &&
+                synchronous.operator_index != kNoId) {
+                PC_CHECK(
+                    resumed_calc.operators().at(
+                        resumed.operator_index).id ==
+                    prefix_calc.operators().at(
+                        synchronous.operator_index).id);
+            }
+        }
+    }
+    PC_CHECK(
+        admitted_ids(
+            resumed_calc, resumed_batch,
+            AutomaticCandidateKind::EldritchSide) ==
+        admitted_ids(
+            prefix_calc, prefix_batch,
+            AutomaticCandidateKind::EldritchSide));
+    PC_CHECK(
+        resumed_calc.telemetry().reforge_logical_work_v1 ==
+        prefix_calc.telemetry().reforge_logical_work_v1);
+
+    /* Cancellation after one parent-Eldritch candidate destroys the frame
+     * before restoring staged operators and every cache/template kernel. A
+     * clean retry then publishes the same deterministic envelope once. */
+    CalcContext cancelled_calc(
+        session, goal, registry, candidates);
+    const std::uint32_t cancelled_state =
+        cancelled_calc.intern_item(repair_prefix);
+    const std::size_t cancelled_operator_count_before =
+        cancelled_calc.operators().size();
+    const std::size_t cancelled_candidate_count_before =
+        cancelled_calc.candidate_operators().size();
+    const std::uint64_t cancelled_distribution_count_before =
+        cancelled_calc.cached_distribution_count();
+    const std::uint64_t cancelled_reforge_count_before =
+        cancelled_calc.cached_reforge_count();
+    StateLocalAutomaticBatch abandoned_batch;
+    PC_CHECK(
+        !cancelled_calc.advance_state_local_automatic_candidates(
+            cancelled_state, limits, abandoned_batch, 1));
+    PC_CHECK(
+        !cancelled_calc.advance_state_local_automatic_candidates(
+            cancelled_state, limits, abandoned_batch, 1));
+    PC_CHECK(
+        cancelled_calc.operators().size() >
+        cancelled_operator_count_before);
+    PC_CHECK(cancelled_calc.automatic_admission_cursor_bytes() > 0);
+    PC_CHECK(
+        cancelled_calc.audited_estimated_owned_bytes() <=
+        cancelled_calc.fast_estimated_owned_bytes());
+    cancelled_calc.cancel_state_local_automatic_candidates(
+        cancelled_state);
+    PC_CHECK(cancelled_calc.automatic_admission_cursor_bytes() == 0);
+    PC_CHECK(
+        cancelled_calc.operators().size() ==
+        cancelled_operator_count_before);
+    PC_CHECK(
+        cancelled_calc.candidate_operators().size() ==
+        cancelled_candidate_count_before);
+    PC_CHECK(
+        cancelled_calc.cached_distribution_count() ==
+        cancelled_distribution_count_before);
+    PC_CHECK(
+        cancelled_calc.cached_reforge_count() ==
+        cancelled_reforge_count_before);
+    PC_CHECK(
+        cancelled_calc.audited_estimated_owned_bytes() <=
+        cancelled_calc.fast_estimated_owned_bytes());
+    const StateLocalAutomaticBatch cancelled_retry =
+        cancelled_calc.admit_state_local_automatic_candidates(
+            cancelled_state, limits);
+    PC_CHECK(!cancelled_retry.cached);
+    PC_CHECK(
+        cancelled_retry.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+    PC_CHECK(
+        admitted_ids(
+            cancelled_calc, cancelled_retry,
+            AutomaticCandidateKind::EldritchSide) ==
+        admitted_ids(
+            prefix_calc, prefix_batch,
+            AutomaticCandidateKind::EldritchSide));
+    PC_CHECK(
+        cancelled_calc.operators().size() ==
+        prefix_calc.operators().size());
+
+    /* The final checkpoint owns the last grown decision/staging vectors.
+     * Probe its exact selected bytes, then place the cap one byte below it:
+     * all earlier leaves must pass, the final suspension must roll back, and
+     * a retry with room must still be complete and uncached. */
+    auto final_checkpoint_session = make_solve_session();
+    ActionRegistry final_checkpoint_registry =
+        build_action_registry(*final_checkpoint_session);
+    const std::vector<std::uint32_t> final_checkpoint_candidates{
+        final_checkpoint_registry.index_by_id.at("chaos"),
+        final_checkpoint_registry.index_by_id.at("annul")};
+    const std::unordered_map<std::string, double>
+        final_checkpoint_prices{
+            {"chaos", 1.0}, {"annul", 1.0}};
+    AutomaticAdmissionLimits final_checkpoint_limits = limits;
+    final_checkpoint_limits.max_solver_owned_bytes = 0;
+    final_checkpoint_limits.prices = &final_checkpoint_prices;
+    pc_item_state final_checkpoint_start;
+    pc_item_clear(&final_checkpoint_start);
+    final_checkpoint_start.rarity = PC_RARITY_RARE;
+    CalcContext final_checkpoint_probe(
+        final_checkpoint_session, goal, final_checkpoint_registry,
+        final_checkpoint_candidates);
+    const std::uint32_t final_checkpoint_probe_state =
+        final_checkpoint_probe.intern_item(final_checkpoint_start);
+    StateLocalAutomaticBatch final_checkpoint_probe_batch;
+    std::vector<std::uint64_t> final_checkpoint_probe_bytes;
+    bool final_checkpoint_probe_complete = false;
+    while (!final_checkpoint_probe_complete &&
+           final_checkpoint_probe_bytes.size() < 4096) {
+        final_checkpoint_probe_complete =
+            final_checkpoint_probe
+                .advance_state_local_automatic_candidates(
+                    final_checkpoint_probe_state,
+                    final_checkpoint_limits,
+                    final_checkpoint_probe_batch, 1);
+        if (!final_checkpoint_probe_complete) {
+            const std::uint64_t audited = final_checkpoint_probe
+                .audited_estimated_owned_bytes();
+            const std::uint64_t fast = final_checkpoint_probe
+                .fast_estimated_owned_bytes();
+            PC_CHECK(fast >= audited);
+            final_checkpoint_probe_bytes.push_back(fast);
+        }
+    }
+    PC_CHECK(final_checkpoint_probe_complete);
+    PC_CHECK(!final_checkpoint_probe_bytes.empty());
+    PC_CHECK(final_checkpoint_probe_bytes.size() >= 2);
+    const std::uint64_t exact_publication_checkpoint_owned =
+        final_checkpoint_probe_bytes.back();
+    const std::uint64_t final_checkpoint_owned =
+        final_checkpoint_probe_bytes[
+            final_checkpoint_probe_bytes.size() - 2];
+    const std::uint64_t prior_checkpoint_max =
+        final_checkpoint_probe_bytes.size() <= 2
+            ? 0
+            : *std::max_element(
+                  final_checkpoint_probe_bytes.begin(),
+                  final_checkpoint_probe_bytes.end() - 2);
+    PC_CHECK(final_checkpoint_owned > prior_checkpoint_max);
+    PC_CHECK(
+        exact_publication_checkpoint_owned >=
+        final_checkpoint_probe.fast_estimated_owned_bytes());
+    PC_CHECK(
+        final_checkpoint_owned >
+        final_checkpoint_probe.fast_estimated_owned_bytes());
+    CalcContext final_cap_calc(
+        final_checkpoint_session, goal, final_checkpoint_registry,
+        final_checkpoint_candidates);
+    const std::uint32_t final_cap_state =
+        final_cap_calc.intern_item(final_checkpoint_start);
+    const std::size_t final_cap_operator_count_before =
+        final_cap_calc.operators().size();
+    const std::size_t final_cap_candidate_count_before =
+        final_cap_calc.candidate_operators().size();
+    AutomaticAdmissionLimits final_cap_limits =
+        final_checkpoint_limits;
+    final_cap_limits.max_solver_owned_bytes =
+        final_checkpoint_owned - 1;
+    bool final_cap_hit = false;
+    std::uint64_t final_cap_completed_suspensions = 0;
+    try {
+        StateLocalAutomaticBatch capped_batch;
+        for (std::uint64_t i = 0; i < 4096; ++i) {
+            if (final_cap_calc.advance_state_local_automatic_candidates(
+                    final_cap_state, final_cap_limits,
+                    capped_batch, 1)) {
+                break;
+            }
+            ++final_cap_completed_suspensions;
+        }
+    } catch (const SolverResourceLimit& limit) {
+        final_cap_hit =
+            limit.cap_name() == "max_solver_owned_bytes" &&
+            limit.limit() == final_cap_limits.max_solver_owned_bytes;
+    }
+    PC_CHECK(final_cap_hit);
+    PC_CHECK(
+        final_cap_completed_suspensions + 2 ==
+        final_checkpoint_probe_bytes.size());
+    PC_CHECK(final_cap_calc.automatic_admission_cursor_bytes() == 0);
+    PC_CHECK(
+        final_cap_calc.operators().size() ==
+        final_cap_operator_count_before);
+    PC_CHECK(
+        final_cap_calc.candidate_operators().size() ==
+        final_cap_candidate_count_before);
+    PC_CHECK(
+        final_cap_calc.audited_estimated_owned_bytes() <=
+        final_cap_calc.fast_estimated_owned_bytes());
+    const StateLocalAutomaticBatch final_cap_retry =
+        final_cap_calc.admit_state_local_automatic_candidates(
+            final_cap_state, final_checkpoint_limits);
+    PC_CHECK(!final_cap_retry.cached);
+    PC_CHECK(
+        final_cap_retry.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+    PC_CHECK(
+        final_cap_retry.admitted_operators ==
+        final_checkpoint_probe_batch.admitted_operators);
+    PC_CHECK(
+        final_cap_retry.decisions.size() ==
+        final_checkpoint_probe_batch.decisions.size());
+
+    /* Cached completion copies the retained carrier envelope into the return
+     * batch. Its allocation is preflighted before the copy, and cancellation
+     * or a one-byte refusal cannot disturb the already-published cache. */
+    const std::uint64_t cached_base_owned =
+        final_cap_calc.fast_estimated_owned_bytes();
+    StateLocalAutomaticBatch cached_projection_batch;
+    PC_CHECK(!final_cap_calc.advance_state_local_automatic_candidates(
+        final_cap_state, final_checkpoint_limits,
+        cached_projection_batch, 1));
+    const std::uint64_t cached_projection_owned =
+        final_cap_calc.fast_estimated_owned_bytes();
+    PC_CHECK(cached_projection_owned > cached_base_owned);
+    final_cap_calc.cancel_state_local_automatic_candidates(
+        final_cap_state);
+    AutomaticAdmissionLimits cached_cap_limits =
+        final_checkpoint_limits;
+    cached_cap_limits.max_solver_owned_bytes =
+        cached_projection_owned - 1;
+    bool cached_copy_cap_hit = false;
+    try {
+        StateLocalAutomaticBatch cached_capped;
+        (void)final_cap_calc.advance_state_local_automatic_candidates(
+            final_cap_state, cached_cap_limits, cached_capped, 1);
+    } catch (const SolverResourceLimit& limit) {
+        cached_copy_cap_hit =
+            limit.cap_name() == "max_solver_owned_bytes";
+    }
+    PC_CHECK(cached_copy_cap_hit);
+    PC_CHECK(final_cap_calc.automatic_admission_cursor_bytes() == 0);
+    const StateLocalAutomaticBatch cached_after_cap =
+        final_cap_calc.admit_state_local_automatic_candidates(
+            final_cap_state, final_checkpoint_limits);
+    PC_CHECK(cached_after_cap.cached);
+    PC_CHECK(
+        cached_after_cap.admitted_operators ==
+        final_cap_retry.admitted_operators);
+
+    /* Even an empty automatic envelope publishes a carrier cache node. Its
+     * staging buckets/nodes are guarded before allocation, and a refusal
+     * leaves the retry observably uncached. */
+    GoalSpec empty_publication_goal = goal;
+    empty_publication_goal.automatic_candidates = false;
+    CalcContext empty_publication_calc(
+        final_checkpoint_session, empty_publication_goal,
+        final_checkpoint_registry, final_checkpoint_candidates);
+    const std::uint32_t empty_publication_state =
+        empty_publication_calc.intern_item(final_checkpoint_start);
+    const std::uint64_t empty_publication_base =
+        empty_publication_calc.fast_estimated_owned_bytes();
+    StateLocalAutomaticBatch empty_projection_batch;
+    PC_CHECK(
+        !empty_publication_calc.advance_state_local_automatic_candidates(
+            empty_publication_state, final_checkpoint_limits,
+            empty_projection_batch, 1));
+    const std::uint64_t empty_projection_owned =
+        empty_publication_calc.fast_estimated_owned_bytes();
+    PC_CHECK(empty_projection_owned > empty_publication_base);
+    empty_publication_calc.cancel_state_local_automatic_candidates(
+        empty_publication_state);
+    AutomaticAdmissionLimits empty_cap_limits =
+        final_checkpoint_limits;
+    empty_cap_limits.max_solver_owned_bytes =
+        empty_projection_owned - 1;
+    bool empty_publication_cap_hit = false;
+    try {
+        StateLocalAutomaticBatch empty_capped;
+        (void)empty_publication_calc
+            .advance_state_local_automatic_candidates(
+                empty_publication_state, empty_cap_limits,
+                empty_capped, 1);
+    } catch (const SolverResourceLimit& limit) {
+        empty_publication_cap_hit =
+            limit.cap_name() == "max_solver_owned_bytes";
+    }
+    PC_CHECK(empty_publication_cap_hit);
+    PC_CHECK(
+        empty_publication_calc.automatic_admission_cursor_bytes() == 0);
+    const StateLocalAutomaticBatch empty_retry =
+        empty_publication_calc.admit_state_local_automatic_candidates(
+            empty_publication_state, final_checkpoint_limits);
+    PC_CHECK(!empty_retry.cached);
+    PC_CHECK(empty_retry.admitted_operators.empty());
+    const StateLocalAutomaticBatch empty_cached =
+        empty_publication_calc.admit_state_local_automatic_candidates(
+            empty_publication_state, final_checkpoint_limits);
+    PC_CHECK(empty_cached.cached);
+    PC_CHECK(empty_cached.admitted_operators.empty());
+    std::printf(
+        "automatic admission continuation: resumes=%llu "
+        "suspensions=%zu max_leaf_ms=%.3f final_owned=%llu\n",
+        static_cast<unsigned long long>(resume_calls),
+        suspended_owned_bytes.size(),
+        static_cast<double>(measured_max_slice_ns) / 1000000.0,
+        static_cast<unsigned long long>(final_checkpoint_owned));
+
+    /* Parent-context Eldritch evaluation is transactional, but its transient
+     * reforge work does not own the retained graph's max_reforge_work cap. A
+     * complete automatic envelope may exceed a tiny parent cap; the next
+     * ordinary retained Chaos row must still encounter that untouched cap. */
+    CalcContext parent_deferred_calc(
+        session, goal, registry, candidates);
+    const std::uint32_t parent_deferred_state =
+        parent_deferred_calc.intern_item(repair_prefix);
+    const std::size_t parent_operator_count_before =
+        parent_deferred_calc.operators().size();
+    const std::size_t parent_candidate_count_before =
+        parent_deferred_calc.candidate_operators().size();
+    constexpr std::uint64_t kRetainedParentReforgeCap = 1;
+    parent_deferred_calc.set_solve_resource_caps(
+        10000, kRetainedParentReforgeCap, false,
+        256ull * 1024ull * 1024ull);
+    AutomaticAdmissionLimits parent_deferred_limits = limits;
+    const StateLocalAutomaticBatch parent_deferred =
+        parent_deferred_calc.admit_state_local_automatic_candidates(
+            parent_deferred_state, parent_deferred_limits);
+    PC_CHECK(
+        parent_deferred.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+    PC_CHECK(!parent_deferred.cached);
+    PC_CHECK(
+        parent_deferred.phases.reforge_logical_work_v1 >
+        kRetainedParentReforgeCap);
+    PC_CHECK(
+        parent_deferred_calc.telemetry()
+            .automatic_admission_reforge_logical_work_v1 ==
+        parent_deferred.phases.reforge_logical_work_v1);
+    PC_CHECK(
+        parent_deferred_calc.telemetry().reforge_logical_work_v1 <
+        kRetainedParentReforgeCap);
+    PC_CHECK(
+        parent_deferred_calc.operators().size() >
+        parent_operator_count_before);
+    PC_CHECK(
+        parent_deferred_calc.candidate_operators().size() >
+        parent_candidate_count_before);
+    PC_CHECK(
+        admitted_ids(
+            parent_deferred_calc, parent_deferred,
+            AutomaticCandidateKind::EldritchSide) ==
+        admitted_ids(
+            prefix_calc, prefix_batch,
+            AutomaticCandidateKind::EldritchSide));
+    PC_CHECK(
+        parent_deferred_calc.operators().size() ==
+        prefix_calc.operators().size());
+    bool retained_reforge_cap_hit = false;
+    try {
+        (void)parent_deferred_calc.outcomes(
+            parent_deferred_state,
+            registry.index_by_id.at("chaos"));
+    } catch (const SolverResourceLimit& limit) {
+        retained_reforge_cap_hit =
+            limit.cap_name() == "max_reforge_work" &&
+            limit.limit() == kRetainedParentReforgeCap;
+    }
+    PC_CHECK(retained_reforge_cap_hit);
+    const StateLocalAutomaticBatch parent_cached =
+        parent_deferred_calc.admit_state_local_automatic_candidates(
+            parent_deferred_state, limits);
+    PC_CHECK(
+        parent_cached.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+    PC_CHECK(parent_cached.cached);
+    PC_CHECK(
+        parent_cached.admitted_operators ==
+        parent_deferred.admitted_operators);
+
+    /* The retained admission context is also retry-safe when selected-owned
+     * memory stops a deterministic Multimod finish. Local state discovery is
+     * intentionally uncapped; raising the actual memory boundary on the same
+     * parent regenerates the complete deterministic envelope once. */
+    auto local_session = make_solve_session();
+    constexpr int kLocalMultimodCode = 17;
+    auto local_data =
+        std::make_shared<DataImpl>(*local_session->data);
+    local_data->metamod_multimod_code = kLocalMultimodCode;
+    local_session->data = std::move(local_data);
+    local_session->metamod_type[5] = kLocalMultimodCode;
+    local_session->bench_mod_ids = {3, 5, 6};
+    for (const std::uint32_t mod : local_session->bench_mod_ids) {
+        local_session->flags[mod] = 1u << 1;
+        pc_bitset_clear(
+            local_session->normal_random_roll_mask.data(), mod);
+    }
+    ActionRegistry local_registry =
+        build_action_registry(*local_session);
+    GoalSpec local_goal;
+    local_goal.rarity = PC_RARITY_RARE;
+    local_goal.automatic_candidates = true;
+    for (const std::uint32_t family : {102u, 105u}) {
+        GoalSlot slot;
+        slot.family_id = family;
+        slot.min_tier = 1;
+        local_goal.slots.push_back(slot);
+    }
+    const std::vector<std::uint32_t> local_candidates{
+        local_registry.index_by_id.at("bench:mod3"),
+        local_registry.index_by_id.at("bench:mod5"),
+        local_registry.index_by_id.at("bench:mod6")};
+    const std::unordered_map<std::string, double> local_prices{
+        {"bench:mod3", 1.0},
+        {"bench:mod5", 2.0},
+        {"bench:mod6", 1.0}};
+    AutomaticAdmissionLimits local_limits;
+    local_limits.max_solver_owned_bytes =
+        256ull * 1024ull * 1024ull;
+    local_limits.max_imprint_program_depth = 3;
+    local_limits.max_imprint_program_work = 256;
+    local_limits.prices = &local_prices;
+    pc_item_state local_start;
+    pc_item_clear(&local_start);
+    local_start.rarity = PC_RARITY_RARE;
+
+    CalcContext local_probe_calc(
+        local_session, local_goal, local_registry, local_candidates);
+    const StateLocalAutomaticBatch local_probe =
+        local_probe_calc.admit_state_local_automatic_candidates(
+            local_probe_calc.intern_item(local_start), local_limits);
+    PC_CHECK(
+        local_probe.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+    const std::vector<std::string> local_probe_ids = admitted_ids(
+        local_probe_calc, local_probe,
+        AutomaticCandidateKind::MultimodFinish);
+    PC_CHECK(!local_probe_ids.empty());
+    const std::uint32_t retained_local_parent_states =
+        local_probe_calc.state_count();
+    PC_CHECK(retained_local_parent_states > 0);
+    PC_CHECK(
+        local_probe.phases.discovered_states >
+        retained_local_parent_states);
+
+    CalcContext local_state_cap_calc(
+        local_session, local_goal, local_registry, local_candidates);
+    const std::uint32_t local_state_cap_state =
+        local_state_cap_calc.intern_item(local_start);
+    local_state_cap_calc.set_solve_resource_caps(
+        retained_local_parent_states, kFocusedRetainedReforgeWork,
+        false, local_limits.max_solver_owned_bytes);
+    const StateLocalAutomaticBatch local_state_cap_batch =
+        local_state_cap_calc.admit_state_local_automatic_candidates(
+            local_state_cap_state, local_limits);
+    PC_CHECK(
+        local_state_cap_batch.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+    PC_CHECK(
+        local_state_cap_calc.state_count() <=
+        retained_local_parent_states);
+    PC_CHECK(
+        local_state_cap_batch.phases.discovered_states >
+        retained_local_parent_states);
+    PC_CHECK(
+        admitted_ids(
+            local_state_cap_calc, local_state_cap_batch,
+            AutomaticCandidateKind::MultimodFinish) ==
+        local_probe_ids);
+
+    CalcContext local_deferred_calc(
+        local_session, local_goal, local_registry, local_candidates);
+    const std::uint32_t local_deferred_state =
+        local_deferred_calc.intern_item(local_start);
+    const std::size_t local_candidate_count_before =
+        local_deferred_calc.candidate_operators().size();
+    AutomaticAdmissionLimits local_deferred_limits = local_limits;
+    const std::uint64_t local_owned_before =
+        local_deferred_calc.fast_estimated_owned_bytes();
+    const std::uint64_t local_probe_owned =
+        local_probe_calc.fast_estimated_owned_bytes();
+    PC_CHECK(local_probe_owned > local_owned_before);
+    local_deferred_limits.max_solver_owned_bytes =
+        local_owned_before +
+        (local_probe_owned - local_owned_before) / 2;
+    bool local_memory_deferred = false;
+    try {
+        (void)local_deferred_calc
+            .admit_state_local_automatic_candidates(
+                local_deferred_state, local_deferred_limits);
+    } catch (const SolverResourceLimit& limit) {
+        local_memory_deferred =
+            (limit.cap_name() == "max_solver_owned_bytes" ||
+             limit.cap_name() == "max_owned_bytes") &&
+            limit.limit() ==
+                local_deferred_limits.max_solver_owned_bytes;
+    }
+    PC_CHECK(local_memory_deferred);
+    PC_CHECK(
+        local_deferred_calc.automatic_admission_cursor_bytes() == 0);
+    PC_CHECK(
+        local_deferred_calc.candidate_operators().size() ==
+        local_candidate_count_before);
+    const StateLocalAutomaticBatch local_retry =
+        local_deferred_calc.admit_state_local_automatic_candidates(
+            local_deferred_state, local_limits);
+    PC_CHECK(
+        local_retry.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+    PC_CHECK(!local_retry.cached);
+    PC_CHECK(
+        admitted_ids(
+            local_deferred_calc, local_retry,
+            AutomaticCandidateKind::MultimodFinish) ==
+        local_probe_ids);
+    PC_CHECK(
+        local_deferred_calc.operators().size() ==
+        local_probe_calc.operators().size());
+    PC_CHECK(
+        local_deferred_calc.candidate_operators().size() ==
+        local_probe_calc.candidate_operators().size());
+    const StateLocalAutomaticBatch local_cached =
+        local_deferred_calc.admit_state_local_automatic_candidates(
+            local_deferred_state, local_limits);
+    PC_CHECK(
+        local_cached.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+    PC_CHECK(local_cached.cached);
+    PC_CHECK(
+        local_cached.admitted_operators ==
+        local_retry.admitted_operators);
 
     /*
      * The side intent is an ordinary Bellman choice, not a prescribed route.
@@ -5766,12 +7749,138 @@ void run_automatic_eldritch_side_tests() {
     /* Keep this synthetic regression on the candidate-admission envelope it
      * was designed to exercise. Product-default cap changes are verified
      * separately and must not multiply the focused suite's runtime. */
-    prefix_solve_options.max_reforge_work = limits.max_reforge_work;
+    prefix_solve_options.max_reforge_work =
+        kFocusedRetainedReforgeWork;
     prefix_solve_options.max_sweeps = 512;
+    auto deferred_closure_session =
+        make_solve_session({"automatic_closure_delayed"});
+    deferred_closure_session->essence_guaranteed_mod_ids = {0};
+    deferred_closure_session->eldritch_eligible = true;
+    deferred_closure_session->eldritch_searing_tier_mod_ids.resize(5);
+    deferred_closure_session->eldritch_eater_tier_mod_ids.resize(5);
+    for (std::uint32_t tier = 1; tier <= 4; ++tier) {
+        deferred_closure_session->eldritch_searing_tier_mod_ids[tier] =
+            {0};
+        deferred_closure_session->eldritch_eater_tier_mod_ids[tier] =
+            {5};
+    }
+    ActionRegistry deferred_closure_registry =
+        build_action_registry(*deferred_closure_session);
+    CalcContext deferred_closure_calc(
+        deferred_closure_session, goal, deferred_closure_registry,
+        {deferred_closure_registry.index_by_id.at(
+             "essence:automatic_closure_delayed"),
+         deferred_closure_registry.index_by_id.at("restart")});
+    auto deferred_closure_prices = prices;
+    deferred_closure_prices["base"] = 1.0;
+    deferred_closure_prices["essence:automatic_closure_delayed"] = 1.0;
+    SolveOptions deferred_closure_options = prefix_solve_options;
+    deferred_closure_options.max_reforge_work = 1;
+    const SolveResult deferred_closure = solve(
+        deferred_closure_calc, repair_prefix, deferred_closure_prices,
+        deferred_closure_options);
+    PC_CHECK(!deferred_closure.converged);
+    PC_CHECK(
+        !deferred_closure.diagnostics
+            .incremental_action_envelope_closed);
+    PC_CHECK(
+        deferred_closure.diagnostics.incremental_actions_unresolved > 0);
+    PC_CHECK(
+        deferred_closure.termination ==
+        SolveTermination::RefusedResourceCap);
+    PC_CHECK(std::find(
+                 deferred_closure.diagnostics.cap_hits.begin(),
+                 deferred_closure.diagnostics.cap_hits.end(),
+                 "max_reforge_work") !=
+             deferred_closure.diagnostics.cap_hits.end());
+    PC_CHECK(
+        deferred_closure.diagnostics.automatic_admission_phases
+            .reforge_logical_work_v1 > 1);
+    PC_CHECK(
+        deferred_closure.diagnostics.reforge_logical_work_v1 <= 1);
+    const std::string deferred_closure_telemetry =
+        serialize_solver_telemetry(
+            deferred_closure_calc, &deferred_closure,
+            nullptr, std::nullopt, nullptr);
+    PC_CHECK(
+        deferred_closure_telemetry.find(
+            "parent_eldritch_kernel_generation_max_reforge_work") ==
+        std::string::npos);
     const SolveResult prefix_solved = solve(
         prefix_solve_calc, repair_prefix, prices,
         prefix_solve_options);
     PC_CHECK(prefix_solved.policy_available);
+    /* Automatic admission may inspect a much larger transient exact kernel
+     * than the sparse row ultimately retained by Solve. max_transitions owns
+     * only that retained graph; replay the deterministic solve with a cap
+     * strictly between retained storage and transient admission work and
+     * require the automatic work ledger to pass through it without consuming
+     * it. Leave bounded per-row insertion headroom because entry-relative
+     * self transitions are checked before sparse normalization. */
+    const std::uint64_t retained_transitions =
+        prefix_solved.diagnostics.sparse_transitions;
+    const std::uint64_t automatic_transition_work =
+        prefix_solved.diagnostics.automatic_admission_phases
+            .transition_entries;
+    PC_CHECK(retained_transitions > 0);
+    PC_CHECK(
+        automatic_transition_work > retained_transitions);
+    const std::uint64_t retained_transition_cap =
+        retained_transitions +
+        (automatic_transition_work - retained_transitions) / 2;
+    PC_CHECK(retained_transition_cap > retained_transitions);
+    PC_CHECK(retained_transition_cap < automatic_transition_work);
+    CalcContext retained_transition_calc(
+        session, goal, registry, candidates);
+    SolveOptions retained_transition_options = prefix_solve_options;
+    retained_transition_options.max_transitions = retained_transition_cap;
+    const SolveResult retained_transition_solved = solve(
+        retained_transition_calc, repair_prefix, prices,
+        retained_transition_options);
+    PC_CHECK(
+        retained_transition_solved.diagnostics.sparse_transitions <=
+        retained_transition_cap);
+    PC_CHECK(
+        retained_transition_solved.diagnostics.automatic_admission_phases
+            .transition_entries > retained_transition_cap);
+    PC_CHECK(std::find(
+                 retained_transition_solved.diagnostics.cap_hits.begin(),
+                 retained_transition_solved.diagnostics.cap_hits.end(),
+                 "max_transitions") ==
+             retained_transition_solved.diagnostics.cap_hits.end());
+    PC_CHECK(retained_transition_solved.policy_available);
+    PC_CHECK(
+        retained_transition_solved.diagnostics
+            .automatic_admission_phases.discovered_states > 0);
+    const std::string retained_transition_telemetry =
+        serialize_solver_telemetry(
+            retained_transition_calc, &retained_transition_solved,
+            nullptr, std::nullopt, nullptr);
+    const std::string automatic_work_json =
+        "\"work\":{\"discovered_states\":" +
+        std::to_string(
+            retained_transition_solved.diagnostics
+                .automatic_admission_phases.discovered_states) +
+        ",\"state_action_rows\":" +
+        std::to_string(
+            retained_transition_solved.diagnostics
+                .automatic_admission_phases.state_action_rows) +
+        ",\"transition_entries\":" +
+        std::to_string(
+            retained_transition_solved.diagnostics
+                .automatic_admission_phases.transition_entries) +
+        ",\"reforge_active_work\":" +
+        std::to_string(
+            retained_transition_solved.diagnostics
+                .automatic_admission_phases.reforge_active_work) +
+        ",\"reforge_logical_work_v1\":" +
+        std::to_string(
+            retained_transition_solved.diagnostics
+                .automatic_admission_phases.reforge_logical_work_v1) +
+        "}";
+    PC_CHECK(
+        retained_transition_telemetry.find(automatic_work_json) !=
+        std::string::npos);
     const PolicyOperatorRef prefix_selected =
         prefix_solved.policy_available
             ? prefix_solved.policy[prefix_solved.start_state]
@@ -5794,9 +7903,7 @@ void run_automatic_eldritch_side_tests() {
                 "\"type\":\"eldritch_ember\",\"tier\":2") !=
                  std::string::npos);
         PC_CHECK(
-            strategy_json.find("\"type\":\"eldritch_chaos\"") !=
-                std::string::npos ||
-            strategy_json.find("\"type\":\"eldritch_annul\"") !=
+            strategy_json.find("\"type\":\"eldritch_exalt\"") !=
                 std::string::npos);
         const std::shared_ptr<StrategyImpl> strategy =
             compile_strategy_json(
@@ -5882,7 +7989,7 @@ void run_automatic_eldritch_side_tests() {
         PC_CHECK(kernel.expected_primitive_actions == 1.0);
         ++direct_count;
     }
-    PC_CHECK(direct_count == 2);
+    PC_CHECK(direct_count == 3);
 
     pc_item_state repair_suffix;
     pc_item_clear(&repair_suffix);
@@ -5902,6 +8009,7 @@ void run_automatic_eldritch_side_tests() {
         suffix_calc.admit_state_local_automatic_candidates(
             suffix_state, limits);
     std::uint32_t suffix_count = 0;
+    bool saw_suffix_exalt = false;
     for (const StateLocalAutomaticCandidate& decision :
          suffix_batch.decisions) {
         if (decision.kind !=
@@ -5915,9 +8023,193 @@ void run_automatic_eldritch_side_tests() {
         PC_CHECK(
             registry.actions.at(planner.primitive_program.front()).id ==
             "eldritch_ichor:2");
+        const ActionType final = registry.actions.at(
+            planner.primitive_program.back()).params.type;
+        if (final == ActionType::EldritchExalt) {
+            saw_suffix_exalt = true;
+            PC_CHECK(planner.display_name == "Eldritch Exalt Suffix");
+            const OptionKernel& kernel = suffix_calc.option_kernel(
+                suffix_state, decision.operator_index);
+            PC_CHECK(kernel.automatic.eligible);
+            PC_CHECK(kernel.expected_primitive_actions == 2.0);
+            bool saw_goal_exit = false;
+            for (const OutcomeEntry& exit : kernel.exits) {
+                const AbstractState& successor =
+                    suffix_calc.state(exit.state);
+                PC_CHECK(
+                    successor.slot_status[0] ==
+                    static_cast<std::uint8_t>(
+                        GoalSlotStatus::Satisfied));
+                saw_goal_exit |=
+                    successor.slot_status[1] ==
+                    static_cast<std::uint8_t>(
+                        GoalSlotStatus::Satisfied);
+            }
+            PC_CHECK(saw_goal_exit);
+        }
         ++suffix_count;
     }
-    PC_CHECK(suffix_count == 2);
+    PC_CHECK(suffix_count == 3);
+    PC_CHECK(saw_suffix_exalt);
+
+    /* A target family blocked by an existing explicit group is not rollable,
+     * even with target-side capacity and useful opposite-side progress. */
+    pc_item_state blocked_prefix;
+    pc_item_clear(&blocked_prefix);
+    blocked_prefix.rarity = PC_RARITY_RARE;
+    place(
+        &blocked_prefix, PC_SIDE_PREFIX, 2,
+        session->primary_group[2]);
+    place(
+        &blocked_prefix, PC_SIDE_SUFFIX, 5,
+        session->primary_group[5]);
+    blocked_prefix.eater_of_worlds_tier = 1;
+    CalcContext blocked_calc(
+        session, goal, registry, candidates);
+    const StateLocalAutomaticBatch blocked_batch =
+        blocked_calc.admit_state_local_automatic_candidates(
+            blocked_calc.intern_item(blocked_prefix), limits);
+    PC_CHECK(std::none_of(
+        blocked_batch.decisions.begin(), blocked_batch.decisions.end(),
+        [&](const StateLocalAutomaticCandidate& decision) {
+            return decision_is_eldritch_exalt(blocked_calc, decision);
+        }));
+
+    /* Capacity and a rollable target are insufficient without already useful
+     * goal progress on the side that Eldritch Exalt preserves. */
+    pc_item_state no_opposite_progress;
+    pc_item_clear(&no_opposite_progress);
+    no_opposite_progress.rarity = PC_RARITY_RARE;
+    place(
+        &no_opposite_progress, PC_SIDE_PREFIX, 3,
+        session->primary_group[3]);
+    place(
+        &no_opposite_progress, PC_SIDE_SUFFIX, 6,
+        session->primary_group[6]);
+    no_opposite_progress.eater_of_worlds_tier = 1;
+    CalcContext no_opposite_calc(
+        session, goal, registry, candidates);
+    const StateLocalAutomaticBatch no_opposite_batch =
+        no_opposite_calc.admit_state_local_automatic_candidates(
+            no_opposite_calc.intern_item(no_opposite_progress), limits);
+    PC_CHECK(std::none_of(
+        no_opposite_batch.decisions.begin(),
+        no_opposite_batch.decisions.end(),
+        [&](const StateLocalAutomaticCandidate& decision) {
+            return decision_is_eldritch_exalt(
+                no_opposite_calc, decision);
+        }));
+
+    /* Missing action and setup prices retain auditable rejected decisions but
+     * never admit the compound option. */
+    auto missing_action_prices = prices;
+    missing_action_prices.erase("eldritch_exalt");
+    AutomaticAdmissionLimits missing_action_limits = limits;
+    missing_action_limits.prices = &missing_action_prices;
+    CalcContext missing_action_calc(
+        session, goal, registry, candidates);
+    const StateLocalAutomaticBatch missing_action_batch =
+        missing_action_calc.admit_state_local_automatic_candidates(
+            missing_action_calc.intern_item(repair_prefix),
+            missing_action_limits);
+    bool saw_missing_action_price = false;
+    for (const StateLocalAutomaticCandidate& decision :
+         missing_action_batch.decisions) {
+        if (!decision_is_eldritch_exalt(
+                missing_action_calc, decision)) {
+            continue;
+        }
+        saw_missing_action_price = true;
+        PC_CHECK(!decision.admitted);
+        PC_CHECK(decision.missing_price);
+        PC_CHECK(
+            decision.evidence.reason ==
+            "automatic_candidate_missing_price");
+    }
+    PC_CHECK(saw_missing_action_price);
+
+    auto missing_setup_prices = prices;
+    missing_setup_prices.erase("eldritch_ember:2");
+    missing_setup_prices.erase("eldritch_ember:3");
+    missing_setup_prices.erase("eldritch_ember:4");
+    AutomaticAdmissionLimits missing_setup_limits = limits;
+    missing_setup_limits.prices = &missing_setup_prices;
+    CalcContext missing_setup_calc(
+        session, goal, registry, candidates);
+    const StateLocalAutomaticBatch missing_setup_batch =
+        missing_setup_calc.admit_state_local_automatic_candidates(
+            missing_setup_calc.intern_item(repair_prefix),
+            missing_setup_limits);
+    bool saw_missing_setup_price = false;
+    for (const StateLocalAutomaticCandidate& decision :
+         missing_setup_batch.decisions) {
+        if (!decision_is_eldritch_exalt(
+                missing_setup_calc, decision)) {
+            continue;
+        }
+        saw_missing_setup_price = true;
+        PC_CHECK(!decision.admitted);
+        PC_CHECK(decision.missing_price);
+    }
+    PC_CHECK(saw_missing_setup_price);
+
+    pc_item_state influenced_exalt = repair_prefix;
+    influenced_exalt.generic_influence_bits = 1;
+    CalcContext influenced_exalt_calc(
+        session, goal, registry, candidates);
+    const StateLocalAutomaticBatch influenced_exalt_batch =
+        influenced_exalt_calc.admit_state_local_automatic_candidates(
+            influenced_exalt_calc.intern_item(influenced_exalt), limits);
+    bool saw_influenced_exalt = false;
+    for (const StateLocalAutomaticCandidate& decision :
+         influenced_exalt_batch.decisions) {
+        if (!decision_is_eldritch_exalt(
+                influenced_exalt_calc, decision)) {
+            continue;
+        }
+        saw_influenced_exalt = true;
+        PC_CHECK(!decision.admitted);
+        PC_CHECK(!decision.evidence.eligible);
+    }
+    PC_CHECK(saw_influenced_exalt);
+
+    auto full_session = make_solve_session();
+    full_session->eldritch_eligible = true;
+    full_session->rare_affix_cap = 2;
+    full_session->eldritch_searing_tier_mod_ids.resize(5);
+    full_session->eldritch_eater_tier_mod_ids.resize(5);
+    for (std::uint32_t tier = 1; tier <= 4; ++tier) {
+        full_session->eldritch_searing_tier_mod_ids[tier] = {0};
+        full_session->eldritch_eater_tier_mod_ids[tier] = {5};
+    }
+    ActionRegistry full_registry =
+        build_action_registry(*full_session);
+    const std::vector<std::uint32_t> full_candidates{
+        full_registry.index_by_id.at("chaos"),
+        full_registry.index_by_id.at("annul")};
+    pc_item_state full_prefix;
+    pc_item_clear(&full_prefix);
+    full_prefix.rarity = PC_RARITY_RARE;
+    place(
+        &full_prefix, PC_SIDE_PREFIX, 3,
+        full_session->primary_group[3]);
+    place(
+        &full_prefix, PC_SIDE_PREFIX, 4,
+        full_session->primary_group[4]);
+    place(
+        &full_prefix, PC_SIDE_SUFFIX, 5,
+        full_session->primary_group[5]);
+    full_prefix.eater_of_worlds_tier = 1;
+    CalcContext full_calc(
+        full_session, goal, full_registry, full_candidates);
+    const StateLocalAutomaticBatch full_batch =
+        full_calc.admit_state_local_automatic_candidates(
+            full_calc.intern_item(full_prefix), limits);
+    PC_CHECK(std::none_of(
+        full_batch.decisions.begin(), full_batch.decisions.end(),
+        [&](const StateLocalAutomaticCandidate& decision) {
+            return decision_is_eldritch_exalt(full_calc, decision);
+        }));
 
     /*
      * Remove the completed prefix from ordinary random support. Chaos can no
@@ -6043,6 +8335,9 @@ void run_automatic_eldritch_side_tests() {
     PC_CHECK(
         !ineligible_registry.index_by_id.contains(
             "eldritch_annul"));
+    PC_CHECK(
+        !ineligible_registry.index_by_id.contains(
+            "eldritch_exalt"));
 }
 
 bool read_text_file(const std::string& path, std::string& out) {
@@ -6335,10 +8630,8 @@ void run_artifact_solve_tests(const char* artifact_dir) {
         PC_CHECK(raw_split_chaos.supported);
         PC_CHECK(!raw_split_chaos.entries.empty());
         AutomaticAdmissionLimits split_limits;
-        split_limits.max_discovered_states = 200000;
         split_limits.max_state_action_rows = 300000;
         split_limits.max_transitions = 10000000;
-        split_limits.max_reforge_work = 100000000;
         split_limits.max_solver_owned_bytes =
             512ull * 1024ull * 1024ull;
         split_limits.prices = &split_prices;
@@ -6442,6 +8735,8 @@ void run_artifact_solve_tests(const char* artifact_dir) {
 } // namespace
 
 void run_solver_automatic_eldritch_tests() {
+    run_resource_stop_reachable_policy_tests();
+    run_automatic_imprint_cooperative_tests();
     run_automatic_eldritch_side_tests();
 }
 

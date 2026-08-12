@@ -4,7 +4,7 @@
 
 Parent: [Mechanics](README.md)
 
-Verified against code: 2026-07-28 @ Q-directed Eldritch milestone
+Verified against code: 2026-08-09 @ automatic Eldritch Exalt milestone
 
 Verification scope: native Eldritch implicit and explicit-currency actions,
 influence-exalt application, exact calculator, solver registry/options, and
@@ -15,9 +15,23 @@ product controls and catalog.
 This family owns `eldritch_ember`, `eldritch_ichor`, `eldritch_exalt`,
 `eldritch_chaos`, `eldritch_annul`, and `influence_exalt`.
 
-The current compiled catalog exposes the generic influence names
+The compiled modifier pools recognize the generic influence names
 `adjudicator`, `basilisk`, `crusader`, `elder`, `eyrie`, and `shaper` in
-addition to the no-influence state.
+addition to the no-influence state. Influence Exalt currency exists for only
+four of those pool identities, with this owner-adjudicated mapping:
+
+- Warlord's Exalted Orb -> `adjudicator`;
+- Hunter's Exalted Orb -> `basilisk`;
+- Crusader's Exalted Orb -> `crusader`; and
+- Redeemer's Exalted Orb -> `eyrie`.
+
+`elder` and `shaper` remain valid modifier-pool influences, but have no
+corresponding Influence Exalt currency or product action.
+
+Registry IDs, compiled strategy operations, and economy keys use the public
+currency names `crusader`, `hunter`, `redeemer`, and `warlord`. The strategy
+and primitive-action parsers retain the old internal names for those four as
+input aliases, while emitting and charging only the public names.
 
 ## Implemented Behavior
 
@@ -50,13 +64,14 @@ one uniformly sampled non-fractured affix from the targeted side; it does not
 consult a target-side metamod lock. Without dominance it performs the ordinary
 lock-aware Annul transition. The raw dispatcher does not add a rarity guard.
 
-`influence_exalt:<influence-name>` requires a rare item with no existing
+Each of the four currency-backed `influence_exalt:<currency-influence>` actions
+requires a rare item with no existing
 generic influence, no Eldritch tiers, and no fractured affix. It adds the
 requested influence bit, then attempts to add one modifier from only that
 influence’s pool. If no modifier can be added, it rolls the influence bit back
 and reports the action unapplied.
 
-All six primitive types also share the global corrupted/mirrored refusal.
+All actions in this family also share the global corrupted/mirrored refusal.
 
 ## Dated Oliver Rulings
 
@@ -65,6 +80,9 @@ All six primitive types also share the global corrupted/mirrored refusal.
   solver option that establishes dominance and pays for every setup currency.
   This is recorded in the archived
   [S7 plan](../archive/2026-07-solver-s7/plan.md).
+- **2026-08-09:** Influence Exalt exposure is limited to the four real
+  currency mappings above. Elder and Shaper pools do not imply Exalted Orb
+  actions.
 
 ## Engine Coverage And Code Pointers
 
@@ -85,14 +103,14 @@ All six primitive types also share the global corrupted/mirrored refusal.
 ## Emulator Support
 
 The Eldritch panel exposes tier 1 through 4 Ember and Ichor controls plus
-Eldritch Exalt, Chaos, and Annul. The Influenced panel exposes the catalog
-influence selector and Influence Exalt. All outcome rules remain native.
+Eldritch Exalt, Chaos, and Annul. The Influenced panel exposes the four
+currency-backed Influence Exalt choices. All outcome rules remain native.
 
 ## Solver Support
 
 The registry has tiered implicit actions, the three explicit Eldritch actions,
-and one Influence Exalt row per available generic influence. All have exact
-single-action support.
+and one Influence Exalt row for each of the four currency-backed mappings. All
+have exact single-action support.
 
 The user-authored `eldritch_side_intent` option can apply real implicit setup
 actions and then one Eldritch Exalt, Chaos, or Annul. It retains the resulting
@@ -100,14 +118,14 @@ implicit tiers and charges setup resources. No hidden dominance flag or silent
 implicit restoration is used.
 
 When solver automatic candidates are enabled, rare carriers in
-engine-certified eligible sessions may also receive exactly four
-goal-relevant high-level candidates: Eldritch Annul Prefix/Suffix and
-Eldritch Chaos Prefix/Suffix. Session eligibility remains owned by
-`session_builder.cpp` and is true only for helmets, body armour, gloves, and
-boots.
+engine-certified eligible sessions may receive up to six goal-relevant
+high-level candidates: Eldritch Annul Prefix/Suffix, Eldritch Chaos
+Prefix/Suffix, and Eldritch Exalt Prefix/Suffix. Session eligibility remains
+owned by `session_builder.cpp` and is true only for helmets, body armour,
+gloves, and boots.
 
 In product `goal_relevant` scope, the required Ember tiers, Ichor tiers,
-Eldritch Chaos, and Eldritch Annul descriptors are retained as
+Eldritch Exalt, Eldritch Chaos, and Eldritch Annul descriptors are retained as
 automatic-option dependencies. They are not returned as standalone candidates
 and do not enter the parent state layout merely because they were retained.
 The native carrier-local builder resolves and admits only the dependencies of
@@ -116,16 +134,20 @@ a useful materialized side option.
 Each automatic candidate reads the carrier's real implicit tiers. Existing
 requested-side dominance avoids setup. Missing dominance uses the cheapest
 priced legal real Ember/Ichor sequence supported by the same side-intent
-machinery, then performs the real Annul or Chaos. Every setup resource is
+machinery, then performs the real Annul, Chaos, or Exalt. Every setup resource is
 charged, resulting implicit tiers remain in item state, and compilation emits
 the real setup operations followed by the real final currency.
 
 The candidates are filtered by whether their targeted or preserved explicit
-side can matter to the remaining goal. This is only action admission; Bellman
-chooses the route. Automatic standalone Ember, Ichor, Eldritch Exalt,
-arbitrary implicit rolling, Veiled crafting, and Influence Exalt are not
-added. Eldritch Chaos is excluded from the gated zero-progress retry basin
-because its preserved side observes the discarded carrier.
+side can matter to the remaining goal. Eldritch Exalt is stricter: the target
+side must have capacity and an unmet goal intersecting the exact carrier's
+ordinary roll pool, while the opposite side must already contain useful
+satisfied goal progress. This is only action admission; Bellman chooses the
+route. Automatic standalone Ember, Ichor, arbitrary implicit rolling, Veiled
+crafting, and Influence Exalt are not added. Eldritch Exalt remains
+dependency-only and is reachable only through the admitted compound.
+Eldritch Chaos is excluded from the gated zero-progress retry basin because
+its preserved side observes the discarded carrier.
 
 Generic influence or any other carrier state rejected by the existing
 Eldritch legality checks prevents automatic admission. Missing setup or final
@@ -143,6 +165,7 @@ exact calculation.
 - Ember/Ichor and Influence Exalt do not combine generic and Eldritch
   influence states.
 - Influence Exalt is refused when any fractured affix exists.
+- Elder and Shaper modifier pools do not create Influence Exalt actions.
 - Side intent is not an opaque primitive mechanic; it is a compound solver
   option made from real tier setup and explicit-currency actions.
 - No generic influence operation beyond `influence_exalt` is present in the

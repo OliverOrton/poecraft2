@@ -94,7 +94,7 @@ try {
         ["bestiary:imprint", "bestiary:restore_imprint"],
     );
     assert.deepEqual(presentation.actions[0]?.cost_keys, [
-        "beast:craicic-chimeral",
+        "beast:craicic-croaker",
         "beast:rare",
         "beast:rare",
         "beast:rare",

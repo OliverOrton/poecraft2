@@ -115,13 +115,28 @@ The complete parameterized registry grammar is:
 - `harvest_augment:<allowlisted-tag>`;
 - `harvest_resist:<source>:<target>`;
 - `eldritch_ember:<1..4>` and `eldritch_ichor:<1..4>`;
-- `influence_exalt:<influence-name>`; and
+- `influence_exalt:<currency-influence>` for `crusader`, `hunter`, `redeemer`,
+  and `warlord`; and
 - fixed `fracture` and `remove_crafted_modifiers` IDs.
 
 Fossil cost vectors contain each Fossil key and a resonator-size key. Harvest
 resistance IDs include source and target but use a target-only cost key. Bench
 uses canonical bench-option currency quantities. Restart uses `base`, which is
 manual-only and never silently zero.
+
+Influence Exalt strategy operations and price keys use those four public
+currency names. The parser accepts the previously emitted internal aliases
+`adjudicator`, `basilisk`, and `eyrie` for persisted strategy compatibility,
+but normalizes their accounting to `warlord`, `hunter`, and `redeemer`.
+`elder` and `shaper` remain generic modifier-pool identities and are not
+Influence Exalt operations.
+
+The automatic Imprint option uses the Bestiary descriptor's four-entry cost
+vector: one `beast:craicic-croaker` and three repeated `beast:rare` keys. The
+current economy supplies Croaker as a required market quote and the rare key as
+an overridable one-chaos-per-beast `owner_default`. Price completeness is
+evaluated against those engine-authored keys; missing identities remain
+incomplete rather than being silently zeroed.
 
 ### Compound solver options
 
@@ -168,6 +183,9 @@ The simulator never executes an opaque option action.
 - **2026-07-18:** product Fracture planning uses the ordinary primitive and a
   priced Restart miss route; `fracture_prepare` remains only for explicit
   authored envelopes.
+- **2026-08-09:** automatic Imprint pricing uses Craicic Croaker plus three
+  generic rare beasts; each generic rare has an explicit, user-overridable
+  one-chaos owner default with non-market provenance.
 
 Sources are the archived
 [economy plan](../archive/2026-07-15-economy/plan.md),

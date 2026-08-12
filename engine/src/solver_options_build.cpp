@@ -167,9 +167,11 @@ std::vector<PlannerOperator> build_planner_operators(
                 AutomaticCandidateKind::EldritchSide) {
                 option.display_name =
                     std::string("Eldritch ") +
-                    (craft.params.type == ActionType::EldritchAnnul
-                         ? "Annul "
-                         : "Chaos ") +
+                    (craft.params.type == ActionType::EldritchExalt
+                         ? "Exalt "
+                         : craft.params.type == ActionType::EldritchAnnul
+                               ? "Annul "
+                               : "Chaos ") +
                     (spec.side == PC_SIDE_PREFIX
                          ? "Prefix"
                          : "Suffix");

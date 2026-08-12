@@ -64,6 +64,19 @@ const char* primitive_telemetry_family_name(
     case PrimitiveTelemetryFamily::Bestiary: return "bestiary";
     case PrimitiveTelemetryFamily::Fracture: return "fracture";
     case PrimitiveTelemetryFamily::Other: return "other";
+    case PrimitiveTelemetryFamily::EldritchSetup:
+        return "eldritch_setup";
+    case PrimitiveTelemetryFamily::EldritchChaos:
+        return "eldritch_chaos";
+    case PrimitiveTelemetryFamily::EldritchAnnul:
+        return "eldritch_annul";
+    case PrimitiveTelemetryFamily::EldritchExalt:
+        return "eldritch_exalt";
+    case PrimitiveTelemetryFamily::InfluenceExalt:
+        return "influence_exalt";
+    case PrimitiveTelemetryFamily::VeiledChaos: return "veiled_chaos";
+    case PrimitiveTelemetryFamily::VeiledExalt: return "veiled_exalt";
+    case PrimitiveTelemetryFamily::Unveil: return "unveil";
     case PrimitiveTelemetryFamily::Count: return "none";
     }
     return "none";
@@ -293,8 +306,7 @@ SolveProgress SolveWork::Impl::progress() const {
             value.start_value_bound = result.values[result.start_state];
         }
         if (result.diagnostics.focused_expansion) {
-            value.lower_bound =
-                result.diagnostics.focused_lower_bound;
+            value.lower_bound = certified_global_lower_bound();
             value.upper_bound = output_incumbent.has_value()
                                     ? output_incumbent->certified_upper_bound
                                     : result.diagnostics.focused_upper_bound;
@@ -560,7 +572,10 @@ std::uint64_t SolveWork::Impl::output_incumbent_owned_bytes() const {
         std::uint64_t bytes = certified_fallback_portfolio.capacity() *
             sizeof(BoundedPolicyIncumbent);
         if (output_incumbent.has_value()) {
-            bytes += incumbent_owned_bytes(*output_incumbent);
+            /* std::optional owns its inline object inside Impl; only the
+             * selected dynamic allocations are additional live storage. */
+            bytes += incumbent_owned_bytes(*output_incumbent) -
+                sizeof(BoundedPolicyIncumbent);
         }
         for (const BoundedPolicyIncumbent& incumbent :
              certified_fallback_portfolio) {
@@ -596,6 +611,8 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
         bytes += expansion_operator_indices.capacity() *
                  sizeof(std::uint32_t);
         bytes += incremental_carriers.capacity() * sizeof(std::uint32_t);
+        bytes += incremental_certified_upper_values.capacity() *
+                 sizeof(double);
         bytes += incremental_dynamic_operator_indices.capacity() *
                  sizeof(std::uint32_t);
         bytes += incremental_alternative_rows.capacity() *
@@ -680,6 +697,7 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
         bytes += policy_seed_states.capacity() * sizeof(std::uint32_t);
         bytes += policy_selection_states.capacity() * sizeof(std::uint32_t);
         bytes += current_policy_scratch_bytes;
+        bytes += anytime_policy_scratch_bytes;
         bytes += kernel_value_caches.capacity() * sizeof(KernelValueCache);
         bytes += kernel_value_cache_by_offset.bucket_count() * sizeof(void*);
         bytes += kernel_value_cache_by_offset.size() *
@@ -753,6 +771,8 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
         bytes += expansion_operator_indices.capacity() *
                  sizeof(std::uint32_t);
         bytes += incremental_carriers.capacity() * sizeof(std::uint32_t);
+        bytes += incremental_certified_upper_values.capacity() *
+                 sizeof(double);
         bytes += incremental_dynamic_operator_indices.capacity() *
                  sizeof(std::uint32_t);
         bytes += incremental_alternative_rows.capacity() *
@@ -836,6 +856,7 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
         bytes += policy_seed_states.capacity() * sizeof(std::uint32_t);
         bytes += policy_selection_states.capacity() * sizeof(std::uint32_t);
         bytes += current_policy_scratch_bytes;
+        bytes += anytime_policy_scratch_bytes;
         bytes += kernel_value_caches.capacity() * sizeof(KernelValueCache);
         bytes += kernel_value_cache_by_offset.bucket_count() * sizeof(void*);
         bytes += kernel_value_cache_by_offset.size() *
@@ -2326,6 +2347,10 @@ std::string serialize_solver_telemetry(
         json += ",\"publication_successes\":" +
                 std::to_string(
                     refinement.fallback_publication_successes);
+        json += ",\"cheapest_independently_evaluated_selected\":";
+        json += refinement.cheapest_independently_evaluated_selected
+                    ? "true"
+                    : "false";
         json += ",\"preferred_candidate_upper\":" +
                 telemetry_finite_json(
                     refinement.preferred_candidate_upper);
@@ -2728,6 +2753,46 @@ std::string serialize_solver_telemetry(
             diagnostics->automatic_admission_phases;
         json += ",\"admission_phases\":{\"carriers\":" +
                 std::to_string(phases.carriers);
+        json += ",\"work\":{\"discovered_states\":" +
+                std::to_string(phases.discovered_states);
+        json += ",\"state_action_rows\":" +
+                std::to_string(phases.state_action_rows);
+        json += ",\"transition_entries\":" +
+                std::to_string(phases.transition_entries);
+        json += ",\"reforge_active_work\":" +
+                std::to_string(phases.reforge_active_work);
+        json += ",\"reforge_logical_work_v1\":" +
+                std::to_string(phases.reforge_logical_work_v1) + "}";
+        json += ",\"imprint_discovery\":{\"programs_evaluated\":" +
+                std::to_string(phases.imprint_programs_evaluated);
+        json += ",\"programs_pruned\":" +
+                std::to_string(phases.imprint_programs_pruned);
+        json += ",\"distribution_dominated_programs\":" +
+                std::to_string(
+                    phases.imprint_distribution_dominated_programs);
+        json += ",\"price_pruned_programs\":" +
+                std::to_string(
+                    phases.imprint_price_pruned_programs);
+        json += ",\"price_bound_max_program_depth\":" +
+                std::to_string(
+                    phases.imprint_price_bound_max_program_depth);
+        json += ",\"max_evaluated_depth\":" +
+                std::to_string(
+                    phases.imprint_max_evaluated_depth);
+        json += ",\"max_frontier_size\":" +
+                std::to_string(
+                    phases.imprint_max_frontier_size);
+        json += ",\"price_bound_complete_carriers\":" +
+                std::to_string(
+                    phases.imprint_price_bound_complete_carriers);
+        json += ",\"action_state_evaluations\":" +
+                std::to_string(
+                    phases.imprint_action_state_evaluations);
+        json += ",\"outcomes_merged\":" +
+                std::to_string(phases.imprint_outcomes_merged);
+        json += ",\"max_atomic_outcomes_ns\":" +
+                std::to_string(
+                    phases.imprint_max_atomic_outcomes_ns) + "}";
         json += ",\"synthesis_ns\":" +
                 std::to_string(phases.synthesis_ns);
         json += ",\"local_context_ns\":" +
@@ -3049,11 +3114,34 @@ std::string serialize_solver_telemetry(
     }
     json += "}";
 
+    const bool focused_restricted_envelope_open =
+        diagnostics != nullptr &&
+        diagnostics->incremental_action_generation &&
+        !diagnostics->incremental_action_envelope_closed;
+    const double focused_published_lower =
+        diagnostics == nullptr
+            ? 0.0
+            : globally_certified_action_envelope_lower_bound(
+                  diagnostics->focused_lower_bound,
+                  diagnostics->incremental_action_generation,
+                  diagnostics->incremental_action_envelope_closed);
+    const double focused_published_gap =
+        diagnostics != nullptr &&
+                std::isfinite(diagnostics->focused_upper_bound) &&
+                std::isfinite(focused_published_lower)
+            ? std::max(
+                  0.0,
+                  diagnostics->focused_upper_bound -
+                      focused_published_lower)
+            : kInfinity;
     json += ",\"focused_expansion\":{";
     if (diagnostics == nullptr) {
         json += "\"used\":null,\"rounds\":null,\"lower_bound\":null";
+        json += ",\"restricted_action_envelope_lower_bound\":null";
+        json += ",\"lower_bound_scope\":null";
         json += ",\"upper_bound\":null,\"partial_policy_upper_bound\":null";
         json += ",\"partial_policy_rounds\":null,\"optimality_gap\":null";
+        json += ",\"restricted_action_envelope_optimality_gap\":null";
         json += ",\"duration_ns\":null,\"schedule\":null";
         json += ",\"fallback_validation\":null,\"constructive_policy\":null";
     } else {
@@ -3071,7 +3159,14 @@ std::string serialize_solver_telemetry(
             }
         };
         json += ",\"lower_bound\":";
+        append_bound(focused_published_lower);
+        json += ",\"restricted_action_envelope_lower_bound\":";
         append_bound(diagnostics->focused_lower_bound);
+        json += ",\"lower_bound_scope\":\"";
+        json += focused_restricted_envelope_open
+                    ? "independent_global_floor"
+                    : "closed_action_envelope";
+        json += "\"";
         json += ",\"upper_bound\":";
         append_bound(diagnostics->focused_upper_bound);
         json += ",\"partial_policy_upper_bound\":";
@@ -3080,6 +3175,8 @@ std::string serialize_solver_telemetry(
         json += ",\"partial_policy_rounds\":" + std::to_string(
             diagnostics->focused_partial_policy_rounds);
         json += ",\"optimality_gap\":";
+        append_bound(focused_published_gap);
+        json += ",\"restricted_action_envelope_optimality_gap\":";
         append_bound(diagnostics->focused_optimality_gap);
         json += ",\"exact_gap_proof_tolerance\":";
         append_bound(diagnostics->focused_exact_gap_proof_tolerance);
@@ -3844,11 +3941,11 @@ std::string serialize_solver_telemetry(
         json += ",\"residual\":" + std::to_string(diagnostics->residual);
         json += ",\"optimality_gap\":";
         if (diagnostics->focused_expansion &&
-            std::isfinite(diagnostics->focused_optimality_gap)) {
+            std::isfinite(focused_published_gap)) {
             char buffer[40];
             std::snprintf(
                 buffer, sizeof(buffer), "%.17g",
-                diagnostics->focused_optimality_gap);
+                focused_published_gap);
             json += buffer;
         } else {
             json += "null";
@@ -3888,11 +3985,11 @@ std::string serialize_solver_telemetry(
         json += ",\"residual\":" + std::to_string(diagnostics->residual);
         json += ",\"optimality_gap\":";
         if (diagnostics->focused_expansion &&
-            std::isfinite(diagnostics->focused_optimality_gap)) {
+            std::isfinite(focused_published_gap)) {
             char buffer[40];
             std::snprintf(
                 buffer, sizeof(buffer), "%.17g",
-                diagnostics->focused_optimality_gap);
+                focused_published_gap);
             json += buffer;
         } else {
             json += "null";

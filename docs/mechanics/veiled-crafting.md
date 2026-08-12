@@ -27,10 +27,11 @@ Only one veiled placeholder may exist on an item at a time.
 - `veiled_exalt` requires a rare, non-corrupted, non-mirrored item with no
   existing veiled placeholder and adds one placeholder on a randomly selected
   open side.
-- Placeholder creation attempts to generate up to three distinct persisted
-  offers from the generic unveiled modifier mask. Each offer is weighted and
-  checked for the placeholder side, item state, and modifier-group conflicts.
-  Placeholder creation fails when it cannot generate an offer.
+- The Simulator's placeholder creation attempts to generate up to three
+  distinct persisted offers from the generic unveiled modifier mask. Each
+  offer is weighted and checked for the placeholder side, item state, and
+  modifier-group conflicts. Placeholder creation fails when it cannot generate
+  an offer.
 - `unveil` requires an existing placeholder and an explicitly selected
   `mod_key`. The selected modifier must be one of the stored offers, must match
   the placeholder side, and must not conflict with another live modifier group.
@@ -77,9 +78,17 @@ may append Unveil only immediately after that Veiled Chaos step.
 The compiled strategy simulator can execute an explicit Unveil operation and
 can test `has_unveil_option`. Whole-graph exact strategy evaluation carries
 the sampled offer set in evaluator-pair identity. A
-`has_unveil_option(mod_key)` router tests that stored set, and an authored
-Unveil selection consumes the same offer context. A selected modifier absent
-from the sampled offer is refused rather than resampled or approximated.
+`has_unveil_option(mod_key)` router tests that offer context, and an authored
+Unveil selection consumes the same context. A selected modifier absent from
+the sampled offer is refused rather than resampled or approximated.
+
+There is currently a cross-engine timing mismatch. The Simulator samples and
+stores the offers when the placeholder is acquired. The exact solver's
+`AbstractState` does not carry those stored IDs; `evaluate_unveil` instead
+samples the offer set from the item state when Unveil is observed. These paths
+agree for the existing immediate acquisition-to-Unveil program, but can
+disagree if another action changes modifier conflicts between acquisition and
+observation.
 
 ## Calculator Support
 
@@ -96,7 +105,18 @@ policy may also compile Unveil routing to ordinary strategy nodes.
 
 ## Open Questions Requiring Oliver
 
-No unresolved mechanic ruling is attached to authored Unveil exact evaluation.
-The remaining product question is only whether broader automatic Veiled
-planning should enter goal-relevant solver scope; that is deferred solver
-scope, not a transition-mechanic ambiguity.
+The automatic goal-relevant program is intended to allow
+`Veiled currency -> optional blocker -> observe offers`. Oliver must select one
+offer-timing rule before that program is implemented:
+
+- generate and persist offers at placeholder acquisition, matching the current
+  Simulator; a blocker added afterward cannot improve those offers; or
+- generate offers at observation/Unveil time, matching the current exact
+  solver and allowing the requested post-acquisition blocker to change the
+  distribution.
+
+Oliver must also select the bounded continuation when none of the three offers
+directly satisfies a goal: choose the best legal non-goal offer and clean up,
+retry internally, or stop with the placeholder. Until both decisions are
+recorded, automatic Veiled planning remains deferred and the authored
+immediate acquisition-to-Unveil path is the supported solver boundary.

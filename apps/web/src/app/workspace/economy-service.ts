@@ -1,7 +1,11 @@
 import type { EconomyIdentity } from "../engine-protocol";
 
 export type Prices = Record<string, number>;
-export type PublishedPriceSource = "quote" | "recipe" | "zero";
+export type PublishedPriceSource =
+    | "quote"
+    | "recipe"
+    | "zero"
+    | "owner_default";
 export type PriceSource = PublishedPriceSource | "override" | "fallback";
 export interface PriceResolution {
     value: number | undefined;
@@ -816,7 +820,8 @@ export class EconomyService {
                     Object.entries(priceSources).flatMap(([key, priceSource]) =>
                         priceSource === "quote" ||
                         priceSource === "recipe" ||
-                        priceSource === "zero"
+                        priceSource === "zero" ||
+                        priceSource === "owner_default"
                             ? [[key, priceSource]]
                             : [],
                     ),

@@ -1,9 +1,15 @@
 import assert from "node:assert/strict";
 
 import {
+    influenceLabels,
     placeStableSlots,
     visibleModTags,
 } from "../src/app/item-display";
+import type { Catalog } from "../src/app/engine-protocol";
+import {
+    buildGenericInfluenceCatalog,
+    buildInfluenceExaltCatalog,
+} from "../src/app/influence-presentation";
 
 assert.deepEqual(
     visibleModTags([
@@ -63,5 +69,56 @@ const editedTargets = placeStableSlots(
     targetIdOf,
 );
 assert.deepEqual(editedTargets.ids, ["resistance", "defence", undefined]);
+
+const influenceCatalog: Catalog = {
+    groupKeyById: [],
+    groupNameById: [],
+    essences: [],
+    fossils: [],
+    bench: [],
+    harvestTags: [],
+    influences: [
+        { key: "crusader", code: 3, name: "Crusader" },
+        { key: "warlord", code: 1, name: "Warlord" },
+        { key: "redeemer", code: 5, name: "Redeemer" },
+        { key: "hunter", code: 2, name: "Hunter" },
+    ],
+    genericInfluences: [
+        { key: "adjudicator", code: 1, name: "Warlord" },
+        { key: "basilisk", code: 2, name: "Hunter" },
+        { key: "crusader", code: 3, name: "Crusader" },
+        { key: "elder", code: 4, name: "Elder" },
+        { key: "eyrie", code: 5, name: "Redeemer" },
+        { key: "shaper", code: 6, name: "Shaper" },
+    ],
+};
+assert.deepEqual(
+    influenceLabels((1 << 0) | (1 << 3) | (1 << 5), 0, 0, influenceCatalog),
+    ["Warlord", "Elder", "Shaper"],
+    "generic influence display remains complete when currency choices narrow",
+);
+
+const derivedGenericInfluences = buildGenericInfluenceCatalog({
+    adjudicator: 11,
+    basilisk: 12,
+    crusader: 13,
+    elder: 14,
+    eyrie: 15,
+    none: 0,
+    shaper: 16,
+});
+assert.deepEqual(
+    buildInfluenceExaltCatalog(derivedGenericInfluences).map((entry) => [
+        entry.key,
+        entry.code,
+    ]),
+    [
+        ["crusader", 13],
+        ["warlord", 11],
+        ["redeemer", 15],
+        ["hunter", 12],
+    ],
+    "currency choices derive numeric codes from the compiled generic catalog",
+);
 
 console.log("  ok - concrete and target slots keep stable presentation identities");

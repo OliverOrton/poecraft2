@@ -1,5 +1,7 @@
 #include "solver_calc_types.hpp"
 
+#include "solver_action_family_contract.hpp"
+
 #include "harvest_crafts.generated.hpp"
 
 #include <algorithm>
@@ -119,32 +121,6 @@ bool goal_has_influence(
                            session.influence_code[goal_mod] == influence;
                 });
         });
-}
-
-PrimitiveTelemetryFamily product_family(const ActionType type) {
-    switch (type) {
-    case ActionType::Essence: return PrimitiveTelemetryFamily::Essence;
-    case ActionType::Fossil: return PrimitiveTelemetryFamily::Fossil;
-    case ActionType::HarvestReforge:
-    case ActionType::HarvestAugment:
-    case ActionType::HarvestResist:
-        return PrimitiveTelemetryFamily::Harvest;
-    case ActionType::Bench:
-    case ActionType::RemoveCraftedModifiers:
-        return PrimitiveTelemetryFamily::Bench;
-    case ActionType::Fracture: return PrimitiveTelemetryFamily::Fracture;
-    case ActionType::Transmute:
-    case ActionType::Augment:
-    case ActionType::Alteration:
-    case ActionType::Regal:
-    case ActionType::Alchemy:
-    case ActionType::Chaos:
-    case ActionType::Exalt:
-    case ActionType::Annul:
-    case ActionType::Scour:
-        return PrimitiveTelemetryFamily::Currency;
-    default: return PrimitiveTelemetryFamily::Other;
-    }
 }
 
 bool mods_conflict_for_admission(
@@ -391,6 +367,7 @@ ProductAdmissionDecision classify_goal_relevant_action(
                 "filtered_veiled_option_deferred"};
     case ActionType::EldritchEmber:
     case ActionType::EldritchIchor:
+    case ActionType::EldritchExalt:
     case ActionType::EldritchChaos:
     case ActionType::EldritchAnnul:
         return options.automatic_candidates
@@ -400,9 +377,6 @@ ProductAdmissionDecision classify_goal_relevant_action(
                    : ProductAdmissionDecision{
                          ProductActionRole::Filtered,
                          "filtered_eldritch_without_automatic_options"};
-    case ActionType::EldritchExalt:
-        return {ProductActionRole::Filtered,
-                "filtered_eldritch_exalt_not_in_automatic_family"};
     case ActionType::HarvestReforge:
     case ActionType::HarvestAugment:
     case ActionType::HarvestResist:
@@ -473,7 +447,8 @@ void retain_goal_relevant_actions(
             action.product_role = ProductActionRole::Candidate;
             action.product_admission_reason = "candidate_unfiltered";
             ++registry.product_role_family_counts[0][
-                static_cast<std::size_t>(product_family(action.params.type))];
+                static_cast<std::size_t>(
+                    primitive_family_for_action(action.params.type))];
         }
         registry.product_reason_counts["candidate_unfiltered"] =
             static_cast<std::uint32_t>(registry.actions.size());
@@ -494,13 +469,13 @@ void retain_goal_relevant_actions(
         const ProductAdmissionDecision decision = decisions[action_index];
         const std::size_t role = static_cast<std::size_t>(decision.role);
         const std::size_t family = static_cast<std::size_t>(
-            product_family(action.params.type));
+            primitive_family_for_action(action.params.type));
         ++registry.product_role_counts[role];
         ++registry.product_role_family_counts[role][family];
         ++registry.product_reason_counts[decision.reason];
         if (decision.role == ProductActionRole::Filtered) {
             registry.product_filtered_actions.push_back(
-                {action.id, product_family(action.params.type),
+                {action.id, primitive_family_for_action(action.params.type),
                  decision.role, decision.reason});
             continue;
         }
@@ -2234,11 +2209,12 @@ void add_influence_exalts(const SessionImpl& session,
             }
         }
         if (!nonempty) continue;
-        if (data.influence_name_by_code.size() <=
+        if (data.influence_exalt_name_by_code.size() <=
             static_cast<std::size_t>(code)) {
             continue;
         }
-        const std::string& name = data.influence_name_by_code[code];
+        const std::string& name =
+            data.influence_exalt_name_by_code[code];
         if (name.empty()) continue;
         ActionDescriptor d;
         d.id = "influence_exalt:" + name;
@@ -2804,6 +2780,7 @@ ActionRegistry build_action_registry(
             derive_preservation_metadata(session, action);
     }
     retain_goal_relevant_actions(session, options, registry);
+    validate_action_registry_family_contract(registry);
     return registry;
 }
 

@@ -1588,11 +1588,16 @@ void compile_operation(
         node.price_keys = {type + ":" + std::to_string(node.action.tier)};
     } else if (action_type == ActionType::InfluenceExalt) {
         const std::string influence = string_member(source, "influence");
-        const auto it = data.influence_code_by_name.find(influence);
-        if (it == data.influence_code_by_name.end() || it->second <= 0)
-            invalid("unknown influence: " + influence);
+        const auto it = data.influence_exalt_code_by_name.find(influence);
+        if (it == data.influence_exalt_code_by_name.end() ||
+            it->second <= 0) {
+            invalid("unknown Influence Exalt currency: " + influence);
+        }
         node.action.influence_code = it->second;
-        node.price_keys = {"influence_exalt:" + influence};
+        node.price_keys = {
+            "influence_exalt:" +
+            data.influence_exalt_name_by_code.at(
+                static_cast<std::size_t>(it->second))};
     } else if (action_type == ActionType::RemoveCraftedModifiers) {
         node.price_keys = {"scour"};
     }

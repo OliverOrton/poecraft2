@@ -2,12 +2,14 @@
 
 #include "poecraft/api.h"
 #include "poecraft/session.h"
+#include "poecraft/simulator.h"
 #include "poecraft/solver.h"
 
 #include "../src/json.hpp"
 
 #include <algorithm>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <limits>
 #include <map>
@@ -514,6 +516,26 @@ void run_session_builder_tests(const char* artifact_dir,
     }
 
     // --- complete cross-base structural reliability audit -------------------
+    namespace fs = std::filesystem;
+    const fs::path repo_root =
+        fs::absolute(fs::path(fixtures)).parent_path().parent_path();
+    const json::Value current_economy = load_fixture(
+        (repo_root / "apps" / "web" / "public" / "economy" /
+         "snapshots" /
+         "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json")
+            .string());
+    std::set<std::string> current_price_keys;
+    for (const auto& [key, unused] :
+         current_economy.at("prices").object) {
+        (void)unused;
+        current_price_keys.insert(key);
+    }
+    std::set<std::string> explicit_missing_price_keys;
+    for (const json::Value& key :
+         current_economy.at("metadata").at("missing_keys").array) {
+        explicit_missing_price_keys.insert(key.as_string());
+    }
+
     uint32_t base_count = 0;
     pc_data_summary summary;
     pc_data_get_summary(data, &summary, &error);
@@ -524,9 +546,13 @@ void run_session_builder_tests(const char* artifact_dir,
          found_abyss = false, found_implicit = false;
     int built = 0;
     int with_mods = 0;
+    int feasible_goal_witnesses = 0;
+    int price_accounted_vocabularies = 0;
+    int compiled_evaluator_smokes = 0;
     std::set<std::string> expected_classes;
     std::set<std::string> built_classes;
     std::set<std::string> level_switched_classes;
+    std::set<std::string> stochastic_transition_classes;
     std::map<std::string, std::set<std::string>> actions_by_class;
     for (uint32_t i = 0; i < base_count; ++i) {
         const char* unused_path = nullptr;
@@ -726,6 +752,9 @@ void run_session_builder_tests(const char* artifact_dir,
             base_path, class_key,
             "item serialization length changed after restoration");
 
+        reliability_check(
+            !representative_mod.empty(), base_path, class_key,
+            "ordinary base has no reachable natural family at item level 86");
         if (!representative_mod.empty()) {
             const std::string goal =
                 "{\"version\":\"v1\",\"rarity\":\"rare\","
@@ -750,6 +779,8 @@ void run_session_builder_tests(const char* artifact_dir,
                     base_path, class_key,
                     "action registry is empty: goal_mod=" +
                         representative_mod);
+                std::uint32_t fully_priced_action_count = 0;
+                bool vocabulary_explicitly_accounted = true;
                 for (std::uint32_t action = 0;
                      action < action_count; ++action) {
                     pc_solver_action_info action_info{};
@@ -763,7 +794,40 @@ void run_session_builder_tests(const char* artifact_dir,
                             "invalid action registry row: action=" +
                                 std::to_string(action))) {
                         actions_by_class[class_key].insert(action_info.id);
+                        bool fully_priced = true;
+                        bool explicitly_accounted = true;
+                        for (std::uint32_t cost = 0;
+                             cost < action_info.cost_key_count; ++cost) {
+                            const std::string key =
+                                action_info.cost_keys[cost];
+                            const bool priced =
+                                current_price_keys.count(key) != 0;
+                            fully_priced = fully_priced && priced;
+                            explicitly_accounted =
+                                explicitly_accounted &&
+                                (priced ||
+                                 explicit_missing_price_keys.count(key) != 0);
+                        }
+                        reliability_check(
+                            explicitly_accounted, base_path, class_key,
+                            "action price key is neither priced nor explicitly missing: action=" +
+                                std::string(action_info.id));
+                        vocabulary_explicitly_accounted =
+                            vocabulary_explicitly_accounted &&
+                            explicitly_accounted;
+                        if (fully_priced && action_info.synthetic == 0 &&
+                            action_info.cost_key_count > 0) {
+                            ++fully_priced_action_count;
+                        }
                     }
+                }
+                reliability_check(
+                    fully_priced_action_count > 0,
+                    base_path, class_key,
+                    "goal registry has no fully priced non-synthetic action");
+                if (vocabulary_explicitly_accounted &&
+                    fully_priced_action_count > 0) {
+                    ++price_accounted_vocabularies;
                 }
                 std::uint32_t candidate_count = 0;
                 pc_result candidates_result = pc_solver_candidates(
@@ -776,6 +840,26 @@ void run_session_builder_tests(const char* artifact_dir,
                     base_path, class_key,
                     "goal produced no candidate actions: mod=" +
                         representative_mod);
+
+                pc_goal_feasibility feasibility{};
+                const bool feasibility_ok = reliability_check(
+                    pc_solver_goal_feasibility(
+                        structural_solver, &rare_item, &feasibility,
+                        &error) == PC_RESULT_OK &&
+                        feasibility.status ==
+                            PC_GOAL_FEASIBILITY_FEASIBLE &&
+                        feasibility.reason ==
+                            PC_GOAL_FEASIBILITY_REASON_NATURAL_REFORGE_WITNESS &&
+                        feasibility.goal_slot_count == 1 &&
+                        feasibility.required_slot_count == 1 &&
+                        feasibility.eligible_slot_count == 1 &&
+                        feasibility.natural_pool_mod_count > 0 &&
+                        feasibility.natural_pool_weight > 0 &&
+                        feasibility.witness_action_index != UINT32_MAX,
+                    base_path, class_key,
+                    "representative natural-family feasibility witness failed: mod=" +
+                        representative_mod);
+                if (feasibility_ok) ++feasible_goal_witnesses;
 
                 std::uint32_t restart_action = UINT32_MAX;
                 if (reliability_check(
@@ -799,6 +883,67 @@ void run_session_builder_tests(const char* artifact_dir,
                             outcome_count > 0,
                         base_path, class_key,
                         "restart exact legality/evaluation failed");
+                }
+
+                std::uint32_t scour_action = UINT32_MAX;
+                if (reliability_check(
+                        pc_solver_find_action(
+                            structural_solver, "scour", &scour_action,
+                            &error) == PC_RESULT_OK,
+                        base_path, class_key,
+                        "scour action missing from registry")) {
+                    pc_calc_summary scour_summary{};
+                    std::uint32_t scour_outcome_count = 0;
+                    const pc_result scour_result =
+                        pc_calc_action_outcomes(
+                            structural_solver, &rare_item, scour_action,
+                            nullptr, 0, &scour_outcome_count,
+                            &scour_summary, &error);
+                    reliability_check(
+                        (scour_result == PC_RESULT_OK ||
+                         scour_result == PC_RESULT_BUFFER_TOO_SMALL) &&
+                            scour_summary.supported != 0 &&
+                            scour_summary.legal != 0 &&
+                            scour_outcome_count == 1,
+                        base_path, class_key,
+                        "scour deterministic transition failed");
+                }
+
+                if (stochastic_transition_classes.insert(class_key).second) {
+                    pc_item_init_options normal_options{};
+                    normal_options.struct_size = sizeof(normal_options);
+                    normal_options.abi_version = PC_ABI_VERSION;
+                    normal_options.rarity = PC_RARITY_NORMAL;
+                    normal_options.with_implicits = 0;
+                    pc_item_state normal_item{};
+                    std::uint32_t transmute_action = UINT32_MAX;
+                    const bool transmute_ready =
+                        pc_item_init(
+                            s, &normal_options, &normal_item,
+                            &error) == PC_RESULT_OK &&
+                        pc_solver_find_action(
+                            structural_solver, "transmute",
+                            &transmute_action, &error) == PC_RESULT_OK;
+                    pc_calc_summary transmute_summary{};
+                    std::uint32_t transmute_outcome_count = 0;
+                    pc_result transmute_result = PC_RESULT_INVALID_ARGUMENT;
+                    if (transmute_ready) {
+                        transmute_result = pc_calc_action_outcomes(
+                            structural_solver, &normal_item,
+                            transmute_action, nullptr, 0,
+                            &transmute_outcome_count,
+                            &transmute_summary, &error);
+                    }
+                    reliability_check(
+                        transmute_ready &&
+                            (transmute_result == PC_RESULT_OK ||
+                             transmute_result ==
+                                 PC_RESULT_BUFFER_TOO_SMALL) &&
+                            transmute_summary.supported != 0 &&
+                            transmute_summary.legal != 0 &&
+                            transmute_outcome_count > 0,
+                        base_path, class_key,
+                        "class representative transmute transition failed");
                 }
 
                 std::uint32_t eldritch_count = 0;
@@ -834,6 +979,62 @@ void run_session_builder_tests(const char* artifact_dir,
                             base_path, class_key,
                             "Eldritch eligibility/action legality failed");
                     }
+                }
+
+                const std::string strategy_json =
+                    std::string(
+                        "{\"version\":\"v1\",\"name\":\"cross-base "
+                        "scour smoke\",\"start_node_id\":\"start\","
+                        "\"base_state\":{\"base_key\":") +
+                    quoted_json(base_path) +
+                    ",\"item_level\":86,\"rarity\":\"rare\"},"
+                    "\"nodes\":[{\"id\":\"start\",\"kind\":\"start\"},"
+                    "{\"id\":\"scour\",\"kind\":\"operation\","
+                    "\"operation\":{\"type\":\"scour\",\"params\":{}}},"
+                    "{\"id\":\"success\",\"kind\":\"terminal\","
+                    "\"terminal\":\"success\"}],\"edges\":["
+                    "{\"id\":\"begin\",\"from\":\"start\","
+                    "\"to\":\"scour\",\"priority\":0,"
+                    "\"condition\":{\"type\":\"always\"}},"
+                    "{\"id\":\"done\",\"from\":\"scour\","
+                    "\"to\":\"success\",\"priority\":0,"
+                    "\"condition\":{\"type\":\"always\"}}]}";
+                pc_strategy_handle strategy = nullptr;
+                const bool strategy_compiled = reliability_check(
+                    pc_strategy_compile_json(
+                        s, strategy_json.data(), strategy_json.size(),
+                        &strategy, &error) == PC_RESULT_OK &&
+                        strategy != nullptr,
+                    base_path, class_key,
+                    "one-operation strategy compilation failed");
+                if (strategy_compiled) {
+                    pc_strategy_eval_options eval_options{};
+                    eval_options.struct_size = sizeof(eval_options);
+                    eval_options.abi_version = PC_ABI_VERSION;
+                    std::size_t eval_length = 0;
+                    const pc_result eval_query = pc_strategy_evaluate(
+                        strategy, &eval_options, nullptr, 0,
+                        &eval_length, &error);
+                    std::string eval_json(eval_length + 1, '\0');
+                    const pc_result eval_result =
+                        eval_query == PC_RESULT_OK
+                            ? pc_strategy_evaluate(
+                                  strategy, &eval_options,
+                                  eval_json.data(), eval_json.size(),
+                                  &eval_length, &error)
+                            : eval_query;
+                    eval_json.resize(
+                        std::min(eval_length, eval_json.size()));
+                    const bool eval_ok = reliability_check(
+                        eval_result == PC_RESULT_OK &&
+                            eval_json.find("\"converged\":true") !=
+                                std::string::npos &&
+                            eval_json.find("\"success\":1") !=
+                                std::string::npos,
+                        base_path, class_key,
+                        "one-operation exact evaluator smoke failed");
+                    if (eval_ok) ++compiled_evaluator_smokes;
+                    pc_strategy_destroy(strategy);
                 }
                 pc_solver_destroy(structural_solver);
             }
@@ -918,9 +1119,14 @@ void run_session_builder_tests(const char* artifact_dir,
     }
     std::printf(
         "generic: built %d ordinary sessions, %d with mods (armour=%d weapon=%d "
-        "jewel=%d abyss=%d)\n",
-        built, with_mods, found_armour, found_weapon, found_jewel, found_abyss);
+        "jewel=%d abyss=%d); feasible=%d priced=%d compiled_eval=%d\n",
+        built, with_mods, found_armour, found_weapon, found_jewel, found_abyss,
+        feasible_goal_witnesses, price_accounted_vocabularies,
+        compiled_evaluator_smokes);
     PC_CHECK(built == 979);
+    PC_CHECK(feasible_goal_witnesses == built);
+    PC_CHECK(price_accounted_vocabularies == built);
+    PC_CHECK(compiled_evaluator_smokes == built);
     PC_CHECK(built_classes == expected_classes);
     PC_CHECK(level_switched_classes == expected_classes);
     for (const std::string& item_class : expected_classes) {

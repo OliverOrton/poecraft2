@@ -1,4 +1,5 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { cpus } from "node:os";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -32,6 +33,11 @@ interface CliOptions {
     verificationRuns?: number;
 }
 
+type CompletedSolverSolveResult = Extract<
+    SolverSolveResult,
+    { cancelled: false }
+>;
+
 interface CaseReport {
     id: string;
     category: string;
@@ -62,6 +68,9 @@ interface CaseReport {
         cancellation_ack_ms: number | null;
         cancellation_mode: string | null;
         cooperative_abandon_ms: number | null;
+        watchdog_seconds: number | null;
+        watchdog_mode: "cooperative_abort_signal" | null;
+        watchdog_expired: boolean;
     };
     memory: {
         measurement_kind: string;
@@ -79,6 +88,18 @@ interface CaseReport {
         nodes: number;
         edges: number;
         strategy_json_bytes: number;
+    } | null;
+    product_action_ids: string[];
+    compiled_operation_contract: Record<string, unknown> | null;
+    compiled_operation_contracts: Array<Record<string, unknown>>;
+    market_price_override_contracts: Record<string, unknown> | null;
+    material_ratio_contract: Record<string, unknown> | null;
+    forced_winner_contract: Record<string, unknown> | null;
+    bounded_best_policy_contract: Record<string, unknown> | null;
+    prepared_strategy: {
+        sha256: string;
+        json_bytes: number;
+        document: unknown;
     } | null;
     exact_evaluation: Record<string, unknown> | null;
     value: { start: number | null };
@@ -189,13 +210,26 @@ function disabledReport(spec: SolverBenchmarkCase, status?: string): CaseReport 
         verification_skipped: false,
         input: {
             comparison_profile:
-                spec.execution_backend === "native_unit_fixture"
+                spec.comparison_profile ??
+                (spec.execution_backend === "native_unit_fixture"
                     ? "native-unit-only"
-                    : "native-wasm-solver-v1",
+                    : "native-wasm-solver-v1"),
+            watchdog_seconds: spec.watchdog_seconds ?? null,
             session: spec.session ?? null,
             start: spec.start ?? null,
             goal: spec.goal ?? null,
+            product_action_envelope: spec.product_action_envelope ?? null,
             allowed_mechanic_families: spec.allowed_mechanic_families ?? null,
+            compiled_operation_contract:
+                spec.compiled_operation_contract ?? null,
+            compiled_operation_contracts:
+                spec.compiled_operation_contracts ?? null,
+            market_price_override_contracts:
+                spec.market_price_override_contracts ?? null,
+            material_ratio_contract: spec.material_ratio_contract ?? null,
+            forced_winner_contract: spec.forced_winner_contract ?? null,
+            bounded_best_policy_contract:
+                spec.bounded_best_policy_contract ?? null,
             economy: spec.economy ?? null,
             caps: spec.caps ?? null,
             verification: spec.verification ?? null,
@@ -214,6 +248,11 @@ function disabledReport(spec: SolverBenchmarkCase, status?: string): CaseReport 
             cancellation_ack_ms: null,
             cancellation_mode: null,
             cooperative_abandon_ms: null,
+            watchdog_seconds: spec.watchdog_seconds ?? null,
+            watchdog_mode: spec.watchdog_seconds === undefined
+                ? null
+                : "cooperative_abort_signal",
+            watchdog_expired: false,
         },
         memory: {
             measurement_kind: "not_measured",
@@ -228,6 +267,14 @@ function disabledReport(spec: SolverBenchmarkCase, status?: string): CaseReport 
         solve_summary: null,
         solver_telemetry: null,
         compiled_graph: null,
+        product_action_ids: [],
+        compiled_operation_contract: null,
+        compiled_operation_contracts: [],
+        market_price_override_contracts: null,
+        material_ratio_contract: null,
+        forced_winner_contract: null,
+        bounded_best_policy_contract: null,
+        prepared_strategy: null,
         exact_evaluation: null,
         value: { start: null },
         verification: null,
@@ -405,6 +452,289 @@ function nestedBoolean(value: unknown, ...path: string[]): boolean | null {
     return typeof current === "boolean" ? current : null;
 }
 
+function nestedRecord(
+    value: unknown,
+    ...path: string[]
+): Record<string, unknown> | null {
+    let current = value;
+    for (const key of path) {
+        if (!current || typeof current !== "object" || Array.isArray(current)) {
+            return null;
+        }
+        current = (current as Record<string, unknown>)[key];
+    }
+    return current && typeof current === "object" && !Array.isArray(current)
+        ? current as Record<string, unknown>
+        : null;
+}
+
+function finiteNumber(value: unknown): value is number {
+    return typeof value === "number" && Number.isFinite(value);
+}
+
+function costsReconcile(
+    left: number | null,
+    right: number | null,
+    spec: SolverBenchmarkCase,
+): boolean {
+    if (!finiteNumber(left) || !finiteNumber(right)) return false;
+    const absolute = Math.abs(left - right);
+    const relative = Math.abs(right) > 1e-12
+        ? absolute / Math.abs(right)
+        : absolute;
+    return absolute <=
+        (spec.verification.exact_cost_absolute_tolerance ?? 1e-7) ||
+        relative <=
+        (spec.verification.exact_cost_relative_tolerance ?? 1e-9);
+}
+
+function nonnegativeCount(value: unknown): number {
+    return finiteNumber(value) && value > 0 ? value : 0;
+}
+
+function boundedBestPolicyReport(
+    spec: SolverBenchmarkCase,
+    solve: CompletedSolverSolveResult | null,
+    telemetry: SolverTelemetry | null,
+): Record<string, unknown> | null {
+    const contract = spec.bounded_best_policy_contract;
+    if (!contract) return null;
+
+    const exactPath = solve?.policy_available === true &&
+        solve.policy_status === "exact" && solve.termination === "exact_closed";
+    if (exactPath) {
+        return {
+            checked: true,
+            passed: contract.allow_exact,
+            path: "exact",
+            checks: {
+                named_stop: null,
+                strict_gap: null,
+                open_obligations: null,
+                evaluated_upper: null,
+                cheapest_independently_evaluated_incumbent: null,
+            },
+            open_work: {
+                incremental_actions: 0,
+                refinement_obligations: 0,
+            },
+            failure_reason: contract.allow_exact
+                ? null
+                : "the contract does not permit the exact completion path",
+        };
+    }
+
+    const bounded = solve?.policy_available === true && [
+        "bounded_feasible",
+        "bounded_near_optimal",
+    ].includes(solve.policy_status);
+    const capStops = new Set([
+        "state_cap",
+        "transition_cap",
+        "memory_cap",
+        "sweep_cap",
+        "reforge_work_cap",
+        "state_action_row_cap",
+        "compiled_output_cap",
+    ]);
+    const namedStop = solve?.termination === "refused_resource_cap" &&
+        capStops.has(solve.stop_cause);
+    const strictGap = finiteNumber(solve?.lower_bound) &&
+        finiteNumber(solve?.upper_bound) &&
+        solve.lower_bound < solve.upper_bound;
+    const evaluatedUpper = costsReconcile(
+        solve?.upper_bound ?? null,
+        solve?.evaluated_policy_cost ?? null,
+        spec,
+    );
+
+    const envelope = nestedRecord(telemetry, "incremental_action_envelope");
+    const incremental = nonnegativeCount(
+        envelope?.remaining_action_envelope,
+    );
+    const incrementalOpen = envelope?.enabled === true &&
+        envelope.closed === false && incremental > 0;
+    const certification = nestedRecord(
+        telemetry,
+        "policy_refinement",
+        "certification_work",
+    );
+    const refinement = [
+        "unresolved_alternative_obligations",
+        "competitive_alternatives_remaining",
+        "obligations_resource_interrupted",
+    ].reduce(
+        (total, key) => total + nonnegativeCount(certification?.[key]),
+        0,
+    );
+    const openObligations = incrementalOpen || refinement > 0;
+
+    const fallbackPortfolio = nestedRecord(
+        telemetry,
+        "policy_refinement",
+        "fallback_portfolio",
+    );
+    const cheapestEvaluated =
+        fallbackPortfolio?.cheapest_independently_evaluated_selected === true;
+    const passed = bounded &&
+        (!contract.bounded_requires_named_stop || namedStop) &&
+        (!contract.bounded_requires_strict_gap || strictGap) &&
+        (!contract.bounded_requires_open_obligations || openObligations) &&
+        (!contract.require_evaluated_upper || evaluatedUpper) &&
+        (!contract.require_cheapest_independently_evaluated_incumbent ||
+            cheapestEvaluated);
+    return {
+        checked: true,
+        passed,
+        path: "bounded",
+        checks: {
+            named_stop: namedStop,
+            strict_gap: strictGap,
+            open_obligations: openObligations,
+            evaluated_upper: evaluatedUpper,
+            cheapest_independently_evaluated_incumbent: cheapestEvaluated,
+        },
+        open_work: {
+            incremental_actions: incremental,
+            refinement_obligations: refinement,
+        },
+        failure_reason: passed
+            ? null
+            : !bounded
+              ? "the result was neither exact nor a bounded policy"
+              : "one or more bounded-result proof obligations failed",
+    };
+}
+
+function matchingOperationNodes(
+    strategy: unknown,
+    operationType: string,
+    requiredStringParameters: Readonly<Record<string, string>> = {},
+): number {
+    const root = nestedRecord(strategy);
+    if (!Array.isArray(root?.nodes)) return 0;
+    return root.nodes.filter((value) => {
+        const node = value && typeof value === "object" && !Array.isArray(value)
+            ? value as Record<string, unknown>
+            : null;
+        const operation = nestedRecord(node?.operation);
+        return node?.kind === "operation" && operation?.type === operationType &&
+            Object.entries(requiredStringParameters).every(
+                ([key, expected]) => operation[key] === expected,
+            );
+    }).length;
+}
+
+function compiledOperationContracts(
+    spec: SolverBenchmarkCase,
+): Array<{ type: string; required_string_parameters: Record<string, string> }> {
+    return [
+        ...(spec.compiled_operation_contract === undefined
+            ? []
+            : [spec.compiled_operation_contract]),
+        ...(spec.compiled_operation_contracts ?? []),
+    ];
+}
+
+function materialRatioContractReport(
+    spec: SolverBenchmarkCase,
+    exactEvaluation: Record<string, unknown> | null,
+    verification: Record<string, unknown> | null,
+): Record<string, unknown> | null {
+    const contract = spec.material_ratio_contract;
+    if (contract === undefined) return null;
+    const exactResult = nestedRecord(exactEvaluation, "result");
+    const expectedConsumption = exactResult?.expected_consumption;
+    let exactNumerator = 0;
+    let exactDenominator = 0;
+    if (Array.isArray(expectedConsumption)) {
+        for (const value of expectedConsumption) {
+            const row = nestedRecord(value);
+            if (!row || typeof row.quantity !== "number") continue;
+            if (row.key === contract.numerator_price_key) {
+                exactNumerator = row.quantity;
+            } else if (row.key === contract.denominator_price_key) {
+                exactDenominator = row.quantity;
+            }
+        }
+    }
+    const exactPricingComplete =
+        nestedString(exactResult, "accounting", "pricing", "status") ===
+            "complete" &&
+        Array.isArray(
+            nestedRecord(exactResult, "accounting", "pricing")
+                ?.missing_price_keys,
+        ) &&
+        (nestedRecord(exactResult, "accounting", "pricing")
+            ?.missing_price_keys as unknown[]).length === 0;
+    const exactExpected = contract.expected_ratio * exactDenominator;
+    const exactTolerance = 1e-10 * Math.max(
+        1,
+        Math.abs(exactNumerator),
+        Math.abs(exactExpected),
+    );
+    const exactChecked = exactResult !== null;
+    const exactPassed = exactChecked &&
+        (!contract.require_positive_denominator || exactDenominator > 0) &&
+        Math.abs(exactNumerator - exactExpected) <= exactTolerance &&
+        (!contract.require_complete_pricing || exactPricingComplete);
+
+    const sampledAccounting = nestedRecord(
+        verification,
+        "simulation",
+        "sampled_accounting",
+    );
+    let sampledNumerator = 0;
+    let sampledDenominator = 0;
+    if (Array.isArray(sampledAccounting?.materials)) {
+        for (const value of sampledAccounting.materials) {
+            const row = nestedRecord(value);
+            if (!row || typeof row.count !== "number") continue;
+            if (row.price_key === contract.numerator_price_key) {
+                sampledNumerator = row.count;
+            } else if (row.price_key === contract.denominator_price_key) {
+                sampledDenominator = row.count;
+            }
+        }
+    }
+    const summary = nestedRecord(verification, "simulation", "summary");
+    const sampledPricingComplete = summary?.cost_status === "complete" &&
+        summary.missing_price_run_count === 0 &&
+        summary.missing_price_action_count === 0;
+    const sampledExpected = contract.expected_ratio * sampledDenominator;
+    const sampledTolerance = 1e-10 * Math.max(
+        1,
+        Math.abs(sampledNumerator),
+        Math.abs(sampledExpected),
+    );
+    const sampledChecked = sampledAccounting !== null;
+    const sampledPassed = sampledChecked &&
+        (!contract.require_positive_denominator || sampledDenominator > 0) &&
+        Math.abs(sampledNumerator - sampledExpected) <= sampledTolerance &&
+        (!contract.require_complete_pricing || sampledPricingComplete);
+    return {
+        numerator_price_key: contract.numerator_price_key,
+        denominator_price_key: contract.denominator_price_key,
+        expected_ratio: contract.expected_ratio,
+        checked: exactChecked && sampledChecked,
+        passed: exactPassed && sampledPassed,
+        exact_evaluation: {
+            checked: exactChecked,
+            numerator_quantity: exactNumerator,
+            denominator_quantity: exactDenominator,
+            complete_pricing: exactPricingComplete,
+            passed: exactPassed,
+        },
+        sampled_simulation: {
+            checked: sampledChecked,
+            numerator_count: sampledNumerator,
+            denominator_count: sampledDenominator,
+            complete_pricing: sampledPricingComplete,
+            passed: sampledPassed,
+        },
+    };
+}
+
 function buildCapChecks(spec: SolverBenchmarkCase, report: CaseReport): CaseReport["cap_checks"] {
     const checks: Record<string, boolean> = {};
     const optimization = report.solver_telemetry?.optimization;
@@ -429,6 +759,16 @@ function buildCapChecks(spec: SolverBenchmarkCase, report: CaseReport): CaseRepo
     check("max_compiled_edges", report.compiled_graph?.edges ?? null, spec.caps.max_compiled_edges);
     check("max_strategy_json_bytes", report.compiled_graph?.strategy_json_bytes ?? null, spec.caps.max_strategy_json_bytes);
     check("worker_step_ms", report.execution.worker_max_slice_ms, spec.caps.worker_step_ms);
+    if (spec.watchdog_seconds !== undefined) {
+        check(
+            "watchdog_seconds",
+            report.phase_wall_ms.total === null
+                ? null
+                : report.phase_wall_ms.total / 1000,
+            spec.watchdog_seconds,
+        );
+        checks.watchdog_not_expired = !report.execution.watchdog_expired;
+    }
     if (spec.expected?.solve_status === "cancelled") {
         check("cancel_ack_ms", report.execution.cancellation_ack_ms, spec.caps.cancel_ack_ms);
     }
@@ -443,6 +783,30 @@ function caseExpectationMet(
     if (report.errors.length > 0) return false;
     if (report.solver_telemetry?.version !== "solver_telemetry_v1") return false;
     if (!report.cap_checks.all_passed) return false;
+    if (spec.bounded_best_policy_contract !== undefined &&
+        report.bounded_best_policy_contract?.passed !== true) {
+        return false;
+    }
+    if (report.compiled_operation_contracts.some(
+        (contract) => contract.present !== true,
+    )) {
+        return false;
+    }
+    if (spec.market_price_override_contracts !== undefined &&
+        report.market_price_override_contracts?.checked !== true) {
+        return false;
+    }
+    if (spec.material_ratio_contract !== undefined) {
+        const exact = nestedRecord(
+            report.material_ratio_contract,
+            "exact_evaluation",
+        );
+        if (exact?.passed !== true ||
+            (!skipVerification &&
+             report.material_ratio_contract?.passed !== true)) {
+            return false;
+        }
+    }
     if (
         report.solve_summary?.policy_available === true &&
         spec.verification.exact_evaluation === true &&
@@ -464,7 +828,11 @@ function caseExpectationMet(
             if (
                 !skipVerification &&
                 spec.verification.runs > 0 &&
-                report.workflow_status.simulation !== "completed"
+                (report.workflow_status.simulation !== "completed" ||
+                    report.verification?.verification_passed !== true ||
+                    report.verification.runs !== spec.verification.runs ||
+                    report.verification.requested_runs !==
+                        spec.verification.runs)
             ) {
                 return false;
             }
@@ -513,14 +881,20 @@ function caseExpectationMet(
         return false;
     }
     if (!skipVerification && spec.expected.verification_status === "run") {
-        if (!report.verification || report.verification.verification_passed !== true) {
+        if (!report.verification ||
+            report.verification.verification_passed !== true ||
+            report.verification.runs !== spec.verification.runs ||
+            report.verification.requested_runs !== spec.verification.runs) {
             return false;
         }
     }
     if (!skipVerification &&
         spec.expected.verification_status === "run_if_compiled" &&
         report.compiled_graph &&
-        (!report.verification || report.verification.verification_passed !== true)) {
+        (!report.verification ||
+            report.verification.verification_passed !== true ||
+            report.verification.runs !== spec.verification.runs ||
+            report.verification.requested_runs !== spec.verification.runs)) {
         return false;
     }
     return true;
@@ -546,6 +920,10 @@ async function runCase(
     let compiledGraph: CaseReport["compiled_graph"] = null;
     let exactEvaluation: CaseReport["exact_evaluation"] = null;
     let verification: CaseReport["verification"] = null;
+    let productActionIds: string[] = [];
+    let preparedStrategy: CaseReport["prepared_strategy"] = null;
+    let forcedPriceChecked = false;
+    let dependencyCandidateChecked = false;
     let registryLayoutMs: number | null = null;
     let solveMs: number | null = null;
     let compileMs: number | null = null;
@@ -567,6 +945,17 @@ async function runCase(
     let simulationStatus = verificationRuns > 0
         ? "not_attempted"
         : "not_requested";
+    const caseAbort = new AbortController();
+    let watchdogExpired = false;
+    // The worker consumes this abort at its next event-loop yield. The separate
+    // worker_step_ms contract bounds any one in-flight native/WASM slice.
+    const watchdogTimer = spec.watchdog_seconds === undefined
+        ? null
+        : setTimeout(() => {
+            watchdogExpired = true;
+            caseAbort.abort("solver benchmark watchdog expired");
+        }, spec.watchdog_seconds * 1000);
+    watchdogTimer?.unref();
 
     try {
         wasmBefore = (await client.memoryStats()).wasm_memory_bytes;
@@ -608,11 +997,41 @@ async function runCase(
             spec,
             REPO_ROOT,
         );
+        forcedPriceChecked = spec.forced_winner_contract !== undefined;
+        const economyPrices = nestedRecord(economySpec, "prices");
+        if (economyPrices === null) {
+            throw new Error("materialized benchmark economy has no prices object");
+        }
+        if (spec.product_action_envelope !== undefined) {
+            const envelopeSolver = await client.openSolver(
+                session,
+                spec.product_action_envelope.envelope_goal,
+            );
+            try {
+                const candidates = await client.solverActions(envelopeSolver);
+                productActionIds = candidates
+                    .filter((candidate) => candidate.cost_keys.every(
+                        (key) => Object.hasOwn(economyPrices, key),
+                    ))
+                    .map((candidate) => candidate.id);
+            } finally {
+                await client.closeSolver(envelopeSolver).catch(() => {});
+            }
+        }
         solver = await client.openSolver(
             session,
-            materializeSolverBenchmarkGoal(spec),
+            materializeSolverBenchmarkGoal(spec, productActionIds),
         );
         await client.solverActions(solver);
+        const forcedWinner = spec.forced_winner_contract;
+        dependencyCandidateChecked = forcedWinner !== undefined &&
+            forcedWinner.dependency_must_not_be_primitive_candidate;
+        if (forcedWinner?.dependency_must_not_be_primitive_candidate &&
+            productActionIds.includes(forcedWinner.dependency_action_id)) {
+            throw new Error(
+                "forced winner dependency unexpectedly appeared as a primitive product candidate",
+            );
+        }
         economy = await client.loadEconomy(
             economySpec,
         );
@@ -621,7 +1040,6 @@ async function runCase(
         const solveStarted = performance.now();
         try {
             if (spec.benchmark_mode === "cancel_after_first_step") {
-                const controller = new AbortController();
                 let abortStarted: number | null = null;
                 solve = await client.solverSolve(
                     solver,
@@ -650,11 +1068,11 @@ async function runCase(
                     {
                         chunkSize: spec.caps.solve_step_work_items,
                         yieldEveryStep: true,
-                        signal: controller.signal,
+                        signal: caseAbort.signal,
                         onProgress: (progress) => {
                             if (abortStarted === null && !progress.done) {
                                 abortStarted = performance.now();
-                                controller.abort();
+                                caseAbort.abort("cancel-after-first-step benchmark");
                             }
                         },
                     },
@@ -687,7 +1105,10 @@ async function runCase(
                         goal_progress_gated_reforges:
                             spec.caps.goal_progress_gated_reforges,
                     },
-                    { chunkSize: spec.caps.solve_step_work_items },
+                    {
+                        chunkSize: spec.caps.solve_step_work_items,
+                        signal: caseAbort.signal,
+                    },
                 );
             }
         } catch (error) {
@@ -713,14 +1134,43 @@ async function runCase(
                     strategy_json_bytes: Buffer.byteLength(strategyJson),
                 };
                 const strategy = prepareSolverStrategy(raw);
-                const reloaded = JSON.parse(
-                    JSON.stringify(strategy),
-                ) as unknown;
+                const preparedJson = JSON.stringify(strategy);
+                const reloaded = JSON.parse(preparedJson) as unknown;
                 if (!isStrategyDocument(reloaded)) {
                     throw new Error(
                         "The saved compiled strategy did not reload as a "
                         + "Strategy Board document.",
                     );
+                }
+                preparedStrategy = {
+                    sha256: createHash("sha256")
+                        .update(preparedJson)
+                        .digest("hex"),
+                    json_bytes: Buffer.byteLength(preparedJson),
+                    document: reloaded,
+                };
+                const forcedWinner = spec.forced_winner_contract;
+                if (forcedWinner !== undefined &&
+                    matchingOperationNodes(
+                        reloaded,
+                        forcedWinner.required_compiled_operation_type,
+                    ) === 0) {
+                    throw new Error(
+                        "compiled strategy omitted the forced winner operation type",
+                    );
+                }
+                for (const operationContract of
+                    compiledOperationContracts(spec)) {
+                    if (matchingOperationNodes(
+                        reloaded,
+                        operationContract.type,
+                        operationContract.required_string_parameters,
+                    ) === 0) {
+                        throw new Error(
+                            "compiled strategy omitted the required operation "
+                            + `contract: ${operationContract.type}`,
+                        );
+                    }
                 }
                 strategyHandle = await client.compileStrategy(
                     session,
@@ -742,7 +1192,10 @@ async function runCase(
                             max_owned_bytes:
                                 spec.verification.exact_max_owned_bytes,
                         },
-                        { economy: economySpec },
+                        {
+                            economy: economySpec,
+                            signal: caseAbort.signal,
+                        },
                     );
                     const offPolicy =
                         exact.terminals.failure +
@@ -782,6 +1235,7 @@ async function runCase(
                         ? "matched"
                         : "mismatch";
                     exactEvaluation = {
+                        result: exact,
                         converged: exact.converged,
                         cost_complete:
                             exact.accounting.totals.per_invocation
@@ -843,6 +1297,7 @@ async function runCase(
                             spec,
                             verificationRuns,
                             (handle) => { simulator = handle; },
+                            caseAbort.signal,
                         );
                         simulationStatus =
                             verification.verification_passed === true
@@ -871,6 +1326,18 @@ async function runCase(
             memoryAfter = sampled.after;
             rssPeak = sampled.peak;
         }
+        if (watchdogTimer !== null) clearTimeout(watchdogTimer);
+    }
+
+    const totalMs = roundMs(performance.now() - totalStarted);
+    if (spec.watchdog_seconds !== undefined &&
+        totalMs > spec.watchdog_seconds * 1000) {
+        watchdogExpired = true;
+    }
+    if (watchdogExpired) {
+        errors.push(
+            `watchdog: exceeded ${spec.watchdog_seconds} seconds`,
+        );
     }
 
     const actualStatus = statusFrom(
@@ -881,6 +1348,60 @@ async function runCase(
     );
     const worker = solve?.worker;
     const complete = solve && !solve.cancelled ? solve : null;
+    const boundedContract = boundedBestPolicyReport(spec, complete, telemetry);
+    if (boundedContract !== null && boundedContract.passed !== true) {
+        errors.push(
+            `bounded best-policy contract failed: ${String(
+                boundedContract.failure_reason,
+            )}`,
+        );
+    }
+    const forced = spec.forced_winner_contract;
+    const forcedOperationNodes = forced !== undefined && preparedStrategy !== null
+        ? matchingOperationNodes(
+            preparedStrategy.document,
+            forced.required_compiled_operation_type,
+        )
+        : 0;
+    const operationContract = spec.compiled_operation_contract;
+    const operationContractNodes = operationContract !== undefined &&
+        preparedStrategy !== null
+        ? matchingOperationNodes(
+            preparedStrategy.document,
+            operationContract.type,
+            operationContract.required_string_parameters,
+        )
+        : 0;
+    const operationContractReports = compiledOperationContracts(spec).map(
+        (contract) => {
+            const matching = preparedStrategy === null
+                ? 0
+                : matchingOperationNodes(
+                    preparedStrategy.document,
+                    contract.type,
+                    contract.required_string_parameters,
+                );
+            return {
+                type: contract.type,
+                required_string_parameters:
+                    contract.required_string_parameters,
+                checked: preparedStrategy !== null,
+                matching_node_count: matching,
+                present: matching > 0,
+            };
+        },
+    );
+    const materialRatio = materialRatioContractReport(
+        spec,
+        exactEvaluation,
+        verification,
+    );
+    if (!skipVerification && materialRatio !== null &&
+        materialRatio.passed !== true) {
+        errors.push(
+            "material ratio contract failed exact or sampled accounting",
+        );
+    }
     const report: CaseReport = {
         id: spec.id,
         category: spec.category,
@@ -916,11 +1437,24 @@ async function runCase(
         expectation_met: false,
         verification_skipped: skipVerification,
         input: {
-            comparison_profile: "native-wasm-solver-v1",
+            comparison_profile:
+                spec.comparison_profile ?? "native-wasm-solver-v1",
+            watchdog_seconds: spec.watchdog_seconds ?? null,
             session: spec.session,
             start: spec.start,
             goal: spec.goal,
+            product_action_envelope: spec.product_action_envelope ?? null,
             allowed_mechanic_families: spec.allowed_mechanic_families,
+            compiled_operation_contract:
+                spec.compiled_operation_contract ?? null,
+            compiled_operation_contracts:
+                spec.compiled_operation_contracts ?? null,
+            market_price_override_contracts:
+                spec.market_price_override_contracts ?? null,
+            material_ratio_contract: spec.material_ratio_contract ?? null,
+            forced_winner_contract: spec.forced_winner_contract ?? null,
+            bounded_best_policy_contract:
+                spec.bounded_best_policy_contract ?? null,
             economy: spec.economy,
             caps: spec.caps,
             verification: spec.verification,
@@ -930,7 +1464,7 @@ async function runCase(
             solve: solveMs,
             compile: compileMs,
             verification: verificationMs,
-            total: roundMs(performance.now() - totalStarted),
+            total: totalMs,
         },
         execution: {
             solve_steps: worker?.step_count ?? null,
@@ -942,6 +1476,11 @@ async function runCase(
                     ? "abort_signal_after_worker_progress"
                     : null,
             cooperative_abandon_ms: null,
+            watchdog_seconds: spec.watchdog_seconds ?? null,
+            watchdog_mode: spec.watchdog_seconds === undefined
+                ? null
+                : "cooperative_abort_signal",
+            watchdog_expired: watchdogExpired,
         },
         memory: {
             measurement_kind: "node_process_rss_sampled_5ms_and_wasm_heap_snapshots",
@@ -960,6 +1499,53 @@ async function runCase(
             : null,
         solver_telemetry: telemetry,
         compiled_graph: compiledGraph,
+        product_action_ids: productActionIds,
+        compiled_operation_contract: operationContract === undefined
+            ? null
+            : {
+                type: operationContract.type,
+                required_string_parameters:
+                    operationContract.required_string_parameters,
+                checked: preparedStrategy !== null,
+                matching_node_count: operationContractNodes,
+                present: operationContractNodes > 0,
+            },
+        compiled_operation_contracts: operationContractReports,
+        market_price_override_contracts:
+            spec.market_price_override_contracts === undefined
+                ? null
+                : {
+                    checked: true,
+                    declared_override_count:
+                        spec.market_price_override_contracts.length,
+                },
+        material_ratio_contract: materialRatio,
+        forced_winner_contract: forced === undefined
+            ? null
+            : {
+                required_compiled_operation: {
+                    type: forced.required_compiled_operation_type,
+                    checked: preparedStrategy !== null,
+                    matching_node_count: forcedOperationNodes,
+                    present: forcedOperationNodes > 0,
+                },
+                synthetic_action_price: {
+                    snapshot_quote: forced.snapshot_action_price,
+                    forced_value: forced.forced_action_price,
+                    checked: forcedPriceChecked,
+                },
+                dependency_primitive_candidate: {
+                    action_id: forced.dependency_action_id,
+                    must_be_absent:
+                        forced.dependency_must_not_be_primitive_candidate,
+                    checked: dependencyCandidateChecked,
+                    absent: !productActionIds.includes(
+                        forced.dependency_action_id,
+                    ),
+                },
+            },
+        bounded_best_policy_contract: boundedContract,
+        prepared_strategy: preparedStrategy,
         exact_evaluation: exactEvaluation,
         value: {
             start: complete
@@ -985,6 +1571,7 @@ async function verifyStrategy(
     spec: SolverBenchmarkCase,
     verificationRuns: number,
     setSimulator: (handle: number) => void,
+    signal: AbortSignal,
 ): Promise<Record<string, unknown>> {
     const simulator = await client.createSimulator(session, strategyHandle, economy);
     setSimulator(simulator);
@@ -992,7 +1579,7 @@ async function verifyStrategy(
         target_runs: verificationRuns,
         seed: spec.verification.seed,
         max_actions_per_run: spec.verification.max_actions_per_run,
-    });
+    }, { signal });
     if (run.cancelled) throw new Error("simulation verification was cancelled");
     const completed = run.summary.completed_runs;
     const meanCost = completed > 0
@@ -1003,13 +1590,25 @@ async function verifyStrategy(
     const successRate = completed > 0 ? run.summary.success_count / completed : 0;
     const offPolicy = run.summary.no_matching_edge_count +
         run.summary.action_not_applied_count;
+    const fullFixtureRun = completed === spec.verification.runs &&
+        verificationRuns === spec.verification.runs &&
+        run.summary.target_runs === spec.verification.runs &&
+        run.summary.seed === spec.verification.seed;
+    const completeCostAccounting = run.summary.cost_status === "complete" &&
+        run.summary.missing_price_run_count === 0 &&
+        run.summary.missing_price_action_count === 0;
     const meanWithinTolerance = spec.verification.mean_cost_absolute_tolerance !== undefined
         ? absolute <= spec.verification.mean_cost_absolute_tolerance
         : spec.verification.mean_cost_relative_tolerance !== undefined
           ? relative <= spec.verification.mean_cost_relative_tolerance
           : null;
     return {
+        simulation: {
+            summary: run.summary,
+            sampled_accounting: run.sampled_accounting,
+        },
         runs: completed,
+        requested_runs: verificationRuns,
         success_count: run.summary.success_count,
         failure_count: run.summary.failure_count,
         mean_cost: meanCost,
@@ -1023,6 +1622,8 @@ async function verifyStrategy(
                 ? null
                 : successRate >= spec.verification.minimum_success_rate,
         verification_passed:
+            fullFixtureRun &&
+            completeCostAccounting &&
             offPolicy === 0 &&
             meanWithinTolerance !== false &&
             (spec.verification.minimum_success_rate === undefined ||

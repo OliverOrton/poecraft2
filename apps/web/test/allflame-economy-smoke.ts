@@ -70,9 +70,13 @@ assert.equal(economyService.getState().selectedProfile, "allflame");
 const pinned = economyService.pin(["chaos"]);
 assert.equal(
     pinned.sourceSnapshotId,
-    "economy:allflame:a122cad9494aa3361016b6f9c542e029e7aa1465de6d04bd6b5b150b5d26c485",
+    "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
 );
 assert.equal(pinned.snapshot.prices.chaos, 1);
+assert.equal(pinned.snapshot.prices["beast:craicic-croaker"], 66);
+assert.equal(pinned.snapshot.sources?.["beast:craicic-croaker"], "quote");
+assert.equal(pinned.snapshot.prices["beast:rare"], 1);
+assert.equal(pinned.snapshot.sources?.["beast:rare"], "owner_default");
 
 const { client, worker } = spawnClient();
 await client.whenReady();

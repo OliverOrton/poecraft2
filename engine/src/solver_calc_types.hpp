@@ -1,6 +1,7 @@
 #pragma once
 
 #include "solver_model.hpp"
+#include "solver_cooperative_task.hpp"
 
 namespace poecraft {
 namespace solver {
@@ -466,6 +467,15 @@ struct CalcTelemetry {
     std::uint64_t distribution_build_ns = 0;
     std::uint64_t state_action_rows = 0;
     std::uint64_t transition_entries = 0;
+    /* Transient child/local states synthesized only to validate automatic
+     * candidates. This observational work does not consume the retained
+     * parent graph's max_discovered_states allowance. */
+    std::uint64_t automatic_admission_discovered_states = 0;
+    /* Transient child/local and parent-layout automatic evaluation work.
+     * These saturating observational counters are deliberately outside the
+     * retained solve's max_reforge_work authority. */
+    std::uint64_t automatic_admission_reforge_active_work = 0;
+    std::uint64_t automatic_admission_reforge_logical_work_v1 = 0;
     std::uint64_t outcome_entries = 0;
     std::uint64_t choice_groups = 0;
     std::uint64_t choice_successor_entries = 0;
@@ -476,9 +486,11 @@ struct CalcTelemetry {
     /* Historic active-evaluator ledger. Retained verbatim for comparisons
      * with prior evidence; it no longer defines search admission. */
     std::uint64_t reforge_frontier_work = 0;
-    /* Stable V1-equivalent logical envelope consumed by max_reforge_work.
-     * This is distinct from raw-equivalent attempted effort so an interrupted
-     * over-cap charge remains observable without admitting or publishing it. */
+    /* Stable V1-equivalent logical envelope consumed by max_reforge_work for
+     * retained parent solve/evaluation rows. Transient automatic admission
+     * has the separately named observational ledger above. This remains
+     * distinct from raw-equivalent attempted effort so an interrupted
+     * over-cap charge is observable without admitting or publishing it. */
     std::uint64_t reforge_logical_work_v1 = 0;
     /* Parallel effort ledgers. V1 raw-equivalent work retains the historic
      * one-node-plus-all-buckets definition. V2 projected work counts one
@@ -534,11 +546,13 @@ class SolverResourceLimit : public std::length_error {
         : std::length_error(
               "solver exceeded " + cap_name + " (" +
               std::to_string(limit) + ")"),
-          cap_name_(std::move(cap_name)) {}
+          cap_name_(std::move(cap_name)), limit_(limit) {}
     const std::string& cap_name() const { return cap_name_; }
+    std::uint64_t limit() const { return limit_; }
 
   private:
     std::string cap_name_;
+    std::uint64_t limit_ = 0;
 };
 
 struct ActionControlSummary {
@@ -555,11 +569,13 @@ struct ActionControlSummary {
 };
 
 struct AutomaticAdmissionLimits {
-    std::uint32_t max_discovered_states = 0;
     std::uint64_t max_state_action_rows = 0;
     std::uint64_t max_transitions = 0;
-    std::uint64_t max_reforge_work = 0;
     std::uint64_t max_solver_owned_bytes = 0;
+    /* Fallback refusal boundary when no certified finite positive-price
+     * grammar bound exists. A price-proved search uses its derived depth and
+     * may intentionally exceed this value; max_imprint_program_work and the
+     * owned-byte cap remain unconditional. */
     std::uint32_t max_imprint_program_depth = 0;
     std::uint64_t max_imprint_program_work = 0;
     const std::unordered_map<std::string, double>* prices = nullptr;
@@ -595,8 +611,21 @@ struct StateLocalAutomaticCandidate {
     OptionKernel::AutomaticEvidence evidence;
 };
 
+enum class StateLocalAutomaticBatchStatus : std::uint8_t {
+    Complete = 0,
+    ResourceDeferred = 1,
+};
+
 struct StateLocalAutomaticBatch {
+    StateLocalAutomaticBatchStatus status =
+        StateLocalAutomaticBatchStatus::Complete;
     bool cached = false;
+    /* Set only for ResourceDeferred. The candidate decision retains the
+     * corresponding human-readable reason; these fields are the scheduling
+     * authority used to prevent an incomplete envelope from closing exact. */
+    std::string resource_cap;
+    std::uint64_t resource_limit = 0;
+    std::string resource_reason;
     AutomaticAdmissionPhaseTelemetry phases;
     std::array<std::uint64_t, kAutomaticTelemetryKindCount>
         shared_admission_ns{};
@@ -607,6 +636,13 @@ struct StateLocalAutomaticBatch {
     std::uint64_t temporary_effect_classes = 0;
     std::uint64_t temporary_collapsed_variants = 0;
     std::uint64_t temporary_enumeration_ns = 0;
+    /* Cooperative admission execution telemetry. One resume advances to the
+     * next explicit checkpoint (or completion), so these counters make the
+     * worker-slice boundary and accidental replay observable in focused
+     * correctness tests. */
+    std::uint64_t continuation_resumes = 0;
+    std::uint64_t continuation_suspensions = 0;
+    std::uint64_t max_continuation_slice_ns = 0;
     std::vector<StateLocalAutomaticCandidate> decisions;
     std::vector<std::uint32_t> admitted_operators;
 };
@@ -669,7 +705,8 @@ class CalcContext {
         bool capture_reforge_attribution = false,
         bool use_projected_reforge_frontier = false,
         bool reverse_reforge_bucket_enumeration = false,
-        bool use_factored_terminal_reforge = false);
+        bool use_factored_terminal_reforge = false,
+        const AbstractLayout* refinement_parent_layout = nullptr);
 
     const SessionImpl& session() const { return *session_; }
     const AbstractLayout& layout() const { return layout_; }
@@ -735,6 +772,17 @@ class CalcContext {
     StateLocalAutomaticBatch admit_state_local_automatic_candidates(
         std::uint32_t state_id,
         const AutomaticAdmissionLimits& limits);
+    /* Advance a retained carrier-local admission continuation. A false
+     * return means the envelope is still being prepared and must be resumed;
+     * no partial batch is published as complete. */
+    bool advance_state_local_automatic_candidates(
+        std::uint32_t state_id,
+        const AutomaticAdmissionLimits& limits,
+        StateLocalAutomaticBatch& completed,
+        std::uint32_t max_checkpoints = 1);
+    void cancel_state_local_automatic_candidates(std::uint32_t state_id);
+    void cancel_state_local_automatic_candidates();
+    std::uint64_t automatic_admission_cursor_bytes() const;
     bool is_state_local_automatic_operator(std::uint32_t index) const {
         return state_local_automatic_operator_indices_.contains(index);
     }
@@ -887,8 +935,48 @@ class CalcContext {
     std::vector<PlannerOperator> operators_;
     std::vector<std::uint32_t> candidate_operators_;
     std::size_t static_candidate_operator_count_ = 0;
+    /* Presence is a completeness certificate. Resource-deferred batches are
+     * deliberately never inserted, so a later solve can safely retry the
+     * carrier with a larger allowance. */
     std::unordered_map<std::uint32_t, std::vector<std::uint32_t>>
         state_local_automatic_operators_;
+    struct AutomaticTemplateBucketCheckpoint {
+        std::uint64_t key = 0;
+        std::size_t size = 0;
+    };
+    struct AutomaticReforgeBucketCheckpoint {
+        std::tuple<std::uint32_t, std::uint64_t, bool> key;
+        std::size_t size = 0;
+    };
+    struct StateLocalAutomaticAdmissionCursor {
+        std::uint32_t state_id = kNoId;
+        AutomaticAdmissionLimits limits;
+        std::size_t first_operator = 0;
+        std::vector<std::uint64_t> distribution_cache_keys_before;
+        std::vector<std::uint64_t> option_cache_keys_before;
+        /* Exact mutation logs cover kernels materialized for intermediate
+         * states inside a fixed program, not only the carrier-key prefix. */
+        std::vector<std::uint64_t> distribution_cache_keys_inserted;
+        std::vector<std::uint64_t> option_cache_keys_inserted;
+        std::vector<std::uint64_t> option_template_hit_keys_before;
+        std::vector<AutomaticTemplateBucketCheckpoint>
+            option_template_buckets_before;
+        std::vector<AutomaticTemplateBucketCheckpoint>
+            transition_template_buckets_before;
+        std::vector<AutomaticTemplateBucketCheckpoint>
+            operator_template_buckets_before;
+        std::vector<AutomaticReforgeBucketCheckpoint>
+            reforge_buckets_before;
+        std::uint64_t resumes = 0;
+        std::uint64_t suspensions = 0;
+        std::uint64_t max_slice_ns = 0;
+        solve_detail::CooperativeTask<StateLocalAutomaticBatch> task;
+    };
+    /* Parent operators are staged in one append-only range, so admission is
+     * deliberately single-flight per CalcContext. This makes cancellation's
+     * rollback range disjoint by construction. */
+    std::optional<StateLocalAutomaticAdmissionCursor>
+        state_local_automatic_admission_cursor_;
     std::unordered_set<std::uint32_t> admitted_automatic_dependencies_;
     std::unordered_set<std::uint32_t>
         state_local_automatic_operator_indices_;
@@ -902,6 +990,10 @@ class CalcContext {
     std::optional<std::uint32_t> solve_discovered_state_cap_;
     std::optional<std::uint64_t> solve_reforge_work_cap_;
     std::optional<std::uint64_t> solve_owned_bytes_cap_;
+    /* Synchronous parent-layout automatic kernels share this CalcContext but
+     * not the retained graph's reforge allowance. While nonzero,
+     * consume_reforge_work routes charges to the automatic-admission ledger. */
+    std::uint32_t automatic_admission_reforge_scope_depth_ = 0;
     struct StateHashBucket {
         std::uint32_t first = kNoId;
         std::vector<std::uint32_t> collisions;
@@ -980,6 +1072,18 @@ class CalcContext {
     std::uint64_t calculate_owned_bytes() const;
     std::uint64_t dynamic_shallow_owned_bytes() const;
     void account_new_operator(const PlannerOperator& value);
+    void rollback_staged_automatic_operators(
+        std::uint32_t state_id,
+        std::size_t first_operator);
+    void initialize_state_local_automatic_transaction(
+        StateLocalAutomaticAdmissionCursor& cursor);
+    void rollback_state_local_automatic_transaction(
+        StateLocalAutomaticAdmissionCursor& cursor) noexcept;
+    void reconcile_option_storage_owned_bytes() noexcept;
+    solve_detail::CooperativeTask<StateLocalAutomaticBatch>
+    build_state_local_automatic_candidates(
+        std::uint32_t state_id,
+        AutomaticAdmissionLimits limits);
     void account_state_local_operators(
         const std::vector<std::uint32_t>& values);
     void account_distribution_cache_insert(
@@ -1004,6 +1108,7 @@ class CalcContext {
         std::size_t old_capacity,
         const std::vector<std::uint32_t>& values);
     void account_reforge_cache_insert(
+        const std::tuple<std::uint32_t, std::uint64_t, bool>& key,
         std::size_t old_capacity, std::size_t new_capacity,
         const ReforgeCacheMemo& value);
     bool can_retain_reforge_distribution(

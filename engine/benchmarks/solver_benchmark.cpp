@@ -81,9 +81,23 @@ struct NativeHandles {
 };
 
 struct CaseResult {
+    struct CompiledOperationContractResult {
+        std::string type;
+        std::vector<std::pair<std::string, std::string>> string_parameters;
+        bool checked = false;
+        std::uint64_t matching_nodes = 0;
+    };
     struct ActionCount {
         std::string node_id;
         std::int32_t action_type = -1;
+        std::uint64_t count = 0;
+    };
+    struct ActionDescriptorCount {
+        std::string action_id;
+        std::uint64_t count = 0;
+    };
+    struct MaterialCount {
+        std::string price_key;
         std::uint64_t count = 0;
     };
     struct BoundTraceEntry {
@@ -144,10 +158,64 @@ struct CaseResult {
     std::uint64_t compiled_nodes = 0;
     std::uint64_t compiled_edges = 0;
     bool has_compiled_graph = false;
+    bool has_compiled_operation_contract = false;
+    std::string compiled_operation_contract_type;
+    std::vector<std::pair<std::string, std::string>>
+        compiled_operation_contract_string_parameters;
+    bool compiled_operation_contract_checked = false;
+    std::uint64_t compiled_operation_contract_matching_nodes = 0;
+    std::vector<CompiledOperationContractResult>
+        compiled_operation_contracts;
+    bool has_market_price_override_contracts = false;
+    bool market_price_override_contracts_checked = false;
+    std::uint64_t market_price_override_contract_count = 0;
+    bool has_material_ratio_contract = false;
+    std::string material_ratio_numerator_key;
+    std::string material_ratio_denominator_key;
+    double material_ratio_expected = 0.0;
+    bool material_ratio_require_positive_denominator = false;
+    bool material_ratio_require_complete_pricing = false;
+    bool material_ratio_exact_checked = false;
+    bool material_ratio_exact_passed = false;
+    double material_ratio_exact_numerator = 0.0;
+    double material_ratio_exact_denominator = 0.0;
+    bool material_ratio_exact_pricing_complete = false;
+    bool material_ratio_sampled_checked = false;
+    bool material_ratio_sampled_passed = false;
+    std::uint64_t material_ratio_sampled_numerator = 0;
+    std::uint64_t material_ratio_sampled_denominator = 0;
+    bool material_ratio_sampled_pricing_complete = false;
+    bool material_ratio_contract_checked = false;
+    bool material_ratio_contract_passed = false;
+    bool has_forced_winner_contract = false;
+    std::string required_compiled_operation_type;
+    bool required_compiled_operation_checked = false;
+    std::uint64_t required_compiled_operation_node_count = 0;
+    std::string dependency_action_id;
+    bool dependency_must_not_be_primitive_candidate = false;
+    bool dependency_primitive_candidate_checked = false;
+    bool dependency_primitive_candidate_absent = false;
+    double forced_winner_snapshot_action_price = 0.0;
+    double forced_winner_action_price = 0.0;
+    bool forced_winner_price_override_checked = false;
+    bool has_bounded_best_policy_contract = false;
+    bool bounded_best_policy_contract_checked = false;
+    bool bounded_best_policy_contract_passed = false;
+    bool bounded_best_policy_exact_path = false;
+    bool bounded_best_policy_named_stop = false;
+    bool bounded_best_policy_strict_gap = false;
+    bool bounded_best_policy_open_obligations = false;
+    bool bounded_best_policy_evaluated_upper = false;
+    bool bounded_best_policy_cheapest_evaluated_incumbent = false;
+    std::uint64_t bounded_best_policy_incremental_obligations = 0;
+    std::uint64_t bounded_best_policy_refinement_obligations = 0;
+    std::string bounded_best_policy_failure_reason;
     bool has_verification = false;
     bool verification_diagnostic = false;
     bool verification_finished = false;
     bool verification_time_limited = false;
+    double watchdog_seconds = 0.0;
+    bool watchdog_expired = false;
     std::uint64_t verification_requested_runs = 0;
     double verification_projected_ms = 0.0;
     double verification_cost_standard_deviation = 0.0;
@@ -171,6 +239,8 @@ struct CaseResult {
     double cost_delta_absolute = 0.0;
     double cost_delta_relative = 0.0;
     std::vector<ActionCount> action_distribution;
+    std::vector<ActionDescriptorCount> action_descriptor_distribution;
+    std::vector<MaterialCount> material_distribution;
     std::vector<BoundTraceEntry> bound_trace;
     bool has_time_to_first_incumbent = false;
     double time_to_first_incumbent_ms = 0.0;
@@ -322,16 +392,9 @@ std::string load_case_economy_json(const Value& specification) {
         throw std::runtime_error("pinned economy snapshot id mismatch");
     }
     const Value& metadata = required(snapshot, "metadata", Type::Object);
-    const bool generated_natural_contract =
-        economy.find("override_purpose") == nullptr;
-    if (!generated_natural_contract &&
-        required_string(metadata, "content_sha256") !=
-            required_string(economy, "content_sha256")) {
+    if (required_string(metadata, "content_sha256") !=
+        required_string(economy, "content_sha256")) {
         throw std::runtime_error("pinned economy content hash mismatch");
-    }
-    if (generated_natural_contract &&
-        required_string(economy, "content_sha256").size() != 64) {
-        throw std::runtime_error("generated economy file hash pin is malformed");
     }
     if (required_string(metadata, "source_cutoff_at_utc") !=
         required_string(economy, "source_cutoff_at_utc")) {
@@ -350,16 +413,168 @@ std::string load_case_economy_json(const Value& specification) {
     }
     if (overrides.object.empty()) return text;
 
+    const bool generated_reliability =
+        required_string(specification, "category") ==
+        "cross_base_reliability";
+    const auto require_override_decision = [&economy](
+                                               const char* object_name,
+                                               const std::string& key) {
+        const Value& decisions = required(economy, object_name, Type::Object);
+        const Value* decision = decisions.find(key);
+        if (decision == nullptr || decision->type != Type::String ||
+            decision->string.empty()) {
+            throw std::runtime_error(
+                std::string("economy override requires a non-empty ") +
+                object_name + " decision for " + key);
+        }
+    };
+
+    const Value* forced_winner = optional(
+        specification, "forced_winner_contract", Type::Object);
+    const Value* disclosed_market_overrides = optional(
+        specification, "market_price_override_contracts", Type::Array);
+    if (disclosed_market_overrides != nullptr) {
+        if (forced_winner != nullptr ||
+            required_string(economy, "override_purpose") !=
+                "synthetic_forced_winner_gate_not_market_quote" ||
+            overrides.object.size() !=
+                disclosed_market_overrides->array.size() ||
+            overrides.find("base") != nullptr) {
+            throw std::runtime_error(
+                "disclosed market overrides must be the complete "
+                "non-Bestiary override set");
+        }
+        const auto same_price = [](const double lhs, const double rhs) {
+            return std::fabs(lhs - rhs) <=
+                   1e-12 * std::max({1.0, std::fabs(lhs), std::fabs(rhs)});
+        };
+        std::vector<std::pair<std::string, Value>> replacements;
+        for (const Value& entry : disclosed_market_overrides->array) {
+            if (entry.type != Type::Object) {
+                throw std::runtime_error(
+                    "market price override contracts must be objects");
+            }
+            const std::string key = required_string(entry, "price_key");
+            const double declared_snapshot = required(
+                entry, "snapshot_chaos_value", Type::Number).number;
+            const double declared_override = required(
+                entry, "override_chaos_value", Type::Number).number;
+            const Value* source_price = source_prices.find(key);
+            const Value* override = overrides.find(key);
+            if (key == "base" || key.starts_with("beast:") ||
+                source_price == nullptr ||
+                source_price->type != Type::Number || override == nullptr ||
+                override->type != Type::Number ||
+                !same_price(source_price->number, declared_snapshot) ||
+                !same_price(override->number, declared_override)) {
+                throw std::runtime_error(
+                    "disclosed market override does not match its pinned "
+                    "quote and override: " + key);
+            }
+            if (std::any_of(
+                    replacements.begin(), replacements.end(),
+                    [&](const auto& replacement) {
+                        return replacement.first == key;
+                    })) {
+                throw std::runtime_error(
+                    "duplicate disclosed market override: " + key);
+            }
+            require_override_decision("manual_override_decisions", key);
+            replacements.emplace_back(key, *override);
+        }
+        for (auto& [object_key, value] : snapshot.object) {
+            if (object_key != "prices") continue;
+            for (const auto& [replacement_key, replacement_value] :
+                 replacements) {
+                auto found = std::find_if(
+                    value.object.begin(), value.object.end(),
+                    [&](const auto& price) {
+                        return price.first == replacement_key;
+                    });
+                if (found == value.object.end()) {
+                    throw std::runtime_error(
+                        "disclosed market key is absent from the pinned "
+                        "snapshot: " + replacement_key);
+                }
+                found->second = replacement_value;
+            }
+            return json_of(snapshot);
+        }
+        throw std::runtime_error("pinned economy snapshot has no prices object");
+    }
+    if (forced_winner != nullptr) {
+        if (required_string(economy, "override_purpose") !=
+            "synthetic_forced_winner_gate_not_market_quote") {
+            throw std::runtime_error(
+                "forced winner price override requires the synthetic gate "
+                "disclosure");
+        }
+        const std::string dependency = required_string(
+            *forced_winner, "dependency_action_id");
+        const double declared_snapshot_price = required(
+            *forced_winner, "snapshot_action_price", Type::Number).number;
+        const double declared_forced_price = required(
+            *forced_winner, "forced_action_price", Type::Number).number;
+        const Value* source_price = source_prices.find(dependency);
+        const Value* base_override = overrides.find("base");
+        const Value* action_override = overrides.find(dependency);
+        const auto same_price = [](const double lhs, const double rhs) {
+            return std::fabs(lhs - rhs) <=
+                   1e-12 * std::max({1.0, std::fabs(lhs), std::fabs(rhs)});
+        };
+        if (overrides.object.size() != 2 || dependency == "base" ||
+            source_price == nullptr || source_price->type != Type::Number ||
+            base_override == nullptr || base_override->type != Type::Number ||
+            base_override->number <= 0.0 || action_override == nullptr ||
+            action_override->type != Type::Number ||
+            action_override->number <= 0.0 ||
+            !same_price(source_price->number, declared_snapshot_price) ||
+            !same_price(action_override->number, declared_forced_price)) {
+            throw std::runtime_error(
+                "forced winner overrides must contain only a positive base "
+                "value and the declared dependency value, with the pinned "
+                "snapshot quote recorded exactly");
+        }
+        require_override_decision("missing_price_decisions", "base");
+        require_override_decision(
+            "manual_override_decisions", dependency);
+        for (auto& [key, value] : snapshot.object) {
+            if (key != "prices") continue;
+            bool replaced_dependency = false;
+            for (auto& [price_key, price_value] : value.object) {
+                if (price_key != dependency) continue;
+                price_value = *action_override;
+                replaced_dependency = true;
+                break;
+            }
+            if (!replaced_dependency) {
+                throw std::runtime_error(
+                    "forced winner dependency is absent from the pinned "
+                    "snapshot");
+            }
+            value.object.emplace_back("base", *base_override);
+            return json_of(snapshot);
+        }
+        throw std::runtime_error("pinned economy snapshot has no prices object");
+    }
+
+    const Value* override_purpose = economy.find("override_purpose");
+    const bool legacy_base_disclosure =
+        override_purpose != nullptr &&
+        override_purpose->type == Type::String &&
+        override_purpose->string ==
+            "r3f_restart_route_gate_not_market_quote";
     if (overrides.object.size() != 1 ||
         overrides.object.front().first != "base" ||
         overrides.object.front().second.type != Type::Number ||
         overrides.object.front().second.number <= 0.0 ||
-        (!generated_natural_contract &&
-         required_string(economy, "override_purpose") !=
-             "r3f_restart_route_gate_not_market_quote")) {
+        (override_purpose != nullptr && !legacy_base_disclosure)) {
         throw std::runtime_error(
-            "pinned regression permits only the disclosed positive R3F base "
-            "override");
+            "pinned benchmark permits only one disclosed positive base "
+            "override when no forced-winner contract is present");
+    }
+    if (!legacy_base_disclosure && !generated_reliability) {
+        require_override_decision("missing_price_decisions", "base");
     }
     for (auto& [key, value] : snapshot.object) {
         if (key == "prices") {
@@ -517,6 +732,375 @@ double optional_nonnegative_double(
             std::string("non-finite or negative field: ") + key);
     }
     return value->number;
+}
+
+void initialize_forced_winner_contract(
+    const Value& specification, CaseResult& report) {
+    const Value* contract = optional(
+        specification, "forced_winner_contract", Type::Object);
+    if (contract == nullptr) return;
+    report.has_forced_winner_contract = true;
+    report.required_compiled_operation_type = required_string(
+        *contract, "required_compiled_operation_type");
+    report.dependency_action_id = required_string(
+        *contract, "dependency_action_id");
+    report.dependency_must_not_be_primitive_candidate = required(
+        *contract, "dependency_must_not_be_primitive_candidate",
+        Type::Bool).boolean;
+    report.forced_winner_snapshot_action_price = required(
+        *contract, "snapshot_action_price", Type::Number).number;
+    report.forced_winner_action_price = required(
+        *contract, "forced_action_price", Type::Number).number;
+}
+
+void initialize_bounded_best_policy_contract(
+    const Value& specification, CaseResult& report) {
+    report.has_bounded_best_policy_contract = optional(
+        specification, "bounded_best_policy_contract", Type::Object) !=
+        nullptr;
+}
+
+void initialize_compiled_operation_contract(
+    const Value& specification, CaseResult& report) {
+    const auto append_contract = [&](const Value& contract) {
+        CaseResult::CompiledOperationContractResult parsed;
+        parsed.type = required_string(contract, "type");
+        const Value* parameters = optional(
+            contract, "required_string_parameters", Type::Object);
+        if (parameters != nullptr) {
+            for (const auto& [key, value] : parameters->object) {
+                if (value.type != Type::String || key.empty() ||
+                    value.string.empty()) {
+                    throw std::runtime_error(
+                        "compiled operation contract parameters must be "
+                        "non-empty strings");
+                }
+                parsed.string_parameters.emplace_back(key, value.string);
+            }
+            std::sort(
+                parsed.string_parameters.begin(),
+                parsed.string_parameters.end());
+        }
+        report.compiled_operation_contracts.push_back(std::move(parsed));
+    };
+    const Value* contract = optional(
+        specification, "compiled_operation_contract", Type::Object);
+    if (contract != nullptr) {
+        report.has_compiled_operation_contract = true;
+        append_contract(*contract);
+        report.compiled_operation_contract_type =
+            report.compiled_operation_contracts.back().type;
+        report.compiled_operation_contract_string_parameters =
+            report.compiled_operation_contracts.back().string_parameters;
+    }
+    const Value* contracts = optional(
+        specification, "compiled_operation_contracts", Type::Array);
+    if (contracts != nullptr) {
+        for (const Value& entry : contracts->array) {
+            if (entry.type != Type::Object) {
+                throw std::runtime_error(
+                    "compiled operation contracts must be objects");
+            }
+            append_contract(entry);
+        }
+    }
+}
+
+void initialize_material_ratio_contract(
+    const Value& specification, CaseResult& report) {
+    const Value* contract = optional(
+        specification, "material_ratio_contract", Type::Object);
+    if (contract == nullptr) return;
+    report.has_material_ratio_contract = true;
+    report.material_ratio_numerator_key = required_string(
+        *contract, "numerator_price_key");
+    report.material_ratio_denominator_key = required_string(
+        *contract, "denominator_price_key");
+    report.material_ratio_expected = required(
+        *contract, "expected_ratio", Type::Number).number;
+    report.material_ratio_require_positive_denominator = required(
+        *contract, "require_positive_denominator", Type::Bool).boolean;
+    report.material_ratio_require_complete_pricing = required(
+        *contract, "require_complete_pricing", Type::Bool).boolean;
+}
+
+void initialize_market_price_override_contracts(
+    const Value& specification, CaseResult& report) {
+    const Value* contracts = optional(
+        specification, "market_price_override_contracts", Type::Array);
+    if (contracts == nullptr) return;
+    report.has_market_price_override_contracts = true;
+    report.market_price_override_contract_count = contracts->array.size();
+}
+
+std::uint64_t nonnegative_telemetry_count(const Value* value) {
+    if (value == nullptr || value->type != Type::Number ||
+        !std::isfinite(value->number) || value->number <= 0.0) {
+        return 0;
+    }
+    const double maximum = static_cast<double>(
+        std::numeric_limits<std::uint64_t>::max());
+    if (value->number >= maximum) {
+        return std::numeric_limits<std::uint64_t>::max();
+    }
+    return static_cast<std::uint64_t>(value->number);
+}
+
+std::uint64_t saturating_count_sum(
+    const std::uint64_t left, const std::uint64_t right) {
+    return right > std::numeric_limits<std::uint64_t>::max() - left
+               ? std::numeric_limits<std::uint64_t>::max()
+               : left + right;
+}
+
+bool costs_reconcile(
+    const double left, const double right, const Value& verification) {
+    if (!std::isfinite(left) || !std::isfinite(right)) return false;
+    const double absolute_delta = std::fabs(left - right);
+    const double relative_delta = std::fabs(right) > 1e-12
+        ? absolute_delta / std::fabs(right)
+        : absolute_delta;
+    const Value* absolute = optional(
+        verification, "exact_cost_absolute_tolerance", Type::Number);
+    const Value* relative = optional(
+        verification, "exact_cost_relative_tolerance", Type::Number);
+    return absolute_delta <= (absolute == nullptr ? 1e-7 : absolute->number) ||
+           relative_delta <= (relative == nullptr ? 1e-9 : relative->number);
+}
+
+void enforce_bounded_best_policy_contract(
+    const Value& specification, CaseResult& report) {
+    const Value* contract = optional(
+        specification, "bounded_best_policy_contract", Type::Object);
+    if (contract == nullptr) return;
+    report.bounded_best_policy_contract_checked = true;
+    const bool allow_exact = required(
+        *contract, "allow_exact", Type::Bool).boolean;
+    if (!report.has_solve_summary ||
+        !report.solve_summary.policy_available) {
+        report.bounded_best_policy_failure_reason =
+            "the solve did not publish an executable policy";
+    } else {
+        report.bounded_best_policy_exact_path =
+            report.solve_summary.policy_status == PC_SOLVE_POLICY_EXACT &&
+            report.solve_summary.termination ==
+                PC_SOLVE_TERMINATION_EXACT_CLOSED;
+        if (report.bounded_best_policy_exact_path) {
+            report.bounded_best_policy_contract_passed = allow_exact;
+            if (!allow_exact) {
+                report.bounded_best_policy_failure_reason =
+                    "the contract does not permit the exact completion path";
+                report.errors.push_back(
+                    "bounded best-policy contract failed: " +
+                    report.bounded_best_policy_failure_reason);
+            }
+            return;
+        }
+
+        const bool bounded =
+            report.solve_summary.policy_status ==
+                PC_SOLVE_POLICY_BOUNDED_FEASIBLE ||
+            report.solve_summary.policy_status ==
+                PC_SOLVE_POLICY_BOUNDED_NEAR_OPTIMAL;
+        report.bounded_best_policy_named_stop =
+            report.solve_summary.termination ==
+                PC_SOLVE_TERMINATION_REFUSED_RESOURCE_CAP &&
+            report.solve_summary.stop_cause >= PC_SOLVE_STOP_STATE_CAP &&
+            report.solve_summary.stop_cause <=
+                PC_SOLVE_STOP_COMPILED_OUTPUT_CAP;
+        report.bounded_best_policy_strict_gap =
+            std::isfinite(report.solve_summary.lower_bound) &&
+            std::isfinite(report.solve_summary.upper_bound) &&
+            report.solve_summary.lower_bound < report.solve_summary.upper_bound;
+
+        const Value& verification = required(
+            specification, "verification", Type::Object);
+        report.bounded_best_policy_evaluated_upper = costs_reconcile(
+            report.solve_summary.upper_bound,
+            report.solve_summary.evaluated_policy_cost, verification);
+
+        if (!report.telemetry_json.empty()) {
+            const Value telemetry = Parser(
+                report.telemetry_json.data(),
+                report.telemetry_json.size()).parse();
+            const Value* envelope = optional(
+                telemetry, "incremental_action_envelope", Type::Object);
+            if (envelope != nullptr) {
+                const Value* remaining = optional(
+                    *envelope, "remaining_action_envelope", Type::Number);
+                report.bounded_best_policy_incremental_obligations =
+                    nonnegative_telemetry_count(remaining);
+                const Value* enabled = optional(
+                    *envelope, "enabled", Type::Bool);
+                const Value* closed = optional(
+                    *envelope, "closed", Type::Bool);
+                report.bounded_best_policy_open_obligations =
+                    enabled != nullptr && enabled->boolean &&
+                    closed != nullptr && !closed->boolean &&
+                    report.bounded_best_policy_incremental_obligations > 0;
+            }
+
+            const Value* refinement = optional(
+                telemetry, "policy_refinement", Type::Object);
+            const Value* certification = refinement == nullptr
+                ? nullptr
+                : optional(
+                      *refinement, "certification_work", Type::Object);
+            if (certification != nullptr &&
+                certification->type == Type::Object) {
+                for (const char* key : {
+                         "unresolved_alternative_obligations",
+                         "competitive_alternatives_remaining",
+                         "obligations_resource_interrupted"}) {
+                    report.bounded_best_policy_refinement_obligations =
+                        saturating_count_sum(
+                            report.bounded_best_policy_refinement_obligations,
+                            nonnegative_telemetry_count(
+                                certification->find(key)));
+                }
+                report.bounded_best_policy_open_obligations =
+                    report.bounded_best_policy_open_obligations ||
+                    report.bounded_best_policy_refinement_obligations > 0;
+            }
+
+            const Value* fallback_portfolio = refinement == nullptr
+                ? nullptr
+                : optional(
+                      *refinement, "fallback_portfolio", Type::Object);
+            const Value* cheapest_selected = fallback_portfolio == nullptr
+                ? nullptr
+                : optional(
+                      *fallback_portfolio,
+                      "cheapest_independently_evaluated_selected",
+                      Type::Bool);
+            report.bounded_best_policy_cheapest_evaluated_incumbent =
+                cheapest_selected != nullptr && cheapest_selected->boolean;
+        }
+
+        const bool named_stop_required = required(
+            *contract, "bounded_requires_named_stop", Type::Bool).boolean;
+        const bool strict_gap_required = required(
+            *contract, "bounded_requires_strict_gap", Type::Bool).boolean;
+        const bool open_obligations_required = required(
+            *contract, "bounded_requires_open_obligations", Type::Bool)
+                                                   .boolean;
+        const bool evaluated_upper_required = required(
+            *contract, "require_evaluated_upper", Type::Bool).boolean;
+        const bool cheapest_incumbent_required = required(
+            *contract,
+            "require_cheapest_independently_evaluated_incumbent",
+            Type::Bool).boolean;
+        report.bounded_best_policy_contract_passed =
+            bounded &&
+            (!named_stop_required ||
+             report.bounded_best_policy_named_stop) &&
+            (!strict_gap_required ||
+             report.bounded_best_policy_strict_gap) &&
+            (!open_obligations_required ||
+             report.bounded_best_policy_open_obligations) &&
+            (!evaluated_upper_required ||
+             report.bounded_best_policy_evaluated_upper) &&
+            (!cheapest_incumbent_required ||
+             report
+                 .bounded_best_policy_cheapest_evaluated_incumbent);
+        if (!report.bounded_best_policy_contract_passed) {
+            report.bounded_best_policy_failure_reason =
+                !bounded
+                    ? "the result was neither exact nor a bounded policy"
+                    : "one or more bounded-result proof obligations failed";
+        }
+    }
+    if (!report.bounded_best_policy_contract_passed) {
+        report.errors.push_back(
+            "bounded best-policy contract failed: " +
+            report.bounded_best_policy_failure_reason);
+    }
+}
+
+void enforce_dependency_candidate_contract(CaseResult& report) {
+    if (!report.has_forced_winner_contract ||
+        !report.dependency_must_not_be_primitive_candidate) {
+        return;
+    }
+    report.dependency_primitive_candidate_checked = true;
+    report.dependency_primitive_candidate_absent = std::find(
+        report.product_action_ids.begin(), report.product_action_ids.end(),
+        report.dependency_action_id) == report.product_action_ids.end();
+    if (!report.dependency_primitive_candidate_absent) {
+        report.actual_status = "forced_winner_contract_failed";
+        throw std::runtime_error(
+            "forced winner dependency unexpectedly appeared as a primitive "
+            "product candidate: " + report.dependency_action_id);
+    }
+}
+
+void enforce_required_compiled_operation(
+    const std::string& strategy_json, CaseResult& report) {
+    if (!report.has_forced_winner_contract &&
+        report.compiled_operation_contracts.empty()) {
+        return;
+    }
+    const Value strategy = Parser(
+        strategy_json.data(), strategy_json.size()).parse();
+    const Value& nodes = required(strategy, "nodes", Type::Array);
+    std::uint64_t matching_nodes = 0;
+    for (auto& contract : report.compiled_operation_contracts) {
+        contract.checked = true;
+        contract.matching_nodes = 0;
+    }
+    for (const Value& node : nodes.array) {
+        if (node.type != Type::Object) continue;
+        const Value* kind = optional(node, "kind", Type::String);
+        if (kind == nullptr || kind->string != "operation") continue;
+        const Value* operation = optional(node, "operation", Type::Object);
+        if (operation == nullptr) continue;
+        const Value* type = optional(*operation, "type", Type::String);
+        if (report.has_forced_winner_contract && type != nullptr &&
+            type->string == report.required_compiled_operation_type) {
+            ++matching_nodes;
+        }
+        if (type == nullptr) continue;
+        for (auto& contract : report.compiled_operation_contracts) {
+            if (type->string != contract.type) continue;
+            bool parameters_match = true;
+            for (const auto& [key, expected] :
+                 contract.string_parameters) {
+                const Value* actual = optional(
+                    *operation, key.c_str(), Type::String);
+                if (actual == nullptr || actual->string != expected) {
+                    parameters_match = false;
+                    break;
+                }
+            }
+            if (parameters_match) ++contract.matching_nodes;
+        }
+    }
+    if (report.has_forced_winner_contract) {
+        report.required_compiled_operation_checked = true;
+        report.required_compiled_operation_node_count = matching_nodes;
+    }
+    if (report.has_compiled_operation_contract &&
+        !report.compiled_operation_contracts.empty()) {
+        report.compiled_operation_contract_checked =
+            report.compiled_operation_contracts.front().checked;
+        report.compiled_operation_contract_matching_nodes =
+            report.compiled_operation_contracts.front().matching_nodes;
+    }
+    if (report.has_forced_winner_contract && matching_nodes == 0) {
+        report.compile_status = "compiled_contract_mismatch";
+        report.actual_status = "forced_winner_contract_failed";
+        throw std::runtime_error(
+            "compiled strategy omitted forced winner operation type: " +
+            report.required_compiled_operation_type);
+    }
+    for (const auto& contract : report.compiled_operation_contracts) {
+        if (contract.matching_nodes == 0) {
+            report.compile_status = "compiled_contract_mismatch";
+            throw std::runtime_error(
+                "compiled strategy omitted required operation contract: " +
+                contract.type);
+        }
+    }
 }
 
 double milliseconds(Clock::time_point begin, Clock::time_point end) {
@@ -818,6 +1402,49 @@ void inspect_exact_strategy_evaluation(
         report.exact_strategy_evaluation_off_policy_mass <= 1e-10 &&
         success->number >= 1.0 - 1e-10;
     report.exact_strategy_evaluation_cost = cost->number;
+    if (report.has_material_ratio_contract) {
+        report.material_ratio_exact_checked = true;
+        const Value& consumption = required(
+            evaluation, "expected_consumption", Type::Array);
+        for (const Value& row : consumption.array) {
+            if (row.type != Type::Object) continue;
+            const Value* key = optional(row, "key", Type::String);
+            const Value* quantity = optional(row, "quantity", Type::Number);
+            if (key == nullptr || quantity == nullptr) continue;
+            if (key->string == report.material_ratio_numerator_key) {
+                report.material_ratio_exact_numerator = quantity->number;
+            } else if (
+                key->string == report.material_ratio_denominator_key) {
+                report.material_ratio_exact_denominator = quantity->number;
+            }
+        }
+        const Value* pricing_status = nested_member(
+            evaluation, {"accounting", "pricing", "status"});
+        const Value* missing_prices = nested_member(
+            evaluation,
+            {"accounting", "pricing", "missing_price_keys"});
+        report.material_ratio_exact_pricing_complete =
+            pricing_status != nullptr && pricing_status->type == Type::String &&
+            pricing_status->string == "complete" &&
+            missing_prices != nullptr && missing_prices->type == Type::Array &&
+            missing_prices->array.empty();
+        const double expected_numerator =
+            report.material_ratio_expected *
+            report.material_ratio_exact_denominator;
+        const double tolerance = 1e-10 * std::max(
+            {1.0, std::fabs(report.material_ratio_exact_numerator),
+             std::fabs(expected_numerator)});
+        const bool positive_denominator =
+            !report.material_ratio_require_positive_denominator ||
+            report.material_ratio_exact_denominator > 0.0;
+        report.material_ratio_exact_passed =
+            positive_denominator &&
+            std::fabs(
+                report.material_ratio_exact_numerator -
+                expected_numerator) <= tolerance &&
+            (!report.material_ratio_require_complete_pricing ||
+             report.material_ratio_exact_pricing_complete);
+    }
     report.exact_strategy_evaluation_cost_delta_absolute = std::fabs(
         cost->number - report.solve_summary.evaluated_policy_cost);
     report.exact_strategy_evaluation_cost_delta_relative =
@@ -850,6 +1477,53 @@ void inspect_exact_strategy_evaluation(
         report.errors.push_back(
             "exact strategy evaluation did not reconcile with the "
             "solver policy");
+    }
+}
+
+void finalize_material_ratio_contract(
+    CaseResult& report, const bool skip_verification) {
+    if (!report.has_material_ratio_contract) return;
+    if (report.has_verification) {
+        report.material_ratio_sampled_checked = true;
+        for (const auto& material : report.material_distribution) {
+            if (material.price_key == report.material_ratio_numerator_key) {
+                report.material_ratio_sampled_numerator = material.count;
+            } else if (
+                material.price_key == report.material_ratio_denominator_key) {
+                report.material_ratio_sampled_denominator = material.count;
+            }
+        }
+        report.material_ratio_sampled_pricing_complete =
+            report.verification.cost_status == PC_COST_COMPLETE &&
+            report.verification.missing_price_run_count == 0 &&
+            report.verification.missing_price_action_count == 0;
+        const double expected_numerator =
+            report.material_ratio_expected *
+            static_cast<double>(report.material_ratio_sampled_denominator);
+        const double tolerance = 1e-10 * std::max(
+            {1.0,
+             static_cast<double>(report.material_ratio_sampled_numerator),
+             std::fabs(expected_numerator)});
+        const bool positive_denominator =
+            !report.material_ratio_require_positive_denominator ||
+            report.material_ratio_sampled_denominator > 0;
+        report.material_ratio_sampled_passed =
+            positive_denominator &&
+            std::fabs(
+                static_cast<double>(report.material_ratio_sampled_numerator) -
+                expected_numerator) <= tolerance &&
+            (!report.material_ratio_require_complete_pricing ||
+             report.material_ratio_sampled_pricing_complete);
+    }
+    report.material_ratio_contract_checked =
+        report.material_ratio_exact_checked &&
+        (skip_verification || report.material_ratio_sampled_checked);
+    report.material_ratio_contract_passed =
+        report.material_ratio_exact_passed &&
+        (skip_verification || report.material_ratio_sampled_passed);
+    if (!skip_verification && !report.material_ratio_contract_passed) {
+        report.errors.push_back(
+            "material ratio contract failed exact or sampled accounting");
     }
 }
 
@@ -946,7 +1620,50 @@ bool evaluate_expectation(
         report.actual_status == "not_run_approval_pending") {
         return true;
     }
-    if (report.telemetry_json.empty() || !report.errors.empty()) return false;
+    if (report.watchdog_expired || report.telemetry_json.empty() ||
+        !report.errors.empty()) {
+        return false;
+    }
+    if (report.has_forced_winner_contract) {
+        if (!report.forced_winner_price_override_checked ||
+            !report.required_compiled_operation_checked ||
+            report.required_compiled_operation_node_count == 0) {
+            return false;
+        }
+        if (report.dependency_must_not_be_primitive_candidate &&
+            (!report.dependency_primitive_candidate_checked ||
+             !report.dependency_primitive_candidate_absent)) {
+            return false;
+        }
+    }
+    if (report.has_bounded_best_policy_contract &&
+        (!report.bounded_best_policy_contract_checked ||
+         !report.bounded_best_policy_contract_passed)) {
+        return false;
+    }
+    if (report.has_compiled_operation_contract &&
+        (!report.compiled_operation_contract_checked ||
+         report.compiled_operation_contract_matching_nodes == 0)) {
+        return false;
+    }
+    if (std::any_of(
+            report.compiled_operation_contracts.begin(),
+            report.compiled_operation_contracts.end(),
+            [](const auto& contract) {
+                return !contract.checked || contract.matching_nodes == 0;
+            })) {
+        return false;
+    }
+    if (report.has_market_price_override_contracts &&
+        !report.market_price_override_contracts_checked) {
+        return false;
+    }
+    if (report.has_material_ratio_contract &&
+        (!report.material_ratio_exact_passed ||
+         (!skip_verification &&
+          !report.material_ratio_contract_passed))) {
+        return false;
+    }
     const Value& verification =
         required(specification, "verification", Type::Object);
     const bool exact_evaluation_required =
@@ -1022,7 +1739,19 @@ bool evaluate_expectation(
     if (!verification_required) {
         return true;
     }
-    if (!report.has_verification || report.verification.completed_runs == 0) {
+    const std::uint64_t required_runs = optional_u64(
+        verification, "runs", 0);
+    const std::uint64_t required_seed = optional_u64(
+        verification, "seed", 20260715);
+    if (!report.has_verification || !report.verification_finished ||
+        report.verification_time_limited || required_runs == 0 ||
+        report.verification_requested_runs != required_runs ||
+        report.verification.completed_runs != required_runs ||
+        report.verification.target_runs != required_runs ||
+        report.verification.seed != required_seed ||
+        report.verification.cost_status != PC_COST_COMPLETE ||
+        report.verification.missing_price_run_count != 0 ||
+        report.verification.missing_price_action_count != 0) {
         return false;
     }
     const std::uint64_t off_policy =
@@ -1143,15 +1872,195 @@ void validate_case_shape(const Value& specification) {
     required_string(specification, "category");
     required_string(specification, "approval_status");
     required_string(specification, "comparison_profile");
+    if (const Value* watchdog = optional(
+            specification, "watchdog_seconds", Type::Number)) {
+        if (!std::isfinite(watchdog->number) || watchdog->number <= 0.0) {
+            throw std::runtime_error(
+                "case watchdog_seconds must be a positive finite number");
+        }
+    }
     required(specification, "benchmark_enabled", Type::Bool);
     if (const Value* expected = specification.find("expected")) {
         if (expected->type != Type::Object) {
             throw std::runtime_error("case expected must be an object");
         }
     }
+    const Value* forced_winner = optional(
+        specification, "forced_winner_contract", Type::Object);
+    if (forced_winner != nullptr) {
+        const std::string automatic_kind = required_string(
+            *forced_winner, "automatic_candidate_kind");
+        const std::string dependency = required_string(
+            *forced_winner, "dependency_action_id");
+        required(
+            *forced_winner,
+            "dependency_must_not_be_primitive_candidate", Type::Bool);
+        const std::string operation = required_string(
+            *forced_winner, "required_compiled_operation_type");
+        const std::string target = required_string(
+            *forced_winner, "target_side");
+        const std::string preserved = required_string(
+            *forced_winner, "preserved_goal_side");
+        const double snapshot_action_price = required(
+            *forced_winner, "snapshot_action_price", Type::Number).number;
+        const double forced_action_price = required(
+            *forced_winner, "forced_action_price", Type::Number).number;
+        const auto valid_side = [](const std::string& side) {
+            return side == "prefix" || side == "suffix";
+        };
+        if (automatic_kind.empty() || dependency.empty() ||
+            operation.empty()) {
+            throw std::runtime_error(
+                "forced winner contract strings must be non-empty");
+        }
+        if (!valid_side(target) || !valid_side(preserved) ||
+            target == preserved) {
+            throw std::runtime_error(
+                "forced winner target/preserved sides must be opposite "
+                "prefix and suffix sides");
+        }
+        if (!std::isfinite(snapshot_action_price) ||
+            !std::isfinite(forced_action_price) ||
+            snapshot_action_price <= 0.0 || forced_action_price <= 0.0 ||
+            forced_action_price >= snapshot_action_price) {
+            throw std::runtime_error(
+                "forced winner prices must be positive and the disclosed "
+                "forced value must be below the snapshot quote");
+        }
+        const Value* expected = optional(
+            specification, "expected", Type::Object);
+        if (expected == nullptr ||
+            required_string(*expected, "compile_status") != "compiled") {
+            throw std::runtime_error(
+                "forced winner contracts require expected compile_status "
+                "compiled");
+        }
+    }
+    const Value* bounded_best = optional(
+        specification, "bounded_best_policy_contract", Type::Object);
+    if (bounded_best != nullptr) {
+        for (const char* key : {
+                 "allow_exact", "bounded_requires_named_stop",
+                 "bounded_requires_strict_gap",
+                 "bounded_requires_open_obligations",
+                 "require_evaluated_upper",
+                 "require_cheapest_independently_evaluated_incumbent"}) {
+            required(*bounded_best, key, Type::Bool);
+        }
+        const Value& expected = required(
+            specification, "expected", Type::Object);
+        if (required_string(expected, "compile_status") != "compiled") {
+            throw std::runtime_error(
+                "bounded best-policy contract requires compiled output");
+        }
+        const Value& verification = required(
+            specification, "verification", Type::Object);
+        if (!optional_bool(verification, "exact_evaluation", false)) {
+            throw std::runtime_error(
+                "bounded best-policy contract requires exact evaluation");
+        }
+    }
+    const auto validate_compiled_operation = [](const Value& contract) {
+        required_string(contract, "type");
+        const Value& parameters = required(
+            contract, "required_string_parameters", Type::Object);
+        for (const auto& [key, value] : parameters.object) {
+            if (key.empty() || value.type != Type::String ||
+                value.string.empty()) {
+                throw std::runtime_error(
+                    "compiled operation contract parameters must be "
+                    "non-empty strings");
+            }
+        }
+    };
+    const Value* compiled_operation = optional(
+        specification, "compiled_operation_contract", Type::Object);
+    if (compiled_operation != nullptr) {
+        validate_compiled_operation(*compiled_operation);
+    }
+    const Value* compiled_operations = optional(
+        specification, "compiled_operation_contracts", Type::Array);
+    if (compiled_operations != nullptr) {
+        if (compiled_operations->array.empty()) {
+            throw std::runtime_error(
+                "compiled operation contracts must be non-empty");
+        }
+        for (const Value& contract : compiled_operations->array) {
+            if (contract.type != Type::Object) {
+                throw std::runtime_error(
+                    "compiled operation contracts must be objects");
+            }
+            validate_compiled_operation(contract);
+        }
+    }
+    const Value* material_ratio = optional(
+        specification, "material_ratio_contract", Type::Object);
+    if (material_ratio != nullptr) {
+        const std::string numerator = required_string(
+            *material_ratio, "numerator_price_key");
+        const std::string denominator = required_string(
+            *material_ratio, "denominator_price_key");
+        const double ratio = required(
+            *material_ratio, "expected_ratio", Type::Number).number;
+        required(
+            *material_ratio, "require_positive_denominator", Type::Bool);
+        required(*material_ratio, "require_complete_pricing", Type::Bool);
+        if (numerator == denominator || !std::isfinite(ratio) ||
+            ratio <= 0.0) {
+            throw std::runtime_error(
+                "material ratio contract requires distinct keys and a "
+                "positive finite ratio");
+        }
+    }
+    const Value* market_overrides = optional(
+        specification, "market_price_override_contracts", Type::Array);
+    if (market_overrides != nullptr) {
+        if (market_overrides->array.empty()) {
+            throw std::runtime_error(
+                "market price override contracts must be non-empty");
+        }
+        std::vector<std::string> keys;
+        for (const Value& contract : market_overrides->array) {
+            if (contract.type != Type::Object) {
+                throw std::runtime_error(
+                    "market price override contracts must be objects");
+            }
+            const std::string key = required_string(contract, "price_key");
+            required_string(contract, "purpose");
+            const double snapshot = required(
+                contract, "snapshot_chaos_value", Type::Number).number;
+            const double override_value = required(
+                contract, "override_chaos_value", Type::Number).number;
+            if (key == "base" || key.starts_with("beast:") ||
+                std::find(keys.begin(), keys.end(), key) != keys.end() ||
+                !std::isfinite(snapshot) || snapshot <= 0.0 ||
+                !std::isfinite(override_value) || override_value <= 0.0) {
+                throw std::runtime_error(
+                    "market override contracts require unique non-Bestiary "
+                    "keys and positive prices");
+            }
+            keys.push_back(key);
+        }
+    }
+    if (compiled_operation != nullptr || compiled_operations != nullptr ||
+        material_ratio != nullptr) {
+        const Value& expected = required(
+            specification, "expected", Type::Object);
+        if (required_string(expected, "compile_status") != "compiled") {
+            throw std::runtime_error(
+                "compiled-policy contracts require compiled output");
+        }
+    }
     const std::string backend =
         optional_string(specification, "execution_backend", "artifact");
     if (backend == "native_unit_fixture") {
+        if (forced_winner != nullptr || bounded_best != nullptr ||
+            compiled_operation != nullptr || compiled_operations != nullptr ||
+            material_ratio != nullptr || market_overrides != nullptr) {
+            throw std::runtime_error(
+                "compiled-policy acceptance contracts require the artifact "
+                "benchmark backend");
+        }
         required(specification, "unit_fixture", Type::Object);
         return;
     }
@@ -1161,9 +2070,113 @@ void validate_case_shape(const Value& specification) {
     required(specification, "start", Type::Object);
     const Value& goal = required(specification, "goal", Type::Object);
     required(goal, "slots", Type::Array);
-    required(specification, "economy", Type::Object);
+    const Value& economy = required(
+        specification, "economy", Type::Object);
+    if (forced_winner != nullptr) {
+        required(economy, "snapshot_path", Type::String);
+        if (required_string(economy, "override_purpose") !=
+            "synthetic_forced_winner_gate_not_market_quote") {
+            throw std::runtime_error(
+                "forced winner economy must disclose its synthetic price "
+                "override purpose");
+        }
+        const Value& overrides = required(
+            economy, "manual_overrides", Type::Object);
+        const std::string dependency = required_string(
+            *forced_winner, "dependency_action_id");
+        const double forced_action_price = required(
+            *forced_winner, "forced_action_price", Type::Number).number;
+        const Value* base_override = overrides.find("base");
+        const Value* action_override = overrides.find(dependency);
+        if (overrides.object.size() != 2 || dependency == "base" ||
+            base_override == nullptr || base_override->type != Type::Number ||
+            base_override->number <= 0.0 || action_override == nullptr ||
+            action_override->type != Type::Number ||
+            action_override->number != forced_action_price) {
+            throw std::runtime_error(
+                "forced winner economy must override only base and the "
+                "declared dependency at the declared forced value");
+        }
+    }
     required(specification, "caps", Type::Object);
-    required(specification, "verification", Type::Object);
+    const Value& verification = required(
+        specification, "verification", Type::Object);
+    if (material_ratio != nullptr &&
+        (!optional_bool(verification, "exact_evaluation", false) ||
+         optional_u64(verification, "runs", 0) == 0)) {
+        throw std::runtime_error(
+            "material ratio contract requires exact evaluation and sampled "
+            "verification");
+    }
+}
+
+void validate_case_manifest_contract(
+    const Value& manifest, const Value& specification) {
+    const Value* profile = optional(
+        manifest, "comparison_profile", Type::Object);
+    if (profile == nullptr) return;
+    const std::string profile_id = required_string(*profile, "id");
+    const bool bounded_profile =
+        profile->find("product_scope") != nullptr ||
+        profile->find("maximum_wall_seconds") != nullptr ||
+        profile->find("exact_required") != nullptr;
+    if (!bounded_profile) return;
+
+    required_string(*profile, "product_scope");
+    const bool exact_required = required(
+        *profile, "exact_required", Type::Bool).boolean;
+    const bool exact_evaluation_required = required(
+        *profile, "compiled_exact_evaluation_required", Type::Bool).boolean;
+    const double maximum_wall_seconds = required(
+        *profile, "maximum_wall_seconds", Type::Number).number;
+    const double verification_runs = required(
+        *profile, "verification_runs", Type::Number).number;
+    if (!std::isfinite(maximum_wall_seconds) ||
+        maximum_wall_seconds <= 0.0) {
+        throw std::runtime_error(
+            "manifest maximum_wall_seconds must be a positive finite number");
+    }
+    if (!std::isfinite(verification_runs) || verification_runs < 0.0 ||
+        std::floor(verification_runs) != verification_runs ||
+        verification_runs > 9007199254740991.0) {
+        throw std::runtime_error(
+            "manifest verification_runs must be a non-negative safe integer");
+    }
+    const std::string case_id = required_string(specification, "id");
+    if (required_string(specification, "comparison_profile") != profile_id) {
+        throw std::runtime_error(
+            case_id + " comparison profile does not match its corpus");
+    }
+    const Value& watchdog = required(
+        specification, "watchdog_seconds", Type::Number);
+    if (!std::isfinite(watchdog.number) || watchdog.number <= 0.0 ||
+        watchdog.number > maximum_wall_seconds) {
+        throw std::runtime_error(
+            case_id +
+            " watchdog must be positive and within its corpus profile");
+    }
+    const Value& expected = required(
+        specification, "expected", Type::Object);
+    if (exact_required &&
+        required_string(expected, "optimality_status") != "exact") {
+        throw std::runtime_error(
+            case_id + " must require exact optimality under its corpus profile");
+    }
+    const Value& verification = required(
+        specification, "verification", Type::Object);
+    if (exact_evaluation_required &&
+        !optional_bool(verification, "exact_evaluation", false)) {
+        throw std::runtime_error(
+            case_id + " must require independent exact evaluation");
+    }
+    const Value& case_runs = required(
+        verification, "runs", Type::Number);
+    if (!std::isfinite(case_runs.number) ||
+        std::floor(case_runs.number) != case_runs.number ||
+        case_runs.number != verification_runs) {
+        throw std::runtime_error(
+            case_id + " verification runs do not match its corpus profile");
+    }
 }
 
 void create_case_objects(
@@ -1239,7 +2252,20 @@ CaseResult run_case(
     report.verification_skipped = skip_verification;
     report.max_discovered_states_override =
         max_discovered_states_override;
+    initialize_forced_winner_contract(specification, report);
+    initialize_bounded_best_policy_contract(specification, report);
+    initialize_compiled_operation_contract(specification, report);
+    initialize_material_ratio_contract(specification, report);
+    initialize_market_price_override_contracts(specification, report);
     const auto total_begin = Clock::now();
+    if (const Value* watchdog = optional(
+            specification, "watchdog_seconds", Type::Number)) {
+        report.watchdog_seconds = watchdog->number;
+    }
+    const auto case_deadline = report.watchdog_seconds > 0.0
+        ? total_begin + std::chrono::duration_cast<Clock::duration>(
+              std::chrono::duration<double>(report.watchdog_seconds))
+        : Clock::time_point::max();
     report.working_set_before = process_working_set();
     const std::string backend =
         optional_string(specification, "execution_backend", "artifact");
@@ -1266,7 +2292,18 @@ CaseResult run_case(
         create_case_objects(
             data, specification, handles, start_item,
             &report.product_action_ids);
+        report.forced_winner_price_override_checked =
+            report.has_forced_winner_contract;
+        report.market_price_override_contracts_checked =
+            report.has_market_price_override_contracts;
+        enforce_dependency_candidate_contract(report);
         report.registry_layout_ms = milliseconds(create_begin, Clock::now());
+        if (Clock::now() >= case_deadline) {
+            report.watchdog_expired = true;
+            report.actual_status = "watchdog_expired";
+            throw std::runtime_error(
+                "case watchdog expired during session/economy setup");
+        }
 
         const Value& caps = required(specification, "caps", Type::Object);
         pc_solve_options solve_options{};
@@ -1482,6 +2519,7 @@ CaseResult run_case(
             report.working_set_after = process_working_set();
             if (checkpoint) checkpoint(report);
         };
+        bool watchdog_abandoned = false;
         do {
             const auto step_begin = Clock::now();
             result = pc_solver_solve_step(
@@ -1512,6 +2550,16 @@ CaseResult run_case(
                     std::chrono::duration_cast<Clock::duration>(
                         std::chrono::duration<double>(
                             trace_interval_seconds));
+            }
+            if (after_step >= case_deadline) {
+                if (!progress.done) {
+                    pc_solver_solve_abandon(handles.solver);
+                }
+                report.watchdog_expired = true;
+                watchdog_abandoned = true;
+                report.actual_status = "watchdog_expired";
+                report.diagnostic_stop_reason = "watchdog_seconds";
+                break;
             }
             if (emit_progress && Clock::now() >= next_progress) {
                 std::cout << required_string(specification, "id")
@@ -1569,7 +2617,8 @@ CaseResult run_case(
              bounded_incremental_diagnostic ||
              stop_after_bellman_entry) &&
             !progress.done;
-        if (!cancel_after_first && !diagnostic_abandoned) {
+        if (!cancel_after_first && !diagnostic_abandoned &&
+            !watchdog_abandoned) {
             report.solve_summary = {};
             result = pc_solver_solve_finish(
                 handles.solver, &report.solve_summary, &error);
@@ -1623,6 +2672,10 @@ CaseResult run_case(
                 if (result == PC_RESULT_OK) {
                     strategy_json.resize(strategy_length);
                     report.strategy_json_bytes = strategy_length;
+                    report.compile_ms = milliseconds(
+                        compile_begin, Clock::now());
+                    enforce_required_compiled_operation(
+                        strategy_json, report);
                     if (!strategy_output.empty()) {
                         std::string file_id =
                             required_string(specification, "id");
@@ -1699,7 +2752,7 @@ CaseResult run_case(
                                 &handles.strategy_evaluation, &error);
                             if (result == PC_RESULT_OK) {
                                 pc_strategy_eval_progress evaluation_progress{};
-                                const auto evaluation_deadline =
+                                const auto requested_evaluation_deadline =
                                     exact_strategy_evaluation_time_limit_seconds > 0.0
                                         ? evaluation_started +
                                               std::chrono::duration_cast<
@@ -1707,6 +2760,9 @@ CaseResult run_case(
                                                   std::chrono::duration<double>(
                                                       exact_strategy_evaluation_time_limit_seconds))
                                         : Clock::time_point::max();
+                                const auto evaluation_deadline = std::min(
+                                    requested_evaluation_deadline,
+                                    case_deadline);
                                 auto next_evaluation_progress =
                                     evaluation_started +
                                     std::chrono::seconds(10);
@@ -1745,8 +2801,16 @@ CaseResult run_case(
                                         now >= evaluation_deadline) {
                                         report.exact_strategy_evaluation_time_limited =
                                             true;
-                                        report.exact_evaluation_status =
-                                            "time_cap";
+                                        if (now >= case_deadline) {
+                                            report.watchdog_expired = true;
+                                            report.actual_status =
+                                                "watchdog_expired";
+                                            report.exact_evaluation_status =
+                                                "watchdog_expired";
+                                        } else {
+                                            report.exact_evaluation_status =
+                                                "time_cap";
+                                        }
                                         break;
                                     }
                                 }
@@ -1816,7 +2880,8 @@ CaseResult run_case(
                                 ? "not_selected"
                                 : (skip_verification ? "skipped"
                                                      : "running");
-                        if (runs > 0 && !skip_verification) {
+                        if (runs > 0 && !skip_verification &&
+                            !report.watchdog_expired) {
                             const auto verification_begin = Clock::now();
                             result = pc_simulator_create(
                                 handles.session, handles.strategy,
@@ -1842,7 +2907,7 @@ CaseResult run_case(
                                                  "max_actions_per_run", 100000);
                                 pc_simulation_progress simulation_progress{};
                                 const auto simulation_started = Clock::now();
-                                const auto simulation_deadline =
+                                const auto requested_simulation_deadline =
                                     verification_time_limit_seconds > 0.0
                                         ? simulation_started +
                                               std::chrono::duration_cast<
@@ -1850,6 +2915,9 @@ CaseResult run_case(
                                                   std::chrono::duration<double>(
                                                       verification_time_limit_seconds))
                                         : Clock::time_point::max();
+                                const auto simulation_deadline = std::min(
+                                    requested_simulation_deadline,
+                                    case_deadline);
                                 auto next_simulation_progress =
                                     simulation_started +
                                     std::chrono::seconds(10);
@@ -1920,8 +2988,16 @@ CaseResult run_case(
                                     if (!simulation_progress.finished &&
                                         now >= simulation_deadline) {
                                         report.verification_time_limited = true;
-                                        report.simulation_status =
-                                            "time_cap";
+                                        if (now >= case_deadline) {
+                                            report.watchdog_expired = true;
+                                            report.actual_status =
+                                                "watchdog_expired";
+                                            report.simulation_status =
+                                                "watchdog_expired";
+                                        } else {
+                                            report.simulation_status =
+                                                "time_cap";
+                                        }
                                         break;
                                     }
                                 }
@@ -1998,6 +3074,88 @@ CaseResult run_case(
                                             }
                                         }
                                     }
+                                    if (result != PC_RESULT_OK) {
+                                        report.errors.push_back(api_error(
+                                            "simulation action distribution",
+                                            result, error));
+                                    }
+                                    std::uint32_t descriptor_count = 0;
+                                    result =
+                                        pc_simulator_action_descriptor_distribution_query(
+                                            handles.simulator, nullptr, 0,
+                                            &descriptor_count, &error);
+                                    if (result == PC_RESULT_OK ||
+                                        result == PC_RESULT_BUFFER_TOO_SMALL) {
+                                        std::vector<
+                                            pc_action_descriptor_sample_entry>
+                                            entries(descriptor_count);
+                                        result =
+                                            pc_simulator_action_descriptor_distribution_query(
+                                                handles.simulator,
+                                                entries.data(),
+                                                descriptor_count,
+                                                &descriptor_count, &error);
+                                        if (result == PC_RESULT_OK) {
+                                            report
+                                                .action_descriptor_distribution
+                                                .reserve(descriptor_count);
+                                            for (std::uint32_t i = 0;
+                                                 i < descriptor_count; ++i) {
+                                                report
+                                                    .action_descriptor_distribution
+                                                    .push_back({
+                                                        entries[i].action_id ==
+                                                                nullptr
+                                                            ? std::string()
+                                                            : entries[i]
+                                                                  .action_id,
+                                                        entries[i].count});
+                                            }
+                                        }
+                                    }
+                                    if (result != PC_RESULT_OK) {
+                                        report.errors.push_back(api_error(
+                                            "simulation action descriptor "
+                                            "distribution",
+                                            result, error));
+                                    }
+
+                                    std::uint32_t material_count = 0;
+                                    result =
+                                        pc_simulator_material_distribution_query(
+                                            handles.simulator, nullptr, 0,
+                                            &material_count, &error);
+                                    if (result == PC_RESULT_OK ||
+                                        result == PC_RESULT_BUFFER_TOO_SMALL) {
+                                        std::vector<pc_material_sample_entry>
+                                            entries(material_count);
+                                        result =
+                                            pc_simulator_material_distribution_query(
+                                                handles.simulator,
+                                                entries.data(), material_count,
+                                                &material_count, &error);
+                                        if (result == PC_RESULT_OK) {
+                                            report.material_distribution.reserve(
+                                                material_count);
+                                            for (std::uint32_t i = 0;
+                                                 i < material_count; ++i) {
+                                                report.material_distribution
+                                                    .push_back({
+                                                        entries[i].price_key ==
+                                                                nullptr
+                                                            ? std::string()
+                                                            : entries[i]
+                                                                  .price_key,
+                                                        entries[i].count});
+                                            }
+                                        }
+                                    }
+                                    if (result != PC_RESULT_OK) {
+                                        report.errors.push_back(api_error(
+                                            "simulation material "
+                                            "distribution",
+                                            result, error));
+                                    }
                                 } else {
                                     report.simulation_status =
                                         "simulation_failed";
@@ -2059,10 +3217,18 @@ CaseResult run_case(
         }
     }
 
+    if (Clock::now() >= case_deadline) {
+        report.watchdog_expired = true;
+        if (report.actual_status != "covered_by_native_unit_gate" &&
+            report.actual_status != "not_run_approval_pending") {
+            report.actual_status = "watchdog_expired";
+        }
+    }
+    finalize_material_ratio_contract(report, skip_verification);
+    enforce_bounded_best_policy_contract(specification, report);
     evaluate_cap_checks(specification, report);
     report.expectation_met = evaluate_expectation(
-        specification, report,
-        skip_verification || report.verification_diagnostic);
+        specification, report, skip_verification);
     report.working_set_after = process_working_set();
     report.total_ms = milliseconds(total_begin, Clock::now());
     if (checkpoint) checkpoint(report);
@@ -2181,7 +3347,7 @@ void append_case_report(
         << (result.verification_skipped ? "true" : "false") << ",\n";
     out << "  \"input\":{";
     bool first_input = true;
-    for (const char* key : {"comparison_profile", "session", "start", "goal", "corpus", "feasibility", "generation", "product_action_envelope", "allowed_mechanic_families", "economy", "caps", "verification"}) {
+    for (const char* key : {"comparison_profile", "watchdog_seconds", "session", "start", "goal", "corpus", "feasibility", "generation", "product_action_envelope", "allowed_mechanic_families", "compiled_operation_contract", "compiled_operation_contracts", "material_ratio_contract", "market_price_override_contracts", "forced_winner_contract", "bounded_best_policy_contract", "economy", "caps", "verification"}) {
         const Value* value = specification.find(key);
         if (value == nullptr) continue;
         if (!first_input) out << ',';
@@ -2264,6 +3430,191 @@ void append_case_report(
         out << escape_json(result.product_action_ids[i]);
     }
     out << "],\n";
+    out << "  \"compiled_operation_contract\":";
+    if (!result.has_compiled_operation_contract) {
+        out << "null,\n";
+    } else {
+        out << "{\"type\":"
+            << escape_json(result.compiled_operation_contract_type)
+            << ",\"required_string_parameters\":{";
+        for (std::size_t i = 0;
+             i < result.compiled_operation_contract_string_parameters.size();
+             ++i) {
+            if (i != 0) out << ',';
+            out << escape_json(
+                       result.compiled_operation_contract_string_parameters[i]
+                           .first)
+                << ':'
+                << escape_json(
+                       result.compiled_operation_contract_string_parameters[i]
+                           .second);
+        }
+        out << "},\"checked\":"
+            << (result.compiled_operation_contract_checked
+                    ? "true" : "false")
+            << ",\"matching_node_count\":"
+            << result.compiled_operation_contract_matching_nodes
+            << ",\"present\":"
+            << (result.compiled_operation_contract_matching_nodes > 0
+                    ? "true" : "false")
+            << "},\n";
+    }
+    out << "  \"compiled_operation_contracts\":[";
+    for (std::size_t i = 0;
+         i < result.compiled_operation_contracts.size(); ++i) {
+        if (i != 0) out << ',';
+        const auto& contract = result.compiled_operation_contracts[i];
+        out << "{\"type\":" << escape_json(contract.type)
+            << ",\"required_string_parameters\":{";
+        for (std::size_t j = 0; j < contract.string_parameters.size(); ++j) {
+            if (j != 0) out << ',';
+            out << escape_json(contract.string_parameters[j].first) << ':'
+                << escape_json(contract.string_parameters[j].second);
+        }
+        out << "},\"checked\":" << (contract.checked ? "true" : "false")
+            << ",\"matching_node_count\":" << contract.matching_nodes
+            << ",\"present\":"
+            << (contract.matching_nodes > 0 ? "true" : "false") << '}';
+    }
+    out << "],\n";
+    out << "  \"market_price_override_contracts\":";
+    if (!result.has_market_price_override_contracts) {
+        out << "null,\n";
+    } else {
+        out << "{\"checked\":"
+            << (result.market_price_override_contracts_checked
+                    ? "true" : "false")
+            << ",\"declared_override_count\":"
+            << result.market_price_override_contract_count << "},\n";
+    }
+    out << "  \"material_ratio_contract\":";
+    if (!result.has_material_ratio_contract) {
+        out << "null,\n";
+    } else {
+        out << "{\"numerator_price_key\":"
+            << escape_json(result.material_ratio_numerator_key)
+            << ",\"denominator_price_key\":"
+            << escape_json(result.material_ratio_denominator_key)
+            << ",\"expected_ratio\":";
+        append_nullable_number(out, true, result.material_ratio_expected);
+        out << ",\"checked\":"
+            << (result.material_ratio_contract_checked ? "true" : "false")
+            << ",\"passed\":"
+            << (result.material_ratio_contract_passed ? "true" : "false")
+            << ",\"exact_evaluation\":{\"checked\":"
+            << (result.material_ratio_exact_checked ? "true" : "false")
+            << ",\"numerator_quantity\":";
+        append_nullable_number(
+            out, result.material_ratio_exact_checked,
+            result.material_ratio_exact_numerator);
+        out << ",\"denominator_quantity\":";
+        append_nullable_number(
+            out, result.material_ratio_exact_checked,
+            result.material_ratio_exact_denominator);
+        out << ",\"complete_pricing\":"
+            << (result.material_ratio_exact_pricing_complete
+                    ? "true" : "false")
+            << ",\"passed\":"
+            << (result.material_ratio_exact_passed ? "true" : "false")
+            << "},\"sampled_simulation\":{\"checked\":"
+            << (result.material_ratio_sampled_checked ? "true" : "false")
+            << ",\"numerator_count\":"
+            << result.material_ratio_sampled_numerator
+            << ",\"denominator_count\":"
+            << result.material_ratio_sampled_denominator
+            << ",\"complete_pricing\":"
+            << (result.material_ratio_sampled_pricing_complete
+                    ? "true" : "false")
+            << ",\"passed\":"
+            << (result.material_ratio_sampled_passed ? "true" : "false")
+            << "}},\n";
+    }
+    out << "  \"forced_winner_contract\":";
+    if (!result.has_forced_winner_contract) {
+        out << "null,\n";
+    } else {
+        out << "{\"required_compiled_operation\":{\"type\":"
+            << escape_json(result.required_compiled_operation_type)
+            << ",\"checked\":"
+            << (result.required_compiled_operation_checked
+                    ? "true" : "false")
+            << ",\"matching_node_count\":"
+            << result.required_compiled_operation_node_count
+            << ",\"present\":"
+            << (result.required_compiled_operation_node_count > 0
+                    ? "true" : "false")
+            << "},\"synthetic_action_price\":{\"snapshot_quote\":";
+        append_nullable_number(
+            out, true, result.forced_winner_snapshot_action_price);
+        out << ",\"forced_value\":";
+        append_nullable_number(out, true, result.forced_winner_action_price);
+        out << ",\"checked\":"
+            << (result.forced_winner_price_override_checked
+                    ? "true" : "false")
+            << "},\"dependency_primitive_candidate\":{\"action_id\":"
+            << escape_json(result.dependency_action_id)
+            << ",\"must_be_absent\":"
+            << (result.dependency_must_not_be_primitive_candidate
+                    ? "true" : "false")
+            << ",\"checked\":"
+            << (result.dependency_primitive_candidate_checked
+                    ? "true" : "false")
+            << ",\"absent\":"
+            << (result.dependency_primitive_candidate_absent
+                    ? "true" : "false")
+            << "}},\n";
+    }
+    out << "  \"bounded_best_policy_contract\":";
+    if (!result.has_bounded_best_policy_contract) {
+        out << "null,\n";
+    } else {
+        out << "{\"checked\":"
+            << (result.bounded_best_policy_contract_checked
+                    ? "true" : "false")
+            << ",\"passed\":"
+            << (result.bounded_best_policy_contract_passed
+                    ? "true" : "false")
+            << ",\"path\":"
+            << escape_json(
+                   result.bounded_best_policy_exact_path
+                       ? "exact"
+                       : "bounded")
+            << ",\"checks\":{";
+        if (result.bounded_best_policy_exact_path) {
+            out << "\"named_stop\":null,\"strict_gap\":null,"
+                   "\"open_obligations\":null,"
+                   "\"evaluated_upper\":null,"
+                   "\"cheapest_independently_evaluated_incumbent\":null";
+        } else {
+            out << "\"named_stop\":"
+                << (result.bounded_best_policy_named_stop
+                        ? "true" : "false")
+                << ",\"strict_gap\":"
+                << (result.bounded_best_policy_strict_gap
+                        ? "true" : "false")
+                << ",\"open_obligations\":"
+                << (result.bounded_best_policy_open_obligations
+                        ? "true" : "false")
+                << ",\"evaluated_upper\":"
+                << (result.bounded_best_policy_evaluated_upper
+                        ? "true" : "false")
+                << ",\"cheapest_independently_evaluated_incumbent\":"
+                << (result
+                            .bounded_best_policy_cheapest_evaluated_incumbent
+                        ? "true" : "false");
+        }
+        out << "},\"open_work\":{\"incremental_actions\":"
+            << result.bounded_best_policy_incremental_obligations
+            << ",\"refinement_obligations\":"
+            << result.bounded_best_policy_refinement_obligations
+            << "},\"failure_reason\":";
+        if (result.bounded_best_policy_failure_reason.empty()) {
+            out << "null";
+        } else {
+            out << escape_json(result.bounded_best_policy_failure_reason);
+        }
+        out << "},\n";
+    }
     out << "  \"execution\":{\"solve_steps\":";
     if (!measured || result.solve_steps == 0) out << "null";
     else out << result.solve_steps;
@@ -2314,6 +3665,15 @@ void append_case_report(
     append_nullable_number(
         out, result.diagnostic_time_limit_seconds > 0.0,
         result.diagnostic_time_limit_seconds);
+    out << ",\"watchdog_seconds\":";
+    append_nullable_number(
+        out, result.watchdog_seconds > 0.0, result.watchdog_seconds);
+    out << ",\"watchdog_mode\":"
+        << (result.watchdog_seconds > 0.0
+                ? "\"cooperative_case_deadline\""
+                : "null")
+        << ",\"watchdog_expired\":"
+        << (result.watchdog_expired ? "true" : "false");
     out << ",\"diagnostic_stop_reason\":";
     if (result.diagnostic_stop_reason.empty()) out << "null";
     else out << escape_json(result.diagnostic_stop_reason);
@@ -2585,9 +3945,102 @@ void append_case_report(
         const bool has_success_tolerance = minimum_success != nullptr;
         const bool success_within_tolerance =
             minimum_success == nullptr || success_rate >= minimum_success->number;
+        const std::uint64_t required_runs = optional_u64(
+            verification_spec, "runs", 0);
+        const std::uint64_t required_seed = optional_u64(
+            verification_spec, "seed", 20260715);
+        const bool full_fixture_run =
+            result.verification_finished &&
+            !result.verification_time_limited && required_runs > 0 &&
+            result.verification_requested_runs == required_runs &&
+            result.verification.completed_runs == required_runs &&
+            result.verification.target_runs == required_runs &&
+            result.verification.seed == required_seed;
+        const bool complete_cost_accounting =
+            result.verification.cost_status == PC_COST_COMPLETE &&
+            result.verification.missing_price_run_count == 0 &&
+            result.verification.missing_price_action_count == 0;
         const bool verification_passed =
-            off_policy == 0 && mean_within_tolerance && success_within_tolerance;
-        out << '{'
+            full_fixture_run && complete_cost_accounting && off_policy == 0 &&
+            mean_within_tolerance && success_within_tolerance;
+        out << "{\"simulation\":{\"summary\":{"
+            << "\"completed_runs\":"
+            << result.verification.completed_runs
+            << ",\"success_count\":"
+            << result.verification.success_count
+            << ",\"failure_count\":"
+            << result.verification.failure_count
+            << ",\"stop_count\":" << result.verification.stop_count
+            << ",\"total_actions\":"
+            << result.verification.total_actions
+            << ",\"action_limit_count\":"
+            << result.verification.action_limit_count
+            << ",\"cost_limit_count\":"
+            << result.verification.cost_limit_count
+            << ",\"step_limit_count\":"
+            << result.verification.step_limit_count
+            << ",\"no_matching_edge_count\":"
+            << result.verification.no_matching_edge_count
+            << ",\"action_not_applied_count\":"
+            << result.verification.action_not_applied_count
+            << ",\"missing_price_run_count\":"
+            << result.verification.missing_price_run_count
+            << ",\"costed_action_count\":"
+            << result.verification.costed_action_count
+            << ",\"missing_price_action_count\":"
+            << result.verification.missing_price_action_count
+            << ",\"known_total_cost\":"
+            << std::setprecision(17)
+            << result.verification.known_total_cost
+            << ",\"cost_status\":"
+            << escape_json(
+                   result.verification.cost_status == PC_COST_DISABLED
+                       ? "disabled"
+                       : (result.verification.cost_status == PC_COST_COMPLETE
+                              ? "complete"
+                              : "incomplete"))
+            << ",\"seed\":" << result.verification.seed
+            << ",\"target_runs\":" << result.verification.target_runs
+            << "},\"sampled_accounting\":{"
+            << "\"evidence_source\":\"simulator_sample\","
+            << "\"sample_count\":"
+            << result.verification.completed_runs
+            << ",\"seed\":" << result.verification.seed
+            << ",\"actions\":[";
+        for (std::size_t i = 0;
+             i < result.action_descriptor_distribution.size(); ++i) {
+            if (i != 0) out << ',';
+            const auto& action = result.action_descriptor_distribution[i];
+            out << "{\"action_id\":" << escape_json(action.action_id)
+                << ",\"count\":" << action.count
+                << ",\"average_per_invocation\":";
+            append_nullable_number(
+                out, result.verification.completed_runs > 0,
+                result.verification.completed_runs == 0
+                    ? 0.0
+                    : static_cast<double>(action.count) /
+                          static_cast<double>(
+                              result.verification.completed_runs));
+            out << '}';
+        }
+        out << "],\"materials\":[";
+        for (std::size_t i = 0;
+             i < result.material_distribution.size(); ++i) {
+            if (i != 0) out << ',';
+            const auto& material = result.material_distribution[i];
+            out << "{\"price_key\":" << escape_json(material.price_key)
+                << ",\"count\":" << material.count
+                << ",\"average_per_invocation\":";
+            append_nullable_number(
+                out, result.verification.completed_runs > 0,
+                result.verification.completed_runs == 0
+                    ? 0.0
+                    : static_cast<double>(material.count) /
+                          static_cast<double>(
+                              result.verification.completed_runs));
+            out << '}';
+        }
+        out << "]}},"
             << "\"runs\":" << result.verification.completed_runs << ','
             << "\"requested_runs\":"
             << result.verification_requested_runs << ','
@@ -2859,6 +4312,7 @@ int main(int argc, char** argv) {
                 const fs::path path = corpus_dir / relative.string;
                 Value specification = parse_json(read_file(path), path);
                 validate_case_shape(specification);
+                validate_case_manifest_contract(manifest, specification);
                 const std::string id = required_string(specification, "id");
                 if (!args.case_id.empty() && id != args.case_id) continue;
                 specifications.push_back(std::move(specification));
@@ -2875,8 +4329,78 @@ int main(int argc, char** argv) {
                     }
                     NativeHandles handles;
                     pc_item_state start_item{};
+                    CaseResult contract_probe;
+                    initialize_forced_winner_contract(
+                        specification, contract_probe);
                     create_case_objects(
-                        data, specification, handles, start_item);
+                        data, specification, handles, start_item,
+                        &contract_probe.product_action_ids);
+                    contract_probe.forced_winner_price_override_checked =
+                        contract_probe.has_forced_winner_contract;
+                    enforce_dependency_candidate_contract(contract_probe);
+                    if (contract_probe.has_forced_winner_contract) {
+                        const std::string strategy_probe =
+                            "{\"nodes\":[{\"kind\":\"operation\","
+                            "\"operation\":{\"type\":" +
+                            escape_json(
+                                contract_probe
+                                    .required_compiled_operation_type) +
+                            "}}]}";
+                        enforce_required_compiled_operation(
+                            strategy_probe, contract_probe);
+                        std::ostringstream report_probe;
+                        append_case_report(
+                            report_probe, specification, contract_probe);
+                        const std::string report_probe_json =
+                            report_probe.str();
+                        const Value parsed_report = Parser(
+                            report_probe_json.data(),
+                            report_probe_json.size()).parse();
+                        const Value& reported_contract = required(
+                            parsed_report, "forced_winner_contract",
+                            Type::Object);
+                        const Value& reported_operation = required(
+                            reported_contract,
+                            "required_compiled_operation", Type::Object);
+                        const Value& reported_price = required(
+                            reported_contract, "synthetic_action_price",
+                            Type::Object);
+                        const Value& reported_dependency = required(
+                            reported_contract,
+                            "dependency_primitive_candidate", Type::Object);
+                        if (!required(
+                                 reported_operation, "present",
+                                 Type::Bool).boolean ||
+                            required_string(
+                                reported_operation, "type") !=
+                                contract_probe
+                                    .required_compiled_operation_type ||
+                            required(
+                                reported_operation, "matching_node_count",
+                                Type::Number).number != 1.0 ||
+                            !required(
+                                 reported_price, "checked",
+                                 Type::Bool).boolean ||
+                            required(
+                                reported_price, "snapshot_quote",
+                                Type::Number).number !=
+                                contract_probe
+                                    .forced_winner_snapshot_action_price ||
+                            required(
+                                reported_price, "forced_value",
+                                Type::Number).number !=
+                                contract_probe.forced_winner_action_price ||
+                            !required(
+                                 reported_dependency, "absent",
+                                 Type::Bool).boolean ||
+                            required_string(
+                                reported_dependency, "action_id") !=
+                                contract_probe.dependency_action_id) {
+                            throw std::runtime_error(
+                                "forced winner validate-only report probe "
+                                "failed");
+                        }
+                    }
                 }
                 std::cout << "Validated " << specifications.size()
                           << " solver benchmark specifications.\n";

@@ -28,6 +28,10 @@ import {
     WorkerMessage,
 } from "./engine-protocol";
 import { buildHarvestCatalog } from "./harvest-crafts";
+import {
+    buildGenericInfluenceCatalog,
+    buildInfluenceExaltCatalog,
+} from "./influence-presentation";
 
 const DEFAULT_CHUNK_SIZE = 1000;
 
@@ -41,6 +45,7 @@ const dataBundles = new Map<number, Uint8Array>();
 const catalogCache = new Map<number, Catalog>();
 
 interface BundleShape {
+    manifest: { enums: { influence: Record<string, number> } };
     strings: { strings: string[]; string_id_base?: number };
     game_data: {
         groups: { key_string_ids: number[]; display_name_string_ids: number[] };
@@ -116,29 +121,10 @@ function buildCatalog(bundle: Uint8Array): Catalog {
     bench.sort((a, b) => a.name.localeCompare(b.name));
     const tagNames = new Set(g.tags.name_string_ids.map(s));
     const harvestTags = buildHarvestCatalog(tagNames);
-    const influences = [
-        "shaper",
-        "elder",
-        "crusader",
-        "adjudicator",
-        "basilisk",
-        "eyrie",
-    ].map((key) => ({
-        key,
-        code: {
-            adjudicator: 1,
-            basilisk: 2,
-            crusader: 3,
-            elder: 4,
-            eyrie: 5,
-            shaper: 6,
-        }[key],
-        name: {
-            adjudicator: "Warlord",
-            basilisk: "Redeemer",
-            eyrie: "Hunter",
-        }[key] ?? key.replace(/\b\w/g, (c) => c.toUpperCase()),
-    }));
+    const genericInfluences = buildGenericInfluenceCatalog(
+        json.manifest.enums.influence,
+    );
+    const influences = buildInfluenceExaltCatalog(genericInfluences);
     return {
         groupKeyById,
         groupNameById,
@@ -147,6 +133,7 @@ function buildCatalog(bundle: Uint8Array): Catalog {
         bench,
         harvestTags,
         influences,
+        genericInfluences,
     };
 }
 

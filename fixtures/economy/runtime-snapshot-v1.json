@@ -1,6 +1,6 @@
 {
   "version": "v1",
-  "id": "economy:fixture-league:5b6827ebf7194e8a02d6bcdd3896b5be2c2be6c303671be8f2698f5aa5b50b8a",
+  "id": "economy:fixture-league:b6f3283682a3219648a41396053947bcb0b3bfcfaf487f20652ed6ccbf8f71fd",
   "metadata": {
     "schema_version": 1,
     "game": "poe1",
@@ -11,15 +11,23 @@
     "source_cutoff_at_utc": "2026-07-15T00:00:00Z",
     "created_at_utc": "2026-07-15T00:00:00Z",
     "game_data_hash": "fixture-game",
-    "price_count": 4,
+    "price_count": 5,
     "missing_keys": ["base"],
     "low_confidence_keys": [],
-    "content_sha256": "5b6827ebf7194e8a02d6bcdd3896b5be2c2be6c303671be8f2698f5aa5b50b8a"
+    "content_sha256": "b6f3283682a3219648a41396053947bcb0b3bfcfaf487f20652ed6ccbf8f71fd"
   },
   "prices": {
     "alteration": 0.18,
+    "beast:rare": 1.0,
     "bench:EinharMasterLightRadiusScalesWithEnergyShield1": 2.5,
     "bench:EinharMasterLightningDamagePrefix3": 3.75,
     "chaos": 1.0
+  },
+  "sources": {
+    "alteration": "quote",
+    "beast:rare": "owner_default",
+    "bench:EinharMasterLightRadiusScalesWithEnergyShield1": "recipe",
+    "bench:EinharMasterLightningDamagePrefix3": "recipe",
+    "chaos": "quote"
   }
 }

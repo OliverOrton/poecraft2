@@ -4,7 +4,7 @@
 
 Parent: [Economy](README.md)
 
-Verified against code and data: 2026-08-09 @ e810a9f plus the Allflame live
+Verified against code and data: 2026-08-09 through the Gate 2 Allflame/Bestiary
 refresh. Scope: `tools/economy`, the economy schema/catalog/fixtures, isolated
 live ingest, checked-in static publication, the web economy service, and one
 native pricing smoke. No external storage activation was performed.
@@ -30,7 +30,8 @@ Database checkpoint write/verify commands live in the companion
 
 Code authority:
 `tools/economy/poecraft_economy/core.py`, `cli.py`, `checkpoint.py`, and
-`schemas/economy/001_initial.sql`.
+`schemas/economy/001_initial.sql` plus the ordered migrations in
+`schemas/economy/`.
 
 ## Provider Adapter
 
@@ -47,33 +48,38 @@ league plus the most recently seen archived temporary family.
 
 Category capabilities are code, not inferred from every upstream category:
 
-| Category | Surface | Scheduled refresh at d5e38e3 |
+| Category | Surface | Scheduled refresh at Gate 2 |
 | --- | --- | --- |
 | Currency | exchange | required/fetched |
 | Fossil | exchange | required/fetched |
 | Resonator | exchange | required/fetched |
 | Essence | exchange | required/fetched |
-| Beast | stash | optional/not fetched |
+| Beast | stash | required/fetched |
 | BaseType | stash | optional/not fetched |
 
-The Beast distinction matters now: the catalog maps Craicic Chimeral for the
-implemented Imprint recipe, but `refresh_all_leagues` selects only capabilities
-whose `required` flag is true. Therefore scheduled snapshots do not currently
-gain a live Craicic Chimeral quote. `beast:rare` is intentionally manual-only.
-Use a manual override/fallback for current product work and treat automatic
-scheduled Imprint pricing as open debt, not as production-ready behavior.
+The Beast distinction matters now: the catalog maps the provider's Craicic
+Croaker row to `beast:craicic-croaker` for the implemented Imprint recipe, and
+`refresh_all_leagues` fetches Beast because its `required` flag is true. Other
+Beast rows are accounted as not-runtime inputs rather than becoming solver
+actions. The three generic rare inputs use the separate `beast:rare`
+owner default described below; they are not inferred from the Beast response.
 
 Code authority: `tools/economy/poecraft_economy/provider.py` and
 `core.py::refresh_all_leagues`.
 
 ## Canonical SQLite
 
-`schemas/economy/001_initial.sql` is the schema authority. It stores:
+`schemas/economy/001_initial.sql` is the schema-v1 authority, and
+`schemas/economy/002_owner_defaults.sql` migrates an existing v1 database to
+v2. Economy entry points read `economy_manifest.schema_version`, reject a
+database newer than the tool, and apply each ordered migration before seeding,
+refreshing, or compiling. The schema stores:
 
 - manifest, maintenance, sources, normalized leagues, and provider league ids;
 - ingest runs, per-category fetch evidence, exact source rows, and one
   accounting disposition per row;
 - canonical price keys, stable source mappings, quotes, and derived recipes;
+- owner-default definitions and immutable per-snapshot owner-default evidence;
 - immutable snapshots, prices, recipe components, and source fetch links;
 - latest per-league status; and
 - pinned/named external snapshot references.
@@ -83,6 +89,13 @@ snapshot rows and components are protected by triggers; controlled retention
 temporarily enables deletion instead of mutating retained content. A failed or
 partial league refresh leaves its last successful snapshot pointer intact and
 marks the league stale/error.
+
+Owner defaults live outside the quote/recipe/zero price table so their
+non-market decision id, note, value, and overridable flag remain explicit.
+The v2 migration does not rewrite completed v1 snapshot rows. New checkpoint
+manifests record the actual `database_schema_version` alongside the checkpoint
+manifest's own `schema_version`; verification checks it after byte size and
+SHA-256. Manifests created before that field was introduced remain readable.
 
 Raw response files are content-addressed. SQLite stores their hash, size,
 path, request/response metadata, ETag/Last-Modified values, and parse/accounting
@@ -100,11 +113,13 @@ seed canonical price identities and mappings. An active key is classified as:
 - base quote; or
 - unsupported.
 
-Absent means unknown, never free. `unveil` is explicitly zero-cost. `base` and
-`beast:rare` are manual-only. Bench and Harvest price keys derive from
-versioned component recipes. Essence, Fossil, resonator, currency, influence,
-Fracture, Eldritch, lifeforce, and the mapped Craicic Chimeral use stable
-catalog/source identities.
+Absent means unknown, never free. `unveil` is explicitly zero-cost and `base`
+is manual-only. `beast:rare` is an overridable owner default of one chaos per
+generic rare beast, with decision id
+`owner:2026-08-09:generic-rare-beast`; it is never represented as a market
+quote. Bench and Harvest price keys derive from versioned component recipes.
+Essence, Fossil, resonator, currency, influence, Fracture, Eldritch,
+lifeforce, and the mapped Craicic Croaker use stable catalog/source identities.
 
 The Harvest recipe source and owner-approved quantities are preserved in
 `fixtures/economy/harvest-recipes-v1.json`. Mechanic cost rulings belong to the
@@ -113,10 +128,10 @@ The Harvest recipe source and owner-approved quantities are preserved in
 ## Immutable Snapshots And Publication
 
 A runtime artifact has `version: "v1"`, a content-derived id, metadata,
-prices, and per-key source provenance (`quote`, `recipe`, or `zero`). Its
-content hash is deterministic over league key, game-data hash, normalized
-price tokens, missing keys, low-confidence keys, and sources. Created time and
-JSON insertion order do not define identity.
+prices, and per-key source provenance (`quote`, `recipe`, `zero`, or
+`owner_default`). Its content hash is deterministic over league key,
+game-data hash, normalized price tokens, missing keys, low-confidence keys,
+and sources. Created time and JSON insertion order do not define identity.
 
 Every valid mapped quote is included, including low-confidence quotes; the
 metadata separately identifies low-confidence and missing keys. Derived recipe
@@ -140,17 +155,26 @@ and only then copied into the checked-in static publication. The fixture-backed
 
 | League | State | Snapshot content hash | Cutoff | Priced / missing / low |
 | --- | --- | --- | --- | --- |
-| Allflame | active temporary softcore | `a122cad9494aa3361016b6f9c542e029e7aa1465de6d04bd6b5b150b5d26c485` | `2026-08-09T16:44:10Z` | 861 / 585 / 28 |
-| Hardcore Allflame | active temporary hardcore | `b199684d293012331b8d4a57dea44a1f7241d5d4664ba6579de94848d82f0cff` | `2026-08-09T16:44:10Z` | 797 / 649 / 98 |
-| Standard | active permanent | `ff59e7f60886430318976be46a4ea971fc20c8381274be2ef18c8a92193feb82` | `2026-08-09T16:44:10Z` | 794 / 652 / 256 |
+| Allflame | active temporary softcore | `de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0` | `2026-08-09T18:34:48Z` | 863 / 583 / 29 |
+| Hardcore Allflame | active temporary hardcore | `9dece258da8894eb75cbb28115c89cca3149a03b885510e10ab6c22836dbc2fc` | `2026-08-09T18:34:48Z` | 807 / 639 / 109 |
+| Standard | active permanent | `7da0b6fe6884582874c8e75bbcc19e2c9cf76388992a68d546f14c967a469702` | `2026-08-09T18:34:48Z` | 794 / 652 / 206 |
 | Hardcore | active permanent, stale | `49d5d98e06d6271a6d799a7cee2b8c79f3b7d0319321ed9df90289033a6db615` | `2026-07-15T21:08:07Z` | 271 / 1175 / 270 |
 
 The Allflame snapshot contains all core currency action keys, 25 Fossil keys,
 4 Resonator keys, 101 Essence keys, and the derived canonical key
 `harvest_reforge:defences`. It does not contain the stale singular
-`harvest_reforge:defence`. Every absent supported/manual key is listed in
-`metadata.missing_keys`; specifically, no Beast, rare-beast, or base price was
-invented.
+`harvest_reforge:defence`. It also contains the current Craicic Croaker quote
+at 66 chaos with `quote` provenance and `beast:rare` at one chaos with
+`owner_default` provenance. Imprint consumes the Croaker key once and the rare
+key three times, so the owner-default portion contributes three chaos before
+any user override. Every absent supported/manual key is listed in
+`metadata.missing_keys`; `base` remains absent.
+
+This publication was additive. The prior Allflame, Hardcore Allflame, and
+Standard hash-named files remain in the static snapshot directory, as do the
+archived Mirage/Ancestors artifacts and their historical Chimeral-era evidence.
+Only the current league-index pointers moved to the three new identities; no
+historical artifact was rewritten to claim Croaker or owner-default provenance.
 
 Representative chaos-equivalent prices changed as follows from the preserved
 Mirage snapshot/raw evidence to Allflame:

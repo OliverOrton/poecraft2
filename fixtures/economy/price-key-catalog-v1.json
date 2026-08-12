@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "catalog_version": "2026-07-17.1",
+  "catalog_version": "2026-08-09.1",
   "source": "poe-ninja",
   "direct": {
     "transmute": "transmute",
@@ -37,7 +37,15 @@
     "lifeforce:rancour": "sandswept-lifeforce"
   },
   "zero_cost": ["unveil"],
-  "manual_only": ["base", "beast:rare"],
+  "manual_only": ["base"],
+  "owner_defaults": {
+    "beast:rare": {
+      "chaos_value": 1,
+      "decision_id": "owner:2026-08-09:generic-rare-beast",
+      "decision_note": "Each generic rare beast consumed by Imprint costs one chaos.",
+      "overridable": true
+    }
+  },
   "derived_prefixes": ["bench:", "harvest_reforge:", "harvest_augment:", "harvest_resist:"],
   "market_prefixes": ["essence:", "fossil:", "resonator:", "beast:"],
   "unsupported_prefixes": [],
@@ -48,6 +56,6 @@
     "prime-chaotic-resonator": "resonator:4"
   },
   "beasts": {
-    "craicic-chimeral": "beast:craicic-chimeral"
+    "craicic-croaker": "beast:craicic-croaker"
   }
 }

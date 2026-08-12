@@ -9,6 +9,7 @@ import unittest
 
 from poecraft_economy.core import (
     DEFAULT_FIXTURE,
+    DEFAULT_SCHEMA,
     _snapshot_content,
     canonical_json,
     ingest_fixture,
@@ -19,6 +20,7 @@ from poecraft_economy.core import (
     validate_database,
 )
 from poecraft_economy.provider import (
+    ADAPTER_VERSION,
     CATEGORY_CAPABILITIES,
     FetchResult,
     PoeNinjaAdapter,
@@ -72,12 +74,16 @@ class FrozenAdapter:
         fail: tuple[str, str] | None = None,
         *,
         not_modified: bool = False,
+        omit_required: tuple[str, str] | None = None,
+        malformed: tuple[str, str] | None = None,
     ) -> None:
         self.root = fixture.parent
         self.manifest = json.loads(fixture.read_text(encoding="utf-8"))
         self.delegate = PoeNinjaAdapter()
         self.fail = fail
         self.not_modified = not_modified
+        self.omit_required = omit_required
+        self.malformed = malformed
 
     def capabilities(self):
         return CATEGORY_CAPABILITIES
@@ -93,12 +99,22 @@ class FrozenAdapter:
     def fetch_category(self, source_league_id, capability, conditional_headers=None):
         if self.fail == (source_league_id, capability.name):
             raise ValueError("forced category failure")
+        if self.malformed == (source_league_id, capability.name):
+            return FetchResult(200, b"{", '"fixture-category"', None, "max-age=3600")
         if self.not_modified:
             if not conditional_headers or "If-None-Match" not in conditional_headers:
                 raise ValueError("conditional ETag header was not supplied")
             return FetchResult(304, None, '"fixture-category"', None, "max-age=3600")
         relative = self.manifest["responses"][source_league_id][capability.name]
         body = (self.root / relative).read_bytes()
+        if self.omit_required == (source_league_id, capability.name):
+            value = json.loads(body)
+            value["lines"] = [
+                row
+                for row in value["lines"]
+                if row.get("detailsId") != "craicic-croaker"
+            ]
+            body = json.dumps(value, sort_keys=True).encode()
         return FetchResult(200, body, '"fixture-category"', None, "max-age=3600")
 
     def parse_rows(self, capability, raw_response):
@@ -115,6 +131,7 @@ class EconomyPipelineTests(unittest.TestCase):
             artifact["prices"],
             artifact["metadata"]["missing_keys"],
             artifact["metadata"]["low_confidence_keys"],
+            artifact.get("sources"),
         )
         self.assertEqual(
             sha256_bytes(canonical_json(content).encode("utf-8")),
@@ -170,9 +187,25 @@ class EconomyPipelineTests(unittest.TestCase):
             self.assertEqual(artifact["prices"]["harvest_resist:fire"], 10.0)
             self.assertEqual(artifact["prices"]["bench:CraftedLife"], 2.0)
             self.assertEqual(
-                artifact["prices"]["beast:craicic-chimeral"], 42.0
+                artifact["prices"]["beast:craicic-croaker"], 42.0
             )
-            self.assertIn("beast:rare", artifact["metadata"]["missing_keys"])
+            self.assertEqual(artifact["prices"]["beast:rare"], 1.0)
+            self.assertEqual(
+                artifact["sources"]["beast:craicic-croaker"], "quote"
+            )
+            self.assertEqual(
+                artifact["sources"]["beast:rare"], "owner_default"
+            )
+            self.assertNotIn("beast:rare", artifact["metadata"]["missing_keys"])
+            owner_default = connection.execute(
+                """
+                SELECT chaos_value, decision_id, overridable
+                FROM economy_snapshot_owner_default_price
+                WHERE snapshot_id = ? AND canonical_price_key = 'beast:rare'
+                """,
+                (artifact["id"],),
+            ).fetchone()
+            self.assertEqual(tuple(owner_default), (1.0, "owner:2026-08-09:generic-rare-beast", 1))
             with self.assertRaises(sqlite3.IntegrityError):
                 connection.execute(
                     "UPDATE economy_snapshot SET artifact_json = '{}' WHERE snapshot_id = ?",
@@ -257,6 +290,120 @@ class EconomyPipelineTests(unittest.TestCase):
             connection.close()
             report = validate_database(database)
             self.assertTrue(report["ok"], report)
+
+    def test_missing_required_croaker_and_parse_errors_are_league_local(self) -> None:
+        for label, adapter in (
+            (
+                "missing",
+                FrozenAdapter(
+                    DEFAULT_FIXTURE,
+                    omit_required=("Hardcore Mirage", "Beast"),
+                ),
+            ),
+            (
+                "malformed",
+                FrozenAdapter(
+                    DEFAULT_FIXTURE,
+                    malformed=("Hardcore Mirage", "Beast"),
+                ),
+            ),
+        ):
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                game = root / "game.db"
+                database = root / "economy.db"
+                _create_game_database(game)
+                ingest_fixture(
+                    database,
+                    raw_root=root / "raw",
+                    game_database=game,
+                    force=True,
+                )
+                connection = sqlite3.connect(database)
+                before = connection.execute(
+                    """
+                    SELECT latest_snapshot_id FROM economy_league_status
+                    WHERE league_key = 'hardcore-mirage'
+                    """
+                ).fetchone()[0]
+                connection.close()
+
+                result = refresh_all_leagues(
+                    database,
+                    raw_root=root / "raw",
+                    game_database=game,
+                    adapter=adapter,
+                )
+                self.assertEqual(result["status"], "partial")
+                failed = next(
+                    row
+                    for row in result["leagues"]
+                    if row["league_key"] == "hardcore-mirage"
+                )
+                self.assertEqual(failed["failed_categories"], ["Beast"])
+                self.assertIn("Beast", failed["failure_details"])
+                connection = sqlite3.connect(database)
+                after, stale = connection.execute(
+                    """
+                    SELECT latest_snapshot_id, stale FROM economy_league_status
+                    WHERE league_key = 'hardcore-mirage'
+                    """
+                ).fetchone()
+                self.assertEqual(after, before)
+                self.assertEqual(stale, 1)
+                connection.close()
+                report = validate_database(database)
+                self.assertTrue(report["ok"], report)
+
+    def test_refresh_migrates_a_restored_schema_v1_checkpoint(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            game = root / "game.db"
+            database = root / "economy.db"
+            _create_game_database(game)
+            connection = sqlite3.connect(database)
+            connection.executescript(DEFAULT_SCHEMA.read_text(encoding="utf-8"))
+            connection.execute(
+                "INSERT INTO economy_manifest VALUES (1, 1, 'old-tool', '2026-07-15T00:00:00Z')"
+            )
+            connection.execute("INSERT INTO economy_maintenance VALUES (1, 0)")
+            connection.execute(
+                """
+                INSERT INTO economy_source VALUES (
+                    'poe-ninja', 'poe.ninja', 'old-adapter', 'https://poe.ninja/data'
+                )
+                """
+            )
+            connection.commit()
+            connection.close()
+
+            result = refresh_all_leagues(
+                database,
+                raw_root=root / "raw",
+                game_database=game,
+                adapter=FrozenAdapter(DEFAULT_FIXTURE),
+            )
+            self.assertEqual(result["status"], "complete")
+            connection = sqlite3.connect(database)
+            self.assertEqual(
+                connection.execute(
+                    "SELECT schema_version FROM economy_manifest WHERE singleton = 1"
+                ).fetchone()[0],
+                2,
+            )
+            self.assertEqual(
+                connection.execute(
+                    "SELECT chaos_value FROM economy_owner_default WHERE canonical_price_key = 'beast:rare'"
+                ).fetchone()[0],
+                1.0,
+            )
+            self.assertEqual(
+                connection.execute(
+                    "SELECT adapter_version FROM economy_source WHERE source_key = 'poe-ninja'"
+                ).fetchone()[0],
+                ADAPTER_VERSION,
+            )
+            connection.close()
 
     def test_publish_and_retention_dry_run_then_apply(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

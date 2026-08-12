@@ -7,8 +7,8 @@ that statement.
 
 Parent: [Documentation index](../README.md)
 
-Verified against code and the checked-in local publication: 2026-08-09 @
-e810a9f plus the Allflame data refresh. Scope: economy schema and Python
+Verified against code and the checked-in local publication: 2026-08-09 through
+the Gate 2 Allflame/Bestiary refresh. Scope: economy schema and Python
 package, live provider discovery/required-category ingest, price
 catalogs/fixtures, immutable publication, browser service and selector, and
 the native-consumer smoke. Cloudflare resources, secrets, and production CDN
@@ -34,9 +34,9 @@ and a run/solve keeps the exact economy identity it started with.
 
 Fresh product sessions select the active temporary softcore league, now
 Allflame. Its immutable snapshot is
-`economy:allflame:a122cad9494aa3361016b6f9c542e029e7aa1465de6d04bd6b5b150b5d26c485`
-with source cutoff `2026-08-09T16:44:10Z`, 861 priced keys, 585 explicit
-missing keys, and 28 low-confidence keys. Hardcore Allflame is the active
+`economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0`
+with source cutoff `2026-08-09T18:34:48Z`, 863 priced keys, 583 explicit
+missing keys, and 29 low-confidence keys. Hardcore Allflame is the active
 temporary hardcore league, refreshed Standard remains active, and Hardcore
 remains selectable through its prior immutable snapshot with a stale warning
 because the live Currency response omitted a numeric value for its chaos
@@ -47,12 +47,16 @@ index as archived profiles. Their immutable files and every direct benchmark
 reference are unchanged, so a stored historical selection is preserved; it
 is never silently replaced by Allflame. The checked-in publication lives at
 `apps/web/public/economy` and was updated only after isolated staging and hash
-inspection.
+inspection. The superseded Allflame, Hardcore Allflame, and Standard
+content-addressed files also remain present; the league index alone advances
+fresh selections to the new immutable identities.
 
-Allflame has successful Currency, Fossil, Resonator, and Essence evidence.
-Beast was not fetched, so Craicic Chimeral/Imprint remains missing unless a
-user supplies an override. `beast:rare` and `base` remain manual-only and are
-also explicitly missing.
+Allflame has successful Currency, Fossil, Resonator, Essence, and required
+Beast evidence. Its Imprint inputs are a quoted `beast:craicic-croaker` at
+66 chaos and three uses of `beast:rare`. Each generic rare beast has an
+explicit one-chaos, user-overridable owner default whose snapshot provenance
+is `owner_default`, never a poe.ninja quote. `base` remains manual-only and
+explicitly missing.
 
 ## References
 
@@ -71,10 +75,11 @@ owned by [Solver](../solver/README.md).
 The scheduled workflow is implemented but cannot activate itself: the two R2
 buckets, custom domain, and repository secrets must exist externally.
 
-The scheduled refresh fetches only capabilities marked required:
-Currency, Fossil, Resonator, and Essence. The Imprint catalog and fixture map
-`beast:craicic-chimeral`, but `Beast` remains optional in the provider adapter,
-so the scheduled production refresh does not currently fetch its quote. Rare
-beasts are manual-only. Imprint price identities exist; automatic scheduled
-Imprint pricing is not complete. This gap is recorded in
-[Economy Notes](NOTES.md).
+The scheduled refresh fetches capabilities marked required: Currency, Fossil,
+Resonator, Essence, and Beast. The Imprint catalog maps only Craicic Croaker
+from the Beast surface; enabling that required category does not expose every
+provider Beast as a solver action. A required-category fetch, parse, or mapped
+key failure is isolated to its league: that league retains its last successful
+snapshot and becomes stale while successful leagues advance. The generic rare
+beast price is the separately recorded overridable owner default described
+above, so current scheduled Imprint pricing has both required price identities.

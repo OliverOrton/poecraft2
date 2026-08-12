@@ -343,7 +343,8 @@ AbstractLayout build_abstract_layout(
     const std::vector<CountObservation>& count_observations,
     const std::vector<std::uint64_t>&
         required_reachable_mod_mask,
-    const bool distinguish_modifier_identity) {
+    const bool distinguish_modifier_identity,
+    const AbstractLayout* refinement_parent_layout) {
     if (goal.slots.empty() && !allow_empty_goal) {
         invalid("goal spec has no slots");
     }
@@ -360,6 +361,13 @@ AbstractLayout build_abstract_layout(
     AbstractLayout layout;
     for (std::size_t i = 0; i < goal.slots.size(); ++i) {
         layout.slots.push_back(resolve_slot(session, goal.slots[i], i));
+    }
+    if (refinement_parent_layout != nullptr &&
+        (refinement_parent_layout->slots.size() !=
+             layout.slots.size() ||
+         refinement_parent_layout->junk_class_by_mod.size() !=
+             session.mod_count)) {
+        invalid("refinement parent layout is incompatible");
     }
     for (std::size_t a = 0; a < layout.slots.size(); ++a) {
         for (std::size_t b = a + 1; b < layout.slots.size(); ++b) {
@@ -551,8 +559,11 @@ AbstractLayout build_abstract_layout(
             std::int32_t, std::optional<std::uint32_t>,
             std::vector<std::uint64_t>,
             std::vector<std::uint64_t>,
+            std::optional<std::uint32_t>,
             std::optional<std::uint32_t>>;
-        for (ResolvedGoalSlot& slot : layout.slots) {
+        for (std::size_t slot_index = 0;
+             slot_index < layout.slots.size(); ++slot_index) {
+            ResolvedGoalSlot& slot = layout.slots[slot_index];
             std::map<GoalClassKey, std::vector<std::uint32_t>> classes;
             pc_bitset_for_each(
                 slot.member_mask.data(), session.words,
@@ -602,6 +613,15 @@ AbstractLayout build_abstract_layout(
                         std::move(observation_bits),
                         distinguish_modifier_identity
                             ? std::optional<std::uint32_t>(mod)
+                            : std::nullopt,
+                        refinement_parent_layout != nullptr
+                            ? std::optional<std::uint32_t>(
+                                  refinement_parent_layout->slots[slot_index]
+                                          .member_class_token_by_mod.empty()
+                                      ? 0
+                                      : refinement_parent_layout
+                                            ->slots[slot_index]
+                                            .member_class_token_by_mod.at(mod))
                             : std::nullopt}]
                         .push_back(mod);
                 });
@@ -712,6 +732,7 @@ AbstractLayout build_abstract_layout(
         std::optional<std::int32_t>, std::optional<std::uint32_t>,
         std::vector<std::uint64_t>,
         std::vector<std::uint64_t>,
+        std::optional<std::uint32_t>,
         std::optional<std::uint32_t>>;
     std::map<ClassKey, std::vector<std::uint32_t>> classes;
     std::vector<std::uint32_t> groups;
@@ -783,6 +804,11 @@ AbstractLayout build_abstract_layout(
                  std::move(exclusion_effect), std::move(observation_bits),
                  distinguish_modifier_identity
                      ? std::optional<std::uint32_t>(mod)
+                     : std::nullopt,
+                 refinement_parent_layout != nullptr
+                     ? std::optional<std::uint32_t>(
+                           refinement_parent_layout
+                               ->junk_class_by_mod.at(mod))
                      : std::nullopt}]
             .push_back(mod);
     });

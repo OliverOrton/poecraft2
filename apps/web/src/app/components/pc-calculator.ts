@@ -217,6 +217,7 @@ export class PcCalculator extends HTMLElement {
     } | null = null;
     private solveExcludedActions = 0;
     private solveAdmittedActionIds: string[] = [];
+    private solveMissingPriceKeys: string[] = [];
     private solveStopDetail = "";
     private solveTelemetry: unknown = null;
     private solveAbsoluteGapTarget = 0;
@@ -510,6 +511,7 @@ export class PcCalculator extends HTMLElement {
         this.verification = null;
         this.solveExcludedActions = 0;
         this.solveAdmittedActionIds = [];
+        this.solveMissingPriceKeys = [];
         this.solveStopDetail = "";
         this.solveTelemetry = null;
         this.solveProgress = null;
@@ -754,6 +756,15 @@ export class PcCalculator extends HTMLElement {
             this.solveExcludedActions =
                 relevantActions.length - candidateIds.length;
             this.solveAdmittedActionIds = [...candidateIds];
+            this.solveMissingPriceKeys = Array.from(
+                new Set(
+                    relevantActions.flatMap((action) =>
+                        action.cost_keys.filter(
+                            (key) => pinnedPrice(key) === undefined,
+                        ),
+                    ),
+                ),
+            ).sort((left, right) => left.localeCompare(right));
             const solveGoal = this.solverGoal(candidateIds, true);
             solveSolver = await this.client.openSolver(
                 this.session,
@@ -1808,11 +1819,21 @@ export class PcCalculator extends HTMLElement {
                   summary,
                   admittedActionIds: this.solveAdmittedActionIds,
                   excludedActions: this.solveExcludedActions,
+                  missingPriceKeys: this.solveMissingPriceKeys,
                   economyLabel: summary.economy
                       ? economyIdentityLabel(summary.economy)
                       : null,
                   terminationDetail: this.solveStopDetail,
+                  productActionScope: "goal_relevant",
+                  goalProgressGatedReforges: true,
                   hasCompiledStrategy: this.solvedStrategy !== null,
+                  compiledOperationTypes: this.solvedStrategy
+                      ? this.solvedStrategy.nodes.flatMap((node) =>
+                            node.kind === "operation" && node.operation?.type
+                                ? [node.operation.type]
+                                : [],
+                        )
+                      : [],
                   busy: this.busy,
                   verification: this.verification,
                   telemetry: this.solveTelemetry,

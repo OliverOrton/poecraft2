@@ -110,8 +110,18 @@ enum class PrimitiveTelemetryFamily : std::uint8_t {
     Bench = 4,
     Bestiary = 5,
     Fracture = 6,
+    /* Retained as an additive compatibility bucket. Every current ordinary
+     * registry descriptor maps to a more specific family below. */
     Other = 7,
-    Count = 8,
+    EldritchSetup = 8,
+    EldritchChaos = 9,
+    EldritchAnnul = 10,
+    EldritchExalt = 11,
+    InfluenceExalt = 12,
+    VeiledChaos = 13,
+    VeiledExalt = 14,
+    Unveil = 15,
+    Count = 16,
 };
 
 inline constexpr std::size_t kPrimitiveTelemetryFamilyCount =
@@ -184,6 +194,33 @@ struct AutomaticKindTelemetry {
 
 struct AutomaticAdmissionPhaseTelemetry {
     std::uint64_t carriers = 0;
+    /* Cumulative transient Calculator work performed while discovering and
+     * validating carrier-local automatic options. These counters are
+     * observational: retained sparse-graph row/transition limits are enforced
+     * only when rows are appended to SolveTransitionCache. */
+    std::uint64_t discovered_states = 0;
+    std::uint64_t state_action_rows = 0;
+    std::uint64_t transition_entries = 0;
+    /* Automatic option synthesis/evaluation is transient admission work. It
+     * remains observable here but does not consume the retained parent
+     * graph's max_reforge_work allowance. */
+    std::uint64_t reforge_active_work = 0;
+    std::uint64_t reforge_logical_work_v1 = 0;
+    /* Imprint discovery's nominal program budget hides a second exact-work
+     * dimension: every program step may fan out over many Calculator states
+     * and outcomes. Keep both dimensions and the remaining atomic outcomes()
+     * leaf visible so worker-slice claims are measured rather than inferred. */
+    std::uint64_t imprint_programs_evaluated = 0;
+    std::uint64_t imprint_programs_pruned = 0;
+    std::uint64_t imprint_distribution_dominated_programs = 0;
+    std::uint64_t imprint_price_pruned_programs = 0;
+    std::uint64_t imprint_price_bound_max_program_depth = 0;
+    std::uint64_t imprint_max_evaluated_depth = 0;
+    std::uint64_t imprint_max_frontier_size = 0;
+    std::uint64_t imprint_price_bound_complete_carriers = 0;
+    std::uint64_t imprint_action_state_evaluations = 0;
+    std::uint64_t imprint_outcomes_merged = 0;
+    std::uint64_t imprint_max_atomic_outcomes_ns = 0;
     std::uint64_t synthesis_ns = 0;
     std::uint64_t local_context_ns = 0;
     std::uint64_t local_planner_build_ns = 0;
@@ -1006,7 +1043,8 @@ AbstractLayout build_abstract_layout(
     const std::vector<CountObservation>& count_observations = {},
     const std::vector<std::uint64_t>&
         required_reachable_mod_mask = {},
-    bool distinguish_modifier_identity = false);
+    bool distinguish_modifier_identity = false,
+    const AbstractLayout* refinement_parent_layout = nullptr);
 
 // --- abstract state -----------------------------------------------------------
 

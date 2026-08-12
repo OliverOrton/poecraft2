@@ -883,6 +883,65 @@ void run_exact_goal_member_class_tests() {
 }
 
 void run_selector_conditioned_strict_partition_tests() {
+    /* A strict child may admit fewer primitive observers than its product
+     * parent. Even when the child's own semantic key would merge two mods,
+     * the refinement partition must remain a subset of the already-solved
+     * coarse partition so strict-to-coarse mapping is single-valued. */
+    {
+        auto session = make_solver_session();
+        set_single_group(*session, 4, 12);
+        rebuild_group_masks(*session);
+        const ActionRegistry built = build_action_registry(*session);
+        ActionDescriptor coarse_observer =
+            built.actions[built.index_by_id.at("exalt")];
+        coarse_observer.id = "test:coarse_attack_observer";
+        coarse_observer.discriminating_tag_ids = {kTagAttack};
+        ActionRegistry coarse_registry;
+        coarse_registry.index_by_id.emplace(coarse_observer.id, 0);
+        coarse_registry.actions.push_back(coarse_observer);
+
+        ActionDescriptor strict_observer = coarse_observer;
+        strict_observer.id = "test:strict_nondiscriminating_observer";
+        strict_observer.discriminating_tag_ids.clear();
+        ActionRegistry strict_registry;
+        strict_registry.index_by_id.emplace(strict_observer.id, 0);
+        strict_registry.actions.push_back(strict_observer);
+
+        const GoalSpec goal = family_goal(100, 0);
+        const AbstractLayout coarse = build_abstract_layout(
+            *session, goal, coarse_registry, {0});
+        const AbstractLayout unconstrained_strict = build_abstract_layout(
+            *session, goal, strict_registry, {0},
+            false, true, true);
+        const AbstractLayout refining_strict = build_abstract_layout(
+            *session, goal, strict_registry, {0},
+            false, true, true, {}, {}, false, &coarse);
+        PC_CHECK(
+            coarse.junk_class_by_mod[3] !=
+            coarse.junk_class_by_mod[4]);
+        PC_CHECK(
+            unconstrained_strict.junk_class_by_mod[3] ==
+            unconstrained_strict.junk_class_by_mod[4]);
+        PC_CHECK(
+            refining_strict.junk_class_by_mod[3] !=
+            refining_strict.junk_class_by_mod[4]);
+        for (const JunkClass& strict_class :
+             refining_strict.junk_classes) {
+            std::uint32_t parent = kNoId;
+            pc_bitset_for_each(
+                strict_class.member_mask.data(), session->words,
+                [&](const std::size_t bit) {
+                    const std::uint32_t candidate =
+                        coarse.junk_class_by_mod[bit];
+                    if (parent == kNoId) {
+                        parent = candidate;
+                    } else {
+                        PC_CHECK(parent == candidate);
+                    }
+                });
+        }
+    }
+
     /*
      * A tag named only by the semantic refinement contract must not widen
      * the product/coarse carrier. The same admitted observer does split the

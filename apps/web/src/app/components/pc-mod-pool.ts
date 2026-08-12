@@ -16,6 +16,7 @@
 
 import { ModInfo, PoolDebug } from "../engine-protocol";
 import { visibleModTags } from "../item-display";
+import { genericInfluenceDisplayName } from "../influence-presentation";
 
 type Tab = "prefix" | "suffix" | "implicit";
 type Section = "base" | "influenced" | "crafted" | "essence" | "fossil";
@@ -633,11 +634,7 @@ function sourceLabel(info: ModInfo | undefined): string {
 }
 
 function influenceLabel(value: string): string {
-    const key = value.toLowerCase();
-    if (key === "adjudicator") return "Warlord";
-    if (key === "basilisk") return "Redeemer";
-    if (key === "eyrie") return "Hunter";
-    return formatTag(value);
+    return genericInfluenceDisplayName(value);
 }
 
 function formatTag(tag: string): string {

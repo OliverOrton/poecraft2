@@ -111,8 +111,10 @@ session.
   lightning conversions; its cost key is `harvest_resist:<target>`;
 - `eldritch_ember:1` through `eldritch_ember:4` and
   `eldritch_ichor:1` through `eldritch_ichor:4`;
-- `influence_exalt:<influence-name>`; the checked artifact exposes
-  `adjudicator`, `basilisk`, `crusader`, `elder`, `eyrie`, and `shaper`;
+- `influence_exalt:<currency-influence>` for `crusader`, `hunter`, `redeemer`,
+  and `warlord`; the compiled modifier pools separately retain the internal
+  `adjudicator`, `basilisk`, `crusader`, `elder`, `eyrie`, and `shaper`
+  identities;
 - `fracture` and `remove_crafted_modifiers`.
 
 The fixed-option kinds accepted from solver request JSON are
@@ -161,6 +163,10 @@ are not additional crafting rules.
   dedicated bench craft-panel tab.
 - Solver-generated `restart` nodes compile and simulate, but `restart` is not
   present in the visual Strategy Builder operation dropdown.
+- Veiled offer timing is inconsistent across engines: the Simulator persists
+  offers at placeholder acquisition, while the exact solver samples them when
+  Unveil is observed. The automatic post-acquisition blocker program is paused
+  on Oliver's ruling in [Veiled crafting](veiled-crafting.md).
 
 Open mechanic questions are kept in the family files that own them. The
 current code-inspection audit found questions about double-side-lock Scour,

@@ -13,7 +13,7 @@ from urllib.request import Request, urlopen
 SOURCE_KEY = "poe-ninja"
 SOURCE_NAME = "poe.ninja"
 SOURCE_TERMS_URL = "https://poe.ninja/data"
-ADAPTER_VERSION = "poe1-2026-07-15"
+ADAPTER_VERSION = "poe1-2026-08-09"
 DEFAULT_BASE_URL = "https://poe.ninja/poe1/api/economy"
 DEFAULT_USER_AGENT = (
     "poecraft2-economy-ingest/0.1 "
@@ -36,7 +36,7 @@ CATEGORY_CAPABILITIES = (
     CategoryCapability("Fossil", "exchange", True),
     CategoryCapability("Resonator", "exchange", True),
     CategoryCapability("Essence", "exchange", True),
-    CategoryCapability("Beast", "stash", False),
+    CategoryCapability("Beast", "stash", True),
     CategoryCapability("BaseType", "stash", False),
 )
 

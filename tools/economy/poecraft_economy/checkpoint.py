@@ -1,11 +1,39 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import closing
 import json
 from pathlib import Path
+import sqlite3
 import sys
 
 from .core import sha256_bytes
+
+
+def _database_schema_version(database: Path) -> int:
+    try:
+        uri = database.resolve().as_uri() + "?mode=ro"
+        with closing(sqlite3.connect(uri, uri=True)) as connection:
+            row = connection.execute(
+                "SELECT schema_version FROM economy_manifest WHERE singleton = 1"
+            ).fetchone()
+    except sqlite3.Error as error:
+        raise ValueError(
+            f"checkpoint database schema could not be read: {error}"
+        ) from error
+    if row is None:
+        raise ValueError("checkpoint database manifest is missing")
+    try:
+        version = int(row[0])
+    except (TypeError, ValueError) as error:
+        raise ValueError(
+            "checkpoint database schema version is not an integer"
+        ) from error
+    if version < 1:
+        raise ValueError(
+            f"checkpoint database schema version must be positive, got {version}"
+        )
+    return version
 
 
 def create_manifest(database: Path) -> dict[str, object]:
@@ -13,6 +41,7 @@ def create_manifest(database: Path) -> dict[str, object]:
     content_hash = sha256_bytes(body)
     return {
         "schema_version": 1,
+        "database_schema_version": _database_schema_version(database),
         "database_key": f"database/{content_hash}.db",
         "sha256": content_hash,
         "bytes": len(body),
@@ -33,6 +62,14 @@ def verify(database: Path, manifest_path: Path) -> dict[str, object]:
         raise ValueError(
             f"checkpoint hash mismatch: expected {expected_hash}, got {actual_hash}"
         )
+    if "database_schema_version" in manifest:
+        expected_schema_version = int(manifest["database_schema_version"])
+        actual_schema_version = _database_schema_version(database)
+        if actual_schema_version != expected_schema_version:
+            raise ValueError(
+                "checkpoint database schema mismatch: "
+                f"expected {expected_schema_version}, got {actual_schema_version}"
+            )
     return manifest
 
 

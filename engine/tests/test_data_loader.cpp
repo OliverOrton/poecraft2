@@ -57,6 +57,33 @@ void run_data_loader_tests(const char* artifact_dir) {
         PC_CHECK(native.bestiary_actions[0].cost_keys.size() == 4);
         PC_CHECK(native.bestiary_actions[1].cost_keys.empty());
     }
+    const auto influence_exalt_code = [&](const char* name) {
+        const auto found = native.influence_exalt_code_by_name.find(name);
+        return found == native.influence_exalt_code_by_name.end()
+                   ? -1
+                   : found->second;
+    };
+    PC_CHECK(influence_exalt_code("warlord") ==
+             influence_exalt_code("adjudicator"));
+    PC_CHECK(influence_exalt_code("hunter") ==
+             influence_exalt_code("basilisk"));
+    PC_CHECK(influence_exalt_code("redeemer") ==
+             influence_exalt_code("eyrie"));
+    PC_CHECK(influence_exalt_code("crusader") > 0);
+    PC_CHECK(influence_exalt_code("elder") == -1);
+    PC_CHECK(influence_exalt_code("shaper") == -1);
+    PC_CHECK(native.influence_exalt_name_by_code.at(
+                 static_cast<std::size_t>(
+                     influence_exalt_code("adjudicator"))) ==
+             "warlord");
+    PC_CHECK(native.influence_exalt_name_by_code.at(
+                 static_cast<std::size_t>(
+                     influence_exalt_code("basilisk"))) ==
+             "hunter");
+    PC_CHECK(native.influence_exalt_name_by_code.at(
+                 static_cast<std::size_t>(
+                     influence_exalt_code("eyrie"))) ==
+             "redeemer");
     std::printf("loaded %u bases (%u ordinary), %u mods, %u strings\n",
                 summary.base_item_count, summary.ordinary_session_base_count,
                 summary.mod_count, summary.string_count);

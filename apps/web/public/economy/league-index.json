@@ -1,63 +1,63 @@
 {
-  "generated_at_utc": "2026-08-09T16:47:37Z",
+  "generated_at_utc": "2026-08-09T18:34:56Z",
   "leagues": [
     {
       "active": true,
       "archived": false,
-      "content_sha256": "a122cad9494aa3361016b6f9c542e029e7aa1465de6d04bd6b5b150b5d26c485",
+      "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
       "coverage": {
-        "low_confidence": 28,
-        "missing": 585,
-        "priced": 861
+        "low_confidence": 29,
+        "missing": 583,
+        "priced": 863
       },
       "display_name": "Allflame",
       "error": null,
-      "latest_snapshot_id": "economy:allflame:a122cad9494aa3361016b6f9c542e029e7aa1465de6d04bd6b5b150b5d26c485",
-      "latest_snapshot_url": "snapshots/a122cad9494aa3361016b6f9c542e029e7aa1465de6d04bd6b5b150b5d26c485.json",
+      "latest_snapshot_id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+      "latest_snapshot_url": "snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
       "league_key": "allflame",
       "realm": "pc",
       "ruleset": "softcore",
-      "source_cutoff_at_utc": "2026-08-09T16:44:10Z",
+      "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
       "stale": false,
       "temporary": true
     },
     {
       "active": true,
       "archived": false,
-      "content_sha256": "b199684d293012331b8d4a57dea44a1f7241d5d4664ba6579de94848d82f0cff",
+      "content_sha256": "9dece258da8894eb75cbb28115c89cca3149a03b885510e10ab6c22836dbc2fc",
       "coverage": {
-        "low_confidence": 98,
-        "missing": 649,
-        "priced": 797
+        "low_confidence": 109,
+        "missing": 639,
+        "priced": 807
       },
       "display_name": "Hardcore Allflame",
       "error": null,
-      "latest_snapshot_id": "economy:hardcore-allflame:b199684d293012331b8d4a57dea44a1f7241d5d4664ba6579de94848d82f0cff",
-      "latest_snapshot_url": "snapshots/b199684d293012331b8d4a57dea44a1f7241d5d4664ba6579de94848d82f0cff.json",
+      "latest_snapshot_id": "economy:hardcore-allflame:9dece258da8894eb75cbb28115c89cca3149a03b885510e10ab6c22836dbc2fc",
+      "latest_snapshot_url": "snapshots/9dece258da8894eb75cbb28115c89cca3149a03b885510e10ab6c22836dbc2fc.json",
       "league_key": "hardcore-allflame",
       "realm": "pc",
       "ruleset": "hardcore",
-      "source_cutoff_at_utc": "2026-08-09T16:44:10Z",
+      "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
       "stale": false,
       "temporary": true
     },
     {
       "active": true,
       "archived": false,
-      "content_sha256": "ff59e7f60886430318976be46a4ea971fc20c8381274be2ef18c8a92193feb82",
+      "content_sha256": "7da0b6fe6884582874c8e75bbcc19e2c9cf76388992a68d546f14c967a469702",
       "coverage": {
-        "low_confidence": 256,
+        "low_confidence": 206,
         "missing": 652,
         "priced": 794
       },
       "display_name": "Standard",
       "error": null,
-      "latest_snapshot_id": "economy:standard:ff59e7f60886430318976be46a4ea971fc20c8381274be2ef18c8a92193feb82",
-      "latest_snapshot_url": "snapshots/ff59e7f60886430318976be46a4ea971fc20c8381274be2ef18c8a92193feb82.json",
+      "latest_snapshot_id": "economy:standard:7da0b6fe6884582874c8e75bbcc19e2c9cf76388992a68d546f14c967a469702",
+      "latest_snapshot_url": "snapshots/7da0b6fe6884582874c8e75bbcc19e2c9cf76388992a68d546f14c967a469702.json",
       "league_key": "standard",
       "realm": "pc",
       "ruleset": "softcore",
-      "source_cutoff_at_utc": "2026-08-09T16:44:10Z",
+      "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
       "stale": false,
       "temporary": false
     },
@@ -71,7 +71,7 @@
         "priced": 271
       },
       "display_name": "Hardcore",
-      "error": "live refresh failed: Currency chaos reference row had no numeric primaryValue",
+      "error": "required category failure: Currency (ValueError: primaryValue must be numeric)",
       "latest_snapshot_id": "economy:hardcore:49d5d98e06d6271a6d799a7cee2b8c79f3b7d0319321ed9df90289033a6db615",
       "latest_snapshot_url": "snapshots/49d5d98e06d6271a6d799a7cee2b8c79f3b7d0319321ed9df90289033a6db615.json",
       "league_key": "hardcore",

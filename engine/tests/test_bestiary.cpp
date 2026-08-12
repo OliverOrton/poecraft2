@@ -35,7 +35,7 @@ DataImpl contract_data() {
     create.checkpoint_effect = BestiaryCheckpointEffect::Create;
     create.identity_requirement = BestiaryIdentityRequirement::CurrentItem;
     create.cost_keys = {
-        "beast:craicic-chimeral", "beast:rare", "beast:rare", "beast:rare"};
+        "beast:craicic-croaker", "beast:rare", "beast:rare", "beast:rare"};
     BestiaryActionDescriptor restore;
     restore.global_action_id = 21;
     restore.global_recipe_id = 10;
@@ -196,7 +196,7 @@ void run_bestiary_tests() {
     PC_CHECK(std::strcmp(action_info.family_display_name, "Imprint") == 0);
     PC_CHECK(action_info.cost_key_count == 4);
     PC_CHECK(std::strcmp(action_info.cost_keys[0],
-                         "beast:craicic-chimeral") == 0);
+                         "beast:craicic-croaker") == 0);
     PC_CHECK(std::strcmp(action_info.cost_keys[1], "beast:rare") == 0);
     PC_CHECK(std::strcmp(action_info.cost_keys[2], "beast:rare") == 0);
     PC_CHECK(std::strcmp(action_info.cost_keys[3], "beast:rare") == 0);

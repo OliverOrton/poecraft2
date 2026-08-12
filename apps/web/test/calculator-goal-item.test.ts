@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 
 import { buildCalculatorTargetModel } from "../src/app/calculator-goal-model";
-import type { ModifierFamilyOption } from "../src/app/modifier-options";
+import {
+    buildModifierOptions,
+    type ModifierFamilyOption,
+} from "../src/app/modifier-options";
+import type { Catalog, ModInfo } from "../src/app/engine-protocol";
 import type { CalculatorGoalSlot } from "../src/app/workspace/persistence";
 
 const options: ModifierFamilyOption[] = [
@@ -139,5 +143,60 @@ const dense = buildCalculatorTargetModel({
 assert.equal(dense.prefixes.length, 3);
 assert.equal(dense.suffixes.length, 3);
 assert.equal(dense.otherRequirements.length, 0);
+
+const influenceMod = (
+    id: number,
+    internalName: string,
+    influenceCode: number,
+): ModInfo => ({
+    session_mod_id: id,
+    global_mod_id: id,
+    key: `influence-${internalName}`,
+    generation_type: 0,
+    reach_kind: 1,
+    reach_influence: influenceCode,
+    reach_via: `influence:${internalName}`,
+    primary_group_id: id,
+    family_id: id,
+    required_level: 1,
+    group_display_name: internalName,
+    family_tier_index: 1,
+    text_lines: [`${internalName} modifier`],
+    classification_tags: [],
+});
+const influenceOptionCatalog: Catalog = {
+    groupKeyById: [],
+    groupNameById: [],
+    essences: [],
+    fossils: [],
+    bench: [],
+    harvestTags: [],
+    influences: [
+        { key: "warlord", code: 1, name: "Warlord" },
+        { key: "hunter", code: 2, name: "Hunter" },
+        { key: "redeemer", code: 5, name: "Redeemer" },
+    ],
+};
+const influenceOptions = buildModifierOptions(
+    [
+        influenceMod(1, "adjudicator", 1),
+        influenceMod(2, "basilisk", 2),
+        influenceMod(4, "elder", 4),
+        influenceMod(5, "eyrie", 5),
+        influenceMod(6, "shaper", 6),
+    ],
+    influenceOptionCatalog,
+);
+assert.deepEqual(
+    new Map(influenceOptions.map((option) => [option.value, option.sourceLabel])),
+    new Map([
+        ["influence-adjudicator", "Warlord"],
+        ["influence-basilisk", "Hunter"],
+        ["influence-elder", "Elder"],
+        ["influence-eyrie", "Redeemer"],
+        ["influence-shaper", "Shaper"],
+    ]),
+    "generic influence pools keep Elder/Shaper and use canonical public labels",
+);
 
 console.log("  ok - Calculator v1 goals adapt to the shared target item model");

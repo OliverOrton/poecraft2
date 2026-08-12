@@ -753,7 +753,9 @@ struct StrategyEvalWork::Impl {
         const StrategyEvalOptions& options_in)
         : strategy(std::move(strategy_in)),
           options(options_in),
-          model(derive_checked_model(strategy, options_in.max_states)),
+          model(derive_checked_model(
+              strategy, options_in.max_states,
+              options_in.use_exact_exchangeable_family_compression)),
           review_sections(parse_review_sections(
               *strategy, options_in.review_projection_json)) {
         if (strategy == nullptr || strategy->session == nullptr ||
@@ -3971,16 +3973,10 @@ struct StrategyEvalWork::Impl {
                 edge_count,
                 attribution_rows[pair.row].transitions.size());
         }
-        if (edge_count > std::numeric_limits<std::uint32_t>::max()) {
-            return solve_shared_row_exact_attribution();
-        }
-
         /* The raw attribution transpose expands every shared row once per
-         * pair. Preflight that representation before allocating it: the
-         * bd85 control projects billions of PolicyEdge entries even though
-         * the retained shared-row payload is comparatively small. This probe
-         * diagnoses the existing algorithmic choice without changing the
-         * evaluator path or its configured memory limit. */
+         * pair. Prefer the exact shared-row solver whenever that expansion
+         * cannot fit the evaluator's remaining owned-byte envelope, not only
+         * after the edge count has overflowed a 32-bit index. */
         memory_probe_stage =
             "exact_attribution_expanded_transpose";
         memory_probe_units = edge_count;
@@ -3993,6 +3989,19 @@ struct StrategyEvalWork::Impl {
                 count,
                 sizeof(std::uint32_t) + sizeof(PolicyRow) +
                     sizeof(std::uint32_t)));
+        const std::uint64_t owned_before_transpose =
+            fast_estimated_owned_bytes();
+        const bool transpose_exceeds_memory =
+            owned_before_transpose > options.max_owned_bytes ||
+            transpose_projection >
+                options.max_owned_bytes - owned_before_transpose;
+        if (edge_count > std::numeric_limits<std::uint32_t>::max() ||
+            transpose_exceeds_memory) {
+            memory_probe_stage = "steady_state";
+            memory_probe_units = 0;
+            memory_probe_unit_bytes = 0;
+            return solve_shared_row_exact_attribution();
+        }
         check_owned_cap(transpose_projection);
         memory_probe_stage = "steady_state";
         memory_probe_units = 0;
@@ -4508,6 +4517,8 @@ struct StrategyEvalWork::Impl {
             calc.telemetry().reforge_projected_work;
         output.reforge_evaluator_work_v3 =
             calc.telemetry().reforge_factored_work;
+        output.reforge_gated_first_kernel_bits_hash =
+            calc.telemetry().gated_first_kernel_bits_hash;
         output.reforge_effort = calc.telemetry().reforge_effort;
         output.reforge_row_samples =
             calc.telemetry().reforge_row_samples;
@@ -5361,6 +5372,8 @@ const StrategyEvalResult& StrategyEvalWork::diagnostic_result() {
             telemetry.reforge_projected_work;
         output.reforge_evaluator_work_v3 =
             telemetry.reforge_factored_work;
+        output.reforge_gated_first_kernel_bits_hash =
+            telemetry.gated_first_kernel_bits_hash;
         output.reforge_effort = telemetry.reforge_effort;
         output.reforge_row_samples = telemetry.reforge_row_samples;
         output.reforge_row_samples_omitted =

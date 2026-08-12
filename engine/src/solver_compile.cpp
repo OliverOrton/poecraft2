@@ -1,4 +1,5 @@
 #include "solver_compile_serialization.hpp"
+#include "solver_solve_types.hpp"
 
 /*
  * Compile an exact solver policy into the ordinary strategy graph format.
@@ -276,27 +277,33 @@ std::string compile_policy_strategy_json(
                        certified_kernel_bits_hash) {
                 return std::nullopt;
             }
-            double probability = 0.0;
-            double success_probability = 0.0;
+            solve_detail::WideFloat probability_mass{0.0};
+            solve_detail::WideFloat success_probability_mass{0.0};
             for (const OutcomeEntry& outcome : kernel.entries) {
                 if (!(outcome.probability > 0.0) ||
                     !std::isfinite(outcome.probability) ||
                     outcome.state >= result.policy_reachable.size()) {
                     return std::nullopt;
                 }
-                probability += outcome.probability;
+                probability_mass +=
+                    solve_detail::WideFloat{outcome.probability};
                 const bool goal_successor =
                     calc.is_goal_state(calc.state(outcome.state));
                 if (goal_successor) {
                     if (!result.goal_states[outcome.state]) {
                         return std::nullopt;
                     }
-                    success_probability += outcome.probability;
+                    success_probability_mass +=
+                        solve_detail::WideFloat{
+                            outcome.probability};
                 } else if (result.goal_states[outcome.state] ||
                            !result.policy_reachable[outcome.state]) {
                     return std::nullopt;
                 }
             }
+            const double probability = probability_mass.value();
+            const double success_probability =
+                success_probability_mass.value();
             const double probability_tolerance =
                 1e-12 * std::max(1.0, std::abs(probability));
             if (std::abs(probability - 1.0) > probability_tolerance ||
@@ -446,7 +453,6 @@ std::string compile_policy_strategy_json(
         json +=
             "},\"start_node_id\":\"start\",\"nodes\":["
             "{\"id\":\"start\",\"kind\":\"start\"},"
-            "{\"id\":\"router\",\"kind\":\"router\"},"
             "{\"id\":\"goal\",\"kind\":\"terminal\","
             "\"terminal\":\"success\"},"
             "{\"id\":\"renewal\",\"kind\":\"operation\","
@@ -455,18 +461,22 @@ std::string compile_policy_strategy_json(
             ",\"operation\":" +
             operation_json(session, descriptor) +
             "}],\"edges\":["
-            "{\"id\":\"e0\",\"from\":\"start\",\"to\":\"router\","
+            "{\"id\":\"e0\",\"from\":\"start\",\"to\":\"renewal\","
             "\"priority\":0,\"is_default\":true},"
-            "{\"id\":\"e1\",\"from\":\"router\",\"to\":\"goal\","
+            "{\"id\":\"e1\",\"from\":\"renewal\",\"to\":\"goal\","
             "\"priority\":0,\"condition\":" +
             goal_condition +
             "},"
-            "{\"id\":\"e2\",\"from\":\"router\",\"to\":\"renewal\","
-            "\"priority\":1,\"is_default\":true},"
-            "{\"id\":\"e3\",\"from\":\"renewal\",\"to\":\"router\","
-            "\"priority\":0,\"is_default\":true}]}";
-        constexpr std::uint32_t kNodes = 4;
-        constexpr std::uint32_t kEdges = 4;
+            "{\"id\":\"e2\",\"from\":\"renewal\",\"to\":\"renewal\","
+            "\"priority\":1,\"is_default\":true,"
+            "\"accounting_roles\":[\"retry\"]}]}";
+        /* Keep the certified renewal local to its operation node. Besides
+         * removing a semantically empty router, this is the executable
+         * identity used by exact evaluation to select the calculator's
+         * goal-progress-gated kernel instead of expanding unobserved physical
+         * miss states. */
+        constexpr std::uint32_t kNodes = 3;
+        constexpr std::uint32_t kEdges = 3;
         if (kNodes > result.options.max_compiled_nodes) {
             if (telemetry != nullptr) {
                 telemetry->cap_hit = "max_compiled_nodes";

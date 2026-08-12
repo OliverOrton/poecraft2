@@ -27,6 +27,11 @@ struct StrategyEvalOptions {
      * historical effectively-unbounded default. */
     std::uint64_t max_reforge_work =
         std::numeric_limits<std::uint64_t>::max();
+    /* Internal A/B control. The default independently rebuilds exact
+     * destructive-reforge rows with the calculator's proved exchangeable
+     * junk-family symmetry reduction whenever the evaluator carrier is
+     * coarse. Identity-observing carriers always retain the raw family path. */
+    bool use_exact_exchangeable_family_compression = true;
 };
 
 enum class StrategyEvalPhase {
@@ -205,6 +210,11 @@ struct StrategyEvalResult {
     std::uint64_t reforge_evaluator_work_v1 = 0;
     std::uint64_t reforge_evaluator_work_v2 = 0;
     std::uint64_t reforge_evaluator_work_v3 = 0;
+    /* Canonical state/probability-bit hash for the first goal-gated reforge
+     * kernel. Kept in the native result so focused exact-evaluator tests can
+     * prove compressed and raw family enumeration are distribution-identical
+     * without making this diagnostic part of the JSON contract. */
+    std::uint64_t reforge_gated_first_kernel_bits_hash = 0;
     ReforgeEffortBreakdown reforge_effort;
     std::vector<ReforgeRowTelemetry> reforge_row_samples;
     std::uint64_t reforge_row_samples_omitted = 0;

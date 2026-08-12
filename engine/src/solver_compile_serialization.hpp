@@ -276,7 +276,7 @@ std::string operation_json(const SessionImpl& session,
                "\",\"tier\":" + std::to_string(action.params.tier) + "}";
     case ActionType::InfluenceExalt:
         return "{\"type\":\"influence_exalt\",\"influence\":\"" +
-               json_escape(data.influence_name_by_code.at(
+               json_escape(data.influence_exalt_name_by_code.at(
                    static_cast<std::size_t>(
                        action.params.influence_code))) +
                "\"}";

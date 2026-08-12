@@ -142,8 +142,11 @@ upper-policy provenance telemetry.
 The completed
 [Q-Directed Deep Solving And Automatic Eldritch Side Actions](archive/2026-07-28-q-directed-eldritch-side-actions/README.md)
 milestone retains stored-row Q refinement, exceptional-support expansion, and
-four automatic real-resource Eldritch side options for eligible armour. The
-frozen lower bounds improve materially, but the action intervals remain open.
+the original four automatic real-resource Eldritch side options for eligible
+armour. The current product surface also admits carrier-local Eldritch Exalt
+Prefix/Suffix options when their stricter goal-preservation predicate holds.
+The frozen historical lower bounds improve materially, but their action
+intervals remain open.
 
 The completed
 [Chaos-Anchored Incremental Action Generation](archive/2026-07-28-chaos-anchored-incremental-actions/README.md)

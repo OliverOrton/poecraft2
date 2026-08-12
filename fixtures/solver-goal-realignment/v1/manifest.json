@@ -1,0 +1,38 @@
+{
+  "schema_version": "solver_benchmark_corpus_v1",
+  "corpus_id": "poecraft2-solver-goal-realignment-v1",
+  "artifact": {
+    "manifest_relative_path": "data/compiled/current/manifest.json",
+    "canonical_source": "data/sqlite/poecraft.db",
+    "engine_abi_version": 2,
+    "artifact_schema_version": 4,
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+    "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+  },
+  "comparison_profile": {
+    "id": "solver-goal-realignment-native-wasm-v1",
+    "product_scope": "calculator_goal_relevant_with_zero_progress_gated_reforges",
+    "exact_required": true,
+    "maximum_wall_seconds": 300,
+    "compiled_exact_evaluation_required": true,
+    "verification_runs": 10000
+  },
+  "owner_decisions": [
+    "The primary fixture uses an explicit five-chaos base and Restart price; this is a fixture input, not a universal default.",
+    "All four goal slots require the named naturally rolled T1 modifier families; crafted or unveiled relatives do not satisfy them.",
+    "The solve uses Calculator goal-relevant action discovery and goal-progress-gated destructive reforges.",
+    "The automatic Eldritch Exalt case keeps the primitive dependency-only and requires its carrier-local prefix option to preserve an already satisfied suffix goal; its disclosed 0.001-chaos fixture override against the pinned 3.59-chaos snapshot quote is synthetic forced-winner input, not a live-optimality claim.",
+    "The Influence Exalt case uses a Warlord-only natural family goal on an uninfluenced Vaal Regalia, so the canonical market-priced Warlord Exalt must be retained and selected through the ordinary product path without a forced action-price override.",
+    "The Imprint case freezes the dynamic public-product gate's lowest-weight natural prefix and highest-weight compatible natural suffix, retains the quoted Craicic Croaker and owner-default rare-beast prices, and discloses only the two non-Bestiary retry-route overrides already qualified by that gate.",
+    "Every relevant family must complete, prove non-improving, win, or report a deterministic rejection; a cap-stopped Chaos policy is not exact.",
+    "The case succeeds only with exact lower/upper equality and an independently evaluated compiled policy within five minutes."
+  ],
+  "cases": [
+    "cases/conquest-lamellar-allflame-four-natural-t1.json",
+    "cases/vaal-regalia-allflame-automatic-eldritch-exalt.json",
+    "cases/vaal-regalia-allflame-warlord-exalt-goal.json",
+    "cases/vaal-regalia-allflame-imprint-retry.json"
+  ]
+}

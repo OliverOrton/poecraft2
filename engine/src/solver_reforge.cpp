@@ -1,4 +1,5 @@
 #include "solver_calc_types.hpp"
+#include "solver_solve_types.hpp"
 
 #include <algorithm>
 #include <array>
@@ -828,7 +829,13 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             consume_reforge_work(amount, amount);
         };
 
-    std::unordered_map<std::uint32_t, double> outcome_acc;
+    /* A goal-progress-gated row can merge a very large number of tiny
+     * terminal branches into one canonical successor.  Accumulate those
+     * stored-double branch masses in the same deterministic double-double
+     * arithmetic used by the independent policy evaluator.  Converting to
+     * the public double once, after the canonical successor is complete,
+     * avoids order-sensitive rare-success drift in cost / probability. */
+    std::unordered_map<std::uint32_t, solve_detail::WideFloat> outcome_acc;
     std::size_t outcome_reserve = 65536;
     if (state_cap_.has_value()) {
         outcome_reserve = std::min<std::size_t>(
@@ -889,7 +896,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             const auto found = outcome_acc.find(state);
             if (found != outcome_acc.end()) {
                 credit_effort(effort.successor_duplicate_merges);
-                found->second += probability;
+                found->second += solve_detail::WideFloat{probability};
                 if (capture_attribution) {
                     ++attribution.duplicate_projected_outcomes;
                     attribution.duplicate_projected_probability_mass +=
@@ -923,7 +930,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 require_reforge_scratch_bytes(projected);
                 outcome_acc.reserve(outcome_preflight_entries);
             }
-            outcome_acc.emplace(state, probability);
+            outcome_acc.emplace(
+                state, solve_detail::WideFloat{probability});
             credit_effort(effort.successor_unique_insertions);
             return false;
         };
@@ -982,18 +990,24 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                                right.probability_mass);
                 });
         }
-        std::vector<std::pair<std::uint32_t, double>> ordered_outcomes(
-            outcome_acc.begin(), outcome_acc.end());
+        std::vector<std::pair<std::uint32_t, double>> ordered_outcomes;
+        ordered_outcomes.reserve(outcome_acc.size());
+        for (const auto& [successor, probability] : outcome_acc) {
+            ordered_outcomes.emplace_back(
+                successor, probability.value());
+        }
         std::sort(ordered_outcomes.begin(), ordered_outcomes.end());
-        double committed = 0.0;
+        solve_detail::WideFloat committed_mass{0.0};
         for (const auto& [successor, probability] : ordered_outcomes) {
             (void)successor;
-            committed += probability;
+            committed_mass += solve_detail::WideFloat{probability};
         }
+        double committed = committed_mass.value();
         if (committed <= 0.0) {
             outcome_acc.clear();
             accumulate_outcome(state_id, 1.0);
             ordered_outcomes.assign({{state_id, 1.0}});
+            committed_mass = solve_detail::WideFloat{1.0};
             committed = 1.0;
             state_dependent = true;
         }
@@ -1007,7 +1021,9 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             result.entries.push_back({
                 successor,
                 goal_progress_gated ? probability
-                                    : probability / committed});
+                                    : (solve_detail::WideFloat{probability} /
+                                       committed_mass)
+                                          .value()});
         }
         for (const OutcomeEntry& entry : result.entries) {
             const AbstractState& successor = states_.at(entry.state);
@@ -1021,17 +1037,25 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         }
         if (goal_progress_gated) {
             result.goal_progress_gated = true;
+            solve_detail::WideFloat terminal_mass{0.0};
+            solve_detail::WideFloat retry_mass{0.0};
+            solve_detail::WideFloat partial_mass{0.0};
             for (const OutcomeEntry& entry : result.entries) {
                 if (entry.state == result.gated_terminal_state) {
-                    result.gated_terminal_probability +=
-                        entry.probability;
+                    terminal_mass +=
+                        solve_detail::WideFloat{entry.probability};
                 } else if (entry.state == result.gated_retry_state) {
-                    result.gated_retry_probability += entry.probability;
+                    retry_mass +=
+                        solve_detail::WideFloat{entry.probability};
                 } else {
-                    result.gated_partial_probability += entry.probability;
+                    partial_mass +=
+                        solve_detail::WideFloat{entry.probability};
                     ++result.gated_partial_states;
                 }
             }
+            result.gated_terminal_probability = terminal_mass.value();
+            result.gated_retry_probability = retry_mass.value();
+            result.gated_partial_probability = partial_mass.value();
             std::uint64_t kernel_hash = 1469598103934665603ull;
             const auto mix_hash = [&](const std::uint64_t value) {
                 kernel_hash ^= value;
@@ -1058,12 +1082,24 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 telemetry_.gated_first_kernel_bits_hash = kernel_hash;
             }
             ++telemetry_.gated_reforge_rows;
-            telemetry_.gated_terminal_probability +=
-                result.gated_terminal_probability;
-            telemetry_.gated_retry_probability +=
-                result.gated_retry_probability;
-            telemetry_.gated_partial_probability +=
-                result.gated_partial_probability;
+            telemetry_.gated_terminal_probability =
+                (solve_detail::WideFloat{
+                     telemetry_.gated_terminal_probability} +
+                 solve_detail::WideFloat{
+                     result.gated_terminal_probability})
+                    .value();
+            telemetry_.gated_retry_probability =
+                (solve_detail::WideFloat{
+                     telemetry_.gated_retry_probability} +
+                 solve_detail::WideFloat{
+                     result.gated_retry_probability})
+                    .value();
+            telemetry_.gated_partial_probability =
+                (solve_detail::WideFloat{
+                     telemetry_.gated_partial_probability} +
+                 solve_detail::WideFloat{
+                     result.gated_partial_probability})
+                    .value();
             telemetry_.gated_terminal_short_circuits +=
                 result.gated_terminal_short_circuits;
             telemetry_.gated_retry_short_circuits +=
@@ -1087,7 +1123,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             const std::size_t old_capacity = bucket.capacity();
             bucket.push_back({std::move(base_observation), finalized});
             account_reforge_cache_insert(
-                old_capacity, bucket.capacity(), bucket.back());
+                memo_key, old_capacity, bucket.capacity(), bucket.back());
         }
         if (effort_recorder.has_value()) {
             effort_recorder->completed = true;

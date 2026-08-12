@@ -383,6 +383,13 @@ SolveWork::Impl::Impl(
         initialize_owned_bytes_ledger();
     }
 
+SolveWork::Impl::~Impl() {
+    /* A suspended admission owns staged parent operators through its
+     * CalcContext. Abandonment destroys the continuation synchronously and
+     * rolls that append-only range back before the context can be reused. */
+    calc.cancel_state_local_automatic_candidates();
+}
+
 double SolveWork::Impl::exact_gap_proof_tolerance() const {
         return options.epsilon * 10.0;
     }
