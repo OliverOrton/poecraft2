@@ -77,6 +77,9 @@ fallback is an incumbent, never proof that Chaos is optimal.
 
 ## Gate 0 - boundary and fresh baseline
 
+Frozen measurements and raw-artifact identities are in
+[Gate 0 baseline](evidence/gate0-baseline.md).
+
 1. Verify the clean starting commit and branch, read the required authority
    documents and the two latest milestone reports, activate this plan in the
    documentation indexes and `HANDOFF.md`, and commit the boundary before
@@ -120,6 +123,15 @@ Fracture/Restart. No family is forced to win.
 
 ## Gate 1 - fresh-eyes end-to-end audit
 
+The executable audit contract and current evidence are in the
+[Gate 1 action-family matrix](evidence/gate1-action-family-matrix.md). The
+focused family-contract gate covers every primitive action type, every native
+automatic kind, and the separate Bestiary operations with typed price,
+carrier, scheduling, row/Q, selection, compiler, evaluator, Simulator, C-API,
+and release-WASM paths; it passes 182,656 checks. The matrix keeps outstanding
+selected-policy and final release-WASM proofs explicit rather than treating
+vocabulary presence as end-to-end acceptance.
+
 Audit the live chain:
 
 ```text
@@ -150,6 +162,9 @@ optimization.
 
 ## Gate 2 - action and price availability
 
+The completed economy/action evidence is in
+[Gate 2 action and price availability](evidence/gate2-action-price-availability.md).
+
 1. Replace Craicic Chimeral with Craicic Croaker in the Bestiary manifest,
    stable price catalog/provider mapping, generated/static bundles, native/web
    consumers, solver cost vectors, compiler/Simulator accounting,
@@ -166,7 +181,21 @@ optimization.
    priced and the option is not silently skipped. Audit every supported family
    for explicit price completeness/exclusion.
 
+The reusable cross-runtime Imprint fixture now closes exactly at
+`252.65352021274481`, compiles one create and one restore operation, and passes
+the exact 3:1 rare-beast/Croaker consumption contract with complete pricing.
+Its final native/release-WASM 10,000-run qualification remains part of the
+end-of-plan acceptance pass.
+
 ## Gate 3 - bounded automatic Veiled crafting
+
+**Paused on owner ruling:** the Simulator currently fixes and stores offers at
+placeholder acquisition, while the exact solver samples them at observed
+Unveil. The requested post-acquisition blocker can improve the offer
+distribution only under observation-time generation. Oliver must also choose
+the bounded continuation when no offered modifier satisfies a goal. The exact
+question and current implementation split are recorded in
+[Veiled crafting](../../mechanics/veiled-crafting.md).
 
 Reuse the existing exact Veiled primitives, offer identity, compiler routing,
 evaluator, and Simulator. Add carrier-local bounded programs with optional
@@ -194,6 +223,56 @@ ineligible base, and one public-path forced winner that compiles and verifies.
 
 ## Gate 5 - multi-action solver completeness
 
+Focused counter, watchdog, and leaf-ownership evidence is retained in
+[Gate 5 solver-completeness recovery](evidence/gate5-solver-completeness-recovery.md).
+
+The first repaired primary rerun proved that the former transition-cap stop
+was false: all 3,621 parent states were expanded while only 35,866 sparse rows
+and 52,758 transitions were retained. It then expired inside one unyielded
+solver step. Carrier-local automatic admission is now a transactional,
+single-flight cooperative continuation. Focused cancellation, deterministic
+resume/no-replay, rollback, owned-byte reconciliation, and final-checkpoint
+cap tests pass; six resumes and five suspensions measured a maximum
+uninterrupted leaf of 0.210 ms against the 20-second worker slice.
+
+Automatic child discovery is now separate from the retained parent-state cap.
+The Warlord-only control consequently completes that former boundary, exposing
+644,462 transient automatic child states against only 698 retained parent
+states. Its next honest stop is the shared `max_reforge_work` accounting limit.
+At that stop the solver previously discarded a completed start-reachable
+Warlord/Restart route because an irrelevant expanded component made the global
+proper-policy bootstrap fail.
+
+The resource-stop constructor now works over the start-reachable admitted-row
+attractor, independently certifies the resulting proper policy, and exposes an
+unsampled authoritative signal when the cheapest evaluated fallback candidate
+is selected. Its focused open-envelope regression publishes a reconciled
+74.625-chaos Transmute/Restart incumbent with lower bound zero while irrelevant
+expanded states remain outside the policy. Automatic-admission reforge work is
+now separate from retained parent work as well. A debugger capture assigned the
+subsequent unreturned work item to `discover_automatic_imprint_options`, and
+that discovery/attempt traversal is now cooperative and transactional. Its
+focused gate preserves goal-capable longer prefixes such as Augment followed by
+Regal. Price-bounded finite closure is now implemented: it uses only a
+carrier-local certified incumbent upper, downward-rounded mandatory prices, an
+outward-rounded useful-depth ceiling, exact terminal-kernel equality, and
+componentwise primitive-resource dominance. Zero, missing, or nonfinite prices,
+an absent incumbent upper, and the independent work cap remain honest open
+boundaries. The final focused native gates pass 98,783 Solve checks and 60
+dedicated Imprint compile/evaluate checks.
+
+The post-proof Warlord rerun did not reach the former depth witness. Its
+60.354-second watchdog expired without a survivor after 8,943 returned solve
+slices. All 698 parent states were expanded and the frontier was empty, but the
+solver remained in iteration round zero with zero completed sweeps, no
+incumbent, and no finite upper; 5,081 rows, 3,719 transitions, and 2,555,093
+retained reforge-work units were unchanged at the final sample. Because this
+carrier never acquired a certified upper, the price certificate was correctly
+dormant and the no-incumbent Imprint fallback did not finish its first Bellman
+sweep within the watchdog. This is the new precise Gate 5 boundary. Characterize
+and close that fallback, then rerun Warlord before the primary. Do not start the
+mixed-action seven-step follow-up or the primary from this handoff.
+
 Run the primary four-mod case and trace every relevant family to materialized,
 pending, completed, proved non-improving, selected, or deterministically
 rejected. Repair confirmed scheduling, delayed-row lifecycle, partial-state
@@ -214,6 +293,20 @@ exact lower/upper equality with a compiled independently verified policy.
 
 ## Gate 6 - all-base correctness and evaluator recovery
 
+The Ring/Amulet publication and independent-evaluator repair is complete in
+[Gate 6 evaluator recovery](evidence/gate6-ring-amulet-evaluator-recovery.md).
+Both cases now publish honest bounded executable policies whose emitted
+three-node/three-edge graphs exact-evaluate with success probability one and
+zero off-policy or unresolved mass. Amulet completes in 1.634 seconds at
+`144.88045459605041`; exact exchangeable-family compression reduced its
+previously interrupted row from 20,000,025 to 1,043,760 logical work without
+raising a cap or weakening probability semantics. The lightweight every-base
+matrix is implemented but still needs its final direct acceptance run. Two
+isolated current-product controls now cover a real Prefixes Cannot Be Changed
+start and a full-junk-prefix carrier preserving one useful suffix while adding
+the other; their manifest validates, but focused solve/compile/evaluator/
+Simulator qualification remains pending.
+
 Run lightweight generated checks over every compiled mechanically achievable
 base for session creation, feasibility, rarity, modifier availability, action
 roles, price completeness, one-action transitions, and compiler/evaluator
@@ -227,6 +320,8 @@ Repair Ring and Amulet exact-evaluation/publication failures at the sparse or
 shared attribution and strict-partition ownership boundary. Do not weaken
 partition correctness, discard probability mass, or bypass independent
 verification.
+
+Focused acceptance: [Ring/Amulet evaluator recovery](evidence/gate6-ring-amulet-evaluator-recovery.md).
 
 ## Gate 7 - compiler and presentation integrity
 
