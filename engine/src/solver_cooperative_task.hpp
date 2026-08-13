@@ -2,7 +2,9 @@
 
 #include <coroutine>
 #include <cstddef>
+#include <cstdint>
 #include <exception>
+#include <limits>
 #include <new>
 #include <optional>
 #include <stdexcept>
@@ -14,6 +16,17 @@ namespace solve_detail {
 
 struct CooperativeCheckpoint {
     std::size_t retained_nested_bytes = 0;
+
+    constexpr CooperativeCheckpoint() = default;
+
+    constexpr explicit CooperativeCheckpoint(
+        const std::uint64_t retained_bytes) noexcept
+        : retained_nested_bytes(
+              retained_bytes >
+                      static_cast<std::uint64_t>(
+                          std::numeric_limits<std::size_t>::max())
+                  ? std::numeric_limits<std::size_t>::max()
+                  : static_cast<std::size_t>(retained_bytes)) {}
 };
 
 /*
