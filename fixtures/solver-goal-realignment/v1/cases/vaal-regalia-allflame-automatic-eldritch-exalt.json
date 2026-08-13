@@ -5,7 +5,7 @@
   "approval_status": "owner_pinned_2026_08_09",
   "benchmark_enabled": true,
   "benchmark_mode": "exact_product_acceptance",
-  "description": "Rare item-level-86 Vaal Regalia with a completed suffix goal and open prefix capacity; the pinned Allflame snapshot plus a disclosed synthetic Eldritch Exalt price force the dependency-only automatic prefix option to win while preserving the suffix.",
+  "description": "Rare item-level-86 Vaal Regalia with a completed fractured suffix goal and open prefix capacity; the pinned Allflame snapshot plus disclosed synthetic Eldritch Exalt and Eldritch Annul prices force the dependency-only automatic prefix retry option to win while retaining the opposite-side goal on every continuation.",
   "comparison_profile": "solver-goal-realignment-native-wasm-v1",
   "watchdog_seconds": 300,
   "session": {
@@ -23,7 +23,7 @@
     "mods": [
       {
         "key": "EinharMasterColdResist3__",
-        "flags": []
+        "flags": ["fractured"]
       }
     ]
   },
@@ -79,6 +79,20 @@
     "target_side": "prefix",
     "preserved_goal_side": "suffix"
   },
+  "compiled_operation_contracts": [
+    {
+      "type": "eldritch_annul",
+      "required_string_parameters": {}
+    }
+  ],
+  "market_price_override_contracts": [
+    {
+      "price_key": "eldritch_annul",
+      "snapshot_chaos_value": 40.53,
+      "override_chaos_value": 0.001,
+      "purpose": "Pair the synthetic Eldritch Exalt winner with its carrier-local miss cleanup so the gate qualifies that bounded retry program rather than an unrelated market-priced recovery route."
+    }
+  ],
   "economy": {
     "version": "v1",
     "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
@@ -89,7 +103,8 @@
     "league_name": "Allflame",
     "manual_overrides": {
       "base": 1000,
-      "eldritch_exalt": 0.001
+      "eldritch_exalt": 0.001,
+      "eldritch_annul": 0.001
     },
     "override_purpose": "synthetic_forced_winner_gate_not_market_quote",
     "fallback_price": null,
@@ -97,7 +112,8 @@
       "base": "owner_fixture_input_1000_chaos_to_force_eldritch_exalt"
     },
     "manual_override_decisions": {
-      "eldritch_exalt": "synthetic_0.001_chaos_forced_winner_gate_snapshot_quote_3.59"
+      "eldritch_exalt": "synthetic_0.001_chaos_forced_winner_gate_snapshot_quote_3.59",
+      "eldritch_annul": "synthetic_0.001_chaos_paired_retry_cleanup_snapshot_quote_40.53"
     }
   },
   "expected": {

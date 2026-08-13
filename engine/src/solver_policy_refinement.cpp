@@ -47,26 +47,6 @@ struct QuotientAlternativeDescriptor {
     bool operator==(const QuotientAlternativeDescriptor&) const = default;
 };
 
-std::uint64_t quotient_alternative_descriptor_bytes(
-        const QuotientAlternativeDescriptor& descriptor) {
-    std::uint64_t bytes = 0;
-    saturating_add(
-        bytes,
-        stable_key_bytes(descriptor.action.semantic_action_identity));
-    saturating_add(
-        bytes,
-        stable_key_bytes(
-            descriptor.action.runtime_contract_program_identity));
-    saturating_add(
-        bytes,
-        stable_key_bytes(descriptor.action.exact_choice_recipe_identity));
-    saturating_add(
-        bytes, requirement_bytes(descriptor.routing_observes));
-    saturating_add(
-        bytes, stable_key_bytes(descriptor.resumable_work_identity));
-    return bytes;
-}
-
 #include "solver_policy_oracle.hpp"
 #include "solver_policy_oracle_evaluate.inc"
 #include "solver_policy_oracle_resources.inc"
@@ -811,14 +791,22 @@ PolicyExactLiftCertificate lift_policy_quotient_materialized_scaffold(
     return certificate;
 }
 
-PolicyExactLiftCertificate lift_policy_quotient(
+namespace {
+
+struct QuotientFrontierExpansion {
+    std::vector<AbstractState> states;
+    PolicyLiftAdapterTelemetry telemetry;
+};
+
+PolicyExactLiftCertificate lift_policy_quotient_pass(
         CalcContext& coarse,
         const SolveResult& solved,
         const pc_item_state& exact_start,
         const std::unordered_map<std::string, double>& prices,
         const SolveOptions& options,
         const std::string& strategy_name,
-        const RefinementLimits* limits_override) {
+        const RefinementLimits* limits_override,
+        const std::vector<AbstractState>& frontier_seeds) {
     PolicyExactLiftCertificate certificate;
     certificate.solver_cost = solved.evaluated_policy_cost;
     const RefinementLimits limits =
@@ -872,13 +860,12 @@ PolicyExactLiftCertificate lift_policy_quotient(
         std::vector<std::uint32_t> locators;
         std::vector<std::uint32_t> ordinal_by_strict_state;
         std::vector<std::vector<std::uint32_t>> rows_by_ordinal;
-        using AlternativeDescriptors =
-            std::vector<QuotientAlternativeDescriptor>;
-        std::vector<std::shared_ptr<const AlternativeDescriptors>>
+        using AlternativeOperatorIds = std::vector<std::uint32_t>;
+        std::vector<std::shared_ptr<const AlternativeOperatorIds>>
             alternatives_by_ordinal;
         std::vector<std::uint32_t>
             alternative_payload_by_ordinal;
-        std::vector<std::shared_ptr<const AlternativeDescriptors>>
+        std::vector<std::shared_ptr<const AlternativeOperatorIds>>
             alternative_descriptor_payloads;
 
         const auto ensure_locator_capacity = [&](const std::uint32_t locator) {
@@ -908,6 +895,9 @@ PolicyExactLiftCertificate lift_policy_quotient(
             return ordinal;
         };
         intern_locator(root_locator);
+        for (const AbstractState& frontier : frontier_seeds) {
+            intern_locator(oracle.quotient_seed_locator(frontier));
+        }
 
         const auto canonical_raw_row = [&](QuotientOracleCompactRow row) {
             std::map<std::uint32_t, solve_detail::WideFloat> mass;
@@ -976,8 +966,8 @@ PolicyExactLiftCertificate lift_policy_quotient(
             if (!state.terminal) {
                 const std::optional<StableKey> reuse_identity =
                     oracle.quotient_selected_compact_row_identity(state);
-                AlternativeDescriptors descriptors =
-                    oracle.quotient_alternative_descriptors(state);
+                AlternativeOperatorIds descriptors =
+                    oracle.quotient_alternative_operator_ids(state);
                 const auto shared_descriptors = std::find_if(
                     alternative_descriptor_payloads.begin(),
                     alternative_descriptor_payloads.end(),
@@ -994,7 +984,7 @@ PolicyExactLiftCertificate lift_policy_quotient(
                             alternative_descriptor_payloads.begin());
                 } else {
                     auto payload =
-                        std::make_shared<const AlternativeDescriptors>(
+                        std::make_shared<const AlternativeOperatorIds>(
                             std::move(descriptors));
                     alternative_descriptor_payloads.push_back(payload);
                     alternatives_by_ordinal[cursor] =
@@ -1003,7 +993,7 @@ PolicyExactLiftCertificate lift_policy_quotient(
                         static_cast<std::uint32_t>(
                             alternative_descriptor_payloads.size() - 1);
                 }
-                const AlternativeDescriptors& state_alternatives =
+                const AlternativeOperatorIds& state_alternatives =
                     *alternatives_by_ordinal[cursor];
                 const auto reused =
                     reuse_identity.has_value()
@@ -1023,14 +1013,7 @@ PolicyExactLiftCertificate lift_policy_quotient(
                     saturating_add(
                         discovery_live,
                         state_alternatives.capacity() *
-                            sizeof(QuotientAlternativeDescriptor));
-                    for (const QuotientAlternativeDescriptor& descriptor :
-                         state_alternatives) {
-                        saturating_add(
-                            discovery_live,
-                            quotient_alternative_descriptor_bytes(
-                                descriptor));
-                    }
+                            sizeof(std::uint32_t));
                     saturating_add(
                         discovery_live,
                         selected_action_bytes(selected.selected));
@@ -1116,11 +1099,11 @@ PolicyExactLiftCertificate lift_policy_quotient(
             rows_by_ordinal.capacity() *
                 sizeof(std::vector<std::uint32_t>) +
             alternatives_by_ordinal.capacity() *
-                sizeof(std::shared_ptr<const AlternativeDescriptors>) +
+                sizeof(std::shared_ptr<const AlternativeOperatorIds>) +
             alternative_payload_by_ordinal.capacity() *
                 sizeof(std::uint32_t) +
             alternative_descriptor_payloads.capacity() *
-                sizeof(std::shared_ptr<const AlternativeDescriptors>);
+                sizeof(std::shared_ptr<const AlternativeOperatorIds>);
         for (const RawRowPayload& row : raw_rows) {
             saturating_add(
                 raw_row_bytes, selected_action_bytes(row.selected));
@@ -1144,14 +1127,7 @@ PolicyExactLiftCertificate lift_policy_quotient(
         for (const auto& descriptors : alternative_descriptor_payloads) {
             saturating_add(
                 raw_row_bytes,
-                descriptors->capacity() *
-                    sizeof(QuotientAlternativeDescriptor));
-            for (const QuotientAlternativeDescriptor& descriptor :
-                 *descriptors) {
-                saturating_add(
-                    raw_row_bytes,
-                    quotient_alternative_descriptor_bytes(descriptor));
-            }
+                descriptors->capacity() * sizeof(std::uint32_t));
         }
         std::uint64_t locator_bytes =
             locators.capacity() * sizeof(std::uint32_t) +
@@ -1245,13 +1221,24 @@ PolicyExactLiftCertificate lift_policy_quotient(
                         }
                     }
                 }
+                if (include_observations) {
+                    for (const std::uint32_t operator_index :
+                         *alternatives_by_ordinal.at(ordinal)) {
+                        requirement = merge_observation_requirements(
+                            std::move(requirement),
+                            oracle.quotient_alternative_descriptor(
+                                operator_index).routing_observes);
+                    }
+                }
                 immediate.push_back(
                     alternatives_by_ordinal.at(ordinal)->size());
                 /* Collision-free interned authority: payload ids are assigned
                  * only after full descriptor equality succeeds. The full
-                 * identities remain retained once in
-                 * alternative_descriptor_payloads and in proof obligations;
-                 * per-cell partition keys need only the deterministic id. */
+                 * admitted operator ids remain retained once in
+                 * alternative_descriptor_payloads; full action identities
+                 * are deterministic operator metadata and are materialized
+                 * only for proof obligations. Per-cell partition keys need
+                 * only the deterministic payload id. */
                 immediate.push_back(
                     alternative_payload_by_ordinal.at(ordinal));
             }
@@ -1414,6 +1401,14 @@ PolicyExactLiftCertificate lift_policy_quotient(
                                 std::move(cell.observation_requirement),
                                 raw_rows[payload_id]
                                     .selected.routing_observes);
+                    }
+                    for (const std::uint32_t operator_index :
+                         *alternatives_by_ordinal[representative]) {
+                        cell.observation_requirement =
+                            merge_observation_requirements(
+                                std::move(cell.observation_requirement),
+                                oracle.quotient_alternative_descriptor(
+                                    operator_index).routing_observes);
                     }
                 }
                 cell.observed_features = observe_features(
@@ -1599,10 +1594,10 @@ PolicyExactLiftCertificate lift_policy_quotient(
         };
         refresh_external_row_kernel_bytes();
 
-        const StableKey price_identity =
-            oracle.quotient_price_identity();
-        const StableKey vocabulary_identity =
-            oracle.quotient_vocabulary_identity();
+        const quotient::SharedStableKey price_identity{
+            oracle.quotient_price_identity()};
+        const quotient::SharedStableKey vocabulary_identity{
+            oracle.quotient_vocabulary_identity()};
         double retained_lower_delta = kInfinity;
         double retained_lower_relative = kInfinity;
         const bool retained_global_lower_authority =
@@ -1622,13 +1617,14 @@ PolicyExactLiftCertificate lift_policy_quotient(
             if (cell.terminal) continue;
             const std::uint32_t representative = representative_for(
                 partition.class_by_node, cls);
-            const auto& descriptors =
+            const auto& alternative_operator_ids =
                 *alternatives_by_ordinal.at(representative);
             for (const quotient::CoverageRange& range :
                  cell.coverage.ranges) {
                 for (std::uint64_t ordinal = range.begin;
                      ordinal < range.begin + range.count; ++ordinal) {
-                    if (*alternatives_by_ordinal.at(ordinal) != descriptors) {
+                    if (*alternatives_by_ordinal.at(ordinal) !=
+                        alternative_operator_ids) {
                         throw AdapterFailure(
                             PolicyExactLiftStatus::RefinementFailure,
                             "one quotient cell merged incompatible admitted alternatives");
@@ -1667,8 +1663,10 @@ PolicyExactLiftCertificate lift_policy_quotient(
                 selected->sparse_row,
                 std::nullopt});
             if (retained_global_lower_authority) continue;
-            for (const QuotientAlternativeDescriptor& descriptor :
-                 descriptors) {
+            for (const std::uint32_t operator_index :
+                 alternative_operator_ids) {
+                const QuotientAlternativeDescriptor descriptor =
+                    oracle.quotient_alternative_descriptor(operator_index);
                 const quotient::SharedStableKey& shared_cell_identity =
                     bellman.shared_semantic_identity_for_cell(cell.cell_id);
                 const StableKey& cell_identity = shared_cell_identity.value();
@@ -1701,9 +1699,36 @@ PolicyExactLiftCertificate lift_policy_quotient(
                 identity.admission_generation = 1;
                 identity.price_generation = 1;
                 identity.vocabulary_generation = 1;
-                identity.optimistic_lower =
-                    quotient::trivial_carrier_wide_lower_q(
-                        shared_cell_identity, cell.coverage);
+                const double immediate_cost_lower =
+                    oracle.quotient_operator_immediate_cost_lower(
+                        operator_index);
+                if (immediate_cost_lower > 0.0) {
+                    std::vector<quotient::CarrierLowerQWitness> witnesses;
+                    witnesses.reserve(cell.coverage.exact_source_count);
+                    for (const quotient::CoverageRange& range :
+                         cell.coverage.ranges) {
+                        for (std::uint64_t ordinal = range.begin;
+                             ordinal < range.begin + range.count;
+                             ++ordinal) {
+                            witnesses.push_back({
+                                range.range_identity, ordinal,
+                                immediate_cost_lower});
+                        }
+                    }
+                    identity.optimistic_lower =
+                        quotient::certify_carrier_wide_lower_q(
+                            shared_cell_identity, cell.coverage,
+                            {0x706371707269636cull,
+                             operator_index,
+                             std::bit_cast<std::uint64_t>(
+                                 immediate_cost_lower),
+                             1},
+                            std::move(witnesses));
+                } else {
+                    identity.optimistic_lower =
+                        quotient::trivial_carrier_wide_lower_q(
+                            shared_cell_identity, cell.coverage);
+                }
                 identity.scheduling_priority = 0.0;
                 identity.resumable_work_identity =
                     std::move(resumable);
@@ -1853,9 +1878,6 @@ PolicyExactLiftCertificate lift_policy_quotient(
             policy_class.coarse_state_key = cell.coarse_parent;
             policy_class.terminal = cell.terminal;
             policy_class.goal = cell.terminal;
-            policy_class.required_observations =
-                cell.observation_requirement;
-            policy_class.observation_signature = cell.observed_features;
             for (const quotient::CoverageRange& range :
                  cell.coverage.ranges) {
                 for (std::uint64_t ordinal = range.begin;
@@ -1882,6 +1904,18 @@ PolicyExactLiftCertificate lift_policy_quotient(
                 solved_upper.selected_rows_by_state.at(state);
             policy_class.selected_action =
                 publication_by_row.at(selected_row)->selected;
+            /* The proof partition observes every admitted alternative so its
+             * carrier-wide rows cannot merge behavior they would route
+             * differently. The published policy needs only the observations
+             * consumed by its selected action; exposing proof-only
+             * observations here would make the compiler demand predicates
+             * that cannot affect the executable continuation. */
+            policy_class.required_observations =
+                canonical_observation_requirement(
+                    policy_class.selected_action->routing_observes);
+            policy_class.observation_signature = observe_features(
+                cell.observed_features,
+                policy_class.required_observations);
             policy_class.action_cost =
                 bellman.priced_rows().at(selected_row).cost;
             const SparseRow& sparse = graph.rows.at(selected_row);
@@ -2236,6 +2270,7 @@ PolicyExactLiftCertificate lift_policy_quotient(
         bool stop_alternative_scheduling =
             certificate.global_lower_bound_closed;
         std::set<std::uint32_t> attempted_obligations;
+        std::map<StableKey, AbstractState> frontier_states;
         std::map<std::uint32_t, std::uint32_t>
             scheduler_class_by_cell;
         for (std::uint32_t cls = 0; cls < final_cell_id.size(); ++cls) {
@@ -2341,8 +2376,8 @@ PolicyExactLiftCertificate lift_policy_quotient(
                 quotient::AlternativeObligationValidationContext context;
                 context.source_cell_identity =
                     bellman.semantic_identity_for_cell(cell.cell_id);
-                context.price_identity = price_identity;
-                context.vocabulary_identity = vocabulary_identity;
+                context.price_identity = price_identity.value();
+                context.vocabulary_identity = vocabulary_identity.value();
                 context.requirement_generation = cell.generation;
                 context.source_generation = cell.generation;
                 context.target_generation = cell.generation;
@@ -2389,15 +2424,13 @@ PolicyExactLiftCertificate lift_policy_quotient(
 
                 const std::uint32_t representative = representative_for(
                     partition.class_by_node, source_class->second);
-                const auto& representative_descriptors =
+                const auto& representative_operator_ids =
                     *alternatives_by_ordinal.at(representative);
-                const auto descriptor_it = std::find_if(
-                    representative_descriptors.begin(),
-                    representative_descriptors.end(),
-                    [&](const QuotientAlternativeDescriptor& descriptor) {
-                        return descriptor.action == before.identity.action;
-                    });
-                if (descriptor_it == representative_descriptors.end()) {
+                const auto operator_it = std::find(
+                    representative_operator_ids.begin(),
+                    representative_operator_ids.end(),
+                    before.identity.action.action_id);
+                if (operator_it == representative_operator_ids.end()) {
                     bellman.proof_store()
                         ->transition_alternative_obligation(
                             obligation_id,
@@ -2408,7 +2441,17 @@ PolicyExactLiftCertificate lift_policy_quotient(
                     continue;
                 }
                 const QuotientAlternativeDescriptor descriptor =
-                    *descriptor_it;
+                    oracle.quotient_alternative_descriptor(*operator_it);
+                if (descriptor.action != before.identity.action) {
+                    bellman.proof_store()
+                        ->transition_alternative_obligation(
+                            obligation_id,
+                            quotient::AlternativeObligationStatus::Stale);
+                    saturating_add(
+                        telemetry.alternative_obligations_stale, 1);
+                    attempted_obligations.insert(obligation_id);
+                    continue;
+                }
                 bellman.proof_store()->transition_alternative_obligation(
                     obligation_id,
                     quotient::AlternativeObligationStatus::Scheduled);
@@ -2451,6 +2494,12 @@ PolicyExactLiftCertificate lift_policy_quotient(
                                 complete_cell_row = false;
                                 break;
                             }
+                            for (QuotientOracleCompactTransition& transition :
+                                 candidate->transitions) {
+                                transition.strict_state =
+                                    oracle.quotient_canonical_locator(
+                                        transition.strict_state);
+                            }
                             QuotientOracleCompactRow row =
                                 canonical_raw_row(
                                     std::move(*candidate));
@@ -2466,14 +2515,21 @@ PolicyExactLiftCertificate lift_policy_quotient(
                             std::map<
                                 std::uint32_t,
                                 solve_detail::WideFloat> projected;
+                            bool reaches_new_frontier = false;
                             for (const auto& transition :
                                  row.transitions) {
                                 if (transition.strict_state >=
                                         ordinal_by_strict_state.size() ||
                                     ordinal_by_strict_state[
                                         transition.strict_state] == kNoId) {
-                                    complete_cell_row = false;
-                                    break;
+                                    AbstractState frontier =
+                                        oracle.quotient_export_locator(
+                                            transition.strict_state);
+                                    frontier_states.emplace(
+                                        exact_abstract_state_key(frontier, 0),
+                                        std::move(frontier));
+                                    reaches_new_frontier = true;
+                                    continue;
                                 }
                                 const std::uint32_t target_ordinal =
                                     ordinal_by_strict_state[
@@ -2483,6 +2539,9 @@ PolicyExactLiftCertificate lift_policy_quotient(
                                         target_ordinal]]] +=
                                     solve_detail::WideFloat{
                                         transition.probability};
+                            }
+                            if (reaches_new_frontier) {
+                                complete_cell_row = false;
                             }
                             if (!complete_cell_row) break;
                             std::vector<std::pair<std::uint32_t, double>>
@@ -2760,6 +2819,22 @@ PolicyExactLiftCertificate lift_policy_quotient(
             if (!policy_improved_this_round) break;
         }
 
+        if (!frontier_states.empty()) {
+            oracle.quotient_sync_resource_telemetry();
+            telemetry.strict_states_discovered =
+                static_cast<std::uint32_t>(locators.size());
+            telemetry.strict_carriers_materialized =
+                static_cast<std::uint32_t>(locators.size());
+            std::vector<AbstractState> states;
+            states.reserve(frontier_states.size());
+            for (auto& [identity, state] : frontier_states) {
+                (void)identity;
+                states.push_back(std::move(state));
+            }
+            throw QuotientFrontierExpansion{
+                std::move(states), std::move(telemetry)};
+        }
+
         const std::map<std::uint32_t, double> published_upper =
             upper_by_source(published_solved);
         const quotient::AlternativeActionAccountingAudit final_action_audit =
@@ -2880,6 +2955,129 @@ PolicyExactLiftCertificate lift_policy_quotient(
     }
     certificate.adapter = std::move(telemetry);
     return certificate;
+}
+
+} // namespace
+
+PolicyExactLiftCertificate lift_policy_quotient(
+        CalcContext& coarse,
+        const SolveResult& solved,
+        const pc_item_state& exact_start,
+        const std::unordered_map<std::string, double>& prices,
+        const SolveOptions& options,
+        const std::string& strategy_name,
+        const RefinementLimits* limits_override) {
+    const RefinementLimits limits =
+        limits_override == nullptr
+            ? default_limits(coarse, solved, options)
+            : *limits_override;
+    std::map<StableKey, AbstractState> frontier_by_identity;
+    PolicyLiftAdapterTelemetry prior_telemetry;
+    RefinementLimits pass_limits = limits;
+    SolveOptions pass_options = options;
+    const auto resource_cap = [&](const char* reason, const char* cap) {
+        PolicyExactLiftCertificate certificate;
+        certificate.solver_cost = solved.evaluated_policy_cost;
+        certificate.status = PolicyExactLiftStatus::ResourceCap;
+        certificate.failure_reason = reason;
+        certificate.resource_cap = cap;
+        certificate.adapter = prior_telemetry;
+        return certificate;
+    };
+    while (true) {
+        std::vector<AbstractState> frontier_seeds;
+        frontier_seeds.reserve(frontier_by_identity.size());
+        for (const auto& [identity, state] : frontier_by_identity) {
+            (void)identity;
+            frontier_seeds.push_back(state);
+        }
+        try {
+            PolicyExactLiftCertificate certificate =
+                lift_policy_quotient_pass(
+                coarse, solved, exact_start, prices, pass_options,
+                strategy_name, &pass_limits, frontier_seeds);
+            PolicyLiftAdapterTelemetry total = prior_telemetry;
+            merge_adapter_telemetry(total, certificate.adapter);
+            certificate.adapter = std::move(total);
+            return certificate;
+        } catch (QuotientFrontierExpansion& expansion) {
+            merge_adapter_telemetry(
+                prior_telemetry, expansion.telemetry);
+            bool grew = false;
+            for (AbstractState& state : expansion.states) {
+                const StableKey identity =
+                    exact_abstract_state_key(state, 0);
+                auto [found, inserted] =
+                    frontier_by_identity.emplace(
+                        identity, std::move(state));
+                (void)found;
+                grew = grew || inserted;
+            }
+            if (!grew) {
+                PolicyExactLiftCertificate certificate;
+                certificate.solver_cost = solved.evaluated_policy_cost;
+                certificate.status =
+                    PolicyExactLiftStatus::RefinementFailure;
+                certificate.failure_reason =
+                    "competitive quotient frontier did not grow";
+                return certificate;
+            }
+            if (frontier_by_identity.size() >=
+                limits.max_exact_states) {
+                return resource_cap(
+                    "competitive quotient frontier reached "
+                    "max_exact_states",
+                    "max_exact_states");
+            }
+            if (prior_telemetry.strict_kernels_built >=
+                limits.max_exact_kernels) {
+                return resource_cap(
+                    "competitive quotient frontier reached "
+                    "max_exact_kernels",
+                    "max_exact_kernels");
+            }
+            pass_limits.max_exact_kernels =
+                limits.max_exact_kernels -
+                prior_telemetry.strict_kernels_built;
+            if (prior_telemetry.strict_transitions_built >=
+                limits.max_transitions) {
+                return resource_cap(
+                    "competitive quotient frontier reached "
+                    "max_transitions",
+                    "max_transitions");
+            }
+            pass_limits.max_transitions =
+                limits.max_transitions -
+                prior_telemetry.strict_transitions_built;
+            std::uint64_t spent_rounds =
+                prior_telemetry.backward_observation_rounds;
+            saturating_add(
+                spent_rounds,
+                prior_telemetry.exact_fixed_point_rounds);
+            saturating_add(
+                spent_rounds,
+                prior_telemetry.local_reoptimization_rounds);
+            if (spent_rounds >= limits.max_refinement_rounds) {
+                return resource_cap(
+                    "competitive quotient frontier reached "
+                    "max_refinement_rounds",
+                    "max_refinement_rounds");
+            }
+            pass_limits.max_refinement_rounds =
+                limits.max_refinement_rounds -
+                static_cast<std::uint32_t>(spent_rounds);
+            if (prior_telemetry.strict_reforge_logical_work_v1 >=
+                options.max_reforge_work) {
+                return resource_cap(
+                    "competitive quotient frontier reached "
+                    "max_reforge_work",
+                    "max_reforge_work");
+            }
+            pass_options.max_reforge_work =
+                options.max_reforge_work -
+                prior_telemetry.strict_reforge_logical_work_v1;
+        }
+    }
 }
 
 PolicyExactLiftCertificate lift_policy_exact(

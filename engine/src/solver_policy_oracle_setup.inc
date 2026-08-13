@@ -254,6 +254,19 @@
         return known_.at(exact.stable_key).strict_state;
     }
 
+    std::uint32_t quotient_seed_locator(const AbstractState& state) {
+        return quotient_canonical_locator(strict_->intern_state(state));
+    }
+
+    AbstractState quotient_export_locator(
+            const std::uint32_t strict_state) const {
+        return strict_->state(strict_state);
+    }
+
+    void quotient_sync_resource_telemetry() {
+        sync_strict_reforge_resource_telemetry();
+    }
+
     ExactState quotient_materialize_locator(
             const std::uint32_t strict_state) {
         auto [state, inserted] = intern_strict_state(strict_state);
@@ -301,8 +314,8 @@
         adapter_memory_projected_growth_bytes_ = 0;
     }
 
-    std::vector<QuotientAlternativeDescriptor>
-    quotient_alternative_descriptors(const ExactState& state) {
+    std::vector<std::uint32_t> quotient_alternative_operator_ids(
+            const ExactState& state) {
         if (state.terminal) return {};
         const auto known = known_.find(state.stable_key);
         if (known == known_.end()) {
@@ -310,7 +323,7 @@
                 PolicyExactLiftStatus::InvalidSolveState,
                 "alternative descriptor lost its exact carrier");
         }
-        std::vector<QuotientAlternativeDescriptor> descriptors;
+        std::vector<std::uint32_t> operator_ids;
         for (const std::uint32_t operator_index : admitted_operators_) {
             const std::uint32_t coarse_operator =
                 coarse_operator_for(operator_index);
@@ -329,63 +342,86 @@
                         strict_->state(known->second.strict_state))) {
                     continue;
                 }
+            } else {
+                const double immediate_lower =
+                    quotient_operator_immediate_cost_lower(
+                        operator_index);
+                const bool potentially_competitive =
+                    !std::isfinite(solved_.evaluated_policy_cost) ||
+                    immediate_lower < solved_.evaluated_policy_cost;
+                if (potentially_competitive) {
+                    const OptionKernel& kernel = strict_->option_kernel(
+                        known->second.strict_state, operator_index);
+                    if (!kernel.supported || !kernel.legal ||
+                        !kernel.terminates_almost_surely) {
+                        continue;
+                    }
+                    (void)resource_cost(kernel.expected_resources);
+                }
             }
-            SelectedAction runtime;
-            runtime.action_id = operator_index;
-            populate_ordered_runtime_contracts(runtime, planner);
-            runtime.routing_observes =
-                observation_requirement_from_selected_action(runtime);
-            const StableKey planner_identity =
-                planner_operator_semantic_key(planner);
-            StableKey pending_identity{
-                0x706371616c746431ull,
-                operator_index,
-                planner_identity.size()};
-            pending_identity.insert(
-                pending_identity.end(),
-                planner_identity.begin(), planner_identity.end());
-            StableKey choice_identity{
-                0x70637163686f6964ull,
-                pending_identity.size()};
-            choice_identity.insert(
-                choice_identity.end(),
-                pending_identity.begin(), pending_identity.end());
-            StableKey resumable_identity{
-                0x706371726573756dull,
-                pending_identity.size()};
-            resumable_identity.insert(
-                resumable_identity.end(),
-                pending_identity.begin(), pending_identity.end());
-            QuotientAlternativeDescriptor descriptor;
-            descriptor.operator_index = operator_index;
-            descriptor.action =
-                quotient::canonical_alternative_action_identity({
-                    operator_index,
-                    std::move(pending_identity),
-                    canonical_selected_runtime_contract_identity(runtime),
-                    std::move(choice_identity)});
-            descriptor.routing_observes =
-                std::move(runtime.routing_observes);
-            descriptor.resumable_work_identity =
-                std::move(resumable_identity);
-            descriptors.push_back(std::move(descriptor));
+            operator_ids.push_back(operator_index);
         }
         std::sort(
-            descriptors.begin(), descriptors.end(),
-            [](const QuotientAlternativeDescriptor& left,
-               const QuotientAlternativeDescriptor& right) {
-                return std::tie(
-                           left.operator_index,
-                           left.action.semantic_action_identity,
-                           left.action.exact_choice_recipe_identity) <
-                       std::tie(
-                           right.operator_index,
-                           right.action.semantic_action_identity,
-                           right.action.exact_choice_recipe_identity);
-            });
-        descriptors.erase(
-            std::unique(descriptors.begin(), descriptors.end()),
-            descriptors.end());
+            operator_ids.begin(), operator_ids.end());
+        operator_ids.erase(
+            std::unique(operator_ids.begin(), operator_ids.end()),
+            operator_ids.end());
+        return operator_ids;
+    }
+
+    QuotientAlternativeDescriptor quotient_alternative_descriptor(
+            const std::uint32_t operator_index) const {
+        const PlannerOperator& planner =
+            strict_->operators().at(operator_index);
+        SelectedAction runtime;
+        runtime.action_id = operator_index;
+        populate_ordered_runtime_contracts(runtime, planner);
+        runtime.routing_observes =
+            observation_requirement_from_selected_action(runtime);
+        const StableKey planner_identity =
+            planner_operator_semantic_key(planner);
+        StableKey pending_identity{
+            0x706371616c746431ull,
+            operator_index,
+            planner_identity.size()};
+        pending_identity.insert(
+            pending_identity.end(),
+            planner_identity.begin(), planner_identity.end());
+        StableKey choice_identity{
+            0x70637163686f6964ull,
+            pending_identity.size()};
+        choice_identity.insert(
+            choice_identity.end(),
+            pending_identity.begin(), pending_identity.end());
+        StableKey resumable_identity{
+            0x706371726573756dull,
+            pending_identity.size()};
+        resumable_identity.insert(
+            resumable_identity.end(),
+            pending_identity.begin(), pending_identity.end());
+        QuotientAlternativeDescriptor descriptor;
+        descriptor.operator_index = operator_index;
+        descriptor.action =
+            quotient::canonical_alternative_action_identity({
+                operator_index,
+                std::move(pending_identity),
+                canonical_selected_runtime_contract_identity(runtime),
+                std::move(choice_identity)});
+        descriptor.routing_observes =
+            std::move(runtime.routing_observes);
+        descriptor.resumable_work_identity =
+            std::move(resumable_identity);
+        return descriptor;
+    }
+
+    std::vector<QuotientAlternativeDescriptor>
+    quotient_alternative_descriptors(const ExactState& state) {
+        std::vector<QuotientAlternativeDescriptor> descriptors;
+        for (const std::uint32_t operator_index :
+             quotient_alternative_operator_ids(state)) {
+            descriptors.push_back(
+                quotient_alternative_descriptor(operator_index));
+        }
         return descriptors;
     }
 
@@ -416,6 +452,46 @@
                 identity.end(), planner.begin(), planner.end());
         }
         return identity;
+    }
+
+    double quotient_operator_immediate_cost_lower(
+            const std::uint32_t operator_index) const {
+        const PlannerOperator& planner =
+            strict_->operators().at(operator_index);
+        double lower = 0.0;
+        for (const auto& [key, quantity] :
+             planner.resource_quantities) {
+            const auto price = prices_.find(key);
+            if (price == prices_.end() ||
+                !std::isfinite(price->second) || price->second < 0.0 ||
+                !std::isfinite(quantity) || quantity < 0.0) {
+                throw AdapterFailure(
+                    PolicyExactLiftStatus::MissingPrice,
+                    "alternative operator has a missing or invalid "
+                    "mandatory resource price for '" + key + "'");
+            }
+            if (price->second == 0.0 || quantity == 0.0) continue;
+            double part = quantity * price->second;
+            if (!std::isfinite(part)) {
+                throw AdapterFailure(
+                    PolicyExactLiftStatus::MissingPrice,
+                    "alternative operator has a non-finite mandatory "
+                    "resource price");
+            }
+            part = std::nextafter(
+                part, -std::numeric_limits<double>::infinity());
+            const double sum = lower + part;
+            if (!std::isfinite(sum)) {
+                throw AdapterFailure(
+                    PolicyExactLiftStatus::MissingPrice,
+                    "alternative operator has a non-finite mandatory "
+                    "resource total");
+            }
+            lower = std::nextafter(
+                sum, -std::numeric_limits<double>::infinity());
+            lower = std::max(0.0, lower);
+        }
+        return lower;
     }
 
     void record_broad_row_attribution(

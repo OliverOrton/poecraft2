@@ -214,7 +214,9 @@ void add_payload_identity_storage(
 
 void add_obligation_identity_storage(
         ProofStoreStorageStats& stats,
-        const UnresolvedAlternativeObligationIdentity& identity) {
+        const UnresolvedAlternativeObligationIdentity& identity,
+        std::vector<ObligationSharedKeyAllocation>&
+            shared_key_allocations) {
     const auto add_key = [&](const StableKey& key) {
         stats.obligation_key_u64_capacity = checked_add(
             stats.obligation_key_u64_capacity, key.capacity());
@@ -222,8 +224,25 @@ void add_obligation_identity_storage(
     add_key(identity.action.semantic_action_identity);
     add_key(identity.action.runtime_contract_program_identity);
     add_key(identity.action.exact_choice_recipe_identity);
-    add_key(identity.price_identity);
-    add_key(identity.vocabulary_identity);
+    const auto add_shared_key = [&](const SharedStableKey& key) {
+        const StableKey* storage = key.storage_identity();
+        if (storage == nullptr) return;
+        const auto found = std::find_if(
+            shared_key_allocations.begin(), shared_key_allocations.end(),
+            [&](const ObligationSharedKeyAllocation& candidate) {
+                return candidate.identity == storage;
+            });
+        if (found != shared_key_allocations.end()) return;
+        shared_key_allocations.push_back({storage, key.capacity()});
+        stats.obligation_shared_key_allocation_capacity =
+            shared_key_allocations.capacity();
+        stats.obligation_shared_key_object_count =
+            shared_key_allocations.size();
+        stats.obligation_shared_key_u64_capacity = checked_add(
+            stats.obligation_shared_key_u64_capacity, key.capacity());
+    };
+    add_shared_key(identity.price_identity);
+    add_shared_key(identity.vocabulary_identity);
     add_key(identity.optimistic_lower.authority_identity());
     add_key(identity.resumable_work_identity);
     stats.obligation_requirement_tag_capacity = checked_add(
@@ -583,7 +602,18 @@ CarrierWideOptimisticLowerQ certify_carrier_wide_lower_q(
         const CoverageDescriptor& coverage,
         StableKey authority_identity,
         std::vector<CarrierLowerQWitness> witnesses) {
-    require_identity(source_cell_identity, "lower-Q source cell identity");
+    return certify_carrier_wide_lower_q(
+        SharedStableKey{source_cell_identity}, coverage,
+        std::move(authority_identity), std::move(witnesses));
+}
+
+CarrierWideOptimisticLowerQ certify_carrier_wide_lower_q(
+        const SharedStableKey& source_cell_identity,
+        const CoverageDescriptor& coverage,
+        StableKey authority_identity,
+        std::vector<CarrierLowerQWitness> witnesses) {
+    require_identity(
+        source_cell_identity.value(), "lower-Q source cell identity");
     require_identity(authority_identity, "lower-Q authority identity");
     const CoverageDescriptor canonical =
         canonical_coverage_descriptor(coverage);
@@ -629,7 +659,7 @@ CarrierWideOptimisticLowerQ certify_carrier_wide_lower_q(
     return {
         OptimisticLowerQProvenanceKind::CarrierWideWitness,
         std::move(authority_identity),
-        SharedStableKey{source_cell_identity},
+        source_cell_identity,
         canonical.exact_source_count,
         canonical.exact_total_probability,
         minimum};
@@ -1289,7 +1319,8 @@ std::pair<std::uint32_t, bool> ProofStore::intern_alternative_obligation(
     storage_stats_.obligation_capacity =
         alternative_obligations_.capacity();
     add_obligation_identity_storage(
-        storage_stats_, alternative_obligations_.back().identity);
+        storage_stats_, alternative_obligations_.back().identity,
+        obligation_shared_key_allocations_);
     bucket = std::lower_bound(
         alternative_buckets_.begin(), alternative_buckets_.end(),
         bucket_hash,
@@ -1424,10 +1455,10 @@ ProofStore::validate_alternative_obligation(
         context.source_cell_identity) {
         return AlternativeObligationValidationStatus::StaleSourceIdentity;
     }
-    if (identity.price_identity != context.price_identity) {
+    if (identity.price_identity.value() != context.price_identity) {
         return AlternativeObligationValidationStatus::StalePriceIdentity;
     }
-    if (identity.vocabulary_identity != context.vocabulary_identity) {
+    if (identity.vocabulary_identity.value() != context.vocabulary_identity) {
         return AlternativeObligationValidationStatus::StaleVocabularyIdentity;
     }
     if (identity.requirement_generation != context.requirement_generation) {
@@ -1796,12 +1827,15 @@ ProofStoreStorageStats ProofStore::storage_stats() const {
     }
     stats.obligation_capacity = alternative_obligations_.capacity();
     stats.obligation_bucket_capacity = alternative_buckets_.capacity();
+    stats.obligation_shared_key_allocation_capacity =
+        obligation_shared_key_allocations_.capacity();
     for (const AlternativeObligationHashBucket& bucket :
          alternative_buckets_) {
         stats.obligation_bucket_id_capacity = checked_add(
             stats.obligation_bucket_id_capacity,
             bucket.obligation_ids.capacity());
     }
+    std::vector<const StableKey*> shared_obligation_keys;
     for (const UnresolvedAlternativeObligation& obligation :
          alternative_obligations_) {
         const UnresolvedAlternativeObligationIdentity& identity =
@@ -1813,8 +1847,21 @@ ProofStoreStorageStats ProofStore::storage_stats() const {
         add_key(identity.action.semantic_action_identity);
         add_key(identity.action.runtime_contract_program_identity);
         add_key(identity.action.exact_choice_recipe_identity);
-        add_key(identity.price_identity);
-        add_key(identity.vocabulary_identity);
+        const auto add_shared_key = [&](const SharedStableKey& key) {
+            const StableKey* storage = key.storage_identity();
+            if (storage == nullptr ||
+                std::find(
+                    shared_obligation_keys.begin(),
+                    shared_obligation_keys.end(), storage) !=
+                    shared_obligation_keys.end()) {
+                return;
+            }
+            shared_obligation_keys.push_back(storage);
+            stats.obligation_shared_key_u64_capacity = checked_add(
+                stats.obligation_shared_key_u64_capacity, key.capacity());
+        };
+        add_shared_key(identity.price_identity);
+        add_shared_key(identity.vocabulary_identity);
         add_key(identity.optimistic_lower.authority_identity());
         add_key(identity.resumable_work_identity);
         stats.obligation_requirement_tag_capacity = checked_add(
@@ -1830,6 +1877,8 @@ ProofStoreStorageStats ProofStore::storage_stats() const {
                 observation.selector.required_tag_ids.capacity());
         }
     }
+    stats.obligation_shared_key_object_count =
+        shared_obligation_keys.size();
     return stats;
 }
 
@@ -1951,6 +2000,21 @@ void ProofStore::refresh_owned_bytes() {
     obligation_bytes = checked_add(
         obligation_bytes,
         checked_multiply(
+            stats.obligation_shared_key_allocation_capacity,
+            sizeof(ObligationSharedKeyAllocation)));
+    obligation_bytes = checked_add(
+        obligation_bytes,
+        checked_multiply(
+            stats.obligation_shared_key_object_count,
+            sizeof(StableKey) + 2 * sizeof(void*)));
+    obligation_bytes = checked_add(
+        obligation_bytes,
+        checked_multiply(
+            stats.obligation_shared_key_u64_capacity,
+            sizeof(std::uint64_t)));
+    obligation_bytes = checked_add(
+        obligation_bytes,
+        checked_multiply(
             stats.obligation_requirement_tag_capacity,
             sizeof(std::uint32_t)));
     obligation_bytes = checked_add(
@@ -1991,6 +2055,8 @@ void ProofStore::clear_and_release() {
         alternative_obligations_);
     std::vector<AlternativeObligationHashBucket>().swap(
         alternative_buckets_);
+    std::vector<ObligationSharedKeyAllocation>().swap(
+        obligation_shared_key_allocations_);
     storage_stats_ = {};
     price_generation_ = 0;
     q_generation_ = 0;

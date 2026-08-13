@@ -620,6 +620,14 @@ ProductionPolicyOracle::candidate_selection(
             operator_index,
             known->second.strict_state,
             &recipe);
+        const StableKey raw_key = exact_refinement_state_key(
+            strict_->state(known->second.strict_state),
+            abstract_state_key(
+                coarse_.state(known->second.coarse_state)));
+        if (raw_key != key) {
+            store_choice_recipe(
+                key, selected.semantic_key, recipe);
+        }
         /*
          * A local override owns only its semantic contract. The shared exact
          * graph computes downstream observation preimages from the resulting

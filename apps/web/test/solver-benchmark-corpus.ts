@@ -627,13 +627,17 @@ export function materializeSolverBenchmarkEconomy(
 
     const forced = spec.forced_winner_contract;
     const marketOverrides = entries.filter(([key]) => key !== "base");
+    const additionalMarketOverrides = marketOverrides.filter(
+        ([key]) => key !== forced?.dependency_action_id,
+    );
     const disclosedMarketOverrides =
         spec.market_price_override_contracts;
     if (disclosedMarketOverrides !== undefined) {
-        if (forced !== undefined || baseOverride !== undefined ||
+        if ((forced === undefined && baseOverride !== undefined) ||
             economy.override_purpose !==
                 "synthetic_forced_winner_gate_not_market_quote" ||
-            marketOverrides.length !== disclosedMarketOverrides.length) {
+            additionalMarketOverrides.length !==
+                disclosedMarketOverrides.length) {
             throw new Error(
                 `${spec.id} disclosed market overrides must be the complete non-Bestiary override set`,
             );
@@ -659,7 +663,8 @@ export function materializeSolverBenchmarkEconomy(
                 `${spec.id}.economy.manual_override_decisions`,
             );
         }
-        if (marketOverrides.some(([key]) => !declaredKeys.has(key))) {
+        if (additionalMarketOverrides.some(
+            ([key]) => !declaredKeys.has(key))) {
             throw new Error(
                 `${spec.id} contains an undisclosed market-price override`,
             );
@@ -670,16 +675,22 @@ export function materializeSolverBenchmarkEconomy(
                 `${spec.id} contains an undisclosed market-price override`,
             );
         }
-    } else {
+    } else if (additionalMarketOverrides.length !== 0) {
+        throw new Error(
+            `${spec.id} contains an undisclosed market-price override`,
+        );
+    }
+    if (forced !== undefined) {
         const dependency = forced.dependency_action_id;
         const sourcePrice = sourcePrices[dependency];
         const actionOverride = overrides[dependency];
         if (
             economy.override_purpose !==
                 "synthetic_forced_winner_gate_not_market_quote" ||
-            dependency === "base" || entries.length !== 2 ||
+            dependency === "base" ||
+            entries.length !== 2 + additionalMarketOverrides.length ||
             baseOverride === undefined || actionOverride === undefined ||
-            marketOverrides.length !== 1 || marketOverrides[0][0] !== dependency ||
+            marketOverrides.filter(([key]) => key === dependency).length !== 1 ||
             !finitePrice(sourcePrice, true) || !finitePrice(actionOverride, true) ||
             !finitePrice(forced.snapshot_action_price, true) ||
             !finitePrice(forced.forced_action_price, true) ||

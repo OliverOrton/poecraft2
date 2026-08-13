@@ -433,9 +433,9 @@ std::string load_case_economy_json(const Value& specification) {
         specification, "forced_winner_contract", Type::Object);
     const Value* disclosed_market_overrides = optional(
         specification, "market_price_override_contracts", Type::Array);
-    if (disclosed_market_overrides != nullptr) {
-        if (forced_winner != nullptr ||
-            required_string(economy, "override_purpose") !=
+    if (disclosed_market_overrides != nullptr &&
+        forced_winner == nullptr) {
+        if (required_string(economy, "override_purpose") !=
                 "synthetic_forced_winner_gate_not_market_quote" ||
             overrides.object.size() !=
                 disclosed_market_overrides->array.size() ||
@@ -518,11 +518,16 @@ std::string load_case_economy_json(const Value& specification) {
         const Value* source_price = source_prices.find(dependency);
         const Value* base_override = overrides.find("base");
         const Value* action_override = overrides.find(dependency);
+        const std::size_t additional_override_count =
+            disclosed_market_overrides == nullptr
+                ? 0
+                : disclosed_market_overrides->array.size();
         const auto same_price = [](const double lhs, const double rhs) {
             return std::fabs(lhs - rhs) <=
                    1e-12 * std::max({1.0, std::fabs(lhs), std::fabs(rhs)});
         };
-        if (overrides.object.size() != 2 || dependency == "base" ||
+        if (overrides.object.size() != 2 + additional_override_count ||
+            dependency == "base" ||
             source_price == nullptr || source_price->type != Type::Number ||
             base_override == nullptr || base_override->type != Type::Number ||
             base_override->number <= 0.0 || action_override == nullptr ||
@@ -534,6 +539,47 @@ std::string load_case_economy_json(const Value& specification) {
                 "forced winner overrides must contain only a positive base "
                 "value and the declared dependency value, with the pinned "
                 "snapshot quote recorded exactly");
+        }
+        std::vector<std::pair<std::string, const Value*>>
+            additional_replacements;
+        if (disclosed_market_overrides != nullptr) {
+            for (const Value& entry :
+                 disclosed_market_overrides->array) {
+                const std::string key = required_string(
+                    entry, "price_key");
+                const double declared_snapshot = required(
+                    entry, "snapshot_chaos_value", Type::Number).number;
+                const double declared_override = required(
+                    entry, "override_chaos_value", Type::Number).number;
+                const Value* additional_source = source_prices.find(key);
+                const Value* additional_override = overrides.find(key);
+                if (key == "base" || key == dependency ||
+                    key.starts_with("beast:") ||
+                    additional_source == nullptr ||
+                    additional_source->type != Type::Number ||
+                    additional_override == nullptr ||
+                    additional_override->type != Type::Number ||
+                    !same_price(
+                        additional_source->number,
+                        declared_snapshot) ||
+                    !same_price(
+                        additional_override->number,
+                        declared_override) ||
+                    std::any_of(
+                        additional_replacements.begin(),
+                        additional_replacements.end(),
+                        [&](const auto& replacement) {
+                            return replacement.first == key;
+                        })) {
+                    throw std::runtime_error(
+                        "forced winner additional market override does not "
+                        "match its pinned quote and override: " + key);
+                }
+                require_override_decision(
+                    "manual_override_decisions", key);
+                additional_replacements.emplace_back(
+                    key, additional_override);
+            }
         }
         require_override_decision("missing_price_decisions", "base");
         require_override_decision(
@@ -551,6 +597,20 @@ std::string load_case_economy_json(const Value& specification) {
                 throw std::runtime_error(
                     "forced winner dependency is absent from the pinned "
                     "snapshot");
+            }
+            for (const auto& [replacement_key, replacement_value] :
+                 additional_replacements) {
+                const auto found = std::find_if(
+                    value.object.begin(), value.object.end(),
+                    [&](const auto& price) {
+                        return price.first == replacement_key;
+                    });
+                if (found == value.object.end()) {
+                    throw std::runtime_error(
+                        "forced winner additional market key is absent "
+                        "from the pinned snapshot: " + replacement_key);
+                }
+                found->second = *replacement_value;
             }
             value.object.emplace_back("base", *base_override);
             return json_of(snapshot);
@@ -2088,14 +2148,35 @@ void validate_case_shape(const Value& specification) {
             *forced_winner, "forced_action_price", Type::Number).number;
         const Value* base_override = overrides.find("base");
         const Value* action_override = overrides.find(dependency);
-        if (overrides.object.size() != 2 || dependency == "base" ||
+        bool additional_overrides_valid = true;
+        std::size_t additional_override_count = 0;
+        if (market_overrides != nullptr) {
+            additional_override_count = market_overrides->array.size();
+            for (const Value& raw_contract : market_overrides->array) {
+                const std::string key = required_string(
+                    raw_contract, "price_key");
+                const double declared = required(
+                    raw_contract, "override_chaos_value",
+                    Type::Number).number;
+                const Value* value = overrides.find(key);
+                if (key == dependency || value == nullptr ||
+                    value->type != Type::Number ||
+                    value->number != declared) {
+                    additional_overrides_valid = false;
+                }
+            }
+        }
+        if (overrides.object.size() != 2 + additional_override_count ||
+            dependency == "base" ||
             base_override == nullptr || base_override->type != Type::Number ||
             base_override->number <= 0.0 || action_override == nullptr ||
             action_override->type != Type::Number ||
-            action_override->number != forced_action_price) {
+            action_override->number != forced_action_price ||
+            !additional_overrides_valid) {
             throw std::runtime_error(
-                "forced winner economy must override only base and the "
-                "declared dependency at the declared forced value");
+                "forced winner economy must override only base, the "
+                "declared dependency at the declared forced value, and "
+                "fully declared additional market overrides");
         }
     }
     required(specification, "caps", Type::Object);

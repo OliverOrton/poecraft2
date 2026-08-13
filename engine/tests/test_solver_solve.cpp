@@ -1761,6 +1761,10 @@ void run_policy_guided_exact_lift_tests() {
         SolveTermination::RefusedResourceCap);
     PC_CHECK(
         successful_refined_publication_termination(
+            SolveTermination::RefusedResourceCap, true, true) ==
+        SolveTermination::ExactClosed);
+    PC_CHECK(
+        successful_refined_publication_termination(
             SolveTermination::None, true) ==
         SolveTermination::RefusedResourceCap);
     PC_CHECK(
@@ -2451,6 +2455,7 @@ void run_policy_guided_exalt_lift_tests() {
     PC_CHECK(
         solved.policy_status ==
         SolvePolicyStatus::Exact);
+    /* The strict global envelope supersedes any earlier coarse stop cause. */
     PC_CHECK(
         solved.termination ==
         SolveTermination::ExactClosed);
@@ -7414,9 +7419,11 @@ void run_automatic_eldritch_side_tests() {
         prefix_calc.operators().size());
 
     /* The final checkpoint owns the last grown decision/staging vectors.
-     * Probe its exact selected bytes, then place the cap one byte below it:
-     * all earlier leaves must pass, the final suspension must roll back, and
-     * a retry with room must still be complete and uncached. */
+     * Probe its exact selected bytes, then place the cap one byte below it.
+     * With no completed admission contexts retained, the transient child may
+     * encounter that cap first and return ResourceDeferred instead of the
+     * parent checkpoint throwing. Both paths must roll back, and a retry with
+     * room must still be complete and uncached. */
     auto final_checkpoint_session = make_solve_session();
     ActionRegistry final_checkpoint_registry =
         build_action_registry(*final_checkpoint_session);
@@ -7492,13 +7499,15 @@ void run_automatic_eldritch_side_tests() {
     final_cap_limits.max_solver_owned_bytes =
         final_checkpoint_owned - 1;
     bool final_cap_hit = false;
+    bool final_cap_completed = false;
     std::uint64_t final_cap_completed_suspensions = 0;
+    StateLocalAutomaticBatch capped_batch;
     try {
-        StateLocalAutomaticBatch capped_batch;
         for (std::uint64_t i = 0; i < 4096; ++i) {
             if (final_cap_calc.advance_state_local_automatic_candidates(
                     final_cap_state, final_cap_limits,
                     capped_batch, 1)) {
+                final_cap_completed = true;
                 break;
             }
             ++final_cap_completed_suspensions;
@@ -7508,9 +7517,15 @@ void run_automatic_eldritch_side_tests() {
             limit.cap_name() == "max_solver_owned_bytes" &&
             limit.limit() == final_cap_limits.max_solver_owned_bytes;
     }
-    PC_CHECK(final_cap_hit);
+    const bool final_cap_deferred =
+        final_cap_completed &&
+        capped_batch.status ==
+            StateLocalAutomaticBatchStatus::ResourceDeferred &&
+        capped_batch.resource_cap == "max_solver_owned_bytes";
+    PC_CHECK(final_cap_hit || final_cap_deferred);
     PC_CHECK(
-        final_cap_completed_suspensions + 2 ==
+        final_cap_completed_suspensions +
+                (final_cap_hit ? 2 : 1) ==
         final_checkpoint_probe_bytes.size());
     PC_CHECK(final_cap_calc.automatic_admission_cursor_bytes() == 0);
     PC_CHECK(

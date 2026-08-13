@@ -79,13 +79,15 @@ enum class SolveTermination : std::uint8_t {
 };
 
 /*
- * Exact refinement changes publication proof, not the coarse solve's genuine
- * stopping cause. This helper is only for a successfully retained executable
+ * Bounded refinement preserves the coarse solve's genuine stopping cause. A
+ * globally exact strict envelope is a new closure proof and supersedes that
+ * earlier cause. This helper is only for a successfully retained executable
  * lift; consequently it can never return NoExecutablePolicy.
  */
 SolveTermination successful_refined_publication_termination(
     SolveTermination coarse_termination,
-    bool resource_cap_hit);
+    bool resource_cap_hit,
+    bool globally_exact = false);
 
 enum class SolveGapTarget : std::uint8_t {
     None,

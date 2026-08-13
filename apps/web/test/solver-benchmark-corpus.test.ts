@@ -168,8 +168,11 @@ test("goal-realignment corpora validate every current case and economy", () => {
     );
     assert.equal(forced?.prices.base, 1000);
     assert.equal(forced?.prices.eldritch_exalt, 0.001);
+    assert.equal(forced?.prices.eldritch_annul, 0.001);
     assert.equal(forced?.sources?.eldritch_exalt, "quote");
+    assert.equal(forced?.sources?.eldritch_annul, "quote");
     assert.equal(forced?.manual_overrides?.eldritch_exalt, 0.001);
+    assert.equal(forced?.manual_overrides?.eldritch_annul, 0.001);
     assert.match(
         forced?.missing_price_decisions?.base ?? "",
         /owner_fixture_input/,
@@ -177,6 +180,10 @@ test("goal-realignment corpora validate every current case and economy", () => {
     assert.match(
         forced?.manual_override_decisions?.eldritch_exalt ?? "",
         /forced_winner/,
+    );
+    assert.match(
+        forced?.manual_override_decisions?.eldritch_annul ?? "",
+        /paired_retry_cleanup/,
     );
     assert.equal(
         economies.get("runic-gauntlets-allflame-partial-five")?.prices.base,
@@ -281,7 +288,10 @@ test("goal-realignment materialization rejects undisclosed market overrides", ()
     );
 
     const missingDecision = structuredClone(eldritch);
-    missingDecision.economy.manual_override_decisions = {};
+    missingDecision.economy.manual_override_decisions = {
+        eldritch_annul:
+            eldritch.economy.manual_override_decisions?.eldritch_annul ?? "",
+    };
     assert.throws(
         () => materializeSolverBenchmarkEconomy(missingDecision, repoRoot),
         /manual_override_decisions\.eldritch_exalt/,

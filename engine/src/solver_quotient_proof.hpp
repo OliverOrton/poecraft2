@@ -45,6 +45,7 @@ public:
     operator const StableKey&() const { return value(); }
     bool empty() const { return value().empty(); }
     std::size_t capacity() const { return value().capacity(); }
+    const StableKey* storage_identity() const { return value_.get(); }
     void push_back(const std::uint64_t token) {
         StableKey copy = value();
         copy.push_back(token);
@@ -294,6 +295,11 @@ private:
         const CoverageDescriptor&,
         StableKey,
         std::vector<CarrierLowerQWitness>);
+    friend CarrierWideOptimisticLowerQ certify_carrier_wide_lower_q(
+        const SharedStableKey&,
+        const CoverageDescriptor&,
+        StableKey,
+        std::vector<CarrierLowerQWitness>);
 };
 
 CarrierWideOptimisticLowerQ trivial_carrier_wide_lower_q(
@@ -306,6 +312,12 @@ CarrierWideOptimisticLowerQ trivial_carrier_wide_lower_q(
 
 CarrierWideOptimisticLowerQ certify_carrier_wide_lower_q(
     const StableKey& source_cell_identity,
+    const CoverageDescriptor& coverage,
+    StableKey authority_identity,
+    std::vector<CarrierLowerQWitness> witnesses);
+
+CarrierWideOptimisticLowerQ certify_carrier_wide_lower_q(
+    const SharedStableKey& source_cell_identity,
     const CoverageDescriptor& coverage,
     StableKey authority_identity,
     std::vector<CarrierLowerQWitness> witnesses);
@@ -327,8 +339,8 @@ struct UnresolvedAlternativeObligationIdentity {
     SharedStableKey source_cell_identity;
     ObservationRequirement observation_requirement;
     AlternativeActionIdentity action;
-    StableKey price_identity;
-    StableKey vocabulary_identity;
+    SharedStableKey price_identity;
+    SharedStableKey vocabulary_identity;
     std::uint64_t requirement_generation = 0;
     std::uint64_t source_generation = 0;
     std::uint64_t target_generation = 0;
@@ -612,9 +624,17 @@ struct ProofStoreStorageStats {
     std::uint64_t obligation_bucket_capacity = 0;
     std::uint64_t obligation_bucket_id_capacity = 0;
     std::uint64_t obligation_key_u64_capacity = 0;
+    std::uint64_t obligation_shared_key_allocation_capacity = 0;
+    std::uint64_t obligation_shared_key_object_count = 0;
+    std::uint64_t obligation_shared_key_u64_capacity = 0;
     std::uint64_t obligation_requirement_tag_capacity = 0;
     std::uint64_t obligation_requirement_affix_capacity = 0;
     std::uint64_t obligation_requirement_selector_tag_capacity = 0;
+};
+
+struct ObligationSharedKeyAllocation {
+    const StableKey* identity = nullptr;
+    std::uint64_t u64_capacity = 0;
 };
 
 struct ProofPayloadHashBucket {
@@ -720,6 +740,8 @@ private:
     std::vector<std::vector<std::uint64_t>> target_rows_;
     std::vector<UnresolvedAlternativeObligation> alternative_obligations_;
     std::vector<AlternativeObligationHashBucket> alternative_buckets_;
+    std::vector<ObligationSharedKeyAllocation>
+        obligation_shared_key_allocations_;
     std::uint64_t price_generation_ = 0;
     std::uint64_t q_generation_ = 0;
     std::uint64_t policy_generation_ = 0;

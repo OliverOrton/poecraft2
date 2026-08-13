@@ -921,7 +921,16 @@ CalcContext::build_state_local_automatic_candidates(
     const auto local_context_started = std::chrono::steady_clock::now();
     const std::string context_key = automatic_context_key(
         local_goal.fixed_options, local_candidates);
-    constexpr std::size_t kRetainedAutomaticAdmissionContexts = 64;
+    /* Carrier-local contexts are only a cross-carrier performance cache; the
+     * active coroutine owns its transient context across suspension.  A broad
+     * product envelope can synthesize thousands of distinct context keys, so
+     * retaining 64 cold contexts made every owned-byte checkpoint traverse a
+     * large dead cache and could consume the public solver budget before the
+     * compact admitted rows reached Bellman closure. The active candidate's
+     * transient context supplies all correctness state, so keep no completed
+     * carrier context alive across candidates; immutable option templates and
+     * admitted parent rows remain the durable reuse layers. */
+    constexpr std::size_t kRetainedAutomaticAdmissionContexts = 0;
     bool admission_context_created = false;
     std::unique_ptr<CalcContext> transient_context;
     CalcContext* local_pointer = nullptr;

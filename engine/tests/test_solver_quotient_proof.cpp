@@ -890,6 +890,11 @@ independent_store_bytes(
             sizeof(AlternativeObligationHashBucket) +
         stats.obligation_bucket_id_capacity * sizeof(std::uint32_t) +
         stats.obligation_key_u64_capacity * sizeof(std::uint64_t) +
+        stats.obligation_shared_key_allocation_capacity *
+            sizeof(ObligationSharedKeyAllocation) +
+        stats.obligation_shared_key_object_count *
+            (sizeof(StableKey) + 2 * sizeof(void*)) +
+        stats.obligation_shared_key_u64_capacity * sizeof(std::uint64_t) +
         stats.obligation_requirement_tag_capacity * sizeof(std::uint32_t) +
         stats.obligation_requirement_affix_capacity *
             sizeof(RefinementAffixObservation) +

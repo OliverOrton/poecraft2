@@ -1992,20 +1992,16 @@ std::string compile_policy_strategy_json(
                 return entry.leader == partition_leader;
             });
         if (one_region) {
-            /* Stop once the partition selects one executable region. Minimize
-             * that complete region against every differently routed or
-             * off-policy strict state; the helper retains exact-state
-             * serialization when no safe quotient predicate exists. */
-            const std::vector<std::uint32_t>& members =
-                states_by_leader.at(partition_leader);
-            return {
-                state_node(partition_leader),
-                policy_region_condition(
-                    calc, vocabulary, partition_leader, members,
-                    feature_index, policy_region_by_state,
-                    telemetry == nullptr
-                        ? nullptr
-                        : &telemetry->exact_state_fallbacks)};
+            /* Stop once the observations already tested by the route select
+             * one executable continuation. Reattaching the complete abstract
+             * region predicate here is not merely redundant: a bounded
+             * product incumbent can omit a concrete strict successor while
+             * retaining the same continuation on both neighboring abstract
+             * states. The exact evaluator must be allowed to exercise that
+             * continuation and either certify it or reject it. The default
+             * edge still handles every observation value that separates this
+             * region from another selected continuation. */
+            return {state_node(partition_leader), all_of({})};
         }
         std::vector<std::string> constants;
         std::vector<std::size_t> varying;

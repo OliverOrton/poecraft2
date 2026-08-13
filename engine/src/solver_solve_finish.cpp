@@ -39,7 +39,11 @@ void order_observed_modifier_choices(
 
 SolveTermination successful_refined_publication_termination(
         const SolveTermination coarse_termination,
-        const bool resource_cap_hit) {
+        const bool resource_cap_hit,
+        const bool globally_exact) {
+    if (globally_exact) {
+        return SolveTermination::ExactClosed;
+    }
     if (coarse_termination == SolveTermination::ExactClosed) {
         return SolveTermination::ExactClosed;
     }
@@ -2051,92 +2055,19 @@ SolveResult SolveWork::Impl::finish() {
                 const std::string& stage,
                 const std::string& failure_reason) {
                 if (assertion.strategy_json.empty()) return;
+                /* A graph that failed independent exact evaluation is useful
+                 * diagnostic evidence, but it is not a fallback candidate.
+                 * Retaining its complete policy vectors and JSON in the
+                 * certified portfolio used to consume the same memory the
+                 * strict lift needed to replace it. Record stable metadata and
+                 * release the unverified payload before refinement instead. */
                 BoundedPolicyIncumbent candidate;
-                if (output_incumbent.has_value() &&
-                    !output_incumbent->policy.empty()) {
-                    candidate = std::move(*output_incumbent);
-                    output_incumbent.reset();
-                } else {
-                    candidate.values = result.values;
-                    candidate.policy = result.policy;
-                    candidate.unveil_preferences =
-                        result.unveil_preferences;
-                    candidate.option_unveil_preferences =
-                        result.option_unveil_preferences;
-                    candidate.behavioral_representative_by_state =
-                        result.behavioral_representative_by_state;
-                    candidate.policy_reachable = result.policy_reachable;
-                    candidate.primitive_renewal_witness =
-                        result.primitive_renewal_witness;
-                    candidate.policy_rows = policy_rows;
-                    candidate.policy_rows.resize(
-                        candidate.values.size(),
-                        std::numeric_limits<std::uint64_t>::max());
-                    candidate.policy_row_costs.assign(
-                        candidate.values.size(), kInfinity);
-                    for (std::size_t state = 0;
-                         state < candidate.policy_rows.size(); ++state) {
-                        const std::uint64_t row =
-                            candidate.policy_rows[state];
-                        if (row ==
-                            std::numeric_limits<std::uint64_t>::max()) {
-                            continue;
-                        }
-                        if (state < restored_policy_row_costs.size()) {
-                            candidate.policy_row_costs[state] =
-                                restored_policy_row_costs[state];
-                        } else if (row < priced_rows.size()) {
-                            candidate.policy_row_costs[state] =
-                                priced_rows[row].cost;
-                        }
-                    }
-                    candidate.restart_operator = restart_operator_index;
-                    candidate.restart_state = restart_state;
-                    candidate.round =
-                        result.diagnostics.focused_expansion_rounds;
-                    candidate.goal_identity = goal_identity();
-                    candidate.economy_identity = economy_identity();
-                    candidate.action_vocabulary_identity =
-                        action_vocabulary_identity();
-                    candidate.action_vocabulary_size = operators.size();
-                    candidate.graph_identity = graph_identity();
-                    candidate.artifact_identity = artifact_identity();
-                    candidate.source_generation =
-                        transition_cache->rows.size();
-                    candidate.target_generation = calc.state_count();
-                    candidate.graph_row_count =
-                        transition_cache->rows.size();
-                    candidate.graph_priced_row_count = priced_rows.size();
-                    candidate.graph_successor_count =
-                        transition_cache->successors.size();
-                    candidate.graph_probability_count =
-                        transition_cache->probabilities.size();
-                    candidate.graph_choice_count =
-                        transition_cache->choices.size();
-                    candidate.graph_choice_successor_count =
-                        transition_cache->choice_successors.size();
-                    candidate.graph_choice_option_count =
-                        transition_cache->choice_options.size();
-                    candidate.graph_prefix_identity =
-                        incumbent_graph_prefix_identity(
-                            candidate.graph_row_count,
-                            candidate.graph_priced_row_count,
-                            candidate.graph_successor_count,
-                            candidate.graph_probability_count,
-                            candidate.graph_choice_count,
-                            candidate.graph_choice_successor_count,
-                            candidate.graph_choice_option_count);
-                    candidate.policy_materialized =
-                        !candidate.policy.empty();
-                }
                 candidate.certified_upper_bound =
                     std::isfinite(assertion.solver_cost) &&
                             assertion.solver_cost >= 0.0
                         ? assertion.solver_cost
                         : kInfinity;
                 candidate.evaluated_policy_cost = kInfinity;
-                candidate.compiled_artifact =
-                    retained_artifact_from_assertion(assertion);
                 candidate.kind = kind;
                 candidate.compilation_provenance =
                     "compiled_unverified_" + stage + "_v1";
@@ -2146,32 +2077,22 @@ SolveResult SolveWork::Impl::finish() {
                 candidate.independently_evaluated = false;
                 candidate.proper = false;
                 candidate.executable = false;
+                candidate.goal_identity = goal_identity();
+                candidate.economy_identity = economy_identity();
+                candidate.artifact_identity = artifact_identity();
                 std::uint64_t identity = 1469598103934665603ULL;
                 identity_mix(identity, candidate.goal_identity);
                 identity_mix(identity, candidate.economy_identity);
                 identity_mix(identity, candidate.artifact_identity);
-                identity_mix(identity, candidate.graph_prefix_identity);
                 identity_mix_string(identity, candidate.kind);
                 identity_mix_string(
-                    identity,
-                    candidate.compiled_artifact.strategy_json);
+                    identity, assertion.strategy_json);
                 candidate.portfolio_identity = identity;
-                candidate.retained_owned_bytes =
-                    incumbent_owned_bytes(candidate);
-                const std::uint64_t candidate_dynamic_bytes =
-                    candidate.retained_owned_bytes >=
-                            sizeof(BoundedPolicyIncumbent)
-                        ? candidate.retained_owned_bytes -
-                              sizeof(BoundedPolicyIncumbent)
-                        : candidate.retained_owned_bytes;
-                const bool retained =
-                    retain_certified_incumbent(
-                        candidate, candidate_dynamic_bytes);
                 record_candidate_sample(
                     candidate, stage,
-                    retained ? "retained_diagnostic_only"
-                             : "diagnostic_retention_refused",
+                    "diagnostic_metadata_only",
                     candidate.final_graph_verification_failure);
+                std::string{}.swap(assertion.strategy_json);
             };
         const auto saturated_add =
             [](const std::uint64_t lhs, const std::uint64_t rhs) {
@@ -3445,10 +3366,16 @@ SolveResult SolveWork::Impl::finish() {
                         : "bounded_strict_policy";
                     telemetry.published_candidate_kind =
                         "policy_guided_exact_refinement";
+                    /* A complete strict Bellman envelope is a fresh global
+                     * optimality proof. Once it closes, an earlier coarse
+                     * resource stop no longer describes the published
+                     * result; only bounded strict publication inherits that
+                     * stop cause. */
                     result.termination =
                         successful_refined_publication_termination(
                             coarse_solve_termination,
-                            result.diagnostics.resource_cap_hit);
+                            result.diagnostics.resource_cap_hit,
+                            globally_exact);
                     if (!globally_exact) {
                         classify_bounded_publication();
                     }
