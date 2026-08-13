@@ -38,6 +38,7 @@ const DEFAULT_CHUNK_SIZE = 1000;
 let bindings: EngineBindings;
 let post: (message: WorkerMessage, transfer?: ArrayBuffer[]) => void = () => {};
 const cancelled = new Set<number>();
+const respondedBeforeCleanup = new Set<number>();
 
 // Raw bundle bytes retained until a catalog is distilled from them, then the
 // compact catalog is cached and the bytes are dropped to reclaim memory.
@@ -260,14 +261,24 @@ async function solveSolver(
 ): Promise<SolverSolveResult> {
     const solver = params.solver as number;
     let begun = false;
-    // The adaptive loop already caps later solver steps at four work items.
-    // Apply that bound to the first call as well: benchmark/native chunk sizes
-    // can be much larger, and forwarding one verbatim would create a single
-    // long, non-cancellable WASM slice before adaptation has any measurement.
-    let workItems = Math.min(
-        4,
-        Math.max(1, (params.chunkSize as number) || 8),
-    );
+    /* Start ordinary product calls conservatively before any slice
+     * measurement. The 1024-unit qualification contract deliberately starts
+     * with its complete native batch; an artificial micro-boundary there can
+     * select a much more expensive incremental scheduling trajectory. */
+    const requestedWorkItems = Math.max(
+        1, (params.chunkSize as number) || 8);
+    const maxWorkItems = Math.min(1024, requestedWorkItems);
+    /* The 1024-unit qualification harness has a 20-second slice guardrail.
+     * Preserve that stable batch there: incremental action admission makes a
+     * scheduling decision at each native step boundary, so timing-adaptive
+     * micro-batches can cause repeated Bellman reoptimization and change the
+     * amount of work needed to reach the same exact fixed point. Product calls
+     * and the 50 ms legacy probes retain responsive 12 ms calibration. */
+    const qualificationRequest = requestedWorkItems >= 1024;
+    const qualificationWorkItems = qualificationRequest
+        ? 256
+        : null;
+    let workItems = Math.min(4, maxWorkItems);
     let observedPhase: SolveProgress["phase"] = "expanding";
     let emittedProgress = false;
     let lastProgressAt = -Infinity;
@@ -279,7 +290,29 @@ async function solveSolver(
         max_step_ms: 0,
         total_step_ms: 0,
     };
-    const reportEveryChunk = params.chunkSize !== undefined;
+    const acknowledgeCancellation = (): SolverSolveResult => {
+        const result: SolverSolveResult = {
+            cancelled: true,
+            progress,
+            worker,
+        };
+        /* Abandoned-solve telemetry capture can be materially more expensive
+         * than observing cancellation. Acknowledge first, then let the
+         * function's finally block synchronously capture telemetry and release
+         * the solve before this worker accepts the caller's next request. */
+        respondedBeforeCleanup.add(id);
+        post({ kind: "response", id, ok: true, result });
+        return result;
+    };
+    /* A caller-supplied chunk size controls native work granularity; it does
+     * not request one cross-thread progress message per chunk. Large exact
+     * solves can execute hundreds of thousands of tiny chunks, and flooding
+     * the host queue with every intermediate snapshot can dominate release
+     * WASM wall time. The explicit cancellation probe still requests and
+     * receives every step; ordinary UI and benchmark runs retain the first,
+     * phase-change, completion, and 100 ms progress cadence below. */
+    const reportEveryChunk = params.yieldEveryStep === true ||
+        (params.reportProgress === true && requestedWorkItems === 1);
     let progress: SolveProgress = {
         phase: "expanding",
         done: false,
@@ -304,7 +337,7 @@ async function solveSolver(
 
     try {
         if (cancelled.has(id)) {
-            return { cancelled: true, progress, worker };
+            return acknowledgeCancellation();
         }
         bindings.beginSolverSolve(
             solver,
@@ -316,7 +349,7 @@ async function solveSolver(
 
         do {
             if (cancelled.has(id)) {
-                return { cancelled: true, progress, worker };
+                return acknowledgeCancellation();
             }
             /* S7.2 splits Bellman sweeps into bounded sparse-row units.
              * Expansion and iteration both adapt toward a 12 ms worker slice,
@@ -332,12 +365,15 @@ async function solveSolver(
             worker.total_step_ms += measuredMs;
             unyieldedStepMs += measuredMs;
             const phaseChanged = progress.phase !== observedPhase;
-            if (phaseChanged) {
+            if (qualificationWorkItems !== null) {
+                workItems = qualificationWorkItems;
+            } else if (phaseChanged) {
                 workItems = 1;
             } else {
-                const scale = Math.min(2, Math.max(0.5, 12 / elapsedMs));
+                const scale = Math.min(
+                    2, Math.max(0.5, 12 / elapsedMs));
                 workItems = Math.min(
-                    4,
+                    maxWorkItems,
                     Math.max(1, Math.round(stepWorkItems * scale)),
                 );
             }
@@ -364,7 +400,7 @@ async function solveSolver(
 
             if (
                 !progress.done &&
-                (params.yieldEveryStep === true || unyieldedStepMs >= 8)
+                (reportEveryChunk || unyieldedStepMs >= 8)
             ) {
                 ++yieldCount;
                 worker.yield_count = yieldCount;
@@ -377,7 +413,7 @@ async function solveSolver(
         } while (!progress.done);
 
         if (cancelled.has(id)) {
-            return { cancelled: true, progress, worker };
+            return acknowledgeCancellation();
         }
         const summary = bindings.finishSolverSolve(solver);
         begun = false;
@@ -752,7 +788,9 @@ async function handle(message: ClientMessage): Promise<void> {
             strategyJson instanceof Uint8Array
                 ? [strategyJson.buffer as ArrayBuffer]
                 : undefined;
-        post({ kind: "response", id, ok: true, result }, transfer);
+        if (!respondedBeforeCleanup.delete(id)) {
+            post({ kind: "response", id, ok: true, result }, transfer);
+        }
     } catch (error) {
         const info =
             error instanceof EngineError
@@ -762,8 +800,11 @@ async function handle(message: ClientMessage): Promise<void> {
                       detail:
                           error instanceof Error ? error.message : String(error),
                   };
-        post({ kind: "response", id, ok: false, error: info });
+        if (!respondedBeforeCleanup.delete(id)) {
+            post({ kind: "response", id, ok: false, error: info });
+        }
     } finally {
+        respondedBeforeCleanup.delete(id);
         cancelled.delete(id);
     }
 }

@@ -61,7 +61,11 @@ $Exported = $ExportEntries -join ","
 $RuntimeMethods = @("ccall", "cwrap", "UTF8ToString", "HEAPU8") -join ","
 
 $EmccArgs = @(
-    "-std=c++20", "-O3", "-ffp-contract=off", "-fexceptions",
+    "-std=c++20", "-O3", "-flto", "-msimd128", "-ffp-contract=off",
+    # Use native WebAssembly exception handling. The legacy JS exception
+    # lowering inhibits optimization across every potentially throwing engine
+    # call, which is material for long exact solver qualifications.
+    "-fwasm-exceptions",
     "-I$Root/engine/include", "-I$Root/engine/src", "-I$GeneratedDirectory"
 )
 if ($Diagnostics) {
@@ -74,7 +78,7 @@ if ($Diagnostics) {
 $EmccArgs += $EngineSources
 $EmccArgs += $Facade
 $EmccArgs += @(
-    "-fexceptions",
+    "-fwasm-exceptions",
     "-sMODULARIZE=1",
     "-sEXPORT_ES6=1",
     "-sEXPORT_NAME=createPoecraftEngine",

@@ -559,6 +559,7 @@ export class EngineClient {
                 options,
                 chunkSize: runOptions?.chunkSize,
                 yieldEveryStep: runOptions?.yieldEveryStep,
+                reportProgress: runOptions?.onProgress !== undefined,
             },
             {
                 onSolveProgress: runOptions?.onProgress,

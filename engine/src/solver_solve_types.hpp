@@ -911,6 +911,20 @@ struct SolveWork::Impl {
     using FocusedFallbackWitness =
         std::shared_ptr<const FocusedFallbackPolicy>;
     FocusedFallbackWitness focused_fallback_policy;
+    /* Constructive fallback discovery can inspect every exact renewal exit
+     * on every expanded carrier. Retain its cursor so one public solve step
+     * never has to synthesize the entire proof synchronously. */
+    bool constructive_policy_active = false;
+    bool constructive_fallback_pending = false;
+    std::optional<FocusedFallbackPolicy> constructive_progress_fallback;
+    struct PrimitiveDestructiveRenewalWork {
+        bool active = false;
+        std::vector<std::uint64_t> materialized_alternatives;
+        std::vector<std::uint32_t> renewal_sources;
+        std::size_t renewal_source_cursor = 0;
+        FocusedFallbackPolicy best;
+        double best_start = kInfinity;
+    } primitive_destructive_renewal_work;
     /*
      * A successful validation may outlive later focused-graph appends, but
      * never a change to the prefix on which it was proved. Sparse rows and
@@ -1122,7 +1136,7 @@ struct SolveWork::Impl {
     const char* retained_fallback_invalid_reason(
         const FocusedFallbackPolicy& fallback);
 
-    FocusedFallbackWitness acquire_focused_fallback();
+    FocusedFallbackWitness acquire_focused_fallback(bool& complete);
 
     void capture_incumbent_policy(BoundedPolicyIncumbent& candidate);
 
@@ -1135,6 +1149,9 @@ struct SolveWork::Impl {
 
     std::uint64_t incumbent_owned_bytes(
         const BoundedPolicyIncumbent& incumbent) const;
+
+    std::uint64_t fallback_policy_dynamic_owned_bytes(
+        const FocusedFallbackPolicy& fallback) const;
 
     bool incumbent_precedes(
         const BoundedPolicyIncumbent& left,
@@ -1614,13 +1631,13 @@ struct SolveWork::Impl {
 
     std::optional<FocusedFallbackPolicy> magic_regal_fallback();
 
-    std::optional<FocusedFallbackPolicy>
-    primitive_destructive_renewal_fallback();
+    bool advance_primitive_destructive_renewal_fallback(
+        std::optional<FocusedFallbackPolicy>& completed);
 
     std::optional<FocusedFallbackPolicy> progressive_fracture_fallback(
         const FocusedFallbackPolicy& bootstrap);
 
-    std::optional<FocusedFallbackPolicy> focused_fallback();
+    std::optional<FocusedFallbackPolicy> focused_fallback(bool& complete);
 
     double focused_start_upper_bound(
         const FocusedFallbackPolicy& fallback) const;

@@ -582,6 +582,29 @@ std::uint64_t SolveWork::Impl::output_incumbent_owned_bytes() const {
         return bytes;
     }
 
+std::uint64_t SolveWork::Impl::fallback_policy_dynamic_owned_bytes(
+        const FocusedFallbackPolicy& fallback) const {
+        std::uint64_t bytes = fallback.renewal_kernel_signature.capacity() *
+            sizeof(std::uint64_t);
+        bytes += fallback.primitive_renewal_modes.capacity() *
+            sizeof(FocusedFallbackPolicy::PrimitiveRenewalMode);
+        for (const auto& mode : fallback.primitive_renewal_modes) {
+            bytes += mode.kernel_signature.capacity() *
+                sizeof(std::uint64_t);
+        }
+        bytes += fallback.progress_state_value.bucket_count() *
+            sizeof(void*);
+        bytes += fallback.progress_state_value.size() *
+            (sizeof(std::pair<const std::uint32_t, double>) +
+             2 * sizeof(void*));
+        bytes += fallback.progress_state_operator.bucket_count() *
+            sizeof(void*);
+        bytes += fallback.progress_state_operator.size() *
+            (sizeof(std::pair<const std::uint32_t, std::uint32_t>) +
+             2 * sizeof(void*));
+        return bytes;
+    }
+
 std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes() const {
         ++owned_byte_ledger_requests;
         return fast_estimated_owned_bytes_with_calc(
@@ -687,6 +710,18 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
                 (sizeof(std::pair<const std::uint32_t, std::uint32_t>) +
                  2 * sizeof(void*));
         }
+        if (constructive_progress_fallback.has_value()) {
+            bytes += fallback_policy_dynamic_owned_bytes(
+                *constructive_progress_fallback);
+        }
+        bytes += primitive_destructive_renewal_work
+                     .materialized_alternatives.capacity() *
+                 sizeof(std::uint64_t);
+        bytes += primitive_destructive_renewal_work
+                     .renewal_sources.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += fallback_policy_dynamic_owned_bytes(
+            primitive_destructive_renewal_work.best);
         bytes += certified_state_upper.capacity() * sizeof(double);
         bytes += certified_state_row.capacity() * sizeof(std::uint64_t);
         bytes += priced_rows.capacity() * sizeof(PricedSparseRow);
@@ -849,6 +884,18 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
                 (sizeof(std::pair<const std::uint32_t, std::uint32_t>) +
                  2 * sizeof(void*));
         }
+        if (constructive_progress_fallback.has_value()) {
+            bytes += fallback_policy_dynamic_owned_bytes(
+                *constructive_progress_fallback);
+        }
+        bytes += primitive_destructive_renewal_work
+                     .materialized_alternatives.capacity() *
+                 sizeof(std::uint64_t);
+        bytes += primitive_destructive_renewal_work
+                     .renewal_sources.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += fallback_policy_dynamic_owned_bytes(
+            primitive_destructive_renewal_work.best);
         bytes += certified_state_upper.capacity() * sizeof(double);
         bytes += certified_state_row.capacity() * sizeof(std::uint64_t);
         bytes += priced_rows.capacity() * sizeof(PricedSparseRow);
@@ -3941,7 +3988,8 @@ std::string serialize_solver_telemetry(
         json += ",\"sweeps\":" + std::to_string(diagnostics->sweeps);
         json += ",\"policy_improvement_rounds\":" + std::to_string(
                     diagnostics->policy_improvement_rounds);
-        json += ",\"residual\":" + std::to_string(diagnostics->residual);
+        json += ",\"residual\":" +
+                telemetry_finite_json(diagnostics->residual);
         json += ",\"optimality_gap\":";
         if (diagnostics->focused_expansion &&
             std::isfinite(focused_published_gap)) {
@@ -3985,7 +4033,8 @@ std::string serialize_solver_telemetry(
         json += ",\"sweeps\":" + std::to_string(diagnostics->sweeps);
         json += ",\"policy_improvement_rounds\":" + std::to_string(
                     diagnostics->policy_improvement_rounds);
-        json += ",\"residual\":" + std::to_string(diagnostics->residual);
+        json += ",\"residual\":" +
+                telemetry_finite_json(diagnostics->residual);
         json += ",\"optimality_gap\":";
         if (diagnostics->focused_expansion &&
             std::isfinite(focused_published_gap)) {

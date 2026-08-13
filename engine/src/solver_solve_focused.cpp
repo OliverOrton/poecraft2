@@ -623,20 +623,28 @@ bool SolveWork::Impl::begin_focused_upper_solve() {
 void SolveWork::Impl::finish_focused_lower_solve(
         const bool allow_upper_pass ) {
         if (allow_upper_pass) {
-            ++result.diagnostics.focused_expansion_rounds;
-            result.diagnostics.focused_lower_bound =
-                result.values.at(result.start_state);
-            result.diagnostics.focused_expansion_ns +=
-                result.diagnostics.optimization_ns;
+            if (!constructive_policy_active) {
+                ++result.diagnostics.focused_expansion_rounds;
+                result.diagnostics.focused_lower_bound =
+                    result.values.at(result.start_state);
+                result.diagnostics.focused_expansion_ns +=
+                    result.diagnostics.optimization_ns;
+                constructive_policy_active = true;
+            }
             const auto constructive_policy_start =
                 std::chrono::steady_clock::now();
-            focused_fallback_policy = acquire_focused_fallback();
+            bool fallback_complete = false;
+            FocusedFallbackWitness fallback =
+                acquire_focused_fallback(fallback_complete);
             result.diagnostics.constructive_policy_ns +=
                 static_cast<std::uint64_t>(
                     std::chrono::duration_cast<std::chrono::nanoseconds>(
                         std::chrono::steady_clock::now() -
                         constructive_policy_start)
                         .count());
+            if (!fallback_complete) return;
+            constructive_policy_active = false;
+            focused_fallback_policy = std::move(fallback);
             const auto strict_clean_goal_cover_start =
                 std::chrono::steady_clock::now();
             prepare_strict_clean_goal_cover();

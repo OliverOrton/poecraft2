@@ -1064,6 +1064,8 @@ async function runCase(
                         kernel_reuse: spec.caps.kernel_reuse,
                         goal_progress_gated_reforges:
                             spec.caps.goal_progress_gated_reforges,
+                        high_impact_executable_uppers:
+                            spec.caps.high_impact_executable_uppers,
                     },
                     {
                         chunkSize: spec.caps.solve_step_work_items,
@@ -1104,6 +1106,8 @@ async function runCase(
                         kernel_reuse: spec.caps.kernel_reuse,
                         goal_progress_gated_reforges:
                             spec.caps.goal_progress_gated_reforges,
+                        high_impact_executable_uppers:
+                            spec.caps.high_impact_executable_uppers,
                     },
                     {
                         chunkSize: spec.caps.solve_step_work_items,
@@ -1581,7 +1585,15 @@ async function verifyStrategy(
         max_actions_per_run: spec.verification.max_actions_per_run,
         max_graph_steps_per_run:
             spec.verification.max_graph_steps_per_run ?? 0,
-    }, { signal });
+    }, {
+        // Qualification owns the complete deterministic sample and has a
+        // case-level watchdog. One native chunk avoids paying worker yields
+        // and repeated result/progress serialization inside a 10,000-run
+        // release comparison; interactive product simulations retain their
+        // adaptive cancellable chunks.
+        chunkSize: verificationRuns,
+        signal,
+    });
     if (run.cancelled) throw new Error("simulation verification was cancelled");
     const completed = run.summary.completed_runs;
     const meanCost = completed > 0

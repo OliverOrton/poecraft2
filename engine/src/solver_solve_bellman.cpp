@@ -1818,6 +1818,15 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                     phase = SolvePhase::Done;
                     break;
                 }
+                if (constructive_policy_active) {
+                    finish_focused_lower_solve();
+                    --remaining;
+                    /* The retained cursor is an explicit cooperative
+                     * boundary. Return even when the caller requested a
+                     * large batch so UI qualification cannot fold every
+                     * carrier proof back into one synchronous step. */
+                    break;
+                }
                 if (target_gap_stop) {
                     prepare_iteration();
                     phase = SolvePhase::Done;

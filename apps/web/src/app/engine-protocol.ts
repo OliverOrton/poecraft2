@@ -697,6 +697,8 @@ export interface SolveOptions {
     strict_states?: boolean;
     kernel_reuse?: boolean;
     goal_progress_gated_reforges?: boolean;
+    /** Qualification-only audited scheduler; product solves omit this. */
+    high_impact_executable_uppers?: boolean;
 }
 
 export interface EngineMemoryStats {
@@ -713,9 +715,9 @@ export interface SolveProgress {
     done: boolean;
     expanded_states: number;
     sweeps: number;
-    residual: number;
+    residual: number | null;
     /** Monotonically descending upper bound; 1e12 means iteration is pending. */
-    start_value_bound: number;
+    start_value_bound: number | null;
     lower_bound: number | null;
     upper_bound: number | null;
     absolute_optimality_gap: number | null;

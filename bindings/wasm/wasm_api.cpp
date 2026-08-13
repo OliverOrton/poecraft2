@@ -34,6 +34,7 @@
 #include "poecraft/solver.h"
 
 #include "json.hpp"
+#include "solver_diagnostic_options.hpp"
 
 namespace {
 
@@ -620,6 +621,14 @@ bool parse_solve_options(
         options.solver_flags |=
             PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES;
     }
+    const Value* high_impact_uppers =
+        spec.find("high_impact_executable_uppers");
+    if (high_impact_uppers != nullptr &&
+        high_impact_uppers->type == Type::Bool &&
+        high_impact_uppers->boolean) {
+        options.solver_flags |= poecraft::solver::
+            kHighImpactExecutableUppersDiagnosticFlag;
+    }
     return true;
 }
 
@@ -761,9 +770,9 @@ void append_solve_progress(
            std::to_string(progress.expanded_states);
     out += ",\"sweeps\":" + std::to_string(progress.sweeps);
     out += ",\"residual\":";
-    append_precise_double(out, progress.residual);
+    append_nullable_double(out, progress.residual);
     out += ",\"start_value_bound\":";
-    append_precise_double(out, progress.start_value_bound);
+    append_nullable_double(out, progress.start_value_bound);
     out += ",\"lower_bound\":";
     append_nullable_double(out, progress.lower_bound);
     out += ",\"upper_bound\":";
@@ -805,7 +814,7 @@ void append_solve_summary(
            std::to_string(summary.expanded_states);
     out += ",\"sweeps\":" + std::to_string(summary.sweeps);
     out += ",\"residual\":";
-    append_precise_double(out, summary.residual);
+    append_nullable_double(out, summary.residual);
     out += ",\"skipped_actions\":" +
            std::to_string(summary.skipped_action_count);
     out += ",\"policy_available\":";

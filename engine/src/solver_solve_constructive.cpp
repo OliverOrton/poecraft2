@@ -695,7 +695,9 @@ const char* SolveWork::Impl::retained_fallback_invalid_reason(
         return finish(nullptr);
     }
 
-auto SolveWork::Impl::acquire_focused_fallback() -> FocusedFallbackWitness {
+auto SolveWork::Impl::acquire_focused_fallback(bool& complete)
+        -> FocusedFallbackWitness {
+        complete = true;
         std::array<FocusedFallbackWitness, 2> retained{
             focused_fallback_policy,
             output_incumbent.has_value()
@@ -727,9 +729,12 @@ auto SolveWork::Impl::acquire_focused_fallback() -> FocusedFallbackWitness {
                 output_incumbent.reset();
             }
         }
-        ++result.diagnostics.constructive_policy_syntheses;
+        if (!constructive_fallback_pending) {
+            ++result.diagnostics.constructive_policy_syntheses;
+        }
         std::optional<FocusedFallbackPolicy> synthesized =
-            focused_fallback();
+            focused_fallback(complete);
+        if (!complete) return {};
         if (synthesized.has_value()) {
             stamp_fallback_provenance(*synthesized);
             return std::make_shared<const FocusedFallbackPolicy>(
@@ -3518,48 +3523,69 @@ auto SolveWork::Impl::magic_regal_fallback() -> std::optional<FocusedFallbackPol
         return best;
     }
 
-auto SolveWork::Impl::primitive_destructive_renewal_fallback() -> std::optional<FocusedFallbackPolicy> {
-        if (restart_state == kNoId || restart_state >= calc.state_count() ||
-            result.start_state >= calc.state_count() ||
-            restart_state >= transition_cache->state_rows.size()) {
-            return std::nullopt;
+bool SolveWork::Impl::advance_primitive_destructive_renewal_fallback(
+        std::optional<FocusedFallbackPolicy>& completed) {
+        completed.reset();
+        PrimitiveDestructiveRenewalWork& work =
+            primitive_destructive_renewal_work;
+        if (!work.active) {
+            if (restart_state == kNoId ||
+                restart_state >= calc.state_count() ||
+                result.start_state >= calc.state_count() ||
+                restart_state >= transition_cache->state_rows.size()) {
+                return true;
+            }
+            const AbstractState& anchor = calc.state(restart_state);
+            if (anchor.rarity != PC_RARITY_NORMAL ||
+                anchor.prefix_count != 0 || anchor.suffix_count != 0 ||
+                (anchor.flags & (kFlagCraftedMod | kProtectionFlags)) != 0 ||
+                anchor.fractured_goal_mask != 0 ||
+                anchor.fractured_metamod_flags != 0) {
+                return true;
+            }
+            work = PrimitiveDestructiveRenewalWork{};
+            work.active = true;
+            work.best.anchor_state = restart_state;
+            work.materialized_alternatives.reserve(
+                incremental_alternative_rows.size());
+            for (const IncrementalAlternativeRow& alternative :
+                 incremental_alternative_rows) {
+                if (alternative.row_index < transition_cache->rows.size() &&
+                    alternative.row_index < priced_rows.size()) {
+                    work.materialized_alternatives.push_back(
+                        alternative.row_index);
+                }
+            }
+            std::sort(
+                work.materialized_alternatives.begin(),
+                work.materialized_alternatives.end());
+            work.materialized_alternatives.erase(
+                std::unique(
+                    work.materialized_alternatives.begin(),
+                    work.materialized_alternatives.end()),
+                work.materialized_alternatives.end());
+            work.renewal_sources.reserve(
+                transition_cache->state_rows.size());
+            if (result.start_state < transition_cache->state_rows.size()) {
+                work.renewal_sources.push_back(result.start_state);
+            }
+            for (std::uint32_t state = 0;
+                 state < transition_cache->state_rows.size(); ++state) {
+                if (state == result.start_state || state >= expanded.size() ||
+                    !expanded[state] ||
+                    calc.is_goal_state(calc.state(state))) {
+                    continue;
+                }
+                work.renewal_sources.push_back(state);
+            }
         }
-        const AbstractState& anchor = calc.state(restart_state);
-        if (anchor.rarity != PC_RARITY_NORMAL ||
-            anchor.prefix_count != 0 || anchor.suffix_count != 0 ||
-            (anchor.flags & (kFlagCraftedMod | kProtectionFlags)) != 0 ||
-            anchor.fractured_goal_mask != 0 ||
-            anchor.fractured_metamod_flags != 0) {
-            return std::nullopt;
-        }
-        FocusedFallbackPolicy best;
-        best.anchor_state = restart_state;
-        double best_start = kInfinity;
+        constexpr std::uint32_t kRenewalSourcesPerCooperativeUnit = 32;
+        std::uint32_t sources_processed = 0;
+        while (work.renewal_source_cursor < work.renewal_sources.size() &&
+               sources_processed++ < kRenewalSourcesPerCooperativeUnit) {
+        const std::uint32_t renewal_source =
+            work.renewal_sources[work.renewal_source_cursor++];
         std::unordered_set<std::uint64_t> inspected_renewals;
-        std::unordered_set<std::uint64_t> materialized_alternatives;
-        materialized_alternatives.reserve(
-            incremental_alternative_rows.size());
-        for (const IncrementalAlternativeRow& alternative :
-             incremental_alternative_rows) {
-            if (alternative.row_index < transition_cache->rows.size() &&
-                alternative.row_index < priced_rows.size()) {
-                materialized_alternatives.insert(alternative.row_index);
-            }
-        }
-        std::vector<std::uint32_t> renewal_sources;
-        renewal_sources.reserve(transition_cache->state_rows.size());
-        if (result.start_state < transition_cache->state_rows.size()) {
-            renewal_sources.push_back(result.start_state);
-        }
-        for (std::uint32_t state = 0;
-             state < transition_cache->state_rows.size(); ++state) {
-            if (state == result.start_state || state >= expanded.size() ||
-                !expanded[state] || calc.is_goal_state(calc.state(state))) {
-                continue;
-            }
-            renewal_sources.push_back(state);
-        }
-        for (const std::uint32_t renewal_source : renewal_sources) {
             const AbstractState& renewal_entry =
                 calc.state(renewal_source);
             for (const std::uint64_t absolute :
@@ -3568,7 +3594,9 @@ auto SolveWork::Impl::primitive_destructive_renewal_fallback() -> std::optional<
                 const SparseRow& row =
                     transition_cache->rows.at(absolute);
                 if (!row.admitted &&
-                    !materialized_alternatives.contains(absolute)) {
+                    !std::binary_search(
+                        work.materialized_alternatives.begin(),
+                        work.materialized_alternatives.end(), absolute)) {
                     continue;
                 }
                 if (row.choice_count != 0) continue;
@@ -3756,34 +3784,43 @@ auto SolveWork::Impl::primitive_destructive_renewal_fallback() -> std::optional<
                     candidate);
                 if (!std::isfinite(start_value)) continue;
                 ++result.diagnostics.constructive_policy_feasible_policies;
-                if (start_value < best_start - options.epsilon ||
-                    (std::abs(start_value - best_start) <= options.epsilon &&
+                if (start_value < work.best_start - options.epsilon ||
+                    (std::abs(start_value - work.best_start) <=
+                         options.epsilon &&
                      std::tie(
                          variant.operator_index, anchor_operator) <
                          std::tie(
-                             best.renewal_operator,
-                             best.progress_state_operator[restart_state]))) {
-                    best_start = start_value;
-                    best = std::move(candidate);
+                             work.best.renewal_operator,
+                             work.best.progress_state_operator[
+                                 restart_state]))) {
+                    work.best_start = start_value;
+                    work.best = std::move(candidate);
                 }
             }
         }
         }
-        if (!std::isfinite(best.anchor_state_value)) return std::nullopt;
+        if (work.renewal_source_cursor < work.renewal_sources.size()) {
+            return false;
+        }
+        work.active = false;
+        if (!std::isfinite(work.best.anchor_state_value)) {
+            work = PrimitiveDestructiveRenewalWork{};
+            return true;
+        }
         const PlannerOperator& chosen =
-            calc.operators().at(best.renewal_operator);
+            calc.operators().at(work.best.renewal_operator);
         result.diagnostics.destructive_renewal_action_id = chosen.id;
         result.diagnostics.destructive_renewal_value =
-            best.renewal_state_value;
+            work.best.renewal_state_value;
         result.diagnostics.destructive_renewal_anchor_value =
-            best.anchor_state_value;
-        result.diagnostics.destructive_renewal_start_value = best_start;
+            work.best.anchor_state_value;
+        result.diagnostics.destructive_renewal_start_value = work.best_start;
         std::string renewal_reason =
             "included:primitive_destructive_renewal_policy:" +
             chosen.id + ":renewal=" +
-            finite_json(best.renewal_state_value) + ":anchor=" +
-            finite_json(best.anchor_state_value) + ":start=" +
-            finite_json(best_start);
+            finite_json(work.best.renewal_state_value) + ":anchor=" +
+            finite_json(work.best.anchor_state_value) + ":start=" +
+            finite_json(work.best_start);
         /* Preserve the selected executable incumbent even when broad action
          * admission already filled the bounded reason sample. */
         if (!result.diagnostics.action_inclusion_reasons.empty() &&
@@ -3795,7 +3832,9 @@ auto SolveWork::Impl::primitive_destructive_renewal_fallback() -> std::optional<
         } else {
             retain_action_reason(std::move(renewal_reason));
         }
-        return best;
+        completed = std::move(work.best);
+        work = PrimitiveDestructiveRenewalWork{};
+        return true;
     }
 
 auto SolveWork::Impl::progressive_fracture_fallback(
@@ -4255,21 +4294,34 @@ auto SolveWork::Impl::progressive_fracture_fallback(
         return candidate;
     }
 
-auto SolveWork::Impl::focused_fallback() -> std::optional<FocusedFallbackPolicy> {
+auto SolveWork::Impl::focused_fallback(bool& complete)
+        -> std::optional<FocusedFallbackPolicy> {
+        complete = true;
         const std::uint32_t renewal_source = result.start_state;
-        ++result.diagnostics.constructive_policy_anchor_checks;
-        if (renewal_source >= expanded.size() ||
-            !expanded[renewal_source] ||
-            renewal_source >= transition_cache->state_rows.size() ||
-            restart_state == kNoId || restart_state >= expanded.size() ||
-            !expanded[restart_state] ||
-            restart_state >= transition_cache->state_rows.size()) {
-            return std::nullopt;
+        if (!constructive_fallback_pending) {
+            ++result.diagnostics.constructive_policy_anchor_checks;
+            if (renewal_source >= expanded.size() ||
+                !expanded[renewal_source] ||
+                renewal_source >= transition_cache->state_rows.size() ||
+                restart_state == kNoId || restart_state >= expanded.size() ||
+                !expanded[restart_state] ||
+                restart_state >= transition_cache->state_rows.size()) {
+                return std::nullopt;
+            }
+            constructive_progress_fallback = magic_regal_fallback();
+            constructive_fallback_pending = true;
         }
         std::optional<FocusedFallbackPolicy> progress_fallback =
-            magic_regal_fallback();
-        std::optional<FocusedFallbackPolicy> destructive_fallback =
-            primitive_destructive_renewal_fallback();
+            std::nullopt;
+        std::optional<FocusedFallbackPolicy> destructive_fallback;
+        if (!advance_primitive_destructive_renewal_fallback(
+                destructive_fallback)) {
+            complete = false;
+            return std::nullopt;
+        }
+        progress_fallback = std::move(constructive_progress_fallback);
+        constructive_progress_fallback.reset();
+        constructive_fallback_pending = false;
         if (destructive_fallback.has_value()) {
             try {
                 std::optional<FocusedFallbackPolicy> progressive =

@@ -115,6 +115,7 @@ export interface SolverBenchmarkCase {
         strict_states?: boolean;
         kernel_reuse?: boolean;
         goal_progress_gated_reforges?: boolean;
+        high_impact_executable_uppers?: boolean;
         worker_step_ms: number;
         cancel_ack_ms: number;
         [key: string]: number | boolean | undefined;
@@ -425,6 +426,7 @@ function validateCase(value: unknown, path: string): SolverBenchmarkCase {
         "strict_states",
         "kernel_reuse",
         "goal_progress_gated_reforges",
+        "high_impact_executable_uppers",
     ]) {
         if (key in caps && typeof caps[key] !== "boolean") {
             throw new Error(`${path}.caps.${key} must be boolean`);
