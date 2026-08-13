@@ -791,6 +791,24 @@ const OptionKernel& CalcContext::option_kernel(
             result->automatic.exits_complete =
                 !result->exits.empty() ||
                 !result->observation_choice_groups.empty();
+            if (option.automatic_kind == AutomaticCandidateKind::Veiled) {
+                const bool observes_acquired_offer =
+                    !option.primitive_program.empty() &&
+                    registry_.actions.at(
+                        option.primitive_program.back()).params.type ==
+                        ActionType::Unveil;
+                result->automatic.kernel_changed =
+                    observes_acquired_offer &&
+                    !result->observation_choice_groups.empty();
+                result->automatic.kernel_change_mechanisms =
+                    kAutomaticAcquisitionTimeOffer;
+                result->automatic.setup_complete = attempt.fully_legal;
+                result->automatic.cleanup_complete = true;
+                result->automatic.reason = result->legal &&
+                                                   observes_acquired_offer
+                    ? "exact_acquisition_time_offer_and_best_continuation"
+                    : "veiled_acquisition_observation_or_continuation_incomplete";
+            }
             if (!result->legal && result->automatic.reason.empty()) {
                 result->automatic.reason =
                     "success_failure_recovery_or_outer_exit_incomplete";

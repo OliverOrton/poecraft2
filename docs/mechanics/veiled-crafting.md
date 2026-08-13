@@ -4,8 +4,8 @@
 
 Parent: [Mechanics](README.md)
 
-Verified against code: 2026-07-30 on
-`codex/cross-base-strategy-reliability`
+Verified against code: 2026-08-13 on
+`codex/solver-goal-realignment`
 
 Verification scope: native Veiled Chaos/Exalt/Unveil transitions, offer
 generation, exact single-action calculation, solver compiler/evaluator, and
@@ -47,6 +47,11 @@ Roll Attack/Caster apply to its preservation and random filler pool.
   cost belongs to the preceding veiled-currency action and must not be charged
   again. This is recorded in the archived
   [economy plan](../archive/2026-07-15-economy/plan.md).
+- **2026-08-13:** the three offers are fixed when the veiled placeholder is
+  acquired. An action after acquisition cannot improve those offers. When an
+  observed set contains no goal modifier, choose the legal offered modifier
+  with the best exact cleanup/retry continuation rather than resampling or
+  stopping at the placeholder.
 
 ## Engine Coverage And Code Pointers
 
@@ -72,8 +77,9 @@ the native Unveil action.
 ## Solver Support
 
 The registry exposes all three primitives and the single-action calculator has
-exact support. Renewal fixed options may use Veiled Chaos as their renewal and
-may append Unveil only immediately after that Veiled Chaos step.
+exact support. Renewal fixed options may use Veiled Chaos or Veiled Exalt as
+their acquisition and may append Unveil only immediately after that acquisition
+step.
 
 The compiled strategy simulator can execute an explicit Unveil operation and
 can test `has_unveil_option`. Whole-graph exact strategy evaluation carries
@@ -82,13 +88,21 @@ the sampled offer set in evaluator-pair identity. A
 Unveil selection consumes the same context. A selected modifier absent from
 the sampled offer is refused rather than resampled or approximated.
 
-There is currently a cross-engine timing mismatch. The Simulator samples and
-stores the offers when the placeholder is acquired. The exact solver's
-`AbstractState` does not carry those stored IDs; `evaluate_unveil` instead
-samples the offer set from the item state when Unveil is observed. These paths
-agree for the existing immediate acquisition-to-Unveil program, but can
-disagree if another action changes modifier conflicts between acquisition and
-observation.
+The automatic product path admits bounded immediate programs with optional
+relevant crafted-mod cleanup before Veiled Chaos or Veiled Exalt, followed
+immediately by observed Unveil. The Simulator samples and stores offers at
+acquisition. The exact solver's `AbstractState` does not carry those stored
+IDs and `evaluate_unveil` enumerates them at observation, but the two paths are
+distribution-equivalent for this grammar because no state-changing action may
+occur between acquisition and observation. A post-acquisition blocker remains
+unsupported and would violate that proof boundary.
+
+The observation group retains every legal offer. Bellman choice ordering picks
+the least-cost continuation, so an offer set with no direct goal hit chooses
+the best exact cleanup/retry continuation through its best legal non-goal
+modifier. The selected policy compiler emits `has_unveil_option` routing, the
+exact evaluator carries offer-set identity, and the Simulator consumes the
+persisted acquisition-time offer set.
 
 ## Calculator Support
 
@@ -102,21 +116,5 @@ policy may also compile Unveil routing to ordinary strategy nodes.
   in the engine vocabulary.
 - Unveil selection has no independent price key beyond its explicit zero-cost
   classification.
-
-## Open Questions Requiring Oliver
-
-The automatic goal-relevant program is intended to allow
-`Veiled currency -> optional blocker -> observe offers`. Oliver must select one
-offer-timing rule before that program is implemented:
-
-- generate and persist offers at placeholder acquisition, matching the current
-  Simulator; a blocker added afterward cannot improve those offers; or
-- generate offers at observation/Unveil time, matching the current exact
-  solver and allowing the requested post-acquisition blocker to change the
-  distribution.
-
-Oliver must also select the bounded continuation when none of the three offers
-directly satisfies a goal: choose the best legal non-goal offer and clean up,
-retry internally, or stop with the placeholder. Until both decisions are
-recorded, automatic Veiled planning remains deferred and the authored
-immediate acquisition-to-Unveil path is the supported solver boundary.
+- Post-acquisition blockers are not admitted by the automatic grammar because
+  offers are already fixed.

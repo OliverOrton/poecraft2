@@ -2053,7 +2053,7 @@ void check_action_family_contract(
             "none", "fracture", "permanent_bench",
             "temporary_bench_blocker", "protected_metamod",
             "multimod_finish", "imprint", "constructive_renewal",
-            "eldritch_side", "cannot_roll"}};
+            "eldritch_side", "cannot_roll", "veiled"}};
     PC_CHECK(automatic_telemetry_kind_for_candidate(
                  AutomaticCandidateKind::None) ==
              AutomaticTelemetryKind::None);

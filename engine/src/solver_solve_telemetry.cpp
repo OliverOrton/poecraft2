@@ -46,6 +46,8 @@ const char* automatic_telemetry_kind_name(
         return "eldritch_side";
     case AutomaticTelemetryKind::CannotRoll:
         return "cannot_roll";
+    case AutomaticTelemetryKind::Veiled:
+        return "veiled";
     case AutomaticTelemetryKind::Count:
     case AutomaticTelemetryKind::None:
         return "none";

@@ -924,7 +924,7 @@ inline constexpr ActionSupportPaths kNoAutomaticSupportPaths{
     ReleaseWasmCoveragePath::NotApplicable};
 
 inline constexpr std::size_t kAutomaticCandidateKindCount =
-    static_cast<std::size_t>(AutomaticCandidateKind::CannotRoll) + 1;
+    static_cast<std::size_t>(AutomaticCandidateKind::Veiled) + 1;
 
 inline constexpr std::array<AutomaticFamilyContract,
                             kAutomaticCandidateKindCount>
@@ -960,6 +960,9 @@ inline constexpr std::array<AutomaticFamilyContract,
         {AutomaticCandidateKind::CannotRoll,
          AutomaticTelemetryKind::CannotRoll, "cannot_roll",
          automatic_support_paths(SelectedPolicyPath::AvailableUnpinned)},
+        {AutomaticCandidateKind::Veiled,
+         AutomaticTelemetryKind::Veiled, "veiled",
+         automatic_support_paths(SelectedPolicyPath::PinnedVerified)},
     }};
 
 constexpr bool automatic_family_contract_is_exhaustive() {

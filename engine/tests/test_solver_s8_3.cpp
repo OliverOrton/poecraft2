@@ -309,6 +309,269 @@ SimulationSummaryInternal run_compiled(
     return simulator.summary;
 }
 
+std::shared_ptr<SessionImpl> make_automatic_veiled_session() {
+    auto session = make_automatic_session(true);
+    session->veiled_prefix_mod_id = kBenchGoalPrefix;
+    session->veiled_suffix_mod_id = kBenchGoalSuffix;
+    session->flags[kBenchGoalPrefix] = 0;
+    session->flags[kBenchGoalSuffix] = 0;
+    session->flags[kPrefixLock] = 0;
+    session->flags[kBenchPrefixNeutral] = 0;
+    session->metamod_type[kPrefixLock] = -1;
+    std::erase(session->bench_mod_ids, kBenchGoalPrefix);
+    std::erase(session->bench_mod_ids, kBenchGoalSuffix);
+    std::erase(session->bench_mod_ids, kPrefixLock);
+    std::erase(session->bench_mod_ids, kBenchPrefixNeutral);
+
+    const std::array<std::uint32_t, 8> unveiled{
+        kGoalPrefix, kPrefixJunkA, kPrefixJunkB,
+        kBenchPrefixNeutral, kPrefixLock,
+        kGoalSuffix, kSuffixCompetitor, kSuffixJunk};
+    DataImpl& data = const_cast<DataImpl&>(*session->data);
+    for (const std::uint32_t mod : unveiled) {
+        pc_bitset_set(session->unveiled_mask.data(), mod);
+        pc_bitset_set(session->unveiled_generic_mask.data(), mod);
+        session->base_spawn_weight[mod] = 100;
+        session->base_roll_weight[mod] = 100;
+        data.spawn_weights[mod] = 100;
+        pc_bitset_set(session->positive_spawn_weight_mask.data(), mod);
+        pc_bitset_set(session->positive_base_weight_mask.data(), mod);
+    }
+    std::fill(
+        session->normal_random_roll_mask.begin(),
+        session->normal_random_roll_mask.end(), 0);
+    for (const std::uint32_t mod :
+         {kGoalSuffix, kSuffixCompetitor, kSuffixJunk}) {
+        pc_bitset_set(session->normal_random_roll_mask.data(), mod);
+    }
+    return session;
+}
+
+void run_automatic_veiled_program() {
+    auto session = make_automatic_veiled_session();
+    ActionRegistry registry = build_action_registry(*session);
+    GoalSpec goal = automatic_goal(true, false);
+    const std::uint32_t restart = registry.index_by_id.at("restart");
+    const std::uint32_t alchemy = registry.index_by_id.at("alchemy");
+
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    for (const std::uint32_t mod :
+         {kGoalSuffix, kSuffixCompetitor, kSuffixJunk}) {
+        add_mod(start, *session, mod);
+    }
+
+    const std::unordered_map<std::string, double> prices{
+        {"base", 20.0},
+        {"alchemy", 1.0},
+        {"scour", 1.0},
+        {"veiled_chaos", 1000.0},
+        {"veiled_exalt", 1.0}};
+    CalcContext calc(
+        session, goal, registry, {alchemy, restart}, false, true, true);
+    const std::uint32_t state = calc.intern_item(start);
+    const StateLocalAutomaticBatch batch =
+        admit_automatic(calc, state, prices);
+    bool saw_chaos = false;
+    bool saw_exalt = false;
+    for (const StateLocalAutomaticCandidate& decision : batch.decisions) {
+        if (!decision.admitted ||
+            decision.kind != AutomaticCandidateKind::Veiled) {
+            continue;
+        }
+        const PlannerOperator& planner =
+            calc.operators().at(decision.operator_index);
+        PC_CHECK(planner.option_kind == FixedOptionKind::Renewal);
+        PC_CHECK(planner.primitive_program.size() == 2);
+        PC_CHECK(
+            registry.actions.at(planner.primitive_program.back()).params.type ==
+            ActionType::Unveil);
+        const ActionType acquisition =
+            registry.actions.at(planner.primitive_program.front()).params.type;
+        saw_chaos |= acquisition == ActionType::VeiledChaos;
+        saw_exalt |= acquisition == ActionType::VeiledExalt;
+        PC_CHECK(decision.telemetry_kind == AutomaticTelemetryKind::Veiled);
+        PC_CHECK(
+            (decision.evidence.kernel_change_mechanisms &
+             kAutomaticAcquisitionTimeOffer) != 0);
+        PC_CHECK(decision.evidence.reason ==
+                 "exact_acquisition_time_offer_and_best_continuation");
+    }
+    PC_CHECK(saw_chaos);
+    PC_CHECK(saw_exalt);
+
+    CalcContext missing_calc(
+        session, goal, registry, {alchemy, restart}, false, true, true);
+    const std::uint32_t missing_state = missing_calc.intern_item(start);
+    const StateLocalAutomaticBatch missing = admit_automatic(
+        missing_calc, missing_state, {{"base", 20.0}});
+    std::uint32_t missing_prices = 0;
+    for (const StateLocalAutomaticCandidate& decision : missing.decisions) {
+        if (decision.kind == AutomaticCandidateKind::Veiled &&
+            decision.missing_price) {
+            ++missing_prices;
+        }
+    }
+    PC_CHECK(missing_prices == 2);
+    PC_CHECK(missing.admitted_operators.empty());
+
+    pc_item_state ineligible = start;
+    ineligible.item_flags |= PC_ITEM_CORRUPTED;
+    CalcContext ineligible_calc(
+        session, goal, registry, {alchemy, restart}, false, true, true);
+    const std::uint32_t ineligible_state =
+        ineligible_calc.intern_item(ineligible);
+    const StateLocalAutomaticBatch refused =
+        admit_automatic(ineligible_calc, ineligible_state, prices);
+    bool saw_refused = false;
+    for (const StateLocalAutomaticCandidate& decision : refused.decisions) {
+        if (decision.kind != AutomaticCandidateKind::Veiled) continue;
+        saw_refused = true;
+        PC_CHECK(!decision.admitted);
+        PC_CHECK(!decision.evidence.eligible);
+    }
+    PC_CHECK(saw_refused);
+
+    pc_item_state crafted = start;
+    add_mod(
+        crafted, *session, kBenchPrefixNeutral,
+        PC_MOD_SLOT_CRAFTED);
+    CalcContext cleanup_calc(
+        session, goal, registry, {alchemy, restart}, false, true, true);
+    const std::uint32_t cleanup_state = cleanup_calc.intern_item(crafted);
+    const StateLocalAutomaticBatch cleanup =
+        admit_automatic(cleanup_calc, cleanup_state, prices);
+    bool saw_pre_cleanup = false;
+    for (const StateLocalAutomaticCandidate& decision : cleanup.decisions) {
+        if (!decision.admitted ||
+            decision.kind != AutomaticCandidateKind::Veiled) {
+            continue;
+        }
+        const PlannerOperator& planner =
+            cleanup_calc.operators().at(decision.operator_index);
+        if (planner.primitive_program.size() != 3) continue;
+        saw_pre_cleanup |=
+            registry.actions.at(planner.primitive_program[0]).params.type ==
+                ActionType::RemoveCraftedModifiers &&
+            (registry.actions.at(planner.primitive_program[1]).params.type ==
+                 ActionType::VeiledChaos ||
+             registry.actions.at(planner.primitive_program[1]).params.type ==
+                 ActionType::VeiledExalt) &&
+            registry.actions.at(planner.primitive_program[2]).params.type ==
+                ActionType::Unveil;
+    }
+    PC_CHECK(saw_pre_cleanup);
+
+    CalcContext solve_calc(
+        session, goal, registry, {alchemy, restart}, false, true, true);
+    SolveOptions options;
+    options.max_discovered_states = 100000;
+    options.max_expanded_states = 100000;
+    options.max_reforge_work = 10000000;
+    const SolveResult solved = solve(solve_calc, start, prices, options);
+    PC_CHECK(solved.converged);
+    PC_CHECK(solved.policy_available);
+    PC_CHECK(solved.policy_status == SolvePolicyStatus::Exact);
+    const PolicyOperatorRef selected = solved.policy[solved.start_state];
+    PC_CHECK(selected.kind == PlannerOperatorKind::FixedOption);
+    PC_CHECK(selected.index < solve_calc.operators().size());
+    const PlannerOperator& winner = solve_calc.operators().at(selected.index);
+    PC_CHECK(winner.automatic_kind == AutomaticCandidateKind::Veiled);
+    PC_CHECK(
+        registry.actions.at(winner.primitive_program.front()).params.type ==
+        ActionType::VeiledExalt);
+    PC_CHECK(
+        !solved.option_unveil_preferences[solved.start_state].empty());
+    const OptionKernel& winner_kernel = solve_calc.option_kernel(
+        solved.start_state, selected.index);
+    bool saw_no_goal_offer = false;
+    for (const OutcomeChoiceGroup& group :
+         winner_kernel.observation_choice_groups) {
+        const bool group_has_goal = std::any_of(
+            group.states.begin(), group.states.end(),
+            [&](const std::uint32_t successor) {
+                return successor < solve_calc.state_count() &&
+                       solve_calc.is_goal_state(
+                           solve_calc.state(successor));
+            });
+        saw_no_goal_offer |= !group_has_goal && !group.states.empty();
+    }
+    for (const ObservedUnveilPreference& preference :
+         solved.option_unveil_preferences[solved.start_state]) {
+        if (preference.choices.empty()) continue;
+        const auto continuation_value = [&](const ObservedUnveilChoice& choice) {
+            const std::uint32_t successor =
+                choice.successor_state == kNoId
+                    ? solved.start_state
+                    : choice.successor_state;
+            return solved.values.at(successor);
+        };
+        std::vector<const ObservedUnveilChoice*> non_goal;
+        for (const ObservedUnveilChoice& choice : preference.choices) {
+            if (choice.successor_state < solve_calc.state_count() &&
+                solve_calc.is_goal_state(
+                    solve_calc.state(choice.successor_state))) {
+                continue;
+            }
+            non_goal.push_back(&choice);
+        }
+        for (std::size_t index = 1; index < non_goal.size(); ++index) {
+            PC_CHECK(
+                continuation_value(*non_goal[index - 1]) <=
+                continuation_value(*non_goal[index]) + 1e-10);
+        }
+    }
+    PC_CHECK(saw_no_goal_offer);
+
+    for (std::uint32_t policy_state = 0;
+         policy_state < solved.policy.size(); ++policy_state) {
+        const PolicyOperatorRef selected_row = solved.policy[policy_state];
+        if (selected_row.index >= solve_calc.operators().size()) continue;
+        const PlannerOperator& selected_planner =
+            solve_calc.operators().at(selected_row.index);
+        if (selected_planner.automatic_kind !=
+            AutomaticCandidateKind::Veiled) {
+            continue;
+        }
+        PC_CHECK(!solved.option_unveil_preferences[policy_state].empty());
+    }
+
+    const std::string strategy = compile_policy_strategy_json(
+        solve_calc, solved, "s8.3-automatic-veiled-acquisition-offers");
+    PC_CHECK(strategy.find("has_unveil_option") != std::string::npos);
+    PC_CHECK(strategy.find("\"type\":\"veiled_exalt\"") !=
+             std::string::npos);
+    auto compiled = compile_strategy_json(
+        session, strategy.data(), strategy.size());
+    auto economy = std::make_shared<EconomyImpl>();
+    economy->id = "s8.3-automatic-veiled";
+    economy->prices = prices;
+    StrategyEvalOptions eval_options;
+    eval_options.economy = economy;
+    const StrategyEvalResult exact = evaluate_strategy(
+        *compiled, eval_options);
+    PC_CHECK(exact.converged);
+    PC_CHECK(exact.cost_complete);
+    PC_CHECK(exact.success_probability > 1.0 - 1e-9);
+    PC_CHECK(exact.failure_probability < 1e-12);
+    PC_CHECK(exact.action_not_applied_probability < 1e-12);
+    PC_CHECK(exact.no_matching_edge_probability < 1e-12);
+    PC_CHECK(exact.unresolved_probability < 1e-12);
+    PC_CHECK(std::fabs(
+                 exact.total_expected_cost -
+                 solved.evaluated_policy_cost) < 1e-7);
+    const SimulationSummaryInternal summary = run_compiled(
+        session, strategy, prices, 10000, 8315);
+    PC_CHECK(summary.success_count == summary.completed_runs);
+    std::printf(
+        "solver automatic Veiled: cost=%.12f exact=%.12f "
+        "runs=%llu/%llu\n",
+        solved.evaluated_policy_cost, exact.total_expected_cost,
+        static_cast<unsigned long long>(summary.success_count),
+        static_cast<unsigned long long>(summary.completed_runs));
+}
+
 void run_temporary_blocker_price_flip() {
     auto session = make_automatic_session();
     ActionRegistry registry = build_action_registry(*session);
@@ -462,16 +725,24 @@ void run_temporary_blocker_price_flip() {
         {"scour", 1.0},
         {"bench:s83_mod_8", 2.0}};
     capped_limits.prices = &capped_prices;
-    const StateLocalAutomaticBatch capped_batch =
-        capped_calc.admit_state_local_automatic_candidates(
-            capped_state, capped_limits);
-    PC_CHECK(std::any_of(
-        capped_batch.decisions.begin(), capped_batch.decisions.end(),
-        [](const StateLocalAutomaticCandidate& decision) {
-            return decision.deferred &&
-                   decision.evidence.reason.find(
-                       "max_solver_owned_bytes") != std::string::npos;
-        }));
+    bool capped_witness = false;
+    try {
+        const StateLocalAutomaticBatch capped_batch =
+            capped_calc.admit_state_local_automatic_candidates(
+                capped_state, capped_limits);
+        capped_witness = std::any_of(
+            capped_batch.decisions.begin(), capped_batch.decisions.end(),
+            [](const StateLocalAutomaticCandidate& decision) {
+                return decision.deferred &&
+                       decision.evidence.reason.find(
+                           "max_solver_owned_bytes") != std::string::npos;
+            });
+    } catch (const SolverResourceLimit& limit) {
+        capped_witness =
+            limit.cap_name() == "max_solver_owned_bytes" &&
+            limit.limit() == capped_limits.max_solver_owned_bytes;
+    }
+    PC_CHECK(capped_witness);
     check_owned_byte_ledger(capped_calc);
 
     const SolveResult variant_solve = solve(
@@ -1909,7 +2180,12 @@ void run_planner_operator_import_authority() {
 
 } // namespace
 
+void run_solver_automatic_veiled_tests() {
+    run_automatic_veiled_program();
+}
+
 void run_solver_s8_3_tests() {
+    run_automatic_veiled_program();
     run_temporary_blocker_price_flip();
     run_cannot_roll_price_flip();
     run_multimod_finish_price_flip();

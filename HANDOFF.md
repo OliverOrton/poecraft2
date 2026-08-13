@@ -116,6 +116,17 @@ authority remain distinct, including the equal-bounds-without-policy and open-
 action-envelope hard guards. Evidence is in
 [gate7-compiler-presentation-integrity.md](docs/active/2026-08-09-solver-goal-realignment/evidence/gate7-compiler-presentation-integrity.md).
 
+Gate 3 is complete under Oliver's 2026-08-13 ruling that Veiled offers are
+fixed at placeholder acquisition and that an offer set with no direct goal hit
+takes its Bellman-best legal cleanup/retry continuation. The automatic grammar
+allows relevant crafted-mod cleanup only before Veiled Chaos or Veiled Exalt,
+then requires immediate observed Unveil. This makes the exact observation-time
+enumeration distribution-equivalent to the Simulator's persisted offers
+without adding offer identity to `AbstractState`. Eligible, ineligible,
+missing-price, forced-winner, pre-cleanup, no-goal-offer, compiler/evaluator,
+and 10,000-run sampled coverage are green. Evidence is in
+[gate3-automatic-veiled.md](docs/active/2026-08-09-solver-goal-realignment/evidence/gate3-automatic-veiled.md).
+
 The current boundary is Gate 8. Run the final sequence once: native build,
 release-WASM build, complete repository acceptance, native/release-WASM
 primary, representative five-mod ten-minute case, every-base matrix, selected
@@ -130,11 +141,3 @@ authoritatively selected cheapest independently evaluated portfolio candidate.
 Gate 6 also has two
 isolated current-product controls for a real metamod start and full-junk-side
 suffix salvage; they are validation-clean but not yet solver-qualified.
-
-Gate 3 is paused on one owner mechanic ruling: the Simulator currently fixes
-the three Veiled offers when the placeholder is acquired, while the exact
-solver recomputes them when Unveil is observed. A blocker applied between
-acquisition and observation can improve offers only under observation-time
-generation. Continue all non-Veiled gates, but do not implement the automatic
-Veiled program until Oliver selects that mechanic and the no-goal-offer
-continuation behavior.

@@ -48,6 +48,13 @@ int main(int argc, char** argv) {
                     pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 &&
+        std::string(argv[1]) == "--solver-automatic-veiled-only") {
+        run_solver_automatic_veiled_tests();
+        std::printf("solver automatic Veiled tests: %d checks, %d failures\n",
+                    pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--solver-eval-only") {
         run_solver_eval_tests(argc > 2 ? argv[2] : nullptr);
         std::printf("solver evaluator tests: %d checks, %d failures\n",

@@ -175,6 +175,8 @@ bool approved_renewal_roll(const ActionDescriptor& action) {
     case ActionType::HarvestReforge:
     case ActionType::VeiledChaos:
         return action.kind == TransitionKind::Reforge;
+    case ActionType::VeiledExalt:
+        return action.kind == TransitionKind::SingleSlot;
     default:
         return false;
     }
@@ -415,6 +417,73 @@ AutomaticOptionSynthesis synthesize_automatic_options(
     };
     const std::vector<std::uint32_t>& goal_bench =
         calc.automatic_goal_bench_actions();
+
+    /*
+     * Acquisition-time Veiled offers are an immediate observed-choice
+     * program.  In particular, no post-acquisition blocker may enter this
+     * sequence: the sampled engine has already fixed the three offers by
+     * then.  Bellman choice ordering owns both the best goal offer and, when
+     * an observed set has no goal offer, the cheapest exact cleanup/retry
+     * continuation among the legal non-goal offers.
+     */
+    if (state.rarity == PC_RARITY_RARE &&
+        (state.flags & kFlagVeiledMod) == 0 &&
+        mask_has_any(session.unveiled_generic_mask)) {
+        std::vector<std::uint32_t> veiled_goal_slots;
+        std::uint32_t veiled_goal_mask = 0;
+        for (std::uint32_t slot = 0; slot < goal.slots.size(); ++slot) {
+            if (!target_slot_missing(state, slot)) continue;
+            bool eligible = false;
+            pc_bitset_for_each(
+                session.unveiled_generic_mask.data(), session.words,
+                [&](const std::size_t bit) {
+                    if (eligible || bit >= session.mod_count) return;
+                    const std::uint32_t mod =
+                        static_cast<std::uint32_t>(bit);
+                    eligible = mod_satisfies_goal_slot(
+                        session, mod, goal.slots[slot]);
+                });
+            if (!eligible) continue;
+            veiled_goal_slots.push_back(slot);
+            veiled_goal_mask |= 1u << slot;
+        }
+        if (!veiled_goal_slots.empty()) {
+            const auto append_attempt = [&](
+                    const std::string& acquisition,
+                    const bool pre_cleanup) {
+                if (!registry.index_by_id.contains(acquisition) ||
+                    !registry.index_by_id.contains("unveil")) {
+                    return;
+                }
+                FixedOptionSpec option;
+                option.kind = FixedOptionKind::Renewal;
+                if (pre_cleanup) {
+                    if (!registry.index_by_id.contains(
+                            "remove_crafted_modifiers")) {
+                        return;
+                    }
+                    option.program_action_ids.push_back(
+                        "remove_crafted_modifiers");
+                }
+                option.program_action_ids.push_back(acquisition);
+                option.program_action_ids.push_back("unveil");
+                option.exit_goal_slots = veiled_goal_slots;
+                option.exit_min_satisfied = 1;
+                option.automatic_kind = AutomaticCandidateKind::Veiled;
+                option.relevant_goal_mask = veiled_goal_mask;
+                result.push_back(std::move(option));
+            };
+            append_attempt("veiled_chaos", false);
+            append_attempt("veiled_exalt", false);
+            const bool relevant_pre_cleanup =
+                state_has_unfractured_crafted(state) &&
+                state.crafted_goal_mask == 0;
+            if (relevant_pre_cleanup) {
+                append_attempt("veiled_chaos", true);
+                append_attempt("veiled_exalt", true);
+            }
+        }
+    }
 
     /*
      * Product Eldritch planning exposes state-local side intents.
@@ -973,6 +1042,12 @@ void resolve_renewal_program(
         }
         --effective;
     }
+    const bool automatic_veiled_cleanup =
+        spec.automatic_kind == AutomaticCandidateKind::Veiled &&
+        effective == 2 &&
+        registry.actions.at(out.front()).params.type ==
+            ActionType::RemoveCraftedModifiers &&
+        approved_renewal_roll(registry.actions.at(out[1]));
     const bool one_roll = effective == 1 &&
                           approved_renewal_roll(
                               registry.actions.at(out.front()));
@@ -980,17 +1055,25 @@ void resolve_renewal_program(
         effective == 2 &&
         registry.actions.at(out[0]).params.type == ActionType::Scour &&
         registry.actions.at(out[1]).params.type == ActionType::Alchemy;
-    if (!one_roll && !scour_alchemy) {
+    if (!one_roll && !scour_alchemy && !automatic_veiled_cleanup) {
         throw std::runtime_error(
             "fixed option: renewal preparation must be Alteration, Chaos, "
             "Essence, Fossil, Harvest reforge, Veiled Chaos, or explicit "
             "Scour then Alchemy");
     }
-    if (effective != out.size() &&
-        registry.actions.at(out[effective - 1]).params.type !=
-            ActionType::VeiledChaos) {
-        throw std::runtime_error(
-            "fixed option: observed Unveil renewal requires Veiled Chaos");
+    if (effective != out.size()) {
+        if (effective == 0) {
+            throw std::runtime_error(
+                "fixed option: observed Unveil renewal has no acquisition");
+        }
+        const ActionType observed_acquisition =
+            registry.actions.at(out[effective - 1]).params.type;
+        if (observed_acquisition != ActionType::VeiledChaos &&
+            observed_acquisition != ActionType::VeiledExalt) {
+            throw std::runtime_error(
+                "fixed option: observed Unveil renewal requires Veiled "
+                "Chaos or Veiled Exalt");
+        }
     }
 }
 

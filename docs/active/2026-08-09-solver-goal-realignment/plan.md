@@ -189,26 +189,29 @@ end-of-plan acceptance pass.
 
 ## Gate 3 - bounded automatic Veiled crafting
 
-**Paused on owner ruling:** the Simulator currently fixes and stores offers at
-placeholder acquisition, while the exact solver samples them at observed
-Unveil. The requested post-acquisition blocker can improve the offer
-distribution only under observation-time generation. Oliver must also choose
-the bounded continuation when no offered modifier satisfies a goal. The exact
-question and current implementation split are recorded in
-[Veiled crafting](../../mechanics/veiled-crafting.md).
+Gate 3 is complete. Oliver ruled that the Simulator's acquisition-time offers
+are authoritative and that an offer set with no goal modifier takes the best
+legal cleanup/retry continuation. The bounded automatic grammar therefore
+permits relevant cleanup only before acquisition, then requires immediate
+Veiled Chaos or Veiled Exalt -> observed Unveil with no intervening mutation.
+The exact solver and sampled engine are distribution-equivalent on that
+grammar. The ruling and proof boundary are recorded in
+[Veiled crafting](../../mechanics/veiled-crafting.md), and the focused result
+is recorded in
+[Gate 3 automatic Veiled evidence](evidence/gate3-automatic-veiled.md).
 
 Reuse the existing exact Veiled primitives, offer identity, compiler routing,
 evaluator, and Simulator. Add carrier-local bounded programs with optional
-relevant pre-cleanup, Veiled Chaos or Veiled Exalt, optional beneficial Unveil
-blocker, observation of the exact offer set, best legal goal-satisfying choice,
-optional cleanup, and continuation.
+relevant pre-cleanup, Veiled Chaos or Veiled Exalt, observation of the exact
+offer set, best legal goal-satisfying choice, optional cleanup, and
+continuation.
 
 Generate only when an eligible unveiled modifier can directly satisfy an unmet
-goal. Never resample an observed offer. A blocker enters only when it improves
-the offer distribution for that goal; cleanup remains dependency-only. Keep
-Veiled primitives out of the broad standalone candidate set. Add public-path
-eligible, ineligible, missing-price, and forced-winner cases. Compile and
-exact-evaluate at least one selected route, then complete 10,000 Simulator runs.
+goal. Never resample an observed offer. No post-acquisition blocker enters;
+pre-cleanup remains dependency-only. Keep Veiled primitives out of the broad
+standalone candidate set. Add public-path eligible, ineligible, missing-price,
+and forced-winner cases. Compile and exact-evaluate at least one selected route,
+then complete 10,000 Simulator runs.
 
 ## Gate 4 - bounded Eldritch Exalt planning
 

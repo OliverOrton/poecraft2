@@ -78,6 +78,7 @@ enum class AutomaticCandidateKind : std::uint8_t {
     ConstructiveRenewal = 7,
     EldritchSide = 8,
     CannotRoll = 9,
+    Veiled = 10,
 };
 
 /* R3A retention/accounting categories. These are deliberately independent
@@ -95,7 +96,8 @@ enum class AutomaticTelemetryKind : std::uint8_t {
     PrimitiveFracture = 7,
     EldritchSide = 8,
     CannotRoll = 9,
-    Count = 10,
+    Veiled = 10,
+    Count = 11,
     None = 255,
 };
 
@@ -250,6 +252,7 @@ enum AutomaticKernelMechanism : std::uint32_t {
     kAutomaticImprintCheckpoint = 1u << 6,
     kAutomaticEldritchDominance = 1u << 7,
     kAutomaticMetamodPoolBlock = 1u << 8,
+    kAutomaticAcquisitionTimeOffer = 1u << 9,
 };
 
 /*

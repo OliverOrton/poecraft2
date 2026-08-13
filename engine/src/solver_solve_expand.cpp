@@ -26,6 +26,9 @@ std::size_t selected_growth_capacity(
 
 AutomaticTelemetryKind automatic_telemetry_kind(
     const PlannerOperator& planner) {
+    if (planner.automatic_kind == AutomaticCandidateKind::Veiled) {
+        return AutomaticTelemetryKind::Veiled;
+    }
     if (planner.kind == PlannerOperatorKind::FixedOption) {
         switch (planner.option_kind) {
         case FixedOptionKind::ImprintRetry:
@@ -72,6 +75,8 @@ AutomaticTelemetryKind automatic_telemetry_kind(
         return AutomaticTelemetryKind::EldritchSide;
     case AutomaticCandidateKind::CannotRoll:
         return AutomaticTelemetryKind::CannotRoll;
+    case AutomaticCandidateKind::Veiled:
+        return AutomaticTelemetryKind::Veiled;
     case AutomaticCandidateKind::None:
         break;
     }
@@ -1498,6 +1503,8 @@ std::string SolveWork::Impl::preservation_witness_json(
             return "eldritch_side";
         case AutomaticCandidateKind::CannotRoll:
             return "cannot_roll";
+        case AutomaticCandidateKind::Veiled:
+            return "veiled";
         case AutomaticCandidateKind::None:
             return "none";
         }
@@ -1523,6 +1530,7 @@ std::string SolveWork::Impl::preservation_witness_json(
         add(kAutomaticImprintCheckpoint, "imprint_checkpoint_restore");
         add(kAutomaticEldritchDominance, "eldritch_dominance");
         add(kAutomaticMetamodPoolBlock, "metamod_pool_block");
+        add(kAutomaticAcquisitionTimeOffer, "acquisition_time_offer");
         out.push_back(']');
         return out;
     }
