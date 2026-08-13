@@ -528,8 +528,18 @@ bool SolveWork::Impl::prepare_high_impact_policy_wave(
 double SolveWork::Impl::sparse_row_q_for_values(
         const std::size_t row_index,
         const std::vector<double>& values) const {
-    const SparseRow& row = transition_cache->rows.at(row_index);
-    if (row_index >= priced_rows.size()) return kInfinity;
+    /*
+     * Carrier-local admission is transactional. A resource refusal can roll
+     * staged sparse rows back after an incremental diagnostic recorded their
+     * provisional index. Finalization is observational, so a rolled-back row
+     * is unresolved/infinite rather than a reason to index past the retained
+     * row tables and terminate the solve.
+     */
+    if (row_index >= transition_cache->rows.size() ||
+        row_index >= priced_rows.size()) {
+        return kInfinity;
+    }
+    const SparseRow& row = transition_cache->rows[row_index];
     double constant = priced_rows.at(row_index).cost;
     if (!std::isfinite(constant)) return kInfinity;
     for (std::uint32_t i = 0; i < row.transition_count; ++i) {

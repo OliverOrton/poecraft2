@@ -3,6 +3,7 @@
 #include "../src/json.hpp"
 #include "../src/solver_action_family_contract.hpp"
 #include "../src/solver_internal.hpp"
+#include "../src/solver_solve_types.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
 
@@ -491,7 +492,9 @@ void run_identity_reforge_factorization_tests() {
         const std::uint64_t matrix_owned =
             matrix_capped.fast_estimated_owned_bytes();
         constexpr std::uint64_t one_outcome_entry_bytes =
-            sizeof(std::pair<const std::uint32_t, double>) +
+            sizeof(std::pair<
+                const std::uint32_t,
+                solve_detail::WideFloat>) +
             5 * sizeof(void*);
         matrix_capped.set_solve_resource_caps(
             1,
@@ -508,7 +511,11 @@ void run_identity_reforge_factorization_tests() {
         }
         PC_CHECK(matrix_cap_hit);
         PC_CHECK(
-            matrix_capped.telemetry().reforge_frontier_work > 0);
+            matrix_capped.telemetry()
+                    .reforge_effort.pool_entries_scanned > 0);
+        PC_CHECK(
+            matrix_capped.telemetry()
+                    .reforge_effort.rows_interrupted > 0);
 
         /*
          * A sufficient cap is observational only: exact raw witnesses and

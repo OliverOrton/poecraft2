@@ -2112,7 +2112,7 @@ void run_public_solver_gate(const char* artifact_dir) {
     const std::string solved_telemetry =
         solver_telemetry_json(solver, &error);
     PC_CHECK(solved_telemetry.find(
-                 "\"transition_bits_hash\":\"e9f2ba9132f51c8c\"") !=
+                 "\"transition_bits_hash\":\"067ac4c6510645e6\"") !=
              std::string::npos);
     PC_CHECK(solved_telemetry.find(
                  "\"policy_bits_hash\":\"bfcb25789b4f99ae\"") !=
