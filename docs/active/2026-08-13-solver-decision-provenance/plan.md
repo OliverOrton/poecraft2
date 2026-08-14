@@ -1,6 +1,6 @@
 # Solver Decision Provenance And Result-Truth Hardening
 
-**Status: active implementation plan.** Oliver selected this audited
+**Status: active at Gate 5 final acceptance.** Oliver selected this audited
 replacement on 2026-08-13 in hardening-only mode. The unavailable historical
 Fossil-to-Chaos request may not be claimed as localized; the controlled current
 Calculator request-scope witness is the Gate 0 authority.
@@ -403,7 +403,7 @@ is documented.
 
 ## Gate 3 - Replay And Classification
 
-**Status: active.** Replay the frozen current controls and classify the source
+**Status: complete.** Replay the frozen current controls and classify the source
 hardening without assigning a cause to the unavailable historical request.
 
 Replay the frozen cases against:
@@ -432,7 +432,18 @@ If the current report does not reproduce or its input is unavailable, Gate 3
 may accept the source-hardening results but must not assign the old symptom a
 cause.
 
+The controlled Calculator request defect is fixed at Gate 1. Frozen/current
+Imprint input, exact value, compiled strategy bytes, exact evaluation, and
+10,000-run behavior match. The historical request remains unavailable, so no
+cause is assigned to that report. See the
+[Gate 3/4 replay record](evidence/gate3-gate4-replay-classification.md).
+
 ## Gate 4 - Evidence-Selected Repair Only
+
+**Status: complete with no additional repair.** Gate 3 produced no new pre-fix
+failing witness. The Gate 1 and Gate 2 corrections are the complete selected
+behavioral scope; making another repair would violate this gate's evidence
+requirement.
 
 Make a behavioral solver repair only if Gate 3 identifies a remaining defect
 not already corrected by Gate 2:
@@ -460,6 +471,9 @@ witness, proper exact evaluation where exactness is claimed, and no unexplained
 change in the controls.
 
 ## Gate 5 - Proportional Final Acceptance
+
+**Status: active.** The selected row is Q, ordering, or policy-selection
+change, together with the crossed Calculator/result contract.
 
 Run acceptance once, after all selected implementation gates are complete.
 Choose the row matching the actual semantic reach:

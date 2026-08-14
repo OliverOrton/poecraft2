@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Status: active — Solver Decision Provenance Gate 3.**
+**Status: active - Solver Decision Provenance Gate 5 final acceptance.**
 
 Oliver selected
 [Solver Decision Provenance And Result-Truth Hardening](docs/active/2026-08-13-solver-decision-provenance/plan.md)
@@ -10,7 +10,7 @@ Fossil-to-Chaos request is unavailable, so this milestone may fix and classify
 the current Calculator request-scope defect but may not claim the historical
 policy transition was localized.
 
-Gates 0/1/2 are complete. The controlled witness proved that inspecting
+Gates 0/1/2/3/4 are complete. The controlled witness proved that inspecting
 `fossil:lucent` changed the product envelope request; the correction now keeps
 selected-Fossil materialization on the exact odds handle while making the
 product envelope, priced candidates, and final Solve goal independent of the
@@ -29,12 +29,22 @@ proof authority without changing ABI v2. Fresh build plus focused solve,
 refinement, quotient-proof, policy-refinement, and API suites pass. Evidence is
 in the [Gate 2 record](docs/active/2026-08-13-solver-decision-provenance/evidence/gate2-decision-and-result-truth.md).
 
-The immediate boundary is Gate 3: replay and classify the frozen current
-controls against the Gate 1 and Gate 2 checkpoints. The historical serialized
-request remains unavailable, so do not assign the old Fossil-to-Chaos symptom
-a cause. Gate 4 may make no further behavior change unless replay produces a
-new pre-fix witness. Do not start the proportional final acceptance sequence
-until that classification is recorded.
+Gate 3 replay found the frozen and current Imprint inputs, exact value, compiled
+strategy bytes, exact evaluation, and 10,000-run behavior identical. The
+current report additionally names exact-policy-closure lower-bound authority.
+The historical serialized request remains unavailable, so the old
+Fossil-to-Chaos symptom is not assigned a cause. Gate 4 is complete with no
+additional repair because replay produced no new pre-fix failing witness.
+Evidence is in the active plan's
+[Gate 3/4 record](docs/active/2026-08-13-solver-decision-provenance/evidence/gate3-gate4-replay-classification.md).
+
+The immediate boundary is Gate 5. Run the proportional Q/order acceptance row
+once: audit cross-layer impact, fresh native build and focused suites, focused
+web checks, release WASM rebuild, lightweight every-base matrix, selected
+native/release-WASM controls, one current 49-case portfolio comparison, the
+required primary native/release-WASM exact control, and one final full
+repository pipeline at the end. Do not make another behavioral repair without
+a new failing witness. Do not start the mixed-action seven-step follow-up.
 
 The completed Goal Realignment milestone remains frozen evidence and restores
 the goal-relevant product path across action
