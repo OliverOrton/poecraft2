@@ -4,8 +4,8 @@
 
 Parent: [Mechanics](README.md)
 
-Verified against code and checked-in economy artifacts: 2026-08-09 through
-Gate 2 action and price availability.
+Verified against code, checked-in economy artifacts, and final native/release-
+WASM qualification: 2026-08-13.
 
 Verification scope: approved Bestiary fixtures, canonical/compiled recipe
 descriptors, native companion-state actions and exact calculation, WASM facade,
@@ -111,9 +111,10 @@ an ordinary policy.
 
 User-authored `imprint_retry` programs and exits are rejected. Automatic-only
 discovery may use a renewal attempt program or ordinary add/upgrade actions,
-and successful exits continue through the ordinary Bellman solve. The archived
-10,000-run Imprint verification remains deferred; that is a verification
-boundary, not missing implementation of the create/restore rule.
+and successful exits continue through the ordinary Bellman solve. Final native
+and release-WASM qualification closes exactly at `252.6535202127448`, compiles
+both Bestiary operations, preserves the exact 3:1 rare-beast/Croaker accounting
+ratio, and completes 10,000/10,000 sampled runs with zero off-policy failures.
 
 ## Calculator Support
 
@@ -135,5 +136,4 @@ complete useful kernel.
 ## Open Questions Requiring Oliver
 
 No unresolved Imprint transition-law question was found in the approved
-fixtures or inspected code. The deferred 10,000-run gate is evidence work, not
-a mechanic ruling.
+fixtures or inspected code.

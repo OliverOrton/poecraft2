@@ -1,10 +1,10 @@
 # Solver Goal Realignment And End-To-End Capability Recovery
 
-**Status: active implementation plan.**
+**Status: completed on 2026-08-13.** See the [completion report](report.md).
 
 Owner: Oliver
 
-Parent: [Active work](../README.md)
+Parent: [Documentation archive](../README.md)
 
 Starting commit: `c00c18133f88151dc971955c161d01e2178aef4b`.
 
@@ -354,6 +354,14 @@ only incumbent. Equal displayed bounds without an executable policy is a hard
 defect.
 
 ## Gate 8 - performance and final acceptance
+
+Gate 8 is complete. The native/release-WASM primary closes exactly at
+`3745.7309340083884` inside five minutes, the representative five-mod case
+returns the required independently evaluated bounded policy with a truthful
+gap, all 979 ordinary bases pass, selected 10,000-run checks pass, and the
+single native/release-WASM 49-case portfolio comparison passes 4,072 semantic
+checks. Evidence is recorded in
+[Gate 8 performance and final acceptance](evidence/gate8-final-acceptance.md).
 
 Measure deterministic native behavior first and release WASM second. Record
 native/WASM live and peak owned bytes, state payload, transitions, evaluator

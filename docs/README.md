@@ -29,13 +29,15 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-Oliver selected the active
-[Solver Goal Realignment And End-To-End Capability Recovery](active/2026-08-09-solver-goal-realignment/plan.md)
-milestone on 2026-08-09. It starts from clean commit `c00c181` and restores the
-complete supported product path from goal/action/price admission through exact
-solving, compilation, independent evaluation, Simulator execution, and honest
-presentation. Its primary gate is an exact verified four-natural-T1 Conquest
-Lamellar Allflame policy within five minutes. The completed
+No implementation boundary is active. The completed
+[Solver Goal Realignment And End-To-End Capability Recovery](archive/2026-08-09-solver-goal-realignment/README.md)
+milestone restores the complete supported product path from goal/action/price
+admission through exact solving, compilation, independent evaluation,
+Simulator execution, and honest presentation. Its exact verified four-natural-
+T1 Conquest Lamellar Allflame policy finishes within five minutes in native and
+release WASM, all 979 ordinary bases pass, and the final 49-case semantic
+comparison is green. Oliver must select a new chunk before implementation
+resumes. The completed
 [Product Action Dependency Reachability](archive/2026-08-08-product-action-dependency-reachability/README.md)
 milestone preserves narrow product action-family filters while separating
 independent candidates from bounded automatic dependencies, repairing the real

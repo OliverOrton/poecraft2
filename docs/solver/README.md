@@ -26,6 +26,13 @@ generated corpus lives in
 [seeded natural-T1 v1](../../fixtures/solver-natural-t1/v1/README.md). This
 stamp does not claim rendered-browser review or a mechanic ruling.
 
+Solver Goal Realignment addendum: the full native/release-WASM product path was
+qualified on 2026-08-13. The four-natural-T1 primary closes exactly at
+`3745.7309340083884` inside five minutes in both runtimes, every one of the 979
+ordinary bases passes, and the 49-case semantic comparison passes 4,072 checks.
+The [completion report](../archive/2026-08-09-solver-goal-realignment/report.md)
+owns the point-in-time measurements; the contracts below own current behavior.
+
 Focused qualification addendum: the shared refinement and policy-lifting
 authorities were rechecked on 2026-07-31 from source base `acb9c975` with
 `301/0` and `4,829/0` focused results. The natural two-goal publication path
@@ -382,12 +389,14 @@ overlapping goal satisfaction, or non-uniform persistent identity. No
 fractured-junk miss state is interned. Compilation uses the existing Fracture,
 condition-router, and Restart vocabulary; primitive Fracture remains exact.
 
-The goal-relevant product envelope intentionally excludes Veiled crafting and
-standalone Eldritch primitive use. Ember, Ichor, Eldritch Exalt, Eldritch
-Chaos, and Eldritch Annul are retained only as dependencies of bounded
-side-salvage options on eligible carriers. Arbitrary implicit rolling remains
-outside product scope. Influence Exalts keep their existing goal-influence
-filter and are not part of automatic Eldritch side salvage.
+The goal-relevant product envelope excludes standalone Veiled and Eldritch
+primitive use. Veiled Chaos and Veiled Exalt are dependencies of bounded
+carrier-local programs that may perform relevant cleanup before acquisition
+and must observe Unveil immediately afterward. Ember, Ichor, Eldritch Exalt,
+Eldritch Chaos, and Eldritch Annul are dependencies of bounded side-salvage
+options on eligible carriers. Arbitrary implicit rolling remains outside
+product scope. Influence Exalts keep their existing goal-influence filter and
+are not part of automatic Eldritch side salvage.
 
 Code authority:
 `engine/src/solver_registry.cpp`, the `engine/src/solver_options*.cpp` owners,
@@ -737,11 +746,13 @@ materialized. Missing setup or final prices reject the compound option
 explicitly. Generic influence or another illegal carrier state rejects it
 before kernel admission.
 
-Automatic standalone Ember, Ichor, arbitrary implicit rolling, and Veiled
-crafting remain outside this scope. Eldritch Exalt is reachable only inside
-its admitted side compound, not as a primitive Bellman candidate. Influence
-Exalts retain their separate goal-influence candidate rule. Manual actions and
-user-authored `eldritch_side_intent` options retain their existing behavior.
+Automatic standalone Ember, Ichor, and arbitrary implicit rolling remain
+outside this scope. Veiled acquisition and Unveil are reachable only inside
+their bounded immediate observed-choice program; Eldritch Exalt is reachable
+only inside its admitted side compound, not as a primitive Bellman candidate.
+Influence Exalts retain their separate goal-influence candidate rule. Manual
+actions and user-authored `eldritch_side_intent` options retain their existing
+behavior.
 
 ## Solve And Reprice
 

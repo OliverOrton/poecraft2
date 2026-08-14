@@ -37,8 +37,10 @@ does not reimplement crafting rules.
   are implemented. Remaining delivery boundaries are preserved without
   scheduling them in the [solver roadmap](future/solver-roadmap.md).
 - Economy ingest, immutable snapshots, league selection, overrides, and cost
-  identities exist. Production activation remains external, and scheduled
-  refresh does not currently fetch Beast prices; see [Economy](economy/README.md).
+  identities exist. The checked-in Allflame publication includes required
+  Beast pricing for Craicic Croaker plus the explicit generic rare-beast owner
+  default. Production activation remains external; see
+  [Economy](economy/README.md).
 - Accounts and publishing, recombinator planning, additional mechanics, and ML
   planning remain deferred in [Future](future/README.md).
 
@@ -55,8 +57,11 @@ benchmarking milestone is complete in its
 [dated archive](archive/2026-07-22-bounded-policy-and-benchmarking/README.md).
 It preserves exact mechanics and action scope while making certified executable
 incumbents useful before exact closure, and adds a seeded natural-T1 corpus and
-stratified solver evidence. [Active work](active/README.md) and
-[HANDOFF](../HANDOFF.md) record the current stopping point.
+stratified solver evidence. The subsequent
+[Solver Goal Realignment milestone](archive/2026-08-09-solver-goal-realignment/README.md)
+qualifies the goal-relevant native/release-WASM product path, including the
+five-minute four-goal target and every ordinary base. [Active work](active/README.md)
+and [HANDOFF](../HANDOFF.md) record whether Oliver has selected another chunk.
 Exact solver action/state pruning is complete and preserved in its
 [dated archive](archive/2026-07-21-solver-action-state-pruning/README.md).
 Exact solver state scaling is preserved in its

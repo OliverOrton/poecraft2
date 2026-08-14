@@ -5,7 +5,7 @@ describes the implemented system. It does not select future work.
 
 Parent: [Documentation](../README.md)
 
-Verified against code: 2026-07-19 @ d5e38e3
+Verified against code through Solver Goal Realignment acceptance: 2026-08-13.
 
 ## Purpose
 
@@ -140,6 +140,10 @@ costs and solver selection; they do not change crafting legality or outcomes.
 - Ordinary non-cluster sessions are implemented. Cluster sessions and
   two-item recombination remain explicit future work.
 - Current history and deferred designs stay outside stable references.
+- A public exact claim crosses layers: the admitted action envelope must be
+  closed, an executable policy must be compiled and independently evaluated,
+  and its cost and properness must reconcile. Equal displayed bounds without
+  those authorities are not exactness evidence.
 
 ## Current Entry Points
 

@@ -1,7 +1,7 @@
 # Solver Goal Realignment V1
 
-This corpus owns the frozen acceptance cases for the active
-[Solver Goal Realignment And End-To-End Capability Recovery](../../../docs/active/2026-08-09-solver-goal-realignment/plan.md)
+This corpus owns the frozen acceptance cases for the completed
+[Solver Goal Realignment And End-To-End Capability Recovery](../../../docs/archive/2026-08-09-solver-goal-realignment/plan.md)
 milestone.
 
 The primary case is an empty rare item-level-86 Conquest Lamellar under the

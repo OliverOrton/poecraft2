@@ -4,8 +4,8 @@
 
 Parent: [Mechanics](README.md)
 
-Verified against code: 2026-07-31 through Policy-Guided Exact State
-Refinement.
+Verified against code through the final Solver Goal Realignment native/release-
+WASM acceptance: 2026-08-13.
 
 Verification scope: strategy compiler and simulator parsers, condition
 compiler/evaluator, exact whole-graph evaluator, solver registry/request

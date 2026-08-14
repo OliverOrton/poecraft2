@@ -1,0 +1,111 @@
+{
+  "schema_version": "solver_goal_realignment_gate8_acceptance_v1",
+  "measured_date": "2026-08-13",
+  "engine_checkpoint": "3ef32fe",
+  "comparison_checkpoint": "9547b52",
+  "result": "pass",
+  "full_repository_pipeline_runs": 1,
+  "release_wasm_build": {
+    "configuration": "release O3 LTO SIMD WASM exceptions default allocator and growth",
+    "result": "pass"
+  },
+  "primary": {
+    "expected_cost": 3745.7309340083884,
+    "native_total_ms": 218703,
+    "wasm_total_ms": 277906,
+    "maximum_wall_ms": 300000,
+    "native_wasm_semantic_checks": 96,
+    "verification_runs": 10000,
+    "successful_runs": 10000,
+    "off_policy_runs": 0
+  },
+  "warlord_control": {
+    "expected_cost": 224.1238588972487,
+    "wasm_total_ms": 7697,
+    "native_wasm_semantic_checks": 96,
+    "verification_runs": 10000,
+    "successful_runs": 10000,
+    "off_policy_runs": 0
+  },
+  "five_mod": {
+    "termination_reason": "refused_resource_cap",
+    "lower_bound": 0,
+    "evaluated_policy_upper": 0.01165,
+    "open_incremental_obligations": 28,
+    "native_total_ms": 22104,
+    "verification_runs": 10000,
+    "successful_runs": 10000,
+    "off_policy_runs": 0,
+    "bounded_contract_passed": true
+  },
+  "eldritch": {
+    "expected_cost": 0.018630169563331064,
+    "native_total_ms": 100180,
+    "wasm_total_ms": 156219,
+    "native_wasm_semantic_checks": 96,
+    "verification_runs": 10000,
+    "successful_runs": 10000,
+    "off_policy_runs": 0
+  },
+  "imprint": {
+    "expected_cost": 252.6535202127448,
+    "native_total_ms": 588,
+    "wasm_total_ms": 4706,
+    "native_wasm_semantic_checks": 96,
+    "verification_runs": 10000,
+    "successful_runs": 10000,
+    "off_policy_runs": 0,
+    "rare_beast_to_croaker_ratio": "3:1"
+  },
+  "every_base": {
+    "ordinary_bases": 979,
+    "sessions_built": 979,
+    "modifier_pools_present": 979,
+    "goals_feasible": 979,
+    "prices_complete": 979,
+    "compiled_evaluations_passed": 979
+  },
+  "portfolio": {
+    "native_complete_runs": 1,
+    "wasm_complete_runs": 1,
+    "cases": 49,
+    "native_policies": 49,
+    "wasm_policies": 49,
+    "expectations_met": 42,
+    "sampled_action_cap_misses": 7,
+    "exact_evaluations_passed": 49,
+    "semantic_checks": 4072,
+    "semantic_mismatches": 0,
+    "watchdogs": 0,
+    "report_errors": 0,
+    "off_policy_runs": 0
+  },
+  "full_pipeline": {
+    "ingest_tests": 18,
+    "economy_tests": 12,
+    "fixture_tests": 17,
+    "engine_checks": 3464752,
+    "engine_failures": 0,
+    "benchmark_specs": 12,
+    "wasm_smoke_checks": 28,
+    "wasm_smoke_failures": 0,
+    "non_visual_web_suite": "pass"
+  },
+  "raw_artifacts": [
+    {"path": "build/solver-goal-realignment/gate8/final/native-primary-accounting.json", "bytes": 2053372, "sha256": "7d9f45ab740dec50415672922445a2b37ecfa7d82755e40b55dcb04cb2ddf7a7"},
+    {"path": "build/solver-goal-realignment/gate8/final/wasm-primary-final-candidate.json", "bytes": 18790969, "sha256": "52481b1350766027e30378135ca5347a5d21d3812812d262c05a00e482f5c170"},
+    {"path": "build/solver-goal-realignment/gate8/final/native-warlord-accounting.json", "bytes": 451651, "sha256": "cf99ef96ab326e789990438010d6534f9be14281a09757958d9d6434697e6a69"},
+    {"path": "build/solver-goal-realignment/gate8/final/wasm-warlord-final-candidate.json", "bytes": 985235, "sha256": "fee96e6ba81e74c76978b0182281493fb57f102dc54e85dfcececb7e16de05d9"},
+    {"path": "build/solver-goal-realignment/gate8/final/native-five-mod-final-current.json", "bytes": 218711, "sha256": "d397724a385911fd315113b4ecf7eaa0163f939a73251d8c9ae90823c7d07125"},
+    {"path": "build/solver-goal-realignment/gate8/final/native-eldritch-final-current.json", "bytes": 1224484, "sha256": "e43cce795b616afa0b9ca64a756c893e9d57502f7dc90e2bf6be0043415d47b7"},
+    {"path": "build/solver-goal-realignment/gate8/final/wasm-eldritch-final-current.json", "bytes": 1735589, "sha256": "59c3788877b5107a8a5990ddc1cee6906cda8474876759669560ef9906dbd33b"},
+    {"path": "build/solver-goal-realignment/gate8/final/native-imprint-final-current.json", "bytes": 252598, "sha256": "456dd64a8e7dd8d0425fcf6a2e4696847cb9c3c0d7cf987fa2cc7dccd870b0b2"},
+    {"path": "build/solver-goal-realignment/gate8/final/wasm-imprint-final-current.json", "bytes": 575926, "sha256": "caf0c16145f0055ce53ecc91dddd2f4f252e8c07a260be48b7dd9fa74c1a4f44"},
+    {"path": "build/solver-goal-realignment/gate8/final/semantic-primary-final.json", "bytes": 22462, "sha256": "d5a0cab8416747e36910f28e8f12416c15a2e9ef88c75fd91d1e3e9e1aa226d1"},
+    {"path": "build/solver-goal-realignment/gate8/final/semantic-warlord-final.json", "bytes": 22312, "sha256": "08c67d1b3bce3ea37384a7f71b165de9ef030d80e4a92e8157555c2641a84a29"},
+    {"path": "build/solver-goal-realignment/gate8/final/semantic-eldritch-final.json", "bytes": 22873, "sha256": "8763ce5df9cd3b7ed3c50683ab805e384a5c3bc356e11fb1853d431e704a1fe3"},
+    {"path": "build/solver-goal-realignment/gate8/final/semantic-imprint-final.json", "bytes": 21800, "sha256": "94bb193c496002a7adf0a0f03744e23fddab9b88d78bbbcf9d9dc76ee106abe5"},
+    {"path": "build/solver-goal-realignment/gate8/final/wasm-portfolio-final-current.json", "bytes": 41048263, "sha256": "15c2389a3e9f3a2350269d43eb3f9fe4207ab714bd5ba4cc92576c178da7fa5f"},
+    {"path": "build/solver-goal-realignment/gate8/final/semantic-portfolio-final-corrected.json", "bytes": 831332, "sha256": "a41ba84fdf105ec34d561ce3f48d7b0086a94325082fcc6607409ef0ef761a9f"}
+  ]
+}

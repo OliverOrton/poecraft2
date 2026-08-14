@@ -6,8 +6,7 @@ future work or define crafting mechanics.
 
 Parent: [Foundation](README.md)
 
-Verified against code: 2026-08-01 on
-`codex/solver-iteration-infrastructure`.
+Verified against code through Solver Goal Realignment acceptance: 2026-08-13.
 
 ## Execution Flow
 
@@ -126,6 +125,10 @@ Oliver ruling and belong in the [mechanics library](../mechanics/README.md).
   version's physical effort remain observational telemetry; wall time, owned
   memory, and cooperative-step latency are separate qualification dimensions,
   not inputs to a universal weighted score.
+- Automatic finite-program discovery closes only through exact mechanical or
+  resource dominance, or a conservative positive-price certificate against a
+  proper carrier-local upper. An arbitrary depth limit cannot close the action
+  envelope or support global exactness.
 - Crafting legality and probabilities stay in the native engine. Compilation,
   evaluation, WASM, and TypeScript consume native results; they do not recreate
   mechanics.

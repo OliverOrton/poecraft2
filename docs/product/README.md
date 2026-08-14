@@ -5,10 +5,11 @@ browser product; it does not schedule future work.
 
 Parent: [Documentation index](../README.md)
 
-Verified against code: 2026-07-19 @ d5e38e3. Scope: Vite/TypeScript/Web
-Components workspace, document persistence, Calculator, Strategy Builder,
-Simulator presentation, and economy integration. No rendered or visual review
-was performed.
+Verified against code and the final non-visual Solver Goal Realignment
+acceptance: 2026-08-13. Scope: Vite/TypeScript/Web Components workspace,
+document persistence, Calculator, Strategy Builder, Simulator presentation,
+economy integration, and the release-WASM worker path. No rendered or visual
+review was performed.
 
 ## Product Shape
 

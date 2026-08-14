@@ -1,143 +1,42 @@
 # Session Handoff
 
-**Status: active milestone; Gate 8 is the current acceptance boundary.**
+**Status: no active implementation boundary.**
 
-Oliver selected
-[Solver Goal Realignment And End-To-End Capability Recovery](docs/active/2026-08-09-solver-goal-realignment/plan.md)
-on 2026-08-09. Work starts from clean commit
-`c00c18133f88151dc971955c161d01e2178aef4b` on branch
-`codex/solver-goal-realignment`.
+The
+[Solver Goal Realignment And End-To-End Capability Recovery](docs/archive/2026-08-09-solver-goal-realignment/README.md)
+milestone completed on 2026-08-13. Oliver must choose the next chunk before
+implementation resumes. Do not infer a follow-up from the archived plan or
+from `docs/future/`.
 
-The milestone's product objective is an anytime minimum-expected-chaos solver
-that retains every relevant supported action family end to end, publishes the
-cheapest independently verified executable policy at a bounded stop, and
-claims exactness only when every improvement obligation closes. The primary
-acceptance case is a new Allflame Conquest Lamellar item-level-86 fixture with
-four required natural T1 modifiers and an explicit five-chaos base price. It
-must close exact with a compiled independently evaluated policy within five
-minutes; a cap-stopped Chaos incumbent is not success.
+The completed milestone restores the goal-relevant product path across action
+and price admission, bounded automatic Veiled/Eldritch Exalt/Imprint programs,
+exact alternative-envelope closure, anytime verified policy publication,
+all-base correctness, compilation, independent exact evaluation, Simulator,
+release WASM, and non-visual Calculator presentation.
 
-The active work includes:
+Final qualification:
 
-- a complete product-path action-family matrix and focused before evidence;
-- Craicic Croaker live Beast pricing and an overridable one-chaos generic
-  rare-beast owner default in a fresh isolated Allflame snapshot;
-- bounded automatic Veiled and Eldritch Exalt planning;
-- multi-action scheduling, Q completion, bound closure, and anytime policy
-  repairs required by the primary case;
-- all-base feasibility and Ring/Amulet exact-evaluator/publication recovery;
-- compiler, exact evaluator, Simulator, and frontend integrity; and
-- one final native/release-WASM acceptance and semantic comparison.
+- the four-natural-T1 Allflame Conquest Lamellar case is exact at
+  `3745.7309340083884` chaos in 218.703 seconds natively and 277.906 seconds in
+  release WASM;
+- primary, Warlord, Eldritch, and Imprint selected policies complete their
+  required 10,000/10,000 runs with zero off-policy failures;
+- the representative five-mod case retains an independently evaluated bounded
+  policy at `0.01165` with lower `0`, 28 open obligations, and a named resource
+  stop;
+- all 979 ordinary bases pass the lightweight matrix;
+- the complete repository pipeline was run once and passed; and
+- one native and one release-WASM 49-case portfolio publish all 49 policies,
+  with a 4,072-check semantic comparison and zero mismatches.
 
-Preserve `goal_progress_gated_reforges`, complete salvage on partial-progress
-states, distinct natural/crafted goal identity, narrow Harvest/Essence/Fossil
-filters, generated-data authority, and local-only commits. Do not research or
-guess any further mechanic rule; ask Oliver if an ambiguity appears. Do not
-upload or publish externally, and do not perform rendered/visual review.
+Seven portfolio samples reach the Simulator's 100,000-action ceiling, but all
+seven compiled policies exact-evaluate with success probability one and zero
+off-policy mass. One case reaches different native/WASM internal resource
+stops; public semantics match, while post-stop structural counters are not
+cross-runtime authority. These are disclosed qualification boundaries, not
+active implementation work.
 
-Gate 2 is complete in the working tree. The current immutable Allflame
-snapshot is
-`economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0`;
-it contains the Craicic Croaker quote and the explicit one-chaos
-`beast:rare` owner default. Historical Mirage inputs, immutable older
-snapshots, and their evidence remain unchanged. The product-path Imprint gate
-compiles, exact-evaluates, and completes 10,000 native Simulator runs. A regular
-cross-runtime Imprint fixture also closes exactly at
-`252.65352021274481`, compiles both Bestiary operations, and passes the exact
-3:1 rare-beast/Croaker accounting contract; its final sampled native/WASM
-qualification remains pending.
-
-Gate 4's dependency-only automatic Eldritch Exalt path is implemented and its
-focused native product gate is green. The Influence Exalt vocabulary is
-normalized to the four real currency names while preserving the six generic
-influence bits for item display. The executable Gate 1 family contract covers
-every primitive and automatic kind and passes 182,656 focused checks.
-Ring/Amulet independently evaluated publication is repaired; both now emit
-three-node/three-edge bounded policies with success probability one and zero
-off-policy or unresolved mass. The every-base harness remains a later Gate 6
-acceptance item.
-
-The first post-repair primary run reached all 3,621 abstract states and stayed
-well below retained row/transition and memory caps, then expired at the
-five-minute watchdog inside a long unyielded work unit. Its partial report also
-proved that a restricted-envelope value was being exposed as a global lower
-while delayed actions remained open. Bound authority, transactional cooperative
-automatic admission, retained-versus-transient work accounting, and
-start-reachable resource-stop policy publication are repaired. The earlier
-Warlord control consequently published and independently evaluated a proper
-224.12385889724871-chaos Warlord Exalt/Restart policy, but honestly refused
-exact closure on `max_imprint_program_depth`.
-
-After this handoff was first written, the interrupted Gate 5 work implemented
-finite Imprint-program closure from exact terminal-kernel/resource dominance
-and a carrier-local price certificate. The proof audit is sound under the
-engine's nonnegative economy contract: it uses downward-rounded mandatory
-prices, an outward-rounded maximum useful depth, exact outcome vectors, and
-componentwise primitive-resource counts. Only carrier-local certified
-incremental/fallback/restart or proper independently evaluated policy values
-may supply the upper. Missing, nonfinite, negative, or zero-step prices, an
-absent upper, and the independent work cap retain an honest refusal. The native
-tree builds; focused Solve and dedicated Imprint gates pass 98,783 and 60
-checks respectively. The accumulated implementation is checkpointed locally at
-`29a3b05e`.
-
-Gate 5 is complete. The no-incumbent Imprint fallback now bootstraps a certified
-carrier-local renewal/finisher upper, program extension is legality-first, and
-the finite price-bounded proof retains exact terminal/resource-vector
-dominance. The focused mixed-action seven-step and renewal/finisher controls are
-green. Product Fracture has an explicit strict quotient, and a complete audited
-strict alternative-action envelope is now authoritative for global lower-bound
-closure. The final Warlord control closes exactly at
-`224.12385889724871` chaos and completes 10,000/10,000 native Simulator runs.
-The primary closes exactly at `3745.7309340083884` chaos in 139.631 seconds,
-compiles, independently evaluates to the same value, and completes
-10,000/10,000 native Simulator runs after the benchmark contract exposes and
-the fixture pins the engine's 4,000,000 graph-step maximum. Gate 5 evidence is
-in
-[gate5-solver-completeness-recovery.md](docs/active/2026-08-09-solver-goal-realignment/evidence/gate5-solver-completeness-recovery.md).
-
-Gate 6 is complete. The every-base matrix builds and validates all 979 ordinary
-bases with 2,811,093 checks and zero failures. The current-product metamod start
-and full-junk suffix-salvage controls both close exact, compile, independently
-evaluate, and complete 10,000/10,000 native Simulator runs. The final costs are
-`61.3644166136243` and `69.871075553584731` chaos respectively. The repair adds
-an exact completed state/operator-pair ledger for late-discovered incremental
-carriers and composes a stationary strict renewal carrier through the real
-fresh-base setup and arbitrary priced-Restart starts without relaxing any cap.
-Evidence is in
-[gate6-ring-amulet-evaluator-recovery.md](docs/active/2026-08-09-solver-goal-realignment/evidence/gate6-ring-amulet-evaluator-recovery.md).
-
-Gate 7 is complete. Native Solve/compiler/evaluator suites and focused
-non-visual frontend presentation, workspace, Strategy Board, Calculator-mode,
-goal-item, corpus-contract, and TypeScript checks pass. The same engine-authored
-strategy document retains provenance across compilation, exact evaluation,
-Simulator, and Strategy Board. Exact, bounded, cap-stopped, and no-policy
-authority remain distinct, including the equal-bounds-without-policy and open-
-action-envelope hard guards. Evidence is in
-[gate7-compiler-presentation-integrity.md](docs/active/2026-08-09-solver-goal-realignment/evidence/gate7-compiler-presentation-integrity.md).
-
-Gate 3 is complete under Oliver's 2026-08-13 ruling that Veiled offers are
-fixed at placeholder acquisition and that an offer set with no direct goal hit
-takes its Bellman-best legal cleanup/retry continuation. The automatic grammar
-allows relevant crafted-mod cleanup only before Veiled Chaos or Veiled Exalt,
-then requires immediate observed Unveil. This makes the exact observation-time
-enumeration distribution-equivalent to the Simulator's persisted offers
-without adding offer identity to `AbstractState`. Eligible, ineligible,
-missing-price, forced-winner, pre-cleanup, no-goal-offer, compiler/evaluator,
-and 10,000-run sampled coverage are green. Evidence is in
-[gate3-automatic-veiled.md](docs/active/2026-08-09-solver-goal-realignment/evidence/gate3-automatic-veiled.md).
-
-The current boundary is Gate 8. Run the final sequence once: native build,
-release-WASM build, complete repository acceptance, native/release-WASM
-primary, representative five-mod ten-minute case, every-base matrix, selected
-10,000-run Veiled/Eldritch/Imprint/primary verifications, semantic comparison,
-and the single 49-case portfolio comparison. Do not perform rendered or visual
-review.
-
-The five-mod fixture now has a machine-enforced bounded-policy contract: exact
-closure is accepted, while a bounded result must expose a named resource stop,
-a strict gap, nonzero open obligations, a reconciled evaluated upper, and the
-authoritatively selected cheapest independently evaluated portfolio candidate.
-Gate 6 also has two
-isolated current-product controls for a real metamod start and full-junk-side
-suffix salvage; they are validation-clean but not yet solver-qualified.
+The final implementation and benchmark checkpoints are `3ef32fe` and
+`9547b52`. Detailed results, raw-report hashes, and caveats are in the
+[completion report](docs/archive/2026-08-09-solver-goal-realignment/report.md)
+and [Gate 8 evidence](docs/archive/2026-08-09-solver-goal-realignment/evidence/gate8-final-acceptance.md).

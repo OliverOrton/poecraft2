@@ -4,8 +4,8 @@
 
 Parent: [Product](README.md)
 
-Verified against code and complete non-visual R4 acceptance: 2026-07-26 @
-browser-transfer/lifetime R4 closure. Scope:
+Verified against code, complete non-visual R4 acceptance, and the final Solver
+Goal Realignment native/release-WASM acceptance: 2026-08-13. Scope:
 `pc-calculator`, goal/draft models, solver worker orchestration, exact-outcome
 presentation, and shared economy access. No rendered or visual review was
 performed; that review remains Oliver's.
@@ -131,9 +131,9 @@ strategy nodes; the web app does not execute opaque macros.
 Near policy quality, the result discloses the actual product scope without
 listing every action: goal-relevant action discovery, the zero-progress
 destructive-reforge retry restriction, admitted priced counts grouped by
-family, missing-price exclusions, deferred Veiled crafting, and any unresolved
-action obligations left by a resource stop. Detailed admitted action IDs stay
-in the existing collapsible section. Solver telemetry is therefore retrieved
+family, missing-price exclusions, bounded automatic Veiled dependencies, and
+any unresolved action obligations left by a resource stop. Detailed admitted
+action IDs stay in the existing collapsible section. Solver telemetry is therefore retrieved
 for successful exact results as well as bounded or refused results.
 
 Every solver-generated document records its non-executable scope as optional
@@ -168,11 +168,15 @@ The complete Calculator-to-worker-to-native sequence, including handle
 ownership, cooperative cancellation, compilation, repricing, and verification,
 is documented in [End-To-End Solver Flow](../solver/flow.md).
 
-The browser worker adaptively steps solves but caps a call at four work items.
-Calculator does not retain the scoped solve handle after transfer. Strategy
-inputs are also encoded once and transferred to the worker for compilation or
-exact evaluation instead of structured-cloning the full graph. A retained
-transition-cache product mode remains deferred in the
+The browser worker starts ordinary product solves conservatively and adapts
+toward a responsive slice. The explicit 1,024-work-item qualification request
+retains that complete native batch from its first and subsequent calls because
+step boundaries affect incremental scheduling; its separate 20-second guard
+remains the responsiveness contract. Calculator does not retain the scoped
+solve handle after transfer. Strategy inputs are encoded once and transferred
+to the worker for compilation or exact evaluation instead of structured-
+cloning the full graph. A retained transition-cache product mode remains
+deferred in the
 [solver roadmap](../future/solver-roadmap.md).
 
 Code authority:

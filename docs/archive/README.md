@@ -9,6 +9,16 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-08-09
+
+- [Solver Goal Realignment And End-To-End Capability Recovery](2026-08-09-solver-goal-realignment/README.md) —
+  restores every relevant supported product family through admission, pricing,
+  automatic dependency programs, exact/anytime solving, independently verified
+  publication, compiler/evaluator/Simulator execution, and non-visual product
+  presentation. The four-natural-T1 primary is exact inside five minutes in
+  native and release WASM, all 979 ordinary bases pass, and the final 49-case
+  semantic comparison passes 4,072 checks.
+
 ## 2026-08-08
 
 - [Product Action Dependency Reachability](2026-08-08-product-action-dependency-reachability/README.md) —

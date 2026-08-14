@@ -457,3 +457,40 @@ evidence. Telemetry preserves the core candidate, direct assertion, strict
 lift, and final publication identities and reasons. No mechanic, price,
 objective, action scope, abstraction, strategy vocabulary, or resource limit
 changes under this decision.
+
+## 2026-08-13 — Automatic Program Closure Requires A Finite Certificate
+
+**Decision:** A dynamic automatic-program grammar may close through exact
+terminal-kernel equality plus componentwise nonnegative primitive-resource
+dominance. It may also use a carrier-local price certificate only when a proper
+finite upper exists, every grammar step has a finite strictly positive price,
+mandatory costs round downward, and the useful-depth ceiling rounds outward.
+An arbitrary depth limit is a resource stop, never an exactness proof.
+
+**Context:** The completed
+[Solver Goal Realignment milestone](archive/2026-08-09-solver-goal-realignment/report.md)
+uses this contract for automatic Imprint attempt/restore discovery.
+
+**Consequences:** Missing or nonfinite prices, a zero-price step, an absent
+carrier-local upper, or exhausted discovery work leaves the automatic action
+envelope open. A bounded executable policy may survive, but the solver cannot
+claim exact optimality from that grammar.
+
+## 2026-08-13 — Product Exactness Requires Closed Alternatives And Verified Execution
+
+**Decision:** Product exactness requires both a closed engine-owned relevant
+alternative envelope and a proper executable policy whose emitted strategy
+independently exact-evaluates and reconciles to the public cost. At a resource
+stop, retain the cheapest independently evaluated policy and disclose the
+named stop, bounds, gap, and unresolved obligations.
+
+**Context:** The
+[Gate 8 record](archive/2026-08-09-solver-goal-realignment/evidence/gate8-final-acceptance.md)
+qualifies this contract across native, release WASM, compilation, exact
+evaluation, Simulator execution, and the non-visual Calculator path.
+
+**Consequences:** Equal numeric bounds without an executable policy, or a
+policy with open improvement obligations, cannot be presented as exact. Native
+and WASM may reach different internal resource stops; public semantics remain
+mandatory parity while structural telemetry after different stops is not an
+execution-semantic invariant.

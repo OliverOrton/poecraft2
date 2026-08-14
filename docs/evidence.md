@@ -1562,6 +1562,30 @@ dispositions, Amulet and `bd85` strict invariant witnesses, and the exact
 classified as avoidable dense work rather than accounting errors; their
 larger representation fix is explicitly deferred.
 
+## Solver Goal Realignment Final Acceptance
+
+The 2026-08-13
+[completion report](archive/2026-08-09-solver-goal-realignment/report.md) and
+[tracked Gate 8 record](archive/2026-08-09-solver-goal-realignment/evidence/gate8-final-acceptance.json)
+close the goal-relevant product recovery. The four-natural-T1 primary is exact
+at `3745.7309340083884` in 218.703 seconds natively and 277.906 seconds in
+release WASM. Both emitted policies independently evaluate and complete
+10,000/10,000 simulations with zero off-policy failures.
+
+The single complete repository pipeline passes 3,464,752 engine checks plus
+ingest, economy, fixture, artifact, benchmark, WASM-smoke, TypeScript, and
+non-visual web acceptance. All 979 ordinary bases pass the lightweight matrix.
+Focused primary, Warlord, Eldritch, and Imprint comparisons pass 384 checks.
+The one native and one release-WASM 49-case portfolio each publish 49 policies;
+their corrected comparison passes 4,072 semantic checks with zero mismatches.
+
+Seven portfolio samples reach the 100,000-action Simulator limit, while their
+compiled graphs exact-evaluate with success probability one and zero off-policy
+mass. One case reaches selected-owned memory first natively and reforge work
+first in 32-bit WASM; structural counts after different internal stops are
+excluded, while public solve, policy, value, compilation, exact evaluation,
+simulation, and cap disclosure still match.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)
