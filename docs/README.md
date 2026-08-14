@@ -29,15 +29,15 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. The completed
+[Solver Decision Provenance And Result-Truth Hardening](active/2026-08-13-solver-decision-provenance/plan.md)
+is active in hardening-only mode from source baseline `9914b84`. It first
+separates Calculator odds materialization from the product Solve envelope,
+then audits shared Q authority, strict objective ordering versus numerical
+policy stability, decision provenance, result authority, and lower-bound
+provenance. The unavailable historical Fossil-to-Chaos request is not a current
+reproduction claim. The completed
 [Solver Goal Realignment And End-To-End Capability Recovery](archive/2026-08-09-solver-goal-realignment/README.md)
-milestone restores the complete supported product path from goal/action/price
-admission through exact solving, compilation, independent evaluation,
-Simulator execution, and honest presentation. Its exact verified four-natural-
-T1 Conquest Lamellar Allflame policy finishes within five minutes in native and
-release WASM, all 979 ordinary bases pass, and the final 49-case semantic
-comparison is green. Oliver must select a new chunk before implementation
-resumes. The completed
+remains the accepted capability and performance baseline. The completed
 [Product Action Dependency Reachability](archive/2026-08-08-product-action-dependency-reachability/README.md)
 milestone preserves narrow product action-family filters while separating
 independent candidates from bounded automatic dependencies, repairing the real

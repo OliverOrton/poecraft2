@@ -1,14 +1,23 @@
 # Session Handoff
 
-**Status: no active implementation boundary.**
+**Status: active — Solver Decision Provenance Gate 0.**
 
-The
-[Solver Goal Realignment And End-To-End Capability Recovery](docs/archive/2026-08-09-solver-goal-realignment/README.md)
-milestone completed on 2026-08-13. Oliver must choose the next chunk before
-implementation resumes. Do not infer a follow-up from the archived plan or
-from `docs/future/`.
+Oliver selected
+[Solver Decision Provenance And Result-Truth Hardening](docs/active/2026-08-13-solver-decision-provenance/plan.md)
+on 2026-08-13 in hardening-only mode from frozen source baseline
+`9914b84f2c075e84d932936a14fa0d2ac5f03156`. The historical serialized
+Fossil-to-Chaos request is unavailable, so this milestone may fix and classify
+the current Calculator request-scope defect but may not claim the historical
+policy transition was localized.
 
-The completed milestone restores the goal-relevant product path across action
+The immediate boundary is Gate 0 followed by Gate 1: freeze the current
+Calculator two-stage Solve flow, prove the selected-Fossil envelope leak with a
+controlled witness, then split exact odds materialization from the product
+envelope and add a whole-flow regression. Do not add solver-hot-path provenance
+until Gate 1 shows whether the request fix and existing telemetry are enough.
+
+The completed Goal Realignment milestone remains frozen evidence and restores
+the goal-relevant product path across action
 and price admission, bounded automatic Veiled/Eldritch Exalt/Imprint programs,
 exact alternative-envelope closure, anytime verified policy publication,
 all-base correctness, compilation, independent exact evaluation, Simulator,

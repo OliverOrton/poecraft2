@@ -1,12 +1,13 @@
 # Active Work
 
-**Status: no active implementation boundary.**
+**Status: Solver Decision Provenance And Result-Truth Hardening is active.**
 
 Parent: [Documentation map](../README.md)
 
-The Solver Goal Realignment milestone is complete in the
-[documentation archive](../archive/2026-08-09-solver-goal-realignment/README.md).
-Oliver must choose the next chunk before implementation resumes.
+Oliver selected the
+[active plan](2026-08-13-solver-decision-provenance/plan.md) on 2026-08-13 in
+hardening-only mode. Gate 0 freezes the current request-scope witness without
+claiming that the unavailable historical Fossil-to-Chaos report was localized.
 
-Unselected possibilities remain in [Future work](../future/README.md). Neither
-the archive nor future documents select current work.
+The completed Solver Goal Realignment milestone remains frozen in the
+[documentation archive](../archive/2026-08-09-solver-goal-realignment/README.md).

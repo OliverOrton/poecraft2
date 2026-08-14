@@ -6,6 +6,14 @@ S8 sequence as current momentum.
 
 Parent: [Future work](README.md)
 
+> **2026-08-13 supersession note:** The completed
+> [Solver Goal Realignment milestone](../archive/2026-08-09-solver-goal-realignment/README.md)
+> is the authority for current one-item solver coverage and acceptance. Its
+> Gate 8 evidence supersedes older pending-Imprint and waived-verification
+> statements below. The audited possible follow-up is now recorded separately
+> as the active
+> [Solver Decision Provenance And Result-Truth Hardening plan](../active/2026-08-13-solver-decision-provenance/plan.md).
+
 ## Current Boundary Record
 
 The 2026-07-20 [Exact Solver State Scaling archive](../archive/2026-07-20-solver-state-scaling/README.md)
@@ -268,10 +276,11 @@ If Oliver selects another one-item solver chunk, the surviving product work is:
 - **S8.6 — broader solver acceptance.** A fresh checkpoint is needed only if a
   later plan expands one-item scope beyond the accepted scaling corpus.
 
-The waived B1.5 checkpoint was not completed: no separate full Bestiary suite,
-10,000-run Imprint verification, or rendered review was backfilled. Any future
-plan decides whether one of those gates is still required; this roadmap does
-not silently revive it.
+The former waived B1.5 verification gap is superseded by Goal Realignment Gate
+8: selected native and release-WASM Imprint strategies exact-evaluated and
+passed the required 10,000-run verification with complete material accounting.
+Rendered review remains Oliver-owned and was not performed by the agent; that
+presentation-only fact does not reopen solver correctness acceptance.
 
 ## Unselected Investigations
 
