@@ -1104,6 +1104,9 @@ struct SimulatorImpl {
     std::vector<SimulationExampleInternal> failure_examples;
     std::vector<FailureSummaryInternal> failure_summaries;
     std::vector<std::uint64_t> action_counts;
+    std::vector<std::uint64_t> accounted_action_counts;
+    std::vector<std::uint64_t> applied_action_counts;
+    std::vector<std::uint64_t> accounted_applied_action_counts;
     std::vector<std::string> action_descriptor_ids;
     std::unordered_map<std::string, std::uint64_t> action_descriptor_counts;
     std::unordered_map<std::string, std::uint64_t> material_counts;

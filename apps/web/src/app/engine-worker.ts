@@ -276,9 +276,9 @@ async function solveSolver(
      * and the 50 ms legacy probes retain responsive 12 ms calibration. */
     const qualificationRequest = requestedWorkItems >= 1024;
     const qualificationWorkItems = qualificationRequest
-        ? 256
+        ? maxWorkItems
         : null;
-    let workItems = Math.min(4, maxWorkItems);
+    let workItems = qualificationWorkItems ?? Math.min(4, maxWorkItems);
     let observedPhase: SolveProgress["phase"] = "expanding";
     let emittedProgress = false;
     let lastProgressAt = -Infinity;

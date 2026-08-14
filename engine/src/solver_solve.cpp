@@ -190,6 +190,60 @@ SolveWork::Impl::Impl(
             }
             ++result.diagnostics.supported_priced_actions;
         }
+        if (options.goal_progress_gated_reforges) {
+            for (std::uint32_t index = 0;
+                 index < calc.registry().actions.size(); ++index) {
+                const PlannerOperator& planner =
+                    calc.operators().at(index);
+                if (planner.automatic_kind !=
+                        AutomaticCandidateKind::PermanentBench ||
+                    std::any_of(
+                        operators.begin(), operators.end(),
+                        [&](const PricedOperator& priced) {
+                            return priced.index == index;
+                        })) {
+                    continue;
+                }
+                double cost = 0.0;
+                bool priced = true;
+                std::vector<std::pair<std::string, double>>
+                    resource_prices;
+                for (const auto& [key, quantity] :
+                     planner.resource_quantities) {
+                    const auto found = prices.find(key);
+                    if (found == prices.end()) {
+                        priced = false;
+                        break;
+                    }
+                    cost += quantity * found->second;
+                    resource_prices.push_back({key, found->second});
+                }
+                if (!priced) {
+                    record_skipped_missing_price(planner.id);
+                    add_action_reason(
+                        "unpriced", planner.id,
+                        "missing_one_or_more_resource_prices");
+                    add_action_reason(
+                        "rejected", planner.id,
+                        "automatic_candidate_missing_price");
+                    continue;
+                }
+                if (!calc_supports(
+                        calc.registry().actions.at(
+                            planner.primitive_action))) {
+                    reported_unsupported[index] = true;
+                    record_skipped_unsupported(planner.id);
+                    add_action_reason(
+                        "unsupported", planner.id,
+                        "no_exact_evaluator_for_requested_primitive");
+                    continue;
+                }
+                operators.push_back(
+                    {index, cost, std::move(resource_prices)});
+                ++result.diagnostics.priced_scanned_actions;
+                ++result.diagnostics.supported_priced_actions;
+            }
+        }
         const bool priced_automatic_fracture = std::any_of(
             operators.begin(), operators.end(),
             [&](const PricedOperator& priced) {
@@ -219,6 +273,39 @@ SolveWork::Impl::Impl(
         }
         incremental_action_generation =
             options.goal_progress_gated_reforges;
+        if (incremental_action_generation) {
+            std::uint64_t direct_goal_bench_anchors = 0;
+            for (const PricedOperator& priced : operators) {
+                const PlannerOperator& planner =
+                    calc.operators().at(priced.index);
+                if (planner.automatic_kind !=
+                        AutomaticCandidateKind::PermanentBench ||
+                    std::find(
+                        static_operator_indices.begin(),
+                        static_operator_indices.end(), priced.index) !=
+                        static_operator_indices.end()) {
+                    continue;
+                }
+                /*
+                 * Carrier-local automatic admission is transactional: a
+                 * later unfinished compound correctly leaves that action
+                 * envelope open and rolls its staged rows back. A priced
+                 * deterministic goal Bench is already a globally defined,
+                 * exact primitive, however, and is independently executable
+                 * wherever legal. Keep it in the restricted anchor graph so
+                 * a later automatic resource stop cannot erase this proved
+                 * upper policy. This adds no completeness claim for the
+                 * still-open automatic envelope.
+                 */
+                static_operator_indices.push_back(priced.index);
+                ++direct_goal_bench_anchors;
+            }
+            if (direct_goal_bench_anchors != 0) {
+                retain_action_reason(
+                    "included:incremental_direct_goal_bench_upper_anchors:" +
+                    std::to_string(direct_goal_bench_anchors));
+            }
+        }
         if (options.high_impact_executable_uppers) {
             retain_action_reason(
                 "included:high_impact_executable_uppers:enabled");

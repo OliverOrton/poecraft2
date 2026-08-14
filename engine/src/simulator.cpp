@@ -2027,6 +2027,9 @@ const StrategyEdge* select_edge(
     const SessionImpl& session,
     const pc_item_state& item,
     SimulatorImpl& simulator) {
+    if (node.edges.size() == 1 && node.edges.front().is_default) {
+        return &node.edges.front();
+    }
     if (++simulator.current_condition_generation == 0) {
         std::fill(
             simulator.condition_cache_generation.begin(),
@@ -2167,14 +2170,22 @@ const char* failure_default_detail(int reason) {
 }
 
 bool action_needs_rollback(ActionType type) {
-    // These reforges validate before mutation and always report applied once
+    // These actions either reject before mutating the item, or report applied
+    // after their first mutation. The reforges also always report applied once
     // entered; an empty pool simply yields fewer mods. Avoid copying the full
-    // item state for their overwhelmingly common success path.
+    // item state for their overwhelmingly common success path. Keep the
+    // conservative rollback for compound actions that can mutate before a
+    // later refusal (including Scour's rarity normalization).
     switch (type) {
     case ActionType::Transmute:
+    case ActionType::Augment:
     case ActionType::Alteration:
+    case ActionType::Regal:
     case ActionType::Alchemy:
     case ActionType::Chaos:
+    case ActionType::Exalt:
+    case ActionType::Annul:
+    case ActionType::Fracture:
         return false;
     default:
         return true;
@@ -2369,19 +2380,13 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
             }
             ++result.actions;
             ++simulator.action_counts[node_index];
-            if (!simulator.action_descriptor_ids[node_index].empty()) {
-                ++simulator.action_descriptor_counts[
-                    simulator.action_descriptor_ids[node_index]];
-            }
             if (!outcome.applied) {
                 finish_failure(PC_SIM_FAILURE_ACTION_NOT_APPLIED, node, "");
                 break;
             }
 
             applied = true;
-            for (const std::string& price_key : node.price_keys) {
-                ++simulator.material_counts[price_key];
-            }
+            ++simulator.applied_action_counts[node_index];
             if (price_known && simulator.economy != nullptr) {
                 result.known_cost += price;
                 ++simulator.summary.costed_action_count;
@@ -2643,6 +2648,9 @@ void prepare_simulator_runtime(SimulatorImpl& simulator) {
     }
 
     simulator.action_counts.assign(node_count, 0);
+    simulator.accounted_action_counts.assign(node_count, 0);
+    simulator.applied_action_counts.assign(node_count, 0);
+    simulator.accounted_applied_action_counts.assign(node_count, 0);
     simulator.action_descriptor_ids.assign(node_count, {});
     const solver::ActionRegistry accounting_registry =
         solver::build_action_registry(*simulator.session);
@@ -2781,6 +2789,50 @@ void run_simulator_chunk(
             } else {
                 simulator.failure_examples.push_back(std::move(example));
             }
+        }
+    }
+    /*
+     * Per-node counters are the simulator hot-path authority. Aggregate the
+     * public action/material maps once per externally visible chunk instead
+     * of performing string hashes for every applied action. This preserves
+     * exact cumulative accounting across arbitrary chunk sizes while keeping
+     * long compiled-policy verification dominated by craft execution and
+     * dispatch rather than reporting bookkeeping.
+     */
+    for (std::size_t node_index = 0;
+         node_index < simulator.action_counts.size(); ++node_index) {
+        const std::uint64_t total = simulator.action_counts[node_index];
+        const std::uint64_t accounted =
+            simulator.accounted_action_counts[node_index];
+        if (total < accounted) {
+            throw std::logic_error(
+                "simulator action accounting counter moved backwards");
+        }
+        const std::uint64_t delta = total - accounted;
+        if (delta == 0) continue;
+        const std::string& descriptor =
+            simulator.action_descriptor_ids[node_index];
+        if (!descriptor.empty()) {
+            simulator.action_descriptor_counts[descriptor] += delta;
+        }
+        simulator.accounted_action_counts[node_index] = total;
+
+        const std::uint64_t applied =
+            simulator.applied_action_counts[node_index];
+        const std::uint64_t accounted_applied =
+            simulator.accounted_applied_action_counts[node_index];
+        if (applied < accounted_applied) {
+            throw std::logic_error(
+                "simulator applied-action accounting counter moved "
+                "backwards");
+        }
+        const std::uint64_t applied_delta = applied - accounted_applied;
+        if (applied_delta != 0) {
+            for (const std::string& price_key :
+                 simulator.strategy->nodes[node_index].price_keys) {
+                simulator.material_counts[price_key] += applied_delta;
+            }
+            simulator.accounted_applied_action_counts[node_index] = applied;
         }
     }
 }

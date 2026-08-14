@@ -1877,7 +1877,7 @@ void SolveWork::Impl::install_direct_output_incumbent(
 
 bool SolveWork::Impl::try_install_resource_stop_reachable_incumbent() {
         if (!result.diagnostics.resource_cap_hit ||
-            output_incumbent.has_value() || transition_cache == nullptr ||
+            transition_cache == nullptr ||
             result.start_state == kNoId ||
             result.start_state >= calc.state_count() ||
             transition_cache->rows.empty() || priced_rows.empty()) {
@@ -2200,11 +2200,21 @@ bool SolveWork::Impl::try_install_resource_stop_reachable_incumbent() {
                         break;
                     }
                     result.diagnostics.policy_evaluation_failure.clear();
+                    const bool had_prior_incumbent =
+                        output_incumbent.has_value();
+                    const double prior_upper =
+                        had_prior_incumbent
+                            ? output_incumbent->evaluated_policy_cost
+                            : kInfinity;
                     install_output_incumbent(
                         upper, result.values, policy_rows, {}, {},
                         "resource_stop_reachable_proper_policy",
                         &reachable, nullptr, true, true);
-                    installed = output_incumbent.has_value();
+                    installed = output_incumbent.has_value() &&
+                        (!had_prior_incumbent ||
+                         output_incumbent->evaluated_policy_cost <
+                             prior_upper -
+                                 value_comparison_tolerance(prior_upper));
                     break;
                 }
                 if (improper_policy_states.empty() ||

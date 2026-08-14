@@ -584,12 +584,6 @@ bool SolveWork::Impl::prepare_state_expansion(
             const auto priority = [&](const std::uint32_t index) {
                 const PlannerOperator& planner =
                     calc.operators().at(index);
-                if (planner.kind == PlannerOperatorKind::Primitive &&
-                    calc.registry().actions.at(
-                        planner.primitive_action).params.type ==
-                        ActionType::Chaos) {
-                    return 0;
-                }
                 if (planner.automatic_kind ==
                         AutomaticCandidateKind::PermanentBench ||
                     (planner.kind == PlannerOperatorKind::Primitive &&
@@ -597,6 +591,16 @@ bool SolveWork::Impl::prepare_state_expansion(
                          planner.primitive_action).params.type ==
                          ActionType::Bench &&
                      planner_goal_reach_mask(index) != 0)) {
+                    /* A deterministic goal finish is a complete executable
+                     * start policy. Publish that row before a broad renewal
+                     * can exhaust its transient kernel budget, so an honest
+                     * resource stop retains the cheapest proved incumbent. */
+                    return 0;
+                }
+                if (planner.kind == PlannerOperatorKind::Primitive &&
+                    calc.registry().actions.at(
+                        planner.primitive_action).params.type ==
+                        ActionType::Chaos) {
                     return 1;
                 }
                 if (index == restart_operator_index) return 2;

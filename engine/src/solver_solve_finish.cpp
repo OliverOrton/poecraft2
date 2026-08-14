@@ -190,8 +190,7 @@ SolveResult SolveWork::Impl::finish() {
             throw std::logic_error("solver work was already finished");
         }
         const auto extraction_started = std::chrono::steady_clock::now();
-        if (result.diagnostics.resource_cap_hit &&
-            !output_incumbent.has_value()) {
+        if (result.diagnostics.resource_cap_hit) {
             (void)try_install_resource_stop_reachable_incumbent();
         }
         const auto finalize_diagnostic =
