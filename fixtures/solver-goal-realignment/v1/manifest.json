@@ -14,6 +14,7 @@
   "comparison_profile": {
     "id": "solver-goal-realignment-native-wasm-v1",
     "product_scope": "calculator_goal_relevant_with_zero_progress_gated_reforges",
+    "v_start_absolute_tolerance": 1e-7,
     "exact_required": true,
     "maximum_wall_seconds": 300,
     "compiled_exact_evaluation_required": true,

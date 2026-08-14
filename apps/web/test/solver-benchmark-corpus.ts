@@ -99,6 +99,8 @@ export interface SolverBenchmarkCase {
     caps: {
         max_states: number;
         max_sweeps: number;
+        max_absolute_optimality_gap?: number;
+        max_relative_optimality_gap?: number;
         solve_step_work_items: number;
         max_discovered_states: number;
         max_expanded_states: number;

@@ -1048,6 +1048,10 @@ async function runCase(
                     {
                         max_states: spec.caps.max_states,
                         max_sweeps: spec.caps.max_sweeps,
+                        max_absolute_optimality_gap:
+                            spec.caps.max_absolute_optimality_gap,
+                        max_relative_optimality_gap:
+                            spec.caps.max_relative_optimality_gap,
                         max_discovered_states: spec.caps.max_discovered_states,
                         max_expanded_states: spec.caps.max_expanded_states,
                         max_state_action_rows: spec.caps.max_state_action_rows,
@@ -1090,6 +1094,10 @@ async function runCase(
                     {
                         max_states: spec.caps.max_states,
                         max_sweeps: spec.caps.max_sweeps,
+                        max_absolute_optimality_gap:
+                            spec.caps.max_absolute_optimality_gap,
+                        max_relative_optimality_gap:
+                            spec.caps.max_relative_optimality_gap,
                         max_discovered_states: spec.caps.max_discovered_states,
                         max_expanded_states: spec.caps.max_expanded_states,
                         max_state_action_rows: spec.caps.max_state_action_rows,
