@@ -202,6 +202,11 @@ an explicit mode with an explicit request contract and presentation.
 
 ## Gate 0 - Selection, Freeze, And Current Reproduction
 
+**Status: complete.** Hardening-only mode freezes `9914b84`; the historical
+request is unavailable. A controlled current odds toggle reproduced the
+Calculator envelope leak without claiming the historical policy symptom.
+Evidence: [Gate 0/1 Calculator request scope](evidence/gate0-gate1-calculator-request-scope.md).
+
 On activation:
 
 1. freeze the actual source commit, native executable, release WASM module,
@@ -236,6 +241,11 @@ for Oliver; under hardening-only mode it records the limitation and continues.
 
 ## Gate 1 - Calculator Envelope And Solve Isolation
 
+**Status: complete.** The odds, product-envelope, and scoped-Solve goal
+contracts are separate. The whole-flow regression fails on the frozen behavior
+and passes after the correction while selected-Fossil odds remain materialized.
+Evidence: [Gate 0/1 Calculator request scope](evidence/gate0-gate1-calculator-request-scope.md).
+
 Correct the source-confirmed request leak before adding solver-hot-path
 instrumentation:
 
@@ -269,6 +279,10 @@ must not claim it caused the reported Fossil-to-Chaos policy without that
 request or an exact reproduction.
 
 ## Gate 2 - Decision Provenance And Independent Truth Corrections
+
+**Status: active at Gate 2A.** First audit whether the request fix plus existing
+diagnostics answer the remaining decision-authority questions; add hot-path
+provenance only if the existing evidence is insufficient.
 
 These corrections have independent tests and commits so one cannot hide a
 failure in another.

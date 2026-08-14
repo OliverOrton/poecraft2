@@ -83,6 +83,7 @@ import {
     resistanceEntries,
 } from "../craft-choices";
 import {
+    buildCalculatorSolverGoal,
     prepareSolverStrategy,
     pricedSolverActionIds,
     solvePriceReadiness,
@@ -406,7 +407,7 @@ export class PcCalculator extends HTMLElement {
         if (this.disposed || this.slots.length === 0) {
             return;
         }
-        const goal = this.solverGoal();
+        const goal = this.solverGoal("odds");
         try {
             // The engine owns bounded goal-relevant fossil synthesis. Keep a
             // hand-selected loadout materialized for exact odds even when it
@@ -425,35 +426,26 @@ export class PcCalculator extends HTMLElement {
         this.pickerActions = await this.client.solverActions(this.solver);
     }
     private solverGoal(
-        actions?: string[],
-        goalRelevantActions = false,
+        mode: "odds" | "product_envelope" | "scoped_solve",
+        actions?: readonly string[],
     ): SolverGoal {
-        return {
-            version: "v1",
-            rarity: this.goalRarity,
-            ...(goalRelevantActions
-                ? { action_mode: "goal_relevant" as const }
-                : {}),
-            min_satisfied_slots: this.effectiveMinSatisfiedSlots(),
-            slots: this.slots.map((slot) =>
-                slot.group
-                    ? { group: slot.group, min_tier: slot.minTier }
-                    : {
-                          family_mod_key: slot.familyModKey ?? "",
-                          min_tier: slot.minTier,
-                    },
-            ),
-            ...(actions
-                ? { actions }
-                : {
-                      fossil_mode: "goal_relevant" as const,
-                      requested_fossil_actions: this.actionId.startsWith(
-                          "fossil:",
-                      )
-                          ? [this.actionId]
-                          : [],
-                  }),
-        };
+        return buildCalculatorSolverGoal(
+            {
+                rarity: this.goalRarity,
+                minSatisfiedSlots: this.effectiveMinSatisfiedSlots(),
+                slots: this.slots.map((slot) =>
+                    slot.group
+                        ? { group: slot.group, min_tier: slot.minTier }
+                        : {
+                              family_mod_key: slot.familyModKey ?? "",
+                              min_tier: slot.minTier,
+                          },
+                ),
+            },
+            mode,
+            this.actionId,
+            actions,
+        );
     }
 
     private async closeSolverHandle(): Promise<void> {
@@ -740,7 +732,7 @@ export class PcCalculator extends HTMLElement {
              * merely because Solve uses a smaller abstraction. */
             envelopeSolver = await this.client.openSolver(
                 this.session,
-                this.solverGoal(undefined, true),
+                this.solverGoal("product_envelope"),
             );
             const relevantActions =
                 await this.client.solverActions(envelopeSolver);
@@ -765,7 +757,7 @@ export class PcCalculator extends HTMLElement {
                     ),
                 ),
             ).sort((left, right) => left.localeCompare(right));
-            const solveGoal = this.solverGoal(candidateIds, true);
+            const solveGoal = this.solverGoal("scoped_solve", candidateIds);
             solveSolver = await this.client.openSolver(
                 this.session,
                 solveGoal,

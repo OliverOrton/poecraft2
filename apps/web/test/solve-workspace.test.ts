@@ -2,12 +2,86 @@ import assert from "node:assert/strict";
 
 import type { SolverActionInfo } from "../src/app/engine-protocol";
 import {
+    buildCalculatorSolverGoal,
     incompleteSolveDetail,
     prepareSolverStrategy,
     pricedSolverActionIds,
     solvePriceReadiness,
 } from "../src/app/solve-workspace";
 import { createDefaultStrategy } from "../src/app/strategy-model";
+
+{
+    const fields = {
+        rarity: "rare" as const,
+        minSatisfiedSlots: 1,
+        slots: [{ family_mod_key: "goal-life", min_tier: 1 }],
+    };
+    const selectedFossil = "fossil:lucent";
+    const automaticActions = [action("chaos", ["chaos"])];
+    const requestedFossil = action(selectedFossil, [
+        "fossil:lucent",
+        "resonator:1",
+    ]);
+    const envelopeActions = (requested: readonly string[] | undefined) =>
+        requested?.includes(selectedFossil)
+            ? [...automaticActions, requestedFossil]
+            : automaticActions;
+    const price = (key: string): number | undefined =>
+        new Map([
+            ["chaos", 1],
+            ["fossil:lucent", 2],
+            ["resonator:1", 1],
+        ]).get(key);
+
+    const fossilEnvelope = buildCalculatorSolverGoal(
+        fields,
+        "product_envelope",
+        selectedFossil,
+    );
+    const chaosEnvelope = buildCalculatorSolverGoal(
+        fields,
+        "product_envelope",
+        "chaos",
+    );
+    assert.deepEqual(
+        fossilEnvelope,
+        chaosEnvelope,
+        "the inspected odds action must not change the product envelope",
+    );
+    const fossilCandidateIds = pricedSolverActionIds(
+        envelopeActions(fossilEnvelope.requested_fossil_actions),
+        price,
+    );
+    const chaosCandidateIds = pricedSolverActionIds(
+        envelopeActions(chaosEnvelope.requested_fossil_actions),
+        price,
+    );
+    assert.deepEqual(fossilCandidateIds, chaosCandidateIds);
+    assert.deepEqual(
+        buildCalculatorSolverGoal(
+            fields,
+            "scoped_solve",
+            selectedFossil,
+            fossilCandidateIds,
+        ),
+        buildCalculatorSolverGoal(
+            fields,
+            "scoped_solve",
+            "chaos",
+            chaosCandidateIds,
+        ),
+        "the complete serialized Solve goal must be odds-selection invariant",
+    );
+    assert.deepEqual(
+        buildCalculatorSolverGoal(fields, "odds", selectedFossil)
+            .requested_fossil_actions,
+        [selectedFossil],
+        "the exact odds handle still materializes a selected Fossil",
+    );
+    console.log(
+        "  ok - Calculator odds selection is isolated from the product Solve envelope",
+    );
+}
 
 {
     assert.equal(

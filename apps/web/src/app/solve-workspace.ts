@@ -1,4 +1,4 @@
-import type { SolverActionInfo } from "./engine-protocol";
+import type { SolverActionInfo, SolverGoal } from "./engine-protocol";
 import {
     isStrategyDocument,
     validateStrategy,
@@ -12,6 +12,45 @@ export interface SolvePriceReadiness {
     costKeys: string[];
     missingKeys: string[];
     missingFractureBasePrice: boolean;
+}
+
+export interface CalculatorSolverGoalFields {
+    rarity: NonNullable<SolverGoal["rarity"]>;
+    minSatisfiedSlots: number;
+    slots: SolverGoal["slots"];
+}
+
+export type CalculatorSolverGoalMode =
+    | "odds"
+    | "product_envelope"
+    | "scoped_solve";
+
+/** Build one of Calculator's three solver-goal contracts. */
+export function buildCalculatorSolverGoal(
+    fields: CalculatorSolverGoalFields,
+    mode: CalculatorSolverGoalMode,
+    inspectedActionId: string,
+    actions?: readonly string[],
+): SolverGoal {
+    const scopedActions =
+        mode === "scoped_solve" ? [...(actions ?? [])] : null;
+    return {
+        version: "v1",
+        rarity: fields.rarity,
+        ...(mode !== "odds" ? { action_mode: "goal_relevant" as const } : {}),
+        min_satisfied_slots: fields.minSatisfiedSlots,
+        slots: fields.slots,
+        ...(scopedActions
+            ? { actions: scopedActions }
+            : {
+                  fossil_mode: "goal_relevant" as const,
+                  requested_fossil_actions:
+                      mode === "odds" &&
+                      inspectedActionId.startsWith("fossil:")
+                      ? [inspectedActionId]
+                      : [],
+              }),
+    };
 }
 
 function objectRecord(value: unknown): Record<string, unknown> | null {

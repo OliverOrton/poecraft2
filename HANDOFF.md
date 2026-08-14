@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Status: active — Solver Decision Provenance Gate 0.**
+**Status: active — Solver Decision Provenance Gate 2A.**
 
 Oliver selected
 [Solver Decision Provenance And Result-Truth Hardening](docs/active/2026-08-13-solver-decision-provenance/plan.md)
@@ -10,11 +10,19 @@ Fossil-to-Chaos request is unavailable, so this milestone may fix and classify
 the current Calculator request-scope defect but may not claim the historical
 policy transition was localized.
 
-The immediate boundary is Gate 0 followed by Gate 1: freeze the current
-Calculator two-stage Solve flow, prove the selected-Fossil envelope leak with a
-controlled witness, then split exact odds materialization from the product
-envelope and add a whole-flow regression. Do not add solver-hot-path provenance
-until Gate 1 shows whether the request fix and existing telemetry are enough.
+Gates 0/1 are complete. The controlled witness proved that inspecting
+`fossil:lucent` changed the product envelope request; the correction now keeps
+selected-Fossil materialization on the exact odds handle while making the
+product envelope, priced candidates, and final Solve goal independent of the
+inspected action. Focused web regression and TypeScript checks pass. Evidence
+is in the active plan's
+[Gate 0/1 record](docs/active/2026-08-13-solver-decision-provenance/evidence/gate0-gate1-calculator-request-scope.md).
+
+The immediate boundary is Gate 2A: audit existing bounded-incumbent choice
+sources and diagnostics before adding solver-hot-path provenance. If existing
+telemetry is sufficient, skip new provenance representation and proceed to the
+shared-Q, strict-selection/stability, result-authority, and lower-provenance
+audits. Do not start final acceptance early.
 
 The completed Goal Realignment milestone remains frozen evidence and restores
 the goal-relevant product path across action
