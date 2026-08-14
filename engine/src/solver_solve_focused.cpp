@@ -104,9 +104,8 @@ void SolveWork::Impl::begin_focused_lower_solve() {
                 std::uint32_t work = 0;
                 const double candidate = sparse_row_q(absolute, work);
                 ++result.diagnostics.bellman_action_evaluations;
-                if (candidate < best - options.epsilon ||
-                    (std::abs(candidate - best) <= options.epsilon &&
-                     absolute < best_row)) {
+                if (sparse_policy_row_precedes(
+                        candidate, absolute, best, best_row)) {
                     best = candidate;
                     best_row = absolute;
                 }
@@ -265,6 +264,13 @@ double SolveWork::Impl::focused_start_upper_bound(
             return std::min(
                 failure_value, fallback_terminal_upper(state, fallback));
         };
+        struct FocusedUpperValueContext {
+            const SolveWork::Impl* work = nullptr;
+            const FocusedFallbackPolicy* fallback = nullptr;
+            double failure_value = kInfinity;
+        };
+        const FocusedUpperValueContext value_context{
+            this, &fallback, failure_value};
         double best = continuation_upper(result.start_state);
         for (const std::uint64_t absolute :
              state_row_indices(*transition_cache, result.start_state)) {
@@ -275,68 +281,30 @@ double SolveWork::Impl::focused_start_upper_bound(
                 !std::isfinite(priced.cost) || priced.cost < 0.0) {
                 continue;
             }
-            double constant = priced.cost;
-            for (std::uint32_t i = 0; i < row.transition_count; ++i) {
-                const std::uint64_t offset = row.transition_offset + i;
-                const std::uint32_t successor =
-                    transition_cache->successors.at(offset);
-                if (successor == result.start_state ||
-                    calc.is_goal_state(calc.state(successor))) {
-                    continue;
-                }
-                constant += transition_cache->probabilities.at(offset) *
-                            continuation_upper(successor);
-            }
-            std::vector<std::pair<double, double>> self_choices;
-            for (std::uint32_t i = 0; i < row.choice_count; ++i) {
-                const SparseChoiceGroup& group =
-                    transition_cache->choices.at(row.choice_offset + i);
-                double alternate = kInfinity;
-                for (std::uint32_t s = 0; s < group.successor_count; ++s) {
-                    alternate = std::min(
-                        alternate,
-                        continuation_upper(
-                            transition_cache->choice_successors.at(
-                                group.successor_offset + s)));
-                }
-                if (group.has_self) {
-                    self_choices.push_back(
-                        {alternate, group.probability});
-                } else if (std::isfinite(alternate)) {
-                    constant += group.probability * alternate;
-                } else {
-                    constant = kInfinity;
-                    break;
-                }
-            }
-            if (!std::isfinite(constant)) continue;
-            std::sort(
-                self_choices.begin(), self_choices.end(),
-                [](const auto& left, const auto& right) {
-                    return left.first < right.first;
-                });
-            double loop_probability = row.self_probability;
-            for (const auto& [unused, probability] : self_choices) {
-                (void)unused;
-                loop_probability += probability;
-            }
-            std::size_t fixed_choices = 0;
-            while (true) {
-                const double denominator = 1.0 - loop_probability;
-                const double value = denominator > 1e-15
-                                         ? constant / denominator
-                                         : kInfinity;
-                if (fixed_choices >= self_choices.size() ||
-                    value <= self_choices[fixed_choices].first + 1e-12) {
-                    best = std::min(best, value);
-                    break;
-                }
-                const auto [alternate, probability] =
-                    self_choices[fixed_choices++];
-                if (!std::isfinite(alternate)) break;
-                constant += probability * alternate;
-                loop_probability -= probability;
-            }
+            std::uint32_t transition_work = 0;
+            const double value =
+                evaluate_sparse_policy_row_with_accessor(
+                    *transition_cache, priced_rows, absolute,
+                    transition_work,
+                    [](const void* const opaque,
+                       const std::uint32_t state) {
+                        const FocusedUpperValueContext& source =
+                            *static_cast<
+                                const FocusedUpperValueContext*>(opaque);
+                        if (source.work->calc.is_goal_state(
+                                source.work->calc.state(state))) {
+                            return 0.0;
+                        }
+                        if (state == source.fallback->anchor_state) {
+                            return source.fallback->anchor_state_value;
+                        }
+                        return std::min(
+                            source.failure_value,
+                            source.work->fallback_terminal_upper(
+                                state, *source.fallback));
+                    },
+                    &value_context);
+            best = std::min(best, value);
         }
         return best;
     }
@@ -399,9 +367,8 @@ std::pair<double, std::uint64_t> SolveWork::Impl::focused_direct_state_upper(
                 continue;
             }
             const double value = priced.cost / goal_probability;
-            if (value < best - options.epsilon ||
-                (std::abs(value - best) <= options.epsilon &&
-                 absolute < best_row)) {
+            if (sparse_policy_row_precedes(
+                    value, absolute, best, best_row)) {
                 best = value;
                 best_row = absolute;
             }

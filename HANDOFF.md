@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Status: active — Solver Decision Provenance Gate 2A.**
+**Status: active — Solver Decision Provenance Gate 3.**
 
 Oliver selected
 [Solver Decision Provenance And Result-Truth Hardening](docs/active/2026-08-13-solver-decision-provenance/plan.md)
@@ -10,7 +10,7 @@ Fossil-to-Chaos request is unavailable, so this milestone may fix and classify
 the current Calculator request-scope defect but may not claim the historical
 policy transition was localized.
 
-Gates 0/1 are complete. The controlled witness proved that inspecting
+Gates 0/1/2 are complete. The controlled witness proved that inspecting
 `fossil:lucent` changed the product envelope request; the correction now keeps
 selected-Fossil materialization on the exact odds handle while making the
 product envelope, priced candidates, and final Solve goal independent of the
@@ -18,11 +18,23 @@ inspected action. Focused web regression and TypeScript checks pass. Evidence
 is in the active plan's
 [Gate 0/1 record](docs/active/2026-08-13-solver-decision-provenance/evidence/gate0-gate1-calculator-request-scope.md).
 
-The immediate boundary is Gate 2A: audit existing bounded-incumbent choice
-sources and diagnostics before adding solver-hot-path provenance. If existing
-telemetry is sufficient, skip new provenance representation and proceed to the
-shared-Q, strict-selection/stability, result-authority, and lower-provenance
-audits. Do not start final acceptance early.
+Gate 2 reused existing bounded-incumbent/publication provenance, unified
+incremental and focused row evaluation behind the sparse Q authority, made
+finite objective order strict, kept policy-iteration tolerances behind a
+separate stability decision, and prevents a tolerance-suppressed strict winner
+from carrying exact closure. Bounded/refined `exact_closed` remains legal, but
+synthesis from coarse `none`/`no_executable_policy` now requires an explicit
+coarse-discovery closure fact. Raw native/WASM telemetry names lower-bound
+proof authority without changing ABI v2. Fresh build plus focused solve,
+refinement, quotient-proof, policy-refinement, and API suites pass. Evidence is
+in the [Gate 2 record](docs/active/2026-08-13-solver-decision-provenance/evidence/gate2-decision-and-result-truth.md).
+
+The immediate boundary is Gate 3: replay and classify the frozen current
+controls against the Gate 1 and Gate 2 checkpoints. The historical serialized
+request remains unavailable, so do not assign the old Fossil-to-Chaos symptom
+a cause. Gate 4 may make no further behavior change unless replay produces a
+new pre-fix witness. Do not start the proportional final acceptance sequence
+until that classification is recorded.
 
 The completed Goal Realignment milestone remains frozen evidence and restores
 the goal-relevant product path across action

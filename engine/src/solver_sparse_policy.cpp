@@ -173,21 +173,29 @@ std::uint64_t append_sparse_policy_row(
     return row_index;
 }
 
-double evaluate_sparse_policy_row(
+template <typename ValueAt>
+double evaluate_sparse_policy_row_impl(
         const SolveTransitionCache& graph,
         const std::vector<PricedSparseRow>& priced_rows,
-        const std::vector<double>& values,
         const std::size_t row_index,
         std::uint32_t& transition_work,
+        ValueAt&& value_at,
         const std::optional<SparsePolicyCachedTransitionValue>
             cached_transitions) {
     const SparseRow& row = graph.rows.at(row_index);
     double constant = priced_rows.at(row_index).cost;
     transition_work = 0;
+    if (!std::isfinite(constant) || constant < 0.0) {
+        return kInfinity;
+    }
+    const auto finite_or_infinity = [](const double value) {
+        return std::isfinite(value) ? value : kInfinity;
+    };
     if (cached_transitions.has_value() &&
         row.choice_count == 0 &&
         row.transition_count >= 1024) {
-        const double self_value = values.at(row.owner_state);
+        const double self_value = finite_or_infinity(
+            value_at(row.owner_state));
         const bool infinite_self =
             row.embedded_self_probability > 0.0 &&
             self_value == kInfinity;
@@ -207,8 +215,8 @@ double evaluate_sparse_policy_row(
             if (graph.successors.at(offset) == row.owner_state) {
                 continue;
             }
-            const double value =
-                values[graph.successors.at(offset)];
+            const double value = finite_or_infinity(
+                value_at(graph.successors.at(offset)));
             ++transition_work;
             if (value == kInfinity) return kInfinity;
             constant += graph.probabilities.at(offset) * value;
@@ -230,7 +238,8 @@ double evaluate_sparse_policy_row(
             const std::uint32_t candidate =
                 graph.choice_successors.at(
                     group.successor_offset + s);
-            const double candidate_value = values[candidate];
+            const double candidate_value = finite_or_infinity(
+                value_at(candidate));
             if (sparse_policy_choice_precedes(
                     candidate_value, candidate,
                     best, best_state)) {
@@ -278,7 +287,7 @@ double evaluate_sparse_policy_row(
                 value, row.owner_state,
                 self_choices[fixed_choices].alternate,
                 self_choices[fixed_choices].alternate_state)) {
-            return value;
+            return finite_or_infinity(value);
         }
         const SelfChoice& fixed =
             self_choices[fixed_choices++];
@@ -288,6 +297,41 @@ double evaluate_sparse_policy_row(
         constant += probability * alternate;
         loop_probability -= probability;
     }
+}
+
+double evaluate_sparse_policy_row(
+        const SolveTransitionCache& graph,
+        const std::vector<PricedSparseRow>& priced_rows,
+        const std::vector<double>& values,
+        const std::size_t row_index,
+        std::uint32_t& transition_work,
+        const std::optional<SparsePolicyCachedTransitionValue>
+            cached_transitions) {
+    return evaluate_sparse_policy_row_impl(
+        graph, priced_rows, row_index, transition_work,
+        [&](const std::uint32_t state) {
+            return values.at(state);
+        },
+        cached_transitions);
+}
+
+double evaluate_sparse_policy_row_with_accessor(
+        const SolveTransitionCache& graph,
+        const std::vector<PricedSparseRow>& priced_rows,
+        const std::size_t row_index,
+        std::uint32_t& transition_work,
+        const SparsePolicyStateValueAccessor value_at,
+        const void* const value_context) {
+    if (value_at == nullptr) {
+        throw std::invalid_argument(
+            "sparse policy row value accessor is null");
+    }
+    return evaluate_sparse_policy_row_impl(
+        graph, priced_rows, row_index, transition_work,
+        [&](const std::uint32_t state) {
+            return value_at(value_context, state);
+        },
+        std::nullopt);
 }
 
 double sparse_policy_exit_probability(
@@ -333,6 +377,51 @@ std::uint32_t select_sparse_policy_choice_successor(
         }
     }
     return selected;
+}
+
+bool sparse_policy_row_precedes(
+        const double candidate_value,
+        const std::uint64_t candidate_row,
+        const double incumbent_value,
+        const std::uint64_t incumbent_row) {
+    const std::uint64_t no_row =
+        std::numeric_limits<std::uint64_t>::max();
+    if (candidate_row == no_row) return false;
+    if (!std::isfinite(candidate_value)) return false;
+    if (incumbent_row == no_row) return true;
+    if (candidate_value < incumbent_value) return true;
+    if (incumbent_value < candidate_value) return false;
+    return candidate_row < incumbent_row;
+}
+
+bool sparse_policy_value_improvement_exceeds_tolerance(
+        const double candidate_value,
+        const double incumbent_value,
+        const double tolerance) {
+    return candidate_value <
+        incumbent_value - std::max(0.0, tolerance);
+}
+
+SparsePolicyReplacementDecision sparse_policy_replacement_decision(
+        const double candidate_value,
+        const std::uint64_t candidate_row,
+        const double incumbent_value,
+        const std::uint64_t incumbent_row,
+        const double stability_tolerance) {
+    if (!sparse_policy_row_precedes(
+            candidate_value, candidate_row,
+            incumbent_value, incumbent_row)) {
+        return SparsePolicyReplacementDecision::Unchanged;
+    }
+    if (candidate_value == incumbent_value) {
+        return SparsePolicyReplacementDecision::Replace;
+    }
+    return sparse_policy_value_improvement_exceeds_tolerance(
+               candidate_value,
+               incumbent_value,
+               stability_tolerance)
+        ? SparsePolicyReplacementDecision::Replace
+        : SparsePolicyReplacementDecision::SuppressedStrictImprovement;
 }
 
 bool advance_sparse_policy_components(

@@ -40,7 +40,8 @@ void order_observed_modifier_choices(
 SolveTermination successful_refined_publication_termination(
         const SolveTermination coarse_termination,
         const bool resource_cap_hit,
-        const bool globally_exact) {
+        const bool globally_exact,
+        const bool coarse_discovery_closed) {
     if (globally_exact) {
         return SolveTermination::ExactClosed;
     }
@@ -57,8 +58,15 @@ SolveTermination successful_refined_publication_termination(
     }
     /*
      * The caller has retained an exact executable strategy, so None and
-     * NoExecutablePolicy cannot remain the published stopping cause.
+     * NoExecutablePolicy cannot remain the published stopping cause. They
+     * become ExactClosed only when the caller separately proves that broad
+     * discovery itself closed; executable recovery alone is insufficient.
      */
+    if (!coarse_discovery_closed) {
+        throw std::logic_error(
+            "bounded refined publication has no coarse discovery closure "
+            "or orthogonal stop cause");
+    }
     return SolveTermination::ExactClosed;
 }
 
@@ -300,6 +308,18 @@ SolveResult SolveWork::Impl::finish() {
              (focused_closure_proved &&
               result.diagnostics.focused_optimality_gap <=
                   exact_gap_proof_tolerance()));
+        const bool coarse_discovery_closed =
+            (!incremental_action_generation ||
+             incremental_envelope_closed) &&
+            !result.diagnostics.state_cap_hit &&
+            !result.diagnostics.resource_cap_hit &&
+            (!result.diagnostics.focused_expansion ||
+             focused_bound_proved ||
+             full_closure_after_focused_fallback ||
+             pre_extraction_full_non_goal_closure ||
+             (focused_closure_proved &&
+              result.diagnostics.focused_optimality_gap <=
+                  exact_gap_proof_tolerance()));
         const bool restore_output_incumbent =
             output_incumbent.has_value() &&
             !current_policy_can_still_be_exact;
@@ -434,8 +454,9 @@ SolveResult SolveWork::Impl::finish() {
         const std::uint64_t extraction_base_bytes = estimated_owned_bytes();
         bool finalization_capped =
             check_solver_byte_cap_from(extraction_base_bytes);
-        /* Deterministic argmin: cost ties break toward lower cost-to-go
-         * variance, then lower action index by stable registry traversal. */
+        /* Final exact extraction uses the same strict row argmin as Howard
+         * selection. Expected cost is the objective; stable row identity is
+         * the only exact-tie breaker. */
         const bool authoritative_policy_available =
             !result.diagnostics.state_cap_hit &&
             !result.diagnostics.resource_cap_hit &&
@@ -444,84 +465,25 @@ SolveResult SolveWork::Impl::finish() {
              authoritative_policy_available && state < state_count; ++state) {
             if (finalization_capped) break;
             if (!result.expanded[state] || result.goal_states[state]) continue;
-            double best_q = kInfinity;
-            double best_variance = kInfinity;
-            std::uint32_t best_operator = kNoId;
-            std::uint64_t best_row_index = std::numeric_limits<std::uint64_t>::max();
-            for (const std::uint64_t absolute_row :
-                 state_row_indices(*transition_cache, state)) {
-                if (preservation_prunes(absolute_row)) continue;
-                const SparseRow& row = transition_cache->rows.at(absolute_row);
-                if (!row.admitted) continue;
-                const std::uint64_t variance_scratch_bytes =
-                    (static_cast<std::uint64_t>(row.transition_count) +
-                     row.choice_count + 1) *
-                    sizeof(std::pair<double, double>);
-                if (check_solver_byte_cap_from(
-                        extraction_base_bytes,
-                        variance_scratch_bytes)) {
-                    finalization_capped = true;
-                    break;
-                }
-                ++result.diagnostics.extraction_action_evaluations;
-                std::uint32_t transition_work = 0;
-                const double q = sparse_row_q(absolute_row, transition_work);
-                if (q == kInfinity) continue;
-                double mean = 0.0;
-                std::vector<std::pair<double, double>> random_values;
-                if (row.self_probability > 0.0) {
-                    random_values.push_back(
-                        {row.self_probability, result.values[state]});
-                    mean += row.self_probability * result.values[state];
-                }
-                for (std::uint32_t i = 0;
-                     i < row.transition_count; ++i) {
-                    const std::uint64_t offset =
-                        row.transition_offset + i;
-                    if (transition_cache->successors.at(offset) == state) {
-                        continue;
-                    }
-                    random_values.push_back(
-                        {transition_cache->probabilities.at(offset),
-                         result.values[
-                             transition_cache->successors.at(offset)]});
-                    mean += transition_cache->probabilities.at(offset) *
-                            result.values[
-                                transition_cache->successors.at(offset)];
-                }
-                for (std::uint32_t i = 0; i < row.choice_count; ++i) {
-                    const SparseChoiceGroup& group =
-                        transition_cache->choices.at(row.choice_offset + i);
-                    double chosen = group.has_self
-                                        ? result.values[state]
-                                        : kInfinity;
-                    for (std::uint32_t s = 0;
-                         s < group.successor_count; ++s) {
-                        chosen = std::min(
-                            chosen,
-                            result.values[transition_cache->choice_successors.at(
-                                group.successor_offset + s)]);
-                    }
-                    random_values.push_back(
-                        {group.probability, chosen});
-                    mean += group.probability * chosen;
-                }
-                double variance = 0.0;
-                for (const auto& [probability, value] : random_values) {
-                    const double delta = value - mean;
-                    variance += probability * delta * delta;
-                }
-                const bool better =
-                    q < best_q - options.epsilon ||
-                    (q < best_q + options.epsilon &&
-                     variance < best_variance - options.epsilon);
-                if (better) {
-                    best_q = q;
-                    best_variance = variance;
-                    best_operator = priced_rows[absolute_row].operator_index;
-                    best_row_index = absolute_row;
-                }
-            }
+            const SparsePolicyRowSelection selected =
+                select_sparse_policy_row(
+                    *transition_cache, state,
+                    [&](const std::uint64_t row) {
+                        return transition_cache->rows.at(row).admitted &&
+                               !preservation_prunes(row);
+                    },
+                    [&](const std::uint64_t row,
+                        std::uint32_t& work) {
+                        return sparse_row_q(row, work);
+                    });
+            result.diagnostics.extraction_action_evaluations +=
+                selected.evaluated_rows;
+            const std::uint64_t best_row_index = selected.row;
+            const std::uint32_t best_operator =
+                best_row_index ==
+                        std::numeric_limits<std::uint64_t>::max()
+                    ? kNoId
+                    : priced_rows.at(best_row_index).operator_index;
             result.policy[state] =
                 best_operator == kNoId
                     ? PolicyOperatorRef{}
@@ -1841,8 +1803,7 @@ SolveResult SolveWork::Impl::finish() {
                 record_candidate_sample(
                     fallback, "publication",
                     "selected_for_publication",
-                    "cheapest independently evaluated candidate within "
-                    "the existing tolerance");
+                    "strict cheapest independently evaluated candidate");
                 for (const BoundedPolicyIncumbent& candidate :
                      certified_fallback_portfolio) {
                     if (candidate.portfolio_identity ==
@@ -1924,7 +1885,9 @@ SolveResult SolveWork::Impl::finish() {
                 result.termination =
                     successful_refined_publication_termination(
                         coarse_solve_termination,
-                        result.diagnostics.resource_cap_hit);
+                        result.diagnostics.resource_cap_hit,
+                        false,
+                        coarse_discovery_closed);
                 result.diagnostics.focused_upper_bound =
                     result.upper_bound;
                 result.diagnostics
@@ -2478,6 +2441,13 @@ SolveResult SolveWork::Impl::finish() {
                         ? direct_lower_delta /
                               std::abs(result.lower_bound)
                         : direct_lower_delta;
+                verify_retained_portfolio();
+                BoundedPolicyIncumbent* cheaper_verified =
+                    best_current_certified_fallback();
+                const bool direct_superseded =
+                    cheaper_verified != nullptr &&
+                    cheaper_verified->evaluated_policy_cost <
+                        candidate.evaluated_policy_cost;
                 const bool exact_without_refinement =
                     assertion.status ==
                         refinement::CompiledPolicyAssertionStatus::Complete &&
@@ -2486,6 +2456,7 @@ SolveResult SolveWork::Impl::finish() {
                     result.policy_status == SolvePolicyStatus::Exact &&
                     std::isfinite(result.lower_bound) &&
                     result.lower_bound >= 0.0 &&
+                    !direct_superseded &&
                     (direct_lower_delta <= 1e-7 ||
                      direct_lower_relative <= 1e-9);
                 if (exact_without_refinement) {
@@ -2521,8 +2492,9 @@ SolveResult SolveWork::Impl::finish() {
                         record_candidate_sample(
                             retained, "publication", "not_selected",
                             retained.independently_evaluated
-                                ? "the globally exact direct graph was not "
-                                  "more expensive beyond tolerance"
+                                ? "the globally exact direct graph was "
+                                  "cheaper or exactly tied with stronger "
+                                  "proof authority"
                                 : "final graph evaluation did not establish "
                                   "an executable cost");
                     }
@@ -2570,7 +2542,9 @@ SolveResult SolveWork::Impl::finish() {
                         result.termination =
                             successful_refined_publication_termination(
                                 core_solve_termination,
-                                result.diagnostics.resource_cap_hit);
+                                result.diagnostics.resource_cap_hit,
+                                false,
+                                coarse_discovery_closed);
                         classify_bounded_publication();
                         result.diagnostics.solution_scope =
                             "direct_certified_core_policy_bounded";
@@ -2644,7 +2618,9 @@ SolveResult SolveWork::Impl::finish() {
                     result.termination =
                         successful_refined_publication_termination(
                             core_solve_termination,
-                            result.diagnostics.resource_cap_hit);
+                            result.diagnostics.resource_cap_hit,
+                            false,
+                            coarse_discovery_closed);
                     classify_bounded_publication();
                     result.diagnostics.solution_scope =
                         "direct_certified_core_policy_bounded";
@@ -3291,9 +3267,7 @@ SolveResult SolveWork::Impl::finish() {
                     const bool strict_superseded =
                         cheaper_verified != nullptr &&
                         cheaper_verified->evaluated_policy_cost <
-                            exact_policy_cost -
-                                value_comparison_tolerance(
-                                    exact_policy_cost) &&
+                            exact_policy_cost &&
                         publish_certified_fallback(
                             coarse_solve_termination);
                     if (strict_superseded) {
@@ -3310,7 +3284,8 @@ SolveResult SolveWork::Impl::finish() {
                         strict_candidate_record, "publication",
                         "selected_for_publication",
                         "no retained independently evaluated candidate was "
-                        "cheaper beyond tolerance");
+                        "strictly cheaper; exact cost ties retain the "
+                        "stronger strict proof authority");
                     const double retained_lower =
                         std::isfinite(result.lower_bound) &&
                                 result.lower_bound <=
@@ -3374,7 +3349,8 @@ SolveResult SolveWork::Impl::finish() {
                         successful_refined_publication_termination(
                             coarse_solve_termination,
                             result.diagnostics.resource_cap_hit,
-                            globally_exact);
+                            globally_exact,
+                            coarse_discovery_closed);
                     if (!globally_exact) {
                         classify_bounded_publication();
                     }
@@ -3383,8 +3359,8 @@ SolveResult SolveWork::Impl::finish() {
                         record_candidate_sample(
                             candidate, "publication", "not_selected",
                             candidate.independently_evaluated
-                                ? "strict final graph was not more expensive "
-                                  "beyond tolerance"
+                                ? "strict final graph was cheaper or exactly "
+                                  "tied with stronger proof authority"
                                 : "final graph evaluation did not establish "
                                   "an executable cost");
                     }
@@ -3542,6 +3518,15 @@ SolveResult SolveWork::Impl::finish() {
             upper_policy_provenance_retained_bytes;
         result.diagnostics.upper_cap_zero_progress_audit_json =
             std::move(upper_cap_zero_progress_audit_json);
+        const solve_detail::SolveLowerBoundAuthority lower_authority =
+            solve_detail::classify_public_lower_bound_authority(
+                result.lower_bound,
+                result.policy_status,
+                incremental_action_generation,
+                incremental_envelope_closed);
+        result.global_lower_bound_certified =
+            lower_authority.globally_certified;
+        result.lower_bound_provenance = lower_authority.provenance;
         if (const char* invariant =
                 solve_detail::publication_invariant_invalid_reason(result)) {
             throw std::logic_error(invariant);

@@ -198,7 +198,7 @@ bool ProductionPolicyOracle::shared_bellman_prefers_candidate(
 
     const solve_detail::SparsePolicyRowSelection selected =
         solve_detail::select_sparse_policy_row(
-            graph, owner, options_.epsilon,
+            graph, owner,
             [](const std::uint64_t) { return true; },
             [&](const std::uint64_t row,
                 std::uint32_t& work) {
@@ -806,17 +806,8 @@ ExactPolicyRun ProductionPolicyOracle::improve_policy(
                                 mutations, 0,
                                 trial_retained);
                         if (proper) {
-                            const double tolerance =
-                                kAbsoluteCostTolerance +
-                                kRelativeCostTolerance *
-                                    std::max(
-                                        std::abs(
-                                            incumbent.root_value()),
-                                        std::abs(
-                                            trial.root_value()));
                             if (trial.root_value() <
-                                incumbent.root_value() -
-                                    tolerance) {
+                                incumbent.root_value()) {
                                 saturating_add(
                                     telemetry_.local_reoptimizations,
                                     mutations.size());

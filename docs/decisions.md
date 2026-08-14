@@ -175,6 +175,22 @@ exactly. Absolute/relative product gaps only stop qualifying completed rounds;
 they never alter Bellman comparisons, ties, admission, pruning, epsilon, or
 eventual exact results.
 
+Raw solver telemetry additionally reports whether `L` came from a closed
+global proof and names its proof family. An open incremental action envelope
+continues to publish the independently safe zero floor, labeled
+`open_incremental_envelope_universal_zero` with
+`global_lower_bound_certified: false`; closed incremental, unrestricted global
+relaxation, and exact policy closure have distinct provenance labels. The
+boolean describes closed solver-proof authority, not whether zero is
+mathematically safe. A bounded policy may therefore retain a certified
+positive closed-envelope lower without being called exact.
+
+`termination = exact_closed` remains orthogonal to bounded policy quality when
+coarse discovery closed and later exact refinement retained only a bounded
+executable policy. Recovering an executable policy from coarse `none` or
+`no_executable_policy` may synthesize that termination only with an explicit
+coarse-discovery-closed invariant; policy recovery alone is not closure.
+
 Retained constructive witnesses may persist across focused rounds only as
 validated upper-bound/output evidence in the atomic incumbent. They never
 guide focus or search. Benchmark action utility and search cost are

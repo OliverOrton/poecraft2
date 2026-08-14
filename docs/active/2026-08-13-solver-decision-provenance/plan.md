@@ -280,9 +280,12 @@ request or an exact reproduction.
 
 ## Gate 2 - Decision Provenance And Independent Truth Corrections
 
-**Status: active at Gate 2A.** First audit whether the request fix plus existing
-diagnostics answer the remaining decision-authority questions; add hot-path
-provenance only if the existing evidence is insufficient.
+**Status: complete.** Existing bounded-incumbent and publication telemetry is
+sufficient in hardening-only mode, so 2A added no hot-path construction-origin
+trace. Shared Q authority, strict objective/stable iteration separation,
+explicit coarse-closure preconditions, and lower-bound proof provenance are
+implemented and covered by focused native/API tests. Evidence:
+[Gate 2 decision and result truth](evidence/gate2-decision-and-result-truth.md).
 
 These corrections have independent tests and commits so one cannot hide a
 failure in another.
@@ -399,6 +402,9 @@ has its focused native or web regression and the cross-layer result contract
 is documented.
 
 ## Gate 3 - Replay And Classification
+
+**Status: active.** Replay the frozen current controls and classify the source
+hardening without assigning a cause to the unavailable historical request.
 
 Replay the frozen cases against:
 

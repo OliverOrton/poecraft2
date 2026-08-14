@@ -1772,9 +1772,7 @@ void SolveWork::Impl::finalize_upper_cap_zero_progress_audit() {
                             ? "true" : "false");
             json += ",\"strictly_below_repriced_chaos\":" +
                     std::string(
-                        repriced <
-                                scenario.chaos_value -
-                                    options.epsilon
+                        repriced < scenario.chaos_value
                             ? "true" : "false") +
                     "}";
         }

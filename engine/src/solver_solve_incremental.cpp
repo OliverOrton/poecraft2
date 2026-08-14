@@ -539,78 +539,28 @@ double SolveWork::Impl::sparse_row_q_for_values(
         row_index >= priced_rows.size()) {
         return kInfinity;
     }
-    const SparseRow& row = transition_cache->rows[row_index];
-    double constant = priced_rows.at(row_index).cost;
-    if (!std::isfinite(constant)) return kInfinity;
-    for (std::uint32_t i = 0; i < row.transition_count; ++i) {
-        const std::uint64_t offset = row.transition_offset + i;
-        const std::uint32_t successor =
-            transition_cache->successors.at(offset);
-        if (successor == row.owner_state) continue;
-        if (successor >= values.size()) {
-            if (calc.is_goal_state(calc.state(successor))) continue;
-            return kInfinity;
-        }
-        const double value = values[successor];
-        if (!std::isfinite(value) || value >= kValueCeiling) {
-            return kInfinity;
-        }
-        constant += transition_cache->probabilities.at(offset) * value;
-    }
-    std::vector<std::pair<double, double>> self_choices;
-    for (std::uint32_t i = 0; i < row.choice_count; ++i) {
-        const SparseChoiceGroup& group =
-            transition_cache->choices.at(row.choice_offset + i);
-        double best = kInfinity;
-        for (std::uint32_t s = 0; s < group.successor_count; ++s) {
-            const std::uint32_t successor =
-                transition_cache->choice_successors.at(
-                    group.successor_offset + s);
-            if (successor >= values.size()) {
-                if (calc.is_goal_state(calc.state(successor))) {
-                    best = 0.0;
-                    continue;
-                }
-                return kInfinity;
+    struct ValueContext {
+        const CalcContext* calc = nullptr;
+        const std::vector<double>* values = nullptr;
+    };
+    const ValueContext context{&calc, &values};
+    std::uint32_t transition_work = 0;
+    return evaluate_sparse_policy_row_with_accessor(
+        *transition_cache, priced_rows, row_index, transition_work,
+        [](const void* const opaque, const std::uint32_t state) {
+            const ValueContext& source =
+                *static_cast<const ValueContext*>(opaque);
+            if (state >= source.values->size()) {
+                return source.calc->is_goal_state(source.calc->state(state))
+                    ? 0.0
+                    : kInfinity;
             }
-            best = std::min(best, values[successor]);
-        }
-        if (group.has_self) {
-            self_choices.push_back({best, group.probability});
-        } else {
-            if (!std::isfinite(best) || best >= kValueCeiling) {
-                return kInfinity;
-            }
-            constant += group.probability * best;
-        }
-    }
-    std::sort(
-        self_choices.begin(), self_choices.end(),
-        [](const auto& left, const auto& right) {
-            return left.first < right.first;
-        });
-    double loop_probability = row.self_probability;
-    for (const auto& [unused, probability] : self_choices) {
-        (void)unused;
-        loop_probability += probability;
-    }
-    std::size_t fixed_choices = 0;
-    while (true) {
-        const double denominator = 1.0 - loop_probability;
-        const double value =
-            denominator > 1e-15 ? constant / denominator : kInfinity;
-        if (fixed_choices >= self_choices.size() ||
-            value <= self_choices[fixed_choices].first + 1e-12) {
-            return value;
-        }
-        const auto [alternate, probability] =
-            self_choices[fixed_choices++];
-        if (!std::isfinite(alternate) || alternate >= kValueCeiling) {
-            return kInfinity;
-        }
-        constant += probability * alternate;
-        loop_probability -= probability;
-    }
+            const double value = source.values->at(state);
+            return std::isfinite(value) && value < kValueCeiling
+                ? value
+                : kInfinity;
+        },
+        &context);
 }
 
 std::vector<double>
@@ -712,10 +662,7 @@ void SolveWork::Impl::refresh_incremental_upper_incumbent() {
             const double q = sparse_row_q_for_values(
                 candidate.row_index, incumbent.values);
             const double current = incumbent.values[candidate.state];
-            const double tolerance = value_comparison_tolerance(
-                std::isfinite(current) ? current : 1.0);
-            if (!std::isfinite(q) ||
-                q >= current - tolerance) {
+            if (!std::isfinite(q) || !(q < current)) {
                 continue;
             }
             incumbent.values[candidate.state] = q;
@@ -1162,10 +1109,8 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
                     candidate.state < upper_values->size()
                 ? upper_values->at(candidate.state)
                 : kInfinity;
-        const double tolerance = value_comparison_tolerance(
-            std::isfinite(current_upper) ? current_upper : 1.0);
         if (std::isfinite(candidate.upper_q) &&
-            candidate.upper_q < current_upper - tolerance) {
+            candidate.upper_q < current_upper) {
             transition_cache->rows.at(candidate.row_index).admitted = true;
             candidate.status =
                 IncrementalAlternativeRow::Status::Admitted;
@@ -1176,7 +1121,7 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
         }
         if (std::isfinite(current_upper) &&
             current_upper < kValueCeiling &&
-            candidate.lower_q >= current_upper - tolerance) {
+            candidate.lower_q >= current_upper) {
             candidate.status =
                 IncrementalAlternativeRow::Status::NonImproving;
             candidate.improvement_margin =

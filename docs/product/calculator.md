@@ -83,25 +83,29 @@ Code authority:
 The Solve surface is distinct from one-action odds:
 
 1. Pin the effective workspace economy, including action price provenance.
-2. Open a native `action_mode: "goal_relevant"` envelope, which enables the
+2. Build a product-envelope goal that is independent of the action currently
+   selected in the Odds inspector. Exact selected-action odds may explicitly
+   materialize that Fossil on its own scoped handle; that request-only detail
+   never enters the ordinary Solve envelope.
+3. Open a native `action_mode: "goal_relevant"` envelope, which enables the
    current automatic-candidate substrate. Native action classification retains
    automatic dependencies separately; the descriptor list returned to the web
    app contains independently selectable candidates only.
-3. Keep only candidates whose complete price vectors resolve. If priced
+4. Keep only candidates whose complete price vectors resolve. If priced
    Fracture is relevant, require an explicit `base` price because miss recovery
    uses Restart.
-4. Open a fresh scoped solve handle with
+5. Open a fresh scoped solve handle with
    `goal_progress_gated_reforges: true` and run the stateful native
    begin/step/finish API in the worker with progress and cancellation. This is
    the Calculator product scope; the native/WASM option remains optional and
    other callers retain their explicit scope or the unrestricted default.
-5. Compile whenever the result has `policy_available`, including bounded cap
+6. Compile whenever the result has `policy_available`, including bounded cap
    and target-gap results. Transfer the compiled document as one byte buffer,
    decode/parse it once on the main thread, assign missing board positions,
    attach the economy identity, and allow an unsaved copy to open in Strategy
    Builder. A non-converged result without a proper executable policy is not
    compiled.
-6. Release the scoped solve handle and its transition closure after summary,
+7. Release the scoped solve handle and its transition closure after summary,
    telemetry, and strategy handoff. A later solve or reprice rebuilds.
 
 Two optional product stopping targets are available: absolute chaos-equivalent

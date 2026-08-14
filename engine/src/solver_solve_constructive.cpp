@@ -1736,10 +1736,10 @@ void SolveWork::Impl::install_output_incumbent(
             const double incumbent_upper =
                 output_incumbent->certified_upper_bound;
             const bool strictly_better =
-                upper < incumbent_upper - options.epsilon;
+                upper < incumbent_upper;
             const bool replace_equal =
                 replace_equal_incumbent &&
-                std::abs(upper - incumbent_upper) <= options.epsilon &&
+                upper == incumbent_upper &&
                 incumbent_precedes(candidate, *output_incumbent);
             if (!strictly_better && !replace_equal) {
                 if (!candidate.compiled_artifact.strategy_json.empty()) {
@@ -1809,8 +1809,7 @@ void SolveWork::Impl::install_direct_output_incumbent(
         const double upper, const std::uint64_t row) {
         if (!output_incumbent.has_value() ||
             !std::isfinite(upper) || upper < 0.0 ||
-            upper >= output_incumbent->certified_upper_bound -
-                         options.epsilon ||
+            upper >= output_incumbent->certified_upper_bound ||
             row >= priced_rows.size() ||
             row >= transition_cache->rows.size() ||
             transition_cache->rows[row].owner_state != result.start_state) {
@@ -2202,19 +2201,18 @@ bool SolveWork::Impl::try_install_resource_stop_reachable_incumbent() {
                     result.diagnostics.policy_evaluation_failure.clear();
                     const bool had_prior_incumbent =
                         output_incumbent.has_value();
-                    const double prior_upper =
+                    const std::uint64_t prior_identity =
                         had_prior_incumbent
-                            ? output_incumbent->evaluated_policy_cost
-                            : kInfinity;
+                            ? output_incumbent->portfolio_identity
+                            : 0;
                     install_output_incumbent(
                         upper, result.values, policy_rows, {}, {},
                         "resource_stop_reachable_proper_policy",
                         &reachable, nullptr, true, true);
                     installed = output_incumbent.has_value() &&
                         (!had_prior_incumbent ||
-                         output_incumbent->evaluated_policy_cost <
-                             prior_upper -
-                                 value_comparison_tolerance(prior_upper));
+                         output_incumbent->portfolio_identity !=
+                             prior_identity);
                     break;
                 }
                 if (improper_policy_states.empty() ||
@@ -2436,6 +2434,42 @@ double solve_detail::globally_certified_action_envelope_lower_bound(
                        restricted_lower_bound >= 0.0
             ? restricted_lower_bound
             : 0.0;
+    }
+
+SolveLowerBoundAuthority
+solve_detail::classify_public_lower_bound_authority(
+        const double lower_bound,
+        const SolvePolicyStatus policy_status,
+        const bool incremental_action_generation,
+        const bool incremental_action_envelope_closed) {
+        if (!std::isfinite(lower_bound) || lower_bound < 0.0) {
+            return {};
+        }
+        if (policy_status == SolvePolicyStatus::Exact) {
+            return {
+                true,
+                SolveLowerBoundProvenance::ExactPolicyClosure,
+            };
+        }
+        if (incremental_action_generation &&
+            !incremental_action_envelope_closed) {
+            return {
+                false,
+                SolveLowerBoundProvenance::
+                    OpenIncrementalEnvelopeUniversalZero,
+            };
+        }
+        if (incremental_action_generation) {
+            return {
+                true,
+                SolveLowerBoundProvenance::
+                    ClosedIncrementalActionEnvelope,
+            };
+        }
+        return {
+            true,
+            SolveLowerBoundProvenance::GlobalActionRelaxation,
+        };
     }
 
 double SolveWork::Impl::certified_global_lower_bound() const {
@@ -3143,8 +3177,7 @@ auto SolveWork::Impl::magic_regal_fallback() -> std::optional<FocusedFallbackPol
                                     salvage_anchor_guess;
                             const double restart_value = restart_cost +
                                 salvage_anchor_guess;
-                            if (exalt_value <
-                                restart_value - options.epsilon) {
+                            if (exalt_value < restart_value) {
                                 salvage_operator[state] = exalt;
                                 salvage_active.erase(state);
                                 salvage_equations.emplace(
@@ -3398,7 +3431,7 @@ auto SolveWork::Impl::magic_regal_fallback() -> std::optional<FocusedFallbackPol
                         const double early_value = early.constant +
                             early.restart_coefficient * solved.anchor_value;
                         const bool choose_early =
-                            early_value < direct_value - options.epsilon;
+                            early_value < direct_value;
                         const bool was_early =
                             carrier_operator.at(carrier) == finish_action;
                         if (choose_early == was_early) continue;
@@ -3769,9 +3802,8 @@ bool SolveWork::Impl::advance_primitive_destructive_renewal_fallback(
                                 1.0 - loop_probability;
                             if (!feasible || denominator <= 1e-15) continue;
                             const double value = constant / denominator;
-                            if (value < anchor_value - options.epsilon ||
-                                (std::abs(value - anchor_value) <=
-                                     options.epsilon &&
+                            if (value < anchor_value ||
+                                (value == anchor_value &&
                                  setup_variant.operator_index <
                                      anchor_operator)) {
                                 anchor_value = value;
@@ -3794,9 +3826,8 @@ bool SolveWork::Impl::advance_primitive_destructive_renewal_fallback(
                     candidate);
                 if (!std::isfinite(start_value)) continue;
                 ++result.diagnostics.constructive_policy_feasible_policies;
-                if (start_value < work.best_start - options.epsilon ||
-                    (std::abs(start_value - work.best_start) <=
-                         options.epsilon &&
+                if (start_value < work.best_start ||
+                    (start_value == work.best_start &&
                      std::tie(
                          variant.operator_index, anchor_operator) <
                          std::tie(
@@ -4452,9 +4483,8 @@ auto SolveWork::Impl::focused_fallback(bool& complete)
                     continue;
                 }
                 ++result.diagnostics.constructive_policy_feasible_policies;
-                if (value < best.renewal_state_value - options.epsilon ||
-                    (std::abs(value - best.renewal_state_value) <=
-                         options.epsilon &&
+                if (value < best.renewal_state_value ||
+                    (value == best.renewal_state_value &&
                      std::tie(
                          absolute, variant.operator_index,
                          renewal.constructive_finish_action) <
@@ -4545,9 +4575,8 @@ auto SolveWork::Impl::focused_fallback(bool& complete)
             const double denominator = 1.0 - loop_probability;
             if (!feasible || denominator <= 1e-15) continue;
             const double value = constant / denominator;
-            if (value < best.anchor_state_value - options.epsilon ||
-                (std::abs(value - best.anchor_state_value) <=
-                     options.epsilon &&
+            if (value < best.anchor_state_value ||
+                (value == best.anchor_state_value &&
                  absolute < best.anchor_row)) {
                 best.anchor_state_value = value;
                 best.anchor_row = absolute;

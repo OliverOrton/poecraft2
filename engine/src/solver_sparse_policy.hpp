@@ -69,6 +69,22 @@ double evaluate_sparse_policy_row(
     std::optional<SparsePolicyCachedTransitionValue>
         cached_transitions = std::nullopt);
 
+using SparsePolicyStateValueAccessor =
+    double (*)(const void* context, std::uint32_t state);
+
+/*
+ * Evaluate through the same row/choice/fixed-point authority while allowing
+ * a caller with a provisional or partial value table to define missing-state
+ * semantics. The accessor must return kInfinity for unresolved states.
+ */
+double evaluate_sparse_policy_row_with_accessor(
+    const SolveTransitionCache& graph,
+    const std::vector<PricedSparseRow>& priced_rows,
+    std::size_t row_index,
+    std::uint32_t& transition_work,
+    SparsePolicyStateValueAccessor value_at,
+    const void* value_context);
+
 /* Exact stored-double complement used whenever algebraic self mass is removed
  * from a policy row. Any representable positive exit remains positive; only a
  * nonpositive complement denotes a closed/invalid row. */
@@ -101,15 +117,43 @@ struct SparsePolicyRowSelection {
     std::uint64_t evaluated_rows = 0;
 };
 
+bool sparse_policy_row_precedes(
+    double candidate_value,
+    std::uint64_t candidate_row,
+    double incumbent_value,
+    std::uint64_t incumbent_row);
+
+bool sparse_policy_value_improvement_exceeds_tolerance(
+    double candidate_value,
+    double incumbent_value,
+    double tolerance);
+
+enum class SparsePolicyReplacementDecision : std::uint8_t {
+    Unchanged,
+    Replace,
+    SuppressedStrictImprovement,
+};
+
+/* Keep the strict objective separate from the numerical stability latch.
+ * Exact ties move only toward stable row identity. A genuine smaller value
+ * inside the policy-iteration tolerance is recorded as suppressed so callers
+ * cannot mistake numerical stability for canonical exact closure. */
+SparsePolicyReplacementDecision sparse_policy_replacement_decision(
+    double candidate_value,
+    std::uint64_t candidate_row,
+    double incumbent_value,
+    std::uint64_t incumbent_row,
+    double stability_tolerance);
+
 /*
- * Shared deterministic Howard row selection. Row iteration order remains the
- * graph's stable owner chain; epsilon ties keep the first admitted row.
+ * Canonical strict row argmin. Expected value is the objective and stable row
+ * identity breaks exact ties. Numerical policy-iteration stability is a
+ * separate decision made by the caller.
  */
 template <typename RowEligible, typename RowEvaluator>
 SparsePolicyRowSelection select_sparse_policy_row(
         const SolveTransitionCache& graph,
         const std::uint32_t state,
-        const double epsilon,
         RowEligible&& eligible,
         RowEvaluator&& evaluate) {
     SparsePolicyRowSelection selected;
@@ -119,7 +163,8 @@ SparsePolicyRowSelection select_sparse_policy_row(
         const double value = evaluate(row, row_work);
         selected.transition_work += row_work;
         ++selected.evaluated_rows;
-        if (value < selected.value - epsilon) {
+        if (sparse_policy_row_precedes(
+                value, row, selected.value, selected.row)) {
             selected.value = value;
             selected.row = row;
         }

@@ -2157,6 +2157,11 @@ void run_public_solver_gate(const char* artifact_dir) {
                      "\"policy_result\":{\"available\":true,"
                      "\"status\":\"exact\"") !=
                  std::string::npos);
+        PC_CHECK(solved_telemetry.find(
+                     "\"global_lower_bound_certified\":true,"
+                     "\"lower_bound_provenance\":"
+                     "\"exact_policy_closure\"") !=
+                 std::string::npos);
     }
     const json::Value solved_telemetry_document =
         parse_solver_api_fixture(solved_telemetry);

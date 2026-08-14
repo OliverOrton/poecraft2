@@ -2712,9 +2712,9 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                     }
                     const std::uint32_t source_state =
                         *bellman.state_index_for_cell(cell.cell_id);
-                    if (candidate_q + 1e-12 >=
-                        current_solved.values_by_state.at(
-                            source_state)) {
+                    if (!(candidate_q <
+                          current_solved.values_by_state.at(
+                              source_state))) {
                         continue;
                     }
 

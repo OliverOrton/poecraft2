@@ -658,7 +658,7 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
                 continue;
             }
             const auto selected = solve_detail::select_sparse_policy_row(
-                transition_cache_, state, improvement_epsilon,
+                transition_cache_, state,
                 [&](const std::uint64_t row) {
                     return transition_cache_.rows[row].admitted;
                 },
@@ -759,7 +759,7 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
             }
             if (policy_rows[state] != kNoRow) continue;
             const auto selected = solve_detail::select_sparse_policy_row(
-                transition_cache_, state, improvement_epsilon,
+                transition_cache_, state,
                 [&](const std::uint64_t row) {
                     return transition_cache_.rows[row].admitted &&
                            row_certificate_current(row) &&
@@ -988,11 +988,12 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
             }
 
             bool changed = false;
+            bool strict_improvement_suppressed = false;
             for (const std::uint32_t state : state_by_local) {
                 const CellRecord& cell = cells_.at(cell_by_state_[state]);
                 if (cell.cell.terminal) continue;
                 const auto selected = solve_detail::select_sparse_policy_row(
-                    transition_cache_, state, improvement_epsilon,
+                    transition_cache_, state,
                     [&](const std::uint64_t row) {
                         return transition_cache_.rows[row].admitted &&
                                row_certificate_current(row) &&
@@ -1006,12 +1007,37 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
                 telemetry_.bellman_rows_evaluated += selected.evaluated_rows;
                 if (selected.row != kNoRow &&
                     selected.row != policy_rows[state]) {
-                    policy_rows[state] = selected.row;
-                    ++telemetry_.policy_improvements;
-                    changed = true;
+                    std::uint32_t current_work = 0;
+                    const double current_q =
+                        solve_detail::evaluate_sparse_policy_row(
+                            transition_cache_, priced_rows_, values,
+                            policy_rows[state], current_work);
+                    const solve_detail::SparsePolicyReplacementDecision
+                        decision =
+                            solve_detail::sparse_policy_replacement_decision(
+                                selected.value, selected.row,
+                                current_q, policy_rows[state],
+                                improvement_epsilon);
+                    if (decision == solve_detail::
+                            SparsePolicyReplacementDecision::Replace) {
+                        policy_rows[state] = selected.row;
+                        ++telemetry_.policy_improvements;
+                        changed = true;
+                    } else if (decision == solve_detail::
+                            SparsePolicyReplacementDecision::
+                                SuppressedStrictImprovement) {
+                        strict_improvement_suppressed = true;
+                    }
                 }
             }
             if (changed) continue;
+            if (strict_improvement_suppressed) {
+                out.status = QuotientBellmanStatus::DidNotConverge;
+                out.failure_reason =
+                    "canonical strict row improvement remained within "
+                    "the policy stability tolerance";
+                return out;
+            }
 
             out.values_by_state = std::move(values);
             out.selected_rows_by_state = std::move(policy_rows);

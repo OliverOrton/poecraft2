@@ -2597,8 +2597,8 @@ std::pair<bool, std::uint64_t> SolveWork::Impl::append_sparse_row(
             transition_cache->variant_arena->variants.at(variant_index);
         double appended_cost = 0.0;
         if (priced_variant_cost(appended_variant, appended_cost) &&
-            (appended_cost < selected.cost - 1e-12 ||
-             (std::abs(appended_cost - selected.cost) <= 1e-12 &&
+            (appended_cost < selected.cost ||
+             (appended_cost == selected.cost &&
               appended_variant.operator_index < selected.operator_index))) {
             selected.operator_index = appended_variant.operator_index;
             selected.cost = appended_cost;
@@ -3752,8 +3752,8 @@ void SolveWork::Impl::update_priced_row(const std::size_t row_index) {
             }
             double cost = 0.0;
             if (!priced_variant_cost(variant, cost)) continue;
-            if (cost < selected.cost - 1e-12 ||
-                (std::abs(cost - selected.cost) <= 1e-12 &&
+            if (cost < selected.cost ||
+                (cost == selected.cost &&
                  variant.operator_index < selected.operator_index)) {
                 selected.operator_index = variant.operator_index;
                 selected.cost = cost;
@@ -3841,7 +3841,7 @@ void SolveWork::Impl::prepare_priced_rows() {
                 if (operator_index == selected.operator_index) continue;
                 const std::string& candidate =
                     calc.operators().at(operator_index).id;
-                if (std::abs(cost - selected.cost) <= 1e-12) {
+                if (cost == selected.cost) {
                     ++result.diagnostics.equivalent_price_ties;
                     add_action_reason(
                         "included", candidate,

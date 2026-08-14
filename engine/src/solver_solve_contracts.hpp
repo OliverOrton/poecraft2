@@ -87,13 +87,22 @@ enum class SolveTermination : std::uint8_t {
 SolveTermination successful_refined_publication_termination(
     SolveTermination coarse_termination,
     bool resource_cap_hit,
-    bool globally_exact = false);
+    bool globally_exact = false,
+    bool coarse_discovery_closed = false);
 
 enum class SolveGapTarget : std::uint8_t {
     None,
     Absolute,
     Relative,
     Both,
+};
+
+enum class SolveLowerBoundProvenance : std::uint8_t {
+    None,
+    OpenIncrementalEnvelopeUniversalZero,
+    ClosedIncrementalActionEnvelope,
+    GlobalActionRelaxation,
+    ExactPolicyClosure,
 };
 
 struct FocusedScheduleRoundTelemetry {
@@ -282,7 +291,7 @@ struct PolicyRefinementTelemetry {
     /* Authoritative, non-sampled publication contract. Candidate samples are
      * bounded diagnostics and may be omitted; harnesses use this bit to prove
      * that the published result was selected from the complete independently
-     * evaluated portfolio by the canonical cost/tolerance ordering. */
+     * evaluated portfolio by strict finite cost and stable identity. */
     bool cheapest_independently_evaluated_selected = false;
     double preferred_candidate_upper =
         std::numeric_limits<double>::infinity();
@@ -693,6 +702,9 @@ struct SolveResult {
     SolveGapTarget target_fired = SolveGapTarget::None;
     bool target_met = false;
     double lower_bound = 0.0;
+    bool global_lower_bound_certified = false;
+    SolveLowerBoundProvenance lower_bound_provenance =
+        SolveLowerBoundProvenance::None;
     double upper_bound = std::numeric_limits<double>::infinity();
     double evaluated_policy_cost = std::numeric_limits<double>::infinity();
     double absolute_optimality_gap = std::numeric_limits<double>::infinity();
@@ -739,6 +751,22 @@ namespace solve_detail {
  * evidence, not a certificate for the requested full action envelope. */
 double globally_certified_action_envelope_lower_bound(
     double restricted_lower_bound,
+    bool incremental_action_generation,
+    bool incremental_action_envelope_closed);
+
+struct SolveLowerBoundAuthority {
+    bool globally_certified = false;
+    SolveLowerBoundProvenance provenance =
+        SolveLowerBoundProvenance::None;
+};
+
+/* Classify the proof family behind the already-normalized public lower.
+ * Open incremental work deliberately reports the universal zero fail-safe as
+ * not globally certified: it is independent of the still-open requested
+ * action envelope, while a closed envelope owns an actual solver proof. */
+SolveLowerBoundAuthority classify_public_lower_bound_authority(
+    double lower_bound,
+    SolvePolicyStatus policy_status,
     bool incremental_action_generation,
     bool incremental_action_envelope_closed);
 

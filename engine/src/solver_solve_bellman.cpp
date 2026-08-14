@@ -105,6 +105,7 @@ bool SolveWork::Impl::optimization_converged() const {
             return residual <= options.epsilon;
         }
         return policy_initialized && policy_stable &&
+               policy_strict_order_reconciled &&
                residual <= acceptable_residual();
     }
 
@@ -502,6 +503,7 @@ void SolveWork::Impl::begin_policy_selection() {
             }
         }
         policy_selection_improved = false;
+        policy_strict_order_reconciled = true;
         policy_selection_residual = 0.0;
     }
 
@@ -617,7 +619,7 @@ bool SolveWork::Impl::advance_policy_selection(bool& improved) {
             if (!result.expanded[state] || result.goal_states[state]) continue;
             const SparsePolicyRowSelection selected =
                 select_sparse_policy_row(
-                    *transition_cache, state, options.epsilon,
+                    *transition_cache, state,
                     [&](const std::uint64_t row) {
                         return transition_cache->rows.at(row).admitted &&
                                !preservation_prunes(row);
@@ -646,7 +648,17 @@ bool SolveWork::Impl::advance_policy_selection(bool& improved) {
                         incremental_upper_policy_pass
                             ? value_comparison_tolerance(current)
                             : options.epsilon;
-                    improving = best < current - tolerance;
+                    const SparsePolicyReplacementDecision decision =
+                        sparse_policy_replacement_decision(
+                            best, best_row, current,
+                            policy_rows[state], tolerance);
+                    improving =
+                        decision ==
+                        SparsePolicyReplacementDecision::Replace;
+                    if (decision == SparsePolicyReplacementDecision::
+                            SuppressedStrictImprovement) {
+                        policy_strict_order_reconciled = false;
+                    }
                 }
                 if (improving) {
                     policy_rows[state] = best_row;
@@ -677,6 +689,7 @@ void SolveWork::Impl::reset_policy_iteration_units() {
         policy_selection_cursor = 0;
         policy_selection_states.clear();
         policy_selection_improved = false;
+        policy_strict_order_reconciled = true;
         policy_selection_residual = 0.0;
         sparse_policy_resume.reset();
         policy_kernel_preparation.reset();
@@ -1476,7 +1489,7 @@ bool SolveWork::Impl::repair_improper_policy() {
         for (const std::uint32_t state : improper_policy_states) {
             const SparsePolicyRowSelection selected =
                 select_sparse_policy_row(
-                    *transition_cache, state, options.epsilon,
+                    *transition_cache, state,
                     [&](const std::uint64_t row_index) {
                         if (preservation_prunes(row_index)) {
                             return false;
@@ -1697,7 +1710,7 @@ double SolveWork::Impl::backup_state(
         ++result.diagnostics.bellman_backups;
         const SparsePolicyRowSelection selected =
             select_sparse_policy_row(
-                *transition_cache, state, 0.0,
+                *transition_cache, state,
                 [&](const std::uint64_t row) {
                     return transition_cache->rows.at(row).admitted &&
                            !preservation_prunes(row);

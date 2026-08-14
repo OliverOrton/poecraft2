@@ -175,6 +175,14 @@ returned-policy cost, gaps, requested targets, and the firing target. The
 facade serializes unavailable numeric claims as `null`. Gap options are
 forwarded to native solve and are product stopping targets only.
 
+The versioned raw telemetry's `policy_result` also carries
+`global_lower_bound_certified` and `lower_bound_provenance`. Provenance is one
+of `open_incremental_envelope_universal_zero`,
+`closed_incremental_action_envelope`, `global_action_relaxation`,
+`exact_policy_closure`, or `none`. These diagnostic fields cross native and
+release WASM through the existing telemetry JSON; they do not change ABI v2's
+fixed summary layout.
+
 ### Exact strategy evaluation
 
 The evaluator calls the stateful begin/step/finish API. It begins at the

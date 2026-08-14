@@ -382,25 +382,110 @@ void run_shared_sparse_policy_kernel_tests() {
         graph, priced, values, 0, transition_work);
     PC_CHECK(std::abs(row_q - 24.0) <= 1e-12);
     PC_CHECK(transition_work == 1);
+    struct AccessorValues {
+        const std::vector<double>* values = nullptr;
+        std::uint32_t terminal = kNoId;
+    };
+    const auto accessor = [](const void* opaque, const std::uint32_t state) {
+        const AccessorValues& source =
+            *static_cast<const AccessorValues*>(opaque);
+        if (state == source.terminal) return 0.0;
+        return state < source.values->size()
+            ? source.values->at(state)
+            : kInfinity;
+    };
+    const AccessorValues direct_values{&values, kNoId};
+    std::uint32_t accessor_work = 0;
+    const double accessor_q =
+        solve_detail::evaluate_sparse_policy_row_with_accessor(
+            graph, priced, 0, accessor_work,
+            accessor, &direct_values);
+    PC_CHECK(accessor_q == row_q);
+    PC_CHECK(accessor_work == transition_work);
+    std::vector<double> non_finite_values = values;
+    non_finite_values[1] = std::numeric_limits<double>::quiet_NaN();
+    std::uint32_t non_finite_work = 0;
+    PC_CHECK(
+        solve_detail::evaluate_sparse_policy_row(
+            graph, priced, non_finite_values, 0,
+            non_finite_work) == kInfinity);
+
+    SolveTransitionCache staged_graph;
+    std::vector<PricedSparseRow> staged_priced;
+    solve_detail::SparsePolicyRowInput staged_row;
+    staged_row.owner_state = 0;
+    staged_row.cost = 2.0;
+    staged_row.transitions = {{0, 0.25}, {2, 0.75}};
+    solve_detail::append_sparse_policy_row(
+        staged_graph, staged_priced, staged_row);
+    const std::vector<double> partial_values{0.0, kInfinity};
+    const AccessorValues staged_values{&partial_values, 2};
+    std::uint32_t staged_work = 0;
+    PC_CHECK(
+        solve_detail::evaluate_sparse_policy_row_with_accessor(
+            staged_graph, staged_priced, 0, staged_work,
+            accessor, &staged_values) ==
+        2.0 / 0.75);
+    PC_CHECK(staged_work == 1);
 
     const auto tied = solve_detail::select_sparse_policy_row(
-        graph, 0, 1e-3,
+        graph, 0,
         [](const std::uint64_t) { return true; },
         [](const std::uint64_t row, std::uint32_t& work) {
             work = 1;
-            return row == 0 ? 24.0 : 23.9995;
+            return row == 0 ? 24.0 : std::nextafter(24.0, 0.0);
         });
-    PC_CHECK(tied.row == 0);
+    PC_CHECK(tied.row == 1);
     PC_CHECK(tied.evaluated_rows == 2);
     PC_CHECK(tied.transition_work == 2);
+    const auto exactly_equal = solve_detail::select_sparse_policy_row(
+        graph, 0,
+        [](const std::uint64_t) { return true; },
+        [](const std::uint64_t, std::uint32_t& work) {
+            work = 0;
+            return 24.0;
+        });
+    PC_CHECK(exactly_equal.row == 0);
+    const auto non_finite = solve_detail::select_sparse_policy_row(
+        graph, 0,
+        [](const std::uint64_t) { return true; },
+        [](const std::uint64_t row, std::uint32_t& work) {
+            work = 0;
+            return row == 0
+                ? std::numeric_limits<double>::quiet_NaN()
+                : kInfinity;
+        });
+    PC_CHECK(
+        non_finite.row ==
+        std::numeric_limits<std::uint64_t>::max());
     const auto improving = solve_detail::select_sparse_policy_row(
-        graph, 0, 1e-3,
+        graph, 0,
         [](const std::uint64_t) { return true; },
         [](const std::uint64_t row, std::uint32_t& work) {
             work = 0;
             return row == 0 ? 24.0 : 23.9;
         });
     PC_CHECK(improving.row == 1);
+    PC_CHECK(
+        !solve_detail::sparse_policy_value_improvement_exceeds_tolerance(
+            std::nextafter(24.0, 0.0), 24.0, 1e-3));
+    PC_CHECK(
+        solve_detail::sparse_policy_value_improvement_exceeds_tolerance(
+            23.9, 24.0, 1e-3));
+    PC_CHECK(
+        solve_detail::sparse_policy_replacement_decision(
+            std::nextafter(24.0, 0.0), 1,
+            24.0, 0, 1e-3) ==
+        solve_detail::SparsePolicyReplacementDecision::
+            SuppressedStrictImprovement);
+    PC_CHECK(
+        solve_detail::sparse_policy_replacement_decision(
+            24.0, 0, 24.0, 1, 1e-3) ==
+        solve_detail::SparsePolicyReplacementDecision::Replace);
+    PC_CHECK(
+        solve_detail::sparse_policy_replacement_decision(
+            23.9, 1, 24.0, 0, 1e-3) ==
+        solve_detail::SparsePolicyReplacementDecision::Replace);
 
     graph.choice_successors = {2, 1};
     SparseChoiceGroup choice;
@@ -1773,8 +1858,16 @@ void run_policy_guided_exact_lift_tests() {
         SolveTermination::TargetGap);
     PC_CHECK(
         successful_refined_publication_termination(
-            SolveTermination::NoExecutablePolicy, false) ==
+            SolveTermination::NoExecutablePolicy, false, false, true) ==
         SolveTermination::ExactClosed);
+    bool rejected_unclosed_synthesis = false;
+    try {
+        (void)successful_refined_publication_termination(
+            SolveTermination::NoExecutablePolicy, false);
+    } catch (const std::logic_error&) {
+        rejected_unclosed_synthesis = true;
+    }
+    PC_CHECK(rejected_unclosed_synthesis);
 
     auto session = make_solve_session();
     ActionRegistry registry = build_action_registry(*session);
@@ -5296,6 +5389,38 @@ void run_incremental_action_generation_tests() {
         solve_detail::globally_certified_action_envelope_lower_bound(
             3759.5969190413853, true, true),
         3759.5969190413853));
+    const solve_detail::SolveLowerBoundAuthority open_authority =
+        solve_detail::classify_public_lower_bound_authority(
+            0.0, SolvePolicyStatus::BoundedFeasible, true, false);
+    PC_CHECK(!open_authority.globally_certified);
+    PC_CHECK(
+        open_authority.provenance ==
+        SolveLowerBoundProvenance::
+            OpenIncrementalEnvelopeUniversalZero);
+    const solve_detail::SolveLowerBoundAuthority closed_authority =
+        solve_detail::classify_public_lower_bound_authority(
+            3759.5969190413853,
+            SolvePolicyStatus::BoundedFeasible,
+            true,
+            true);
+    PC_CHECK(closed_authority.globally_certified);
+    PC_CHECK(
+        closed_authority.provenance ==
+        SolveLowerBoundProvenance::ClosedIncrementalActionEnvelope);
+    const solve_detail::SolveLowerBoundAuthority global_authority =
+        solve_detail::classify_public_lower_bound_authority(
+            0.0, SolvePolicyStatus::None, false, false);
+    PC_CHECK(global_authority.globally_certified);
+    PC_CHECK(
+        global_authority.provenance ==
+        SolveLowerBoundProvenance::GlobalActionRelaxation);
+    const solve_detail::SolveLowerBoundAuthority exact_authority =
+        solve_detail::classify_public_lower_bound_authority(
+            10.0, SolvePolicyStatus::Exact, true, false);
+    PC_CHECK(exact_authority.globally_certified);
+    PC_CHECK(
+        exact_authority.provenance ==
+        SolveLowerBoundProvenance::ExactPolicyClosure);
     PC_CHECK(near(
         q_directed_uncertainty_contribution(
             0.9, 10.0, 12.0),
@@ -5400,6 +5525,10 @@ void run_incremental_action_generation_tests() {
         result.diagnostics.policy_evaluation_failure.c_str());
     PC_CHECK(result.converged);
     PC_CHECK(result.policy_status == SolvePolicyStatus::Exact);
+    PC_CHECK(result.global_lower_bound_certified);
+    PC_CHECK(
+        result.lower_bound_provenance ==
+        SolveLowerBoundProvenance::ExactPolicyClosure);
     PC_CHECK(result.diagnostics.incremental_action_generation);
     PC_CHECK(
         result.diagnostics.incremental_action_envelope_closed);
@@ -5420,6 +5549,13 @@ void run_incremental_action_generation_tests() {
     PC_CHECK(
         telemetry.find("\"incremental_action_envelope\":{"
                        "\"enabled\":true,\"closed\":true") !=
+        std::string::npos);
+    PC_CHECK(
+        telemetry.find("\"global_lower_bound_certified\":true,") !=
+        std::string::npos);
+    PC_CHECK(
+        telemetry.find(
+            "\"lower_bound_provenance\":\"exact_policy_closure\"") !=
         std::string::npos);
     PC_CHECK(
         telemetry.find("\"completed_rows_recomputed\":0") !=

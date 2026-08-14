@@ -4095,6 +4095,30 @@ std::string serialize_solver_telemetry(
         json += termination_name(result->termination);
         json += "\",\"lower_bound\":";
         append_result_number(result->lower_bound);
+        json += ",\"global_lower_bound_certified\":" +
+                std::string(bool_json(
+                    result->global_lower_bound_certified));
+        json += ",\"lower_bound_provenance\":\"";
+        switch (result->lower_bound_provenance) {
+        case SolveLowerBoundProvenance::None:
+            json += "none";
+            break;
+        case SolveLowerBoundProvenance::
+                OpenIncrementalEnvelopeUniversalZero:
+            json += "open_incremental_envelope_universal_zero";
+            break;
+        case SolveLowerBoundProvenance::
+                ClosedIncrementalActionEnvelope:
+            json += "closed_incremental_action_envelope";
+            break;
+        case SolveLowerBoundProvenance::GlobalActionRelaxation:
+            json += "global_action_relaxation";
+            break;
+        case SolveLowerBoundProvenance::ExactPolicyClosure:
+            json += "exact_policy_closure";
+            break;
+        }
+        json += "\"";
         json += ",\"upper_bound\":";
         append_result_number(result->upper_bound);
         json += ",\"evaluated_policy_cost\":";
