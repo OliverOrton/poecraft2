@@ -9,5 +9,6 @@ previous qualification profile before selecting any implementation change.
 
 - [Plan and gate contract](plan.md)
 - [Gate 0 product-equivalent reproduction](evidence/gate0-reproduction.md)
+- [Gate 1 scheduler selection and Gate 2 progress](evidence/gate1-gate2-selection-progress.md)
 
 The exact current boundary is in [HANDOFF](../../../HANDOFF.md).

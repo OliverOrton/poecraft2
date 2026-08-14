@@ -1520,6 +1520,39 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
     );
     await client.closeSolver(partialSolver);
 
+    // Native Done is only a boundary before public extraction. A cancel sent
+    // from the worker-owned finalizing snapshot must prevent that extraction
+    // from being published as a successful result.
+    const finalizationCancelSolver = await client.openSolver(sessionId, {
+        version: "v1",
+        rarity: "rare",
+        slots: [{ family_mod_key: goalMod.key, min_tier: 0 }],
+        actions: [
+            "transmute", "augment", "alteration", "regal", "alchemy",
+            "chaos", "exalt", "annul", "scour", "restart",
+        ],
+    });
+    const finalizationController = new AbortController();
+    const finalizationProgress: SolveProgress[] = [];
+    const finalizationCancelled = await client.solverSolve(
+        finalizationCancelSolver,
+        item,
+        economy,
+        undefined,
+        {
+            signal: finalizationController.signal,
+            onProgress: (progress) => {
+                finalizationProgress.push(progress);
+                if (progress.phase === "finalizing") {
+                    finalizationController.abort();
+                }
+            },
+        },
+    );
+    assert.equal(finalizationCancelled.cancelled, true);
+    assert.equal(finalizationProgress.at(-1)?.phase, "finalizing");
+    await client.closeSolver(finalizationCancelSolver);
+
     // Solve, then verify the compiled policy through the simulator.
     const solveProgress: SolveProgress[] = [];
     const solve = await client.solverSolve(solver, item, economy, undefined, {
@@ -1535,6 +1568,10 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
         solveProgress.some((progress) => progress.phase === "iterating") ||
             solve.residual === 0,
         "solve should expose iteration or finish with a zero exactness gap",
+    );
+    assert.ok(
+        solveProgress.some((progress) => progress.phase === "finalizing"),
+        "solve should distinguish native finalization from publication",
     );
     assert.equal(solveProgress.at(-1)?.phase, "done");
     assert.equal(solve.converged, true);
@@ -1572,6 +1609,7 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
     assert.equal(solve.skipped_actions, 0);
     assert.ok(solve.worker.step_count > 0);
     assert.ok(solve.worker.max_step_ms > 0);
+    assert.ok(solve.worker.finalization_ms >= 0);
 
     const solveTelemetry = await client.solverTelemetry(solver);
     assert.equal(solveTelemetry.version, "solver_telemetry_v1");

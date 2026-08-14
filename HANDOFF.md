@@ -1,6 +1,6 @@
 # Session Handoff
 
-**Status: active implementation boundary at Gate 1.**
+**Status: active implementation boundary at the Gate 2 architecture decision.**
 
 Oliver selected
 [Calculator WASM Scheduling And Progress](docs/active/2026-08-14-calculator-wasm-scheduling-progress/plan.md)
@@ -41,8 +41,29 @@ uncancellable steps. The selected release-WASM product witness must eventually
 finish within five minutes with the same terminal semantics as its fixed
 1,024-work control, while individual worker steps remain at most 250 ms.
 
-Next action: checkpoint the frozen witness and Gate 0 evidence, finish the
-Gate 1 soundness/breadth audit of high-impact scheduling, and isolate a
-cooperative design for final extraction. A synthetic `finalizing` label alone
-is insufficient because cancellation must remain real. The full acceptance
-pipeline is reserved for the end of the milestone.
+Gate 1 is complete. The current operator-major scheduler closes the exact
+delayed state/operator-pair ledger and retains independent strict/publication
+proof authority. Under eight-item stepping, the primary, Oliver witness,
+Eldritch, Warlord, and Imprint controls all close exact without watchdogs. The
+normal Calculator now opts into that scheduler.
+
+The worker and Calculator progress repair is retained. Native `Done` becomes a
+worker-owned `finalizing` phase, finalization has its own wall-time metric, and
+the real final `done` snapshot is rebuilt from the published summary. The UI
+shows elapsed time plus discovered/frontier/row/transition/reforge/memory work.
+The exact witness now returns in about 142 seconds instead of failing the
+five-minute boundary, with max bounded step 76.028 ms and the final exact value
+`2186.6911143146394`.
+
+One architecture boundary remains: the 142.123-second strict lift is still a
+single synchronous WASM finalization call. A cancel at the finalizing boundary
+prevents it; a cancel clicked after it begins is preserved as cancelled but
+cannot shorten the wait. Genuine interruption requires an incremental retained
+strict-lift work object across C ABI/WASM steps (principally 4,215 selected
+kernel builds here), or an equivalent isolated reconstructible worker. A UI
+label cannot satisfy that part of Gate 2.
+
+Next action: checkpoint this selected implementation and decide whether the
+incremental strict-lift architecture remains inside this milestone. Do not
+start final acceptance or archive while the Gate 2 responsiveness contract is
+unresolved. The full pipeline remains reserved for the end.

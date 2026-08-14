@@ -90,7 +90,7 @@
     "worker_step_ms": 250,
     "cancel_ack_ms": 250,
     "goal_progress_gated_reforges": true,
-    "high_impact_executable_uppers": false,
+    "high_impact_executable_uppers": true,
     "full_evidence": false
   },
   "verification": {

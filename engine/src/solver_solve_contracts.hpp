@@ -52,8 +52,9 @@ struct SolveOptions {
     bool strict_states = false;
     bool kernel_reuse = true;
     bool goal_progress_gated_reforges = false;
-    /* Native benchmark investigation only; not exposed by named public ABI
-     * flags or product bindings. */
+    /* Exact operator-major delayed-action scheduling. Calculator release-WASM
+     * solves opt in; native callers retain the stable default unless they use
+     * the historical diagnostic-bit bridge. */
     bool high_impact_executable_uppers = false;
     bool projected_reforge_frontier_diagnostic = false;
     bool factored_terminal_reforge_diagnostic = false;

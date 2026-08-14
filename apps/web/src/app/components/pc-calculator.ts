@@ -166,6 +166,17 @@ const FLAG_LABELS = [
 const RARITY_NAMES = ["Normal", "Magic", "Rare"];
 const RARITY_CODES = { normal: 0, magic: 1, rare: 2 } as const;
 
+function solveElapsedLabel(elapsedMs: number): string {
+    const seconds = Math.max(0, Math.floor(elapsedMs / 1000));
+    const minutes = Math.floor(seconds / 60);
+    const remainder = seconds % 60;
+    return minutes > 0 ? `${minutes}m ${remainder}s` : `${remainder}s`;
+}
+
+function solveMemoryLabel(bytes: number): string {
+    return `${(Math.max(0, bytes) / (1024 * 1024)).toFixed(1)} MiB`;
+}
+
 export class PcCalculator extends HTMLElement {
     private client!: EngineClient;
     private dataId = 0;
@@ -225,6 +236,7 @@ export class PcCalculator extends HTMLElement {
     private solveRelativeGapPercentTarget = 0;
     private solveRunning = false;
     private solveProgress: SolveProgress | null = null;
+    private solveElapsedMs = 0;
     private solveAbort: AbortController | null = null;
     private solveCancelled = false;
     private verificationRunning = false;
@@ -507,6 +519,7 @@ export class PcCalculator extends HTMLElement {
         this.solveStopDetail = "";
         this.solveTelemetry = null;
         this.solveProgress = null;
+        this.solveElapsedMs = 0;
         this.solveCancelled = false;
     }
 
@@ -718,6 +731,20 @@ export class PcCalculator extends HTMLElement {
         this.clearSolveResult();
         this.solveEconomy = pinned;
         this.solveRunning = true;
+        const solveStartedAt = performance.now();
+        this.solveElapsedMs = 0;
+        const refreshSolveElapsed = (): void => {
+            this.solveElapsedMs = performance.now() - solveStartedAt;
+            const elapsed = this.querySelector<HTMLElement>(
+                ".pc-calc-solve-elapsed b",
+            );
+            if (elapsed) {
+                elapsed.textContent = solveElapsedLabel(this.solveElapsedMs);
+            }
+        };
+        const solveClock = window.setInterval(() => {
+            if (this.solveRunning) refreshSolveElapsed();
+        }, 1000);
         const solveAbort = new AbortController();
         this.solveAbort = solveAbort;
         this.setStatus("Solving — may take a while on large goals.");
@@ -776,13 +803,18 @@ export class PcCalculator extends HTMLElement {
                     signal: solveAbort.signal,
                     onProgress: (progress) => {
                         this.solveProgress = progress;
+                        refreshSolveElapsed();
                         const phase =
                             progress.phase === "expanding"
-                                ? `${progress.expanded_states.toLocaleString()} states expanded`
+                                ? `${progress.expanded_states.toLocaleString()} expanded, ${progress.discovered_states.toLocaleString()} discovered`
                                 : progress.phase === "iterating"
                                   ? `${progress.sweeps.toLocaleString()} sweeps`
-                                  : "finishing policy";
-                        this.setStatus(`Solving · ${phase}`);
+                                  : progress.phase === "finalizing"
+                                    ? "finalizing and verifying policy"
+                                    : "publishing result";
+                        this.setStatus(
+                            `Solving · ${phase} · ${solveElapsedLabel(this.solveElapsedMs)}`,
+                        );
                         this.renderSolvePanel();
                     },
                 },
@@ -837,6 +869,8 @@ export class PcCalculator extends HTMLElement {
                 detail: engineErrorDetail(error),
             };
         } finally {
+            window.clearInterval(solveClock);
+            refreshSolveElapsed();
             this.solveAbort = null;
             const releases: Promise<unknown>[] = [];
             if (solveSolver) {
@@ -1796,13 +1830,22 @@ export class PcCalculator extends HTMLElement {
         const progressMarkup =
             this.solveRunning && progress
                 ? `<section class="pc-calc-solve-progress" aria-live="polite">
-                    <strong>${progress.phase === "expanding" ? "Expanding reachable states" : progress.phase === "iterating" ? "Optimizing policy" : "Finishing policy"}</strong>
-                    <span>States <b>${progress.expanded_states.toLocaleString()}</b></span>
+                    <strong>${progress.phase === "expanding" ? "Expanding reachable states" : progress.phase === "iterating" ? "Optimizing policy" : progress.phase === "finalizing" ? "Finalizing and verifying policy" : "Publishing result"}</strong>
+                    <span class="pc-calc-solve-elapsed">Elapsed <b>${solveElapsedLabel(this.solveElapsedMs)}</b></span>
+                    <span>Expanded <b>${progress.expanded_states.toLocaleString()}</b></span>
+                    <span>Discovered <b>${progress.discovered_states.toLocaleString()}</b></span>
+                    <span>Frontier <b>${progress.frontier_states.toLocaleString()}</b></span>
                     <span>Sweeps <b>${progress.sweeps.toLocaleString()}</b></span>
+                    <span>Focused round <b>${progress.focused_round.toLocaleString()}</b></span>
+                    <span>Rows <b>${progress.state_action_rows.toLocaleString()}</b></span>
+                    <span>Transitions <b>${progress.transition_entries.toLocaleString()}</b></span>
+                    <span>Reforge work <b>${progress.reforge_work.toLocaleString()}</b></span>
+                    <span>Solver-owned memory <b>${solveMemoryLabel(progress.live_owned_bytes)}</b></span>
                     <span>Lower <b>${progressLower}</b></span>
                     <span>Upper <b>${progressUpper}</b></span>
                     <span>Gap <b>${progressGap}</b></span>
                     <span>Factor <b>${progressFactor}</b></span>
+                    ${progress.phase === "finalizing" ? "<small>Exact policy refinement is still running. Cancellation is recorded now but waits for the current native finalization pass.</small>" : ""}
                 </section>`
                 : "";
         const summary = this.solveSummary;

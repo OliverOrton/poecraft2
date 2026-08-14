@@ -70,6 +70,7 @@ interface CaseReport {
         solve_steps: number | null;
         max_solve_step_ms: number | null;
         worker_max_slice_ms: number | null;
+        finalization_ms: number | null;
         cancellation_ack_ms: number | null;
         cancellation_mode: string | null;
         cooperative_abandon_ms: number | null;
@@ -301,6 +302,7 @@ function disabledReport(spec: SolverBenchmarkCase, status?: string): CaseReport 
             solve_steps: null,
             max_solve_step_ms: null,
             worker_max_slice_ms: null,
+            finalization_ms: null,
             cancellation_ack_ms: null,
             cancellation_mode: null,
             cooperative_abandon_ms: null,
@@ -1568,6 +1570,9 @@ async function runCase(
             solve_steps: worker?.step_count ?? null,
             max_solve_step_ms: worker ? roundMs(worker.max_step_ms) : null,
             worker_max_slice_ms: worker ? roundMs(worker.max_step_ms) : null,
+            finalization_ms: worker
+                ? roundMs(worker.finalization_ms)
+                : null,
             cancellation_ack_ms: cancellationAckMs,
             cancellation_mode:
                 spec.benchmark_mode === "cancel_after_first_step"

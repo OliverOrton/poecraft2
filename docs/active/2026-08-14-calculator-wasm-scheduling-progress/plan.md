@@ -99,8 +99,12 @@ solver result.
 
 ## Gate 1 - Scheduling And Progress Attribution
 
-**Status: in progress.** Chunk size is rejected as the primary cause. Audit
-the high-impact proof/scheduler path and the monolithic final extraction.
+**Status: complete.** Chunk size is rejected as the primary cause. The current
+operator-major path's exact pair ledger, row admission, proper-upper, strict
+lift, and independent final-evaluation authorities are audited, and all five
+Goal Realignment release-WASM controls close exact under the selected product
+profile. Evidence:
+[Gate 1/2 record](evidence/gate1-gate2-selection-progress.md).
 
 Identify where small product steps repeat expensive work and whether the
 solver is making hidden progress while the displayed fields are flat. Compare
@@ -116,6 +120,14 @@ solver-internal architecture change, cap increase, or proof weakening is
 required, stop with a new precise handoff.
 
 ## Gate 2 - Product Scheduler And Truthful Progress
+
+**Status: scheduler and truthful progress implemented; cooperative strict
+finalization remains open under the architecture stop condition.** The product
+witness closes exact in about 142 seconds with sub-77-ms bounded steps and a
+truthful final result snapshot. Its 142-second strict lift remains a single
+synchronous WASM finalization call; cancellation is preserved but cannot
+shorten that pass. Evidence:
+[Gate 1/2 record](evidence/gate1-gate2-selection-progress.md).
 
 Implement the smallest evidence-supported correction. The normal Calculator
 profile must retain cooperative progress callbacks and cancellation. On the

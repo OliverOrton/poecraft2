@@ -697,7 +697,7 @@ export interface SolveOptions {
     strict_states?: boolean;
     kernel_reuse?: boolean;
     goal_progress_gated_reforges?: boolean;
-    /** Qualification-only audited scheduler; product solves omit this. */
+    /** Exact operator-major delayed-action scheduler used by Calculator. */
     high_impact_executable_uppers?: boolean;
 }
 
@@ -711,7 +711,9 @@ export interface EngineMemoryStats {
 }
 
 export interface SolveProgress {
-    phase: "expanding" | "iterating" | "done";
+    /** `finalizing` is worker-owned: native stepping ended, but exact public
+     * policy extraction and result verification are still running. */
+    phase: "expanding" | "iterating" | "finalizing" | "done";
     done: boolean;
     expanded_states: number;
     sweeps: number;
@@ -757,6 +759,8 @@ export interface SolverWorkerMetrics {
     yield_count: number;
     max_step_ms: number;
     total_step_ms: number;
+    /** Synchronous public-result extraction after native bounded stepping. */
+    finalization_ms: number;
 }
 
 export type SolverSolveResult =

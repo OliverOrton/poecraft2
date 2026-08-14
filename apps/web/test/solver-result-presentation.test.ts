@@ -109,16 +109,19 @@ import {
 {
     assert.deepEqual(calculatorSolveOptions(5, 10), {
         goal_progress_gated_reforges: true,
+        high_impact_executable_uppers: true,
         max_absolute_optimality_gap: 5,
         max_relative_optimality_gap: 0.1,
     });
     assert.deepEqual(calculatorSolveOptions(0, -1), {
         goal_progress_gated_reforges: true,
+        high_impact_executable_uppers: true,
     });
     assert.deepEqual(calculatorSolveOptions(Number.NaN, 0), {
         goal_progress_gated_reforges: true,
+        high_impact_executable_uppers: true,
     });
-    console.log("  ok - Calculator solves always opt into gated reforges and map optional targets");
+    console.log("  ok - Calculator solves use exact operator-major scheduling and map optional targets");
 }
 
 {

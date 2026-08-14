@@ -289,6 +289,7 @@ async function solveSolver(
         yield_count: 0,
         max_step_ms: 0,
         total_step_ms: 0,
+        finalization_ms: 0,
     };
     const acknowledgeCancellation = (): SolverSolveResult => {
         const result: SolverSolveResult = {
@@ -380,13 +381,12 @@ async function solveSolver(
             observedPhase = progress.phase;
 
             const now = performance.now();
-            if (
+            if (!progress.done && (
                 reportEveryChunk ||
                 !emittedProgress ||
                 phaseChanged ||
-                progress.done ||
                 now - lastProgressAt >= 100
-            ) {
+            )) {
                 const counts = solveProgressCounts(progress);
                 post({
                     kind: "progress",
@@ -415,8 +415,57 @@ async function solveSolver(
         if (cancelled.has(id)) {
             return acknowledgeCancellation();
         }
+        progress = {
+            ...progress,
+            phase: "finalizing",
+            done: false,
+        };
+        post({
+            kind: "progress",
+            id,
+            done: 0,
+            total: 1,
+            solve: progress,
+        });
+        // Let the caller render finalization and deliver a cancel already
+        // queued at the last cooperative native step boundary.
+        await yieldToTimerTask();
+        if (cancelled.has(id)) {
+            return acknowledgeCancellation();
+        }
+        const finalizationStarted = performance.now();
         const summary = bindings.finishSolverSolve(solver);
+        worker.finalization_ms = Math.max(
+            0,
+            performance.now() - finalizationStarted,
+        );
         begun = false;
+        // Finalization is currently one synchronous native pass. Preserve a
+        // cancel requested during it once the worker regains its event loop.
+        await yieldToTimerTask();
+        if (cancelled.has(id)) {
+            return { cancelled: true, progress, worker };
+        }
+        progress = {
+            ...progress,
+            phase: "done",
+            done: true,
+            expanded_states: summary.expanded_states,
+            sweeps: summary.sweeps,
+            residual: summary.residual,
+            start_value_bound: summary.start_value,
+            lower_bound: summary.lower_bound,
+            upper_bound: summary.upper_bound,
+            absolute_optimality_gap: summary.absolute_optimality_gap,
+            relative_optimality_gap: summary.relative_optimality_gap,
+        };
+        post({
+            kind: "progress",
+            id,
+            done: 1,
+            total: 1,
+            solve: progress,
+        });
         return { ...summary, cancelled: false, progress, worker };
     } finally {
         if (begun) bindings.abandonSolverSolve(solver);
