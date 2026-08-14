@@ -145,6 +145,14 @@ struct RefinedPolicyCompileRouting {
     bool product_solver_parent = false;
 };
 
+/* Streamed quotient coverage names the strict locators visited by the proof,
+ * while materializing one locator can discover additional semantically
+ * equivalent strict carriers. Compilation must represent the canonical union
+ * rather than letting either source replace the other. */
+void merge_refined_compile_strict_members(
+    std::vector<std::uint32_t>& represented_members,
+    const std::vector<std::uint32_t>& streamed_members);
+
 enum class CompiledPolicyAssertionStatus : std::uint8_t {
     NotRun = 0,
     Complete,

@@ -35,16 +35,25 @@ current report additionally names exact-policy-closure lower-bound authority.
 The historical serialized request remains unavailable, so the old
 Fossil-to-Chaos symptom is not assigned a cause. Gate 4 is complete with no
 additional repair because replay produced no new pre-fix failing witness.
-Evidence is in the active plan's
-[Gate 3/4 record](docs/active/2026-08-13-solver-decision-provenance/evidence/gate3-gate4-replay-classification.md).
+The first Gate 5 breadth run then supplied a new witness: automatic Eldritch
+Exalt retained a truthful bounded upper but lost exact strict lift. Gate 4 was
+reopened narrowly. Policy-change gates now retain their named stability
+tolerances while objective order stays strict, and streamed compiler coverage
+unions materialized equivalent carriers instead of dropping them. The repaired
+case is exact at `0.018630169563331064`, independently evaluates, and emits the
+same strategy SHA-256 as frozen Gate 8. Evidence is in the active plan's
+[Gate 3/4 record](docs/active/2026-08-13-solver-decision-provenance/evidence/gate3-gate4-replay-classification.md)
+and
+[Gate 4 repair record](docs/active/2026-08-13-solver-decision-provenance/evidence/gate4-eldritch-strict-lift-repair.md).
 
-The immediate boundary is Gate 5. Run the proportional Q/order acceptance row
-once: audit cross-layer impact, fresh native build and focused suites, focused
-web checks, release WASM rebuild, lightweight every-base matrix, selected
-native/release-WASM controls, one current 49-case portfolio comparison, the
-required primary native/release-WASM exact control, and one final full
-repository pipeline at the end. Do not make another behavioral repair without
-a new failing witness. Do not start the mixed-action seven-step follow-up.
+The immediate boundary is Gate 5 restarted after the repair. Rebuild release
+WASM, then rerun the proportional Q/order semantic controls, one current
+49-case portfolio comparison, the required primary native/release-WASM exact
+control, and one final full repository pipeline at the end. The fresh native
+build, focused native/web suites, and 979-base matrix already pass, but final
+evidence must distinguish pre-repair results from the restarted sequence. Do
+not make another behavioral repair without a new failing witness. Do not start
+the mixed-action seven-step follow-up.
 
 The completed Goal Realignment milestone remains frozen evidence and restores
 the goal-relevant product path across action

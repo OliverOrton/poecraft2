@@ -79,8 +79,8 @@ corrections. The available exact control is byte-identical at the compiled
 strategy boundary and independently exact-evaluates. The historical symptom
 remains unclassified because its request is unavailable.
 
-Gate 4 is therefore complete with no additional source change. Making another
-behavioral repair would violate its requirement for a new pre-fix failing
-witness. The selected semantic reach remains Q/order/result-contract plus
-Calculator request scope, so Gate 5 must run the proportional Q/order acceptance
-row.
+At the Gate 3 boundary, Gate 4 therefore closed with no additional source
+change because making another repair would have violated its requirement for a
+new pre-fix failing witness. The later Gate 5 breadth run did produce a new
+Eldritch strict-lift witness, so Gate 4 was reopened and repaired under its own
+[evidence record](gate4-eldritch-strict-lift-repair.md).

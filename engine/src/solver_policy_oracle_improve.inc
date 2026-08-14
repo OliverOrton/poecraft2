@@ -806,8 +806,19 @@ ExactPolicyRun ProductionPolicyOracle::improve_policy(
                                 mutations, 0,
                                 trial_retained);
                         if (proper) {
-                            if (trial.root_value() <
-                                incumbent.root_value()) {
+                            const double tolerance =
+                                kAbsoluteCostTolerance +
+                                kRelativeCostTolerance *
+                                    std::max(
+                                        std::abs(
+                                            incumbent.root_value()),
+                                        std::abs(
+                                            trial.root_value()));
+                            if (solve_detail::
+                                    sparse_policy_value_improvement_exceeds_tolerance(
+                                        trial.root_value(),
+                                        incumbent.root_value(),
+                                        tolerance)) {
                                 saturating_add(
                                     telemetry_.local_reoptimizations,
                                     mutations.size());

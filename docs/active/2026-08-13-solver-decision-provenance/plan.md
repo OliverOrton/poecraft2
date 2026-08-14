@@ -440,10 +440,14 @@ cause is assigned to that report. See the
 
 ## Gate 4 - Evidence-Selected Repair Only
 
-**Status: complete with no additional repair.** Gate 3 produced no new pre-fix
-failing witness. The Gate 1 and Gate 2 corrections are the complete selected
-behavioral scope; making another repair would violate this gate's evidence
-requirement.
+**Status: complete after one evidence-selected repair.** Gate 3 produced no
+new witness, but the first Gate 5 native breadth run did: automatic Eldritch
+Exalt lost exact strict-lift publication. Policy-change gates now retain their
+named numerical stability tolerances while objective selection stays strict,
+and streamed compilation unions proof coverage with materialized equivalent
+strict carriers. The repaired case is exact, independently evaluated, and
+byte-identical to its frozen compiled strategy. See the
+[Gate 4 repair record](evidence/gate4-eldritch-strict-lift-repair.md).
 
 Make a behavioral solver repair only if Gate 3 identifies a remaining defect
 not already corrected by Gate 2:

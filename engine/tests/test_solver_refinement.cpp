@@ -1,3 +1,4 @@
+#include "../src/solver_policy_refinement.hpp"
 #include "../src/solver_refinement.hpp"
 #include "tests.hpp"
 
@@ -2464,6 +2465,15 @@ void run_rejection_and_cap_tests() {
 } // namespace
 
 void run_solver_refinement_tests() {
+    {
+        std::vector<std::uint32_t> represented{2, 5, 8};
+        merge_refined_compile_strict_members(
+            represented, {1, 2, 4, 8});
+        PC_CHECK(
+            represented ==
+            std::vector<std::uint32_t>({1, 2, 4, 5, 8}));
+    }
+
     run_unset_metamod_observation_parity_tests();
     run_abstract_adapter_tests();
     run_closed_partition_cycle_merge_tests();

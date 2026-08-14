@@ -465,18 +465,26 @@
                     PolicyExactLiftStatus::InvalidSolveState,
                     "streamed refinement class lacks canonical exact locator coverage");
             }
+            const std::vector<std::uint32_t>* represented_members =
+                &cls.strict_members;
+            if (refined_routing != nullptr) {
+                RefinedPolicyCompileClass& compile_class =
+                    refined_routing->classes.at(cls.class_id);
+                merge_refined_compile_strict_members(
+                    compile_class.strict_members,
+                    cls.strict_members);
+                represented_members = &compile_class.strict_members;
+            }
             const std::uint32_t representative =
                 *std::min_element(
-                    cls.strict_members.begin(),
-                    cls.strict_members.end());
+                    represented_members->begin(),
+                    represented_members->end());
             if (refined_routing != nullptr) {
-                refined_routing->classes.at(cls.class_id).strict_members =
-                    cls.strict_members;
                 refined_routing->classes.at(cls.class_id)
                     .representative_state = representative;
             }
             lifted.policy_reachable[representative] = 1;
-            for (const std::uint32_t strict_state : cls.strict_members) {
+            for (const std::uint32_t strict_state : *represented_members) {
                 if (strict_state >= strict_->state_count()) {
                     throw AdapterFailure(
                         PolicyExactLiftStatus::InvalidSolveState,

@@ -7,6 +7,19 @@ namespace poecraft {
 namespace solver {
 namespace refinement {
 
+void merge_refined_compile_strict_members(
+        std::vector<std::uint32_t>& represented_members,
+        const std::vector<std::uint32_t>& streamed_members) {
+    std::vector<std::uint32_t> merged;
+    merged.reserve(
+        represented_members.size() + streamed_members.size());
+    std::set_union(
+        represented_members.begin(), represented_members.end(),
+        streamed_members.begin(), streamed_members.end(),
+        std::back_inserter(merged));
+    represented_members = std::move(merged);
+}
+
 namespace {
 
 struct QuotientOracleRow {
@@ -2712,9 +2725,12 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                     }
                     const std::uint32_t source_state =
                         *bellman.state_index_for_cell(cell.cell_id);
-                    if (!(candidate_q <
-                          current_solved.values_by_state.at(
-                              source_state))) {
+                    if (!solve_detail::
+                            sparse_policy_value_improvement_exceeds_tolerance(
+                                candidate_q,
+                                current_solved.values_by_state.at(
+                                    source_state),
+                                1e-12)) {
                         continue;
                     }
 
