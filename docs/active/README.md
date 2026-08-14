@@ -1,16 +1,13 @@
 # Active Work
 
-**Status: no active implementation plan.**
+**Status: Calculator WASM Scheduling And Progress is active.**
 
 Parent: [Documentation map](../README.md)
 
-Solver Decision Provenance And Result-Truth Hardening completed on 2026-08-14
-and is preserved in the
-[documentation archive](../archive/2026-08-13-solver-decision-provenance/README.md).
-The historical Fossil-to-Chaos request remained unavailable, so the milestone
-does not claim to have localized that report.
+Oliver selected
+[Calculator WASM Scheduling And Progress](2026-08-14-calculator-wasm-scheduling-progress/README.md)
+from a live Allflame Conquest Lamellar report. Gate 0 freezes and reproduces
+the normal Calculator release-WASM profile before any scheduling change.
 
-The completed Solver Goal Realignment milestone remains frozen in the
-[documentation archive](../archive/2026-08-09-solver-goal-realignment/README.md).
-
-Oliver must select the next implementation chunk before source work resumes.
+The completed Solver Decision Provenance and Solver Goal Realignment
+milestones remain frozen in the [documentation archive](../archive/README.md).

@@ -29,8 +29,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation plan is active. Oliver must select the next chunk before
-source work resumes. The completed
+The active
+[Calculator WASM Scheduling And Progress](active/2026-08-14-calculator-wasm-scheduling-progress/README.md)
+milestone freezes Oliver's live Allflame three-prefix Conquest Lamellar as a
+product-equivalent release-WASM witness. It must separate normal cooperative
+worker scheduling from the earlier 1,024-work benchmark profile, retain
+cancellation and proof truth, and expose real work when expanded states and
+bounds are temporarily flat. The completed
 [Solver Decision Provenance And Result-Truth Hardening](archive/2026-08-13-solver-decision-provenance/README.md)
 separates Calculator odds materialization from ordinary Solve scope, unifies Q
 authority, distinguishes strict objective order from numerical policy
