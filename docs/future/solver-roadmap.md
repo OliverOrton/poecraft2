@@ -10,9 +10,9 @@ Parent: [Future work](README.md)
 > [Solver Goal Realignment milestone](../archive/2026-08-09-solver-goal-realignment/README.md)
 > is the authority for current one-item solver coverage and acceptance. Its
 > Gate 8 evidence supersedes older pending-Imprint and waived-verification
-> statements below. The audited possible follow-up is now recorded separately
-> as the active
-> [Solver Decision Provenance And Result-Truth Hardening plan](../active/2026-08-13-solver-decision-provenance/plan.md).
+> statements below. The audited hardening follow-up is now complete and
+> preserved in the
+> [Solver Decision Provenance And Result-Truth archive](../archive/2026-08-13-solver-decision-provenance/README.md).
 
 ## Current Boundary Record
 

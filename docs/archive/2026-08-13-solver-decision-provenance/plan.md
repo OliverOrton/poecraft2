@@ -1,6 +1,6 @@
 # Solver Decision Provenance And Result-Truth Hardening
 
-**Status: active at Gate 5 final acceptance.** Oliver selected this audited
+**Status: complete and archived on 2026-08-14.** Oliver selected this audited
 replacement on 2026-08-13 in hardening-only mode. The unavailable historical
 Fossil-to-Chaos request may not be claimed as localized; the controlled current
 Calculator request-scope witness is the Gate 0 authority.
@@ -476,8 +476,11 @@ change in the controls.
 
 ## Gate 5 - Proportional Final Acceptance
 
-**Status: active.** The selected row is Q, ordering, or policy-selection
-change, together with the crossed Calculator/result contract.
+**Status: complete.** The selected row was Q, ordering, or policy-selection
+change, together with the crossed Calculator/result contract. The final
+post-fix repository pipeline passed; the first attempted invocation exposed
+one stale S8.3 exact-tie expectation, which was corrected and passed its
+focused suite before the accepted final invocation.
 
 Run acceptance once, after all selected implementation gates are complete.
 Choose the row matching the actual semantic reach:

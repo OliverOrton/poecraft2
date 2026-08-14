@@ -20,6 +20,32 @@ These fixtures are mechanic/data evidence. Current explanatory authority lives
 in [Mechanics](mechanics/README.md), [Engine](engine/README.md), and
 [Economy](economy/README.md).
 
+## Solver Decision Provenance And Result Truth
+
+The 2026-08-14
+[completion report](archive/2026-08-13-solver-decision-provenance/report.md) and
+[Gate 5 record](archive/2026-08-13-solver-decision-provenance/evidence/gate5-final-acceptance.md)
+close the hardening-only milestone. Calculator odds inspection no longer
+changes the product action envelope or ordinary Solve scope; sparse decisions
+share one Q authority; strict finite objective order is separate from the
+policy-iteration stability latch; and public termination, stop cause,
+executable publication, exactness, and lower provenance are independently
+truthful.
+
+The primary remains exact at `3745.7309340083884` in 92.854 seconds natively
+and 147.292 seconds in release WASM. All 979 ordinary bases pass. The current
+native/release-WASM 49-case portfolio comparison passes 3,729 checks, and final
+affected-case overlays revoke an unsound positive lower after unclosed strict
+refinement. Seven changed release-WASM strategies received 10,000 requested
+samples each with zero off-policy failures; one very large graph retains the
+disclosed 100,000-action sampling horizon while exact evaluation proves
+success probability one.
+
+The accepted repository pipeline passes 3,464,781 engine checks plus ingest,
+economy, fixture, artifact, benchmark, WASM-smoke, TypeScript, and non-visual
+web acceptance. The unavailable historical Fossil-to-Chaos request remains
+unlocalized and is not assigned a speculative cause.
+
 ## Product Action Dependency Reachability
 
 The 2026-08-08

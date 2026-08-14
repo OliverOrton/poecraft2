@@ -777,9 +777,10 @@ void run_temporary_blocker_price_flip() {
     PC_CHECK(std::fabs(high.values[high.start_state] - 15.0) < 1e-9);
     const SolveResult tie = solve(calc, start, prices(4.0));
     PC_CHECK(tie.converged);
-    /* Equal expected cost retains both rows; the established lower-variance
-     * tie-break deterministically selects the one-outcome blocker kernel. */
-    PC_CHECK(tie.policy[tie.start_state].index == blocker);
+    /* Equal expected cost retains both rows. Canonical strict row order now
+     * breaks an exact value tie by stable row identity, so the earlier Exalt
+     * row wins rather than introducing a second, variance-based objective. */
+    PC_CHECK(tie.policy[tie.start_state].index == exalt);
     PC_CHECK(std::fabs(tie.values[tie.start_state] - 15.0) < 1e-9);
     PC_CHECK(tie.diagnostics.automatic_rows_eligible > 0);
     if (!low.converged || low.policy[low.start_state].index != blocker) return;

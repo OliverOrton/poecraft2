@@ -9,6 +9,15 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-08-13
+
+- [Solver Decision Provenance And Result-Truth Hardening](2026-08-13-solver-decision-provenance/README.md) -
+  isolates inspected odds from ordinary Solve scope, unifies sparse Q
+  authority, makes finite objective order strict without sacrificing
+  iteration stability, and separates closure, executable publication,
+  exactness, stop cause, and lower-bound proof authority across native, WASM,
+  and web results.
+
 ## 2026-08-09
 
 - [Solver Goal Realignment And End-To-End Capability Recovery](2026-08-09-solver-goal-realignment/README.md) —

@@ -31,7 +31,7 @@ bound.
 ## Frozen Evidence
 
 Use the same product-cap portfolio and identity as the completed
-[root-action feasibility pass](../archive/2026-07-27-certified-root-action-feasibility/README.md):
+[root-action feasibility pass](../2026-07-27-certified-root-action-feasibility/README.md):
 
 - `natural-t1-smoke-dire-pelt-three`;
 - `natural-t1-full-three-24920b3b28de`;
@@ -41,7 +41,7 @@ Use the same product-cap portfolio and identity as the completed
 
 The comparison targets are the exact fixed-renewal candidates already pinned
 by the
-[broad-action report](../archive/2026-07-25-broad-action-separation-research/report.md):
+[broad-action report](../2026-07-25-broad-action-separation-research/report.md):
 
 | Hard case | Selected renewal action | Exact upper |
 | --- | --- | ---: |

@@ -29,13 +29,14 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[Solver Decision Provenance And Result-Truth Hardening](active/2026-08-13-solver-decision-provenance/plan.md)
-is active in hardening-only mode from source baseline `9914b84`. It first
-separates Calculator odds materialization from the product Solve envelope,
-then audits shared Q authority, strict objective ordering versus numerical
-policy stability, decision provenance, result authority, and lower-bound
-provenance. The unavailable historical Fossil-to-Chaos request is not a current
-reproduction claim. The completed
+No implementation plan is active. Oliver must select the next chunk before
+source work resumes. The completed
+[Solver Decision Provenance And Result-Truth Hardening](archive/2026-08-13-solver-decision-provenance/README.md)
+separates Calculator odds materialization from ordinary Solve scope, unifies Q
+authority, distinguishes strict objective order from numerical policy
+stability, and makes result and lower-bound proof authority truthful. The
+unavailable historical Fossil-to-Chaos request remains unlocalized. The
+completed
 [Solver Goal Realignment And End-To-End Capability Recovery](archive/2026-08-09-solver-goal-realignment/README.md)
 remains the accepted capability and performance baseline. The completed
 [Product Action Dependency Reachability](archive/2026-08-08-product-action-dependency-reachability/README.md)
