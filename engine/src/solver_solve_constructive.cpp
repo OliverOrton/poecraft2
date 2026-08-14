@@ -2441,7 +2441,8 @@ solve_detail::classify_public_lower_bound_authority(
         const double lower_bound,
         const SolvePolicyStatus policy_status,
         const bool incremental_action_generation,
-        const bool incremental_action_envelope_closed) {
+        const bool incremental_action_envelope_closed,
+        const bool unclosed_strict_refinement) {
         if (!std::isfinite(lower_bound) || lower_bound < 0.0) {
             return {};
         }
@@ -2449,6 +2450,13 @@ solve_detail::classify_public_lower_bound_authority(
             return {
                 true,
                 SolveLowerBoundProvenance::ExactPolicyClosure,
+            };
+        }
+        if (unclosed_strict_refinement) {
+            return {
+                false,
+                SolveLowerBoundProvenance::
+                    UnclosedStrictRefinementUniversalZero,
             };
         }
         if (incremental_action_generation &&

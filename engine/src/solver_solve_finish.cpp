@@ -3403,6 +3403,20 @@ SolveResult SolveWork::Impl::finish() {
                     coarse_solve_termination);
             }
         }
+        const bool unclosed_strict_refinement =
+            result.diagnostics.policy_refinement.strict_lift_status !=
+                "not_run" &&
+            !result.diagnostics.policy_refinement
+                 .strict_global_lower_bound_closed &&
+            result.policy_status != SolvePolicyStatus::Exact;
+        if (unclosed_strict_refinement) {
+            /* Once exact mechanics expose a compatibility witness, the
+             * coarse objective is not a lower relaxation of the strict
+             * decision problem. A failed or bounded strict lift can retain
+             * its independently evaluated upper, but only the universal
+             * non-negative floor remains a public lower certificate. */
+            result.lower_bound = 0.0;
+        }
         solve_detail::normalize_publication_result(result);
         if (result.policy_available) {
             result.diagnostics.focused_lower_bound = result.lower_bound;
@@ -3523,7 +3537,8 @@ SolveResult SolveWork::Impl::finish() {
                 result.lower_bound,
                 result.policy_status,
                 incremental_action_generation,
-                incremental_envelope_closed);
+                incremental_envelope_closed,
+                unclosed_strict_refinement);
         result.global_lower_bound_certified =
             lower_authority.globally_certified;
         result.lower_bound_provenance = lower_authority.provenance;

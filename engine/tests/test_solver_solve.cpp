@@ -5397,6 +5397,18 @@ void run_incremental_action_generation_tests() {
         open_authority.provenance ==
         SolveLowerBoundProvenance::
             OpenIncrementalEnvelopeUniversalZero);
+    const solve_detail::SolveLowerBoundAuthority strict_open_authority =
+        solve_detail::classify_public_lower_bound_authority(
+            0.0,
+            SolvePolicyStatus::BoundedFeasible,
+            true,
+            true,
+            true);
+    PC_CHECK(!strict_open_authority.globally_certified);
+    PC_CHECK(
+        strict_open_authority.provenance ==
+        SolveLowerBoundProvenance::
+            UnclosedStrictRefinementUniversalZero);
     const solve_detail::SolveLowerBoundAuthority closed_authority =
         solve_detail::classify_public_lower_bound_authority(
             3759.5969190413853,

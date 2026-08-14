@@ -4108,6 +4108,10 @@ std::string serialize_solver_telemetry(
             json += "open_incremental_envelope_universal_zero";
             break;
         case SolveLowerBoundProvenance::
+                UnclosedStrictRefinementUniversalZero:
+            json += "unclosed_strict_refinement_universal_zero";
+            break;
+        case SolveLowerBoundProvenance::
                 ClosedIncrementalActionEnvelope:
             json += "closed_incremental_action_envelope";
             break;

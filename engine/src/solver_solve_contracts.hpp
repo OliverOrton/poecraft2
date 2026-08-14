@@ -100,6 +100,7 @@ enum class SolveGapTarget : std::uint8_t {
 enum class SolveLowerBoundProvenance : std::uint8_t {
     None,
     OpenIncrementalEnvelopeUniversalZero,
+    UnclosedStrictRefinementUniversalZero,
     ClosedIncrementalActionEnvelope,
     GlobalActionRelaxation,
     ExactPolicyClosure,
@@ -768,7 +769,8 @@ SolveLowerBoundAuthority classify_public_lower_bound_authority(
     double lower_bound,
     SolvePolicyStatus policy_status,
     bool incremental_action_generation,
-    bool incremental_action_envelope_closed);
+    bool incremental_action_envelope_closed,
+    bool unclosed_strict_refinement = false);
 
 /* One final normalizer shared by direct, strict, and fallback publication.
  * Equality without Exact status is not a global closure certificate. */

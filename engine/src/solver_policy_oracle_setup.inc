@@ -759,8 +759,17 @@
     std::optional<StableKey> quotient_selected_compact_row_identity(
             const ExactState& state) {
         if (state.terminal) return std::nullopt;
-        const std::optional<SelectedAction> selected =
-            selected_action(state);
+        std::optional<SelectedAction> selected;
+        try {
+            selected = selected_action(state);
+        } catch (const AdapterFailure& error) {
+            if (error.status == PolicyExactLiftStatus::ResourceCap) throw;
+            /* Reuse is only an optimization. A strict successor can project
+             * to an unselected coarse parent during witness-driven local
+             * reoptimization; the compact-row builder below owns the
+             * certified admitted-row fallback for that carrier. */
+            return std::nullopt;
+        }
         if (!selected.has_value()) return std::nullopt;
         std::optional<StableKey> identity =
             exact_kernel_reuse_key(state, *selected);
