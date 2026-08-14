@@ -1,7 +1,7 @@
 # Calculator WASM Scheduling And Progress
 
-**Status: active.** Selected by Oliver on 2026-08-14 from a live release-WASM
-Calculator report.
+**Status: active at the five-natural-T1 sparse-policy convergence boundary.**
+Selected by Oliver on 2026-08-14 from live release-WASM Calculator reports.
 
 Parent: [Active work](../README.md)
 
@@ -16,6 +16,12 @@ three-prefix solve within a useful product boundary, without weakening solver
 semantics, raising resource caps, or trading away cooperative cancellation.
 While work is legitimately continuing, the Calculator must expose changing
 work that distinguishes a busy solver from a stalled one.
+
+The representative breadth witness is the same empty base and economy with
+five natural T1 goals: the three prefixes below plus T1 physical-damage
+reduction and T1 spell suppression. It must not be represented by the legacy
+partial five-mod case whose starting item already satisfies four goals and
+whose fifth goal is a deterministic bench craft.
 
 The live witness is an empty rare item at item level 86:
 
@@ -119,14 +125,14 @@ mathematical request or silently activate a diagnostic solver mode. If a
 solver-internal architecture change, cap increase, or proof weakening is
 required, stop with a new precise handoff.
 
-## Gate 2 - Product Scheduler And Truthful Progress
+## Gate 2 - Product Scheduler, Sparse Convergence, And Truthful Progress
 
-**Status: scheduler and truthful progress implemented; cooperative strict
-finalization remains open under the architecture stop condition.** The product
-witness closes exact in about 142 seconds with sub-77-ms bounded steps and a
-truthful final result snapshot. Its 142-second strict lift remains a single
-synchronous WASM finalization call; cancellation is preserved but cannot
-shorten that pass. Evidence:
+**Status: scheduler and truthful progress implemented; the from-empty
+five-natural-T1 sparse-policy convergence failure and cooperative strict
+finalization remain open.** The three-prefix witness closes exact in about 142
+seconds with sub-77-ms bounded steps and a truthful final result snapshot. Its
+142-second strict lift remains a single synchronous WASM finalization call;
+cancellation is preserved but cannot shorten that pass. Evidence:
 [Gate 1/2 record](evidence/gate1-gate2-selection-progress.md).
 
 Implement the smallest evidence-supported correction. The normal Calculator
@@ -149,6 +155,15 @@ If cancellation currently discards the only useful stopped-run telemetry,
 retain a compact final progress snapshot without confusing cancellation with
 a published solve result.
 
+The five-natural-T1 witness must also leave the current failed numerical path.
+Its 926-state fixed-policy SCC exhausts 100,000 sparse component iterations,
+reports `sparse_policy_component_did_not_converge`, and falls back to millions
+of ordinary Bellman sweeps. Repair the shared sparse fixed-policy evaluator or
+make that failure terminate with an honest bounded publication; do not hide it
+with a larger sweep cap. Compare scheduler on/off and eight/1,024 work items,
+but preserve the selected eight-item product responsiveness boundary unless a
+measured adaptive chunk remains within 250 ms.
+
 ## Gate 3 - Focused Qualification
 
 Rebuild native and release WASM after their respective source changes. Run the
@@ -162,6 +177,11 @@ The product case must:
 - have truthful globally certified lower provenance;
 - compile and exact-evaluate with the reported expected cost; and
 - remain responsive under the Gate 2 worker-step and cancellation boundary.
+
+The five-natural-T1 breadth witness must return a truthful result or a precise
+named numerical/resource stop within five minutes. Exact closure is preferred;
+a bounded result is acceptable only with a proper independently evaluated
+executable policy, honest lower/upper bounds, and open obligations.
 
 The four-goal control must retain native/release-WASM semantic equality and
 its existing under-five-minute exact result. Run exactly 10,000 simulator

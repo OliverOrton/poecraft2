@@ -105,3 +105,47 @@ or a message-only cancel cannot make synchronous WASM yield. This is the
 plan's architecture stop condition and remains open for an explicit decision;
 the scheduler/product-latency repair itself is retained for final qualification.
 
+## Five-natural-T1 breadth correction
+
+Oliver's live five-mod report is not represented by the historical Runic
+Gauntlets control. That control starts with four satisfied T1 affixes and can
+finish with one `0.01165`-chaos Cold Resistance bench craft; under the selected
+WASM profile it returned a bounded result in `14673.498` ms. The actual live
+request starts from an empty ilvl-86 Conquest Lamellar and requires the three
+natural T1 armour/evasion prefixes plus natural T1 physical-damage reduction
+and spell suppression suffixes.
+
+The live run remained in expansion after `175m 21s`: 216 expanded, 1,785
+discovered, 1,569 frontier, 8,222,083 displayed sweeps, focused round 324,
+1,885 rows, 8,657 transitions, 749,416 reforge work, lower zero, and upper
+about `37279652.26`. The zero lower remains sound; the runtime is unacceptable.
+
+The frozen fixture reproduced the same boundary with a 30-second cooperative
+watchdog. Both scheduler modes built the same 1,347-state/7,056-row/25,554-
+transition initial graph, entered a largest fixed-policy SCC of 926 states,
+consumed 100,138 sparse-policy iterations, and reported
+`sparse_policy_component_did_not_converge` with `max_sweeps` recorded. The
+solver then continued through prioritized Bellman fallback instead of
+publishing or stopping. At cancellation, eight-item high-impact mode had 2,580
+fallback sweeps; off mode had 2,573. A 1,024-item high-impact control reached
+3,485 sweeps with a 138.947-ms maximum step, a modest throughput improvement
+that does not address the numerical failure.
+
+The retained fallback portfolio's preferred executable upper was
+`37279857.82627867`, matching the scale of the live report. The scheduler
+promotion therefore did not create this first failure: it exposed a shared
+sparse fixed-policy convergence/fallback defect. The next source boundary is
+the shared large-SCC evaluator in `solver_sparse_policy.cpp`, not another
+scheduler or cap experiment.
+
+Raw ignored reports:
+
+- `gate2-five-natural-t1-product-on-30s.json`, 455,150 bytes, SHA-256
+  `322be395f9361a031d3210353e6c2d40e47d0f61910259a947281e41c901fa96`;
+- `gate2-five-natural-t1-product-off-30s.json`, 455,944 bytes, SHA-256
+  `a1dae51a9cee9899e4d8f83a9fc9fc5fb7291e70e2778511cbeafa12f58da728`;
+- `gate2-five-natural-t1-product-on-1024-30s.json`, 440,844 bytes, SHA-256
+  `5908c6f3ba7a03ed987a32fcab82dc64025ed29b2217c31315022ffaf2f8ef08`;
+  and
+- `gate2-five-mod-product-30s.json`, 418,887 bytes, SHA-256
+  `79a843ac7272c7048a966c21e9fa6ef5a54de93cf3098ca4cab98614adad40aa`.

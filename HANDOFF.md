@@ -1,6 +1,7 @@
 # Session Handoff
 
-**Status: active implementation boundary at the Gate 2 architecture decision.**
+**Status: active implementation boundary at the Gate 2 sparse fixed-policy
+convergence defect.**
 
 Oliver selected
 [Calculator WASM Scheduling And Progress](docs/active/2026-08-14-calculator-wasm-scheduling-progress/plan.md)
@@ -55,15 +56,37 @@ The exact witness now returns in about 142 seconds instead of failing the
 five-minute boundary, with max bounded step 76.028 ms and the final exact value
 `2186.6911143146394`.
 
-One architecture boundary remains: the 142.123-second strict lift is still a
-single synchronous WASM finalization call. A cancel at the finalizing boundary
-prevents it; a cancel clicked after it begins is preserved as cancelled but
-cannot shorten the wait. Genuine interruption requires an incremental retained
-strict-lift work object across C ABI/WASM steps (principally 4,215 selected
-kernel builds here), or an equivalent isolated reconstructible worker. A UI
-label cannot satisfy that part of Gate 2.
+Two boundaries remain. The first and current source boundary comes from
+Oliver's representative from-empty five-natural-T1 request. It is the same
+Conquest Lamellar, Allflame snapshot, and three prefix goals, plus natural T1
+`AdditionalPhysicalDamageReduction5_` and
+`ChanceToSuppressSpellsHigh5___` suffix goals. The historical partial five-mod
+Runic Gauntlets control is not representative: it begins with four completed
+goals and finishes with one cheap deterministic bench craft.
 
-Next action: checkpoint this selected implementation and decide whether the
-incremental strict-lift architecture remains inside this milestone. Do not
-start final acceptance or archive while the Gate 2 responsiveness contract is
+The live five-T1 run reached 175 minutes, 8.22 million displayed sweeps, and
+focused round 324 without returning. The frozen 30-second WASM reproduction
+shows why: the first fixed-policy evaluation contains a 926-state SCC, consumes
+100,138 sparse component iterations, fails with
+`sparse_policy_component_did_not_converge`, records `max_sweeps`, and then
+continues in extremely slow prioritized Bellman fallback. Scheduler on/off
+produces the same failure and almost identical work. A 1,024-item control only
+improves fallback throughput modestly. The preferred executable upper
+`37279857.82627867` matches the live report's scale.
+
+Next action: repair and prove the shared large-SCC fixed-policy evaluator in
+`engine/src/solver_sparse_policy.cpp`, then rerun the frozen 30-second witness
+before any long qualification. Do not raise `max_sweeps`, add an unproved
+positive lower, or treat the old partial five-mod control as acceptance. Keep
+the selected scheduler/progress work unless terminal semantics disprove it.
+
+The second architecture boundary is unchanged: the 142.123-second strict lift
+is still a single synchronous WASM finalization call. A cancel at the
+finalizing boundary prevents it; a cancel clicked after it begins is preserved
+as cancelled but cannot shorten the wait. Genuine interruption requires an
+incremental retained strict-lift work object across C ABI/WASM steps
+(principally 4,215 selected kernel builds here), or an equivalent isolated
+reconstructible worker. A UI label cannot satisfy that part of Gate 2.
+
+Do not start final acceptance or archive while either Gate 2 boundary remains
 unresolved. The full pipeline remains reserved for the end.

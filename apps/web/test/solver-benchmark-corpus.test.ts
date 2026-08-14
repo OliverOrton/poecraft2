@@ -113,7 +113,7 @@ test("goal-realignment corpora validate every current case and economy", () => {
             "poecraft2-solver-goal-realignment-gate6-v1",
         ],
     );
-    assert.deepEqual(loaded.map((corpus) => corpus.cases.length), [5, 1, 2]);
+    assert.deepEqual(loaded.map((corpus) => corpus.cases.length), [6, 1, 2]);
 
     const cases = loaded.flatMap((corpus) => {
         validateCorpusArtifactPins(corpus.manifest, artifact, 2);
@@ -150,6 +150,11 @@ test("goal-realignment corpora validate every current case and economy", () => {
     );
     assert.equal(
         economies.get("conquest-lamellar-allflame-three-prefix-t1-product")
+            ?.prices.base,
+        undefined,
+    );
+    assert.equal(
+        economies.get("conquest-lamellar-allflame-five-natural-t1-product")
             ?.prices.base,
         undefined,
     );

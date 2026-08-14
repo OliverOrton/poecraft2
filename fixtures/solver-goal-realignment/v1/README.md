@@ -10,6 +10,13 @@ requires four natural T1 modifiers and uses Calculator's goal-relevant action
 envelope with `goal_progress_gated_reforges`. The historical Mirage regression
 fixture is unchanged.
 
+The live Calculator scheduling witnesses use the same empty ilvl-86 Conquest
+Lamellar and published Allflame economy without a base-price override. One
+requires the three displayed natural T1 armour/evasion prefixes. The harder
+five-affix witness adds natural T1 physical-damage reduction and spell
+suppression suffixes. It is a from-empty five-T1 goal and must not be
+represented by the separate partial five-mod control below.
+
 The focused Vaal Regalia case starts with a satisfied suffix goal and existing
 Exarch dominance. Its open, naturally rollable prefix target, pinned Allflame
 snapshot, and disclosed synthetic `eldritch_exalt` price override force the
