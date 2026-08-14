@@ -8,6 +8,7 @@ import { Worker, type TransferListItem } from "node:worker_threads";
 import { EngineClient, type EngineTransport } from "../src/app/engine-client";
 import {
     EngineError,
+    type SolveProgress,
     type SolverSolveResult,
     type SolverTelemetry,
 } from "../src/app/engine-protocol";
@@ -31,6 +32,10 @@ interface CliOptions {
     caseId?: string;
     skipVerification: boolean;
     verificationRuns?: number;
+    solveStepWorkItems?: number;
+    highImpactExecutableUppers?: boolean;
+    watchdogSeconds?: number;
+    solveOnly: boolean;
 }
 
 type CompletedSolverSolveResult = Extract<
@@ -72,6 +77,7 @@ interface CaseReport {
         watchdog_mode: "cooperative_abort_signal" | null;
         watchdog_expired: boolean;
     };
+    progress_trace: Array<Record<string, unknown>>;
     memory: {
         measurement_kind: string;
         process_working_set_before_bytes: number | null;
@@ -112,11 +118,13 @@ interface CaseReport {
 }
 
 function parseArgs(args: string[]): CliOptions {
+    const parsedOptions: Partial<CliOptions> = {};
     let corpus = resolve(REPO_ROOT, "fixtures/solver-benchmarks/v1/manifest.json");
     let output: string | undefined;
     let caseId: string | undefined;
     let skipVerification = false;
     let verificationRuns: number | undefined;
+    let solveOnly = false;
     for (let index = 0; index < args.length; index += 1) {
         const value = args[index + 1];
         if (args[index] === "--corpus" && value) {
@@ -137,16 +145,64 @@ function parseArgs(args: string[]): CliOptions {
             }
             verificationRuns = parsed;
             index += 1;
+        } else if (args[index] === "--solve-step-work-items" && value) {
+            const parsed = Number(value);
+            if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+                throw new Error(
+                    "--solve-step-work-items must be a positive integer",
+                );
+            }
+            parsedOptions.solveStepWorkItems = parsed;
+            index += 1;
+        } else if (
+            args[index] === "--high-impact-executable-uppers" && value
+        ) {
+            if (value !== "true" && value !== "false") {
+                throw new Error(
+                    "--high-impact-executable-uppers must be true or false",
+                );
+            }
+            parsedOptions.highImpactExecutableUppers = value === "true";
+            index += 1;
+        } else if (args[index] === "--watchdog-seconds" && value) {
+            const parsed = Number(value);
+            if (!Number.isFinite(parsed) || parsed <= 0) {
+                throw new Error("--watchdog-seconds must be a positive number");
+            }
+            parsedOptions.watchdogSeconds = parsed;
+            index += 1;
+        } else if (args[index] === "--solve-only") {
+            solveOnly = true;
         } else {
             throw new Error(`unknown or incomplete argument: ${args[index]}`);
         }
     }
-    return {
+    Object.assign(parsedOptions, {
         corpus,
         output,
         caseId,
         skipVerification,
         verificationRuns,
+        solveOnly,
+    });
+    return parsedOptions as CliOptions;
+}
+
+function applyDiagnosticOverrides(
+    spec: SolverBenchmarkCase,
+    options: CliOptions,
+): SolverBenchmarkCase {
+    return {
+        ...spec,
+        watchdog_seconds: options.watchdogSeconds ?? spec.watchdog_seconds,
+        caps: {
+            ...spec.caps,
+            solve_step_work_items:
+                options.solveStepWorkItems ?? spec.caps.solve_step_work_items,
+            high_impact_executable_uppers:
+                options.highImpactExecutableUppers ??
+                spec.caps.high_impact_executable_uppers,
+        },
     };
 }
 
@@ -254,6 +310,7 @@ function disabledReport(spec: SolverBenchmarkCase, status?: string): CaseReport 
                 : "cooperative_abort_signal",
             watchdog_expired: false,
         },
+        progress_trace: [],
         memory: {
             measurement_kind: "not_measured",
             process_working_set_before_bytes: null,
@@ -906,6 +963,8 @@ async function runCase(
     spec: SolverBenchmarkCase,
     skipVerification: boolean,
     verificationRunsOverride?: number,
+    progressOutputPath?: string,
+    solveOnly = false,
 ): Promise<CaseReport> {
     const totalStarted = performance.now();
     const errors: string[] = [];
@@ -930,6 +989,21 @@ async function runCase(
     let verificationMs: number | null = null;
     let cancellationAckMs: number | null = null;
     let solveError: string | null = null;
+    const progressTrace: Array<Record<string, unknown>> = [];
+    const persistProgressTrace = (reason: string): void => {
+        if (!progressOutputPath) return;
+        mkdirSync(dirname(progressOutputPath), { recursive: true });
+        writeFileSync(
+            progressOutputPath,
+            `${JSON.stringify({
+                schema_version: "solver_progress_trace_v1",
+                case_id: spec.id,
+                reason,
+                captured_at_utc: new Date().toISOString(),
+                trace: progressTrace,
+            }, null, 2)}\n`,
+        );
+    };
     let memoryBefore = 0;
     let memoryAfter = 0;
     let wasmBefore = 0;
@@ -953,6 +1027,7 @@ async function runCase(
         ? null
         : setTimeout(() => {
             watchdogExpired = true;
+            persistProgressTrace("cooperative_watchdog_fired");
             caseAbort.abort("solver benchmark watchdog expired");
         }, spec.watchdog_seconds * 1000);
     watchdogTimer?.unref();
@@ -1038,6 +1113,12 @@ async function runCase(
         registryLayoutMs = roundMs(performance.now() - registryStarted);
 
         const solveStarted = performance.now();
+        const recordSolveProgress = (progress: SolveProgress): void => {
+            progressTrace.push({
+                elapsed_ms: roundMs(performance.now() - solveStarted),
+                ...progress,
+            });
+        };
         try {
             if (spec.benchmark_mode === "cancel_after_first_step") {
                 let abortStarted: number | null = null;
@@ -1076,6 +1157,7 @@ async function runCase(
                         yieldEveryStep: true,
                         signal: caseAbort.signal,
                         onProgress: (progress) => {
+                            recordSolveProgress(progress);
                             if (abortStarted === null && !progress.done) {
                                 abortStarted = performance.now();
                                 caseAbort.abort("cancel-after-first-step benchmark");
@@ -1120,6 +1202,7 @@ async function runCase(
                     {
                         chunkSize: spec.caps.solve_step_work_items,
                         signal: caseAbort.signal,
+                        onProgress: recordSolveProgress,
                     },
                 );
             }
@@ -1130,7 +1213,7 @@ async function runCase(
         solveMs = roundMs(performance.now() - solveStarted);
         telemetry = await safeTelemetry(client, solver, errors);
 
-        if (solve && !solve.cancelled && solve.policy_available) {
+        if (!solveOnly && solve && !solve.cancelled && solve.policy_available) {
             const compileStarted = performance.now();
             try {
                 const raw = await client.solverCompileStrategy(solver);
@@ -1339,6 +1422,9 @@ async function runCase(
             rssPeak = sampled.peak;
         }
         if (watchdogTimer !== null) clearTimeout(watchdogTimer);
+        persistProgressTrace(
+            watchdogExpired ? "case_cleanup_completed_after_watchdog" : "case_completed",
+        );
     }
 
     const totalMs = roundMs(performance.now() - totalStarted);
@@ -1494,6 +1580,7 @@ async function runCase(
                 : "cooperative_abort_signal",
             watchdog_expired: watchdogExpired,
         },
+        progress_trace: progressTrace,
         memory: {
             measurement_kind: "node_process_rss_sampled_5ms_and_wasm_heap_snapshots",
             process_working_set_before_bytes: memoryBefore || null,
@@ -1686,9 +1773,11 @@ try {
             reports.push(await runCase(
                 client,
                 data,
-                spec,
+                applyDiagnosticOverrides(spec, options),
                 options.skipVerification,
                 options.verificationRuns,
+                options.output ? `${options.output}.progress.json` : undefined,
+                options.solveOnly,
             ));
         }
     }
@@ -1717,6 +1806,13 @@ try {
             abi_version: client.getAbiVersion(),
             runtime: "node-worker_threads-wasm",
             data_load_ms: dataLoadMs,
+        },
+        diagnostic_overrides: {
+            solve_step_work_items: options.solveStepWorkItems ?? null,
+            high_impact_executable_uppers:
+                options.highImpactExecutableUppers ?? null,
+            watchdog_seconds: options.watchdogSeconds ?? null,
+            solve_only: options.solveOnly,
         },
         cases: reports,
     };

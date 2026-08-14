@@ -113,7 +113,7 @@ test("goal-realignment corpora validate every current case and economy", () => {
             "poecraft2-solver-goal-realignment-gate6-v1",
         ],
     );
-    assert.deepEqual(loaded.map((corpus) => corpus.cases.length), [4, 1, 2]);
+    assert.deepEqual(loaded.map((corpus) => corpus.cases.length), [5, 1, 2]);
 
     const cases = loaded.flatMap((corpus) => {
         validateCorpusArtifactPins(corpus.manifest, artifact, 2);
@@ -147,6 +147,11 @@ test("goal-realignment corpora validate every current case and economy", () => {
         economies.get("conquest-lamellar-allflame-four-natural-t1")
             ?.prices.base,
         5,
+    );
+    assert.equal(
+        economies.get("conquest-lamellar-allflame-three-prefix-t1-product")
+            ?.prices.base,
+        undefined,
     );
     assert.equal(
         economies.get("vaal-regalia-allflame-warlord-exalt-goal")

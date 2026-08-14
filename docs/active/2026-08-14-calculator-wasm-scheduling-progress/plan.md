@@ -68,6 +68,13 @@ fail-safe and may not be replaced with an uncertified positive lower.
 
 ## Gate 0 - Freeze And Product-Equivalent Reproduction
 
+**Status: complete.** The off-mode product request reproduced the `13882.86`
+zero-lower interval and did not return by five minutes. Both high-impact modes
+closed exactly at `2186.6911143146394` in about 134-137 seconds with identical
+hashes; eight-item stepping was slightly faster. Native progress became
+prematurely `done` before a 133-second synchronous extraction. Evidence:
+[Gate 0 reproduction](evidence/gate0-reproduction.md).
+
 Add a deterministic three-prefix fixture and a release-WASM diagnostic run
 that uses the same goal, economy, product action envelope, prices, options,
 and effective eight-item worker maximum as the Calculator. Freeze request,
@@ -91,6 +98,9 @@ attribution even if a watchdog stops one or more modes; a stopped run is not a
 solver result.
 
 ## Gate 1 - Scheduling And Progress Attribution
+
+**Status: in progress.** Chunk size is rejected as the primary cause. Audit
+the high-impact proof/scheduler path and the monolithic final extraction.
 
 Identify where small product steps repeat expensive work and whether the
 solver is making hidden progress while the displayed fields are flat. Compare
@@ -179,4 +189,3 @@ progress work changes mathematical results; passing requires a cap increase,
 proof weakening, or multi-second cooperative steps; the selected case loses a
 proper policy or exact closure available to its control; or a mechanic ruling
 is required.
-

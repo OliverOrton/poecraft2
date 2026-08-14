@@ -32,6 +32,7 @@
   ],
   "cases": [
     "cases/conquest-lamellar-allflame-four-natural-t1.json",
+    "cases/conquest-lamellar-allflame-three-prefix-t1-product.json",
     "cases/vaal-regalia-allflame-automatic-eldritch-exalt.json",
     "cases/vaal-regalia-allflame-warlord-exalt-goal.json",
     "cases/vaal-regalia-allflame-imprint-retry.json"
