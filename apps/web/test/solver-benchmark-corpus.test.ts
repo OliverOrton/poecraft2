@@ -24,6 +24,10 @@ const GOAL_REALIGNMENT_MANIFESTS = [
         import.meta.url,
     ),
     new URL(
+        "../../../fixtures/solver-goal-realignment/v1/five-natural-t1-manifest.json",
+        import.meta.url,
+    ),
+    new URL(
         "../../../fixtures/solver-goal-realignment/v1/five-mod-manifest.json",
         import.meta.url,
     ),
@@ -109,11 +113,12 @@ test("goal-realignment corpora validate every current case and economy", () => {
         loaded.map((corpus) => corpus.manifest.corpus_id),
         [
             "poecraft2-solver-goal-realignment-v1",
+            "poecraft2-solver-goal-realignment-five-natural-t1-v1",
             "poecraft2-solver-goal-realignment-five-mod-v1",
             "poecraft2-solver-goal-realignment-gate6-v1",
         ],
     );
-    assert.deepEqual(loaded.map((corpus) => corpus.cases.length), [6, 1, 2]);
+    assert.deepEqual(loaded.map((corpus) => corpus.cases.length), [5, 1, 1, 2]);
 
     const cases = loaded.flatMap((corpus) => {
         validateCorpusArtifactPins(corpus.manifest, artifact, 2);
@@ -255,6 +260,22 @@ test("goal-realignment corpora validate every current case and economy", () => {
     assert.deepEqual(fiveMod.bounded_best_policy_contract, {
         allow_exact: true,
         bounded_requires_named_stop: true,
+        bounded_requires_strict_gap: true,
+        bounded_requires_open_obligations: true,
+        require_evaluated_upper: true,
+        require_cheapest_independently_evaluated_incumbent: true,
+    });
+
+    const fiveNaturalT1 = cases.find(
+        (entry) =>
+            entry.id === "conquest-lamellar-allflame-five-natural-t1-product",
+    );
+    assert.ok(fiveNaturalT1);
+    assert.deepEqual(fiveNaturalT1.bounded_best_policy_contract, {
+        allow_exact: true,
+        bounded_requires_named_stop: true,
+        allowed_bounded_terminations: ["numerical_stability"],
+        allowed_bounded_stop_causes: ["numerical_stability"],
         bounded_requires_strict_gap: true,
         bounded_requires_open_obligations: true,
         require_evaluated_upper: true,

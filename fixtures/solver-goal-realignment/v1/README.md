@@ -11,11 +11,17 @@ envelope with `goal_progress_gated_reforges`. The historical Mirage regression
 fixture is unchanged.
 
 The live Calculator scheduling witnesses use the same empty ilvl-86 Conquest
-Lamellar and published Allflame economy without a base-price override. One
-requires the three displayed natural T1 armour/evasion prefixes. The harder
-five-affix witness adds natural T1 physical-damage reduction and spell
-suppression suffixes. It is a from-empty five-T1 goal and must not be
-represented by the separate partial five-mod control below.
+Lamellar and published Allflame economy without a base-price override. The
+main exact corpus includes the three displayed natural T1 armour/evasion
+prefixes. The harder `five-natural-t1-manifest.json` witness adds natural T1
+physical-damage reduction and spell-suppression suffixes. It is a from-empty
+five-T1 goal and must not be represented by the separate partial five-mod
+control below. Exact closure remains preferred, while its bounded contract
+also accepts the named numerical-stability boundary only with a strict open
+gap and a cheapest independently evaluated executable policy. Its more-than-
+37-million-action Chaos fallback is independently exact-evaluated; sampled
+verification is not required because the unchanged Simulator limit is 100,000
+actions per run.
 
 The focused Vaal Regalia case starts with a satisfied suffix goal and existing
 Exarch dominance. Its open, naturally rollable prefix target, pinned Allflame
@@ -55,5 +61,6 @@ The primary Conquest Lamellar case is successful only when native and release
 WASM both close exactly within five minutes, publish the same-semantics
 independently evaluated strategy, and complete the milestone's required
 10,000-run verification. A bounded or cap-stopped primary policy remains
-useful evidence but does not satisfy that case. The separate five-mod manifest
-owns its explicitly bounded ten-minute acceptance contract.
+useful evidence but does not satisfy that case. The separate five-natural-T1
+and partial five-mod manifests own their explicit bounded acceptance
+contracts.

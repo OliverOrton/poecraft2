@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: active implementation boundary at the Gate 2 sparse fixed-policy
-convergence defect.**
+**Status: active implementation boundary at Gate 2 cooperative strict
+finalization. The five-natural-T1 sparse-policy hang is closed.**
 
 Oliver selected
 [Calculator WASM Scheduling And Progress](docs/active/2026-08-14-calculator-wasm-scheduling-progress/plan.md)
@@ -56,7 +56,7 @@ The exact witness now returns in about 142 seconds instead of failing the
 five-minute boundary, with max bounded step 76.028 ms and the final exact value
 `2186.6911143146394`.
 
-Two boundaries remain. The first and current source boundary comes from
+The five-natural-T1 source boundary came from
 Oliver's representative from-empty five-natural-T1 request. It is the same
 Conquest Lamellar, Allflame snapshot, and three prefix goals, plus natural T1
 `AdditionalPhysicalDamageReduction5_` and
@@ -74,19 +74,33 @@ produces the same failure and almost identical work. A 1,024-item control only
 improves fallback throughput modestly. The preferred executable upper
 `37279857.82627867` matches the live report's scale.
 
-Next action: repair and prove the shared large-SCC fixed-policy evaluator in
-`engine/src/solver_sparse_policy.cpp`, then rerun the frozen 30-second witness
-before any long qualification. Do not raise `max_sweeps`, add an unproved
-positive lower, or treat the old partial five-mod control as acceptance. Keep
-the selected scheduler/progress work unless terminal semantics disprove it.
+That numerical boundary is now closed. The 926-state component no longer
+abandons BiCGSTAB after two nonmonotone residual windows and now converges in
+at most 53 sparse iterations. Policy-hash instrumentation then proved that the
+remaining loop reevaluated an identical selected row policy with `improved =
+false`; only strict ordering inside the numerical latch remained unresolved.
+Two such complete rounds now terminate as `numerical_stability`. This cannot
+claim exactness or a positive lower: finalization independently evaluates the
+retained executable fallback and publishes only a bounded upper.
 
-The second architecture boundary is unchanged: the 142.123-second strict lift
-is still a single synchronous WASM finalization call. A cancel at the
-finalizing boundary prevents it; a cancel clicked after it begins is preserved
-as cancelled but cannot shorten the wait. Genuine interruption requires an
-incremental retained strict-lift work object across C ABI/WASM steps
+The final release-WASM run on the exact empty-to-five-T1 request finishes in
+`5304.073` ms total (`1359.401` ms solve, `876.765` ms finalization,
+`799.929` ms compile/evaluation), with a `93.106` ms maximum bounded worker
+step. It returns `bounded_feasible / numerical_stability`, lower `0`, evaluated
+upper `37279857.73995944`, no cap hits, and 20,175 explicit remaining action-
+envelope obligations. Its 3-node/3-edge Chaos-renewal strategy exact-evaluates
+to the identical upper. The result is useful but not an optimality claim.
+
+The only remaining architecture boundary is unchanged: the 142.123-second
+strict lift is still a single synchronous WASM finalization call. A cancel at
+the finalizing boundary prevents it; a cancel clicked after it begins is
+preserved as cancelled but cannot shorten the wait. Genuine interruption
+requires an incremental retained strict-lift work object across C ABI/WASM steps
 (principally 4,215 selected kernel builds here), or an equivalent isolated
 reconstructible worker. A UI label cannot satisfy that part of Gate 2.
 
-Do not start final acceptance or archive while either Gate 2 boundary remains
-unresolved. The full pipeline remains reserved for the end.
+Next action: make the strict lift cooperative through a retained incremental
+work object across C ABI/WASM steps, or stop with an equivalent precise
+architecture handoff. Do not start final acceptance or archive while this
+Gate 2 boundary remains unresolved. The full pipeline remains reserved for the
+end.

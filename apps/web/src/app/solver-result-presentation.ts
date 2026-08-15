@@ -182,6 +182,8 @@ function terminationLabel(
             return "Resource cap reached";
         case "no_executable_policy":
             return "No executable policy could be certified";
+        case "numerical_stability":
+            return "Numerical stability boundary reached";
         default:
             return "Solve stopped without a classified termination";
     }
@@ -321,6 +323,11 @@ export function solveTerminationDetail(
         return retainedCoreCertificationDetail(telemetry) ??
             "The solver could not establish a proper executable fallback, so no finite policy upper bound is claimed.";
     }
+    if (summary.termination === "numerical_stability") {
+        return summary.policy_available
+            ? "The selected policy stopped changing, but strict comparisons inside the numerical stability tolerance could not be reconciled. The independently evaluated executable policy is published as bounded; exactness is not claimed."
+            : "The selected policy stopped changing before strict comparisons inside the numerical stability tolerance could be reconciled, and no executable fallback was certified.";
+    }
     return "The solve stopped without a classified termination reason.";
 }
 
@@ -367,6 +374,8 @@ function stopCauseLabel(
             return `Other resource cap${namedCaps}`;
         case "no_executable_policy":
             return "No executable policy";
+        case "numerical_stability":
+            return "Numerical stability boundary";
         default:
             return "No stopping cause reported";
     }

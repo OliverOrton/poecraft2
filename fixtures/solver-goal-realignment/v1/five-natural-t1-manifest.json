@@ -1,0 +1,31 @@
+{
+  "schema_version": "solver_benchmark_corpus_v1",
+  "corpus_id": "poecraft2-solver-goal-realignment-five-natural-t1-v1",
+  "artifact": {
+    "manifest_relative_path": "data/compiled/current/manifest.json",
+    "canonical_source": "data/sqlite/poecraft.db",
+    "engine_abi_version": 2,
+    "artifact_schema_version": 4,
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+    "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+  },
+  "comparison_profile": {
+    "id": "solver-goal-realignment-five-natural-t1-v1",
+    "product_scope": "calculator_goal_relevant_with_zero_progress_gated_reforges",
+    "exact_required": false,
+    "maximum_wall_seconds": 300,
+    "compiled_exact_evaluation_required": true,
+    "verification_runs": 0
+  },
+  "owner_decisions": [
+    "This is Oliver's live from-empty Conquest Lamellar witness: three natural T1 armour/evasion prefixes plus natural T1 physical-damage reduction and spell suppression suffixes.",
+    "The case uses the published Allflame snapshot without a base or action-price override; missing prices and unsupported relevant mechanics remain explicit open obligations.",
+    "Exact closure is preferred. A numerical-stability result qualifies only when it reports a strict open gap, publishes the cheapest available executable policy, compiles it, and independently exact-evaluates it within five minutes.",
+    "Sampled Simulator verification is not an acceptance obligation for this breadth boundary: the independently evaluated Chaos fallback averages more than 37 million actions, far above the unchanged 100,000-action per-run Simulator limit."
+  ],
+  "cases": [
+    "cases/conquest-lamellar-allflame-five-natural-t1-product.json"
+  ]
+}

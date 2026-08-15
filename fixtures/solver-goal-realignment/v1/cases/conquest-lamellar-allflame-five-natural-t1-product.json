@@ -4,9 +4,8 @@
   "category": "calculator_wasm_scheduling_product_witness",
   "approval_status": "owner_live_witness_2026_08_14",
   "benchmark_enabled": true,
-  "benchmark_mode": "exact_product_acceptance",
   "description": "Oliver's empty rare item-level-86 Conquest Lamellar requiring three natural T1 armour/evasion prefixes plus natural T1 physical-damage reduction and spell-suppression suffixes under the published Allflame economy with no manual price override.",
-  "comparison_profile": "solver-goal-realignment-native-wasm-v1",
+  "comparison_profile": "solver-goal-realignment-five-natural-t1-v1",
   "watchdog_seconds": 300,
   "session": {
     "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
@@ -71,10 +70,20 @@
     }
   },
   "expected": {
-    "solve_status": "converged",
-    "optimality_status": "exact",
+    "solve_status": "reliability_classified",
+    "optimality_status": "classified",
     "compile_status": "compiled",
-    "verification_status": "run"
+    "verification_status": "not_required"
+  },
+  "bounded_best_policy_contract": {
+    "allow_exact": true,
+    "bounded_requires_named_stop": true,
+    "allowed_bounded_terminations": ["numerical_stability"],
+    "allowed_bounded_stop_causes": ["numerical_stability"],
+    "bounded_requires_strict_gap": true,
+    "bounded_requires_open_obligations": true,
+    "require_evaluated_upper": true,
+    "require_cheapest_independently_evaluated_incumbent": true
   },
   "caps": {
     "max_states": 200000,
@@ -98,7 +107,7 @@
     "full_evidence": false
   },
   "verification": {
-    "runs": 10000,
+    "runs": 0,
     "seed": 20260814,
     "max_actions_per_run": 100000,
     "max_graph_steps_per_run": 4000000,

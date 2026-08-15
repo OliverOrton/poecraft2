@@ -56,6 +56,9 @@ SolveTermination successful_refined_publication_termination(
     if (coarse_termination == SolveTermination::TargetGap) {
         return SolveTermination::TargetGap;
     }
+    if (coarse_termination == SolveTermination::NumericalStability) {
+        return SolveTermination::NumericalStability;
+    }
     /*
      * The caller has retained an exact executable strategy, so None and
      * NoExecutablePolicy cannot remain the published stopping cause. They
@@ -1343,7 +1346,9 @@ SolveResult SolveWork::Impl::finish() {
             result.termination =
                 target_gap_stop
                     ? SolveTermination::TargetGap
-                    : SolveTermination::RefusedResourceCap;
+                    : numerical_stability_stop
+                          ? SolveTermination::NumericalStability
+                          : SolveTermination::RefusedResourceCap;
             result.lower_bound = certified_global_lower_bound();
             result.upper_bound = incumbent.certified_upper_bound;
             result.evaluated_policy_cost =
@@ -1374,7 +1379,9 @@ SolveResult SolveWork::Impl::finish() {
              * without an incumbent is still a resource-cap result; callers
              * must not have to infer it from optional telemetry. */
             result.termination =
-                result.diagnostics.resource_cap_hit
+                numerical_stability_stop
+                    ? SolveTermination::NumericalStability
+                    : result.diagnostics.resource_cap_hit
                     ? SolveTermination::RefusedResourceCap
                     : SolveTermination::NoExecutablePolicy;
             result.lower_bound = certified_global_lower_bound();

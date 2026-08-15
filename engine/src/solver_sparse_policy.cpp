@@ -955,13 +955,26 @@ SparsePolicyComponentResult advance_sparse_policy_component(
                               true_residual_stagnation) +
                               1));
                 last_true_residual = checked_residual;
-                if (!std::isfinite(checked_residual) ||
-                    true_residual_stagnation >= 2) {
+                if (!std::isfinite(checked_residual)) {
                     for (WideFloat& value : x) {
                         if (!finite_wide(value)) value = 0.0;
                     }
                     last_true_residual = true_residual(r);
                     mode = SparsePolicySolveMode::GaussSeidel;
+                    true_residual_stagnation = 0;
+                } else if (true_residual_stagnation >= 32) {
+                    /* BiCGSTAB residuals are not monotone. Two cooperative
+                     * four-iteration units without a 1e-6 relative decrease
+                     * are not evidence that Krylov acceleration failed; on
+                     * large rare-event SCCs that rule abandoned the solver
+                     * after eight iterations and left nearly the entire
+                     * 100,000-iteration budget to slow Gauss-Seidel sweeps.
+                     * Replace the recursive residual and restart the Krylov
+                     * recurrence only after a sustained finite plateau. The
+                     * dimension bound below remains the deterministic
+                     * authority for switching algorithms. */
+                    r = s;
+                    reset_bicgstab();
                     true_residual_stagnation = 0;
                 } else if (bicgstab_candidate_converged) {
                     /* The recursive residual was optimistic. Restart from the

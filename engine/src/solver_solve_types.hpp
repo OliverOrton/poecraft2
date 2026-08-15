@@ -833,6 +833,8 @@ struct SolveWork::Impl {
     std::vector<std::uint32_t> policy_selection_states;
     bool policy_selection_improved = false;
     bool policy_strict_order_reconciled = true;
+    std::uint32_t unreconciled_stable_policy_rounds = 0;
+    bool numerical_stability_stop = false;
     double policy_selection_residual = 0.0;
     std::uint64_t peak_policy_scratch_bytes = 0;
     std::uint64_t current_policy_scratch_bytes = 0;

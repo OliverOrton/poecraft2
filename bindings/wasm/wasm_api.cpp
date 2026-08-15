@@ -704,6 +704,8 @@ const char* solve_termination_name(const int32_t termination) {
     case PC_SOLVE_TERMINATION_EXACT_CLOSED: return "exact_closed";
     case PC_SOLVE_TERMINATION_NO_EXECUTABLE_POLICY:
         return "no_executable_policy";
+    case PC_SOLVE_TERMINATION_NUMERICAL_STABILITY:
+        return "numerical_stability";
     default: return "none";
     }
 }
@@ -725,6 +727,8 @@ const char* solve_stop_cause_name(const int32_t cause) {
         return "other_resource_cap";
     case PC_SOLVE_STOP_NO_EXECUTABLE_POLICY:
         return "no_executable_policy";
+    case PC_SOLVE_STOP_NUMERICAL_STABILITY:
+        return "numerical_stability";
     default: return "none";
     }
 }

@@ -70,6 +70,8 @@ export interface SolverBenchmarkCase {
     bounded_best_policy_contract?: {
         allow_exact: boolean;
         bounded_requires_named_stop: boolean;
+        allowed_bounded_terminations?: string[];
+        allowed_bounded_stop_causes?: string[];
         bounded_requires_strict_gap: boolean;
         bounded_requires_open_obligations: boolean;
         require_evaluated_upper: boolean;

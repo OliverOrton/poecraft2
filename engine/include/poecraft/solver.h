@@ -395,7 +395,8 @@ typedef enum pc_solve_termination {
     PC_SOLVE_TERMINATION_REFUSED_RESOURCE_CAP = 1,
     PC_SOLVE_TERMINATION_TARGET_GAP = 2,
     PC_SOLVE_TERMINATION_EXACT_CLOSED = 3,
-    PC_SOLVE_TERMINATION_NO_EXECUTABLE_POLICY = 4
+    PC_SOLVE_TERMINATION_NO_EXECUTABLE_POLICY = 4,
+    PC_SOLVE_TERMINATION_NUMERICAL_STABILITY = 5
 } pc_solve_termination;
 
 /* Precise stopping cause is independent of policy availability. A capped
@@ -414,7 +415,8 @@ typedef enum pc_solve_stop_cause {
     PC_SOLVE_STOP_STATE_ACTION_ROW_CAP = 8,
     PC_SOLVE_STOP_COMPILED_OUTPUT_CAP = 9,
     PC_SOLVE_STOP_OTHER_RESOURCE_CAP = 10,
-    PC_SOLVE_STOP_NO_EXECUTABLE_POLICY = 11
+    PC_SOLVE_STOP_NO_EXECUTABLE_POLICY = 11,
+    PC_SOLVE_STOP_NUMERICAL_STABILITY = 12
 } pc_solve_stop_cause;
 
 typedef enum pc_solve_cap_hit {

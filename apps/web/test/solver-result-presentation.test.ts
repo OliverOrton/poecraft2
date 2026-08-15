@@ -466,6 +466,40 @@ import {
     console.log("  ok - an explicitly open action envelope blocks exact presentation");
 }
 
+{
+    const summary = solveSummary({
+        policy_available: true,
+        policy_status: "bounded_feasible",
+        termination: "numerical_stability",
+        stop_cause: "numerical_stability",
+        lower_bound: 0,
+        upper_bound: 37_279_857.83,
+        evaluated_policy_cost: 37_279_857.83,
+        absolute_optimality_gap: 37_279_857.83,
+    });
+    const detail = solveTerminationDetail(summary, null);
+    assert.match(detail, /strict comparisons/);
+    assert.match(detail, /published as bounded/);
+    const markup = solveResultMarkup({
+        summary,
+        admittedActionIds: ["chaos"],
+        excludedActions: 0,
+        missingPriceKeys: [],
+        economyLabel: "Test economy",
+        terminationDetail: detail,
+        productActionScope: "goal_relevant",
+        goalProgressGatedReforges: true,
+        hasCompiledStrategy: true,
+        compiledOperationTypes: ["chaos"],
+        busy: false,
+        verification: null,
+        telemetry: null,
+    });
+    assert.match(markup, /Numerical stability boundary/);
+    assert.doesNotMatch(markup, /Exact optimal policy/);
+    console.log("  ok - numerical stability stops remain explicitly bounded");
+}
+
 function solveSummary(overrides: Partial<SolveSummary>): SolveSummary {
     return {
         converged: false,

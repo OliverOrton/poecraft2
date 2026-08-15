@@ -1,7 +1,7 @@
 # Gate 1 Scheduler Selection And Gate 2 Progress Contract
 
-**Status: Gate 1 complete; Gate 2 implementation retained with one explicit
-open architecture boundary.**
+**Status: Gate 1 complete; Gate 2 scheduling/progress and the five-natural-T1
+numerical stop are retained with one explicit open architecture boundary.**
 
 Parent: [Plan](../plan.md)
 
@@ -149,3 +149,68 @@ Raw ignored reports:
   and
 - `gate2-five-mod-product-30s.json`, 418,887 bytes, SHA-256
   `79a843ac7272c7048a966c21e9fa6ef5a54de93cf3098ca4cab98614adad40aa`.
+
+## Five-natural-T1 selected numerical stop
+
+The shared SCC evaluator abandoned BiCGSTAB after only two cooperative
+four-iteration windows without a monotone `1e-6` residual decrease. BiCGSTAB
+residuals are nonmonotone, so the 926-state rare-event component entered slow
+Gauss-Seidel after about eight accelerated iterations and exhausted almost the
+entire 100,000-iteration budget. The retained evaluator allows a sustained 32-
+window finite plateau to restart the Krylov recurrence; nonfinite residuals,
+actual breakdown, and the deterministic `2 * component_dimension` limit still
+switch to Gauss-Seidel under the unchanged public budget.
+
+That repair removed `sparse_policy_component_did_not_converge`: the component
+now solves in at most 53 sparse iterations. A 60-second diagnostic then showed
+the selected value and residual remaining byte-for-byte stable through 12,822
+policy rounds. Temporary policy-hash instrumentation confirmed that sweep 8
+and every sampled later sweep selected the same row policy with `improved =
+false`; only `policy_strict_order_reconciled` remained false. A wider row-Q
+accumulation experiment preserved that boundary and reduced throughput, so it
+was rejected.
+
+The selected stop counts complete unchanged/unreconciled policy rounds. After
+two, it terminates as `numerical_stability` instead of running the identical
+policy to the unrelated sweep cap. This is not a closure proof: finalization
+restores the retained executable fallback, independently evaluates it, keeps
+the globally certified lower at zero, and publishes only a bounded upper. If
+strict refinement independently closes the global envelope, ordinary exact
+authority still upgrades the result to `exact_closed`.
+
+The final release-WASM acceptance uses Oliver's exact empty Conquest Lamellar
+with the three natural T1 prefixes plus T1 physical-damage reduction and T1
+spell suppression. The ordinary eight-item product scheduler reports:
+
+| Field | Result |
+| --- | ---: |
+| total / solve / compile wall ms | `5304.073` / `1359.401` / `799.929` |
+| synchronous finalization ms | `876.765` |
+| maximum bounded worker step ms | `93.106` |
+| policy rounds / fixed-policy calls | `10` / `18` |
+| sparse component iterations | `571` total, `53` maximum |
+| policy status / termination | `bounded_feasible` / `numerical_stability` |
+| lower / evaluated upper | `0` / `37279857.73995944` |
+| compiled graph | `3` nodes / `3` edges |
+| cap hits | none |
+| remaining action-envelope work | `20175` |
+
+All bounded-publication checks pass: named stop, strict gap, open obligations,
+evaluated upper, and cheapest independently evaluated incumbent. The compiled
+Chaos-renewal policy's exact evaluator converges with success mass one and the
+same expected cost. Sampled verification is not an acceptance obligation for
+this breadth boundary because its mean exceeds 37 million actions while the
+unchanged Simulator limit is 100,000 actions per run.
+
+Final ignored report:
+`build/calculator-wasm-scheduling/gate2-five-natural-t1-bounded-acceptance-final.json`,
+469,348 bytes, SHA-256
+`446da6182824b33f616c540fc8a37e52f4ed05c28ed8fe482b90755050bae25d`.
+The rebuilt tracked release WASM is 5,644,399 bytes with SHA-256
+`eaa61c17177478306b729a43a39e36727244dd827c0069d914f51d065f807442`.
+
+Focused checks pass: fresh native build; native solve, API, and exact-evaluation
+CTest targets; goal-realignment corpus tests; numerical-stop result
+presentation; TypeScript no-emit; final release-WASM rebuild; and the exact
+five-natural-T1 bounded acceptance. The full repository pipeline remains
+reserved for final Gate 4.

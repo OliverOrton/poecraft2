@@ -77,7 +77,20 @@ enum class SolveTermination : std::uint8_t {
     TargetGap,
     ExactClosed,
     NoExecutablePolicy,
+    NumericalStability,
 };
+
+inline bool advance_unreconciled_stable_policy_latch(
+    const bool policy_improved,
+    const bool strict_order_reconciled,
+    std::uint32_t& consecutive_rounds) {
+    if (policy_improved || strict_order_reconciled) {
+        consecutive_rounds = 0;
+        return false;
+    }
+    ++consecutive_rounds;
+    return consecutive_rounds >= 2;
+}
 
 /*
  * Bounded refinement preserves the coarse solve's genuine stopping cause. A

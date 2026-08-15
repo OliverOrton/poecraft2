@@ -129,6 +129,13 @@ optimal” and “At most 10% more expensive than optimal.” They never say the
 policy is 10% suboptimal or call the upper bound the optimum; a weak lower
 bound can make the certificate pessimistic.
 
+A named numerical-stability stop is likewise bounded, never exact. It means
+the selected policy stopped changing across complete fixed-policy evaluations
+while strict comparisons remained unresolved inside the numerical tolerance.
+Calculator may publish the independently evaluated executable policy as an
+upper bound, keeps the certified lower and open obligations visible, and does
+not relabel the policy value as the optimum.
+
 Automatic options remain native planner operators and compile into primitive
 strategy nodes; the web app does not execute opaque macros.
 

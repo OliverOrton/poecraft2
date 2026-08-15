@@ -1281,6 +1281,8 @@ std::string serialize_solver_telemetry(
         case SolveTermination::ExactClosed: return "exact_closed";
         case SolveTermination::NoExecutablePolicy:
             return "no_executable_policy";
+        case SolveTermination::NumericalStability:
+            return "numerical_stability";
         }
         return "none";
     };

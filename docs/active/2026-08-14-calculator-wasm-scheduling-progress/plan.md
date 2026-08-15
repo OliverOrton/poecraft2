@@ -1,6 +1,7 @@
 # Calculator WASM Scheduling And Progress
 
-**Status: active at the five-natural-T1 sparse-policy convergence boundary.**
+**Status: active with the five-natural-T1 numerical boundary closed; the
+cooperative strict-finalization architecture boundary remains.**
 Selected by Oliver on 2026-08-14 from live release-WASM Calculator reports.
 
 Parent: [Active work](../README.md)
@@ -128,9 +129,10 @@ required, stop with a new precise handoff.
 ## Gate 2 - Product Scheduler, Sparse Convergence, And Truthful Progress
 
 **Status: scheduler and truthful progress implemented; the from-empty
-five-natural-T1 sparse-policy convergence failure and cooperative strict
-finalization remain open.** The three-prefix witness closes exact in about 142
-seconds with sub-77-ms bounded steps and a truthful final result snapshot. Its
+five-natural-T1 sparse-policy failure now returns a truthful bounded result,
+while cooperative strict finalization remains open.** The three-prefix witness
+closes exact in about 142 seconds with sub-77-ms bounded steps and a truthful
+final result snapshot. Its
 142-second strict lift remains a single synchronous WASM finalization call;
 cancellation is preserved but cannot shorten that pass. Evidence:
 [Gate 1/2 record](evidence/gate1-gate2-selection-progress.md).
@@ -164,7 +166,22 @@ with a larger sweep cap. Compare scheduler on/off and eight/1,024 work items,
 but preserve the selected eight-item product responsiveness boundary unless a
 measured adaptive chunk remains within 250 ms.
 
+The selected correction now satisfies that breadth boundary. BiCGSTAB no
+longer abandons a finite nonmonotone residual after only two four-iteration
+windows. When two complete fixed-policy evaluations retain the identical row
+policy but strict ordering remains inside the numerical latch, the solve stops
+as `numerical_stability` and may publish only an independently evaluated
+bounded fallback. The final release-WASM product run completes solve, compile,
+and exact evaluation in `5304.073` ms with a `93.106` ms maximum worker step,
+lower `0`, evaluated upper `37279857.73995944`, no cap hit, and explicit open
+obligations. Exactness is not claimed.
+
 ## Gate 3 - Focused Qualification
+
+**Partial:** the five-natural-T1 breadth qualification is complete as the
+named bounded result above. The three-prefix and four-goal final controls
+remain reserved until the cooperative finalization boundary is selected or
+handed off precisely.
 
 Rebuild native and release WASM after their respective source changes. Run the
 three-prefix product-equivalent case and the four-goal qualification control.

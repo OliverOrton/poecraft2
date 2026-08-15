@@ -427,6 +427,12 @@ function statusFrom(
     }
     if (
         solve && !solve.cancelled &&
+        solve.termination === "numerical_stability"
+    ) {
+        return "numerical_stability";
+    }
+    if (
+        solve && !solve.cancelled &&
         solve.termination === "no_executable_policy"
     ) {
         return "no_executable_policy";
@@ -474,6 +480,7 @@ function expectationMet(expected: string, actual: string): boolean {
             "bounded_near_optimal",
             "bounded_feasible",
             "no_executable_policy",
+            "numerical_stability",
             "refused_state_cap",
             "refused_sweep_cap",
             "refused_resource_cap",
@@ -596,8 +603,18 @@ function boundedBestPolicyReport(
         "state_action_row_cap",
         "compiled_output_cap",
     ]);
-    const namedStop = solve?.termination === "refused_resource_cap" &&
-        capStops.has(solve.stop_cause);
+    const allowedTerminations = contract.allowed_bounded_terminations;
+    const allowedStopCauses = contract.allowed_bounded_stop_causes;
+    const namedStop = allowedTerminations === undefined &&
+            allowedStopCauses === undefined
+        ? solve?.termination === "refused_resource_cap" &&
+            capStops.has(solve.stop_cause)
+        : solve !== null &&
+            solve !== undefined &&
+            (allowedTerminations === undefined ||
+                allowedTerminations.includes(solve.termination)) &&
+            (allowedStopCauses === undefined ||
+                allowedStopCauses.includes(solve.stop_cause));
     const strictGap = finiteNumber(solve?.lower_bound) &&
         finiteNumber(solve?.upper_bound) &&
         solve.lower_bound < solve.upper_bound;

@@ -991,8 +991,12 @@ independently. `policy_status` distinguishes no policy, bounded feasible,
 bounded near-optimal, and exact policy. `stop_cause` separately names exact
 closure, a requested gap, or the first deterministic state, transition,
 memory, sweep, reforge-work, state/action-row, compiled-output, or other
-resource stop. `cap_hit_mask` retains every observed cap, including when a
-proper bounded policy survives.
+resource stop. It also names `numerical_stability` when repeated complete
+fixed-policy evaluations select the same policy but cannot reconcile a strict
+row comparison inside the numerical tolerance. That stop cannot claim
+exactness; it may retain only an independently evaluated executable upper.
+`cap_hit_mask` retains every observed cap, including when a proper bounded
+policy survives.
 
 Action accounting is also categorical: registry actions, solver candidates,
 evaluator-supported actions, supported priced actions, missing-price skips,

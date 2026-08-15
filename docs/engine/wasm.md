@@ -173,7 +173,11 @@ The completed ABI v2 summary keeps `converged` as the exact-closure flag and
 separately reports policy availability/status, termination, `L`, `U`, exact
 returned-policy cost, gaps, requested targets, and the firing target. The
 facade serializes unavailable numeric claims as `null`. Gap options are
-forwarded to native solve and are product stopping targets only.
+forwarded to native solve and are product stopping targets only. A
+`numerical_stability` termination/stop cause means complete fixed-policy
+evaluations stopped changing the selected row policy while a strict comparison
+remained inside the numerical latch. It never implies exact closure; only an
+independently evaluated executable fallback may accompany that bounded result.
 
 The versioned raw telemetry's `policy_result` also carries
 `global_lower_bound_certified` and `lower_bound_provenance`. Provenance is one

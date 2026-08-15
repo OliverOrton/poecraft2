@@ -713,6 +713,8 @@ int32_t solve_termination(const solver::SolveTermination termination) {
         return PC_SOLVE_TERMINATION_EXACT_CLOSED;
     case solver::SolveTermination::NoExecutablePolicy:
         return PC_SOLVE_TERMINATION_NO_EXECUTABLE_POLICY;
+    case solver::SolveTermination::NumericalStability:
+        return PC_SOLVE_TERMINATION_NUMERICAL_STABILITY;
     }
     return PC_SOLVE_TERMINATION_NONE;
 }
@@ -772,6 +774,8 @@ int32_t solve_stop_cause(const solver::SolveResult& result) {
         return PC_SOLVE_STOP_TARGET_GAP;
     case solver::SolveTermination::NoExecutablePolicy:
         return PC_SOLVE_STOP_NO_EXECUTABLE_POLICY;
+    case solver::SolveTermination::NumericalStability:
+        return PC_SOLVE_STOP_NUMERICAL_STABILITY;
     case solver::SolveTermination::RefusedResourceCap:
         return PC_SOLVE_STOP_OTHER_RESOURCE_CAP;
     case solver::SolveTermination::None:

@@ -675,6 +675,24 @@ bool SolveWork::Impl::advance_policy_selection(bool& improved) {
         residual = policy_selection_residual;
         result.diagnostics.residual = residual;
         improved = policy_selection_improved;
+        if (advance_unreconciled_stable_policy_latch(
+                policy_selection_improved,
+                policy_strict_order_reconciled,
+                unreconciled_stable_policy_rounds)) {
+            /* The selected row policy did not change across two complete
+             * exact fixed-policy evaluations, but a strictly cheaper
+             * comparison remains inside the numerical stability latch.
+             * Repeating the identical policy cannot reconcile that proof
+             * obligation. Stop with the independently evaluated fallback
+             * as a bounded upper instead of claiming exactness or running
+             * to the unrelated public sweep cap. */
+            numerical_stability_stop = true;
+            if (result.diagnostics.policy_evaluation_failure.empty()) {
+                result.diagnostics.policy_evaluation_failure =
+                    "strict_policy_order_unreconciled_at_"
+                    "numerical_stability";
+            }
+        }
         policy_selection_active = false;
         policy_selection_states.clear();
         return true;
@@ -690,6 +708,8 @@ void SolveWork::Impl::reset_policy_iteration_units() {
         policy_selection_states.clear();
         policy_selection_improved = false;
         policy_strict_order_reconciled = true;
+        unreconciled_stable_policy_rounds = 0;
+        numerical_stability_stop = false;
         policy_selection_residual = 0.0;
         sparse_policy_resume.reset();
         policy_kernel_preparation.reset();
@@ -1695,7 +1715,8 @@ bool SolveWork::Impl::run_policy_iteration_unit() {
         ++result.diagnostics.bellman_work_units;
         policy_unit_stage = PolicyUnitStage::Evaluate;
         finish_unit();
-        if ((policy_stable && residual <= acceptable_residual()) ||
+        if (numerical_stability_stop ||
+            (policy_stable && residual <= acceptable_residual()) ||
             sweeps >= options.max_sweeps) {
             backup_active = false;
         } else {
@@ -1996,6 +2017,10 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                 continue;
             }
 
+            if (!backup_active && numerical_stability_stop) {
+                phase = SolvePhase::Done;
+                break;
+            }
             if (!backup_active &&
                 (optimization_converged() ||
                  sweeps >= options.max_sweeps)) {
@@ -2034,6 +2059,10 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                 run_bellman_unit();
             }
             --remaining;
+            if (!backup_active && numerical_stability_stop) {
+                phase = SolvePhase::Done;
+                break;
+            }
             if (!backup_active &&
                 (optimization_converged() ||
                  sweeps >= options.max_sweeps)) {

@@ -1110,6 +1110,10 @@ void SolveWork::Impl::run_focused_lower_unit() {
                 return;
             }
         }
+        if (!backup_active && numerical_stability_stop) {
+            phase = SolvePhase::Done;
+            return;
+        }
         if (!backup_active && optimization_converged()) {
             if (focused_upper_mode) {
                 finish_focused_upper_solve(true);

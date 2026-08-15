@@ -1836,6 +1836,20 @@ void report_solve_issue(
 }
 
 void run_policy_guided_exact_lift_tests() {
+    std::uint32_t unresolved_rounds = 0;
+    PC_CHECK(!advance_unreconciled_stable_policy_latch(
+        false, false, unresolved_rounds));
+    PC_CHECK(unresolved_rounds == 1);
+    PC_CHECK(advance_unreconciled_stable_policy_latch(
+        false, false, unresolved_rounds));
+    PC_CHECK(unresolved_rounds == 2);
+    PC_CHECK(!advance_unreconciled_stable_policy_latch(
+        true, false, unresolved_rounds));
+    PC_CHECK(unresolved_rounds == 0);
+    PC_CHECK(!advance_unreconciled_stable_policy_latch(
+        false, true, unresolved_rounds));
+    PC_CHECK(unresolved_rounds == 0);
+
     PC_CHECK(
         successful_refined_publication_termination(
             SolveTermination::ExactClosed, false) ==
@@ -1856,6 +1870,14 @@ void run_policy_guided_exact_lift_tests() {
         successful_refined_publication_termination(
             SolveTermination::TargetGap, false) ==
         SolveTermination::TargetGap);
+    PC_CHECK(
+        successful_refined_publication_termination(
+            SolveTermination::NumericalStability, false) ==
+        SolveTermination::NumericalStability);
+    PC_CHECK(
+        successful_refined_publication_termination(
+            SolveTermination::NumericalStability, false, true) ==
+        SolveTermination::ExactClosed);
     PC_CHECK(
         successful_refined_publication_termination(
             SolveTermination::NoExecutablePolicy, false, false, true) ==
