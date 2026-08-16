@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: active implementation boundary at Gate 0 selected-policy and
-finalization evidence. The five-natural-T1 sparse-policy hang is closed.**
+**Status: active implementation boundary at Gate 1 selected-policy
+preservation. Gate 0 evidence is complete.**
 
 Oliver selected
 [Calculator WASM Scheduling And Progress](docs/active/2026-08-14-calculator-wasm-scheduling-progress/plan.md)
@@ -106,10 +106,18 @@ requires an incremental retained strict-lift work object across C ABI/WASM steps
 (principally 4,215 selected kernel builds here), or an equivalent isolated
 reconstructible worker. A UI label cannot satisfy that part of Gate 2.
 
-Next action: complete Gate 0 by capturing the pre-restore selected-policy
-identity and measuring finalization stages without changing public values,
-bounds, termination, actions, hashes, or cap accounting. Then preserve that
-policy as an explicitly unverified candidate before incumbent restoration.
-Do not start final acceptance or archive while selected-policy certification
-and cooperative exact refinement remain unresolved. The full pipeline remains
-reserved for the end.
+Gate 0 now proves the five-T1 pre-restore policy is stable across eight and
+1,024 work items, structurally materializable, and captured in about 5.3 ms
+without changing the retained public result. The known three-prefix control
+remains exact at `2186.6911143146394`. The newly frozen four-goal control spends
+173.7 seconds in finalization, ends at the exact evaluator's unchanged
+`max_sweeps`, and exposes a pre-existing `bounded_feasible / exact_closed`
+classification defect. Exact graph evaluation, not only strict carrier
+construction, must become cooperative.
+
+Next action: preserve the selected five-T1 policy as an explicitly unverified,
+memory-accounted candidate before incumbent restoration. It must remain
+impossible for that snapshot to affect a public upper until compilation and
+independent exact evaluation succeed. Do not start final acceptance or archive
+while selected-policy certification and cooperative exact refinement remain
+unresolved. The full pipeline remains reserved for the end.

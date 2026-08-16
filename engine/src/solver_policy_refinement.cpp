@@ -1265,6 +1265,7 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
             return node;
         };
 
+        telemetry.carrier_discovery_ns = elapsed_certification_ns();
         std::uint64_t retained_for_partition = oracle.estimated_owned_bytes();
         saturating_add(
             retained_for_partition, ledger.snapshot().total_bytes);
@@ -1274,6 +1275,8 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
             retained_for_partition,
             limits.max_estimated_memory_bytes,
             limits.probability_sum_tolerance};
+        const auto observation_partition_started =
+            std::chrono::steady_clock::now();
         refinement::ClosedPartitionResult observation_coarse =
             refinement::refine_closed_probabilistic_partition_replay(
                 static_cast<std::uint32_t>(locators.size()),
@@ -1281,6 +1284,12 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                     return replay_node(false, ordinal);
                 },
                 {}, false, partition_limits);
+        telemetry.partition_refinement_ns +=
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() -
+                    observation_partition_started)
+                    .count());
         if (observation_coarse.status !=
                 refinement::ClosedPartitionStatus::Complete ||
             !observation_coarse.lumpable) {
@@ -1319,6 +1328,8 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
             ledger.snapshot().total_bytes);
         const std::uint64_t final_partition_retained =
             partition_limits.retained_estimated_memory_bytes;
+        const auto exact_partition_started =
+            std::chrono::steady_clock::now();
         refinement::ClosedPartitionResult partition =
             refinement::refine_closed_probabilistic_partition_replay(
                 static_cast<std::uint32_t>(locators.size()),
@@ -1327,6 +1338,12 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                 },
                 observation_coarse.class_by_node,
                 false, partition_limits);
+        telemetry.partition_refinement_ns +=
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() -
+                    exact_partition_started)
+                    .count());
         if (partition.status != refinement::ClosedPartitionStatus::Complete ||
             !partition.lumpable) {
             throw AdapterFailure(
@@ -1983,6 +2000,8 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
             std::max<std::uint32_t>(1, options.max_sweeps);
         evaluation_request.limits.max_estimated_memory_bytes =
             limits.max_estimated_memory_bytes;
+        const auto policy_evaluation_started =
+            std::chrono::steady_clock::now();
         if (retained_global_lower_authority) {
             std::vector<std::uint32_t> group_by_local(
                 certificate.refinement.classes.size(), kNoId);
@@ -2194,6 +2213,12 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
             certificate.class_evaluation = evaluate_refined_policy_exact(
                 certificate.refinement, std::move(evaluation_request));
         }
+        telemetry.policy_evaluation_ns +=
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() -
+                    policy_evaluation_started)
+                    .count());
         if (certificate.class_evaluation.status !=
                 PolicyEvaluationStatus::Complete ||
             !certificate.class_evaluation.converged ||
@@ -2244,6 +2269,8 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
         certificate.executable = true;
         };
         publish_current_upper(solved_quotient);
+        const auto local_reoptimization_started =
+            std::chrono::steady_clock::now();
         if (!telemetry.work_to_first_executable_upper.has_value()) {
             telemetry.work_to_first_executable_upper =
                 telemetry.strict_reforge_work;
@@ -2901,6 +2928,12 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
              !certificate.global_lower_bound_closed &&
              !telemetry.exact_alternative_envelope_closed);
 
+        telemetry.local_reoptimization_ns +=
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() -
+                    local_reoptimization_started)
+                    .count());
         const quotient::QuotientBellmanTelemetry& final_bellman_telemetry =
             bellman.telemetry();
         telemetry.proof_payload_reuses =
@@ -2969,6 +3002,10 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
         certificate.status = PolicyExactLiftStatus::RefinementFailure;
         certificate.failure_reason = error.what();
     }
+    telemetry.compilation_ns += certificate.compiled.compilation_ns;
+    telemetry.exact_evaluation_ns +=
+        certificate.compiled.exact_evaluation_ns;
+    telemetry.total_ns = elapsed_certification_ns();
     certificate.adapter = std::move(telemetry);
     return certificate;
 }

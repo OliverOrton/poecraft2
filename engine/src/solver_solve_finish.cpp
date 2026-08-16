@@ -326,10 +326,165 @@ SolveResult SolveWork::Impl::finish() {
         const bool restore_output_incumbent =
             output_incumbent.has_value() &&
             !current_policy_can_still_be_exact;
+        {
+            const auto snapshot_started =
+                std::chrono::steady_clock::now();
+            PolicyRefinementTelemetry& telemetry =
+                result.diagnostics.policy_refinement;
+            const std::uint64_t no_row =
+                std::numeric_limits<std::uint64_t>::max();
+            telemetry.pre_restore_policy_present =
+                restore_output_incumbent &&
+                result.start_state < result.values.size() &&
+                result.start_state < policy_rows.size() &&
+                policy_rows[result.start_state] != no_row;
+            telemetry.pre_restore_policy_numerical_stop =
+                telemetry.pre_restore_policy_present &&
+                numerical_stability_stop;
+            if (telemetry.pre_restore_policy_present) {
+                telemetry.pre_restore_policy_start_value =
+                    result.values[result.start_state];
+                telemetry.pre_restore_policy_residual = residual;
+                telemetry.pre_restore_policy_goal_identity =
+                    goal_identity();
+                telemetry.pre_restore_policy_economy_identity =
+                    economy_identity();
+                telemetry
+                    .pre_restore_policy_action_vocabulary_identity =
+                    action_vocabulary_identity();
+                telemetry.pre_restore_policy_graph_identity =
+                    graph_identity();
+                telemetry.pre_restore_policy_artifact_identity =
+                    artifact_identity();
+                telemetry.pre_restore_policy_source_generation =
+                    transition_cache->rows.size();
+                telemetry.pre_restore_policy_target_generation =
+                    calc.state_count();
+
+                std::uint64_t policy_hash = 1469598103934665603ULL;
+                const auto mix = [&policy_hash](const std::uint64_t value) {
+                    policy_hash ^= value;
+                    policy_hash *= 1099511628211ULL;
+                };
+                for (std::size_t state = 0;
+                     state < policy_rows.size(); ++state) {
+                    const std::uint64_t row = policy_rows[state];
+                    mix(state);
+                    mix(row);
+                    if (row == no_row) continue;
+                    ++telemetry.pre_restore_policy_selected_rows;
+                    if (row < priced_rows.size()) {
+                        mix(priced_rows[row].operator_index);
+                        mix(std::bit_cast<std::uint64_t>(
+                            priced_rows[row].cost));
+                    }
+                }
+                telemetry.pre_restore_policy_bits_hash = policy_hash;
+
+                const std::size_t state_count = result.values.size();
+                std::vector<std::uint8_t> reachable(state_count, 0);
+                std::vector<std::uint32_t> pending;
+                pending.reserve(state_count);
+                std::vector<std::uint8_t> action_seen(
+                    calc.operators().size(), 0);
+                telemetry.pre_restore_policy_snapshot_peak_bytes =
+                    reachable.capacity() * sizeof(std::uint8_t) +
+                    pending.capacity() * sizeof(std::uint32_t) +
+                    action_seen.capacity() * sizeof(std::uint8_t);
+                pending.push_back(result.start_state);
+                reachable[result.start_state] = 1;
+                bool materializable = true;
+                for (std::size_t cursor = 0;
+                     cursor < pending.size(); ++cursor) {
+                    const std::uint32_t state = pending[cursor];
+                    if (state >= state_count) {
+                        materializable = false;
+                        continue;
+                    }
+                    ++telemetry.pre_restore_policy_reachable_states;
+                    if (calc.is_goal_state(calc.state(state))) continue;
+                    if (state >= policy_rows.size()) {
+                        materializable = false;
+                        continue;
+                    }
+                    const std::uint64_t row_index = policy_rows[state];
+                    if (row_index == no_row ||
+                        row_index >= transition_cache->rows.size() ||
+                        row_index >= priced_rows.size()) {
+                        materializable = false;
+                        continue;
+                    }
+                    const SparseRow& row =
+                        transition_cache->rows[row_index];
+                    const PricedSparseRow& priced =
+                        priced_rows[row_index];
+                    if (!row.admitted ||
+                        priced.operator_index >= calc.operators().size()) {
+                        materializable = false;
+                        continue;
+                    }
+                    ++telemetry.pre_restore_policy_reachable_rows;
+                    if (!action_seen[priced.operator_index]) {
+                        action_seen[priced.operator_index] = 1;
+                        ++telemetry.pre_restore_policy_distinct_actions;
+                    }
+                    telemetry.pre_restore_policy_choice_groups +=
+                        row.choice_count;
+                    telemetry.pre_restore_policy_choice_options +=
+                        priced.choice_option_count;
+                    for (std::uint32_t i = 0;
+                         i < row.transition_count; ++i) {
+                        const std::uint64_t offset =
+                            row.transition_offset + i;
+                        if (transition_cache->probabilities.at(offset) <=
+                            0.0) {
+                            continue;
+                        }
+                        const std::uint32_t successor =
+                            transition_cache->successors.at(offset);
+                        if (successor >= state_count) {
+                            materializable = false;
+                        } else if (!reachable[successor]) {
+                            reachable[successor] = 1;
+                            pending.push_back(successor);
+                        }
+                    }
+                    for (std::uint32_t i = 0;
+                         i < row.choice_count; ++i) {
+                        const SparseChoiceGroup& choice =
+                            transition_cache->choices.at(
+                                row.choice_offset + i);
+                        const std::uint32_t successor =
+                            select_sparse_policy_choice_successor(
+                                *transition_cache, choice, state,
+                                result.values);
+                        if (successor == kNoId ||
+                            successor >= state_count) {
+                            materializable = false;
+                        } else if (!reachable[successor]) {
+                            reachable[successor] = 1;
+                            pending.push_back(successor);
+                        }
+                    }
+                }
+                telemetry.pre_restore_policy_materializable =
+                    materializable;
+            }
+            telemetry.pre_restore_policy_snapshot_ns =
+                static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() -
+                        snapshot_started)
+                        .count());
+        }
+        const auto extraction_materialization_started =
+            std::chrono::steady_clock::now();
         std::vector<double> restored_policy_row_costs;
         std::vector<std::uint8_t> restored_policy_reachable;
         bool explicit_restored_policy_reachable = false;
         if (restore_output_incumbent) {
+            const auto restore_started =
+                std::chrono::steady_clock::now();
             BoundedPolicyIncumbent& incumbent = *output_incumbent;
             count_policy_actions(
                 policy_rows, nullptr,
@@ -417,6 +572,12 @@ SolveResult SolveWork::Impl::finish() {
                     }
                 }
             }
+            result.diagnostics.policy_refinement.incumbent_restore_ns =
+                static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() -
+                        restore_started)
+                        .count());
         }
 
         const std::uint32_t state_count =
@@ -719,6 +880,12 @@ SolveResult SolveWork::Impl::finish() {
             }
         }
         if (finalization_capped) reachable_policy_complete = false;
+        result.diagnostics.policy_refinement.extraction_materialization_ns =
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() -
+                    extraction_materialization_started)
+                    .count());
 
         bool full_non_goal_closure = true;
         for (std::uint32_t state = 0; state < result.values.size(); ++state) {
@@ -2224,6 +2391,8 @@ SolveResult SolveWork::Impl::finish() {
                     : 0;
             const std::optional<SolveOptions> assertion_options =
                 publication_options_for_live(publication_live_bytes);
+            const auto direct_certification_started =
+                std::chrono::steady_clock::now();
             refinement::CompiledPolicyAssertion assertion;
             if (assertion_options.has_value()) {
                 assertion = refinement::assert_compiled_policy_exact(
@@ -2237,6 +2406,16 @@ SolveResult SolveWork::Impl::finish() {
                     "coarse live solve leaves no memory for direct exact "
                     "policy certification";
             }
+            telemetry.direct_certification_ns =
+                static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() -
+                        direct_certification_started)
+                        .count());
+            telemetry.strategy_compilation_ns +=
+                assertion.compilation_ns;
+            telemetry.exact_graph_evaluation_ns +=
+                assertion.exact_evaluation_ns;
             result.diagnostics.reforge_frontier_work = saturated_add(
                 result.diagnostics.reforge_frontier_work,
                 assertion.evaluation.reforge_work);
@@ -2697,6 +2876,8 @@ SolveResult SolveWork::Impl::finish() {
             const std::optional<SolveOptions> lift_options =
                 publication_options_for_live(
                     publication_live_bytes);
+            const auto strict_lift_started =
+                std::chrono::steady_clock::now();
             refinement::PolicyExactLiftCertificate certificate;
             if (lift_options.has_value()) {
                 certificate = refinement::lift_policy_quotient(
@@ -2713,6 +2894,24 @@ SolveResult SolveWork::Impl::finish() {
             }
             PolicyRefinementTelemetry& telemetry =
                 result.diagnostics.policy_refinement;
+            telemetry.strict_lift_total_ns =
+                static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() -
+                        strict_lift_started)
+                        .count());
+            telemetry.strict_carrier_discovery_ns =
+                certificate.adapter.carrier_discovery_ns;
+            telemetry.strict_partition_refinement_ns =
+                certificate.adapter.partition_refinement_ns;
+            telemetry.strict_policy_evaluation_ns =
+                certificate.adapter.policy_evaluation_ns;
+            telemetry.strict_local_reoptimization_ns =
+                certificate.adapter.local_reoptimization_ns;
+            telemetry.strategy_compilation_ns +=
+                certificate.adapter.compilation_ns;
+            telemetry.exact_graph_evaluation_ns +=
+                certificate.adapter.exact_evaluation_ns;
             telemetry.status =
                 refinement::policy_exact_lift_status_name(
                     certificate.status);

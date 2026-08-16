@@ -1,6 +1,8 @@
 #include "solver_policy_refinement_helpers.hpp"
 #include "solver_compile_contracts.hpp"
 
+#include <chrono>
+
 namespace poecraft {
 namespace solver {
 namespace refinement {
@@ -164,11 +166,21 @@ CompiledPolicyAssertion assert_compiled_policy_exact(
                     live);
         }
     } else {
+        const auto compilation_started =
+            std::chrono::steady_clock::now();
+        const auto record_compilation_time = [&] {
+            result.compilation_ns = static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() -
+                    compilation_started)
+                    .count());
+        };
         try {
             result.strategy_json = compile_policy_strategy_json(
                 coarse, solved, strategy_name, &result.compilation,
                 compilation_json_limit, refined_routing,
                 compilation_memory);
+            record_compilation_time();
             {
                 std::uint64_t live =
                     result.retained_solver_bytes;
@@ -197,6 +209,7 @@ CompiledPolicyAssertion assert_compiled_policy_exact(
                 return result;
             }
         } catch (const SolverResourceLimit& error) {
+            record_compilation_time();
             std::uint64_t live =
                 result.retained_solver_bytes;
             saturating_add(
@@ -209,12 +222,14 @@ CompiledPolicyAssertion assert_compiled_policy_exact(
             result.failure_reason = error.what();
             return result;
         } catch (const std::length_error& error) {
+            record_compilation_time();
             result.status = CompiledPolicyAssertionStatus::ResourceCap;
             result.resource_cap =
                 resource_cap_from_message(error.what());
             result.failure_reason = error.what();
             return result;
         } catch (const std::exception& error) {
+            record_compilation_time();
             result.status = result.compilation.cap_hit.empty()
                                 ? CompiledPolicyAssertionStatus::
                                       CompilationFailure
@@ -252,6 +267,15 @@ CompiledPolicyAssertion assert_compiled_policy_exact(
                 ", evaluator_budget=" +
                 std::to_string(result.evaluator_memory_budget);
         };
+    const auto evaluation_started =
+        std::chrono::steady_clock::now();
+    const auto record_evaluation_time = [&] {
+        result.exact_evaluation_ns = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() -
+                evaluation_started)
+                .count());
+    };
     try {
         const std::uint64_t strategy_json_bytes =
             result.strategy_json.capacity() + 1;
@@ -277,6 +301,7 @@ CompiledPolicyAssertion assert_compiled_policy_exact(
         if (!consume_memory(
                 strategy_json_bytes,
                 "parsed exact policy evaluation")) {
+            record_evaluation_time();
             return result;
         }
         const std::shared_ptr<const SessionImpl> session =
@@ -302,6 +327,7 @@ CompiledPolicyAssertion assert_compiled_policy_exact(
         if (!consume_memory(
                 result.parsed_strategy_bytes,
                 "the parsed exact strategy")) {
+            record_evaluation_time();
             return result;
         }
         auto economy = std::make_shared<EconomyImpl>();
@@ -324,6 +350,7 @@ CompiledPolicyAssertion assert_compiled_policy_exact(
         if (!consume_memory(
                 result.economy_bytes,
                 "the exact-evaluation economy")) {
+            record_evaluation_time();
             return result;
         }
 
@@ -359,6 +386,7 @@ CompiledPolicyAssertion assert_compiled_policy_exact(
             throw;
         }
         result.evaluation = evaluation_work.result();
+        record_evaluation_time();
         {
             std::uint64_t live =
                 result.retained_solver_bytes;
@@ -376,12 +404,14 @@ CompiledPolicyAssertion assert_compiled_policy_exact(
                     live);
         }
     } catch (const SolverResourceLimit& error) {
+        record_evaluation_time();
         result.status = CompiledPolicyAssertionStatus::ResourceCap;
         result.resource_cap = error.cap_name();
         result.failure_reason =
             failure_with_graph_context(error.what());
         return result;
     } catch (const std::length_error& error) {
+        record_evaluation_time();
         result.status = CompiledPolicyAssertionStatus::ResourceCap;
         result.resource_cap =
             resource_cap_from_message(error.what());
@@ -389,6 +419,7 @@ CompiledPolicyAssertion assert_compiled_policy_exact(
             failure_with_graph_context(error.what());
         return result;
     } catch (const std::exception& error) {
+        record_evaluation_time();
         result.status =
             CompiledPolicyAssertionStatus::ExactEvaluationFailure;
         result.failure_reason =

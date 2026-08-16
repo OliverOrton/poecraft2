@@ -505,6 +505,11 @@ void SolveWork::Impl::begin_policy_selection() {
         policy_selection_improved = false;
         policy_strict_order_reconciled = true;
         policy_selection_residual = 0.0;
+        PolicyRefinementTelemetry& refinement =
+            result.diagnostics.policy_refinement;
+        refinement.strict_order_suppressed_comparisons = 0;
+        refinement.strict_order_suppressed_samples_retained = 0;
+        refinement.strict_order_suppressed_samples_omitted = 0;
     }
 
 bool SolveWork::Impl::initialize_focused_proper_policy() {
@@ -658,6 +663,26 @@ bool SolveWork::Impl::advance_policy_selection(bool& improved) {
                     if (decision == SparsePolicyReplacementDecision::
                             SuppressedStrictImprovement) {
                         policy_strict_order_reconciled = false;
+                        PolicyRefinementTelemetry& refinement =
+                            result.diagnostics.policy_refinement;
+                        ++refinement.strict_order_suppressed_comparisons;
+                        if (refinement
+                                .strict_order_suppressed_samples_retained <
+                            PolicyRefinementTelemetry::
+                                kSuppressedStrictImprovementSampleLimit) {
+                            auto& sample =
+                                refinement.strict_order_suppressed_samples[
+                                    refinement
+                                        .strict_order_suppressed_samples_retained++];
+                            sample.state = state;
+                            sample.retained_row = policy_rows[state];
+                            sample.preferred_row = best_row;
+                            sample.retained_value = current;
+                            sample.preferred_value = best;
+                        } else {
+                            ++refinement
+                                  .strict_order_suppressed_samples_omitted;
+                        }
                     }
                 }
                 if (improving) {

@@ -1132,6 +1132,23 @@ void merge_adapter_telemetry(
     saturating_add(
         total.reference_adapter_invocations,
         pass.reference_adapter_invocations);
+    saturating_add(total.total_ns, pass.total_ns);
+    saturating_add(
+        total.carrier_discovery_ns,
+        pass.carrier_discovery_ns);
+    saturating_add(
+        total.partition_refinement_ns,
+        pass.partition_refinement_ns);
+    saturating_add(
+        total.policy_evaluation_ns,
+        pass.policy_evaluation_ns);
+    saturating_add(
+        total.local_reoptimization_ns,
+        pass.local_reoptimization_ns);
+    saturating_add(total.compilation_ns, pass.compilation_ns);
+    saturating_add(
+        total.exact_evaluation_ns,
+        pass.exact_evaluation_ns);
 }
 
 RefinementLimits default_limits(

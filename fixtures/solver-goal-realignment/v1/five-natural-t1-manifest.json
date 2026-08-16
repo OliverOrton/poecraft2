@@ -21,11 +21,13 @@
   },
   "owner_decisions": [
     "This is Oliver's live from-empty Conquest Lamellar witness: three natural T1 armour/evasion prefixes plus natural T1 physical-damage reduction and spell suppression suffixes.",
+    "The paired four-goal control uses the same three natural T1 prefixes plus only natural T1 spell suppression and must remain exact while finalization is made cooperative.",
     "The case uses the published Allflame snapshot without a base or action-price override; missing prices and unsupported relevant mechanics remain explicit open obligations.",
     "Exact closure is preferred. A numerical-stability result qualifies only when it reports a strict open gap, publishes the cheapest available executable policy, compiles it, and independently exact-evaluates it within five minutes.",
     "Sampled Simulator verification is not an acceptance obligation for this breadth boundary: the independently evaluated Chaos fallback averages more than 37 million actions, far above the unchanged 100,000-action per-run Simulator limit."
   ],
   "cases": [
-    "cases/conquest-lamellar-allflame-five-natural-t1-product.json"
+    "cases/conquest-lamellar-allflame-five-natural-t1-product.json",
+    "cases/conquest-lamellar-allflame-three-prefix-spell-suppression-t1-product.json"
   ]
 }

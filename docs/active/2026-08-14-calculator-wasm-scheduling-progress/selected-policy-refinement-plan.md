@@ -1,7 +1,7 @@
 # Selected Policy Publication And Cooperative Exact Refinement
 
-**Status: active. Selected by Oliver on 2026-08-16; Gate 0 candidate and
-finalization evidence is in progress.**
+**Status: active. Selected by Oliver on 2026-08-16; Gate 0 is complete and
+Gate 1 selected-policy preservation is in progress.**
 
 Parent: [Calculator WASM Scheduling And Progress](README.md)
 
@@ -178,6 +178,14 @@ summary and strategy must remain identical to an uninterrupted run.
 
 ## Gate 0 - Freeze Candidate And Finalization Evidence
 
+**Status: complete.** The pre-restore five-T1 policy is stable across eight and
+1,024 work items, structurally materializable, and captured in about 5.3 ms.
+The known three-prefix exact result is unchanged. Stage attribution also
+localized the newly frozen four-goal boundary to partitioning plus repeated
+exact graph evaluation, which ends at `max_sweeps` and exposes an existing
+bounded-policy/`exact_closed` classification defect. Evidence:
+[Gate 0 selected-policy and finalization record](evidence/gate0-selected-policy-finalization.md).
+
 Before publication behavior changes, add a narrowly scoped diagnostic snapshot
 at the numerical-stability boundary and freeze two release-WASM witnesses:
 
@@ -221,6 +229,8 @@ Gate 0 exit:
 - no result semantics change.
 
 ## Gate 1 - Preserve The Selected Policy As An Unverified Candidate
+
+**Status: in progress.**
 
 Capture the current stable selected policy before `restore_output_incumbent`
 can replace it. Prefer a dedicated type or explicit state such as

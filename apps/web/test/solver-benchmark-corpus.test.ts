@@ -118,7 +118,7 @@ test("goal-realignment corpora validate every current case and economy", () => {
             "poecraft2-solver-goal-realignment-gate6-v1",
         ],
     );
-    assert.deepEqual(loaded.map((corpus) => corpus.cases.length), [5, 1, 1, 2]);
+    assert.deepEqual(loaded.map((corpus) => corpus.cases.length), [5, 2, 1, 2]);
 
     const cases = loaded.flatMap((corpus) => {
         validateCorpusArtifactPins(corpus.manifest, artifact, 2);
@@ -281,6 +281,16 @@ test("goal-realignment corpora validate every current case and economy", () => {
         require_evaluated_upper: true,
         require_cheapest_independently_evaluated_incumbent: true,
     });
+
+    const fourGoalFinalization = cases.find(
+        (entry) =>
+            entry.id ===
+            "conquest-lamellar-allflame-three-prefix-spell-suppression-t1-product",
+    );
+    assert.ok(fourGoalFinalization);
+    assert.equal(fourGoalFinalization.goal.min_satisfied_slots, 4);
+    assert.equal(fourGoalFinalization.goal.slots.length, 4);
+    assert.deepEqual(fourGoalFinalization.economy.manual_overrides, {});
 });
 
 test("goal-realignment materialization rejects undisclosed market overrides", () => {

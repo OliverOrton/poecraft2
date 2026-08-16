@@ -1474,6 +1474,34 @@ std::string serialize_solver_telemetry(
                 "\"global_lower_bound_closed\":null}";
         json += ",\"publication\":{"
                 "\"status\":null,\"candidate_kind\":null}";
+        json += ",\"pre_restore_selected_policy\":{"
+                "\"present\":null,\"materializable\":null,"
+                "\"numerical_stop\":null,\"start_value\":null,"
+                "\"residual\":null,\"policy_bits_hash\":null,"
+                "\"selected_rows\":null,\"reachable_states\":null,"
+                "\"reachable_rows\":null,\"distinct_actions\":null,"
+                "\"choice_groups\":null,\"choice_options\":null,"
+                "\"goal_identity\":null,\"economy_identity\":null,"
+                "\"action_vocabulary_identity\":null,"
+                "\"graph_identity\":null,\"artifact_identity\":null,"
+                "\"source_generation\":null,"
+                "\"target_generation\":null,\"snapshot_ns\":null,"
+                "\"snapshot_peak_bytes\":null,"
+                "\"strict_order_suppressed_comparisons\":null,"
+                "\"suppressed_samples\":[],"
+                "\"suppressed_samples_retained\":null,"
+                "\"suppressed_samples_omitted\":null}";
+        json += ",\"finalization_stages_ns\":{"
+                "\"incumbent_restore\":null,"
+                "\"extraction_materialization\":null,"
+                "\"direct_certification\":null,"
+                "\"strict_lift_total\":null,"
+                "\"strict_carrier_discovery\":null,"
+                "\"strict_partition_refinement\":null,"
+                "\"strict_policy_evaluation\":null,"
+                "\"strict_local_reoptimization\":null,"
+                "\"strategy_compilation\":null,"
+                "\"exact_graph_evaluation\":null}";
         json += ",\"policy_reachable_coarse_states\":null";
         json += ",\"exact_states\":null,\"retained_exact_states\":null";
         json += ",\"exact_classes\":null";
@@ -1744,6 +1772,138 @@ std::string serialize_solver_telemetry(
                 json, refinement.published_candidate_kind);
         }
         json += "}";
+        json += ",\"pre_restore_selected_policy\":{";
+        json += "\"present\":" +
+                std::string(bool_json(
+                    refinement.pre_restore_policy_present));
+        json += ",\"materializable\":" +
+                std::string(bool_json(
+                    refinement.pre_restore_policy_materializable));
+        json += ",\"numerical_stop\":" +
+                std::string(bool_json(
+                    refinement.pre_restore_policy_numerical_stop));
+        json += ",\"start_value\":" +
+                telemetry_finite_json(
+                    refinement.pre_restore_policy_start_value);
+        json += ",\"residual\":" +
+                telemetry_finite_json(
+                    refinement.pre_restore_policy_residual);
+        json += ",\"policy_bits_hash\":";
+        append_telemetry_json_string(
+            json,
+            telemetry_hex_u64(
+                refinement.pre_restore_policy_bits_hash));
+        json += ",\"selected_rows\":" +
+                std::to_string(
+                    refinement.pre_restore_policy_selected_rows);
+        json += ",\"reachable_states\":" +
+                std::to_string(
+                    refinement.pre_restore_policy_reachable_states);
+        json += ",\"reachable_rows\":" +
+                std::to_string(
+                    refinement.pre_restore_policy_reachable_rows);
+        json += ",\"distinct_actions\":" +
+                std::to_string(
+                    refinement.pre_restore_policy_distinct_actions);
+        json += ",\"choice_groups\":" +
+                std::to_string(
+                    refinement.pre_restore_policy_choice_groups);
+        json += ",\"choice_options\":" +
+                std::to_string(
+                    refinement.pre_restore_policy_choice_options);
+        json += ",\"goal_identity\":";
+        append_telemetry_json_string(
+            json,
+            telemetry_hex_u64(
+                refinement.pre_restore_policy_goal_identity));
+        json += ",\"economy_identity\":";
+        append_telemetry_json_string(
+            json,
+            telemetry_hex_u64(
+                refinement.pre_restore_policy_economy_identity));
+        json += ",\"action_vocabulary_identity\":";
+        append_telemetry_json_string(
+            json,
+            telemetry_hex_u64(
+                refinement
+                    .pre_restore_policy_action_vocabulary_identity));
+        json += ",\"graph_identity\":";
+        append_telemetry_json_string(
+            json,
+            telemetry_hex_u64(
+                refinement.pre_restore_policy_graph_identity));
+        json += ",\"artifact_identity\":";
+        append_telemetry_json_string(
+            json,
+            telemetry_hex_u64(
+                refinement.pre_restore_policy_artifact_identity));
+        json += ",\"source_generation\":" +
+                std::to_string(
+                    refinement.pre_restore_policy_source_generation);
+        json += ",\"target_generation\":" +
+                std::to_string(
+                    refinement.pre_restore_policy_target_generation);
+        json += ",\"snapshot_ns\":" +
+                std::to_string(
+                    refinement.pre_restore_policy_snapshot_ns);
+        json += ",\"snapshot_peak_bytes\":" +
+                std::to_string(
+                    refinement.pre_restore_policy_snapshot_peak_bytes);
+        json += ",\"strict_order_suppressed_comparisons\":" +
+                std::to_string(
+                    refinement.strict_order_suppressed_comparisons);
+        json += ",\"suppressed_samples\":[";
+        for (std::uint32_t sample_index = 0;
+             sample_index <
+                 refinement.strict_order_suppressed_samples_retained;
+             ++sample_index) {
+            if (sample_index != 0) json.push_back(',');
+            const auto& sample =
+                refinement.strict_order_suppressed_samples[sample_index];
+            json += "{\"state\":" + std::to_string(sample.state);
+            json += ",\"retained_row\":" +
+                    std::to_string(sample.retained_row);
+            json += ",\"preferred_row\":" +
+                    std::to_string(sample.preferred_row);
+            json += ",\"retained_value\":" +
+                    telemetry_finite_json(sample.retained_value);
+            json += ",\"preferred_value\":" +
+                    telemetry_finite_json(sample.preferred_value) + "}";
+        }
+        json += "],\"suppressed_samples_retained\":" +
+                std::to_string(
+                    refinement.strict_order_suppressed_samples_retained);
+        json += ",\"suppressed_samples_omitted\":" +
+                std::to_string(
+                    refinement.strict_order_suppressed_samples_omitted) +
+                "}";
+        json += ",\"finalization_stages_ns\":{";
+        json += "\"incumbent_restore\":" +
+                std::to_string(refinement.incumbent_restore_ns);
+        json += ",\"extraction_materialization\":" +
+                std::to_string(
+                    refinement.extraction_materialization_ns);
+        json += ",\"direct_certification\":" +
+                std::to_string(refinement.direct_certification_ns);
+        json += ",\"strict_lift_total\":" +
+                std::to_string(refinement.strict_lift_total_ns);
+        json += ",\"strict_carrier_discovery\":" +
+                std::to_string(
+                    refinement.strict_carrier_discovery_ns);
+        json += ",\"strict_partition_refinement\":" +
+                std::to_string(
+                    refinement.strict_partition_refinement_ns);
+        json += ",\"strict_policy_evaluation\":" +
+                std::to_string(
+                    refinement.strict_policy_evaluation_ns);
+        json += ",\"strict_local_reoptimization\":" +
+                std::to_string(
+                    refinement.strict_local_reoptimization_ns);
+        json += ",\"strategy_compilation\":" +
+                std::to_string(refinement.strategy_compilation_ns);
+        json += ",\"exact_graph_evaluation\":" +
+                std::to_string(refinement.exact_graph_evaluation_ns) +
+                "}";
         json += ",\"policy_reachable_coarse_states\":" +
                 std::to_string(
                     refinement.policy_reachable_coarse_states);

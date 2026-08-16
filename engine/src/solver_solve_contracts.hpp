@@ -181,6 +181,17 @@ struct PolicyBroadRowAttribution {
 };
 
 struct PolicyRefinementTelemetry {
+    struct SuppressedStrictImprovementSample {
+        std::uint32_t state = kNoId;
+        std::uint64_t retained_row =
+            std::numeric_limits<std::uint64_t>::max();
+        std::uint64_t preferred_row =
+            std::numeric_limits<std::uint64_t>::max();
+        double retained_value = std::numeric_limits<double>::infinity();
+        double preferred_value = std::numeric_limits<double>::infinity();
+    };
+    static constexpr std::size_t kSuppressedStrictImprovementSampleLimit = 8;
+
     std::uint64_t triggers = 0;
     /* Structured compatibility witnesses consumed by exact refinement. The
      * vector is unique, deterministic in discovery order, and bounded by the
@@ -238,6 +249,51 @@ struct PolicyRefinementTelemetry {
     bool strict_global_lower_bound_closed = false;
     std::string publication_status = "not_run";
     std::string published_candidate_kind;
+    /* Gate-0 observational snapshot of the selected sparse row policy before
+     * a certified output incumbent can replace it. This snapshot is never a
+     * candidate, upper bound, or publication input. */
+    bool pre_restore_policy_present = false;
+    bool pre_restore_policy_materializable = false;
+    bool pre_restore_policy_numerical_stop = false;
+    double pre_restore_policy_start_value =
+        std::numeric_limits<double>::infinity();
+    double pre_restore_policy_residual =
+        std::numeric_limits<double>::infinity();
+    std::uint64_t pre_restore_policy_bits_hash = 0;
+    std::uint64_t pre_restore_policy_selected_rows = 0;
+    std::uint64_t pre_restore_policy_reachable_states = 0;
+    std::uint64_t pre_restore_policy_reachable_rows = 0;
+    std::uint64_t pre_restore_policy_distinct_actions = 0;
+    std::uint64_t pre_restore_policy_choice_groups = 0;
+    std::uint64_t pre_restore_policy_choice_options = 0;
+    std::uint64_t pre_restore_policy_goal_identity = 0;
+    std::uint64_t pre_restore_policy_economy_identity = 0;
+    std::uint64_t pre_restore_policy_action_vocabulary_identity = 0;
+    std::uint64_t pre_restore_policy_graph_identity = 0;
+    std::uint64_t pre_restore_policy_artifact_identity = 0;
+    std::uint64_t pre_restore_policy_source_generation = 0;
+    std::uint64_t pre_restore_policy_target_generation = 0;
+    std::uint64_t pre_restore_policy_snapshot_ns = 0;
+    std::uint64_t pre_restore_policy_snapshot_peak_bytes = 0;
+    std::uint64_t strict_order_suppressed_comparisons = 0;
+    std::array<
+        SuppressedStrictImprovementSample,
+        kSuppressedStrictImprovementSampleLimit>
+        strict_order_suppressed_samples{};
+    std::uint32_t strict_order_suppressed_samples_retained = 0;
+    std::uint64_t strict_order_suppressed_samples_omitted = 0;
+    /* Wall attribution is diagnostic only; logical work and proof status
+     * remain the deterministic authorities. */
+    std::uint64_t incumbent_restore_ns = 0;
+    std::uint64_t extraction_materialization_ns = 0;
+    std::uint64_t direct_certification_ns = 0;
+    std::uint64_t strict_lift_total_ns = 0;
+    std::uint64_t strict_carrier_discovery_ns = 0;
+    std::uint64_t strict_partition_refinement_ns = 0;
+    std::uint64_t strict_policy_evaluation_ns = 0;
+    std::uint64_t strict_local_reoptimization_ns = 0;
+    std::uint64_t strategy_compilation_ns = 0;
+    std::uint64_t exact_graph_evaluation_ns = 0;
     std::uint64_t policy_reachable_coarse_states = 0;
     /* Cumulative strict carrier materializations across lift/re-opt passes. */
     std::uint64_t exact_states = 0;

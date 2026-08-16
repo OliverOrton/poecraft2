@@ -103,6 +103,13 @@ struct PolicyLiftAdapterTelemetry {
     std::uint64_t scratch_bytes = 0;
     std::uint64_t total_solver_owned_bytes = 0;
     std::uint64_t reference_adapter_invocations = 0;
+    std::uint64_t total_ns = 0;
+    std::uint64_t carrier_discovery_ns = 0;
+    std::uint64_t partition_refinement_ns = 0;
+    std::uint64_t policy_evaluation_ns = 0;
+    std::uint64_t local_reoptimization_ns = 0;
+    std::uint64_t compilation_ns = 0;
+    std::uint64_t exact_evaluation_ns = 0;
 };
 
 /*
@@ -187,6 +194,8 @@ struct CompiledPolicyAssertion {
     std::uint64_t economy_bytes = 0;
     std::uint64_t evaluator_memory_budget = 0;
     std::uint64_t publication_peak_owned_bytes = 0;
+    std::uint64_t compilation_ns = 0;
+    std::uint64_t exact_evaluation_ns = 0;
 };
 
 /* Pure final classification shared by the production assertion and focused

@@ -23,6 +23,12 @@ gap and a cheapest independently evaluated executable policy. Its more-than-
 verification is not required because the unchanged Simulator limit is 100,000
 actions per run.
 
+`five-natural-t1-manifest.json` also owns Oliver's empty four-goal finalization
+control: the same three natural T1 armour/evasion prefixes plus natural T1
+spell suppression. Both use the published Allflame snapshot without overrides.
+The pair freezes the selected-policy quality and long strict-finalization
+boundaries for the active continuation plan.
+
 The focused Vaal Regalia case starts with a satisfied suffix goal and existing
 Exarch dominance. Its open, naturally rollable prefix target, pinned Allflame
 snapshot, and disclosed synthetic `eldritch_exalt` price override force the
