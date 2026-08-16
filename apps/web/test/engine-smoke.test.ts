@@ -1520,9 +1520,8 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
     );
     await client.closeSolver(partialSolver);
 
-    // Native Done is only a boundary before public extraction. A cancel sent
-    // from the worker-owned finalizing snapshot must prevent that extraction
-    // from being published as a successful result.
+    // Native refinement/certification remains cancellable before Done. Done
+    // itself means the subsequent finish call is packaging-only.
     const finalizationCancelSolver = await client.openSolver(sessionId, {
         version: "v1",
         rarity: "rare",
@@ -1543,14 +1542,22 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
             signal: finalizationController.signal,
             onProgress: (progress) => {
                 finalizationProgress.push(progress);
-                if (progress.phase === "finalizing") {
+                if (
+                    progress.phase === "refining" ||
+                    progress.phase === "compiling" ||
+                    progress.phase === "certifying"
+                ) {
                     finalizationController.abort();
                 }
             },
         },
     );
     assert.equal(finalizationCancelled.cancelled, true);
-    assert.equal(finalizationProgress.at(-1)?.phase, "finalizing");
+    assert.ok(
+        ["refining", "compiling", "certifying"].includes(
+            finalizationProgress.at(-1)?.phase ?? "",
+        ),
+    );
     await client.closeSolver(finalizationCancelSolver);
 
     // Solve, then verify the compiled policy through the simulator.
@@ -1570,8 +1577,11 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
         "solve should expose iteration or finish with a zero exactness gap",
     );
     assert.ok(
-        solveProgress.some((progress) => progress.phase === "finalizing"),
-        "solve should distinguish native finalization from publication",
+        solveProgress.some((progress) =>
+            progress.phase === "refining" ||
+            progress.phase === "compiling" ||
+            progress.phase === "certifying"),
+        "solve should expose retained native finalization phases",
     );
     assert.equal(solveProgress.at(-1)?.phase, "done");
     assert.equal(solve.converged, true);

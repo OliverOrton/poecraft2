@@ -45,6 +45,19 @@ if ($LASTEXITCODE -ne 0) {
 $EngineSources = Get-PoeCraftEngineSources -Root $Root
 $Facade = Join-Path $Root "bindings/wasm/wasm_api.cpp"
 
+# Emscripten 6.0.0's LTO coroutine lowering produces invalid SSA for the
+# retained finalization continuation in this translation unit. Keep the hot
+# engine kernels under full LTO, but lower this orchestration-only source to a
+# regular optimized WebAssembly object before the final link.
+$FinishSource = [System.IO.Path]::GetFullPath(
+    (Join-Path $Root "engine/src/solver_solve_finish.cpp"))
+$LtoEngineSources = @(
+    $EngineSources | Where-Object { $_ -ne $FinishSource }
+)
+$ObjectDirectory = Join-Path $Root "build/wasm/objects"
+$FinishObject = Join-Path $ObjectDirectory "solver_solve_finish.o"
+New-Item -ItemType Directory -Force -Path $ObjectDirectory | Out-Null
+
 $ExportManifest = Join-Path $Root "bindings/wasm/wasm-exports.txt"
 $ExportEntries = @(
     Get-Content -LiteralPath $ExportManifest |
@@ -60,8 +73,8 @@ $Exported = $ExportEntries -join ","
 
 $RuntimeMethods = @("ccall", "cwrap", "UTF8ToString", "HEAPU8") -join ","
 
-$EmccArgs = @(
-    "-std=c++20", "-O3", "-flto", "-msimd128", "-ffp-contract=off",
+$SharedCompileArgs = @(
+    "-msimd128", "-ffp-contract=off",
     # Use native WebAssembly exception handling. The legacy JS exception
     # lowering inhibits optimization across every potentially throwing engine
     # call, which is material for long exact solver qualifications.
@@ -69,13 +82,29 @@ $EmccArgs = @(
     "-I$Root/engine/include", "-I$Root/engine/src", "-I$GeneratedDirectory"
 )
 if ($Diagnostics) {
-    $EmccArgs += @(
+    $SharedCompileArgs += @(
         "-sASSERTIONS=2",
         "-sSAFE_HEAP=1",
         "-sSTACK_OVERFLOW_CHECK=2"
     )
 }
-$EmccArgs += $EngineSources
+$FinishCompileArgs = @("-std=c++20", "-O3") + $SharedCompileArgs
+
+Write-Host "Compiling cooperative finalization WASM object..."
+$ErrorActionPreference = "Continue"
+& $Emcc.Source @FinishCompileArgs "-c" $FinishSource "-o" $FinishObject
+$FinishExit = $LASTEXITCODE
+$ErrorActionPreference = $PreviousPreference
+if ($FinishExit -ne 0) {
+    throw "cooperative finalization WASM compile failed with exit code $FinishExit."
+}
+
+$EmccArgs = @(
+    "-std=c++20", "-O3", "-flto"
+)
+$EmccArgs += $SharedCompileArgs
+$EmccArgs += $LtoEngineSources
+$EmccArgs += $FinishObject
 $EmccArgs += $Facade
 $EmccArgs += @(
     "-fwasm-exceptions",

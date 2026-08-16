@@ -809,8 +809,12 @@ export class PcCalculator extends HTMLElement {
                                 ? `${progress.expanded_states.toLocaleString()} expanded, ${progress.discovered_states.toLocaleString()} discovered`
                                 : progress.phase === "iterating"
                                   ? `${progress.sweeps.toLocaleString()} sweeps`
-                                  : progress.phase === "finalizing"
-                                    ? "finalizing and verifying policy"
+                                  : progress.phase === "refining"
+                                    ? `${progress.refinement_states.toLocaleString()} strict states refined`
+                                  : progress.phase === "compiling"
+                                    ? "compiling selected policy"
+                                  : progress.phase === "certifying"
+                                    ? `${progress.certification_discovered_pairs.toLocaleString()} certification pairs`
                                     : "publishing result";
                         this.setStatus(
                             `Solving · ${phase} · ${solveElapsedLabel(this.solveElapsedMs)}`,
@@ -1830,7 +1834,7 @@ export class PcCalculator extends HTMLElement {
         const progressMarkup =
             this.solveRunning && progress
                 ? `<section class="pc-calc-solve-progress" aria-live="polite">
-                    <strong>${progress.phase === "expanding" ? "Expanding reachable states" : progress.phase === "iterating" ? "Optimizing policy" : progress.phase === "finalizing" ? "Finalizing and verifying policy" : "Publishing result"}</strong>
+                    <strong>${progress.phase === "expanding" ? "Expanding reachable states" : progress.phase === "iterating" ? "Optimizing policy" : progress.phase === "refining" ? "Refining exact policy" : progress.phase === "compiling" ? "Compiling selected policy" : progress.phase === "certifying" ? "Certifying compiled policy" : "Publishing result"}</strong>
                     <span class="pc-calc-solve-elapsed">Elapsed <b>${solveElapsedLabel(this.solveElapsedMs)}</b></span>
                     <span>Expanded <b>${progress.expanded_states.toLocaleString()}</b></span>
                     <span>Discovered <b>${progress.discovered_states.toLocaleString()}</b></span>
@@ -1840,12 +1844,14 @@ export class PcCalculator extends HTMLElement {
                     <span>Rows <b>${progress.state_action_rows.toLocaleString()}</b></span>
                     <span>Transitions <b>${progress.transition_entries.toLocaleString()}</b></span>
                     <span>Reforge work <b>${progress.reforge_work.toLocaleString()}</b></span>
+                    <span>Refined states <b>${progress.refinement_states.toLocaleString()}</b></span>
+                    <span>Refinement classes <b>${progress.refinement_classes.toLocaleString()}</b></span>
+                    <span>Certification pairs <b>${progress.certification_discovered_pairs.toLocaleString()}</b></span>
                     <span>Solver-owned memory <b>${solveMemoryLabel(progress.live_owned_bytes)}</b></span>
                     <span>Lower <b>${progressLower}</b></span>
                     <span>Upper <b>${progressUpper}</b></span>
                     <span>Gap <b>${progressGap}</b></span>
                     <span>Factor <b>${progressFactor}</b></span>
-                    ${progress.phase === "finalizing" ? "<small>Exact policy refinement is still running. Cancellation is recorded now but waits for the current native finalization pass.</small>" : ""}
                 </section>`
                 : "";
         const summary = this.solveSummary;

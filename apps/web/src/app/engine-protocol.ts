@@ -713,9 +713,14 @@ export interface EngineMemoryStats {
 }
 
 export interface SolveProgress {
-    /** `finalizing` is worker-owned: native stepping ended, but exact public
-     * policy extraction and result verification are still running. */
-    phase: "expanding" | "iterating" | "finalizing" | "done";
+    /** Native retained-work phase. `done` means finish is packaging-only. */
+    phase:
+        | "expanding"
+        | "iterating"
+        | "refining"
+        | "compiling"
+        | "certifying"
+        | "done";
     done: boolean;
     expanded_states: number;
     sweeps: number;
@@ -745,6 +750,16 @@ export interface SolveProgress {
     reforge_work: number;
     live_owned_bytes: number;
     peak_owned_bytes: number;
+    finalization_work_items: number;
+    refinement_states: number;
+    refinement_kernels: number;
+    refinement_transitions: number;
+    refinement_rounds: number;
+    refinement_classes: number;
+    certification_discovered_pairs: number;
+    certification_pending_pairs: number;
+    certification_solved_sccs: number;
+    certification_total_sccs: number;
 }
 
 /** Benchmark telemetry emitted by the native optimal solver.  The versioned
@@ -761,7 +776,7 @@ export interface SolverWorkerMetrics {
     yield_count: number;
     max_step_ms: number;
     total_step_ms: number;
-    /** Synchronous public-result extraction after native bounded stepping. */
+    /** Packaging-only public-result transfer after native bounded stepping. */
     finalization_ms: number;
 }
 

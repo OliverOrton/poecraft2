@@ -668,6 +668,9 @@ const char* solve_phase_name(const int32_t phase) {
     case PC_SOLVE_PHASE_EXPANDING: return "expanding";
     case PC_SOLVE_PHASE_ITERATING: return "iterating";
     case PC_SOLVE_PHASE_DONE: return "done";
+    case PC_SOLVE_PHASE_REFINING: return "refining";
+    case PC_SOLVE_PHASE_COMPILING: return "compiling";
+    case PC_SOLVE_PHASE_CERTIFYING: return "certifying";
     default: return "expanding";
     }
 }
@@ -803,6 +806,26 @@ void append_solve_progress(
            std::to_string(progress.live_owned_bytes);
     out += ",\"peak_owned_bytes\":" +
            std::to_string(progress.peak_owned_bytes);
+    out += ",\"finalization_work_items\":" +
+           std::to_string(progress.finalization_work_items);
+    out += ",\"refinement_states\":" +
+           std::to_string(progress.refinement_states);
+    out += ",\"refinement_kernels\":" +
+           std::to_string(progress.refinement_kernels);
+    out += ",\"refinement_transitions\":" +
+           std::to_string(progress.refinement_transitions);
+    out += ",\"refinement_rounds\":" +
+           std::to_string(progress.refinement_rounds);
+    out += ",\"refinement_classes\":" +
+           std::to_string(progress.refinement_classes);
+    out += ",\"certification_discovered_pairs\":" +
+           std::to_string(progress.certification_discovered_pairs);
+    out += ",\"certification_pending_pairs\":" +
+           std::to_string(progress.certification_pending_pairs);
+    out += ",\"certification_solved_sccs\":" +
+           std::to_string(progress.certification_solved_sccs);
+    out += ",\"certification_total_sccs\":" +
+           std::to_string(progress.certification_total_sccs);
     out.push_back('}');
 }
 

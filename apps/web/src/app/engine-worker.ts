@@ -252,6 +252,26 @@ function solveProgressCounts(
     if (progress.phase === "iterating") {
         return { done: progress.sweeps, total: progress.sweeps + 1 };
     }
+    if (progress.phase === "refining") {
+        return {
+            done: progress.refinement_states,
+            total: progress.refinement_states + 1,
+        };
+    }
+    if (progress.phase === "certifying") {
+        return {
+            done: progress.certification_discovered_pairs,
+            total:
+                progress.certification_discovered_pairs +
+                progress.certification_pending_pairs,
+        };
+    }
+    if (progress.phase === "compiling") {
+        return {
+            done: progress.finalization_work_items,
+            total: progress.finalization_work_items + 1,
+        };
+    }
     return { done: 1, total: 1 };
 }
 
@@ -334,6 +354,16 @@ async function solveSolver(
         reforge_work: 0,
         live_owned_bytes: 0,
         peak_owned_bytes: 0,
+        finalization_work_items: 0,
+        refinement_states: 0,
+        refinement_kernels: 0,
+        refinement_transitions: 0,
+        refinement_rounds: 0,
+        refinement_classes: 0,
+        certification_discovered_pairs: 0,
+        certification_pending_pairs: 0,
+        certification_solved_sccs: 0,
+        certification_total_sccs: 0,
     };
 
     try {
@@ -415,24 +445,6 @@ async function solveSolver(
         if (cancelled.has(id)) {
             return acknowledgeCancellation();
         }
-        progress = {
-            ...progress,
-            phase: "finalizing",
-            done: false,
-        };
-        post({
-            kind: "progress",
-            id,
-            done: 0,
-            total: 1,
-            solve: progress,
-        });
-        // Let the caller render finalization and deliver a cancel already
-        // queued at the last cooperative native step boundary.
-        await yieldToTimerTask();
-        if (cancelled.has(id)) {
-            return acknowledgeCancellation();
-        }
         const finalizationStarted = performance.now();
         const summary = bindings.finishSolverSolve(solver);
         worker.finalization_ms = Math.max(
@@ -440,12 +452,6 @@ async function solveSolver(
             performance.now() - finalizationStarted,
         );
         begun = false;
-        // Finalization is currently one synchronous native pass. Preserve a
-        // cancel requested during it once the worker regains its event loop.
-        await yieldToTimerTask();
-        if (cancelled.has(id)) {
-            return { cancelled: true, progress, worker };
-        }
         progress = {
             ...progress,
             phase: "done",
