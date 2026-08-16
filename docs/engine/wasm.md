@@ -7,12 +7,12 @@ evidence boundaries.
 Parent: [Engine](README.md)
 
 Verified against code, rebuilt release module, and complete non-visual web
-acceptance: 2026-08-01 on `codex/solver-iteration-infrastructure`.
+acceptance: 2026-08-16 on `codex/solver-goal-realignment`.
 
 Release-wrapper export map verified in the tracked
 `bindings/wasm/dist/poecraft_engine.mjs` generated at this boundary. The
 tracked `.wasm` SHA-256 is
-`2aefa2e4958f4ddef34372c60118a3df59e9a84848630f0fb6b52046353ef523`.
+`c1b873930209fe86fae066ea85cf24130f0638eba0783c214bfa22ffcc5fd528`.
 
 ## Architecture
 
@@ -36,9 +36,12 @@ with the worker/tab rather than an ordinary product `data_close` path.
 ## Build and release artifact
 
 `scripts/build-wasm.ps1` activates Emscripten from `$env:EMSDK` or `C:\emsdk`,
-regenerates the Harvest allowlist header, reads the canonical engine source and
-WASM export manifests, and compiles every engine translation unit plus the
-facade in one direct-emcc release invocation. The release flags include:
+regenerates the Harvest allowlist header, and reads the canonical engine source
+and WASM export manifests. Emscripten 6.0.0 currently miscompiles the retained
+coroutine in `solver_solve_finish.cpp` under full LTO with invalid SSA. The
+release builder therefore compiles that orchestration-only translation unit as
+an optimized non-LTO WebAssembly object, then full-LTO links every hot engine
+kernel plus the facade. The release flags include:
 
 - C++20, `-O3`, disabled floating-point contraction, and C++ exceptions;
 - modularized ES module output named `createPoecraftEngine` for
@@ -148,8 +151,10 @@ The worker calls `pcw_solver_solve_begin`, repeatedly calls `step`, then calls
 chunk size or 8 work items, adapts toward roughly 12 ms steps, and clamps later
 chunks to 1–4 work items; a phase change resets the chunk to 1. It yields after
 about 8 ms of accumulated unyielded work or when `yieldEveryStep` is requested.
-Progress covers expanding, iterating, and done phases and is throttled to
-roughly 100 ms apart except for first, phase-change, and final updates. ABI v2
+Progress covers expanding, iterating, refining, compiling, certifying, and
+done phases and is throttled to roughly 100 ms apart except for first,
+phase-change, and final updates. ABI values 1-3 remain expanding, iterating,
+and done; the three finalization phases are append-only values 4-6. ABI v2
 progress also carries live lower/upper and absolute/relative gap values,
 focused round, incumbent kind, discovered/expanded/frontier state counts,
 rows/transitions/reforge work, and live/peak selected owned bytes. The latter
@@ -168,6 +173,11 @@ On cancellation the worker returns a cancelled result with its latest
 progress/worker telemetry and calls `pcw_solver_solve_abandon` in cleanup.
 Abandon resets the native in-progress solve while retaining bounded abandoned
 telemetry for diagnosis.
+
+Policy extraction, exact lift, compilation, and independent graph assertion
+all remain inside repeated native `step` calls. Native `Done` is emitted only
+after those phases complete, so `finish` packages and transfers an existing
+result rather than owning another unbounded proof pass.
 
 The completed ABI v2 summary keeps `converged` as the exact-closure flag and
 separately reports policy availability/status, termination, `L`, `U`, exact

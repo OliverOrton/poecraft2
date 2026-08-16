@@ -510,3 +510,28 @@ policy with open improvement obligations, cannot be presented as exact. Native
 and WASM may reach different internal resource stops; public semantics remain
 mandatory parity while structural telemetry after different stops is not an
 execution-semantic invariant.
+
+## 2026-08-16 — Selected Policies Remain Unverified Until Cooperative Finalization
+
+**Decision:** A stable Bellman-selected row policy stopped by numerical
+stability is retained separately from certified fallbacks. Its coarse value
+may prioritize work but is not an upper-bound or publication authority. It may
+enter the certified portfolio only after the emitted graph independently proves
+proper execution, complete exact pricing, zero off-policy mass, and a finite
+cost. The cheapest independently evaluated candidate wins publication.
+
+Exact lift, compilation, and graph assertion are retained native solve work.
+The public phase enum appends `refining`, `compiling`, and `certifying` without
+renumbering existing values; native `Done` means `finish` is packaging-only.
+
+**Context:** The completed
+[Calculator WASM Scheduling And Selected-Policy Refinement milestone](archive/2026-08-14-calculator-wasm-scheduling-progress/report.md)
+recovers Oliver's from-empty five-natural-T1 policy at an exact evaluated cost
+of `624800.9519118543`, about 59.7 times cheaper than the former Chaos renewal,
+while keeping the open-envelope lower at zero.
+
+**Consequences:** A fallback restoration cannot erase a cheaper stable policy
+before it receives an independent proof attempt, and an unverified snapshot
+cannot leak into public bounds. WASM progress and cancellation cover proof
+finalization itself. No mechanic, price, action scope, goal, objective, cap,
+tolerance, or Simulator horizon changes under this decision.

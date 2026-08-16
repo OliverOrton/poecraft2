@@ -4,8 +4,9 @@
 
 Parent: [Product](README.md)
 
-Verified against code, complete non-visual R4 acceptance, and the final Solver
-Goal Realignment native/release-WASM acceptance: 2026-08-13. Scope:
+Verified against code, complete non-visual R4 acceptance, the final Solver Goal
+Realignment native/release-WASM acceptance, and selected-policy cooperative
+finalization acceptance: 2026-08-16. Scope:
 `pc-calculator`, goal/draft models, solver worker orchestration, exact-outcome
 presentation, and shared economy access. No rendered or visual review was
 performed; that review remains Oliver's.
@@ -135,6 +136,14 @@ while strict comparisons remained unresolved inside the numerical tolerance.
 Calculator may publish the independently evaluated executable policy as an
 upper bound, keeps the certified lower and open obligations visible, and does
 not relabel the policy value as the optimum.
+
+That stable selected policy is not silently replaced by the previous fallback.
+Native finalization retains it as an unverified candidate, independently
+compiles/evaluates it, and publishes it only if it earns executable proof and
+beats every other independently evaluated candidate. Calculator displays
+native expanding, iterating, refining, compiling, and certifying progress; it
+does not manufacture a synthetic finalization phase. Cancellation remains
+available until native `Done`, after which result transfer is packaging-only.
 
 Automatic options remain native planner operators and compile into primitive
 strategy nodes; the web app does not execute opaque macros.

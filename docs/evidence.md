@@ -20,6 +20,30 @@ These fixtures are mechanic/data evidence. Current explanatory authority lives
 in [Mechanics](mechanics/README.md), [Engine](engine/README.md), and
 [Economy](economy/README.md).
 
+## Calculator WASM Scheduling And Selected-Policy Refinement
+
+The 2026-08-16
+[completion report](archive/2026-08-14-calculator-wasm-scheduling-progress/report.md)
+and [final acceptance record](archive/2026-08-14-calculator-wasm-scheduling-progress/evidence/final-acceptance.md)
+close the selected-policy and cooperative-finalization milestone.
+
+Oliver's from-empty Allflame five-natural-T1 Conquest Lamellar now publishes
+an independently exact-evaluated 184-node/666-edge non-Chaos policy at
+`624800.9519118543`, about 59.7 times cheaper than the old Chaos renewal. The
+eight-item and 1,024-work release-WASM modes agree on status, bounds, cost,
+actions, and strategy hash and finish in about 14 seconds with maximum native
+steps of 185.229 and 187.872 ms. The action envelope remains open, so the
+result is honestly `bounded_feasible / numerical_stability` with lower zero.
+
+Exact lift, compilation, and graph assertion now run before native `Done` in
+retained `refining`, `compiling`, and `certifying` phases. The exact
+three-prefix and spell-suppression witnesses retain their values and strategy
+hashes with 164.756 and 238.509 ms maximum steps. The applicable five retained
+controls each completed exactly 10,000 Simulator trials with zero failures,
+cap hits, or off-policy execution. The single final repository pipeline passed
+3,462,490 native checks plus all ingest, economy, fixture, artifact, binding,
+benchmark, release-WASM, and non-visual web acceptance.
+
 ## Solver Decision Provenance And Result Truth
 
 The 2026-08-14

@@ -203,15 +203,23 @@ The native stages are:
 5. freeze the core-selected policy, reachable closure, values, bounds,
    identities, transition/policy hashes, and owned memory before publication
    work can mutate or revoke it;
-6. compile and exact-assert that retained candidate directly, requiring parse,
+6. keep a numerically stopped selected policy in a distinct unverified wrapper
+   while preserving the already certified fallback; the coarse selected value
+   may prioritize work but has no publication authority;
+7. compile and exact-assert that retained candidate directly, requiring parse,
    proper absorption, complete exact pricing, zero off-policy mass, and cost
    reconciliation, while charging its work to the shared unchanged caps;
-7. only when that direct assertion demonstrates an incompatibility, improper
+8. only when that direct assertion demonstrates an incompatibility, improper
    component, or mismatch, lift the affected policy region through native
    policy-guided exact refinement and prove selected-kernel lumpability; and
-8. publish the best certified retained artifact, preserving the core and
+9. publish the best certified retained artifact, preserving the core and
    direct-stage identities and reasons in telemetry even when strict repair
    wins or no candidate can be published.
+
+Steps 5-9 remain inside repeated native solve steps. Progress names retained
+`refining`, `compiling`, and `certifying` work before `Done`; the subsequent
+finish call is packaging-only. Cancellation abandons the retained work without
+promoting a partial or unverified candidate.
 
 Callers may opt into `goal_progress_gated_reforges`. In that scope, primitive
 reforge rows fold goal outcomes to one terminal exit and zero-goal-progress

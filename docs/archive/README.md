@@ -9,6 +9,16 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-08-16
+
+- [Calculator WASM Scheduling And Selected-Policy Refinement](2026-08-14-calculator-wasm-scheduling-progress/README.md) —
+  retains numerically stable selected policies without granting coarse proof
+  authority, independently certifies the cheaper five-natural-T1 strategy,
+  and moves exact lift, compilation, and graph assertion under append-only
+  cooperative native/WASM progress phases. The five-T1 strategy is about 59.7
+  times cheaper than the former Chaos fallback; exact controls retain their
+  values and hashes, and the full repository pipeline passes.
+
 ## 2026-08-13
 
 - [Solver Decision Provenance And Result-Truth Hardening](2026-08-13-solver-decision-provenance/README.md) -

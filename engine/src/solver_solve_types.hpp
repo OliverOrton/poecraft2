@@ -1023,8 +1023,9 @@ struct SolveWork::Impl {
      * A Bellman-selected row policy is not a certified upper bound. Keep its
      * complete captured materialization in a distinct wrapper so no
      * unverified estimate can enter the executable fallback portfolio by
-     * accident. Only finish() may convert the snapshot after independent
-     * compiled-graph evaluation succeeds.
+     * accident. Only retained finalization may convert the snapshot after
+     * independent compiled-graph evaluation succeeds; finish() only moves an
+     * already finalized result.
      */
     struct UnverifiedSelectedPolicyCandidate {
         BoundedPolicyIncumbent snapshot;

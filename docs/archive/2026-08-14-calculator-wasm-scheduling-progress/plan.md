@@ -1,7 +1,7 @@
 # Calculator WASM Scheduling And Progress
 
-**Status: active with the five-natural-T1 numerical boundary closed; the
-cooperative strict-finalization architecture boundary remains.**
+**Status: complete and archived. The selected-policy continuation closed the
+cooperative strict-finalization architecture boundary.**
 Selected by Oliver on 2026-08-14 from live release-WASM Calculator reports.
 
 Parent: [Active work](../README.md)
@@ -178,10 +178,10 @@ obligations. Exactness is not claimed.
 
 ## Gate 3 - Focused Qualification
 
-**Partial:** the five-natural-T1 breadth qualification is complete as the
-named bounded result above. The three-prefix and four-goal final controls
-remain reserved until the cooperative finalization boundary is selected or
-handed off precisely.
+**Status: complete.** The selected continuation recovered a cheaper five-T1
+strategy, made native finalization cooperative, and passed the three-prefix,
+four-goal, and retained publication controls. See
+[final evidence](evidence/final-acceptance.md).
 
 Rebuild native and release WASM after their respective source changes. Run the
 three-prefix product-equivalent case and the four-goal qualification control.
@@ -206,6 +206,10 @@ trials for any changed compiled strategy that requires verification; do not
 repeat simulation for byte-identical strategies.
 
 ## Gate 4 - Final Acceptance And Archive
+
+**Status: complete.** The downstream audit, focused qualification, release-WASM
+rebuild, one full repository acceptance run, stable documentation update, and
+archive all passed on 2026-08-16.
 
 After all selected implementation work is complete:
 

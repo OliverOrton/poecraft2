@@ -970,6 +970,12 @@ finalization, and explicit memory-statistics requests. This distinction keeps
 frequent progress cheap without weakening selected-owned-byte enforcement or
 final reporting.
 
+Finalization is itself retained cooperative work. The stepped solver exposes
+native refining, compiling, and certifying phases before `Done`; `finish()`
+only transfers the already finalized result. Exact lift, compiled-policy
+assertion, their continuations, and a completed result awaiting transfer are
+included in both fast and audited selected-owned-byte accounting.
+
 Transition caches are price-independent and can be reused by a solver handle.
 The browser product deliberately does not retain its scoped Solve handle:
 after summary, telemetry, and compiled-strategy transfer it closes the handle
@@ -997,6 +1003,15 @@ row comparison inside the numerical tolerance. That stop cannot claim
 exactness; it may retain only an independently evaluated executable upper.
 `cap_hit_mask` retains every observed cap, including when a proper bounded
 policy survives.
+
+A stable Bellman-selected policy stopped by `numerical_stability` is captured
+as an `UnverifiedSelectedPolicyCandidate`, not as a certified upper. Its coarse
+estimate may schedule certification but cannot compete for publication. Only
+after compilation and independent evaluation prove executable parsing, proper
+absorption, complete exact cost, zero off-policy mass, and a finite cost can it
+enter the certified fallback portfolio. Publication then selects the cheapest
+independently evaluated candidate; an open action envelope still keeps the
+global lower at zero.
 
 Action accounting is also categorical: registry actions, solver candidates,
 evaluator-supported actions, supported priced actions, missing-price skips,
@@ -1165,7 +1180,7 @@ The public ABI is declared in `engine/include/poecraft/solver.h`:
 | --- | --- |
 | Registry | create/destroy, action count/info/find, candidate indices |
 | Calculator | exact `pc_calc_action_outcomes` for one concrete item/action |
-| Solve | synchronous solve plus begin/step/finish/abandon, product gap targets, opt-in goal-progress-gated reforge scope, and live `L`/`U`/gap, round, incumbent, work, and memory progress |
+| Solve | synchronous solve plus begin/step/finish/abandon, append-only expanding/iterating/refining/compiling/certifying/done phases, product gap targets, opt-in goal-progress-gated reforge scope, and live `L`/`U`/gap, round, incumbent, work, and memory progress |
 | Results | state value/policy, concrete projection, compile, solve log |
 | Diagnostics | versioned telemetry and selected live/peak memory statistics |
 | Exact graph | synchronous evaluate plus begin/step/finish/destroy and memory statistics |

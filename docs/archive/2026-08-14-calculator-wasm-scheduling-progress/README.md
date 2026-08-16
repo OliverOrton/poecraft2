@@ -1,8 +1,6 @@
 # Calculator WASM Scheduling And Progress
 
-**Status: active. Selected-policy publication and cooperative exact refinement
-is the current execution contract; Gates 0-2 are complete and Gate 3 is in
-progress.**
+**Status: complete and archived on 2026-08-16.**
 
 This milestone uses Oliver's live Allflame Conquest Lamellar report to make
 the normal Calculator WASM solve both practically usable and truthfully
@@ -15,5 +13,8 @@ previous qualification profile before selecting any implementation change.
 - [Gate 1 scheduler selection and Gate 2 progress](evidence/gate1-gate2-selection-progress.md)
 - [Gate 0 selected-policy and finalization evidence](evidence/gate0-selected-policy-finalization.md)
 - [Gates 1-2 selected-policy publication evidence](evidence/gate1-gate2-selected-policy-publication.md)
+- [Final qualification and acceptance evidence](evidence/final-acceptance.md)
+- [Completion report](report.md)
 
-The exact current boundary is in [HANDOFF](../../../HANDOFF.md).
+This directory is historical. Current implementation sequencing, when one is
+selected, is named by [HANDOFF](../../../HANDOFF.md).

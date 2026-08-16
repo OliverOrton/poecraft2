@@ -29,16 +29,12 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active
-[Calculator WASM Scheduling And Progress](active/2026-08-14-calculator-wasm-scheduling-progress/README.md)
-milestone freezes Oliver's live Allflame three-prefix Conquest Lamellar as a
-product-equivalent release-WASM witness. It must separate normal cooperative
-worker scheduling from the earlier 1,024-work benchmark profile, retain
-cancellation and proof truth, and expose real work when expanded states and
-bounds are temporarily flat. Its current selected continuation preserves the
-stable five-natural-T1 policy before fallback restoration, admits it for
-publication only after independent exact evaluation, and moves exact
-refinement under cooperative native/WASM stepping. The completed
+No implementation milestone is currently active. The completed
+[Calculator WASM Scheduling And Selected-Policy Refinement](archive/2026-08-14-calculator-wasm-scheduling-progress/README.md)
+milestone recovers a five-natural-T1 non-Chaos strategy about 59.7 times
+cheaper than the prior fallback, retains selected candidates without granting
+coarse proof authority, and moves exact refinement, compilation, and
+certification under cooperative native/WASM stepping. The completed
 [Solver Decision Provenance And Result-Truth Hardening](archive/2026-08-13-solver-decision-provenance/README.md)
 separates Calculator odds materialization from ordinary Solve scope, unifies Q
 authority, distinguishes strict objective order from numerical policy

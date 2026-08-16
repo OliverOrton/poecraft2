@@ -1,7 +1,7 @@
 # Selected Policy Publication And Cooperative Exact Refinement
 
-**Status: active. Selected by Oliver on 2026-08-16; Gates 0-2 are complete
-and Gate 3 retained cooperative exact work is in progress.**
+**Status: complete. Selected by Oliver on 2026-08-16; Gates 0-6 passed and
+the milestone was archived on 2026-08-16.**
 
 Parent: [Calculator WASM Scheduling And Progress](README.md)
 
@@ -318,9 +318,12 @@ positive Gate 2 result.
 
 ## Gate 3 - Make Exact Lift Retained And Cooperative
 
-**Status: in progress.** The evaluator repair reduces the exact three-prefix
-control from 108.8 to 31.9 seconds, but its remaining 29.0-second strict lift
-is still synchronous and therefore does not satisfy this gate.
+**Status: complete.** Retained `PolicyExactLiftWork`, cooperative exact graph
+assertion, replay-backed partitioning, and explicit construction handoff
+checkpoints move the previously synchronous work under `SolveWork::step()`.
+Native stepped-equivalence tests cover work sizes 1, 8, and 1,024. The final
+release-WASM three-prefix and three-prefix-plus-spell-suppression witnesses
+remain deterministic and keep their maximum native step below 250 ms.
 
 Enter only after Gate 2 proves a useful selected candidate exists, or after the
 monolithic viability attempt reaches a measured atomic-work boundary that must
@@ -366,6 +369,13 @@ failure classification must match.
 
 ## Gate 4 - Integrate Native Finalization With WASM Progress And Cancellation
 
+**Status: complete.** Finalization is retained by the native solve state
+machine. ABI phases 1-3 remain unchanged and phases `refining = 4`,
+`compiling = 5`, and `certifying = 6` are appended through the C ABI, WASM
+facade, worker protocol, and Calculator. `finish()` is packaging-only after
+native `Done`; cancellation/abandon remains available during all retained
+finalization phases.
+
 Move candidate extraction/refinement/certification before native `Done` so
 `pc_solver_solve_step()` remains the cooperative owner of unfinished work.
 Append public progress phases only if required; do not renumber existing C ABI
@@ -400,6 +410,16 @@ Gate 4 exit on both exact refinement witnesses:
 
 ## Gate 5 - Focused Qualification
 
+**Status: complete.** The five-T1 eight-item and 1,024-work requests publish
+the same 184-node/666-edge non-Chaos strategy at
+`624800.9519118543`, 59.7 times cheaper than the former Chaos renewal, with
+identical action IDs and strategy hash. The exact three-prefix,
+three-prefix-plus-spell-suppression, four-natural-T1, Eldritch, Warlord, and
+Imprint controls retain their required semantics. Applicable controls passed
+exactly 10,000 Simulator runs; the five-T1 policy's roughly 2.19 million
+expected actions makes capped sampling inapplicable. See
+[final evidence](evidence/final-acceptance.md).
+
 Run one focused acceptance set after the implementation is complete:
 
 | Case | Required result |
@@ -433,6 +453,12 @@ runs as cost corroboration.
 Do not run routine full suites between gates.
 
 ## Gate 6 - Final Acceptance And Archive
+
+**Status: complete.** The proof-state, memory-ownership, and append-only ABI
+audits passed. The single final `scripts/test.ps1` invocation passed 3,462,490
+native checks plus ingest, economy, fixture, artifact, binding, benchmark,
+release-WASM, and non-visual web acceptance. Stable documentation was updated,
+the milestone was archived, and `HANDOFF.md` returned to no active boundary.
 
 After the focused set passes:
 
