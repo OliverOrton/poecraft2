@@ -1,9 +1,9 @@
 # Five-T1 Restart-Monotone Strategy Recovery
 
-**Status: proposed execution plan for review. Not selected and not an active
-implementation boundary.**
+**Status: active. Selected by Oliver on 2026-08-16; Gate 0 evidence and
+behavior-neutral telemetry are the current implementation boundary.**
 
-Parent: [Future work](README.md)
+Parent: [Five-T1 Restart-Monotone Strategy Recovery](README.md)
 
 ## Objective
 
@@ -586,7 +586,7 @@ Stop and update `HANDOFF.md` with a precise boundary if any of these occurs:
 
 ## Review Questions
 
-Before Oliver selects this plan, review should challenge:
+The pre-selection review challenged:
 
 1. whether fail-closed certification plus product-graph exact evaluation is
    sufficient to prove the safe Restart defaults unreachable from the start;

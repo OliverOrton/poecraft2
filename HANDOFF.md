@@ -1,20 +1,15 @@
 # Session Handoff
 
-**Status: no active implementation boundary. A proposed next plan is ready
-for review.**
+**Status: active implementation boundary at Gate 0 evidence and
+behavior-neutral telemetry.**
 
-The
-[Calculator WASM Scheduling And Selected-Policy Refinement](docs/archive/2026-08-14-calculator-wasm-scheduling-progress/README.md)
-milestone completed and was archived on 2026-08-16. Oliver must choose the
-next bounded plan before implementation resumes.
-
-The proposed
-[Five-T1 Restart-Monotone Strategy Recovery](docs/future/five-t1-restart-monotone-recovery-plan.md)
-plan incorporates the priced-base five-natural-T1 Calculator failure and the
-subsequent external review. It is deliberately not active: Oliver may review
-or revise its fail-closed certification, Restart-monotonicity, automatic
-admission, evaluator-scaling, responsiveness, and materiality gates before
-selecting it. No source implementation from that plan has started.
+Oliver selected
+[Five-T1 Restart-Monotone Strategy Recovery](docs/active/2026-08-16-five-t1-restart-monotone-recovery/plan.md)
+on 2026-08-16. Its current boundary is Gate 0: freeze the exact Restart-free,
+priced-base, and automatic-admission witnesses and add behavior-neutral
+failure, route-default, observation-payload, memory, automatic-family, and
+wall-time evidence. Do not change Restart scheduling, automatic admission,
+evaluator representation, or publication behavior before Gate 0 closes.
 
 The accepted behavioral source checkpoint is
 `f3b908011490b39347e8fad6945b471d888b9845` on
