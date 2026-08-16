@@ -1,5 +1,6 @@
 #include "solver_policy_refinement_helpers.hpp"
 #include "solver_quotient_bellman.hpp"
+#include "solver_cooperative_task.hpp"
 
 #include <chrono>
 
@@ -811,7 +812,8 @@ struct QuotientFrontierExpansion {
     PolicyLiftAdapterTelemetry telemetry;
 };
 
-PolicyExactLiftCertificate lift_policy_quotient_pass(
+solve_detail::CooperativeTask<PolicyExactLiftCertificate>
+lift_policy_quotient_pass_task(
         CalcContext& coarse,
         const SolveResult& solved,
         const pc_item_state& exact_start,
@@ -819,7 +821,8 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
         const SolveOptions& options,
         const std::string& strategy_name,
         const RefinementLimits* limits_override,
-        const std::vector<AbstractState>& frontier_seeds) {
+        std::vector<AbstractState> frontier_seeds,
+        PolicyExactLiftProgress& progress) {
     PolicyExactLiftCertificate certificate;
     certificate.solver_cost = solved.evaluated_policy_cost;
     const RefinementLimits limits =
@@ -837,6 +840,9 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                 .count());
     };
     try {
+        progress = {};
+        progress.phase = PolicyExactLiftPhase::CarrierDiscovery;
+        co_await solve_detail::CooperativeCheckpoint{};
         ReoptimizationSeed seed;
         seed.coarse_parents.insert(
             solved.diagnostics.policy_refinement
@@ -850,7 +856,17 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
         }
         ProductionPolicyOracle oracle(
             coarse, solved, exact_start, prices, options, limits,
-            telemetry, seed.empty() ? nullptr : &seed);
+            telemetry, seed.empty() ? nullptr : &seed, false, true);
+        auto oracle_initialization = oracle.initialize_cooperatively();
+        while (!oracle_initialization.resume()) {
+            ++progress.work_items;
+            co_await solve_detail::CooperativeCheckpoint{
+                oracle.estimated_owned_bytes()};
+        }
+        (void)oracle_initialization.take_result();
+        progress.strict_states = 1;
+        co_await solve_detail::CooperativeCheckpoint{
+            oracle.estimated_owned_bytes()};
         certificate.exact_root_key = oracle.root_key();
         const std::uint32_t root_locator =
             oracle.quotient_locator(certificate.exact_root_key);
@@ -1101,6 +1117,13 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                     "streamed quotient discovery reached memory cap",
                     "max_estimated_memory_bytes");
             }
+            ++progress.work_items;
+            progress.strict_states = static_cast<std::uint32_t>(
+                locators.size());
+            progress.strict_kernels = telemetry.strict_kernels_built;
+            progress.strict_transitions =
+                telemetry.strict_transitions_built;
+            co_await solve_detail::CooperativeCheckpoint{combined};
         }
 
         std::map<StableKey, std::uint32_t>{}.swap(
@@ -1185,9 +1208,8 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
 
         const auto replay_node =
                 [&](const bool include_observations,
-                    const std::uint32_t ordinal) {
-            ExactState state =
-                oracle.quotient_materialize_locator(locators.at(ordinal));
+                    const std::uint32_t ordinal,
+                    const ExactState& state) {
             refinement::ClosedPartitionNode node;
             node.stable_key = {
                 0x7063716e6f646532ull,
@@ -1261,14 +1283,89 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
             telemetry.peak_live_slice_bytes = std::max(
                 telemetry.peak_live_slice_bytes,
                 exact_state_bytes(state));
-            oracle.quotient_release_carrier(state.stable_key);
             return node;
         };
+
+        /* Replaying an exact carrier through the strict calculator dominated
+         * the old partition pass because every refinement round rebuilt the
+         * same immutable node. Retain both observation projections once,
+         * under the existing proof-memory ceiling, then let the unchanged
+         * replay partition authority consume deterministic copies. */
+        progress.phase = PolicyExactLiftPhase::PartitionRefinement;
+        std::vector<refinement::ClosedPartitionNode>
+            cached_observation_nodes;
+        std::vector<refinement::ClosedPartitionNode> cached_exact_nodes;
+        std::vector<ExactState> cached_partition_states;
+        cached_observation_nodes.reserve(locators.size());
+        cached_exact_nodes.reserve(locators.size());
+        cached_partition_states.reserve(locators.size());
+        std::uint64_t cached_partition_node_bytes =
+            cached_observation_nodes.capacity() *
+                sizeof(refinement::ClosedPartitionNode) +
+            cached_exact_nodes.capacity() *
+                sizeof(refinement::ClosedPartitionNode);
+        std::uint64_t cached_partition_state_bytes =
+            cached_partition_states.capacity() * sizeof(ExactState);
+        const auto account_cached_node =
+                [&](const refinement::ClosedPartitionNode& node) {
+            saturating_add(
+                cached_partition_node_bytes,
+                node.stable_key.capacity() * sizeof(std::uint64_t));
+            saturating_add(
+                cached_partition_node_bytes,
+                node.observation_key.capacity() * sizeof(std::uint64_t));
+            saturating_add(
+                cached_partition_node_bytes,
+                node.immediate_key.capacity() * sizeof(std::uint64_t));
+            saturating_add(
+                cached_partition_node_bytes,
+                node.arcs.capacity() *
+                    sizeof(refinement::ClosedPartitionArc));
+            for (const refinement::ClosedPartitionArc& arc : node.arcs) {
+                saturating_add(
+                    cached_partition_node_bytes,
+                    arc.label.capacity() * sizeof(std::uint64_t));
+            }
+        };
+        for (std::uint32_t ordinal = 0;
+             ordinal < locators.size(); ++ordinal) {
+            cached_partition_states.push_back(
+                oracle.quotient_materialize_locator(locators.at(ordinal)));
+            saturating_add(
+                cached_partition_state_bytes,
+                exact_state_bytes(cached_partition_states.back()));
+            cached_observation_nodes.push_back(
+                replay_node(
+                    false, ordinal,
+                    cached_partition_states.back()));
+            account_cached_node(cached_observation_nodes.back());
+            cached_exact_nodes.push_back(replay_node(
+                true, ordinal, cached_partition_states.back()));
+            account_cached_node(cached_exact_nodes.back());
+            oracle.quotient_release_carrier(
+                cached_partition_states.back().stable_key);
+            std::uint64_t live = oracle.estimated_owned_bytes();
+            saturating_add(live, ledger.snapshot().total_bytes);
+            saturating_add(live, cached_partition_node_bytes);
+            saturating_add(live, cached_partition_state_bytes);
+            if (live > limits.max_estimated_memory_bytes) {
+                throw AdapterFailure(
+                    PolicyExactLiftStatus::ResourceCap,
+                    "cached streamed quotient partition reached memory cap",
+                    "max_estimated_memory_bytes");
+            }
+            ++progress.work_items;
+            co_await solve_detail::CooperativeCheckpoint{live};
+        }
 
         telemetry.carrier_discovery_ns = elapsed_certification_ns();
         std::uint64_t retained_for_partition = oracle.estimated_owned_bytes();
         saturating_add(
             retained_for_partition, ledger.snapshot().total_bytes);
+        saturating_add(
+            retained_for_partition, cached_partition_node_bytes);
+        saturating_add(
+            retained_for_partition, cached_partition_state_bytes);
         refinement::ClosedPartitionLimits partition_limits{
             limits.max_refinement_classes,
             limits.max_refinement_rounds,
@@ -1281,7 +1378,7 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
             refinement::refine_closed_probabilistic_partition_replay(
                 static_cast<std::uint32_t>(locators.size()),
                 [&](const std::uint32_t ordinal) {
-                    return replay_node(false, ordinal);
+                    return cached_observation_nodes.at(ordinal);
                 },
                 {}, false, partition_limits);
         telemetry.partition_refinement_ns +=
@@ -1290,6 +1387,12 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                     std::chrono::steady_clock::now() -
                     observation_partition_started)
                     .count());
+        progress.partition_rounds += observation_coarse.rounds;
+        progress.partition_classes =
+            observation_coarse.final_class_count;
+        ++progress.work_items;
+        co_await solve_detail::CooperativeCheckpoint{
+            retained_for_partition};
         if (observation_coarse.status !=
                 refinement::ClosedPartitionStatus::Complete ||
             !observation_coarse.lumpable) {
@@ -1326,6 +1429,12 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
         saturating_add(
             partition_limits.retained_estimated_memory_bytes,
             ledger.snapshot().total_bytes);
+        saturating_add(
+            partition_limits.retained_estimated_memory_bytes,
+            cached_partition_node_bytes);
+        saturating_add(
+            partition_limits.retained_estimated_memory_bytes,
+            cached_partition_state_bytes);
         const std::uint64_t final_partition_retained =
             partition_limits.retained_estimated_memory_bytes;
         const auto exact_partition_started =
@@ -1334,7 +1443,7 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
             refinement::refine_closed_probabilistic_partition_replay(
                 static_cast<std::uint32_t>(locators.size()),
                 [&](const std::uint32_t ordinal) {
-                    return replay_node(true, ordinal);
+                    return cached_exact_nodes.at(ordinal);
                 },
                 observation_coarse.class_by_node,
                 false, partition_limits);
@@ -1344,6 +1453,11 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                     std::chrono::steady_clock::now() -
                     exact_partition_started)
                     .count());
+        progress.partition_rounds += partition.rounds;
+        progress.partition_classes = partition.final_class_count;
+        ++progress.work_items;
+        co_await solve_detail::CooperativeCheckpoint{
+            partition_limits.retained_estimated_memory_bytes};
         if (partition.status != refinement::ClosedPartitionStatus::Complete ||
             !partition.lumpable) {
             throw AdapterFailure(
@@ -1361,6 +1475,11 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
         quotient::ScopedProofMemoryCharge retained_partition(
             ledger, quotient::ProofMemoryCategory::Partition,
             final_partition_owned);
+        std::vector<refinement::ClosedPartitionNode>{}.swap(
+            cached_observation_nodes);
+        std::vector<refinement::ClosedPartitionNode>{}.swap(
+            cached_exact_nodes);
+        cached_partition_node_bytes = 0;
 
         const auto class_coverage =
                 [&](const std::vector<std::uint32_t>& class_by_node,
@@ -1409,14 +1528,17 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                 [&](const refinement::ClosedPartitionResult& shared,
                     const bool include_observations,
                     const std::vector<std::uint32_t>& cell_id_by_class,
-                    const std::vector<std::uint64_t>& generation_by_class) {
+                    const std::vector<std::uint64_t>& generation_by_class)
+                    -> solve_detail::CooperativeTask<
+                        std::vector<quotient::QuotientCell>> {
             std::vector<quotient::QuotientCell> cells(shared.classes.size());
+            std::uint32_t built = 0;
             for (const refinement::ClosedPartitionClass& cls :
                  shared.classes) {
                 const std::uint32_t representative = representative_for(
                     shared.class_by_node, cls.class_id);
-                ExactState state = oracle.quotient_materialize_locator(
-                    locators[representative]);
+                const ExactState& state =
+                    cached_partition_states.at(representative);
                 quotient::QuotientCell cell;
                 cell.cell_id = cell_id_by_class.at(cls.class_id);
                 cell.generation = generation_by_class.at(cls.class_id);
@@ -1448,9 +1570,15 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                     shared.class_by_node, cls.class_id);
                 cell.semantic_identity =
                     quotient::canonical_quotient_cell_identity(cell);
-                oracle.quotient_release_carrier(state.stable_key);
                 cells[cls.class_id] = std::move(cell);
+                ++built;
+                if ((built & 63u) == 0u) {
+                    co_await solve_detail::CooperativeCheckpoint{
+                        cells.capacity() *
+                        sizeof(quotient::QuotientCell)};
+                }
             }
+            std::uint32_t projected = 0;
             for (const refinement::ClosedPartitionClass& cls :
                  shared.classes) {
                 quotient::QuotientCell& cell = cells[cls.class_id];
@@ -1465,8 +1593,14 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                         std::nullopt,
                         arc.probability});
                 }
+                ++projected;
+                if ((projected & 63u) == 0u) {
+                    co_await solve_detail::CooperativeCheckpoint{
+                        cells.capacity() *
+                        sizeof(quotient::QuotientCell)};
+                }
             }
-            return cells;
+            co_return cells;
         };
 
         std::vector<std::uint32_t> final_cell_id(
@@ -1475,8 +1609,15 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
             final_cell_id.begin(), final_cell_id.end(), 0u);
         std::vector<std::uint64_t> final_generation(
             partition.final_class_count, 1);
-        std::vector<quotient::QuotientCell> final_cells = build_cells(
+        auto build_cells_work = build_cells(
             partition, true, final_cell_id, final_generation);
+        while (!build_cells_work.resume()) {
+            ++progress.work_items;
+            co_await solve_detail::CooperativeCheckpoint{
+                build_cells_work.retained_bytes()};
+        }
+        std::vector<quotient::QuotientCell> final_cells =
+            build_cells_work.take_result();
         for (quotient::QuotientCell& cell : final_cells) {
             std::vector<quotient::QuotientCellArc>{}.swap(cell.arcs);
         }
@@ -1510,7 +1651,9 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
         const auto publish_rows =
                 [&](const refinement::ClosedPartitionResult& shared,
                     const std::vector<quotient::QuotientCell>& cells,
-                    const std::vector<std::uint32_t>& cell_id_by_class) {
+                    const std::vector<std::uint32_t>& cell_id_by_class)
+                    -> solve_detail::CooperativeTask<
+                        std::vector<PublishedRow>> {
             using ProjectedPayload =
                 std::vector<std::pair<std::uint32_t, double>>;
             std::vector<ProjectedPayload> projected_payloads(
@@ -1531,8 +1674,8 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                     &cell - cells.data());
                 const std::uint32_t representative = representative_for(
                     shared.class_by_node, class_id);
-                ExactState source = oracle.quotient_materialize_locator(
-                    locators[representative]);
+                const ExactState& source =
+                    cached_partition_states.at(representative);
                 for (const std::uint32_t payload_id :
                      rows_by_ordinal[representative]) {
                     const RawRowPayload& row = raw_rows[payload_id];
@@ -1601,16 +1744,32 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                         bellman.append_row(std::move(input));
                     published.push_back({
                         sparse_row, cell.cell_id, row.selected});
+                    if ((published.size() & 255u) == 0u) {
+                        co_await solve_detail::CooperativeCheckpoint{
+                            published.capacity() * sizeof(PublishedRow)};
+                    }
                 }
-                oracle.quotient_release_carrier(source.stable_key);
+                if ((class_id & 31u) == 31u) {
+                    co_await solve_detail::CooperativeCheckpoint{
+                        published.capacity() * sizeof(PublishedRow)};
+                }
             }
-            return published;
+            co_return published;
         };
 
         install_cells(final_cells);
         retained_coarse_partition.reset();
-        std::vector<PublishedRow> published_rows = publish_rows(
+        auto publish_rows_work = publish_rows(
             partition, final_cells, final_cell_id);
+        while (!publish_rows_work.resume()) {
+            ++progress.work_items;
+            co_await solve_detail::CooperativeCheckpoint{
+                publish_rows_work.retained_bytes()};
+        }
+        std::vector<PublishedRow> published_rows =
+            publish_rows_work.take_result();
+        std::vector<ExactState>{}.swap(cached_partition_states);
+        cached_partition_state_bytes = 0;
         const auto refresh_external_row_kernel_bytes = [&] {
             std::uint64_t retained = raw_row_bytes;
             saturating_add(
@@ -1643,6 +1802,20 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
         std::vector<quotient::AccountedAlternativeAction>
             completed_action_accounting;
         for (std::uint32_t cls = 0; cls < final_cells.size(); ++cls) {
+            if (cls != 0 && (cls & 15u) == 0u) {
+                ++progress.work_items;
+                std::uint64_t retained = oracle.estimated_owned_bytes();
+                saturating_add(retained, ledger.snapshot().total_bytes);
+                saturating_add(
+                    retained,
+                    admitted_action_accounting.capacity() *
+                        sizeof(quotient::AccountedAlternativeAction));
+                saturating_add(
+                    retained,
+                    completed_action_accounting.capacity() *
+                        sizeof(quotient::AccountedAlternativeAction));
+                co_await solve_detail::CooperativeCheckpoint{retained};
+            }
             const quotient::QuotientCell& cell = final_cells[cls];
             if (cell.terminal) continue;
             const std::uint32_t representative = representative_for(
@@ -1788,6 +1961,9 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                     telemetry.alternative_obligations_created, 1);
             }
         }
+        ++progress.work_items;
+        co_await solve_detail::CooperativeCheckpoint{
+            ledger.snapshot().total_bytes};
         const quotient::AlternativeActionAccountingAudit action_audit =
             bellman.proof_store()->audit_alternative_actions(
                 admitted_action_accounting,
@@ -1804,6 +1980,9 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                 PolicyExactLiftStatus::RefinementFailure,
                 "selected-first quotient lost admitted-action accounting");
         }
+        ++progress.work_items;
+        co_await solve_detail::CooperativeCheckpoint{
+            ledger.snapshot().total_bytes};
 
         const std::uint32_t root_class = partition.class_by_node.at(0);
         const std::uint32_t root_cell = final_cell_id.at(root_class);
@@ -1813,6 +1992,9 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                 : bellman.solve(
                       {root_cell}, limits.max_refinement_rounds,
                       std::max<std::uint32_t>(1, options.max_sweeps));
+        ++progress.work_items;
+        co_await solve_detail::CooperativeCheckpoint{
+            ledger.snapshot().total_bytes};
         const quotient::QuotientBellmanTelemetry& bellman_telemetry =
             bellman.telemetry();
         telemetry.proof_payload_reuses =
@@ -1855,7 +2037,8 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                     : std::string{});
         }
         const auto publish_current_upper =
-                [&](const quotient::QuotientBellmanResult& solved_upper) {
+                [&](const quotient::QuotientBellmanResult& solved_upper)
+                    -> solve_detail::CooperativeTask<bool> {
         certificate.refinement = {};
         certificate.class_evaluation = {};
         certificate.compiled = {};
@@ -1899,6 +2082,10 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
             transition_owner_by_span;
         for (std::uint32_t local = 0;
              local < reachable_classes.size(); ++local) {
+            if (local != 0 && (local & 31u) == 0u) {
+                co_await solve_detail::CooperativeCheckpoint{
+                    oracle.estimated_owned_bytes()};
+            }
             const std::uint32_t cls = reachable_classes[local];
             const quotient::QuotientCell& cell = final_cells[cls];
             RefinedPolicyClass& policy_class =
@@ -2011,6 +2198,10 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                 initial_group;
             for (std::uint32_t local = 0;
                  local < certificate.refinement.classes.size(); ++local) {
+                if (local != 0 && (local & 63u) == 0u) {
+                    co_await solve_detail::CooperativeCheckpoint{
+                        oracle.estimated_owned_bytes()};
+                }
                 const RefinedPolicyClass& cls =
                     certificate.refinement.classes[local];
                 const std::pair initial_key{
@@ -2051,6 +2242,10 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                     group_by_local.size(), kNoId);
                 for (std::uint32_t local = 0;
                      local < group_by_local.size(); ++local) {
+                    if (local != 0 && (local & 63u) == 0u) {
+                        co_await solve_detail::CooperativeCheckpoint{
+                            oracle.estimated_owned_bytes()};
+                    }
                     std::uint32_t projection_value_id = 0;
                     if (sparse_by_local[local] != nullptr) {
                         const SparseRow& sparse =
@@ -2125,6 +2320,10 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                 evaluation_group_count, kNoId);
             for (std::uint32_t local = 0;
                  local < group_by_local.size(); ++local) {
+                if (local != 0 && (local & 255u) == 0u) {
+                    co_await solve_detail::CooperativeCheckpoint{
+                        oracle.estimated_owned_bytes()};
+                }
                 if (representative_by_group[group_by_local[local]] == kNoId) {
                     representative_by_group[group_by_local[local]] = local;
                 }
@@ -2137,6 +2336,10 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                 representative_by_group.size());
             for (std::uint32_t group = 0;
                  group < representative_by_group.size(); ++group) {
+                if (group != 0 && (group & 63u) == 0u) {
+                    co_await solve_detail::CooperativeCheckpoint{
+                        oracle.estimated_owned_bytes()};
+                }
                 const RefinedPolicyClass& source =
                     certificate.refinement.classes[
                         representative_by_group[group]];
@@ -2178,6 +2381,10 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                 grouped.class_values.reserve(group_by_local.size());
                 for (std::uint32_t local = 0;
                      local < group_by_local.size(); ++local) {
+                    if (local != 0 && (local & 255u) == 0u) {
+                        co_await solve_detail::CooperativeCheckpoint{
+                            oracle.estimated_owned_bytes()};
+                    }
                     grouped.class_values.push_back({
                         local,
                         value_by_group.at(group_by_local[local])});
@@ -2241,10 +2448,42 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
         certificate.policy_changed =
             bellman_telemetry.policy_improvements != 0;
 
-        (void)oracle.quotient_materialize_locator(root_locator);
-        certificate.compiled = oracle.assert_lifted_policy(
-            strategy_name, certificate.refinement,
-            certificate.class_evaluation);
+        progress.phase = PolicyExactLiftPhase::Compiling;
+        ProductionPolicyOracle::PreparedLiftedPolicyAssertion prepared =
+            oracle.prepare_lifted_policy_assertion(
+                certificate.refinement,
+                certificate.class_evaluation);
+        if (!prepared.ready) {
+            certificate.compiled = std::move(prepared.immediate);
+        } else {
+            CompiledPolicyAssertionWork assertion_work =
+                oracle.begin_lifted_policy_assertion(
+                    prepared, strategy_name);
+            while (!assertion_work.progress().done) {
+                const CompiledPolicyAssertionProgress assertion_progress =
+                    assertion_work.progress();
+                progress.phase =
+                    assertion_progress.phase ==
+                            CompiledPolicyAssertionPhase::Compiling
+                        ? PolicyExactLiftPhase::Compiling
+                        : PolicyExactLiftPhase::Certifying;
+                progress.evaluation = assertion_progress.evaluation;
+                assertion_work.step(1);
+                ++progress.work_items;
+                std::uint64_t retained =
+                    oracle.estimated_owned_bytes();
+                saturating_add(
+                    retained, assertion_work.retained_bytes());
+                co_await solve_detail::CooperativeCheckpoint{
+                    retained};
+            }
+            certificate.compiled =
+                oracle.finish_lifted_policy_assertion(
+                    prepared,
+                    assertion_work.take_result(),
+                    certificate.refinement,
+                    certificate.class_evaluation);
+        }
         certificate.lumpable = true;
         if (telemetry.reference_adapter_invocations != 0) {
             throw AdapterFailure(
@@ -2267,8 +2506,17 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
         }
         certificate.status = PolicyExactLiftStatus::Complete;
         certificate.executable = true;
+        co_return true;
         };
-        publish_current_upper(solved_quotient);
+        {
+            auto publication_task = publish_current_upper(solved_quotient);
+            while (!publication_task.resume()) {
+                ++progress.work_items;
+                co_await solve_detail::CooperativeCheckpoint{
+                    oracle.estimated_owned_bytes()};
+            }
+            (void)publication_task.take_result();
+        }
         const auto local_reoptimization_started =
             std::chrono::steady_clock::now();
         if (!telemetry.work_to_first_executable_upper.has_value()) {
@@ -2778,7 +3026,14 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
                     }
                     current_solved = std::move(improved);
                     try {
-                        publish_current_upper(current_solved);
+                        auto publication_task =
+                            publish_current_upper(current_solved);
+                        while (!publication_task.resume()) {
+                            ++progress.work_items;
+                            co_await solve_detail::CooperativeCheckpoint{
+                                oracle.estimated_owned_bytes()};
+                        }
+                        (void)publication_task.take_result();
                     } catch (const AdapterFailure& error) {
                         if (error.status !=
                             PolicyExactLiftStatus::ResourceCap) {
@@ -3007,10 +3262,225 @@ PolicyExactLiftCertificate lift_policy_quotient_pass(
         certificate.compiled.exact_evaluation_ns;
     telemetry.total_ns = elapsed_certification_ns();
     certificate.adapter = std::move(telemetry);
-    return certificate;
+    progress.phase = PolicyExactLiftPhase::Done;
+    progress.done = true;
+    co_return certificate;
 }
 
 } // namespace
+
+struct PolicyExactLiftWork::Impl {
+    CalcContext& coarse;
+    const SolveResult& solved;
+    pc_item_state exact_start{};
+    const std::unordered_map<std::string, double>& prices;
+    SolveOptions options;
+    std::string strategy_name;
+    RefinementLimits limits;
+    std::map<StableKey, AbstractState> frontier_by_identity;
+    PolicyLiftAdapterTelemetry prior_telemetry;
+    RefinementLimits pass_limits;
+    SolveOptions pass_options;
+    PolicyExactLiftProgress progress;
+    solve_detail::CooperativeTask<PolicyExactLiftCertificate> pass;
+    std::optional<PolicyExactLiftCertificate> completed;
+
+    Impl(
+            CalcContext& coarse_value,
+            const SolveResult& solved_value,
+            const pc_item_state& exact_start_value,
+            const std::unordered_map<std::string, double>& prices_value,
+            const SolveOptions& options_value,
+            std::string strategy_name_value,
+            const RefinementLimits* limits_override)
+        : coarse(coarse_value),
+          solved(solved_value),
+          exact_start(exact_start_value),
+          prices(prices_value),
+          options(options_value),
+          strategy_name(std::move(strategy_name_value)),
+          limits(
+              limits_override == nullptr
+                  ? default_limits(coarse, solved, options)
+                  : *limits_override),
+          pass_limits(limits),
+          pass_options(options) {
+        begin_pass();
+    }
+
+    PolicyExactLiftCertificate resource_cap(
+            const char* reason, const char* cap) const {
+        PolicyExactLiftCertificate certificate;
+        certificate.solver_cost = solved.evaluated_policy_cost;
+        certificate.status = PolicyExactLiftStatus::ResourceCap;
+        certificate.failure_reason = reason;
+        certificate.resource_cap = cap;
+        certificate.adapter = prior_telemetry;
+        return certificate;
+    }
+
+    void begin_pass() {
+        std::vector<AbstractState> frontier_seeds;
+        frontier_seeds.reserve(frontier_by_identity.size());
+        for (const auto& [identity, state] : frontier_by_identity) {
+            (void)identity;
+            frontier_seeds.push_back(state);
+        }
+        progress = {};
+        pass = lift_policy_quotient_pass_task(
+            coarse, solved, exact_start, prices, pass_options,
+            strategy_name, &pass_limits, std::move(frontier_seeds),
+            progress);
+    }
+
+    void accept_frontier(QuotientFrontierExpansion expansion) {
+        merge_adapter_telemetry(
+            prior_telemetry, expansion.telemetry);
+        bool grew = false;
+        for (AbstractState& state : expansion.states) {
+            const StableKey identity =
+                exact_abstract_state_key(state, 0);
+            auto [found, inserted] = frontier_by_identity.emplace(
+                identity, std::move(state));
+            (void)found;
+            grew = grew || inserted;
+        }
+        if (!grew) {
+            PolicyExactLiftCertificate certificate;
+            certificate.solver_cost = solved.evaluated_policy_cost;
+            certificate.status =
+                PolicyExactLiftStatus::RefinementFailure;
+            certificate.failure_reason =
+                "competitive quotient frontier did not grow";
+            completed = std::move(certificate);
+            return;
+        }
+        if (frontier_by_identity.size() >= limits.max_exact_states) {
+            completed = resource_cap(
+                "competitive quotient frontier reached max_exact_states",
+                "max_exact_states");
+            return;
+        }
+        if (prior_telemetry.strict_kernels_built >=
+            limits.max_exact_kernels) {
+            completed = resource_cap(
+                "competitive quotient frontier reached max_exact_kernels",
+                "max_exact_kernels");
+            return;
+        }
+        pass_limits.max_exact_kernels =
+            limits.max_exact_kernels -
+            prior_telemetry.strict_kernels_built;
+        if (prior_telemetry.strict_transitions_built >=
+            limits.max_transitions) {
+            completed = resource_cap(
+                "competitive quotient frontier reached max_transitions",
+                "max_transitions");
+            return;
+        }
+        pass_limits.max_transitions =
+            limits.max_transitions -
+            prior_telemetry.strict_transitions_built;
+        std::uint64_t spent_rounds =
+            prior_telemetry.backward_observation_rounds;
+        saturating_add(
+            spent_rounds,
+            prior_telemetry.exact_fixed_point_rounds);
+        saturating_add(
+            spent_rounds,
+            prior_telemetry.local_reoptimization_rounds);
+        if (spent_rounds >= limits.max_refinement_rounds) {
+            completed = resource_cap(
+                "competitive quotient frontier reached "
+                "max_refinement_rounds",
+                "max_refinement_rounds");
+            return;
+        }
+        pass_limits.max_refinement_rounds =
+            limits.max_refinement_rounds -
+            static_cast<std::uint32_t>(spent_rounds);
+        if (prior_telemetry.strict_reforge_logical_work_v1 >=
+            options.max_reforge_work) {
+            completed = resource_cap(
+                "competitive quotient frontier reached max_reforge_work",
+                "max_reforge_work");
+            return;
+        }
+        pass_options.max_reforge_work =
+            options.max_reforge_work -
+            prior_telemetry.strict_reforge_logical_work_v1;
+        begin_pass();
+    }
+
+    void step(std::uint32_t max_work_items) {
+        std::uint32_t remaining =
+            std::max<std::uint32_t>(1, max_work_items);
+        while (remaining-- != 0 && !completed.has_value()) {
+            try {
+                if (!pass.resume()) continue;
+                PolicyExactLiftCertificate certificate =
+                    pass.take_result();
+                PolicyLiftAdapterTelemetry total = prior_telemetry;
+                merge_adapter_telemetry(total, certificate.adapter);
+                certificate.adapter = std::move(total);
+                progress.phase = PolicyExactLiftPhase::Done;
+                progress.done = true;
+                completed = std::move(certificate);
+            } catch (QuotientFrontierExpansion& expansion) {
+                accept_frontier(std::move(expansion));
+            }
+        }
+    }
+
+    std::uint64_t retained_bytes() const {
+        std::uint64_t bytes = pass.retained_bytes();
+        for (const auto& [identity, state] : frontier_by_identity) {
+            saturating_add(
+                bytes,
+                identity.capacity() * sizeof(std::uint64_t));
+            (void)state;
+            saturating_add(bytes, sizeof(AbstractState));
+        }
+        return bytes;
+    }
+};
+
+PolicyExactLiftWork::PolicyExactLiftWork(
+        CalcContext& coarse,
+        const SolveResult& solved,
+        const pc_item_state& exact_start,
+        const std::unordered_map<std::string, double>& prices,
+        const SolveOptions& options,
+        std::string strategy_name,
+        const RefinementLimits* limits_override)
+    : impl_(std::make_unique<Impl>(
+          coarse, solved, exact_start, prices, options,
+          std::move(strategy_name), limits_override)) {}
+
+PolicyExactLiftWork::~PolicyExactLiftWork() = default;
+PolicyExactLiftWork::PolicyExactLiftWork(
+    PolicyExactLiftWork&&) noexcept = default;
+PolicyExactLiftWork& PolicyExactLiftWork::operator=(
+    PolicyExactLiftWork&&) noexcept = default;
+
+void PolicyExactLiftWork::step(const std::uint32_t max_work_items) {
+    impl_->step(max_work_items);
+}
+
+PolicyExactLiftProgress PolicyExactLiftWork::progress() const {
+    return impl_->progress;
+}
+
+PolicyExactLiftCertificate PolicyExactLiftWork::take_result() {
+    if (!impl_->completed.has_value()) {
+        throw std::logic_error("policy exact lift work is not finished");
+    }
+    return std::move(*impl_->completed);
+}
+
+std::uint64_t PolicyExactLiftWork::retained_bytes() const {
+    return impl_->retained_bytes();
+}
 
 PolicyExactLiftCertificate lift_policy_quotient(
         CalcContext& coarse,
@@ -3020,117 +3490,11 @@ PolicyExactLiftCertificate lift_policy_quotient(
         const SolveOptions& options,
         const std::string& strategy_name,
         const RefinementLimits* limits_override) {
-    const RefinementLimits limits =
-        limits_override == nullptr
-            ? default_limits(coarse, solved, options)
-            : *limits_override;
-    std::map<StableKey, AbstractState> frontier_by_identity;
-    PolicyLiftAdapterTelemetry prior_telemetry;
-    RefinementLimits pass_limits = limits;
-    SolveOptions pass_options = options;
-    const auto resource_cap = [&](const char* reason, const char* cap) {
-        PolicyExactLiftCertificate certificate;
-        certificate.solver_cost = solved.evaluated_policy_cost;
-        certificate.status = PolicyExactLiftStatus::ResourceCap;
-        certificate.failure_reason = reason;
-        certificate.resource_cap = cap;
-        certificate.adapter = prior_telemetry;
-        return certificate;
-    };
-    while (true) {
-        std::vector<AbstractState> frontier_seeds;
-        frontier_seeds.reserve(frontier_by_identity.size());
-        for (const auto& [identity, state] : frontier_by_identity) {
-            (void)identity;
-            frontier_seeds.push_back(state);
-        }
-        try {
-            PolicyExactLiftCertificate certificate =
-                lift_policy_quotient_pass(
-                coarse, solved, exact_start, prices, pass_options,
-                strategy_name, &pass_limits, frontier_seeds);
-            PolicyLiftAdapterTelemetry total = prior_telemetry;
-            merge_adapter_telemetry(total, certificate.adapter);
-            certificate.adapter = std::move(total);
-            return certificate;
-        } catch (QuotientFrontierExpansion& expansion) {
-            merge_adapter_telemetry(
-                prior_telemetry, expansion.telemetry);
-            bool grew = false;
-            for (AbstractState& state : expansion.states) {
-                const StableKey identity =
-                    exact_abstract_state_key(state, 0);
-                auto [found, inserted] =
-                    frontier_by_identity.emplace(
-                        identity, std::move(state));
-                (void)found;
-                grew = grew || inserted;
-            }
-            if (!grew) {
-                PolicyExactLiftCertificate certificate;
-                certificate.solver_cost = solved.evaluated_policy_cost;
-                certificate.status =
-                    PolicyExactLiftStatus::RefinementFailure;
-                certificate.failure_reason =
-                    "competitive quotient frontier did not grow";
-                return certificate;
-            }
-            if (frontier_by_identity.size() >=
-                limits.max_exact_states) {
-                return resource_cap(
-                    "competitive quotient frontier reached "
-                    "max_exact_states",
-                    "max_exact_states");
-            }
-            if (prior_telemetry.strict_kernels_built >=
-                limits.max_exact_kernels) {
-                return resource_cap(
-                    "competitive quotient frontier reached "
-                    "max_exact_kernels",
-                    "max_exact_kernels");
-            }
-            pass_limits.max_exact_kernels =
-                limits.max_exact_kernels -
-                prior_telemetry.strict_kernels_built;
-            if (prior_telemetry.strict_transitions_built >=
-                limits.max_transitions) {
-                return resource_cap(
-                    "competitive quotient frontier reached "
-                    "max_transitions",
-                    "max_transitions");
-            }
-            pass_limits.max_transitions =
-                limits.max_transitions -
-                prior_telemetry.strict_transitions_built;
-            std::uint64_t spent_rounds =
-                prior_telemetry.backward_observation_rounds;
-            saturating_add(
-                spent_rounds,
-                prior_telemetry.exact_fixed_point_rounds);
-            saturating_add(
-                spent_rounds,
-                prior_telemetry.local_reoptimization_rounds);
-            if (spent_rounds >= limits.max_refinement_rounds) {
-                return resource_cap(
-                    "competitive quotient frontier reached "
-                    "max_refinement_rounds",
-                    "max_refinement_rounds");
-            }
-            pass_limits.max_refinement_rounds =
-                limits.max_refinement_rounds -
-                static_cast<std::uint32_t>(spent_rounds);
-            if (prior_telemetry.strict_reforge_logical_work_v1 >=
-                options.max_reforge_work) {
-                return resource_cap(
-                    "competitive quotient frontier reached "
-                    "max_reforge_work",
-                    "max_reforge_work");
-            }
-            pass_options.max_reforge_work =
-                options.max_reforge_work -
-                prior_telemetry.strict_reforge_logical_work_v1;
-        }
-    }
+    PolicyExactLiftWork work(
+        coarse, solved, exact_start, prices, options,
+        strategy_name, limits_override);
+    while (!work.progress().done) work.step(1024);
+    return work.take_result();
 }
 
 PolicyExactLiftCertificate lift_policy_exact(

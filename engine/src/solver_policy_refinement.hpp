@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <limits>
+#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -225,6 +226,52 @@ CompiledPolicyAssertion assert_compiled_policy_exact(
     const std::string* emitted_strategy_json = nullptr,
     const PolicyCompilationTelemetry* emitted_compilation = nullptr);
 
+enum class CompiledPolicyAssertionPhase : std::uint8_t {
+    Compiling = 0,
+    Certifying,
+    Done,
+};
+
+struct CompiledPolicyAssertionProgress {
+    CompiledPolicyAssertionPhase phase =
+        CompiledPolicyAssertionPhase::Compiling;
+    bool done = false;
+    StrategyEvalProgress evaluation;
+};
+
+/* Retained counterpart of assert_compiled_policy_exact(). Compilation and
+ * parsing are bounded stages; exact graph evaluation advances through the
+ * evaluator's existing one-work-item continuation. Borrowed inputs must
+ * outlive the work object. */
+class CompiledPolicyAssertionWork {
+  public:
+    CompiledPolicyAssertionWork(
+        CalcContext& coarse,
+        const SolveResult& solved,
+        const std::unordered_map<std::string, double>& prices,
+        const SolveOptions& options,
+        std::string strategy_name,
+        const RefinedPolicyCompileRouting* refined_routing = nullptr,
+        const std::string* emitted_strategy_json = nullptr,
+        const PolicyCompilationTelemetry* emitted_compilation = nullptr);
+    ~CompiledPolicyAssertionWork();
+    CompiledPolicyAssertionWork(CompiledPolicyAssertionWork&&) noexcept;
+    CompiledPolicyAssertionWork& operator=(
+        CompiledPolicyAssertionWork&&) noexcept;
+    CompiledPolicyAssertionWork(const CompiledPolicyAssertionWork&) = delete;
+    CompiledPolicyAssertionWork& operator=(
+        const CompiledPolicyAssertionWork&) = delete;
+
+    void step(std::uint32_t max_work_items);
+    CompiledPolicyAssertionProgress progress() const;
+    CompiledPolicyAssertion take_result();
+    std::uint64_t retained_bytes() const;
+
+  private:
+    struct Impl;
+    std::unique_ptr<Impl> impl_;
+};
+
 enum class PolicyExactLiftStatus : std::uint8_t {
     Complete = 0,
     NoPolicy,
@@ -260,6 +307,55 @@ struct PolicyExactLiftCertificate {
     RefinementResult refinement;
     PolicyEvaluationResult class_evaluation;
     CompiledPolicyAssertion compiled;
+};
+
+enum class PolicyExactLiftPhase : std::uint8_t {
+    CarrierDiscovery = 0,
+    PartitionRefinement,
+    PolicyEvaluation,
+    LocalReoptimization,
+    Compiling,
+    Certifying,
+    Done,
+};
+
+struct PolicyExactLiftProgress {
+    PolicyExactLiftPhase phase =
+        PolicyExactLiftPhase::CarrierDiscovery;
+    bool done = false;
+    std::uint64_t work_items = 0;
+    std::uint32_t strict_states = 0;
+    std::uint32_t strict_kernels = 0;
+    std::uint64_t strict_transitions = 0;
+    std::uint32_t partition_rounds = 0;
+    std::uint32_t partition_classes = 0;
+    StrategyEvalProgress evaluation;
+};
+
+class PolicyExactLiftWork {
+  public:
+    PolicyExactLiftWork(
+        CalcContext& coarse,
+        const SolveResult& solved,
+        const pc_item_state& exact_start,
+        const std::unordered_map<std::string, double>& prices,
+        const SolveOptions& options,
+        std::string strategy_name,
+        const RefinementLimits* limits_override = nullptr);
+    ~PolicyExactLiftWork();
+    PolicyExactLiftWork(PolicyExactLiftWork&&) noexcept;
+    PolicyExactLiftWork& operator=(PolicyExactLiftWork&&) noexcept;
+    PolicyExactLiftWork(const PolicyExactLiftWork&) = delete;
+    PolicyExactLiftWork& operator=(const PolicyExactLiftWork&) = delete;
+
+    void step(std::uint32_t max_work_items);
+    PolicyExactLiftProgress progress() const;
+    PolicyExactLiftCertificate take_result();
+    std::uint64_t retained_bytes() const;
+
+  private:
+    struct Impl;
+    std::unique_ptr<Impl> impl_;
 };
 
 /*

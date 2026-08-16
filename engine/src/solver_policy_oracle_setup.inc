@@ -8,7 +8,8 @@
         RefinementLimits limits,
         PolicyLiftAdapterTelemetry& telemetry,
         const ReoptimizationSeed* reoptimization_seed,
-        const bool force_semantic_strict_identity = false)
+        const bool force_semantic_strict_identity = false,
+        const bool defer_initialization = false)
         : coarse_(coarse),
           solved_(solved),
           exact_start_(exact_start),
@@ -32,10 +33,25 @@
                         *reoptimization_seed)),
           force_semantic_strict_identity_(
               force_semantic_strict_identity) {
+        if (defer_initialization) return;
+        auto initialization = initialize_cooperatively();
+        while (!initialization.resume()) {}
+        (void)initialization.take_result();
+    }
+
+    solve_detail::CooperativeTask<bool> initialize_cooperatively() {
         require_local_memory(
             0, "exact-refinement adapter construction");
-        discover_coarse_policy();
+        auto coarse_discovery =
+            discover_coarse_policy_cooperatively();
+        while (!coarse_discovery.resume()) {
+            co_await solve_detail::CooperativeCheckpoint{
+                estimated_owned_bytes()};
+        }
+        (void)coarse_discovery.take_result();
         index_coarse_states();
+        co_await solve_detail::CooperativeCheckpoint{
+            estimated_owned_bytes()};
         /*
          * The strict child retains the solver's already-filtered operator
          * vocabulary, not merely its primitive leaves. Only the dependency
@@ -93,6 +109,8 @@
                 admitted_coarse_operators_.begin(),
                 admitted_coarse_operators_.end()),
             admitted_coarse_operators_.end());
+        co_await solve_detail::CooperativeCheckpoint{
+            estimated_owned_bytes()};
         for (const std::uint32_t operator_index :
              admitted_coarse_operators_) {
             if (operator_index >= coarse_.operators().size()) {
@@ -129,6 +147,8 @@
             std::unique(
                 admitted_actions_.begin(), admitted_actions_.end()),
             admitted_actions_.end());
+        co_await solve_detail::CooperativeCheckpoint{
+            estimated_owned_bytes()};
         std::vector<std::uint64_t> exact_start_mods(
             coarse_.session().words, 0);
         require_local_memory(
@@ -147,9 +167,9 @@
                 }
             };
         retain_start_mods(
-            exact_start.prefixes, exact_start.prefix_count);
+            exact_start_.prefixes, exact_start_.prefix_count);
         retain_start_mods(
-            exact_start.suffixes, exact_start.suffix_count);
+            exact_start_.suffixes, exact_start_.suffix_count);
         /* Contract-derived semantic strict carrier with bounded broad-row
          * attribution and an explicit diagnostic-only projected-frontier
          * opt-in. */
@@ -173,7 +193,10 @@
                 limits_.use_factored_terminal_reforge,
             false,
             limits_.use_factored_terminal_reforge,
-            &coarse_.layout());
+            &coarse_.layout(),
+            true);
+        co_await solve_detail::CooperativeCheckpoint{
+            estimated_owned_bytes()};
         strict_->set_reforge_resource_accounting(
             options_.reforge_resource_accounting);
         strict_->set_reforge_provenance_context(
@@ -185,6 +208,8 @@
             "strict calculation construction",
             exact_start_mods.capacity() * sizeof(std::uint64_t));
         import_admitted_operators();
+        co_await solve_detail::CooperativeCheckpoint{
+            estimated_owned_bytes()};
         for (auto& [state, node] : coarse_policy_) {
             if (node.coarse_operator == kNoId) continue;
             node.selected = make_selected(
@@ -193,8 +218,12 @@
                 std::nullopt);
             require_local_memory(
                 0, "coarse selected-action construction");
+            co_await solve_detail::CooperativeCheckpoint{
+                estimated_owned_bytes()};
         }
         propagate_backward_observations();
+        co_await solve_detail::CooperativeCheckpoint{
+            estimated_owned_bytes()};
         for (const auto& [unused, node] : coarse_policy_) {
             (void)unused;
             carrier_requirement_ =
@@ -205,9 +234,11 @@
                 0, "policy carrier-requirement construction");
         }
         build_strict_to_coarse_junk_map();
+        co_await solve_detail::CooperativeCheckpoint{
+            estimated_owned_bytes()};
 
         const std::uint32_t strict_start =
-            strict_->intern_item(exact_start);
+            strict_->intern_item(exact_start_);
         const std::uint32_t coarse_start =
             coarse_parent(strict_start);
         if (coarse_start != solved_.start_state) {
@@ -222,6 +253,7 @@
         require_local_memory(
             exact_state_bytes(root),
             "exact-refinement root construction");
+        co_return true;
     }
 
     ~ProductionPolicyOracle() override {
@@ -991,6 +1023,185 @@
             }
         }
         return false;
+    }
+
+    struct PreparedLiftedPolicyAssertion {
+        SolveOptions options;
+        SolveResult lifted;
+        RefinedPolicyCompileRouting routing;
+        CompiledPolicyAssertion immediate;
+        std::uint64_t projected_construction_live = 0;
+        std::uint64_t required_before_lift = 0;
+        std::uint64_t refined_routing_bytes = 0;
+        bool ready = false;
+    };
+
+    PreparedLiftedPolicyAssertion prepare_lifted_policy_assertion(
+            const RefinementResult& refinement,
+            const PolicyEvaluationResult& evaluation) {
+        PreparedLiftedPolicyAssertion prepared;
+        prepared.options = options_;
+        const std::uint64_t coarse_bytes =
+            estimated_retained_solver_bytes(coarse_, &solved_);
+        const std::uint64_t strict_bytes =
+            strict_->audited_estimated_owned_bytes();
+        const std::uint64_t adapter_bytes =
+            audit_adapter_owned_bytes();
+        const std::uint64_t adapter_cache_bytes =
+            adapter_bytes > strict_bytes
+                ? adapter_bytes - strict_bytes
+                : 0;
+        const std::uint64_t refinement_bytes =
+            refinement_result_bytes(refinement);
+        const std::uint64_t evaluation_bytes =
+            policy_evaluation_result_bytes(evaluation);
+        const std::uint64_t projected_lift_bytes =
+            projected_lifted_construction_bytes(refinement);
+        prepared.projected_construction_live = coarse_bytes;
+        const auto add_projected = [&](const std::uint64_t bytes) {
+            saturating_add(
+                prepared.projected_construction_live, bytes);
+        };
+        add_projected(adapter_bytes);
+        add_projected(refinement_bytes);
+        add_projected(evaluation_bytes);
+        add_projected(projected_lift_bytes);
+        if (prepared.projected_construction_live >=
+            prepared.options.max_solver_owned_bytes) {
+            prepared.immediate.status =
+                CompiledPolicyAssertionStatus::ResourceCap;
+            prepared.immediate.resource_cap =
+                "max_solver_owned_bytes";
+            prepared.immediate.failure_reason =
+                "projected lifted policy construction reached "
+                "max_solver_owned_bytes";
+            prepared.immediate.publication_peak_owned_bytes =
+                prepared.projected_construction_live;
+            return prepared;
+        }
+        prepared.required_before_lift = coarse_bytes;
+        saturating_add(
+            prepared.required_before_lift, adapter_cache_bytes);
+        saturating_add(
+            prepared.required_before_lift, refinement_bytes);
+        saturating_add(
+            prepared.required_before_lift, evaluation_bytes);
+        if (prepared.required_before_lift >=
+            prepared.options.max_solver_owned_bytes) {
+            prepared.immediate.status =
+                CompiledPolicyAssertionStatus::ResourceCap;
+            prepared.immediate.resource_cap =
+                "max_solver_owned_bytes";
+            prepared.immediate.failure_reason =
+                "live coarse/refinement state leaves no memory for the "
+                "lifted strict artifact";
+            prepared.immediate.publication_peak_owned_bytes =
+                prepared.required_before_lift;
+            return prepared;
+        }
+        prepared.options.max_solver_owned_bytes -=
+            prepared.required_before_lift;
+        const bool streamed = std::any_of(
+            refinement.classes.begin(), refinement.classes.end(),
+            [](const RefinedPolicyClass& cls) {
+                return !cls.strict_members.empty();
+            });
+        prepared.lifted = streamed
+            ? make_streamed_lifted_solve_result(
+                  refinement, evaluation, &prepared.routing)
+            : make_lifted_solve_result(
+                  refinement, evaluation, &prepared.routing);
+        prepared.refined_routing_bytes =
+            refined_compile_routing_bytes(prepared.routing);
+        if (prepared.refined_routing_bytes >=
+            prepared.options.max_solver_owned_bytes) {
+            prepared.immediate.status =
+                CompiledPolicyAssertionStatus::ResourceCap;
+            prepared.immediate.resource_cap =
+                "max_solver_owned_bytes";
+            prepared.immediate.failure_reason =
+                "refined compile routing leaves no memory for the "
+                "compiled exact artifact";
+            prepared.immediate.publication_peak_owned_bytes =
+                prepared.required_before_lift;
+            saturating_add(
+                prepared.immediate.publication_peak_owned_bytes,
+                prepared.refined_routing_bytes);
+            return prepared;
+        }
+        prepared.options.max_solver_owned_bytes -=
+            prepared.refined_routing_bytes;
+        prepared.options.max_reforge_work = options_.max_reforge_work;
+        strict_->set_solve_resource_caps(
+            std::max<std::uint32_t>(1, limits_.max_exact_states),
+            prepared.options.max_reforge_work,
+            false,
+            prepared.options.max_solver_owned_bytes);
+        strict_->refresh_solve_owned_bytes_cap(
+            prepared.options.max_solver_owned_bytes);
+        prepared.ready = true;
+        return prepared;
+    }
+
+    CompiledPolicyAssertion finish_lifted_policy_assertion(
+            PreparedLiftedPolicyAssertion& prepared,
+            CompiledPolicyAssertion compiled,
+            const RefinementResult& refinement,
+            const PolicyEvaluationResult& evaluation) {
+        std::uint64_t publication_compile_peak =
+            prepared.required_before_lift;
+        saturating_add(
+            publication_compile_peak,
+            prepared.refined_routing_bytes);
+        saturating_add(
+            publication_compile_peak,
+            compiled.publication_peak_owned_bytes);
+        compiled.publication_peak_owned_bytes = std::max(
+            prepared.projected_construction_live,
+            publication_compile_peak);
+        if (compiled.status ==
+                CompiledPolicyAssertionStatus::Complete) {
+            std::uint32_t expected_working_classes = 0;
+            for (const RefinedClassValue& value :
+                 evaluation.class_values) {
+                if (value.class_id >= refinement.classes.size() ||
+                    refinement.classes[value.class_id].class_id !=
+                        value.class_id) {
+                    compiled.status =
+                        CompiledPolicyAssertionStatus::CompilationFailure;
+                    compiled.executable = false;
+                    compiled.failure_reason =
+                        "exact evaluator returned a non-canonical "
+                        "refinement class id";
+                    return compiled;
+                }
+                if (!refinement.classes[value.class_id].terminal) {
+                    ++expected_working_classes;
+                }
+            }
+            if (compiled.compilation.working_states !=
+                expected_working_classes) {
+                compiled.status =
+                    CompiledPolicyAssertionStatus::CompilationFailure;
+                compiled.executable = false;
+                compiled.failure_reason =
+                    "compiled exact quotient working-state count does "
+                    "not match reachable non-terminal refinement classes";
+            }
+        }
+        return compiled;
+    }
+
+    CompiledPolicyAssertionWork begin_lifted_policy_assertion(
+            PreparedLiftedPolicyAssertion& prepared,
+            std::string strategy_name) {
+        if (!prepared.ready) {
+            throw std::logic_error(
+                "unready lifted assertion entered cooperative evaluator");
+        }
+        return CompiledPolicyAssertionWork(
+            *strict_, prepared.lifted, prices_, prepared.options,
+            std::move(strategy_name), &prepared.routing);
     }
 
     CompiledPolicyAssertion assert_lifted_policy(

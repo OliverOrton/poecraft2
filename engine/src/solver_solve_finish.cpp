@@ -198,13 +198,17 @@ void SolveWork::Impl::count_policy_actions(
         }
     }
 
-SolveResult SolveWork::Impl::finish() {
-        if (phase != SolvePhase::Done) {
-            throw std::logic_error("solver work is not finished");
+solve_detail::CooperativeTask<SolveResult>
+SolveWork::Impl::run_finalization() {
+        if (phase != SolvePhase::Refining &&
+            phase != SolvePhase::Compiling &&
+            phase != SolvePhase::Certifying) {
+            throw std::logic_error("solver finalization was not started");
         }
         if (consumed) {
             throw std::logic_error("solver work was already finished");
         }
+        co_await solve_detail::CooperativeCheckpoint{};
         const auto extraction_started = std::chrono::steady_clock::now();
         if (result.diagnostics.resource_cap_hit) {
             (void)try_install_resource_stop_reachable_incumbent();
@@ -2596,55 +2600,66 @@ SolveResult SolveWork::Impl::finish() {
                             unverified_selected_policy_candidate.reset();
                             finish_candidate_timing();
                         } else {
+                            SolveResult proof;
+                            proof.policy_available = true;
+                            proof.policy_status =
+                                SolvePolicyStatus::BoundedFeasible;
+                            proof.termination =
+                                SolveTermination::NumericalStability;
+                            proof.lower_bound = 0.0;
+                            proof.upper_bound =
+                                selected.selected_estimate;
+                            proof.evaluated_policy_cost =
+                                selected.selected_estimate;
+                            proof.start_state = result.start_state;
+                            proof.has_exact_start_item =
+                                selected.has_exact_start_item;
+                            proof.exact_start_item =
+                                selected.exact_start_item;
+                            proof.values = snapshot.values;
+                            proof.policy = snapshot.policy;
+                            proof.policy_reachable =
+                                snapshot.policy_reachable;
+                            proof.unveil_preferences =
+                                snapshot.unveil_preferences;
+                            proof.option_unveil_preferences =
+                                snapshot.option_unveil_preferences;
+                            proof.behavioral_representative_by_state =
+                                snapshot.behavioral_representative_by_state;
+                            proof.options = *scoped;
+                            proof.goal_states.assign(
+                                proof.values.size(), 0);
+                            proof.expanded.assign(
+                                proof.values.size(), 0);
+                            for (std::uint32_t state = 0;
+                                 state < proof.values.size(); ++state) {
+                                proof.goal_states[state] =
+                                    calc.is_goal_state(calc.state(state))
+                                        ? 1
+                                        : 0;
+                            }
+                            refinement::CompiledPolicyAssertionWork
+                                assertion_work(
+                                    calc, proof, prices, *scoped,
+                                    "selected coarse policy");
+                            while (!assertion_work.progress().done) {
+                                const auto assertion_progress =
+                                    assertion_work.progress();
+                                phase = assertion_progress.phase ==
+                                        refinement::
+                                            CompiledPolicyAssertionPhase::
+                                                Compiling
+                                    ? SolvePhase::Compiling
+                                    : SolvePhase::Certifying;
+                                finalization_evaluation_progress =
+                                    assertion_progress.evaluation;
+                                assertion_work.step(1);
+                                co_await solve_detail::
+                                    CooperativeCheckpoint{
+                                        assertion_work.retained_bytes()};
+                            }
                             refinement::CompiledPolicyAssertion assertion =
-                                [&]() {
-                                    SolveResult proof;
-                                    proof.policy_available = true;
-                                    proof.policy_status =
-                                        SolvePolicyStatus::BoundedFeasible;
-                                    proof.termination =
-                                        SolveTermination::NumericalStability;
-                                    proof.lower_bound = 0.0;
-                                    proof.upper_bound =
-                                        selected.selected_estimate;
-                                    proof.evaluated_policy_cost =
-                                        selected.selected_estimate;
-                                    proof.start_state = result.start_state;
-                                    proof.has_exact_start_item =
-                                        selected.has_exact_start_item;
-                                    proof.exact_start_item =
-                                        selected.exact_start_item;
-                                    proof.values = snapshot.values;
-                                    proof.policy = snapshot.policy;
-                                    proof.policy_reachable =
-                                        snapshot.policy_reachable;
-                                    proof.unveil_preferences =
-                                        snapshot.unveil_preferences;
-                                    proof.option_unveil_preferences =
-                                        snapshot
-                                            .option_unveil_preferences;
-                                    proof.behavioral_representative_by_state =
-                                        snapshot
-                                            .behavioral_representative_by_state;
-                                    proof.options = *scoped;
-                                    proof.goal_states.assign(
-                                        proof.values.size(), 0);
-                                    proof.expanded.assign(
-                                        proof.values.size(), 0);
-                                    for (std::uint32_t state = 0;
-                                         state < proof.values.size();
-                                         ++state) {
-                                        proof.goal_states[state] =
-                                            calc.is_goal_state(
-                                                calc.state(state))
-                                                ? 1
-                                                : 0;
-                                    }
-                                    return refinement::
-                                        assert_compiled_policy_exact(
-                                            calc, proof, prices, *scoped,
-                                            "selected coarse policy");
-                                }();
+                                assertion_work.take_result();
                             result.diagnostics.reforge_frontier_work =
                                 saturated_add(
                                     result.diagnostics.reforge_frontier_work,
@@ -3138,9 +3153,24 @@ SolveResult SolveWork::Impl::finish() {
                 std::chrono::steady_clock::now();
             refinement::CompiledPolicyAssertion assertion;
             if (assertion_options.has_value()) {
-                assertion = refinement::assert_compiled_policy_exact(
+                refinement::CompiledPolicyAssertionWork assertion_work(
                     calc, result, prices, *assertion_options,
                     "selected core policy");
+                while (!assertion_work.progress().done) {
+                    const auto assertion_progress =
+                        assertion_work.progress();
+                    phase = assertion_progress.phase ==
+                            refinement::CompiledPolicyAssertionPhase::
+                                Compiling
+                        ? SolvePhase::Compiling
+                        : SolvePhase::Certifying;
+                    finalization_evaluation_progress =
+                        assertion_progress.evaluation;
+                    assertion_work.step(1);
+                    co_await solve_detail::CooperativeCheckpoint{
+                        assertion_work.retained_bytes()};
+                }
+                assertion = assertion_work.take_result();
             } else {
                 assertion.status =
                     refinement::CompiledPolicyAssertionStatus::ResourceCap;
@@ -3623,9 +3653,40 @@ SolveResult SolveWork::Impl::finish() {
                 std::chrono::steady_clock::now();
             refinement::PolicyExactLiftCertificate certificate;
             if (lift_options.has_value()) {
-                certificate = refinement::lift_policy_quotient(
+                refinement::PolicyExactLiftWork lift_work(
                     calc, result, exact_start_item, prices,
                     *lift_options, "solved policy");
+                while (!lift_work.progress().done) {
+                    const refinement::PolicyExactLiftProgress
+                        lift_progress = lift_work.progress();
+                    switch (lift_progress.phase) {
+                    case refinement::PolicyExactLiftPhase::Compiling:
+                        phase = SolvePhase::Compiling;
+                        break;
+                    case refinement::PolicyExactLiftPhase::Certifying:
+                        phase = SolvePhase::Certifying;
+                        break;
+                    default:
+                        phase = SolvePhase::Refining;
+                        break;
+                    }
+                    finalization_refinement_states =
+                        lift_progress.strict_states;
+                    finalization_refinement_kernels =
+                        lift_progress.strict_kernels;
+                    finalization_refinement_transitions =
+                        lift_progress.strict_transitions;
+                    finalization_refinement_rounds =
+                        lift_progress.partition_rounds;
+                    finalization_refinement_classes =
+                        lift_progress.partition_classes;
+                    finalization_evaluation_progress =
+                        lift_progress.evaluation;
+                    lift_work.step(1);
+                    co_await solve_detail::CooperativeCheckpoint{
+                        lift_work.retained_bytes()};
+                }
+                certificate = lift_work.take_result();
             } else {
                 certificate.status =
                     refinement::PolicyExactLiftStatus::ResourceCap;
@@ -4496,7 +4557,38 @@ SolveResult SolveWork::Impl::finish() {
             throw std::logic_error(invariant);
         }
         consumed = true;
-        return std::move(result);
+        co_return std::move(result);
+    }
+
+void SolveWork::Impl::begin_finalization() {
+        if (finalization_task.has_value() ||
+            finalized_result.has_value()) {
+            return;
+        }
+        phase = SolvePhase::Refining;
+        finalization_task.emplace(run_finalization());
+    }
+
+void SolveWork::Impl::advance_finalization() {
+        if (!finalization_task.has_value()) {
+            throw std::logic_error(
+                "solver finalization continuation is missing");
+        }
+        ++finalization_work_items;
+        if (!finalization_task->resume()) return;
+        finalized_result.emplace(finalization_task->take_result());
+        finalization_task.reset();
+        phase = SolvePhase::Done;
+    }
+
+SolveResult SolveWork::Impl::finish() {
+        if (phase != SolvePhase::Done ||
+            !finalized_result.has_value()) {
+            throw std::logic_error("solver work is not finished");
+        }
+        SolveResult finished = std::move(*finalized_result);
+        finalized_result.reset();
+        return finished;
     }
 
 }

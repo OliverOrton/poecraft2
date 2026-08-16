@@ -2380,6 +2380,48 @@ void run_policy_guided_exact_lift_tests() {
     PC_CHECK(
         lifted.adapter.canonical_successor_collapses > 0);
 
+    const auto cooperative_lift = [&](const std::uint32_t chunk) {
+        refinement::PolicyExactLiftWork work(
+            calc, solved, start, prices, options,
+            "focused policy-guided exact lift");
+        std::uint64_t steps = 0;
+        while (!work.progress().done) {
+            work.step(chunk);
+            ++steps;
+            PC_CHECK(steps < 1000000);
+        }
+        return work.take_result();
+    };
+    for (const std::uint32_t chunk : {1u, 8u}) {
+        const refinement::PolicyExactLiftCertificate chunked =
+            cooperative_lift(chunk);
+        PC_CHECK(chunked.status == lifted.status);
+        PC_CHECK(chunked.executable == lifted.executable);
+        PC_CHECK(chunked.lumpable == lifted.lumpable);
+        PC_CHECK(chunked.policy_changed == lifted.policy_changed);
+        PC_CHECK(near(
+            chunked.exact_start_cost,
+            lifted.exact_start_cost, 1e-12));
+        PC_CHECK(
+            chunked.compiled.strategy_json ==
+            lifted.compiled.strategy_json);
+        PC_CHECK(
+            chunked.compiled.compilation.nodes ==
+            lifted.compiled.compilation.nodes);
+        PC_CHECK(
+            chunked.compiled.compilation.edges ==
+            lifted.compiled.compilation.edges);
+        PC_CHECK(near(
+            chunked.compiled.evaluation.total_expected_cost,
+            lifted.compiled.evaluation.total_expected_cost, 1e-12));
+        PC_CHECK(
+            chunked.adapter.strict_kernels_built ==
+            lifted.adapter.strict_kernels_built);
+        PC_CHECK(
+            chunked.adapter.strict_transitions_built ==
+            lifted.adapter.strict_transitions_built);
+    }
+
     const auto check_strict_evaluator = [](
             const refinement::PolicyExactLiftCertificate& certificate,
             const ReforgeEvaluatorVersion expected) {

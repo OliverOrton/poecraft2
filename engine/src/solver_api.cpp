@@ -683,6 +683,9 @@ int32_t solve_phase(const solver::SolvePhase phase) {
     case solver::SolvePhase::Expanding: return PC_SOLVE_PHASE_EXPANDING;
     case solver::SolvePhase::Iterating: return PC_SOLVE_PHASE_ITERATING;
     case solver::SolvePhase::Done: return PC_SOLVE_PHASE_DONE;
+    case solver::SolvePhase::Refining: return PC_SOLVE_PHASE_REFINING;
+    case solver::SolvePhase::Compiling: return PC_SOLVE_PHASE_COMPILING;
+    case solver::SolvePhase::Certifying: return PC_SOLVE_PHASE_CERTIFYING;
     }
     return PC_SOLVE_PHASE_DONE;
 }
@@ -849,6 +852,20 @@ void copy_solve_progress(
     target.reforge_work = source.reforge_work;
     target.live_owned_bytes = source.live_owned_bytes;
     target.peak_owned_bytes = source.peak_owned_bytes;
+    target.finalization_work_items = source.finalization_work_items;
+    target.refinement_states = source.refinement_states;
+    target.refinement_kernels = source.refinement_kernels;
+    target.refinement_transitions = source.refinement_transitions;
+    target.refinement_rounds = source.refinement_rounds;
+    target.refinement_classes = source.refinement_classes;
+    target.certification_discovered_pairs =
+        source.certification_discovered_pairs;
+    target.certification_pending_pairs =
+        source.certification_pending_pairs;
+    target.certification_solved_sccs =
+        source.certification_solved_sccs;
+    target.certification_total_sccs =
+        source.certification_total_sccs;
 }
 
 void copy_solve_summary(

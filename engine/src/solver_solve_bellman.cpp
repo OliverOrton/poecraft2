@@ -1859,6 +1859,15 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
     try {
         std::uint32_t remaining = std::max<std::uint32_t>(1, max_work_items);
         while (remaining > 0 && phase != SolvePhase::Done) {
+            if (phase == SolvePhase::Refining ||
+                phase == SolvePhase::Compiling ||
+                phase == SolvePhase::Certifying) {
+                advance_finalization();
+                /* Finalization continuations define the UI/cancellation
+                 * boundary. Never fold multiple proof resumes into one
+                 * public solve step, even for a 1,024-item caller batch. */
+                break;
+            }
             if (phase == SolvePhase::Expanding) {
                 if (incremental_dynamic_prepare_active) {
                     const bool preparation_complete =
@@ -2159,6 +2168,10 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
         if (phase == SolvePhase::Done &&
             begin_incremental_upper_policy_pass()) {
             phase = SolvePhase::Expanding;
+        }
+        if (phase == SolvePhase::Done &&
+            !finalized_result.has_value()) {
+            begin_finalization();
         }
     }
 

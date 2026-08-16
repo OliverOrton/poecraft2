@@ -706,7 +706,8 @@ class CalcContext {
         bool use_projected_reforge_frontier = false,
         bool reverse_reforge_bucket_enumeration = false,
         bool use_factored_terminal_reforge = false,
-        const AbstractLayout* refinement_parent_layout = nullptr);
+        const AbstractLayout* refinement_parent_layout = nullptr,
+        bool registry_contracts_validated = false);
 
     const SessionImpl& session() const { return *session_; }
     const AbstractLayout& layout() const { return layout_; }

@@ -144,6 +144,7 @@ struct CaseResult {
     std::uint32_t max_solve_step_phase = 0;
     std::uint32_t max_solve_step_expanded_states = 0;
     std::uint32_t max_solve_step_sweeps = 0;
+    std::uint64_t max_solve_step_finalization_work_item = 0;
     double cooperative_abandon_ms = 0.0;
     bool has_cooperative_abandon = false;
     std::uint64_t working_set_before = 0;
@@ -2617,6 +2618,8 @@ CaseResult run_case(
                 report.max_solve_step_expanded_states =
                     progress.expanded_states;
                 report.max_solve_step_sweeps = progress.sweeps;
+                report.max_solve_step_finalization_work_item =
+                    progress.finalization_work_items;
             }
             ++report.solve_steps;
             if (result != PC_RESULT_OK) {
@@ -3723,6 +3726,9 @@ void append_case_report(
     out << ",\"max_solve_step_sweeps\":";
     if (!measured || result.solve_steps == 0) out << "null";
     else out << result.max_solve_step_sweeps;
+    out << ",\"max_solve_step_finalization_work_item\":";
+    if (!measured || result.solve_steps == 0) out << "null";
+    else out << result.max_solve_step_finalization_work_item;
     out << ",\"solve_step_wall_ms\":";
     if (!measured || result.solve_step_wall_ms.empty()) {
         out << "null";

@@ -1581,6 +1581,26 @@ void run_destructive_refinement_cycle_test() {
     PC_CHECK(near(exact.no_matching_edge_probability, 0.0, 1e-12));
     PC_CHECK(exact.max_mass_conservation_error < 1e-10);
 
+    StrategyEvalWork single_step_work(strategy, options);
+    while (!single_step_work.progress().done) {
+        single_step_work.step(1);
+    }
+    const StrategyEvalResult single_step =
+        single_step_work.take_result();
+    PC_CHECK(single_step.raw_pairs_discovered ==
+             exact.raw_pairs_discovered);
+    PC_CHECK(single_step.refined_pairs == exact.refined_pairs);
+    PC_CHECK(single_step.converged == exact.converged);
+    PC_CHECK(near(
+        single_step.success_probability,
+        exact.success_probability, 1e-12));
+    PC_CHECK(near(
+        single_step.total_expected_cost,
+        exact.total_expected_cost, 1e-12));
+    PC_CHECK(single_step.edges.size() == exact.edges.size());
+    PC_CHECK(single_step.action_totals.size() ==
+             exact.action_totals.size());
+
     /* The public result is stored as doubles even though component solving
      * uses WideFloat. A sub-double caller tolerance must not reject a sound
      * exact attribution merely because the returned coordinates round to

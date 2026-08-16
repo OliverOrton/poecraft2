@@ -1086,6 +1086,16 @@ struct SolveWork::Impl {
     std::vector<std::uint64_t> certified_state_row;
     std::uint64_t peak_owned_bytes = 0;
     SolvePhase phase = SolvePhase::Expanding;
+    std::uint64_t finalization_work_items = 0;
+    std::uint32_t finalization_refinement_states = 0;
+    std::uint32_t finalization_refinement_kernels = 0;
+    std::uint64_t finalization_refinement_transitions = 0;
+    std::uint32_t finalization_refinement_rounds = 0;
+    std::uint32_t finalization_refinement_classes = 0;
+    StrategyEvalProgress finalization_evaluation_progress;
+    std::optional<solve_detail::CooperativeTask<SolveResult>>
+        finalization_task;
+    std::optional<SolveResult> finalized_result;
     bool consumed = false;
 
     static std::uint64_t priced_operator_nested_bytes(
@@ -1101,6 +1111,12 @@ struct SolveWork::Impl {
         const std::unordered_map<std::string, double>& prices,
         const SolveOptions& solve_options);
     ~Impl();
+
+    solve_detail::CooperativeTask<SolveResult> run_finalization();
+
+    void begin_finalization();
+
+    void advance_finalization();
 
     static void identity_mix(
         std::uint64_t& hash, const std::uint64_t value);

@@ -401,44 +401,91 @@
             const RefinementResult& refinement,
             const PolicyEvaluationResult& evaluation,
             RefinedPolicyCompileRouting* refined_routing) {
-        RefinementResult representatives = refinement;
-        representatives.assignments.clear();
-        for (RefinedPolicyClass& cls : representatives.classes) {
-            if (cls.strict_members.empty()) {
-                throw AdapterFailure(
-                    PolicyExactLiftStatus::InvalidSolveState,
-                    "streamed refinement class has no strict coverage");
-            }
-            const std::uint32_t representative =
-                *std::min_element(
-                    cls.strict_members.begin(),
-                    cls.strict_members.end());
-            ExactState state = quotient_materialize_locator(representative);
-            cls.exact_members = {state.stable_key};
-            cls.strict_members.clear();
-            if (!cls.terminal && cls.selected_action.has_value()) {
-                exact_policy_[state.stable_key] = *cls.selected_action;
-                const auto recipe = quotient_streamed_recipes_.find(
-                    cls.selected_action->semantic_key);
-                if (recipe == quotient_streamed_recipes_.end()) {
+        SolveResult lifted;
+        lifted.converged = solved_.converged;
+        lifted.policy_available = true;
+        lifted.policy_status = SolvePolicyStatus::Exact;
+        lifted.termination = solved_.termination;
+        lifted.target_fired = solved_.target_fired;
+        lifted.target_met = solved_.target_met;
+        lifted.lower_bound = 0.0;
+        if (evaluation.start_values.size() != 1 ||
+            !std::isfinite(evaluation.start_values.front())) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::InvalidSolveState,
+                "lifted exact policy has no finite root value");
+        }
+        lifted.upper_bound = evaluation.start_values.front();
+        lifted.evaluated_policy_cost = evaluation.start_values.front();
+        lifted.absolute_optimality_gap = std::max(
+            0.0, lifted.upper_bound - lifted.lower_bound);
+        lifted.relative_optimality_gap =
+            std::abs(lifted.upper_bound) > 1e-12
+                ? lifted.absolute_optimality_gap /
+                      std::abs(lifted.upper_bound)
+                : lifted.absolute_optimality_gap;
+        lifted.requested_absolute_optimality_gap =
+            solved_.requested_absolute_optimality_gap;
+        lifted.requested_relative_optimality_gap =
+            solved_.requested_relative_optimality_gap;
+        lifted.options = options_;
+        lifted.has_exact_start_item = true;
+        lifted.exact_start_item = exact_start_;
+
+        const std::uint32_t state_count = strict_->state_count();
+        lifted.values.assign(state_count, kInfinity);
+        lifted.policy.assign(state_count, PolicyOperatorRef{});
+        lifted.expanded.assign(state_count, 0);
+        lifted.goal_states.assign(state_count, 0);
+        lifted.policy_reachable.assign(state_count, 0);
+        lifted.unveil_preferences.resize(state_count);
+        lifted.option_unveil_preferences.resize(state_count);
+        lifted.behavioral_representative_by_state.resize(state_count);
+        std::iota(
+            lifted.behavioral_representative_by_state.begin(),
+            lifted.behavioral_representative_by_state.end(), 0u);
+
+        if (refined_routing != nullptr) {
+            refined_routing->classes.clear();
+            refined_routing->classes.resize(refinement.classes.size());
+            refined_routing->parents.clear();
+            refined_routing->parent_layout = &coarse_.layout();
+            refined_routing->product_solver_parent =
+                coarse_.product_solver_parent();
+            std::set<std::uint32_t> retained_compile_parents;
+            for (const RefinedPolicyClass& cls : refinement.classes) {
+                if (cls.class_id >= refined_routing->classes.size()) {
                     throw AdapterFailure(
                         PolicyExactLiftStatus::InvalidSolveState,
-                        "streamed selected decision has no retained recipe");
+                        "streamed refinement has an invalid class id");
                 }
-                store_choice_recipe(
-                    state.stable_key,
-                    cls.selected_action->semantic_key,
-                    recipe->second);
+                RefinedPolicyCompileClass& compile_class =
+                    refined_routing->classes[cls.class_id];
+                compile_class.class_id = cls.class_id;
+                compile_class.coarse_state = cls.coarse_state;
+                compile_class.coarse_state_key = cls.coarse_state_key;
+                if (compile_class.coarse_state_key !=
+                    abstract_state_key(coarse_.state(cls.coarse_state))) {
+                    throw AdapterFailure(
+                        PolicyExactLiftStatus::InvalidSolveState,
+                        "refinement class semantic coarse-state key "
+                        "disagrees with its numeric parent");
+                }
+                if (retained_compile_parents.insert(
+                        cls.coarse_state).second) {
+                    refined_routing->parents.push_back({
+                        cls.coarse_state, cls.coarse_state_key,
+                        coarse_.state(cls.coarse_state)});
+                }
+                compile_class.terminal = cls.terminal;
+                compile_class.required_observations =
+                    cls.required_observations;
+                compile_class.observation_signature =
+                    cls.observation_signature;
+                compile_class.selected_action = cls.selected_action;
+                compile_class.action_cost = cls.action_cost;
+                compile_class.transitions = cls.transitions;
             }
-            representatives.assignments.push_back({
-                cls.coarse_state, cls.class_id, 0});
-        }
-        SolveResult lifted = make_lifted_solve_result(
-            representatives, evaluation, refined_routing);
-        for (const RefinedPolicyClass& cls : representatives.classes) {
-            const StableKey& representative = cls.exact_members.front();
-            exact_policy_.erase(representative);
-            quotient_release_carrier(representative);
         }
 
         std::vector<double> value_by_class(

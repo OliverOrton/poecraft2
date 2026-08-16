@@ -84,7 +84,7 @@ void finalize_compiled_policy_assertion(
     }
 }
 
-CompiledPolicyAssertion assert_compiled_policy_exact(
+static CompiledPolicyAssertion assert_compiled_policy_exact_reference(
         CalcContext& coarse,
         const SolveResult& solved,
         const std::unordered_map<std::string, double>& prices,

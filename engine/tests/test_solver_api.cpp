@@ -2047,15 +2047,51 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(pc_solver_solve_step(solver, 1, &solve_progress, &error) ==
              PC_RESULT_NOT_FOUND);
 
+    /* Finalization phases are append-only ABI values and remain abandonable;
+     * Done is reserved for an already-certified, packaging-only result. */
+    static_assert(PC_SOLVE_PHASE_EXPANDING == 1);
+    static_assert(PC_SOLVE_PHASE_ITERATING == 2);
+    static_assert(PC_SOLVE_PHASE_DONE == 3);
+    static_assert(PC_SOLVE_PHASE_REFINING == 4);
+    static_assert(PC_SOLVE_PHASE_COMPILING == 5);
+    static_assert(PC_SOLVE_PHASE_CERTIFYING == 6);
+    PC_CHECK(pc_solver_solve_begin(solver, &item, economy, nullptr, &error) ==
+             PC_RESULT_OK);
+    bool reached_retained_finalization = false;
+    for (std::uint32_t step = 0; step < 100000; ++step) {
+        PC_CHECK(pc_solver_solve_step(
+                     solver, 1, &solve_progress, &error) ==
+                 PC_RESULT_OK);
+        reached_retained_finalization =
+            solve_progress.phase == PC_SOLVE_PHASE_REFINING ||
+            solve_progress.phase == PC_SOLVE_PHASE_COMPILING ||
+            solve_progress.phase == PC_SOLVE_PHASE_CERTIFYING;
+        if (reached_retained_finalization || solve_progress.done) break;
+    }
+    PC_CHECK(reached_retained_finalization);
+    PC_CHECK(!solve_progress.done);
+    pc_solver_solve_abandon(solver);
+    PC_CHECK(pc_solver_solve_step(solver, 1, &solve_progress, &error) ==
+             PC_RESULT_NOT_FOUND);
+
     PC_CHECK(pc_solver_solve_begin(solver, &item, economy, nullptr, &error) ==
              PC_RESULT_OK);
     uint32_t step_count = 0;
+    bool saw_refining = false;
+    bool saw_compiling = false;
+    bool saw_certifying = false;
     do {
         const uint32_t budget = step_count % 3 == 0 ? 1 : 7;
         PC_CHECK(pc_solver_solve_step(solver, budget, &solve_progress,
                                       &error) == PC_RESULT_OK);
         PC_CHECK(solve_progress.expanded_states > 0);
         PC_CHECK(solve_progress.start_value_bound >= 0.0);
+        saw_refining |=
+            solve_progress.phase == PC_SOLVE_PHASE_REFINING;
+        saw_compiling |=
+            solve_progress.phase == PC_SOLVE_PHASE_COMPILING;
+        saw_certifying |=
+            solve_progress.phase == PC_SOLVE_PHASE_CERTIFYING;
         ++step_count;
     } while (!solve_progress.done);
     PC_CHECK(step_count >= 2);
@@ -2067,9 +2103,11 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(solve_progress.live_owned_bytes > 0);
     PC_CHECK(solve_progress.peak_owned_bytes >=
              solve_progress.live_owned_bytes);
-    /* Progress is the completed discovery snapshot. Finalization parses and
-     * independently evaluates the exact emitted JSON for direct, refined,
-     * and fallback policies, then may replace and normalize these bounds. */
+    PC_CHECK(saw_refining || saw_compiling || saw_certifying);
+    PC_CHECK(solve_progress.finalization_work_items > 0);
+    PC_CHECK(solve_progress.certification_discovered_pairs > 0);
+    /* Done includes exact refinement and independent policy evaluation;
+     * finish below only transfers the already-certified result. */
     PC_CHECK(solve_progress.lower_bound >= 0.0);
     PC_CHECK(
         solve_progress.upper_bound >=

@@ -303,6 +303,52 @@ SolveProgress SolveWork::Impl::progress() const {
         value.expanded_states = expanded_count;
         value.sweeps = sweeps;
         value.residual = residual;
+        value.finalization_work_items = finalization_work_items;
+        value.refinement_states = finalization_refinement_states;
+        value.refinement_kernels = finalization_refinement_kernels;
+        value.refinement_transitions =
+            finalization_refinement_transitions;
+        value.refinement_rounds = finalization_refinement_rounds;
+        value.refinement_classes = finalization_refinement_classes;
+        value.certification_discovered_pairs =
+            finalization_evaluation_progress.discovered_pairs;
+        value.certification_pending_pairs =
+            finalization_evaluation_progress.pending_pairs;
+        value.certification_solved_sccs =
+            finalization_evaluation_progress.solved_sccs;
+        value.certification_total_sccs =
+            finalization_evaluation_progress.total_sccs;
+        if (finalized_result.has_value()) {
+            const SolveResult& finalized = *finalized_result;
+            value.start_value_bound =
+                finalized.start_state < finalized.values.size()
+                    ? finalized.values[finalized.start_state]
+                    : finalized.upper_bound;
+            value.lower_bound = finalized.lower_bound;
+            value.upper_bound = finalized.upper_bound;
+            value.absolute_optimality_gap =
+                finalized.absolute_optimality_gap;
+            value.relative_optimality_gap =
+                finalized.relative_optimality_gap;
+            value.focused_round =
+                finalized.diagnostics.focused_expansion_rounds;
+            value.incumbent_kind =
+                finalized.diagnostics.incumbent_kind;
+            value.discovered_states =
+                finalized.diagnostics.discovered_states;
+            value.frontier_states =
+                finalized.diagnostics.frontier_states;
+            value.state_action_rows =
+                finalized.diagnostics.sparse_rows;
+            value.transition_entries =
+                finalized.diagnostics.sparse_transitions;
+            value.reforge_work =
+                finalized.diagnostics.reforge_logical_work_v1;
+            value.live_owned_bytes = fast_estimated_owned_bytes();
+            value.peak_owned_bytes = std::max(
+                peak_owned_bytes, value.live_owned_bytes);
+            return value;
+        }
         value.start_value_bound = kValueCeiling;
         if (!result.values.empty() &&
             result.start_state < result.values.size()) {
@@ -782,6 +828,14 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
             result.refined_policy_artifact.strategy_json.capacity() + 1;
         bytes += owned_result_nested_bytes;
         bytes += output_incumbent_owned_bytes();
+        if (finalization_task.has_value()) {
+            bytes += finalization_task->retained_bytes();
+        }
+        if (finalized_result.has_value()) {
+            bytes += solve_result_owned_bytes(*finalized_result) -
+                (sizeof(SolveResult) -
+                 kUpperPolicyProvenanceAccountingOffset);
+        }
         /* Diagnostic samples are strictly bounded and are not graph-sized.
          * Keep their exact current allocation in both ledger paths. */
         bytes += diagnostics_owned_bytes(result.diagnostics);
@@ -969,6 +1023,14 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
         bytes +=
             result.refined_policy_artifact.strategy_json.capacity() + 1;
         bytes += output_incumbent_owned_bytes();
+        if (finalization_task.has_value()) {
+            bytes += finalization_task->retained_bytes();
+        }
+        if (finalized_result.has_value()) {
+            bytes += solve_result_owned_bytes(*finalized_result) -
+                (sizeof(SolveResult) -
+                 kUpperPolicyProvenanceAccountingOffset);
+        }
         bytes += diagnostics_owned_bytes(result.diagnostics);
         return bytes;
     }

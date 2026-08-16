@@ -1,4 +1,5 @@
 #include "solver_eval_helpers.hpp"
+#include "solver_cooperative_task.hpp"
 
 #include <iomanip>
 #include <numeric>
@@ -77,6 +78,11 @@ struct StrategyEvalWork::Impl {
     std::vector<ReviewSectionSpec> review_sections;
     StrategyEvalResult output;
     StrategyEvalPhase phase = StrategyEvalPhase::Discovery;
+    std::optional<solve_detail::CooperativeTask<bool>> component_build_task;
+    std::optional<solve_detail::CooperativeTask<bool>> finalization_task;
+    bool skip_pair_refinement_once = false;
+    bool pair_refinement_identity_graph_intact = true;
+    std::uint64_t pair_refinement_peak_before = 0;
 
     std::map<
         std::tuple<
@@ -433,6 +439,12 @@ struct StrategyEvalWork::Impl {
             bytes += trace.capacity() * sizeof(std::uint64_t);
         }
         bytes += output_owned_bytes();
+        if (finalization_task.has_value()) {
+            bytes += finalization_task->retained_bytes();
+        }
+        if (component_build_task.has_value()) {
+            bytes += component_build_task->retained_bytes();
+        }
         return bytes;
     }
 
@@ -547,6 +559,12 @@ struct StrategyEvalWork::Impl {
                  sizeof(refinement::StableKey);
         bytes += policy_route_trace_payload_owned_bytes;
         bytes += output_owned_bytes();
+        if (finalization_task.has_value()) {
+            bytes += finalization_task->retained_bytes();
+        }
+        if (component_build_task.has_value()) {
+            bytes += component_build_task->retained_bytes();
+        }
         return bytes;
     }
 
@@ -1678,14 +1696,15 @@ struct StrategyEvalWork::Impl {
         return key;
     }
 
-    void refine_pair_graph() {
+    solve_detail::CooperativeTask<bool> refine_pair_graph() {
         using refinement::ClosedPartitionArc;
         using refinement::ClosedPartitionLimits;
         using refinement::ClosedPartitionNode;
         using refinement::ClosedPartitionResult;
         using refinement::ClosedPartitionStatus;
 
-        if (pairs.empty()) return;
+        if (pairs.empty()) co_return true;
+        co_await solve_detail::CooperativeCheckpoint{};
         output.raw_pairs_discovered =
             static_cast<std::uint32_t>(pairs.size());
 
@@ -1714,12 +1733,14 @@ struct StrategyEvalWork::Impl {
                     key.capacity(), sizeof(std::uint64_t));
             };
 
-        const std::uint64_t peak_before_refinement =
-            peak_owned_bytes_value;
-        bool identity_graph_intact = true;
-        try {
+        pair_refinement_peak_before = peak_owned_bytes_value;
+        pair_refinement_identity_graph_intact = true;
 
-        const bool use_replay_partition = pairs.size() > 100000;
+        /* Materializing a second closed graph becomes a single long WASM
+         * partition unit well before it becomes a memory problem. Replay the
+         * retained exact rows from this boundary so certification stays
+         * cooperative without changing the partition authority. */
+        const bool use_replay_partition = pairs.size() >= 4096;
         std::vector<ClosedPartitionNode> closed;
         std::uint64_t stable_keys_owned_bytes = 0;
         if (!use_replay_partition) {
@@ -1911,6 +1932,12 @@ struct StrategyEvalWork::Impl {
             closed.push_back(std::move(node));
             check_owned_cap(saturated_add(
                 closed_owned_bytes, stable_keys_owned_bytes));
+            if ((pair_id & 31u) == 31u) {
+                co_await solve_detail::CooperativeCheckpoint{
+                    saturated_add(
+                        closed_owned_bytes,
+                        stable_keys_owned_bytes)};
+            }
         }
         KeyAuthorityMap{}.swap(observation_authority_by_hash);
         KeyAuthorityMap{}.swap(immediate_authority_by_hash);
@@ -1961,6 +1988,10 @@ struct StrategyEvalWork::Impl {
                 } else {
                     replay_arc_source[pair_id] =
                         first_pair_by_row[row];
+                }
+                if ((pair_id & 63u) == 63u) {
+                    co_await solve_detail::CooperativeCheckpoint{
+                        replay_key_cache_owned_bytes};
                 }
             }
             decltype(observation_ids){}.swap(observation_ids);
@@ -2036,6 +2067,7 @@ struct StrategyEvalWork::Impl {
                   &replay_arc_source)
             : refinement::refine_closed_probabilistic_partition(
                   std::move(closed), limits);
+        co_await solve_detail::CooperativeCheckpoint{};
         std::vector<std::uint32_t>{}.swap(replay_observation_id);
         std::vector<std::uint32_t>{}.swap(replay_immediate_id);
         std::vector<std::optional<std::uint32_t>>{}.swap(
@@ -2085,7 +2117,7 @@ struct StrategyEvalWork::Impl {
          * merges concrete evaluator pairs. */
         if (refined.final_class_count == pairs.size()) {
             check_owned_cap();
-            return;
+            co_return true;
         }
 
         if (refined.estimated_memory_bytes <
@@ -2123,6 +2155,10 @@ struct StrategyEvalWork::Impl {
                     raw_pair_stable_key(pairs[selected])) {
                 selected = raw;
             }
+            if ((raw & 255u) == 255u) {
+                co_await solve_detail::CooperativeCheckpoint{
+                    refined_result_owned_bytes};
+            }
         }
 
         const std::uint32_t refined_class_count =
@@ -2142,7 +2178,7 @@ struct StrategyEvalWork::Impl {
         check_owned_cap(conversion_local_bytes());
 
         {
-            identity_graph_intact = false;
+            pair_refinement_identity_graph_intact = false;
             std::vector<EvalPair> raw_pairs = std::move(pairs);
             std::vector<EvalRow> raw_rows = std::move(rows);
             attribution_start_pair = start_pair;
@@ -2205,6 +2241,10 @@ struct StrategyEvalWork::Impl {
 
             for (std::uint32_t class_id = 0;
                  class_id < refined_class_count; ++class_id) {
+                if (class_id != 0 && (class_id & 31u) == 0u) {
+                    co_await solve_detail::CooperativeCheckpoint{
+                        raw_graph_bytes};
+                }
                 const std::uint32_t raw =
                     representative.at(class_id);
                 if (raw == kNoId) {
@@ -2349,29 +2389,29 @@ struct StrategyEvalWork::Impl {
             check_owned_cap();
         }
         check_owned_cap();
-        } catch (const std::length_error& ex) {
-            const std::string message = ex.what();
-            if (!identity_graph_intact ||
-                pairs.size() > options.max_pairs ||
-                message.find("max_owned_bytes") == std::string::npos) {
-                throw;
-            }
-            /* The unquotiented pair graph is itself an exact, trivially
-             * lumpable identity partition. If the optional behavioral
-             * quotient's proof scratch does not fit but that identity
-             * partition is already inside max_pairs, retain it instead of
-             * rejecting an otherwise bounded exact evaluation. */
-            output.refined_pairs =
-                static_cast<std::uint32_t>(pairs.size());
-            output.pair_refinement_rounds = 0;
-            output.pair_lumpability_checks = 0;
-            peak_owned_bytes_value = std::max(
-                peak_before_refinement,
-                fast_estimated_owned_bytes());
-            output.peak_owned_bytes_estimate =
-                peak_owned_bytes_value;
-            check_owned_cap();
+        co_return true;
+    }
+
+    bool accept_identity_pair_refinement_fallback(
+            const std::length_error& error) {
+        const std::string message = error.what();
+        if (!pair_refinement_identity_graph_intact ||
+            pairs.size() > options.max_pairs ||
+            message.find("max_owned_bytes") == std::string::npos) {
+            return false;
         }
+        /* The unquotiented pair graph is itself an exact, trivially lumpable
+         * identity partition. Keep this resource fallback outside coroutine
+         * exception regions so WASM's legacy exception lowering never has
+         * to merge suspended frames through a handler. */
+        output.refined_pairs = static_cast<std::uint32_t>(pairs.size());
+        output.pair_refinement_rounds = 0;
+        output.pair_lumpability_checks = 0;
+        peak_owned_bytes_value = std::max(
+            pair_refinement_peak_before, fast_estimated_owned_bytes());
+        output.peak_owned_bytes_estimate = peak_owned_bytes_value;
+        check_owned_cap();
+        return true;
     }
 
     /* Fold deterministic pass-through pairs â€” exactly one outgoing
@@ -2506,20 +2546,33 @@ struct StrategyEvalWork::Impl {
      * of a folded chain and its single edge, in chain order. Runs once,
      * at finalization, after every component (or the reference sweep)
      * has committed its flows into chain_inflow. */
-    void propagate_chain_inflow() {
+    solve_detail::CooperativeTask<bool> propagate_chain_inflow() {
         const std::size_t count = pair_contracted.size();
         std::vector<std::uint32_t> indegree(count, 0);
         for (std::uint32_t pair = 0; pair < count; ++pair) {
-            if (!pair_contracted[pair]) continue;
-            const std::uint32_t next = chain_next[pair];
-            if (pair_contracted[next]) ++indegree[next];
+            if (pair_contracted[pair]) {
+                const std::uint32_t next = chain_next[pair];
+                if (pair_contracted[next]) ++indegree[next];
+            }
+            if ((pair & 255u) == 255u) {
+                co_await solve_detail::CooperativeCheckpoint{
+                    capped_product(
+                        indegree.capacity(), sizeof(std::uint32_t))};
+            }
         }
         std::vector<std::uint32_t> ready;
         for (std::uint32_t pair = 0; pair < count; ++pair) {
             if (pair_contracted[pair] && indegree[pair] == 0) {
                 ready.push_back(pair);
             }
+            if ((pair & 255u) == 255u) {
+                co_await solve_detail::CooperativeCheckpoint{
+                    capped_product(
+                        indegree.capacity() + ready.capacity(),
+                        sizeof(std::uint32_t))};
+            }
         }
+        std::uint64_t propagated = 0;
         while (!ready.empty()) {
             const std::uint32_t pair = ready.back();
             ready.pop_back();
@@ -2535,12 +2588,30 @@ struct StrategyEvalWork::Impl {
                 chain_inflow[next] += inflow;
                 if (--indegree[next] == 0) ready.push_back(next);
             }
+            if ((++propagated & 255u) == 0u) {
+                co_await solve_detail::CooperativeCheckpoint{
+                    capped_product(
+                        indegree.capacity() + ready.capacity(),
+                        sizeof(std::uint32_t))};
+            }
         }
+        co_return true;
     }
 
-    void build_components() {
-        refine_pair_graph();
+    solve_detail::CooperativeTask<bool> build_components() {
+        co_await solve_detail::CooperativeCheckpoint{};
+        if (!skip_pair_refinement_once) {
+            auto refinement = refine_pair_graph();
+            while (!refinement.resume()) {
+                co_await solve_detail::CooperativeCheckpoint{
+                    refinement.retained_bytes()};
+            }
+            (void)refinement.take_result();
+        }
+        skip_pair_refinement_once = false;
+        co_await solve_detail::CooperativeCheckpoint{};
         contract_pass_through();
+        co_await solve_detail::CooperativeCheckpoint{};
         const std::size_t count = pairs.size();
         struct Frame {
             std::uint32_t pair = kNoId;
@@ -2567,6 +2638,7 @@ struct StrategyEvalWork::Impl {
             if (pair_contracted[root] || index[root] != kNoId) continue;
             std::vector<Frame> dfs;
             push_pair(root, dfs);
+            std::uint64_t tarjan_work = 0;
             while (!dfs.empty()) {
                 Frame& frame = dfs.back();
                 const auto& transitions = pair_row(frame.pair).transitions;
@@ -2578,6 +2650,9 @@ struct StrategyEvalWork::Impl {
                     } else if (on_stack[target]) {
                         lowlink[frame.pair] = std::min(
                             lowlink[frame.pair], index[target]);
+                    }
+                    if ((++tarjan_work & 1023u) == 0u) {
+                        co_await solve_detail::CooperativeCheckpoint{};
                     }
                     continue;
                 }
@@ -2602,7 +2677,11 @@ struct StrategyEvalWork::Impl {
                         raw_components.back().begin(),
                         raw_components.back().end());
                 }
+                if ((++tarjan_work & 1023u) == 0u) {
+                    co_await solve_detail::CooperativeCheckpoint{};
+                }
             }
+            co_await solve_detail::CooperativeCheckpoint{};
         }
 
         /* Tarjan emits sink components first. Reverse that order so forward
@@ -2639,6 +2718,7 @@ struct StrategyEvalWork::Impl {
             }
         }
         component_index = 0;
+        co_return true;
     }
 
     bool component_has_exit(
@@ -3450,7 +3530,8 @@ struct StrategyEvalWork::Impl {
         }
     }
 
-    std::vector<double> solve_shared_row_exact_attribution() {
+    solve_detail::CooperativeTask<std::vector<double>>
+    solve_shared_row_exact_attribution() {
         using solve_detail::PolicyEdge;
         using solve_detail::PolicyRow;
         using solve_detail::SparsePolicyComponentResult;
@@ -3465,6 +3546,7 @@ struct StrategyEvalWork::Impl {
             row_count, solve_detail::WideFloat{0.0});
         {
             std::uint64_t edge_count = 0;
+            std::uint32_t validated_rows = 0;
             for (const EvalRow& row : attribution_rows) {
                 edge_count = capped_add(
                     edge_count, row.transitions.size());
@@ -3476,6 +3558,9 @@ struct StrategyEvalWork::Impl {
                             "strategy evaluation exact attribution row "
                             "target is missing");
                     }
+                }
+                if ((++validated_rows & 127u) == 0u) {
+                    co_await solve_detail::CooperativeCheckpoint{};
                 }
             }
             if (edge_count >
@@ -3494,6 +3579,7 @@ struct StrategyEvalWork::Impl {
                         3 * sizeof(double))));
 
             std::vector<std::uint32_t> incoming_counts(row_count, 0);
+            std::uint32_t counted_rows = 0;
             for (const EvalRow& row : attribution_rows) {
                 for (const EvalTransition& transition : row.transitions) {
                     const std::uint32_t target_row =
@@ -3505,6 +3591,12 @@ struct StrategyEvalWork::Impl {
                             "incoming edge count overflowed");
                     }
                     ++incoming_counts[target_row];
+                }
+                if ((++counted_rows & 127u) == 0u) {
+                    co_await solve_detail::CooperativeCheckpoint{
+                        capped_product(
+                            incoming_counts.capacity(),
+                            sizeof(std::uint32_t))};
                 }
             }
 
@@ -3529,6 +3621,16 @@ struct StrategyEvalWork::Impl {
                         attribution_pairs[transition.target].row;
                     transpose_edges[cursors[target_row]++] = {
                         source, transition.probability};
+                }
+                if ((source & 127u) == 127u) {
+                    co_await solve_detail::CooperativeCheckpoint{
+                        capped_add(
+                            capped_product(
+                                transpose_rows.capacity(),
+                                sizeof(PolicyRow)),
+                            capped_product(
+                                transpose_edges.capacity(),
+                                sizeof(PolicyEdge)))};
                 }
             }
 
@@ -3630,8 +3732,12 @@ struct StrategyEvalWork::Impl {
             while (!solve_detail::advance_sparse_policy_components(
                 tarjan, workspace, 65536)) {
                 check_owned_cap(transient_bytes());
+                co_await solve_detail::CooperativeCheckpoint{
+                    transient_bytes()};
             }
             check_owned_cap(transient_bytes());
+            co_await solve_detail::CooperativeCheckpoint{
+                transient_bytes()};
 
             for (std::uint32_t component = 0;
                  component < workspace.components.size(); ++component) {
@@ -3739,6 +3845,8 @@ struct StrategyEvalWork::Impl {
                             solved_wide.capacity(),
                             sizeof(solve_detail::WideFloat)));
                     check_owned_cap(retained_solve);
+                    co_await solve_detail::CooperativeCheckpoint{
+                        retained_solve};
                 } while (solved.status ==
                          SparsePolicyComponentStatus::Incomplete);
                 if (solved.status ==
@@ -3834,6 +3942,8 @@ struct StrategyEvalWork::Impl {
                         }
                     }
                 }
+                co_await solve_detail::CooperativeCheckpoint{
+                    transient_bytes()};
             }
         }
 
@@ -3864,6 +3974,12 @@ struct StrategyEvalWork::Impl {
                          ? solve_detail::WideFloat{0.0}
                          : row_visits[row_id]) *
                     solve_detail::WideFloat{transition.probability};
+            }
+            if ((row_id & 255u) == 255u) {
+                co_await solve_detail::CooperativeCheckpoint{
+                    capped_product(
+                        row_visits.capacity() + reconstructed.capacity(),
+                        sizeof(solve_detail::WideFloat))};
             }
         }
         for (std::uint32_t state = 0; state < count; ++state) {
@@ -3933,10 +4049,11 @@ struct StrategyEvalWork::Impl {
         validate_exact_attribution_quotient(
             exact_visits, retained_scratch);
         attribution_exact_row_visits = std::move(row_visits);
-        return exact_visits;
+        co_return exact_visits;
     }
 
-    std::vector<double> solve_exact_attribution() {
+    solve_detail::CooperativeTask<std::vector<double>>
+    solve_exact_attribution() {
         using solve_detail::PolicyEdge;
         using solve_detail::PolicyRow;
         using solve_detail::SparsePolicyComponentResult;
@@ -3955,6 +4072,7 @@ struct StrategyEvalWork::Impl {
         }
 
         std::uint64_t edge_count = 0;
+        std::uint32_t validated_attribution_rows = 0;
         for (const EvalRow& row : attribution_rows) {
             for (const EvalTransition& transition : row.transitions) {
                 if (transition.target >= count) {
@@ -3963,7 +4081,11 @@ struct StrategyEvalWork::Impl {
                         "missing");
                 }
             }
+            if ((++validated_attribution_rows & 127u) == 0u) {
+                co_await solve_detail::CooperativeCheckpoint{};
+            }
         }
+        std::uint32_t projected_pairs = 0;
         for (const EvalPair& pair : attribution_pairs) {
             if (pair.row >= attribution_rows.size()) {
                 throw std::logic_error(
@@ -3972,6 +4094,9 @@ struct StrategyEvalWork::Impl {
             edge_count = capped_add(
                 edge_count,
                 attribution_rows[pair.row].transitions.size());
+            if ((++projected_pairs & 127u) == 0u) {
+                co_await solve_detail::CooperativeCheckpoint{};
+            }
         }
         /* The raw attribution transpose expands every shared row once per
          * pair. Prefer the exact shared-row solver whenever that expansion
@@ -4007,7 +4132,12 @@ struct StrategyEvalWork::Impl {
             memory_probe_stage = "steady_state";
             memory_probe_units = 0;
             memory_probe_unit_bytes = 0;
-            return solve_shared_row_exact_attribution();
+            auto shared = solve_shared_row_exact_attribution();
+            while (!shared.resume()) {
+                co_await solve_detail::CooperativeCheckpoint{
+                    shared.retained_bytes()};
+            }
+            co_return shared.take_result();
         }
         check_owned_cap(transpose_projection);
         memory_probe_stage = "steady_state";
@@ -4387,16 +4517,28 @@ struct StrategyEvalWork::Impl {
             }
         }
         check_owned_cap(transient_bytes());
-        return exact_visits;
+        co_return exact_visits;
     }
 
-    void finalize() {
-        propagate_chain_inflow();
+    solve_detail::CooperativeTask<bool> finalize() {
+        co_await solve_detail::CooperativeCheckpoint{};
+        auto chain_propagation = propagate_chain_inflow();
+        while (!chain_propagation.resume()) {
+            co_await solve_detail::CooperativeCheckpoint{
+                chain_propagation.retained_bytes()};
+        }
+        (void)chain_propagation.take_result();
         std::vector<double> exact_pair_visits_owned;
         const std::vector<double>* exact_pair_visits = &pair_visits;
         const std::vector<EvalPair>* exact_pairs = &pairs;
         if (!attribution_pairs.empty()) {
-            exact_pair_visits_owned = solve_exact_attribution();
+            auto exact_attribution = solve_exact_attribution();
+            while (!exact_attribution.resume()) {
+                co_await solve_detail::CooperativeCheckpoint{
+                    exact_attribution.retained_bytes()};
+            }
+            exact_pair_visits_owned =
+                exact_attribution.take_result();
             exact_pair_visits = &exact_pair_visits_owned;
             exact_pairs = &attribution_pairs;
             for (auto& incoming : terminal_incoming) incoming.clear();
@@ -4502,6 +4644,13 @@ struct StrategyEvalWork::Impl {
                             exact_action_not_applied.capacity() +
                             exact_no_matching_edge.capacity(),
                         sizeof(solve_detail::WideFloat)));
+                    co_await solve_detail::CooperativeCheckpoint{
+                        capped_product(
+                            visits_by_row.capacity() +
+                                exact_terminal_mass.capacity() +
+                                exact_action_not_applied.capacity() +
+                                exact_no_matching_edge.capacity(),
+                            sizeof(solve_detail::WideFloat))};
                 }
             }
             for (std::size_t node = 0;
@@ -4512,6 +4661,7 @@ struct StrategyEvalWork::Impl {
                 no_matching_edge[node] =
                     exact_no_matching_edge[node].value();
             }
+            co_await solve_detail::CooperativeCheckpoint{};
         }
         CalcContext& calc = *model.calc;
         output.reforge_work =
@@ -4555,6 +4705,8 @@ struct StrategyEvalWork::Impl {
         for (std::uint32_t state = 0; state < calc.state_count(); ++state) {
             output.occupancy_states.push_back(calc.state(state));
         }
+        co_await solve_detail::CooperativeCheckpoint{
+            finalization_transient_floor};
         output.occupancy.reserve(operation_pair_count);
         output.occupancy_reward_complete = options.economy != nullptr;
         std::vector<double> node_visits(node_count, 0.0);
@@ -4615,6 +4767,9 @@ struct StrategyEvalWork::Impl {
                     check_owned_cap(
                         finalization_transient_floor +
                         compressed_top_owned_bytes);
+                    co_await solve_detail::CooperativeCheckpoint{
+                        finalization_transient_floor +
+                        compressed_top_owned_bytes};
                 }
             }
         }
@@ -4673,6 +4828,8 @@ struct StrategyEvalWork::Impl {
             }
             if ((pair & 255u) == 255u) {
                 check_owned_cap(finalization_transient_floor);
+                co_await solve_detail::CooperativeCheckpoint{
+                    finalization_transient_floor};
             }
         }
         if (!attribution_pairs.empty() && !hard_unresolved &&
@@ -4918,6 +5075,8 @@ struct StrategyEvalWork::Impl {
             }
             if ((node_index & 255u) == 255u) {
                 check_owned_cap(finalization_transient_floor);
+                co_await solve_detail::CooperativeCheckpoint{
+                    finalization_transient_floor};
             }
         }
         struct RetainedRegion {
@@ -5166,6 +5325,8 @@ struct StrategyEvalWork::Impl {
                     target.total_expected_cost = target.known_expected_cost;
                 }
                 check_owned_cap(finalization_transient_floor);
+                co_await solve_detail::CooperativeCheckpoint{
+                    finalization_transient_floor};
             }
             double section_actions_sum = 0.0;
             std::map<std::string, double> section_material_sum;
@@ -5206,13 +5367,16 @@ struct StrategyEvalWork::Impl {
         }
         check_owned_cap();
         phase = StrategyEvalPhase::Done;
+        co_return true;
     }
 
     StrategyEvalResult forward_reference() {
         if (phase == StrategyEvalPhase::Finalization) {
             unresolved_pair.assign(pairs.size(), 0.0);
             pair_visits.assign(pairs.size(), 0.0);
-            finalize();
+            auto reference_finalization = finalize();
+            while (!reference_finalization.resume()) {}
+            (void)reference_finalization.take_result();
             return output;
         }
         if (discover_index != pairs.size()) {
@@ -5277,7 +5441,9 @@ struct StrategyEvalWork::Impl {
         hard_unresolved = residual >= options.epsilon;
         fallback_sweeps = sweeps;
         phase = StrategyEvalPhase::Finalization;
-        finalize();
+        auto reference_finalization = finalize();
+        while (!reference_finalization.resume()) {}
+        (void)reference_finalization.take_result();
         return output;
     }
 
@@ -5290,8 +5456,22 @@ struct StrategyEvalWork::Impl {
                     expand_pair(static_cast<std::uint32_t>(discover_index));
                     ++discover_index;
                 } else {
-                    build_components();
-                    phase = StrategyEvalPhase::Solving;
+                    if (!component_build_task.has_value()) {
+                        component_build_task.emplace(build_components());
+                    }
+                    try {
+                        if (component_build_task->resume()) {
+                            (void)component_build_task->take_result();
+                            component_build_task.reset();
+                            phase = StrategyEvalPhase::Solving;
+                        }
+                    } catch (const std::length_error& error) {
+                        component_build_task.reset();
+                        if (!accept_identity_pair_refinement_fallback(error)) {
+                            throw;
+                        }
+                        skip_pair_refinement_once = true;
+                    }
                 }
                 break;
             case StrategyEvalPhase::Solving:
@@ -5301,7 +5481,13 @@ struct StrategyEvalWork::Impl {
                 run_fallback_batch();
                 break;
             case StrategyEvalPhase::Finalization:
-                finalize();
+                if (!finalization_task.has_value()) {
+                    finalization_task.emplace(finalize());
+                }
+                if (finalization_task->resume()) {
+                    (void)finalization_task->take_result();
+                    finalization_task.reset();
+                }
                 break;
             case StrategyEvalPhase::Done:
                 break;
@@ -5309,8 +5495,6 @@ struct StrategyEvalWork::Impl {
             if (phase == StrategyEvalPhase::Discovery &&
                 discover_index != 0 &&
                 (discover_index & 4095u) == 0) {
-                audit_owned_bytes();
-            } else if (phase == StrategyEvalPhase::Done) {
                 audit_owned_bytes();
             }
             check_owned_cap();
@@ -5365,6 +5549,13 @@ const StrategyEvalResult& StrategyEvalWork::result() const {
     return impl_->output;
 }
 
+StrategyEvalResult StrategyEvalWork::take_result() {
+    if (impl_->phase != StrategyEvalPhase::Done) {
+        throw std::logic_error("strategy evaluation is not finished");
+    }
+    return std::move(impl_->output);
+}
+
 const StrategyEvalResult& StrategyEvalWork::diagnostic_result() {
     StrategyEvalResult& output = impl_->output;
     if (impl_->model.calc != nullptr) {
@@ -5415,7 +5606,7 @@ StrategyEvalResult evaluate_strategy(
         &strategy, [](const StrategyImpl*) {});
     StrategyEvalWork work(std::move(borrowed), options);
     while (!work.progress().done) work.step(4096);
-    return work.result();
+    return work.take_result();
 }
 
 StrategyEvalResult evaluate_strategy_forward_reference_for_test(

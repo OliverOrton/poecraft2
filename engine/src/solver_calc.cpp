@@ -443,7 +443,8 @@ CalcContext::CalcContext(
     const bool use_projected_reforge_frontier,
     const bool reverse_reforge_bucket_enumeration,
     const bool use_factored_terminal_reforge,
-    const AbstractLayout* refinement_parent_layout)
+    const AbstractLayout* refinement_parent_layout,
+    const bool registry_contracts_validated)
     : session_(std::move(session)),
       goal_(goal),
       registry_(std::move(registry)),
@@ -464,9 +465,11 @@ CalcContext::CalcContext(
      * future integrations, not only products of build_action_registry().
      * Canonicalize and prove every contract at the CalcContext boundary so a
      * matching schema number can never masquerade as semantic admission. */
-    for (ActionDescriptor& action : registry_.actions) {
-        canonicalize_and_validate_action_refinement_contract(
-            *session_, action);
+    if (!registry_contracts_validated) {
+        for (ActionDescriptor& action : registry_.actions) {
+            canonicalize_and_validate_action_refinement_contract(
+                *session_, action);
+        }
     }
     if (candidates_.empty() && empty_actions_mean_all) {
         candidates_.reserve(registry_.actions.size());

@@ -244,6 +244,7 @@ class StrategyEvalWork {
     void step(std::uint32_t max_work_items);
     StrategyEvalProgress progress() const;
     const StrategyEvalResult& result() const;
+    StrategyEvalResult take_result();
     /* Partial counters retained after a resource refusal. Diagnostic only;
      * it never converts incomplete work into an evaluable result. */
     const StrategyEvalResult& diagnostic_result();

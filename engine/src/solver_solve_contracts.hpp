@@ -870,10 +870,13 @@ const char* publication_invariant_invalid_reason(
 
 } // namespace solve_detail
 
-enum class SolvePhase {
-    Expanding,
-    Iterating,
-    Done,
+enum class SolvePhase : std::uint8_t {
+    Expanding = 0,
+    Iterating = 1,
+    Done = 2,
+    Refining = 3,
+    Compiling = 4,
+    Certifying = 5,
 };
 
 struct SolveProgress {
@@ -894,6 +897,16 @@ struct SolveProgress {
     std::uint64_t state_action_rows = 0;
     std::uint64_t transition_entries = 0;
     std::uint64_t reforge_work = 0;
+    std::uint64_t finalization_work_items = 0;
+    std::uint32_t refinement_states = 0;
+    std::uint32_t refinement_kernels = 0;
+    std::uint64_t refinement_transitions = 0;
+    std::uint32_t refinement_rounds = 0;
+    std::uint32_t refinement_classes = 0;
+    std::uint64_t certification_discovered_pairs = 0;
+    std::uint64_t certification_pending_pairs = 0;
+    std::uint64_t certification_solved_sccs = 0;
+    std::uint64_t certification_total_sccs = 0;
     std::uint64_t live_owned_bytes = 0;
     std::uint64_t peak_owned_bytes = 0;
 };
@@ -910,7 +923,7 @@ struct SolveTelemetrySnapshot {
 /* Stateful counterpart of solve(). Each expansion work item processes one
  * reachable abstract state; each iteration work item processes a bounded
  * sparse-row/transition unit within a deterministic Bellman sweep. finish()
- * extracts the policy only after the stepped work reports done. */
+ * extracts and certifies the policy before stepped work reports done. */
 class SolveWork {
   public:
     SolveWork(

@@ -473,7 +473,10 @@ typedef struct pc_solve_summary {
 typedef enum pc_solve_phase {
     PC_SOLVE_PHASE_EXPANDING = 1,
     PC_SOLVE_PHASE_ITERATING = 2,
-    PC_SOLVE_PHASE_DONE = 3
+    PC_SOLVE_PHASE_DONE = 3,
+    PC_SOLVE_PHASE_REFINING = 4,
+    PC_SOLVE_PHASE_COMPILING = 5,
+    PC_SOLVE_PHASE_CERTIFYING = 6
 } pc_solve_phase;
 
 typedef enum pc_solve_incumbent_kind {
@@ -514,14 +517,26 @@ typedef struct pc_solve_progress {
     uint64_t reforge_work;
     uint64_t live_owned_bytes;
     uint64_t peak_owned_bytes;
+    /* Append-only native finalization progress. These counters are
+     * observational and never participate in proof comparisons. */
+    uint64_t finalization_work_items;
+    uint32_t refinement_states;
+    uint32_t refinement_kernels;
+    uint64_t refinement_transitions;
+    uint32_t refinement_rounds;
+    uint32_t refinement_classes;
+    uint64_t certification_discovered_pairs;
+    uint64_t certification_pending_pairs;
+    uint64_t certification_solved_sccs;
+    uint64_t certification_total_sccs;
 } pc_solve_progress;
 
 /* Stateful solve surface. After non-null argument validation, begin releases
  * and resets the latest result before constructing replacement work, so a
  * later failed begin does not restore the previous result or its
  * compiled-strategy cache. step performs bounded expansion/sweep work; finish
- * extracts and stores the policy after progress.done; abandon discards
- * partial work. */
+ * transfers the already-certified policy after progress.done; abandon
+ * discards partial retained refinement/certification work. */
 pc_result pc_solver_solve_begin(
     pc_solver_handle solver,
     const pc_item_state* start_item,

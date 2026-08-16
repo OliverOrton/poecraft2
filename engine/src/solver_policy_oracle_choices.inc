@@ -724,7 +724,8 @@
         return result;
     }
 
-    void discover_coarse_policy() {
+    solve_detail::CooperativeTask<bool>
+    discover_coarse_policy_cooperatively() {
         if (!solved_.policy_available ||
             solved_.start_state == kNoId ||
             solved_.start_state >= coarse_.state_count()) {
@@ -809,5 +810,14 @@
             require_local_memory(
                 u32_set_bytes(pending),
                 "coarse policy discovery");
+            co_await solve_detail::CooperativeCheckpoint{
+                estimated_owned_bytes()};
         }
+        co_return true;
+    }
+
+    void discover_coarse_policy() {
+        auto work = discover_coarse_policy_cooperatively();
+        while (!work.resume()) {}
+        (void)work.take_result();
     }
