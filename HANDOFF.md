@@ -1,13 +1,20 @@
 # Session Handoff
 
-**Status: active implementation boundary at Gate 2 cooperative strict
-finalization. The five-natural-T1 sparse-policy hang is closed.**
+**Status: active implementation boundary at Gate 0 selected-policy and
+finalization evidence. The five-natural-T1 sparse-policy hang is closed.**
 
 Oliver selected
 [Calculator WASM Scheduling And Progress](docs/active/2026-08-14-calculator-wasm-scheduling-progress/plan.md)
 on 2026-08-14 from a live normal-Calculator report. The frozen source baseline
 is `191bc010aad7ece2a227766d6000117074ad9e52` on
 `codex/solver-goal-realignment`.
+
+On 2026-08-16 Oliver selected the continuation
+[Selected Policy Publication And Cooperative Exact Refinement](docs/active/2026-08-14-calculator-wasm-scheduling-progress/selected-policy-refinement-plan.md).
+Its immediate boundary is behavior-neutral Gate 0 instrumentation and frozen
+evidence for the stable pre-restore five-T1 policy and the long exact
+finalization witnesses. A coarse value is not publication authority; an
+unverified selected candidate must not enter the certified fallback portfolio.
 
 The exact witness is an empty rare item-level-86 Conquest Lamellar
 (`Metadata/Items/Armours/BodyArmours/BodyStrDex20`) in the published Allflame
@@ -99,8 +106,10 @@ requires an incremental retained strict-lift work object across C ABI/WASM steps
 (principally 4,215 selected kernel builds here), or an equivalent isolated
 reconstructible worker. A UI label cannot satisfy that part of Gate 2.
 
-Next action: make the strict lift cooperative through a retained incremental
-work object across C ABI/WASM steps, or stop with an equivalent precise
-architecture handoff. Do not start final acceptance or archive while this
-Gate 2 boundary remains unresolved. The full pipeline remains reserved for the
-end.
+Next action: complete Gate 0 by capturing the pre-restore selected-policy
+identity and measuring finalization stages without changing public values,
+bounds, termination, actions, hashes, or cap accounting. Then preserve that
+policy as an explicitly unverified candidate before incumbent restoration.
+Do not start final acceptance or archive while selected-policy certification
+and cooperative exact refinement remain unresolved. The full pipeline remains
+reserved for the end.

@@ -35,7 +35,10 @@ milestone freezes Oliver's live Allflame three-prefix Conquest Lamellar as a
 product-equivalent release-WASM witness. It must separate normal cooperative
 worker scheduling from the earlier 1,024-work benchmark profile, retain
 cancellation and proof truth, and expose real work when expanded states and
-bounds are temporarily flat. The completed
+bounds are temporarily flat. Its current selected continuation preserves the
+stable five-natural-T1 policy before fallback restoration, admits it for
+publication only after independent exact evaluation, and moves exact
+refinement under cooperative native/WASM stepping. The completed
 [Solver Decision Provenance And Result-Truth Hardening](archive/2026-08-13-solver-decision-provenance/README.md)
 separates Calculator odds materialization from ordinary Solve scope, unifies Q
 authority, distinguishes strict objective order from numerical policy
