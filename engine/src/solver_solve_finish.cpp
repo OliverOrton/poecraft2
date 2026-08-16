@@ -3618,6 +3618,11 @@ SolveWork::Impl::run_finalization() {
             (result.diagnostics.policy_refinement.triggers != 0 ||
              direct_certification_requires_strict_lift) &&
             !skip_strict_lift) {
+            /* Direct assertion has finished and its candidate has been
+             * recorded. Yield before allocating/starting strict lift so a
+             * WASM step never owns both proof stages' completion work. */
+            phase = SolvePhase::Refining;
+            co_await solve_detail::CooperativeCheckpoint{};
             /* Final-graph verification of already retained fallbacks happens
              * before optional strict work so a later lift cannot consume the
              * remaining allowance and erase an executable candidate. */
@@ -3653,9 +3658,12 @@ SolveWork::Impl::run_finalization() {
                 std::chrono::steady_clock::now();
             refinement::PolicyExactLiftCertificate certificate;
             if (lift_options.has_value()) {
+                co_await solve_detail::CooperativeCheckpoint{};
                 refinement::PolicyExactLiftWork lift_work(
                     calc, result, exact_start_item, prices,
                     *lift_options, "solved policy");
+                co_await solve_detail::CooperativeCheckpoint{
+                    lift_work.retained_bytes()};
                 while (!lift_work.progress().done) {
                     const refinement::PolicyExactLiftProgress
                         lift_progress = lift_work.progress();
