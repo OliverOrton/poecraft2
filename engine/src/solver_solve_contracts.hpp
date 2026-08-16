@@ -275,6 +275,23 @@ struct PolicyRefinementTelemetry {
     std::uint64_t pre_restore_policy_target_generation = 0;
     std::uint64_t pre_restore_policy_snapshot_ns = 0;
     std::uint64_t pre_restore_policy_snapshot_peak_bytes = 0;
+    bool selected_candidate_capture_attempted = false;
+    bool selected_candidate_captured = false;
+    bool selected_candidate_memory_rejected = false;
+    bool selected_candidate_identity_valid = false;
+    bool selected_candidate_certification_attempted = false;
+    bool selected_candidate_independently_evaluated = false;
+    bool selected_candidate_retained = false;
+    double selected_candidate_estimated_cost =
+        std::numeric_limits<double>::infinity();
+    double selected_candidate_exact_cost =
+        std::numeric_limits<double>::infinity();
+    std::uint64_t selected_candidate_owned_bytes = 0;
+    std::uint64_t selected_candidate_identity = 0;
+    std::uint64_t selected_candidate_capture_ns = 0;
+    std::uint64_t selected_candidate_certification_ns = 0;
+    std::string selected_candidate_status = "not_run";
+    std::string selected_candidate_failure_reason;
     std::uint64_t strict_order_suppressed_comparisons = 0;
     std::array<
         SuppressedStrictImprovementSample,

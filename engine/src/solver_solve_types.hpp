@@ -1019,7 +1019,25 @@ struct SolveWork::Impl {
         bool proper = false;
         bool executable = false;
     };
+    /*
+     * A Bellman-selected row policy is not a certified upper bound. Keep its
+     * complete captured materialization in a distinct wrapper so no
+     * unverified estimate can enter the executable fallback portfolio by
+     * accident. Only finish() may convert the snapshot after independent
+     * compiled-graph evaluation succeeds.
+     */
+    struct UnverifiedSelectedPolicyCandidate {
+        BoundedPolicyIncumbent snapshot;
+        bool has_exact_start_item = false;
+        pc_item_state exact_start_item{};
+        double selected_estimate = kInfinity;
+        std::uint64_t selected_policy_hash = 0;
+        std::uint64_t capture_identity = 0;
+        bool numerical_stability_stop = false;
+    };
     std::optional<BoundedPolicyIncumbent> output_incumbent;
+    std::optional<UnverifiedSelectedPolicyCandidate>
+        unverified_selected_policy_candidate;
     /* Best-first, deterministic, bounded collection of independently
      * executable candidates displaced by cheaper preferred policies. */
     std::vector<BoundedPolicyIncumbent> certified_fallback_portfolio;

@@ -1853,6 +1853,14 @@ void run_policy_guided_exact_lift_tests() {
     PC_CHECK(
         successful_refined_publication_termination(
             SolveTermination::ExactClosed, false) ==
+        SolveTermination::NumericalStability);
+    PC_CHECK(
+        successful_refined_publication_termination(
+            SolveTermination::ExactClosed, true) ==
+        SolveTermination::RefusedResourceCap);
+    PC_CHECK(
+        successful_refined_publication_termination(
+            SolveTermination::ExactClosed, false, true) ==
         SolveTermination::ExactClosed);
     PC_CHECK(
         successful_refined_publication_termination(

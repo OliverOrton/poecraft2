@@ -169,6 +169,12 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
            diagnostics.policy_refinement
                    .preferred_publication_failure_reason.capacity() +
                1 +
+           diagnostics.policy_refinement
+                   .selected_candidate_status.capacity() +
+               1 +
+           diagnostics.policy_refinement
+                   .selected_candidate_failure_reason.capacity() +
+               1 +
            broad_row_attribution_owned_bytes(
                diagnostics.policy_refinement.broad_row_attribution) +
            diagnostics.policy_refinement
@@ -572,6 +578,12 @@ std::uint64_t SolveWork::Impl::output_incumbent_owned_bytes() const {
             /* std::optional owns its inline object inside Impl; only the
              * selected dynamic allocations are additional live storage. */
             bytes += incumbent_owned_bytes(*output_incumbent) -
+                sizeof(BoundedPolicyIncumbent);
+        }
+        if (unverified_selected_policy_candidate.has_value()) {
+            /* The wrapper and nested incumbent are inline in Impl. */
+            bytes += incumbent_owned_bytes(
+                         unverified_selected_policy_candidate->snapshot) -
                 sizeof(BoundedPolicyIncumbent);
         }
         for (const BoundedPolicyIncumbent& incumbent :
@@ -1491,6 +1503,16 @@ std::string serialize_solver_telemetry(
                 "\"suppressed_samples\":[],"
                 "\"suppressed_samples_retained\":null,"
                 "\"suppressed_samples_omitted\":null}";
+        json += ",\"selected_policy_candidate\":{"
+                "\"capture_attempted\":null,\"captured\":null,"
+                "\"memory_rejected\":null,\"identity_valid\":null,"
+                "\"certification_attempted\":null,"
+                "\"independently_evaluated\":null,"
+                "\"retained\":null,\"estimated_cost\":null,"
+                "\"exact_cost\":null,\"owned_bytes\":null,"
+                "\"identity\":null,\"capture_ns\":null,"
+                "\"certification_ns\":null,\"status\":null,"
+                "\"failure_reason\":null}";
         json += ",\"finalization_stages_ns\":{"
                 "\"incumbent_restore\":null,"
                 "\"extraction_materialization\":null,"
@@ -1877,6 +1899,62 @@ std::string serialize_solver_telemetry(
                 std::to_string(
                     refinement.strict_order_suppressed_samples_omitted) +
                 "}";
+        json += ",\"selected_policy_candidate\":{";
+        json += "\"capture_attempted\":" +
+                std::string(bool_json(
+                    refinement.selected_candidate_capture_attempted));
+        json += ",\"captured\":" +
+                std::string(bool_json(
+                    refinement.selected_candidate_captured));
+        json += ",\"memory_rejected\":" +
+                std::string(bool_json(
+                    refinement.selected_candidate_memory_rejected));
+        json += ",\"identity_valid\":" +
+                std::string(bool_json(
+                    refinement.selected_candidate_identity_valid));
+        json += ",\"certification_attempted\":" +
+                std::string(bool_json(
+                    refinement
+                        .selected_candidate_certification_attempted));
+        json += ",\"independently_evaluated\":" +
+                std::string(bool_json(
+                    refinement
+                        .selected_candidate_independently_evaluated));
+        json += ",\"retained\":" +
+                std::string(bool_json(
+                    refinement.selected_candidate_retained));
+        json += ",\"estimated_cost\":" +
+                telemetry_finite_json(
+                    refinement.selected_candidate_estimated_cost);
+        json += ",\"exact_cost\":" +
+                telemetry_finite_json(
+                    refinement.selected_candidate_exact_cost);
+        json += ",\"owned_bytes\":" +
+                std::to_string(
+                    refinement.selected_candidate_owned_bytes);
+        json += ",\"identity\":";
+        append_telemetry_json_string(
+            json,
+            telemetry_hex_u64(
+                refinement.selected_candidate_identity));
+        json += ",\"capture_ns\":" +
+                std::to_string(
+                    refinement.selected_candidate_capture_ns);
+        json += ",\"certification_ns\":" +
+                std::to_string(
+                    refinement.selected_candidate_certification_ns);
+        json += ",\"status\":";
+        append_telemetry_json_string(
+            json, refinement.selected_candidate_status);
+        json += ",\"failure_reason\":";
+        if (refinement.selected_candidate_failure_reason.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json,
+                refinement.selected_candidate_failure_reason);
+        }
+        json += "}";
         json += ",\"finalization_stages_ns\":{";
         json += "\"incumbent_restore\":" +
                 std::to_string(refinement.incumbent_restore_ns);

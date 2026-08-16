@@ -2,6 +2,8 @@
 #include "solver_policy_refinement.hpp"
 #include "solver_sparse_policy.hpp"
 
+#include <cstring>
+
 namespace poecraft {
 namespace solver {
 
@@ -45,9 +47,6 @@ SolveTermination successful_refined_publication_termination(
     if (globally_exact) {
         return SolveTermination::ExactClosed;
     }
-    if (coarse_termination == SolveTermination::ExactClosed) {
-        return SolveTermination::ExactClosed;
-    }
     if (coarse_termination ==
             SolveTermination::RefusedResourceCap ||
         resource_cap_hit) {
@@ -57,6 +56,12 @@ SolveTermination successful_refined_publication_termination(
         return SolveTermination::TargetGap;
     }
     if (coarse_termination == SolveTermination::NumericalStability) {
+        return SolveTermination::NumericalStability;
+    }
+    if (coarse_termination == SolveTermination::ExactClosed) {
+        /* Exact closure of a coarse quotient cannot survive a failed or
+         * incomplete strict publication proof. The executable graph still
+         * supplies a bounded upper, but global closure remains unresolved. */
         return SolveTermination::NumericalStability;
     }
     /*
@@ -469,6 +474,155 @@ SolveResult SolveWork::Impl::finish() {
                 }
                 telemetry.pre_restore_policy_materializable =
                     materializable;
+                telemetry.selected_candidate_capture_attempted = true;
+                telemetry.selected_candidate_estimated_cost =
+                    telemetry.pre_restore_policy_start_value;
+                if (materializable) {
+                    const auto capture_started =
+                        std::chrono::steady_clock::now();
+                    UnverifiedSelectedPolicyCandidate selected;
+                    BoundedPolicyIncumbent& snapshot = selected.snapshot;
+                    selected.has_exact_start_item =
+                        result.has_exact_start_item;
+                    selected.exact_start_item = result.exact_start_item;
+                    selected.selected_estimate =
+                        telemetry.pre_restore_policy_start_value;
+                    selected.selected_policy_hash = policy_hash;
+                    selected.numerical_stability_stop =
+                        numerical_stability_stop;
+                    snapshot.certified_upper_bound =
+                        selected.selected_estimate;
+                    snapshot.evaluated_policy_cost = kInfinity;
+                    snapshot.values = result.values;
+                    snapshot.policy_rows = policy_rows;
+                    snapshot.policy_rows.resize(
+                        snapshot.values.size(), no_row);
+                    snapshot.policy_reachable = std::move(reachable);
+                    snapshot.behavioral_representative_by_state =
+                        result.behavioral_representative_by_state;
+                    snapshot.restart_operator = restart_operator_index;
+                    snapshot.restart_state = restart_state;
+                    snapshot.round =
+                        result.diagnostics.focused_expansion_rounds;
+                    snapshot.kind = "selected_coarse_policy";
+                    snapshot.goal_identity = goal_identity();
+                    snapshot.economy_identity = economy_identity();
+                    snapshot.action_vocabulary_identity =
+                        action_vocabulary_identity();
+                    snapshot.action_vocabulary_size = operators.size();
+                    snapshot.graph_identity = graph_identity();
+                    snapshot.artifact_identity = artifact_identity();
+                    snapshot.source_generation =
+                        transition_cache->rows.size();
+                    snapshot.target_generation = calc.state_count();
+                    snapshot.graph_row_count =
+                        transition_cache->rows.size();
+                    snapshot.graph_priced_row_count = priced_rows.size();
+                    snapshot.graph_successor_count =
+                        transition_cache->successors.size();
+                    snapshot.graph_probability_count =
+                        transition_cache->probabilities.size();
+                    snapshot.graph_choice_count =
+                        transition_cache->choices.size();
+                    snapshot.graph_choice_successor_count =
+                        transition_cache->choice_successors.size();
+                    snapshot.graph_choice_option_count =
+                        transition_cache->choice_options.size();
+                    snapshot.graph_prefix_identity =
+                        incumbent_graph_prefix_identity(
+                            snapshot.graph_row_count,
+                            snapshot.graph_priced_row_count,
+                            snapshot.graph_successor_count,
+                            snapshot.graph_probability_count,
+                            snapshot.graph_choice_count,
+                            snapshot.graph_choice_successor_count,
+                            snapshot.graph_choice_option_count);
+                    snapshot.strict_state_provenance =
+                        result.behavioral_representative_by_state.empty();
+                    snapshot.policy_materialized = false;
+                    snapshot.independently_certified = false;
+                    snapshot.independently_evaluated = false;
+                    snapshot.proper = false;
+                    snapshot.executable = false;
+                    try {
+                        capture_incumbent_policy(snapshot);
+                        std::uint64_t identity =
+                            1469598103934665603ULL;
+                        identity_mix(identity, selected.selected_policy_hash);
+                        identity_mix(identity, snapshot.goal_identity);
+                        identity_mix(identity, snapshot.economy_identity);
+                        identity_mix(
+                            identity,
+                            snapshot.action_vocabulary_identity);
+                        identity_mix(identity, snapshot.artifact_identity);
+                        identity_mix(
+                            identity, snapshot.graph_prefix_identity);
+                        identity_mix(identity, snapshot.source_generation);
+                        identity_mix(identity, snapshot.target_generation);
+                        identity_mix_string(identity, snapshot.kind);
+                        selected.capture_identity = identity;
+                        snapshot.portfolio_identity = identity;
+                        const std::uint64_t candidate_bytes =
+                            incumbent_owned_bytes(snapshot) -
+                            sizeof(BoundedPolicyIncumbent);
+                        const std::uint64_t live_bytes =
+                            fast_estimated_owned_bytes();
+                        const std::uint64_t transient_bytes =
+                            telemetry.pre_restore_policy_snapshot_peak_bytes;
+                        const std::uint64_t current_with_transient =
+                            transient_bytes >
+                                    std::numeric_limits<std::uint64_t>::max() -
+                                        live_bytes
+                                ? std::numeric_limits<std::uint64_t>::max()
+                                : live_bytes + transient_bytes;
+                        if (!certified_fallback_fits_memory(
+                                current_with_transient, candidate_bytes,
+                                options.max_solver_owned_bytes)) {
+                            telemetry.selected_candidate_memory_rejected =
+                                true;
+                            telemetry.selected_candidate_status =
+                                "capture_memory_rejected";
+                            telemetry.selected_candidate_failure_reason =
+                                "selected policy snapshot does not fit "
+                                "max_solver_owned_bytes";
+                        } else {
+                            snapshot.retained_owned_bytes =
+                                incumbent_owned_bytes(snapshot);
+                            telemetry.selected_candidate_owned_bytes =
+                                snapshot.retained_owned_bytes;
+                            telemetry.selected_candidate_identity =
+                                selected.capture_identity;
+                            unverified_selected_policy_candidate =
+                                std::move(selected);
+                            telemetry.selected_candidate_captured = true;
+                            telemetry.selected_candidate_identity_valid =
+                                true;
+                            telemetry.selected_candidate_status =
+                                "captured_unverified";
+                            peak_owned_bytes = std::max(
+                                peak_owned_bytes,
+                                fast_estimated_owned_bytes());
+                        }
+                    } catch (const std::exception& error) {
+                        telemetry.selected_candidate_status =
+                            "capture_failed";
+                        telemetry.selected_candidate_failure_reason =
+                            error.what();
+                    }
+                    telemetry.selected_candidate_capture_ns =
+                        static_cast<std::uint64_t>(
+                            std::chrono::duration_cast<
+                                std::chrono::nanoseconds>(
+                                std::chrono::steady_clock::now() -
+                                capture_started)
+                                .count());
+                } else {
+                    telemetry.selected_candidate_status =
+                        "not_materializable";
+                    telemetry.selected_candidate_failure_reason =
+                        "selected row policy is not structurally "
+                        "materializable";
+                }
             }
             telemetry.pre_restore_policy_snapshot_ns =
                 static_cast<std::uint64_t>(
@@ -1973,7 +2127,11 @@ SolveResult SolveWork::Impl::finish() {
                 BoundedPolicyIncumbent fallback = std::move(*retained);
                 const bool direct_core_policy =
                     fallback.compilation_provenance ==
-                    "direct_compiled_policy_assertion_v1";
+                        "direct_compiled_policy_assertion_v1" ||
+                    fallback.compilation_provenance ==
+                        "selected_compiled_policy_assertion_v1" ||
+                    fallback.compilation_provenance ==
+                        "selected_policy_guided_exact_refinement_v1";
                 record_candidate_sample(
                     fallback, "publication",
                     "selected_for_publication",
@@ -2277,6 +2435,591 @@ SolveResult SolveWork::Impl::finish() {
         };
         bool skip_strict_lift = false;
         bool direct_certification_requires_strict_lift = false;
+        if (unverified_selected_policy_candidate.has_value()) {
+            PolicyRefinementTelemetry& telemetry =
+                result.diagnostics.policy_refinement;
+            UnverifiedSelectedPolicyCandidate& selected =
+                *unverified_selected_policy_candidate;
+            const std::uint64_t selected_capture_identity =
+                selected.capture_identity;
+            BoundedPolicyIncumbent& snapshot = selected.snapshot;
+            telemetry.selected_candidate_certification_attempted = true;
+            const auto certification_started =
+                std::chrono::steady_clock::now();
+            const auto finish_candidate_timing = [&] {
+                telemetry.selected_candidate_certification_ns =
+                    static_cast<std::uint64_t>(
+                        std::chrono::duration_cast<
+                            std::chrono::nanoseconds>(
+                            std::chrono::steady_clock::now() -
+                            certification_started)
+                            .count());
+            };
+            const auto current_prefix_identity =
+                incumbent_graph_prefix_identity(
+                    snapshot.graph_row_count,
+                    snapshot.graph_priced_row_count,
+                    snapshot.graph_successor_count,
+                    snapshot.graph_probability_count,
+                    snapshot.graph_choice_count,
+                    snapshot.graph_choice_successor_count,
+                    snapshot.graph_choice_option_count);
+            const char* invalid_reason = nullptr;
+            if (snapshot.goal_identity != goal_identity()) {
+                invalid_reason = "goal_identity_changed";
+            } else if (snapshot.economy_identity != economy_identity()) {
+                invalid_reason = "economy_identity_changed";
+            } else if (snapshot.action_vocabulary_size != operators.size() ||
+                       snapshot.action_vocabulary_identity !=
+                           action_vocabulary_identity()) {
+                invalid_reason = "action_vocabulary_changed";
+            } else if (snapshot.artifact_identity != artifact_identity()) {
+                invalid_reason = "artifact_generation_changed";
+            } else if (snapshot.source_generation >
+                           transition_cache->rows.size() ||
+                       snapshot.target_generation > calc.state_count()) {
+                invalid_reason = "graph_generation_rewound";
+            } else if (snapshot.graph_prefix_identity !=
+                       current_prefix_identity) {
+                invalid_reason = "graph_prefix_changed";
+            } else if (selected.has_exact_start_item !=
+                           result.has_exact_start_item ||
+                       (selected.has_exact_start_item &&
+                        std::memcmp(
+                            &selected.exact_start_item,
+                            &result.exact_start_item,
+                            sizeof(pc_item_state)) != 0)) {
+                invalid_reason = "exact_start_item_changed";
+            }
+            std::uint64_t captured_policy_hash =
+                1469598103934665603ULL;
+            const auto mix_captured =
+                [&captured_policy_hash](const std::uint64_t value) {
+                    captured_policy_hash ^= value;
+                    captured_policy_hash *= 1099511628211ULL;
+                };
+            for (std::size_t state = 0;
+                 state < snapshot.policy_rows.size(); ++state) {
+                const std::uint64_t row = snapshot.policy_rows[state];
+                mix_captured(state);
+                mix_captured(row);
+                if (row == std::numeric_limits<std::uint64_t>::max()) {
+                    continue;
+                }
+                if (row >= priced_rows.size()) {
+                    invalid_reason = "captured_policy_row_changed";
+                    break;
+                }
+                mix_captured(priced_rows[row].operator_index);
+                mix_captured(std::bit_cast<std::uint64_t>(
+                    priced_rows[row].cost));
+            }
+            if (invalid_reason == nullptr &&
+                captured_policy_hash != selected.selected_policy_hash) {
+                invalid_reason = "selected_policy_changed_after_capture";
+            }
+            telemetry.selected_candidate_identity_valid =
+                invalid_reason == nullptr;
+            if (invalid_reason != nullptr) {
+                telemetry.selected_candidate_status =
+                    "identity_invalidated";
+                telemetry.selected_candidate_failure_reason =
+                    invalid_reason;
+                unverified_selected_policy_candidate.reset();
+                finish_candidate_timing();
+            } else {
+                std::uint64_t preference_projection =
+                    static_cast<std::uint64_t>(snapshot.values.size()) *
+                    (sizeof(std::vector<std::uint32_t>) +
+                     sizeof(std::vector<ObservedUnveilPreference>));
+                for (const BoundedPolicyIncumbent::ChoiceSource& source :
+                     snapshot.choice_sources) {
+                    const std::uint64_t choices = source.choices.size();
+                    preference_projection = saturated_add(
+                        preference_projection,
+                        choices >
+                                std::numeric_limits<std::uint64_t>::max() /
+                                    128
+                            ? std::numeric_limits<std::uint64_t>::max()
+                            : choices * 128);
+                }
+                const std::uint64_t live_before_materialization =
+                    estimated_owned_bytes();
+                if (!certified_fallback_fits_memory(
+                        live_before_materialization,
+                        preference_projection,
+                        options.max_solver_owned_bytes)) {
+                    telemetry.selected_candidate_memory_rejected = true;
+                    telemetry.selected_candidate_status =
+                        "materialization_memory_rejected";
+                    telemetry.selected_candidate_failure_reason =
+                        "selected policy preferences do not fit "
+                        "max_solver_owned_bytes";
+                    unverified_selected_policy_candidate.reset();
+                    finish_candidate_timing();
+                } else {
+                    try {
+                        populate_incumbent_policy(snapshot);
+                    } catch (const std::exception& error) {
+                        telemetry.selected_candidate_status =
+                            "materialization_failed";
+                        telemetry.selected_candidate_failure_reason =
+                            error.what();
+                    }
+                    if (!snapshot.policy_materialized) {
+                        unverified_selected_policy_candidate.reset();
+                        finish_candidate_timing();
+                    } else if (estimated_owned_bytes() >
+                               options.max_solver_owned_bytes) {
+                        telemetry.selected_candidate_memory_rejected = true;
+                        telemetry.selected_candidate_status =
+                            "materialization_memory_rejected";
+                        telemetry.selected_candidate_failure_reason =
+                            "selected policy materialization exceeded "
+                            "max_solver_owned_bytes";
+                        unverified_selected_policy_candidate.reset();
+                        finish_candidate_timing();
+                    } else {
+                        telemetry.selected_candidate_owned_bytes =
+                            incumbent_owned_bytes(snapshot);
+                        const std::optional<SolveOptions> scoped =
+                            publication_options_for_live(
+                                estimated_owned_bytes());
+                        if (!scoped.has_value()) {
+                            telemetry.selected_candidate_memory_rejected =
+                                true;
+                            telemetry.selected_candidate_status =
+                                "certification_memory_rejected";
+                            telemetry.selected_candidate_failure_reason =
+                                "no remaining solver memory for selected "
+                                "policy certification";
+                            unverified_selected_policy_candidate.reset();
+                            finish_candidate_timing();
+                        } else {
+                            refinement::CompiledPolicyAssertion assertion =
+                                [&]() {
+                                    SolveResult proof;
+                                    proof.policy_available = true;
+                                    proof.policy_status =
+                                        SolvePolicyStatus::BoundedFeasible;
+                                    proof.termination =
+                                        SolveTermination::NumericalStability;
+                                    proof.lower_bound = 0.0;
+                                    proof.upper_bound =
+                                        selected.selected_estimate;
+                                    proof.evaluated_policy_cost =
+                                        selected.selected_estimate;
+                                    proof.start_state = result.start_state;
+                                    proof.has_exact_start_item =
+                                        selected.has_exact_start_item;
+                                    proof.exact_start_item =
+                                        selected.exact_start_item;
+                                    proof.values = snapshot.values;
+                                    proof.policy = snapshot.policy;
+                                    proof.policy_reachable =
+                                        snapshot.policy_reachable;
+                                    proof.unveil_preferences =
+                                        snapshot.unveil_preferences;
+                                    proof.option_unveil_preferences =
+                                        snapshot
+                                            .option_unveil_preferences;
+                                    proof.behavioral_representative_by_state =
+                                        snapshot
+                                            .behavioral_representative_by_state;
+                                    proof.options = *scoped;
+                                    proof.goal_states.assign(
+                                        proof.values.size(), 0);
+                                    proof.expanded.assign(
+                                        proof.values.size(), 0);
+                                    for (std::uint32_t state = 0;
+                                         state < proof.values.size();
+                                         ++state) {
+                                        proof.goal_states[state] =
+                                            calc.is_goal_state(
+                                                calc.state(state))
+                                                ? 1
+                                                : 0;
+                                    }
+                                    return refinement::
+                                        assert_compiled_policy_exact(
+                                            calc, proof, prices, *scoped,
+                                            "selected coarse policy");
+                                }();
+                            result.diagnostics.reforge_frontier_work =
+                                saturated_add(
+                                    result.diagnostics.reforge_frontier_work,
+                                    assertion.evaluation.reforge_work);
+                            result.diagnostics.reforge_logical_work_v1 =
+                                std::min(
+                                    options.max_reforge_work,
+                                    saturated_add(
+                                        result.diagnostics
+                                            .reforge_logical_work_v1,
+                                        assertion.evaluation
+                                            .reforge_logical_work_v1));
+                            telemetry.strategy_compilation_ns =
+                                saturated_add(
+                                    telemetry.strategy_compilation_ns,
+                                    assertion.compilation_ns);
+                            telemetry.exact_graph_evaluation_ns =
+                                saturated_add(
+                                    telemetry.exact_graph_evaluation_ns,
+                                    assertion.exact_evaluation_ns);
+                            telemetry.selected_candidate_exact_cost =
+                                assertion.exact_cost;
+                            telemetry.selected_candidate_status =
+                                assertion_status_name(assertion.status);
+                            telemetry.selected_candidate_failure_reason =
+                                assertion.failure_reason;
+                            const bool verified =
+                                assertion.executable && assertion.proper &&
+                                assertion.evaluation.cost_complete &&
+                                assertion.zero_off_policy &&
+                                std::isfinite(assertion.exact_cost) &&
+                                assertion.exact_cost >= 0.0;
+                            if (verified) {
+                                BoundedPolicyIncumbent candidate =
+                                    std::move(snapshot);
+                                unverified_selected_policy_candidate.reset();
+                                candidate.certified_upper_bound =
+                                    assertion.exact_cost;
+                                candidate.evaluated_policy_cost =
+                                    assertion.exact_cost;
+                                candidate.compiled_artifact =
+                                    retained_artifact_from_assertion(
+                                        assertion);
+                                candidate.compilation_provenance =
+                                    "selected_compiled_policy_assertion_v1";
+                                candidate.independently_certified = true;
+                                candidate.independently_evaluated = true;
+                                candidate.proper = true;
+                                candidate.executable = true;
+                                candidate.reconciliation_absolute_delta =
+                                    assertion.absolute_cost_delta;
+                                candidate.reconciliation_relative_delta =
+                                    assertion.relative_cost_delta;
+                                std::uint64_t identity =
+                                    selected_capture_identity;
+                                identity_mix(
+                                    identity,
+                                    std::bit_cast<std::uint64_t>(
+                                        candidate.evaluated_policy_cost));
+                                identity_mix_string(
+                                    identity,
+                                    candidate.compilation_provenance);
+                                candidate.portfolio_identity = identity;
+                                candidate.retained_owned_bytes =
+                                    incumbent_owned_bytes(candidate);
+                                telemetry.selected_candidate_identity =
+                                    identity;
+                                telemetry
+                                    .selected_candidate_independently_evaluated =
+                                    true;
+                                assertion.evaluation = {};
+                                const std::uint64_t candidate_dynamic =
+                                    candidate.retained_owned_bytes -
+                                    sizeof(BoundedPolicyIncumbent);
+                                if (retain_certified_incumbent(
+                                        candidate, candidate_dynamic)) {
+                                    telemetry.selected_candidate_retained =
+                                        true;
+                                    telemetry.selected_candidate_status =
+                                        "verified_retained";
+                                    telemetry
+                                        .selected_candidate_failure_reason
+                                        .clear();
+                                    record_candidate_sample(
+                                        candidate,
+                                        "selected_policy_certification",
+                                        "eligible_verified_candidate",
+                                        assertion.cost_reconciled
+                                            ? "selected compiled graph cost "
+                                              "reconciled"
+                                            : "selected compiled graph owns "
+                                              "the bounded evaluated cost");
+                                } else {
+                                    telemetry.selected_candidate_status =
+                                        "verified_retention_rejected";
+                                    telemetry
+                                        .selected_candidate_failure_reason =
+                                        "verified selected candidate did not "
+                                        "fit the retained portfolio";
+                                }
+                            } else {
+                                /* Direct graph evaluation can be too broad
+                                 * even when the selected row policy is useful.
+                                 * Give that same immutable candidate—not the
+                                 * restored fallback—to strict quotient lift. */
+                                std::string{}.swap(assertion.strategy_json);
+                                assertion.evaluation = {};
+                                const std::optional<SolveOptions>
+                                    strict_options =
+                                        publication_options_for_live(
+                                            estimated_owned_bytes());
+                                const auto strict_started =
+                                    std::chrono::steady_clock::now();
+                                refinement::PolicyExactLiftCertificate
+                                    certificate;
+                                if (strict_options.has_value()) {
+                                    SolveResult proof;
+                                    proof.policy_available = true;
+                                    proof.policy_status =
+                                        SolvePolicyStatus::BoundedFeasible;
+                                    proof.termination =
+                                        SolveTermination::NumericalStability;
+                                    proof.lower_bound = 0.0;
+                                    proof.upper_bound =
+                                        selected.selected_estimate;
+                                    proof.evaluated_policy_cost =
+                                        selected.selected_estimate;
+                                    proof.start_state = result.start_state;
+                                    proof.has_exact_start_item =
+                                        selected.has_exact_start_item;
+                                    proof.exact_start_item =
+                                        selected.exact_start_item;
+                                    proof.values = snapshot.values;
+                                    proof.policy = snapshot.policy;
+                                    proof.policy_reachable =
+                                        snapshot.policy_reachable;
+                                    proof.unveil_preferences =
+                                        snapshot.unveil_preferences;
+                                    proof.option_unveil_preferences =
+                                        snapshot
+                                            .option_unveil_preferences;
+                                    proof.behavioral_representative_by_state =
+                                        snapshot
+                                            .behavioral_representative_by_state;
+                                    proof.options = *strict_options;
+                                    proof.goal_states.assign(
+                                        proof.values.size(), 0);
+                                    proof.expanded.assign(
+                                        proof.values.size(), 0);
+                                    for (std::uint32_t state = 0;
+                                         state < proof.values.size();
+                                         ++state) {
+                                        proof.goal_states[state] =
+                                            calc.is_goal_state(
+                                                calc.state(state))
+                                                ? 1
+                                                : 0;
+                                    }
+                                    certificate = refinement::
+                                        lift_policy_quotient(
+                                            calc, proof,
+                                            selected.exact_start_item,
+                                            prices, *strict_options,
+                                            "selected policy strict lift");
+                                } else {
+                                    certificate.status = refinement::
+                                        PolicyExactLiftStatus::ResourceCap;
+                                    certificate.resource_cap =
+                                        "max_solver_owned_bytes";
+                                    certificate.failure_reason =
+                                        "no remaining solver memory for "
+                                        "selected strict policy lift";
+                                }
+                                const std::uint64_t strict_elapsed_ns =
+                                    static_cast<std::uint64_t>(
+                                        std::chrono::duration_cast<
+                                            std::chrono::nanoseconds>(
+                                            std::chrono::steady_clock::now() -
+                                            strict_started)
+                                            .count());
+                                telemetry.strict_lift_total_ns =
+                                    saturated_add(
+                                        telemetry.strict_lift_total_ns,
+                                        strict_elapsed_ns);
+                                telemetry.strict_carrier_discovery_ns =
+                                    saturated_add(
+                                        telemetry
+                                            .strict_carrier_discovery_ns,
+                                        certificate.adapter
+                                            .carrier_discovery_ns);
+                                telemetry.strict_partition_refinement_ns =
+                                    saturated_add(
+                                        telemetry
+                                            .strict_partition_refinement_ns,
+                                        certificate.adapter
+                                            .partition_refinement_ns);
+                                telemetry.strict_policy_evaluation_ns =
+                                    saturated_add(
+                                        telemetry
+                                            .strict_policy_evaluation_ns,
+                                        certificate.adapter
+                                            .policy_evaluation_ns);
+                                telemetry.strict_local_reoptimization_ns =
+                                    saturated_add(
+                                        telemetry
+                                            .strict_local_reoptimization_ns,
+                                        certificate.adapter
+                                            .local_reoptimization_ns);
+                                telemetry.strategy_compilation_ns =
+                                    saturated_add(
+                                        telemetry.strategy_compilation_ns,
+                                        certificate.adapter.compilation_ns);
+                                telemetry.exact_graph_evaluation_ns =
+                                    saturated_add(
+                                        telemetry.exact_graph_evaluation_ns,
+                                        certificate.adapter
+                                            .exact_evaluation_ns);
+                                telemetry.selected_candidate_status =
+                                    std::string{"strict_"} +
+                                    refinement::
+                                        policy_exact_lift_status_name(
+                                            certificate.status);
+                                telemetry
+                                    .selected_candidate_failure_reason =
+                                    certificate.failure_reason;
+                                telemetry.selected_candidate_exact_cost =
+                                    certificate.compiled.exact_cost;
+                                telemetry.strict_lift_status =
+                                    refinement::
+                                        policy_exact_lift_status_name(
+                                            certificate.status);
+                                telemetry.strict_lift_failure_reason =
+                                    certificate.failure_reason;
+                                telemetry.strict_lift_resource_cap =
+                                    certificate.resource_cap;
+                                telemetry.exact_states =
+                                    certificate.adapter
+                                        .strict_carriers_materialized;
+                                telemetry.retained_exact_states =
+                                    certificate.refinement.telemetry
+                                        .exact_states;
+                                telemetry.exact_classes =
+                                    certificate.refinement.telemetry
+                                        .final_refinement_classes;
+                                telemetry.exact_kernels =
+                                    certificate.adapter
+                                        .strict_kernels_built;
+                                telemetry.exact_kernel_cache_hits =
+                                    certificate.adapter
+                                        .strict_kernel_cache_hits;
+                                result.diagnostics.reforge_frontier_work =
+                                    saturated_add(
+                                        result.diagnostics
+                                            .reforge_frontier_work,
+                                        saturated_add(
+                                            certificate.adapter
+                                                .strict_reforge_work,
+                                            certificate.compiled.evaluation
+                                                .reforge_work));
+                                result.diagnostics.reforge_logical_work_v1 =
+                                    std::min(
+                                        options.max_reforge_work,
+                                        saturated_add(
+                                            result.diagnostics
+                                                .reforge_logical_work_v1,
+                                            saturated_add(
+                                                certificate.adapter
+                                                    .strict_reforge_logical_work_v1,
+                                                certificate.compiled
+                                                    .evaluation
+                                                    .reforge_logical_work_v1)));
+                                const bool strict_verified =
+                                    certificate.status == refinement::
+                                        PolicyExactLiftStatus::Complete &&
+                                    certificate.executable &&
+                                    certificate.lumpable &&
+                                    certificate.compiled.executable &&
+                                    certificate.compiled.proper &&
+                                    certificate.compiled.evaluation
+                                        .cost_complete &&
+                                    certificate.compiled.zero_off_policy &&
+                                    std::isfinite(
+                                        certificate.compiled.exact_cost) &&
+                                    certificate.compiled.exact_cost >= 0.0;
+                                if (strict_verified) {
+                                    BoundedPolicyIncumbent candidate =
+                                        std::move(snapshot);
+                                    unverified_selected_policy_candidate
+                                        .reset();
+                                    candidate.certified_upper_bound =
+                                        certificate.compiled.exact_cost;
+                                    candidate.evaluated_policy_cost =
+                                        certificate.compiled.exact_cost;
+                                    candidate.compiled_artifact =
+                                        retained_artifact_from_assertion(
+                                            certificate.compiled);
+                                    candidate.compilation_provenance =
+                                        "selected_policy_guided_exact_"
+                                        "refinement_v1";
+                                    candidate.kind =
+                                        "selected_policy_guided_exact_"
+                                        "refinement";
+                                    candidate.strict_state_provenance = true;
+                                    candidate.independently_certified = true;
+                                    candidate.independently_evaluated = true;
+                                    candidate.proper = true;
+                                    candidate.executable = true;
+                                    candidate
+                                        .reconciliation_absolute_delta =
+                                        certificate.compiled
+                                            .absolute_cost_delta;
+                                    candidate
+                                        .reconciliation_relative_delta =
+                                        certificate.compiled
+                                            .relative_cost_delta;
+                                    std::uint64_t identity =
+                                        selected_capture_identity;
+                                    identity_mix(
+                                        identity,
+                                        std::bit_cast<std::uint64_t>(
+                                            candidate
+                                                .evaluated_policy_cost));
+                                    identity_mix_string(
+                                        identity,
+                                        candidate
+                                            .compilation_provenance);
+                                    candidate.portfolio_identity = identity;
+                                    candidate.retained_owned_bytes =
+                                        incumbent_owned_bytes(candidate);
+                                    telemetry.selected_candidate_identity =
+                                        identity;
+                                    telemetry
+                                        .selected_candidate_independently_evaluated =
+                                        true;
+                                    certificate.compiled.evaluation = {};
+                                    const std::uint64_t candidate_dynamic =
+                                        candidate.retained_owned_bytes -
+                                        sizeof(BoundedPolicyIncumbent);
+                                    if (retain_certified_incumbent(
+                                            candidate,
+                                            candidate_dynamic)) {
+                                        telemetry
+                                            .selected_candidate_retained =
+                                            true;
+                                        telemetry
+                                            .selected_candidate_status =
+                                            "strict_verified_retained";
+                                        telemetry
+                                            .selected_candidate_failure_reason
+                                            .clear();
+                                        record_candidate_sample(
+                                            candidate,
+                                            "selected_policy_strict_lift",
+                                            "eligible_verified_candidate",
+                                            "strict compiled graph owns the "
+                                            "selected policy bounded cost");
+                                    } else {
+                                        telemetry
+                                            .selected_candidate_status =
+                                            "strict_verified_retention_"
+                                            "rejected";
+                                        telemetry
+                                            .selected_candidate_failure_reason =
+                                            "verified strict selected "
+                                            "candidate did not fit the "
+                                            "retained portfolio";
+                                    }
+                                }
+                            }
+                            finish_candidate_timing();
+                        }
+                    }
+                }
+            }
+        }
         {
             PolicyRefinementTelemetry& telemetry =
                 result.diagnostics.policy_refinement;
