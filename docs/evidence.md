@@ -6,6 +6,18 @@ routes to them rather than duplicating complete reports.
 
 Parent: [Documentation map](README.md)
 
+## Active Five-T1 Certification Boundary
+
+The 2026-08-16
+[Gate 1 result and Gate 4 stop record](active/2026-08-16-five-t1-restart-monotone-recovery/evidence/gate1-gate4-stop.md)
+records the checked Restart-free/priced-base witnesses, fail-closed bounded
+certification, structurally paired safe product graph, observation payload and
+owned-byte evidence, and the next exact boundary. Witness A remains
+independently evaluated at `624800.9519118543`; Witness B clears observation
+propagation but reaches 8,395,474 state/action pairs and exceeds the unchanged
+evaluator budget before component construction. The milestone is stopped, not
+complete, and release WASM/final acceptance were not run.
+
 ## Rule And Data Fixtures
 
 - [`fixtures/spec`](../fixtures/spec/) pins small session pools, weights, and

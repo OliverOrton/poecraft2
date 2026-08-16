@@ -1,7 +1,7 @@
 # Five-T1 Restart-Monotone Strategy Recovery
 
-**Status: active. Selected by Oliver on 2026-08-16; Gate 0 evidence and
-behavior-neutral telemetry are the current implementation boundary.**
+**Status: stopped on 2026-08-16 at Gate 4 stop condition 5, with stop
+conditions 6 and 7 also present. Gates 2, 3, and 5-8 were not started.**
 
 Parent: [Five-T1 Restart-Monotone Strategy Recovery](README.md)
 
@@ -435,6 +435,11 @@ cap. If it reaches a new non-observation-memory boundary, record that boundary
 accurately and stop the milestone there. A cap increase is not a pass.
 
 ## Gate 5 - Make Candidate Selection And Progress Monotone
+
+> Execution note: the diagnostic Gate 4 qualification reached
+> `exact_eval_pair_discovery_memory_cap` after observation propagation passed.
+> Per Gate 4 and stop condition 5, execution stopped before this gate. See the
+> [Gate 1/Gate 4 evidence](evidence/gate1-gate4-stop.md).
 
 Keep the certified Restart-free seed alive across:
 

@@ -1,65 +1,53 @@
 # Session Handoff
 
-**Status: active implementation boundary at Gate 0 evidence and
-behavior-neutral telemetry.**
+**Status: stopped implementation boundary at exact pair discovery. Oliver
+must select or approve a new plan before source implementation resumes.**
 
-Oliver selected
+The selected
 [Five-T1 Restart-Monotone Strategy Recovery](docs/active/2026-08-16-five-t1-restart-monotone-recovery/plan.md)
-on 2026-08-16. Its current boundary is Gate 0: freeze the exact Restart-free,
-priced-base, and automatic-admission witnesses and add behavior-neutral
-failure, route-default, observation-payload, memory, automatic-family, and
-wall-time evidence. Do not change Restart scheduling, automatic admission,
-evaluator representation, or publication behavior before Gate 0 closes.
+hit its explicit Gate 4 stop condition. Do not proceed into Gates 2, 3, or
+5-8 from that plan, do not raise the solver/WASM cap, and do not describe the
+five-T1 priced-base strategy as recovered.
 
-The accepted behavioral source checkpoint is
-`f3b908011490b39347e8fad6945b471d888b9845` on
-`codex/solver-goal-realignment`. The final documentation/archive checkpoint is
-the local commit containing this handoff. Nothing was pushed.
+The native source checkpoint is `705c25c` on
+`codex/solver-goal-realignment`. It adds the checked 27-action Restart-free and
+28-action priced-base cases, explicit product/certification compiler modes,
+fail-closed bounded certification, structurally verified default-only graph
+pairs, retained certificate/product telemetry and memory accounting, stable
+failure classes, and observation propagation evidence. Nothing was pushed.
 
-The representative from-empty five-natural-T1 Allflame Conquest Lamellar now
-returns in about 14.25 seconds in the normal eight-item release-WASM profile.
-It publishes a 184-node/666-edge non-Chaos strategy independently
-exact-evaluated at `624800.9519118543`, about 59.7 times cheaper than the old
-Chaos renewal. The eight-item and 1,024-work modes have identical termination,
-bounds, evaluated cost, action IDs, and strategy hash. The result remains
-honestly `bounded_feasible / numerical_stability` with lower zero because one
-missing-price and one unsupported action leave the full envelope open.
+Witness A is sound at this boundary. Its fail-closed certificate has 170
+policy-router defaults to `offpolicy`, is proper/cost-complete with zero
+off-policy mass, and pairs structurally with the 184-node/666-edge safe product
+graph. Independent product evaluation matches at `624800.9519118543`; the
+product SHA-256 is
+`f12a2cb13137e69d7b107015da9d417026a4b01accf5cb7206da18d315b2ee62`.
+The final focused native run took 5.50 seconds with a 224.30 ms largest step.
 
-A subsequent compiler audit found 170 bounded route defaults to
-`bounded_default_restart` in that graph. Its exact evaluation still proves the
-cost and executability of the emitted product graph, but it does not prove that
-the intended selected-policy router has zero reachable misses because Restart
-absorbs such misses. Treat the 624,800 result as provisional policy-coverage
-evidence until the proposed plan's fail-closed certification gate passes.
+Witness B now clears the former observation refusal. Its 2,015-node/4,123-edge
+fail-closed certificate completes observation propagation in 10 rounds with
+six canonical requirements. Conservative projected observation peak is
+4,313,004 bytes versus a 2,905,660-byte post-fixed-point owned estimate.
 
-Exact lift, compilation, and graph assertion now run cooperatively inside the
-native stepped solve. ABI phase values 1-3 are unchanged; `refining = 4`,
-`compiling = 5`, and `certifying = 6` are append-only through native, WASM,
-worker, and Calculator surfaces. Native `Done` means `finish()` is packaging-
-only, and cancellation/abandon remains available during retained finalization.
+The new boundary is exact pre-component pair discovery: 8,395,474
+state/action pairs, 35,837 states, 544 rows, 8,396,650 transitions, and
+1,178,801,916 owned bytes against a 1,050,982,663-byte evaluator budget. Row
+payload is 268,692,800 bytes; retained observation requirements are only
+594,480 bytes. The stable classification is
+`exact_eval_pair_discovery_memory_cap`. The same path has a 2,636.42 ms public
+step. Publication therefore remains the six-node Chaos renewal at
+`37279857.73995944`, above the plan's one-million-chaos materiality ceiling.
 
-The exact three-prefix and three-prefix-plus-spell-suppression witnesses retain
-their values and hashes with 164.756 ms and 238.509 ms maximum release-WASM
-steps. The retained four-natural-T1, Eldritch, Warlord, Imprint, and three-
-prefix controls each completed exactly 10,000 Simulator runs with zero
-failures, cap hits, or off-policy executions. The five-T1 policy exceeds the
-unchanged sampling action horizon, so its independent exact graph evaluation
-is authoritative and 10,000-run sampling is not applicable.
+Detailed evidence and exact commands are in the
+[Gate 1/Gate 4 record](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/gate1-gate4-stop.md).
+The focused native build, compiler suite (815 checks), evaluator suite (16,801
+checks), solver suite (96,082 checks), both frozen cases, and `git diff
+--check` passed. No release-WASM rebuild, web suite, Warlord/automatic Gate 3
+matrix, or full `scripts/test.ps1` acceptance run was performed after this
+checkpoint, as required by the stop condition.
 
-The selected-candidate proof audit, retained-memory audit, and append-only ABI
-audit passed. A release-WASM build under Emscripten 6.0.0 requires
-`solver_solve_finish.cpp` to be compiled as an optimized non-LTO object before
-the remaining full-LTO link because full-LTO coroutine lowering otherwise
-produces invalid SSA. The qualified tracked WASM SHA-256 is
-`c1b873930209fe86fae066ea85cf24130f0638eba0783c214bfa22ffcc5fd528`.
-
-The one final `powershell -File scripts/test.ps1` invocation passed 3,462,490
-native checks plus ingest, economy, fixtures, artifact validation, Python
-bindings, benchmark validation, 28/28 release-WASM smoke checks, and the
-complete non-visual web suite. Focused native tests, the release-WASM rebuild,
-`npx tsc --noEmit`, and `git diff --check` also passed. Oliver retains rendered
-and real-device/browser review; none was performed.
-
-Detailed values, report hashes, sampling, and the disclosed pre-existing
-benchmark expectation-vocabulary mismatch are in the
-[final acceptance record](docs/archive/2026-08-14-calculator-wasm-scheduling-progress/evidence/final-acceptance.md).
+The next selected work should first attribute and redesign exact pair
+discovery under the existing cap, including cooperative scheduling of the
+current multi-second step. Gates 2/3 remain valuable but cannot make the
+current priced-base certificate materializable on their own. Preserve the
+current tree and checkpoints when planning that work.
