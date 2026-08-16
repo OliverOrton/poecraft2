@@ -963,11 +963,15 @@ void enforce_bounded_best_policy_contract(
             report.solve_summary.policy_status ==
                 PC_SOLVE_POLICY_BOUNDED_NEAR_OPTIMAL;
         report.bounded_best_policy_named_stop =
-            report.solve_summary.termination ==
-                PC_SOLVE_TERMINATION_REFUSED_RESOURCE_CAP &&
-            report.solve_summary.stop_cause >= PC_SOLVE_STOP_STATE_CAP &&
-            report.solve_summary.stop_cause <=
-                PC_SOLVE_STOP_COMPILED_OUTPUT_CAP;
+            (report.solve_summary.termination ==
+                 PC_SOLVE_TERMINATION_REFUSED_RESOURCE_CAP &&
+             report.solve_summary.stop_cause >= PC_SOLVE_STOP_STATE_CAP &&
+             report.solve_summary.stop_cause <=
+                 PC_SOLVE_STOP_COMPILED_OUTPUT_CAP) ||
+            (report.solve_summary.termination ==
+                 PC_SOLVE_TERMINATION_NUMERICAL_STABILITY &&
+             report.solve_summary.stop_cause ==
+                 PC_SOLVE_STOP_NUMERICAL_STABILITY);
         report.bounded_best_policy_strict_gap =
             std::isfinite(report.solve_summary.lower_bound) &&
             std::isfinite(report.solve_summary.upper_bound) &&
@@ -3343,6 +3347,8 @@ const char* termination_name(const int32_t termination) {
     case PC_SOLVE_TERMINATION_EXACT_CLOSED: return "exact_closed";
     case PC_SOLVE_TERMINATION_NO_EXECUTABLE_POLICY:
         return "no_executable_policy";
+    case PC_SOLVE_TERMINATION_NUMERICAL_STABILITY:
+        return "numerical_stability";
     default: return "none";
     }
 }
@@ -3364,6 +3370,8 @@ const char* stop_cause_name(const int32_t cause) {
         return "other_resource_cap";
     case PC_SOLVE_STOP_NO_EXECUTABLE_POLICY:
         return "no_executable_policy";
+    case PC_SOLVE_STOP_NUMERICAL_STABILITY:
+        return "numerical_stability";
     default: return "none";
     }
 }

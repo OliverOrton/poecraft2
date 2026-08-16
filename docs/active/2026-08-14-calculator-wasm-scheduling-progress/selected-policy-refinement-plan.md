@@ -1,7 +1,7 @@
 # Selected Policy Publication And Cooperative Exact Refinement
 
-**Status: active. Selected by Oliver on 2026-08-16; Gate 0 is complete and
-Gate 1 selected-policy preservation is in progress.**
+**Status: active. Selected by Oliver on 2026-08-16; Gates 0-2 are complete
+and Gate 3 retained cooperative exact work is in progress.**
 
 Parent: [Calculator WASM Scheduling And Progress](README.md)
 
@@ -230,7 +230,10 @@ Gate 0 exit:
 
 ## Gate 1 - Preserve The Selected Policy As An Unverified Candidate
 
-**Status: in progress.**
+**Status: complete.** The selected row policy is retained in a dedicated,
+memory-accounted, identity-stamped wrapper before fallback restoration. It is
+not a portfolio or publication type. Evidence:
+[Gates 1-2 selected-policy publication](evidence/gate1-gate2-selected-policy-publication.md).
 
 Capture the current stable selected policy before `restore_output_incumbent`
 can replace it. Prefer a dedicated type or explicit state such as
@@ -267,6 +270,12 @@ Gate 1 exit: telemetry shows both the stable selected candidate and the Chaos
 incumbent with distinct identities and proof states.
 
 ## Gate 2 - Certify And Compare The Selected Candidate
+
+**Status: complete natively.** Exact shared-row attribution independently
+evaluates the 184-node selected graph at `624800.9519118543`, about 59.7 times
+cheaper than the retained Chaos renewal. The result remains honestly bounded
+with lower zero and `numerical_stability`. Release-WASM parity belongs to Gate
+5 after cooperative finalization integration.
 
 Refactor final publication into an explicit candidate pipeline:
 
@@ -308,6 +317,10 @@ resource, or policy-compatibility failure. Fast Chaos fallback alone is not a
 positive Gate 2 result.
 
 ## Gate 3 - Make Exact Lift Retained And Cooperative
+
+**Status: in progress.** The evaluator repair reduces the exact three-prefix
+control from 108.8 to 31.9 seconds, but its remaining 29.0-second strict lift
+is still synchronous and therefore does not satisfy this gate.
 
 Enter only after Gate 2 proves a useful selected candidate exists, or after the
 monolithic viability attempt reaches a measured atomic-work boundary that must

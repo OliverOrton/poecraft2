@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: active implementation boundary at Gate 1 selected-policy
-preservation. Gate 0 evidence is complete.**
+**Status: active implementation boundary at Gate 3 retained cooperative
+exact work. Gates 0-2 are complete.**
 
 Oliver selected
 [Calculator WASM Scheduling And Progress](docs/active/2026-08-14-calculator-wasm-scheduling-progress/plan.md)
@@ -115,9 +115,15 @@ remains exact at `2186.6911143146394`. The newly frozen four-goal control spends
 classification defect. Exact graph evaluation, not only strict carrier
 construction, must become cooperative.
 
-Next action: preserve the selected five-T1 policy as an explicitly unverified,
-memory-accounted candidate before incumbent restoration. It must remain
-impossible for that snapshot to affect a public upper until compilation and
-independent exact evaluation succeed. Do not start final acceptance or archive
-while selected-policy certification and cooperative exact refinement remain
+Gates 1-2 now preserve the selected five-T1 policy before fallback restoration
+and independently evaluate its 184-node/666-edge compiled graph. The native
+evaluated upper is `624800.9519118543`, about 59.7 times cheaper than the old
+Chaos renewal, with honest lower zero and `numerical_stability`. Exact
+shared-row attribution supplies the proof and retains independent raw-pair and
+quotient flow checks.
+
+Next action: retain and step the exact carrier/partition work that still owns
+28.95 synchronous seconds on the three-prefix exact control. Then integrate
+those phases through the C ABI/WASM worker before release-WASM parity. Do not
+start final acceptance or archive while cooperative exact refinement remains
 unresolved. The full pipeline remains reserved for the end.

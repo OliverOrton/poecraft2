@@ -3995,7 +3995,14 @@ struct StrategyEvalWork::Impl {
             owned_before_transpose > options.max_owned_bytes ||
             transpose_projection >
                 options.max_owned_bytes - owned_before_transpose;
-        if (edge_count > std::numeric_limits<std::uint32_t>::max() ||
+        /* Shared rows are exact transition/absorption authorities, and the
+         * shared-row solve is followed by raw-pair and quotient flow
+         * residual checks. Prefer it whenever it actually contracts the raw
+         * attribution graph; expanding one identical transpose row per pair
+         * can create a large near-renewal SCC that spends the entire public
+         * iteration budget relearning an already-solved aggregate mode. */
+        if (attribution_rows.size() < count ||
+            edge_count > std::numeric_limits<std::uint32_t>::max() ||
             transpose_exceeds_memory) {
             memory_probe_stage = "steady_state";
             memory_probe_units = 0;
