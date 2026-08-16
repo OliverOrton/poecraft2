@@ -1,11 +1,20 @@
 # Session Handoff
 
-**Status: no active implementation boundary.**
+**Status: no active implementation boundary. A proposed next plan is ready
+for review.**
 
 The
 [Calculator WASM Scheduling And Selected-Policy Refinement](docs/archive/2026-08-14-calculator-wasm-scheduling-progress/README.md)
 milestone completed and was archived on 2026-08-16. Oliver must choose the
 next bounded plan before implementation resumes.
+
+The proposed
+[Five-T1 Restart-Monotone Strategy Recovery](docs/future/five-t1-restart-monotone-recovery-plan.md)
+plan incorporates the priced-base five-natural-T1 Calculator failure and the
+subsequent external review. It is deliberately not active: Oliver may review
+or revise its fail-closed certification, Restart-monotonicity, automatic
+admission, evaluator-scaling, responsiveness, and materiality gates before
+selecting it. No source implementation from that plan has started.
 
 The accepted behavioral source checkpoint is
 `f3b908011490b39347e8fad6945b471d888b9845` on
@@ -20,6 +29,13 @@ Chaos renewal. The eight-item and 1,024-work modes have identical termination,
 bounds, evaluated cost, action IDs, and strategy hash. The result remains
 honestly `bounded_feasible / numerical_stability` with lower zero because one
 missing-price and one unsupported action leave the full envelope open.
+
+A subsequent compiler audit found 170 bounded route defaults to
+`bounded_default_restart` in that graph. Its exact evaluation still proves the
+cost and executability of the emitted product graph, but it does not prove that
+the intended selected-policy router has zero reachable misses because Restart
+absorbs such misses. Treat the 624,800 result as provisional policy-coverage
+evidence until the proposed plan's fail-closed certification gate passes.
 
 Exact lift, compilation, and graph assertion now run cooperatively inside the
 native stepped solve. ABI phase values 1-3 are unchanged; `refining = 4`,

@@ -29,7 +29,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation milestone is currently active. The completed
+No implementation milestone is currently active. A review-ready
+[Five-T1 Restart-Monotone Strategy Recovery](future/five-t1-restart-monotone-recovery-plan.md)
+plan proposes fail-closed bounded certification, preservation of the cheaper
+Restart-free incumbent when a base price adds Restart, prioritized state-local
+automatic admission in the Calculator scheduler, and exact evaluator scaling
+under the unchanged cap. It has not been selected and authorizes no source
+implementation. The completed
 [Calculator WASM Scheduling And Selected-Policy Refinement](archive/2026-08-14-calculator-wasm-scheduling-progress/README.md)
 milestone recovers a five-natural-T1 non-Chaos strategy about 59.7 times
 cheaper than the prior fallback, retains selected candidates without granting
