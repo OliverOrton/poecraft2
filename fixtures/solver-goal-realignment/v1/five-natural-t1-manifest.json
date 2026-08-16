@@ -28,6 +28,7 @@
   ],
   "cases": [
     "cases/conquest-lamellar-allflame-five-natural-t1-product.json",
+    "cases/conquest-lamellar-allflame-five-natural-t1-priced-base-product.json",
     "cases/conquest-lamellar-allflame-three-prefix-spell-suppression-t1-product.json"
   ]
 }

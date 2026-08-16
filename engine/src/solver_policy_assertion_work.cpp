@@ -2,10 +2,78 @@
 #include "solver_compile_contracts.hpp"
 
 #include <chrono>
+#include <string_view>
 
 namespace poecraft {
 namespace solver {
 namespace refinement {
+
+namespace {
+
+bool policy_graphs_differ_only_at_bounded_defaults(
+        const std::string& product,
+        const PolicyCompilationTelemetry& product_compilation,
+        const std::string& certification,
+        const PolicyCompilationTelemetry& certification_compilation) {
+    if (product_compilation.policy_route_default_mode !=
+            "product_safe_restart" ||
+        certification_compilation.policy_route_default_mode !=
+            "certification_fail_closed" ||
+        product_compilation.policy_route_default_edges !=
+            certification_compilation.policy_route_default_edges ||
+        certification_compilation.policy_route_offpolicy_default_edges !=
+            certification_compilation.policy_route_default_edges ||
+        product_compilation.nodes != certification_compilation.nodes ||
+        product_compilation.edges != certification_compilation.edges) {
+        return false;
+    }
+
+    const auto normalized = [](const std::string& graph) {
+        std::string value = graph;
+        constexpr std::string_view default_suffix =
+            ",\"is_default\":true}";
+        constexpr std::string_view edge_prefix = "{\"id\":\"e";
+        constexpr std::string_view from_prefix =
+            "\"from\":\"policy_route_";
+        constexpr std::string_view to_prefix = "\"to\":\"";
+        std::vector<std::pair<std::size_t, std::size_t>> targets;
+        std::size_t offset = 0;
+        while ((offset = value.find(default_suffix, offset)) !=
+               std::string::npos) {
+            const std::size_t edge = value.rfind(edge_prefix, offset);
+            const std::size_t from = value.find(from_prefix, edge);
+            if (edge != std::string::npos &&
+                from != std::string::npos && from < offset) {
+                const std::size_t to = value.find(to_prefix, from);
+                if (to != std::string::npos && to < offset) {
+                    const std::size_t target = to + to_prefix.size();
+                    const std::size_t target_end = value.find('\"', target);
+                    if (target_end != std::string::npos &&
+                        target_end < offset) {
+                        targets.emplace_back(
+                            target, target_end - target);
+                    }
+                }
+            }
+            offset += default_suffix.size();
+        }
+        for (auto target = targets.rbegin(); target != targets.rend();
+             ++target) {
+            value.replace(target->first, target->second, "offpolicy");
+        }
+        return std::pair<std::string, std::size_t>{
+            std::move(value), targets.size()};
+    };
+    auto normalized_product = normalized(product);
+    auto normalized_certification = normalized(certification);
+    return normalized_product.second ==
+            product_compilation.policy_route_default_edges &&
+        normalized_certification.second ==
+            certification_compilation.policy_route_default_edges &&
+        normalized_product.first == normalized_certification.first;
+}
+
+} // namespace
 
 struct CompiledPolicyAssertionWork::Impl {
     enum class Stage : std::uint8_t {
@@ -56,6 +124,8 @@ struct CompiledPolicyAssertionWork::Impl {
         result.status = status;
         result.failure_reason = std::move(reason);
         result.resource_cap = std::move(cap);
+        result.failure_classification =
+            compiled_policy_failure_classification(result);
         stage = Stage::Done;
     }
 
@@ -166,7 +236,8 @@ struct CompiledPolicyAssertionWork::Impl {
                 result.strategy_json = compile_policy_strategy_json(
                     coarse, solved, strategy_name, &result.compilation,
                     compilation_json_limit, refined_routing,
-                    compilation_memory);
+                    compilation_memory,
+                    PolicyRouteDefaultMode::CertificationFailClosed);
                 record_compilation_time();
                 std::uint64_t live = result.retained_solver_bytes;
                 saturating_add(
@@ -350,6 +421,82 @@ struct CompiledPolicyAssertionWork::Impl {
             result.publication_peak_owned_bytes = std::max(
                 result.publication_peak_owned_bytes, live);
             finalize_compiled_policy_assertion(result);
+            if (result.executable && result.proper &&
+                result.zero_off_policy &&
+                result.evaluation.cost_complete &&
+                std::isfinite(result.exact_cost)) {
+                result.certification_strategy_json =
+                    std::move(result.strategy_json);
+                result.certification_compilation =
+                    result.compilation;
+                result.compilation = {};
+                evaluation_work.reset();
+                parsed_strategy.reset();
+                economy.reset();
+                const std::uint64_t certification_bytes =
+                    result.certification_strategy_json.capacity() + 1;
+                std::uint64_t paired_retained =
+                    result.retained_solver_bytes;
+                saturating_add(paired_retained, certification_bytes);
+                saturating_add(
+                    paired_retained,
+                    result.evaluation
+                        .retained_output_owned_bytes_estimate);
+                if (paired_retained >=
+                    options.max_solver_owned_bytes) {
+                    finish_failure(
+                        CompiledPolicyAssertionStatus::ResourceCap,
+                        "certification artifact leaves no memory for the "
+                        "paired product graph",
+                        "max_solver_owned_bytes");
+                    return;
+                }
+                try {
+                    result.strategy_json = compile_policy_strategy_json(
+                        coarse, solved, strategy_name,
+                        &result.compilation,
+                        options.max_strategy_json_bytes,
+                        refined_routing,
+                        options.max_solver_owned_bytes - paired_retained,
+                        PolicyRouteDefaultMode::ProductSafeRestart);
+                } catch (const SolverResourceLimit& error) {
+                    finish_failure(
+                        CompiledPolicyAssertionStatus::ResourceCap,
+                        error.what(), error.cap_name());
+                    return;
+                } catch (const std::length_error& error) {
+                    finish_failure(
+                        CompiledPolicyAssertionStatus::ResourceCap,
+                        error.what(),
+                        resource_cap_from_message(error.what()));
+                    return;
+                } catch (const std::exception& error) {
+                    finish_failure(
+                        CompiledPolicyAssertionStatus::CompilationFailure,
+                        error.what());
+                    return;
+                }
+                if (!policy_graphs_differ_only_at_bounded_defaults(
+                        result.strategy_json,
+                        result.compilation,
+                        result.certification_strategy_json,
+                        result.certification_compilation)) {
+                    finish_failure(
+                        CompiledPolicyAssertionStatus::CompilationFailure,
+                        "paired product and certification graphs differ "
+                        "outside compiler-designated bounded defaults");
+                    return;
+                }
+                result.paired_default_only = true;
+                std::uint64_t paired_live = paired_retained;
+                saturating_add(
+                    paired_live,
+                    std::max<std::uint64_t>(
+                        result.compilation.peak_owned_bytes,
+                        result.strategy_json.capacity() + 1));
+                result.publication_peak_owned_bytes = std::max(
+                    result.publication_peak_owned_bytes, paired_live);
+            }
             stage = Stage::Done;
         } catch (const SolverResourceLimit& error) {
             result.evaluation = evaluation_work->diagnostic_result();
@@ -408,8 +555,26 @@ struct CompiledPolicyAssertionWork::Impl {
     std::uint64_t retained_bytes() const {
         std::uint64_t bytes = sizeof(*this);
         saturating_add(bytes, result.strategy_json.capacity() + 1);
+        saturating_add(
+            bytes, result.certification_strategy_json.capacity() + 1);
+        saturating_add(
+            bytes,
+            result.evaluation.retained_output_owned_bytes_estimate);
         saturating_add(bytes, result.failure_reason.capacity() + 1);
+        saturating_add(bytes, result.failure_classification.capacity() + 1);
         saturating_add(bytes, result.resource_cap.capacity() + 1);
+        saturating_add(
+            bytes, result.compilation.policy_route_default_mode.capacity() +
+                1);
+        saturating_add(
+            bytes,
+            result.certification_compilation
+                    .policy_route_default_mode.capacity() +
+                1);
+        saturating_add(bytes, result.compilation.cap_hit.capacity() + 1);
+        saturating_add(
+            bytes,
+            result.certification_compilation.cap_hit.capacity() + 1);
         if (parsed_strategy != nullptr) {
             saturating_add(
                 bytes, strategy_impl_owned_bytes(*parsed_strategy));

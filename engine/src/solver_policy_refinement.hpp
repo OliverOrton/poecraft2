@@ -181,9 +181,13 @@ struct CompiledPolicyAssertion {
     bool zero_off_policy = false;
     bool cost_reconciled = false;
     std::string failure_reason;
+    std::string failure_classification;
     std::string resource_cap;
     std::string strategy_json;
     PolicyCompilationTelemetry compilation;
+    std::string certification_strategy_json;
+    PolicyCompilationTelemetry certification_compilation;
+    bool paired_default_only = false;
     StrategyEvalResult evaluation;
     double solver_cost = std::numeric_limits<double>::infinity();
     double exact_cost = std::numeric_limits<double>::infinity();
@@ -204,6 +208,9 @@ struct CompiledPolicyAssertion {
  * strategy's exact result. */
 void finalize_compiled_policy_assertion(
     CompiledPolicyAssertion& assertion);
+
+std::string compiled_policy_failure_classification(
+    const CompiledPolicyAssertion& assertion);
 
 /*
  * Compile the supplied policy/layout, parse the emitted strategy through

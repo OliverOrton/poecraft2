@@ -7,6 +7,11 @@ namespace solver {
 
 // --- policy -> strategy graph compiler (S5) --------------------------------------
 
+enum class PolicyRouteDefaultMode : std::uint8_t {
+    ProductSafeRestart = 0,
+    CertificationFailClosed,
+};
+
 /*
  * Compile a solved policy into ordinary strategy JSON (the same format the
  * editor and simulator consume): a master router whose prioritized edges
@@ -32,7 +37,9 @@ std::string compile_policy_strategy_json(
     const refinement::RefinedPolicyCompileRouting* refined_routing =
         nullptr,
     std::uint64_t max_compiler_owned_bytes =
-        std::numeric_limits<std::uint64_t>::max());
+        std::numeric_limits<std::uint64_t>::max(),
+    PolicyRouteDefaultMode route_default_mode =
+        PolicyRouteDefaultMode::ProductSafeRestart);
 
 
 } // namespace solver

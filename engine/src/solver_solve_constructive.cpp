@@ -1018,6 +1018,12 @@ std::uint64_t SolveWork::Impl::incumbent_owned_bytes(
                      .kernel_signature.capacity() *
                  sizeof(std::uint64_t);
         bytes += incumbent.compiled_artifact.strategy_json.capacity() + 1;
+        bytes += incumbent.compiled_artifact
+                     .certification_strategy_json.capacity() + 1;
+        bytes += incumbent.compiled_artifact
+                     .policy_route_default_mode.capacity() + 1;
+        bytes += incumbent.compiled_artifact
+                     .certification_policy_route_default_mode.capacity() + 1;
         bytes += incumbent.unveil_preferences.capacity() *
                  sizeof(std::vector<std::uint32_t>);
         for (const auto& preferences : incumbent.unveil_preferences) {
@@ -1254,6 +1260,14 @@ bool SolveWork::Impl::certify_incumbent_for_fallback(
             compilation.exact_state_fallbacks;
         incumbent.compiled_artifact.junk_predicates =
             compilation.junk_predicates;
+        incumbent.compiled_artifact.policy_route_default_edges =
+            compilation.policy_route_default_edges;
+        incumbent.compiled_artifact.policy_route_restart_default_edges =
+            compilation.policy_route_restart_default_edges;
+        incumbent.compiled_artifact.policy_route_offpolicy_default_edges =
+            compilation.policy_route_offpolicy_default_edges;
+        incumbent.compiled_artifact.policy_route_default_mode =
+            compilation.policy_route_default_mode;
         incumbent.compiled_artifact.peak_owned_bytes =
             compilation.peak_owned_bytes;
         incumbent.compiled_artifact

@@ -152,7 +152,16 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
                    .direct_certification_failure_reason.capacity() +
                1 +
            diagnostics.policy_refinement
+                   .direct_certification_failure_classification.capacity() +
+               1 +
+           diagnostics.policy_refinement
                    .direct_certification_resource_cap.capacity() +
+               1 +
+           diagnostics.policy_refinement
+                   .direct_certification_route_default_mode.capacity() +
+               1 +
+           diagnostics.policy_refinement
+                   .direct_product_route_default_mode.capacity() +
                1 +
            diagnostics.policy_refinement.strict_lift_status.capacity() + 1 +
            diagnostics.policy_refinement
@@ -236,6 +245,12 @@ std::uint64_t solve_result_owned_bytes(const SolveResult& result) {
     bytes += result.primitive_renewal_witness.kernel_signature.capacity() *
              sizeof(std::uint64_t);
     bytes += result.refined_policy_artifact.strategy_json.capacity() + 1;
+    bytes += result.refined_policy_artifact
+                 .certification_strategy_json.capacity() + 1;
+    bytes += result.refined_policy_artifact
+                 .policy_route_default_mode.capacity() + 1;
+    bytes += result.refined_policy_artifact
+                 .certification_policy_route_default_mode.capacity() + 1;
     bytes += diagnostics_owned_bytes(result.diagnostics);
     return bytes;
 }
@@ -826,6 +841,12 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
                  sizeof(std::uint64_t);
         bytes +=
             result.refined_policy_artifact.strategy_json.capacity() + 1;
+        bytes += result.refined_policy_artifact
+                     .certification_strategy_json.capacity() + 1;
+        bytes += result.refined_policy_artifact
+                     .policy_route_default_mode.capacity() + 1;
+        bytes += result.refined_policy_artifact
+                     .certification_policy_route_default_mode.capacity() + 1;
         bytes += owned_result_nested_bytes;
         bytes += output_incumbent_owned_bytes();
         if (finalization_task.has_value()) {
@@ -1022,6 +1043,12 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
                  sizeof(std::uint64_t);
         bytes +=
             result.refined_policy_artifact.strategy_json.capacity() + 1;
+        bytes += result.refined_policy_artifact
+                     .certification_strategy_json.capacity() + 1;
+        bytes += result.refined_policy_artifact
+                     .policy_route_default_mode.capacity() + 1;
+        bytes += result.refined_policy_artifact
+                     .certification_policy_route_default_mode.capacity() + 1;
         bytes += output_incumbent_owned_bytes();
         if (finalization_task.has_value()) {
             bytes += finalization_task->retained_bytes();
@@ -1780,6 +1807,14 @@ std::string serialize_solver_telemetry(
                 json,
                 refinement.direct_certification_failure_reason);
         }
+        json += ",\"failure_classification\":";
+        if (refinement.direct_certification_failure_classification.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json,
+                refinement.direct_certification_failure_classification);
+        }
         json += ",\"resource_cap\":";
         if (refinement.direct_certification_resource_cap.empty()) {
             json += "null";
@@ -1806,6 +1841,32 @@ std::string serialize_solver_telemetry(
         json += ",\"peak_owned_bytes\":" +
                 std::to_string(
                     refinement.direct_certification_peak_owned_bytes);
+        json += ",\"route_defaults\":{\"paired_default_only\":" +
+                std::string(bool_json(
+                    refinement.direct_paired_default_only));
+        json += ",\"certification\":{\"mode\":";
+        if (refinement.direct_certification_route_default_mode.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json,
+                refinement.direct_certification_route_default_mode);
+        }
+        json += ",\"edges\":" +
+                std::to_string(
+                    refinement
+                        .direct_certification_route_default_edges) +
+                "},\"product\":{\"mode\":";
+        if (refinement.direct_product_route_default_mode.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json, refinement.direct_product_route_default_mode);
+        }
+        json += ",\"edges\":" +
+                std::to_string(
+                    refinement.direct_product_route_default_edges) +
+                "}}";
         json += ",\"executable\":" +
                 std::string(bool_json(
                     refinement.direct_certification_executable));
@@ -4595,6 +4656,9 @@ std::string serialize_solver_telemetry(
         json += ",\"max_condition_bytes\":null";
         json += ",\"exact_state_fallbacks\":null";
         json += ",\"junk_predicates\":null";
+        json += ",\"policy_route_defaults\":null";
+        json += ",\"certification_policy_route_defaults\":null";
+        json += ",\"paired_default_only\":null";
         json += ",\"peak_owned_bytes\":null";
         json += ",\"previously_accounted_peak_owned_bytes\":null";
         json += ",\"complete_peak_owned_bytes\":null";
@@ -4618,6 +4682,43 @@ std::string serialize_solver_telemetry(
                 std::to_string(compilation->exact_state_fallbacks);
         json += ",\"junk_predicates\":" +
                 std::to_string(compilation->junk_predicates);
+        json += ",\"policy_route_defaults\":{\"mode\":";
+        if (compilation->policy_route_default_mode.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json, compilation->policy_route_default_mode);
+        }
+        json += ",\"edges\":" +
+                std::to_string(
+                    compilation->policy_route_default_edges);
+        json += ",\"restart\":" +
+                std::to_string(
+                    compilation->policy_route_restart_default_edges);
+        json += ",\"offpolicy\":" +
+                std::to_string(
+                    compilation->policy_route_offpolicy_default_edges) +
+                "}";
+        json += ",\"certification_policy_route_defaults\":{";
+        json += "\"mode\":";
+        if (compilation->certification_policy_route_default_mode.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json,
+                compilation->certification_policy_route_default_mode);
+        }
+        json += ",\"edges\":" +
+                std::to_string(
+                    compilation
+                        ->certification_policy_route_default_edges);
+        json += ",\"offpolicy\":" +
+                std::to_string(
+                    compilation
+                        ->certification_policy_route_offpolicy_default_edges) +
+                "}";
+        json += ",\"paired_default_only\":";
+        json += compilation->paired_default_only ? "true" : "false";
         json += ",\"peak_owned_bytes\":" +
                 std::to_string(compilation->peak_owned_bytes);
         json += ",\"previously_accounted_peak_owned_bytes\":" +

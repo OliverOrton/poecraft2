@@ -209,6 +209,12 @@ struct PolicyObservationFixedPoint {
     bool round_cap = false;
     std::string failure_reason;
     std::uint32_t rounds = 0;
+    std::uint32_t propagation_groups = 0;
+    std::uint64_t unique_canonical_requirements = 0;
+    std::uint64_t required_payload_p50_bytes = 0;
+    std::uint64_t required_payload_p95_bytes = 0;
+    std::uint64_t required_payload_max_bytes = 0;
+    std::uint64_t estimated_peak_owned_bytes = 0;
     std::uint64_t collapse_events = 0;
     RefinementFeatureMask collapse_destroyed_feature_mask = 0;
     RefinementFeatureMask collapse_preserved_feature_mask = 0;

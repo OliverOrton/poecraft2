@@ -1799,6 +1799,23 @@ pc_result pc_solver_compile_strategy(
                 telemetry.exact_state_fallbacks =
                     refined.exact_state_fallbacks;
                 telemetry.junk_predicates = refined.junk_predicates;
+                telemetry.policy_route_default_edges =
+                    refined.policy_route_default_edges;
+                telemetry.policy_route_restart_default_edges =
+                    refined.policy_route_restart_default_edges;
+                telemetry.policy_route_offpolicy_default_edges =
+                    refined.policy_route_offpolicy_default_edges;
+                telemetry.policy_route_default_mode =
+                    refined.policy_route_default_mode;
+                telemetry.certification_policy_route_default_edges =
+                    refined.certification_policy_route_default_edges;
+                telemetry.certification_policy_route_offpolicy_default_edges =
+                    refined
+                        .certification_policy_route_offpolicy_default_edges;
+                telemetry.certification_policy_route_default_mode =
+                    refined.certification_policy_route_default_mode;
+                telemetry.paired_default_only =
+                    refined.paired_default_only;
                 telemetry.previously_accounted_peak_owned_bytes = std::max(
                     refined.previously_accounted_peak_owned_bytes,
                     static_cast<std::uint64_t>(

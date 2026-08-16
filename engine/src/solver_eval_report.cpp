@@ -358,6 +358,32 @@ std::string serialize_strategy_eval(const StrategyEvalResult& result) {
     }
     out += ']';
 
+    const auto& observation = result.observation_propagation;
+    out += ",\"observation_propagation\":{\"nodes\":" +
+           std::to_string(observation.nodes);
+    out += ",\"groups\":" + std::to_string(observation.groups);
+    out += ",\"rounds\":" + std::to_string(observation.rounds);
+    out += ",\"unique_canonical_requirements\":" +
+           std::to_string(observation.unique_canonical_requirements);
+    out += ",\"direct_payload_bytes\":{\"p50\":" +
+           std::to_string(observation.direct_payload_p50_bytes) +
+           ",\"p95\":" +
+           std::to_string(observation.direct_payload_p95_bytes) +
+           ",\"max\":" +
+           std::to_string(observation.direct_payload_max_bytes) + "}";
+    out += ",\"propagated_payload_bytes\":{\"p50\":" +
+           std::to_string(observation.propagated_payload_p50_bytes) +
+           ",\"p95\":" +
+           std::to_string(observation.propagated_payload_p95_bytes) +
+           ",\"max\":" +
+           std::to_string(observation.propagated_payload_max_bytes) + "}";
+    out += ",\"projected_peak_bytes\":" +
+           std::to_string(observation.projected_peak_bytes);
+    out += ",\"actual_peak_bytes\":" +
+           std::to_string(observation.actual_peak_bytes);
+    out += ",\"retained_bytes\":" +
+           std::to_string(observation.retained_bytes) + "}";
+
     out += ",\"failures_by_node\":[";
     for (std::size_t i = 0; i < result.failures_by_node.size(); ++i) {
         if (i != 0) out += ',';
@@ -556,6 +582,9 @@ std::string serialize_strategy_eval(const StrategyEvalResult& result) {
            std::to_string(result.owned_bytes_estimate) +
            ",\"peak_owned_bytes_estimate\":" +
            std::to_string(result.peak_owned_bytes_estimate) +
+           ",\"retained_output_owned_bytes_estimate\":" +
+           std::to_string(
+               result.retained_output_owned_bytes_estimate) +
            ",\"max_owned_bytes\":" +
            std::to_string(result.max_owned_bytes) +
            ",\"max_output_json_bytes\":" +

@@ -227,6 +227,7 @@ struct PolicyRefinementTelemetry {
     std::uint64_t core_policy_owned_bytes = 0;
     std::string direct_certification_status = "not_run";
     std::string direct_certification_failure_reason;
+    std::string direct_certification_failure_classification;
     std::string direct_certification_resource_cap;
     double direct_certification_solver_cost =
         std::numeric_limits<double>::infinity();
@@ -237,6 +238,11 @@ struct PolicyRefinementTelemetry {
     std::uint64_t direct_certification_reforge_work = 0;
     std::uint64_t direct_certification_artifact_bytes = 0;
     std::uint64_t direct_certification_peak_owned_bytes = 0;
+    std::uint64_t direct_certification_route_default_edges = 0;
+    std::uint64_t direct_product_route_default_edges = 0;
+    std::string direct_certification_route_default_mode;
+    std::string direct_product_route_default_mode;
+    bool direct_paired_default_only = false;
     bool direct_certification_executable = false;
     bool direct_certification_proper = false;
     bool direct_certification_cost_complete = false;
@@ -763,6 +769,7 @@ struct PrimitiveRenewalWitness {
  */
 struct RetainedCompiledPolicyArtifact {
     std::string strategy_json;
+    std::string certification_strategy_json;
     std::uint32_t working_states = 0;
     std::uint32_t behavioral_classes = 0;
     std::uint32_t policy_regions = 0;
@@ -772,6 +779,14 @@ struct RetainedCompiledPolicyArtifact {
     std::uint64_t max_condition_bytes = 0;
     std::uint64_t exact_state_fallbacks = 0;
     std::uint64_t junk_predicates = 0;
+    std::uint64_t policy_route_default_edges = 0;
+    std::uint64_t policy_route_restart_default_edges = 0;
+    std::uint64_t policy_route_offpolicy_default_edges = 0;
+    std::string policy_route_default_mode;
+    std::uint64_t certification_policy_route_default_edges = 0;
+    std::uint64_t certification_policy_route_offpolicy_default_edges = 0;
+    std::string certification_policy_route_default_mode;
+    bool paired_default_only = false;
     std::uint64_t peak_owned_bytes = 0;
     std::uint64_t previously_accounted_peak_owned_bytes = 0;
     std::uint64_t complete_peak_owned_bytes = 0;
@@ -988,6 +1003,17 @@ struct PolicyCompilationTelemetry {
     std::uint64_t max_condition_bytes = 0;
     std::uint64_t exact_state_fallbacks = 0;
     std::uint64_t junk_predicates = 0;
+    /* Compiler-designated policy-router defaults only. Product graphs may
+     * route these misses through Restart; certification graphs must fail
+     * closed through the off-policy terminal. */
+    std::uint64_t policy_route_default_edges = 0;
+    std::uint64_t policy_route_restart_default_edges = 0;
+    std::uint64_t policy_route_offpolicy_default_edges = 0;
+    std::string policy_route_default_mode;
+    std::uint64_t certification_policy_route_default_edges = 0;
+    std::uint64_t certification_policy_route_offpolicy_default_edges = 0;
+    std::string certification_policy_route_default_mode;
+    bool paired_default_only = false;
     /* Peak compiler-owned buffers, excluding the retained CalcContext and
      * SolveResult charged by the caller. Structured refinement includes its
      * parent/member condition programs as well as the growing JSON document. */

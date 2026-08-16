@@ -231,6 +231,8 @@ PolicyObservationFixedPoint propagate_policy_observations(
             propagation_groups[group->second].push_back(index);
         }
     }
+    result.propagation_groups = static_cast<std::uint32_t>(
+        propagation_groups.size());
     for (const PolicyObservationNode& node : nodes) {
         const std::optional<SelectedAction>& selected =
             selected_action(node);
@@ -269,6 +271,30 @@ PolicyObservationFixedPoint propagate_policy_observations(
                 nodes[index].direct_observes);
         }
     }
+    const auto requirement_payload_bytes =
+        [](const ObservationRequirement& requirement) {
+            std::uint64_t bytes =
+                requirement.modifier_tag_ids.capacity() *
+                sizeof(std::uint32_t);
+            bytes += requirement.affix_observations.capacity() *
+                sizeof(RefinementAffixObservation);
+            for (const RefinementAffixObservation& observation :
+                 requirement.affix_observations) {
+                bytes += observation.selector.required_tag_ids.capacity() *
+                    sizeof(std::uint32_t);
+            }
+            return bytes;
+        };
+    const auto requirements_bytes =
+        [&](const std::vector<ObservationRequirement>& values) {
+            std::uint64_t bytes =
+                values.capacity() * sizeof(ObservationRequirement);
+            for (const ObservationRequirement& requirement : values) {
+                bytes += requirement_payload_bytes(requirement);
+            }
+            return bytes;
+        };
+    result.estimated_peak_owned_bytes = requirements_bytes(required);
     for (;;) {
         if (result.rounds >= max_rounds) {
             result.round_cap = true;
@@ -280,6 +306,9 @@ PolicyObservationFixedPoint propagate_policy_observations(
         ++result.rounds;
         bool changed = false;
         std::vector<ObservationRequirement> next = required;
+        result.estimated_peak_owned_bytes = std::max(
+            result.estimated_peak_owned_bytes,
+            requirements_bytes(required) + requirements_bytes(next));
         for (const std::vector<std::uint32_t>& group :
              propagation_groups) {
             const std::uint32_t source = group.front();
@@ -319,7 +348,19 @@ PolicyObservationFixedPoint propagate_policy_observations(
         if (!changed) break;
     }
     result.assignments.reserve(nodes.size());
+    std::uint64_t payload_max = 0;
     for (std::uint32_t index = 0; index < nodes.size(); ++index) {
+        const std::uint64_t payload =
+            requirement_payload_bytes(required[index]);
+        payload_max = std::max(payload_max, payload);
+        bool unique = true;
+        for (std::uint32_t prior = 0; prior < index; ++prior) {
+            if (required[prior] == required[index]) {
+                unique = false;
+                break;
+            }
+        }
+        if (unique) ++result.unique_canonical_requirements;
         result.assignments.push_back(
             {nodes[index].state_id, required[index]});
         const std::optional<SelectedAction>& selected =
@@ -354,6 +395,51 @@ PolicyObservationFixedPoint propagate_policy_observations(
             }
         }
     }
+    const auto percentile = [&](const std::uint32_t numerator) {
+        if (required.empty()) return std::uint64_t{0};
+        const std::size_t rank = std::max<std::size_t>(
+            1, (required.size() * numerator + 99) / 100);
+        std::uint64_t selected = 0;
+        bool has_selected = false;
+        std::size_t cumulative = 0;
+        while (cumulative < rank) {
+            std::uint64_t next =
+                std::numeric_limits<std::uint64_t>::max();
+            for (const ObservationRequirement& requirement : required) {
+                const std::uint64_t payload =
+                    requirement_payload_bytes(requirement);
+                if ((!has_selected || payload > selected) &&
+                    payload < next) {
+                    next = payload;
+                }
+            }
+            if (next == std::numeric_limits<std::uint64_t>::max()) {
+                return selected;
+            }
+            selected = next;
+            has_selected = true;
+            cumulative = 0;
+            for (const ObservationRequirement& requirement : required) {
+                if (requirement_payload_bytes(requirement) <= selected) {
+                    ++cumulative;
+                }
+            }
+        }
+        return selected;
+    };
+    result.required_payload_p50_bytes = percentile(50);
+    result.required_payload_p95_bytes = percentile(95);
+    result.required_payload_max_bytes = payload_max;
+    std::uint64_t assignment_bytes = result.assignments.capacity() *
+        sizeof(PolicyObservationAssignment);
+    for (const PolicyObservationAssignment& assignment :
+         result.assignments) {
+        assignment_bytes += requirement_payload_bytes(
+            assignment.required);
+    }
+    result.estimated_peak_owned_bytes = std::max(
+        result.estimated_peak_owned_bytes,
+        requirements_bytes(required) + assignment_bytes);
     result.complete = true;
     return result;
 }

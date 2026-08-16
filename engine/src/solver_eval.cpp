@@ -807,9 +807,12 @@ struct StrategyEvalWork::Impl {
         }
         const std::size_t node_count = strategy->nodes.size();
         check_owned_cap();
+        const auto observation_started =
+            std::chrono::steady_clock::now();
         node_observation_requirements =
             derive_node_observation_requirements(
                 *strategy, model, options.max_sweeps,
+                &output.observation_propagation,
                 [&](const std::uint64_t transient_bytes,
                     const char* stage,
                     const std::uint64_t units,
@@ -819,6 +822,12 @@ struct StrategyEvalWork::Impl {
                     memory_probe_unit_bytes = unit_bytes;
                     check_owned_cap(transient_bytes);
                 });
+        output.observation_propagation.duration_ns =
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() -
+                    observation_started)
+                    .count());
         memory_probe_stage = "steady_state";
         memory_probe_units = 0;
         memory_probe_unit_bytes = 0;
@@ -5553,6 +5562,8 @@ StrategyEvalResult StrategyEvalWork::take_result() {
     if (impl_->phase != StrategyEvalPhase::Done) {
         throw std::logic_error("strategy evaluation is not finished");
     }
+    impl_->output.retained_output_owned_bytes_estimate =
+        impl_->output_owned_bytes();
     return std::move(impl_->output);
 }
 
@@ -5584,6 +5595,8 @@ const StrategyEvalResult& StrategyEvalWork::diagnostic_result() {
     output.refined_pairs = output.raw_pairs_discovered;
     output.owned_bytes_estimate =
         impl_->fast_estimated_owned_bytes();
+    output.retained_output_owned_bytes_estimate =
+        impl_->output_owned_bytes();
     output.peak_owned_bytes_estimate = std::max(
         impl_->peak_owned_bytes_value,
         output.owned_bytes_estimate);

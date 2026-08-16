@@ -343,6 +343,9 @@ void run_direct_certification_contract_tests() {
     PC_CHECK(mismatch.executable);
     PC_CHECK(mismatch.proper);
     PC_CHECK(!mismatch.cost_reconciled);
+    PC_CHECK(
+        mismatch.failure_classification ==
+        "solver_exact_cost_mismatch");
 
     const refinement::CompiledPolicyAssertion off_policy =
         evaluated(10.0, 10.0, 0.9, 0.1);
@@ -353,6 +356,29 @@ void run_direct_certification_contract_tests() {
     PC_CHECK(!off_policy.proper);
     PC_CHECK(!off_policy.zero_off_policy);
     PC_CHECK(off_policy.off_policy_probability > 0.0);
+    PC_CHECK(
+        off_policy.failure_classification ==
+        "route_coverage_failure");
+
+    refinement::CompiledPolicyAssertion observation_cap;
+    observation_cap.status =
+        refinement::CompiledPolicyAssertionStatus::ResourceCap;
+    observation_cap.resource_cap = "max_solver_owned_bytes";
+    observation_cap.strategy_json = "{}";
+    observation_cap.failure_reason =
+        "probe=observation_fixed_point_dense_nodes";
+    PC_CHECK(
+        refinement::compiled_policy_failure_classification(
+            observation_cap) ==
+        "exact_eval_observation_memory_cap");
+
+    refinement::CompiledPolicyAssertion pair_cap = observation_cap;
+    pair_cap.failure_reason =
+        "pairs=8395474, path=pre_component, "
+        "observation_requirements=594480";
+    PC_CHECK(
+        refinement::compiled_policy_failure_classification(pair_cap) ==
+        "exact_eval_pair_discovery_memory_cap");
 }
 
 void run_shared_sparse_policy_kernel_tests() {
@@ -1262,6 +1288,16 @@ void run_alt_spam_tests() {
         compilation_sample.max_condition_bytes = 272;
         compilation_sample.exact_state_fallbacks = 2;
         compilation_sample.junk_predicates = 273;
+        compilation_sample.policy_route_default_edges = 5;
+        compilation_sample.policy_route_restart_default_edges = 5;
+        compilation_sample.policy_route_default_mode =
+            "product_safe_restart";
+        compilation_sample.certification_policy_route_default_edges = 5;
+        compilation_sample
+            .certification_policy_route_offpolicy_default_edges = 5;
+        compilation_sample.certification_policy_route_default_mode =
+            "certification_fail_closed";
+        compilation_sample.paired_default_only = true;
         compilation_sample.peak_owned_bytes = 280;
         compilation_sample.previously_accounted_peak_owned_bytes = 28;
         compilation_sample.complete_peak_owned_bytes = 280;
@@ -1285,6 +1321,7 @@ void run_alt_spam_tests() {
                      "\"direct_certification\":{"
                      "\"status\":\"cost_mismatch\","
                      "\"failure_reason\":\"cost mismatch\","
+                     "\"failure_classification\":null,"
                      "\"resource_cap\":null,\"solver_cost\":30,"
                      "\"exact_cost\":31,\"offpolicy_probability\":0") !=
                  std::string::npos);
@@ -1406,6 +1443,13 @@ void run_alt_spam_tests() {
                      "\"max_condition_bytes\":272,"
                      "\"exact_state_fallbacks\":2,"
                      "\"junk_predicates\":273,"
+                     "\"policy_route_defaults\":{"
+                     "\"mode\":\"product_safe_restart\","
+                     "\"edges\":5,\"restart\":5,\"offpolicy\":0},"
+                     "\"certification_policy_route_defaults\":{"
+                     "\"mode\":\"certification_fail_closed\","
+                     "\"edges\":5,\"offpolicy\":5},"
+                     "\"paired_default_only\":true,"
                      "\"peak_owned_bytes\":280,"
                      "\"previously_accounted_peak_owned_bytes\":28,"
                      "\"complete_peak_owned_bytes\":280,"

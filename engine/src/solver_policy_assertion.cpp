@@ -7,6 +7,72 @@ namespace poecraft {
 namespace solver {
 namespace refinement {
 
+std::string compiled_policy_failure_classification(
+        const CompiledPolicyAssertion& result) {
+    if (result.status == CompiledPolicyAssertionStatus::Complete) {
+        return {};
+    }
+    if (result.status == CompiledPolicyAssertionStatus::NoPolicy) {
+        return "policy_not_materializable";
+    }
+    if (result.status == CompiledPolicyAssertionStatus::IncompleteCost ||
+        result.failure_reason.find("price") != std::string::npos) {
+        return "missing_price";
+    }
+    if (result.failure_reason.find("unsupported") != std::string::npos) {
+        return "unsupported_action";
+    }
+    if (result.status == CompiledPolicyAssertionStatus::ImproperPolicy &&
+        (result.off_policy_probability > kOffPolicyTolerance ||
+         result.evaluation.no_matching_edge_probability >
+             kOffPolicyTolerance ||
+         result.evaluation.failure_probability >
+             kOffPolicyTolerance)) {
+        return "route_coverage_failure";
+    }
+    if (result.status == CompiledPolicyAssertionStatus::ResourceCap) {
+        if (result.resource_cap == "max_strategy_json_bytes" ||
+            result.resource_cap == "max_compiled_nodes" ||
+            result.resource_cap == "max_compiled_edges") {
+            return "strategy_compile_size_cap";
+        }
+        if (result.failure_reason.find("probe=observation_") !=
+            std::string::npos) {
+            return "exact_eval_observation_memory_cap";
+        }
+        if (result.failure_reason.find("pairs=") !=
+                std::string::npos ||
+            result.failure_reason.find("path=pre_component") !=
+                std::string::npos) {
+            return "exact_eval_pair_discovery_memory_cap";
+        }
+        if (result.failure_reason.find("component") !=
+                std::string::npos ||
+            result.failure_reason.find("sparse_") !=
+                std::string::npos) {
+            return "exact_eval_component_memory_cap";
+        }
+        if (result.strategy_json.empty()) {
+            return "strategy_compile_memory_cap";
+        }
+        return "exact_eval_component_memory_cap";
+    }
+    if (result.failure_reason.find("max_sweeps") !=
+            std::string::npos ||
+        result.failure_reason.find("round") != std::string::npos ||
+        result.failure_reason.find("time") != std::string::npos) {
+        return "exact_eval_time_or_round_cap";
+    }
+    if (result.status ==
+        CompiledPolicyAssertionStatus::CompilationFailure) {
+        return "policy_not_materializable";
+    }
+    if (result.status == CompiledPolicyAssertionStatus::CostMismatch) {
+        return "solver_exact_cost_mismatch";
+    }
+    return "policy_not_materializable";
+}
+
 void finalize_compiled_policy_assertion(
         CompiledPolicyAssertion& result) {
     result.off_policy_probability =
@@ -82,6 +148,8 @@ void finalize_compiled_policy_assertion(
         result.executable = true;
         result.failure_reason.clear();
     }
+    result.failure_classification =
+        compiled_policy_failure_classification(result);
 }
 
 static CompiledPolicyAssertion assert_compiled_policy_exact_reference(
@@ -179,7 +247,8 @@ static CompiledPolicyAssertion assert_compiled_policy_exact_reference(
             result.strategy_json = compile_policy_strategy_json(
                 coarse, solved, strategy_name, &result.compilation,
                 compilation_json_limit, refined_routing,
-                compilation_memory);
+                compilation_memory,
+                PolicyRouteDefaultMode::CertificationFailClosed);
             record_compilation_time();
             {
                 std::uint64_t live =

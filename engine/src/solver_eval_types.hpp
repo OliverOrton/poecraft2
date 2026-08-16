@@ -203,6 +203,9 @@ struct StrategyEvalResult {
     double max_mass_conservation_error = 0.0;
     std::uint64_t owned_bytes_estimate = 0;
     std::uint64_t peak_owned_bytes_estimate = 0;
+    /* Owned bytes retained by this result after StrategyEvalWork releases
+     * its model, graph, and solve scratch. */
+    std::uint64_t retained_output_owned_bytes_estimate = 0;
     std::uint64_t max_owned_bytes = 0;
     std::uint64_t max_output_json_bytes = 0;
     std::uint64_t reforge_work = 0;
@@ -222,6 +225,22 @@ struct StrategyEvalResult {
     std::uint32_t refined_pairs = 0;
     std::uint32_t pair_refinement_rounds = 0;
     std::uint64_t pair_lumpability_checks = 0;
+    struct ObservationPropagationTelemetry {
+        std::uint32_t nodes = 0;
+        std::uint32_t groups = 0;
+        std::uint32_t rounds = 0;
+        std::uint64_t unique_canonical_requirements = 0;
+        std::uint64_t direct_payload_p50_bytes = 0;
+        std::uint64_t direct_payload_p95_bytes = 0;
+        std::uint64_t direct_payload_max_bytes = 0;
+        std::uint64_t propagated_payload_p50_bytes = 0;
+        std::uint64_t propagated_payload_p95_bytes = 0;
+        std::uint64_t propagated_payload_max_bytes = 0;
+        std::uint64_t projected_peak_bytes = 0;
+        std::uint64_t actual_peak_bytes = 0;
+        std::uint64_t retained_bytes = 0;
+        std::uint64_t duration_ns = 0;
+    } observation_propagation;
 };
 
 class StrategyEvalUnsupported : public std::runtime_error {

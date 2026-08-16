@@ -19,7 +19,8 @@ std::string compile_policy_strategy_json(
     PolicyCompilationTelemetry* telemetry,
     const std::uint64_t max_strategy_json_bytes,
     const refinement::RefinedPolicyCompileRouting* refined_routing,
-    const std::uint64_t max_compiler_owned_bytes) {
+    const std::uint64_t max_compiler_owned_bytes,
+    const PolicyRouteDefaultMode route_default_mode) {
     const std::uint64_t strategy_json_limit = std::min(
         result.options.max_strategy_json_bytes,
         max_strategy_json_bytes);
@@ -63,7 +64,18 @@ std::string compile_policy_strategy_json(
                 std::max(previously_accounted, complete));
             publish_and_enforce_compiler_owned();
         };
-    if (!result.refined_policy_artifact.strategy_json.empty()) {
+    const char* const route_default_mode_name =
+        route_default_mode ==
+                PolicyRouteDefaultMode::CertificationFailClosed
+            ? "certification_fail_closed"
+            : "product_safe_restart";
+    if (telemetry != nullptr) {
+        telemetry->policy_route_default_mode =
+            route_default_mode_name;
+    }
+    if (!result.refined_policy_artifact.strategy_json.empty() &&
+        result.refined_policy_artifact.policy_route_default_mode ==
+            route_default_mode_name) {
         if (result.refined_policy_artifact.strategy_json.size() >
             strategy_json_limit) {
             if (telemetry != nullptr) {
@@ -91,6 +103,28 @@ std::string compile_policy_strategy_json(
                 result.refined_policy_artifact.exact_state_fallbacks;
             telemetry->junk_predicates =
                 result.refined_policy_artifact.junk_predicates;
+            telemetry->policy_route_default_edges =
+                result.refined_policy_artifact.policy_route_default_edges;
+            telemetry->policy_route_restart_default_edges =
+                result.refined_policy_artifact
+                    .policy_route_restart_default_edges;
+            telemetry->policy_route_offpolicy_default_edges =
+                result.refined_policy_artifact
+                    .policy_route_offpolicy_default_edges;
+            telemetry->policy_route_default_mode =
+                result.refined_policy_artifact
+                    .policy_route_default_mode;
+            telemetry->certification_policy_route_default_edges =
+                result.refined_policy_artifact
+                    .certification_policy_route_default_edges;
+            telemetry->certification_policy_route_offpolicy_default_edges =
+                result.refined_policy_artifact
+                    .certification_policy_route_offpolicy_default_edges;
+            telemetry->certification_policy_route_default_mode =
+                result.refined_policy_artifact
+                    .certification_policy_route_default_mode;
+            telemetry->paired_default_only =
+                result.refined_policy_artifact.paired_default_only;
         }
         const std::uint64_t previously_accounted = std::max(
             result.refined_policy_artifact
@@ -1678,7 +1712,10 @@ std::string compile_policy_strategy_json(
                   ? "bounded_default_restart"
                   : "product_fracture_restart";
     const std::string policy_route_default_node =
-        strict_policy_route && restart_region_leader != kNoId
+        route_default_mode ==
+                PolicyRouteDefaultMode::CertificationFailClosed
+            ? "offpolicy"
+        : strict_policy_route && restart_region_leader != kNoId
             ? state_node(restart_region_leader)
             : bounded_policy ? "bounded_default_restart" : "offpolicy";
     std::vector<std::map<std::uint32_t, std::string>>
@@ -2802,6 +2839,18 @@ std::string compile_policy_strategy_json(
         observe_complete_compiler_owned(
             owned, audited_compiler_owned_bytes(&json));
     };
+    const auto policy_route_default_edge =
+        [&](const std::string& from, const int priority) {
+            edge(
+                from, policy_route_default_node, priority, "", true);
+            if (telemetry == nullptr) return;
+            ++telemetry->policy_route_default_edges;
+            if (policy_route_default_node == "offpolicy") {
+                ++telemetry->policy_route_offpolicy_default_edges;
+            } else {
+                ++telemetry->policy_route_restart_default_edges;
+            }
+        };
 
     edge("start", root_router_id, 0, "", true);
 
@@ -2900,9 +2949,7 @@ std::string compile_policy_strategy_json(
                     router_id, route.first, route_priority++,
                     route.second, false);
             }
-            edge(
-                router_id, policy_route_default_node,
-                route_priority, "", true);
+            policy_route_default_edge(router_id, route_priority);
         }
     } else if (structured_refined_route) {
         std::set<std::pair<std::string, std::string>> emitted_routes;
@@ -2927,9 +2974,8 @@ std::string compile_policy_strategy_json(
                 state_conditions.at(leader), false);
         }
     }
-    edge(
-        root_router_id, policy_route_default_node,
-        root_default_priority, "", true);
+    policy_route_default_edge(
+        root_router_id, root_default_priority);
     for (const PolicyRouteNode& route : policy_route_nodes) {
         int priority = 0;
         for (const PolicyRouteEdge& route_edge : route.edges) {
@@ -2937,7 +2983,7 @@ std::string compile_policy_strategy_json(
                 route.id, route_edge.to, priority++,
                 route_edge.condition, false);
         }
-        edge(route.id, policy_route_default_node, priority, "", true);
+        policy_route_default_edge(route.id, priority);
     }
     if (bounded_default_restart_action != kNoId) {
         edge("bounded_default_restart", root_router_id, 0, "", true);

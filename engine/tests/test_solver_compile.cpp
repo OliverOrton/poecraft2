@@ -1113,6 +1113,57 @@ void run_synthetic_gate() {
                     expected, mean);
         PC_CHECK(std::fabs(mean - expected) < 0.4);
         PC_CHECK(std::fabs(expected - (2.0 - p) / p) < 1e-6);
+
+        SolveResult bounded = solved;
+        bounded.policy_status = SolvePolicyStatus::BoundedFeasible;
+        bounded.refined_policy_artifact = {};
+        PolicyCompilationTelemetry product_telemetry;
+        const std::string product = compile_policy_strategy_json(
+            calc, bounded, "bounded pair", &product_telemetry);
+        PolicyCompilationTelemetry certification_telemetry;
+        const std::string certification = compile_policy_strategy_json(
+            calc, bounded, "bounded pair",
+            &certification_telemetry,
+            std::numeric_limits<std::uint64_t>::max(), nullptr,
+            std::numeric_limits<std::uint64_t>::max(),
+            PolicyRouteDefaultMode::CertificationFailClosed);
+        PC_CHECK(
+            product_telemetry.policy_route_default_mode ==
+            "product_safe_restart");
+        PC_CHECK(product_telemetry.policy_route_default_edges > 0);
+        PC_CHECK(
+            product_telemetry.policy_route_restart_default_edges ==
+            product_telemetry.policy_route_default_edges);
+        PC_CHECK(
+            certification_telemetry.policy_route_default_mode ==
+            "certification_fail_closed");
+        PC_CHECK(
+            certification_telemetry.policy_route_offpolicy_default_edges ==
+            certification_telemetry.policy_route_default_edges);
+        PC_CHECK(
+            product_telemetry.policy_route_default_edges ==
+            certification_telemetry.policy_route_default_edges);
+        PC_CHECK(product_telemetry.nodes == certification_telemetry.nodes);
+        PC_CHECK(product_telemetry.edges == certification_telemetry.edges);
+        std::string normalized_product = product;
+        const std::string product_target =
+            "\"to\":\"bounded_default_restart\"";
+        const std::string certification_target =
+            "\"to\":\"offpolicy\"";
+        std::size_t replaced_defaults = 0;
+        std::size_t offset = 0;
+        while ((offset = normalized_product.find(
+                    product_target, offset)) != std::string::npos) {
+            normalized_product.replace(
+                offset, product_target.size(), certification_target);
+            offset += certification_target.size();
+            ++replaced_defaults;
+        }
+        PC_CHECK(
+            replaced_defaults ==
+            product_telemetry.policy_route_default_edges);
+        PC_CHECK(normalized_product == certification);
+        PC_CHECK(product != certification);
     }
 
     /* Flagged states compile to exact item-flag guards. A corrupted start

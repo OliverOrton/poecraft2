@@ -418,6 +418,7 @@ derive_node_observation_requirements(
     const StrategyImpl& strategy,
     const EvalModel& model,
     const std::uint32_t max_rounds,
+    StrategyEvalResult::ObservationPropagationTelemetry* telemetry,
     MemoryCheck&& check_memory) {
     const std::size_t node_count = strategy.nodes.size();
     std::vector<ObservationRequirement> direct(node_count);
@@ -438,6 +439,49 @@ derive_node_observation_requirements(
         direct_bytes = capped_add(
             direct_bytes,
             observation_requirement_payload_bytes(requirement));
+    }
+    if (telemetry != nullptr) {
+        telemetry->nodes = static_cast<std::uint32_t>(node_count);
+        const auto percentile = [&](const std::uint32_t numerator) {
+            if (direct.empty()) return std::uint64_t{0};
+            const std::size_t rank = std::max<std::size_t>(
+                1, (direct.size() * numerator + 99) / 100);
+            std::uint64_t selected = 0;
+            bool has_selected = false;
+            std::size_t cumulative = 0;
+            while (cumulative < rank) {
+                std::uint64_t next =
+                    std::numeric_limits<std::uint64_t>::max();
+                for (const ObservationRequirement& requirement : direct) {
+                    const std::uint64_t payload =
+                        observation_requirement_payload_bytes(requirement);
+                    if ((!has_selected || payload > selected) &&
+                        payload < next) {
+                        next = payload;
+                    }
+                }
+                if (next == std::numeric_limits<std::uint64_t>::max()) {
+                    return selected;
+                }
+                selected = next;
+                has_selected = true;
+                cumulative = 0;
+                for (const ObservationRequirement& requirement : direct) {
+                    if (observation_requirement_payload_bytes(requirement) <=
+                        selected) {
+                        ++cumulative;
+                    }
+                }
+            }
+            return selected;
+        };
+        telemetry->direct_payload_p50_bytes = percentile(50);
+        telemetry->direct_payload_p95_bytes = percentile(95);
+        for (const ObservationRequirement& requirement : direct) {
+            telemetry->direct_payload_max_bytes = std::max(
+                telemetry->direct_payload_max_bytes,
+                observation_requirement_payload_bytes(requirement));
+        }
     }
     check_memory(
         direct_bytes, "observation_direct_requirements",
@@ -491,7 +535,6 @@ derive_node_observation_requirements(
     std::uint64_t nodes_bytes = capped_product(
         nodes.capacity(), sizeof(refinement::PolicyObservationNode));
     ObservationRequirement union_requirement;
-    std::uint64_t requirement_vocabulary_bytes = 0;
     for (const refinement::PolicyObservationNode& node : nodes) {
         nodes_bytes = capped_add(
             nodes_bytes,
@@ -512,10 +555,6 @@ derive_node_observation_requirements(
                 nodes_bytes,
                 refinement_contract_payload_bytes(
                     node.selected_action->contract));
-            requirement_vocabulary_bytes = capped_add(
-                requirement_vocabulary_bytes,
-                refinement_contract_payload_bytes(
-                    node.selected_action->contract));
             union_requirement =
                 refinement::merge_observation_requirements(
                     std::move(union_requirement),
@@ -528,26 +567,74 @@ derive_node_observation_requirements(
         }
     }
     std::vector<ObservationRequirement>().swap(direct);
+    /* Selected-action contracts remain owned once by `nodes_bytes`. The
+     * propagated vector stores ObservationRequirement payloads only; charging
+     * the sum of every contract vocabulary inside every node requirement was
+     * an N-by-vocabulary phantom allocation. */
+    /* A canonical requirement's logical content is bounded by the union,
+     * but repeated merge/canonicalize cycles may retain geometric-growth
+     * slack in both outer and selector vectors. Four union payloads plus the
+     * larger dense wrapper conservatively cover the supported vector growth;
+     * the actual retained peak is checked again after the fixed point. */
     const std::uint64_t one_requirement_bytes = capped_add(
-        capped_add(
+        std::max(
             sizeof(ObservationRequirement),
-            observation_requirement_payload_bytes(union_requirement)),
-        requirement_vocabulary_bytes);
-    /* propagate_policy_observations owns the graph, its ordered state index,
-     * two fixed-point vectors, and finally one assignment vector. Every
-     * propagated requirement is a subset of this deterministic union. */
-    std::uint64_t propagation_peak = nodes_bytes;
-    propagation_peak = capped_add(
-        propagation_peak,
+            sizeof(refinement::PolicyObservationAssignment)),
+        capped_product(
+            observation_requirement_payload_bytes(union_requirement), 4));
+    /* The fixed point owns the graph, ordered state index and grouping
+     * vectors. Group construction also owns one signature-map entry per node
+     * in the conservative case. During propagation/publication it owns two
+     * requirement vectors plus bounded merge scratch, never three dense
+     * vectors. Every propagated requirement is a subset of the deterministic
+     * union. */
+    const std::uint64_t index_bytes = capped_product(
+        node_count,
+        sizeof(std::pair<const std::uint32_t, std::uint32_t>) +
+            3 * sizeof(void*));
+    const std::uint64_t group_bytes = capped_add(
+        capped_product(
+            capped_product(node_count, 3),
+            sizeof(std::vector<std::uint32_t>)),
+        capped_product(
+            capped_product(node_count, 3),
+            sizeof(std::uint32_t)));
+    std::uint64_t largest_group_signature_tokens =
+        6 + union_requirement.modifier_tag_ids.size();
+    for (const RefinementAffixObservation& observation :
+         union_requirement.affix_observations) {
+        largest_group_signature_tokens = capped_add(
+            largest_group_signature_tokens,
+            6 + observation.selector.required_tag_ids.size());
+    }
+    /* StableKey grows geometrically from the three-token prefix. Twice the
+     * final token count safely covers its retained capacity. */
+    largest_group_signature_tokens = capped_product(
+        largest_group_signature_tokens, 2);
+    const std::uint64_t signature_map_bytes = capped_product(
+        node_count,
+        capped_add(
+            sizeof(std::pair<const refinement::StableKey, std::uint32_t>) +
+                3 * sizeof(void*),
+            capped_product(
+                largest_group_signature_tokens,
+                sizeof(std::uint64_t))));
+    std::uint64_t common_graph_bytes = nodes_bytes;
+    common_graph_bytes = capped_add(common_graph_bytes, index_bytes);
+    common_graph_bytes = capped_add(common_graph_bytes, group_bytes);
+    const std::uint64_t group_build_peak = capped_add(
+        common_graph_bytes, signature_map_bytes);
+    std::uint64_t fixed_point_peak = common_graph_bytes;
+    fixed_point_peak = capped_add(
+        fixed_point_peak,
         capped_product(
             node_count,
-            sizeof(std::pair<const std::uint32_t, std::uint32_t>) +
-                3 * sizeof(void*)));
-    propagation_peak = capped_add(
-        propagation_peak,
-        capped_product(
-            node_count,
-            capped_product(one_requirement_bytes, 3)));
+            capped_product(one_requirement_bytes, 2)));
+    fixed_point_peak = capped_add(
+        fixed_point_peak,
+        capped_product(one_requirement_bytes, 3));
+    const std::uint64_t propagation_peak = std::max(
+        group_build_peak, fixed_point_peak);
     check_memory(
         propagation_peak, "observation_fixed_point_dense_nodes",
         node_count, one_requirement_bytes);
@@ -564,6 +651,32 @@ derive_node_observation_requirements(
             fixed.failure_reason.empty()
                 ? "strategy observation fixed point did not converge"
                 : fixed.failure_reason);
+    }
+    const std::uint64_t actual_scratch_unit = capped_add(
+        sizeof(ObservationRequirement),
+        fixed.required_payload_max_bytes);
+    const std::uint64_t actual_propagation_peak = capped_add(
+        common_graph_bytes,
+        capped_add(
+            fixed.estimated_peak_owned_bytes,
+            capped_product(actual_scratch_unit, 3)));
+    check_memory(
+        actual_propagation_peak,
+        "observation_fixed_point_actual_owned",
+        node_count, one_requirement_bytes);
+    if (telemetry != nullptr) {
+        telemetry->groups = fixed.propagation_groups;
+        telemetry->rounds = fixed.rounds;
+        telemetry->unique_canonical_requirements =
+            fixed.unique_canonical_requirements;
+        telemetry->propagated_payload_p50_bytes =
+            fixed.required_payload_p50_bytes;
+        telemetry->propagated_payload_p95_bytes =
+            fixed.required_payload_p95_bytes;
+        telemetry->propagated_payload_max_bytes =
+            fixed.required_payload_max_bytes;
+        telemetry->projected_peak_bytes = propagation_peak;
+        telemetry->actual_peak_bytes = actual_propagation_peak;
     }
     std::vector<ObservationRequirement> required(node_count);
     std::uint64_t conversion_bytes = capped_product(
@@ -587,6 +700,11 @@ derive_node_observation_requirements(
          fixed.assignments) {
         required.at(assignment.state_id) =
             std::move(assignment.required);
+    }
+    if (telemetry != nullptr) {
+        telemetry->retained_bytes = conversion_bytes;
+        telemetry->actual_peak_bytes = std::max(
+            telemetry->actual_peak_bytes, conversion_bytes);
     }
     return required;
 }

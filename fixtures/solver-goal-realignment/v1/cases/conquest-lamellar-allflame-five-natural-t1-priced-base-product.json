@@ -1,10 +1,10 @@
 {
   "schema_version": "solver_benchmark_case_v1",
-  "id": "conquest-lamellar-allflame-five-natural-t1-product",
+  "id": "conquest-lamellar-allflame-five-natural-t1-priced-base-product",
   "category": "calculator_wasm_scheduling_product_witness",
   "approval_status": "owner_live_witness_2026_08_14",
   "benchmark_enabled": true,
-  "description": "Oliver's empty rare item-level-86 Conquest Lamellar requiring three natural T1 armour/evasion prefixes plus natural T1 physical-damage reduction and spell-suppression suffixes under the published Allflame economy with no manual price override.",
+  "description": "Oliver's empty rare item-level-86 Conquest Lamellar requiring three natural T1 armour/evasion prefixes plus natural T1 physical-damage reduction and spell-suppression suffixes under the published Allflame economy with the owner-reconstructed base = 5 price override.",
   "comparison_profile": "solver-goal-realignment-five-natural-t1-v1",
   "watchdog_seconds": 300,
   "session": {
@@ -76,7 +76,8 @@
       "harvest_reforge:physical",
       "harvest_augment:defences",
       "harvest_augment:physical",
-      "fracture"
+      "fracture",
+      "restart"
     ],
     "pricing_filter": "all_declared_cost_keys_present",
     "bench_goal_slots_forbidden": true
@@ -92,10 +93,10 @@
     "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
     "league_key": "allflame",
     "league_name": "Allflame",
-    "manual_overrides": {},
+    "manual_overrides": {"base": 5.0},
     "fallback_price": null,
     "missing_price_decisions": {
-      "base": "published_snapshot_missing_no_product_override"
+      "base": "owner_reconstructed_live_override_5_chaos"
     }
   },
   "expected": {

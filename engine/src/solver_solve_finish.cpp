@@ -1944,31 +1944,6 @@ SolveWork::Impl::run_finalization() {
                     ? std::numeric_limits<std::uint64_t>::max()
                     : left + right;
             };
-        const auto compilation_from_artifact =
-            [](const RetainedCompiledPolicyArtifact& artifact) {
-                PolicyCompilationTelemetry compilation;
-                compilation.working_states = artifact.working_states;
-                compilation.behavioral_classes =
-                    artifact.behavioral_classes;
-                compilation.policy_regions = artifact.policy_regions;
-                compilation.nodes = artifact.nodes;
-                compilation.edges = artifact.edges;
-                compilation.total_condition_bytes =
-                    artifact.total_condition_bytes;
-                compilation.max_condition_bytes =
-                    artifact.max_condition_bytes;
-                compilation.exact_state_fallbacks =
-                    artifact.exact_state_fallbacks;
-                compilation.junk_predicates =
-                    artifact.junk_predicates;
-                compilation.peak_owned_bytes =
-                    artifact.peak_owned_bytes;
-                compilation.previously_accounted_peak_owned_bytes =
-                    artifact.previously_accounted_peak_owned_bytes;
-                compilation.complete_peak_owned_bytes =
-                    artifact.complete_peak_owned_bytes;
-                return compilation;
-            };
         const auto verify_retained_final_graph =
             [&](BoundedPolicyIncumbent& candidate) {
                 if (certified_incumbent_invalid_reason(candidate) ==
@@ -2005,15 +1980,31 @@ SolveWork::Impl::run_finalization() {
                 proof.policy_status = SolvePolicyStatus::BoundedFeasible;
                 proof.evaluated_policy_cost =
                     candidate.certified_upper_bound;
-                const PolicyCompilationTelemetry compilation =
-                    compilation_from_artifact(
-                        candidate.compiled_artifact);
+                proof.start_state = result.start_state;
+                proof.has_exact_start_item = result.has_exact_start_item;
+                proof.exact_start_item = result.exact_start_item;
+                proof.values = candidate.values;
+                proof.policy = candidate.policy;
+                proof.policy_reachable = candidate.policy_reachable;
+                proof.unveil_preferences = candidate.unveil_preferences;
+                proof.option_unveil_preferences =
+                    candidate.option_unveil_preferences;
+                proof.behavioral_representative_by_state =
+                    candidate.behavioral_representative_by_state;
+                proof.primitive_renewal_witness =
+                    candidate.primitive_renewal_witness;
+                proof.options = options;
+                proof.goal_states.assign(proof.values.size(), 0);
+                proof.expanded.assign(proof.values.size(), 0);
+                for (std::uint32_t state = 0;
+                     state < proof.values.size(); ++state) {
+                    proof.goal_states[state] =
+                        calc.is_goal_state(calc.state(state)) ? 1 : 0;
+                }
                 refinement::CompiledPolicyAssertion assertion =
                     refinement::assert_compiled_policy_exact(
                         calc, proof, prices, *scoped,
-                        "retained publication candidate", nullptr,
-                        &candidate.compiled_artifact.strategy_json,
-                        &compilation);
+                        "retained publication candidate");
                 result.diagnostics.reforge_frontier_work =
                     saturated_publication_add(
                         result.diagnostics.reforge_frontier_work,
@@ -2269,7 +2260,9 @@ SolveWork::Impl::run_finalization() {
                 telemetry.retained_artifact_bytes =
                     result.refined_policy_artifact
                             .strategy_json.capacity() +
-                    1;
+                    result.refined_policy_artifact
+                            .certification_strategy_json.capacity() +
+                    2;
                 telemetry.published_fallback_upper = result.upper_bound;
                 telemetry.published_fallback_evaluated_cost =
                     result.evaluated_policy_cost;
@@ -2322,6 +2315,8 @@ SolveWork::Impl::run_finalization() {
             [](refinement::CompiledPolicyAssertion& assertion) {
                 RetainedCompiledPolicyArtifact artifact;
                 artifact.strategy_json = std::move(assertion.strategy_json);
+                artifact.certification_strategy_json =
+                    std::move(assertion.certification_strategy_json);
                 artifact.working_states =
                     assertion.compilation.working_states;
                 artifact.behavioral_classes =
@@ -2338,6 +2333,27 @@ SolveWork::Impl::run_finalization() {
                     assertion.compilation.exact_state_fallbacks;
                 artifact.junk_predicates =
                     assertion.compilation.junk_predicates;
+                artifact.policy_route_default_edges =
+                    assertion.compilation.policy_route_default_edges;
+                artifact.policy_route_restart_default_edges =
+                    assertion.compilation
+                        .policy_route_restart_default_edges;
+                artifact.policy_route_offpolicy_default_edges =
+                    assertion.compilation
+                        .policy_route_offpolicy_default_edges;
+                artifact.policy_route_default_mode =
+                    assertion.compilation.policy_route_default_mode;
+                artifact.certification_policy_route_default_edges =
+                    assertion.certification_compilation
+                        .policy_route_default_edges;
+                artifact.certification_policy_route_offpolicy_default_edges =
+                    assertion.certification_compilation
+                        .policy_route_offpolicy_default_edges;
+                artifact.certification_policy_route_default_mode =
+                    assertion.certification_compilation
+                        .policy_route_default_mode;
+                artifact.paired_default_only =
+                    assertion.paired_default_only;
                 artifact.peak_owned_bytes =
                     assertion.compilation.peak_owned_bytes;
                 artifact.previously_accounted_peak_owned_bytes =
@@ -3203,6 +3219,8 @@ SolveWork::Impl::run_finalization() {
                 assertion_status_name(assertion.status);
             telemetry.direct_certification_failure_reason =
                 assertion.failure_reason;
+            telemetry.direct_certification_failure_classification =
+                assertion.failure_classification;
             telemetry.direct_certification_resource_cap =
                 assertion.resource_cap;
             telemetry.direct_certification_solver_cost =
@@ -3219,6 +3237,26 @@ SolveWork::Impl::run_finalization() {
                 saturated_add(
                     publication_external_live_bytes,
                     assertion.publication_peak_owned_bytes);
+            const PolicyCompilationTelemetry& certification_compilation =
+                assertion.paired_default_only
+                    ? assertion.certification_compilation
+                    : assertion.compilation;
+            telemetry.direct_certification_route_default_edges =
+                certification_compilation
+                    .policy_route_default_edges;
+            telemetry.direct_product_route_default_edges =
+                assertion.paired_default_only
+                    ? assertion.compilation.policy_route_default_edges
+                    : 0;
+            telemetry.direct_certification_route_default_mode =
+                certification_compilation
+                    .policy_route_default_mode;
+            telemetry.direct_product_route_default_mode =
+                assertion.paired_default_only
+                    ? assertion.compilation.policy_route_default_mode
+                    : std::string{};
+            telemetry.direct_paired_default_only =
+                assertion.paired_default_only;
             telemetry.direct_certification_executable =
                 assertion.executable;
             telemetry.direct_certification_proper = assertion.proper;
@@ -3233,6 +3271,8 @@ SolveWork::Impl::run_finalization() {
                  assertion.failure_reason.find(
                      "max_owned_bytes") != std::string::npos) &&
                 !assertion.failure_reason.empty()) {
+                const auto& observation =
+                    assertion.evaluation.observation_propagation;
                 retain_bounded_json_sample(
                     telemetry.evaluator_memory_samples,
                     telemetry.evaluator_memory_samples_omitted,
@@ -3251,6 +3291,43 @@ SolveWork::Impl::run_finalization() {
                         ",\"state_action_pairs\":" +
                         std::to_string(
                             assertion.evaluation.refined_pairs) +
+                        ",\"observation\":{\"nodes\":" +
+                        std::to_string(observation.nodes) +
+                        ",\"groups\":" +
+                        std::to_string(observation.groups) +
+                        ",\"rounds\":" +
+                        std::to_string(observation.rounds) +
+                        ",\"unique_canonical_requirements\":" +
+                        std::to_string(
+                            observation.unique_canonical_requirements) +
+                        ",\"direct_payload_p50_bytes\":" +
+                        std::to_string(
+                            observation.direct_payload_p50_bytes) +
+                        ",\"direct_payload_p95_bytes\":" +
+                        std::to_string(
+                            observation.direct_payload_p95_bytes) +
+                        ",\"direct_payload_max_bytes\":" +
+                        std::to_string(
+                            observation.direct_payload_max_bytes) +
+                        ",\"propagated_payload_p50_bytes\":" +
+                        std::to_string(
+                            observation.propagated_payload_p50_bytes) +
+                        ",\"propagated_payload_p95_bytes\":" +
+                        std::to_string(
+                            observation.propagated_payload_p95_bytes) +
+                        ",\"propagated_payload_max_bytes\":" +
+                        std::to_string(
+                            observation.propagated_payload_max_bytes) +
+                        ",\"projected_peak_bytes\":" +
+                        std::to_string(
+                            observation.projected_peak_bytes) +
+                        ",\"actual_peak_bytes\":" +
+                        std::to_string(
+                            observation.actual_peak_bytes) +
+                        ",\"retained_bytes\":" +
+                        std::to_string(observation.retained_bytes) +
+                        ",\"duration_ns\":" +
+                        std::to_string(observation.duration_ns) + "}" +
                         ",\"calculation\":\"" +
                         diagnostic_json_escape(
                             assertion.failure_reason) + "\"}");
@@ -3439,7 +3516,9 @@ SolveWork::Impl::run_finalization() {
                     telemetry.retained_artifact_bytes =
                         result.refined_policy_artifact
                                 .strategy_json.capacity() +
-                        1;
+                        result.refined_policy_artifact
+                                .certification_strategy_json.capacity() +
+                        2;
                     telemetry.publication_status =
                         "exact_core_policy";
                     telemetry.published_candidate_kind = candidate.kind;
@@ -3483,7 +3562,9 @@ SolveWork::Impl::run_finalization() {
                         telemetry.retained_artifact_bytes =
                             result.refined_policy_artifact
                                     .strategy_json.capacity() +
-                            1;
+                            result.refined_policy_artifact
+                                    .certification_strategy_json.capacity() +
+                            2;
                         result.converged = false;
                         result.lower_bound =
                             std::isfinite(result.lower_bound) &&
@@ -3552,7 +3633,9 @@ SolveWork::Impl::run_finalization() {
                     telemetry.retained_artifact_bytes =
                         result.refined_policy_artifact
                                 .strategy_json.capacity() +
-                        1;
+                        result.refined_policy_artifact
+                                .certification_strategy_json.capacity() +
+                        2;
                     const double exact_cost =
                         candidate.evaluated_policy_cost;
                     result.converged = false;
@@ -4184,6 +4267,10 @@ SolveWork::Impl::run_finalization() {
                 RetainedCompiledPolicyArtifact artifact;
                 artifact.strategy_json =
                     std::move(certificate.compiled.strategy_json);
+                artifact.certification_strategy_json =
+                    std::move(
+                        certificate.compiled
+                            .certification_strategy_json);
                 artifact.working_states =
                     certificate.compiled.compilation.working_states;
                 artifact.behavioral_classes =
@@ -4202,6 +4289,29 @@ SolveWork::Impl::run_finalization() {
                     certificate.compiled.compilation.exact_state_fallbacks;
                 artifact.junk_predicates =
                     certificate.compiled.compilation.junk_predicates;
+                artifact.policy_route_default_edges =
+                    certificate.compiled.compilation
+                        .policy_route_default_edges;
+                artifact.policy_route_restart_default_edges =
+                    certificate.compiled.compilation
+                        .policy_route_restart_default_edges;
+                artifact.policy_route_offpolicy_default_edges =
+                    certificate.compiled.compilation
+                        .policy_route_offpolicy_default_edges;
+                artifact.policy_route_default_mode =
+                    certificate.compiled.compilation
+                        .policy_route_default_mode;
+                artifact.certification_policy_route_default_edges =
+                    certificate.compiled.certification_compilation
+                        .policy_route_default_edges;
+                artifact.certification_policy_route_offpolicy_default_edges =
+                    certificate.compiled.certification_compilation
+                        .policy_route_offpolicy_default_edges;
+                artifact.certification_policy_route_default_mode =
+                    certificate.compiled.certification_compilation
+                        .policy_route_default_mode;
+                artifact.paired_default_only =
+                    certificate.compiled.paired_default_only;
                 artifact.peak_owned_bytes =
                     certificate.compiled.compilation.peak_owned_bytes;
                 artifact.previously_accounted_peak_owned_bytes =
@@ -4215,7 +4325,9 @@ SolveWork::Impl::run_finalization() {
                 telemetry.retained_artifact_bytes =
                     result.refined_policy_artifact
                             .strategy_json.capacity() +
-                    1;
+                    result.refined_policy_artifact
+                            .certification_strategy_json.capacity() +
+                    2;
                 if (estimated_owned_bytes() >
                     options.max_solver_owned_bytes) {
                     result.refined_policy_artifact = {};
