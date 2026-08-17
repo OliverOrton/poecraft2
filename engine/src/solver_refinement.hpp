@@ -358,7 +358,10 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
     ClosedPartitionLimits limits = {},
     bool arc_sources_absent = false,
     const std::vector<std::optional<std::uint32_t>>*
-        known_arc_sources = nullptr);
+        known_arc_sources = nullptr,
+    bool retain_shared_arc_authorities = true,
+    bool retain_projected_classes = true,
+    bool compact_projection_identity = false);
 
 /*
  * Collision-free operation/state key for evaluator row collapse. Returns

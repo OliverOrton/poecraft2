@@ -413,6 +413,10 @@ std::string serialize_strategy_eval(const StrategyEvalResult& result) {
            std::to_string(row_census.replay_route_token_bytes);
     out += ",\"replay_route_result_authorities\":" +
            std::to_string(row_census.replay_route_result_authorities);
+    out += ",\"compact_attribution_rows\":" +
+           std::to_string(row_census.compact_attribution_rows);
+    out += ",\"compact_attribution_edges\":" +
+           std::to_string(row_census.compact_attribution_edges);
     out += ",\"projected_u32_route_tokens_bytes\":" +
            std::to_string(row_census.projected_u32_route_tokens_bytes);
     out += ",\"source_edge_selections\":" +

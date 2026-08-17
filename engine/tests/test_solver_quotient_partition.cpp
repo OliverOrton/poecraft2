@@ -498,6 +498,44 @@ void run_replay_backed_shared_partition_tests() {
     PC_CHECK(known_authority.class_by_node ==
              shared_materialized.class_by_node);
     PC_CHECK(authority_arc_replays > 0);
+    const refinement::ClosedPartitionResult streamed_authority =
+        refinement::refine_closed_probabilistic_partition_replay(
+            static_cast<std::uint32_t>(shared_nodes.size()),
+            [&](const std::uint32_t index) {
+                return shared_nodes.at(index);
+            },
+            {}, true, {}, false, &known_sources, false);
+    PC_CHECK(streamed_authority.status ==
+             refinement::ClosedPartitionStatus::Complete);
+    PC_CHECK(streamed_authority.lumpable);
+    PC_CHECK(streamed_authority.initial_class_by_node ==
+             shared_materialized.initial_class_by_node);
+    PC_CHECK(streamed_authority.class_by_node ==
+             shared_materialized.class_by_node);
+    PC_CHECK(streamed_authority.classes ==
+             shared_materialized.classes);
+    const refinement::ClosedPartitionResult compact_authority =
+        refinement::refine_closed_probabilistic_partition_replay(
+            static_cast<std::uint32_t>(shared_nodes.size()),
+            [&](const std::uint32_t index) {
+                return shared_nodes.at(index);
+            },
+            {}, false, {}, false, &known_sources,
+            false, false, true);
+    PC_CHECK(compact_authority.status ==
+             refinement::ClosedPartitionStatus::Complete);
+    PC_CHECK(compact_authority.lumpable);
+    PC_CHECK(compact_authority.final_class_count ==
+             shared_materialized.final_class_count);
+    for (std::size_t left = 0; left < shared_nodes.size(); ++left) {
+        for (std::size_t right = 0; right < shared_nodes.size(); ++right) {
+            PC_CHECK(
+                (compact_authority.class_by_node[left] ==
+                 compact_authority.class_by_node[right]) ==
+                (shared_materialized.class_by_node[left] ==
+                 shared_materialized.class_by_node[right]));
+        }
+    }
 
     std::vector<refinement::ClosedPartitionNode> observed = nodes;
     observed[1].observation_key = {101};

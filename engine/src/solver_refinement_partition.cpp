@@ -505,7 +505,10 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
         const ClosedPartitionLimits limits,
         const bool arc_sources_absent,
         const std::vector<std::optional<std::uint32_t>>*
-            known_arc_sources) {
+            known_arc_sources,
+        const bool retain_shared_arc_authorities,
+        const bool retain_projected_classes,
+        const bool compact_projection_identity) {
     ClosedPartitionResult result;
     if (node_count == 0) {
         result.failure_reason =
@@ -656,12 +659,17 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
     std::vector<std::uint32_t> retained_authority_by_node(
         node_count, kNoId);
     std::vector<CanonicalClosedNode> retained_authorities;
-    retained_authorities.reserve(std::count(
-        shared_arc_authority.begin(),
-        shared_arc_authority.end(), true));
+    if (retain_shared_arc_authorities) {
+        retained_authorities.reserve(std::count(
+            shared_arc_authority.begin(),
+            shared_arc_authority.end(), true));
+    }
     try {
         for (std::uint32_t node = 0; node < node_count; ++node) {
-            if (!shared_arc_authority[node]) continue;
+            if (!retain_shared_arc_authorities ||
+                !shared_arc_authority[node]) {
+                continue;
+            }
             retained_authority_by_node[node] =
                 static_cast<std::uint32_t>(
                     retained_authorities.size());
@@ -691,6 +699,42 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
         }
         return retained_authorities.at(retained);
     };
+    const auto select_canonical = [&]
+            (const std::uint32_t node,
+             CanonicalClosedNode& replayed)
+                -> const CanonicalClosedNode& {
+        if (retain_shared_arc_authorities &&
+            shared_arc_authority[node]) {
+            return retained_authority(node);
+        }
+        replayed = canonical_node(node);
+        std::uint64_t replayed_bytes = sizeof(CanonicalClosedNode);
+        add_bytes(
+            replayed_bytes,
+            estimate_stable_key_bytes(replayed.stable_key));
+        add_bytes(
+            replayed_bytes,
+            estimate_stable_key_bytes(replayed.observation_key));
+        add_bytes(
+            replayed_bytes,
+            estimate_stable_key_bytes(replayed.immediate_key));
+        add_bytes(
+            replayed_bytes,
+            saturated_product(
+                replayed.arcs.capacity(),
+                sizeof(CanonicalClosedArc)));
+        for (const CanonicalClosedArc& arc : replayed.arcs) {
+            add_bytes(
+                replayed_bytes,
+                estimate_stable_key_bytes(arc.label));
+        }
+        const std::uint64_t transient = saturated_add(
+            replay_base_bytes, replayed_bytes);
+        if (fail_memory(transient)) {
+            throw std::bad_alloc();
+        }
+        return replayed;
+    };
     const auto projection = [&](const CanonicalClosedNode& node,
                                 const std::vector<std::uint32_t>& partition) {
         using Key =
@@ -712,6 +756,113 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
         }
         return projected;
     };
+    struct ProjectionIdentity {
+        std::uint32_t authority = kNoId;
+        std::uint32_t id = kNoId;
+    };
+    const auto projection_hash = [](
+            const std::vector<ClosedProjectionEntry>& projected) {
+        std::uint64_t first = 1469598103934665603ull;
+        std::uint64_t second = 1099511628211ull;
+        const auto mix = [&](const std::uint64_t token) {
+            first ^= token;
+            first *= 1099511628211ull;
+            second ^= token + 0x9e3779b97f4a7c15ull +
+                (second << 6) + (second >> 2);
+            second *= 0xbf58476d1ce4e5b9ull;
+        };
+        mix(projected.size());
+        for (const ClosedProjectionEntry& arc : projected) {
+            mix(arc.label.size());
+            for (const std::uint64_t token : arc.label) mix(token);
+            mix(arc.successor_class.has_value() ? 1u : 0u);
+            if (arc.successor_class.has_value()) {
+                mix(*arc.successor_class);
+            }
+            mix(std::bit_cast<std::uint64_t>(arc.probability.high));
+            mix(std::bit_cast<std::uint64_t>(arc.probability.low));
+        }
+        return std::pair{first, second};
+    };
+    const auto assign_compact_projection_ids = [&]
+            (const std::vector<std::uint32_t>& partition,
+             std::vector<std::uint32_t>& ids,
+             const std::uint64_t retained_extra) {
+        using BucketMap = std::map<
+            std::pair<std::uint64_t, std::uint64_t>,
+            std::vector<ProjectionIdentity>>;
+        BucketMap authorities;
+        std::uint64_t authority_bytes = 0;
+        ids.assign(node_count, kNoId);
+        std::uint32_t next_id = 0;
+        for (const std::uint32_t node : replay_order) {
+            CanonicalClosedNode replayed;
+            const CanonicalClosedNode& canonical =
+                select_canonical(node, replayed);
+            const std::uint32_t authority =
+                canonical.arc_source.value_or(node);
+            if (authority != node) continue;
+            const std::vector<ClosedProjectionEntry> projected =
+                projection(canonical, partition);
+            const auto hash = projection_hash(projected);
+            auto [bucket, inserted] = authorities.try_emplace(hash);
+            if (inserted) {
+                authority_bytes = saturated_add(
+                    authority_bytes,
+                    sizeof(BucketMap::value_type) + 3 * sizeof(void*));
+            }
+            std::uint32_t selected = kNoId;
+            for (const ProjectionIdentity& candidate : bucket->second) {
+                CanonicalClosedNode replayed_candidate;
+                const CanonicalClosedNode& candidate_node =
+                    select_canonical(
+                        candidate.authority, replayed_candidate);
+                const std::vector<ClosedProjectionEntry>
+                    candidate_projection =
+                        projection(candidate_node, partition);
+                if (fail_memory(saturated_add(
+                        saturated_add(
+                            replay_base_bytes, retained_extra),
+                        saturated_add(
+                            authority_bytes,
+                            saturated_add(
+                                estimate_closed_projection_memory(projected),
+                                estimate_closed_projection_memory(
+                                    candidate_projection)))))) {
+                    return false;
+                }
+                if (candidate_projection == projected) {
+                    selected = candidate.id;
+                    break;
+                }
+            }
+            if (selected == kNoId) {
+                selected = next_id++;
+                const std::size_t capacity_before =
+                    bucket->second.capacity();
+                bucket->second.push_back({node, selected});
+                authority_bytes = saturated_add(
+                    authority_bytes,
+                    saturated_product(
+                        bucket->second.capacity() - capacity_before,
+                        sizeof(ProjectionIdentity)));
+            }
+            ids[node] = selected;
+            if (fail_memory(saturated_add(
+                    saturated_add(
+                        replay_base_bytes, retained_extra),
+                    saturated_add(
+                        authority_bytes,
+                        saturated_add(
+                            saturated_product(
+                                ids.capacity(), sizeof(std::uint32_t)),
+                            estimate_closed_projection_memory(
+                                projected)))))) {
+                return false;
+            }
+        }
+        return true;
+    };
     const auto partition_pass =
             [&](const std::vector<std::uint32_t>* current,
                const bool initial,
@@ -729,78 +880,76 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
             projection_key_bytes = saturated_product(
                 projection_id_by_authority.capacity(),
                 sizeof(std::uint32_t));
-            for (const std::uint32_t node : replay_order) {
-                CanonicalClosedNode replayed;
-                const CanonicalClosedNode* canonical = nullptr;
-                if (shared_arc_authority[node]) {
-                    canonical = &retained_authority(node);
-                } else {
-                    replayed = canonical_node(node);
-                    canonical = &replayed;
-                }
-                const std::uint32_t authority =
-                    canonical->arc_source.value_or(node);
-                if (authority != node) continue;
-                const std::vector<ClosedProjectionEntry> projected =
-                    projection(*canonical, *current);
-                ClosedPartitionKey projection_key =
-                    closed_projection_key(projected);
-                const std::uint64_t transient_projection_bytes =
-                    estimate_closed_projection_memory(projected) +
-                    saturated_product(
-                        projection_key.capacity(),
-                        sizeof(std::uint64_t));
-                if (fail_memory(saturated_add(
-                        saturated_add(
-                            replay_base_bytes,
-                            projection_key_bytes),
-                        transient_projection_bytes))) {
+            if (compact_projection_identity) {
+                if (!assign_compact_projection_ids(
+                        *current, projection_id_by_authority,
+                        projection_key_bytes)) {
                     return false;
                 }
-                auto [stored, inserted] = projection_ids.emplace(
-                    std::move(projection_key),
-                    static_cast<std::uint32_t>(
-                        projection_ids.size()));
-                projection_id_by_authority[node] = stored->second;
-                if (inserted) {
-                    projection_key_bytes = saturated_add(
-                        projection_key_bytes,
+            } else {
+                for (const std::uint32_t node : replay_order) {
+                    CanonicalClosedNode replayed;
+                    const CanonicalClosedNode* canonical = nullptr;
+                    canonical = &select_canonical(node, replayed);
+                    const std::uint32_t authority =
+                        canonical->arc_source.value_or(node);
+                    if (authority != node) continue;
+                    const std::vector<ClosedProjectionEntry> projected =
+                        projection(*canonical, *current);
+                    ClosedPartitionKey projection_key =
+                        closed_projection_key(projected);
+                    const std::uint64_t transient_projection_bytes =
+                        estimate_closed_projection_memory(projected) +
                         saturated_product(
-                            stored->first.capacity(),
-                            sizeof(std::uint64_t)));
-                    projection_key_bytes = saturated_add(
-                        projection_key_bytes,
-                        sizeof(decltype(projection_ids)::value_type) +
-                            3 * sizeof(void*));
+                            projection_key.capacity(),
+                            sizeof(std::uint64_t));
                     if (fail_memory(saturated_add(
-                            replay_base_bytes,
-                            projection_key_bytes))) {
+                            saturated_add(
+                                replay_base_bytes,
+                                projection_key_bytes),
+                            transient_projection_bytes))) {
                         return false;
                     }
+                    auto [stored, inserted] = projection_ids.emplace(
+                        std::move(projection_key),
+                        static_cast<std::uint32_t>(
+                            projection_ids.size()));
+                    projection_id_by_authority[node] = stored->second;
+                    if (inserted) {
+                        projection_key_bytes = saturated_add(
+                            projection_key_bytes,
+                            saturated_product(
+                                stored->first.capacity(),
+                                sizeof(std::uint64_t)));
+                        projection_key_bytes = saturated_add(
+                            projection_key_bytes,
+                            sizeof(decltype(projection_ids)::value_type) +
+                                3 * sizeof(void*));
+                        if (fail_memory(saturated_add(
+                                replay_base_bytes,
+                                projection_key_bytes))) {
+                            return false;
+                        }
+                    }
                 }
-            }
-            std::vector<std::uint32_t> canonical_projection_id(
-                projection_ids.size());
-            std::uint32_t next_projection_id = 0;
-            for (const auto& [unused, temporary_id] :
-                 projection_ids) {
-                (void)unused;
-                canonical_projection_id[temporary_id] =
-                    next_projection_id++;
-            }
-            for (std::uint32_t& id : projection_id_by_authority) {
-                if (id != kNoId) id = canonical_projection_id[id];
+                std::vector<std::uint32_t> canonical_projection_id(
+                    projection_ids.size());
+                std::uint32_t next_projection_id = 0;
+                for (const auto& [unused, temporary_id] :
+                     projection_ids) {
+                    (void)unused;
+                    canonical_projection_id[temporary_id] =
+                        next_projection_id++;
+                }
+                for (std::uint32_t& id : projection_id_by_authority) {
+                    if (id != kNoId) id = canonical_projection_id[id];
+                }
             }
         }
         for (const std::uint32_t node : replay_order) {
             CanonicalClosedNode replayed;
             const CanonicalClosedNode* canonical = nullptr;
-            if (shared_arc_authority[node]) {
-                canonical = &retained_authority(node);
-            } else {
-                replayed = canonical_node(node);
-                canonical = &replayed;
-            }
+            canonical = &select_canonical(node, replayed);
             ClosedPartitionKey key;
             if (initial) {
                 if (!previous_partition.empty()) {
@@ -919,70 +1068,74 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
                 final_projection_ids;
             std::uint64_t final_projection_key_bytes =
                 final_projection_id_bytes;
-            for (const std::uint32_t node : replay_order) {
-                CanonicalClosedNode replayed;
-                const CanonicalClosedNode* canonical = nullptr;
-                if (shared_arc_authority[node]) {
-                    canonical = &retained_authority(node);
-                } else {
-                    replayed = canonical_node(node);
-                    canonical = &replayed;
-                }
-                const std::uint32_t authority =
-                    canonical->arc_source.value_or(node);
-                if (authority != node) continue;
-                const std::vector<ClosedProjectionEntry> projected =
-                    projection(*canonical, partition);
-                ClosedPartitionKey projection_key =
-                    closed_projection_key(projected);
-                const std::uint64_t transient_projection_bytes =
-                    estimate_closed_projection_memory(projected) +
-                    saturated_product(
-                        projection_key.capacity(),
-                        sizeof(std::uint64_t));
-                if (fail_memory(saturated_add(
-                        saturated_add(
-                            replay_base_bytes,
-                            final_projection_key_bytes),
-                        transient_projection_bytes))) {
+            if (compact_projection_identity) {
+                if (!assign_compact_projection_ids(
+                        partition,
+                        final_projection_id_by_authority,
+                        final_projection_key_bytes)) {
                     return result;
                 }
-                auto [stored, inserted] =
-                    final_projection_ids.emplace(
-                        std::move(projection_key),
-                        static_cast<std::uint32_t>(
-                            final_projection_ids.size()));
-                final_projection_id_by_authority[node] =
-                    stored->second;
-                if (inserted) {
-                    final_projection_key_bytes = saturated_add(
-                        final_projection_key_bytes,
+            } else {
+                for (const std::uint32_t node : replay_order) {
+                    CanonicalClosedNode replayed;
+                    const CanonicalClosedNode* canonical = nullptr;
+                    canonical = &select_canonical(node, replayed);
+                    const std::uint32_t authority =
+                        canonical->arc_source.value_or(node);
+                    if (authority != node) continue;
+                    const std::vector<ClosedProjectionEntry> projected =
+                        projection(*canonical, partition);
+                    ClosedPartitionKey projection_key =
+                        closed_projection_key(projected);
+                    const std::uint64_t transient_projection_bytes =
+                        estimate_closed_projection_memory(projected) +
                         saturated_product(
-                            stored->first.capacity(),
-                            sizeof(std::uint64_t)));
-                    final_projection_key_bytes = saturated_add(
-                        final_projection_key_bytes,
-                        sizeof(decltype(final_projection_ids)::value_type) +
-                            3 * sizeof(void*));
+                            projection_key.capacity(),
+                            sizeof(std::uint64_t));
                     if (fail_memory(saturated_add(
-                            replay_base_bytes,
-                            final_projection_key_bytes))) {
+                            saturated_add(
+                                replay_base_bytes,
+                                final_projection_key_bytes),
+                            transient_projection_bytes))) {
                         return result;
                     }
+                    auto [stored, inserted] =
+                        final_projection_ids.emplace(
+                            std::move(projection_key),
+                            static_cast<std::uint32_t>(
+                                final_projection_ids.size()));
+                    final_projection_id_by_authority[node] =
+                        stored->second;
+                    if (inserted) {
+                        final_projection_key_bytes = saturated_add(
+                            final_projection_key_bytes,
+                            saturated_product(
+                                stored->first.capacity(),
+                                sizeof(std::uint64_t)));
+                        final_projection_key_bytes = saturated_add(
+                            final_projection_key_bytes,
+                            sizeof(decltype(final_projection_ids)::value_type) +
+                                3 * sizeof(void*));
+                        if (fail_memory(saturated_add(
+                                replay_base_bytes,
+                                final_projection_key_bytes))) {
+                            return result;
+                        }
+                    }
                 }
-            }
-            std::vector<std::uint32_t> canonical_projection_id(
-                final_projection_ids.size());
-            std::uint32_t next_projection_id = 0;
-            for (const auto& [unused, temporary_id] :
-                 final_projection_ids) {
-                (void)unused;
-                canonical_projection_id[temporary_id] =
-                    next_projection_id++;
-            }
-            for (std::uint32_t& id :
-                 final_projection_id_by_authority) {
-                if (id != kNoId) id = canonical_projection_id[id];
+                std::vector<std::uint32_t> canonical_projection_id(
+                    final_projection_ids.size());
+                std::uint32_t next_projection_id = 0;
+                for (const auto& [unused, temporary_id] :
+                     final_projection_ids) {
+                    (void)unused;
+                    canonical_projection_id[temporary_id] =
+                        next_projection_id++;
+                }
+                for (std::uint32_t& id :
+                     final_projection_id_by_authority) {
+                    if (id != kNoId) id = canonical_projection_id[id];
+                }
             }
         }
         std::vector<std::uint32_t> class_projection_id(
@@ -1000,11 +1153,13 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
             auto [cached, inserted] =
                 final_shared_projections.try_emplace(authority);
             if (inserted) {
-                const CanonicalClosedNode& source =
-                    authority == node
-                        ? canonical
-                        : retained_authority(authority);
-                cached->second = projection(source, partition);
+                CanonicalClosedNode replayed_source;
+                const CanonicalClosedNode* source = &canonical;
+                if (authority != node) {
+                    source = &select_canonical(
+                        authority, replayed_source);
+                }
+                cached->second = projection(*source, partition);
                 final_shared_projection_bytes = saturated_add(
                     final_shared_projection_bytes,
                     estimate_closed_projection_memory(
@@ -1024,21 +1179,19 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
             const std::uint32_t representative = representatives[cls];
             CanonicalClosedNode replayed_authority;
             const CanonicalClosedNode* authority = nullptr;
-            if (shared_arc_authority[representative]) {
-                authority = &retained_authority(representative);
-            } else {
-                replayed_authority = canonical_node(representative);
-                authority = &replayed_authority;
-            }
+            authority = &select_canonical(
+                representative, replayed_authority);
             std::vector<ClosedProjectionEntry> local_projection;
             const std::vector<ClosedProjectionEntry>* projected = nullptr;
-            if (authority->arc_source.has_value() ||
-                shared_arc_authority[representative]) {
-                projected = &final_shared_projection(
-                    representative, *authority);
-            } else {
-                local_projection = projection(*authority, partition);
-                projected = &local_projection;
+            if (retain_projected_classes) {
+                if (authority->arc_source.has_value() ||
+                    shared_arc_authority[representative]) {
+                    projected = &final_shared_projection(
+                        representative, *authority);
+                } else {
+                    local_projection = projection(*authority, partition);
+                    projected = &local_projection;
+                }
             }
             const std::uint32_t row_authority =
                 authority->arc_source.value_or(representative);
@@ -1056,10 +1209,12 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
             output.observation_key = authority->observation_key;
             output.immediate_key = authority->immediate_key;
             output.terminal = authority->terminal;
-            for (const ClosedProjectionEntry& arc : *projected) {
-                output.arcs.push_back({
-                    arc.label, arc.successor_class,
-                    arc.probability.value()});
+            if (projected != nullptr) {
+                for (const ClosedProjectionEntry& arc : *projected) {
+                    output.arcs.push_back({
+                        arc.label, arc.successor_class,
+                        arc.probability.value()});
+                }
             }
             if (retain_member_keys) {
                 output.member_keys.reserve(member_counts[cls]);
@@ -1069,12 +1224,7 @@ ClosedPartitionResult refine_closed_probabilistic_partition_replay(
             const std::uint32_t cls = partition[node];
             CanonicalClosedNode replayed_candidate;
             const CanonicalClosedNode* candidate = nullptr;
-            if (shared_arc_authority[node]) {
-                candidate = &retained_authority(node);
-            } else {
-                replayed_candidate = canonical_node(node);
-                candidate = &replayed_candidate;
-            }
+            candidate = &select_canonical(node, replayed_candidate);
             const ClosedPartitionClass& authority = result.classes[cls];
             const std::uint32_t row_authority =
                 candidate->arc_source.value_or(node);

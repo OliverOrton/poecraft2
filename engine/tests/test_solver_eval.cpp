@@ -660,6 +660,8 @@ void run_closed_form_tests() {
     PC_CHECK(compressed_census.routed_payload_bytes > 0);
     PC_CHECK(compressed_census.replay_route_token_bytes > 0);
     PC_CHECK(compressed_census.replay_route_result_authorities > 0);
+    PC_CHECK(compressed_census.compact_attribution_rows > 0);
+    PC_CHECK(compressed_census.compact_attribution_edges > 0);
     PC_CHECK(
         compressed_census.replay_route_token_bytes <=
         compressed_census.projected_u32_route_tokens_bytes);
@@ -1730,11 +1732,11 @@ void run_destructive_refinement_cycle_test() {
     PC_CHECK(sub_double.raw_pairs_discovered == 76);
     PC_CHECK(sub_double.refined_pairs == 57);
 
-    /* A cap that exactly admits the collision-safe compact discovery peak
-     * must reach refinement: the discovery-only bucket/link index has been
-     * accounted at its true peak and retired before partition scratch gains
-     * authority. A later refinement allocation may still hit the same cap,
-     * but it may not be misclassified as pair discovery. */
+    /* A cap that exactly admits the collision-safe compact discovery peak may
+     * stop on the first refinement allocation. Replay recipes keep the pair
+     * index as exact successor authority through quotient conversion and raw
+     * attribution, so it no longer retires at closure. The stop must still be
+     * classified as refinement rather than pair discovery. */
     StrategyEvalWork discovery_memory(strategy, options);
     while (discovery_memory.progress().pending_pairs != 0) {
         discovery_memory.step(1);
@@ -1765,13 +1767,20 @@ void run_destructive_refinement_cycle_test() {
             std::string(error.what()).find("max_owned_bytes") !=
             std::string::npos;
     }
-    PC_CHECK(partition_memory_reached_refinement);
     const StrategyEvalResult& partition_diagnostic =
         partition_memory.diagnostic_result();
+    PC_CHECK(
+        partition_memory_reached_refinement ||
+        partition_memory.progress().done ||
+        partition_diagnostic.boundary_subphase ==
+            StrategyEvalSubphase::PairRefinement ||
+        partition_diagnostic.boundary_subphase ==
+            StrategyEvalSubphase::ComponentConstruction);
     if (partition_memory_capped) {
         PC_CHECK(
+            partition_memory_reached_refinement ||
             partition_diagnostic.boundary_subphase ==
-            StrategyEvalSubphase::PairRefinement ||
+                StrategyEvalSubphase::PairRefinement ||
             partition_diagnostic.boundary_subphase ==
                 StrategyEvalSubphase::ComponentConstruction);
     } else {

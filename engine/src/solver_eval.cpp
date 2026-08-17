@@ -1394,13 +1394,23 @@ struct StrategyEvalWork::Impl {
         }
     }
 
-    void retire_pair_discovery_indexes() {
+    void retire_pair_lookup_index() {
         output.pair_discovery_index_peak_bytes = std::max(
             output.pair_discovery_index_peak_bytes,
             pair_index_owned_bytes());
         std::vector<std::uint32_t>().swap(pair_bucket_heads);
         pair_next.release();
+    }
+
+    void retire_row_discovery_indexes() {
         decltype(row_by_distribution){}.swap(row_by_distribution);
+        std::vector<std::uint32_t>().swap(replay_route_bucket_heads);
+        std::vector<std::uint32_t>().swap(replay_route_next);
+    }
+
+    void retire_pair_discovery_indexes() {
+        retire_pair_lookup_index();
+        retire_row_discovery_indexes();
     }
 
     std::uint32_t intern_pair(
@@ -1450,7 +1460,8 @@ struct StrategyEvalWork::Impl {
         return id;
     }
 
-    std::uint32_t find_pair(
+    std::uint32_t find_pair_in(
+            const solve_detail::SegmentedVector<EvalPair>& carrier,
             const std::uint32_t node,
             const std::uint32_t state,
             const std::uint32_t unveil_offer = kNoId,
@@ -1463,7 +1474,7 @@ struct StrategyEvalWork::Impl {
         for (std::uint32_t candidate = pair_bucket_heads[bucket];
              candidate != kNoId;
              candidate = pair_next.at(candidate)) {
-            const EvalPair& pair = pairs.at(candidate);
+            const EvalPair& pair = carrier.at(candidate);
             if (pair.node == node && pair.state == state &&
                 pair.unveil_offer == unveil_offer &&
                 pair.checkpoint_state == checkpoint_state) {
@@ -1471,6 +1482,80 @@ struct StrategyEvalWork::Impl {
             }
         }
         return kNoId;
+    }
+
+    std::uint32_t find_pair(
+            const std::uint32_t node,
+            const std::uint32_t state,
+            const std::uint32_t unveil_offer = kNoId,
+            const std::uint32_t checkpoint_state = kNoId) const {
+        return find_pair_in(
+            pairs, node, state, unveil_offer, checkpoint_state);
+    }
+
+    template <typename TransitionVisitor, typename AbsorptionVisitor>
+    void visit_eval_row(
+            const EvalRow& row,
+            const solve_detail::SegmentedVector<EvalPair>& carrier,
+            TransitionVisitor&& visit_transition,
+            AbsorptionVisitor&& visit_absorption) const {
+        if (!row.replayable()) {
+            for (const EvalTransition& transition : row.transitions) {
+                visit_transition(transition);
+            }
+            for (const EvalAbsorption& absorption : row.absorptions) {
+                visit_absorption(absorption);
+            }
+            return;
+        }
+        const OutcomeDistribution& distribution =
+            *row.replay_distribution;
+        if (!distribution.stable_shared_kernel ||
+            distribution.entries.size() !=
+                row.replay_route_tokens.size() ||
+            !row.transitions.empty() || !row.absorptions.empty()) {
+            throw std::logic_error(
+                "strategy evaluation replay row has invalid stable "
+                "kernel authority");
+        }
+        for (std::size_t index = 0;
+             index < distribution.entries.size(); ++index) {
+            const OutcomeEntry& outcome = distribution.entries[index];
+            const ReplayRouteResult& route = replay_route_results.at(
+                row.replay_route_tokens[index]);
+            if (route.kind == ReplayRouteKind::Transition) {
+                const std::uint32_t target = find_pair_in(
+                    carrier, route.node, outcome.state, kNoId,
+                    row.replay_checkpoint_state);
+                if (target == kNoId) {
+                    throw std::logic_error(
+                        "strategy evaluation replay row names an "
+                        "undiscovered successor");
+                }
+                visit_transition(EvalTransition{
+                    target, outcome.probability, route.edge,
+                    route.policy_route, outcome.state});
+                continue;
+            }
+            visit_absorption(EvalAbsorption{
+                route.kind == ReplayRouteKind::Terminal
+                    ? EvalAbsorptionKind::Terminal
+                    : EvalAbsorptionKind::NoMatchingEdge,
+                route.node, outcome.state, outcome.probability,
+                route.edge, route.policy_route});
+        }
+    }
+
+    static std::size_t eval_row_arc_count(const EvalRow& row) {
+        return row.replayable()
+            ? row.replay_route_tokens.size()
+            : row.transitions.size() + row.absorptions.size();
+    }
+
+    static bool has_replayable_rows(const std::vector<EvalRow>& source) {
+        return std::any_of(
+            source.begin(), source.end(),
+            [](const EvalRow& row) { return row.replayable(); });
     }
 
     void materialize_replay_rows_for_legacy_consumers() {
@@ -2952,16 +3037,22 @@ struct StrategyEvalWork::Impl {
     }
 
     refinement::StableKey transition_partition_label(
-        const EvalTransition& transition) const {
+        const EvalTransition& transition,
+        const solve_detail::SegmentedVector<EvalPair>& carrier) const {
         refinement::StableKey key{
             0x6576616c74726e31ull}; /* "evaltrn1" */
         append_optional_u32(key, transition.edge);
         append_unveil_offer(
-            key, pairs.at(transition.target).unveil_offer);
+            key, carrier.at(transition.target).unveil_offer);
         append_compressed_policy_trace(
             key, transition.policy_route,
             transition.policy_state);
         return key;
+    }
+
+    refinement::StableKey transition_partition_label(
+        const EvalTransition& transition) const {
+        return transition_partition_label(transition, pairs);
     }
 
     refinement::StableKey absorption_partition_label(
@@ -3026,7 +3117,9 @@ struct StrategyEvalWork::Impl {
          * partition unit well before it becomes a memory problem. Replay the
          * retained exact rows from this boundary so certification stays
          * cooperative without changing the partition authority. */
-        const bool use_replay_partition = pairs.size() >= 4096;
+        const bool replayable_operation_rows = has_replayable_rows(rows);
+        const bool use_replay_partition =
+            replayable_operation_rows || pairs.size() >= 4096;
         std::vector<ClosedPartitionNode> closed;
         std::uint64_t stable_keys_owned_bytes = 0;
         if (!use_replay_partition) {
@@ -3331,26 +3424,28 @@ struct StrategyEvalWork::Impl {
             }
             const EvalRow& row = pair_row(pair_id);
             node.arcs.reserve(
-                row.transitions.size() + row.absorptions.size());
-            for (const EvalTransition& transition : row.transitions) {
-                node.arcs.push_back({
-                    transition_partition_label(transition),
-                    std::optional<std::uint32_t>{transition.target},
-                    transition.probability});
-            }
-            for (const EvalAbsorption& absorption : row.absorptions) {
-                node.arcs.push_back({
-                    absorption_partition_label(absorption),
-                    std::nullopt,
-                    absorption.probability});
-            }
+                eval_row_arc_count(row));
+            visit_eval_row(
+                row, pairs,
+                [&](const EvalTransition& transition) {
+                    node.arcs.push_back({
+                        transition_partition_label(transition),
+                        std::optional<std::uint32_t>{transition.target},
+                        transition.probability});
+                },
+                [&](const EvalAbsorption& absorption) {
+                    node.arcs.push_back({
+                        absorption_partition_label(absorption),
+                        std::nullopt,
+                        absorption.probability});
+                });
             return node;
         };
         ClosedPartitionResult refined = use_replay_partition
             ? refinement::refine_closed_probabilistic_partition_replay(
-                  static_cast<std::uint32_t>(pairs.size()),
-                  replay_pair, {}, false, limits, false,
-                  &replay_arc_source)
+                   static_cast<std::uint32_t>(pairs.size()),
+                   replay_pair, {}, false, limits, false,
+                   &replay_arc_source, false, false, true)
             : refinement::refine_closed_probabilistic_partition(
                   std::move(closed), limits);
         co_await solve_detail::CooperativeCheckpoint{};
@@ -3402,6 +3497,16 @@ struct StrategyEvalWork::Impl {
          * secondary attribution graph exists only when quotienting actually
          * merges concrete evaluator pairs. */
         if (refined.final_class_count == pairs.size()) {
+            if (replayable_operation_rows) {
+                if (pairs.size() >= 4096) {
+                    throw std::length_error(
+                        "strategy evaluation replay partition remained "
+                        "identity and cannot materialize the scalable raw "
+                        "carrier");
+                }
+                materialize_replay_rows_for_legacy_consumers();
+            }
+            retire_pair_discovery_indexes();
             check_owned_cap();
             co_return true;
         }
@@ -3488,9 +3593,13 @@ struct StrategyEvalWork::Impl {
                             saturated_product(
                                 row.transition_via.capacity(),
                                 sizeof(std::uint32_t)),
-                            saturated_product(
-                                row.absorptions.capacity(),
-                                sizeof(EvalAbsorption)))));
+                            saturated_add(
+                                saturated_product(
+                                    row.absorptions.capacity(),
+                                    sizeof(EvalAbsorption)),
+                                saturated_product(
+                                    row.replay_route_tokens.capacity(),
+                                    sizeof(std::uint32_t))))));
             }
             const auto check_conversion =
                 [&](const std::uint64_t scratch = 0) {
@@ -3555,43 +3664,43 @@ struct StrategyEvalWork::Impl {
                             absorptions.size(),
                             absorption_map_node_bytes));
                 };
-                for (const EvalTransition& transition :
-                     source.transitions) {
-                    const TransitionKey key{
-                        class_by_node.at(transition.target),
-                        transition.edge,
-                        transition.policy_route,
-                        transition.policy_state};
-                    const auto found = transitions.find(key);
-                    if (found == transitions.end()) {
-                        check_conversion(saturated_add(
-                            map_bytes(),
-                            transition_map_node_bytes));
-                        transitions.emplace(
-                            key, transition.probability);
-                    } else {
-                        found->second += transition.probability;
-                    }
-                }
-                for (const EvalAbsorption& absorption :
-                     source.absorptions) {
-                    const AbsorptionKey key{
-                        static_cast<int>(absorption.kind),
-                        absorption.node,
-                        absorption.state,
-                        absorption.edge,
-                        absorption.policy_route};
-                    const auto found = absorptions.find(key);
-                    if (found == absorptions.end()) {
-                        check_conversion(saturated_add(
-                            map_bytes(),
-                            absorption_map_node_bytes));
-                        absorptions.emplace(
-                            key, absorption.probability);
-                    } else {
-                        found->second += absorption.probability;
-                    }
-                }
+                visit_eval_row(
+                    source, raw_pairs,
+                    [&](const EvalTransition& transition) {
+                        const TransitionKey key{
+                            class_by_node.at(transition.target),
+                            transition.edge,
+                            transition.policy_route,
+                            transition.policy_state};
+                        const auto found = transitions.find(key);
+                        if (found == transitions.end()) {
+                            check_conversion(saturated_add(
+                                map_bytes(),
+                                transition_map_node_bytes));
+                            transitions.emplace(
+                                key, transition.probability);
+                        } else {
+                            found->second += transition.probability;
+                        }
+                    },
+                    [&](const EvalAbsorption& absorption) {
+                        const AbsorptionKey key{
+                            static_cast<int>(absorption.kind),
+                            absorption.node,
+                            absorption.state,
+                            absorption.edge,
+                            absorption.policy_route};
+                        const auto found = absorptions.find(key);
+                        if (found == absorptions.end()) {
+                            check_conversion(saturated_add(
+                                map_bytes(),
+                                absorption_map_node_bytes));
+                            absorptions.emplace(
+                                key, absorption.probability);
+                        } else {
+                            found->second += absorption.probability;
+                        }
+                    });
 
                 const std::uint64_t projected_row_bytes =
                     saturated_add(
@@ -3660,7 +3769,6 @@ struct StrategyEvalWork::Impl {
                 start_pair = class_by_node.at(start_pair);
             }
             discover_index = pairs.size();
-            retire_pair_discovery_indexes();
             attribution_pairs = std::move(raw_pairs);
             attribution_rows = std::move(raw_rows);
             attribution_class_by_pair = std::move(class_by_node);
@@ -3676,9 +3784,18 @@ struct StrategyEvalWork::Impl {
                             capped_product(
                                 row.transition_via.capacity(),
                                 sizeof(std::uint32_t)),
-                            capped_product(
-                                row.absorptions.capacity(),
-                                sizeof(EvalAbsorption)))));
+                            capped_add(
+                                capped_product(
+                                    row.absorptions.capacity(),
+                                    sizeof(EvalAbsorption)),
+                                capped_product(
+                                    row.replay_route_tokens.capacity(),
+                                    sizeof(std::uint32_t))))));
+            }
+            if (!has_replayable_rows(attribution_rows)) {
+                retire_pair_discovery_indexes();
+                std::vector<ReplayRouteResult>().swap(
+                    replay_route_results);
             }
             check_owned_cap();
         }
@@ -4867,45 +4984,82 @@ struct StrategyEvalWork::Impl {
         std::vector<solve_detail::WideFloat> row_visits(
             row_count, solve_detail::WideFloat{0.0});
         {
-            std::uint64_t edge_count = 0;
-            std::uint32_t validated_rows = 0;
-            for (const EvalRow& row : attribution_rows) {
-                edge_count = capped_add(
-                    edge_count, row.transitions.size());
-                for (const EvalTransition& transition : row.transitions) {
-                    if (transition.target >= count ||
-                        attribution_pairs[transition.target].row >=
-                            row_count) {
-                        throw std::logic_error(
-                            "strategy evaluation exact attribution row "
-                            "target is missing");
-                    }
-                }
-                if ((++validated_rows & 127u) == 0u) {
-                    co_await solve_detail::CooperativeCheckpoint{};
-                }
-            }
-            if (edge_count >
-                std::numeric_limits<std::uint32_t>::max()) {
-                throw std::length_error(
-                    "strategy evaluation exact row attribution edge count "
-                    "overflowed");
-            }
-            check_owned_cap(capped_add(
-                capped_product(edge_count, sizeof(PolicyEdge)),
-                capped_product(
-                    row_count,
-                    sizeof(PolicyRow) +
-                        5 * sizeof(std::uint32_t) +
-                        2 * sizeof(std::uint8_t) +
-                        3 * sizeof(double))));
-
             std::vector<std::uint32_t> incoming_counts(row_count, 0);
-            std::uint32_t counted_rows = 0;
-            for (const EvalRow& row : attribution_rows) {
-                for (const EvalTransition& transition : row.transitions) {
-                    const std::uint32_t target_row =
-                        attribution_pairs[transition.target].row;
+            std::vector<PolicyRow> forward_rows(row_count);
+            std::vector<PolicyEdge> forward_edges;
+            std::vector<std::uint8_t> row_has_absorption(
+                row_count, 0);
+            const std::uint64_t aggregation_node_bytes =
+                sizeof(std::map<
+                    std::uint32_t,
+                    solve_detail::WideFloat>::value_type) +
+                3 * sizeof(void*);
+            const auto compact_graph_bytes = [&]() {
+                return capped_add(
+                    capped_product(
+                        incoming_counts.capacity(),
+                        sizeof(std::uint32_t)),
+                    capped_add(
+                        capped_product(
+                            forward_rows.capacity(),
+                            sizeof(PolicyRow)),
+                        capped_add(
+                            capped_product(
+                                forward_edges.capacity(),
+                                sizeof(PolicyEdge)),
+                            capped_product(
+                                row_has_absorption.capacity(),
+                                sizeof(std::uint8_t)))));
+            };
+            memory_probe_stage =
+                "exact_attribution_compact_row_transpose";
+            for (std::uint32_t source = 0;
+                 source < row_count; ++source) {
+                std::map<std::uint32_t, solve_detail::WideFloat>
+                    aggregated;
+                visit_eval_row(
+                    attribution_rows[source], attribution_pairs,
+                    [&](const EvalTransition& transition) {
+                        if (transition.target >= count ||
+                            attribution_pairs[transition.target].row >=
+                                row_count) {
+                            throw std::logic_error(
+                                "strategy evaluation exact attribution row "
+                                "target is missing");
+                        }
+                        const std::uint32_t target_row =
+                            attribution_pairs[transition.target].row;
+                        auto found = aggregated.find(target_row);
+                        if (found == aggregated.end()) {
+                            check_owned_cap(capped_add(
+                                compact_graph_bytes(),
+                                capped_product(
+                                    aggregated.size() + 1,
+                                    aggregation_node_bytes)));
+                            found = aggregated.emplace(
+                                target_row,
+                                solve_detail::WideFloat{0.0}).first;
+                        }
+                        found->second += solve_detail::WideFloat{
+                            transition.probability};
+                    },
+                    [&](const EvalAbsorption&) {
+                        row_has_absorption[source] = 1;
+                    });
+                forward_rows[source].edge_offset =
+                    forward_edges.size();
+                if (aggregated.size() >
+                        std::numeric_limits<std::uint32_t>::max() ||
+                    forward_edges.size() >
+                        std::numeric_limits<std::uint32_t>::max() -
+                            aggregated.size()) {
+                    throw std::length_error(
+                        "strategy evaluation exact row attribution edge "
+                        "count overflowed");
+                }
+                forward_rows[source].edge_count =
+                    static_cast<std::uint32_t>(aggregated.size());
+                for (const auto& [target_row, probability] : aggregated) {
                     if (incoming_counts[target_row] ==
                         std::numeric_limits<std::uint32_t>::max()) {
                         throw std::length_error(
@@ -4913,15 +5067,28 @@ struct StrategyEvalWork::Impl {
                             "incoming edge count overflowed");
                     }
                     ++incoming_counts[target_row];
+                    forward_edges.push_back({
+                        target_row, probability.value()});
                 }
-                if ((++counted_rows & 127u) == 0u) {
+                memory_probe_units = forward_edges.size();
+                memory_probe_unit_bytes = sizeof(PolicyEdge);
+                check_owned_cap(compact_graph_bytes());
+                if ((source & 31u) == 31u) {
                     co_await solve_detail::CooperativeCheckpoint{
-                        capped_product(
-                            incoming_counts.capacity(),
-                            sizeof(std::uint32_t))};
+                        compact_graph_bytes()};
                 }
             }
 
+            const std::uint64_t edge_count = forward_edges.size();
+            output.operation_row_census.compact_attribution_rows =
+                row_count;
+            output.operation_row_census.compact_attribution_edges =
+                edge_count;
+            check_owned_cap(capped_add(
+                compact_graph_bytes(),
+                capped_add(
+                    capped_product(row_count, sizeof(PolicyRow)),
+                    capped_product(edge_count, sizeof(PolicyEdge)))));
             std::vector<PolicyRow> transpose_rows(row_count);
             std::vector<PolicyEdge> transpose_edges(
                 static_cast<std::size_t>(edge_count));
@@ -4935,26 +5102,31 @@ struct StrategyEvalWork::Impl {
                 cursors[target] = static_cast<std::uint32_t>(offset);
                 offset += incoming_counts[target];
             }
-            for (std::uint32_t source = 0;
-                 source < row_count; ++source) {
-                for (const EvalTransition& transition :
-                     attribution_rows[source].transitions) {
-                    const std::uint32_t target_row =
-                        attribution_pairs[transition.target].row;
-                    transpose_edges[cursors[target_row]++] = {
-                        source, transition.probability};
+            for (std::uint32_t source = 0; source < row_count; ++source) {
+                const PolicyRow& row = forward_rows[source];
+                for (std::uint32_t edge_index = 0;
+                     edge_index < row.edge_count; ++edge_index) {
+                    const PolicyEdge& edge = forward_edges.at(
+                        row.edge_offset + edge_index);
+                    transpose_edges[cursors[edge.target]++] = {
+                        source, edge.probability};
                 }
                 if ((source & 127u) == 127u) {
                     co_await solve_detail::CooperativeCheckpoint{
                         capped_add(
+                            compact_graph_bytes(),
+                            capped_add(
                             capped_product(
                                 transpose_rows.capacity(),
                                 sizeof(PolicyRow)),
                             capped_product(
                                 transpose_edges.capacity(),
-                                sizeof(PolicyEdge)))};
+                                sizeof(PolicyEdge))))};
                 }
             }
+            memory_probe_stage = "steady_state";
+            memory_probe_units = 0;
+            memory_probe_unit_bytes = 0;
 
             std::vector<std::uint32_t> active_states(row_count);
             std::vector<std::uint8_t> active(row_count, 1);
@@ -5023,6 +5195,9 @@ struct StrategyEvalWork::Impl {
                                 values.capacity(), sizeof(Value)));
                     };
                     add_vector(incoming_counts);
+                    add_vector(forward_rows);
+                    add_vector(forward_edges);
+                    add_vector(row_has_absorption);
                     add_vector(transpose_rows);
                     add_vector(transpose_edges);
                     add_vector(cursors);
@@ -5080,13 +5255,13 @@ struct StrategyEvalWork::Impl {
 
                 bool has_exit = false;
                 for (const std::uint32_t source : members) {
-                    const EvalRow& row = attribution_rows[source];
-                    if (!row.absorptions.empty()) has_exit = true;
-                    for (const EvalTransition& transition :
-                         row.transitions) {
-                        const std::uint32_t target_row =
-                            attribution_pairs[transition.target].row;
-                        if (workspace.component_by_state[target_row] !=
+                    if (row_has_absorption[source]) has_exit = true;
+                    const PolicyRow& row = forward_rows[source];
+                    for (std::uint32_t edge_index = 0;
+                         edge_index < row.edge_count; ++edge_index) {
+                        const PolicyEdge& edge = forward_edges.at(
+                            row.edge_offset + edge_index);
+                        if (workspace.component_by_state[edge.target] !=
                             component) {
                             has_exit = true;
                         }
@@ -5252,15 +5427,16 @@ struct StrategyEvalWork::Impl {
                             : solved_wide[local];
                 }
                 for (const std::uint32_t source : members) {
-                    for (const EvalTransition& transition :
-                         attribution_rows[source].transitions) {
-                        const std::uint32_t target_row =
-                            attribution_pairs[transition.target].row;
-                        if (workspace.component_by_state[target_row] !=
+                    const PolicyRow& row = forward_rows[source];
+                    for (std::uint32_t edge_index = 0;
+                         edge_index < row.edge_count; ++edge_index) {
+                        const PolicyEdge& edge = forward_edges.at(
+                            row.edge_offset + edge_index);
+                        if (workspace.component_by_state[edge.target] !=
                             component) {
-                            external_incoming[target_row] +=
+                            external_incoming[edge.target] +=
                                 row_visits[source].value() *
-                                transition.probability;
+                                edge.probability;
                         }
                     }
                 }
@@ -5289,14 +5465,17 @@ struct StrategyEvalWork::Impl {
                     "strategy evaluation shared-row exact attribution "
                     "produced an invalid row occupancy");
             }
-            for (const EvalTransition& transition :
-                 attribution_rows[row_id].transitions) {
-                reconstructed.at(transition.target) +=
-                    (value < 0.0
-                         ? solve_detail::WideFloat{0.0}
-                         : row_visits[row_id]) *
-                    solve_detail::WideFloat{transition.probability};
-            }
+            visit_eval_row(
+                attribution_rows[row_id], attribution_pairs,
+                [&](const EvalTransition& transition) {
+                    reconstructed.at(transition.target) +=
+                        (value < 0.0
+                             ? solve_detail::WideFloat{0.0}
+                             : row_visits[row_id]) *
+                        solve_detail::WideFloat{
+                            transition.probability};
+                },
+                [](const EvalAbsorption&) {});
             if ((row_id & 255u) == 255u) {
                 co_await solve_detail::CooperativeCheckpoint{
                     capped_product(
@@ -5320,28 +5499,13 @@ struct StrategyEvalWork::Impl {
             checked_row_mass.at(attribution_pairs[source].row) +=
                 solve_detail::WideFloat{exact_visits[source]};
         }
-        std::fill(
-            reconstructed.begin(), reconstructed.end(),
-            solve_detail::WideFloat{0.0});
-        reconstructed[attribution_start_pair] =
-            solve_detail::WideFloat{1.0};
         for (std::uint32_t row_id = 0; row_id < row_count; ++row_id) {
-            for (const EvalTransition& transition :
-                 attribution_rows[row_id].transitions) {
-                reconstructed.at(transition.target) +=
-                    checked_row_mass[row_id] *
-                    solve_detail::WideFloat{transition.probability};
-            }
-        }
-        for (std::uint32_t state = 0; state < count; ++state) {
-            const double expected_value = reconstructed[state].value();
             const double residual = std::fabs(
-                (solve_detail::WideFloat{exact_visits[state]} -
-                 reconstructed[state])
+                (checked_row_mass[row_id] - row_visits[row_id])
                     .value());
             const double scale = std::max(
-                {1.0, std::fabs(exact_visits[state]),
-                 std::fabs(expected_value)});
+                {1.0, std::fabs(checked_row_mass[row_id].value()),
+                 std::fabs(row_visits[row_id].value())});
             const double tolerance =
                 std::max(
                     options.epsilon,
@@ -5349,8 +5513,8 @@ struct StrategyEvalWork::Impl {
                 scale;
             if (!std::isfinite(residual) || residual > tolerance) {
                 throw std::runtime_error(
-                    "strategy evaluation shared-row exact attribution raw "
-                    "residual exceeded epsilon");
+                    "strategy evaluation shared-row exact attribution "
+                    "disaggregation residual exceeded epsilon");
             }
         }
         std::uint64_t retained_scratch = capped_product(
@@ -5391,6 +5555,15 @@ struct StrategyEvalWork::Impl {
             attribution_class_by_pair.size() != count) {
             throw std::logic_error(
                 "strategy evaluation exact attribution graph is incomplete");
+        }
+        if (attribution_rows.size() < count ||
+            has_replayable_rows(attribution_rows)) {
+            auto shared = solve_shared_row_exact_attribution();
+            while (!shared.resume()) {
+                co_await solve_detail::CooperativeCheckpoint{
+                    shared.retained_bytes()};
+            }
+            co_return shared.take_result();
         }
 
         std::uint64_t edge_count = 0;
@@ -5450,8 +5623,7 @@ struct StrategyEvalWork::Impl {
          * attribution graph; expanding one identical transpose row per pair
          * can create a large near-renewal SCC that spends the entire public
          * iteration budget relearning an already-solved aggregate mode. */
-        if (attribution_rows.size() < count ||
-            edge_count > std::numeric_limits<std::uint32_t>::max() ||
+        if (edge_count > std::numeric_limits<std::uint32_t>::max() ||
             transpose_exceeds_memory) {
             memory_probe_stage = "steady_state";
             memory_probe_units = 0;
@@ -5939,35 +6111,38 @@ struct StrategyEvalWork::Impl {
                 const double visits = wide_visits.value();
                 if (!(visits > 0.0)) continue;
                 const EvalRow& row = attribution_rows[row_id];
-                for (const EvalTransition& transition : row.transitions) {
-                    add_compressed_policy_incoming(
-                        transition.policy_route,
-                        transition.policy_state,
-                        visits * transition.probability);
-                }
-                for (const EvalAbsorption& absorption : row.absorptions) {
-                    const solve_detail::WideFloat wide_mass =
-                        wide_visits *
-                        solve_detail::WideFloat{
-                            absorption.probability};
-                    const double mass = wide_mass.value();
-                    add_compressed_policy_incoming(
-                        absorption.policy_route,
-                        absorption.state, mass);
-                    if (absorption.kind == EvalAbsorptionKind::Terminal) {
-                        exact_terminal_mass.at(absorption.node) +=
-                            wide_mass;
-                        add_terminal_incoming(
-                            absorption.node, absorption.state, mass);
-                    } else if (absorption.kind ==
-                               EvalAbsorptionKind::ActionNotApplied) {
-                        exact_action_not_applied.at(absorption.node) +=
-                            wide_mass;
-                    } else {
-                        exact_no_matching_edge.at(absorption.node) +=
-                            wide_mass;
-                    }
-                }
+                visit_eval_row(
+                    row, attribution_pairs,
+                    [&](const EvalTransition& transition) {
+                        add_compressed_policy_incoming(
+                            transition.policy_route,
+                            transition.policy_state,
+                            visits * transition.probability);
+                    },
+                    [&](const EvalAbsorption& absorption) {
+                        const solve_detail::WideFloat wide_mass =
+                            wide_visits *
+                            solve_detail::WideFloat{
+                                absorption.probability};
+                        const double mass = wide_mass.value();
+                        add_compressed_policy_incoming(
+                            absorption.policy_route,
+                            absorption.state, mass);
+                        if (absorption.kind ==
+                                EvalAbsorptionKind::Terminal) {
+                            exact_terminal_mass.at(absorption.node) +=
+                                wide_mass;
+                            add_terminal_incoming(
+                                absorption.node, absorption.state, mass);
+                        } else if (absorption.kind ==
+                                   EvalAbsorptionKind::ActionNotApplied) {
+                            exact_action_not_applied.at(absorption.node) +=
+                                wide_mass;
+                        } else {
+                            exact_no_matching_edge.at(absorption.node) +=
+                                wide_mass;
+                        }
+                    });
                 if ((row_id & 255u) == 255u) {
                     check_owned_cap(capped_product(
                         visits_by_row.capacity() +
@@ -6357,6 +6532,11 @@ struct StrategyEvalWork::Impl {
                         std::fabs(correction));
                 }
             }
+        }
+        if (!attribution_pairs.empty()) {
+            retire_pair_lookup_index();
+            std::vector<ReplayRouteResult>().swap(
+                replay_route_results);
         }
         attribution_pairs.release();
         std::vector<EvalRow>().swap(attribution_rows);
@@ -6982,8 +7162,11 @@ struct StrategyEvalWork::Impl {
                          * releasing indexes that have no partition or solve
                          * authority. */
                         check_owned_cap();
-                        materialize_replay_rows_for_legacy_consumers();
-                        retire_pair_discovery_indexes();
+                        /* Replay recipes still require the collision-safe raw
+                         * pair index through partition, quotient conversion,
+                         * and exact attribution. Only discovery-time row and
+                         * route interning indexes retire at closure. */
+                        retire_row_discovery_indexes();
                     }
                 } else {
                     if (!component_build_task.has_value()) {

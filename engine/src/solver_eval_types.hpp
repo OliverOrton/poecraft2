@@ -114,6 +114,8 @@ struct StrategyEvalOperationRowCensus {
     std::uint64_t routed_payload_bytes = 0;
     std::uint64_t replay_route_token_bytes = 0;
     std::uint64_t replay_route_result_authorities = 0;
+    std::uint64_t compact_attribution_rows = 0;
+    std::uint64_t compact_attribution_edges = 0;
     std::uint64_t source_edge_selections = 0;
     std::uint64_t deterministic_route_resolutions = 0;
     std::uint64_t sampled_source_edge_selections = 0;
