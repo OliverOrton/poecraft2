@@ -30,12 +30,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 ## Execution State
 
 The selected
-[Five-T1 Restart-Monotone Strategy Recovery](active/2026-08-16-five-t1-restart-monotone-recovery/README.md)
-milestone is active at Gate 0 evidence and behavior-neutral telemetry. It will
-make bounded certification fail closed, preserve the cheaper Restart-free
-incumbent when a base price adds Restart, restore prioritized state-local
-automatic admission in the Calculator scheduler, and scale exact evaluation
-under the unchanged cap. The completed
+[Five-T1 Exact-Evaluator Scaling And Recovery](active/2026-08-16-five-t1-restart-monotone-recovery/successor-plan.md)
+successor starts from the priced five-T1 exact pair-discovery stop. It first
+adds evaluator subphase attribution, then shares product-local Fracture regions
+by complete executable behavior before choosing any lower-level pair
+representation. Caps remain unchanged; publication-reason truth,
+action-monotone recovery, automatic controls, and release-WASM responsiveness
+follow only after the candidate becomes materializable. The completed
 [Calculator WASM Scheduling And Selected-Policy Refinement](archive/2026-08-14-calculator-wasm-scheduling-progress/README.md)
 milestone recovers a five-natural-T1 non-Chaos strategy about 59.7 times
 cheaper than the prior fallback, retains selected candidates without granting
