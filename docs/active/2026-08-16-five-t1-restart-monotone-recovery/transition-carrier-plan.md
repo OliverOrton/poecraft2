@@ -1,7 +1,8 @@
 # Five-T1 Pre-Closure Transition Carrier Recovery
 
-**Status: Gates 0-1 complete; Gate 2 compact segmented pair-carrier work is
-active.**
+**Status: stopped after Gate 2. The segmented pair carrier crossed the former
+allocation cliff, but raw discovery remains open at 18 million transitions
+with only 24.8 MB of peak byte headroom. Gate 3 was not entered.**
 
 Parent: [Five-T1 Exact-Evaluator Scaling And Recovery](successor-plan.md)
 
@@ -83,12 +84,22 @@ operation/action metadata derivable exactly from the compiled node. Preserve
 full four-word raw identity and checked random access. See the
 [Gate 1 decision](evidence/transition-carrier-gate1.md).
 
+**Actual result:** segmented 24-byte pairs reduced the checked 10-million run
+to a 600,881,764-byte evaluator peak. A temporary 18-million probe crossed the
+old vector cliff but still stopped in discovery at 17,998,209 raw pairs and a
+1,026,151,572-byte peak against 1,050,981,759. The checked cap is restored to
+10 million. A new transition-target streaming/pre-closure quotient plan is
+required, so this plan's broader-architecture stop fires. See the
+[Gate 2 stop](evidence/transition-carrier-gate2-stop.md).
+
 ## Gate 3 - Rejoin The Scaling Successor
 
 Only after Witness B is independently materializable, return to cooperative
 evaluation, publication-reason truth, permanent five-goal coverage, remaining
 action semantics, release-WASM qualification, and final acceptance in the
 parent successor plan.
+
+**Not entered.** Witness B is not independently materializable.
 
 ## Checkpoints
 

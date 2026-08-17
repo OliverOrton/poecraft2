@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: transition-carrier Gates 0-1 passed; compact segmented pair-carrier
-work is the active Gate 2 boundary.**
+**Status: transition-carrier Gate 2 reached its broader-architecture stop.
+No implementation plan is active. Oliver must select the next chunk.**
 
 The original
 [Five-T1 Restart-Monotone Strategy Recovery](docs/active/2026-08-16-five-t1-restart-monotone-recovery/plan.md)
@@ -11,7 +11,7 @@ after reviewing the follow-up evidence. Do not resume unstarted gates from the
 old plan, raise the solver/WASM cap, or describe the five-T1 priced-base
 strategy as recovered.
 
-The native source checkpoint is `705c25c` on
+The original Gate 4 native source checkpoint was `705c25c` on
 `codex/solver-goal-realignment`. It adds the checked 27-action Restart-free and
 28-action priced-base cases, explicit product/certification compiler modes,
 fail-closed bounded certification, structurally verified default-only graph
@@ -132,10 +132,29 @@ open at 15,998,209 pairs, with a 1,011,645,812-byte peak against the
 million. See the
 [Gate 1 decision](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/transition-carrier-gate1.md).
 
-Gate 2 now owns the pair allocation cliff: use fixed-size segmented storage
-for raw pairs and discovery links, compact only metadata exactly derivable
-from the compiled node, and keep full four-word identity plus checked random
-access. Add a focused segment-boundary/raw-reference oracle before repeating
-Witness A and the checked-cap Witness B. Do not raise the byte cap, rebuild
-WASM, start the older action-semantics gates, or run the full acceptance
-pipeline yet.
+Gate 2 is complete and stopped. Fixed-size segmented storage now carries raw
+pairs and discovery links, and the 24-byte pair record omits only operation and
+action metadata derived exactly from its retained compiled node. The native
+build, evaluator suite (16,852 checks), solver suite (96,113 checks), segment
+boundary, and raw/reference oracles pass.
+
+Witness A remains independently evaluated at 624,800.951911854, success one,
+zero off-policy mass, with a 227.24 ms largest native step. Witness B's checked
+10-million run now peaks at 600,881,764 evaluator bytes, down from 858,541,852.
+One temporary 18-million probe crossed the former 16.7-million allocation
+cliff but still stopped in raw discovery at 17,998,209 pairs and
+1,026,151,572 peak bytes against 1,050,981,759. The fixture is restored to 10
+million. Detailed evidence is in the
+[Gate 2 stop](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/transition-carrier-gate2-stop.md).
+
+The exact next owner is broader than another pair/cap tweak: raw transition
+targets must be reduced or streamed before full retention, and the subsequent
+partition replay must fit without materializing per-raw-pair caches. No
+closed-partition class count exists yet. The priced five-T1 publication remains
+the six-node Chaos renewal at 37,279,857.73995944 and is not recovered. Parent
+successor Gates 4-8 remain unstarted. No WASM build, web suite, or full
+acceptance pipeline was run. Do not resume until Oliver selects a new scoped
+plan.
+
+The current implementation checkpoint is `3acd2a4`; the final Gate 2 evidence
+update follows it as a documentation-only local commit.
