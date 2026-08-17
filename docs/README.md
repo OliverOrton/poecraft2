@@ -31,12 +31,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 The selected
 [Replayable Exact Operation-Row Recovery](active/2026-08-16-five-t1-restart-monotone-recovery/replayable-operation-row-plan.md)
-is active at Gate 0. Exact online deterministic routing removed the former
+is active at Gate 1. Exact online deterministic routing removed the former
 router-pair frontier, but the sole 20-million probe remains open with 27,588
 operation pairs pending and its retained-row slope reaches one GiB before
-closure. The active census measures unique operation-kernel ownership,
-routing reuse, and downstream replay cost before selecting one exact compact
-authority. It reuses the existing collision-safe replay partition and must
+closure. Gate 0 found that broad stable Chaos rows own essentially every
+measured outcome and selected a shared-kernel plus 32-bit exact route-token
+authority; sampled route-state and propagated-observation caches both had zero
+reuse. Gate 1 reuses the existing collision-safe replay partition and must
 replace raw attribution consumers as well as discovery storage.
 Publication-reason truth, action-monotone recovery, automatic controls, and
 release-WASM responsiveness still follow only after the candidate becomes

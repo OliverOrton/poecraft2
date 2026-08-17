@@ -647,6 +647,20 @@ void run_closed_form_tests() {
         evaluate_strategy(*loop_strategy, raw_family_options);
     PC_CHECK(exact.converged);
     PC_CHECK(raw_family_exact.converged);
+    const StrategyEvalOperationRowCensus& compressed_census =
+        exact.operation_row_census;
+    PC_CHECK(compressed_census.materialized_rows > 0);
+    PC_CHECK(compressed_census.stable_shared_rows > 0);
+    PC_CHECK(compressed_census.unique_stable_kernels > 0);
+    PC_CHECK(compressed_census.exact_outcome_entries > 0);
+    PC_CHECK(compressed_census.routed_transitions > 0);
+    PC_CHECK(compressed_census.exact_outcome_payload_bytes > 0);
+    PC_CHECK(compressed_census.unique_stable_kernel_payload_bytes > 0);
+    PC_CHECK(compressed_census.routed_payload_bytes > 0);
+    PC_CHECK(
+        compressed_census.projected_u32_route_tokens_bytes ==
+        compressed_census.exact_outcome_entries *
+            sizeof(std::uint32_t));
     /* Both runs are independent exact evaluations. The default evaluator may
      * compress only proved exchangeable junk families; disabling that proof
      * reconstructs the physical family frontier. Raw probability-bit hashes
@@ -1127,6 +1141,12 @@ void run_closed_form_tests() {
     }
 
     const std::string bytes = serialize_strategy_eval(exact);
+    PC_CHECK(
+        bytes.find("\"operation_row_census\":{") !=
+        std::string::npos);
+    PC_CHECK(
+        bytes.find("\"projected_u32_route_tokens_bytes\":") !=
+        std::string::npos);
     PC_CHECK(bytes.find(
                  "\"reforge_resource_accounting\":"
                  "{\"schema_version\":2") != std::string::npos);
@@ -1614,6 +1634,9 @@ void run_destructive_refinement_cycle_test() {
     PC_CHECK(progress.pending_pairs == 0);
 
     const StrategyEvalResult& exact = work.result();
+    PC_CHECK(exact.operation_row_census.materialized_rows > 0);
+    PC_CHECK(exact.operation_row_census.state_local_rows > 0);
+    PC_CHECK(exact.operation_row_census.exact_outcome_entries > 0);
     PC_CHECK(
         progress.discovered_pairs == exact.refined_pairs);
     PC_CHECK(exact.raw_pairs_discovered == 76);
@@ -2312,6 +2335,15 @@ void run_scale_and_fallback_tests() {
         std::string::npos);
     PC_CHECK(
         transition_diagnostic.find("calc_owned=") != std::string::npos);
+    PC_CHECK(
+        transition_diagnostic.find("operation_rows=") !=
+        std::string::npos);
+    PC_CHECK(
+        transition_diagnostic.find("projected_u32_route_tokens=") !=
+        std::string::npos);
+    PC_CHECK(
+        transition_diagnostic.find("operation_action_census=[") !=
+        std::string::npos);
 
     StrategyEvalOptions memory_guard;
     memory_guard.max_owned_bytes = 1;

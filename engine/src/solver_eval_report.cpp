@@ -384,6 +384,50 @@ std::string serialize_strategy_eval(const StrategyEvalResult& result) {
     out += ",\"retained_bytes\":" +
            std::to_string(observation.retained_bytes) + "}";
 
+    const auto& row_census = result.operation_row_census;
+    out += ",\"operation_row_census\":{\"materialized_rows\":" +
+           std::to_string(row_census.materialized_rows);
+    out += ",\"shared_row_reuses\":" +
+           std::to_string(row_census.shared_row_reuses);
+    out += ",\"stable_shared_rows\":" +
+           std::to_string(row_census.stable_shared_rows);
+    out += ",\"unique_stable_kernels\":" +
+           std::to_string(row_census.unique_stable_kernels);
+    out += ",\"state_local_rows\":" +
+           std::to_string(row_census.state_local_rows);
+    out += ",\"exact_outcome_entries\":" +
+           std::to_string(row_census.exact_outcome_entries);
+    out += ",\"routed_transitions\":" +
+           std::to_string(row_census.routed_transitions);
+    out += ",\"absorptions\":" +
+           std::to_string(row_census.absorptions);
+    out += ",\"exact_outcome_payload_bytes\":" +
+           std::to_string(row_census.exact_outcome_payload_bytes);
+    out += ",\"unique_stable_kernel_payload_bytes\":" +
+           std::to_string(row_census.unique_stable_kernel_payload_bytes);
+    out += ",\"routed_payload_bytes\":" +
+           std::to_string(row_census.routed_payload_bytes);
+    out += ",\"projected_u32_route_tokens_bytes\":" +
+           std::to_string(row_census.projected_u32_route_tokens_bytes);
+    out += ",\"source_edge_selections\":" +
+           std::to_string(row_census.source_edge_selections);
+    out += ",\"deterministic_route_resolutions\":" +
+           std::to_string(row_census.deterministic_route_resolutions);
+    out += ",\"sampled_source_edge_selections\":" +
+           std::to_string(row_census.sampled_source_edge_selections);
+    out += ",\"sampled_source_edge_ns\":" +
+           std::to_string(row_census.sampled_source_edge_ns);
+    out += ",\"sampled_deterministic_routes\":" +
+           std::to_string(row_census.sampled_deterministic_routes);
+    out += ",\"sampled_deterministic_route_ns\":" +
+           std::to_string(row_census.sampled_deterministic_route_ns);
+    out += ",\"sampled_route_keys\":" +
+           std::to_string(row_census.sampled_route_keys);
+    out += ",\"sampled_route_key_reuses\":" +
+           std::to_string(row_census.sampled_route_key_reuses);
+    out += ",\"sampled_row_completion_ns\":" +
+           std::to_string(row_census.sampled_row_completion_ns) + "}";
+
     out += ",\"failures_by_node\":[";
     for (std::size_t i = 0; i < result.failures_by_node.size(); ++i) {
         if (i != 0) out += ',';

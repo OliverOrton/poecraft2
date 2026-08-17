@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: replayable exact operation-row recovery selected on 2026-08-17.
-Gate 0 row-ownership and replay-cost census is active.**
+**Status: replayable exact operation-row Gate 0 completed on 2026-08-17.
+Gate 1 compact shared-kernel route-token authority is active.**
 
 The original
 [Five-T1 Restart-Monotone Strategy Recovery](docs/active/2026-08-16-five-t1-restart-monotone-recovery/plan.md)
@@ -206,11 +206,19 @@ is of that fallback, not the unmaterialized candidate.
 
 Oliver has now selected the
 [replayable operation-row recovery plan](docs/active/2026-08-16-five-t1-restart-monotone-recovery/replayable-operation-row-plan.md).
-Gate 0 is active. It must first attribute unique operation rows, exact outcomes,
-routed entries, route reuse, bytes, and active time by action/family and
-stable-shared versus state-local authority. The census selects exactly one
-carrier only if it projects below both the 84.5-million-entry closure byte
-boundary and the downstream replay-time boundary.
+Gate 0 is complete. Broad stable Chaos rows own 9,962,130 of 9,974,257
+measured outcomes; the state-local Exalt fringe owns only 2,632. A 32-bit
+route token plus current trace payload is about 80.0 MB at the checked prefix
+versus 239.4 MB of routed rows. Raw `(route root, state)` and propagated-
+observation cache keys both measured zero reuse; the latter cost 225.7 MB for
+only a 1/256 shadow sample and was removed. Deterministic routing projects to
+65.8 seconds and is the runtime owner. See the
+[Gate 0 census](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/replayable-row-gate0.md).
+
+Gate 1 therefore retains immutable stable kernels once under existing exact
+authority, stores one compact route-result token per broad outcome, keeps the
+tiny state-local fringe direct, and compacts collision-safe route traces and
+results. Bounded materialized-reference parity remains mandatory.
 
 The existing split-only replay partition remains the quotient authority.
 Exact attribution currently retains the raw graph and builds a full

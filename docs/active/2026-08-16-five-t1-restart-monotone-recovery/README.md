@@ -1,7 +1,7 @@
 # Five-T1 Restart-Monotone Strategy Recovery
 
-**Status: replayable exact operation-row recovery selected on 2026-08-17.
-Gate 0 row-ownership census is active.**
+**Status: replayable exact operation-row Gate 0 complete. Gate 1 compact
+shared-kernel route-token authority is active.**
 
 Parent: [Active work](../README.md)
 
@@ -15,6 +15,7 @@ existing memory and responsiveness limits.
 - [Selected exact-evaluator successor plan](successor-plan.md)
 - [Selected streamed evaluator closure plan](streamed-evaluator-closure-plan.md)
 - [Selected replayable operation-row recovery plan](replayable-operation-row-plan.md)
+- [Replayable-row Gate 0 census and selection](evidence/replayable-row-gate0.md)
 - [Streamed closure Gate 0 census](evidence/streamed-closure-gate0.md)
 - [Streamed closure Gate 1 result and Gate 2 stop](evidence/streamed-closure-gate1-gate2-stop.md)
 - [Gate 1 result and Gate 4 stop evidence](evidence/gate1-gate4-stop.md)
@@ -33,6 +34,15 @@ zero router pairs and a 362,706,844-byte peak. The sole 20-million probe still
 stops with 27,588 operation pairs pending and a 650,793,188-byte peak; its
 measured slope reaches one GiB before closure. A broader replayable operation-
 row transition authority is now the selected recovery scope. Its first gate
-measures exact row-family ownership and replay cost before choosing a carrier,
-while reusing the existing replay partition and preserving exact attribution.
+measured exact row-family ownership and replay cost and selected the compact
+token carrier, while reusing the existing replay partition and preserving
+exact attribution.
 Release WASM and the full acceptance pipeline remain deliberately unrun.
+
+Gate 0 found that broad stable Chaos kernels own 9,962,130 of 9,974,257
+measured outcomes, while the state-local Exalt fringe owns only 2,632. A
+32-bit route token plus current trace payload projects to about 80.0 MB at the
+checked prefix versus 239.4 MB of routed rows. Both sampled route-state and
+propagated-observation caches had zero reuse. Gate 1 therefore retains shared
+kernels once, compacts exact route authorities, and stores one token per broad
+outcome.

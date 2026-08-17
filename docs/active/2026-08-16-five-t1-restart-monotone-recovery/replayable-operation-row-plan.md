@@ -1,6 +1,7 @@
 # Replayable Exact Operation-Row Recovery
 
-**Status: selected by Oliver on 2026-08-17. Gate 0 is active.**
+**Status: Gate 0 completed on 2026-08-17. Gate 1 is active with the measured
+hybrid shared-kernel plus compact route-token authority.**
 
 Parent: [Five-T1 Restart-Monotone Strategy Recovery](README.md)
 
@@ -92,13 +93,25 @@ projected 84.5-million-entry closure and downstream replay cost. If no exact
 representation projects below the byte and time boundaries, stop here with a
 measured handoff rather than layering speculative carriers.
 
+**Actual result:** selected. Broad stable Chaos rows own 9,962,130 of the
+9,974,257 measured outcomes; state-local Exalt owns only 2,632. A 32-bit token
+projection plus current trace payload is about 80.0 MB at the checked prefix
+versus 239.4 MB of routed rows. Raw `(root,state)` and propagated-observation
+caches both measured zero reuse; the latter also consumed 225.7 MB in a 1/256
+shadow sample and was removed. Deterministic routing projects to 65.8 seconds
+of the checked run and is the runtime owner. See the
+[Gate 0 evidence](evidence/replayable-row-gate0.md).
+
 ## Gate 1 - Replayable Shared Row Authority
 
 Implement the Gate 0 selection as one exact row authority. The expected shape
 is a small immutable recipe plus a compact per-outcome routing token or another
 equally proved carrier; this is not binding until the census measures it.
 
-The implementation must:
+The selected implementation keeps stable shared kernels once, stores one
+32-bit exact route-result token per broad outcome, retains the tiny state-local
+fringe directly, and compacts collision-safe route traces/results. The
+implementation must:
 
 - discover every successor and absorption exactly once;
 - share recipes only under complete equality/immutable-kernel authority;

@@ -96,6 +96,33 @@ struct StrategyEvalStageTimings {
     std::uint64_t finalization_ns = 0;
 };
 
+/* Behavior-neutral discovery census for selecting the exact replayable-row
+ * carrier. Sampled timings and route-key reuse use a deterministic 1/256
+ * sample; ownership and row/outcome counts are exact. */
+struct StrategyEvalOperationRowCensus {
+    std::uint64_t materialized_rows = 0;
+    std::uint64_t shared_row_reuses = 0;
+    std::uint64_t stable_shared_rows = 0;
+    std::uint64_t unique_stable_kernels = 0;
+    std::uint64_t state_local_rows = 0;
+    std::uint64_t exact_outcome_entries = 0;
+    std::uint64_t routed_transitions = 0;
+    std::uint64_t absorptions = 0;
+    std::uint64_t exact_outcome_payload_bytes = 0;
+    std::uint64_t unique_stable_kernel_payload_bytes = 0;
+    std::uint64_t routed_payload_bytes = 0;
+    std::uint64_t source_edge_selections = 0;
+    std::uint64_t deterministic_route_resolutions = 0;
+    std::uint64_t sampled_source_edge_selections = 0;
+    std::uint64_t sampled_source_edge_ns = 0;
+    std::uint64_t sampled_deterministic_routes = 0;
+    std::uint64_t sampled_deterministic_route_ns = 0;
+    std::uint64_t sampled_route_keys = 0;
+    std::uint64_t sampled_route_key_reuses = 0;
+    std::uint64_t sampled_row_completion_ns = 0;
+    std::uint64_t projected_u32_route_tokens_bytes = 0;
+};
+
 struct StrategyEvalClass {
     double share = 0.0;
     AbstractState state;
@@ -269,6 +296,7 @@ struct StrategyEvalResult {
     std::uint32_t pair_refinement_rounds = 0;
     std::uint64_t pair_lumpability_checks = 0;
     StrategyEvalStageTimings stage_timings;
+    StrategyEvalOperationRowCensus operation_row_census;
     StrategyEvalSubphase boundary_subphase =
         StrategyEvalSubphase::ModelSetup;
     std::uint32_t refined_pair_limit = 0;

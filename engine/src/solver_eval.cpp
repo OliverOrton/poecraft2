@@ -1,4 +1,5 @@
 #include "solver_eval_helpers.hpp"
+#include "solver_action_family_contract.hpp"
 #include "solver_cooperative_task.hpp"
 
 #include <array>
@@ -104,6 +105,17 @@ struct StrategyEvalWork::Impl {
     static_assert(
         sizeof(DeterministicRouteFlow) == 16,
         "deterministic route flow must remain a compact transient carrier");
+
+    struct OperationRowActionCensus {
+        std::uint64_t materialized_rows = 0;
+        std::uint64_t shared_row_reuses = 0;
+        std::uint64_t stable_shared_rows = 0;
+        std::uint64_t state_local_rows = 0;
+        std::uint64_t exact_outcome_entries = 0;
+        std::uint64_t routed_transitions = 0;
+        std::uint64_t absorptions = 0;
+        std::uint64_t exact_outcome_payload_bytes = 0;
+    };
 
     struct FallbackState {
         std::uint32_t component = kNoId;
@@ -232,6 +244,14 @@ struct StrategyEvalWork::Impl {
     std::vector<std::uint32_t> deterministic_route_walk_scratch;
     std::uint64_t deterministic_route_trace_payload_owned_bytes = 0;
     std::vector<DeterministicRouteFlow> deterministic_route_flows;
+    std::vector<OperationRowActionCensus> operation_row_census_by_action;
+    std::vector<const OutcomeDistribution*> census_stable_distributions;
+    /* Exact keys for a deterministic 1/256 sample of (route root, state).
+     * Packing two uint32 words is collision-free; the chained index uses the
+     * full packed key as equality authority. */
+    std::vector<std::uint32_t> route_sample_bucket_heads;
+    std::vector<std::uint32_t> route_sample_next;
+    std::vector<std::uint64_t> route_sample_keys;
     std::vector<ObservationRequirement>
         node_observation_requirements;
 
@@ -549,6 +569,14 @@ struct StrategyEvalWork::Impl {
                  sizeof(std::uint32_t);
         bytes += deterministic_route_flows.capacity() *
                  sizeof(DeterministicRouteFlow);
+        bytes += operation_row_census_by_action.capacity() *
+                 sizeof(OperationRowActionCensus);
+        bytes += census_stable_distributions.capacity() *
+                 sizeof(const OutcomeDistribution*);
+        bytes += route_sample_bucket_heads.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += route_sample_next.capacity() * sizeof(std::uint32_t);
+        bytes += route_sample_keys.capacity() * sizeof(std::uint64_t);
         bytes += output_owned_bytes();
         if (finalization_task.has_value()) {
             bytes += finalization_task->retained_bytes();
@@ -681,6 +709,14 @@ struct StrategyEvalWork::Impl {
                  sizeof(std::uint32_t);
         bytes += deterministic_route_flows.capacity() *
                  sizeof(DeterministicRouteFlow);
+        bytes += operation_row_census_by_action.capacity() *
+                 sizeof(OperationRowActionCensus);
+        bytes += census_stable_distributions.capacity() *
+                 sizeof(const OutcomeDistribution*);
+        bytes += route_sample_bucket_heads.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += route_sample_next.capacity() * sizeof(std::uint32_t);
+        bytes += route_sample_keys.capacity() * sizeof(std::uint64_t);
         bytes += output_owned_bytes();
         if (finalization_task.has_value()) {
             bytes += finalization_task->retained_bytes();
@@ -952,6 +988,8 @@ struct StrategyEvalWork::Impl {
             options.max_reforge_work,
             false,
             options.max_owned_bytes);
+        operation_row_census_by_action.resize(
+            model.calc->registry().actions.size());
         output.targets = model.targets;
         for (const ReviewSectionSpec& section : review_sections) {
             review_payload_owned_bytes +=
@@ -1080,6 +1118,113 @@ struct StrategyEvalWork::Impl {
         value = (value ^ (value >> 27u)) *
                 0x94d049bb133111ebull;
         return value ^ (value >> 31u);
+    }
+
+    static std::uint64_t route_sample_key(
+            const std::uint32_t root,
+            const std::uint32_t state) {
+        return (static_cast<std::uint64_t>(root) << 32u) | state;
+    }
+
+    static bool census_sample(const std::uint64_t key) {
+        return (mix_pair_index_word(key) & 0xffu) == 0;
+    }
+
+    void rehash_route_sample_index(const std::size_t bucket_count) {
+        if (bucket_count == 0 ||
+            (bucket_count & (bucket_count - 1)) != 0) {
+            throw std::logic_error(
+                "strategy evaluation route-sample buckets are not a power "
+                "of two");
+        }
+        check_owned_cap(bucket_count * sizeof(std::uint32_t));
+        std::vector<std::uint32_t> replacement(bucket_count, kNoId);
+        route_sample_next.resize(route_sample_keys.size(), kNoId);
+        for (std::uint32_t index = 0;
+             index < route_sample_keys.size(); ++index) {
+            const std::size_t bucket =
+                mix_pair_index_word(route_sample_keys[index]) &
+                (bucket_count - 1);
+            route_sample_next[index] = replacement[bucket];
+            replacement[bucket] = index;
+        }
+        route_sample_bucket_heads.swap(replacement);
+    }
+
+    void observe_sampled_route_key(
+            const std::uint32_t root,
+            const std::uint32_t state) {
+        const std::uint64_t key = route_sample_key(root, state);
+        if (!census_sample(key)) return;
+        auto& census = output.operation_row_census;
+        ++census.sampled_route_keys;
+        if (route_sample_bucket_heads.empty()) {
+            rehash_route_sample_index(64);
+        } else if (route_sample_keys.size() >=
+                   route_sample_bucket_heads.size() * 6) {
+            rehash_route_sample_index(
+                route_sample_bucket_heads.size() * 2);
+        }
+        const std::size_t bucket =
+            mix_pair_index_word(key) &
+            (route_sample_bucket_heads.size() - 1);
+        for (std::uint32_t candidate = route_sample_bucket_heads[bucket];
+             candidate != kNoId;
+             candidate = route_sample_next[candidate]) {
+            if (route_sample_keys[candidate] == key) {
+                ++census.sampled_route_key_reuses;
+                return;
+            }
+        }
+        const std::uint32_t index =
+            static_cast<std::uint32_t>(route_sample_keys.size());
+        route_sample_keys.push_back(key);
+        route_sample_next.push_back(route_sample_bucket_heads[bucket]);
+        route_sample_bucket_heads[bucket] = index;
+        check_owned_cap();
+    }
+
+    static std::uint64_t outcome_payload_bytes(
+            const OutcomeDistribution& outcomes) {
+        std::uint64_t bytes =
+            outcomes.entries.capacity() * sizeof(OutcomeEntry) +
+            outcomes.choice_groups.capacity() * sizeof(OutcomeChoiceGroup) +
+            outcomes.choice_options.capacity() * sizeof(OutcomeChoiceOption);
+        for (const OutcomeChoiceGroup& group : outcomes.choice_groups) {
+            bytes += group.states.capacity() * sizeof(std::uint32_t);
+        }
+        return bytes;
+    }
+
+    refinement::StableKey node_observation_key(
+            const std::uint32_t node,
+            const std::uint32_t state) const {
+        const ObservationRequirement& requirement =
+            node_observation_requirements.at(node);
+        if (requirement.item_features == 0 &&
+            requirement.modifier_tag_ids.empty() &&
+            requirement.affix_observations.empty()) {
+            return refinement::StableKey{
+                0x6576616c6f627330ull}; /* "evalobs0" */
+        }
+        const refinement::AbstractFeatureExtraction extraction =
+            refinement::extract_strict_abstract_features(
+                model.calc->session(), model.calc->layout(),
+                model.calc->state(state), requirement);
+        if (!extraction.complete()) {
+            throw StrategyEvalUnsupported(
+                "strategy evaluation unsupported:\n- node '" +
+                strategy->nodes.at(node).id +
+                "' requires an exact observation discarded by the "
+                "evaluation carrier");
+        }
+        const refinement::FeatureSignature observed =
+            refinement::observe_features(
+                extraction.features, requirement);
+        refinement::StableKey key{
+            0x6576616c6f627331ull}; /* "evalobs1" */
+        append_feature_signature(key, observed);
+        return key;
     }
 
     static std::uint64_t pair_index_hash(
@@ -1230,6 +1375,39 @@ struct StrategyEvalWork::Impl {
         return row.transition_via.at(transition);
     }
 
+    std::string operation_row_census_summary() const {
+        std::ostringstream out;
+        out << '[';
+        bool first = true;
+        const auto& actions = model.calc->registry().actions;
+        for (std::size_t index = 0;
+             index < operation_row_census_by_action.size(); ++index) {
+            const OperationRowActionCensus& census =
+                operation_row_census_by_action[index];
+            if (census.materialized_rows == 0 &&
+                census.shared_row_reuses == 0) {
+                continue;
+            }
+            if (!first) out << ';';
+            first = false;
+            out << actions.at(index).id
+                << ":family="
+                << static_cast<unsigned>(primitive_family_for_action(
+                       actions.at(index).params.type))
+                << ":rows=" << census.materialized_rows
+                << ":reuses=" << census.shared_row_reuses
+                << ":stable=" << census.stable_shared_rows
+                << ":local=" << census.state_local_rows
+                << ":outcomes=" << census.exact_outcome_entries
+                << ":routed=" << census.routed_transitions
+                << ":absorptions=" << census.absorptions
+                << ":outcome_payload="
+                << census.exact_outcome_payload_bytes;
+        }
+        out << ']';
+        return out.str();
+    }
+
     void ensure_transition_budget(std::uint64_t additional) const {
         if (stored_transitions > options.max_transitions ||
             additional > options.max_transitions - stored_transitions) {
@@ -1307,6 +1485,77 @@ struct StrategyEvalWork::Impl {
                     std::to_string(
                         deterministic_route_flows.capacity() *
                         sizeof(DeterministicRouteFlow)) +
+                ", operation_rows=" +
+                    std::to_string(
+                        output.operation_row_census.materialized_rows) +
+                ", operation_row_reuses=" +
+                    std::to_string(
+                        output.operation_row_census.shared_row_reuses) +
+                ", operation_stable_rows=" +
+                    std::to_string(
+                        output.operation_row_census.stable_shared_rows) +
+                ", operation_unique_stable_kernels=" +
+                    std::to_string(
+                        output.operation_row_census.unique_stable_kernels) +
+                ", operation_state_local_rows=" +
+                    std::to_string(
+                        output.operation_row_census.state_local_rows) +
+                ", operation_exact_outcomes=" +
+                    std::to_string(
+                        output.operation_row_census.exact_outcome_entries) +
+                ", operation_outcome_payload=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .exact_outcome_payload_bytes) +
+                ", operation_unique_stable_kernel_payload=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .unique_stable_kernel_payload_bytes) +
+                ", operation_routed_payload=" +
+                    std::to_string(
+                        output.operation_row_census.routed_payload_bytes) +
+                ", projected_u32_route_tokens=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .projected_u32_route_tokens_bytes) +
+                ", operation_source_edge_selections=" +
+                    std::to_string(
+                        output.operation_row_census.source_edge_selections) +
+                ", operation_deterministic_routes=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .deterministic_route_resolutions) +
+                ", route_sample_requests=" +
+                    std::to_string(
+                        output.operation_row_census.sampled_route_keys) +
+                ", route_sample_reuses=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .sampled_route_key_reuses) +
+                ", route_sample_unique=" +
+                    std::to_string(route_sample_keys.size()) +
+                ", source_edge_sample_calls=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .sampled_source_edge_selections) +
+                ", source_edge_sample_ns=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .sampled_source_edge_ns) +
+                ", deterministic_route_sample_calls=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .sampled_deterministic_routes) +
+                ", deterministic_route_sample_ns=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .sampled_deterministic_route_ns) +
+                ", row_completion_sample_ns=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .sampled_row_completion_ns) +
+                ", operation_action_census=" +
+                    operation_row_census_summary() +
                 ", owned=" +
                     std::to_string(fast_estimated_owned_bytes()) +
                 ")");
@@ -1690,6 +1939,10 @@ struct StrategyEvalWork::Impl {
         const OutcomeDistribution* shared_distribution = nullptr;
         bool release_operation_outcome = false;
         bool release_goal_progress_gated_outcome = false;
+        bool census_operation_distribution = false;
+        bool census_stable_shared_kernel = false;
+        std::uint64_t census_outcome_entries = 0;
+        std::uint64_t census_outcome_payload_bytes = 0;
         std::map<
             std::tuple<
                 std::uint32_t, std::uint32_t, std::uint32_t,
@@ -1754,8 +2007,24 @@ struct StrategyEvalWork::Impl {
                 throw std::runtime_error(
                     "strategy evaluation found a non-finite transition");
             }
+            auto& census = output.operation_row_census;
+            const bool operation_route =
+                node.kind == StrategyNodeKind::Operation;
+            if (operation_route) ++census.source_edge_selections;
+            const bool sampled_source = operation_route && census_sample(
+                route_sample_key(node_index, state));
+            const Clock::time_point source_started =
+                sampled_source ? Clock::now() : Clock::time_point{};
             const StrategyEdge* selected =
                 select_edge(node, state, offered_mods);
+            if (sampled_source) {
+                ++census.sampled_source_edge_selections;
+                census.sampled_source_edge_ns +=
+                    static_cast<std::uint64_t>(
+                        std::chrono::duration_cast<std::chrono::nanoseconds>(
+                            Clock::now() - source_started)
+                            .count());
+            }
             if (selected == nullptr) {
                 add_absorption(
                     {static_cast<int>(EvalAbsorptionKind::NoMatchingEdge),
@@ -1782,8 +2051,28 @@ struct StrategyEvalWork::Impl {
                 target_node = resolution.target_node;
             }
             if (policy_route == kNoId) {
+                const bool deterministic =
+                    online_deterministic_router(target_node);
+                if (deterministic && operation_route) {
+                    ++census.deterministic_route_resolutions;
+                    observe_sampled_route_key(target_node, state);
+                }
+                const bool sampled_route =
+                    deterministic && operation_route && census_sample(
+                        route_sample_key(target_node, state));
+                const Clock::time_point route_started =
+                    sampled_route ? Clock::now() : Clock::time_point{};
                 const DeterministicRouteResolution resolution =
                     resolve_deterministic_route(target_node, state);
+                if (sampled_route) {
+                    ++census.sampled_deterministic_routes;
+                    census.sampled_deterministic_route_ns +=
+                        static_cast<std::uint64_t>(
+                            std::chrono::duration_cast<
+                                std::chrono::nanoseconds>(
+                                Clock::now() - route_started)
+                                .count());
+                }
                 if (resolution.trace != kNoId) {
                     policy_route = encode_deterministic_route_authority(
                         resolution.trace);
@@ -1997,6 +2286,15 @@ struct StrategyEvalWork::Impl {
                             "state");
                     }
                     ensure_state_limit();
+                    census_operation_distribution = true;
+                    census_stable_shared_kernel =
+                        outcomes.stable_shared_kernel;
+                    census_outcome_entries =
+                        action_observes_modifier_offer(action)
+                            ? 1
+                            : outcomes.entries.size();
+                    census_outcome_payload_bytes =
+                        outcome_payload_bytes(outcomes);
                     if (outcomes.stable_shared_kernel) {
                         const auto shared = row_by_distribution.find(
                             {node_index, checkpoint_state_id, &outcomes});
@@ -2004,6 +2302,16 @@ struct StrategyEvalWork::Impl {
                             EvalPair& pair = pairs.at(pair_id);
                             pair.consumes = consumes;
                             pair.row = shared->second;
+                            auto& total = output.operation_row_census;
+                            ++total.shared_row_reuses;
+                            total.projected_u32_route_tokens_bytes =
+                                total.exact_outcome_entries *
+                                sizeof(std::uint32_t);
+                            if (action_index <
+                                operation_row_census_by_action.size()) {
+                                ++operation_row_census_by_action[action_index]
+                                      .shared_row_reuses;
+                            }
                             record_expanded_pair(
                                 pair_id, rows.at(pair.row), true);
                             return;
@@ -2069,6 +2377,11 @@ struct StrategyEvalWork::Impl {
             }
         }
 
+        const bool sampled_row_completion =
+            node.kind == StrategyNodeKind::Operation && census_sample(
+                route_sample_key(node_index, state_id));
+        const Clock::time_point row_completion_started =
+            sampled_row_completion ? Clock::now() : Clock::time_point{};
         EvalPair& pair = pairs.at(pair_id);
         pair.consumes = consumes;
         EvalRow row;
@@ -2115,6 +2428,63 @@ struct StrategyEvalWork::Impl {
             row.transitions.capacity() * sizeof(EvalTransition) +
             row.transition_via.capacity() * sizeof(std::uint32_t) +
             row.absorptions.capacity() * sizeof(EvalAbsorption);
+        if (node.kind == StrategyNodeKind::Operation) {
+            auto& total = output.operation_row_census;
+            ++total.materialized_rows;
+            total.routed_transitions += row.transitions.size();
+            total.absorptions += row.absorptions.size();
+            total.routed_payload_bytes +=
+                row.transitions.capacity() * sizeof(EvalTransition) +
+                row.absorptions.capacity() * sizeof(EvalAbsorption);
+            if (census_operation_distribution) {
+                total.exact_outcome_entries += census_outcome_entries;
+                total.exact_outcome_payload_bytes +=
+                    census_outcome_payload_bytes;
+                if (census_stable_shared_kernel) {
+                    ++total.stable_shared_rows;
+                    if (std::find(
+                            census_stable_distributions.begin(),
+                            census_stable_distributions.end(),
+                            shared_distribution) ==
+                        census_stable_distributions.end()) {
+                        census_stable_distributions.push_back(
+                            shared_distribution);
+                        ++total.unique_stable_kernels;
+                        total.unique_stable_kernel_payload_bytes +=
+                            census_outcome_payload_bytes;
+                    }
+                } else {
+                    ++total.state_local_rows;
+                }
+            }
+            total.projected_u32_route_tokens_bytes =
+                total.exact_outcome_entries * sizeof(std::uint32_t);
+            if (action_index < operation_row_census_by_action.size()) {
+                OperationRowActionCensus& action_census =
+                    operation_row_census_by_action[action_index];
+                ++action_census.materialized_rows;
+                action_census.routed_transitions += row.transitions.size();
+                action_census.absorptions += row.absorptions.size();
+                if (census_operation_distribution) {
+                    action_census.exact_outcome_entries +=
+                        census_outcome_entries;
+                    action_census.exact_outcome_payload_bytes +=
+                        census_outcome_payload_bytes;
+                    if (census_stable_shared_kernel) {
+                        ++action_census.stable_shared_rows;
+                    } else {
+                        ++action_census.state_local_rows;
+                    }
+                }
+            }
+        }
+        if (sampled_row_completion) {
+            output.operation_row_census.sampled_row_completion_ns +=
+                static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        Clock::now() - row_completion_started)
+                        .count());
+        }
         pair.row = static_cast<std::uint32_t>(rows.size());
         record_expanded_pair(pair_id, row, false);
         rows.push_back(std::move(row));
@@ -2217,34 +2587,7 @@ struct StrategyEvalWork::Impl {
 
     refinement::StableKey pair_observation_key(
         const EvalPair& pair) const {
-        const ObservationRequirement& requirement =
-            node_observation_requirements.at(pair.node);
-        if (requirement.item_features == 0 &&
-            requirement.modifier_tag_ids.empty() &&
-            requirement.affix_observations.empty()) {
-            return refinement::StableKey{
-                0x6576616c6f627330ull}; /* "evalobs0" */
-        }
-        const refinement::AbstractFeatureExtraction extraction =
-            refinement::extract_strict_abstract_features(
-                model.calc->session(),
-                model.calc->layout(),
-                model.calc->state(pair.state),
-                requirement);
-        if (!extraction.complete()) {
-            throw StrategyEvalUnsupported(
-                "strategy evaluation unsupported:\n- node '" +
-                strategy->nodes.at(pair.node).id +
-                "' requires an exact observation discarded by the "
-                "evaluation carrier");
-        }
-        const refinement::FeatureSignature observed =
-            refinement::observe_features(
-                extraction.features, requirement);
-        refinement::StableKey key{
-            0x6576616c6f627331ull}; /* "evalobs1" */
-        append_feature_signature(key, observed);
-        return key;
+        return node_observation_key(pair.node, pair.state);
     }
 
     bool pair_is_operation(const EvalPair& pair) const {
