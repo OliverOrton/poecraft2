@@ -7343,11 +7343,19 @@ const StrategyEvalResult& StrategyEvalWork::diagnostic_result() {
         output.reforge_row_samples_omitted =
             telemetry.reforge_row_samples_omitted;
     }
-    output.raw_pairs_discovered = static_cast<std::uint32_t>(
-        std::min<std::size_t>(
-            impl_->pairs.size(),
-            std::numeric_limits<std::uint32_t>::max()));
-    output.refined_pairs = output.raw_pairs_discovered;
+    /* Before refinement starts, the live pair carrier is the only exact
+     * discovery count available. Once refinement records its raw and
+     * quotient counts, keep those authorities: quotient conversion replaces
+     * the live carrier before a later resource stop can request diagnostics. */
+    if (output.raw_pairs_discovered == 0) {
+        output.raw_pairs_discovered = static_cast<std::uint32_t>(
+            std::min<std::size_t>(
+                impl_->pairs.size(),
+                std::numeric_limits<std::uint32_t>::max()));
+    }
+    if (output.refined_pairs == 0) {
+        output.refined_pairs = output.raw_pairs_discovered;
+    }
     output.owned_bytes_estimate =
         impl_->fast_estimated_owned_bytes();
     output.retained_output_owned_bytes_estimate =

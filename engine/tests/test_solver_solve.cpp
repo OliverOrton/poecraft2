@@ -393,6 +393,14 @@ void run_direct_certification_contract_tests() {
         refinement::compiled_policy_failure_classification(pair_cap) ==
         "exact_eval_pair_discovery_memory_cap");
 
+    refinement::CompiledPolicyAssertion refinement_memory_cap = pair_cap;
+    refinement_memory_cap.evaluation.boundary_subphase =
+        StrategyEvalSubphase::PairRefinement;
+    PC_CHECK(
+        refinement::compiled_policy_failure_classification(
+            refinement_memory_cap) ==
+        "exact_eval_pair_refinement_memory_cap");
+
     refinement::CompiledPolicyAssertion transition_cap = pair_cap;
     transition_cap.resource_cap = "max_transitions";
     transition_cap.failure_reason =

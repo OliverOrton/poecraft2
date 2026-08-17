@@ -1642,6 +1642,10 @@ void run_destructive_refinement_cycle_test() {
     PC_CHECK(progress.pending_pairs == 0);
 
     const StrategyEvalResult& exact = work.result();
+    const StrategyEvalResult& completed_diagnostic =
+        work.diagnostic_result();
+    PC_CHECK(completed_diagnostic.raw_pairs_discovered == 76);
+    PC_CHECK(completed_diagnostic.refined_pairs == 57);
     PC_CHECK(exact.operation_row_census.materialized_rows > 0);
     PC_CHECK(exact.operation_row_census.state_local_rows > 0);
     PC_CHECK(exact.operation_row_census.exact_outcome_entries > 0);

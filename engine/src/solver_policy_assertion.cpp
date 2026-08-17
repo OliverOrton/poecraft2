@@ -46,6 +46,10 @@ std::string compiled_policy_failure_classification(
             std::string::npos) {
             return "exact_eval_observation_memory_cap";
         }
+        if (result.evaluation.boundary_subphase ==
+            StrategyEvalSubphase::PairRefinement) {
+            return "exact_eval_pair_refinement_memory_cap";
+        }
         if (result.failure_reason.find("pairs=") !=
                 std::string::npos ||
             result.failure_reason.find("path=pre_component") !=
