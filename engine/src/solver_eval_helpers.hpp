@@ -26,6 +26,7 @@
 #include "json.hpp"
 #include "poecraft/bitset.h"
 #include "solver_refinement.hpp"
+#include "solver_segmented_vector.hpp"
 #include "solver_sparse_policy.hpp"
 
 namespace poecraft {
@@ -120,11 +121,16 @@ struct EvalPair {
     std::uint32_t checkpoint_state = kNoId;
     /* Interned sampled Unveil offer carried through its routing DAG. */
     std::uint32_t unveil_offer = kNoId;
-    bool operation = false;
-    bool consumes = false;
-    std::uint32_t action = kNoId;
     std::uint32_t row = kNoId;
+    /* Whether this operation was legal and consumed its material. Operation
+     * kind and action descriptor are exact functions of the compiled node and
+     * are deliberately not duplicated in every raw pair. */
+    bool consumes = false;
 };
+
+static_assert(
+    sizeof(EvalPair) == 24,
+    "raw exact-evaluator pair records must remain compact");
 
 void add_gap(std::vector<std::string>& gaps, const std::string& gap) {
     if (std::find(gaps.begin(), gaps.end(), gap) == gaps.end()) {

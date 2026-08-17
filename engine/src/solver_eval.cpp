@@ -117,8 +117,8 @@ struct StrategyEvalWork::Impl {
      * next link per pair instead of duplicating every four-word key in an
      * ordered-tree node. Full key equality remains authoritative. */
     std::vector<std::uint32_t> pair_bucket_heads;
-    std::vector<std::uint32_t> pair_next;
-    std::vector<EvalPair> pairs;
+    solve_detail::SegmentedVector<std::uint32_t> pair_next;
+    solve_detail::SegmentedVector<EvalPair> pairs;
     std::map<std::vector<std::uint32_t>, std::uint32_t>
         unveil_offer_by_mods;
     std::vector<std::vector<std::uint32_t>> unveil_offer_sets;
@@ -127,7 +127,7 @@ struct StrategyEvalWork::Impl {
      * carrier. Retain the pre-quotient graph until finalization solely to
      * disaggregate that flow back onto exact evaluator states and terminal
      * states; no representative state is authoritative for reporting. */
-    std::vector<EvalPair> attribution_pairs;
+    solve_detail::SegmentedVector<EvalPair> attribution_pairs;
     std::vector<EvalRow> attribution_rows;
     std::vector<std::uint32_t> attribution_class_by_pair;
     std::vector<solve_detail::WideFloat>
@@ -341,8 +341,8 @@ struct StrategyEvalWork::Impl {
             bytes += string_vector_bytes(section.edges);
         }
         bytes += pair_bucket_heads.capacity() * sizeof(std::uint32_t);
-        bytes += pair_next.capacity() * sizeof(std::uint32_t);
-        bytes += pairs.capacity() * sizeof(EvalPair);
+        bytes += pair_next.owned_bytes();
+        bytes += pairs.owned_bytes();
         bytes += node_observation_requirements.capacity() *
                  sizeof(ObservationRequirement);
         for (const ObservationRequirement& requirement :
@@ -367,7 +367,7 @@ struct StrategyEvalWork::Impl {
             bytes += row.transition_via.capacity() * sizeof(std::uint32_t);
             bytes += row.absorptions.capacity() * sizeof(EvalAbsorption);
         }
-        bytes += attribution_pairs.capacity() * sizeof(EvalPair);
+        bytes += attribution_pairs.owned_bytes();
         bytes += attribution_rows.capacity() * sizeof(EvalRow);
         bytes += attribution_class_by_pair.capacity() *
                  sizeof(std::uint32_t);
@@ -493,8 +493,8 @@ struct StrategyEvalWork::Impl {
         bytes += review_sections.capacity() * sizeof(ReviewSectionSpec);
         bytes += review_payload_owned_bytes;
         bytes += pair_bucket_heads.capacity() * sizeof(std::uint32_t);
-        bytes += pair_next.capacity() * sizeof(std::uint32_t);
-        bytes += pairs.capacity() * sizeof(EvalPair);
+        bytes += pair_next.owned_bytes();
+        bytes += pairs.owned_bytes();
         bytes += node_observation_requirements.capacity() *
                  sizeof(ObservationRequirement);
         bytes += observation_requirement_owned_bytes;
@@ -512,7 +512,7 @@ struct StrategyEvalWork::Impl {
         }
         bytes += rows.capacity() * sizeof(EvalRow);
         bytes += row_payload_owned_bytes;
-        bytes += attribution_pairs.capacity() * sizeof(EvalPair);
+        bytes += attribution_pairs.owned_bytes();
         bytes += attribution_rows.capacity() * sizeof(EvalRow);
         bytes += attribution_class_by_pair.capacity() *
                  sizeof(std::uint32_t);
@@ -636,8 +636,7 @@ struct StrategyEvalWork::Impl {
                     std::to_string(
                         pair_bucket_heads.capacity() *
                             sizeof(std::uint32_t) +
-                        pair_next.capacity() *
-                            sizeof(std::uint32_t)) +
+                        pair_next.owned_bytes()) +
                 ", rows=" + std::to_string(rows.size()) +
                 ", transitions=" + std::to_string(stored_transitions) +
                 ", graph_nodes=" +
@@ -756,8 +755,7 @@ struct StrategyEvalWork::Impl {
                     std::to_string(
                         pair_bucket_heads.capacity() *
                             sizeof(std::uint32_t) +
-                        pair_next.capacity() *
-                            sizeof(std::uint32_t)) +
+                        pair_next.owned_bytes()) +
                 ", rows=" + std::to_string(rows.size()) +
                 ", transitions=" + std::to_string(stored_transitions) +
                 ", graph_nodes=" +
@@ -994,7 +992,7 @@ struct StrategyEvalWork::Impl {
     std::uint64_t pair_index_owned_bytes() const {
         return
             pair_bucket_heads.capacity() * sizeof(std::uint32_t) +
-            pair_next.capacity() * sizeof(std::uint32_t);
+            pair_next.owned_bytes();
     }
 
     void rehash_pair_index(const std::size_t bucket_count) {
@@ -1049,7 +1047,7 @@ struct StrategyEvalWork::Impl {
             output.pair_discovery_index_peak_bytes,
             pair_index_owned_bytes());
         std::vector<std::uint32_t>().swap(pair_bucket_heads);
-        std::vector<std::uint32_t>().swap(pair_next);
+        pair_next.release();
         decltype(row_by_distribution){}.swap(row_by_distribution);
     }
 
@@ -1081,6 +1079,9 @@ struct StrategyEvalWork::Impl {
             }
         }
         const std::uint32_t id = static_cast<std::uint32_t>(pairs.size());
+        check_owned_cap(capped_add(
+            pairs.additional_owned_bytes_for_push(),
+            pair_next.additional_owned_bytes_for_push()));
         EvalPair pair;
         pair.node = node;
         pair.state = state;
@@ -1128,6 +1129,12 @@ struct StrategyEvalWork::Impl {
                 std::to_string(options.max_transitions) +
                 "; stored=" + std::to_string(stored_transitions) +
                 ", pairs=" + std::to_string(pairs.size()) +
+                ", pair_record_bytes=" +
+                    std::to_string(sizeof(EvalPair)) +
+                ", pair_carrier=" +
+                    std::to_string(pairs.owned_bytes()) +
+                ", pair_links=" +
+                    std::to_string(pair_next.owned_bytes()) +
                 ", row_payload=" +
                     std::to_string(row_payload_owned_bytes) +
                 ", transition_record_bytes=" +
@@ -1322,7 +1329,6 @@ struct StrategyEvalWork::Impl {
                 ? nullptr
                 : &unveil_offer_sets.at(unveil_offer_id);
         const StrategyNode& node = strategy->nodes.at(node_index);
-        bool operation = false;
         bool consumes = false;
         std::uint32_t action_index = kNoId;
         const OutcomeDistribution* shared_distribution = nullptr;
@@ -1523,7 +1529,6 @@ struct StrategyEvalWork::Impl {
                 }
             }
         } else {
-            operation = true;
             const ResolvedStrategyOperation& resolved =
                 model.operation_by_node.at(node_index);
             if (resolved.kind ==
@@ -1623,9 +1628,7 @@ struct StrategyEvalWork::Impl {
                             {node_index, checkpoint_state_id, &outcomes});
                         if (shared != row_by_distribution.end()) {
                             EvalPair& pair = pairs.at(pair_id);
-                            pair.operation = operation;
                             pair.consumes = consumes;
-                            pair.action = action_index;
                             pair.row = shared->second;
                             return;
                         }
@@ -1691,9 +1694,7 @@ struct StrategyEvalWork::Impl {
         }
 
         EvalPair& pair = pairs.at(pair_id);
-        pair.operation = operation;
         pair.consumes = consumes;
-        pair.action = action_index;
         EvalRow row;
         row.transitions.reserve(transitions.size());
         for (const auto& [key, probability] : transitions) {
@@ -1850,14 +1851,33 @@ struct StrategyEvalWork::Impl {
         return key;
     }
 
+    bool pair_is_operation(const EvalPair& pair) const {
+        if (pair.node >= strategy->nodes.size()) {
+            throw std::logic_error(
+                "strategy evaluation pair has no compiled node");
+        }
+        return strategy->nodes[pair.node].kind ==
+               StrategyNodeKind::Operation;
+    }
+
+    std::uint32_t pair_action(const EvalPair& pair) const {
+        if (!pair_is_operation(pair)) return kNoId;
+        const ResolvedStrategyOperation& operation =
+            model.operation_by_node.at(pair.node);
+        return operation.kind == ResolvedStrategyOperationKind::Bestiary
+            ? kNoId
+            : operation.descriptor_index;
+    }
+
     refinement::StableKey pair_immediate_key(
         const EvalPair& pair) const {
+        const bool operation = pair_is_operation(pair);
         refinement::StableKey key{
             0x6576616c696d6d31ull, /* "evalimm1" */
             pair.node,
-            pair.operation ? 1u : 0u,
+            operation ? 1u : 0u,
             pair.consumes ? 1u : 0u};
-        append_optional_u32(key, pair.action);
+        append_optional_u32(key, pair_action(pair));
         append_unveil_offer(key, pair.unveil_offer);
         return key;
     }
@@ -2376,16 +2396,15 @@ struct StrategyEvalWork::Impl {
 
         {
             pair_refinement_identity_graph_intact = false;
-            std::vector<EvalPair> raw_pairs = std::move(pairs);
+            solve_detail::SegmentedVector<EvalPair> raw_pairs =
+                std::move(pairs);
             std::vector<EvalRow> raw_rows = std::move(rows);
             attribution_start_pair = start_pair;
             stored_transitions = 0;
             row_payload_owned_bytes = 0;
             std::uint64_t raw_graph_bytes =
                 saturated_add(
-                    saturated_product(
-                        raw_pairs.capacity(),
-                        sizeof(EvalPair)),
+                    raw_pairs.owned_bytes(),
                     saturated_product(
                         raw_rows.capacity(),
                         sizeof(EvalRow)));
@@ -2414,8 +2433,8 @@ struct StrategyEvalWork::Impl {
                 };
             check_conversion();
             check_conversion(saturated_add(
-                saturated_product(
-                    refined_class_count, sizeof(EvalPair)),
+                solve_detail::SegmentedVector<EvalPair>::
+                    projected_owned_bytes(refined_class_count),
                 saturated_product(
                     refined_class_count, sizeof(EvalRow))));
             pairs.assign(refined_class_count, EvalPair{});
@@ -4319,8 +4338,10 @@ struct StrategyEvalWork::Impl {
                 co_await solve_detail::CooperativeCheckpoint{};
             }
         }
-        std::uint32_t projected_pairs = 0;
-        for (const EvalPair& pair : attribution_pairs) {
+        for (std::uint32_t projected_pairs = 0;
+             projected_pairs < attribution_pairs.size();
+             ++projected_pairs) {
+            const EvalPair& pair = attribution_pairs[projected_pairs];
             if (pair.row >= attribution_rows.size()) {
                 throw std::logic_error(
                     "strategy evaluation exact attribution row is missing");
@@ -4328,7 +4349,7 @@ struct StrategyEvalWork::Impl {
             edge_count = capped_add(
                 edge_count,
                 attribution_rows[pair.row].transitions.size());
-            if ((++projected_pairs & 127u) == 0u) {
+            if (((projected_pairs + 1) & 127u) == 0u) {
                 co_await solve_detail::CooperativeCheckpoint{};
             }
         }
@@ -4379,7 +4400,9 @@ struct StrategyEvalWork::Impl {
         memory_probe_unit_bytes = 0;
 
         std::vector<std::uint32_t> incoming_counts(count, 0);
-        for (const EvalPair& pair : attribution_pairs) {
+        for (std::uint32_t pair_id = 0;
+             pair_id < attribution_pairs.size(); ++pair_id) {
+            const EvalPair& pair = attribution_pairs[pair_id];
             for (const EvalTransition& transition :
                  attribution_rows[pair.row].transitions) {
                 if (incoming_counts[transition.target] ==
@@ -4768,7 +4791,7 @@ struct StrategyEvalWork::Impl {
         (void)chain_propagation.take_result();
         std::vector<double> exact_pair_visits_owned;
         const std::vector<double>* exact_pair_visits = &pair_visits;
-        const std::vector<EvalPair>* exact_pairs = &pairs;
+        const solve_detail::SegmentedVector<EvalPair>* exact_pairs = &pairs;
         if (!attribution_pairs.empty()) {
             auto exact_attribution = solve_exact_attribution();
             while (!exact_attribution.resume()) {
@@ -4920,10 +4943,12 @@ struct StrategyEvalWork::Impl {
         output.reforge_row_samples_omitted =
             calc.telemetry().reforge_row_samples_omitted;
         const std::size_t node_count = strategy->nodes.size();
-        const std::size_t operation_pair_count = static_cast<std::size_t>(
-            std::count_if(
-                exact_pairs->begin(), exact_pairs->end(),
-                [](const EvalPair& pair) { return pair.operation; }));
+        std::size_t operation_pair_count = 0;
+        for (std::size_t pair = 0; pair < exact_pairs->size(); ++pair) {
+            if (pair_is_operation((*exact_pairs)[pair])) {
+                ++operation_pair_count;
+            }
+        }
         std::uint64_t finalization_transient_floor =
             capped_product(
                 exact_pair_visits_owned.capacity(), sizeof(double)) +
@@ -5024,7 +5049,7 @@ struct StrategyEvalWork::Impl {
             const double visits = exact_pair_visits->at(pair);
             node_visits[record.node] += visits;
             incoming[record.node][record.state] += visits;
-            if (record.operation) {
+            if (pair_is_operation(record)) {
                 output.expected_actions += visits;
                 operation_visits[record.node] += visits;
                 StrategyEvalOccupancyEntry retained;
@@ -5119,7 +5144,7 @@ struct StrategyEvalWork::Impl {
                 }
             }
         }
-        std::vector<EvalPair>().swap(attribution_pairs);
+        attribution_pairs.release();
         std::vector<EvalRow>().swap(attribution_rows);
         std::vector<std::uint32_t>().swap(
             attribution_class_by_pair);
