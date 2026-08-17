@@ -1856,6 +1856,11 @@ std::string serialize_solver_telemetry(
                 std::to_string(evaluation_stages.exact_kernel_ns);
         json += ",\"pair_refinement\":" +
                 std::to_string(evaluation_stages.pair_refinement_ns);
+        json += ",\"pair_partition\":" +
+                std::to_string(evaluation_stages.pair_partition_ns);
+        json += ",\"pair_quotient_conversion\":" +
+                std::to_string(
+                    evaluation_stages.pair_quotient_conversion_ns);
         json += ",\"component_construction\":" +
                 std::to_string(
                     evaluation_stages.component_construction_ns);
@@ -1863,6 +1868,16 @@ std::string serialize_solver_telemetry(
                 std::to_string(evaluation_stages.component_solve_ns);
         json += ",\"finalization\":" +
                 std::to_string(evaluation_stages.finalization_ns) + "}";
+        json += ",\"evaluation_max_work_item_ns\":" +
+                std::to_string(
+                    refinement
+                        .direct_certification_evaluation_max_work_item_ns);
+        json += ",\"evaluation_max_work_item_subphase\":";
+        append_telemetry_json_string(
+            json,
+            strategy_eval_subphase_name(
+                refinement
+                    .direct_certification_evaluation_max_work_item_subphase));
         json += ",\"evaluation_boundary\":{\"subphase\":";
         append_telemetry_json_string(
             json,
@@ -3393,6 +3408,25 @@ std::string serialize_solver_telemetry(
                     diagnostics
                         ->product_fracture_selected_unproved_rows) +
                 "}";
+        json += ",\"final_q\":{\"evaluated_rows\":" +
+                std::to_string(
+                    diagnostics->product_fracture_q_evaluated_rows);
+        json += ",\"cheaper_rows\":" +
+                std::to_string(
+                    diagnostics->product_fracture_q_cheaper_rows);
+        json += ",\"tied_rows\":" +
+                std::to_string(
+                    diagnostics->product_fracture_q_tied_rows);
+        json += ",\"costlier_rows\":" +
+                std::to_string(
+                    diagnostics->product_fracture_q_costlier_rows);
+        json += ",\"unresolved_rows\":" +
+                std::to_string(
+                    diagnostics->product_fracture_q_unresolved_rows);
+        json += ",\"best_selected_minus_fracture\":" +
+                telemetry_finite_json(
+                    diagnostics->product_fracture_best_q_advantage) +
+                "}";
         json += ",\"max_probability_error\":" +
                 std::to_string(
                     diagnostics
@@ -4691,6 +4725,7 @@ std::string serialize_solver_telemetry(
         json += "\"available\":false,\"working_states\":null";
         json += ",\"behavioral_classes\":null";
         json += ",\"policy_regions\":null";
+        json += ",\"graph_census\":null";
         json += ",\"nodes\":null,\"edges\":null";
         json += ",\"strategy_json_bytes\":null";
         json += ",\"total_condition_bytes\":null";
@@ -4711,6 +4746,16 @@ std::string serialize_solver_telemetry(
                 std::to_string(compilation->behavioral_classes);
         json += ",\"policy_regions\":" +
                 std::to_string(compilation->policy_regions);
+        json += ",\"graph_census\":{\"infrastructure_nodes\":" +
+                std::to_string(compilation->infrastructure_nodes);
+        json += ",\"policy_route_nodes\":" +
+                std::to_string(compilation->policy_route_nodes);
+        json += ",\"local_gated_route_nodes\":" +
+                std::to_string(compilation->local_gated_route_nodes);
+        json += ",\"primitive_region_nodes\":" +
+                std::to_string(compilation->primitive_region_nodes);
+        json += ",\"additional_recipe_nodes\":" +
+                std::to_string(compilation->additional_recipe_nodes) + "}";
         json += ",\"nodes\":" + std::to_string(compilation->nodes);
         json += ",\"edges\":" + std::to_string(compilation->edges);
         json += ",\"strategy_json_bytes\":" +

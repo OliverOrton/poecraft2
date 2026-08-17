@@ -144,6 +144,16 @@ struct CompiledPolicyAssertionWork::Impl {
             std::to_string(result.compilation.edges) +
             ", policy_regions=" +
             std::to_string(result.compilation.policy_regions) +
+            ", infrastructure_nodes=" +
+            std::to_string(result.compilation.infrastructure_nodes) +
+            ", policy_route_nodes=" +
+            std::to_string(result.compilation.policy_route_nodes) +
+            ", local_gated_route_nodes=" +
+            std::to_string(result.compilation.local_gated_route_nodes) +
+            ", primitive_region_nodes=" +
+            std::to_string(result.compilation.primitive_region_nodes) +
+            ", additional_recipe_nodes=" +
+            std::to_string(result.compilation.additional_recipe_nodes) +
             ", reachable_states=" +
             std::to_string(result.evaluation.raw_pairs_discovered) +
             ", state_action_pairs=" +

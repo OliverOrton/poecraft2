@@ -1,6 +1,7 @@
 #pragma once
 
 #include "solver_model.hpp"
+#include "solver_cooperative_task.hpp"
 
 #include <array>
 #include <cstddef>
@@ -231,6 +232,14 @@ struct PolicyObservationFixedPoint {
 
 PolicyObservationFixedPoint
 propagate_policy_observations(
+    std::vector<PolicyObservationNode> nodes,
+    std::uint32_t max_rounds);
+
+/* Resumable authority for large policy graphs. The synchronous entry point
+ * above drains this same task, so native reference callers and cooperative
+ * publication use one ordering and one numeric implementation. */
+solve_detail::CooperativeTask<PolicyObservationFixedPoint>
+propagate_policy_observations_cooperatively(
     std::vector<PolicyObservationNode> nodes,
     std::uint32_t max_rounds);
 

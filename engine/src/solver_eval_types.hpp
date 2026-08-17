@@ -42,17 +42,6 @@ enum class StrategyEvalPhase {
     Done,
 };
 
-struct StrategyEvalProgress {
-    StrategyEvalPhase phase = StrategyEvalPhase::Discovery;
-    bool done = false;
-    std::uint64_t discovered_pairs = 0;
-    std::uint64_t pending_pairs = 0;
-    std::uint64_t solved_sccs = 0;
-    std::uint64_t total_sccs = 0;
-    std::uint64_t fallback_sweeps = 0;
-    double residual = 0.0;
-};
-
 enum class StrategyEvalSubphase {
     ModelSetup,
     ObservationPreparation,
@@ -62,6 +51,18 @@ enum class StrategyEvalSubphase {
     ComponentSolve,
     Finalization,
     Done,
+};
+
+struct StrategyEvalProgress {
+    StrategyEvalPhase phase = StrategyEvalPhase::Discovery;
+    StrategyEvalSubphase subphase = StrategyEvalSubphase::ModelSetup;
+    bool done = false;
+    std::uint64_t discovered_pairs = 0;
+    std::uint64_t pending_pairs = 0;
+    std::uint64_t solved_sccs = 0;
+    std::uint64_t total_sccs = 0;
+    std::uint64_t fallback_sweeps = 0;
+    double residual = 0.0;
 };
 
 inline const char* strategy_eval_subphase_name(
@@ -91,6 +92,11 @@ struct StrategyEvalStageTimings {
     std::uint64_t pair_interning_ns = 0;
     std::uint64_t exact_kernel_ns = 0;
     std::uint64_t pair_refinement_ns = 0;
+    /* Inclusive sub-owners of pair_refinement. Partition is the exact
+     * replay-backed bisimulation proof; conversion materializes its quotient
+     * rows. Both exclude time while a cooperative task is suspended. */
+    std::uint64_t pair_partition_ns = 0;
+    std::uint64_t pair_quotient_conversion_ns = 0;
     std::uint64_t component_construction_ns = 0;
     std::uint64_t component_solve_ns = 0;
     std::uint64_t finalization_ns = 0;
@@ -106,6 +112,25 @@ struct StrategyEvalOperationRowCensus {
     std::uint64_t stable_shared_rows = 0;
     std::uint64_t unique_stable_kernels = 0;
     std::uint64_t state_local_rows = 0;
+    /* Compiled-route shape and selected exact-kernel authority. A local gated
+     * route is the compiler shape `operation -> *_gated_route`, where the
+     * router separates canonical zero progress from the policy root. Gate 0
+     * observes this shape only; compact evaluation remains separately counted
+     * by `goal_progress_gated_rows`. */
+    std::uint64_t direct_repeat_rows = 0;
+    std::uint64_t local_gated_route_rows = 0;
+    std::uint64_t other_operation_rows = 0;
+    std::uint64_t goal_progress_gated_rows = 0;
+    std::uint64_t full_physical_rows = 0;
+    std::uint64_t local_gated_route_proved_rows = 0;
+    std::uint64_t local_gated_route_shape_rejections = 0;
+    std::uint64_t local_gated_route_condition_rejections = 0;
+    std::uint64_t local_gated_route_target_rejections = 0;
+    std::uint64_t local_gated_route_root_rejections = 0;
+    std::uint64_t local_gated_full_outcome_entries = 0;
+    std::uint64_t local_gated_full_routed_transitions = 0;
+    std::uint64_t local_gated_full_outcome_payload_bytes = 0;
+    std::uint64_t local_gated_full_routed_payload_bytes = 0;
     std::uint64_t exact_outcome_entries = 0;
     std::uint64_t routed_transitions = 0;
     std::uint64_t absorptions = 0;
@@ -302,6 +327,11 @@ struct StrategyEvalResult {
     std::uint64_t pair_lumpability_checks = 0;
     StrategyEvalStageTimings stage_timings;
     StrategyEvalOperationRowCensus operation_row_census;
+    /* Largest single resumable evaluator work item. This is active native
+     * wall time and identifies the subphase that owns responsiveness. */
+    std::uint64_t max_work_item_ns = 0;
+    StrategyEvalSubphase max_work_item_subphase =
+        StrategyEvalSubphase::ModelSetup;
     StrategyEvalSubphase boundary_subphase =
         StrategyEvalSubphase::ModelSetup;
     std::uint32_t refined_pair_limit = 0;

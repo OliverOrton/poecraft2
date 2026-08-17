@@ -1,4 +1,5 @@
-    void propagate_backward_observations() {
+    solve_detail::CooperativeTask<bool>
+    propagate_backward_observations_cooperatively() {
         std::vector<PolicyObservationNode> nodes;
         nodes.reserve(coarse_policy_.size());
         require_local_memory(
@@ -26,10 +27,16 @@
         require_local_memory(
             fixed_point_peak,
             "coarse observation fixed-point work");
-        PolicyObservationFixedPoint fixed =
-            propagate_policy_observations(
+        auto fixed_point =
+            propagate_policy_observations_cooperatively(
                 std::move(nodes),
                 limits_.max_refinement_rounds);
+        while (!fixed_point.resume()) {
+            co_await solve_detail::CooperativeCheckpoint{
+                fixed_point.retained_bytes()};
+        }
+        PolicyObservationFixedPoint fixed =
+            fixed_point.take_result();
         require_local_memory(
             policy_observation_fixed_bytes(fixed),
             "coarse observation fixed-point result");
@@ -66,6 +73,7 @@
                 policy_observation_fixed_bytes(fixed),
                 "coarse observation routing assignment");
         }
+        co_return true;
     }
 
     void ensure_coarse_policy_parent(

@@ -1788,6 +1788,15 @@ pc_result pc_solver_compile_strategy(
                 telemetry.behavioral_classes =
                     refined.behavioral_classes;
                 telemetry.policy_regions = refined.policy_regions;
+                telemetry.infrastructure_nodes =
+                    refined.infrastructure_nodes;
+                telemetry.policy_route_nodes = refined.policy_route_nodes;
+                telemetry.local_gated_route_nodes =
+                    refined.local_gated_route_nodes;
+                telemetry.primitive_region_nodes =
+                    refined.primitive_region_nodes;
+                telemetry.additional_recipe_nodes =
+                    refined.additional_recipe_nodes;
                 telemetry.nodes = refined.nodes;
                 telemetry.edges = refined.edges;
                 telemetry.strategy_json_bytes =

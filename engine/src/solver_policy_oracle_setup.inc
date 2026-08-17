@@ -221,7 +221,13 @@
             co_await solve_detail::CooperativeCheckpoint{
                 estimated_owned_bytes()};
         }
-        propagate_backward_observations();
+        auto backward_observations =
+            propagate_backward_observations_cooperatively();
+        while (!backward_observations.resume()) {
+            co_await solve_detail::CooperativeCheckpoint{
+                backward_observations.retained_bytes()};
+        }
+        (void)backward_observations.take_result();
         co_await solve_detail::CooperativeCheckpoint{
             estimated_owned_bytes()};
         for (const auto& [unused, node] : coarse_policy_) {

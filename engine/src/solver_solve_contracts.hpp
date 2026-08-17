@@ -239,6 +239,10 @@ struct PolicyRefinementTelemetry {
     std::uint64_t direct_certification_artifact_bytes = 0;
     std::uint64_t direct_certification_peak_owned_bytes = 0;
     StrategyEvalStageTimings direct_certification_evaluation_stages;
+    std::uint64_t direct_certification_evaluation_max_work_item_ns = 0;
+    StrategyEvalSubphase
+        direct_certification_evaluation_max_work_item_subphase =
+            StrategyEvalSubphase::ModelSetup;
     StrategyEvalSubphase direct_certification_evaluation_boundary =
         StrategyEvalSubphase::ModelSetup;
     std::uint64_t
@@ -558,6 +562,12 @@ struct SolveDiagnostics {
     std::uint64_t product_fracture_selected_proper_rows = 0;
     std::uint64_t product_fracture_selected_improper_rows = 0;
     std::uint64_t product_fracture_selected_unproved_rows = 0;
+    std::uint64_t product_fracture_q_evaluated_rows = 0;
+    std::uint64_t product_fracture_q_cheaper_rows = 0;
+    std::uint64_t product_fracture_q_tied_rows = 0;
+    std::uint64_t product_fracture_q_costlier_rows = 0;
+    std::uint64_t product_fracture_q_unresolved_rows = 0;
+    double product_fracture_best_q_advantage = 0.0;
     double product_fracture_max_probability_error = 0.0;
     std::array<
         std::array<std::uint64_t, kMaxGoalSlots + 1>,
@@ -781,6 +791,11 @@ struct RetainedCompiledPolicyArtifact {
     std::uint32_t working_states = 0;
     std::uint32_t behavioral_classes = 0;
     std::uint32_t policy_regions = 0;
+    std::uint32_t infrastructure_nodes = 0;
+    std::uint32_t policy_route_nodes = 0;
+    std::uint32_t local_gated_route_nodes = 0;
+    std::uint32_t primitive_region_nodes = 0;
+    std::uint32_t additional_recipe_nodes = 0;
     std::uint32_t nodes = 0;
     std::uint32_t edges = 0;
     std::uint64_t total_condition_bytes = 0;
@@ -1004,6 +1019,16 @@ struct PolicyCompilationTelemetry {
     std::uint32_t working_states = 0;
     std::uint32_t behavioral_classes = 0;
     std::uint32_t policy_regions = 0;
+    /* Exact emitted graph census. Policy-route nodes include the root;
+     * infrastructure excludes it and includes start/goal/off-policy plus any
+     * compiler-owned bounded Restart node. Primitive region nodes are the
+     * single-operation region leaders; additional recipe nodes cover observed
+     * choices and multi-step fixed options. */
+    std::uint32_t infrastructure_nodes = 0;
+    std::uint32_t policy_route_nodes = 0;
+    std::uint32_t local_gated_route_nodes = 0;
+    std::uint32_t primitive_region_nodes = 0;
+    std::uint32_t additional_recipe_nodes = 0;
     std::uint32_t nodes = 0;
     std::uint32_t edges = 0;
     std::uint64_t strategy_json_bytes = 0;

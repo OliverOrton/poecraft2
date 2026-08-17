@@ -91,6 +91,16 @@ std::string compile_policy_strategy_json(
                 result.refined_policy_artifact.behavioral_classes;
             telemetry->policy_regions =
                 result.refined_policy_artifact.policy_regions;
+            telemetry->infrastructure_nodes =
+                result.refined_policy_artifact.infrastructure_nodes;
+            telemetry->policy_route_nodes =
+                result.refined_policy_artifact.policy_route_nodes;
+            telemetry->local_gated_route_nodes =
+                result.refined_policy_artifact.local_gated_route_nodes;
+            telemetry->primitive_region_nodes =
+                result.refined_policy_artifact.primitive_region_nodes;
+            telemetry->additional_recipe_nodes =
+                result.refined_policy_artifact.additional_recipe_nodes;
             telemetry->nodes = result.refined_policy_artifact.nodes;
             telemetry->edges = result.refined_policy_artifact.edges;
             telemetry->strategy_json_bytes =
@@ -550,6 +560,11 @@ std::string compile_policy_strategy_json(
                 static_cast<std::uint32_t>(working_states);
             telemetry->behavioral_classes = 1;
             telemetry->policy_regions = 1;
+            telemetry->infrastructure_nodes = 2;
+            telemetry->policy_route_nodes = 0;
+            telemetry->local_gated_route_nodes = 0;
+            telemetry->primitive_region_nodes = 1;
+            telemetry->additional_recipe_nodes = 0;
             telemetry->nodes = kNodes;
             telemetry->edges = kEdges;
             telemetry->strategy_json_bytes = json.size();
@@ -1597,14 +1612,146 @@ std::string compile_policy_strategy_json(
     }
     std::vector<std::uint32_t> policy_region_by_state(
         result.values.size(), kNoId);
+    for (const std::uint32_t leader : emitted_states) {
+        for (const std::uint32_t member : states_by_leader.at(leader)) {
+            policy_region_by_state[member] = leader;
+        }
+    }
+
+    /* Complete-behavior sharing for goal-progress-gated primitive regions.
+     *
+     * The initial pass above intentionally keeps a gated region local unless
+     * its retry action is immediately identical. That one-hop test misses
+     * equivalent chains and cycles, leaving hundreds of byte-identical
+     * operation/router recipes distinguished only by their node ids. Compute
+     * the coarsest stable partition instead. A block begins with collision-
+     * free planner semantics and is repeatedly split by the block (or exact
+     * external region) selected for its canonical retry basin. Partial
+     * progress always returns to the common policy root. Thus two merged
+     * regions have the same operation/accounting recipe and bisimilar retry
+     * continuation; no hash or representative state grants authority. */
+    std::vector<std::uint32_t> gated_region_leaders;
+    std::map<std::uint32_t, std::uint32_t> gated_block_by_leader;
+    std::map<std::vector<std::uint64_t>, std::uint32_t>
+        initial_gated_block_by_semantics;
+    for (const std::uint32_t leader : emitted_states) {
+        if (!gated_retry_state_by_state.contains(leader)) continue;
+        const PlannerOperator& planner =
+            calc.operators().at(result.policy[leader]);
+        if (planner.kind != PlannerOperatorKind::Primitive ||
+            primitive_observes_modifier_offer(planner)) {
+            continue;
+        }
+        const std::vector<std::uint64_t> semantics =
+            planner_operator_semantic_key(planner);
+        auto [block, inserted] =
+            initial_gated_block_by_semantics.try_emplace(
+                semantics,
+                static_cast<std::uint32_t>(
+                    initial_gated_block_by_semantics.size()));
+        (void)inserted;
+        gated_region_leaders.push_back(leader);
+        gated_block_by_leader.emplace(leader, block->second);
+    }
+    for (std::size_t round = 0;
+         round <= gated_region_leaders.size(); ++round) {
+        using GatedBehaviorKey = std::tuple<
+            std::vector<std::uint64_t>, bool, std::uint32_t>;
+        std::map<GatedBehaviorKey, std::uint32_t> block_by_behavior;
+        std::map<std::uint32_t, std::uint32_t> refined;
+        for (const std::uint32_t leader : gated_region_leaders) {
+            const std::uint32_t retry_state =
+                gated_retry_state_by_state.at(leader);
+            if (retry_state >= policy_region_by_state.size() ||
+                policy_region_by_state[retry_state] == kNoId) {
+                gap("gated retry basin has no initial policy region");
+            }
+            const std::uint32_t retry_region =
+                policy_region_by_state[retry_state];
+            const auto internal =
+                gated_block_by_leader.find(retry_region);
+            const bool external =
+                internal == gated_block_by_leader.end();
+            const std::uint32_t continuation =
+                external ? retry_region : internal->second;
+            GatedBehaviorKey key{
+                planner_operator_semantic_key(
+                    calc.operators().at(result.policy[leader])),
+                external,
+                continuation};
+            auto [block, inserted] = block_by_behavior.try_emplace(
+                std::move(key),
+                static_cast<std::uint32_t>(block_by_behavior.size()));
+            (void)inserted;
+            refined.emplace(leader, block->second);
+        }
+        if (refined == gated_block_by_leader) break;
+        if (round == gated_region_leaders.size()) {
+            gap("gated behavior partition did not stabilize");
+        }
+        gated_block_by_leader.swap(refined);
+    }
+    if (!gated_region_leaders.empty()) {
+        std::map<std::uint32_t, std::uint32_t>
+            representative_by_block;
+        std::map<std::uint32_t, std::uint32_t>
+            representative_by_leader;
+        for (const std::uint32_t leader : emitted_states) {
+            const auto block = gated_block_by_leader.find(leader);
+            if (block == gated_block_by_leader.end()) {
+                representative_by_leader.emplace(leader, leader);
+                continue;
+            }
+            const std::uint32_t representative =
+                representative_by_block.try_emplace(
+                    block->second, leader).first->second;
+            representative_by_leader.emplace(
+                leader, representative);
+        }
+        std::map<std::uint32_t, std::vector<std::uint32_t>>
+            compacted_states_by_leader;
+        std::vector<std::uint32_t> compacted_emitted_states;
+        std::set<std::uint32_t> emitted_representatives;
+        for (const std::uint32_t leader : emitted_states) {
+            const std::uint32_t representative =
+                representative_by_leader.at(leader);
+            std::vector<std::uint32_t>& destination =
+                compacted_states_by_leader[representative];
+            const std::vector<std::uint32_t>& source =
+                states_by_leader.at(leader);
+            destination.insert(
+                destination.end(), source.begin(), source.end());
+            if (emitted_representatives.insert(representative).second) {
+                compacted_emitted_states.push_back(representative);
+            }
+        }
+        for (std::uint32_t& region : policy_region_by_state) {
+            if (region == kNoId) continue;
+            const auto representative =
+                representative_by_leader.find(region);
+            if (representative != representative_by_leader.end()) {
+                region = representative->second;
+            }
+        }
+        states_by_leader.swap(compacted_states_by_leader);
+        emitted_states.swap(compacted_emitted_states);
+        shared_gated_repeat_leaders.clear();
+        for (const std::uint32_t leader : emitted_states) {
+            const auto retry =
+                gated_retry_state_by_state.find(leader);
+            if (retry == gated_retry_state_by_state.end()) continue;
+            if (retry->second < policy_region_by_state.size() &&
+                policy_region_by_state[retry->second] == leader) {
+                shared_gated_repeat_leaders.insert(leader);
+            }
+        }
+    }
+
     std::map<std::uint32_t, std::optional<std::string>> region_expected_cost;
     std::uint32_t restart_region_leader = kNoId;
     for (const std::uint32_t leader : emitted_states) {
         const std::vector<std::uint32_t>& members =
             states_by_leader.at(leader);
-        for (const std::uint32_t member : members) {
-            policy_region_by_state[member] = leader;
-        }
         const std::string first_value = number(result.values[members.front()]);
         const bool uniform = std::all_of(
             members.begin() + 1, members.end(),
@@ -3375,7 +3522,39 @@ std::string compile_policy_strategy_json(
         }
         telemetry->policy_regions = static_cast<std::uint32_t>(
             emitted_states.size());
+        telemetry->infrastructure_nodes =
+            3 + (bounded_default_restart_action != kNoId ? 1u : 0u) +
+            (dedicated_product_fracture_restart ? 1u : 0u);
+        telemetry->policy_route_nodes =
+            1 + static_cast<std::uint32_t>(policy_route_nodes.size()) +
+            static_cast<std::uint32_t>(refined_parent_router.size());
+        telemetry->local_gated_route_nodes =
+            static_cast<std::uint32_t>(std::count_if(
+                emitted_states.begin(), emitted_states.end(),
+                [&](const std::uint32_t state_id) {
+                    return gated_retry_state_by_state.contains(state_id) &&
+                           !shared_gated_repeat_leaders.contains(state_id);
+                }));
+        telemetry->primitive_region_nodes =
+            static_cast<std::uint32_t>(std::count_if(
+                emitted_states.begin(), emitted_states.end(),
+                [&](const std::uint32_t state_id) {
+                    const PlannerOperator& planner =
+                        calc.operators().at(result.policy[state_id]);
+                    return planner.kind == PlannerOperatorKind::Primitive &&
+                           !primitive_observes_modifier_offer(planner);
+                }));
         telemetry->nodes = node_count;
+        const std::uint64_t attributed_nodes =
+            static_cast<std::uint64_t>(telemetry->infrastructure_nodes) +
+            telemetry->policy_route_nodes +
+            telemetry->local_gated_route_nodes +
+            telemetry->primitive_region_nodes;
+        telemetry->additional_recipe_nodes =
+            attributed_nodes >= telemetry->nodes
+                ? 0
+                : telemetry->nodes -
+                      static_cast<std::uint32_t>(attributed_nodes);
         telemetry->edges = edge_counter;
         telemetry->strategy_json_bytes = json.size();
     }

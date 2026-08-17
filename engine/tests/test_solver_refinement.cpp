@@ -2462,6 +2462,68 @@ void run_rejection_and_cap_tests() {
     REFINE_CHECK(cap.resource_cap == "max_exact_states");
 }
 
+void run_policy_observation_cooperative_tests() {
+    std::vector<PolicyObservationNode> nodes;
+    constexpr std::uint32_t kNodeCount = 24;
+    nodes.reserve(kNodeCount);
+    for (std::uint32_t index = 0; index < kNodeCount; ++index) {
+        ObservationRequirement direct;
+        if (index == 0) {
+            direct.item_features =
+                refinement_feature(RefinementFeature::Rarity);
+        } else if (index == kNodeCount / 2) {
+            direct.item_features =
+                refinement_feature(RefinementFeature::Influence);
+        }
+        nodes.push_back({
+            1000 + index, std::nullopt, std::move(direct),
+            {1000 + ((index + 1) % kNodeCount)}});
+    }
+
+    const PolicyObservationFixedPoint synchronous =
+        propagate_policy_observations(nodes, 64);
+    auto cooperative = propagate_policy_observations_cooperatively(
+        std::move(nodes), 64);
+    std::uint32_t resumptions = 0;
+    while (!cooperative.resume()) ++resumptions;
+    const PolicyObservationFixedPoint resumed =
+        cooperative.take_result();
+
+    REFINE_CHECK(resumptions > 1);
+    REFINE_CHECK(synchronous.complete == resumed.complete);
+    REFINE_CHECK(synchronous.round_cap == resumed.round_cap);
+    REFINE_CHECK(synchronous.failure_reason == resumed.failure_reason);
+    REFINE_CHECK(synchronous.rounds == resumed.rounds);
+    REFINE_CHECK(
+        synchronous.propagation_groups == resumed.propagation_groups);
+    REFINE_CHECK(
+        synchronous.unique_canonical_requirements ==
+        resumed.unique_canonical_requirements);
+    REFINE_CHECK(
+        synchronous.required_payload_p50_bytes ==
+        resumed.required_payload_p50_bytes);
+    REFINE_CHECK(
+        synchronous.required_payload_p95_bytes ==
+        resumed.required_payload_p95_bytes);
+    REFINE_CHECK(
+        synchronous.required_payload_max_bytes ==
+        resumed.required_payload_max_bytes);
+    REFINE_CHECK(
+        synchronous.estimated_peak_owned_bytes ==
+        resumed.estimated_peak_owned_bytes);
+    REFINE_CHECK(
+        synchronous.assignments.size() == resumed.assignments.size());
+    for (std::size_t index = 0;
+         index < synchronous.assignments.size(); ++index) {
+        REFINE_CHECK(
+            synchronous.assignments[index].state_id ==
+            resumed.assignments[index].state_id);
+        REFINE_CHECK(
+            synchronous.assignments[index].required ==
+            resumed.assignments[index].required);
+    }
+}
+
 } // namespace
 
 void run_solver_refinement_tests() {
@@ -2491,4 +2553,5 @@ void run_solver_refinement_tests() {
     run_refinement_memory_accounting_tests();
     run_policy_evaluation_memory_cap_tests();
     run_rejection_and_cap_tests();
+    run_policy_observation_cooperative_tests();
 }

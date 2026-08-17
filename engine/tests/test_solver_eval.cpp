@@ -653,6 +653,10 @@ void run_closed_form_tests() {
     PC_CHECK(compressed_census.replayable_rows > 0);
     PC_CHECK(compressed_census.stable_shared_rows > 0);
     PC_CHECK(compressed_census.unique_stable_kernels > 0);
+    PC_CHECK(compressed_census.direct_repeat_rows > 0);
+    PC_CHECK(compressed_census.local_gated_route_rows == 0);
+    PC_CHECK(compressed_census.goal_progress_gated_rows > 0);
+    PC_CHECK(compressed_census.full_physical_rows == 0);
     PC_CHECK(compressed_census.exact_outcome_entries > 0);
     PC_CHECK(compressed_census.routed_transitions > 0);
     PC_CHECK(compressed_census.exact_outcome_payload_bytes > 0);
@@ -861,6 +865,94 @@ void run_closed_form_tests() {
     PC_CHECK(near(sampled_chaos, sampled_material, 1e-12));
     PC_CHECK(loop_simulator.options.seed == 20260718);
     check_reference_parity(*loop_strategy, exact, options);
+
+    /* The general compiler uses this local router when the canonical
+     * zero-progress retry basin selects a different policy region. Record the
+     * exact structural candidate and the full physical row it continues to
+     * use. Structure alone cannot grant compact-kernel numeric authority. */
+    const auto local_gated_strategy = compile(
+        session,
+        shell(
+            "local gated chaos loop", "rare",
+            R"JSON({"id":"start","kind":"start"},
+{"id":"policy_route_root","kind":"router"},
+{"id":"chaos","kind":"operation","operation":{"type":"chaos","params":{}},"accounting_roles":["retry_action"]},
+{"id":"chaos_gated_route","kind":"router"},
+{"id":"success","kind":"terminal","terminal":"success"})JSON",
+            R"JSON({"id":"begin","from":"start","to":"policy_route_root","priority":0,"condition":{"type":"always"}},
+{"id":"policy_hit","from":"policy_route_root","to":"success","priority":0,"condition":{"type":"has_mod_family","family_mod_key":"mod0","min_tier":1}},
+{"id":"policy_roll","from":"policy_route_root","to":"chaos","priority":999,"is_default":true},
+{"id":"roll_route","from":"chaos","to":"chaos_gated_route","priority":999,"is_default":true},
+{"id":"zero_progress","from":"chaos_gated_route","to":"chaos","priority":0,"condition":{"type":"not","conditions":[{"type":"has_mod_family","family_mod_key":"mod0","min_tier":1}]},"accounting_roles":["retry"]},
+{"id":"made_progress","from":"chaos_gated_route","to":"policy_route_root","priority":999,"is_default":true})JSON"));
+    StrategyEvalOptions local_gated_options = options;
+    local_gated_options.review_projection_json.clear();
+    const StrategyEvalResult local_gated_full =
+        evaluate_strategy(
+            *local_gated_strategy, local_gated_options);
+    const StrategyEvalOperationRowCensus& local_gated_census =
+        local_gated_full.operation_row_census;
+    PC_CHECK(local_gated_census.local_gated_route_rows > 0);
+    PC_CHECK(local_gated_census.local_gated_route_proved_rows ==
+             local_gated_census.local_gated_route_rows);
+    PC_CHECK(local_gated_full.converged);
+    PC_CHECK(local_gated_full.cost_complete);
+    PC_CHECK(near(
+        local_gated_full.success_probability,
+        exact.success_probability, 1e-12));
+    PC_CHECK(near(
+        local_gated_full.total_expected_cost,
+        exact.total_expected_cost, 1e-10));
+    PC_CHECK(
+        local_gated_full.operation_row_census.goal_progress_gated_rows == 0);
+    PC_CHECK(
+        local_gated_full.operation_row_census
+            .local_gated_full_outcome_entries > 0);
+    const std::string local_gated_report =
+        serialize_strategy_eval(local_gated_full);
+    PC_CHECK(local_gated_report.find(
+                 "\"local_gated_route_proof\":{\"proved_rows\":") !=
+             std::string::npos);
+    PC_CHECK(local_gated_report.find(
+                 "\"local_gated_full_rows\":{\"outcome_entries\":") !=
+             std::string::npos);
+    check_reference_parity(
+        *local_gated_strategy, local_gated_full, local_gated_options);
+
+    /* A semantically equivalent but non-canonical condition is deliberately
+     * rejected by the structural proof. Naming alone never grants authority
+     * to collapse a physical distribution. */
+    const auto rejected_local_gated_strategy = compile(
+        session,
+        shell(
+            "rejected local gated chaos loop", "rare",
+            R"JSON({"id":"start","kind":"start"},
+{"id":"policy_route_root","kind":"router"},
+{"id":"chaos","kind":"operation","operation":{"type":"chaos","params":{}}},
+{"id":"chaos_gated_route","kind":"router"},
+{"id":"success","kind":"terminal","terminal":"success"})JSON",
+            R"JSON({"id":"begin","from":"start","to":"policy_route_root","priority":0,"condition":{"type":"always"}},
+{"id":"policy_hit","from":"policy_route_root","to":"success","priority":0,"condition":{"type":"has_mod_family","family_mod_key":"mod0","min_tier":1}},
+{"id":"policy_roll","from":"policy_route_root","to":"chaos","priority":999,"is_default":true},
+{"id":"roll_route","from":"chaos","to":"chaos_gated_route","priority":999,"is_default":true},
+{"id":"zero_progress","from":"chaos_gated_route","to":"chaos","priority":0,"condition":{"type":"not","conditions":[{"type":"not","conditions":[{"type":"not","conditions":[{"type":"has_mod_family","family_mod_key":"mod0","min_tier":1}]}]}]}},
+{"id":"made_progress","from":"chaos_gated_route","to":"policy_route_root","priority":999,"is_default":true})JSON"));
+    const StrategyEvalResult rejected_local_gated =
+        evaluate_strategy(
+            *rejected_local_gated_strategy, local_gated_options);
+    PC_CHECK(rejected_local_gated.converged);
+    PC_CHECK(near(
+        rejected_local_gated.total_expected_cost,
+        local_gated_full.total_expected_cost, 1e-10));
+    PC_CHECK(
+        rejected_local_gated.operation_row_census
+            .local_gated_route_condition_rejections > 0);
+    PC_CHECK(
+        rejected_local_gated.operation_row_census
+            .goal_progress_gated_rows == 0);
+    PC_CHECK(
+        rejected_local_gated.operation_row_census
+            .local_gated_full_outcome_entries > 0);
 
     auto two_state_session = make_eval_session();
     pc_bitset_zero(

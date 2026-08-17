@@ -111,6 +111,16 @@ struct StrategyEvalWork::Impl {
         std::uint64_t shared_row_reuses = 0;
         std::uint64_t stable_shared_rows = 0;
         std::uint64_t state_local_rows = 0;
+        std::uint64_t direct_repeat_rows = 0;
+        std::uint64_t local_gated_route_rows = 0;
+        std::uint64_t other_operation_rows = 0;
+        std::uint64_t goal_progress_gated_rows = 0;
+        std::uint64_t full_physical_rows = 0;
+        std::uint64_t local_gated_route_proved_rows = 0;
+        std::uint64_t local_gated_full_outcome_entries = 0;
+        std::uint64_t local_gated_full_routed_transitions = 0;
+        std::uint64_t local_gated_full_outcome_payload_bytes = 0;
+        std::uint64_t local_gated_full_routed_payload_bytes = 0;
         std::uint64_t exact_outcome_entries = 0;
         std::uint64_t routed_transitions = 0;
         std::uint64_t absorptions = 0;
@@ -121,6 +131,15 @@ struct StrategyEvalWork::Impl {
         Transition = 0,
         Terminal = 1,
         NoMatchingEdge = 2,
+    };
+
+    enum class LocalGatedRouteProof : std::uint8_t {
+        NotCandidate = 0,
+        Proved = 1,
+        ShapeRejected = 2,
+        ConditionRejected = 3,
+        TargetRejected = 4,
+        RootRejected = 5,
     };
 
     struct ReplayRouteResult {
@@ -264,6 +283,7 @@ struct StrategyEvalWork::Impl {
     std::uint64_t deterministic_route_trace_payload_owned_bytes = 0;
     std::vector<DeterministicRouteFlow> deterministic_route_flows;
     std::vector<OperationRowActionCensus> operation_row_census_by_action;
+    std::vector<LocalGatedRouteProof> local_gated_route_proof_by_node;
     std::vector<const OutcomeDistribution*> census_stable_distributions;
     /* Exact keys for a deterministic 1/256 sample of (route root, state).
      * Packing two uint32 words is collision-free; the chained index uses the
@@ -291,6 +311,115 @@ struct StrategyEvalWork::Impl {
         case StrategyNodeKind::Terminal: return 3;
         }
         throw std::logic_error("strategy evaluation has an invalid node kind");
+    }
+
+    bool goal_leaf_matches_target(
+            const CompiledCondition& condition,
+            const GoalSlot& target) const {
+        if (condition.min_value != static_cast<int>(target.min_tier)) {
+            return false;
+        }
+        if (condition.kind == ConditionKind::HasModFamily) {
+            return target.family_id != kNoId &&
+                   condition.family_id == target.family_id;
+        }
+        if (condition.kind == ConditionKind::HasModGroup) {
+            return target.group_id != kNoId &&
+                   condition.group_id == target.group_id;
+        }
+        return false;
+    }
+
+    bool condition_is_exact_zero_goal_progress(
+            const CompiledCondition& condition) const {
+        if (condition.kind != ConditionKind::Not ||
+            condition.children.size() != 1 || model.targets.empty()) {
+            return false;
+        }
+        const CompiledCondition& positive = condition.children.front();
+        const std::vector<CompiledCondition>* leaves = nullptr;
+        std::vector<CompiledCondition> single;
+        if (positive.kind == ConditionKind::Any) {
+            leaves = &positive.children;
+        } else {
+            single.push_back(positive);
+            leaves = &single;
+        }
+        if (leaves->size() != model.targets.size()) return false;
+        std::vector<std::uint8_t> matched(model.targets.size(), 0);
+        for (const CompiledCondition& leaf : *leaves) {
+            std::size_t selected = model.targets.size();
+            for (std::size_t target = 0;
+                 target < model.targets.size(); ++target) {
+                if (!matched[target] &&
+                    goal_leaf_matches_target(leaf, model.targets[target])) {
+                    selected = target;
+                    break;
+                }
+            }
+            if (selected == model.targets.size()) return false;
+            matched[selected] = 1;
+        }
+        return std::all_of(
+            matched.begin(), matched.end(),
+            [](const std::uint8_t value) { return value != 0; });
+    }
+
+    LocalGatedRouteProof classify_local_gated_route(
+            const std::uint32_t operation) const {
+        if (operation >= strategy->nodes.size()) {
+            return LocalGatedRouteProof::NotCandidate;
+        }
+        const StrategyNode& source = strategy->nodes[operation];
+        if (source.kind != StrategyNodeKind::Operation ||
+            source.edges.size() != 1) {
+            return LocalGatedRouteProof::NotCandidate;
+        }
+        const StrategyEdge& source_edge = source.edges.front();
+        if (source_edge.target >= strategy->nodes.size()) {
+            return LocalGatedRouteProof::ShapeRejected;
+        }
+        const StrategyNode& route = strategy->nodes[source_edge.target];
+        const bool named_candidate =
+            route.id.ends_with("_gated_route");
+        if (!named_candidate) return LocalGatedRouteProof::NotCandidate;
+        if (!source_edge.is_default ||
+            route.kind != StrategyNodeKind::Router ||
+            route.edges.size() != 2 ||
+            node_observes_modifier_offer(route)) {
+            return LocalGatedRouteProof::ShapeRejected;
+        }
+        const StrategyEdge* retry = nullptr;
+        const StrategyEdge* progress = nullptr;
+        for (const StrategyEdge& edge : route.edges) {
+            if (edge.is_default) {
+                if (progress != nullptr) {
+                    return LocalGatedRouteProof::ShapeRejected;
+                }
+                progress = &edge;
+            } else {
+                if (retry != nullptr) {
+                    return LocalGatedRouteProof::ShapeRejected;
+                }
+                retry = &edge;
+            }
+        }
+        if (retry == nullptr || progress == nullptr) {
+            return LocalGatedRouteProof::ShapeRejected;
+        }
+        if (!condition_is_exact_zero_goal_progress(retry->condition)) {
+            return LocalGatedRouteProof::ConditionRejected;
+        }
+        if (retry->target >= strategy->nodes.size() ||
+            strategy->nodes[retry->target].kind !=
+                StrategyNodeKind::Operation) {
+            return LocalGatedRouteProof::TargetRejected;
+        }
+        if (!compress_policy_routes ||
+            progress->target != compressed_policy_root) {
+            return LocalGatedRouteProof::RootRejected;
+        }
+        return LocalGatedRouteProof::Proved;
     }
 
     void record_expanded_pair(
@@ -597,6 +726,8 @@ struct StrategyEvalWork::Impl {
                  sizeof(DeterministicRouteFlow);
         bytes += operation_row_census_by_action.capacity() *
                  sizeof(OperationRowActionCensus);
+        bytes += local_gated_route_proof_by_node.capacity() *
+                 sizeof(LocalGatedRouteProof);
         bytes += census_stable_distributions.capacity() *
                  sizeof(const OutcomeDistribution*);
         bytes += route_sample_bucket_heads.capacity() *
@@ -742,6 +873,8 @@ struct StrategyEvalWork::Impl {
                  sizeof(DeterministicRouteFlow);
         bytes += operation_row_census_by_action.capacity() *
                  sizeof(OperationRowActionCensus);
+        bytes += local_gated_route_proof_by_node.capacity() *
+                 sizeof(LocalGatedRouteProof);
         bytes += census_stable_distributions.capacity() *
                  sizeof(const OutcomeDistribution*);
         bytes += route_sample_bucket_heads.capacity() *
@@ -1089,6 +1222,12 @@ struct StrategyEvalWork::Impl {
         compress_policy_routes = policy_roots.size() == 1;
         if (compress_policy_routes) {
             compressed_policy_root = policy_roots.front();
+        }
+        local_gated_route_proof_by_node.resize(
+            node_count, LocalGatedRouteProof::NotCandidate);
+        for (std::uint32_t node = 0; node < node_count; ++node) {
+            local_gated_route_proof_by_node[node] =
+                classify_local_gated_route(node);
         }
         terminal_mass.assign(node_count, 0.0);
         action_not_applied.assign(node_count, 0.0);
@@ -1697,6 +1836,21 @@ struct StrategyEvalWork::Impl {
                 << ":reuses=" << census.shared_row_reuses
                 << ":stable=" << census.stable_shared_rows
                 << ":local=" << census.state_local_rows
+                << ":direct_repeat=" << census.direct_repeat_rows
+                << ":local_gated=" << census.local_gated_route_rows
+                << ":other=" << census.other_operation_rows
+                << ":gated_kernel=" << census.goal_progress_gated_rows
+                << ":full_kernel=" << census.full_physical_rows
+                << ":local_gated_proved="
+                << census.local_gated_route_proved_rows
+                << ":local_gated_full_outcomes="
+                << census.local_gated_full_outcome_entries
+                << ":local_gated_full_routed="
+                << census.local_gated_full_routed_transitions
+                << ":local_gated_full_outcome_payload="
+                << census.local_gated_full_outcome_payload_bytes
+                << ":local_gated_full_routed_payload="
+                << census.local_gated_full_routed_payload_bytes
                 << ":outcomes=" << census.exact_outcome_entries
                 << ":routed=" << census.routed_transitions
                 << ":absorptions=" << census.absorptions
@@ -1802,6 +1956,59 @@ struct StrategyEvalWork::Impl {
                 ", operation_state_local_rows=" +
                     std::to_string(
                         output.operation_row_census.state_local_rows) +
+                ", operation_direct_repeat_rows=" +
+                    std::to_string(
+                        output.operation_row_census.direct_repeat_rows) +
+                ", operation_local_gated_route_rows=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .local_gated_route_rows) +
+                ", operation_other_rows=" +
+                    std::to_string(
+                        output.operation_row_census.other_operation_rows) +
+                ", operation_gated_kernel_rows=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .goal_progress_gated_rows) +
+                ", operation_full_kernel_rows=" +
+                    std::to_string(
+                        output.operation_row_census.full_physical_rows) +
+                ", operation_local_gated_proved_rows=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .local_gated_route_proved_rows) +
+                ", operation_local_gated_shape_rejections=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .local_gated_route_shape_rejections) +
+                ", operation_local_gated_condition_rejections=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .local_gated_route_condition_rejections) +
+                ", operation_local_gated_target_rejections=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .local_gated_route_target_rejections) +
+                ", operation_local_gated_root_rejections=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .local_gated_route_root_rejections) +
+                ", operation_local_gated_full_outcomes=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .local_gated_full_outcome_entries) +
+                ", operation_local_gated_full_routed=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .local_gated_full_routed_transitions) +
+                ", operation_local_gated_full_outcome_payload=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .local_gated_full_outcome_payload_bytes) +
+                ", operation_local_gated_full_routed_payload=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .local_gated_full_routed_payload_bytes) +
                 ", operation_exact_outcomes=" +
                     std::to_string(
                         output.operation_row_census.exact_outcome_entries) +
@@ -2251,6 +2458,12 @@ struct StrategyEvalWork::Impl {
         bool release_goal_progress_gated_outcome = false;
         bool census_operation_distribution = false;
         bool census_stable_shared_kernel = false;
+        bool census_direct_repeat = false;
+        bool census_goal_progress_gated = false;
+        const LocalGatedRouteProof census_local_gated_route =
+            node_index < local_gated_route_proof_by_node.size()
+                ? local_gated_route_proof_by_node[node_index]
+                : LocalGatedRouteProof::NotCandidate;
         std::uint64_t census_outcome_entries = 0;
         std::uint64_t census_outcome_payload_bytes = 0;
         const OutcomeDistribution* replay_distribution = nullptr;
@@ -2599,15 +2812,15 @@ struct StrategyEvalWork::Impl {
                         [&](const StrategyEdge& edge) {
                             return edge.target == node_index;
                         });
+                    census_direct_repeat = may_repeat_directly;
                     /* A compiled shared gated-renewal region deliberately
                      * observes only whether this action made goal progress:
                      * every zero-progress physical outcome immediately
                      * repeats the same operation. Use the calculator's exact
-                     * gated kernel when that retry state selects this node.
-                     * Expanding and then re-merging the unobserved physical
-                     * junk would be algebraically equivalent, but its stored
-                     * double normalization can accumulate across a very long
-                     * renewal and drift away from the solver's kernel bits. */
+                     * gated kernel only for that direct self-loop. Local
+                     * gated routers remain structural telemetry: the real
+                     * five-goal control proved that substituting the compact
+                     * normalization there does not preserve exact cost bits. */
                     if (may_repeat_directly) {
                         const OutcomeDistribution& gated_candidate =
                             exact_outcomes(
@@ -2622,8 +2835,10 @@ struct StrategyEvalWork::Impl {
                                 node,
                                 gated_candidate.gated_retry_state,
                                 nullptr);
-                            if (retry != nullptr &&
-                                retry->target == node_index) {
+                            const bool retry_is_exact =
+                                retry != nullptr &&
+                                retry->target == node_index;
+                            if (retry_is_exact) {
                                 selected_outcomes = &gated_candidate;
                             }
                         }
@@ -2643,6 +2858,8 @@ struct StrategyEvalWork::Impl {
                     }
                     ensure_state_limit();
                     census_operation_distribution = true;
+                    census_goal_progress_gated =
+                        outcomes.goal_progress_gated;
                     census_stable_shared_kernel =
                         outcomes.stable_shared_kernel;
                     census_outcome_entries =
@@ -2833,22 +3050,69 @@ struct StrategyEvalWork::Impl {
             row.replay_route_tokens.capacity() * sizeof(std::uint32_t);
         if (node.kind == StrategyNodeKind::Operation) {
             auto& total = output.operation_row_census;
+            const std::uint64_t row_routed_transitions =
+                row.transitions.size() + replay_transition_count;
+            const std::uint64_t row_routed_payload_bytes =
+                row.transitions.capacity() * sizeof(EvalTransition) +
+                row.absorptions.capacity() * sizeof(EvalAbsorption) +
+                row.replay_route_tokens.capacity() *
+                    sizeof(std::uint32_t);
             ++total.materialized_rows;
+            if (census_direct_repeat) {
+                ++total.direct_repeat_rows;
+            } else if (census_local_gated_route !=
+                       LocalGatedRouteProof::NotCandidate) {
+                ++total.local_gated_route_rows;
+            } else {
+                ++total.other_operation_rows;
+            }
+            if (census_goal_progress_gated) {
+                ++total.goal_progress_gated_rows;
+            } else if (census_operation_distribution) {
+                ++total.full_physical_rows;
+            }
+            switch (census_local_gated_route) {
+            case LocalGatedRouteProof::Proved:
+                ++total.local_gated_route_proved_rows;
+                break;
+            case LocalGatedRouteProof::ShapeRejected:
+                ++total.local_gated_route_shape_rejections;
+                break;
+            case LocalGatedRouteProof::ConditionRejected:
+                ++total.local_gated_route_condition_rejections;
+                break;
+            case LocalGatedRouteProof::TargetRejected:
+                ++total.local_gated_route_target_rejections;
+                break;
+            case LocalGatedRouteProof::RootRejected:
+                ++total.local_gated_route_root_rejections;
+                break;
+            case LocalGatedRouteProof::NotCandidate:
+                break;
+            }
             if (row.replayable()) {
                 ++total.replayable_rows;
                 total.replay_route_token_bytes +=
                     row.replay_route_tokens.capacity() *
                     sizeof(std::uint32_t);
             }
-            total.routed_transitions +=
-                row.transitions.size() + replay_transition_count;
+            total.routed_transitions += row_routed_transitions;
             total.absorptions +=
                 row.absorptions.size() + replay_absorption_count;
-            total.routed_payload_bytes +=
-                row.transitions.capacity() * sizeof(EvalTransition) +
-                row.absorptions.capacity() * sizeof(EvalAbsorption) +
-                row.replay_route_tokens.capacity() *
-                    sizeof(std::uint32_t);
+            total.routed_payload_bytes += row_routed_payload_bytes;
+            if (census_local_gated_route !=
+                    LocalGatedRouteProof::NotCandidate &&
+                !census_goal_progress_gated &&
+                census_operation_distribution) {
+                total.local_gated_full_outcome_entries +=
+                    census_outcome_entries;
+                total.local_gated_full_routed_transitions +=
+                    row_routed_transitions;
+                total.local_gated_full_outcome_payload_bytes +=
+                    census_outcome_payload_bytes;
+                total.local_gated_full_routed_payload_bytes +=
+                    row_routed_payload_bytes;
+            }
             if (census_operation_distribution) {
                 total.exact_outcome_entries += census_outcome_entries;
                 total.exact_outcome_payload_bytes +=
@@ -2876,10 +3140,40 @@ struct StrategyEvalWork::Impl {
                 OperationRowActionCensus& action_census =
                     operation_row_census_by_action[action_index];
                 ++action_census.materialized_rows;
+                if (census_direct_repeat) {
+                    ++action_census.direct_repeat_rows;
+                } else if (census_local_gated_route !=
+                           LocalGatedRouteProof::NotCandidate) {
+                    ++action_census.local_gated_route_rows;
+                } else {
+                    ++action_census.other_operation_rows;
+                }
+                if (census_goal_progress_gated) {
+                    ++action_census.goal_progress_gated_rows;
+                } else if (census_operation_distribution) {
+                    ++action_census.full_physical_rows;
+                }
+                if (census_local_gated_route ==
+                    LocalGatedRouteProof::Proved) {
+                    ++action_census.local_gated_route_proved_rows;
+                }
                 action_census.routed_transitions +=
-                    row.transitions.size() + replay_transition_count;
+                    row_routed_transitions;
                 action_census.absorptions +=
                     row.absorptions.size() + replay_absorption_count;
+                if (census_local_gated_route !=
+                        LocalGatedRouteProof::NotCandidate &&
+                    !census_goal_progress_gated &&
+                    census_operation_distribution) {
+                    action_census.local_gated_full_outcome_entries +=
+                        census_outcome_entries;
+                    action_census.local_gated_full_routed_transitions +=
+                        row_routed_transitions;
+                    action_census.local_gated_full_outcome_payload_bytes +=
+                        census_outcome_payload_bytes;
+                    action_census.local_gated_full_routed_payload_bytes +=
+                        row_routed_payload_bytes;
+                }
                 if (census_operation_distribution) {
                     action_census.exact_outcome_entries +=
                         census_outcome_entries;
@@ -3441,13 +3735,18 @@ struct StrategyEvalWork::Impl {
                 });
             return node;
         };
-        ClosedPartitionResult refined = use_replay_partition
-            ? refinement::refine_closed_probabilistic_partition_replay(
-                   static_cast<std::uint32_t>(pairs.size()),
-                   replay_pair, {}, false, limits, false,
-                   &replay_arc_source, false, false, true)
-            : refinement::refine_closed_probabilistic_partition(
-                  std::move(closed), limits);
+        ClosedPartitionResult refined;
+        {
+            ActiveTimer partition_timer(
+                output.stage_timings.pair_partition_ns);
+            refined = use_replay_partition
+                ? refinement::refine_closed_probabilistic_partition_replay(
+                       static_cast<std::uint32_t>(pairs.size()),
+                       replay_pair, {}, false, limits, false,
+                       &replay_arc_source, false, false, true)
+                : refinement::refine_closed_probabilistic_partition(
+                      std::move(closed), limits);
+        }
         co_await solve_detail::CooperativeCheckpoint{};
         std::vector<std::uint32_t>{}.swap(replay_observation_id);
         std::vector<std::uint32_t>{}.swap(replay_immediate_id);
@@ -3643,6 +3942,8 @@ struct StrategyEvalWork::Impl {
                     co_await solve_detail::CooperativeCheckpoint{
                         raw_graph_bytes};
                 }
+                ActiveTimer conversion_timer(
+                    output.stage_timings.pair_quotient_conversion_ns);
                 const std::uint32_t raw =
                     representative.at(class_id);
                 if (raw == kNoId) {
@@ -7199,6 +7500,8 @@ struct StrategyEvalWork::Impl {
                 throw std::logic_error(
                     "strategy evaluation has no active timing subphase");
             }
+            const StrategyEvalSubphase active_subphase = subphase;
+            const auto work_item_started = Clock::now();
             ActiveTimer active_timer(*active_counter);
             switch (phase) {
             case StrategyEvalPhase::Discovery:
@@ -7253,6 +7556,15 @@ struct StrategyEvalWork::Impl {
             case StrategyEvalPhase::Done:
                 break;
             }
+            const std::uint64_t work_item_ns =
+                static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        Clock::now() - work_item_started)
+                        .count());
+            if (work_item_ns > output.max_work_item_ns) {
+                output.max_work_item_ns = work_item_ns;
+                output.max_work_item_subphase = active_subphase;
+            }
             if (phase == StrategyEvalPhase::Discovery &&
                 discover_index != 0 &&
                 (discover_index & 4095u) == 0) {
@@ -7265,6 +7577,7 @@ struct StrategyEvalWork::Impl {
     StrategyEvalProgress progress() const {
         StrategyEvalProgress value;
         value.phase = phase;
+        value.subphase = subphase;
         value.done = phase == StrategyEvalPhase::Done;
         value.discovered_pairs = discover_index;
         value.pending_pairs = pairs.size() - discover_index;

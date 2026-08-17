@@ -1235,10 +1235,17 @@ void run_alt_spam_tests() {
         refinement.direct_certification_evaluation_stages
             .pair_refinement_ns = 47;
         refinement.direct_certification_evaluation_stages
+            .pair_partition_ns = 55;
+        refinement.direct_certification_evaluation_stages
+            .pair_quotient_conversion_ns = 56;
+        refinement.direct_certification_evaluation_stages
             .component_construction_ns = 48;
         refinement.direct_certification_evaluation_stages.component_solve_ns =
             49;
         refinement.direct_certification_evaluation_stages.finalization_ns = 50;
+        refinement.direct_certification_evaluation_max_work_item_ns = 57;
+        refinement.direct_certification_evaluation_max_work_item_subphase =
+            StrategyEvalSubphase::PairDiscovery;
         refinement.direct_certification_evaluation_boundary =
             StrategyEvalSubphase::PairRefinement;
         refinement.direct_certification_raw_pairs = 51;
@@ -1394,9 +1401,14 @@ void run_alt_spam_tests() {
                      "\"pair_interning\":45,"
                      "\"exact_kernel\":46,"
                      "\"pair_refinement\":47,"
+                     "\"pair_partition\":55,"
+                     "\"pair_quotient_conversion\":56,"
                      "\"component_construction\":48,"
                      "\"component_solve\":49,"
                      "\"finalization\":50},"
+                     "\"evaluation_max_work_item_ns\":57,"
+                     "\"evaluation_max_work_item_subphase\":"
+                     "\"pair_discovery\","
                      "\"evaluation_boundary\":{"
                      "\"subphase\":\"pair_refinement\","
                      "\"raw_pairs\":51,\"refined_pairs\":52,"
@@ -1515,6 +1527,12 @@ void run_alt_spam_tests() {
                      "\"working_states\":23,"
                      "\"behavioral_classes\":22,"
                      "\"policy_regions\":24,"
+                     "\"graph_census\":{"
+                     "\"infrastructure_nodes\":0,"
+                     "\"policy_route_nodes\":0,"
+                     "\"local_gated_route_nodes\":0,"
+                     "\"primitive_region_nodes\":0,"
+                     "\"additional_recipe_nodes\":0},"
                      "\"nodes\":25,\"edges\":26,"
                      "\"strategy_json_bytes\":27,"
                      "\"total_condition_bytes\":271,"
@@ -4536,8 +4554,28 @@ void run_primitive_destructive_renewal_upper_tests() {
         product_fracture_result.diagnostics
                 .product_fracture_selected_unproved_rows == 0);
     PC_CHECK(
+        product_fracture_result.diagnostics
+                .product_fracture_q_evaluated_rows +
+            product_fracture_result.diagnostics
+                .product_fracture_q_unresolved_rows ==
+        product_fracture_result.diagnostics.product_fracture_rows);
+    PC_CHECK(
+        product_fracture_result.diagnostics
+                .product_fracture_q_cheaper_rows +
+            product_fracture_result.diagnostics
+                .product_fracture_q_tied_rows +
+            product_fracture_result.diagnostics
+                .product_fracture_q_costlier_rows ==
+        product_fracture_result.diagnostics
+            .product_fracture_q_evaluated_rows);
+    PC_CHECK(
         !product_fracture_result.diagnostics
              .product_fracture_witnesses.empty());
+    PC_CHECK(
+        product_fracture_result.diagnostics
+                .product_fracture_witnesses.front().find(
+                    "\"final_q\":{\"evaluated\":") !=
+        std::string::npos);
     PC_CHECK(
         product_fracture_result.diagnostics.action_search_costs.at(
             "fracture").cache_requests == 0);
@@ -4653,6 +4691,18 @@ void run_primitive_destructive_renewal_upper_tests() {
     PC_CHECK(
         shared_product_fracture_compilation.policy_regions <
         shared_product_fracture_compilation.working_states);
+    PC_CHECK(shared_product_fracture_compilation.infrastructure_nodes > 0);
+    PC_CHECK(shared_product_fracture_compilation.policy_route_nodes > 0);
+    PC_CHECK(
+        shared_product_fracture_compilation.primitive_region_nodes >=
+        emitted_fracture_operations);
+    PC_CHECK(
+        shared_product_fracture_compilation.infrastructure_nodes +
+            shared_product_fracture_compilation.policy_route_nodes +
+            shared_product_fracture_compilation.local_gated_route_nodes +
+            shared_product_fracture_compilation.primitive_region_nodes +
+            shared_product_fracture_compilation.additional_recipe_nodes ==
+        shared_product_fracture_compilation.nodes);
     const std::shared_ptr<StrategyImpl> shared_product_fracture_strategy =
         compile_strategy_json(
             fracture_session, shared_product_fracture_json.data(),

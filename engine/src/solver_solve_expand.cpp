@@ -1,4 +1,5 @@
 #include "solver_solve_types.hpp"
+#include "solver_sparse_policy.hpp"
 
 namespace poecraft {
 namespace solver {
@@ -1889,9 +1890,17 @@ void SolveWork::Impl::finalize_automatic_candidate_diagnostics() {
         result.diagnostics.product_fracture_selected_proper_rows = 0;
         result.diagnostics.product_fracture_selected_improper_rows = 0;
         result.diagnostics.product_fracture_selected_unproved_rows = 0;
+        result.diagnostics.product_fracture_q_evaluated_rows = 0;
+        result.diagnostics.product_fracture_q_cheaper_rows = 0;
+        result.diagnostics.product_fracture_q_tied_rows = 0;
+        result.diagnostics.product_fracture_q_costlier_rows = 0;
+        result.diagnostics.product_fracture_q_unresolved_rows = 0;
+        result.diagnostics.product_fracture_best_q_advantage = 0.0;
         result.diagnostics.product_fracture_max_probability_error = 0.0;
         result.diagnostics.product_fracture_shape_rows = {};
         result.diagnostics.product_fracture_witnesses.clear();
+        std::map<std::uint32_t, SparsePolicyRowSelection>
+            selected_row_by_source;
         for (auto& witness :
             transition_cache->product_fracture_rows) {
             witness.selected_in_policy =
@@ -1904,6 +1913,108 @@ void SolveWork::Impl::finalize_automatic_candidate_diagnostics() {
             witness.proper =
                 witness.properness_checked &&
                 improper_policy_states.empty();
+            witness.final_q_evaluated = false;
+            witness.final_source_value = kInfinity;
+            witness.final_fracture_q = kInfinity;
+            witness.final_selected_q = kInfinity;
+            witness.final_selected_row =
+                std::numeric_limits<std::uint64_t>::max();
+            witness.final_selected_operator = kNoId;
+            witness.final_selection_reason =
+                SolveTransitionCache::ProductFractureQReason::None;
+            if (witness.source_state < result.values.size() &&
+                witness.row_index < transition_cache->rows.size() &&
+                witness.row_index < priced_rows.size()) {
+                auto [selected, inserted] =
+                    selected_row_by_source.try_emplace(
+                        witness.source_state);
+                if (inserted) {
+                    selected->second = select_sparse_policy_row(
+                        *transition_cache, witness.source_state,
+                        [&](const std::uint64_t row) {
+                            return transition_cache->rows.at(row).admitted &&
+                                   !preservation_prunes(row);
+                        },
+                        [&](const std::uint64_t row,
+                            std::uint32_t& work) {
+                            return evaluate_sparse_policy_row(
+                                *transition_cache, priced_rows,
+                                result.values, row, work);
+                        });
+                }
+                std::uint32_t fracture_work = 0;
+                witness.final_source_value =
+                    result.values[witness.source_state];
+                witness.final_fracture_q = evaluate_sparse_policy_row(
+                    *transition_cache, priced_rows, result.values,
+                    witness.row_index, fracture_work);
+                witness.final_selected_row = selected->second.row;
+                witness.final_selected_q = selected->second.value;
+                if (witness.final_selected_row < priced_rows.size()) {
+                    witness.final_selected_operator =
+                        priced_rows[witness.final_selected_row]
+                            .operator_index;
+                }
+                witness.final_q_evaluated =
+                    std::isfinite(witness.final_fracture_q) &&
+                    std::isfinite(witness.final_selected_q);
+                if (!witness.final_q_evaluated) {
+                    ++result.diagnostics
+                          .product_fracture_q_unresolved_rows;
+                    witness.final_selection_reason =
+                        SolveTransitionCache::ProductFractureQReason::
+                            NonfiniteSuccessorOrSelectedQ;
+                } else {
+                    ++result.diagnostics
+                          .product_fracture_q_evaluated_rows;
+                    const double delta =
+                        witness.final_selected_q -
+                        witness.final_fracture_q;
+                    result.diagnostics
+                        .product_fracture_best_q_advantage = std::max(
+                            result.diagnostics
+                                .product_fracture_best_q_advantage,
+                            delta);
+                    if (witness.row_index ==
+                        witness.final_selected_row) {
+                        ++result.diagnostics
+                              .product_fracture_q_tied_rows;
+                        witness.final_selection_reason =
+                            SolveTransitionCache::ProductFractureQReason::
+                                SelectedStrictArgmin;
+                    } else if (sparse_policy_row_precedes(
+                                   witness.final_fracture_q,
+                                   witness.row_index,
+                                   witness.final_selected_q,
+                                   witness.final_selected_row)) {
+                        ++result.diagnostics
+                              .product_fracture_q_cheaper_rows;
+                        witness.final_selection_reason =
+                            SolveTransitionCache::ProductFractureQReason::
+                                CheaperThanCapturedPolicy;
+                    } else if (
+                        witness.final_fracture_q ==
+                        witness.final_selected_q) {
+                        ++result.diagnostics
+                              .product_fracture_q_tied_rows;
+                        witness.final_selection_reason =
+                            SolveTransitionCache::ProductFractureQReason::
+                                ExactTieLostByStableRowOrder;
+                    } else {
+                        ++result.diagnostics
+                              .product_fracture_q_costlier_rows;
+                        witness.final_selection_reason =
+                            SolveTransitionCache::ProductFractureQReason::
+                                CostlierThanSelectedQ;
+                    }
+                }
+            } else {
+                ++result.diagnostics
+                      .product_fracture_q_unresolved_rows;
+                witness.final_selection_reason =
+                    SolveTransitionCache::ProductFractureQReason::
+                        RowOrSourceNotRetained;
+            }
             if (witness.selected_in_policy) {
                 ++result.diagnostics.product_fracture_selected_rows;
                 if (witness.properness_checked) {
@@ -1945,6 +2056,36 @@ void SolveWork::Impl::finalize_automatic_candidate_diagnostics() {
             if (result.diagnostics.product_fracture_witnesses.size() >=
                 options.max_diagnostic_samples) {
                 continue;
+            }
+            const char* final_q_reason = "none";
+            switch (witness.final_selection_reason) {
+            case SolveTransitionCache::ProductFractureQReason::None:
+                break;
+            case SolveTransitionCache::ProductFractureQReason::
+                    RowOrSourceNotRetained:
+                final_q_reason = "row_or_source_not_retained";
+                break;
+            case SolveTransitionCache::ProductFractureQReason::
+                    NonfiniteSuccessorOrSelectedQ:
+                final_q_reason = "nonfinite_successor_or_selected_q";
+                break;
+            case SolveTransitionCache::ProductFractureQReason::
+                    SelectedStrictArgmin:
+                final_q_reason = "selected_strict_argmin";
+                break;
+            case SolveTransitionCache::ProductFractureQReason::
+                    CheaperThanCapturedPolicy:
+                final_q_reason = "cheaper_than_captured_policy";
+                break;
+            case SolveTransitionCache::ProductFractureQReason::
+                    ExactTieLostByStableRowOrder:
+                final_q_reason =
+                    "exact_q_tie_lost_by_stable_row_order";
+                break;
+            case SolveTransitionCache::ProductFractureQReason::
+                    CostlierThanSelectedQ:
+                final_q_reason = "costlier_than_selected_q";
+                break;
             }
             std::string json =
                 "{\"source_state\":" +
@@ -2009,7 +2150,31 @@ void SolveWork::Impl::finalize_automatic_candidate_diagnostics() {
                      ? (witness.proper ? "selected_policy_proper"
                                        : "selected_policy_not_proved")
                      : "not_selected_not_required") +
-                "\"}";
+                "\",\"final_q\":{\"evaluated\":" +
+                std::string(
+                    witness.final_q_evaluated ? "true" : "false") +
+                ",\"source_value\":" +
+                finite_json(witness.final_source_value) +
+                ",\"fracture\":" +
+                finite_json(witness.final_fracture_q) +
+                ",\"selected\":" +
+                finite_json(witness.final_selected_q) +
+                ",\"selected_row\":" +
+                (witness.final_selected_row ==
+                         std::numeric_limits<std::uint64_t>::max()
+                     ? "null"
+                     : std::to_string(witness.final_selected_row)) +
+                ",\"selected_operator\":" +
+                (witness.final_selected_operator == kNoId
+                     ? "null"
+                     : std::to_string(
+                           witness.final_selected_operator)) +
+                ",\"selected_minus_fracture\":" +
+                finite_json(
+                    witness.final_selected_q -
+                    witness.final_fracture_q) +
+                ",\"reason\":\"" +
+                final_q_reason + "\"}}";
             result.diagnostics.product_fracture_witnesses.push_back(
                 std::move(json));
         }

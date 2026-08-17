@@ -387,6 +387,16 @@ class ProofStore;
  * relative prices without rebuilding transitions or reusing a stale action
  * representative. */
 struct SolveTransitionCache {
+    enum class ProductFractureQReason : std::uint8_t {
+        None = 0,
+        RowOrSourceNotRetained,
+        NonfiniteSuccessorOrSelectedQ,
+        SelectedStrictArgmin,
+        CheaperThanCapturedPolicy,
+        ExactTieLostByStableRowOrder,
+        CostlierThanSelectedQ,
+    };
+
     struct ProductFractureRowWitness {
         std::uint32_t source_state = kNoId;
         std::uint64_t row_index =
@@ -413,6 +423,15 @@ struct SolveTransitionCache {
         bool properness_checked = false;
         bool proper = false;
         std::uint32_t parent_miss_state_count = 0;
+        bool final_q_evaluated = false;
+        double final_source_value = kInfinity;
+        double final_fracture_q = kInfinity;
+        double final_selected_q = kInfinity;
+        std::uint64_t final_selected_row =
+            std::numeric_limits<std::uint64_t>::max();
+        std::uint32_t final_selected_operator = kNoId;
+        ProductFractureQReason final_selection_reason =
+            ProductFractureQReason::None;
     };
 
     struct AutomaticCandidateRecord {

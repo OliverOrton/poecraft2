@@ -2323,6 +2323,16 @@ SolveWork::Impl::run_finalization() {
                     assertion.compilation.behavioral_classes;
                 artifact.policy_regions =
                     assertion.compilation.policy_regions;
+                artifact.infrastructure_nodes =
+                    assertion.compilation.infrastructure_nodes;
+                artifact.policy_route_nodes =
+                    assertion.compilation.policy_route_nodes;
+                artifact.local_gated_route_nodes =
+                    assertion.compilation.local_gated_route_nodes;
+                artifact.primitive_region_nodes =
+                    assertion.compilation.primitive_region_nodes;
+                artifact.additional_recipe_nodes =
+                    assertion.compilation.additional_recipe_nodes;
                 artifact.nodes = assertion.compilation.nodes;
                 artifact.edges = assertion.compilation.edges;
                 artifact.total_condition_bytes =
@@ -3239,6 +3249,11 @@ SolveWork::Impl::run_finalization() {
                     assertion.publication_peak_owned_bytes);
             telemetry.direct_certification_evaluation_stages =
                 assertion.evaluation.stage_timings;
+            telemetry.direct_certification_evaluation_max_work_item_ns =
+                assertion.evaluation.max_work_item_ns;
+            telemetry
+                .direct_certification_evaluation_max_work_item_subphase =
+                    assertion.evaluation.max_work_item_subphase;
             telemetry.direct_certification_evaluation_boundary =
                 assertion.evaluation.boundary_subphase;
             telemetry
@@ -4291,6 +4306,19 @@ SolveWork::Impl::run_finalization() {
                     certificate.compiled.compilation.behavioral_classes;
                 artifact.policy_regions =
                     certificate.compiled.compilation.policy_regions;
+                artifact.infrastructure_nodes =
+                    certificate.compiled.compilation.infrastructure_nodes;
+                artifact.policy_route_nodes =
+                    certificate.compiled.compilation.policy_route_nodes;
+                artifact.local_gated_route_nodes =
+                    certificate.compiled.compilation
+                        .local_gated_route_nodes;
+                artifact.primitive_region_nodes =
+                    certificate.compiled.compilation
+                        .primitive_region_nodes;
+                artifact.additional_recipe_nodes =
+                    certificate.compiled.compilation
+                        .additional_recipe_nodes;
                 artifact.nodes =
                     certificate.compiled.compilation.nodes;
                 artifact.edges =

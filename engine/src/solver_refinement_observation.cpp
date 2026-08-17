@@ -1,4 +1,5 @@
 #include "solver_refinement_observation_helpers.hpp"
+#include "solver_policy_refinement_helpers.hpp"
 
 namespace poecraft {
 namespace solver {
@@ -119,14 +120,15 @@ ObservationRequirement preserved_observation_requirement(
         downstream, action);
 }
 
-PolicyObservationFixedPoint propagate_policy_observations(
+solve_detail::CooperativeTask<PolicyObservationFixedPoint>
+propagate_policy_observations_cooperatively(
         std::vector<PolicyObservationNode> nodes,
         const std::uint32_t max_rounds) {
     PolicyObservationFixedPoint result;
     if (nodes.empty()) {
         result.failure_reason =
             "policy observation graph is empty";
-        return result;
+        co_return result;
     }
     std::sort(
         nodes.begin(), nodes.end(),
@@ -140,7 +142,7 @@ PolicyObservationFixedPoint propagate_policy_observations(
                 nodes[index].state_id, index).second) {
             result.failure_reason =
                 "policy observation graph has duplicate state ids";
-            return result;
+            co_return result;
         }
         std::sort(
             nodes[index].successors.begin(),
@@ -169,7 +171,7 @@ PolicyObservationFixedPoint propagate_policy_observations(
                 result.failure_reason =
                     "policy observation graph has an invalid shared "
                     "action authority";
-                return result;
+                co_return result;
             }
         }
         if (node.successor_source.has_value()) {
@@ -180,7 +182,7 @@ PolicyObservationFixedPoint propagate_policy_observations(
                 result.failure_reason =
                     "policy observation graph has an invalid shared "
                     "successor authority";
-                return result;
+                co_return result;
             }
         }
     }
@@ -241,7 +243,7 @@ PolicyObservationFixedPoint propagate_policy_observations(
             result.failure_reason =
                 "policy observation graph has an incomplete action "
                 "contract";
-            return result;
+            co_return result;
         }
         if (selected.has_value() &&
             !selected_runtime_contracts_complete(
@@ -249,7 +251,7 @@ PolicyObservationFixedPoint propagate_policy_observations(
             result.failure_reason =
                 "policy observation graph has an incomplete or empty "
                 "runtime path contract";
-            return result;
+            co_return result;
         }
     }
     std::vector<ObservationRequirement> required(nodes.size());
@@ -295,13 +297,38 @@ PolicyObservationFixedPoint propagate_policy_observations(
             return bytes;
         };
     result.estimated_peak_owned_bytes = requirements_bytes(required);
+    const auto saturated_add = [](
+            const std::uint64_t left,
+            const std::uint64_t right) {
+        return right >
+                       std::numeric_limits<std::uint64_t>::max() - left
+                   ? std::numeric_limits<std::uint64_t>::max()
+                   : left + right;
+    };
+    std::uint64_t graph_retained_bytes =
+        policy_observation_nodes_bytes(nodes);
+    graph_retained_bytes = saturated_add(
+        graph_retained_bytes,
+        index_by_state.size() *
+            (sizeof(decltype(index_by_state)::value_type) +
+             3 * sizeof(void*)));
+    graph_retained_bytes = saturated_add(
+        graph_retained_bytes,
+        propagation_groups.capacity() *
+            sizeof(std::vector<std::uint32_t>));
+    for (const std::vector<std::uint32_t>& group :
+         propagation_groups) {
+        graph_retained_bytes = saturated_add(
+            graph_retained_bytes,
+            group.capacity() * sizeof(std::uint32_t));
+    }
     for (;;) {
         if (result.rounds >= max_rounds) {
             result.round_cap = true;
             result.failure_reason =
                 "policy observation propagation reached "
                 "max_refinement_rounds";
-            return result;
+            co_return result;
         }
         ++result.rounds;
         bool changed = false;
@@ -309,8 +336,10 @@ PolicyObservationFixedPoint propagate_policy_observations(
         result.estimated_peak_owned_bytes = std::max(
             result.estimated_peak_owned_bytes,
             requirements_bytes(required) + requirements_bytes(next));
-        for (const std::vector<std::uint32_t>& group :
-             propagation_groups) {
+        for (std::uint32_t group_index = 0;
+             group_index < propagation_groups.size(); ++group_index) {
+            const std::vector<std::uint32_t>& group =
+                propagation_groups[group_index];
             const std::uint32_t source = group.front();
             const PolicyObservationNode& node = nodes[source];
             ObservationRequirement propagated = required[source];
@@ -322,7 +351,7 @@ PolicyObservationFixedPoint propagate_policy_observations(
                     result.failure_reason =
                         "policy observation graph has an unknown "
                         "successor";
-                    return result;
+                    co_return result;
                 }
                 const std::optional<SelectedAction>& selected =
                     selected_action(node);
@@ -343,24 +372,38 @@ PolicyObservationFixedPoint propagate_policy_observations(
                     changed = true;
                 }
             }
+            if ((group_index & 7u) == 7u) {
+                co_await solve_detail::CooperativeCheckpoint{
+                    saturated_add(
+                        graph_retained_bytes,
+                        result.estimated_peak_owned_bytes)};
+            }
         }
         required = std::move(next);
         if (!changed) break;
     }
     result.assignments.reserve(nodes.size());
     std::uint64_t payload_max = 0;
+    /* Distinctness is diagnostic only, but the old prefix scan compared
+     * every assignment with every earlier assignment. Large compiled
+     * policies usually have only a handful of exact requirements repeated
+     * across thousands of states, so retain one collision-free equality
+     * authority per distinct requirement instead. */
+    std::vector<std::uint32_t> unique_requirement_indices;
     for (std::uint32_t index = 0; index < nodes.size(); ++index) {
         const std::uint64_t payload =
             requirement_payload_bytes(required[index]);
         payload_max = std::max(payload_max, payload);
-        bool unique = true;
-        for (std::uint32_t prior = 0; prior < index; ++prior) {
-            if (required[prior] == required[index]) {
-                unique = false;
-                break;
-            }
+        const bool unique = std::none_of(
+            unique_requirement_indices.begin(),
+            unique_requirement_indices.end(),
+            [&](const std::uint32_t prior) {
+                return required[prior] == required[index];
+            });
+        if (unique) {
+            unique_requirement_indices.push_back(index);
+            ++result.unique_canonical_requirements;
         }
-        if (unique) ++result.unique_canonical_requirements;
         result.assignments.push_back(
             {nodes[index].state_id, required[index]});
         const std::optional<SelectedAction>& selected =
@@ -439,9 +482,20 @@ PolicyObservationFixedPoint propagate_policy_observations(
     }
     result.estimated_peak_owned_bytes = std::max(
         result.estimated_peak_owned_bytes,
-        requirements_bytes(required) + assignment_bytes);
+        requirements_bytes(required) + assignment_bytes +
+            unique_requirement_indices.capacity() *
+                sizeof(std::uint32_t));
     result.complete = true;
-    return result;
+    co_return result;
+}
+
+PolicyObservationFixedPoint propagate_policy_observations(
+        std::vector<PolicyObservationNode> nodes,
+        const std::uint32_t max_rounds) {
+    auto work = propagate_policy_observations_cooperatively(
+        std::move(nodes), max_rounds);
+    while (!work.resume()) {}
+    return work.take_result();
 }
 
 } // namespace refinement

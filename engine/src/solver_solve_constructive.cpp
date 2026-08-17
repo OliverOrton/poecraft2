@@ -1250,6 +1250,16 @@ bool SolveWork::Impl::certify_incumbent_for_fallback(
             compilation.behavioral_classes;
         incumbent.compiled_artifact.policy_regions =
             compilation.policy_regions;
+        incumbent.compiled_artifact.infrastructure_nodes =
+            compilation.infrastructure_nodes;
+        incumbent.compiled_artifact.policy_route_nodes =
+            compilation.policy_route_nodes;
+        incumbent.compiled_artifact.local_gated_route_nodes =
+            compilation.local_gated_route_nodes;
+        incumbent.compiled_artifact.primitive_region_nodes =
+            compilation.primitive_region_nodes;
+        incumbent.compiled_artifact.additional_recipe_nodes =
+            compilation.additional_recipe_nodes;
         incumbent.compiled_artifact.nodes = compilation.nodes;
         incumbent.compiled_artifact.edges = compilation.edges;
         incumbent.compiled_artifact.total_condition_bytes =

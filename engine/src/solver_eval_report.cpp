@@ -397,6 +397,39 @@ std::string serialize_strategy_eval(const StrategyEvalResult& result) {
            std::to_string(row_census.unique_stable_kernels);
     out += ",\"state_local_rows\":" +
            std::to_string(row_census.state_local_rows);
+    out += ",\"route_shapes\":{\"direct_repeat_rows\":" +
+           std::to_string(row_census.direct_repeat_rows);
+    out += ",\"local_gated_route_rows\":" +
+           std::to_string(row_census.local_gated_route_rows);
+    out += ",\"other_operation_rows\":" +
+           std::to_string(row_census.other_operation_rows) + "}";
+    out += ",\"kernel_authority\":{\"goal_progress_gated_rows\":" +
+           std::to_string(row_census.goal_progress_gated_rows);
+    out += ",\"full_physical_rows\":" +
+           std::to_string(row_census.full_physical_rows) + "}";
+    out += ",\"local_gated_route_proof\":{\"proved_rows\":" +
+           std::to_string(row_census.local_gated_route_proved_rows);
+    out += ",\"shape_rejections\":" +
+           std::to_string(row_census.local_gated_route_shape_rejections);
+    out += ",\"condition_rejections\":" +
+           std::to_string(
+               row_census.local_gated_route_condition_rejections);
+    out += ",\"target_rejections\":" +
+           std::to_string(row_census.local_gated_route_target_rejections);
+    out += ",\"root_rejections\":" +
+           std::to_string(row_census.local_gated_route_root_rejections) +
+           "}";
+    out += ",\"local_gated_full_rows\":{\"outcome_entries\":" +
+           std::to_string(row_census.local_gated_full_outcome_entries);
+    out += ",\"routed_transitions\":" +
+           std::to_string(
+               row_census.local_gated_full_routed_transitions);
+    out += ",\"outcome_payload_bytes\":" +
+           std::to_string(
+               row_census.local_gated_full_outcome_payload_bytes);
+    out += ",\"routed_payload_bytes\":" +
+           std::to_string(
+               row_census.local_gated_full_routed_payload_bytes) + "}";
     out += ",\"exact_outcome_entries\":" +
            std::to_string(row_census.exact_outcome_entries);
     out += ",\"routed_transitions\":" +
