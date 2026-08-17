@@ -1,7 +1,7 @@
 # Five-T1 Restart-Monotone Strategy Recovery
 
-**Status: successor Gate 0 passed. Behavior-keyed product-local Fracture
-sharing is next under the unchanged cap.**
+**Status: streamed exact-evaluator closure recovery is selected; its
+behavior-neutral representation census is active.**
 
 Parent: [Active work](../README.md)
 
@@ -13,19 +13,17 @@ existing memory and responsiveness limits.
 
 - [Stopped original execution plan](plan.md)
 - [Selected exact-evaluator successor plan](successor-plan.md)
+- [Selected streamed evaluator closure plan](streamed-evaluator-closure-plan.md)
 - [Gate 1 result and Gate 4 stop evidence](evidence/gate1-gate4-stop.md)
 - [Pair-discovery follow-up audit](evidence/pair-discovery-follow-up-audit.md)
 - [Successor Gate 0 result](evidence/successor-gate0.md)
 - [Current handoff](../../../HANDOFF.md)
 
-The native source checkpoint `705c25c` freezes both five-T1 cases, makes
-bounded certification fail closed, retains a structurally checked safe product
-pair for Witness A, and replaces the former observation preflight refusal with
-audited observation accounting. Witness B then discovers 8,395,474 exact
-state/action pairs and exceeds the unchanged evaluator budget before component
-construction. Gates 2, 3, and 5-8 were not started; release WASM and the full
-acceptance pipeline were deliberately not run. Oliver then approved the
-successor plan at `5deaa3f`; it first measures evaluator subphases, then shares
-Fracture regions by complete executable behavior before deciding whether a
-lower-level pair representation change is necessary. Gate 0 now exposes that
-attribution while preserving deterministic standalone evaluator JSON.
+The retained transition and segmented-pair checkpoints reduce Witness B's
+10-million evaluator peak to 600,881,764 bytes and safely cross the former
+16.7-million pair allocation cliff. Discovery remains open at 17,998,209
+pairs with only 24.8 MB of peak headroom at the temporary 18-million probe, so
+the checked cap remains 10 million. Oliver selected a new audited plan that
+first measures whether deterministic routing or transition routing metadata
+owns the remaining prefix, then changes exactly one authority. Release WASM
+and the full acceptance pipeline remain deliberately unrun.

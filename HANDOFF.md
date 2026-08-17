@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: transition-carrier Gate 2 reached its broader-architecture stop.
-No implementation plan is active. Oliver must select the next chunk.**
+**Status: Oliver selected streamed exact-evaluator closure recovery on
+2026-08-17. Its prior-work audit is complete and Gate 0 census is active.**
 
 The original
 [Five-T1 Restart-Monotone Strategy Recovery](docs/active/2026-08-16-five-t1-restart-monotone-recovery/plan.md)
@@ -156,5 +156,11 @@ successor Gates 4-8 remain unstarted. No WASM build, web suite, or full
 acceptance pipeline was run. Do not resume until Oliver selects a new scoped
 plan.
 
-The current implementation checkpoint is `3acd2a4`; the final Gate 2 evidence
-update follows it as a documentation-only local commit.
+The stopped implementation checkpoint is `3acd2a4`; its Gate 2 evidence is
+`8b51928`. Oliver then instructed the work to continue while explicitly
+checking prior attempts before selecting an implementation. The new
+[streamed evaluator closure plan](docs/active/2026-08-16-five-t1-restart-monotone-recovery/streamed-evaluator-closure-plan.md)
+reuses the retained replay partition, rejects open-graph merging and whole-run
+checkpoint work, and begins with a behavior-neutral census. Do not start
+parent successor Gates 4-8 or run the full acceptance pipeline during this
+diagnostic boundary.
