@@ -389,6 +389,8 @@ std::string serialize_strategy_eval(const StrategyEvalResult& result) {
            std::to_string(row_census.materialized_rows);
     out += ",\"shared_row_reuses\":" +
            std::to_string(row_census.shared_row_reuses);
+    out += ",\"replayable_rows\":" +
+           std::to_string(row_census.replayable_rows);
     out += ",\"stable_shared_rows\":" +
            std::to_string(row_census.stable_shared_rows);
     out += ",\"unique_stable_kernels\":" +
@@ -407,6 +409,10 @@ std::string serialize_strategy_eval(const StrategyEvalResult& result) {
            std::to_string(row_census.unique_stable_kernel_payload_bytes);
     out += ",\"routed_payload_bytes\":" +
            std::to_string(row_census.routed_payload_bytes);
+    out += ",\"replay_route_token_bytes\":" +
+           std::to_string(row_census.replay_route_token_bytes);
+    out += ",\"replay_route_result_authorities\":" +
+           std::to_string(row_census.replay_route_result_authorities);
     out += ",\"projected_u32_route_tokens_bytes\":" +
            std::to_string(row_census.projected_u32_route_tokens_bytes);
     out += ",\"source_edge_selections\":" +

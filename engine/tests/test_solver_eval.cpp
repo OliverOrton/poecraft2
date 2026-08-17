@@ -650,6 +650,7 @@ void run_closed_form_tests() {
     const StrategyEvalOperationRowCensus& compressed_census =
         exact.operation_row_census;
     PC_CHECK(compressed_census.materialized_rows > 0);
+    PC_CHECK(compressed_census.replayable_rows > 0);
     PC_CHECK(compressed_census.stable_shared_rows > 0);
     PC_CHECK(compressed_census.unique_stable_kernels > 0);
     PC_CHECK(compressed_census.exact_outcome_entries > 0);
@@ -657,6 +658,11 @@ void run_closed_form_tests() {
     PC_CHECK(compressed_census.exact_outcome_payload_bytes > 0);
     PC_CHECK(compressed_census.unique_stable_kernel_payload_bytes > 0);
     PC_CHECK(compressed_census.routed_payload_bytes > 0);
+    PC_CHECK(compressed_census.replay_route_token_bytes > 0);
+    PC_CHECK(compressed_census.replay_route_result_authorities > 0);
+    PC_CHECK(
+        compressed_census.replay_route_token_bytes <=
+        compressed_census.projected_u32_route_tokens_bytes);
     PC_CHECK(
         compressed_census.projected_u32_route_tokens_bytes ==
         compressed_census.exact_outcome_entries *
@@ -2343,6 +2349,12 @@ void run_scale_and_fallback_tests() {
         std::string::npos);
     PC_CHECK(
         transition_diagnostic.find("operation_action_census=[") !=
+        std::string::npos);
+    PC_CHECK(
+        transition_diagnostic.find("replay_route_token_payload=") !=
+        std::string::npos);
+    PC_CHECK(
+        transition_diagnostic.find("replay_route_result_authorities=") !=
         std::string::npos);
 
     StrategyEvalOptions memory_guard;

@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: replayable exact operation-row Gate 0 completed on 2026-08-17.
-Gate 1 compact shared-kernel route-token authority is active.**
+**Status: replayable exact operation-row Gates 0-1 completed on 2026-08-17.
+Gate 2 direct replay-partition integration is active.**
 
 The original
 [Five-T1 Restart-Monotone Strategy Recovery](docs/active/2026-08-16-five-t1-restart-monotone-recovery/plan.md)
@@ -215,10 +215,19 @@ only a 1/256 shadow sample and was removed. Deterministic routing projects to
 65.8 seconds and is the runtime owner. See the
 [Gate 0 census](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/replayable-row-gate0.md).
 
-Gate 1 therefore retains immutable stable kernels once under existing exact
-authority, stores one compact route-result token per broad outcome, keeps the
-tiny state-local fringe direct, and compacts collision-safe route traces and
-results. Bounded materialized-reference parity remains mandatory.
+Gate 1 is complete. It retains immutable stable kernels once under existing
+exact authority, stores one compact route-result token per broad outcome,
+keeps the tiny state-local fringe direct, and interns collision-safe route
+results. At the same ten-million logical boundary, row payload falls from
+239,404,440 to 39,949,692 bytes and evaluator peak from 364,521,388 to
+167,478,312 bytes. Two stable kernels own 1,310,720 bytes; 279 replayable rows
+own 39,886,500 token bytes and reference 240,257 exact route results. See the
+[Gate 1 result](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/replayable-row-gate1.md).
+
+Gate 2 is active. The bounded legacy rematerialization bridge must be removed:
+tokens feed `refine_closed_probabilistic_partition_replay` directly while the
+collision-safe raw pair index remains available, and only completed quotient
+rows materialize. Bounded materialized-reference parity remains mandatory.
 
 The existing split-only replay partition remains the quotient authority.
 Exact attribution currently retains the raw graph and builds a full

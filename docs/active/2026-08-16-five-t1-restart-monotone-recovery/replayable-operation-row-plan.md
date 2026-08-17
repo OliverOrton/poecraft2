@@ -1,7 +1,7 @@
 # Replayable Exact Operation-Row Recovery
 
-**Status: Gate 0 completed on 2026-08-17. Gate 1 is active with the measured
-hybrid shared-kernel plus compact route-token authority.**
+**Status: Gates 0-1 completed on 2026-08-17. Gate 2 direct replay-partition
+integration is active.**
 
 Parent: [Five-T1 Restart-Monotone Strategy Recovery](README.md)
 
@@ -124,6 +124,14 @@ implementation must:
 Keep a materialized reference mode for small native tests. Prove byte-for-byte
 row parity on direct, long-router, shared-kernel, modifier-offer, checkpoint,
 terminal, no-matching-edge, and deterministic-cycle cases.
+
+**Actual result:** complete. At the unchanged ten-million logical-entry
+boundary, 279 replayable rows retain 39,886,500 token bytes and 240,257 exact
+route-result authorities. Total row payload falls from 239,404,440 to
+39,949,692 bytes and evaluator peak from 364,521,388 to 167,478,312 bytes.
+Two stable kernels own only 1,310,720 bytes. Bounded closed graphs rematerialize
+tokens before the legacy partition as an exact reference bridge. See the
+[Gate 1 evidence](evidence/replayable-row-gate1.md).
 
 ## Gate 2 - Partition And Quotient Conversion
 

@@ -1,7 +1,7 @@
 # Five-T1 Restart-Monotone Strategy Recovery
 
-**Status: replayable exact operation-row Gate 0 complete. Gate 1 compact
-shared-kernel route-token authority is active.**
+**Status: replayable exact operation-row Gates 0-1 complete. Gate 2 direct
+replay-partition integration is active.**
 
 Parent: [Active work](../README.md)
 
@@ -16,6 +16,7 @@ existing memory and responsiveness limits.
 - [Selected streamed evaluator closure plan](streamed-evaluator-closure-plan.md)
 - [Selected replayable operation-row recovery plan](replayable-operation-row-plan.md)
 - [Replayable-row Gate 0 census and selection](evidence/replayable-row-gate0.md)
+- [Replayable-row Gate 1 compact-token result](evidence/replayable-row-gate1.md)
 - [Streamed closure Gate 0 census](evidence/streamed-closure-gate0.md)
 - [Streamed closure Gate 1 result and Gate 2 stop](evidence/streamed-closure-gate1-gate2-stop.md)
 - [Gate 1 result and Gate 4 stop evidence](evidence/gate1-gate4-stop.md)
@@ -46,3 +47,10 @@ checked prefix versus 239.4 MB of routed rows. Both sampled route-state and
 propagated-observation caches had zero reuse. Gate 1 therefore retains shared
 kernels once, compacts exact route authorities, and stores one token per broad
 outcome.
+
+Gate 1 now retains 39.95 MB of row payload at the same ten-million logical
+boundary, down from 239.40 MB, and reduces evaluator peak to 167.48 MB. Two
+stable kernels occupy 1.31 MB; 279 replayable rows use 39.89 MB of 32-bit
+tokens and 240,257 exact route-result authorities. Gate 2 must remove the
+bounded legacy rematerialization bridge and replay tokens directly into the
+existing split-only partition.

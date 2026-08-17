@@ -117,6 +117,25 @@ struct StrategyEvalWork::Impl {
         std::uint64_t exact_outcome_payload_bytes = 0;
     };
 
+    enum class ReplayRouteKind : std::uint32_t {
+        Transition = 0,
+        Terminal = 1,
+        NoMatchingEdge = 2,
+    };
+
+    struct ReplayRouteResult {
+        ReplayRouteKind kind = ReplayRouteKind::Transition;
+        std::uint32_t node = kNoId;
+        std::uint32_t edge = kNoId;
+        std::uint32_t policy_route = kNoId;
+
+        bool operator==(const ReplayRouteResult&) const = default;
+    };
+
+    static_assert(
+        sizeof(ReplayRouteResult) == 16,
+        "replay route results must remain compact");
+
     struct FallbackState {
         std::uint32_t component = kNoId;
         std::vector<std::uint32_t> members;
@@ -252,6 +271,9 @@ struct StrategyEvalWork::Impl {
     std::vector<std::uint32_t> route_sample_bucket_heads;
     std::vector<std::uint32_t> route_sample_next;
     std::vector<std::uint64_t> route_sample_keys;
+    std::vector<std::uint32_t> replay_route_bucket_heads;
+    std::vector<std::uint32_t> replay_route_next;
+    std::vector<ReplayRouteResult> replay_route_results;
     std::vector<ObservationRequirement>
         node_observation_requirements;
 
@@ -451,6 +473,8 @@ struct StrategyEvalWork::Impl {
             bytes += row.transitions.capacity() * sizeof(EvalTransition);
             bytes += row.transition_via.capacity() * sizeof(std::uint32_t);
             bytes += row.absorptions.capacity() * sizeof(EvalAbsorption);
+            bytes += row.replay_route_tokens.capacity() *
+                     sizeof(std::uint32_t);
         }
         bytes += attribution_pairs.owned_bytes();
         bytes += attribution_rows.capacity() * sizeof(EvalRow);
@@ -462,6 +486,8 @@ struct StrategyEvalWork::Impl {
             bytes += row.transitions.capacity() * sizeof(EvalTransition);
             bytes += row.transition_via.capacity() * sizeof(std::uint32_t);
             bytes += row.absorptions.capacity() * sizeof(EvalAbsorption);
+            bytes += row.replay_route_tokens.capacity() *
+                     sizeof(std::uint32_t);
         }
         bytes += row_by_distribution.size() *
                  (sizeof(decltype(row_by_distribution)::value_type) +
@@ -577,6 +603,11 @@ struct StrategyEvalWork::Impl {
                  sizeof(std::uint32_t);
         bytes += route_sample_next.capacity() * sizeof(std::uint32_t);
         bytes += route_sample_keys.capacity() * sizeof(std::uint64_t);
+        bytes += replay_route_bucket_heads.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += replay_route_next.capacity() * sizeof(std::uint32_t);
+        bytes += replay_route_results.capacity() *
+                 sizeof(ReplayRouteResult);
         bytes += output_owned_bytes();
         if (finalization_task.has_value()) {
             bytes += finalization_task->retained_bytes();
@@ -717,6 +748,11 @@ struct StrategyEvalWork::Impl {
                  sizeof(std::uint32_t);
         bytes += route_sample_next.capacity() * sizeof(std::uint32_t);
         bytes += route_sample_keys.capacity() * sizeof(std::uint64_t);
+        bytes += replay_route_bucket_heads.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += replay_route_next.capacity() * sizeof(std::uint32_t);
+        bytes += replay_route_results.capacity() *
+                 sizeof(ReplayRouteResult);
         bytes += output_owned_bytes();
         if (finalization_task.has_value()) {
             bytes += finalization_task->retained_bytes();
@@ -829,7 +865,9 @@ struct StrategyEvalWork::Impl {
             row_payload_owned_bytes +=
                 row.transitions.capacity() * sizeof(EvalTransition) +
                 row.transition_via.capacity() * sizeof(std::uint32_t) +
-                row.absorptions.capacity() * sizeof(EvalAbsorption);
+                row.absorptions.capacity() * sizeof(EvalAbsorption) +
+                row.replay_route_tokens.capacity() *
+                    sizeof(std::uint32_t);
         }
     }
 
@@ -1184,6 +1222,68 @@ struct StrategyEvalWork::Impl {
         check_owned_cap();
     }
 
+    static std::uint64_t replay_route_hash(
+            const ReplayRouteResult& result) {
+        std::uint64_t hash = 0x6576616c72746f6bull; /* "evalrtok" */
+        for (const std::uint32_t word :
+             {static_cast<std::uint32_t>(result.kind), result.node,
+              result.edge, result.policy_route}) {
+            hash = mix_pair_index_word(
+                hash ^ mix_pair_index_word(word));
+        }
+        return hash;
+    }
+
+    void rehash_replay_route_index(const std::size_t bucket_count) {
+        if (bucket_count == 0 ||
+            (bucket_count & (bucket_count - 1)) != 0) {
+            throw std::logic_error(
+                "strategy evaluation replay-route buckets are not a power "
+                "of two");
+        }
+        check_owned_cap(bucket_count * sizeof(std::uint32_t));
+        std::vector<std::uint32_t> replacement(bucket_count, kNoId);
+        replay_route_next.resize(replay_route_results.size(), kNoId);
+        for (std::uint32_t index = 0;
+             index < replay_route_results.size(); ++index) {
+            const std::size_t bucket =
+                replay_route_hash(replay_route_results[index]) &
+                (bucket_count - 1);
+            replay_route_next[index] = replacement[bucket];
+            replacement[bucket] = index;
+        }
+        replay_route_bucket_heads.swap(replacement);
+    }
+
+    std::uint32_t intern_replay_route_result(
+            const ReplayRouteResult& result) {
+        if (replay_route_bucket_heads.empty()) {
+            rehash_replay_route_index(64);
+        } else if (replay_route_results.size() >=
+                   replay_route_bucket_heads.size() * 6) {
+            rehash_replay_route_index(
+                replay_route_bucket_heads.size() * 2);
+        }
+        const std::size_t bucket = replay_route_hash(result) &
+            (replay_route_bucket_heads.size() - 1);
+        for (std::uint32_t candidate = replay_route_bucket_heads[bucket];
+             candidate != kNoId;
+             candidate = replay_route_next[candidate]) {
+            if (replay_route_results[candidate] == result) {
+                return candidate;
+            }
+        }
+        const std::uint32_t index =
+            static_cast<std::uint32_t>(replay_route_results.size());
+        replay_route_results.push_back(result);
+        replay_route_next.push_back(replay_route_bucket_heads[bucket]);
+        replay_route_bucket_heads[bucket] = index;
+        output.operation_row_census.replay_route_result_authorities =
+            replay_route_results.size();
+        check_owned_cap();
+        return index;
+    }
+
     static std::uint64_t outcome_payload_bytes(
             const OutcomeDistribution& outcomes) {
         std::uint64_t bytes =
@@ -1350,6 +1450,120 @@ struct StrategyEvalWork::Impl {
         return id;
     }
 
+    std::uint32_t find_pair(
+            const std::uint32_t node,
+            const std::uint32_t state,
+            const std::uint32_t unveil_offer = kNoId,
+            const std::uint32_t checkpoint_state = kNoId) const {
+        if (pair_bucket_heads.empty()) return kNoId;
+        const std::size_t bucket =
+            pair_index_hash(
+                node, state, unveil_offer, checkpoint_state) &
+            (pair_bucket_heads.size() - 1);
+        for (std::uint32_t candidate = pair_bucket_heads[bucket];
+             candidate != kNoId;
+             candidate = pair_next.at(candidate)) {
+            const EvalPair& pair = pairs.at(candidate);
+            if (pair.node == node && pair.state == state &&
+                pair.unveil_offer == unveil_offer &&
+                pair.checkpoint_state == checkpoint_state) {
+                return candidate;
+            }
+        }
+        return kNoId;
+    }
+
+    void materialize_replay_rows_for_legacy_consumers() {
+        for (EvalRow& row : rows) {
+            if (!row.replayable()) continue;
+            const OutcomeDistribution& distribution =
+                *row.replay_distribution;
+            if (!distribution.stable_shared_kernel ||
+                distribution.entries.size() !=
+                    row.replay_route_tokens.size() ||
+                !row.transitions.empty() || !row.absorptions.empty()) {
+                throw std::logic_error(
+                    "strategy evaluation replay row has invalid stable "
+                    "kernel authority");
+            }
+            std::size_t transition_count = 0;
+            for (const std::uint32_t token : row.replay_route_tokens) {
+                if (replay_route_results.at(token).kind ==
+                    ReplayRouteKind::Transition) {
+                    ++transition_count;
+                }
+            }
+            row.transitions.reserve(transition_count);
+            row.absorptions.reserve(
+                distribution.entries.size() - transition_count);
+            solve_detail::WideFloat mass = 0.0;
+            for (std::size_t index = 0;
+                 index < distribution.entries.size(); ++index) {
+                const OutcomeEntry& outcome = distribution.entries[index];
+                const ReplayRouteResult& route =
+                    replay_route_results.at(
+                        row.replay_route_tokens[index]);
+                mass += solve_detail::WideFloat{outcome.probability};
+                if (route.kind == ReplayRouteKind::Transition) {
+                    const std::uint32_t target = find_pair(
+                        route.node, outcome.state, kNoId,
+                        row.replay_checkpoint_state);
+                    if (target == kNoId) {
+                        throw std::logic_error(
+                            "strategy evaluation replay row names an "
+                            "undiscovered successor");
+                    }
+                    row.transitions.push_back({
+                        target, outcome.probability, route.edge,
+                        route.policy_route, outcome.state});
+                    continue;
+                }
+                row.absorptions.push_back({
+                    route.kind == ReplayRouteKind::Terminal
+                        ? EvalAbsorptionKind::Terminal
+                        : EvalAbsorptionKind::NoMatchingEdge,
+                    route.node, outcome.state, outcome.probability,
+                    route.edge, route.policy_route});
+            }
+            std::sort(
+                row.transitions.begin(), row.transitions.end(),
+                [](const EvalTransition& left,
+                   const EvalTransition& right) {
+                    return std::tie(
+                               left.target, left.edge,
+                               left.policy_route, left.policy_state) <
+                           std::tie(
+                               right.target, right.edge,
+                               right.policy_route, right.policy_state);
+                });
+            std::sort(
+                row.absorptions.begin(), row.absorptions.end(),
+                [](const EvalAbsorption& left,
+                   const EvalAbsorption& right) {
+                    return std::tuple{
+                               static_cast<int>(left.kind), left.node,
+                               left.state, left.edge, left.policy_route} <
+                           std::tuple{
+                               static_cast<int>(right.kind), right.node,
+                               right.state, right.edge,
+                               right.policy_route};
+                });
+            if (std::fabs(mass.value() - 1.0) > 1e-9) {
+                throw std::runtime_error(
+                    "strategy evaluation replayed row does not sum to one");
+            }
+            row.replay_distribution = nullptr;
+            row.replay_checkpoint_state = kNoId;
+            std::vector<std::uint32_t>().swap(row.replay_route_tokens);
+            check_owned_cap();
+        }
+        std::vector<std::uint32_t>().swap(replay_route_bucket_heads);
+        std::vector<std::uint32_t>().swap(replay_route_next);
+        std::vector<ReplayRouteResult>().swap(replay_route_results);
+        refresh_row_payload_owned_bytes();
+        check_owned_cap();
+    }
+
     const OutcomeDistribution& exact_outcomes(
         const std::uint32_t state,
         const std::uint32_t action,
@@ -1488,6 +1702,9 @@ struct StrategyEvalWork::Impl {
                 ", operation_rows=" +
                     std::to_string(
                         output.operation_row_census.materialized_rows) +
+                ", operation_replayable_rows=" +
+                    std::to_string(
+                        output.operation_row_census.replayable_rows) +
                 ", operation_row_reuses=" +
                     std::to_string(
                         output.operation_row_census.shared_row_reuses) +
@@ -1514,6 +1731,14 @@ struct StrategyEvalWork::Impl {
                 ", operation_routed_payload=" +
                     std::to_string(
                         output.operation_row_census.routed_payload_bytes) +
+                ", replay_route_token_payload=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .replay_route_token_bytes) +
+                ", replay_route_result_authorities=" +
+                    std::to_string(
+                        output.operation_row_census
+                            .replay_route_result_authorities) +
                 ", projected_u32_route_tokens=" +
                     std::to_string(
                         output.operation_row_census
@@ -1943,6 +2168,10 @@ struct StrategyEvalWork::Impl {
         bool census_stable_shared_kernel = false;
         std::uint64_t census_outcome_entries = 0;
         std::uint64_t census_outcome_payload_bytes = 0;
+        const OutcomeDistribution* replay_distribution = nullptr;
+        std::uint32_t replay_checkpoint_state = kNoId;
+        std::vector<std::uint32_t> replay_route_tokens;
+        bool capture_replay_routes = false;
         std::map<
             std::tuple<
                 std::uint32_t, std::uint32_t, std::uint32_t,
@@ -1995,6 +2224,21 @@ struct StrategyEvalWork::Impl {
                     solve_detail::WideFloat{probability};
             }
         };
+        const auto capture_replay_route = [&](
+                const ReplayRouteKind kind,
+                const std::uint32_t route_node,
+                const std::uint32_t edge,
+                const std::uint32_t policy_route) {
+            if (!capture_replay_routes) return false;
+            ensure_transition_budget(replay_route_tokens.size() + 1);
+            check_owned_projection(
+                owned_before_expansion,
+                (replay_route_tokens.size() + 1) *
+                    sizeof(std::uint32_t));
+            replay_route_tokens.push_back(intern_replay_route_result({
+                kind, route_node, edge, policy_route}));
+            return true;
+        };
 
         const auto route = [&](
                                std::uint32_t state,
@@ -2026,6 +2270,11 @@ struct StrategyEvalWork::Impl {
                             .count());
             }
             if (selected == nullptr) {
+                if (capture_replay_route(
+                        ReplayRouteKind::NoMatchingEdge,
+                        node_index, kNoId, kNoId)) {
+                    return;
+                }
                 add_absorption(
                     {static_cast<int>(EvalAbsorptionKind::NoMatchingEdge),
                      node_index, state, kNoId, kNoId},
@@ -2041,6 +2290,12 @@ struct StrategyEvalWork::Impl {
                 PolicyRouteResolution& resolution =
                     resolve_policy_route(state);
                 if (resolution.failure_node != kNoId) {
+                    if (capture_replay_route(
+                            ReplayRouteKind::NoMatchingEdge,
+                            resolution.failure_node, edge,
+                            policy_route)) {
+                        return;
+                    }
                     add_absorption(
                         {static_cast<int>(
                              EvalAbsorptionKind::NoMatchingEdge),
@@ -2077,6 +2332,12 @@ struct StrategyEvalWork::Impl {
                     policy_route = encode_deterministic_route_authority(
                         resolution.trace);
                     if (resolution.failure_node != kNoId) {
+                        if (capture_replay_route(
+                                ReplayRouteKind::NoMatchingEdge,
+                                resolution.failure_node, edge,
+                                policy_route)) {
+                            return;
+                        }
                         add_absorption(
                             {static_cast<int>(
                                  EvalAbsorptionKind::NoMatchingEdge),
@@ -2090,6 +2351,11 @@ struct StrategyEvalWork::Impl {
             }
             const StrategyNode& target = strategy->nodes.at(target_node);
             if (target.kind == StrategyNodeKind::Terminal) {
+                if (capture_replay_route(
+                        ReplayRouteKind::Terminal,
+                        target_node, edge, policy_route)) {
+                    return;
+                }
                 add_absorption(
                     {static_cast<int>(EvalAbsorptionKind::Terminal),
                      target_node, state, edge, policy_route},
@@ -2104,6 +2370,11 @@ struct StrategyEvalWork::Impl {
                 intern_pair(
                     target_node, state, target_unveil_offer,
                     checkpoint_state);
+            if (capture_replay_route(
+                    ReplayRouteKind::Transition,
+                    target_node, edge, policy_route)) {
+                return;
+            }
             add_transition(
                 {target_pair, edge, policy_route, state}, probability);
         };
@@ -2361,12 +2632,25 @@ struct StrategyEvalWork::Impl {
                             successor, 1.0, nullptr,
                             successor_checkpoint);
                     } else {
+                        if (outcomes.stable_shared_kernel) {
+                            replay_distribution = &outcomes;
+                            replay_checkpoint_state =
+                                successor_checkpoint;
+                            check_owned_projection(
+                                owned_before_expansion,
+                                outcomes.entries.size() *
+                                    sizeof(std::uint32_t));
+                            replay_route_tokens.reserve(
+                                outcomes.entries.size());
+                            capture_replay_routes = true;
+                        }
                         for (const OutcomeEntry& outcome : outcomes.entries) {
                             distribution_mass += outcome.probability;
                             route(
                                 outcome.state, outcome.probability,
                                 nullptr, successor_checkpoint);
                         }
+                        capture_replay_routes = false;
                     }
                     if (std::fabs(distribution_mass - 1.0) > 1e-9) {
                         throw std::runtime_error(
@@ -2386,6 +2670,18 @@ struct StrategyEvalWork::Impl {
         pair.consumes = consumes;
         EvalRow row;
         solve_detail::WideFloat row_mass = 0.0;
+        if (replay_distribution != nullptr) {
+            if (replay_route_tokens.size() !=
+                replay_distribution->entries.size()) {
+                throw std::logic_error(
+                    "strategy evaluation replay route count does not match "
+                    "its stable kernel");
+            }
+            row.replay_distribution = replay_distribution;
+            row.replay_checkpoint_state = replay_checkpoint_state;
+            row.replay_route_tokens = std::move(replay_route_tokens);
+            row_mass = solve_detail::WideFloat{1.0};
+        }
         row.transitions.reserve(transitions.size());
         for (const auto& [key, probability] : transitions) {
             row.transitions.push_back(
@@ -2417,25 +2713,57 @@ struct StrategyEvalWork::Impl {
             row_mass += solve_detail::WideFloat{
                 row.absorptions.back().probability};
         }
-        retained_absorptions += row.absorptions.size();
+        std::uint64_t replay_transition_count = 0;
+        std::uint64_t replay_absorption_count = 0;
+        for (const std::uint32_t token : row.replay_route_tokens) {
+            const ReplayRouteResult& result =
+                replay_route_results.at(token);
+            if (result.kind == ReplayRouteKind::Transition) {
+                ++replay_transition_count;
+                if (result.edge != kNoId) {
+                    ++retained_transitions_with_edge;
+                }
+                if (result.policy_route != kNoId) {
+                    ++retained_transitions_with_policy_route;
+                }
+                ++retained_policy_state_matches_target;
+            } else {
+                ++replay_absorption_count;
+            }
+        }
+        retained_absorptions +=
+            row.absorptions.size() + replay_absorption_count;
         if (std::fabs(row_mass.value() - 1.0) > 1e-9) {
             throw std::runtime_error(
                 "strategy evaluation transition row does not sum to one at "
                 "node '" + node.id + "'");
         }
-        stored_transitions += row.transitions.size() + row.absorptions.size();
+        stored_transitions +=
+            row.transitions.size() + row.absorptions.size() +
+            row.replay_route_tokens.size();
         row_payload_owned_bytes +=
             row.transitions.capacity() * sizeof(EvalTransition) +
             row.transition_via.capacity() * sizeof(std::uint32_t) +
-            row.absorptions.capacity() * sizeof(EvalAbsorption);
+            row.absorptions.capacity() * sizeof(EvalAbsorption) +
+            row.replay_route_tokens.capacity() * sizeof(std::uint32_t);
         if (node.kind == StrategyNodeKind::Operation) {
             auto& total = output.operation_row_census;
             ++total.materialized_rows;
-            total.routed_transitions += row.transitions.size();
-            total.absorptions += row.absorptions.size();
+            if (row.replayable()) {
+                ++total.replayable_rows;
+                total.replay_route_token_bytes +=
+                    row.replay_route_tokens.capacity() *
+                    sizeof(std::uint32_t);
+            }
+            total.routed_transitions +=
+                row.transitions.size() + replay_transition_count;
+            total.absorptions +=
+                row.absorptions.size() + replay_absorption_count;
             total.routed_payload_bytes +=
                 row.transitions.capacity() * sizeof(EvalTransition) +
-                row.absorptions.capacity() * sizeof(EvalAbsorption);
+                row.absorptions.capacity() * sizeof(EvalAbsorption) +
+                row.replay_route_tokens.capacity() *
+                    sizeof(std::uint32_t);
             if (census_operation_distribution) {
                 total.exact_outcome_entries += census_outcome_entries;
                 total.exact_outcome_payload_bytes +=
@@ -2463,8 +2791,10 @@ struct StrategyEvalWork::Impl {
                 OperationRowActionCensus& action_census =
                     operation_row_census_by_action[action_index];
                 ++action_census.materialized_rows;
-                action_census.routed_transitions += row.transitions.size();
-                action_census.absorptions += row.absorptions.size();
+                action_census.routed_transitions +=
+                    row.transitions.size() + replay_transition_count;
+                action_census.absorptions +=
+                    row.absorptions.size() + replay_absorption_count;
                 if (census_operation_distribution) {
                     action_census.exact_outcome_entries +=
                         census_outcome_entries;
@@ -6652,6 +6982,7 @@ struct StrategyEvalWork::Impl {
                          * releasing indexes that have no partition or solve
                          * authority. */
                         check_owned_cap();
+                        materialize_replay_rows_for_legacy_consumers();
                         retire_pair_discovery_indexes();
                     }
                 } else {

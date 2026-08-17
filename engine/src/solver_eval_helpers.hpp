@@ -112,6 +112,16 @@ struct EvalRow {
      * original pair entered before the transition was redirected. */
     std::vector<std::uint32_t> transition_via;
     std::vector<EvalAbsorption> absorptions;
+    /* Broad immutable operation kernels retain one compact exact route-result
+     * token per sorted OutcomeDistribution entry during discovery. The
+     * distribution is owned by CalcContext's stable shared-kernel memo. */
+    const OutcomeDistribution* replay_distribution = nullptr;
+    std::uint32_t replay_checkpoint_state = kNoId;
+    std::vector<std::uint32_t> replay_route_tokens;
+
+    bool replayable() const {
+        return replay_distribution != nullptr;
+    }
 };
 
 struct EvalPair {

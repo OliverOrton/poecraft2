@@ -101,6 +101,7 @@ struct StrategyEvalStageTimings {
  * sample; ownership and row/outcome counts are exact. */
 struct StrategyEvalOperationRowCensus {
     std::uint64_t materialized_rows = 0;
+    std::uint64_t replayable_rows = 0;
     std::uint64_t shared_row_reuses = 0;
     std::uint64_t stable_shared_rows = 0;
     std::uint64_t unique_stable_kernels = 0;
@@ -111,6 +112,8 @@ struct StrategyEvalOperationRowCensus {
     std::uint64_t exact_outcome_payload_bytes = 0;
     std::uint64_t unique_stable_kernel_payload_bytes = 0;
     std::uint64_t routed_payload_bytes = 0;
+    std::uint64_t replay_route_token_bytes = 0;
+    std::uint64_t replay_route_result_authorities = 0;
     std::uint64_t source_edge_selections = 0;
     std::uint64_t deterministic_route_resolutions = 0;
     std::uint64_t sampled_source_edge_selections = 0;
