@@ -218,6 +218,15 @@ double edge_value(const StrategyEvalResult& result, const std::string& id) {
     return -1.0;
 }
 
+const StrategyEvalNode* node_result(
+    const StrategyEvalResult& result,
+    const std::string& id) {
+    const auto found = std::find_if(
+        result.nodes.begin(), result.nodes.end(),
+        [&](const StrategyEvalNode& node) { return node.id == id; });
+    return found == result.nodes.end() ? nullptr : &*found;
+}
+
 const StrategyEvalActionTotal* action_total(
     const StrategyEvalResult& result,
     const std::string& id) {
@@ -2090,6 +2099,104 @@ void run_scale_and_fallback_tests() {
     PC_CHECK(std::fabs(result.success_probability - 1.0) < 1e-9);
     PC_CHECK(result.max_mass_conservation_error < 1e-9);
     check_reference_parity(*large, result, options);
+    PC_CHECK(result.raw_pairs_discovered < 512);
+    const double routed_mass = edge_value(result, "miss");
+    PC_CHECK(routed_mass > 0.0);
+    for (int i = 0; i < kRouterCount; ++i) {
+        const std::string route = "route_" + std::to_string(i);
+        const std::string router = "router_" + std::to_string(i);
+        PC_CHECK(near(edge_value(result, route), routed_mass, 1e-9));
+        const StrategyEvalNode* retained = node_result(result, router);
+        PC_CHECK(retained != nullptr);
+        PC_CHECK(
+            retained != nullptr &&
+            near(retained->expected_visits, routed_mass, 1e-9));
+        PC_CHECK(retained != nullptr && !retained->classes.empty());
+    }
+
+    const auto direct = compile(
+        session,
+        shell(
+            "large fallback direct oracle", "rare",
+            R"JSON({"id":"start","kind":"start"},
+{"id":"chaos","kind":"operation","operation":{"type":"chaos","params":{}}},
+{"id":"success","kind":"terminal","terminal":"success"})JSON",
+            R"JSON({"id":"begin","from":"start","to":"chaos","priority":0,"condition":{"type":"always"}},
+{"id":"hit","from":"chaos","to":"success","priority":0,"condition":{"type":"has_mod_family","family_mod_key":"mod0","min_tier":1}},
+{"id":"miss","from":"chaos","to":"chaos","priority":999,"is_default":true})JSON"));
+    const StrategyEvalResult direct_result =
+        evaluate_strategy(*direct, options);
+    PC_CHECK(near(
+        result.success_probability,
+        direct_result.success_probability, 1e-9));
+    PC_CHECK(near(
+        result.expected_actions,
+        direct_result.expected_actions, 1e-9));
+    PC_CHECK(near(
+        result.expected_consumption.at("chaos"),
+        direct_result.expected_consumption.at("chaos"), 1e-9));
+
+    StrategyEvalWork single_step_work(large, options);
+    while (!single_step_work.progress().done) {
+        single_step_work.step(1);
+    }
+    const StrategyEvalResult single_step =
+        single_step_work.take_result();
+    PC_CHECK(single_step.raw_pairs_discovered ==
+             result.raw_pairs_discovered);
+    PC_CHECK(near(
+        single_step.success_probability,
+        result.success_probability, 1e-9));
+    PC_CHECK(near(
+        single_step.expected_actions,
+        result.expected_actions, 1e-9));
+    PC_CHECK(single_step.edges.size() == result.edges.size());
+    for (const StrategyEvalEdge& edge : result.edges) {
+        PC_CHECK(near(
+            edge_value(single_step, edge.id),
+            edge.expected_traversals, 1e-9));
+    }
+
+    const auto multiple_roots = compile(
+        session,
+        shell(
+            "multiple deterministic route roots", "rare",
+            R"JSON({"id":"start","kind":"start"},
+{"id":"chaos","kind":"operation","operation":{"type":"chaos","params":{}}},
+{"id":"route_a","kind":"router"},
+{"id":"route_b","kind":"router"},
+{"id":"success","kind":"terminal","terminal":"success"})JSON",
+            R"JSON({"id":"begin","from":"start","to":"chaos","priority":0,"condition":{"type":"always"}},
+{"id":"hit","from":"chaos","to":"success","priority":0,"condition":{"type":"has_mod_family","family_mod_key":"mod0","min_tier":1}},
+{"id":"branch_a","from":"chaos","to":"route_a","priority":1,"condition":{"type":"has_mod_family","family_mod_key":"mod2","min_tier":1}},
+{"id":"branch_b","from":"chaos","to":"route_b","priority":999,"is_default":true},
+{"id":"return_a","from":"route_a","to":"chaos","priority":0,"condition":{"type":"always"}},
+{"id":"return_b","from":"route_b","to":"chaos","priority":0,"condition":{"type":"always"}})JSON"));
+    const StrategyEvalResult multiple =
+        evaluate_strategy(*multiple_roots, options);
+    PC_CHECK(multiple.converged);
+    PC_CHECK(edge_value(multiple, "branch_a") > 0.0);
+    PC_CHECK(edge_value(multiple, "branch_b") > 0.0);
+    PC_CHECK(near(
+        edge_value(multiple, "branch_a"),
+        edge_value(multiple, "return_a"), 1e-9));
+    PC_CHECK(near(
+        edge_value(multiple, "branch_b"),
+        edge_value(multiple, "return_b"), 1e-9));
+    const StrategyEvalNode* route_a = node_result(multiple, "route_a");
+    const StrategyEvalNode* route_b = node_result(multiple, "route_b");
+    PC_CHECK(route_a != nullptr && route_b != nullptr);
+    PC_CHECK(
+        route_a != nullptr &&
+        near(
+            route_a->expected_visits,
+            edge_value(multiple, "branch_a"), 1e-9));
+    PC_CHECK(
+        route_b != nullptr &&
+        near(
+            route_b->expected_visits,
+            edge_value(multiple, "branch_b"), 1e-9));
+    check_reference_parity(*multiple_roots, multiple, options);
 
     const auto pair_guard = compile(
         session,
@@ -2148,6 +2255,9 @@ void run_scale_and_fallback_tests() {
         std::string::npos);
     PC_CHECK(
         transition_diagnostic.find("policy_state_target_match=") !=
+        std::string::npos);
+    PC_CHECK(
+        transition_diagnostic.find("deterministic_route_traces=") !=
         std::string::npos);
     PC_CHECK(
         transition_diagnostic.find("calc_owned=") != std::string::npos);

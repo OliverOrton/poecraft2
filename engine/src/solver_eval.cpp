@@ -87,6 +87,24 @@ struct StrategyEvalWork::Impl {
         bool resolved = false;
     };
 
+    struct DeterministicRouteResolution {
+        std::uint32_t target_node = kNoId;
+        std::uint32_t failure_node = kNoId;
+        std::uint32_t trace = kNoId;
+    };
+
+    struct DeterministicRouteFlow {
+        double mass = 0.0;
+        /* Encoded trace authority until finalization expands it, then the
+         * exact skipped router node for class aggregation. */
+        std::uint32_t authority = kNoId;
+        std::uint32_t state = kNoId;
+    };
+
+    static_assert(
+        sizeof(DeterministicRouteFlow) == 16,
+        "deterministic route flow must remain a compact transient carrier");
+
     struct FallbackState {
         std::uint32_t component = kNoId;
         std::vector<std::uint32_t> members;
@@ -150,6 +168,9 @@ struct StrategyEvalWork::Impl {
     std::uint64_t retained_policy_state_matches_target = 0;
     std::uint64_t retained_policy_state_differs_from_target = 0;
     std::uint64_t retained_absorptions = 0;
+    std::uint64_t deterministic_router_nodes_skipped = 0;
+    std::uint64_t deterministic_router_edges_skipped = 0;
+    std::uint64_t deterministic_router_cycles_retained = 0;
     std::uint64_t row_payload_owned_bytes = 0;
     std::uint64_t component_payload_owned_bytes = 0;
     std::uint64_t review_payload_owned_bytes = 0;
@@ -201,6 +222,13 @@ struct StrategyEvalWork::Impl {
         policy_route_trace_by_key;
     std::vector<refinement::StableKey> policy_route_traces;
     std::uint64_t policy_route_trace_payload_owned_bytes = 0;
+    std::map<refinement::StableKey, std::uint32_t>
+        deterministic_route_trace_by_key;
+    std::vector<refinement::StableKey> deterministic_route_traces;
+    refinement::StableKey deterministic_route_trace_scratch;
+    std::vector<std::uint32_t> deterministic_route_walk_scratch;
+    std::uint64_t deterministic_route_trace_payload_owned_bytes = 0;
+    std::vector<DeterministicRouteFlow> deterministic_route_flows;
     std::vector<ObservationRequirement>
         node_observation_requirements;
 
@@ -502,6 +530,27 @@ struct StrategyEvalWork::Impl {
         for (const refinement::StableKey& trace : policy_route_traces) {
             bytes += trace.capacity() * sizeof(std::uint64_t);
         }
+        bytes += deterministic_route_trace_by_key.size() *
+                 (sizeof(decltype(
+                      deterministic_route_trace_by_key)::value_type) +
+                  3 * sizeof(void*));
+        for (const auto& [trace, unused] :
+             deterministic_route_trace_by_key) {
+            (void)unused;
+            bytes += trace.capacity() * sizeof(std::uint64_t);
+        }
+        bytes += deterministic_route_traces.capacity() *
+                 sizeof(refinement::StableKey);
+        for (const refinement::StableKey& trace :
+             deterministic_route_traces) {
+            bytes += trace.capacity() * sizeof(std::uint64_t);
+        }
+        bytes += deterministic_route_trace_scratch.capacity() *
+                 sizeof(std::uint64_t);
+        bytes += deterministic_route_walk_scratch.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += deterministic_route_flows.capacity() *
+                 sizeof(DeterministicRouteFlow);
         bytes += output_owned_bytes();
         if (finalization_task.has_value()) {
             bytes += finalization_task->retained_bytes();
@@ -621,6 +670,19 @@ struct StrategyEvalWork::Impl {
         bytes += policy_route_traces.capacity() *
                  sizeof(refinement::StableKey);
         bytes += policy_route_trace_payload_owned_bytes;
+        bytes += deterministic_route_trace_by_key.size() *
+                 (sizeof(decltype(
+                      deterministic_route_trace_by_key)::value_type) +
+                  3 * sizeof(void*));
+        bytes += deterministic_route_traces.capacity() *
+                 sizeof(refinement::StableKey);
+        bytes += deterministic_route_trace_payload_owned_bytes;
+        bytes += deterministic_route_trace_scratch.capacity() *
+                 sizeof(std::uint64_t);
+        bytes += deterministic_route_walk_scratch.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += deterministic_route_flows.capacity() *
+                 sizeof(DeterministicRouteFlow);
         bytes += output_owned_bytes();
         if (finalization_task.has_value()) {
             bytes += finalization_task->retained_bytes();
@@ -752,6 +814,19 @@ struct StrategyEvalWork::Impl {
     void add_compressed_policy_incoming(
         std::uint32_t node, std::uint32_t state, double mass) {
         if (node == kNoId || !(mass > 0.0)) return;
+        if (is_deterministic_route_authority(node)) {
+            if (state == kNoId) {
+                throw std::logic_error(
+                    "deterministic route flow has no exact state");
+            }
+            const std::size_t capacity_before =
+                deterministic_route_flows.capacity();
+            deterministic_route_flows.push_back({mass, node, state});
+            if (deterministic_route_flows.capacity() != capacity_before) {
+                check_owned_cap();
+            }
+            return;
+        }
         auto [entry, inserted] =
             compressed_policy_incoming[node].try_emplace(state, 0.0);
         if (inserted) {
@@ -1196,6 +1271,14 @@ struct StrategyEvalWork::Impl {
                 ", transitions_with_policy_route=" +
                     std::to_string(
                         retained_transitions_with_policy_route) +
+                ", deterministic_route_traces=" +
+                    std::to_string(deterministic_route_traces.size()) +
+                ", deterministic_router_nodes_skipped=" +
+                    std::to_string(deterministic_router_nodes_skipped) +
+                ", deterministic_router_edges_skipped=" +
+                    std::to_string(deterministic_router_edges_skipped) +
+                ", deterministic_router_cycles_retained=" +
+                    std::to_string(deterministic_router_cycles_retained) +
                 ", policy_state_target_match=" +
                     std::to_string(
                         retained_policy_state_matches_target) +
@@ -1219,6 +1302,13 @@ struct StrategyEvalWork::Impl {
                     std::to_string(sizeof(EvalTransition)) +
                 ", transition_via=" +
                     std::to_string(output.transition_via_owned_bytes) +
+                ", deterministic_route_trace_payload=" +
+                    std::to_string(
+                        deterministic_route_trace_payload_owned_bytes) +
+                ", deterministic_route_flow=" +
+                    std::to_string(
+                        deterministic_route_flows.capacity() *
+                        sizeof(DeterministicRouteFlow)) +
                 ", owned=" +
                     std::to_string(fast_estimated_owned_bytes()) +
                 ")");
@@ -1353,6 +1443,129 @@ struct StrategyEvalWork::Impl {
             [&](const StrategyEdge& edge) {
                 return !edge.is_default && contains(edge.condition);
             });
+    }
+
+    bool is_deterministic_route_authority(
+            const std::uint32_t authority) const {
+        return authority != kNoId &&
+               authority >= strategy->nodes.size();
+    }
+
+    std::uint32_t encode_deterministic_route_authority(
+            const std::uint32_t trace) const {
+        const std::uint64_t encoded =
+            static_cast<std::uint64_t>(strategy->nodes.size()) + trace;
+        if (encoded >= kNoId) {
+            throw std::length_error(
+                "strategy evaluation exceeded deterministic route trace "
+                "identity space");
+        }
+        return static_cast<std::uint32_t>(encoded);
+    }
+
+    std::uint32_t decode_deterministic_route_authority(
+            const std::uint32_t authority) const {
+        if (!is_deterministic_route_authority(authority)) {
+            throw std::logic_error(
+                "strategy evaluation route authority is not an interned "
+                "deterministic trace");
+        }
+        const std::uint32_t trace =
+            authority - static_cast<std::uint32_t>(strategy->nodes.size());
+        if (trace >= deterministic_route_traces.size()) {
+            throw std::logic_error(
+                "strategy evaluation deterministic route trace is missing");
+        }
+        return trace;
+    }
+
+    bool online_deterministic_router(const std::uint32_t node) const {
+        return node < strategy->nodes.size() &&
+               strategy->nodes[node].kind == StrategyNodeKind::Router &&
+               !node_observes_modifier_offer(strategy->nodes[node]);
+    }
+
+    DeterministicRouteResolution resolve_deterministic_route(
+            const std::uint32_t root,
+            const std::uint32_t state) {
+        DeterministicRouteResolution resolution;
+        resolution.target_node = root;
+        if (!online_deterministic_router(root)) return resolution;
+
+        deterministic_route_trace_scratch.clear();
+        deterministic_route_walk_scratch.clear();
+        deterministic_route_trace_scratch.push_back(
+            0x6576616c726f7574ull); /* "evalrout" */
+        deterministic_route_trace_scratch.push_back(0);
+        std::uint32_t cursor = root;
+        while (online_deterministic_router(cursor)) {
+            if (std::find(
+                    deterministic_route_walk_scratch.begin(),
+                    deterministic_route_walk_scratch.end(), cursor) !=
+                deterministic_route_walk_scratch.end()) {
+                ++deterministic_router_cycles_retained;
+                resolution.target_node = root;
+                return resolution;
+            }
+            deterministic_route_walk_scratch.push_back(cursor);
+            deterministic_route_trace_scratch.push_back(cursor);
+            const StrategyEdge* selected =
+                select_edge(strategy->nodes[cursor], state);
+            if (selected == nullptr) {
+                deterministic_route_trace_scratch.push_back(0);
+                resolution.failure_node = cursor;
+                break;
+            }
+            const std::uint32_t edge =
+                edge_index_by_id.at(selected->id);
+            deterministic_route_trace_scratch.push_back(
+                static_cast<std::uint64_t>(edge) + 1);
+            cursor = selected->target;
+        }
+
+        const std::uint32_t steps = static_cast<std::uint32_t>(
+            deterministic_route_walk_scratch.size());
+        if (steps == 0) return resolution;
+        deterministic_route_trace_scratch[1] = steps;
+        deterministic_route_trace_scratch.push_back(
+            resolution.failure_node == kNoId ? 1 : 0);
+        deterministic_route_trace_scratch.push_back(
+            resolution.failure_node == kNoId
+                ? cursor
+                : resolution.failure_node);
+
+        const auto found = deterministic_route_trace_by_key.find(
+            deterministic_route_trace_scratch);
+        if (found != deterministic_route_trace_by_key.end()) {
+            resolution.trace = found->second;
+        } else {
+            const std::uint32_t candidate = static_cast<std::uint32_t>(
+                deterministic_route_traces.size());
+            const auto [stored, inserted] =
+                deterministic_route_trace_by_key.emplace(
+                    deterministic_route_trace_scratch, candidate);
+            if (!inserted) {
+                throw std::logic_error(
+                    "strategy evaluation deterministic route trace "
+                    "interning disagreed with exact equality");
+            }
+            deterministic_route_trace_payload_owned_bytes +=
+                stored->first.capacity() * sizeof(std::uint64_t);
+            deterministic_route_traces.push_back(stored->first);
+            deterministic_route_trace_payload_owned_bytes +=
+                deterministic_route_traces.back().capacity() *
+                sizeof(std::uint64_t);
+            resolution.trace = candidate;
+            check_owned_cap();
+        }
+        deterministic_router_nodes_skipped += steps;
+        for (std::uint32_t step = 0; step < steps; ++step) {
+            if (deterministic_route_trace_scratch[3 + 2 * step] != 0) {
+                ++deterministic_router_edges_skipped;
+            }
+        }
+        resolution.target_node = cursor;
+        return resolution;
     }
 
     std::uint32_t modifier_offer_action_index(
@@ -1502,6 +1715,24 @@ struct StrategyEvalWork::Impl {
                     return;
                 }
                 target_node = resolution.target_node;
+            }
+            if (policy_route == kNoId) {
+                const DeterministicRouteResolution resolution =
+                    resolve_deterministic_route(target_node, state);
+                if (resolution.trace != kNoId) {
+                    policy_route = encode_deterministic_route_authority(
+                        resolution.trace);
+                    if (resolution.failure_node != kNoId) {
+                        add_absorption(
+                            {static_cast<int>(
+                                 EvalAbsorptionKind::NoMatchingEdge),
+                             resolution.failure_node, state, edge,
+                             policy_route},
+                            probability);
+                        return;
+                    }
+                    target_node = resolution.target_node;
+                }
             }
             const StrategyNode& target = strategy->nodes.at(target_node);
             if (target.kind == StrategyNodeKind::Terminal) {
@@ -1859,6 +2090,16 @@ struct StrategyEvalWork::Impl {
         if (state == kNoId) {
             throw std::logic_error(
                 "compressed policy trace has no exact state");
+        }
+        if (is_deterministic_route_authority(root)) {
+            const std::uint32_t trace =
+                decode_deterministic_route_authority(root);
+            /* The interned key contains every skipped node, exact selected
+             * edge, and resolved/failure endpoint. Equality is full-key
+             * equality; the compact trace id is only its retained handle. */
+            key.push_back(4);
+            key.push_back(trace);
+            return;
         }
         if (root != compressed_policy_root ||
             state >= policy_route_cache.size()) {
@@ -4896,6 +5137,7 @@ struct StrategyEvalWork::Impl {
             for (auto& incoming : compressed_policy_incoming) {
                 incoming.clear();
             }
+            deterministic_route_flows.clear();
             terminal_incoming_owned_bytes = 0;
             compressed_policy_incoming_owned_bytes = 0;
             const bool exact_row_visits_available =
@@ -5069,11 +5311,80 @@ struct StrategyEvalWork::Impl {
         std::vector<std::map<std::uint32_t, double>> incoming(node_count);
         std::vector<std::vector<std::pair<std::uint32_t, double>>>
             compressed_top_classes(node_count);
+        std::vector<std::uint8_t> compressed_class_node(node_count, 0);
         std::uint64_t compressed_top_owned_bytes =
             compressed_top_classes.capacity() *
-            sizeof(std::vector<std::pair<std::uint32_t, double>>);
+                sizeof(std::vector<std::pair<std::uint32_t, double>>) +
+            compressed_class_node.capacity() * sizeof(std::uint8_t);
 
         std::uint64_t compressed_routes_seen = 0;
+        const std::size_t deterministic_flow_count =
+            deterministic_route_flows.size();
+        for (std::size_t flow_index = 0;
+             flow_index < deterministic_flow_count; ++flow_index) {
+            const double mass = deterministic_route_flows[flow_index].mass;
+            const std::uint32_t state =
+                deterministic_route_flows[flow_index].state;
+            const std::uint32_t trace_id =
+                decode_deterministic_route_authority(
+                    deterministic_route_flows[flow_index].authority);
+            const refinement::StableKey& trace =
+                deterministic_route_traces.at(trace_id);
+            if (trace.size() < 4 ||
+                trace[0] != 0x6576616c726f7574ull ||
+                trace.size() != 4 + 2 * trace[1]) {
+                throw std::logic_error(
+                    "strategy evaluation deterministic route trace is "
+                    "malformed");
+            }
+            const std::uint32_t steps = static_cast<std::uint32_t>(trace[1]);
+            if (steps == 0) {
+                throw std::logic_error(
+                    "strategy evaluation retained an empty deterministic "
+                    "route trace");
+            }
+            for (std::uint32_t step = 0; step < steps; ++step) {
+                const std::uint32_t node = static_cast<std::uint32_t>(
+                    trace[2 + 2 * step]);
+                const std::uint64_t edge_token = trace[3 + 2 * step];
+                if (node >= node_count ||
+                    strategy->nodes[node].kind !=
+                        StrategyNodeKind::Router) {
+                    throw std::logic_error(
+                        "strategy evaluation deterministic route trace has "
+                        "a non-router step");
+                }
+                node_visits[node] += mass;
+                if (edge_token != 0) {
+                    const std::uint64_t edge = edge_token - 1;
+                    if (edge >= edge_traversals.size()) {
+                        throw std::logic_error(
+                            "strategy evaluation deterministic route trace "
+                            "has an invalid edge");
+                    }
+                    edge_traversals[static_cast<std::size_t>(edge)] += mass;
+                }
+                if (step == 0) {
+                    deterministic_route_flows[flow_index].authority = node;
+                } else {
+                    const std::size_t capacity_before =
+                        deterministic_route_flows.capacity();
+                    deterministic_route_flows.push_back(
+                        {mass, node, state});
+                    if (deterministic_route_flows.capacity() !=
+                        capacity_before) {
+                        check_owned_cap(
+                            finalization_transient_floor +
+                            compressed_top_owned_bytes);
+                    }
+                }
+            }
+            if ((++compressed_routes_seen & 255u) == 0) {
+                co_await solve_detail::CooperativeCheckpoint{
+                    finalization_transient_floor +
+                    compressed_top_owned_bytes};
+            }
+        }
         for (std::uint32_t root = 0; root < node_count; ++root) {
             for (const auto& [state, mass] :
                  compressed_policy_incoming[root]) {
@@ -5085,29 +5396,15 @@ struct StrategyEvalWork::Impl {
                             "compiled policy router contains a cycle");
                     }
                     node_visits[cursor] += mass;
-                    auto& top = compressed_top_classes[cursor];
-                    if (options.top_classes_per_node != 0) {
-                        const std::size_t capacity_before = top.capacity();
-                        top.push_back({state, mass});
-                        if (top.capacity() != capacity_before) {
-                            compressed_top_owned_bytes +=
-                                (top.capacity() - capacity_before) *
-                                sizeof(std::pair<std::uint32_t, double>);
-                            check_owned_cap(
-                                finalization_transient_floor +
-                                compressed_top_owned_bytes);
-                        }
-                        std::stable_sort(
-                            top.begin(), top.end(),
-                            [](const auto& left, const auto& right) {
-                                if (left.second != right.second) {
-                                    return left.second > right.second;
-                                }
-                                return left.first < right.first;
-                            });
-                        if (top.size() > options.top_classes_per_node) {
-                            top.pop_back();
-                        }
+                    const std::size_t capacity_before =
+                        deterministic_route_flows.capacity();
+                    deterministic_route_flows.push_back(
+                        {mass, cursor, state});
+                    if (deterministic_route_flows.capacity() !=
+                        capacity_before) {
+                        check_owned_cap(
+                            finalization_transient_floor +
+                            compressed_top_owned_bytes);
                     }
                     const StrategyEdge* selected =
                         select_edge(strategy->nodes[cursor], state);
@@ -5126,7 +5423,38 @@ struct StrategyEvalWork::Impl {
                 }
             }
         }
-        finalization_transient_floor += compressed_top_owned_bytes;
+        std::stable_sort(
+            deterministic_route_flows.begin(),
+            deterministic_route_flows.end(),
+            [](const DeterministicRouteFlow& left,
+               const DeterministicRouteFlow& right) {
+                if (left.authority != right.authority) {
+                    return left.authority < right.authority;
+                }
+                return left.state < right.state;
+            });
+        std::size_t compacted_route_flows = 0;
+        for (std::size_t begin = 0;
+             begin < deterministic_route_flows.size();) {
+            std::size_t end = begin + 1;
+            solve_detail::WideFloat mass =
+                deterministic_route_flows[begin].mass;
+            while (end < deterministic_route_flows.size() &&
+                   deterministic_route_flows[end].authority ==
+                       deterministic_route_flows[begin].authority &&
+                   deterministic_route_flows[end].state ==
+                       deterministic_route_flows[begin].state) {
+                mass += solve_detail::WideFloat{
+                    deterministic_route_flows[end].mass};
+                ++end;
+            }
+            deterministic_route_flows[compacted_route_flows++] = {
+                mass.value(),
+                deterministic_route_flows[begin].authority,
+                deterministic_route_flows[begin].state};
+            begin = end;
+        }
+        deterministic_route_flows.resize(compacted_route_flows);
 
         for (std::size_t pair = 0; pair < pairs.size(); ++pair) {
             const EvalPair& record = pairs[pair];
@@ -5185,6 +5513,64 @@ struct StrategyEvalWork::Impl {
                     finalization_transient_floor};
             }
         }
+        const auto consider_compressed_class = [&]
+            (const std::uint32_t node,
+             const std::uint32_t state,
+             const double mass) {
+                if (options.top_classes_per_node == 0 ||
+                    !(mass > 0.0)) {
+                    return;
+                }
+                auto& top = compressed_top_classes[node];
+                const std::size_t capacity_before = top.capacity();
+                top.push_back({state, mass});
+                if (top.capacity() != capacity_before) {
+                    compressed_top_owned_bytes +=
+                        (top.capacity() - capacity_before) *
+                        sizeof(std::pair<std::uint32_t, double>);
+                    check_owned_cap(
+                        finalization_transient_floor +
+                        compressed_top_owned_bytes);
+                }
+                std::stable_sort(
+                    top.begin(), top.end(),
+                    [](const auto& left, const auto& right) {
+                        if (left.second != right.second) {
+                            return left.second > right.second;
+                        }
+                        return left.first < right.first;
+                    });
+                if (top.size() > options.top_classes_per_node) {
+                    top.pop_back();
+                }
+            };
+        for (const DeterministicRouteFlow& flow :
+             deterministic_route_flows) {
+            const std::uint32_t node = flow.authority;
+            if (node >= node_count) {
+                throw std::logic_error(
+                    "strategy evaluation compressed class has an invalid "
+                    "node");
+            }
+            compressed_class_node[node] = 1;
+            double total = flow.mass;
+            auto raw = incoming[node].find(flow.state);
+            if (raw != incoming[node].end()) {
+                total += raw->second;
+                incoming[node].erase(raw);
+            }
+            consider_compressed_class(node, flow.state, total);
+        }
+        for (std::uint32_t node = 0; node < node_count; ++node) {
+            if (!compressed_class_node[node]) continue;
+            for (const auto& [state, mass] : incoming[node]) {
+                consider_compressed_class(node, state, mass);
+            }
+            incoming[node].clear();
+        }
+        std::vector<DeterministicRouteFlow>().swap(
+            deterministic_route_flows);
+        finalization_transient_floor += compressed_top_owned_bytes;
         if (!attribution_pairs.empty() && !hard_unresolved &&
             output.residual_mass < options.epsilon) {
             solve_detail::WideFloat absorbed = 0.0;
@@ -5279,8 +5665,7 @@ struct StrategyEvalWork::Impl {
             output_node.id = source.id;
             output_node.expected_visits = node_visits[node];
             std::vector<std::pair<std::uint32_t, double>> classes;
-            if (compress_policy_routes && is_policy_route_node(
-                    static_cast<std::uint32_t>(node))) {
+            if (compressed_class_node[node]) {
                 classes = compressed_top_classes[node];
             } else {
                 classes.assign(
@@ -5301,8 +5686,7 @@ struct StrategyEvalWork::Impl {
                      calc.state(classes[c].first)});
             }
             double truncated = 0.0;
-            if (compress_policy_routes && is_policy_route_node(
-                    static_cast<std::uint32_t>(node))) {
+            if (compressed_class_node[node]) {
                 double retained = 0.0;
                 for (std::size_t c = 0; c < keep; ++c) {
                     retained += classes[c].second;

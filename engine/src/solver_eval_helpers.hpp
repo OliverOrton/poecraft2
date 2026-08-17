@@ -68,12 +68,14 @@ struct EvalTransition {
     double probability = 0.0;
     std::uint32_t target = kNoId;
     std::uint32_t edge = kNoId;
-    /* First compiler-generated policy_route_* node skipped during discovery.
-     * Its exact state-specific path is replayed once flow is known. */
+    /* Exact skipped-route authority. A compiled-node id names the retained
+     * single-root policy-route cache; an evaluator-encoded id names an
+     * interned deterministic-router trace. The exact path is replayed once
+     * flow is known. */
     std::uint32_t policy_route = kNoId;
-    /* Exact state used to traverse policy_route. Operation-pair refinement
-     * may merge input states after that router selected the same action, so
-     * the target pair's representative is not authoritative for replay. */
+    /* Exact state used by the skipped route. Operation-pair refinement may
+     * merge input states after routing selected the same action, so the
+     * target pair's representative is not authoritative for replay. */
     std::uint32_t policy_state = kNoId;
 
     EvalTransition() = default;
