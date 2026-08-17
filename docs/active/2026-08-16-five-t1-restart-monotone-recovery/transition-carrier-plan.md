@@ -1,7 +1,7 @@
 # Five-T1 Pre-Closure Transition Carrier Recovery
 
-**Status: selected by Oliver on 2026-08-16 after the transition-cap utility
-probe.**
+**Status: Gates 0-1 complete; Gate 2 compact segmented pair-carrier work is
+active.**
 
 Parent: [Five-T1 Exact-Evaluator Scaling And Recovery](successor-plan.md)
 
@@ -73,6 +73,15 @@ change from evidence: compact pair flags, segmented pair storage that avoids a
 capacity-doubling cliff, streamed/shared transition targets, or a sound
 pre-closure quotient. Stop if the required change combines multiple broad
 architectural authorities without an independently testable intermediate.
+
+**Selected result:** the one allowed 16-million probe still stopped during
+raw discovery at 15,998,209 pairs and a 1,011,645,812-byte evaluator peak
+against 1,050,981,759 bytes. The checked cap was restored to 10 million.
+The next owner is the pair carrier: replace contiguous geometric growth for
+raw pairs and discovery links with fixed-size segments, and remove only the
+operation/action metadata derivable exactly from the compiled node. Preserve
+full four-word raw identity and checked random access. See the
+[Gate 1 decision](evidence/transition-carrier-gate1.md).
 
 ## Gate 3 - Rejoin The Scaling Successor
 

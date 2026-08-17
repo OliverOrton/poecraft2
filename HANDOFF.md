@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: transition-carrier Gate 0 passed; frozen Witness A and the unchanged
-10-million-transition Witness B decision run are the active Gate 1 boundary.**
+**Status: transition-carrier Gates 0-1 passed; compact segmented pair-carrier
+work is the active Gate 2 boundary.**
 
 The original
 [Five-T1 Restart-Monotone Strategy Recovery](docs/active/2026-08-16-five-t1-restart-monotone-recovery/plan.md)
@@ -123,8 +123,19 @@ storage and remains identical. The evaluator suite passed 16,823 checks, the
 solver suite passed 96,113, and the native build passed. See
 [Gate 0 evidence](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/transition-carrier-gate0.md).
 
-Next run Witness A once and Witness B once with the checked 10-million cap.
-Use the new `row_payload`, `transition_record_bytes`, `transition_via`, and
-owned-byte diagnostics to choose at most one scoped higher-cap probe that fits
-under the byte budget. Do not raise the byte cap, rebuild WASM, start the older
-action-semantics gates, or run the full acceptance pipeline yet.
+Gate 1 is complete. Witness A remains independently evaluated at
+624,800.951911854 with success one and zero off-policy mass. At the checked
+10-million transition cap, Witness B stops at 9,998,209 raw pairs with an
+858,541,852-byte evaluator peak. One temporary 16-million probe also remained
+open at 15,998,209 pairs, with a 1,011,645,812-byte peak against the
+1,050,981,759-byte evaluator budget. The checked fixture is restored to 10
+million. See the
+[Gate 1 decision](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/transition-carrier-gate1.md).
+
+Gate 2 now owns the pair allocation cliff: use fixed-size segmented storage
+for raw pairs and discovery links, compact only metadata exactly derivable
+from the compiled node, and keep full four-word identity plus checked random
+access. Add a focused segment-boundary/raw-reference oracle before repeating
+Witness A and the checked-cap Witness B. Do not raise the byte cap, rebuild
+WASM, start the older action-semantics gates, or run the full acceptance
+pipeline yet.
