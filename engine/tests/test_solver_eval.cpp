@@ -2198,6 +2198,57 @@ void run_scale_and_fallback_tests() {
             edge_value(multiple, "branch_b"), 1e-9));
     check_reference_parity(*multiple_roots, multiple, options);
 
+    /* Cross the collision-safe trace index's initial 64 buckets at its
+     * checked average chain of six. Every one-node router has a distinct
+     * exact trace; the evaluator must retain one trace copy, rehash its
+     * compact link index, and preserve all route/accounting flow. */
+    constexpr int kTraceBoundaryCount = 385;
+    std::ostringstream trace_nodes;
+    trace_nodes << R"JSON({"id":"start","kind":"start"},
+{"id":"success","kind":"terminal","terminal":"success"})JSON";
+    std::ostringstream trace_edges;
+    trace_edges << R"JSON({"id":"begin","from":"start","to":"restart_0","priority":0,"condition":{"type":"always"}})JSON";
+    for (int i = 0; i < kTraceBoundaryCount; ++i) {
+        trace_nodes
+            << ",{\"id\":\"restart_" << i
+            << "\",\"kind\":\"operation\",\"operation\":{\"type\":\"restart\",\"params\":{}}}"
+            << ",{\"id\":\"trace_router_" << i
+            << "\",\"kind\":\"router\"}";
+        trace_edges
+            << ",{\"id\":\"enter_router_" << i
+            << "\",\"from\":\"restart_" << i
+            << "\",\"to\":\"trace_router_" << i
+            << "\",\"priority\":0,\"condition\":{\"type\":\"always\"}}"
+            << ",{\"id\":\"leave_router_" << i
+            << "\",\"from\":\"trace_router_" << i
+            << "\",\"to\":\""
+            << (i + 1 == kTraceBoundaryCount
+                    ? std::string("success")
+                    : "restart_" + std::to_string(i + 1))
+            << "\",\"priority\":0,\"condition\":{\"type\":\"always\"}}";
+    }
+    const auto trace_boundary = compile(
+        session,
+        shell(
+            "deterministic route trace index boundary", "normal",
+            trace_nodes.str(), trace_edges.str()));
+    const StrategyEvalResult trace_result =
+        evaluate_strategy(*trace_boundary, options);
+    PC_CHECK(trace_result.converged);
+    PC_CHECK(trace_result.raw_pairs_discovered ==
+             kTraceBoundaryCount + 1);
+    PC_CHECK(near(
+        trace_result.expected_actions,
+        static_cast<double>(kTraceBoundaryCount), 1e-12));
+    PC_CHECK(near(
+        trace_result.expected_consumption.at("base"),
+        static_cast<double>(kTraceBoundaryCount), 1e-12));
+    PC_CHECK(near(
+        edge_value(trace_result, "enter_router_384"), 1.0, 1e-12));
+    PC_CHECK(near(
+        edge_value(trace_result, "leave_router_384"), 1.0, 1e-12));
+    check_reference_parity(*trace_boundary, trace_result, options);
+
     const auto pair_guard = compile(
         session,
         shell(

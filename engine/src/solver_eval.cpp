@@ -222,8 +222,11 @@ struct StrategyEvalWork::Impl {
         policy_route_trace_by_key;
     std::vector<refinement::StableKey> policy_route_traces;
     std::uint64_t policy_route_trace_payload_owned_bytes = 0;
-    std::map<refinement::StableKey, std::uint32_t>
-        deterministic_route_trace_by_key;
+    /* Collision-safe chained index over the exact traces retained once in
+     * deterministic_route_traces. This is the same full-equality authority
+     * used by raw pair discovery, not a hash-only route identity. */
+    std::vector<std::uint32_t> deterministic_route_bucket_heads;
+    std::vector<std::uint32_t> deterministic_route_next;
     std::vector<refinement::StableKey> deterministic_route_traces;
     refinement::StableKey deterministic_route_trace_scratch;
     std::vector<std::uint32_t> deterministic_route_walk_scratch;
@@ -530,15 +533,10 @@ struct StrategyEvalWork::Impl {
         for (const refinement::StableKey& trace : policy_route_traces) {
             bytes += trace.capacity() * sizeof(std::uint64_t);
         }
-        bytes += deterministic_route_trace_by_key.size() *
-                 (sizeof(decltype(
-                      deterministic_route_trace_by_key)::value_type) +
-                  3 * sizeof(void*));
-        for (const auto& [trace, unused] :
-             deterministic_route_trace_by_key) {
-            (void)unused;
-            bytes += trace.capacity() * sizeof(std::uint64_t);
-        }
+        bytes += deterministic_route_bucket_heads.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += deterministic_route_next.capacity() *
+                 sizeof(std::uint32_t);
         bytes += deterministic_route_traces.capacity() *
                  sizeof(refinement::StableKey);
         for (const refinement::StableKey& trace :
@@ -670,10 +668,10 @@ struct StrategyEvalWork::Impl {
         bytes += policy_route_traces.capacity() *
                  sizeof(refinement::StableKey);
         bytes += policy_route_trace_payload_owned_bytes;
-        bytes += deterministic_route_trace_by_key.size() *
-                 (sizeof(decltype(
-                      deterministic_route_trace_by_key)::value_type) +
-                  3 * sizeof(void*));
+        bytes += deterministic_route_bucket_heads.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += deterministic_route_next.capacity() *
+                 sizeof(std::uint32_t);
         bytes += deterministic_route_traces.capacity() *
                  sizeof(refinement::StableKey);
         bytes += deterministic_route_trace_payload_owned_bytes;
@@ -1485,6 +1483,96 @@ struct StrategyEvalWork::Impl {
                !node_observes_modifier_offer(strategy->nodes[node]);
     }
 
+    static std::uint64_t deterministic_route_trace_hash(
+            const refinement::StableKey& trace) {
+        std::uint64_t hash = 1469598103934665603ull;
+        for (const std::uint64_t token : trace) {
+            for (std::uint32_t shift = 0; shift < 64; shift += 8) {
+                hash ^= (token >> shift) & 0xffu;
+                hash *= 1099511628211ull;
+            }
+        }
+        return hash;
+    }
+
+    void rehash_deterministic_route_index(
+            const std::size_t bucket_count) {
+        if (bucket_count == 0 ||
+            (bucket_count & (bucket_count - 1)) != 0) {
+            throw std::logic_error(
+                "strategy evaluation deterministic-route index buckets "
+                "are not a power of two");
+        }
+        check_owned_cap(bucket_count * sizeof(std::uint32_t));
+        std::vector<std::uint32_t> replacement(
+            bucket_count, kNoId);
+        if (deterministic_route_next.size() !=
+            deterministic_route_traces.size()) {
+            throw std::logic_error(
+                "strategy evaluation deterministic-route index is not "
+                "parallel to its traces");
+        }
+        for (std::uint32_t trace = 0;
+             trace < deterministic_route_traces.size(); ++trace) {
+            const std::size_t bucket =
+                deterministic_route_trace_hash(
+                    deterministic_route_traces[trace]) &
+                (bucket_count - 1);
+            deterministic_route_next[trace] = replacement[bucket];
+            replacement[bucket] = trace;
+        }
+        deterministic_route_bucket_heads.swap(replacement);
+    }
+
+    void ensure_deterministic_route_index_for_insert() {
+        if (deterministic_route_bucket_heads.empty()) {
+            rehash_deterministic_route_index(64);
+            return;
+        }
+        constexpr std::size_t kMaximumAverageChain = 6;
+        if (deterministic_route_next.size() >=
+            deterministic_route_bucket_heads.size() *
+                kMaximumAverageChain) {
+            if (deterministic_route_bucket_heads.size() >
+                std::numeric_limits<std::size_t>::max() / 2) {
+                throw std::length_error(
+                    "strategy evaluation deterministic-route index is too "
+                    "large");
+            }
+            rehash_deterministic_route_index(
+                deterministic_route_bucket_heads.size() * 2);
+        }
+    }
+
+    std::uint32_t intern_deterministic_route_trace() {
+        ensure_deterministic_route_index_for_insert();
+        const std::size_t bucket =
+            deterministic_route_trace_hash(
+                deterministic_route_trace_scratch) &
+            (deterministic_route_bucket_heads.size() - 1);
+        for (std::uint32_t candidate =
+                 deterministic_route_bucket_heads[bucket];
+             candidate != kNoId;
+             candidate = deterministic_route_next[candidate]) {
+            if (deterministic_route_traces[candidate] ==
+                deterministic_route_trace_scratch) {
+                return candidate;
+            }
+        }
+        const std::uint32_t candidate = static_cast<std::uint32_t>(
+            deterministic_route_traces.size());
+        deterministic_route_traces.push_back(
+            deterministic_route_trace_scratch);
+        deterministic_route_trace_payload_owned_bytes +=
+            deterministic_route_traces.back().capacity() *
+            sizeof(std::uint64_t);
+        deterministic_route_next.push_back(
+            deterministic_route_bucket_heads[bucket]);
+        deterministic_route_bucket_heads[bucket] = candidate;
+        check_owned_cap();
+        return candidate;
+    }
+
     DeterministicRouteResolution resolve_deterministic_route(
             const std::uint32_t root,
             const std::uint32_t state) {
@@ -1534,30 +1622,7 @@ struct StrategyEvalWork::Impl {
                 ? cursor
                 : resolution.failure_node);
 
-        const auto found = deterministic_route_trace_by_key.find(
-            deterministic_route_trace_scratch);
-        if (found != deterministic_route_trace_by_key.end()) {
-            resolution.trace = found->second;
-        } else {
-            const std::uint32_t candidate = static_cast<std::uint32_t>(
-                deterministic_route_traces.size());
-            const auto [stored, inserted] =
-                deterministic_route_trace_by_key.emplace(
-                    deterministic_route_trace_scratch, candidate);
-            if (!inserted) {
-                throw std::logic_error(
-                    "strategy evaluation deterministic route trace "
-                    "interning disagreed with exact equality");
-            }
-            deterministic_route_trace_payload_owned_bytes +=
-                stored->first.capacity() * sizeof(std::uint64_t);
-            deterministic_route_traces.push_back(stored->first);
-            deterministic_route_trace_payload_owned_bytes +=
-                deterministic_route_traces.back().capacity() *
-                sizeof(std::uint64_t);
-            resolution.trace = candidate;
-            check_owned_cap();
-        }
+        resolution.trace = intern_deterministic_route_trace();
         deterministic_router_nodes_skipped += steps;
         for (std::uint32_t step = 0; step < steps; ++step) {
             if (deterministic_route_trace_scratch[3 + 2 * step] != 0) {
