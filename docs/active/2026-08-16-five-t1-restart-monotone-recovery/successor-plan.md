@@ -179,6 +179,12 @@ refinement. Continuing requires a pre-closure quotient/streaming architecture
 or a cap increase, so this stop condition fired. See the
 [Gate 3 stop](evidence/successor-gate3-stop.md).
 
+Oliver later authorized a cap increase if useful. Scoped 12-million and
+13-million probes still stopped before refinement; the 13-million run left
+only 8,166,595 bytes below the evaluator budget. The checked cap remains at 10
+million because no cap-only value can reach raw closure under the current byte
+budget. See the [transition-cap probe](evidence/transition-cap-probe.md).
+
 ## Gate 4 - Cooperative Evaluation And Cancellation
 
 Make every newly owning discovery, key-build, partition, and component loop

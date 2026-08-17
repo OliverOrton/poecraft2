@@ -95,8 +95,19 @@ evidence is in the
 
 The successor plan's explicit stop condition fired. Continuing requires either
 raising the transition cap or a materially broader pre-closure quotient or
-streaming transition architecture. Neither is authorized. Gates 4-8 were not
-started; no release WASM or full acceptance pipeline was run. Do not call the
-priced five-T1 strategy recovered, raise a cap, or resume action-semantics work
-without Oliver selecting the next chunk. Preserve the current tree and
-checkpoints.
+streaming transition architecture. Gates 4-8 were not started; no release WASM
+or full acceptance pipeline was run. Do not call the priced five-T1 strategy
+recovered or resume action-semantics work without Oliver selecting the next
+chunk. Preserve the current tree and checkpoints.
+
+Oliver subsequently authorized a transition-cap increase if it would be
+useful. Scoped 12-million and 13-million probes were not useful: both still
+stopped during raw discovery, and the 13-million run peaked at 1,042,815,196
+bytes, leaving only 8,166,595 bytes below the evaluator budget. Raw closure
+therefore needs more transitions than can fit in the current representation.
+The checked fixture and engine default remain at 10,000,000. See the
+[transition-cap probe](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/transition-cap-probe.md).
+
+The remaining viable boundary is specifically a pre-closure quotient or
+compact/streamed transition representation under the existing byte cap. No
+implementation of that broader architecture is active yet.
