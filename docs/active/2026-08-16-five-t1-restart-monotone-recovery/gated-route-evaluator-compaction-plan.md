@@ -1,8 +1,20 @@
 # Proof-Gated Route And Operation-Graph Compaction
 
-**Status: selected 2026-08-17. Gate 0 in progress.**
+**Status: Gate 0 complete; Gate 1 prototype rejected; Gates 2-4 retained;
+Gate 5 stopped at the atomic exact-reforge leaf.**
 
 Parent: [Five-T1 Restart-Monotone Strategy Recovery](README.md)
+
+Actual result: [bounded native decision and Gate 5 stop](evidence/gated-route-compaction-result.md).
+
+The local-gated compact-kernel hypothesis failed the exact-oracle invariant
+and its prototype was removed. The independent fixed-point behavior-sharing
+change reduced Witness B to 92 nodes / 338 edges / three operation behaviors
+and made its bounded executable candidate independently evaluable at
+`16226566.773294946`. Cooperative observation propagation removed the prior
+2.7-second work item, but Gate 5 remains open at a 1.254-second atomic exact-
+reforge leaf and a 265 ms evaluator discovery item. No downstream release gate
+was run.
 
 ## Objective
 

@@ -1,7 +1,64 @@
 # Session Handoff
 
-**Status: proof-gated route and operation-graph compaction selected on
-2026-08-17. Gate 0 behavior-neutral attribution is in progress.**
+**Status: route/operation-graph compaction is checkpointed at `01035ea`;
+Gate 5 stopped at the remaining atomic exact-reforge leaf.**
+
+## Current boundary
+
+The selected
+[proof-gated route and operation-graph compaction plan](docs/active/2026-08-16-five-t1-restart-monotone-recovery/gated-route-evaluator-compaction-plan.md)
+has reached its precise bounded native stop. Full evidence is in the
+[result record](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/gated-route-compaction-result.md).
+
+Retained implementation:
+
+- exact graph/row and canonical Fracture-Q attribution;
+- a collision-free fixed-point partition of complete goal-gated operation
+  behavior, reducing Witness B from 2,015 nodes / 4,123 edges / 757 operation
+  regions to 92 nodes / 338 edges / three operation behaviors; and
+- cooperative policy-observation propagation using the same fixed-point
+  authority as synchronous callers.
+
+The local-gated compact-evaluator prototype was rejected and removed. It
+changed Witness A from `624800.9519118543` to `624800.9519136797` and Witness B
+from `16226566.773294946` to `16226566.773146724`. Final results use the full
+physical evaluator only.
+
+Final Witness A remains independently exact at `624800.9519118543`, success
+one, zero off-policy mass, 184 nodes / 666 edges, and paired defaults only.
+Transition hash `284ff325a96fe0d7` and policy hash `cee2bf6579b1857a` are
+unchanged.
+
+Final Witness B is a useful but bounded executable policy: upper/evaluated
+cost `16226566.773294946`, success one, zero off-policy mass, and lower bound
+zero. Its actions are Chaos, Exalt, and Dense Fossil plus a one-socket
+resonator. Direct certification is fail-closed as `cost_mismatch` against the
+solver's stored `37279651.842345364`. Strict lift fails because carrier 5983
+maps outside the solved coarse graph. The alternative envelope remains open;
+do not call this an exact optimum.
+
+Fracture is admitted and evaluated structurally: 214 eligible exact rows,
+1,022 raw outcomes, and 452 retained hit/miss entries. All 214 final Q values
+are unresolved because required successor values are nonfinite. There is no
+canonical cheaper-Q witness and no Fracture selection repair is authorized.
+
+Gate 5 improved the old roughly 2.7-second observation work item, but it does
+not pass. Final Witness B's largest native public step is 1,254.159 ms in the
+compiling/strict-lift phase; owner tracing isolated the remaining work to the
+documented atomic `CalcContext::outcomes()` exact-reforge leaf. Direct evaluator
+pair discovery also has a 265.345 ms largest work item. The next selectable
+scope is a cooperative exact-reforge cursor that preserves exact iteration and
+normalization order, cache identity, resource accounting, and cancellation,
+plus the small remaining evaluator split. The strict coarse-mapping failure is
+a separate proof boundary.
+
+The native build and focused evaluator (18,065), compiler (815), refinement
+(362), and solver (96,120) suites pass. `git diff --check` passes. No release
+WASM build, web suite, Warlord/automatic matrix, priced primary, 10,000-run
+verification, or full acceptance pipeline was run. Do not start those gates
+without a newly selected plan.
+
+## Prior history
 
 The original
 [Five-T1 Restart-Monotone Strategy Recovery](docs/active/2026-08-16-five-t1-restart-monotone-recovery/plan.md)

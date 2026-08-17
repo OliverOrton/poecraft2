@@ -1,7 +1,7 @@
 # Five-T1 Restart-Monotone Strategy Recovery
 
-**Status: proof-gated route and operation-graph compaction selected on
-2026-08-17; Gate 0 attribution is in progress.**
+**Status: complete-behavior graph compaction retained; Gate 5 stopped at the
+remaining atomic exact-reforge leaf.**
 
 Parent: [Active work](../README.md)
 
@@ -16,6 +16,7 @@ existing memory and responsiveness limits.
 - [Selected streamed evaluator closure plan](streamed-evaluator-closure-plan.md)
 - [Selected replayable operation-row recovery plan](replayable-operation-row-plan.md)
 - [Selected proof-gated route and operation-graph compaction plan](gated-route-evaluator-compaction-plan.md)
+- [Route/operation-graph compaction result](evidence/gated-route-compaction-result.md)
 - [Replayable-row Gate 0 census and selection](evidence/replayable-row-gate0.md)
 - [Replayable-row Gate 1 compact-token result](evidence/replayable-row-gate1.md)
 - [Replayable-row Gates 2-4 result and stop](evidence/replayable-row-gates2-4-stop.md)
@@ -42,15 +43,26 @@ token carrier, while reusing the existing replay partition and preserving
 exact attribution.
 Release WASM and the full acceptance pipeline remain deliberately unrun.
 
+The selected compaction work now materializes the priced-base Witness B as a
+92-node / 338-edge bounded executable policy whose independent exact cost is
+16,226,566.773294946 Chaos with success one and zero off-policy mass. The
+solver's coarse value does not reconcile, the lower bound remains zero, and
+strict lifting fails on a carrier outside the solved coarse graph. The local-
+gated compact-evaluator prototype changed exact numeric results and was
+removed. Fixed-point compiler behavior sharing and cooperative observation
+propagation are retained. Gate 5 stops at a 1.254-second atomic exact-reforge
+leaf; release WASM, web/Warlord acceptance, the primary, and the full pipeline
+remain closed.
+
 Oliver selected the proof-gated route and operation-graph compaction follow-up
 after a source and artifact audit attributed the 2,015-node certificate to 757
 operation regions, 755 local gated retry routers, 499 policy-route routers,
 and four fixed nodes. The evaluator currently recognizes compact gated kernels
 only through direct operation self-loops; non-shared local gated routes fall
-back to full physical outcomes. The new plan first measures that direct-row
-ownership, then permits only structurally proved compact evaluation. Fracture
-selection is audited separately and cannot change policy without a canonical
-cheaper-Q witness.
+back to full physical outcomes. The selected plan measured that direct-row
+ownership, rejected compact local-route evaluation when its numeric oracle
+differed, and retained independent complete-behavior graph sharing. Fracture
+selection was audited separately and produced no canonical cheaper-Q witness.
 
 Gate 0 found that broad stable Chaos kernels own 9,962,130 of 9,974,257
 measured outcomes, while the state-local Exalt fringe owns only 2,632. A
