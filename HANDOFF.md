@@ -1,8 +1,7 @@
 # Session Handoff
 
-**Status: streamed exact-evaluator closure recovery stopped at Gate 2 on
-2026-08-17. No implementation boundary is active; Oliver must select the next
-transition-streaming chunk.**
+**Status: replayable exact operation-row recovery selected on 2026-08-17.
+Gate 0 row-ownership and replay-cost census is active.**
 
 The original
 [Five-T1 Restart-Monotone Strategy Recovery](docs/active/2026-08-16-five-t1-restart-monotone-recovery/plan.md)
@@ -203,8 +202,21 @@ partition was reached, so Gate 3 did not start. See the
 
 The priced five-T1 publication remains the six-node Chaos renewal at
 37,279,857.73995944. The independent exact evaluation in the stopped reports
-is of that fallback, not the unmaterialized candidate. The next viable owner
-is a replayable/shared operation-row kernel that avoids retaining every
-24-byte routed transition. Do not implement it, start parent successor Gates
-4-8, build release WASM, or run the full acceptance pipeline until Oliver
-selects a new scoped plan.
+is of that fallback, not the unmaterialized candidate.
+
+Oliver has now selected the
+[replayable operation-row recovery plan](docs/active/2026-08-16-five-t1-restart-monotone-recovery/replayable-operation-row-plan.md).
+Gate 0 is active. It must first attribute unique operation rows, exact outcomes,
+routed entries, route reuse, bytes, and active time by action/family and
+stable-shared versus state-local authority. The census selects exactly one
+carrier only if it projects below both the 84.5-million-entry closure byte
+boundary and the downstream replay-time boundary.
+
+The existing split-only replay partition remains the quotient authority.
+Exact attribution currently retains the raw graph and builds a full
+transpose, so a discovery-only recipe is incomplete: partition, quotient
+conversion, component solving, raw attribution, and final route-flow reporting
+must share the replacement row vocabulary. Parent successor Gates 4-8,
+release WASM, web acceptance, and the full acceptance pipeline remain closed
+until Witness B is independently materializable or this plan records a new
+precise stop.

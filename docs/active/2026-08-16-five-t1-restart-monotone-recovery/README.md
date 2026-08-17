@@ -1,7 +1,7 @@
 # Five-T1 Restart-Monotone Strategy Recovery
 
-**Status: streamed exact-evaluator closure recovery stopped at Gate 2.
-Oliver must select the next transition-streaming scope.**
+**Status: replayable exact operation-row recovery selected on 2026-08-17.
+Gate 0 row-ownership census is active.**
 
 Parent: [Active work](../README.md)
 
@@ -14,6 +14,7 @@ existing memory and responsiveness limits.
 - [Stopped original execution plan](plan.md)
 - [Selected exact-evaluator successor plan](successor-plan.md)
 - [Selected streamed evaluator closure plan](streamed-evaluator-closure-plan.md)
+- [Selected replayable operation-row recovery plan](replayable-operation-row-plan.md)
 - [Streamed closure Gate 0 census](evidence/streamed-closure-gate0.md)
 - [Streamed closure Gate 1 result and Gate 2 stop](evidence/streamed-closure-gate1-gate2-stop.md)
 - [Gate 1 result and Gate 4 stop evidence](evidence/gate1-gate4-stop.md)
@@ -31,5 +32,7 @@ deterministic routing. Gate 1 removes that frontier: the checked case now has
 zero router pairs and a 362,706,844-byte peak. The sole 20-million probe still
 stops with 27,588 operation pairs pending and a 650,793,188-byte peak; its
 measured slope reaches one GiB before closure. A broader replayable operation-
-row transition authority requires a newly selected plan. Release WASM and the
-full acceptance pipeline remain deliberately unrun.
+row transition authority is now the selected recovery scope. Its first gate
+measures exact row-family ownership and replay cost before choosing a carrier,
+while reusing the existing replay partition and preserving exact attribution.
+Release WASM and the full acceptance pipeline remain deliberately unrun.
