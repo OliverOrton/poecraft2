@@ -1,7 +1,8 @@
 # Session Handoff
 
 **Status: Oliver selected streamed exact-evaluator closure recovery on
-2026-08-17. Its prior-work audit is complete and Gate 0 census is active.**
+2026-08-17. Its prior-work audit and Gate 0 census are complete; Gate 1 exact
+online deterministic routing is active.**
 
 The original
 [Five-T1 Restart-Monotone Strategy Recovery](docs/active/2026-08-16-five-t1-restart-monotone-recovery/plan.md)
@@ -161,6 +162,20 @@ The stopped implementation checkpoint is `3acd2a4`; its Gate 2 evidence is
 checking prior attempts before selecting an implementation. The new
 [streamed evaluator closure plan](docs/active/2026-08-16-five-t1-restart-monotone-recovery/streamed-evaluator-closure-plan.md)
 reuses the retained replay partition, rejects open-graph merging and whole-run
-checkpoint work, and begins with a behavior-neutral census. Do not start
-parent successor Gates 4-8 or run the full acceptance pipeline during this
-diagnostic boundary.
+checkpoint work, and begins with a behavior-neutral census.
+
+That census is complete. At the checked 10-million cap, Witness B contains
+9,998,209 raw pairs: 9,987,873 routers and 10,335 operations. Only 3,965
+operation pairs had expanded, no router pair had expanded, and 9,994,243 pairs
+were pending. All 9,974,257 retained transition policy states equal their
+target-pair states, but only 12,126 transitions use the existing single-root
+policy-route compression. Evaluator peak was 600,881,884 bytes against
+1,050,981,759. Witness A remained independently exact at 624,800.951911854,
+success one, and zero off-policy mass. See the
+[Gate 0 census](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/streamed-closure-gate0.md).
+
+Gate 1 therefore selects exact online deterministic routing and not derived
+transition routing. It may skip only non-operation, non-modifier-offer routers
+with collision-safe exact node/edge traces; deterministic cycles must remain
+raw. Do not start parent successor Gates 4-8 or run the full acceptance
+pipeline during this boundary.

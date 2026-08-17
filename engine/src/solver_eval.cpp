@@ -234,24 +234,6 @@ struct StrategyEvalWork::Impl {
         if (shared_row) ++shared_row_pairs_expanded;
     }
 
-    void record_retained_row(const EvalRow& row) {
-        retained_absorptions += row.absorptions.size();
-        for (const EvalTransition& transition : row.transitions) {
-            if (transition.edge != kNoId) {
-                ++retained_transitions_with_edge;
-            }
-            if (transition.policy_route != kNoId) {
-                ++retained_transitions_with_policy_route;
-            }
-            if (transition.target < pairs.size() &&
-                pairs[transition.target].state == transition.policy_state) {
-                ++retained_policy_state_matches_target;
-            } else {
-                ++retained_policy_state_differs_from_target;
-            }
-        }
-    }
-
     static std::uint64_t string_bytes(const std::string& value) {
         return sizeof(std::string) + value.capacity() + 1;
     }
@@ -1794,12 +1776,27 @@ struct StrategyEvalWork::Impl {
         EvalPair& pair = pairs.at(pair_id);
         pair.consumes = consumes;
         EvalRow row;
+        solve_detail::WideFloat row_mass = 0.0;
         row.transitions.reserve(transitions.size());
         for (const auto& [key, probability] : transitions) {
             row.transitions.push_back(
                 {std::get<0>(key), probability.value(),
                  std::get<1>(key),
                  std::get<2>(key), std::get<3>(key)});
+            const EvalTransition& transition = row.transitions.back();
+            row_mass += solve_detail::WideFloat{transition.probability};
+            if (transition.edge != kNoId) {
+                ++retained_transitions_with_edge;
+            }
+            if (transition.policy_route != kNoId) {
+                ++retained_transitions_with_policy_route;
+            }
+            if (transition.target < pairs.size() &&
+                pairs[transition.target].state == transition.policy_state) {
+                ++retained_policy_state_matches_target;
+            } else {
+                ++retained_policy_state_differs_from_target;
+            }
         }
         row.absorptions.reserve(absorptions.size());
         for (const auto& [key, probability] : absorptions) {
@@ -1808,16 +1805,10 @@ struct StrategyEvalWork::Impl {
                   std::get<1>(key), std::get<2>(key),
                   probability.value(),
                   std::get<3>(key), std::get<4>(key)});
+            row_mass += solve_detail::WideFloat{
+                row.absorptions.back().probability};
         }
-        solve_detail::WideFloat row_mass = 0.0;
-        for (const EvalTransition& transition : row.transitions) {
-            row_mass +=
-                solve_detail::WideFloat{transition.probability};
-        }
-        for (const EvalAbsorption& absorption : row.absorptions) {
-            row_mass +=
-                solve_detail::WideFloat{absorption.probability};
-        }
+        retained_absorptions += row.absorptions.size();
         if (std::fabs(row_mass.value() - 1.0) > 1e-9) {
             throw std::runtime_error(
                 "strategy evaluation transition row does not sum to one at "
@@ -1829,7 +1820,6 @@ struct StrategyEvalWork::Impl {
             row.transition_via.capacity() * sizeof(std::uint32_t) +
             row.absorptions.capacity() * sizeof(EvalAbsorption);
         pair.row = static_cast<std::uint32_t>(rows.size());
-        record_retained_row(row);
         record_expanded_pair(pair_id, row, false);
         rows.push_back(std::move(row));
         if (shared_distribution != nullptr) {

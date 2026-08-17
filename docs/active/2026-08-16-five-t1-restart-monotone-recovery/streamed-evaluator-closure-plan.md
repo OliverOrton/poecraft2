@@ -1,7 +1,8 @@
 # Streamed Exact-Evaluator Closure Recovery
 
 **Status: selected by Oliver's 2026-08-17 instruction to continue after
-auditing prior attempts. Gate 0 representation census is active.**
+auditing prior attempts. Gate 0 is complete; exact online deterministic
+routing is selected for Gate 1.**
 
 Parent: [Five-T1 Exact-Evaluator Scaling And Recovery](successor-plan.md)
 
@@ -63,6 +64,13 @@ This plan deliberately does not repeat earlier approaches:
 
 ## Gate 0 - Behavior-Neutral Representation Census
 
+**Complete.** The checked 10-million prefix contains 9,987,873 router pairs
+and 10,335 operation pairs. Only 3,965 operation pairs had expanded; no router
+pair had expanded. All 9,974,257 retained transition policy states equal their
+target-pair states, but only 12,126 transitions use the existing single-root
+policy-route compression. See the
+[Gate 0 evidence](evidence/streamed-closure-gate0.md).
+
 Add selected-allocation-neutral scalar diagnostics for the stopped discovery
 prefix. Record:
 
@@ -80,6 +88,11 @@ values, hashes, cap classification, actions, route defaults, or memory peaks
 outside negligible scalar structure size.
 
 ## Gate 1 - Select One Pre-Closure Owner
+
+**Active selection: exact online deterministic routing.** Derived transition
+routing is not part of this gate. The implementation must retain a
+collision-safe exact route trace, report flow on every skipped node and edge,
+stop before modifier-offer observation, and leave deterministic cycles raw.
 
 Choose exactly one implementation from Gate 0 evidence:
 
