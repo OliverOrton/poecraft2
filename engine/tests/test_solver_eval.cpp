@@ -2128,13 +2128,29 @@ void run_scale_and_fallback_tests() {
     StrategyEvalOptions transition_guard;
     transition_guard.max_transitions = 1;
     failed = false;
+    std::string transition_diagnostic;
     try {
         (void)evaluate_strategy(*pair_guard, transition_guard);
     } catch (const std::length_error& ex) {
+        transition_diagnostic = ex.what();
         failed =
-            std::string(ex.what()).find("max_transitions") != std::string::npos;
+            transition_diagnostic.find("max_transitions") !=
+            std::string::npos;
     }
     PC_CHECK(failed);
+    PC_CHECK(
+        transition_diagnostic.find("pair_start=") != std::string::npos);
+    PC_CHECK(
+        transition_diagnostic.find("pair_operation=") !=
+        std::string::npos);
+    PC_CHECK(
+        transition_diagnostic.find("deterministic_expanded=") !=
+        std::string::npos);
+    PC_CHECK(
+        transition_diagnostic.find("policy_state_target_match=") !=
+        std::string::npos);
+    PC_CHECK(
+        transition_diagnostic.find("calc_owned=") != std::string::npos);
 
     StrategyEvalOptions memory_guard;
     memory_guard.max_owned_bytes = 1;

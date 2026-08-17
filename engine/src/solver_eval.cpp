@@ -1,6 +1,7 @@
 #include "solver_eval_helpers.hpp"
 #include "solver_cooperative_task.hpp"
 
+#include <array>
 #include <iomanip>
 #include <numeric>
 #include <sstream>
@@ -140,6 +141,15 @@ struct StrategyEvalWork::Impl {
             const OutcomeDistribution*>,
         std::uint32_t> row_by_distribution;
     std::uint64_t stored_transitions = 0;
+    std::array<std::uint64_t, 4> raw_pairs_by_kind{};
+    std::array<std::uint64_t, 4> expanded_pairs_by_kind{};
+    std::uint64_t deterministic_pairs_expanded = 0;
+    std::uint64_t shared_row_pairs_expanded = 0;
+    std::uint64_t retained_transitions_with_edge = 0;
+    std::uint64_t retained_transitions_with_policy_route = 0;
+    std::uint64_t retained_policy_state_matches_target = 0;
+    std::uint64_t retained_policy_state_differs_from_target = 0;
+    std::uint64_t retained_absorptions = 0;
     std::uint64_t row_payload_owned_bytes = 0;
     std::uint64_t component_payload_owned_bytes = 0;
     std::uint64_t review_payload_owned_bytes = 0;
@@ -198,6 +208,48 @@ struct StrategyEvalWork::Impl {
         return node < strategy->nodes.size() &&
                strategy->nodes[node].kind == StrategyNodeKind::Router &&
                strategy->nodes[node].id.rfind("policy_route_", 0) == 0;
+    }
+
+    static std::size_t node_kind_index(const StrategyNodeKind kind) {
+        switch (kind) {
+        case StrategyNodeKind::Start: return 0;
+        case StrategyNodeKind::Operation: return 1;
+        case StrategyNodeKind::Router: return 2;
+        case StrategyNodeKind::Terminal: return 3;
+        }
+        throw std::logic_error("strategy evaluation has an invalid node kind");
+    }
+
+    void record_expanded_pair(
+            const std::uint32_t pair_id,
+            const EvalRow& row,
+            const bool shared_row) {
+        const EvalPair& pair = pairs.at(pair_id);
+        ++expanded_pairs_by_kind.at(node_kind_index(
+            strategy->nodes.at(pair.node).kind));
+        if (row.absorptions.empty() && row.transitions.size() == 1 &&
+            row.transitions.front().probability == 1.0) {
+            ++deterministic_pairs_expanded;
+        }
+        if (shared_row) ++shared_row_pairs_expanded;
+    }
+
+    void record_retained_row(const EvalRow& row) {
+        retained_absorptions += row.absorptions.size();
+        for (const EvalTransition& transition : row.transitions) {
+            if (transition.edge != kNoId) {
+                ++retained_transitions_with_edge;
+            }
+            if (transition.policy_route != kNoId) {
+                ++retained_transitions_with_policy_route;
+            }
+            if (transition.target < pairs.size() &&
+                pairs[transition.target].state == transition.policy_state) {
+                ++retained_policy_state_matches_target;
+            } else {
+                ++retained_policy_state_differs_from_target;
+            }
+        }
     }
 
     static std::uint64_t string_bytes(const std::string& value) {
@@ -1090,6 +1142,8 @@ struct StrategyEvalWork::Impl {
         pairs.push_back(std::move(pair));
         pair_next.push_back(pair_bucket_heads[bucket]);
         pair_bucket_heads[bucket] = id;
+        ++raw_pairs_by_kind.at(node_kind_index(
+            strategy->nodes.at(node).kind));
         output.pair_discovery_index_peak_bytes = std::max(
             output.pair_discovery_index_peak_bytes,
             pair_index_owned_bytes());
@@ -1129,6 +1183,48 @@ struct StrategyEvalWork::Impl {
                 std::to_string(options.max_transitions) +
                 "; stored=" + std::to_string(stored_transitions) +
                 ", pairs=" + std::to_string(pairs.size()) +
+                ", expanded=" + std::to_string(discover_index) +
+                ", pending=" +
+                    std::to_string(pairs.size() - discover_index) +
+                ", pair_start=" +
+                    std::to_string(raw_pairs_by_kind[0]) +
+                ", pair_operation=" +
+                    std::to_string(raw_pairs_by_kind[1]) +
+                ", pair_router=" +
+                    std::to_string(raw_pairs_by_kind[2]) +
+                ", pair_terminal=" +
+                    std::to_string(raw_pairs_by_kind[3]) +
+                ", expanded_start=" +
+                    std::to_string(expanded_pairs_by_kind[0]) +
+                ", expanded_operation=" +
+                    std::to_string(expanded_pairs_by_kind[1]) +
+                ", expanded_router=" +
+                    std::to_string(expanded_pairs_by_kind[2]) +
+                ", expanded_terminal=" +
+                    std::to_string(expanded_pairs_by_kind[3]) +
+                ", deterministic_expanded=" +
+                    std::to_string(deterministic_pairs_expanded) +
+                ", shared_row_pairs=" +
+                    std::to_string(shared_row_pairs_expanded) +
+                ", rows=" + std::to_string(rows.size()) +
+                ", retained_absorptions=" +
+                    std::to_string(retained_absorptions) +
+                ", transitions_with_edge=" +
+                    std::to_string(retained_transitions_with_edge) +
+                ", transitions_with_policy_route=" +
+                    std::to_string(
+                        retained_transitions_with_policy_route) +
+                ", policy_state_target_match=" +
+                    std::to_string(
+                        retained_policy_state_matches_target) +
+                ", policy_state_target_differ=" +
+                    std::to_string(
+                        retained_policy_state_differs_from_target) +
+                ", calc_states=" +
+                    std::to_string(model.calc->state_count()) +
+                ", calc_owned=" +
+                    std::to_string(
+                        model.calc->fast_estimated_owned_bytes()) +
                 ", pair_record_bytes=" +
                     std::to_string(sizeof(EvalPair)) +
                 ", pair_carrier=" +
@@ -1630,6 +1726,8 @@ struct StrategyEvalWork::Impl {
                             EvalPair& pair = pairs.at(pair_id);
                             pair.consumes = consumes;
                             pair.row = shared->second;
+                            record_expanded_pair(
+                                pair_id, rows.at(pair.row), true);
                             return;
                         }
                         shared_distribution = &outcomes;
@@ -1731,6 +1829,8 @@ struct StrategyEvalWork::Impl {
             row.transition_via.capacity() * sizeof(std::uint32_t) +
             row.absorptions.capacity() * sizeof(EvalAbsorption);
         pair.row = static_cast<std::uint32_t>(rows.size());
+        record_retained_row(row);
+        record_expanded_pair(pair_id, row, false);
         rows.push_back(std::move(row));
         if (shared_distribution != nullptr) {
             row_by_distribution.emplace(
