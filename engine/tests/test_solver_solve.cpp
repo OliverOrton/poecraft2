@@ -41,6 +41,19 @@ namespace {
 std::shared_ptr<SessionImpl> make_solve_session(
     const std::vector<std::string>& essence_keys = {});
 
+std::size_t count_occurrences(
+    const std::string& value,
+    const std::string& needle) {
+    std::size_t count = 0;
+    std::size_t offset = 0;
+    while ((offset = value.find(needle, offset)) !=
+           std::string::npos) {
+        ++count;
+        offset += needle.size();
+    }
+    return count;
+}
+
 void run_bounded_policy_row_capture_tests() {
     auto session = make_solve_session();
     ActionRegistry registry = build_action_registry(*session);
@@ -4530,6 +4543,143 @@ void run_primitive_destructive_renewal_upper_tests() {
     PC_CHECK(
         product_fracture_lift.compiled.strategy_json.find(
             "\"type\":\"restart\"") != std::string::npos);
+    std::set<std::pair<std::string, std::uint32_t>>
+        product_fracture_behaviors;
+    std::uint64_t product_fracture_selected_states = 0;
+    for (std::uint32_t state = 0;
+         state < product_fracture_result.policy.size(); ++state) {
+        if (state >= product_fracture_result.policy_reachable.size() ||
+            !product_fracture_result.policy_reachable[state] ||
+            state >= product_fracture_result.goal_states.size() ||
+            product_fracture_result.goal_states[state] ||
+            product_fracture_result.policy[state] == kNoId) {
+            continue;
+        }
+        const PlannerOperator& planner =
+            product_fracture_calc.operators().at(
+                product_fracture_result.policy[state]);
+        if (planner.kind != PlannerOperatorKind::Primitive ||
+            planner.automatic_kind !=
+                AutomaticCandidateKind::Fracture) {
+            continue;
+        }
+        ++product_fracture_selected_states;
+        const AbstractState& source =
+            product_fracture_calc.state(state);
+        std::uint32_t acceptable_hit_mask = 0;
+        for (std::uint32_t slot = 0;
+             slot < product_fracture_calc.layout().slots.size(); ++slot) {
+            const std::uint32_t bit = 1u << slot;
+            if ((planner.relevant_goal_mask & bit) != 0 &&
+                source.slot_status[slot] ==
+                    static_cast<std::uint8_t>(
+                        GoalSlotStatus::Satisfied) &&
+                (source.fractured_goal_mask & bit) == 0) {
+                acceptable_hit_mask |= bit;
+            }
+        }
+        PC_CHECK(acceptable_hit_mask != 0);
+        PC_CHECK(planner.primitive_program.size() == 1);
+        if (planner.primitive_program.size() == 1) {
+            product_fracture_behaviors.emplace(
+                product_fracture_calc.registry()
+                    .actions.at(planner.primitive_program.front()).id,
+                acceptable_hit_mask);
+        }
+    }
+    PolicyCompilationTelemetry shared_product_fracture_compilation;
+    const std::string shared_product_fracture_json =
+        compile_policy_strategy_json(
+            product_fracture_calc, product_fracture_result,
+            "behavior-shared product Fracture",
+            &shared_product_fracture_compilation);
+    const std::size_t emitted_fracture_routes = count_occurrences(
+        shared_product_fracture_json,
+        "_fracture_route\",\"kind\":\"router\"");
+    const std::size_t emitted_fracture_operations = count_occurrences(
+        shared_product_fracture_json,
+        "\"operation\":{\"type\":\"fracture\"}");
+    std::printf(
+        "solver product Fracture compiler sharing: states=%llu "
+        "behaviors=%llu routes=%llu operations=%llu regions=%llu/%llu\n",
+        static_cast<unsigned long long>(
+            product_fracture_selected_states),
+        static_cast<unsigned long long>(
+            product_fracture_behaviors.size()),
+        static_cast<unsigned long long>(emitted_fracture_routes),
+        static_cast<unsigned long long>(emitted_fracture_operations),
+        static_cast<unsigned long long>(
+            shared_product_fracture_compilation.policy_regions),
+        static_cast<unsigned long long>(
+            shared_product_fracture_compilation.working_states));
+    PC_CHECK(product_fracture_behaviors.size() > 1);
+    PC_CHECK(
+        product_fracture_selected_states >
+        product_fracture_behaviors.size());
+    PC_CHECK(
+        emitted_fracture_routes ==
+        product_fracture_behaviors.size());
+    PC_CHECK(
+        emitted_fracture_operations ==
+        product_fracture_behaviors.size());
+    PC_CHECK(
+        shared_product_fracture_compilation.policy_regions <
+        shared_product_fracture_compilation.working_states);
+    const std::shared_ptr<StrategyImpl> shared_product_fracture_strategy =
+        compile_strategy_json(
+            fracture_session, shared_product_fracture_json.data(),
+            shared_product_fracture_json.size());
+    auto shared_product_fracture_economy =
+        std::make_shared<EconomyImpl>();
+    shared_product_fracture_economy->id =
+        "behavior-shared-product-fracture";
+    shared_product_fracture_economy->prices = fracture_prices;
+    StrategyEvalOptions shared_product_fracture_eval_options;
+    shared_product_fracture_eval_options.economy =
+        shared_product_fracture_economy;
+    const StrategyEvalResult shared_product_fracture_evaluation =
+        evaluate_strategy(
+            *shared_product_fracture_strategy,
+            shared_product_fracture_eval_options);
+    PC_CHECK(shared_product_fracture_evaluation.converged);
+    PC_CHECK(shared_product_fracture_evaluation.cost_complete);
+    PC_CHECK(near(
+        shared_product_fracture_evaluation.success_probability,
+        1.0, 1e-12));
+    PC_CHECK(near(
+        shared_product_fracture_evaluation.failure_probability,
+        0.0, 1e-12));
+    PC_CHECK(near(
+        shared_product_fracture_evaluation.action_not_applied_probability,
+        0.0, 1e-12));
+    PC_CHECK(near(
+        shared_product_fracture_evaluation.no_matching_edge_probability,
+        0.0, 1e-12));
+    PC_CHECK(near(
+        shared_product_fracture_evaluation.total_expected_cost,
+        product_fracture_result.evaluated_policy_cost, 1e-10));
+    PC_CHECK(near(
+        shared_product_fracture_evaluation.total_expected_cost,
+        product_fracture_lift.compiled.evaluation.total_expected_cost,
+        1e-10));
+    PC_CHECK(
+        shared_product_fracture_evaluation.expected_consumption.size() ==
+        product_fracture_lift.compiled.evaluation
+            .expected_consumption.size());
+    for (const auto& [action, expected] :
+         product_fracture_lift.compiled.evaluation
+             .expected_consumption) {
+        const auto shared =
+            shared_product_fracture_evaluation.expected_consumption.find(
+                action);
+        PC_CHECK(
+            shared !=
+            shared_product_fracture_evaluation.expected_consumption.end());
+        if (shared !=
+            shared_product_fracture_evaluation.expected_consumption.end()) {
+            PC_CHECK(near(shared->second, expected, 1e-10));
+        }
+    }
     PC_CHECK(
         product_fracture_lift.compiled.evaluation
             .expected_consumption.contains("base"));

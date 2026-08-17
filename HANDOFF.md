@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: successor Gate 0 passed; behavior-keyed product-local Fracture
-sharing is the active implementation boundary.**
+**Status: successor Gates 0-1 passed; the priced five-T1 Gate 2 decision point
+is the active implementation boundary.**
 
 The original
 [Five-T1 Restart-Monotone Strategy Recovery](docs/active/2026-08-16-five-t1-restart-monotone-recovery/plan.md)
@@ -54,10 +54,21 @@ construction/solve, and finalization active time, and a resource-stopped result
 retains its subphase plus the actual internal refined-pair limit. The focused
 evaluator suite passed 16,819 checks and the focused solver suite passed 96,083.
 
-Next implement Gate 1 compiler sharing of product-local Fracture regions keyed
-by complete executable behavior. The accepted 1,813-node four-goal graph has
-767 Fracture routers but only seven route behaviors; this reduction may
-directly shrink the evaluator carrier. Rerun the priced witness only at the
-Gate 2 decision point. Choose compact/interned/streamed pair work only if that
-run still stops, and base the choice on the new owning payload and actual
-refined-class boundary. Preserve the current tree and checkpoints.
+Successor Gate 1 is complete. Product-local Fracture policy regions share only
+when their operation, accounting roles, acceptable-hit route, and common retry
+default match. The focused oracle collapsed three selected states to two
+distinct executable behaviours while matching the strict lift's exact cost and
+operation accounting. The frozen four-goal graph collapsed its 767 Fracture
+routes to seven, from 1,813 nodes / 3,832 edges / 5,205,249 bytes to 292 nodes /
+1,549 edges / 4,737,473 bytes. Independent exact evaluation still matches
+3,745.73093400839 with success 1 and zero off-policy mass. The focused compiler
+suite passed 815 checks and the solver suite passed 96,111. Detailed evidence
+is in
+[successor Gate 1](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/successor-gate1.md).
+
+Next run Witness A once and priced Witness B once for Gate 2 with all declared
+caps and prices unchanged. If B certifies, skip Gate 3. If it still stops,
+choose exactly one compact/interned/streamed pair-representation change from
+the new owning payload and actual refined-class boundary. Do not infer a count
+cap from raw pair count, rebuild WASM yet, or start later action-semantics work.
+Preserve the current tree and checkpoints.

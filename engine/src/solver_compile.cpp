@@ -1481,12 +1481,65 @@ std::string compile_policy_strategy_json(
             state_id, retry_policy_state);
     }
 
+    const auto product_fracture_hit_condition = [&]
+        (const std::uint32_t state_id,
+         const PlannerOperator& planner) {
+            if (planner.kind != PlannerOperatorKind::Primitive ||
+                planner.automatic_kind !=
+                    AutomaticCandidateKind::Fracture ||
+                planner.primitive_program.size() != 1) {
+                gap(
+                    "product-local Fracture region has no single "
+                    "primitive operation");
+            }
+            const AbstractState& source = calc.state(state_id);
+            std::vector<std::string> acceptable_hits;
+            for (std::uint32_t slot = 0;
+                 slot < layout.slots.size(); ++slot) {
+                const std::uint32_t bit = 1u << slot;
+                if ((planner.relevant_goal_mask & bit) != 0 &&
+                    source.slot_status[slot] ==
+                        static_cast<std::uint8_t>(
+                            GoalSlotStatus::Satisfied) &&
+                    (source.fractured_goal_mask & bit) == 0) {
+                    acceptable_hits.push_back(with_slot_flags(
+                        vocabulary[slot].satisfied, true, false));
+                }
+            }
+            if (acceptable_hits.empty()) {
+                gap(
+                    "selected product-local Fracture has no acceptable "
+                    "hit");
+            }
+            return any_of(acceptable_hits);
+        };
+    const auto product_fracture_region_key = [&]
+        (const std::uint32_t state_id,
+         const PlannerOperator& planner) {
+            const std::uint32_t action =
+                planner.primitive_program.front();
+            const std::array<std::string, 4> components{
+                operation_json(
+                    session, calc.registry().actions.at(action)),
+                accounting_roles_json(planner, action),
+                product_fracture_hit_condition(state_id, planner),
+                "shared_product_fracture_retry_default"};
+            std::string key = "product_fracture:";
+            for (const std::string& component : components) {
+                key += std::to_string(component.size()) + ":" +
+                       component + ";";
+            }
+            return key;
+        };
+
     /* Exact policy-region compression. States may share one emitted
      * continuation when the selected program is state-independent. Expected
      * cost is only an annotation, so omit it for a shared region whose member
      * values differ. Observation-owned and state-local retry options remain
      * singleton regions so their concrete routing recipes cannot be
-     * conflated. */
+     * conflated. Product-local Fracture is shareable only by its complete
+     * emitted operation, acceptable-hit route, accounting, and common retry
+     * default. */
     std::map<std::string, std::vector<std::uint32_t>> leaders_by_key;
     std::map<std::uint32_t, std::vector<std::uint32_t>> states_by_leader;
     std::vector<std::uint32_t> emitted_states;
@@ -1520,13 +1573,14 @@ std::string compile_policy_strategy_json(
                     planner_operator_semantic_key(retry_planner);
         }
         std::uint32_t leader = state_id;
-        if (!primitive_observed_choice && !product_local_fracture &&
+        if (!primitive_observed_choice &&
             !state_local_option &&
             (!gated_primitive_reforge(state_id) ||
              shareable_gated_repeat)) {
-            const std::string key =
-                std::to_string(result.policy[state_id].index) +
-                (shareable_gated_repeat ? ":gated_repeat" : "");
+            const std::string key = product_local_fracture
+                ? product_fracture_region_key(state_id, planner)
+                : std::to_string(result.policy[state_id].index) +
+                      (shareable_gated_repeat ? ":gated_repeat" : "");
             std::vector<std::uint32_t>& leaders = leaders_by_key[key];
             if (leaders.empty()) {
                 leaders.push_back(state_id);
@@ -3190,29 +3244,12 @@ std::string compile_policy_strategy_json(
             planner.kind == PlannerOperatorKind::Primitive &&
             planner.automatic_kind == AutomaticCandidateKind::Fracture;
         if (product_local_fracture) {
-            const AbstractState& source = calc.state(state_id);
-            std::vector<std::string> acceptable_hits;
-            for (std::uint32_t slot = 0;
-                 slot < layout.slots.size(); ++slot) {
-                const std::uint32_t bit = 1u << slot;
-                if ((planner.relevant_goal_mask & bit) != 0 &&
-                    source.slot_status[slot] ==
-                        static_cast<std::uint8_t>(
-                            GoalSlotStatus::Satisfied) &&
-                    (source.fractured_goal_mask & bit) == 0) {
-                    acceptable_hits.push_back(with_slot_flags(
-                        vocabulary[slot].satisfied, true, false));
-                }
-            }
-            if (acceptable_hits.empty()) {
-                gap("selected product-local Fracture has no acceptable hit");
-            }
             const std::string base = state_node(state_id);
             const std::string route = base + "_fracture_route";
             edge(base, route, 0, "", true);
             edge(
                 route, root_router_id, 0,
-                any_of(acceptable_hits), false);
+                product_fracture_hit_condition(state_id, planner), false);
             edge(
                 route, product_fracture_restart_node,
                 1, "", true, "retry");
