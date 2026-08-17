@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: successor Gates 0-1 passed; the priced five-T1 Gate 2 decision point
-is the active implementation boundary.**
+**Status: successor Gates 0-2 complete; discovery-index lifetime reduction is
+the selected conditional Gate 3 implementation boundary.**
 
 The original
 [Five-T1 Restart-Monotone Strategy Recovery](docs/active/2026-08-16-five-t1-restart-monotone-recovery/plan.md)
@@ -66,9 +66,22 @@ suite passed 815 checks and the solver suite passed 96,111. Detailed evidence
 is in
 [successor Gate 1](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/successor-gate1.md).
 
-Next run Witness A once and priced Witness B once for Gate 2 with all declared
-caps and prices unchanged. If B certifies, skip Gate 3. If it still stops,
-choose exactly one compact/interned/streamed pair-representation change from
-the new owning payload and actual refined-class boundary. Do not infer a count
-cap from raw pair count, rebuild WASM yet, or start later action-semantics work.
-Preserve the current tree and checkpoints.
+Successor Gate 2 is complete. Witness A remains independently evaluated at
+624,800.9519118543, paired-default-only, success 1 / off-policy 0, and its
+largest native step is 234.23 ms. Witness B remains resource-deferred and
+publishes the 37,279,857.73995944 Chaos renewal. Its unchanged 2,015-node
+certificate stops before refinement at 8,395,474 raw pairs and 1,178,823,076
+evaluator-owned bytes versus 1,050,981,903. Pair discovery owns 3.30 seconds,
+pair interning 1.39 seconds, and refinement is not reached. Detailed evidence
+is in
+[successor Gate 2](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/successor-gate2.md).
+
+Gate 3 is required. Implement exactly the selected discovery-index lifetime
+change: once raw discovery is closed, release the collision-safe pair and
+shared-distribution interning indexes before starting the exact partition.
+They have no post-discovery authority; transitions and pair ids own the closed
+graph. Add a focused lifetime/resource test plus raw-reference semantic parity,
+then repeat Witness A and B once. Do not change pair identity, probabilities,
+caps, or infer a refined-class failure from the raw count. Do not rebuild WASM
+or start later action-semantics work yet. Preserve the current tree and
+checkpoints.
