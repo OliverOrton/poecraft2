@@ -3241,6 +3241,10 @@ SolveWork::Impl::run_finalization() {
                 assertion.evaluation.stage_timings;
             telemetry.direct_certification_evaluation_boundary =
                 assertion.evaluation.boundary_subphase;
+            telemetry
+                .direct_certification_pair_discovery_index_peak_bytes =
+                assertion.evaluation
+                    .pair_discovery_index_peak_bytes;
             telemetry.direct_certification_raw_pairs =
                 assertion.evaluation.raw_pairs_discovered;
             telemetry.direct_certification_refined_pairs =

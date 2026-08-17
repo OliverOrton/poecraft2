@@ -112,12 +112,12 @@ struct StrategyEvalWork::Impl {
     bool pair_refinement_identity_graph_intact = true;
     std::uint64_t pair_refinement_peak_before = 0;
 
-    std::map<
-        std::tuple<
-            std::uint32_t, std::uint32_t, std::uint32_t,
-            std::uint32_t>,
-        std::uint32_t>
-        pair_by_key;
+    /* Collision-safe chained hash index for raw pair discovery. Pair keys
+     * already live in `pairs`; the index retains only bucket heads and one
+     * next link per pair instead of duplicating every four-word key in an
+     * ordered-tree node. Full key equality remains authoritative. */
+    std::vector<std::uint32_t> pair_bucket_heads;
+    std::vector<std::uint32_t> pair_next;
     std::vector<EvalPair> pairs;
     std::map<std::vector<std::uint32_t>, std::uint32_t>
         unveil_offer_by_mods;
@@ -340,8 +340,8 @@ struct StrategyEvalWork::Impl {
             bytes += section.nodes.capacity() * sizeof(std::uint32_t);
             bytes += string_vector_bytes(section.edges);
         }
-        bytes += pair_by_key.size() *
-                 (sizeof(decltype(pair_by_key)::value_type) + 3 * sizeof(void*));
+        bytes += pair_bucket_heads.capacity() * sizeof(std::uint32_t);
+        bytes += pair_next.capacity() * sizeof(std::uint32_t);
         bytes += pairs.capacity() * sizeof(EvalPair);
         bytes += node_observation_requirements.capacity() *
                  sizeof(ObservationRequirement);
@@ -490,9 +490,8 @@ struct StrategyEvalWork::Impl {
         bytes += model.targets.capacity() * sizeof(GoalSlot);
         bytes += review_sections.capacity() * sizeof(ReviewSectionSpec);
         bytes += review_payload_owned_bytes;
-        bytes += pair_by_key.size() *
-                 (sizeof(decltype(pair_by_key)::value_type) +
-                  3 * sizeof(void*));
+        bytes += pair_bucket_heads.capacity() * sizeof(std::uint32_t);
+        bytes += pair_next.capacity() * sizeof(std::uint32_t);
         bytes += pairs.capacity() * sizeof(EvalPair);
         bytes += node_observation_requirements.capacity() *
                  sizeof(ObservationRequirement);
@@ -631,6 +630,12 @@ struct StrategyEvalWork::Impl {
                     std::to_string(
                         model.calc == nullptr ? 0 : model.calc->state_count()) +
                 ", pairs=" + std::to_string(pairs.size()) +
+                ", pair_index=" +
+                    std::to_string(
+                        pair_bucket_heads.capacity() *
+                            sizeof(std::uint32_t) +
+                        pair_next.capacity() *
+                            sizeof(std::uint32_t)) +
                 ", rows=" + std::to_string(rows.size()) +
                 ", transitions=" + std::to_string(stored_transitions) +
                 ", graph_nodes=" +
@@ -741,6 +746,12 @@ struct StrategyEvalWork::Impl {
                     std::to_string(
                         model.calc == nullptr ? 0 : model.calc->state_count()) +
                 ", pairs=" + std::to_string(pairs.size()) +
+                ", pair_index=" +
+                    std::to_string(
+                        pair_bucket_heads.capacity() *
+                            sizeof(std::uint32_t) +
+                        pair_next.capacity() *
+                            sizeof(std::uint32_t)) +
                 ", rows=" + std::to_string(rows.size()) +
                 ", transitions=" + std::to_string(stored_transitions) +
                 ", graph_nodes=" +
@@ -951,6 +962,91 @@ struct StrategyEvalWork::Impl {
         return id;
     }
 
+    static std::uint64_t mix_pair_index_word(std::uint64_t value) {
+        value += 0x9e3779b97f4a7c15ull;
+        value = (value ^ (value >> 30u)) *
+                0xbf58476d1ce4e5b9ull;
+        value = (value ^ (value >> 27u)) *
+                0x94d049bb133111ebull;
+        return value ^ (value >> 31u);
+    }
+
+    static std::uint64_t pair_index_hash(
+        const std::uint32_t node,
+        const std::uint32_t state,
+        const std::uint32_t unveil_offer,
+        const std::uint32_t checkpoint_state) {
+        std::uint64_t hash = 0x6576616c70616972ull;
+        for (const std::uint32_t word :
+             {node, state, unveil_offer, checkpoint_state}) {
+            hash = mix_pair_index_word(
+                hash ^ mix_pair_index_word(word));
+        }
+        return hash;
+    }
+
+    std::uint64_t pair_index_owned_bytes() const {
+        return
+            pair_bucket_heads.capacity() * sizeof(std::uint32_t) +
+            pair_next.capacity() * sizeof(std::uint32_t);
+    }
+
+    void rehash_pair_index(const std::size_t bucket_count) {
+        if (bucket_count == 0 ||
+            (bucket_count & (bucket_count - 1)) != 0) {
+            throw std::logic_error(
+                "strategy evaluation pair-index buckets are not a power "
+                "of two");
+        }
+        check_owned_cap(
+            bucket_count * sizeof(std::uint32_t));
+        std::vector<std::uint32_t> replacement(
+            bucket_count, kNoId);
+        for (std::uint32_t id = 0; id < pairs.size(); ++id) {
+            const EvalPair& pair = pairs[id];
+            const std::size_t bucket =
+                pair_index_hash(
+                    pair.node, pair.state, pair.unveil_offer,
+                    pair.checkpoint_state) &
+                (bucket_count - 1);
+            pair_next[id] = replacement[bucket];
+            replacement[bucket] = id;
+        }
+        pair_bucket_heads.swap(replacement);
+        output.pair_discovery_index_peak_bytes = std::max(
+            output.pair_discovery_index_peak_bytes,
+            pair_index_owned_bytes());
+    }
+
+    void ensure_pair_index_for_insert() {
+        if (pair_bucket_heads.empty()) {
+            rehash_pair_index(64);
+            return;
+        }
+        /* Chaining keeps the index compact: a load of six still performs a
+         * small expected number of full, collision-safe key comparisons and
+         * avoids a late power-of-two rehash near the five-T1 boundary. */
+        constexpr std::size_t kMaximumAverageChain = 6;
+        if (pair_next.size() >=
+            pair_bucket_heads.size() * kMaximumAverageChain) {
+            if (pair_bucket_heads.size() >
+                std::numeric_limits<std::size_t>::max() / 2) {
+                throw std::length_error(
+                    "strategy evaluation pair index is too large");
+            }
+            rehash_pair_index(pair_bucket_heads.size() * 2);
+        }
+    }
+
+    void retire_pair_discovery_indexes() {
+        output.pair_discovery_index_peak_bytes = std::max(
+            output.pair_discovery_index_peak_bytes,
+            pair_index_owned_bytes());
+        std::vector<std::uint32_t>().swap(pair_bucket_heads);
+        std::vector<std::uint32_t>().swap(pair_next);
+        decltype(row_by_distribution){}.swap(row_by_distribution);
+    }
+
     std::uint32_t intern_pair(
         std::uint32_t node,
         std::uint32_t state,
@@ -963,18 +1059,33 @@ struct StrategyEvalWork::Impl {
          * the reachable graph is closed; it must never irreversibly select a
          * representative during discovery.
          */
-        const auto key = std::make_tuple(
-            node, state, unveil_offer, checkpoint_state);
-        const auto found = pair_by_key.find(key);
-        if (found != pair_by_key.end()) return found->second;
+        ensure_pair_index_for_insert();
+        const std::size_t bucket =
+            pair_index_hash(
+                node, state, unveil_offer, checkpoint_state) &
+            (pair_bucket_heads.size() - 1);
+        for (std::uint32_t candidate = pair_bucket_heads[bucket];
+             candidate != kNoId;
+             candidate = pair_next.at(candidate)) {
+            const EvalPair& pair = pairs.at(candidate);
+            if (pair.node == node && pair.state == state &&
+                pair.unveil_offer == unveil_offer &&
+                pair.checkpoint_state == checkpoint_state) {
+                return candidate;
+            }
+        }
         const std::uint32_t id = static_cast<std::uint32_t>(pairs.size());
-        pair_by_key.emplace(key, id);
         EvalPair pair;
         pair.node = node;
         pair.state = state;
         pair.checkpoint_state = checkpoint_state;
         pair.unveil_offer = unveil_offer;
         pairs.push_back(std::move(pair));
+        pair_next.push_back(pair_bucket_heads[bucket]);
+        pair_bucket_heads[bucket] = id;
+        output.pair_discovery_index_peak_bytes = std::max(
+            output.pair_discovery_index_peak_bytes,
+            pair_index_owned_bytes());
         return id;
     }
 
@@ -2426,8 +2537,7 @@ struct StrategyEvalWork::Impl {
                 start_pair = class_by_node.at(start_pair);
             }
             discover_index = pairs.size();
-            pair_by_key.clear();
-            row_by_distribution.clear();
+            retire_pair_discovery_indexes();
             attribution_pairs = std::move(raw_pairs);
             attribution_rows = std::move(raw_rows);
             attribution_class_by_pair = std::move(class_by_node);
@@ -5562,6 +5672,13 @@ struct StrategyEvalWork::Impl {
                 if (discover_index < pairs.size()) {
                     expand_pair(static_cast<std::uint32_t>(discover_index));
                     ++discover_index;
+                    if (discover_index == pairs.size()) {
+                        /* Account the true closed-discovery peak before
+                         * releasing indexes that have no partition or solve
+                         * authority. */
+                        check_owned_cap();
+                        retire_pair_discovery_indexes();
+                    }
                 } else {
                     if (!component_build_task.has_value()) {
                         component_build_task.emplace(build_components());

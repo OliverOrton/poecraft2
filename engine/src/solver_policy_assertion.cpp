@@ -36,6 +36,12 @@ std::string compiled_policy_failure_classification(
             result.resource_cap == "max_compiled_edges") {
             return "strategy_compile_size_cap";
         }
+        if (result.resource_cap == "max_transitions") {
+            return "exact_eval_pair_discovery_transition_cap";
+        }
+        if (result.resource_cap == "max_pairs") {
+            return "exact_eval_pair_refinement_class_cap";
+        }
         if (result.failure_reason.find("probe=observation_") !=
             std::string::npos) {
             return "exact_eval_observation_memory_cap";

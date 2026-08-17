@@ -1876,7 +1876,11 @@ std::string serialize_solver_telemetry(
                     refinement.direct_certification_refined_pairs);
         json += ",\"refined_pair_limit\":" +
                 std::to_string(
-                    refinement.direct_certification_refined_pair_limit) +
+                    refinement.direct_certification_refined_pair_limit);
+        json += ",\"discovery_index_peak_bytes\":" +
+                std::to_string(
+                    refinement
+                        .direct_certification_pair_discovery_index_peak_bytes) +
                 "}";
         json += ",\"route_defaults\":{\"paired_default_only\":" +
                 std::string(bool_json(

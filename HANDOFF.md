@@ -1,7 +1,8 @@
 # Session Handoff
 
-**Status: successor Gates 0-2 complete; discovery-index lifetime reduction is
-the selected conditional Gate 3 implementation boundary.**
+**Status: successor plan stopped at Gate 3 after clearing the byte cap and
+exposing the exact 10,000,000-transition boundary. No implementation boundary
+is active; Oliver must choose the next architectural chunk.**
 
 The original
 [Five-T1 Restart-Monotone Strategy Recovery](docs/active/2026-08-16-five-t1-restart-monotone-recovery/plan.md)
@@ -76,12 +77,26 @@ pair interning 1.39 seconds, and refinement is not reached. Detailed evidence
 is in
 [successor Gate 2](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/successor-gate2.md).
 
-Gate 3 is required. Implement exactly the selected discovery-index lifetime
-change: once raw discovery is closed, release the collision-safe pair and
-shared-distribution interning indexes before starting the exact partition.
-They have no post-discovery authority; transitions and pair ids own the closed
-graph. Add a focused lifetime/resource test plus raw-reference semantic parity,
-then repeat Witness A and B once. Do not change pair identity, probabilities,
-caps, or infer a refined-class failure from the raw count. Do not rebuild WASM
-or start later action-semantics work yet. Preserve the current tree and
+Successor Gate 3 implemented a compact collision-safe chained pair index and
+retires discovery-only indexes after recording the true closed-discovery peak.
+The focused raw-reference and resource tests pass. Witness A remains sound at
+624,800.9519118543 with a 232.95 ms largest native step. Witness B clears the
+old byte boundary: its index peaks at 75,497,472 bytes and total evaluator peak
+is 938,125,764 versus the 1,050,981,791-byte cap.
+
+The newly reached boundary is count-owned. Discovery stops at the unchanged
+`max_transitions = 10,000,000` with 9,998,209 raw pairs, before refinement.
+The stable classification is now
+`exact_eval_pair_discovery_transition_cap`; no refined-class conclusion is
+available. The published strategy is still the six-node Chaos renewal at
+37,279,857.73995944, and the largest native step remains 2,799.90 ms. Detailed
+evidence is in the
+[Gate 3 stop](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/successor-gate3-stop.md).
+
+The successor plan's explicit stop condition fired. Continuing requires either
+raising the transition cap or a materially broader pre-closure quotient or
+streaming transition architecture. Neither is authorized. Gates 4-8 were not
+started; no release WASM or full acceptance pipeline was run. Do not call the
+priced five-T1 strategy recovered, raise a cap, or resume action-semantics work
+without Oliver selecting the next chunk. Preserve the current tree and
 checkpoints.

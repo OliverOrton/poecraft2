@@ -272,6 +272,9 @@ struct StrategyEvalResult {
     StrategyEvalSubphase boundary_subphase =
         StrategyEvalSubphase::ModelSetup;
     std::uint32_t refined_pair_limit = 0;
+    /* Peak retained bytes for the collision-safe discovery-only pair index.
+     * The index has no authority after the reachable raw graph closes. */
+    std::uint64_t pair_discovery_index_peak_bytes = 0;
     struct ObservationPropagationTelemetry {
         std::uint32_t nodes = 0;
         std::uint32_t groups = 0;

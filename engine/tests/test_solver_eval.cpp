@@ -1572,6 +1572,18 @@ void run_destructive_refinement_cycle_test() {
     PC_CHECK(exact.raw_pairs_discovered == 76);
     PC_CHECK(exact.refined_pairs == 57);
     PC_CHECK(exact.refined_pair_limit == options.max_pairs);
+    PC_CHECK(exact.pair_discovery_index_peak_bytes > 0);
+    using LegacyPairKey = std::tuple<
+        std::uint32_t, std::uint32_t, std::uint32_t,
+        std::uint32_t>;
+    using LegacyPairIndexValue =
+        std::pair<const LegacyPairKey, std::uint32_t>;
+    const std::uint64_t legacy_pair_index_bytes =
+        exact.raw_pairs_discovered *
+        (sizeof(LegacyPairIndexValue) + 3 * sizeof(void*));
+    PC_CHECK(
+        exact.pair_discovery_index_peak_bytes <
+        legacy_pair_index_bytes);
     PC_CHECK(
         exact.boundary_subphase == StrategyEvalSubphase::Done);
     PC_CHECK(exact.stage_timings.model_setup_ns > 0);
@@ -1608,6 +1620,9 @@ void run_destructive_refinement_cycle_test() {
     PC_CHECK(single_step.raw_pairs_discovered ==
              exact.raw_pairs_discovered);
     PC_CHECK(single_step.refined_pairs == exact.refined_pairs);
+    PC_CHECK(
+        single_step.pair_discovery_index_peak_bytes ==
+        exact.pair_discovery_index_peak_bytes);
     PC_CHECK(single_step.converged == exact.converged);
     PC_CHECK(near(
         single_step.success_probability,
@@ -1632,12 +1647,11 @@ void run_destructive_refinement_cycle_test() {
     PC_CHECK(sub_double.raw_pairs_discovered == 76);
     PC_CHECK(sub_double.refined_pairs == 57);
 
-    /*
-     * Pair refinement temporarily retains the discovered evaluator graph
-     * while the shared closed-partition proof owns its canonical graph and
-     * scratch. A cap that exactly admits deterministic discovery must be
-     * rejected by that next phase under the public max_owned_bytes name.
-     */
+    /* A cap that exactly admits the collision-safe compact discovery peak
+     * must reach refinement: the discovery-only bucket/link index has been
+     * accounted at its true peak and retired before partition scratch gains
+     * authority. A later refinement allocation may still hit the same cap,
+     * but it may not be misclassified as pair discovery. */
     StrategyEvalWork discovery_memory(strategy, options);
     while (discovery_memory.progress().pending_pairs != 0) {
         discovery_memory.step(1);
@@ -1654,19 +1668,32 @@ void run_destructive_refinement_cycle_test() {
         partition_memory.step(1);
     }
     bool partition_memory_capped = false;
+    bool partition_memory_reached_refinement = false;
     try {
-        partition_memory.step(1);
+        while (!partition_memory.progress().done) {
+            partition_memory.step(1);
+            if (partition_memory.diagnostic_result().boundary_subphase ==
+                StrategyEvalSubphase::PairRefinement) {
+                partition_memory_reached_refinement = true;
+            }
+        }
     } catch (const std::length_error& error) {
         partition_memory_capped =
             std::string(error.what()).find("max_owned_bytes") !=
             std::string::npos;
     }
-    PC_CHECK(partition_memory_capped);
+    PC_CHECK(partition_memory_reached_refinement);
     const StrategyEvalResult& partition_diagnostic =
         partition_memory.diagnostic_result();
-    PC_CHECK(
-        partition_diagnostic.boundary_subphase ==
-        StrategyEvalSubphase::PairRefinement);
+    if (partition_memory_capped) {
+        PC_CHECK(
+            partition_diagnostic.boundary_subphase ==
+            StrategyEvalSubphase::PairRefinement ||
+            partition_diagnostic.boundary_subphase ==
+                StrategyEvalSubphase::ComponentConstruction);
+    } else {
+        PC_CHECK(partition_memory.progress().done);
+    }
     PC_CHECK(partition_diagnostic.raw_pairs_discovered == 76);
     PC_CHECK(
         partition_diagnostic.refined_pair_limit ==

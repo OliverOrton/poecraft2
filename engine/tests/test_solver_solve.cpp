@@ -392,6 +392,23 @@ void run_direct_certification_contract_tests() {
     PC_CHECK(
         refinement::compiled_policy_failure_classification(pair_cap) ==
         "exact_eval_pair_discovery_memory_cap");
+
+    refinement::CompiledPolicyAssertion transition_cap = pair_cap;
+    transition_cap.resource_cap = "max_transitions";
+    transition_cap.failure_reason =
+        "strategy evaluation exceeded max_transitions (10000000)";
+    PC_CHECK(
+        refinement::compiled_policy_failure_classification(
+            transition_cap) ==
+        "exact_eval_pair_discovery_transition_cap");
+
+    refinement::CompiledPolicyAssertion class_cap = pair_cap;
+    class_cap.resource_cap = "max_pairs";
+    class_cap.failure_reason =
+        "strategy evaluation exceeded max_pairs (1215000)";
+    PC_CHECK(
+        refinement::compiled_policy_failure_classification(class_cap) ==
+        "exact_eval_pair_refinement_class_cap");
 }
 
 void run_shared_sparse_policy_kernel_tests() {
@@ -1219,6 +1236,8 @@ void run_alt_spam_tests() {
         refinement.direct_certification_raw_pairs = 51;
         refinement.direct_certification_refined_pairs = 52;
         refinement.direct_certification_refined_pair_limit = 53;
+        refinement
+            .direct_certification_pair_discovery_index_peak_bytes = 54;
         refinement.direct_certification_executable = true;
         refinement.direct_certification_proper = true;
         refinement.direct_certification_cost_complete = true;
@@ -1373,7 +1392,8 @@ void run_alt_spam_tests() {
                      "\"evaluation_boundary\":{"
                      "\"subphase\":\"pair_refinement\","
                      "\"raw_pairs\":51,\"refined_pairs\":52,"
-                     "\"refined_pair_limit\":53}") !=
+                     "\"refined_pair_limit\":53,"
+                     "\"discovery_index_peak_bytes\":54}") !=
                  std::string::npos);
         PC_CHECK(refinement_telemetry.find(
                      "\"strict_lift\":{\"status\":\"resource_cap\","

@@ -1,7 +1,8 @@
 # Five-T1 Exact-Evaluator Scaling And Recovery
 
-**Status: selected successor plan. Oliver approved continuation on 2026-08-16
-after the Gate 4 stop and an audit of the proposed follow-up evidence.**
+**Status: stopped at successor Gate 3 on 2026-08-16. The compact pair index
+cleared the byte cap and exposed the unchanged 10,000,000-transition boundary
+before refinement. Gates 4-8 were not started.**
 
 Parent: [Five-T1 Restart-Monotone Strategy Recovery](README.md)
 
@@ -170,6 +171,13 @@ resource test at the new representation boundary.
 Repeat Gate 2 after the focused tests. Stop with a precise handoff if fitting
 Witness B requires a materially broader solver/evaluator architecture or a cap
 increase.
+
+**Actual result:** the compact collision-safe discovery index reduced its peak
+to 75,497,472 bytes and kept the evaluator below its byte cap, but discovery
+then reached `max_transitions = 10,000,000` at 9,998,209 raw pairs before
+refinement. Continuing requires a pre-closure quotient/streaming architecture
+or a cap increase, so this stop condition fired. See the
+[Gate 3 stop](evidence/successor-gate3-stop.md).
 
 ## Gate 4 - Cooperative Evaluation And Cancellation
 
