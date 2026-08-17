@@ -238,6 +238,12 @@ struct PolicyRefinementTelemetry {
     std::uint64_t direct_certification_reforge_work = 0;
     std::uint64_t direct_certification_artifact_bytes = 0;
     std::uint64_t direct_certification_peak_owned_bytes = 0;
+    StrategyEvalStageTimings direct_certification_evaluation_stages;
+    StrategyEvalSubphase direct_certification_evaluation_boundary =
+        StrategyEvalSubphase::ModelSetup;
+    std::uint32_t direct_certification_raw_pairs = 0;
+    std::uint32_t direct_certification_refined_pairs = 0;
+    std::uint32_t direct_certification_refined_pair_limit = 0;
     std::uint64_t direct_certification_route_default_edges = 0;
     std::uint64_t direct_product_route_default_edges = 0;
     std::string direct_certification_route_default_mode;

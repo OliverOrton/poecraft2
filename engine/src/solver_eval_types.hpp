@@ -53,6 +53,49 @@ struct StrategyEvalProgress {
     double residual = 0.0;
 };
 
+enum class StrategyEvalSubphase {
+    ModelSetup,
+    ObservationPreparation,
+    PairDiscovery,
+    PairRefinement,
+    ComponentConstruction,
+    ComponentSolve,
+    Finalization,
+    Done,
+};
+
+inline const char* strategy_eval_subphase_name(
+    const StrategyEvalSubphase subphase) {
+    switch (subphase) {
+    case StrategyEvalSubphase::ModelSetup: return "model_setup";
+    case StrategyEvalSubphase::ObservationPreparation:
+        return "observation_preparation";
+    case StrategyEvalSubphase::PairDiscovery: return "pair_discovery";
+    case StrategyEvalSubphase::PairRefinement: return "pair_refinement";
+    case StrategyEvalSubphase::ComponentConstruction:
+        return "component_construction";
+    case StrategyEvalSubphase::ComponentSolve: return "component_solve";
+    case StrategyEvalSubphase::Finalization: return "finalization";
+    case StrategyEvalSubphase::Done: return "done";
+    }
+    return "unknown";
+}
+
+struct StrategyEvalStageTimings {
+    /* Active wall time spent inside native work calls. Suspended browser
+     * scheduling time is deliberately excluded. Pair interning and exact
+     * kernel lookup are inclusive subsets of pair discovery. */
+    std::uint64_t model_setup_ns = 0;
+    std::uint64_t observation_preparation_ns = 0;
+    std::uint64_t pair_discovery_ns = 0;
+    std::uint64_t pair_interning_ns = 0;
+    std::uint64_t exact_kernel_ns = 0;
+    std::uint64_t pair_refinement_ns = 0;
+    std::uint64_t component_construction_ns = 0;
+    std::uint64_t component_solve_ns = 0;
+    std::uint64_t finalization_ns = 0;
+};
+
 struct StrategyEvalClass {
     double share = 0.0;
     AbstractState state;
@@ -225,6 +268,10 @@ struct StrategyEvalResult {
     std::uint32_t refined_pairs = 0;
     std::uint32_t pair_refinement_rounds = 0;
     std::uint64_t pair_lumpability_checks = 0;
+    StrategyEvalStageTimings stage_timings;
+    StrategyEvalSubphase boundary_subphase =
+        StrategyEvalSubphase::ModelSetup;
+    std::uint32_t refined_pair_limit = 0;
     struct ObservationPropagationTelemetry {
         std::uint32_t nodes = 0;
         std::uint32_t groups = 0;

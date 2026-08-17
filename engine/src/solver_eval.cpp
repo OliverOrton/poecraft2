@@ -53,6 +53,32 @@ bool bestiary_action_legal(
 } // namespace
 
 struct StrategyEvalWork::Impl {
+    using Clock = std::chrono::steady_clock;
+
+    struct ActiveTimer {
+        std::uint64_t* counter = nullptr;
+        Clock::time_point started = Clock::now();
+
+        explicit ActiveTimer(std::uint64_t& value)
+            : counter(&value) {}
+
+        ~ActiveTimer() {
+            if (counter == nullptr) return;
+            const std::uint64_t elapsed =
+                static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        Clock::now() - started)
+                        .count());
+            *counter = elapsed >
+                    std::numeric_limits<std::uint64_t>::max() - *counter
+                ? std::numeric_limits<std::uint64_t>::max()
+                : *counter + elapsed;
+        }
+
+        ActiveTimer(const ActiveTimer&) = delete;
+        ActiveTimer& operator=(const ActiveTimer&) = delete;
+    };
+
     struct PolicyRouteResolution {
         std::uint32_t target_node = kNoId;
         std::uint32_t failure_node = kNoId;
@@ -74,10 +100,12 @@ struct StrategyEvalWork::Impl {
 
     std::shared_ptr<const StrategyImpl> strategy;
     StrategyEvalOptions options;
+    Clock::time_point construction_started = Clock::now();
     EvalModel model;
     std::vector<ReviewSectionSpec> review_sections;
     StrategyEvalResult output;
     StrategyEvalPhase phase = StrategyEvalPhase::Discovery;
+    StrategyEvalSubphase subphase = StrategyEvalSubphase::ModelSetup;
     std::optional<solve_detail::CooperativeTask<bool>> component_build_task;
     std::optional<solve_detail::CooperativeTask<bool>> finalization_task;
     bool skip_pair_refinement_once = false;
@@ -787,6 +815,12 @@ struct StrategyEvalWork::Impl {
             options.max_output_json_bytes == 0) {
             throw std::invalid_argument("invalid strategy evaluation options");
         }
+        output.stage_timings.model_setup_ns =
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    Clock::now() - construction_started)
+                    .count());
+        output.refined_pair_limit = options.max_pairs;
         output.max_owned_bytes = options.max_owned_bytes;
         output.max_output_json_bytes = options.max_output_json_bytes;
         model.calc->set_reforge_provenance_context(
@@ -807,8 +841,9 @@ struct StrategyEvalWork::Impl {
         }
         const std::size_t node_count = strategy->nodes.size();
         check_owned_cap();
+        subphase = StrategyEvalSubphase::ObservationPreparation;
         const auto observation_started =
-            std::chrono::steady_clock::now();
+            Clock::now();
         node_observation_requirements =
             derive_node_observation_requirements(
                 *strategy, model, options.max_sweeps,
@@ -825,9 +860,11 @@ struct StrategyEvalWork::Impl {
         output.observation_propagation.duration_ns =
             static_cast<std::uint64_t>(
                 std::chrono::duration_cast<std::chrono::nanoseconds>(
-                    std::chrono::steady_clock::now() -
+                    Clock::now() -
                     observation_started)
                     .count());
+        output.stage_timings.observation_preparation_ns =
+            output.observation_propagation.duration_ns;
         memory_probe_stage = "steady_state";
         memory_probe_units = 0;
         memory_probe_unit_bytes = 0;
@@ -887,6 +924,7 @@ struct StrategyEvalWork::Impl {
                 strategy->start_node, start_state, 1.0);
             phase = StrategyEvalPhase::Finalization;
         } else {
+            subphase = StrategyEvalSubphase::PairDiscovery;
             start_pair = intern_pair(strategy->start_node, start_state);
         }
         check_owned_cap();
@@ -918,6 +956,7 @@ struct StrategyEvalWork::Impl {
         std::uint32_t state,
         std::uint32_t unveil_offer = kNoId,
         std::uint32_t checkpoint_state = kNoId) {
+        ActiveTimer timer(output.stage_timings.pair_interning_ns);
         /*
          * This is deliberately the raw exact pair identity. Observation
          * equality is only a seed for the shared split-only fixed point after
@@ -937,6 +976,15 @@ struct StrategyEvalWork::Impl {
         pair.unveil_offer = unveil_offer;
         pairs.push_back(std::move(pair));
         return id;
+    }
+
+    const OutcomeDistribution& exact_outcomes(
+        const std::uint32_t state,
+        const std::uint32_t action,
+        const bool goal_progress_gated = false) {
+        ActiveTimer timer(output.stage_timings.exact_kernel_ns);
+        return model.calc->outcomes(
+            state, action, goal_progress_gated);
     }
 
     const EvalRow& pair_row(std::uint32_t pair) const {
@@ -1280,7 +1328,7 @@ struct StrategyEvalWork::Impl {
                         checkpoint_state_id);
                 } else {
                     const OutcomeDistribution& outcomes =
-                        model.calc->outcomes(state_id, observed_action);
+                        exact_outcomes(state_id, observed_action);
                     if (!outcomes.supported) {
                         throw StrategyEvalUnsupported(
                             "strategy evaluation unsupported:\n- node '" +
@@ -1398,7 +1446,7 @@ struct StrategyEvalWork::Impl {
                      * renewal and drift away from the solver's kernel bits. */
                     if (may_repeat_directly) {
                         const OutcomeDistribution& gated_candidate =
-                            model.calc->outcomes(
+                            exact_outcomes(
                                 state_id, action_index, true);
                         if (gated_candidate.supported &&
                             gated_candidate.goal_progress_gated &&
@@ -1417,7 +1465,7 @@ struct StrategyEvalWork::Impl {
                         }
                     }
                     if (selected_outcomes == nullptr) {
-                        selected_outcomes = &model.calc->outcomes(
+                        selected_outcomes = &exact_outcomes(
                             state_id, action_index, false);
                     }
                     const OutcomeDistribution& outcomes =
@@ -2608,6 +2656,7 @@ struct StrategyEvalWork::Impl {
     }
 
     solve_detail::CooperativeTask<bool> build_components() {
+        subphase = StrategyEvalSubphase::PairRefinement;
         co_await solve_detail::CooperativeCheckpoint{};
         if (!skip_pair_refinement_once) {
             auto refinement = refine_pair_graph();
@@ -2618,6 +2667,7 @@ struct StrategyEvalWork::Impl {
             (void)refinement.take_result();
         }
         skip_pair_refinement_once = false;
+        subphase = StrategyEvalSubphase::ComponentConstruction;
         co_await solve_detail::CooperativeCheckpoint{};
         contract_pass_through();
         co_await solve_detail::CooperativeCheckpoint{};
@@ -3320,11 +3370,16 @@ struct StrategyEvalWork::Impl {
         phase = component_index < components.size()
                     ? StrategyEvalPhase::Solving
                     : StrategyEvalPhase::Finalization;
+        subphase = phase == StrategyEvalPhase::Finalization
+            ? StrategyEvalSubphase::Finalization
+            : StrategyEvalSubphase::ComponentSolve;
     }
 
     void solve_component() {
+        subphase = StrategyEvalSubphase::ComponentSolve;
         if (component_index >= components.size()) {
             phase = StrategyEvalPhase::Finalization;
+            subphase = StrategyEvalSubphase::Finalization;
             return;
         }
         const std::uint32_t component =
@@ -3390,6 +3445,7 @@ struct StrategyEvalWork::Impl {
     }
 
     void run_fallback_batch() {
+        subphase = StrategyEvalSubphase::ComponentSolve;
         FallbackState& state = *fallback;
         const std::uint64_t scratch =
             solve_detail::sparse_policy_component_scratch_bytes(
@@ -5376,6 +5432,8 @@ struct StrategyEvalWork::Impl {
         }
         check_owned_cap();
         phase = StrategyEvalPhase::Done;
+        subphase = StrategyEvalSubphase::Done;
+        output.boundary_subphase = subphase;
         co_return true;
     }
 
@@ -5459,6 +5517,46 @@ struct StrategyEvalWork::Impl {
     void step(std::uint32_t max_work_items) {
         std::uint32_t remaining = std::max<std::uint32_t>(1, max_work_items);
         while (remaining-- > 0 && phase != StrategyEvalPhase::Done) {
+            if (phase == StrategyEvalPhase::Discovery) {
+                subphase = discover_index < pairs.size()
+                    ? StrategyEvalSubphase::PairDiscovery
+                    : component_build_task.has_value()
+                        ? subphase
+                        : StrategyEvalSubphase::PairRefinement;
+            } else if (phase == StrategyEvalPhase::Solving ||
+                       phase == StrategyEvalPhase::Fallback) {
+                subphase = StrategyEvalSubphase::ComponentSolve;
+            } else if (phase == StrategyEvalPhase::Finalization) {
+                subphase = StrategyEvalSubphase::Finalization;
+            }
+            std::uint64_t* active_counter = nullptr;
+            switch (subphase) {
+            case StrategyEvalSubphase::PairDiscovery:
+                active_counter = &output.stage_timings.pair_discovery_ns;
+                break;
+            case StrategyEvalSubphase::PairRefinement:
+                active_counter = &output.stage_timings.pair_refinement_ns;
+                break;
+            case StrategyEvalSubphase::ComponentConstruction:
+                active_counter =
+                    &output.stage_timings.component_construction_ns;
+                break;
+            case StrategyEvalSubphase::ComponentSolve:
+                active_counter = &output.stage_timings.component_solve_ns;
+                break;
+            case StrategyEvalSubphase::Finalization:
+                active_counter = &output.stage_timings.finalization_ns;
+                break;
+            case StrategyEvalSubphase::ModelSetup:
+            case StrategyEvalSubphase::ObservationPreparation:
+            case StrategyEvalSubphase::Done:
+                break;
+            }
+            if (active_counter == nullptr) {
+                throw std::logic_error(
+                    "strategy evaluation has no active timing subphase");
+            }
+            ActiveTimer active_timer(*active_counter);
             switch (phase) {
             case StrategyEvalPhase::Discovery:
                 if (discover_index < pairs.size()) {
@@ -5564,11 +5662,14 @@ StrategyEvalResult StrategyEvalWork::take_result() {
     }
     impl_->output.retained_output_owned_bytes_estimate =
         impl_->output_owned_bytes();
+    impl_->output.boundary_subphase = StrategyEvalSubphase::Done;
     return std::move(impl_->output);
 }
 
 const StrategyEvalResult& StrategyEvalWork::diagnostic_result() {
     StrategyEvalResult& output = impl_->output;
+    output.boundary_subphase = impl_->subphase;
+    output.refined_pair_limit = impl_->options.max_pairs;
     if (impl_->model.calc != nullptr) {
         const CalcTelemetry& telemetry =
             impl_->model.calc->telemetry();

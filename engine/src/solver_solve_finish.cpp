@@ -3237,6 +3237,16 @@ SolveWork::Impl::run_finalization() {
                 saturated_add(
                     publication_external_live_bytes,
                     assertion.publication_peak_owned_bytes);
+            telemetry.direct_certification_evaluation_stages =
+                assertion.evaluation.stage_timings;
+            telemetry.direct_certification_evaluation_boundary =
+                assertion.evaluation.boundary_subphase;
+            telemetry.direct_certification_raw_pairs =
+                assertion.evaluation.raw_pairs_discovered;
+            telemetry.direct_certification_refined_pairs =
+                assertion.evaluation.refined_pairs;
+            telemetry.direct_certification_refined_pair_limit =
+                assertion.evaluation.refined_pair_limit;
             const PolicyCompilationTelemetry& certification_compilation =
                 assertion.paired_default_only
                     ? assertion.certification_compilation

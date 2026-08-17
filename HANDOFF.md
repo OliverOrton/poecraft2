@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: selected implementation boundary at exact-evaluator attribution and
-behavior-keyed product-local Fracture sharing.**
+**Status: successor Gate 0 passed; behavior-keyed product-local Fracture
+sharing is the active implementation boundary.**
 
 The original
 [Five-T1 Restart-Monotone Strategy Recovery](docs/active/2026-08-16-five-t1-restart-monotone-recovery/plan.md)
@@ -48,11 +48,16 @@ checks), solver suite (96,082 checks), both frozen cases, and `git diff
 matrix, or full `scripts/test.ps1` acceptance run was performed after this
 checkpoint, as required by the stop condition.
 
-The next work is Gate 0 evaluator subphase timing and diagnostic telemetry,
-followed by Gate 1 compiler sharing of product-local Fracture regions keyed by
-complete executable behavior. The accepted 1,813-node four-goal graph has 767
-Fracture routers but only seven route behaviors; this reduction may directly
-shrink the evaluator carrier. Rerun the priced witness only at the Gate 2
-decision point. Choose compact/interned/streamed pair work only if that run
-still stops, and base the choice on the newly measured owning payload and
-actual refined-class boundary. Preserve the current tree and checkpoints.
+Successor Gate 0 is complete. Solver diagnostic telemetry now splits model,
+observation, pair discovery/interning, exact kernel, pair refinement, component
+construction/solve, and finalization active time, and a resource-stopped result
+retains its subphase plus the actual internal refined-pair limit. The focused
+evaluator suite passed 16,819 checks and the focused solver suite passed 96,083.
+
+Next implement Gate 1 compiler sharing of product-local Fracture regions keyed
+by complete executable behavior. The accepted 1,813-node four-goal graph has
+767 Fracture routers but only seven route behaviors; this reduction may
+directly shrink the evaluator carrier. Rerun the priced witness only at the
+Gate 2 decision point. Choose compact/interned/streamed pair work only if that
+run still stops, and base the choice on the new owning payload and actual
+refined-class boundary. Preserve the current tree and checkpoints.

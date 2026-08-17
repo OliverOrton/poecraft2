@@ -1571,6 +1571,24 @@ void run_destructive_refinement_cycle_test() {
         progress.discovered_pairs == exact.refined_pairs);
     PC_CHECK(exact.raw_pairs_discovered == 76);
     PC_CHECK(exact.refined_pairs == 57);
+    PC_CHECK(exact.refined_pair_limit == options.max_pairs);
+    PC_CHECK(
+        exact.boundary_subphase == StrategyEvalSubphase::Done);
+    PC_CHECK(exact.stage_timings.model_setup_ns > 0);
+    PC_CHECK(exact.stage_timings.observation_preparation_ns > 0);
+    PC_CHECK(exact.stage_timings.pair_discovery_ns > 0);
+    PC_CHECK(exact.stage_timings.pair_interning_ns > 0);
+    PC_CHECK(exact.stage_timings.exact_kernel_ns > 0);
+    PC_CHECK(exact.stage_timings.pair_refinement_ns > 0);
+    PC_CHECK(exact.stage_timings.component_construction_ns > 0);
+    PC_CHECK(exact.stage_timings.component_solve_ns > 0);
+    PC_CHECK(exact.stage_timings.finalization_ns > 0);
+    PC_CHECK(
+        exact.stage_timings.pair_interning_ns <=
+        exact.stage_timings.pair_discovery_ns);
+    PC_CHECK(
+        exact.stage_timings.exact_kernel_ns <=
+        exact.stage_timings.pair_discovery_ns);
     PC_CHECK(
         exact.raw_pairs_discovered > exact.refined_pairs);
     PC_CHECK(exact.converged);
@@ -1644,6 +1662,19 @@ void run_destructive_refinement_cycle_test() {
             std::string::npos;
     }
     PC_CHECK(partition_memory_capped);
+    const StrategyEvalResult& partition_diagnostic =
+        partition_memory.diagnostic_result();
+    PC_CHECK(
+        partition_diagnostic.boundary_subphase ==
+        StrategyEvalSubphase::PairRefinement);
+    PC_CHECK(partition_diagnostic.raw_pairs_discovered == 76);
+    PC_CHECK(
+        partition_diagnostic.refined_pair_limit ==
+        partition_memory_options.max_pairs);
+    PC_CHECK(
+        partition_diagnostic.stage_timings.pair_discovery_ns > 0);
+    PC_CHECK(
+        partition_diagnostic.stage_timings.pair_refinement_ns > 0);
 
     const StrategyEvalActionTotal* chaos =
         action_total(exact, "chaos");

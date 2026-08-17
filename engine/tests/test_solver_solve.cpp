@@ -1185,6 +1185,27 @@ void run_alt_spam_tests() {
         refinement.direct_certification_offpolicy_probability = 0.0;
         refinement.direct_certification_artifact_bytes = 40;
         refinement.direct_certification_peak_owned_bytes = 41;
+        refinement.direct_certification_evaluation_stages.model_setup_ns = 42;
+        refinement.direct_certification_evaluation_stages
+            .observation_preparation_ns = 43;
+        refinement.direct_certification_evaluation_stages.pair_discovery_ns =
+            44;
+        refinement.direct_certification_evaluation_stages.pair_interning_ns =
+            45;
+        refinement.direct_certification_evaluation_stages.exact_kernel_ns =
+            46;
+        refinement.direct_certification_evaluation_stages
+            .pair_refinement_ns = 47;
+        refinement.direct_certification_evaluation_stages
+            .component_construction_ns = 48;
+        refinement.direct_certification_evaluation_stages.component_solve_ns =
+            49;
+        refinement.direct_certification_evaluation_stages.finalization_ns = 50;
+        refinement.direct_certification_evaluation_boundary =
+            StrategyEvalSubphase::PairRefinement;
+        refinement.direct_certification_raw_pairs = 51;
+        refinement.direct_certification_refined_pairs = 52;
+        refinement.direct_certification_refined_pair_limit = 53;
         refinement.direct_certification_executable = true;
         refinement.direct_certification_proper = true;
         refinement.direct_certification_cost_complete = true;
@@ -1324,6 +1345,22 @@ void run_alt_spam_tests() {
                      "\"failure_classification\":null,"
                      "\"resource_cap\":null,\"solver_cost\":30,"
                      "\"exact_cost\":31,\"offpolicy_probability\":0") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"evaluation_stages_ns\":{"
+                     "\"model_setup\":42,"
+                     "\"observation_preparation\":43,"
+                     "\"pair_discovery\":44,"
+                     "\"pair_interning\":45,"
+                     "\"exact_kernel\":46,"
+                     "\"pair_refinement\":47,"
+                     "\"component_construction\":48,"
+                     "\"component_solve\":49,"
+                     "\"finalization\":50},"
+                     "\"evaluation_boundary\":{"
+                     "\"subphase\":\"pair_refinement\","
+                     "\"raw_pairs\":51,\"refined_pairs\":52,"
+                     "\"refined_pair_limit\":53}") !=
                  std::string::npos);
         PC_CHECK(refinement_telemetry.find(
                      "\"strict_lift\":{\"status\":\"resource_cap\","

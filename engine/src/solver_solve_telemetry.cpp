@@ -1841,6 +1841,43 @@ std::string serialize_solver_telemetry(
         json += ",\"peak_owned_bytes\":" +
                 std::to_string(
                     refinement.direct_certification_peak_owned_bytes);
+        const StrategyEvalStageTimings& evaluation_stages =
+            refinement.direct_certification_evaluation_stages;
+        json += ",\"evaluation_stages_ns\":{\"model_setup\":" +
+                std::to_string(evaluation_stages.model_setup_ns);
+        json += ",\"observation_preparation\":" +
+                std::to_string(
+                    evaluation_stages.observation_preparation_ns);
+        json += ",\"pair_discovery\":" +
+                std::to_string(evaluation_stages.pair_discovery_ns);
+        json += ",\"pair_interning\":" +
+                std::to_string(evaluation_stages.pair_interning_ns);
+        json += ",\"exact_kernel\":" +
+                std::to_string(evaluation_stages.exact_kernel_ns);
+        json += ",\"pair_refinement\":" +
+                std::to_string(evaluation_stages.pair_refinement_ns);
+        json += ",\"component_construction\":" +
+                std::to_string(
+                    evaluation_stages.component_construction_ns);
+        json += ",\"component_solve\":" +
+                std::to_string(evaluation_stages.component_solve_ns);
+        json += ",\"finalization\":" +
+                std::to_string(evaluation_stages.finalization_ns) + "}";
+        json += ",\"evaluation_boundary\":{\"subphase\":";
+        append_telemetry_json_string(
+            json,
+            strategy_eval_subphase_name(
+                refinement.direct_certification_evaluation_boundary));
+        json += ",\"raw_pairs\":" +
+                std::to_string(
+                    refinement.direct_certification_raw_pairs);
+        json += ",\"refined_pairs\":" +
+                std::to_string(
+                    refinement.direct_certification_refined_pairs);
+        json += ",\"refined_pair_limit\":" +
+                std::to_string(
+                    refinement.direct_certification_refined_pair_limit) +
+                "}";
         json += ",\"route_defaults\":{\"paired_default_only\":" +
                 std::string(bool_json(
                     refinement.direct_paired_default_only));

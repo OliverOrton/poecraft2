@@ -1,8 +1,7 @@
 # Five-T1 Restart-Monotone Strategy Recovery
 
-**Status: successor selected after the Gate 4 stop. Exact-evaluator phase
-attribution and behavior-keyed product-local Fracture sharing are next under
-the unchanged cap.**
+**Status: successor Gate 0 passed. Behavior-keyed product-local Fracture
+sharing is next under the unchanged cap.**
 
 Parent: [Active work](../README.md)
 
@@ -16,6 +15,7 @@ existing memory and responsiveness limits.
 - [Selected exact-evaluator successor plan](successor-plan.md)
 - [Gate 1 result and Gate 4 stop evidence](evidence/gate1-gate4-stop.md)
 - [Pair-discovery follow-up audit](evidence/pair-discovery-follow-up-audit.md)
+- [Successor Gate 0 result](evidence/successor-gate0.md)
 - [Current handoff](../../../HANDOFF.md)
 
 The native source checkpoint `705c25c` freezes both five-T1 cases, makes
@@ -27,4 +27,5 @@ construction. Gates 2, 3, and 5-8 were not started; release WASM and the full
 acceptance pipeline were deliberately not run. Oliver then approved the
 successor plan at `5deaa3f`; it first measures evaluator subphases, then shares
 Fracture regions by complete executable behavior before deciding whether a
-lower-level pair representation change is necessary.
+lower-level pair representation change is necessary. Gate 0 now exposes that
+attribution while preserving deterministic standalone evaluator JSON.
