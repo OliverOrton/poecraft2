@@ -1,8 +1,8 @@
 # Session Handoff
 
-**Status: Oliver selected streamed exact-evaluator closure recovery on
-2026-08-17. Its prior-work audit and Gate 0 census are complete; Gate 1 exact
-online deterministic routing is active.**
+**Status: streamed exact-evaluator closure recovery stopped at Gate 2 on
+2026-08-17. No implementation boundary is active; Oliver must select the next
+transition-streaming chunk.**
 
 The original
 [Five-T1 Restart-Monotone Strategy Recovery](docs/active/2026-08-16-five-t1-restart-monotone-recovery/plan.md)
@@ -179,3 +179,32 @@ transition routing. It may skip only non-operation, non-modifier-offer routers
 with collision-safe exact node/edge traces; deterministic cycles must remain
 raw. Do not start parent successor Gates 4-8 or run the full acceptance
 pipeline during this boundary.
+
+Gate 1 is now complete at `88cc69e` plus the compact collision-safe trace
+index at `7432410`. Focused controls cover long chains, multiple roots, a
+385-trace rehash boundary, direct/raw-reference and single-step parity,
+modifier offers, and deterministic cycles. The native build, evaluator suite
+(18,004 checks), and solver suite (96,113 checks) pass.
+
+The checked Witness B now has 35,828 raw pairs, all but the start pair
+operations, and zero router pairs. At ten million it stops with 31,862 pairs
+pending, a 239,404,440-byte row payload, a 40,097,520-byte exact trace payload,
+and a 362,706,844-byte evaluator peak. Witness A remains independently exact
+at 624,800.9519118543, success one, and zero off-policy mass.
+
+The plan's only higher probe used 20 million transitions and was restored to
+the checked ten-million cap afterward. It still stops in discovery with
+27,588 operation pairs pending, 1,007 rows, 19,972,223 transitions, a
+479,377,920-byte row payload, an 80,202,800-byte trace payload, and a
+650,793,188-byte peak. The measured slope reaches one GiB near 33.9 million
+transitions, while comparable row sharing projects closure much later. No
+partition was reached, so Gate 3 did not start. See the
+[Gate 1/Gate 2 stop](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/streamed-closure-gate1-gate2-stop.md).
+
+The priced five-T1 publication remains the six-node Chaos renewal at
+37,279,857.73995944. The independent exact evaluation in the stopped reports
+is of that fallback, not the unmaterialized candidate. The next viable owner
+is a replayable/shared operation-row kernel that avoids retaining every
+24-byte routed transition. Do not implement it, start parent successor Gates
+4-8, build release WASM, or run the full acceptance pipeline until Oliver
+selects a new scoped plan.

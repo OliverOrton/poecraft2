@@ -1,8 +1,8 @@
 # Streamed Exact-Evaluator Closure Recovery
 
-**Status: selected by Oliver's 2026-08-17 instruction to continue after
-auditing prior attempts. Gate 0 is complete; exact online deterministic
-routing is selected for Gate 1.**
+**Status: stopped at Gate 2 on 2026-08-17. Gate 1 exact online deterministic
+routing is complete, but operation-row transition discovery cannot close
+under one GiB. Gate 3 and parent successor Gates 4-8 did not start.**
 
 Parent: [Five-T1 Exact-Evaluator Scaling And Recovery](successor-plan.md)
 
@@ -89,10 +89,11 @@ outside negligible scalar structure size.
 
 ## Gate 1 - Select One Pre-Closure Owner
 
-**Active selection: exact online deterministic routing.** Derived transition
-routing is not part of this gate. The implementation must retain a
-collision-safe exact route trace, report flow on every skipped node and edge,
-stop before modifier-offer observation, and leave deterministic cycles raw.
+**Complete: exact online deterministic routing.** Derived transition routing
+was not part of this gate. The implementation retains a collision-safe exact
+route trace, reports flow on every skipped node and edge, stops before
+modifier-offer observation, and leaves deterministic cycles raw.
+See the [Gate 1/Gate 2 stop](evidence/streamed-closure-gate1-gate2-stop.md).
 
 Choose exactly one implementation from Gate 0 evidence:
 
@@ -111,6 +112,13 @@ accounting parity.
 
 ## Gate 2 - Closure Decision
 
+**Stopped.** The checked 10-million case has zero router pairs and only 35,828
+raw operation/start pairs, but remains open at 9,974,258 transitions. The one
+20-million probe remains open with 27,588 operation pairs pending and peaks at
+650,793,188 bytes. Its measured slope reaches one GiB near 33.9 million
+transitions, far before projected closure. The checked cap is restored to ten
+million.
+
 Run Witness A once and Witness B at the checked 10-million cap. Use measured
 linear headroom for at most one temporary higher-cap probe. A cap may become
 permanent only if raw discovery closes and the subsequent exact phase fits;
@@ -122,6 +130,8 @@ mass, and publication outcome. Stop if discovery still cannot close without a
 second broad representation authority.
 
 ## Gate 3 - Existing Replay-Partition Density
+
+**Not started.** No closed raw graph or initial partition was reached.
 
 Run only after raw closure. If the retained graph fits but the existing replay
 partition does not, compact that authority rather than introducing another

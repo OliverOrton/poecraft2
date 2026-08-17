@@ -29,14 +29,16 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The selected
+The stopped
 [Streamed Exact-Evaluator Closure Recovery](active/2026-08-16-five-t1-restart-monotone-recovery/streamed-evaluator-closure-plan.md)
-continues from the priced five-T1 segmented pair/transition stop. It first
-audits prior replay, quotient, and contraction work, then measures the raw
-evaluator prefix before choosing one new pre-closure representation. Caps
-remain unchanged; publication-reason truth, action-monotone recovery,
-automatic controls, and release-WASM responsiveness follow only after the
-candidate becomes materializable. The completed
+is stopped at Gate 2. Exact online deterministic routing removes the former
+router-pair frontier and reduces the checked evaluator peak to 362.7 MB, but
+the sole 20-million probe remains open with 27,588 operation pairs pending.
+Its measured slope reaches one GiB before closure. No implementation boundary
+is active until Oliver selects a broader replayable operation-row transition
+scope. Publication-reason truth, action-monotone recovery, automatic controls,
+and release-WASM responsiveness still follow only after the candidate becomes
+materializable. The completed
 [Calculator WASM Scheduling And Selected-Policy Refinement](archive/2026-08-14-calculator-wasm-scheduling-progress/README.md)
 milestone recovers a five-natural-T1 non-Chaos strategy about 59.7 times
 cheaper than the prior fallback, retains selected candidates without granting
