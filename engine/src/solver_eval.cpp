@@ -4994,6 +4994,29 @@ struct StrategyEvalWork::Impl {
                     std::uint32_t,
                     solve_detail::WideFloat>::value_type) +
                 3 * sizeof(void*);
+            std::uint64_t logical_arc_count = 0;
+            for (const EvalRow& row : attribution_rows) {
+                logical_arc_count = capped_add(
+                    logical_arc_count, eval_row_arc_count(row));
+            }
+            const std::uint64_t unaggregated_projection = capped_add(
+                capped_product(
+                    logical_arc_count, 2 * sizeof(PolicyEdge)),
+                capped_product(
+                    row_count,
+                    2 * sizeof(PolicyRow) + sizeof(std::uint32_t) +
+                        sizeof(std::uint8_t)));
+            const std::uint64_t owned_before_transpose =
+                fast_estimated_owned_bytes();
+            const bool aggregate_target_rows =
+                logical_arc_count >
+                    std::numeric_limits<std::uint32_t>::max() ||
+                owned_before_transpose > options.max_owned_bytes ||
+                unaggregated_projection >
+                    options.max_owned_bytes -
+                        std::min(
+                            owned_before_transpose,
+                            options.max_owned_bytes);
             const auto compact_graph_bytes = [&]() {
                 return capped_add(
                     capped_product(
@@ -5011,12 +5034,15 @@ struct StrategyEvalWork::Impl {
                                 row_has_absorption.capacity(),
                                 sizeof(std::uint8_t)))));
             };
-            memory_probe_stage =
-                "exact_attribution_compact_row_transpose";
+            memory_probe_stage = aggregate_target_rows
+                ? "exact_attribution_compact_row_transpose"
+                : "exact_attribution_replay_transpose";
             for (std::uint32_t source = 0;
                  source < row_count; ++source) {
                 std::map<std::uint32_t, solve_detail::WideFloat>
                     aggregated;
+                forward_rows[source].edge_offset =
+                    forward_edges.size();
                 visit_eval_row(
                     attribution_rows[source], attribution_pairs,
                     [&](const EvalTransition& transition) {
@@ -5029,6 +5055,25 @@ struct StrategyEvalWork::Impl {
                         }
                         const std::uint32_t target_row =
                             attribution_pairs[transition.target].row;
+                        if (!aggregate_target_rows) {
+                            if (forward_edges.size() ==
+                                std::numeric_limits<std::uint32_t>::max()) {
+                                throw std::length_error(
+                                    "strategy evaluation exact row "
+                                    "attribution edge count overflowed");
+                            }
+                            if (incoming_counts[target_row] ==
+                                std::numeric_limits<std::uint32_t>::max()) {
+                                throw std::length_error(
+                                    "strategy evaluation exact row "
+                                    "attribution incoming edge count "
+                                    "overflowed");
+                            }
+                            ++incoming_counts[target_row];
+                            forward_edges.push_back({
+                                target_row, transition.probability});
+                            return;
+                        }
                         auto found = aggregated.find(target_row);
                         if (found == aggregated.end()) {
                             check_owned_cap(capped_add(
@@ -5046,30 +5091,33 @@ struct StrategyEvalWork::Impl {
                     [&](const EvalAbsorption&) {
                         row_has_absorption[source] = 1;
                     });
-                forward_rows[source].edge_offset =
-                    forward_edges.size();
-                if (aggregated.size() >
+                if (aggregate_target_rows &&
+                    (aggregated.size() >
                         std::numeric_limits<std::uint32_t>::max() ||
                     forward_edges.size() >
                         std::numeric_limits<std::uint32_t>::max() -
-                            aggregated.size()) {
+                            aggregated.size())) {
                     throw std::length_error(
                         "strategy evaluation exact row attribution edge "
                         "count overflowed");
                 }
-                forward_rows[source].edge_count =
-                    static_cast<std::uint32_t>(aggregated.size());
-                for (const auto& [target_row, probability] : aggregated) {
-                    if (incoming_counts[target_row] ==
-                        std::numeric_limits<std::uint32_t>::max()) {
-                        throw std::length_error(
-                            "strategy evaluation exact row attribution "
-                            "incoming edge count overflowed");
+                if (aggregate_target_rows) {
+                    for (const auto& [target_row, probability] : aggregated) {
+                        if (incoming_counts[target_row] ==
+                            std::numeric_limits<std::uint32_t>::max()) {
+                            throw std::length_error(
+                                "strategy evaluation exact row attribution "
+                                "incoming edge count overflowed");
+                        }
+                        ++incoming_counts[target_row];
+                        forward_edges.push_back({
+                            target_row, probability.value()});
                     }
-                    ++incoming_counts[target_row];
-                    forward_edges.push_back({
-                        target_row, probability.value()});
                 }
+                forward_rows[source].edge_count =
+                    static_cast<std::uint32_t>(
+                        forward_edges.size() -
+                        forward_rows[source].edge_offset);
                 memory_probe_units = forward_edges.size();
                 memory_probe_unit_bytes = sizeof(PolicyEdge);
                 check_owned_cap(compact_graph_bytes());
