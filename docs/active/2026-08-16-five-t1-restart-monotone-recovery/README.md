@@ -1,8 +1,7 @@
 # Five-T1 Restart-Monotone Strategy Recovery
 
-**Status: replayable exact operation-row Gates 0-3 complete. Gate 4 stopped at
-the measured post-partition conversion boundary; no implementation boundary is
-active.**
+**Status: proof-gated route and operation-graph compaction selected on
+2026-08-17; Gate 0 attribution is in progress.**
 
 Parent: [Active work](../README.md)
 
@@ -16,6 +15,7 @@ existing memory and responsiveness limits.
 - [Selected exact-evaluator successor plan](successor-plan.md)
 - [Selected streamed evaluator closure plan](streamed-evaluator-closure-plan.md)
 - [Selected replayable operation-row recovery plan](replayable-operation-row-plan.md)
+- [Selected proof-gated route and operation-graph compaction plan](gated-route-evaluator-compaction-plan.md)
 - [Replayable-row Gate 0 census and selection](evidence/replayable-row-gate0.md)
 - [Replayable-row Gate 1 compact-token result](evidence/replayable-row-gate1.md)
 - [Replayable-row Gates 2-4 result and stop](evidence/replayable-row-gates2-4-stop.md)
@@ -41,6 +41,16 @@ measured exact row-family ownership and replay cost and selected the compact
 token carrier, while reusing the existing replay partition and preserving
 exact attribution.
 Release WASM and the full acceptance pipeline remain deliberately unrun.
+
+Oliver selected the proof-gated route and operation-graph compaction follow-up
+after a source and artifact audit attributed the 2,015-node certificate to 757
+operation regions, 755 local gated retry routers, 499 policy-route routers,
+and four fixed nodes. The evaluator currently recognizes compact gated kernels
+only through direct operation self-loops; non-shared local gated routes fall
+back to full physical outcomes. The new plan first measures that direct-row
+ownership, then permits only structurally proved compact evaluation. Fracture
+selection is audited separately and cannot change policy without a canonical
+cheaper-Q witness.
 
 Gate 0 found that broad stable Chaos kernels own 9,962,130 of 9,974,257
 measured outcomes, while the state-local Exalt fringe owns only 2,632. A

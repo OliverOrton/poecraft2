@@ -30,18 +30,18 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 ## Execution State
 
 The
-[Replayable Exact Operation-Row Recovery](active/2026-08-16-five-t1-restart-monotone-recovery/replayable-operation-row-plan.md)
-is stopped at Gate 4. Gates 2 and 3 feed compact exact route tokens into the
-existing collision-safe replay partition and carry the same authority through
-quotient construction and exact attribution. The sole 30-million real probe
-closes discovery and partitions 35,828 raw pairs to 1,843 classes, but the
-post-partition conversion overlaps 596.86 MB of effectively direct rows and
-peaks at 1.052 GB against the 1.051 GB evaluator budget. It also contains an
-89.95-second cooperative step. The preferred five-T1 candidate remains
-unmaterialized and publication remains the verified 37,279,857.73995944 Chaos
-fallback. No implementation boundary is active; the next selected scope must
-address both the direct-row tail and conversion cooperativity after auditing
-prior attempts.
+[Proof-Gated Route And Operation-Graph Compaction](active/2026-08-16-five-t1-restart-monotone-recovery/gated-route-evaluator-compaction-plan.md)
+is selected and Gate 0 attribution is in progress. Its stopped predecessor
+feeds compact exact route tokens through collision-safe replay partitioning,
+but the sole 30-million probe closes 35,828 raw pairs to 1,843 classes and
+then overlaps 596.86 MB of effectively direct rows during quotient conversion,
+peaking at 1.052 GB against the 1.051 GB evaluator budget with an 89.95-second
+cooperative step. The selected scope measures whether 755 non-shared local
+gated retry routers own that direct-row tail, then permits compact gated-kernel
+evaluation only under structural proof. Fracture non-selection is audited
+separately under canonical Q authority. The preferred five-T1 candidate
+remains unmaterialized and publication remains the verified
+37,279,857.73995944 Chaos fallback.
 Publication-reason truth, action-monotone recovery, automatic controls, and
 release-WASM responsiveness still follow only after the candidate becomes
 materializable. The completed

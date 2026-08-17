@@ -1,8 +1,7 @@
 # Session Handoff
 
-**Status: replayable exact operation-row Gates 0-3 completed on 2026-08-17.
-Gate 4 stopped at the post-partition quotient-conversion memory and
-responsiveness boundary. No implementation boundary is active.**
+**Status: proof-gated route and operation-graph compaction selected on
+2026-08-17. Gate 0 behavior-neutral attribution is in progress.**
 
 The original
 [Five-T1 Restart-Monotone Strategy Recovery](docs/active/2026-08-16-five-t1-restart-monotone-recovery/plan.md)
@@ -268,3 +267,23 @@ successor Gates 4-8, release WASM, web acceptance, Warlord/automatic matrix,
 the primary publication run, and the full acceptance pipeline remain closed.
 Detailed evidence is in the
 [Gates 2-4 stop record](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/replayable-row-gates2-4-stop.md).
+
+Oliver selected the next exact scope in the
+[proof-gated route and operation-graph compaction plan](docs/active/2026-08-16-five-t1-restart-monotone-recovery/gated-route-evaluator-compaction-plan.md).
+The source/artifact audit attributes the 2,015 candidate nodes to 757
+operation regions, 755 local gated retry routers, 499 policy-route routers
+including the root, and four fixed nodes. Generic policy-router subtree
+hash-consing and exact online router skipping already exist. The newly selected
+owner is that non-shared local gated routes prevent the evaluator's direct-
+self-loop test from selecting the compact goal-progress-gated kernel, leaving
+full physical outcome rows in the measured 596,861,448-byte direct tail.
+
+Gate 0 must first attribute gated/full rows, bytes, time, route proof results,
+behavior-signature multiplicities, node-identity-blocked row reuse, and
+canonical Fracture Q/revisit evidence without changing graph behavior, values,
+hashes, selected actions, or cap classifications. Only then may a structurally
+proved local-gated-kernel path land. Fracture policy selection is a separate
+diagnostic lane and requires an exact cheaper-Q witness before any repair.
+Release WASM, the parent successor Gates 4-8, Warlord/automatic acceptance,
+the priced primary, and the full pipeline remain closed until Witness B is
+independently materializable.
