@@ -1573,6 +1573,7 @@ void run_destructive_refinement_cycle_test() {
     PC_CHECK(exact.refined_pairs == 57);
     PC_CHECK(exact.refined_pair_limit == options.max_pairs);
     PC_CHECK(exact.pair_discovery_index_peak_bytes > 0);
+    PC_CHECK(exact.transition_via_owned_bytes > 0);
     using LegacyPairKey = std::tuple<
         std::uint32_t, std::uint32_t, std::uint32_t,
         std::uint32_t>;

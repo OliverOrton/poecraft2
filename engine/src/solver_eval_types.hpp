@@ -275,6 +275,9 @@ struct StrategyEvalResult {
     /* Peak retained bytes for the collision-safe discovery-only pair index.
      * The index has no authority after the reachable raw graph closes. */
     std::uint64_t pair_discovery_index_peak_bytes = 0;
+    /* Retained post-contraction via sidecar payload. This is zero throughout
+     * raw discovery and pair refinement. */
+    std::uint64_t transition_via_owned_bytes = 0;
     struct ObservationPropagationTelemetry {
         std::uint32_t nodes = 0;
         std::uint32_t groups = 0;

@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: Oliver selected pre-closure transition-carrier recovery; compact
-discovery/post-contraction transition storage is the active Gate 0 boundary.**
+**Status: transition-carrier Gate 0 passed; frozen Witness A and the unchanged
+10-million-transition Witness B decision run are the active Gate 1 boundary.**
 
 The original
 [Five-T1 Restart-Monotone Strategy Recovery](docs/active/2026-08-16-five-t1-restart-monotone-recovery/plan.md)
@@ -114,10 +114,17 @@ checkpoint.
 
 Oliver selected the
 [transition-carrier recovery plan](docs/active/2026-08-16-five-t1-restart-monotone-recovery/transition-carrier-plan.md).
-Gate 0 moves the post-contraction-only `via` authority out of every raw
-`EvalTransition` into a row sidecar, reducing the raw record from 32 to 24
-bytes while preserving exact double probabilities and full identities. Update
-all memory ledgers and focused raw/reference/contraction tests before running
-Witness A or B. Re-measure at the checked 10-million cap before any scoped cap
-probe. Do not raise the byte cap, rebuild WASM, start the older action-semantics
-gates, or run the full acceptance pipeline yet.
+Gate 0 is complete. The post-contraction-only `via` authority now lives in a
+checked row sidecar, reducing every raw `EvalTransition` from 32 to 24 bytes
+while preserving exact double probabilities and all identities. Full/fast,
+conversion, attribution, and post-contraction memory ledgers include the
+sidecar. The destructive-cycle raw/reference oracle exercises nonzero sidecar
+storage and remains identical. The evaluator suite passed 16,823 checks, the
+solver suite passed 96,113, and the native build passed. See
+[Gate 0 evidence](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/transition-carrier-gate0.md).
+
+Next run Witness A once and Witness B once with the checked 10-million cap.
+Use the new `row_payload`, `transition_record_bytes`, `transition_via`, and
+owned-byte diagnostics to choose at most one scoped higher-cap probe that fits
+under the byte budget. Do not raise the byte cap, rebuild WASM, start the older
+action-semantics gates, or run the full acceptance pipeline yet.

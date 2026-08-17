@@ -64,13 +64,9 @@ enum class EvalAbsorptionKind {
 };
 
 struct EvalTransition {
-    std::uint32_t target = kNoId;
     double probability = 0.0;
+    std::uint32_t target = kNoId;
     std::uint32_t edge = kNoId;
-    /* When pass-through contraction rewrites this transition, the pair it
-     * originally entered (the head of the folded deterministic chain).
-     * Flow committed through the transition is credited to that chain. */
-    std::uint32_t via = kNoId;
     /* First compiler-generated policy_route_* node skipped during discovery.
      * Its exact state-specific path is replayed once flow is known. */
     std::uint32_t policy_route = kNoId;
@@ -78,7 +74,24 @@ struct EvalTransition {
      * may merge input states after that router selected the same action, so
      * the target pair's representative is not authoritative for replay. */
     std::uint32_t policy_state = kNoId;
+
+    EvalTransition() = default;
+    EvalTransition(
+        const std::uint32_t target_in,
+        const double probability_in,
+        const std::uint32_t edge_in,
+        const std::uint32_t policy_route_in,
+        const std::uint32_t policy_state_in)
+        : probability(probability_in),
+          target(target_in),
+          edge(edge_in),
+          policy_route(policy_route_in),
+          policy_state(policy_state_in) {}
 };
+
+static_assert(
+    sizeof(EvalTransition) == 24,
+    "raw exact-evaluator transitions must remain compact");
 
 struct EvalAbsorption {
     EvalAbsorptionKind kind = EvalAbsorptionKind::Terminal;
@@ -91,6 +104,10 @@ struct EvalAbsorption {
 
 struct EvalRow {
     std::vector<EvalTransition> transitions;
+    /* Empty during discovery and pair refinement. Pass-through contraction
+     * allocates a parallel vector only for a rewritten row; each entry is the
+     * original pair entered before the transition was redirected. */
+    std::vector<std::uint32_t> transition_via;
     std::vector<EvalAbsorption> absorptions;
 };
 

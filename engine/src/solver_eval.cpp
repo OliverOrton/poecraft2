@@ -364,6 +364,7 @@ struct StrategyEvalWork::Impl {
         bytes += rows.capacity() * sizeof(EvalRow);
         for (const EvalRow& row : rows) {
             bytes += row.transitions.capacity() * sizeof(EvalTransition);
+            bytes += row.transition_via.capacity() * sizeof(std::uint32_t);
             bytes += row.absorptions.capacity() * sizeof(EvalAbsorption);
         }
         bytes += attribution_pairs.capacity() * sizeof(EvalPair);
@@ -374,6 +375,7 @@ struct StrategyEvalWork::Impl {
                  sizeof(solve_detail::WideFloat);
         for (const EvalRow& row : attribution_rows) {
             bytes += row.transitions.capacity() * sizeof(EvalTransition);
+            bytes += row.transition_via.capacity() * sizeof(std::uint32_t);
             bytes += row.absorptions.capacity() * sizeof(EvalAbsorption);
         }
         bytes += row_by_distribution.size() *
@@ -691,9 +693,13 @@ struct StrategyEvalWork::Impl {
 
     void refresh_row_payload_owned_bytes() {
         row_payload_owned_bytes = 0;
+        output.transition_via_owned_bytes = 0;
         for (const EvalRow& row : rows) {
+            output.transition_via_owned_bytes +=
+                row.transition_via.capacity() * sizeof(std::uint32_t);
             row_payload_owned_bytes +=
                 row.transitions.capacity() * sizeof(EvalTransition) +
+                row.transition_via.capacity() * sizeof(std::uint32_t) +
                 row.absorptions.capacity() * sizeof(EvalAbsorption);
         }
     }
@@ -1102,12 +1108,35 @@ struct StrategyEvalWork::Impl {
         return rows.at(pairs.at(pair).row);
     }
 
+    static std::uint32_t transition_via(
+        const EvalRow& row,
+        const std::size_t transition) {
+        if (row.transition_via.empty()) return kNoId;
+        if (row.transition_via.size() != row.transitions.size()) {
+            throw std::logic_error(
+                "strategy evaluation transition-via sidecar is not "
+                "parallel to its row");
+        }
+        return row.transition_via.at(transition);
+    }
+
     void ensure_transition_budget(std::uint64_t additional) const {
         if (stored_transitions > options.max_transitions ||
             additional > options.max_transitions - stored_transitions) {
             throw std::length_error(
                 "strategy evaluation exceeded max_transitions (" +
-                std::to_string(options.max_transitions) + ")");
+                std::to_string(options.max_transitions) +
+                "; stored=" + std::to_string(stored_transitions) +
+                ", pairs=" + std::to_string(pairs.size()) +
+                ", row_payload=" +
+                    std::to_string(row_payload_owned_bytes) +
+                ", transition_record_bytes=" +
+                    std::to_string(sizeof(EvalTransition)) +
+                ", transition_via=" +
+                    std::to_string(output.transition_via_owned_bytes) +
+                ", owned=" +
+                    std::to_string(fast_estimated_owned_bytes()) +
+                ")");
         }
     }
 
@@ -1670,7 +1699,7 @@ struct StrategyEvalWork::Impl {
         for (const auto& [key, probability] : transitions) {
             row.transitions.push_back(
                 {std::get<0>(key), probability.value(),
-                 std::get<1>(key), kNoId,
+                 std::get<1>(key),
                  std::get<2>(key), std::get<3>(key)});
         }
         row.absorptions.reserve(absorptions.size());
@@ -1698,6 +1727,7 @@ struct StrategyEvalWork::Impl {
         stored_transitions += row.transitions.size() + row.absorptions.size();
         row_payload_owned_bytes +=
             row.transitions.capacity() * sizeof(EvalTransition) +
+            row.transition_via.capacity() * sizeof(std::uint32_t) +
             row.absorptions.capacity() * sizeof(EvalAbsorption);
         pair.row = static_cast<std::uint32_t>(rows.size());
         rows.push_back(std::move(row));
@@ -1837,7 +1867,6 @@ struct StrategyEvalWork::Impl {
         refinement::StableKey key{
             0x6576616c74726e31ull}; /* "evaltrn1" */
         append_optional_u32(key, transition.edge);
-        append_optional_u32(key, transition.via);
         append_unveil_offer(
             key, pairs.at(transition.target).unveil_offer);
         append_compressed_policy_trace(
@@ -2367,9 +2396,13 @@ struct StrategyEvalWork::Impl {
                         saturated_product(
                             row.transitions.capacity(),
                             sizeof(EvalTransition)),
-                        saturated_product(
-                            row.absorptions.capacity(),
-                            sizeof(EvalAbsorption))));
+                        saturated_add(
+                            saturated_product(
+                                row.transition_via.capacity(),
+                                sizeof(std::uint32_t)),
+                            saturated_product(
+                                row.absorptions.capacity(),
+                                sizeof(EvalAbsorption)))));
             }
             const auto check_conversion =
                 [&](const std::uint64_t scratch = 0) {
@@ -2392,7 +2425,7 @@ struct StrategyEvalWork::Impl {
 
             using TransitionKey = std::tuple<
                 std::uint32_t, std::uint32_t, std::uint32_t,
-                std::uint32_t, std::uint32_t>;
+                std::uint32_t>;
             using AbsorptionKey = std::tuple<
                 int, std::uint32_t, std::uint32_t,
                 std::uint32_t, std::uint32_t>;
@@ -2439,7 +2472,6 @@ struct StrategyEvalWork::Impl {
                     const TransitionKey key{
                         class_by_node.at(transition.target),
                         transition.edge,
-                        transition.via,
                         transition.policy_route,
                         transition.policy_state};
                     const auto found = transitions.find(key);
@@ -2491,9 +2523,13 @@ struct StrategyEvalWork::Impl {
                         saturated_product(
                             row.transitions.capacity(),
                             sizeof(EvalTransition)),
-                        saturated_product(
-                            row.absorptions.capacity(),
-                            sizeof(EvalAbsorption)));
+                        saturated_add(
+                            saturated_product(
+                                row.transition_via.capacity(),
+                                sizeof(std::uint32_t)),
+                            saturated_product(
+                                row.absorptions.capacity(),
+                                sizeof(EvalAbsorption))));
                 };
                 check_conversion(saturated_add(
                     map_bytes(), row_bytes()));
@@ -2503,8 +2539,7 @@ struct StrategyEvalWork::Impl {
                         probability,
                         std::get<1>(key),
                         std::get<2>(key),
-                        std::get<3>(key),
-                        std::get<4>(key)});
+                        std::get<3>(key)});
                 }
                 for (const auto& [key, probability] : absorptions) {
                     row.absorptions.push_back({
@@ -2549,9 +2584,13 @@ struct StrategyEvalWork::Impl {
                         capped_product(
                             row.transitions.capacity(),
                             sizeof(EvalTransition)),
-                        capped_product(
-                            row.absorptions.capacity(),
-                            sizeof(EvalAbsorption))));
+                        capped_add(
+                            capped_product(
+                                row.transition_via.capacity(),
+                                sizeof(std::uint32_t)),
+                            capped_product(
+                                row.absorptions.capacity(),
+                                sizeof(EvalAbsorption)))));
             }
             check_owned_cap();
         }
@@ -2607,6 +2646,11 @@ struct StrategyEvalWork::Impl {
         std::vector<std::uint8_t> pass(count, 0);
         for (std::uint32_t pair = 0; pair < count; ++pair) {
             const EvalRow& row = pair_row(pair);
+            if (!row.transition_via.empty()) {
+                throw std::logic_error(
+                    "strategy evaluation pass-through contraction was "
+                    "applied twice");
+            }
             if (row.absorptions.empty() && row.transitions.size() == 1 &&
                 row.transitions.front().probability == 1.0) {
                 pass[pair] = 1;
@@ -2680,11 +2724,14 @@ struct StrategyEvalWork::Impl {
                         std::uint32_t, std::uint32_t, std::uint32_t,
                         std::uint32_t, std::uint32_t>,
                     double> merged;
-                for (const EvalTransition& transition : row.transitions) {
+                for (std::size_t index = 0;
+                     index < row.transitions.size(); ++index) {
+                    const EvalTransition& transition =
+                        row.transitions[index];
                     const std::uint32_t via =
                         pair_contracted[transition.target]
                             ? transition.target
-                            : kNoId;
+                            : transition_via(row, index);
                     const std::uint32_t target =
                         via == kNoId ? transition.target
                                      : forward[transition.target];
@@ -2694,12 +2741,14 @@ struct StrategyEvalWork::Impl {
                         transition.probability;
                 }
                 row.transitions.clear();
+                row.transition_via.clear();
                 row.transitions.reserve(merged.size());
+                row.transition_via.reserve(merged.size());
                 for (const auto& [key, probability] : merged) {
                     row.transitions.push_back(
                         {std::get<0>(key), probability, std::get<1>(key),
-                         std::get<2>(key), std::get<3>(key),
-                         std::get<4>(key)});
+                         std::get<3>(key), std::get<4>(key)});
+                    row.transition_via.push_back(std::get<2>(key));
                 }
             }
             remaining_transitions +=
@@ -3367,7 +3416,11 @@ struct StrategyEvalWork::Impl {
             const double visit = visits[i];
             pair_visits[pair] += visit;
             const EvalRow& row = pair_row(pair);
-            for (const EvalTransition& transition : row.transitions) {
+            for (std::size_t transition_index = 0;
+                 transition_index < row.transitions.size();
+                 ++transition_index) {
+                const EvalTransition& transition =
+                    row.transitions[transition_index];
                 const double flow = visit * transition.probability;
                 if (transition.edge != kNoId) {
                     edge_traversals.at(transition.edge) += flow;
@@ -3375,8 +3428,10 @@ struct StrategyEvalWork::Impl {
                 add_compressed_policy_incoming(
                     transition.policy_route,
                     transition.policy_state, flow);
-                if (transition.via != kNoId) {
-                    chain_inflow.at(transition.via) += flow;
+                const std::uint32_t via =
+                    transition_via(row, transition_index);
+                if (via != kNoId) {
+                    chain_inflow.at(via) += flow;
                 }
                 if (component_by_pair[transition.target] != component) {
                     external_incoming[transition.target] += flow;
@@ -3658,12 +3713,16 @@ struct StrategyEvalWork::Impl {
                     solve_detail::WideFloat{visits_by_class[source]};
                 continue;
             }
-            for (const EvalTransition& transition :
-                 pair_row(source).transitions) {
+            const EvalRow& row = pair_row(source);
+            for (std::size_t transition_index = 0;
+                 transition_index < row.transitions.size();
+                 ++transition_index) {
+                const EvalTransition& transition =
+                    row.transitions[transition_index];
+                const std::uint32_t via =
+                    transition_via(row, transition_index);
                 const std::uint32_t target =
-                    transition.via != kNoId
-                        ? transition.via
-                        : transition.target;
+                    via != kNoId ? via : transition.target;
                 if (target >= quotient_expected.size()) {
                     throw std::logic_error(
                         "strategy evaluation behavioral quotient target is "
@@ -4641,12 +4700,16 @@ struct StrategyEvalWork::Impl {
                     solve_detail::WideFloat{visits_by_class[source]};
                 continue;
             }
-            for (const EvalTransition& transition :
-                 pair_row(source).transitions) {
+            const EvalRow& row = pair_row(source);
+            for (std::size_t transition_index = 0;
+                 transition_index < row.transitions.size();
+                 ++transition_index) {
+                const EvalTransition& transition =
+                    row.transitions[transition_index];
+                const std::uint32_t via =
+                    transition_via(row, transition_index);
                 const std::uint32_t target =
-                    transition.via != kNoId
-                        ? transition.via
-                        : transition.target;
+                    via != kNoId ? via : transition.target;
                 if (target >= quotient_expected.size()) {
                     throw std::logic_error(
                         "strategy evaluation behavioral quotient target is "
@@ -5571,8 +5634,11 @@ struct StrategyEvalWork::Impl {
                 if (!(mass > 0.0)) continue;
                 pair_visits[pair] += mass;
                 const EvalRow& row = pair_row(static_cast<std::uint32_t>(pair));
-                for (const EvalTransition& transition :
-                     row.transitions) {
+                for (std::size_t transition_index = 0;
+                     transition_index < row.transitions.size();
+                     ++transition_index) {
+                    const EvalTransition& transition =
+                        row.transitions[transition_index];
                     const double flow = mass * transition.probability;
                     next[transition.target] += flow;
                     if (transition.edge != kNoId) {
@@ -5581,8 +5647,10 @@ struct StrategyEvalWork::Impl {
                     add_compressed_policy_incoming(
                         transition.policy_route,
                         transition.policy_state, flow);
-                    if (transition.via != kNoId) {
-                        chain_inflow.at(transition.via) += flow;
+                    const std::uint32_t via =
+                        transition_via(row, transition_index);
+                    if (via != kNoId) {
+                        chain_inflow.at(via) += flow;
                     }
                 }
                 for (const EvalAbsorption& absorption :
