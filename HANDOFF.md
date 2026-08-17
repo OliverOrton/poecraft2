@@ -1,8 +1,7 @@
 # Session Handoff
 
-**Status: successor plan stopped at Gate 3 after clearing the byte cap and
-exposing the exact 10,000,000-transition boundary. No implementation boundary
-is active; Oliver must choose the next architectural chunk.**
+**Status: Oliver selected pre-closure transition-carrier recovery; compact
+discovery/post-contraction transition storage is the active Gate 0 boundary.**
 
 The original
 [Five-T1 Restart-Monotone Strategy Recovery](docs/active/2026-08-16-five-t1-restart-monotone-recovery/plan.md)
@@ -110,4 +109,15 @@ The checked fixture and engine default remain at 10,000,000. See the
 
 The remaining viable boundary is specifically a pre-closure quotient or
 compact/streamed transition representation under the existing byte cap. No
-implementation of that broader architecture is active yet.
+implementation of that broader architecture was active at the stopped
+checkpoint.
+
+Oliver selected the
+[transition-carrier recovery plan](docs/active/2026-08-16-five-t1-restart-monotone-recovery/transition-carrier-plan.md).
+Gate 0 moves the post-contraction-only `via` authority out of every raw
+`EvalTransition` into a row sidecar, reducing the raw record from 32 to 24
+bytes while preserving exact double probabilities and full identities. Update
+all memory ledgers and focused raw/reference/contraction tests before running
+Witness A or B. Re-measure at the checked 10-million cap before any scoped cap
+probe. Do not raise the byte cap, rebuild WASM, start the older action-semantics
+gates, or run the full acceptance pipeline yet.
