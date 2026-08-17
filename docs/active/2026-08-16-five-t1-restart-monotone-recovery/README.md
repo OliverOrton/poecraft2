@@ -1,7 +1,8 @@
 # Five-T1 Restart-Monotone Strategy Recovery
 
-**Status: replayable exact operation-row Gates 0-1 complete. Gate 2 direct
-replay-partition integration is active.**
+**Status: replayable exact operation-row Gates 0-3 complete. Gate 4 stopped at
+the measured post-partition conversion boundary; no implementation boundary is
+active.**
 
 Parent: [Active work](../README.md)
 
@@ -17,6 +18,7 @@ existing memory and responsiveness limits.
 - [Selected replayable operation-row recovery plan](replayable-operation-row-plan.md)
 - [Replayable-row Gate 0 census and selection](evidence/replayable-row-gate0.md)
 - [Replayable-row Gate 1 compact-token result](evidence/replayable-row-gate1.md)
+- [Replayable-row Gates 2-4 result and stop](evidence/replayable-row-gates2-4-stop.md)
 - [Streamed closure Gate 0 census](evidence/streamed-closure-gate0.md)
 - [Streamed closure Gate 1 result and Gate 2 stop](evidence/streamed-closure-gate1-gate2-stop.md)
 - [Gate 1 result and Gate 4 stop evidence](evidence/gate1-gate4-stop.md)
@@ -48,9 +50,16 @@ propagated-observation caches had zero reuse. Gate 1 therefore retains shared
 kernels once, compacts exact route authorities, and stores one token per broad
 outcome.
 
-Gate 1 now retains 39.95 MB of row payload at the same ten-million logical
-boundary, down from 239.40 MB, and reduces evaluator peak to 167.48 MB. Two
-stable kernels occupy 1.31 MB; 279 replayable rows use 39.89 MB of 32-bit
-tokens and 240,257 exact route-result authorities. Gate 2 must remove the
-bounded legacy rematerialization bridge and replay tokens directly into the
-existing split-only partition.
+Gate 1 retains 39.95 MB of row payload at the ten-million logical boundary,
+down from 239.40 MB, and reduces evaluator peak to 167.48 MB. Gates 2 and 3
+now replay tokens directly into the existing split-only partition and carry
+the same authority through quotient construction and exact attribution.
+
+The sole 30-million Gate 4 probe closes discovery and partitions 35,828 raw
+pairs to 1,843 classes, but stops before component construction with 596.86 MB
+of direct row payload and a 1.052 GB evaluator peak against the 1.051 GB
+budget. Its pair-refinement/conversion stage takes 99.02 seconds and its
+largest cooperative step is 89.95 seconds. The five-T1 preferred candidate is
+still unmaterialized; the published result remains the independently verified
+37,279,857.73995944 Chaos renewal. The checked cap is restored to ten million.
+Release WASM and the full acceptance pipeline remain deliberately unrun.

@@ -1,7 +1,8 @@
 # Session Handoff
 
-**Status: replayable exact operation-row Gates 0-1 completed on 2026-08-17.
-Gate 2 direct replay-partition integration is active.**
+**Status: replayable exact operation-row Gates 0-3 completed on 2026-08-17.
+Gate 4 stopped at the post-partition quotient-conversion memory and
+responsiveness boundary. No implementation boundary is active.**
 
 The original
 [Five-T1 Restart-Monotone Strategy Recovery](docs/active/2026-08-16-five-t1-restart-monotone-recovery/plan.md)
@@ -224,16 +225,46 @@ results. At the same ten-million logical boundary, row payload falls from
 own 39,886,500 token bytes and reference 240,257 exact route results. See the
 [Gate 1 result](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/replayable-row-gate1.md).
 
-Gate 2 is active. The bounded legacy rematerialization bridge must be removed:
-tokens feed `refine_closed_probabilistic_partition_replay` directly while the
-collision-safe raw pair index remains available, and only completed quotient
-rows materialize. Bounded materialized-reference parity remains mandatory.
+Gates 2 and 3 are complete in bounded controls at `5e60994`, with the frozen
+attribution-order correction at `942735d` and truthful refinement diagnostics
+at `25c60bd`. Tokens feed the existing split-only replay partition directly;
+compact projection hashes are bucket selectors only and exact replay equality
+remains authoritative. Quotient construction, component input, raw
+disaggregation, terminal/route flow, and row-level attribution share the same
+row vocabulary. Affordable attribution preserves legacy edge order; only a
+carrier that exceeds the actual byte envelope uses target-row aggregation.
 
-The existing split-only replay partition remains the quotient authority.
-Exact attribution currently retains the raw graph and builds a full
-transpose, so a discovery-only recipe is incomplete: partition, quotient
-conversion, component solving, raw attribution, and final route-flow reporting
-must share the replacement row vocabulary. Parent successor Gates 4-8,
-release WASM, web acceptance, and the full acceptance pipeline remain closed
-until Witness B is independently materializable or this plan records a new
-precise stop.
+The final native build, evaluator suite (18,031 checks), quotient-proof suite
+(381 checks), solver suite (96,108 checks), and `git diff --check` pass.
+Witness A remains independently exact at `624800.9519118543`, success one,
+zero off-policy mass, with a 182.49 ms largest step.
+
+Witness B's checked ten-million run remains
+`exact_eval_pair_discovery_transition_cap`: 35,828 pairs, 31,862 pending,
+39,949,692 row bytes, and a 167,478,344-byte evaluator peak. The one authorized
+temporary 30-million probe was restored immediately. It closes discovery and
+partitions 35,828 raw pairs to 1,843 classes, then stops during quotient
+conversion before component construction. The exact owner is 596,861,448
+bytes of effectively direct row payload plus conversion overlap: evaluator
+owned is 939,244,724 bytes, transient is 112,582,028, and measured peak is
+1,051,826,752 against the 1,050,980,927 budget. Discovery takes 177.81 s,
+pair refinement/conversion takes 99.02 s, total case time is 288.41 s, and the
+largest cooperative step is 89.95 s.
+
+The 30-million artifact predates `25c60bd`, so it contains the legacy
+`exact_eval_pair_discovery_memory_cap` label and displays the 1,843 quotient
+classes as both raw and refined counts. Its internal subphase is
+`pair_refinement`; future runs preserve 35,828 raw / 1,843 refined and classify
+this as `exact_eval_pair_refinement_memory_cap`. Do not repeat the probe merely
+to rewrite telemetry.
+
+The preferred candidate still has no exact cost, success, off-policy, or
+component result. Publication remains the independently evaluated six-node
+Chaos renewal at `37279857.73995944`; do not describe five-T1 as recovered.
+The next plan must audit all prior carrier attempts and address both the later
+state-local/direct-row tail/lifetime overlap and replay-partition/quotient-
+conversion cooperativity. A cap-only increase is not sufficient. Parent
+successor Gates 4-8, release WASM, web acceptance, Warlord/automatic matrix,
+the primary publication run, and the full acceptance pipeline remain closed.
+Detailed evidence is in the
+[Gates 2-4 stop record](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/replayable-row-gates2-4-stop.md).

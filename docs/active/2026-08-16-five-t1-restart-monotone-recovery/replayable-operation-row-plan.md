@@ -1,7 +1,8 @@
 # Replayable Exact Operation-Row Recovery
 
-**Status: Gates 0-1 completed on 2026-08-17. Gate 2 direct replay-partition
-integration is active.**
+**Status: Gates 0-3 completed on 2026-08-17. Gate 4 stopped at the measured
+post-partition quotient-conversion memory and responsiveness boundary. No
+implementation boundary is active.**
 
 Parent: [Five-T1 Restart-Monotone Strategy Recovery](README.md)
 
@@ -144,6 +145,13 @@ materialized and replayed paths on bounded graphs for class assignment,
 rounds, lumpability checks, quotient rows, values, terminal mass, edge flow,
 and hashes. A resource-stopped open graph remains unevaluated.
 
+**Actual result:** complete in bounded controls. Replay tokens now feed the
+existing split-only partition directly, compact projection identities remain
+collision-safe through full replay equality, and only quotient rows are
+constructed after the fixed point. The sole higher real probe closes 35,828
+raw pairs and partitions them to 1,843 classes before the conversion overlap
+hits the byte envelope. See the [Gates 2-4 evidence](evidence/replayable-row-gates2-4-stop.md).
+
 ## Gate 3 - Component Solve And Exact Attribution
 
 Replace raw-row consumers that still require the complete carrier, including
@@ -157,6 +165,13 @@ Acceptance requires exact raw-pair and shared-row occupancy equations,
 quotient-flow reconciliation, action/material accounting, terminal and
 failure mass, top classes, edge traversals, and route-trace flow to match the
 materialized reference within the existing numeric contracts.
+
+**Actual result:** complete in bounded controls. Raw disaggregation, terminal
+and route flow, and row-level forward/transpose attribution all share the
+replay vocabulary. Affordable graphs retain legacy edge order; aggregation is
+selected only when the unaggregated carrier exceeds the actual byte envelope.
+Witness A remains exact at its frozen value. Witness B stops before component
+construction, so real-case attribution is deliberately not claimed.
 
 ## Gate 4 - Bounded Real Decision
 
@@ -174,6 +189,15 @@ peak bytes, stage timings, and largest cooperative step.
 If Witness B becomes independently materializable, return to successor Gates
 4-8. If it does not, stop with the precise new owner. Do not run release WASM,
 web acceptance, or the full repository pipeline at this gate.
+
+**Actual result:** stopped. The checked ten-million boundary is unchanged and
+the one permitted 30-million probe closes discovery, partitions 35,828 raw
+pairs to 1,843 classes, then exceeds the one-GiB envelope during quotient
+conversion with 596,861,448 row bytes. Pair refinement/conversion uses 99.02 s
+and the largest cooperative step is 89.95 s. The preferred candidate remains
+unmaterialized; publication is still the independently verified
+`37279857.73995944` Chaos fallback. The fixture is restored to ten million.
+Parent successor Gates 4-8 remain closed.
 
 ## Checkpoints
 

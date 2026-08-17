@@ -29,18 +29,19 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The selected
+The
 [Replayable Exact Operation-Row Recovery](active/2026-08-16-five-t1-restart-monotone-recovery/replayable-operation-row-plan.md)
-is active at Gate 2. Exact online deterministic routing removed the former
-router-pair frontier, but the sole 20-million probe remains open with 27,588
-operation pairs pending and its retained-row slope reaches one GiB before
-closure. Gate 0 found that broad stable Chaos rows own essentially every
-measured outcome and selected a shared-kernel plus 32-bit exact route-token
-authority; sampled route-state and propagated-observation caches both had zero
-reuse. Gate 1 reduces checked row payload from 239.40 MB to 39.95 MB and peak
-from 364.52 MB to 167.48 MB. Gate 2 now feeds those tokens into the existing
-collision-safe replay partition; Gate 3 must replace raw attribution consumers
-as well as discovery storage.
+is stopped at Gate 4. Gates 2 and 3 feed compact exact route tokens into the
+existing collision-safe replay partition and carry the same authority through
+quotient construction and exact attribution. The sole 30-million real probe
+closes discovery and partitions 35,828 raw pairs to 1,843 classes, but the
+post-partition conversion overlaps 596.86 MB of effectively direct rows and
+peaks at 1.052 GB against the 1.051 GB evaluator budget. It also contains an
+89.95-second cooperative step. The preferred five-T1 candidate remains
+unmaterialized and publication remains the verified 37,279,857.73995944 Chaos
+fallback. No implementation boundary is active; the next selected scope must
+address both the direct-row tail and conversion cooperativity after auditing
+prior attempts.
 Publication-reason truth, action-monotone recovery, automatic controls, and
 release-WASM responsiveness still follow only after the candidate becomes
 materializable. The completed
