@@ -29,22 +29,19 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The
-[Proof-Gated Route And Operation-Graph Compaction](active/2026-08-16-five-t1-restart-monotone-recovery/gated-route-evaluator-compaction-plan.md)
-is selected and Gate 0 attribution is in progress. Its stopped predecessor
-feeds compact exact route tokens through collision-safe replay partitioning,
-but the sole 30-million probe closes 35,828 raw pairs to 1,843 classes and
-then overlaps 596.86 MB of effectively direct rows during quotient conversion,
-peaking at 1.052 GB against the 1.051 GB evaluator budget with an 89.95-second
-cooperative step. The selected scope measures whether 755 non-shared local
-gated retry routers own that direct-row tail, then permits compact gated-kernel
-evaluation only under structural proof. Fracture non-selection is audited
-separately under canonical Q authority. The preferred five-T1 candidate
-remains unmaterialized and publication remains the verified
-37,279,857.73995944 Chaos fallback.
-Publication-reason truth, action-monotone recovery, automatic controls, and
-release-WASM responsiveness still follow only after the candidate becomes
-materializable. The completed
+The bounded
+[route/operation-graph compaction result](active/2026-08-16-five-t1-restart-monotone-recovery/evidence/gated-route-compaction-result.md)
+materializes the priced five-T1 candidate as a 92-node executable policy at
+16,226,566.773294946 Chaos with success one and zero off-policy mass. It
+remains a bounded upper: its stored solver cost does not reconcile, strict
+lifting has a coarse-mapping failure, and the lower bound is zero. The 250 ms
+work-item contract also remains open at a measured 1.254-second atomic exact-
+reforge leaf. The proposed
+[cooperative exact-reforge and WASM graph-provenance plan](active/2026-08-16-five-t1-restart-monotone-recovery/cooperative-reforge-wasm-graph-plan.md)
+first distinguishes stale release WASM from a current-native Fracture sharing
+miss, then makes the exact reforge authority resumable with bit-parity,
+rollback, cap-accounting, and release-WASM gates. Implementation has not
+started. The completed
 [Calculator WASM Scheduling And Selected-Policy Refinement](archive/2026-08-14-calculator-wasm-scheduling-progress/README.md)
 milestone recovers a five-natural-T1 non-Chaos strategy about 59.7 times
 cheaper than the prior fallback, retains selected candidates without granting

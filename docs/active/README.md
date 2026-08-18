@@ -1,7 +1,7 @@
 # Active Work
 
-**Status: route/operation-graph compaction is retained; Gate 5 stopped at the
-remaining atomic exact-reforge leaf.**
+**Status: a cooperative exact-reforge and WASM graph-provenance follow-up is
+proposed; implementation has not started.**
 
 Parent: [Documentation map](../README.md)
 
@@ -11,6 +11,16 @@ materializes Witness B as a 92-node independently evaluated executable policy
 at 16,226,566.773294946 Chaos. Exact closure remains open, and the 250 ms
 work-item contract still fails. Release WASM and the parent acceptance gates
 remain closed.
+
+The proposed
+[Cooperative Exact-Reforge And WASM Graph Provenance](2026-08-16-five-t1-restart-monotone-recovery/cooperative-reforge-wasm-graph-plan.md)
+first compares the same native and checked-WASM graph role. The checked WASM
+predates the retained compiler compaction, so the browser's large Fracture
+graph must be classified as stale-WASM, different-artifact, or a current-native
+compiler miss before any additional sharing is attempted. Its implementation
+lane then makes the measured atomic exact-reforge leaf resumable without
+changing exact order, caches, caps, or publication authority. Oliver has not
+yet authorized implementation.
 
 The stopped
 [Replayable Exact Operation-Row Recovery](2026-08-16-five-t1-restart-monotone-recovery/replayable-operation-row-plan.md)
