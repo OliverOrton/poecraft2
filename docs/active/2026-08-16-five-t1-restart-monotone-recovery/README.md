@@ -1,7 +1,7 @@
 # Five-T1 Restart-Monotone Strategy Recovery
 
-**Status: bounded graph compaction is retained; a cooperative exact-reforge
-and WASM graph-provenance follow-up is proposed.**
+**Status: bounded graph compaction is retained; condition-efficient strategy
+compilation and targeted compiler consolidation are proposed.**
 
 Parent: [Active work](../README.md)
 
@@ -17,7 +17,8 @@ existing memory and responsiveness limits.
 - [Selected replayable operation-row recovery plan](replayable-operation-row-plan.md)
 - [Selected proof-gated route and operation-graph compaction plan](gated-route-evaluator-compaction-plan.md)
 - [Route/operation-graph compaction result](evidence/gated-route-compaction-result.md)
-- [Proposed cooperative exact-reforge and WASM graph-provenance plan](cooperative-reforge-wasm-graph-plan.md)
+- [Proposed condition-efficient strategy compilation and consolidation plan](condition-efficient-strategy-compilation-plan.md)
+- [Superseded cooperative exact-reforge and WASM graph-provenance plan](cooperative-reforge-wasm-graph-plan.md)
 - [Replayable-row Gate 0 census and selection](evidence/replayable-row-gate0.md)
 - [Replayable-row Gate 1 compact-token result](evidence/replayable-row-gate1.md)
 - [Replayable-row Gates 2-4 result and stop](evidence/replayable-row-gates2-4-stop.md)
@@ -55,14 +56,17 @@ propagation are retained. Gate 5 stops at a 1.254-second atomic exact-reforge
 leaf; release WASM, web/Warlord acceptance, the primary, and the full pipeline
 remain closed.
 
-The proposed follow-up treats the browser's remaining Fracture-node report as
-an artifact-provenance question first. Current native Witness B has 92 total
-nodes and no selected Fracture operation, while the checked release WASM
-predates the retained compiler compaction. Only a same-request, same-graph-role
-native/WASM comparison may authorize another Fracture sharing change. The
-separate implementation target is a single-authority resumable exact-reforge
-cursor plus the measured small pair-discovery split. Implementation has not
-started.
+The proposed follow-up now targets generated routing quality directly. Current
+native Witness B uses 84 policy routers and 248 condition-bearing edges in a
+92-node graph; conditions own 116,972 of 150,813 serialized bytes. The retained
+four-goal graph uses 4,594,437 condition bytes in 4,737,473 JSON bytes. Source
+inspection confirms that the compiler emits one edge per selected feature
+value even when several branches converge on the same destination, and its
+split heuristic optimizes width/balance rather than continuation count, edges,
+or bytes. The new plan measures those dense regions, introduces a typed
+canonical condition authority, coalesces priority-safe same-target branches
+with the existing `any` vocabulary, and conditionally builds a continuation-
+aware reduced decision DAG. Implementation has not started.
 
 Oliver selected the proof-gated route and operation-graph compaction follow-up
 after a source and artifact audit attributed the 2,015-node certificate to 757

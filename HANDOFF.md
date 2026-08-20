@@ -1,31 +1,41 @@
 # Session Handoff
 
-**Status: a cooperative exact-reforge and WASM graph-provenance plan is
-written for review; implementation has not started.**
+**Status: a condition-efficient strategy compilation and consolidation plan
+is written for review; implementation has not started.**
 
 ## Current boundary
 
 The proposed
-[Cooperative Exact-Reforge And WASM Graph Provenance](docs/active/2026-08-16-five-t1-restart-monotone-recovery/cooperative-reforge-wasm-graph-plan.md)
-is the next reviewable scope. Oliver has not yet authorized its implementation.
-It has two deliberately separated lanes:
+[Condition-Efficient Strategy Compilation And Consolidation](docs/active/2026-08-16-five-t1-restart-monotone-recovery/condition-efficient-strategy-compilation-plan.md)
+is the next reviewable scope. Oliver has not yet authorized implementation. It
+supersedes the cooperative exact-reforge proposal before that proposal began.
 
-- prove why the browser shows many Fracture and `_fracture_route` nodes by
-  comparing the same request and graph role in current native source and the
-  checked release WASM; and
-- make the measured atomic exact-reforge leaf resumable through one shared
-  synchronous/cooperative authority, preserving iteration order, exact bits,
-  cache identity, caps, memory accounting, and cancellation rollback.
+The binding hypothesis is current compiler underuse of the existing condition
+system. Both policy-tree builders split on the widest/most balanced feature,
+emit one edge per feature value, and hash-cons only completed routers with the
+same ordered targets and serialized conditions. They do not optimize for
+distinct continuations, coalesce same-target siblings with `any`, minimize
+edges/condition bytes, or use downstream subtree sharing in feature choice.
+The native simulator already supports nested `all`, `any`, `not`, and
+`at_least`, structurally memoizes equal compiled conditions, and preserves
+priority/source order.
 
-The checked WASM was last rebuilt at `f3b9080`, before the retained native
-graph compaction. Current native Witness B has only 92 total nodes and no
-selected Fracture operation, so stale WASM is the leading explanation for a
-browser graph containing hundreds of Fracture nodes. It is not yet a finding:
-the plan requires same-request provenance and distinguishes product,
-certificate, strict-lift, and fallback artifacts before permitting a compiler
-change. Existing product-Fracture complete-behavior sharing, which previously
-collapsed 767 Fracture pairs to seven behaviors, must be reused rather than
-reimplemented.
+Gate 0 therefore persists actual graph JSON and measures same-target groups,
+mutual-exclusion provenance, priorities, condition expression structure,
+repeated bytes, route depth, and the proof-safe reduction ceiling. The
+implementation then introduces a typed canonical condition authority,
+priority-safe same-target coalescing, and—only if still material—a
+continuation-aware reduced multi-valued decision DAG and existing-vocabulary
+factoring. The touched compiler is subsequently split into condition,
+feature/domain, DAG, and emission/accounting modules. No public strategy schema
+change is authorized.
+
+Current native Witness B is 92 nodes / 338 edges / 150,813 JSON bytes: 84
+policy routers, one local gated router, three primitive operations, four
+infrastructure nodes, 248 condition-bearing edges, and 116,972 condition bytes.
+The retained four-goal graph has 4,594,437 condition bytes in 4,737,473 JSON
+bytes. Existing complete-behavior Fracture and gated-operation sharing remain
+authoritative and are not reimplemented.
 
 The predecessor
 [bounded result](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/gated-route-compaction-result.md)
@@ -36,17 +46,19 @@ Fossil plus a one-socket resonator. Direct certification remains fail-closed
 as `cost_mismatch` against `37279651.842345364`, and strict carrier 5983 maps
 outside the solved coarse graph. Do not call the result optimal.
 
-The current responsiveness owners are a 1,254.159 ms atomic
-`CalcContext::outcomes()` exact-reforge leaf and a separate 265.345 ms
-evaluator pair-discovery item. The proposed final gate rebuilds release WASM
-only after native parity and at-most-250-ms work items pass. It excludes the
-strict mapping repair, Warlord/automatic matrix, priced primary, full pipeline,
-and unrelated action changes.
+The plan preserves but defers exact-reforge responsiveness, strict carrier
+5983 mapping repair, stored/exact cost reconciliation, lower-bound and
+alternative-envelope closure, Fracture-Q completion, broader five-mod action
+quality, versioned condition references/BDD/bytecode, unrelated solver-file
+decomposition, and browser presentation work. These are explicitly listed in
+the plan so they are not lost.
 
 The native build and focused evaluator (18,065), compiler (815), refinement
-(362), and solver (96,120) suites passed at the predecessor checkpoint. No
-release WASM build, web suite, Warlord/automatic matrix, priced primary,
-10,000-run verification, or full acceptance pipeline has run since then.
+(362), and solver (96,120) suites passed at the predecessor checkpoint. A
+manual release-WASM rebuild was subsequently requested and succeeded; its
+generated `.wasm` is currently modified and uncommitted, with no downstream
+test run. The new plan performs one final native/WASM/full acceptance round
+after implementation.
 
 ## Prior history
 

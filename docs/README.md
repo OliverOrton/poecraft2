@@ -36,12 +36,14 @@ materializes the priced five-T1 candidate as a 92-node executable policy at
 remains a bounded upper: its stored solver cost does not reconcile, strict
 lifting has a coarse-mapping failure, and the lower bound is zero. The 250 ms
 work-item contract also remains open at a measured 1.254-second atomic exact-
-reforge leaf. The proposed
-[cooperative exact-reforge and WASM graph-provenance plan](active/2026-08-16-five-t1-restart-monotone-recovery/cooperative-reforge-wasm-graph-plan.md)
-first distinguishes stale release WASM from a current-native Fracture sharing
-miss, then makes the exact reforge authority resumable with bit-parity,
-rollback, cap-accounting, and release-WASM gates. Implementation has not
-started. The completed
+reforge leaf. Oliver instead requested a compiler-quality stabilization scope.
+The proposed
+[condition-efficient strategy compilation plan](active/2026-08-16-five-t1-restart-monotone-recovery/condition-efficient-strategy-compilation-plan.md)
+measures dense same-target edges, canonicalizes internal condition expressions,
+uses existing `any`/`all` vocabulary more effectively, and conditionally builds
+a continuation-aware reduced decision DAG before targeted compiler
+consolidation. Broader proof recovery and responsiveness remain explicitly
+preserved but deferred. Implementation has not started. The completed
 [Calculator WASM Scheduling And Selected-Policy Refinement](archive/2026-08-14-calculator-wasm-scheduling-progress/README.md)
 milestone recovers a five-natural-T1 non-Chaos strategy about 59.7 times
 cheaper than the prior fallback, retains selected candidates without granting

@@ -1,7 +1,7 @@
 # Active Work
 
-**Status: a cooperative exact-reforge and WASM graph-provenance follow-up is
-proposed; implementation has not started.**
+**Status: condition-efficient strategy compilation and targeted compiler
+consolidation are proposed; implementation has not started.**
 
 Parent: [Documentation map](../README.md)
 
@@ -13,14 +13,14 @@ work-item contract still fails. Release WASM and the parent acceptance gates
 remain closed.
 
 The proposed
-[Cooperative Exact-Reforge And WASM Graph Provenance](2026-08-16-five-t1-restart-monotone-recovery/cooperative-reforge-wasm-graph-plan.md)
-first compares the same native and checked-WASM graph role. The checked WASM
-predates the retained compiler compaction, so the browser's large Fracture
-graph must be classified as stale-WASM, different-artifact, or a current-native
-compiler miss before any additional sharing is attempted. Its implementation
-lane then makes the measured atomic exact-reforge leaf resumable without
-changing exact order, caches, caps, or publication authority. Oliver has not
-yet authorized implementation.
+[Condition-Efficient Strategy Compilation And Consolidation](2026-08-16-five-t1-restart-monotone-recovery/condition-efficient-strategy-compilation-plan.md)
+measures dense same-target routing directly, uses a typed canonical condition
+authority, combines proof-disjoint branches through the existing `any`
+vocabulary, and conditionally replaces the width-first policy tree with a
+continuation-aware reduced decision DAG. It preserves exact domain/default
+proofs and keeps broader solver-result recovery deferred. The cooperative
+exact-reforge proposal is superseded without implementation. Oliver has not
+yet authorized implementation of the new plan.
 
 The stopped
 [Replayable Exact Operation-Row Recovery](2026-08-16-five-t1-restart-monotone-recovery/replayable-operation-row-plan.md)

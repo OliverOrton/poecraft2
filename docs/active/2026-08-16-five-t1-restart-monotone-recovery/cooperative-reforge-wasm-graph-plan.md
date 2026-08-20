@@ -1,6 +1,7 @@
 # Cooperative Exact-Reforge And WASM Graph Provenance
 
-**Status: proposed for Oliver's review; implementation has not started.**
+**Status: superseded before implementation by the
+[condition-efficient compilation plan](condition-efficient-strategy-compilation-plan.md).**
 
 Parent: [Five-T1 Restart-Monotone Strategy Recovery](README.md)
 
