@@ -1266,6 +1266,28 @@ bool SolveWork::Impl::certify_incumbent_for_fallback(
             compilation.total_condition_bytes;
         incumbent.compiled_artifact.max_condition_bytes =
             compilation.max_condition_bytes;
+        incumbent.compiled_artifact.condition_edges =
+            compilation.condition_edges;
+        incumbent.compiled_artifact.unique_condition_literals =
+            compilation.unique_condition_literals;
+        incumbent.compiled_artifact.repeated_condition_occurrences =
+            compilation.repeated_condition_occurrences;
+        incumbent.compiled_artifact.repeated_condition_bytes =
+            compilation.repeated_condition_bytes;
+        incumbent.compiled_artifact.policy_route_nondefault_edges =
+            compilation.policy_route_nondefault_edges;
+        incumbent.compiled_artifact.policy_route_distinct_targets =
+            compilation.policy_route_distinct_targets;
+        incumbent.compiled_artifact.same_target_branch_groups =
+            compilation.same_target_branch_groups;
+        incumbent.compiled_artifact.same_target_branch_edges =
+            compilation.same_target_branch_edges;
+        incumbent.compiled_artifact.projected_same_target_edge_savings =
+            compilation.projected_same_target_edge_savings;
+        incumbent.compiled_artifact.max_policy_route_out_degree =
+            compilation.max_policy_route_out_degree;
+        incumbent.compiled_artifact.max_policy_route_distinct_targets =
+            compilation.max_policy_route_distinct_targets;
         incumbent.compiled_artifact.exact_state_fallbacks =
             compilation.exact_state_fallbacks;
         incumbent.compiled_artifact.junk_predicates =

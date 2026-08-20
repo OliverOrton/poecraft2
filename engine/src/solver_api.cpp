@@ -1805,6 +1805,27 @@ pc_result pc_solver_compile_strategy(
                     refined.total_condition_bytes;
                 telemetry.max_condition_bytes =
                     refined.max_condition_bytes;
+                telemetry.condition_edges = refined.condition_edges;
+                telemetry.unique_condition_literals =
+                    refined.unique_condition_literals;
+                telemetry.repeated_condition_occurrences =
+                    refined.repeated_condition_occurrences;
+                telemetry.repeated_condition_bytes =
+                    refined.repeated_condition_bytes;
+                telemetry.policy_route_nondefault_edges =
+                    refined.policy_route_nondefault_edges;
+                telemetry.policy_route_distinct_targets =
+                    refined.policy_route_distinct_targets;
+                telemetry.same_target_branch_groups =
+                    refined.same_target_branch_groups;
+                telemetry.same_target_branch_edges =
+                    refined.same_target_branch_edges;
+                telemetry.projected_same_target_edge_savings =
+                    refined.projected_same_target_edge_savings;
+                telemetry.max_policy_route_out_degree =
+                    refined.max_policy_route_out_degree;
+                telemetry.max_policy_route_distinct_targets =
+                    refined.max_policy_route_distinct_targets;
                 telemetry.exact_state_fallbacks =
                     refined.exact_state_fallbacks;
                 telemetry.junk_predicates = refined.junk_predicates;

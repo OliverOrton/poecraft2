@@ -1,14 +1,29 @@
 # Session Handoff
 
-**Status: a condition-efficient strategy compilation and consolidation plan
-is written for review; implementation has not started.**
+**Status: condition-efficient strategy compilation is selected; Gate 0 is
+complete and typed/canonical condition implementation is in progress.**
 
 ## Current boundary
 
-The proposed
+The selected
 [Condition-Efficient Strategy Compilation And Consolidation](docs/active/2026-08-16-five-t1-restart-monotone-recovery/condition-efficient-strategy-compilation-plan.md)
-is the next reviewable scope. Oliver has not yet authorized implementation. It
-supersedes the cooperative exact-reforge proposal before that proposal began.
+is the active scope. Oliver authorized implementation after reviewing the
+plan. It supersedes the cooperative exact-reforge proposal before that
+proposal began.
+
+Gate 0 persists the three representative pre-change graphs and confirms the
+dense-routing hypothesis. Witness B has 30 same-target sibling groups with 30
+proof-safe redundant edges; Witness A's product graph has 53; the dense
+four-T1 graph has 57 groups containing 734 redundant edges. Across the frozen
+graphs the exact coalescing ceiling is 817 edges. Detailed measurements and
+predeclared targets are in
+[Gate 0 evidence](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/condition-efficient-gate0.md).
+
+Behavior-neutral, cap-accounted compiler telemetry now reports repeated
+condition literals and policy-route same-target density. The native build and
+focused compiler suite pass (815 checks). No route construction has changed at
+this checkpoint; the next implementation boundary is the typed condition
+authority followed by priority-safe coalescing.
 
 The binding hypothesis is current compiler underuse of the existing condition
 system. Both policy-tree builders split on the widest/most balanced feature,

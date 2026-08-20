@@ -800,6 +800,17 @@ struct RetainedCompiledPolicyArtifact {
     std::uint32_t edges = 0;
     std::uint64_t total_condition_bytes = 0;
     std::uint64_t max_condition_bytes = 0;
+    std::uint64_t condition_edges = 0;
+    std::uint64_t unique_condition_literals = 0;
+    std::uint64_t repeated_condition_occurrences = 0;
+    std::uint64_t repeated_condition_bytes = 0;
+    std::uint64_t policy_route_nondefault_edges = 0;
+    std::uint64_t policy_route_distinct_targets = 0;
+    std::uint64_t same_target_branch_groups = 0;
+    std::uint64_t same_target_branch_edges = 0;
+    std::uint64_t projected_same_target_edge_savings = 0;
+    std::uint32_t max_policy_route_out_degree = 0;
+    std::uint32_t max_policy_route_distinct_targets = 0;
     std::uint64_t exact_state_fallbacks = 0;
     std::uint64_t junk_predicates = 0;
     std::uint64_t policy_route_default_edges = 0;
@@ -1034,6 +1045,20 @@ struct PolicyCompilationTelemetry {
     std::uint64_t strategy_json_bytes = 0;
     std::uint64_t total_condition_bytes = 0;
     std::uint64_t max_condition_bytes = 0;
+    /* Exact emitted-condition and generated policy-route density census.
+     * Same-target groups are structurally disjoint siblings produced from
+     * distinct values of one selected compiler feature. */
+    std::uint64_t condition_edges = 0;
+    std::uint64_t unique_condition_literals = 0;
+    std::uint64_t repeated_condition_occurrences = 0;
+    std::uint64_t repeated_condition_bytes = 0;
+    std::uint64_t policy_route_nondefault_edges = 0;
+    std::uint64_t policy_route_distinct_targets = 0;
+    std::uint64_t same_target_branch_groups = 0;
+    std::uint64_t same_target_branch_edges = 0;
+    std::uint64_t projected_same_target_edge_savings = 0;
+    std::uint32_t max_policy_route_out_degree = 0;
+    std::uint32_t max_policy_route_distinct_targets = 0;
     std::uint64_t exact_state_fallbacks = 0;
     std::uint64_t junk_predicates = 0;
     /* Compiler-designated policy-router defaults only. Product graphs may

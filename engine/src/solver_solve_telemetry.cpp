@@ -4730,6 +4730,8 @@ std::string serialize_solver_telemetry(
         json += ",\"strategy_json_bytes\":null";
         json += ",\"total_condition_bytes\":null";
         json += ",\"max_condition_bytes\":null";
+        json += ",\"condition_census\":null";
+        json += ",\"policy_route_density\":null";
         json += ",\"exact_state_fallbacks\":null";
         json += ",\"junk_predicates\":null";
         json += ",\"policy_route_defaults\":null";
@@ -4764,6 +4766,33 @@ std::string serialize_solver_telemetry(
                 std::to_string(compilation->total_condition_bytes);
         json += ",\"max_condition_bytes\":" +
                 std::to_string(compilation->max_condition_bytes);
+        json += ",\"condition_census\":{\"edges\":" +
+                std::to_string(compilation->condition_edges);
+        json += ",\"unique_literals\":" +
+                std::to_string(compilation->unique_condition_literals);
+        json += ",\"repeated_occurrences\":" +
+                std::to_string(
+                    compilation->repeated_condition_occurrences);
+        json += ",\"repeated_bytes\":" +
+                std::to_string(compilation->repeated_condition_bytes) + "}";
+        json += ",\"policy_route_density\":{\"nondefault_edges\":" +
+                std::to_string(
+                    compilation->policy_route_nondefault_edges);
+        json += ",\"distinct_targets\":" +
+                std::to_string(
+                    compilation->policy_route_distinct_targets);
+        json += ",\"same_target_groups\":" +
+                std::to_string(compilation->same_target_branch_groups);
+        json += ",\"same_target_edges\":" +
+                std::to_string(compilation->same_target_branch_edges);
+        json += ",\"projected_edge_savings\":" +
+                std::to_string(
+                    compilation->projected_same_target_edge_savings);
+        json += ",\"max_out_degree\":" +
+                std::to_string(compilation->max_policy_route_out_degree);
+        json += ",\"max_distinct_targets\":" +
+                std::to_string(
+                    compilation->max_policy_route_distinct_targets) + "}";
         json += ",\"exact_state_fallbacks\":" +
                 std::to_string(compilation->exact_state_fallbacks);
         json += ",\"junk_predicates\":" +

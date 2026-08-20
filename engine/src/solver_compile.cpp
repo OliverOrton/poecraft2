@@ -109,6 +109,34 @@ std::string compile_policy_strategy_json(
                 result.refined_policy_artifact.total_condition_bytes;
             telemetry->max_condition_bytes =
                 result.refined_policy_artifact.max_condition_bytes;
+            telemetry->condition_edges =
+                result.refined_policy_artifact.condition_edges;
+            telemetry->unique_condition_literals =
+                result.refined_policy_artifact.unique_condition_literals;
+            telemetry->repeated_condition_occurrences =
+                result.refined_policy_artifact
+                    .repeated_condition_occurrences;
+            telemetry->repeated_condition_bytes =
+                result.refined_policy_artifact.repeated_condition_bytes;
+            telemetry->policy_route_nondefault_edges =
+                result.refined_policy_artifact
+                    .policy_route_nondefault_edges;
+            telemetry->policy_route_distinct_targets =
+                result.refined_policy_artifact
+                    .policy_route_distinct_targets;
+            telemetry->same_target_branch_groups =
+                result.refined_policy_artifact.same_target_branch_groups;
+            telemetry->same_target_branch_edges =
+                result.refined_policy_artifact.same_target_branch_edges;
+            telemetry->projected_same_target_edge_savings =
+                result.refined_policy_artifact
+                    .projected_same_target_edge_savings;
+            telemetry->max_policy_route_out_degree =
+                result.refined_policy_artifact
+                    .max_policy_route_out_degree;
+            telemetry->max_policy_route_distinct_targets =
+                result.refined_policy_artifact
+                    .max_policy_route_distinct_targets;
             telemetry->exact_state_fallbacks =
                 result.refined_policy_artifact.exact_state_fallbacks;
             telemetry->junk_predicates =
@@ -570,6 +598,17 @@ std::string compile_policy_strategy_json(
             telemetry->strategy_json_bytes = json.size();
             telemetry->total_condition_bytes = goal_condition.size();
             telemetry->max_condition_bytes = goal_condition.size();
+            telemetry->condition_edges = 1;
+            telemetry->unique_condition_literals = 1;
+            telemetry->repeated_condition_occurrences = 0;
+            telemetry->repeated_condition_bytes = 0;
+            telemetry->policy_route_nondefault_edges = 0;
+            telemetry->policy_route_distinct_targets = 0;
+            telemetry->same_target_branch_groups = 0;
+            telemetry->same_target_branch_edges = 0;
+            telemetry->projected_same_target_edge_savings = 0;
+            telemetry->max_policy_route_out_degree = 0;
+            telemetry->max_policy_route_distinct_targets = 0;
         }
         return json;
     };
@@ -2357,6 +2396,7 @@ std::string compile_policy_strategy_json(
         }
         compiled_option_kernels.emplace(state_id, kernel);
     }
+    std::map<std::string, std::uint64_t> condition_literal_counts;
     const auto audited_compiler_owned_bytes =
         [&](const std::string* growing_json) {
             std::uint64_t bytes = 0;
@@ -2534,6 +2574,14 @@ std::string compile_policy_strategy_json(
                     add_string(route_edge.to);
                     add_string(route_edge.condition);
                 }
+            }
+            add_map_nodes(
+                condition_literal_counts.size(),
+                sizeof(std::string) + sizeof(std::uint64_t));
+            for (const auto& [condition, unused] :
+                 condition_literal_counts) {
+                (void)unused;
+                add_string(condition);
             }
             add_map_nodes(
                 policy_route_node_by_signature.size(),
@@ -2987,6 +3035,7 @@ std::string compile_policy_strategy_json(
         } else {
             json += ",\"condition\":";
             json += condition;
+            ++condition_literal_counts[condition];
             if (telemetry != nullptr) {
                 add_owned_bytes(
                     telemetry->total_condition_bytes,
@@ -3557,6 +3606,47 @@ std::string compile_policy_strategy_json(
                       static_cast<std::uint32_t>(attributed_nodes);
         telemetry->edges = edge_counter;
         telemetry->strategy_json_bytes = json.size();
+        telemetry->condition_edges = 0;
+        telemetry->unique_condition_literals =
+            condition_literal_counts.size();
+        telemetry->repeated_condition_occurrences = 0;
+        telemetry->repeated_condition_bytes = 0;
+        for (const auto& [condition, count] : condition_literal_counts) {
+            telemetry->condition_edges += count;
+            if (count <= 1) continue;
+            telemetry->repeated_condition_occurrences += count - 1;
+            add_owned_bytes(
+                telemetry->repeated_condition_bytes,
+                (count - 1) * condition.size());
+        }
+        telemetry->policy_route_nondefault_edges = 0;
+        telemetry->policy_route_distinct_targets = 0;
+        telemetry->same_target_branch_groups = 0;
+        telemetry->same_target_branch_edges = 0;
+        telemetry->projected_same_target_edge_savings = 0;
+        telemetry->max_policy_route_out_degree = 0;
+        telemetry->max_policy_route_distinct_targets = 0;
+        for (const PolicyRouteNode& route : policy_route_nodes) {
+            std::map<std::string, std::uint32_t> target_counts;
+            for (const PolicyRouteEdge& route_edge : route.edges) {
+                ++target_counts[route_edge.to];
+            }
+            telemetry->policy_route_nondefault_edges += route.edges.size();
+            telemetry->policy_route_distinct_targets += target_counts.size();
+            telemetry->max_policy_route_out_degree = std::max(
+                telemetry->max_policy_route_out_degree,
+                static_cast<std::uint32_t>(route.edges.size()));
+            telemetry->max_policy_route_distinct_targets = std::max(
+                telemetry->max_policy_route_distinct_targets,
+                static_cast<std::uint32_t>(target_counts.size()));
+            for (const auto& [unused_target, count] : target_counts) {
+                (void)unused_target;
+                if (count <= 1) continue;
+                ++telemetry->same_target_branch_groups;
+                telemetry->same_target_branch_edges += count;
+                telemetry->projected_same_target_edge_savings += count - 1;
+            }
+        }
     }
     return json;
 }

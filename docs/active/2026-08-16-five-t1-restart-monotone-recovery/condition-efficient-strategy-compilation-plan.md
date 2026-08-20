@@ -1,6 +1,6 @@
 # Condition-Efficient Strategy Compilation And Consolidation
 
-**Status: proposed for Oliver's review; implementation has not started.**
+**Status: selected; Gate 0 is complete and implementation is in progress.**
 
 Parent: [Five-T1 Restart-Monotone Strategy Recovery](README.md)
 
@@ -110,6 +110,11 @@ repository acceptance still run after the compiler work is complete.
     upper into an exact optimum or invent a lower bound.
 
 ## Gate 0 - Dense-Route And Condition Census
+
+**Result:** complete. See
+[Gate 0 evidence](evidence/condition-efficient-gate0.md). The three frozen
+graphs contain 140 proof-safe same-target sibling groups and an exact
+817-edge reduction ceiling before additional condition factoring.
 
 Persist the actual compiled strategy JSON, not only aggregate evaluator
 telemetry, for the current native controls:

@@ -2339,6 +2339,30 @@ SolveWork::Impl::run_finalization() {
                     assertion.compilation.total_condition_bytes;
                 artifact.max_condition_bytes =
                     assertion.compilation.max_condition_bytes;
+                artifact.condition_edges =
+                    assertion.compilation.condition_edges;
+                artifact.unique_condition_literals =
+                    assertion.compilation.unique_condition_literals;
+                artifact.repeated_condition_occurrences =
+                    assertion.compilation.repeated_condition_occurrences;
+                artifact.repeated_condition_bytes =
+                    assertion.compilation.repeated_condition_bytes;
+                artifact.policy_route_nondefault_edges =
+                    assertion.compilation.policy_route_nondefault_edges;
+                artifact.policy_route_distinct_targets =
+                    assertion.compilation.policy_route_distinct_targets;
+                artifact.same_target_branch_groups =
+                    assertion.compilation.same_target_branch_groups;
+                artifact.same_target_branch_edges =
+                    assertion.compilation.same_target_branch_edges;
+                artifact.projected_same_target_edge_savings =
+                    assertion.compilation
+                        .projected_same_target_edge_savings;
+                artifact.max_policy_route_out_degree =
+                    assertion.compilation.max_policy_route_out_degree;
+                artifact.max_policy_route_distinct_targets =
+                    assertion.compilation
+                        .max_policy_route_distinct_targets;
                 artifact.exact_state_fallbacks =
                     assertion.compilation.exact_state_fallbacks;
                 artifact.junk_predicates =
@@ -4327,6 +4351,38 @@ SolveWork::Impl::run_finalization() {
                     certificate.compiled.compilation.total_condition_bytes;
                 artifact.max_condition_bytes =
                     certificate.compiled.compilation.max_condition_bytes;
+                artifact.condition_edges =
+                    certificate.compiled.compilation.condition_edges;
+                artifact.unique_condition_literals =
+                    certificate.compiled.compilation
+                        .unique_condition_literals;
+                artifact.repeated_condition_occurrences =
+                    certificate.compiled.compilation
+                        .repeated_condition_occurrences;
+                artifact.repeated_condition_bytes =
+                    certificate.compiled.compilation
+                        .repeated_condition_bytes;
+                artifact.policy_route_nondefault_edges =
+                    certificate.compiled.compilation
+                        .policy_route_nondefault_edges;
+                artifact.policy_route_distinct_targets =
+                    certificate.compiled.compilation
+                        .policy_route_distinct_targets;
+                artifact.same_target_branch_groups =
+                    certificate.compiled.compilation
+                        .same_target_branch_groups;
+                artifact.same_target_branch_edges =
+                    certificate.compiled.compilation
+                        .same_target_branch_edges;
+                artifact.projected_same_target_edge_savings =
+                    certificate.compiled.compilation
+                        .projected_same_target_edge_savings;
+                artifact.max_policy_route_out_degree =
+                    certificate.compiled.compilation
+                        .max_policy_route_out_degree;
+                artifact.max_policy_route_distinct_targets =
+                    certificate.compiled.compilation
+                        .max_policy_route_distinct_targets;
                 artifact.exact_state_fallbacks =
                     certificate.compiled.compilation.exact_state_fallbacks;
                 artifact.junk_predicates =
