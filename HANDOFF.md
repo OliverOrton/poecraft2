@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: condition-efficient strategy compilation is selected; Gate 0 is
-complete and typed/canonical condition implementation is in progress.**
+**Status: condition-efficient strategy compilation is selected; Gates 0-1 are
+complete and same-target route coalescing is in progress.**
 
 ## Current boundary
 
@@ -20,10 +20,13 @@ predeclared targets are in
 [Gate 0 evidence](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/condition-efficient-gate0.md).
 
 Behavior-neutral, cap-accounted compiler telemetry now reports repeated
-condition literals and policy-route same-target density. The native build and
-focused compiler suite pass (815 checks). No route construction has changed at
-this checkpoint; the next implementation boundary is the typed condition
-authority followed by priority-safe coalescing.
+condition literals and policy-route same-target density. Gate 1 adds immutable
+typed composite conditions while leaving primitive parsing and execution in
+the native simulator. On Witness B, canonical route composition retains 92
+nodes / 338 edges and the exact `16226566.773294946` result while reducing
+condition bytes from 116,972 to 106,766 and JSON from 150,813 to 140,607. The
+focused compiler suite passes 823 checks. The next implementation boundary is
+priority-safe coalescing of siblings from one structural feature partition.
 
 The binding hypothesis is current compiler underuse of the existing condition
 system. Both policy-tree builders split on the widest/most balanced feature,

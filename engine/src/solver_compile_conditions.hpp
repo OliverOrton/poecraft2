@@ -1,6 +1,7 @@
 #pragma once
 
 #include "solver_compile_contracts.hpp"
+#include "solver_condition_expr.hpp"
 #include "solver_policy_refinement.hpp"
 
 #include <algorithm>
@@ -502,7 +503,7 @@ std::string abstract_state_condition(
 
 struct QuotientFeature {
     std::uint64_t value = 0;
-    std::string condition;
+    ConditionExpr condition;
 };
 
 std::vector<QuotientFeature> quotient_features(
@@ -850,7 +851,8 @@ std::string policy_region_condition(
     std::vector<std::string> conditions;
     conditions.reserve(selected.size());
     for (const std::size_t feature : selected) {
-        conditions.push_back(representative_features[feature].condition);
+        conditions.push_back(
+            representative_features[feature].condition.json());
     }
     return all_of(conditions);
 }

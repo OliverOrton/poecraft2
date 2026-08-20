@@ -1876,7 +1876,7 @@ std::string compile_policy_strategy_json(
     };
     struct PolicyRouteEdge {
         std::string to;
-        std::string condition;
+        ConditionExpr condition;
     };
     struct PolicyRouteNode {
         std::string id;
@@ -1884,7 +1884,7 @@ std::string compile_policy_strategy_json(
     };
     struct PolicyRouteBranch {
         std::string to;
-        std::string guard;
+        ConditionExpr guard;
     };
     std::vector<PolicyRouteEntry> policy_route_entries;
     const bool strict_policy_route =
@@ -1958,11 +1958,11 @@ std::string compile_policy_strategy_json(
         : strict_policy_route && restart_region_leader != kNoId
             ? state_node(restart_region_leader)
             : bounded_policy ? "bounded_default_restart" : "offpolicy";
-    std::vector<std::map<std::uint32_t, std::string>>
+    std::vector<std::map<std::uint32_t, ConditionExpr>>
         feature_condition_cache(feature_index.width);
     const auto feature_condition =
         [&](const std::uint32_t state,
-            const std::size_t feature) -> const std::string& {
+            const std::size_t feature) -> const ConditionExpr& {
         const std::uint32_t value = feature_index.at(state, feature);
         auto& cache = feature_condition_cache.at(feature);
         auto found = cache.find(value);
@@ -1991,7 +1991,7 @@ std::string compile_policy_strategy_json(
         refined_parent_route_states;
     std::size_t refined_parent_feature_width = 0;
     std::vector<std::uint32_t> refined_parent_feature_values;
-    std::vector<std::map<std::uint32_t, std::string>>
+    std::vector<std::map<std::uint32_t, ConditionExpr>>
         refined_parent_feature_condition_cache;
     PolicyRouteBranch refined_parent_route_root;
     bool use_refined_parent_tree = false;
@@ -2060,7 +2060,7 @@ std::string compile_policy_strategy_json(
             };
         const auto refined_parent_feature_condition =
             [&](const std::uint32_t row,
-                const std::size_t feature) -> const std::string& {
+                const std::size_t feature) -> const ConditionExpr& {
                 const std::uint32_t value =
                     refined_parent_feature_value(row, feature);
                 auto& cache =
@@ -2108,7 +2108,7 @@ std::string compile_policy_strategy_json(
                     [&](const RefinedParentRouteEntry& entry) {
                         return entry.to == first_target;
                     });
-                std::vector<std::string> constants;
+                std::vector<ConditionExpr> constants;
                 std::vector<std::size_t> varying;
                 varying.reserve(features.size());
                 for (const std::size_t feature : features) {
@@ -2129,7 +2129,8 @@ std::string compile_policy_strategy_json(
                         varying.push_back(feature);
                     }
                 }
-                const std::string guard = all_of(constants);
+                const ConditionExpr guard =
+                    ConditionExpr::all(std::move(constants));
                 if (varying.empty()) {
                     if (!one_target) {
                         gap(
@@ -2193,7 +2194,7 @@ std::string compile_policy_strategy_json(
                             members, child_features);
                     edges.push_back({
                         child.to,
-                        all_of({
+                        ConditionExpr::all({
                             refined_parent_feature_condition(
                                 members.front().row, selected),
                             child.guard})});
@@ -2203,8 +2204,8 @@ std::string compile_policy_strategy_json(
                     signature +=
                         std::to_string(route_edge.to.size()) + ":" +
                         route_edge.to + ":" +
-                        std::to_string(route_edge.condition.size()) +
-                        ":" + route_edge.condition + ";";
+                        std::to_string(route_edge.condition.json().size()) +
+                        ":" + route_edge.condition.json() + ";";
                 }
                 const auto shared =
                     policy_route_node_by_signature.find(signature);
@@ -2278,9 +2279,10 @@ std::string compile_policy_strategy_json(
              * continuation and either certify it or reject it. The default
              * edge still handles every observation value that separates this
              * region from another selected continuation. */
-            return {state_node(partition_leader), all_of({})};
+            return {
+                state_node(partition_leader), ConditionExpr::always()};
         }
-        std::vector<std::string> constants;
+        std::vector<ConditionExpr> constants;
         std::vector<std::size_t> varying;
         varying.reserve(features.size());
         for (const std::size_t feature : features) {
@@ -2298,7 +2300,8 @@ std::string compile_policy_strategy_json(
                 varying.push_back(feature);
             }
         }
-        const std::string guard = all_of(constants);
+        const ConditionExpr guard =
+            ConditionExpr::all(std::move(constants));
         if (varying.empty()) {
             gap("identical exact policy states select different regions");
         }
@@ -2345,16 +2348,16 @@ std::string compile_policy_strategy_json(
                 build_policy_route(members, child_features);
             edges.push_back({
                 child.to,
-                all_of({feature_condition(
-                            members.front().state, selected),
-                        child.guard})});
+                ConditionExpr::all({
+                    feature_condition(members.front().state, selected),
+                    child.guard})});
         }
         std::string signature;
         for (const PolicyRouteEdge& route_edge : edges) {
             signature += std::to_string(route_edge.to.size()) + ":" +
                          route_edge.to + ":" +
-                         std::to_string(route_edge.condition.size()) + ":" +
-                         route_edge.condition + ";";
+                         std::to_string(route_edge.condition.json().size()) +
+                         ":" + route_edge.condition.json() + ";";
         }
         const auto shared = policy_route_node_by_signature.find(signature);
         if (shared != policy_route_node_by_signature.end()) {
@@ -2537,14 +2540,14 @@ std::string compile_policy_strategy_json(
                  refined_parent_feature_condition_cache) {
                 add_map_nodes(
                     cache.size(),
-                    sizeof(std::uint32_t) + sizeof(std::string));
+                    sizeof(std::uint32_t) + sizeof(ConditionExpr));
                 for (const auto& [unused, condition] : cache) {
                     (void)unused;
-                    add_string(condition);
+                    add_owned_bytes(bytes, condition.owned_bytes());
                 }
             }
             add_string(refined_parent_route_root.to);
-            add_string(refined_parent_route_root.guard);
+            add_string(refined_parent_route_root.guard.json());
             add_owned_bytes(
                 bytes,
                 static_cast<std::uint64_t>(
@@ -2553,10 +2556,10 @@ std::string compile_policy_strategy_json(
             for (const auto& cache : feature_condition_cache) {
                 add_map_nodes(
                     cache.size(),
-                    sizeof(std::uint32_t) + sizeof(std::string));
+                    sizeof(std::uint32_t) + sizeof(ConditionExpr));
                 for (const auto& [unused, condition] : cache) {
                     (void)unused;
-                    add_string(condition);
+                    add_owned_bytes(bytes, condition.owned_bytes());
                 }
             }
             add_owned_bytes(
@@ -2572,7 +2575,7 @@ std::string compile_policy_strategy_json(
                         sizeof(PolicyRouteEdge));
                 for (const PolicyRouteEdge& route_edge : node.edges) {
                     add_string(route_edge.to);
-                    add_string(route_edge.condition);
+                    add_string(route_edge.condition.json());
                 }
             }
             add_map_nodes(
@@ -2596,7 +2599,7 @@ std::string compile_policy_strategy_json(
                 static_cast<std::uint64_t>(route_features.capacity()) *
                     sizeof(std::size_t));
             add_string(policy_route_root.to);
-            add_string(policy_route_root.guard);
+            add_string(policy_route_root.guard.json());
             add_map_nodes(
                 compiled_option_kernels.size(),
                 sizeof(std::uint32_t) + sizeof(OptionKernel));
@@ -3125,13 +3128,13 @@ std::string compile_policy_strategy_json(
         if (use_exact_policy_tree) {
             edge(
                 root_router_id, policy_route_root.to, 1,
-                policy_route_root.guard, false);
+                policy_route_root.guard.json(), false);
         }
     } else if (structured_refined_route) {
         if (use_refined_parent_tree) {
             edge(
                 root_router_id, refined_parent_route_root.to, 1,
-                refined_parent_route_root.guard, false);
+                refined_parent_route_root.guard.json(), false);
         } else {
             int parent_priority = 1;
             for (const std::uint32_t coarse_state :
@@ -3231,7 +3234,7 @@ std::string compile_policy_strategy_json(
         for (const PolicyRouteEdge& route_edge : route.edges) {
             edge(
                 route.id, route_edge.to, priority++,
-                route_edge.condition, false);
+                route_edge.condition.json(), false);
         }
         policy_route_default_edge(route.id, priority);
     }

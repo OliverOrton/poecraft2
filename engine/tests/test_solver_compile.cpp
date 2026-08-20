@@ -1,6 +1,7 @@
 #include "tests.hpp"
 
 #include "../src/solver_internal.hpp"
+#include "../src/solver_condition_expr.hpp"
 #include "../src/solver_policy_refinement.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
@@ -22,6 +23,38 @@ using namespace poecraft;
 using namespace poecraft::solver;
 
 namespace {
+
+void run_condition_expr_tests() {
+    const ConditionExpr a = ConditionExpr::opaque(
+        "{\"type\":\"item_flag\",\"flag\":\"a\"}");
+    const ConditionExpr b = ConditionExpr::opaque(
+        "{\"type\":\"item_flag\",\"flag\":\"b\"}");
+    PC_CHECK(ConditionExpr::all({}).kind() ==
+             ConditionExpr::Kind::Always);
+    PC_CHECK(ConditionExpr::any({}).kind() ==
+             ConditionExpr::Kind::Never);
+    PC_CHECK(ConditionExpr::all({a}).json() == a.json());
+    PC_CHECK(ConditionExpr::any({b}).json() == b.json());
+    PC_CHECK(ConditionExpr::all({
+                 ConditionExpr::always(), a, a,
+                 ConditionExpr::all({b, a})})
+                 .json() ==
+             "{\"type\":\"all\",\"conditions\":[" + a.json() +
+                 "," + b.json() + "]}");
+    PC_CHECK(ConditionExpr::any({
+                 ConditionExpr::never(), a, a,
+                 ConditionExpr::any({b, a})})
+                 .json() ==
+             "{\"type\":\"any\",\"conditions\":[" + a.json() +
+                 "," + b.json() + "]}");
+    PC_CHECK(
+        ConditionExpr::negate(a).json() ==
+        "{\"type\":\"not\",\"conditions\":[" + a.json() + "]}");
+    PC_CHECK(
+        ConditionExpr::at_least(1, {a, b}).json() ==
+        "{\"type\":\"at_least\",\"count\":1,\"conditions\":[" +
+            a.json() + "," + b.json() + "]}");
+}
 
 void report_compile_solve_issue(
         const char* label,
@@ -2363,6 +2396,7 @@ void run_imprint_gate(const char* artifact_dir) {
 } // namespace
 
 void run_solver_compile_tests(const char* artifact_dir) {
+    run_condition_expr_tests();
     run_future_observed_choice_compile_test();
     run_structured_observation_route_tests();
     run_synthetic_gate();

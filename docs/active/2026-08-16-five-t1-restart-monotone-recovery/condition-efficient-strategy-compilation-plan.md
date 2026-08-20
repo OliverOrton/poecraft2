@@ -157,6 +157,11 @@ and obtain the exact saved strategy before changing the compiler.
 
 ## Gate 1 - Typed Canonical Condition Authority
 
+**Result:** complete. See
+[Gate 1 evidence](evidence/condition-efficient-gate1.md). Witness B retains
+identical nodes, edges, value, terminal mass, and defaults while canonical
+route composition removes 10,206 condition/JSON bytes.
+
 Replace compiler-internal JSON-string composition with a typed immutable
 condition expression used by feature extraction, route construction,
 fingerprinting, size estimation, and final v1 serialization. Keep parsing and
