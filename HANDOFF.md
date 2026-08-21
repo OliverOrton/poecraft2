@@ -22,6 +22,16 @@ checked state, transition, work, or memory cap fires. No new exact value,
 release-WASM primary, or 10,000-run verification was accepted. Full details
 are in the [stopped result](docs/active/2026-08-21-four-t1-automatic-envelope-qualification/result.md).
 
+An owner-authorized diagnostic copy then raised only the case/watchdog wall
+boundary from 300 to 600 seconds; the checked fixture remains unchanged. It
+also stops, at 600.03 seconds after 78,737,871 cooperative solve steps. Live
+work continues advancing, but the strict graph remains fixed at 5,961 states /
+5,927 kernels / 30,697 transitions, graph certification remains reused, and
+the automatic action envelope remains open with 18,414 actions (13,842
+unevaluated and 4,572 unresolved). No checked resource cap fires. The modest
+extension therefore does not close naturally, and its unknown remaining work
+cannot be characterized as merely another minute or two.
+
 The next plausible owner is collision-safe semantic row/proof reuse across
 equivalent temporary-bench and Eldritch-side carrier/operator alternatives.
 Do not substitute compiler compaction, action-family broadening, a cap increase,

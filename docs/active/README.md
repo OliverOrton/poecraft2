@@ -10,7 +10,9 @@ made exact lifting cooperative, repaired refined-parent paired-default proof,
 and reuses only byte-identical complete paired assertion evaluations. The
 checked native primary still stops at 300 seconds while repeatedly rebuilding
 roughly 5,900 strict carriers for the 890-operator automatic alternative
-envelope, so no replacement exact value was accepted. See the
+envelope, so no replacement exact value was accepted. An owner-authorized
+600-second diagnostic also stops after 78.7 million advancing solve steps,
+with the strict graph fixed and the action envelope still open. See the
 [precise result](2026-08-21-four-t1-automatic-envelope-qualification/result.md).
 Oliver must select the next chunk before implementation resumes.
 

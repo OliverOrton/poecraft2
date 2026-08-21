@@ -94,6 +94,34 @@ carrier discovery and local alternative reoptimization, not strategy
 compilation, graph size, exact graph evaluation, automatic preparation, or a
 resource cap.
 
+## Owner-Authorized Ten-Minute Diagnostic
+
+Oliver authorized one unchanged native rerun with a longer diagnostic window
+to determine whether the checked stop merely needed a little more time. The
+diagnostic copied the checked manifest and case into ignored build scratch and
+changed only the enclosing maximum wall time and case watchdog from 300 to 600
+seconds. The checked corpus was not edited. Its persisted result is
+[native-extended-600s.json](evidence/native-extended-600s.json).
+
+The extension also stopped at its watchdog, after 599,992.93 ms of solving and
+600,029.78 ms total. It completed 78,737,871 cooperative solve steps; the
+largest individual step was 51,936.29 ms in local reoptimization at
+finalization work item 90,898. Live progress continued advancing through the
+deadline rather than freezing. The later strict dimensions remained fixed at
+5,961 states, 5,927 kernels, and 30,697 transitions, and the reused graph
+certificate continued to require zero new certification pairs. The product
+action envelope was still explicitly open with 18,414 actions remaining:
+13,842 unevaluated and 4,572 unresolved. The finite executable upper remained
+3,759.5969190423507 Chaos, the global lower remained zero, solver-owned memory
+was 102,115,226 bytes, and every checked resource-cap assertion passed.
+
+This rules out only the modest extension: ten minutes is still insufficient.
+The observed sweep is advancing, but its remaining denominator is not exposed,
+so this result does not establish its natural completion time. A substantially
+longer exploratory ceiling could measure that time, but it would not repair the
+checked five-minute product boundary. Semantic proof or row reuse remains the
+next solver-quality owner.
+
 ## Acceptance
 
 The following passed:

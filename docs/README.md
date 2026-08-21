@@ -36,7 +36,10 @@ proof, and safely reuses byte-identical paired assertion evaluations. Its
 checked native primary still stops at 300 seconds in repeated strict automatic-
 alternative carrier discovery and local reoptimization, so no replacement
 exact value was accepted. The [result](active/2026-08-21-four-t1-automatic-envelope-qualification/result.md)
-names semantic automatic-alternative proof reuse as the next possible owner.
+also records an owner-authorized diagnostic that changed only the watchdog to
+600 seconds and still stopped after 78.7 million advancing solve steps with a
+fixed strict graph and open action envelope. It names semantic automatic-
+alternative proof reuse as the next possible owner.
 No implementation boundary is active until Oliver selects one.
 
 The completed
