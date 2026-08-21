@@ -1,8 +1,24 @@
 # Session Handoff
 
-**Status: no implementation boundary is active.**
+**Status: Four-T1 Automatic-Envelope Replacement Qualification is active.**
 
 ## Current boundary
+
+Oliver selected the
+[Four-T1 Automatic-Envelope Replacement Qualification](docs/active/2026-08-21-four-t1-automatic-envelope-qualification/plan.md).
+Run the checked uncapped native four-natural-T1 primary from starting commit
+`8a4f353`, measure its repaired automatic envelope before changing behavior,
+and implement only an evidence-backed scheduling or representation repair.
+Acceptance requires a closed automatic envelope, independently reconciled
+native and release-WASM strategy evaluation, zero off-policy mass, and the
+pinned 10,000-run verification. Five-T1 recovery, action-family broadening,
+compiler work, and UI work are not part of this boundary.
+
+If a checked cap, the 300-second watchdog, an open automatic obligation, exact
+evaluation failure, or native/WASM disagreement stops the qualification,
+record that precise boundary and stop rather than weakening exactness.
+
+## Completed predecessor
 
 The focused
 [High-Impact Automatic Admission Closure](docs/active/2026-08-21-high-impact-automatic-admission/plan.md)
@@ -21,9 +37,9 @@ web acceptance pass. The full repository pipeline and uncapped replacement
 primary proof were deliberately not run. Detailed evidence is in the
 [accepted result](docs/active/2026-08-21-high-impact-automatic-admission/result.md).
 
-Do not begin another implementation chunk until Oliver selects it.
+This is the accepted starting point for the active replacement qualification.
 
-## Completed predecessor
+## Earlier completed predecessor
 
 The focused
 [Product-Local Fracture Execution Consolidation](docs/active/2026-08-16-five-t1-restart-monotone-recovery/product-fracture-execution-consolidation-plan.md)

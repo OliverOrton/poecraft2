@@ -29,6 +29,14 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
+The active
+[four-T1 automatic-envelope replacement qualification](active/2026-08-21-four-t1-automatic-envelope-qualification/plan.md)
+measures the checked uncapped native primary before changing behavior, then
+permits only an evidence-backed scheduling or representation repair. A new
+exact result requires closed automatic work plus independent native and
+release-WASM evaluation and 10,000-run verification. Five-T1 recovery and
+action-family broadening remain out of scope.
+
 The completed
 [high-impact automatic-admission closure repair](active/2026-08-21-high-impact-automatic-admission/plan.md)
 makes the Calculator's high-impact incremental scheduler process the existing
@@ -37,8 +45,8 @@ work is pending. It deliberately preserves all current action-family filters
 and is limited to scheduling, proof accounting, focused native tests, and
 release-WASM parity. Its [accepted result](active/2026-08-21-high-impact-automatic-admission/result.md)
 records nonzero automatic preparation on the real four- and five-goal capped
-probes. No implementation boundary is currently active; Oliver must select the
-next chunk before implementation resumes.
+probes. Oliver has selected the replacement qualification above as the next
+chunk.
 
 The completed
 [product-local Fracture execution consolidation](active/2026-08-16-five-t1-restart-monotone-recovery/evidence/product-fracture-execution-consolidation-result.md)
