@@ -1,7 +1,6 @@
 # Five-T1 Restart-Monotone Strategy Recovery
 
-**Status: condition-efficient strategy compilation and targeted compiler
-consolidation are complete and accepted.**
+**Status: product-local Fracture execution consolidation is selected.**
 
 Parent: [Active work](../README.md)
 
@@ -18,6 +17,7 @@ existing memory and responsiveness limits.
 - [Selected proof-gated route and operation-graph compaction plan](gated-route-evaluator-compaction-plan.md)
 - [Route/operation-graph compaction result](evidence/gated-route-compaction-result.md)
 - [Completed condition-efficient strategy compilation and consolidation plan](condition-efficient-strategy-compilation-plan.md)
+- [Selected product-local Fracture execution consolidation](product-fracture-execution-consolidation-plan.md)
 - [Condition-efficient Gate 0 census](evidence/condition-efficient-gate0.md)
 - [Condition-efficient Gate 1 typed conditions](evidence/condition-efficient-gate1.md)
 - [Condition-efficient Gate 2 same-target coalescing](evidence/condition-efficient-gate2.md)

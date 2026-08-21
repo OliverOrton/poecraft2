@@ -1,9 +1,17 @@
 # Active Work
 
-**Status: condition-efficient strategy compilation and targeted compiler
-consolidation are complete and accepted; no implementation boundary is active.**
+**Status: product-local Fracture execution consolidation is selected.**
 
 Parent: [Documentation map](../README.md)
+
+Oliver selected the focused
+[Product-Local Fracture Execution Consolidation](2026-08-16-five-t1-restart-monotone-recovery/product-fracture-execution-consolidation-plan.md).
+It preserves the single solver Fracture operator, all state-local `k/n` rows,
+policy hashes and values, and the deliberate priced-Restart miss model while
+compiling selected rows through one shared primitive/result route. The accepted
+four-T1 graph currently spends 3,933,985 condition bytes on 41 Fracture-only
+refined-parent routers; this plan must remove that executable distinction with
+exact native/WASM parity before local integration to `main`.
 
 The
 [accepted condition-efficient result](2026-08-16-five-t1-restart-monotone-recovery/evidence/condition-efficient-final.md)

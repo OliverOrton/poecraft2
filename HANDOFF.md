@@ -1,9 +1,25 @@
 # Session Handoff
 
-**Status: condition-efficient strategy compilation is complete and accepted;
-no implementation boundary is active. Oliver must choose the next chunk.**
+**Status: product-local Fracture execution consolidation is active.**
 
 ## Current boundary
+
+Oliver selected the focused
+[Product-Local Fracture Execution Consolidation](docs/active/2026-08-16-five-t1-restart-monotone-recovery/product-fracture-execution-consolidation-plan.md).
+Preserve the one solver Fracture operator, all state-local `k/n` rows, the
+deliberate priced-Restart miss route, transition/policy hashes, exact value,
+and action/material accounting. Consolidate only the compiled executable
+region to one shared Fracture operation and result router, then run the plan's
+single final native/WASM/repository acceptance round. If accepted, merge the
+completed branch into local `main`; do not push.
+
+The frozen four-T1 baseline is 292 nodes / 815 edges / 4,670,987 bytes. Seven
+Fracture operations, seven local result routers, and 41 Fracture-only refined
+parents own 3,933,985 condition bytes. Solver evidence remains one operator,
+291 evaluated rows, 49 selected proper rows, 242 costlier rows, 49 tied rows,
+and zero unresolved Q-values.
+
+## Completed predecessor
 
 The completed
 [Condition-Efficient Strategy Compilation And Consolidation](docs/active/2026-08-16-five-t1-restart-monotone-recovery/condition-efficient-strategy-compilation-plan.md)
