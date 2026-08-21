@@ -1,23 +1,29 @@
 # Session Handoff
 
-**Status: product-local Fracture execution consolidation is active.**
+**Status: no implementation boundary is active.**
 
 ## Current boundary
 
-Oliver selected the focused
-[Product-Local Fracture Execution Consolidation](docs/active/2026-08-16-five-t1-restart-monotone-recovery/product-fracture-execution-consolidation-plan.md).
-Preserve the one solver Fracture operator, all state-local `k/n` rows, the
-deliberate priced-Restart miss route, transition/policy hashes, exact value,
-and action/material accounting. Consolidate only the compiled executable
-region to one shared Fracture operation and result router, then run the plan's
-single final native/WASM/repository acceptance round. If accepted, merge the
-completed branch into local `main`; do not push.
+The focused
+[Product-Local Fracture Execution Consolidation](docs/active/2026-08-16-five-t1-restart-monotone-recovery/product-fracture-execution-consolidation-plan.md)
+is complete and accepted. Do not begin another implementation chunk until
+Oliver selects it.
 
-The frozen four-T1 baseline is 292 nodes / 815 edges / 4,670,987 bytes. Seven
-Fracture operations, seven local result routers, and 41 Fracture-only refined
-parents own 3,933,985 condition bytes. Solver evidence remains one operator,
-291 evaluated rows, 49 selected proper rows, 242 costlier rows, 49 tied rows,
-and zero unresolved Q-values.
+The exact four-T1 graph falls from 292 nodes / 815 edges / 4,670,987 bytes to
+174 / 515 / 546,057. Seven Fracture operations and result routers become one,
+all 41 Fracture-only refined-parent routers disappear, and condition bytes fall
+from 4,587,281 to 493,618. The transition hash `1c5594f87917f760`, policy hash
+`2c96f9faf0479667`, exact value `3745.7309340083884`, 291 Fracture rows,
+state-local `k/n` authority, expected accounting, and priced-Restart miss route
+remain unchanged.
+
+Native and release WASM independently evaluate the graph to success one,
+off-policy mass zero, and zero cost delta. Both complete their pinned 10,000
+simulator runs with 10,000 successes and no off-policy exits. The cross-runner
+comparison passes 96 checks. The focused compiler/evaluator/refinement/solver
+controls, native and WASM builds, TypeScript, web tests, `git diff --check`,
+and the full repository pipeline pass. Detailed measurements are in the
+[accepted result](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/product-fracture-execution-consolidation-result.md).
 
 ## Completed predecessor
 
@@ -126,10 +132,9 @@ the plan so they are not lost.
 
 The native build and focused evaluator (18,065), compiler (815), refinement
 (362), and solver (96,120) suites passed at the predecessor checkpoint. A
-manual release-WASM rebuild was subsequently requested and succeeded; its
-generated `.wasm` is currently modified and uncommitted, with no downstream
-test run. The new plan performs one final native/WASM/full acceptance round
-after implementation.
+manual release-WASM rebuild was subsequently requested and succeeded. That
+intermediate state is superseded by the accepted product-Fracture result and
+its complete native/WASM/full acceptance round recorded above.
 
 ## Prior history
 

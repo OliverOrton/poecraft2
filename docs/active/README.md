@@ -1,17 +1,18 @@
 # Active Work
 
-**Status: product-local Fracture execution consolidation is selected.**
+**Status: no implementation boundary is active.**
 
 Parent: [Documentation map](../README.md)
 
-Oliver selected the focused
-[Product-Local Fracture Execution Consolidation](2026-08-16-five-t1-restart-monotone-recovery/product-fracture-execution-consolidation-plan.md).
-It preserves the single solver Fracture operator, all state-local `k/n` rows,
-policy hashes and values, and the deliberate priced-Restart miss model while
-compiling selected rows through one shared primitive/result route. The accepted
-four-T1 graph currently spends 3,933,985 condition bytes on 41 Fracture-only
-refined-parent routers; this plan must remove that executable distinction with
-exact native/WASM parity before local integration to `main`.
+The focused
+[Product-Local Fracture Execution Consolidation](2026-08-16-five-t1-restart-monotone-recovery/product-fracture-execution-consolidation-plan.md)
+is complete. It preserves the single solver Fracture operator, all state-local
+`k/n` rows, policy hashes and values, and the deliberate priced-Restart miss
+model while compiling selected rows through one shared primitive/result route.
+The exact four-T1 graph falls from 292 nodes / 815 edges / 4,670,987 bytes to
+174 / 515 / 546,057, with one Fracture operation and result router. Native and
+release WASM exact evaluation and 10,000-run verification pass; see the
+[accepted result](2026-08-16-five-t1-restart-monotone-recovery/evidence/product-fracture-execution-consolidation-result.md).
 
 The
 [accepted condition-efficient result](2026-08-16-five-t1-restart-monotone-recovery/evidence/condition-efficient-final.md)

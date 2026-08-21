@@ -1,8 +1,10 @@
 # Product-Local Fracture Execution Consolidation
 
-**Status: selected for implementation.**
+**Status: complete and accepted on 2026-08-20.**
 
 Parent: [Five-T1 Restart-Monotone Strategy Recovery](README.md)
+
+Result: [accepted evidence](evidence/product-fracture-execution-consolidation-result.md)
 
 ## Objective
 
@@ -87,4 +89,3 @@ or policy decisions.
 Stop with a precise handoff if consolidation changes any solver hash, selected
 row, exact value, terminal mass, action/material accounting, miss recovery,
 default authority, or requires a public strategy-schema change.
-

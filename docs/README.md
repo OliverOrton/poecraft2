@@ -29,6 +29,15 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
+The completed
+[product-local Fracture execution consolidation](active/2026-08-16-five-t1-restart-monotone-recovery/evidence/product-fracture-execution-consolidation-result.md)
+preserves all exact four-T1 solver hashes, rows, value, accounting, and the
+priced-Restart miss model while reducing its compiled graph from 292 nodes /
+815 edges / 4,670,987 bytes to 174 / 515 / 546,057. Native and release WASM
+exact evaluation, 10,000-run verification, focused checks, and the full
+repository pipeline pass. No implementation boundary is currently active;
+Oliver must select the next chunk before implementation resumes.
+
 The bounded
 [route/operation-graph compaction result](active/2026-08-16-five-t1-restart-monotone-recovery/evidence/gated-route-compaction-result.md)
 materializes the priced five-T1 candidate as a 92-node executable policy at
@@ -39,13 +48,11 @@ work-item contract also remains open at a measured 1.254-second atomic exact-
 reforge leaf. Oliver instead requested a compiler-quality stabilization scope.
 The completed
 [condition-efficient strategy compilation plan](active/2026-08-16-five-t1-restart-monotone-recovery/condition-efficient-strategy-compilation-plan.md)
-removes every measured same-target group with exact native/WASM parity. Oliver
-has now selected the focused
-[product-local Fracture execution consolidation](active/2026-08-16-five-t1-restart-monotone-recovery/product-fracture-execution-consolidation-plan.md):
-keep the solver's exact state-local Fracture rows and priced-Restart miss model,
-but compile them through one shared primitive/result route instead of seven
-regions and 41 Fracture-only refined-parent routers. Broader proof recovery and
-responsiveness remain explicitly preserved but deferred. The completed
+removes every measured same-target group with exact native/WASM parity. The
+subsequent product-local Fracture consolidation removes the remaining seven
+equivalent Fracture regions and 41 Fracture-only refined-parent routers.
+Broader proof recovery and responsiveness remain explicitly preserved but
+deferred. The completed
 [Calculator WASM Scheduling And Selected-Policy Refinement](archive/2026-08-14-calculator-wasm-scheduling-progress/README.md)
 milestone recovers a five-natural-T1 non-Chaos strategy about 59.7 times
 cheaper than the prior fallback, retains selected candidates without granting

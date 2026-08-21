@@ -1,6 +1,6 @@
 # Five-T1 Restart-Monotone Strategy Recovery
 
-**Status: product-local Fracture execution consolidation is selected.**
+**Status: latest compiler-stabilization follow-up is complete; no implementation boundary is active.**
 
 Parent: [Active work](../README.md)
 
@@ -17,7 +17,8 @@ existing memory and responsiveness limits.
 - [Selected proof-gated route and operation-graph compaction plan](gated-route-evaluator-compaction-plan.md)
 - [Route/operation-graph compaction result](evidence/gated-route-compaction-result.md)
 - [Completed condition-efficient strategy compilation and consolidation plan](condition-efficient-strategy-compilation-plan.md)
-- [Selected product-local Fracture execution consolidation](product-fracture-execution-consolidation-plan.md)
+- [Completed product-local Fracture execution consolidation](product-fracture-execution-consolidation-plan.md)
+- [Product-local Fracture consolidation result](evidence/product-fracture-execution-consolidation-result.md)
 - [Condition-efficient Gate 0 census](evidence/condition-efficient-gate0.md)
 - [Condition-efficient Gate 1 typed conditions](evidence/condition-efficient-gate1.md)
 - [Condition-efficient Gate 2 same-target coalescing](evidence/condition-efficient-gate2.md)
@@ -35,9 +36,12 @@ existing memory and responsiveness limits.
 - [Successor Gate 0 result](evidence/successor-gate0.md)
 - [Current handoff](../../../HANDOFF.md)
 
-The final condition-efficient result supersedes earlier historical statements
+The final product-Fracture result supersedes earlier historical statements
 below that release WASM or full acceptance had not yet run; those statements
-describe their predecessor checkpoints.
+describe their predecessor checkpoints. The exact four-T1 graph is now 174
+nodes / 515 edges / 546,057 bytes with one Fracture operation and result
+router, unchanged solver hashes and value, exact native/WASM parity, and
+10,000 successful simulator runs on each runner.
 
 The retained transition and segmented-pair checkpoints reduce Witness B's
 10-million evaluator peak to 600,881,764 bytes and safely cross the former
