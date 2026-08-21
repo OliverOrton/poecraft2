@@ -26,15 +26,24 @@ void SolveWork::Impl::retain_incremental_carrier(
     }
     incremental_carriers.push_back(state);
     incremental_unevaluated_actions += delayed_operator_indices.size();
+    if (options.high_impact_executable_uppers) {
+        /* Automatic preparation is itself an open envelope obligation. Its
+         * materialized operators are counted only after synthesis completes. */
+        ++incremental_unevaluated_actions;
+    }
 }
 
 bool SolveWork::Impl::advance_incremental_dynamic_preparation() {
-    if (incremental_carrier_cursor >= incremental_carriers.size()) {
+    const std::size_t carrier_cursor =
+        options.high_impact_executable_uppers
+            ? incremental_automatic_carrier_cursor
+            : incremental_carrier_cursor;
+    if (carrier_cursor >= incremental_carriers.size()) {
         throw std::logic_error(
             "incremental automatic preparation lost its carrier");
     }
     const std::uint32_t state =
-        incremental_carriers[incremental_carrier_cursor];
+        incremental_carriers[carrier_cursor];
     const std::uint64_t unresolved_before =
         incremental_resource_unresolved_actions;
     try {
@@ -58,6 +67,10 @@ bool SolveWork::Impl::advance_incremental_dynamic_preparation() {
     incremental_dynamic_prepared = true;
     incremental_dynamic_prepare_active = false;
     incremental_dynamic_operator_cursor = 0;
+    if (options.high_impact_executable_uppers &&
+        incremental_unevaluated_actions != 0) {
+        --incremental_unevaluated_actions;
+    }
     incremental_unevaluated_actions +=
         incremental_dynamic_operator_indices.size();
     expansion_operator_indices.clear();
@@ -105,6 +118,40 @@ bool SolveWork::Impl::schedule_next_incremental_alternative() {
                 }
                 phase = SolvePhase::Expanding;
             };
+        /* The high-impact path schedules delayed primitives operator-major,
+         * but automatic compounds remain carrier-local. Drain that distinct
+         * ledger first so an early executable-upper checkpoint cannot skip
+         * synthesis and later earn exact closure from delayed rows alone. */
+        while (incremental_automatic_carrier_cursor <
+               incremental_carriers.size()) {
+            const std::uint32_t state = incremental_carriers[
+                incremental_automatic_carrier_cursor];
+            if (!incremental_dynamic_prepared) {
+                incremental_dynamic_prepare_active = true;
+                phase = SolvePhase::Expanding;
+                return true;
+            }
+            if (incremental_dynamic_operator_cursor <
+                incremental_dynamic_operator_indices.size()) {
+                const std::uint32_t operator_index =
+                    incremental_dynamic_operator_indices[
+                        incremental_dynamic_operator_cursor++];
+                if (incremental_completed_pairs.contains(
+                        pair_key(state, operator_index))) {
+                    if (incremental_unevaluated_actions != 0) {
+                        --incremental_unevaluated_actions;
+                    }
+                    continue;
+                }
+                schedule_pair(state, operator_index);
+                return true;
+            }
+            ++incremental_automatic_carrier_cursor;
+            incremental_dynamic_prepared = false;
+            incremental_dynamic_prepare_active = false;
+            incremental_dynamic_operator_cursor = 0;
+            incremental_dynamic_operator_indices.clear();
+        }
         while (incremental_priority_task_cursor <
                incremental_priority_tasks.size()) {
             const IncrementalPriorityTask task =
@@ -1174,8 +1221,15 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
             }
             return true;
         }
+        const bool automatic_preparation_closed =
+            !options.high_impact_executable_uppers ||
+            (incremental_automatic_carrier_cursor >=
+                 incremental_carriers.size() &&
+             !incremental_dynamic_prepare_active &&
+             !incremental_dynamic_prepared);
         if (unresolved == incremental_alternative_rows.end() &&
-            incremental_unevaluated_actions == 0) {
+            incremental_unevaluated_actions == 0 &&
+            automatic_preparation_closed) {
             incremental_envelope_closed = true;
         }
     }

@@ -481,6 +481,94 @@ void run_automatic_veiled_program() {
     PC_CHECK(
         registry.actions.at(winner.primitive_program.front()).params.type ==
         ActionType::VeiledExalt);
+
+    /* The Calculator enables goal-progress-gated delayed reforges and the
+     * high-impact upper scheduler together. That branch must still prepare
+     * each carrier's state-local automatic envelope. Keep the delayed
+     * Harvest action deliberately expensive; the ordinary control above
+     * proves the cheaper automatic Veiled Exalt is the exact policy winner,
+     * while this combined control proves the high-impact branch actually
+     * synthesizes and classifies that same action family. */
+    auto high_impact_session = make_automatic_veiled_session();
+    pc_bitset_set(
+        high_impact_session->normal_random_roll_mask.data(),
+        kGoalPrefix);
+    ActionRegistry high_impact_registry =
+        build_action_registry(*high_impact_session);
+    const std::uint32_t high_impact_restart =
+        high_impact_registry.index_by_id.at("restart");
+    const std::uint32_t high_impact_alchemy =
+        high_impact_registry.index_by_id.at("alchemy");
+    ActionDescriptor harvest;
+    harvest.id = "harvest_reforge:test";
+    harvest.params.type = ActionType::HarvestReforge;
+    harvest.params.target_tag_id = 0;
+    harvest.kind = TransitionKind::Reforge;
+    harvest.cost_keys = {harvest.id};
+    harvest.legality.rarity_mask = 1u << PC_RARITY_RARE;
+    harvest.discriminating_tag_ids = {0};
+    harvest.refinement =
+        derive_action_refinement_contract(*high_impact_session, harvest);
+    validate_action_refinement_contract(harvest);
+    const std::uint32_t harvest_index = static_cast<std::uint32_t>(
+        high_impact_registry.actions.size());
+    high_impact_registry.index_by_id.emplace(harvest.id, harvest_index);
+    high_impact_registry.actions.push_back(harvest);
+    auto high_impact_prices = prices;
+    high_impact_prices.emplace(harvest.id, 1000.0);
+    CalcContext high_impact_calc(
+        high_impact_session, goal, high_impact_registry,
+        {high_impact_alchemy, high_impact_restart, harvest_index},
+        false, true, true);
+    SolveOptions high_impact_options = options;
+    high_impact_options.goal_progress_gated_reforges = true;
+    high_impact_options.high_impact_executable_uppers = true;
+    const SolveResult high_impact_solved = solve(
+        high_impact_calc, start, high_impact_prices,
+        high_impact_options);
+    std::printf(
+        "solver automatic Veiled high-impact: converged=%d policy=%d "
+        "status=%u termination=%u closed=%d carriers=%llu candidates=%llu "
+        "admitted=%llu rejected=%llu unresolved=%llu unevaluated=%llu "
+        "failure=%s\n",
+        high_impact_solved.converged ? 1 : 0,
+        high_impact_solved.policy_available ? 1 : 0,
+        static_cast<unsigned>(high_impact_solved.policy_status),
+        static_cast<unsigned>(high_impact_solved.termination),
+        high_impact_solved.diagnostics.incremental_action_envelope_closed
+            ? 1 : 0,
+        static_cast<unsigned long long>(
+            high_impact_solved.diagnostics.automatic_admission_phases.carriers),
+        static_cast<unsigned long long>(
+            high_impact_solved.diagnostics.automatic_kind_telemetry[
+                static_cast<std::size_t>(AutomaticTelemetryKind::Veiled)]
+                .candidates),
+        static_cast<unsigned long long>(
+            high_impact_solved.diagnostics.incremental_actions_admitted),
+        static_cast<unsigned long long>(
+            high_impact_solved.diagnostics.incremental_actions_non_improving),
+        static_cast<unsigned long long>(
+            high_impact_solved.diagnostics.incremental_actions_unresolved),
+        static_cast<unsigned long long>(
+            high_impact_solved.diagnostics.incremental_actions_unevaluated),
+        high_impact_solved.diagnostics.policy_evaluation_failure.c_str());
+    PC_CHECK(high_impact_solved.diagnostics.incremental_action_generation);
+    PC_CHECK(
+        high_impact_solved.diagnostics.automatic_admission_phases.carriers >
+        0);
+    PC_CHECK(
+        high_impact_solved.diagnostics.automatic_kind_telemetry[
+            static_cast<std::size_t>(AutomaticTelemetryKind::Veiled)]
+            .candidates > 0);
+    PC_CHECK(
+        high_impact_solved.diagnostics.automatic_kind_telemetry[
+            static_cast<std::size_t>(AutomaticTelemetryKind::Veiled)]
+            .eligible_candidates > 0);
+    PC_CHECK(
+        !high_impact_solved.diagnostics
+             .incremental_action_envelope_closed);
+    PC_CHECK(
+        high_impact_solved.diagnostics.incremental_actions_unevaluated > 0);
     PC_CHECK(
         !solved.option_unveil_preferences[solved.start_state].empty());
     const OptionKernel& winner_kernel = solve_calc.option_kernel(

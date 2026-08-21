@@ -1845,6 +1845,7 @@ void SolveWork::Impl::finalize_automatic_candidate_diagnostics() {
         for (std::uint32_t state = 0; state < result.policy.size(); ++state) {
             const std::uint32_t operator_index = result.policy[state].index;
             if (operator_index != kNoId &&
+                operator_index < calc.operators().size() &&
                 calc.operators().at(operator_index).automatic_kind !=
                     AutomaticCandidateKind::None) {
                 ++result.diagnostics.automatic_rows_selected;
@@ -1899,6 +1900,37 @@ void SolveWork::Impl::finalize_automatic_candidate_diagnostics() {
         result.diagnostics.product_fracture_max_probability_error = 0.0;
         result.diagnostics.product_fracture_shape_rows = {};
         result.diagnostics.product_fracture_witnesses.clear();
+        const auto row_values_available =
+            [&](const std::uint64_t row_index) {
+                if (row_index >= transition_cache->rows.size()) {
+                    return false;
+                }
+                const SparseRow& row =
+                    transition_cache->rows.at(row_index);
+                for (std::uint32_t i = 0;
+                     i < row.transition_count; ++i) {
+                    if (transition_cache->successors.at(
+                            row.transition_offset + i) >=
+                        result.values.size()) {
+                        return false;
+                    }
+                }
+                for (std::uint32_t i = 0;
+                     i < row.choice_count; ++i) {
+                    const SparseChoiceGroup& group =
+                        transition_cache->choices.at(
+                            row.choice_offset + i);
+                    for (std::uint32_t s = 0;
+                         s < group.successor_count; ++s) {
+                        if (transition_cache->choice_successors.at(
+                                group.successor_offset + s) >=
+                            result.values.size()) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            };
         std::map<std::uint32_t, SparsePolicyRowSelection>
             selected_row_by_source;
         for (auto& witness :
@@ -1924,7 +1956,8 @@ void SolveWork::Impl::finalize_automatic_candidate_diagnostics() {
                 SolveTransitionCache::ProductFractureQReason::None;
             if (witness.source_state < result.values.size() &&
                 witness.row_index < transition_cache->rows.size() &&
-                witness.row_index < priced_rows.size()) {
+                witness.row_index < priced_rows.size() &&
+                row_values_available(witness.row_index)) {
                 auto [selected, inserted] =
                     selected_row_by_source.try_emplace(
                         witness.source_state);
@@ -1933,7 +1966,8 @@ void SolveWork::Impl::finalize_automatic_candidate_diagnostics() {
                         *transition_cache, witness.source_state,
                         [&](const std::uint64_t row) {
                             return transition_cache->rows.at(row).admitted &&
-                                   !preservation_prunes(row);
+                                   !preservation_prunes(row) &&
+                                   row_values_available(row);
                         },
                         [&](const std::uint64_t row,
                             std::uint32_t& work) {

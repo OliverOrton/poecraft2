@@ -5,6 +5,27 @@
 ## Current boundary
 
 The focused
+[High-Impact Automatic Admission Closure](docs/active/2026-08-21-high-impact-automatic-admission/plan.md)
+repair is complete and accepted. High-impact scheduling now owns an explicit
+automatic-carrier cursor and per-carrier preparation obligation. Materialized
+automatic operators enter the existing delayed-row lifecycle, while resource
+refusal leaves the envelope open and exact closure requires the automatic
+cursor to be caught up. Every existing product/action filter is unchanged.
+
+The real capped four- and five-goal probes now report nonzero automatic
+preparation and clean named state-cap stops. The earlier four-goal
+`3745.7309340083884` policy remains an executable upper, but its stored
+`exact_closed` classification used zero automatic carriers and is no longer an
+optimality authority. Focused native, release-WASM, TypeScript, and complete
+web acceptance pass. The full repository pipeline and uncapped replacement
+primary proof were deliberately not run. Detailed evidence is in the
+[accepted result](docs/active/2026-08-21-high-impact-automatic-admission/result.md).
+
+Do not begin another implementation chunk until Oliver selects it.
+
+## Completed predecessor
+
+The focused
 [Product-Local Fracture Execution Consolidation](docs/active/2026-08-16-five-t1-restart-monotone-recovery/product-fracture-execution-consolidation-plan.md)
 is complete and accepted. Do not begin another implementation chunk until
 Oliver selects it.
@@ -25,7 +46,7 @@ controls, native and WASM builds, TypeScript, web tests, `git diff --check`,
 and the full repository pipeline pass. Detailed measurements are in the
 [accepted result](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/product-fracture-execution-consolidation-result.md).
 
-## Completed predecessor
+## Earlier completed predecessor
 
 The completed
 [Condition-Efficient Strategy Compilation And Consolidation](docs/active/2026-08-16-five-t1-restart-monotone-recovery/condition-efficient-strategy-compilation-plan.md)

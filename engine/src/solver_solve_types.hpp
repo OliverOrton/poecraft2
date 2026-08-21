@@ -717,6 +717,10 @@ struct SolveWork::Impl {
     std::vector<std::uint64_t> incremental_upper_temporary_rows;
     std::vector<std::uint32_t> incremental_carriers;
     std::size_t incremental_carrier_cursor = 0;
+    /* High-impact delayed rows use operator-major scheduling and therefore
+     * cannot share incremental_carrier_cursor with carrier-local automatic
+     * preparation. This cursor is the exact automatic-envelope obligation. */
+    std::size_t incremental_automatic_carrier_cursor = 0;
     std::size_t incremental_operator_cursor = 0;
     bool incremental_dynamic_prepared = false;
     bool incremental_dynamic_prepare_active = false;

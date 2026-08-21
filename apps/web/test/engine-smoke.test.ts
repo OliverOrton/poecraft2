@@ -2003,6 +2003,7 @@ test("product Eldritch dependency wins through release WASM", async () => {
         max_solver_owned_bytes: 512 * 1024 * 1024,
         max_telemetry_json_bytes: 64 * 1024 * 1024,
         goal_progress_gated_reforges: true,
+        high_impact_executable_uppers: true,
     });
     assert.equal(solve.cancelled, false);
     assert.equal(solve.policy_available, true, JSON.stringify(solve));
@@ -2025,6 +2026,22 @@ test("product Eldritch dependency wins through release WASM", async () => {
     >;
     assert.equal(admission.goal_filtering, true);
     assert.ok(roles.automatic_dependency.total > 0);
+    const automatic = (
+        telemetry.action_control as Record<string, unknown>
+    ).automatic_candidates as Record<string, unknown>;
+    const admissionPhases = automatic.admission_phases as Record<
+        string,
+        number
+    >;
+    assert.ok(admissionPhases.carriers > 0, JSON.stringify(automatic));
+    const automaticKinds = automatic.by_kind as Record<
+        string,
+        Record<string, number>
+    >;
+    assert.ok(
+        automaticKinds.eldritch_side.candidates > 0,
+        JSON.stringify(automatic),
+    );
 
     const compiled = prepareSolverStrategy(
         await client.solverCompileStrategy(solver),

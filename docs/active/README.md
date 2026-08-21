@@ -4,6 +4,14 @@
 
 Parent: [Documentation map](../README.md)
 
+The completed
+[High-Impact Automatic Admission Closure](2026-08-21-high-impact-automatic-admission/plan.md)
+repairs the confirmed Calculator scheduler omission: high-impact incremental
+solves now prepare carrier-local automatic actions and cannot close while that
+work remains pending or resource-deferred. Existing family filters are
+unchanged. Focused native and release-WASM acceptance pass; see the
+[accepted result](2026-08-21-high-impact-automatic-admission/result.md).
+
 The focused
 [Product-Local Fracture Execution Consolidation](2026-08-16-five-t1-restart-monotone-recovery/product-fracture-execution-consolidation-plan.md)
 is complete. It preserves the single solver Fracture operator, all state-local
