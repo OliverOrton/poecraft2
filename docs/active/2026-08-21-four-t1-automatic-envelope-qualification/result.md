@@ -122,6 +122,74 @@ longer exploratory ceiling could measure that time, but it would not repair the
 checked five-minute product boundary. Semantic proof or row reuse remains the
 next solver-quality owner.
 
+## Follow-Up Regression Audit And Repair
+
+Oliver asked whether the slowdown could have been caused by the immediately
+preceding work because the four-mod case had completed before. History confirms
+that the old fast result and the current run did not solve the same decision
+problem: the parent at `c955d02` prepared zero automatic carriers. Commit
+`8a4f353` deliberately repaired that omission, so the newly expensive work is
+the proof of the previously skipped carrier-local automatic action envelope.
+The old `3745.7309340083884` result remains an executable upper, not a valid
+performance or optimality baseline for the repaired envelope.
+
+The audit nevertheless found and repaired three avoidable amplifiers without
+changing mechanics, prices, kernels, or Bellman ordering:
+
+- certifying one already-created strict alternative obligation rebuilt the
+  complete descriptor/kernel vocabulary for that carrier and then validated
+  the selected operator again; certification now collision-safely validates
+  only the named descriptor and carrier-local admission before the existing
+  exact candidate check;
+- variants in one temporary-bench effect group share the same complete exact
+  `OptionKernel`; under a concrete economy, every variant above the minimum
+  immediate price is therefore globally dominated for every continuation
+  value. The first minimum is retained. An unpriced caller retains all
+  variants because it has no ordering authority; and
+- local alternative scheduling inherited the last graph-assertion phase and
+  performed long non-yielding sweeps. It now reports
+  `LocalReoptimization`, clears completed graph-evaluation progress, and
+  checkpoints every 32 pending obligations.
+
+The checked repaired native result is
+[native-repaired-300s.json](evidence/native-repaired-300s.json):
+
+| Measurement | Before | Repaired |
+| --- | ---: | ---: |
+| Solve wall time | 300,510.14 ms | 300,149.74 ms |
+| Largest public solve step | 54,203.23 ms | 1,445.44 ms |
+| Automatic operators | 890 | 135 |
+| Automatic rows collapsed | 6 | 2,149 |
+| Temporary-bench rows | 2,552 | 426 |
+| Maximum temporary rows per carrier | 311 | 45 |
+| Coarse sparse rows | 11,739 | 9,613 |
+| Open automatic actions | 18,414 | 16,277 |
+| Unresolved automatic actions | 4,572 | 2,452 |
+| Finite upper bound | 3,759.5969190423507 | 3,759.5969190423507 |
+
+The strict frontier is unchanged at 5,961 states / 5,927 kernels / 30,697
+transitions, which is positive behavior-preservation evidence. The checked run
+still stops before exact closure, so the reductions do not satisfy the primary.
+
+The owner-authorized ten-minute diagnostic was repeated once after the repair;
+its result is
+[native-repaired-600s.json](evidence/native-repaired-600s.json). It also stops:
+600,120.43 ms solving / 600,153.07 ms total, 48,847,540 cooperative solve
+steps, a 1,449.75 ms largest public step, the same finite upper, and no lower
+certificate. The strict dimensions stay fixed and graph-certification pairs
+stay zero while local reoptimization advances. The coarse envelope remains
+open at 16,277 actions (13,825 unevaluated, 2,452 unresolved). No checked cap
+fires. The action-vocabulary reduction and responsiveness repair are real, but
+the dominant exact alternative program still requires semantic row/proof reuse
+across equivalent carrier/operator work rather than another modest timeout.
+
+The follow-up native build passes. The policy-refinement control passes 962
+checks and the S8.3 automatic-admission control passes 534 checks, including
+the pinned 10,000-run Veiled simulation. `git diff --check` passes. Release
+WASM, the four-T1 10,000-run verification, web acceptance, and the full
+repository pipeline were not run because the repaired native primary again
+hit the explicit stop condition before publication.
+
 ## Acceptance
 
 The following passed:

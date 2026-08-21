@@ -795,8 +795,39 @@ void run_temporary_blocker_price_flip() {
         variant_calc,
         "option:temporary_bench_repeat:bench:s83_mod_15:exalt");
     PC_CHECK(variant_batch.temporary_collapsed_variants > 0);
-    PC_CHECK(first_variant != kNoId);
+    PC_CHECK(first_variant == kNoId);
     PC_CHECK(cheaper_variant != kNoId);
+    PC_CHECK(std::any_of(
+        variant_batch.decisions.begin(),
+        variant_batch.decisions.end(),
+        [](const StateLocalAutomaticCandidate& decision) {
+            return decision.collapsed &&
+                   decision.id.find("bench:s83_mod_8") !=
+                       std::string::npos &&
+                   decision.evidence.reason ==
+                       "equivalent_exact_kernel_price_dominated";
+        }));
+
+    /* Kernel equivalence alone does not order different resource vectors.
+     * A caller without an economy must retain every variant so a later
+     * pricing authority can make that decision. */
+    CalcContext unpriced_variant_calc(
+        session, goal, registry, {exalt, restart},
+        false, true, true);
+    const std::uint32_t unpriced_variant_state =
+        unpriced_variant_calc.intern_item(start);
+    AutomaticAdmissionLimits unpriced_variant_limits;
+    unpriced_variant_limits.max_state_action_rows = 100000;
+    unpriced_variant_limits.max_transitions = 1000000;
+    unpriced_variant_limits.max_solver_owned_bytes = 1073741824;
+    (void)unpriced_variant_calc.admit_state_local_automatic_candidates(
+        unpriced_variant_state, unpriced_variant_limits);
+    PC_CHECK(operator_by_fragment(
+        unpriced_variant_calc,
+        "option:temporary_bench_repeat:bench:s83_mod_8:exalt") != kNoId);
+    PC_CHECK(operator_by_fragment(
+        unpriced_variant_calc,
+        "option:temporary_bench_repeat:bench:s83_mod_15:exalt") != kNoId);
 
     CalcContext capped_calc(
         session, goal, registry, {exalt, restart},

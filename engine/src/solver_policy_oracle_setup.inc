@@ -352,6 +352,42 @@
         adapter_memory_projected_growth_bytes_ = 0;
     }
 
+    bool quotient_alternative_operator_admitted(
+            const std::uint32_t coarse_state,
+            const std::uint32_t strict_state,
+            const std::uint32_t operator_index) {
+        const std::uint32_t coarse_operator =
+            coarse_operator_for(operator_index);
+        if (!coarse_.is_candidate_operator_admitted_for_state(
+                coarse_state, coarse_operator)) {
+            return false;
+        }
+        const PlannerOperator& planner =
+            strict_->operators().at(operator_index);
+        if (planner.kind == PlannerOperatorKind::Primitive) {
+            const ActionDescriptor& action = strict_->registry()
+                .actions.at(planner.primitive_action);
+            return action.refinement.complete() &&
+                   action_legal(
+                       strict_->session(), action,
+                       strict_->state(strict_state));
+        }
+        const double immediate_lower =
+            quotient_operator_immediate_cost_lower(operator_index);
+        const bool potentially_competitive =
+            !std::isfinite(solved_.evaluated_policy_cost) ||
+            immediate_lower < solved_.evaluated_policy_cost;
+        if (!potentially_competitive) return true;
+        const OptionKernel& kernel = strict_->option_kernel(
+            strict_state, operator_index);
+        if (!kernel.supported || !kernel.legal ||
+            !kernel.terminates_almost_surely) {
+            return false;
+        }
+        (void)resource_cost(kernel.expected_resources);
+        return true;
+    }
+
     std::vector<std::uint32_t> quotient_alternative_operator_ids(
             const ExactState& state) {
         if (state.terminal) return {};
@@ -363,41 +399,12 @@
         }
         std::vector<std::uint32_t> operator_ids;
         for (const std::uint32_t operator_index : admitted_operators_) {
-            const std::uint32_t coarse_operator =
-                coarse_operator_for(operator_index);
-            if (!coarse_.is_candidate_operator_admitted_for_state(
-                    known->second.coarse_state, coarse_operator)) {
-                continue;
+            if (quotient_alternative_operator_admitted(
+                    known->second.coarse_state,
+                    known->second.strict_state,
+                    operator_index)) {
+                operator_ids.push_back(operator_index);
             }
-            const PlannerOperator& planner =
-                strict_->operators().at(operator_index);
-            if (planner.kind == PlannerOperatorKind::Primitive) {
-                const ActionDescriptor& action = strict_->registry()
-                    .actions.at(planner.primitive_action);
-                if (!action.refinement.complete() ||
-                    !action_legal(
-                        strict_->session(), action,
-                        strict_->state(known->second.strict_state))) {
-                    continue;
-                }
-            } else {
-                const double immediate_lower =
-                    quotient_operator_immediate_cost_lower(
-                        operator_index);
-                const bool potentially_competitive =
-                    !std::isfinite(solved_.evaluated_policy_cost) ||
-                    immediate_lower < solved_.evaluated_policy_cost;
-                if (potentially_competitive) {
-                    const OptionKernel& kernel = strict_->option_kernel(
-                        known->second.strict_state, operator_index);
-                    if (!kernel.supported || !kernel.legal ||
-                        !kernel.terminates_almost_surely) {
-                        continue;
-                    }
-                    (void)resource_cost(kernel.expected_resources);
-                }
-            }
-            operator_ids.push_back(operator_index);
         }
         std::sort(
             operator_ids.begin(), operator_ids.end());
@@ -686,10 +693,27 @@
     quotient_certify_alternative_descriptor(
             const ExactState& state,
             const QuotientAlternativeDescriptor& descriptor) {
-        const std::vector<QuotientAlternativeDescriptor> current =
-            quotient_alternative_descriptors(state);
-        if (std::find(current.begin(), current.end(), descriptor) ==
-            current.end()) {
+        const auto known = known_.find(state.stable_key);
+        const bool structural_match =
+            !state.terminal &&
+            known != known_.end() &&
+            descriptor.operator_index < strict_->operators().size() &&
+            std::binary_search(
+                admitted_operators_.begin(),
+                admitted_operators_.end(),
+                descriptor.operator_index) &&
+            quotient_alternative_descriptor(
+                descriptor.operator_index) == descriptor;
+        /* Alternative discovery already enumerated the complete vocabulary
+         * to create the obligation. Certification needs to prove only that
+         * this descriptor remains admitted on this concrete carrier. Do not
+         * rebuild every unrelated option kernel before immediately checking
+         * the selected candidate again below. */
+        if (!structural_match ||
+            !quotient_alternative_operator_admitted(
+                known->second.coarse_state,
+                known->second.strict_state,
+                descriptor.operator_index)) {
             throw AdapterFailure(
                 PolicyExactLiftStatus::InvalidSolveState,
                 "alternative descriptor is stale or outside admission");

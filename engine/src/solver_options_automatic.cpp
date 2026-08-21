@@ -2210,7 +2210,11 @@ CalcContext::build_state_local_automatic_candidates(
                 }
             }
 
-            std::vector<PlannerOperator> priced_variants;
+            struct PricedVariant {
+                PlannerOperator planner;
+                double immediate_cost = 0.0;
+            };
+            std::vector<PricedVariant> priced_variants;
             priced_variants.reserve(admitted_variants.size());
             const std::size_t first_variant_decision =
                 batch.decisions.size();
@@ -2249,7 +2253,8 @@ CalcContext::build_state_local_automatic_candidates(
                     batch.decisions.push_back(std::move(dominated));
                     continue;
                 }
-                priced_variants.push_back(std::move(admitted));
+                priced_variants.push_back({
+                    std::move(admitted), exact_immediate_cost});
             }
             if (priced_variants.empty()) {
                 const std::uint64_t elapsed = static_cast<std::uint64_t>(
@@ -2266,6 +2271,36 @@ CalcContext::build_state_local_automatic_candidates(
                 }
                 check_limits();
                 continue;
+            }
+
+            if (temporary_group != nullptr && limits.prices != nullptr &&
+                priced_variants.size() > 1) {
+                /* Every blocker variant in one temporary effect group uses
+                 * the same exact OptionKernel. At fixed solve prices its Q
+                 * rows therefore differ only by immediate cost, so every
+                 * non-cheapest variant is globally dominated for this
+                 * carrier under every continuation value. Keep the first
+                 * minimum to preserve deterministic tie authority. */
+                const auto cheapest = std::min_element(
+                    priced_variants.begin(), priced_variants.end(),
+                    [](const PricedVariant& left,
+                       const PricedVariant& right) {
+                        return left.immediate_cost < right.immediate_cost;
+                    });
+                for (auto variant = priced_variants.begin();
+                     variant != priced_variants.end(); ++variant) {
+                    if (variant == cheapest) continue;
+                    StateLocalAutomaticCandidate collapsed = base_decision;
+                    collapsed.id = variant->planner.id;
+                    collapsed.raw_outcomes = 0;
+                    collapsed.collapsed = true;
+                    collapsed.evidence.reason =
+                        "equivalent_exact_kernel_price_dominated";
+                    batch.decisions.push_back(std::move(collapsed));
+                }
+                PricedVariant retained = std::move(*cheapest);
+                priced_variants.clear();
+                priced_variants.push_back(std::move(retained));
             }
 
             const auto outcome_mapping_started =
@@ -2330,7 +2365,8 @@ CalcContext::build_state_local_automatic_candidates(
             }
 
             bool first_variant = true;
-            for (PlannerOperator& admitted : priced_variants) {
+            for (PricedVariant& priced : priced_variants) {
+                PlannerOperator& admitted = priced.planner;
                 StateLocalAutomaticCandidate decision = base_decision;
                 decision.id = admitted.id;
                 decision.raw_outcomes = first_variant

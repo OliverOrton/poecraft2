@@ -6,37 +6,48 @@
 
 The
 [Four-T1 Automatic-Envelope Replacement Qualification](docs/active/2026-08-21-four-t1-automatic-envelope-qualification/plan.md)
-hit its explicit 300-second stop condition. Strict finalization is now
-cooperative, `refined_parent_*` bounded defaults participate in the paired-
-graph proof, every strict completion path requires a complete paired
-assertion, and byte-identical complete paired graph evaluations can be reused
-across competitive-frontier passes with fresh cost reconciliation.
+hit its explicit stop condition and remains stopped. A follow-up history audit
+confirmed that the old fast result at `c955d02` prepared zero automatic
+carriers. Commit `8a4f353` intentionally repaired that omission, so the old
+`3745.7309340083884` policy is an executable upper but is not a performance or
+optimality baseline for the complete repaired envelope.
 
-The checked native primary stops after 300.51 seconds with a 54.20-second
-local-reoptimization work item. Automatic preparation is genuinely active:
-482 carriers produce 890 operators and 4,901 eligible candidate rows with no
-preparation deferral. The exact lift grows from 5,820 to 5,961 strict states;
-later passes reuse the 5,653-pair graph evaluation but repeatedly rebuild the
-strict carriers while the automatic alternative envelope remains open. No
-checked state, transition, work, or memory cap fires. No new exact value,
-release-WASM primary, or 10,000-run verification was accepted. Full details
-are in the [stopped result](docs/active/2026-08-21-four-t1-automatic-envelope-qualification/result.md).
+The follow-up removed three avoidable amplifiers without changing action
+semantics or exact ordering. Strict alternative certification now validates
+only the named collision-safe descriptor and its carrier-local admission
+instead of rebuilding the complete unrelated kernel vocabulary. Temporary-
+bench variants with an identical complete exact kernel are price-dominated
+within their effect group only when a concrete economy exists; unpriced
+callers retain every variant. Local reoptimization now reports its real phase,
+clears stale graph-evaluation progress, and checkpoints every 32 obligations.
 
-An owner-authorized diagnostic copy then raised only the case/watchdog wall
-boundary from 300 to 600 seconds; the checked fixture remains unchanged. It
-also stops, at 600.03 seconds after 78,737,871 cooperative solve steps. Live
-work continues advancing, but the strict graph remains fixed at 5,961 states /
-5,927 kernels / 30,697 transitions, graph certification remains reused, and
-the automatic action envelope remains open with 18,414 actions (13,842
-unevaluated and 4,572 unresolved). No checked resource cap fires. The modest
-extension therefore does not close naturally, and its unknown remaining work
-cannot be characterized as merely another minute or two.
+The checked repaired 300-second result has 135 automatic operators instead of
+890, 426 temporary-bench rows instead of 2,552, 9,613 coarse sparse rows
+instead of 11,739, and a 1.45-second largest public step instead of 54.20
+seconds. Its strict graph and upper bound are unchanged at 5,961 states / 5,927
+kernels / 30,697 transitions and `3759.5969190423507`. The envelope still
+does not close: 16,277 automatic actions remain open, including 13,825
+unevaluated and 2,452 unresolved actions.
 
-The next plausible owner is collision-safe semantic row/proof reuse across
-equivalent temporary-bench and Eldritch-side carrier/operator alternatives.
-Do not substitute compiler compaction, action-family broadening, a cap increase,
-or weakened exactness. Five-T1 recovery remains separate. Oliver must select
-the next implementation chunk before work resumes.
+One owner-authorized 600-second diagnostic was repeated after the repair. It
+also stops, after 48,847,540 cooperative solve steps, with the same graph,
+upper, open-action counts, and no lower certificate or checked resource cap.
+The largest public step remains 1.45 seconds and the truthful phase is local
+reoptimization, not graph compilation. Ten minutes therefore is not merely a
+slightly short timeout. Full details and both checked artifacts are in the
+[stopped result](docs/active/2026-08-21-four-t1-automatic-envelope-qualification/result.md).
+
+The native build and focused policy-refinement and S8.3 automatic-admission
+controls pass. Release WASM, the replacement primary's 10,000-run
+verification, web acceptance, and the full repository pipeline were not run
+because native exact closure again hit the stop condition.
+
+The next plausible owner remains collision-safe semantic row/proof reuse
+across equivalent temporary-bench and Eldritch-side carrier/operator
+alternatives. Do not substitute compiler compaction, action-family broadening,
+a cap increase, a longer routine timeout, or weakened exactness. Five-T1
+recovery remains separate. Oliver must select the next implementation chunk
+before work resumes.
 
 ## Completed predecessor
 

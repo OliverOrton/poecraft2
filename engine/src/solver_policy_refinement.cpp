@@ -2560,6 +2560,8 @@ lift_policy_quotient_pass_task(
             }
             (void)publication_task.take_result();
         }
+        progress.phase = PolicyExactLiftPhase::LocalReoptimization;
+        progress.evaluation = {};
         const auto local_reoptimization_started =
             std::chrono::steady_clock::now();
         if (!telemetry.work_to_first_executable_upper.has_value()) {
@@ -2686,7 +2688,15 @@ lift_policy_quotient_pass_task(
             saturating_add(telemetry.alternative_scheduling_rounds, 1);
             bool policy_improved_this_round = false;
 
-            for (const std::uint32_t obligation_id : pending) {
+            for (std::size_t pending_index = 0;
+                 pending_index < pending.size(); ++pending_index) {
+                if (pending_index != 0 && (pending_index & 31u) == 0u) {
+                    ++progress.work_items;
+                    co_await solve_detail::CooperativeCheckpoint{
+                        oracle.estimated_owned_bytes()};
+                }
+                const std::uint32_t obligation_id =
+                    pending[pending_index];
                 const quotient::UnresolvedAlternativeObligation& before =
                     bellman.proof_store()->alternative_obligation(
                         obligation_id);
@@ -3077,6 +3087,9 @@ lift_policy_quotient_pass_task(
                                 oracle.estimated_owned_bytes()};
                         }
                         (void)publication_task.take_result();
+                        progress.phase =
+                            PolicyExactLiftPhase::LocalReoptimization;
+                        progress.evaluation = {};
                     } catch (const AdapterFailure& error) {
                         if (error.status !=
                             PolicyExactLiftStatus::ResourceCap) {
