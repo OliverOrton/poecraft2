@@ -190,6 +190,12 @@ expressions through native condition execution, not string reasoning alone.
 
 ## Gate 2 - Priority-Safe Same-Target Coalescing
 
+**Result:** complete. See
+[Gate 2 evidence](evidence/condition-efficient-gate2.md). All 140 measured
+groups and the exact 817-edge ceiling are realized with independent exact
+parity. Structural partitions permit non-adjacent grouping; refined
+observation routes use only the separately proved adjacent-run rewrite.
+
 At each compiler-generated decision node, group child branches that target the
 same continuation. For branches created from different values of the selected
 structural feature, retain their complete child guards and combine them with a

@@ -3,6 +3,7 @@
 #include "../src/solver_internal.hpp"
 #include "../src/solver_condition_expr.hpp"
 #include "../src/solver_policy_refinement.hpp"
+#include "../src/solver_policy_route.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
 
@@ -54,6 +55,66 @@ void run_condition_expr_tests() {
         ConditionExpr::at_least(1, {a, b}).json() ==
         "{\"type\":\"at_least\",\"count\":1,\"conditions\":[" +
             a.json() + "," + b.json() + "]}");
+}
+
+PolicyRouteEdge partition_edge(
+    std::string to,
+    const ConditionExpr& condition,
+    const std::size_t feature,
+    const std::uint64_t value,
+    const bool disjoint = true) {
+    return {
+        std::move(to), condition, {feature, value}, disjoint};
+}
+
+void run_policy_route_coalescing_tests() {
+    const ConditionExpr a = ConditionExpr::opaque(
+        "{\"type\":\"item_flag\",\"flag\":\"a\"}");
+    const ConditionExpr b = ConditionExpr::opaque(
+        "{\"type\":\"item_flag\",\"flag\":\"b\"}");
+    const ConditionExpr c = ConditionExpr::opaque(
+        "{\"type\":\"item_flag\",\"flag\":\"c\"}");
+    const std::vector<PolicyRouteEdge> mixed =
+        coalesce_disjoint_policy_route_edges({
+            partition_edge("same", a, 4, 0),
+            partition_edge("other", b, 4, 1),
+            partition_edge("same", c, 4, 2)});
+    PC_CHECK(mixed.size() == 2);
+    PC_CHECK(mixed[0].to == "same");
+    PC_CHECK(mixed[1].to == "other");
+    PC_CHECK(mixed[0].condition.json() ==
+             "{\"type\":\"any\",\"conditions\":[" + a.json() +
+                 "," + c.json() + "]}");
+    PC_CHECK(mixed[1].condition.json() == b.json());
+
+    const auto no_proof = coalesce_disjoint_policy_route_edges({
+        partition_edge("same", a, 4, 0, false),
+        partition_edge("same", b, 4, 1)});
+    PC_CHECK(no_proof.size() == 2);
+    const auto different_features =
+        coalesce_disjoint_policy_route_edges({
+            partition_edge("same", a, 4, 0),
+            partition_edge("same", b, 5, 1)});
+    PC_CHECK(different_features.size() == 2);
+    const auto repeated_value = coalesce_disjoint_policy_route_edges({
+        partition_edge("same", a, 4, 0),
+        partition_edge("same", b, 4, 0)});
+    PC_CHECK(repeated_value.size() == 2);
+
+    const auto adjacent_overlap =
+        coalesce_priority_safe_policy_route_edges({
+            partition_edge("same", a, 4, 0, false),
+            partition_edge("same", b, 9, 0, false),
+            partition_edge("other", c, 7, 0, false)});
+    PC_CHECK(adjacent_overlap.size() == 2);
+    PC_CHECK(adjacent_overlap[0].condition.kind() ==
+             ConditionExpr::Kind::Any);
+    const auto interleaved_overlap =
+        coalesce_priority_safe_policy_route_edges({
+            partition_edge("same", a, 4, 0, false),
+            partition_edge("other", b, 9, 0, false),
+            partition_edge("same", c, 7, 0, false)});
+    PC_CHECK(interleaved_overlap.size() == 3);
 }
 
 void report_compile_solve_issue(
@@ -2397,6 +2458,7 @@ void run_imprint_gate(const char* artifact_dir) {
 
 void run_solver_compile_tests(const char* artifact_dir) {
     run_condition_expr_tests();
+    run_policy_route_coalescing_tests();
     run_future_observed_choice_compile_test();
     run_structured_observation_route_tests();
     run_synthetic_gate();

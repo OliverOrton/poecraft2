@@ -20,6 +20,7 @@ existing memory and responsiveness limits.
 - [Selected condition-efficient strategy compilation and consolidation plan](condition-efficient-strategy-compilation-plan.md)
 - [Condition-efficient Gate 0 census](evidence/condition-efficient-gate0.md)
 - [Condition-efficient Gate 1 typed conditions](evidence/condition-efficient-gate1.md)
+- [Condition-efficient Gate 2 same-target coalescing](evidence/condition-efficient-gate2.md)
 - [Superseded cooperative exact-reforge and WASM graph-provenance plan](cooperative-reforge-wasm-graph-plan.md)
 - [Replayable-row Gate 0 census and selection](evidence/replayable-row-gate0.md)
 - [Replayable-row Gate 1 compact-token result](evidence/replayable-row-gate1.md)

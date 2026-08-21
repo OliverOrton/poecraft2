@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: condition-efficient strategy compilation is selected; Gates 0-1 are
-complete and same-target route coalescing is in progress.**
+**Status: condition-efficient strategy compilation is selected; Gates 0-2 are
+complete and the measurement-gated DAG/factoring decision is next.**
 
 ## Current boundary
 
@@ -25,33 +25,41 @@ typed composite conditions while leaving primitive parsing and execution in
 the native simulator. On Witness B, canonical route composition retains 92
 nodes / 338 edges and the exact `16226566.773294946` result while reducing
 condition bytes from 116,972 to 106,766 and JSON from 150,813 to 140,607. The
-focused compiler suite passes 823 checks. The next implementation boundary is
-priority-safe coalescing of siblings from one structural feature partition.
+focused compiler suite passes 823 checks.
 
-The binding hypothesis is current compiler underuse of the existing condition
-system. Both policy-tree builders split on the widest/most balanced feature,
-emit one edge per feature value, and hash-cons only completed routers with the
-same ordered targets and serialized conditions. They do not optimize for
-distinct continuations, coalesce same-target siblings with `any`, minimize
-edges/condition bytes, or use downstream subtree sharing in feature choice.
-The native simulator already supports nested `all`, `any`, `not`, and
-`at_least`, structurally memoizes equal compiled conditions, and preserves
-priority/source order.
+Gate 2 removes all 140 reproduced groups and realizes the full 817-edge
+predeclared ceiling: Witness B is 92 nodes / 308 edges / 139,225 bytes,
+Witness A's product graph is 184 / 613 / 460,885, and the four-T1 graph is 292
+/ 815 / 4,670,987. All exact costs, success-one and zero-off-policy results,
+defaults, accounting, and classifications remain unchanged. Structural
+feature siblings use mutual-exclusion provenance; refined observation routers
+only coalesce consecutive equal-target runs, preserving overlap priorities.
+The focused compiler suite passes 834 checks.
 
-Gate 0 therefore persists actual graph JSON and measures same-target groups,
+The four-T1 compiler phase falls from 671.06 ms to 69.25 ms, but its remaining
+4,587,281 condition bytes are large distinct inline `observation_signature`
+leaves that repeat the public v1 observation requirement. Removing that
+payload requires a later versioned condition-reference or observation-DAG
+contract, not current-vocabulary boolean factoring.
+
+The binding hypothesis was compiler underuse of the existing condition system.
+The native simulator already supported nested `all`, `any`, `not`, and
+`at_least`, structurally memoized equal compiled conditions, and preserved
+priority/source order; the missing authority was emitted-route reduction.
+
+Gate 0 persisted actual graph JSON and measured same-target groups,
 mutual-exclusion provenance, priorities, condition expression structure,
 repeated bytes, route depth, and the proof-safe reduction ceiling. The
-implementation then introduces a typed canonical condition authority,
+implementation introduces a typed canonical condition authority,
 priority-safe same-target coalescing, and—only if still material—a
 continuation-aware reduced multi-valued decision DAG and existing-vocabulary
 factoring. The touched compiler is subsequently split into condition,
 feature/domain, DAG, and emission/accounting modules. No public strategy schema
 change is authorized.
 
-Current native Witness B is 92 nodes / 338 edges / 150,813 JSON bytes: 84
-policy routers, one local gated router, three primitive operations, four
-infrastructure nodes, 248 condition-bearing edges, and 116,972 condition bytes.
-The retained four-goal graph has 4,594,437 condition bytes in 4,737,473 JSON
+The Gate 0 baseline Witness B was 92 nodes / 338 edges / 150,813 JSON bytes:
+84 policy routers, one local gated router, three primitive operations, four
+infrastructure nodes, 248 condition-bearing edges, and 116,972 condition
 bytes. Existing complete-behavior Fracture and gated-operation sharing remain
 authoritative and are not reimplemented.
 

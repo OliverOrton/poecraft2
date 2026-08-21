@@ -1,4 +1,5 @@
 #include "solver_compile_serialization.hpp"
+#include "solver_policy_route.hpp"
 #include "solver_solve_types.hpp"
 
 /*
@@ -1874,18 +1875,6 @@ std::string compile_policy_strategy_json(
         std::uint32_t state = kNoId;
         std::uint32_t leader = kNoId;
     };
-    struct PolicyRouteEdge {
-        std::string to;
-        ConditionExpr condition;
-    };
-    struct PolicyRouteNode {
-        std::string id;
-        std::vector<PolicyRouteEdge> edges;
-    };
-    struct PolicyRouteBranch {
-        std::string to;
-        ConditionExpr guard;
-    };
     std::vector<PolicyRouteEntry> policy_route_entries;
     const bool strict_policy_route =
         result.behavioral_representative_by_state.empty();
@@ -2188,7 +2177,6 @@ std::string compile_policy_strategy_json(
                 std::vector<PolicyRouteEdge> edges;
                 edges.reserve(groups.size());
                 for (auto& [value, members] : groups) {
-                    (void)value;
                     const PolicyRouteBranch child =
                         build_refined_parent_route(
                             members, child_features);
@@ -2197,16 +2185,13 @@ std::string compile_policy_strategy_json(
                         ConditionExpr::all({
                             refined_parent_feature_condition(
                                 members.front().row, selected),
-                            child.guard})});
+                            child.guard}),
+                        {selected, value},
+                        true});
                 }
-                std::string signature;
-                for (const PolicyRouteEdge& route_edge : edges) {
-                    signature +=
-                        std::to_string(route_edge.to.size()) + ":" +
-                        route_edge.to + ":" +
-                        std::to_string(route_edge.condition.json().size()) +
-                        ":" + route_edge.condition.json() + ";";
-                }
+                edges = coalesce_priority_safe_policy_route_edges(
+                    std::move(edges));
+                std::string signature = policy_route_signature(edges);
                 const auto shared =
                     policy_route_node_by_signature.find(signature);
                 if (shared !=
@@ -2343,22 +2328,19 @@ std::string compile_policy_strategy_json(
         std::vector<PolicyRouteEdge> edges;
         edges.reserve(groups.size());
         for (auto& [value, members] : groups) {
-            (void)value;
             const PolicyRouteBranch child =
                 build_policy_route(members, child_features);
             edges.push_back({
                 child.to,
                 ConditionExpr::all({
                     feature_condition(members.front().state, selected),
-                    child.guard})});
+                    child.guard}),
+                {selected, value},
+                true});
         }
-        std::string signature;
-        for (const PolicyRouteEdge& route_edge : edges) {
-            signature += std::to_string(route_edge.to.size()) + ":" +
-                         route_edge.to + ":" +
-                         std::to_string(route_edge.condition.json().size()) +
-                         ":" + route_edge.condition.json() + ";";
-        }
+        edges = coalesce_priority_safe_policy_route_edges(
+            std::move(edges));
+        std::string signature = policy_route_signature(edges);
         const auto shared = policy_route_node_by_signature.find(signature);
         if (shared != policy_route_node_by_signature.end()) {
             return {shared->second, guard};
@@ -2379,6 +2361,43 @@ std::string compile_policy_strategy_json(
     if (use_exact_policy_tree) {
         policy_route_root =
             build_policy_route(policy_route_entries, route_features);
+    }
+    std::map<std::string, std::vector<PolicyRouteEdge>>
+        refined_parent_policy_edges;
+    if (structured_refined_route) {
+        for (const std::uint32_t coarse_state : refined_parent_order) {
+            if (uniform_refined_parents.contains(coarse_state)) continue;
+            const std::string& router_id =
+                refined_parent_router.at(coarse_state);
+            std::set<std::pair<std::string, std::string>> emitted_routes;
+            std::vector<PolicyRouteEdge> edges;
+            for (const std::uint32_t class_id :
+                 refined_classes_by_coarse_parent.at(coarse_state)) {
+                const refinement::RefinedPolicyCompileClass& policy_class =
+                    refined_routing->classes.at(class_id);
+                if (policy_class.terminal) continue;
+                const std::uint32_t leader =
+                    policy_region_by_state.at(
+                        policy_class.representative_state);
+                if (leader == kNoId) {
+                    gap(
+                        "refined policy class has no emitted policy "
+                        "region");
+                }
+                const std::pair<std::string, std::string> route{
+                    state_node(leader), refined_condition(class_id)};
+                if (!emitted_routes.insert(route).second) continue;
+                edges.push_back({
+                    route.first,
+                    ConditionExpr::opaque(route.second),
+                    {},
+                    false});
+            }
+            refined_parent_policy_edges.emplace(
+                router_id,
+                coalesce_priority_safe_policy_route_edges(
+                    std::move(edges)));
+        }
     }
     std::map<std::uint32_t, OptionKernel> compiled_option_kernels;
     for (const std::uint32_t state_id : compiled_states) {
@@ -2576,6 +2595,23 @@ std::string compile_policy_strategy_json(
                 for (const PolicyRouteEdge& route_edge : node.edges) {
                     add_string(route_edge.to);
                     add_string(route_edge.condition.json());
+                }
+            }
+            add_map_nodes(
+                refined_parent_policy_edges.size(),
+                sizeof(std::string) +
+                    sizeof(std::vector<PolicyRouteEdge>));
+            for (const auto& [node_id, edges] :
+                 refined_parent_policy_edges) {
+                add_string(node_id);
+                add_owned_bytes(
+                    bytes,
+                    static_cast<std::uint64_t>(edges.capacity()) *
+                        sizeof(PolicyRouteEdge));
+                for (const PolicyRouteEdge& route_edge : edges) {
+                    add_string(route_edge.to);
+                    add_owned_bytes(
+                        bytes, route_edge.condition.owned_bytes());
                 }
             }
             add_map_nodes(
@@ -3176,31 +3212,12 @@ std::string compile_policy_strategy_json(
                 refined_classes_by_coarse_parent.at(coarse_state);
             const std::string& router_id =
                 refined_parent_router.at(coarse_state);
-            std::set<std::pair<std::string, std::string>>
-                emitted_routes;
             int route_priority = 0;
-            for (const std::uint32_t class_id : class_ids) {
-                const refinement::RefinedPolicyCompileClass& policy_class =
-                    refined_routing->classes.at(class_id);
-                if (policy_class.terminal) continue;
-                const std::uint32_t state =
-                    policy_class.representative_state;
-                const std::uint32_t leader =
-                    policy_region_by_state.at(state);
-                if (leader == kNoId) {
-                    gap(
-                        "refined policy class has no emitted policy "
-                        "region");
-                }
-                const std::pair<std::string, std::string> route{
-                    state_node(leader),
-                    refined_condition(class_id)};
-                if (!emitted_routes.insert(route).second) {
-                    continue;
-                }
+            for (const PolicyRouteEdge& route :
+                 refined_parent_policy_edges.at(router_id)) {
                 edge(
-                    router_id, route.first, route_priority++,
-                    route.second, false);
+                    router_id, route.to, route_priority++,
+                    route.condition.json(), false);
             }
             policy_route_default_edge(router_id, route_priority);
         }
@@ -3629,16 +3646,17 @@ std::string compile_policy_strategy_json(
         telemetry->projected_same_target_edge_savings = 0;
         telemetry->max_policy_route_out_degree = 0;
         telemetry->max_policy_route_distinct_targets = 0;
-        for (const PolicyRouteNode& route : policy_route_nodes) {
+        const auto census_route_edges =
+            [&](const std::vector<PolicyRouteEdge>& edges) {
             std::map<std::string, std::uint32_t> target_counts;
-            for (const PolicyRouteEdge& route_edge : route.edges) {
+            for (const PolicyRouteEdge& route_edge : edges) {
                 ++target_counts[route_edge.to];
             }
-            telemetry->policy_route_nondefault_edges += route.edges.size();
+            telemetry->policy_route_nondefault_edges += edges.size();
             telemetry->policy_route_distinct_targets += target_counts.size();
             telemetry->max_policy_route_out_degree = std::max(
                 telemetry->max_policy_route_out_degree,
-                static_cast<std::uint32_t>(route.edges.size()));
+                static_cast<std::uint32_t>(edges.size()));
             telemetry->max_policy_route_distinct_targets = std::max(
                 telemetry->max_policy_route_distinct_targets,
                 static_cast<std::uint32_t>(target_counts.size()));
@@ -3649,6 +3667,14 @@ std::string compile_policy_strategy_json(
                 telemetry->same_target_branch_edges += count;
                 telemetry->projected_same_target_edge_savings += count - 1;
             }
+        };
+        for (const PolicyRouteNode& route : policy_route_nodes) {
+            census_route_edges(route.edges);
+        }
+        for (const auto& [unused_node, edges] :
+             refined_parent_policy_edges) {
+            (void)unused_node;
+            census_route_edges(edges);
         }
     }
     return json;
