@@ -311,6 +311,11 @@ reforge, Bellman, or action-mechanics files in this plan.
 
 ## Gate 6 - Bounded Result-Quality Controls
 
+**Result:** complete. Transition/policy hashes, exact values, terminal mass,
+action/material accounting, defaults, bounded classifications, cost mismatch,
+carrier 5983 failure, and Fracture selection/non-selection are unchanged. See
+[Gate 6 evidence](evidence/condition-efficient-gate6.md).
+
 Re-run the frozen policies through independent exact graph evaluation. The
 compiler change must not alter solver action selection or hide current proof
 limitations.

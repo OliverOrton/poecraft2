@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: condition-efficient strategy compilation Gates 0-5 are complete;
-bounded result-quality controls and final acceptance remain.**
+**Status: condition-efficient strategy compilation Gates 0-6 are complete;
+final native/WASM/repository acceptance remains.**
 
 ## Current boundary
 
@@ -48,8 +48,16 @@ remaining dominant payload is not factorable in inline v1. Gate 5 is complete:
 typed condition and policy-route authorities are separate internal headers,
 refined-parent and exact-policy recursion share one reduced decision-DAG
 builder with explicit domain modes, and refined observation edges use the same
-typed staging. The focused compiler suite still passes 834 checks. Gate 6
-result-quality controls and final native/WASM/repository acceptance remain.
+typed staging. The focused compiler suite still passes 834 checks.
+
+Gate 6 re-solves and independently evaluates all three frozen controls after
+the shared-builder refactor. Their strategy files are byte-identical to Gate 2
+and their transition/policy hashes match Gate 0. Witness A remains exact at
+624,800.9519118543; Witness B remains bounded at 16,226,566.773294946 with its
+37,279,651.842345364 stored-cost mismatch, zero lower bound, and carrier 5983
+coarse-mapping failure; the exact four-T1 control remains 3,745.73093400839 and
+uses Fracture 3.99695198371769 times in expectation. All have success one and
+zero off-policy mass. Final acceptance is the only remaining gate.
 
 The binding hypothesis was compiler underuse of the existing condition system.
 The native simulator already supported nested `all`, `any`, `not`, and
