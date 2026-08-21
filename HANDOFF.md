@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: condition-efficient strategy compilation is selected; Gates 0-2 are
-complete and the measurement-gated DAG/factoring decision is next.**
+**Status: condition-efficient strategy compilation Gates 0-5 are complete;
+bounded result-quality controls and final acceptance remain.**
 
 ## Current boundary
 
@@ -41,6 +41,15 @@ The four-T1 compiler phase falls from 671.06 ms to 69.25 ms, but its remaining
 leaves that repeat the public v1 observation requirement. Removing that
 payload requires a later versioned condition-reference or observation-DAG
 contract, not current-vocabulary boolean factoring.
+
+Gates 3-4 are skipped under their explicit measurement rules. Gate 2 leaves
+zero same-target groups and no measured avoidable node/edge ceiling; the
+remaining dominant payload is not factorable in inline v1. Gate 5 is complete:
+typed condition and policy-route authorities are separate internal headers,
+refined-parent and exact-policy recursion share one reduced decision-DAG
+builder with explicit domain modes, and refined observation edges use the same
+typed staging. The focused compiler suite still passes 834 checks. Gate 6
+result-quality controls and final native/WASM/repository acceptance remain.
 
 The binding hypothesis was compiler underuse of the existing condition system.
 The native simulator already supported nested `all`, `any`, `not`, and

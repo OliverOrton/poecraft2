@@ -1970,6 +1970,36 @@ std::string compile_policy_strategy_json(
     };
     std::vector<PolicyRouteNode> policy_route_nodes;
     std::map<std::string, std::string> policy_route_node_by_signature;
+    const auto intern_policy_route_node =
+        [&](std::vector<PolicyRouteEdge> edges,
+            const char* cap_subject) {
+            std::string signature = policy_route_signature(edges);
+            const auto shared =
+                policy_route_node_by_signature.find(signature);
+            if (shared != policy_route_node_by_signature.end()) {
+                return shared->second;
+            }
+            const std::string node_id =
+                "policy_route_" +
+                std::to_string(policy_route_nodes.size());
+            policy_route_nodes.push_back(
+                {node_id, std::move(edges)});
+            policy_route_node_by_signature.emplace(
+                std::move(signature), node_id);
+            if (policy_route_nodes.size() + 4 >
+                result.options.max_compiled_nodes) {
+                if (telemetry != nullptr) {
+                    telemetry->cap_hit = "max_compiled_nodes";
+                }
+                gap(
+                    std::string(cap_subject) +
+                    " exceeded max_compiled_nodes (" +
+                    std::to_string(
+                        result.options.max_compiled_nodes) +
+                    ")");
+            }
+            return node_id;
+        };
     struct RefinedParentRouteEntry {
         std::uint32_t row = kNoId;
         std::string to;
@@ -2080,155 +2110,39 @@ std::string compile_policy_strategy_json(
                     .at(feature)
                     .at(value);
             };
-        std::function<PolicyRouteBranch(
-            const std::vector<RefinedParentRouteEntry>&,
-            const std::vector<std::size_t>&)>
-            build_refined_parent_route;
-        build_refined_parent_route =
-            [&](const std::vector<RefinedParentRouteEntry>& entries,
-                const std::vector<std::size_t>& features)
-                -> PolicyRouteBranch {
-                if (entries.empty()) {
-                    gap("empty refined parent route partition");
-                }
-                const std::string& first_target = entries.front().to;
-                const bool one_target = std::all_of(
-                    entries.begin() + 1, entries.end(),
-                    [&](const RefinedParentRouteEntry& entry) {
-                        return entry.to == first_target;
-                    });
-                std::vector<ConditionExpr> constants;
-                std::vector<std::size_t> varying;
-                varying.reserve(features.size());
-                for (const std::size_t feature : features) {
-                    const std::uint32_t first =
-                        refined_parent_feature_value(
-                            entries.front().row, feature);
-                    const bool constant = std::all_of(
-                        entries.begin() + 1, entries.end(),
-                        [&](const RefinedParentRouteEntry& entry) {
-                            return refined_parent_feature_value(
-                                       entry.row, feature) == first;
-                        });
-                    if (constant) {
-                        constants.push_back(
-                            refined_parent_feature_condition(
-                                entries.front().row, feature));
-                    } else {
-                        varying.push_back(feature);
-                    }
-                }
-                const ConditionExpr guard =
-                    ConditionExpr::all(std::move(constants));
-                if (varying.empty()) {
-                    if (!one_target) {
-                        gap(
-                            "identical refined parent states select "
-                            "different executable routes");
-                    }
-                    return {first_target, guard};
-                }
-
-                /* Keep splitting even when every current member selects the
-                 * same operation. The route is an exact domain proof, so an
-                 * unrepresented value must still take the node's off-policy
-                 * default instead of being admitted by action equality. */
-                std::size_t selected = varying.front();
-                std::size_t selected_distinct = 0;
-                std::uint64_t selected_square_sum =
-                    std::numeric_limits<std::uint64_t>::max();
-                for (const std::size_t feature : varying) {
-                    std::map<std::uint32_t, std::uint32_t> counts;
-                    for (const RefinedParentRouteEntry& entry : entries) {
-                        ++counts[refined_parent_feature_value(
-                            entry.row, feature)];
-                    }
-                    std::uint64_t square_sum = 0;
-                    for (const auto& [value, member_count] : counts) {
-                        (void)value;
-                        square_sum +=
-                            static_cast<std::uint64_t>(member_count) *
-                            member_count;
-                    }
-                    if (counts.size() > selected_distinct ||
-                        (counts.size() == selected_distinct &&
-                         square_sum < selected_square_sum)) {
-                        selected = feature;
-                        selected_distinct = counts.size();
-                        selected_square_sum = square_sum;
-                    }
-                }
-                std::vector<std::size_t> child_features;
-                child_features.reserve(varying.size() - 1);
-                for (const std::size_t feature : varying) {
-                    if (feature != selected) {
-                        child_features.push_back(feature);
-                    }
-                }
-                std::map<
-                    std::uint32_t,
-                    std::vector<RefinedParentRouteEntry>>
-                    groups;
-                for (const RefinedParentRouteEntry& entry : entries) {
-                    groups[refined_parent_feature_value(
-                        entry.row, selected)]
-                        .push_back(entry);
-                }
-                std::vector<PolicyRouteEdge> edges;
-                edges.reserve(groups.size());
-                for (auto& [value, members] : groups) {
-                    const PolicyRouteBranch child =
-                        build_refined_parent_route(
-                            members, child_features);
-                    edges.push_back({
-                        child.to,
-                        ConditionExpr::all({
-                            refined_parent_feature_condition(
-                                members.front().row, selected),
-                            child.guard}),
-                        {selected, value},
-                        true});
-                }
-                edges = coalesce_priority_safe_policy_route_edges(
-                    std::move(edges));
-                std::string signature = policy_route_signature(edges);
-                const auto shared =
-                    policy_route_node_by_signature.find(signature);
-                if (shared !=
-                    policy_route_node_by_signature.end()) {
-                    return {shared->second, guard};
-                }
-                const std::string node_id =
-                    "policy_route_" +
-                    std::to_string(policy_route_nodes.size());
-                policy_route_nodes.push_back(
-                    {node_id, std::move(edges)});
-                policy_route_node_by_signature.emplace(
-                    std::move(signature), node_id);
-                if (policy_route_nodes.size() + 4 >
-                    result.options.max_compiled_nodes) {
-                    if (telemetry != nullptr) {
-                        telemetry->cap_hit = "max_compiled_nodes";
-                    }
-                    gap(
-                        "refined parent router exceeded "
-                        "max_compiled_nodes (" +
-                        std::to_string(
-                            result.options.max_compiled_nodes) +
-                        ")");
-                }
-                return {node_id, guard};
-            };
         std::vector<std::size_t> parent_route_features(
             refined_parent_feature_width);
         for (std::size_t feature = 0;
              feature < parent_route_features.size(); ++feature) {
             parent_route_features[feature] = feature;
         }
-        refined_parent_route_root =
-            build_refined_parent_route(
-                refined_parent_route_entries,
-                parent_route_features);
+        /* Refined-parent routing is also a domain proof. Uniform targets do
+         * not authorize an early leaf because unrepresented feature values
+         * must still reach the fail-closed default. */
+        refined_parent_route_root = build_policy_decision_dag(
+            refined_parent_route_entries,
+            parent_route_features,
+            PolicyRouteDomainMode::ProveRepresentedDomain,
+            [&](const RefinedParentRouteEntry& entry,
+                const std::size_t feature) {
+                return refined_parent_feature_value(
+                    entry.row, feature);
+            },
+            [](const RefinedParentRouteEntry& entry) {
+                return entry.to;
+            },
+            [&](const RefinedParentRouteEntry& entry,
+                const std::size_t feature) {
+                return refined_parent_feature_condition(
+                    entry.row, feature);
+            },
+            [&](std::vector<PolicyRouteEdge> edges) {
+                return intern_policy_route_node(
+                    std::move(edges), "refined parent router");
+            },
+            "empty refined parent route partition",
+            "identical refined parent states select different "
+            "executable routes");
         use_refined_parent_tree = true;
         refined_parent_condition.clear();
         retained_compile_condition_bytes =
@@ -2240,127 +2154,33 @@ std::string compile_policy_strategy_json(
     for (std::size_t feature = 0; feature < route_features.size(); ++feature) {
         route_features[feature] = feature;
     }
-    std::function<PolicyRouteBranch(
-        const std::vector<PolicyRouteEntry>&,
-        const std::vector<std::size_t>&)> build_policy_route;
-    build_policy_route =
-        [&](const std::vector<PolicyRouteEntry>& entries,
-            const std::vector<std::size_t>& features) -> PolicyRouteBranch {
-        if (entries.empty()) gap("empty exact policy route partition");
-        const std::uint32_t partition_leader =
-            entries.front().leader;
-        const bool one_region = std::all_of(
-            entries.begin() + 1, entries.end(),
-            [&](const PolicyRouteEntry& entry) {
-                return entry.leader == partition_leader;
-            });
-        if (one_region) {
-            /* Stop once the observations already tested by the route select
-             * one executable continuation. Reattaching the complete abstract
-             * region predicate here is not merely redundant: a bounded
-             * product incumbent can omit a concrete strict successor while
-             * retaining the same continuation on both neighboring abstract
-             * states. The exact evaluator must be allowed to exercise that
-             * continuation and either certify it or reject it. The default
-             * edge still handles every observation value that separates this
-             * region from another selected continuation. */
-            return {
-                state_node(partition_leader), ConditionExpr::always()};
-        }
-        std::vector<ConditionExpr> constants;
-        std::vector<std::size_t> varying;
-        varying.reserve(features.size());
-        for (const std::size_t feature : features) {
-            const std::uint32_t first =
-                feature_index.at(entries.front().state, feature);
-            const bool constant = std::all_of(
-                entries.begin() + 1, entries.end(),
-                [&](const PolicyRouteEntry& entry) {
-                    return feature_index.at(entry.state, feature) == first;
-                });
-            if (constant) {
-                constants.push_back(
-                    feature_condition(entries.front().state, feature));
-            } else {
-                varying.push_back(feature);
-            }
-        }
-        const ConditionExpr guard =
-            ConditionExpr::all(std::move(constants));
-        if (varying.empty()) {
-            gap("identical exact policy states select different regions");
-        }
-
-        /* Prefer the widest, then most balanced exact partition. This keeps
-         * the router shallow without assigning semantic meaning to hashes or
-         * state discovery ids. */
-        std::size_t selected = varying.front();
-        std::size_t selected_distinct = 0;
-        std::uint64_t selected_square_sum =
-            std::numeric_limits<std::uint64_t>::max();
-        for (const std::size_t feature : varying) {
-            std::map<std::uint32_t, std::uint32_t> counts;
-            for (const PolicyRouteEntry& entry : entries) {
-                ++counts[feature_index.at(entry.state, feature)];
-            }
-            std::uint64_t square_sum = 0;
-            for (const auto& [value, count] : counts) {
-                (void)value;
-                square_sum += static_cast<std::uint64_t>(count) * count;
-            }
-            if (counts.size() > selected_distinct ||
-                (counts.size() == selected_distinct &&
-                 square_sum < selected_square_sum)) {
-                selected = feature;
-                selected_distinct = counts.size();
-                selected_square_sum = square_sum;
-            }
-        }
-        std::vector<std::size_t> child_features;
-        child_features.reserve(varying.size() - 1);
-        for (const std::size_t feature : varying) {
-            if (feature != selected) child_features.push_back(feature);
-        }
-        std::map<std::uint32_t, std::vector<PolicyRouteEntry>> groups;
-        for (const PolicyRouteEntry& entry : entries) {
-            groups[feature_index.at(entry.state, selected)].push_back(entry);
-        }
-        std::vector<PolicyRouteEdge> edges;
-        edges.reserve(groups.size());
-        for (auto& [value, members] : groups) {
-            const PolicyRouteBranch child =
-                build_policy_route(members, child_features);
-            edges.push_back({
-                child.to,
-                ConditionExpr::all({
-                    feature_condition(members.front().state, selected),
-                    child.guard}),
-                {selected, value},
-                true});
-        }
-        edges = coalesce_priority_safe_policy_route_edges(
-            std::move(edges));
-        std::string signature = policy_route_signature(edges);
-        const auto shared = policy_route_node_by_signature.find(signature);
-        if (shared != policy_route_node_by_signature.end()) {
-            return {shared->second, guard};
-        }
-        const std::string node_id =
-            "policy_route_" + std::to_string(policy_route_nodes.size());
-        policy_route_nodes.push_back({node_id, std::move(edges)});
-        policy_route_node_by_signature.emplace(std::move(signature), node_id);
-        if (policy_route_nodes.size() + 4 >
-            result.options.max_compiled_nodes) {
-            if (telemetry != nullptr) telemetry->cap_hit = "max_compiled_nodes";
-            gap("exact policy router exceeded max_compiled_nodes (" +
-                std::to_string(result.options.max_compiled_nodes) + ")");
-        }
-        return {node_id, guard};
-    };
     PolicyRouteBranch policy_route_root;
     if (use_exact_policy_tree) {
-        policy_route_root =
-            build_policy_route(policy_route_entries, route_features);
+        /* Once tested observations select one continuation, the exact policy
+         * route may stop. The next concrete transition is evaluated by the
+         * selected operation; the unchanged default still owns every value
+         * that distinguishes another selected continuation. */
+        policy_route_root = build_policy_decision_dag(
+            policy_route_entries,
+            route_features,
+            PolicyRouteDomainMode::StopAtUniformTarget,
+            [&](const PolicyRouteEntry& entry,
+                const std::size_t feature) {
+                return feature_index.at(entry.state, feature);
+            },
+            [&](const PolicyRouteEntry& entry) {
+                return state_node(entry.leader);
+            },
+            [&](const PolicyRouteEntry& entry,
+                const std::size_t feature) {
+                return feature_condition(entry.state, feature);
+            },
+            [&](std::vector<PolicyRouteEdge> edges) {
+                return intern_policy_route_node(
+                    std::move(edges), "exact policy router");
+            },
+            "empty exact policy route partition",
+            "identical exact policy states select different regions");
     }
     std::map<std::string, std::vector<PolicyRouteEdge>>
         refined_parent_policy_edges;

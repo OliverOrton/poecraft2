@@ -4,9 +4,11 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <map>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -116,6 +118,138 @@ inline std::string policy_route_signature(
                      ":" + edge.condition.json() + ";";
     }
     return signature;
+}
+
+enum class PolicyRouteDomainMode {
+    StopAtUniformTarget,
+    ProveRepresentedDomain,
+};
+
+/* Shared reduced multi-valued decision-DAG construction. Callbacks preserve
+ * the semantic differences between exact-policy and refined-parent routing:
+ * the former may stop at a uniform continuation, while the latter keeps
+ * testing every varying feature to prove the represented domain. */
+template <
+    typename Entry,
+    typename ValueFn,
+    typename TargetFn,
+    typename ConditionFn,
+    typename MakeNodeFn>
+PolicyRouteBranch build_policy_decision_dag(
+    const std::vector<Entry>& root_entries,
+    const std::vector<std::size_t>& root_features,
+    const PolicyRouteDomainMode mode,
+    ValueFn value_of,
+    TargetFn target_of,
+    ConditionFn condition_of,
+    MakeNodeFn make_node,
+    const char* empty_error,
+    const char* conflict_error) {
+    std::function<PolicyRouteBranch(
+        const std::vector<Entry>&,
+        const std::vector<std::size_t>&)> build;
+    build = [&](const std::vector<Entry>& entries,
+                const std::vector<std::size_t>& features)
+        -> PolicyRouteBranch {
+        if (entries.empty()) {
+            throw std::runtime_error(
+                std::string("policy compile: ") + empty_error);
+        }
+        const std::string first_target = target_of(entries.front());
+        const bool one_target = std::all_of(
+            entries.begin() + 1, entries.end(),
+            [&](const Entry& entry) {
+                return target_of(entry) == first_target;
+            });
+        if (mode == PolicyRouteDomainMode::StopAtUniformTarget &&
+            one_target) {
+            return {first_target, ConditionExpr::always()};
+        }
+
+        std::vector<ConditionExpr> constants;
+        std::vector<std::size_t> varying;
+        varying.reserve(features.size());
+        for (const std::size_t feature : features) {
+            const std::uint64_t first =
+                static_cast<std::uint64_t>(
+                    value_of(entries.front(), feature));
+            const bool constant = std::all_of(
+                entries.begin() + 1, entries.end(),
+                [&](const Entry& entry) {
+                    return static_cast<std::uint64_t>(
+                               value_of(entry, feature)) == first;
+                });
+            if (constant) {
+                constants.push_back(
+                    condition_of(entries.front(), feature));
+            } else {
+                varying.push_back(feature);
+            }
+        }
+        const ConditionExpr guard =
+            ConditionExpr::all(std::move(constants));
+        if (varying.empty()) {
+            if (!one_target) {
+                throw std::runtime_error(
+                    std::string("policy compile: ") + conflict_error);
+            }
+            return {first_target, guard};
+        }
+
+        std::size_t selected = varying.front();
+        std::size_t selected_distinct = 0;
+        std::uint64_t selected_square_sum =
+            std::numeric_limits<std::uint64_t>::max();
+        for (const std::size_t feature : varying) {
+            std::map<std::uint64_t, std::uint32_t> counts;
+            for (const Entry& entry : entries) {
+                ++counts[static_cast<std::uint64_t>(
+                    value_of(entry, feature))];
+            }
+            std::uint64_t square_sum = 0;
+            for (const auto& [unused_value, count] : counts) {
+                (void)unused_value;
+                square_sum +=
+                    static_cast<std::uint64_t>(count) * count;
+            }
+            if (counts.size() > selected_distinct ||
+                (counts.size() == selected_distinct &&
+                 square_sum < selected_square_sum)) {
+                selected = feature;
+                selected_distinct = counts.size();
+                selected_square_sum = square_sum;
+            }
+        }
+
+        std::vector<std::size_t> child_features;
+        child_features.reserve(varying.size() - 1);
+        for (const std::size_t feature : varying) {
+            if (feature != selected) child_features.push_back(feature);
+        }
+        std::map<std::uint64_t, std::vector<Entry>> groups;
+        for (const Entry& entry : entries) {
+            groups[static_cast<std::uint64_t>(
+                value_of(entry, selected))]
+                .push_back(entry);
+        }
+        std::vector<PolicyRouteEdge> edges;
+        edges.reserve(groups.size());
+        for (auto& [value, members] : groups) {
+            const PolicyRouteBranch child =
+                build(members, child_features);
+            edges.push_back({
+                child.to,
+                ConditionExpr::all({
+                    condition_of(members.front(), selected),
+                    child.guard}),
+                {selected, value},
+                true});
+        }
+        edges = coalesce_priority_safe_policy_route_edges(
+            std::move(edges));
+        return {make_node(std::move(edges)), guard};
+    };
+    return build(root_entries, root_features);
 }
 
 } // namespace solver

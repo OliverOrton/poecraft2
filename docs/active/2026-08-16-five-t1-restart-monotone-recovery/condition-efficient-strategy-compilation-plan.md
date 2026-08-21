@@ -226,6 +226,12 @@ coalescible same-target sibling group identified by Gate 0 must disappear.
 
 ## Gate 3 - Continuation-Aware Reduced Decision DAG
 
+**Decision:** skipped under this gate's measurement rule. Gate 2 leaves zero
+same-target groups, emitted non-default edges equal distinct continuations,
+and complete identical children remain signature-shared. There is no measured
+node/edge reduction ceiling that justifies changing the split heuristic. See
+[Gates 3-5 evidence](evidence/condition-efficient-gates3-5.md).
+
 Use Gate 0 and Gate 2 results to decide whether the split heuristic still
 creates material avoidable routers or condition bytes. If it does, replace the
 width-first choice with a deterministic continuation-aware cost model over:
@@ -254,6 +260,12 @@ heuristic for aesthetics.
 
 ## Gate 4 - Existing-Vocabulary Factoring
 
+**Decision:** skipped after measurement. The remaining dominant payload is
+distinct inline `observation_signature` leaves, whose repeated requirement
+cannot be shared with the current v1 boolean vocabulary. A versioned reference
+or observation-DAG contract remains deferred. See
+[Gates 3-5 evidence](evidence/condition-efficient-gates3-5.md).
+
 Only after the reduced DAG is measured, apply additional compact forms already
 supported by v1 when they strictly reduce the serialized expression and have
 an exact structural proof:
@@ -271,6 +283,12 @@ vocabulary reductions, record the remaining unique/repeated byte census for a
 later versioned representation plan.
 
 ## Gate 5 - Targeted Compiler Consolidation
+
+**Result:** complete. Typed condition construction and route-DAG construction
+now have explicit internal modules. Refined-parent and exact-policy recursion
+share one builder with separate domain modes, and refined observation edges use
+the same typed route staging before emission. See
+[Gates 3-5 evidence](evidence/condition-efficient-gates3-5.md).
 
 After behavior and representation are stable, split the touched compiler
 responsibilities into explicit internal modules:
