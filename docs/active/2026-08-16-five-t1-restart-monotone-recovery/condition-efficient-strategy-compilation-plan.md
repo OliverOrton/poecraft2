@@ -1,6 +1,6 @@
 # Condition-Efficient Strategy Compilation And Consolidation
 
-**Status: selected; Gate 0 is complete and implementation is in progress.**
+**Status: complete and accepted.**
 
 Parent: [Five-T1 Restart-Monotone Strategy Recovery](README.md)
 
@@ -337,6 +337,11 @@ compiler work changes any of them, treat it as a regression or newly exposed
 defect and stop rather than expanding scope.
 
 ## Gate 7 - Final Native, WASM, And Repository Acceptance
+
+**Result:** complete. Native/WASM comparison passes 96 checks on the exact
+four-T1 graph, both sides pass the pinned 10,000-run verification, focused
+native and web suites pass, and the single final repository pipeline passes.
+See [final evidence](evidence/condition-efficient-final.md).
 
 After all selected implementation gates are complete, run the normal final
 acceptance once:

@@ -1,15 +1,27 @@
 # Session Handoff
 
-**Status: condition-efficient strategy compilation Gates 0-6 are complete;
-final native/WASM/repository acceptance remains.**
+**Status: condition-efficient strategy compilation is complete and accepted;
+no implementation boundary is active. Oliver must choose the next chunk.**
 
 ## Current boundary
 
-The selected
+The completed
 [Condition-Efficient Strategy Compilation And Consolidation](docs/active/2026-08-16-five-t1-restart-monotone-recovery/condition-efficient-strategy-compilation-plan.md)
-is the active scope. Oliver authorized implementation after reviewing the
-plan. It supersedes the cooperative exact-reforge proposal before that
-proposal began.
+is the latest finished scope. It superseded the cooperative exact-reforge
+proposal before that proposal began. Full results and acceptance are in the
+[final evidence](docs/active/2026-08-16-five-t1-restart-monotone-recovery/evidence/condition-efficient-final.md).
+
+The final graphs are Witness B 92 nodes / 308 edges / 139,225 bytes, Witness A
+184 / 613 / 460,885, and four-T1 292 / 815 / 4,670,987. The work removes all
+140 reproduced same-target groups and 817 edges without changing solver hashes,
+exact values, terminal mass, accounting, or defaults. Native/WASM parity passes
+96 checks on the exact four-T1 graph; both sides pass its pinned 10,000-run
+verification. Release WASM and the full repository pipeline pass.
+
+No follow-up is implicitly selected. The clearest remaining representation
+boundary is a versioned shared form for the repeated inline observation
+requirements; the clearest solver-quality boundary remains the bounded
+five-T1 proof/cost/coarse-mapping work listed below.
 
 Gate 0 persists the three representative pre-change graphs and confirms the
 dense-routing hypothesis. Witness B has 30 same-target sibling groups with 30

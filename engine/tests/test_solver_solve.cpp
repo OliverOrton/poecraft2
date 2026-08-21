@@ -1354,6 +1354,17 @@ void run_alt_spam_tests() {
         compilation_sample.strategy_json_bytes = 27;
         compilation_sample.total_condition_bytes = 271;
         compilation_sample.max_condition_bytes = 272;
+        compilation_sample.condition_edges = 274;
+        compilation_sample.unique_condition_literals = 75;
+        compilation_sample.repeated_condition_occurrences = 199;
+        compilation_sample.repeated_condition_bytes = 278;
+        compilation_sample.policy_route_nondefault_edges = 20;
+        compilation_sample.policy_route_distinct_targets = 15;
+        compilation_sample.same_target_branch_groups = 4;
+        compilation_sample.same_target_branch_edges = 9;
+        compilation_sample.projected_same_target_edge_savings = 5;
+        compilation_sample.max_policy_route_out_degree = 6;
+        compilation_sample.max_policy_route_distinct_targets = 5;
         compilation_sample.exact_state_fallbacks = 2;
         compilation_sample.junk_predicates = 273;
         compilation_sample.policy_route_default_edges = 5;
@@ -1537,6 +1548,17 @@ void run_alt_spam_tests() {
                      "\"strategy_json_bytes\":27,"
                      "\"total_condition_bytes\":271,"
                      "\"max_condition_bytes\":272,"
+                     "\"condition_census\":{\"edges\":274,"
+                     "\"unique_literals\":75,"
+                     "\"repeated_occurrences\":199,"
+                     "\"repeated_bytes\":278},"
+                     "\"policy_route_density\":{\"nondefault_edges\":20,"
+                     "\"distinct_targets\":15,"
+                     "\"same_target_groups\":4,"
+                     "\"same_target_edges\":9,"
+                     "\"projected_edge_savings\":5,"
+                     "\"max_out_degree\":6,"
+                     "\"max_distinct_targets\":5},"
                      "\"exact_state_fallbacks\":2,"
                      "\"junk_predicates\":273,"
                      "\"policy_route_defaults\":{"

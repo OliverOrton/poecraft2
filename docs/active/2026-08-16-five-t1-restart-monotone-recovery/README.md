@@ -1,7 +1,7 @@
 # Five-T1 Restart-Monotone Strategy Recovery
 
-**Status: bounded graph compaction is retained; condition-efficient strategy
-compilation and targeted compiler consolidation are selected and in progress.**
+**Status: condition-efficient strategy compilation and targeted compiler
+consolidation are complete and accepted.**
 
 Parent: [Active work](../README.md)
 
@@ -17,12 +17,13 @@ existing memory and responsiveness limits.
 - [Selected replayable operation-row recovery plan](replayable-operation-row-plan.md)
 - [Selected proof-gated route and operation-graph compaction plan](gated-route-evaluator-compaction-plan.md)
 - [Route/operation-graph compaction result](evidence/gated-route-compaction-result.md)
-- [Selected condition-efficient strategy compilation and consolidation plan](condition-efficient-strategy-compilation-plan.md)
+- [Completed condition-efficient strategy compilation and consolidation plan](condition-efficient-strategy-compilation-plan.md)
 - [Condition-efficient Gate 0 census](evidence/condition-efficient-gate0.md)
 - [Condition-efficient Gate 1 typed conditions](evidence/condition-efficient-gate1.md)
 - [Condition-efficient Gate 2 same-target coalescing](evidence/condition-efficient-gate2.md)
 - [Condition-efficient Gates 3-5 decision and consolidation](evidence/condition-efficient-gates3-5.md)
 - [Condition-efficient Gate 6 result-quality controls](evidence/condition-efficient-gate6.md)
+- [Condition-efficient final result and acceptance](evidence/condition-efficient-final.md)
 - [Superseded cooperative exact-reforge and WASM graph-provenance plan](cooperative-reforge-wasm-graph-plan.md)
 - [Replayable-row Gate 0 census and selection](evidence/replayable-row-gate0.md)
 - [Replayable-row Gate 1 compact-token result](evidence/replayable-row-gate1.md)
@@ -33,6 +34,10 @@ existing memory and responsiveness limits.
 - [Pair-discovery follow-up audit](evidence/pair-discovery-follow-up-audit.md)
 - [Successor Gate 0 result](evidence/successor-gate0.md)
 - [Current handoff](../../../HANDOFF.md)
+
+The final condition-efficient result supersedes earlier historical statements
+below that release WASM or full acceptance had not yet run; those statements
+describe their predecessor checkpoints.
 
 The retained transition and segmented-pair checkpoints reduce Witness B's
 10-million evaluator peak to 600,881,764 bytes and safely cross the former
@@ -61,21 +66,16 @@ propagation are retained. Gate 5 stops at a 1.254-second atomic exact-reforge
 leaf; release WASM, web/Warlord acceptance, the primary, and the full pipeline
 remain closed.
 
-The selected follow-up now targets generated routing quality directly. Current
-native Witness B uses 84 policy routers and 248 condition-bearing edges in a
-92-node graph; conditions own 116,972 of 150,813 serialized bytes. The retained
-four-goal graph uses 4,594,437 condition bytes in 4,737,473 JSON bytes. Source
-inspection confirms that the compiler emits one edge per selected feature
-value even when several branches converge on the same destination, and its
-split heuristic optimizes width/balance rather than continuation count, edges,
-or bytes. The new plan measures those dense regions, introduces a typed
-canonical condition authority, coalesces priority-safe same-target branches
-with the existing `any` vocabulary, and conditionally builds a continuation-
-aware reduced decision DAG. Gate 0 reproduces 30 proof-safe same-target groups
-in Witness B, 53 in Witness A's product graph, and 57 in the dense four-goal
-graph. Those groups contain an exact 817 redundant-edge reduction ceiling.
-Behavior-neutral, cap-accounted compiler census telemetry is implemented and
-the focused compiler suite passes 815 checks.
+The completed follow-up targets generated routing quality directly. Gate 0
+reproduced 140 proof-safe same-target groups and an exact 817-edge ceiling.
+Typed canonical conditions and priority-safe unions realize the full ceiling:
+Witness B falls from 338 to 308 edges and 150,813 to 139,225 bytes; Witness A's
+product graph falls from 666 to 613 edges and 482,233 to 460,885 bytes; and the
+dense four-goal graph falls from 1,549 to 815 edges and 4,737,473 to 4,670,987
+bytes. Solver hashes, exact values, accounting, terminal mass, and defaults are
+unchanged. The four-goal native compiler phase falls from 671.06 ms to 66.05
+ms. Release WASM/native parity, pinned 10,000-run verification, focused suites,
+and the full repository pipeline pass.
 
 Oliver selected the proof-gated route and operation-graph compaction follow-up
 after a source and artifact audit attributed the 2,015-node certificate to 757

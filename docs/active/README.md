@@ -1,26 +1,27 @@
 # Active Work
 
 **Status: condition-efficient strategy compilation and targeted compiler
-consolidation are proposed; implementation has not started.**
+consolidation are complete and accepted; no implementation boundary is active.**
 
 Parent: [Documentation map](../README.md)
 
 The
-[bounded native result](2026-08-16-five-t1-restart-monotone-recovery/evidence/gated-route-compaction-result.md)
-materializes Witness B as a 92-node independently evaluated executable policy
-at 16,226,566.773294946 Chaos. Exact closure remains open, and the 250 ms
-work-item contract still fails. Release WASM and the parent acceptance gates
-remain closed.
+[accepted condition-efficient result](2026-08-16-five-t1-restart-monotone-recovery/evidence/condition-efficient-final.md)
+removes all 140 measured same-target groups and 817 edges while preserving
+solver hashes, exact values, terminal mass, accounting, and defaults. Release
+WASM/native parity, pinned 10,000-run verification, focused suites, and the
+full repository pipeline pass. Witness B remains honestly bounded at
+16,226,566.773294946 Chaos; exact closure and the 250 ms work-item contract are
+still open.
 
-The proposed
+The completed
 [Condition-Efficient Strategy Compilation And Consolidation](2026-08-16-five-t1-restart-monotone-recovery/condition-efficient-strategy-compilation-plan.md)
-measures dense same-target routing directly, uses a typed canonical condition
+measured dense same-target routing directly, uses a typed canonical condition
 authority, combines proof-disjoint branches through the existing `any`
 vocabulary, and conditionally replaces the width-first policy tree with a
 continuation-aware reduced decision DAG. It preserves exact domain/default
 proofs and keeps broader solver-result recovery deferred. The cooperative
-exact-reforge proposal is superseded without implementation. Oliver has not
-yet authorized implementation of the new plan.
+exact-reforge proposal is superseded without implementation.
 
 The stopped
 [Replayable Exact Operation-Row Recovery](2026-08-16-five-t1-restart-monotone-recovery/replayable-operation-row-plan.md)

@@ -118,7 +118,7 @@ test("goal-realignment corpora validate every current case and economy", () => {
             "poecraft2-solver-goal-realignment-gate6-v1",
         ],
     );
-    assert.deepEqual(loaded.map((corpus) => corpus.cases.length), [5, 2, 1, 2]);
+    assert.deepEqual(loaded.map((corpus) => corpus.cases.length), [5, 3, 1, 2]);
 
     const cases = loaded.flatMap((corpus) => {
         validateCorpusArtifactPins(corpus.manifest, artifact, 2);
