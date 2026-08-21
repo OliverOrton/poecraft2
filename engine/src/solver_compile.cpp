@@ -1264,10 +1264,16 @@ std::string compile_policy_strategy_json(
             const PlannerOperator& first_planner =
                 calc.operators().at(
                     first.selected_action->action_id);
+            /* Product-local Fracture classes share one emitted primitive and
+             * global goal-hit/Restart route. Their state-local k/n kernels
+             * remain solver authority, but no strict observation is needed
+             * merely to choose the same executable decision. Unrestricted
+             * Fracture retains the conservative class-local requirement. */
             bool uniform = class_ids.size() == 1 ||
                 (first_planner.kind == PlannerOperatorKind::Primitive &&
-                 first_planner.automatic_kind !=
-                     AutomaticCandidateKind::Fracture);
+                 (first_planner.automatic_kind !=
+                      AutomaticCandidateKind::Fracture ||
+                  product_solver_policy));
             uniform = uniform &&
                 retry_targets_repeat_decision(first);
             for (std::size_t index = 1;
@@ -1537,8 +1543,7 @@ std::string compile_policy_strategy_json(
     }
 
     const auto product_fracture_hit_condition = [&]
-        (const std::uint32_t state_id,
-         const PlannerOperator& planner) {
+        (const PlannerOperator& planner) {
             if (planner.kind != PlannerOperatorKind::Primitive ||
                 planner.automatic_kind !=
                     AutomaticCandidateKind::Fracture ||
@@ -1547,16 +1552,11 @@ std::string compile_policy_strategy_json(
                     "product-local Fracture region has no single "
                     "primitive operation");
             }
-            const AbstractState& source = calc.state(state_id);
             std::vector<std::string> acceptable_hits;
             for (std::uint32_t slot = 0;
                  slot < layout.slots.size(); ++slot) {
                 const std::uint32_t bit = 1u << slot;
-                if ((planner.relevant_goal_mask & bit) != 0 &&
-                    source.slot_status[slot] ==
-                        static_cast<std::uint8_t>(
-                            GoalSlotStatus::Satisfied) &&
-                    (source.fractured_goal_mask & bit) == 0) {
+                if ((planner.relevant_goal_mask & bit) != 0) {
                     acceptable_hits.push_back(with_slot_flags(
                         vocabulary[slot].satisfied, true, false));
                 }
@@ -1569,15 +1569,14 @@ std::string compile_policy_strategy_json(
             return any_of(acceptable_hits);
         };
     const auto product_fracture_region_key = [&]
-        (const std::uint32_t state_id,
-         const PlannerOperator& planner) {
+        (const PlannerOperator& planner) {
             const std::uint32_t action =
                 planner.primitive_program.front();
             const std::array<std::string, 4> components{
                 operation_json(
                     session, calc.registry().actions.at(action)),
                 accounting_roles_json(planner, action),
-                product_fracture_hit_condition(state_id, planner),
+                product_fracture_hit_condition(planner),
                 "shared_product_fracture_retry_default"};
             std::string key = "product_fracture:";
             for (const std::string& component : components) {
@@ -1592,9 +1591,9 @@ std::string compile_policy_strategy_json(
      * cost is only an annotation, so omit it for a shared region whose member
      * values differ. Observation-owned and state-local retry options remain
      * singleton regions so their concrete routing recipes cannot be
-     * conflated. Product-local Fracture is shareable only by its complete
-     * emitted operation, acceptable-hit route, accounting, and common retry
-     * default. */
+     * conflated. Product-local Fracture shares its complete emitted operation,
+     * global goal-hit route, accounting, and common retry default; its
+     * state-local k/n Bellman kernels remain distinct solver rows. */
     std::map<std::string, std::vector<std::uint32_t>> leaders_by_key;
     std::map<std::uint32_t, std::vector<std::uint32_t>> states_by_leader;
     std::vector<std::uint32_t> emitted_states;
@@ -1633,7 +1632,7 @@ std::string compile_policy_strategy_json(
             (!gated_primitive_reforge(state_id) ||
              shareable_gated_repeat)) {
             const std::string key = product_local_fracture
-                ? product_fracture_region_key(state_id, planner)
+                ? product_fracture_region_key(planner)
                 : std::to_string(result.policy[state_id].index) +
                       (shareable_gated_repeat ? ":gated_repeat" : "");
             std::vector<std::uint32_t>& leaders = leaders_by_key[key];
@@ -3285,7 +3284,7 @@ std::string compile_policy_strategy_json(
             edge(base, route, 0, "", true);
             edge(
                 route, root_router_id, 0,
-                product_fracture_hit_condition(state_id, planner), false);
+                product_fracture_hit_condition(planner), false);
             edge(
                 route, product_fracture_restart_node,
                 1, "", true, "retry");

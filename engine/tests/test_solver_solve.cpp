@@ -4704,12 +4704,8 @@ void run_primitive_destructive_renewal_upper_tests() {
     PC_CHECK(
         product_fracture_selected_states >
         product_fracture_behaviors.size());
-    PC_CHECK(
-        emitted_fracture_routes ==
-        product_fracture_behaviors.size());
-    PC_CHECK(
-        emitted_fracture_operations ==
-        product_fracture_behaviors.size());
+    PC_CHECK(emitted_fracture_routes == 1);
+    PC_CHECK(emitted_fracture_operations == 1);
     PC_CHECK(
         shared_product_fracture_compilation.policy_regions <
         shared_product_fracture_compilation.working_states);
