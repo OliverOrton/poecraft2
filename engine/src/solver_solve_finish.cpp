@@ -2868,12 +2868,59 @@ SolveWork::Impl::run_finalization() {
                                                 ? 1
                                                 : 0;
                                     }
-                                    certificate = refinement::
-                                        lift_policy_quotient(
+                                    refinement::PolicyExactLiftWork
+                                        selected_lift_work(
                                             calc, proof,
                                             selected.exact_start_item,
                                             prices, *strict_options,
                                             "selected policy strict lift");
+                                    co_await solve_detail::
+                                        CooperativeCheckpoint{
+                                            selected_lift_work
+                                                .retained_bytes()};
+                                    while (!selected_lift_work
+                                                .progress().done) {
+                                        const refinement::
+                                            PolicyExactLiftProgress
+                                                lift_progress =
+                                                    selected_lift_work
+                                                        .progress();
+                                        switch (lift_progress.phase) {
+                                        case refinement::
+                                                PolicyExactLiftPhase::
+                                                    Compiling:
+                                            phase = SolvePhase::Compiling;
+                                            break;
+                                        case refinement::
+                                                PolicyExactLiftPhase::
+                                                    Certifying:
+                                            phase = SolvePhase::Certifying;
+                                            break;
+                                        default:
+                                            phase = SolvePhase::Refining;
+                                            break;
+                                        }
+                                        finalization_refinement_states =
+                                            lift_progress.strict_states;
+                                        finalization_refinement_kernels =
+                                            lift_progress.strict_kernels;
+                                        finalization_refinement_transitions =
+                                            lift_progress
+                                                .strict_transitions;
+                                        finalization_refinement_rounds =
+                                            lift_progress.partition_rounds;
+                                        finalization_refinement_classes =
+                                            lift_progress.partition_classes;
+                                        finalization_evaluation_progress =
+                                            lift_progress.evaluation;
+                                        selected_lift_work.step(1);
+                                        co_await solve_detail::
+                                            CooperativeCheckpoint{
+                                                selected_lift_work
+                                                    .retained_bytes()};
+                                    }
+                                    certificate =
+                                        selected_lift_work.take_result();
                                 } else {
                                     certificate.status = refinement::
                                         PolicyExactLiftStatus::ResourceCap;

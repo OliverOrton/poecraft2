@@ -2656,6 +2656,22 @@ CaseResult run_case(
                           << " sweeps=" << progress.sweeps
                           << " residual=" << progress.residual
                           << " start_bound=" << progress.start_value_bound
+                          << " final_work="
+                          << progress.finalization_work_items
+                          << " refinement_states="
+                          << progress.refinement_states
+                          << " refinement_kernels="
+                          << progress.refinement_kernels
+                          << " refinement_transitions="
+                          << progress.refinement_transitions
+                          << " refinement_rounds="
+                          << progress.refinement_rounds
+                          << " refinement_classes="
+                          << progress.refinement_classes
+                          << " certification_pairs="
+                          << progress.certification_discovered_pairs
+                          << " certification_pending="
+                          << progress.certification_pending_pairs
                           << std::endl;
                 next_progress = Clock::now() + std::chrono::seconds(10);
             }

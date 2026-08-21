@@ -33,15 +33,23 @@ bool policy_graphs_differ_only_at_bounded_defaults(
         constexpr std::string_view default_suffix =
             ",\"is_default\":true}";
         constexpr std::string_view edge_prefix = "{\"id\":\"e";
-        constexpr std::string_view from_prefix =
+        constexpr std::string_view policy_from_prefix =
             "\"from\":\"policy_route_";
+        constexpr std::string_view refined_from_prefix =
+            "\"from\":\"refined_parent_";
         constexpr std::string_view to_prefix = "\"to\":\"";
         std::vector<std::pair<std::size_t, std::size_t>> targets;
         std::size_t offset = 0;
         while ((offset = value.find(default_suffix, offset)) !=
                std::string::npos) {
             const std::size_t edge = value.rfind(edge_prefix, offset);
-            const std::size_t from = value.find(from_prefix, edge);
+            const std::size_t policy_from =
+                value.find(policy_from_prefix, edge);
+            const std::size_t refined_from =
+                value.find(refined_from_prefix, edge);
+            const std::size_t from = std::min(
+                policy_from < offset ? policy_from : std::string::npos,
+                refined_from < offset ? refined_from : std::string::npos);
             if (edge != std::string::npos &&
                 from != std::string::npos && from < offset) {
                 const std::size_t to = value.find(to_prefix, from);
@@ -74,6 +82,83 @@ bool policy_graphs_differ_only_at_bounded_defaults(
 }
 
 } // namespace
+
+std::uint64_t compiled_policy_assertion_retained_bytes(
+        const CompiledPolicyAssertion& assertion) {
+    std::uint64_t bytes = sizeof(assertion);
+    saturating_add(bytes, assertion.failure_reason.capacity() + 1);
+    saturating_add(bytes, assertion.failure_classification.capacity() + 1);
+    saturating_add(bytes, assertion.resource_cap.capacity() + 1);
+    saturating_add(bytes, assertion.strategy_json.capacity() + 1);
+    saturating_add(
+        bytes, assertion.certification_strategy_json.capacity() + 1);
+    saturating_add(
+        bytes,
+        assertion.evaluation.retained_output_owned_bytes_estimate);
+    saturating_add(
+        bytes,
+        assertion.compilation.policy_route_default_mode.capacity() + 1);
+    saturating_add(
+        bytes, assertion.compilation.cap_hit.capacity() + 1);
+    saturating_add(
+        bytes,
+        assertion.certification_compilation
+                .policy_route_default_mode.capacity() +
+            1);
+    saturating_add(
+        bytes,
+        assertion.certification_compilation.cap_hit.capacity() + 1);
+    return bytes;
+}
+
+bool reuse_compiled_policy_assertion_evaluation(
+        CompiledPolicyAssertion& current,
+        std::optional<CompiledPolicyAssertion>& cached) {
+    if (!cached.has_value() || current.strategy_json.empty()) {
+        return false;
+    }
+    const CompiledPolicyAssertion& candidate = *cached;
+    if ((candidate.status != CompiledPolicyAssertionStatus::Complete &&
+         candidate.status != CompiledPolicyAssertionStatus::CostMismatch) ||
+        !candidate.executable || !candidate.proper ||
+        !candidate.zero_off_policy ||
+        !candidate.evaluation.cost_complete ||
+        !std::isfinite(candidate.exact_cost) ||
+        candidate.exact_cost < 0.0 ||
+        !candidate.paired_default_only ||
+        candidate.certification_strategy_json !=
+            current.strategy_json) {
+        return false;
+    }
+
+    const double solver_cost = current.solver_cost;
+    const std::uint64_t retained_solver_bytes =
+        current.retained_solver_bytes;
+    const std::uint64_t evaluator_memory_budget =
+        current.evaluator_memory_budget;
+    const std::uint64_t compilation_ns = current.compilation_ns;
+    const std::uint64_t publication_peak =
+        current.publication_peak_owned_bytes;
+    std::string certification_json = std::move(current.strategy_json);
+    PolicyCompilationTelemetry certification_compilation =
+        std::move(current.compilation);
+
+    current = std::move(*cached);
+    cached.reset();
+    current.solver_cost = solver_cost;
+    current.retained_solver_bytes = retained_solver_bytes;
+    current.evaluator_memory_budget = evaluator_memory_budget;
+    current.compilation_ns = compilation_ns;
+    current.exact_evaluation_ns = 0;
+    current.certification_strategy_json =
+        std::move(certification_json);
+    current.certification_compilation =
+        std::move(certification_compilation);
+    current.publication_peak_owned_bytes = std::max(
+        current.publication_peak_owned_bytes, publication_peak);
+    finalize_compiled_policy_assertion(current);
+    return true;
+}
 
 struct CompiledPolicyAssertionWork::Impl {
     enum class Stage : std::uint8_t {
@@ -600,6 +685,20 @@ struct CompiledPolicyAssertionWork::Impl {
         }
         return bytes;
     }
+
+    bool try_reuse_completed_evaluation(
+            std::optional<CompiledPolicyAssertion>& cached) {
+        if (stage != Stage::Evaluating ||
+            !reuse_compiled_policy_assertion_evaluation(
+                result, cached)) {
+            return false;
+        }
+        evaluation_work.reset();
+        parsed_strategy.reset();
+        economy.reset();
+        stage = Stage::Done;
+        return true;
+    }
 };
 
 CompiledPolicyAssertionWork::CompiledPolicyAssertionWork(
@@ -642,6 +741,11 @@ CompiledPolicyAssertion CompiledPolicyAssertionWork::take_result() {
 
 std::uint64_t CompiledPolicyAssertionWork::retained_bytes() const {
     return impl_->retained_bytes();
+}
+
+bool CompiledPolicyAssertionWork::try_reuse_completed_evaluation(
+        std::optional<CompiledPolicyAssertion>& cached) {
+    return impl_->try_reuse_completed_evaluation(cached);
 }
 
 CompiledPolicyAssertion assert_compiled_policy_exact(

@@ -209,6 +209,16 @@ struct CompiledPolicyAssertion {
 void finalize_compiled_policy_assertion(
     CompiledPolicyAssertion& assertion);
 
+/* Reuse an independently completed exact graph evaluation only when the
+ * newly compiled fail-closed graph is byte-identical. Reconciliation remains
+ * owned by the current class-policy value. The cache is consumed on a hit. */
+bool reuse_compiled_policy_assertion_evaluation(
+    CompiledPolicyAssertion& current,
+    std::optional<CompiledPolicyAssertion>& cached);
+
+std::uint64_t compiled_policy_assertion_retained_bytes(
+    const CompiledPolicyAssertion& assertion);
+
 std::string compiled_policy_failure_classification(
     const CompiledPolicyAssertion& assertion);
 
@@ -273,6 +283,8 @@ class CompiledPolicyAssertionWork {
     CompiledPolicyAssertionProgress progress() const;
     CompiledPolicyAssertion take_result();
     std::uint64_t retained_bytes() const;
+    bool try_reuse_completed_evaluation(
+        std::optional<CompiledPolicyAssertion>& cached);
 
   private:
     struct Impl;

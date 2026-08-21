@@ -769,7 +769,10 @@ PolicyExactLiftCertificate lift_policy_quotient_materialized_scaffold(
                 PolicyExactLiftStatus::RefinementFailure,
                 "production quotient path invoked reconstruct-then-merge reference adapter");
         }
-        if (!certificate.compiled.executable ||
+        if (certificate.compiled.status !=
+                CompiledPolicyAssertionStatus::Complete ||
+            !certificate.compiled.paired_default_only ||
+            !certificate.compiled.executable ||
             !certificate.compiled.proper ||
             !certificate.compiled.zero_off_policy ||
             !certificate.compiled.evaluation.cost_complete ||
@@ -822,7 +825,8 @@ lift_policy_quotient_pass_task(
         const std::string& strategy_name,
         const RefinementLimits* limits_override,
         std::vector<AbstractState> frontier_seeds,
-        PolicyExactLiftProgress& progress) {
+        PolicyExactLiftProgress& progress,
+        std::optional<CompiledPolicyAssertion>* reusable_assertion) {
     PolicyExactLiftCertificate certificate;
     certificate.solver_cost = solved.evaluated_policy_cost;
     const RefinementLimits limits =
@@ -2039,6 +2043,19 @@ lift_policy_quotient_pass_task(
         const auto publish_current_upper =
                 [&](const quotient::QuotientBellmanResult& solved_upper)
                     -> solve_detail::CooperativeTask<bool> {
+        std::optional<CompiledPolicyAssertion> previous_assertion;
+        bool previous_assertion_already_debited = false;
+        if (!certificate.compiled.strategy_json.empty() ||
+            !certificate.compiled.certification_strategy_json.empty()) {
+            previous_assertion.emplace(
+                std::move(certificate.compiled));
+        } else if (reusable_assertion != nullptr &&
+                   reusable_assertion->has_value()) {
+            previous_assertion.emplace(
+                std::move(**reusable_assertion));
+            reusable_assertion->reset();
+            previous_assertion_already_debited = true;
+        }
         certificate.refinement = {};
         certificate.class_evaluation = {};
         certificate.compiled = {};
@@ -2456,9 +2473,23 @@ lift_policy_quotient_pass_task(
         if (!prepared.ready) {
             certificate.compiled = std::move(prepared.immediate);
         } else {
+            if (previous_assertion.has_value() &&
+                !previous_assertion_already_debited) {
+                const std::uint64_t cache_bytes =
+                    compiled_policy_assertion_retained_bytes(
+                        *previous_assertion);
+                if (cache_bytes >=
+                        prepared.options.max_solver_owned_bytes) {
+                    previous_assertion.reset();
+                } else {
+                    prepared.options.max_solver_owned_bytes -=
+                        cache_bytes;
+                }
+            }
             CompiledPolicyAssertionWork assertion_work =
                 oracle.begin_lifted_policy_assertion(
                     prepared, strategy_name);
+            bool previous_assertion_checked = false;
             while (!assertion_work.progress().done) {
                 const CompiledPolicyAssertionProgress assertion_progress =
                     assertion_work.progress();
@@ -2469,6 +2500,15 @@ lift_policy_quotient_pass_task(
                         : PolicyExactLiftPhase::Certifying;
                 progress.evaluation = assertion_progress.evaluation;
                 assertion_work.step(1);
+                if (!previous_assertion_checked &&
+                    assertion_progress.phase ==
+                        CompiledPolicyAssertionPhase::Compiling) {
+                    previous_assertion_checked = true;
+                    (void)assertion_work
+                        .try_reuse_completed_evaluation(
+                            previous_assertion);
+                    previous_assertion.reset();
+                }
                 ++progress.work_items;
                 std::uint64_t retained =
                     oracle.estimated_owned_bytes();
@@ -2490,7 +2530,10 @@ lift_policy_quotient_pass_task(
                 PolicyExactLiftStatus::RefinementFailure,
                 "production quotient invoked reference adapter");
         }
-        if (!certificate.compiled.executable ||
+        if (certificate.compiled.status !=
+                CompiledPolicyAssertionStatus::Complete ||
+            !certificate.compiled.paired_default_only ||
+            !certificate.compiled.executable ||
             !certificate.compiled.proper ||
             !certificate.compiled.zero_off_policy ||
             !certificate.compiled.evaluation.cost_complete ||
@@ -3118,6 +3161,13 @@ lift_policy_quotient_pass_task(
         }
 
         if (!frontier_states.empty()) {
+            if (reusable_assertion != nullptr &&
+                (!certificate.compiled.strategy_json.empty() ||
+                 !certificate.compiled
+                      .certification_strategy_json.empty())) {
+                *reusable_assertion =
+                    std::move(certificate.compiled);
+            }
             oracle.quotient_sync_resource_telemetry();
             telemetry.strict_states_discovered =
                 static_cast<std::uint32_t>(locators.size());
@@ -3281,8 +3331,10 @@ struct PolicyExactLiftWork::Impl {
     PolicyLiftAdapterTelemetry prior_telemetry;
     RefinementLimits pass_limits;
     SolveOptions pass_options;
+    SolveOptions active_pass_options;
     PolicyExactLiftProgress progress;
     solve_detail::CooperativeTask<PolicyExactLiftCertificate> pass;
+    std::optional<CompiledPolicyAssertion> reusable_assertion;
     std::optional<PolicyExactLiftCertificate> completed;
 
     Impl(
@@ -3327,10 +3379,24 @@ struct PolicyExactLiftWork::Impl {
             frontier_seeds.push_back(state);
         }
         progress = {};
+        active_pass_options = pass_options;
+        if (reusable_assertion.has_value()) {
+            const std::uint64_t cache_bytes =
+                compiled_policy_assertion_retained_bytes(
+                    *reusable_assertion);
+            if (cache_bytes >=
+                    active_pass_options.max_solver_owned_bytes) {
+                reusable_assertion.reset();
+            } else {
+                active_pass_options.max_solver_owned_bytes -=
+                    cache_bytes;
+            }
+        }
         pass = lift_policy_quotient_pass_task(
-            coarse, solved, exact_start, prices, pass_options,
+            coarse, solved, exact_start, prices,
+            active_pass_options,
             strategy_name, &pass_limits, std::move(frontier_seeds),
-            progress);
+            progress, &reusable_assertion);
     }
 
     void accept_frontier(QuotientFrontierExpansion expansion) {
@@ -3425,6 +3491,7 @@ struct PolicyExactLiftWork::Impl {
                 certificate.adapter = std::move(total);
                 progress.phase = PolicyExactLiftPhase::Done;
                 progress.done = true;
+                reusable_assertion.reset();
                 completed = std::move(certificate);
             } catch (QuotientFrontierExpansion& expansion) {
                 accept_frontier(std::move(expansion));
@@ -3434,6 +3501,12 @@ struct PolicyExactLiftWork::Impl {
 
     std::uint64_t retained_bytes() const {
         std::uint64_t bytes = pass.retained_bytes();
+        if (reusable_assertion.has_value()) {
+            saturating_add(
+                bytes,
+                compiled_policy_assertion_retained_bytes(
+                    *reusable_assertion));
+        }
         for (const auto& [identity, state] : frontier_by_identity) {
             saturating_add(
                 bytes,
@@ -3844,7 +3917,10 @@ PolicyExactLiftCertificate lift_policy_exact(
         return certificate;
     }
 
-    if (certificate.compiled.executable &&
+    if (certificate.compiled.status ==
+            CompiledPolicyAssertionStatus::Complete &&
+        certificate.compiled.paired_default_only &&
+        certificate.compiled.executable &&
         certificate.compiled.proper &&
         certificate.compiled.zero_off_policy &&
         certificate.compiled.evaluation.cost_complete &&

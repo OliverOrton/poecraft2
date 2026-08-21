@@ -373,6 +373,57 @@ void run_direct_certification_contract_tests() {
         off_policy.failure_classification ==
         "route_coverage_failure");
 
+    refinement::CompiledPolicyAssertion prepared;
+    prepared.solver_cost = 10.0;
+    prepared.strategy_json = "{\"graph\":\"same\"}";
+    prepared.retained_solver_bytes = 17;
+    prepared.evaluator_memory_budget = 23;
+    prepared.compilation_ns = 29;
+    std::optional<refinement::CompiledPolicyAssertion> cached =
+        evaluated(11.0, 10.0, 1.0, 0.0);
+    cached->strategy_json = "{\"graph\":\"product\"}";
+    cached->certification_strategy_json =
+        "{\"graph\":\"same\"}";
+    cached->paired_default_only = true;
+    PC_CHECK(refinement::reuse_compiled_policy_assertion_evaluation(
+        prepared, cached));
+    PC_CHECK(!cached.has_value());
+    PC_CHECK(prepared.solver_cost == 10.0);
+    PC_CHECK(prepared.exact_cost == 10.0);
+    PC_CHECK(prepared.cost_reconciled);
+    PC_CHECK(
+        prepared.status ==
+        refinement::CompiledPolicyAssertionStatus::Complete);
+    PC_CHECK(prepared.strategy_json == "{\"graph\":\"product\"}");
+    PC_CHECK(
+        prepared.certification_strategy_json ==
+        "{\"graph\":\"same\"}");
+    PC_CHECK(prepared.retained_solver_bytes == 17);
+    PC_CHECK(prepared.evaluator_memory_budget == 23);
+    PC_CHECK(prepared.compilation_ns == 29);
+    PC_CHECK(prepared.exact_evaluation_ns == 0);
+
+    refinement::CompiledPolicyAssertion different;
+    different.solver_cost = 10.0;
+    different.strategy_json = "{\"graph\":\"different\"}";
+    cached = prepared;
+    PC_CHECK(!refinement::reuse_compiled_policy_assertion_evaluation(
+        different, cached));
+    PC_CHECK(cached.has_value());
+    PC_CHECK(different.strategy_json ==
+             "{\"graph\":\"different\"}");
+
+    refinement::CompiledPolicyAssertion unpaired;
+    unpaired.solver_cost = 10.0;
+    unpaired.strategy_json = "{\"graph\":\"same\"}";
+    cached = prepared;
+    cached->paired_default_only = false;
+    PC_CHECK(!refinement::reuse_compiled_policy_assertion_evaluation(
+        unpaired, cached));
+    PC_CHECK(cached.has_value());
+    PC_CHECK(unpaired.strategy_json ==
+             "{\"graph\":\"same\"}");
+
     refinement::CompiledPolicyAssertion observation_cap;
     observation_cap.status =
         refinement::CompiledPolicyAssertionStatus::ResourceCap;
@@ -4621,6 +4672,10 @@ void run_primitive_destructive_renewal_upper_tests() {
         product_fracture_lift.status ==
         refinement::PolicyExactLiftStatus::Complete);
     PC_CHECK(product_fracture_lift.executable);
+    PC_CHECK(
+        product_fracture_lift.compiled.status ==
+        refinement::CompiledPolicyAssertionStatus::Complete);
+    PC_CHECK(product_fracture_lift.compiled.paired_default_only);
     PC_CHECK(product_fracture_lift.compiled.executable);
     PC_CHECK(product_fracture_lift.compiled.proper);
     PC_CHECK(product_fracture_lift.compiled.zero_off_policy);
