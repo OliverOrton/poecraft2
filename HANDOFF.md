@@ -1,22 +1,32 @@
 # Session Handoff
 
-**Status: Four-T1 Automatic-Envelope Replacement Qualification is active.**
+**Status: no implementation boundary is active.**
 
 ## Current boundary
 
-Oliver selected the
-[Four-T1 Automatic-Envelope Replacement Qualification](docs/active/2026-08-21-four-t1-automatic-envelope-qualification/plan.md).
-Run the checked uncapped native four-natural-T1 primary from starting commit
-`8a4f353`, measure its repaired automatic envelope before changing behavior,
-and implement only an evidence-backed scheduling or representation repair.
-Acceptance requires a closed automatic envelope, independently reconciled
-native and release-WASM strategy evaluation, zero off-policy mass, and the
-pinned 10,000-run verification. Five-T1 recovery, action-family broadening,
-compiler work, and UI work are not part of this boundary.
+The
+[Four-T1 Automatic-Envelope Replacement Qualification](docs/active/2026-08-21-four-t1-automatic-envelope-qualification/plan.md)
+hit its explicit 300-second stop condition. Strict finalization is now
+cooperative, `refined_parent_*` bounded defaults participate in the paired-
+graph proof, every strict completion path requires a complete paired
+assertion, and byte-identical complete paired graph evaluations can be reused
+across competitive-frontier passes with fresh cost reconciliation.
 
-If a checked cap, the 300-second watchdog, an open automatic obligation, exact
-evaluation failure, or native/WASM disagreement stops the qualification,
-record that precise boundary and stop rather than weakening exactness.
+The checked native primary stops after 300.51 seconds with a 54.20-second
+local-reoptimization work item. Automatic preparation is genuinely active:
+482 carriers produce 890 operators and 4,901 eligible candidate rows with no
+preparation deferral. The exact lift grows from 5,820 to 5,961 strict states;
+later passes reuse the 5,653-pair graph evaluation but repeatedly rebuild the
+strict carriers while the automatic alternative envelope remains open. No
+checked state, transition, work, or memory cap fires. No new exact value,
+release-WASM primary, or 10,000-run verification was accepted. Full details
+are in the [stopped result](docs/active/2026-08-21-four-t1-automatic-envelope-qualification/result.md).
+
+The next plausible owner is collision-safe semantic row/proof reuse across
+equivalent temporary-bench and Eldritch-side carrier/operator alternatives.
+Do not substitute compiler compaction, action-family broadening, a cap increase,
+or weakened exactness. Five-T1 recovery remains separate. Oliver must select
+the next implementation chunk before work resumes.
 
 ## Completed predecessor
 

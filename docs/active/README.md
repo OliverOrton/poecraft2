@@ -1,16 +1,18 @@
 # Active Work
 
-**Status: Four-T1 Automatic-Envelope Replacement Qualification is active.**
+**Status: no implementation boundary is active.**
 
 Parent: [Documentation map](../README.md)
 
-The active
+The stopped
 [Four-T1 Automatic-Envelope Replacement Qualification](2026-08-21-four-t1-automatic-envelope-qualification/plan.md)
-runs the checked uncapped four-natural-T1 case with the repaired automatic
-action envelope, attributes any stop before changing behavior, and accepts a
-replacement exact result only after independent native/release-WASM evaluation
-and 10,000-run verification. Five-T1 work and action-family broadening are out
-of scope.
+made exact lifting cooperative, repaired refined-parent paired-default proof,
+and reuses only byte-identical complete paired assertion evaluations. The
+checked native primary still stops at 300 seconds while repeatedly rebuilding
+roughly 5,900 strict carriers for the 890-operator automatic alternative
+envelope, so no replacement exact value was accepted. See the
+[precise result](2026-08-21-four-t1-automatic-envelope-qualification/result.md).
+Oliver must select the next chunk before implementation resumes.
 
 The completed
 [High-Impact Automatic Admission Closure](2026-08-21-high-impact-automatic-admission/plan.md)

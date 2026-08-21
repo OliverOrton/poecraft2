@@ -1,12 +1,14 @@
 # Four-T1 Automatic-Envelope Replacement Qualification
 
-**Status: active on 2026-08-21.**
+**Status: stopped precisely on 2026-08-21.**
 
 Owner: Oliver
 
 Starting commit: `8a4f3533a24a287e0ce62775de8d2bb3ec1f5beb`
 
 Parent: [Active work](../README.md)
+
+Result: [Four-T1 Automatic-Envelope Replacement Qualification Result](result.md)
 
 ## Objective
 
@@ -82,4 +84,3 @@ carriers.
 
 Any stop is a truthful milestone result with a precise next owner; it is not
 permission to resume five-T1 work or weaken exactness.
-

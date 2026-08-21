@@ -29,13 +29,15 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active
+The stopped
 [four-T1 automatic-envelope replacement qualification](active/2026-08-21-four-t1-automatic-envelope-qualification/plan.md)
-measures the checked uncapped native primary before changing behavior, then
-permits only an evidence-backed scheduling or representation repair. A new
-exact result requires closed automatic work plus independent native and
-release-WASM evaluation and 10,000-run verification. Five-T1 recovery and
-action-family broadening remain out of scope.
+made strict finalization cooperative, repaired refined-parent paired-default
+proof, and safely reuses byte-identical paired assertion evaluations. Its
+checked native primary still stops at 300 seconds in repeated strict automatic-
+alternative carrier discovery and local reoptimization, so no replacement
+exact value was accepted. The [result](active/2026-08-21-four-t1-automatic-envelope-qualification/result.md)
+names semantic automatic-alternative proof reuse as the next possible owner.
+No implementation boundary is active until Oliver selects one.
 
 The completed
 [high-impact automatic-admission closure repair](active/2026-08-21-high-impact-automatic-admission/plan.md)
