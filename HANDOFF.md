@@ -1,9 +1,27 @@
 # Session Handoff
 
 **Status: no implementation boundary is active. Oliver must select the next
-chunk before implementation resumes.**
+chunk before source work resumes.**
 
 ## Current boundary
+
+The
+[Persistent Strict Frontier Growth](docs/active/2026-08-21-persistent-strict-frontier-growth/plan.md)
+boundary is [stopped precisely](docs/active/2026-08-21-persistent-strict-frontier-growth/result.md).
+A collision-checked exact carrier/action-row replay was implemented, measured
+on the five-minute four-T1 primary, and removed. It reached the same upper and
+essentially the same final-work boundary, made the first strict upper 8.0%
+slower, and raised estimated peak ownership from 98.7 MB to 686.4 MB.
+
+The result localizes the remaining restart cost more sharply: exact mechanic
+row calculation is not dominant. The next possible owner is in-place growth
+of one live strict oracle/locator set/partition/Bellman/proof generation, with
+localized coverage insertion, split-only updates, and affected-proof
+revocation. Another cross-pass row or verdict cache is not justified. The
+state-928 Imprint grammar and five-T1 recovery remain separate. The final tree
+retains no engine change from the stopped experiment.
+
+### Completed predecessor
 
 The focused
 [Verified Interim Upper Publication](docs/active/2026-08-21-verified-interim-upper-publication/plan.md)

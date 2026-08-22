@@ -29,6 +29,16 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
+The
+[persistent strict-frontier growth](active/2026-08-21-persistent-strict-frontier-growth/plan.md)
+boundary is [stopped precisely](active/2026-08-21-persistent-strict-frontier-growth/result.md).
+Exact carrier/action-row replay preserved proof boundaries but did not reduce
+the checked final-work stop, regressed time to the first strict upper, and
+increased estimated peak ownership nearly sevenfold, so it was removed. The
+next possible owner is in-place extension of the live strict
+oracle/partition/Bellman/proof generation; another cross-pass row cache is not
+justified. No implementation boundary is active until Oliver selects one.
+
 The focused
 [verified interim upper publication](active/2026-08-21-verified-interim-upper-publication/plan.md)
 repair is [complete](active/2026-08-21-verified-interim-upper-publication/result.md).

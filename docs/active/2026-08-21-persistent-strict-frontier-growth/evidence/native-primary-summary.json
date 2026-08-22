@@ -1,0 +1,40 @@
+{
+  "schema_version": "persistent_strict_frontier_growth_summary_v1",
+  "case_id": "conquest-lamellar-allflame-four-natural-t1",
+  "result": "carrier_row_replay_rejected_no_material_work_reduction",
+  "source_change_retained": false,
+  "baseline": {
+    "solve_wall_ms": 300102.4209,
+    "first_strict_upper_elapsed_ms": 38943.047,
+    "final_live_upper_bound": 3745.7295960574743,
+    "max_solve_step_ms": 1484.7687,
+    "max_finalization_work_item": 78509,
+    "solve_steps": 81423,
+    "native_peak_owned_bytes": 98661450,
+    "native_live_owned_bytes": 41777961,
+    "strict_pass_state_counts_observed": [5820, 5924, 5961]
+  },
+  "carrier_row_replay": {
+    "solve_wall_ms": 300460.6677,
+    "watchdog_expired": true,
+    "first_strict_upper_elapsed_ms": 42064.5618,
+    "final_live_upper_bound": 3745.7295960574743,
+    "global_lower_bound": 0,
+    "upper_increase_samples": 0,
+    "max_solve_step_ms": 1490.831,
+    "max_finalization_work_item": 78489,
+    "solve_steps": 80841,
+    "native_peak_owned_bytes": 686355442,
+    "native_live_owned_bytes": 41777961,
+    "process_working_set_after_bytes": 98594816,
+    "strict_pass_state_counts_observed": [5820, 5924, 5951],
+    "final_strategy_available": false
+  },
+  "post_removal_checks": {
+    "native_build": "pass",
+    "refinement_checks": 362,
+    "quotient_checks": 381,
+    "policy_refinement_checks": 969,
+    "solver_checks": 96174
+  }
+}
