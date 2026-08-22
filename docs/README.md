@@ -29,6 +29,14 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
+The stopped
+[finite Imprint-program closure](active/2026-08-22-finite-imprint-program-closure/plan.md)
+boundary measured and removed two sound pre-evaluation renewal-dominance
+proofs. Both retained the same 256-program refusal and shifted work into much
+larger novel kernels. No implementation boundary is active until Oliver
+selects either honest bounded continuation past a local Imprint deferral or a
+first-class exact kernel/label search.
+
 The completed
 [recovery-scoped Restart and successor-aware bounds](active/2026-08-22-recovery-scoped-restart-successor-bounds/plan.md)
 boundary separates optional economic abandonment from mechanic-owned

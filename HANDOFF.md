@@ -1,20 +1,35 @@
 # Handoff
 
-**Status: no implementation boundary is active.** Recovery-scoped Restart and
-successor-aware bounds are complete. Oliver must select the next chunk before
-implementation resumes.
+**Status: no implementation boundary is active.** The finite Imprint-program
+closure trial stopped precisely and production source was restored. Oliver
+must select the next chunk before implementation resumes.
 
 ## Current checkpoint
 
 - Branch: `main`.
 - Local `origin/main` remains at `c95e6e1`; no push was issued.
-- Starting checkpoint: `40eeb87`.
-- Native implementation checkpoint: `1e21260`.
-- Release-WASM checkpoint: `cfd8904`.
-- Completed plan:
-  [docs/active/2026-08-22-recovery-scoped-restart-successor-bounds/plan.md](docs/active/2026-08-22-recovery-scoped-restart-successor-bounds/plan.md)
-- Accepted result:
+- Starting checkpoint: `f8c5932`.
+- Stopped plan:
+  [docs/active/2026-08-22-finite-imprint-program-closure/plan.md](docs/active/2026-08-22-finite-imprint-program-closure/plan.md)
+- Stopped result:
+  [docs/active/2026-08-22-finite-imprint-program-closure/result.md](docs/active/2026-08-22-finite-imprint-program-closure/result.md)
+- Previous accepted result:
   [docs/active/2026-08-22-recovery-scoped-restart-successor-bounds/result.md](docs/active/2026-08-22-recovery-scoped-restart-successor-bounds/result.md)
+
+## Stopped Imprint boundary
+
+Two sound pre-evaluation terminal-renewal dominance proofs increased exact
+program pruning from 169 to 385 and then 461, but the checked carrier still
+spent all 256 program units. Surviving kernels grew from 182,778 to 2,072,977
+action-state evaluations and from 2.57 million to 2.14 billion merged outcomes;
+solve wall regressed from 47.789 to 107.747 seconds. The final open witness is
+the mechanically distinct `Fossil > Harvest Reforge Defences > Fracture`, not
+another repeated renewal. Engine and test source was restored byte-for-byte to
+`f8c5932`.
+
+Do not repeat local renewal predicates, scalar-price ordering, or a cap-only
+increase. The retained work counter also fails to describe the several-orders-
+of-magnitude support-processing spread between programs.
 
 ## Completed boundary
 
@@ -77,15 +92,15 @@ contains no Restart, exact-evaluates at the solver value, and passed
 
 No successor is selected. The closest evidence-backed choices are:
 
-1. **Finite Imprint-program closure.** The primary now completes well inside
-   its watchdog and publishes a verified bounded policy, but exact closure
-   stops at `max_imprint_program_work`.
-2. **Exact alternative/refinement performance.** Continue the retained
-   persistent quotient owner after a wider Imprint closure if that closure
-   exposes a downstream plateau.
-3. **Executable-upper scheduling.** The earlier Essence/Harvest/Fossil early-
-   incumbent issue remains separate from lower-bound proof strength.
-4. **Goal-slot row equivalence.** The measured temporary-bench duplicate rows
+1. **Bounded continuation past local automatic deferral (recommended product
+   owner).** Preserve the unresolved Imprint obligation and bounded status, but
+   allow independent automatic families and executable-upper scheduling to
+   continue so one capped carrier cannot starve Harvest, Essence, Fossil, or
+   later refinement.
+2. **First-class exact Imprint kernel/label search (research owner).** Replace
+   flat word budgeting with collision-checked kernel labels and a support-work
+   contract designed against the novel Fossil/Harvest/Fracture witness.
+3. **Goal-slot row equivalence.** The measured temporary-bench duplicate rows
    remain a separate behavior-preserving size/proof opportunity.
 
 ## Retained architecture

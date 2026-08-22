@@ -4,6 +4,14 @@
 
 Parent: [Documentation map](../README.md)
 
+The stopped
+[Finite Imprint-Program Closure](2026-08-22-finite-imprint-program-closure/plan.md)
+boundary measured two exact terminal-renewal prefix-erasure proofs. They
+increased exact pruning but retained the same 256-program refusal while moving
+work into kernels with up to 2.14 billion merged outcomes, so all production
+source was restored. See the [result](2026-08-22-finite-imprint-program-closure/result.md)
+for the bounded-continuation and kernel-search successors. Neither is selected.
+
 The completed
 [Recovery-Scoped Restart And Successor-Aware Bounds](2026-08-22-recovery-scoped-restart-successor-bounds/plan.md)
 boundary makes voluntary discard-and-buy-new-base an explicit Calculator
@@ -15,7 +23,7 @@ Fracture miss replacement operation, and publishes a verified 3,759.98-Chaos
 bounded policy before the existing Imprint-program work cap. The Warlord
 control closes exactly without Restart. Native, release-WASM, TypeScript, web,
 and 10,000-run controls pass; see the [result](2026-08-22-recovery-scoped-restart-successor-bounds/result.md).
-No successor is selected.
+Its finite Imprint-program closure successor is selected above.
 
 The completed
 [Eldritch Goal-Cover Coverage](2026-08-22-eldritch-goal-cover-coverage/plan.md)
