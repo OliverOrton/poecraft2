@@ -695,6 +695,38 @@ CarrierWideOptimisticLowerQ certify_carrier_wide_lower_q(
         minimum};
 }
 
+CarrierWideOptimisticLowerQ certify_uniform_carrier_wide_lower_q(
+        const StableKey& source_cell_identity,
+        const CoverageDescriptor& coverage,
+        StableKey authority_identity,
+        const double lower_q) {
+    return certify_uniform_carrier_wide_lower_q(
+        SharedStableKey{source_cell_identity}, coverage,
+        std::move(authority_identity), lower_q);
+}
+
+CarrierWideOptimisticLowerQ certify_uniform_carrier_wide_lower_q(
+        const SharedStableKey& source_cell_identity,
+        const CoverageDescriptor& coverage,
+        StableKey authority_identity,
+        const double lower_q) {
+    require_identity(
+        source_cell_identity.value(), "uniform lower-Q source cell identity");
+    require_identity(authority_identity, "uniform lower-Q authority identity");
+    if (!std::isfinite(lower_q) || lower_q < 0.0) {
+        throw std::invalid_argument("invalid uniform carrier lower-Q witness");
+    }
+    const CoverageDescriptor canonical =
+        canonical_coverage_descriptor(coverage);
+    return {
+        OptimisticLowerQProvenanceKind::UniformCarrierWideWitness,
+        std::move(authority_identity),
+        source_cell_identity,
+        canonical.exact_source_count,
+        canonical.exact_total_probability,
+        lower_q};
+}
+
 AlternativeActionIdentity canonical_alternative_action_identity(
         AlternativeActionIdentity value) {
     require_identity(
@@ -1098,15 +1130,19 @@ std::uint64_t ProofStore::invalidate_source(
         }
     }
     bool obligation_invalidated = false;
-    for (UnresolvedAlternativeObligation& obligation :
-         alternative_obligations_) {
-        if (obligation.identity.source_cell_id == source_cell_id &&
-            obligation.status != AlternativeObligationStatus::Stale) {
-            obligation.status = AlternativeObligationStatus::Stale;
-            obligation.certified_row_id.reset();
-            obligation.conditional_upper_q.reset();
-            obligation.conditional_q_generation = 0;
-            obligation_invalidated = true;
+    if (source_cell_id < alternative_obligations_by_source_.size()) {
+        for (const std::uint32_t obligation_id :
+             alternative_obligations_by_source_[source_cell_id]) {
+            UnresolvedAlternativeObligation& obligation =
+                alternative_obligations_.at(obligation_id);
+            if (obligation.status !=
+                    AlternativeObligationStatus::Stale) {
+                obligation.status = AlternativeObligationStatus::Stale;
+                obligation.certified_row_id.reset();
+                obligation.conditional_upper_q.reset();
+                obligation.conditional_q_generation = 0;
+                obligation_invalidated = true;
+            }
         }
     }
     if (invalidated != 0 || obligation_invalidated) {
@@ -1354,6 +1390,21 @@ std::pair<std::uint32_t, bool> ProofStore::intern_alternative_obligation(
         storage_stats_, alternative_obligations_.back().identity,
         obligation_shared_key_allocations_,
         obligation_shared_requirement_allocations_);
+    const std::uint32_t source_cell_id =
+        alternative_obligations_.back().identity.source_cell_id;
+    if (alternative_obligations_by_source_.size() <= source_cell_id) {
+        alternative_obligations_by_source_.resize(source_cell_id + 1);
+        storage_stats_.obligation_source_index_outer_capacity =
+            alternative_obligations_by_source_.capacity();
+    }
+    std::vector<std::uint32_t>& source_obligations =
+        alternative_obligations_by_source_[source_cell_id];
+    const std::size_t previous_source_capacity =
+        source_obligations.capacity();
+    source_obligations.push_back(obligation_id);
+    replace_capacity(
+        storage_stats_.obligation_source_index_id_capacity,
+        previous_source_capacity, source_obligations.capacity());
     const std::size_t previous_bucket_capacity = bucket->second.capacity();
     bucket->second.push_back(obligation_id);
     replace_capacity(
@@ -1582,11 +1633,13 @@ std::optional<double>
 ProofStore::optimistic_alternative_lower_for_source(
         const std::uint32_t source_cell_id) const {
     std::optional<double> lower;
-    for (const UnresolvedAlternativeObligation& obligation :
-         alternative_obligations_) {
-        if (obligation.identity.source_cell_id != source_cell_id) {
-            continue;
-        }
+    if (source_cell_id >= alternative_obligations_by_source_.size()) {
+        return lower;
+    }
+    for (const std::uint32_t obligation_id :
+         alternative_obligations_by_source_[source_cell_id]) {
+        const UnresolvedAlternativeObligation& obligation =
+            alternative_obligations_.at(obligation_id);
         switch (obligation.status) {
         case AlternativeObligationStatus::Unscheduled:
         case AlternativeObligationStatus::LowerOnly:
@@ -1902,6 +1955,14 @@ ProofStoreStorageStats ProofStore::storage_stats() const {
     }
     stats.obligation_capacity = alternative_obligations_.capacity();
     stats.obligation_bucket_count = alternative_buckets_.size();
+    stats.obligation_source_index_outer_capacity =
+        alternative_obligations_by_source_.capacity();
+    for (const std::vector<std::uint32_t>& obligations :
+         alternative_obligations_by_source_) {
+        stats.obligation_source_index_id_capacity = checked_add(
+            stats.obligation_source_index_id_capacity,
+            obligations.capacity());
+    }
     stats.obligation_shared_key_allocation_capacity =
         obligation_shared_key_allocations_.capacity();
     stats.obligation_shared_requirement_allocation_capacity =
@@ -2098,6 +2159,16 @@ void ProofStore::refresh_owned_bytes() {
     obligation_bytes = checked_add(
         obligation_bytes,
         checked_multiply(
+            stats.obligation_source_index_outer_capacity,
+            sizeof(std::vector<std::uint32_t>)));
+    obligation_bytes = checked_add(
+        obligation_bytes,
+        checked_multiply(
+            stats.obligation_source_index_id_capacity,
+            sizeof(std::uint32_t)));
+    obligation_bytes = checked_add(
+        obligation_bytes,
+        checked_multiply(
             stats.obligation_key_u64_capacity,
             sizeof(std::uint64_t)));
     obligation_bytes = checked_add(
@@ -2168,6 +2239,8 @@ void ProofStore::clear_and_release() {
         alternative_obligations_);
     std::map<std::uint64_t, std::vector<std::uint32_t>>().swap(
         alternative_buckets_);
+    std::vector<std::vector<std::uint32_t>>().swap(
+        alternative_obligations_by_source_);
     std::vector<ObligationSharedKeyAllocation>().swap(
         obligation_shared_key_allocations_);
     std::vector<const ObservationRequirement*>().swap(

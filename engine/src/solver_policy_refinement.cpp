@@ -2131,27 +2131,15 @@ lift_policy_quotient_pass_task(
                     oracle.quotient_operator_immediate_cost_lower(
                         operator_index);
                 if (immediate_cost_lower > 0.0) {
-                    std::vector<quotient::CarrierLowerQWitness> witnesses;
-                    witnesses.reserve(cell.coverage.exact_source_count);
-                    for (const quotient::CoverageRange& range :
-                         cell.coverage.ranges) {
-                        for (std::uint64_t ordinal = range.begin;
-                             ordinal < range.begin + range.count;
-                             ++ordinal) {
-                            witnesses.push_back({
-                                range.range_identity, ordinal,
-                                immediate_cost_lower});
-                        }
-                    }
                     identity.optimistic_lower =
-                        quotient::certify_carrier_wide_lower_q(
+                        quotient::certify_uniform_carrier_wide_lower_q(
                             shared_cell_identity, cell.coverage,
                             {0x706371707269636cull,
                              operator_index,
                              std::bit_cast<std::uint64_t>(
                                  immediate_cost_lower),
                              1},
-                            std::move(witnesses));
+                            immediate_cost_lower);
                 } else {
                     identity.optimistic_lower =
                         quotient::trivial_carrier_wide_lower_q(

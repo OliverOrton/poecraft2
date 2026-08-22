@@ -261,6 +261,7 @@ CoverageReplaySlice replay_coverage(
 enum class OptimisticLowerQProvenanceKind : std::uint8_t {
     TrivialNonnegativeCost = 0,
     CarrierWideWitness,
+    UniformCarrierWideWitness,
 };
 
 struct CarrierLowerQWitness {
@@ -331,6 +332,12 @@ private:
         const CoverageDescriptor&,
         StableKey,
         std::vector<CarrierLowerQWitness>);
+    friend CarrierWideOptimisticLowerQ
+    certify_uniform_carrier_wide_lower_q(
+        const SharedStableKey&,
+        const CoverageDescriptor&,
+        StableKey,
+        double);
 };
 
 CarrierWideOptimisticLowerQ trivial_carrier_wide_lower_q(
@@ -352,6 +359,18 @@ CarrierWideOptimisticLowerQ certify_carrier_wide_lower_q(
     const CoverageDescriptor& coverage,
     StableKey authority_identity,
     std::vector<CarrierLowerQWitness> witnesses);
+
+CarrierWideOptimisticLowerQ certify_uniform_carrier_wide_lower_q(
+    const StableKey& source_cell_identity,
+    const CoverageDescriptor& coverage,
+    StableKey authority_identity,
+    double lower_q);
+
+CarrierWideOptimisticLowerQ certify_uniform_carrier_wide_lower_q(
+    const SharedStableKey& source_cell_identity,
+    const CoverageDescriptor& coverage,
+    StableKey authority_identity,
+    double lower_q);
 
 struct AlternativeActionIdentity {
     std::uint32_t action_id = 0;
@@ -650,6 +669,8 @@ struct ProofStoreStorageStats {
     std::uint64_t obligation_capacity = 0;
     std::uint64_t obligation_bucket_count = 0;
     std::uint64_t obligation_bucket_id_capacity = 0;
+    std::uint64_t obligation_source_index_outer_capacity = 0;
+    std::uint64_t obligation_source_index_id_capacity = 0;
     std::uint64_t obligation_key_u64_capacity = 0;
     std::uint64_t obligation_shared_key_allocation_capacity = 0;
     std::uint64_t obligation_shared_key_object_count = 0;
@@ -770,6 +791,8 @@ private:
     std::vector<UnresolvedAlternativeObligation> alternative_obligations_;
     std::map<std::uint64_t, std::vector<std::uint32_t>>
         alternative_buckets_;
+    std::vector<std::vector<std::uint32_t>>
+        alternative_obligations_by_source_;
     std::vector<ObligationSharedKeyAllocation>
         obligation_shared_key_allocations_;
     std::vector<const ObservationRequirement*>

@@ -399,6 +399,23 @@ void run_alternative_lower_and_collision_tests() {
     PC_CHECK(
         trivial.kind() ==
         OptimisticLowerQProvenanceKind::TrivialNonnegativeCost);
+    const CarrierWideOptimisticLowerQ uniform =
+        certify_uniform_carrier_wide_lower_q(
+            source_cell, row.coverage, {5601}, 7.5);
+    PC_CHECK(
+        uniform.kind() ==
+        OptimisticLowerQProvenanceKind::UniformCarrierWideWitness);
+    PC_CHECK(uniform.lower_q() == 7.5);
+    PC_CHECK(uniform.exact_carriers_covered() == 4);
+    PC_CHECK(uniform.exact_probability_mass() == 1.0);
+    bool invalid_uniform_rejected = false;
+    try {
+        (void)certify_uniform_carrier_wide_lower_q(
+            source_cell, row.coverage, {5601}, -1.0);
+    } catch (const std::invalid_argument&) {
+        invalid_uniform_rejected = true;
+    }
+    PC_CHECK(invalid_uniform_rejected);
 
     bool incomplete_rejected = false;
     try {
@@ -1026,6 +1043,9 @@ independent_store_bytes(
                  std::vector<std::uint32_t>>) +
              3 * sizeof(void*)) +
         stats.obligation_bucket_id_capacity * sizeof(std::uint32_t) +
+        stats.obligation_source_index_outer_capacity *
+            sizeof(std::vector<std::uint32_t>) +
+        stats.obligation_source_index_id_capacity * sizeof(std::uint32_t) +
         stats.obligation_key_u64_capacity * sizeof(std::uint64_t) +
         stats.obligation_shared_key_allocation_capacity *
             sizeof(ObligationSharedKeyAllocation) +
