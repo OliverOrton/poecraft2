@@ -78,6 +78,126 @@ SolveTermination successful_refined_publication_termination(
     return SolveTermination::ExactClosed;
 }
 
+void record_live_policy_lift_telemetry(
+        PolicyRefinementTelemetry& telemetry,
+        const refinement::PolicyLiftAdapterTelemetry& adapter) {
+    telemetry.strict_lift_total_ns = adapter.total_ns;
+    telemetry.strict_carrier_discovery_ns = adapter.carrier_discovery_ns;
+    telemetry.strict_partition_refinement_ns =
+        adapter.partition_refinement_ns;
+    telemetry.strict_policy_evaluation_ns = adapter.policy_evaluation_ns;
+    telemetry.strict_local_reoptimization_ns =
+        adapter.local_reoptimization_ns;
+    telemetry.strict_session_constructions =
+        adapter.strict_session_constructions;
+    telemetry.strict_full_restarts = adapter.strict_full_restarts;
+    telemetry.strict_partition_updates = adapter.strict_partition_updates;
+    telemetry.strict_frontier_insertions =
+        adapter.strict_frontier_insertions;
+    telemetry.strict_frontier_states_inserted =
+        adapter.strict_frontier_states_inserted;
+    telemetry.strict_frontier_update_max_ns =
+        adapter.strict_frontier_update_max_ns;
+    telemetry.strict_cells_retained = adapter.strict_cells_retained;
+    telemetry.strict_cells_created = adapter.strict_cells_created;
+    telemetry.strict_cells_superseded = adapter.strict_cells_superseded;
+    telemetry.exact_states = adapter.strict_carriers_materialized;
+    telemetry.exact_transitions = adapter.strict_transitions_built;
+    telemetry.exact_kernels = adapter.strict_kernels_built;
+    telemetry.exact_kernel_cache_hits = adapter.strict_kernel_cache_hits;
+    telemetry.selected_rows_begun = adapter.selected_rows_begun;
+    telemetry.selected_rows_completed = adapter.selected_rows_completed;
+    telemetry.selected_reforge_work = adapter.selected_reforge_work;
+    telemetry.selected_transitions = adapter.selected_transitions;
+    telemetry.alternative_rows_begun = adapter.alternative_rows_begun;
+    telemetry.alternative_rows_completed =
+        adapter.alternative_rows_completed;
+    telemetry.alternative_reforge_work = adapter.alternative_reforge_work;
+    telemetry.alternative_transitions = adapter.alternative_transitions;
+    telemetry.strict_reforge_active_work = adapter.strict_reforge_work;
+    telemetry.strict_reforge_logical_work_v1 =
+        adapter.strict_reforge_logical_work_v1;
+    telemetry.strict_reforge_evaluator_work_v1 =
+        adapter.strict_reforge_evaluator_work_v1;
+    telemetry.strict_reforge_evaluator_work_v2 =
+        adapter.strict_reforge_evaluator_work_v2;
+    telemetry.strict_reforge_evaluator_work_v3 =
+        adapter.strict_reforge_evaluator_work_v3;
+    telemetry.work_to_first_partition = adapter.work_to_first_partition;
+    telemetry.work_to_first_executable_upper =
+        adapter.work_to_first_executable_upper;
+    telemetry.wall_ns_to_first_partition =
+        adapter.wall_ns_to_first_partition;
+    telemetry.wall_ns_to_first_executable_upper =
+        adapter.wall_ns_to_first_executable_upper;
+    telemetry.alternatives_materialized_before_first_upper =
+        adapter.alternatives_materialized_before_first_upper;
+    telemetry.alternative_obligations_created =
+        adapter.alternative_obligations_created;
+    telemetry.unresolved_alternative_obligations =
+        adapter.unresolved_alternative_obligations;
+    telemetry.alternative_rows_avoided = adapter.alternative_rows_avoided;
+    telemetry.action_accounting_complete =
+        adapter.action_accounting_complete;
+    telemetry.alternative_scheduling_rounds =
+        adapter.alternative_scheduling_rounds;
+    telemetry.alternative_obligations_scheduled =
+        adapter.alternative_obligations_scheduled;
+    telemetry.alternative_obligations_certified =
+        adapter.alternative_obligations_certified;
+    telemetry.alternative_obligations_partially_evaluated =
+        adapter.alternative_obligations_partially_evaluated;
+    telemetry.alternative_obligations_noncompetitive =
+        adapter.alternative_obligations_noncompetitive;
+    telemetry.alternative_obligations_stale =
+        adapter.alternative_obligations_stale;
+    telemetry.alternative_verdict_revocations =
+        adapter.alternative_verdict_revocations;
+    telemetry.alternative_obligations_resource_interrupted =
+        adapter.alternative_obligations_resource_interrupted;
+    telemetry.competitive_alternatives_remaining =
+        adapter.competitive_alternatives_remaining;
+    telemetry.alternative_policy_improvements =
+        adapter.alternative_policy_improvements;
+    telemetry.bounded_publication_retained =
+        adapter.bounded_publication_retained;
+    telemetry.exact_alternative_envelope_closed =
+        adapter.exact_alternative_envelope_closed;
+    telemetry.local_reoptimization_rounds =
+        adapter.local_reoptimization_rounds;
+    telemetry.local_state_action_rows_scheduled =
+        adapter.local_state_action_rows_scheduled;
+    telemetry.local_state_action_rows_evaluated =
+        adapter.local_state_action_rows_evaluated;
+    telemetry.local_reoptimizations = adapter.local_reoptimizations;
+    telemetry.local_policy_changes = adapter.local_policy_changes;
+    telemetry.local_value_changes = adapter.local_value_changes;
+    telemetry.proof_payload_reuses = adapter.proof_payload_reuses;
+    telemetry.row_reprojections = adapter.row_reprojections;
+    telemetry.quotient_source_splits = adapter.quotient_source_splits;
+    telemetry.quotient_target_splits = adapter.quotient_target_splits;
+    telemetry.reverse_invalidations = adapter.reverse_invalidations;
+    telemetry.improper_policy_repairs = adapter.improper_policy_repairs;
+    telemetry.exact_carriers_replayed = adapter.exact_carriers_replayed;
+    telemetry.current_live_slices = adapter.current_live_slices;
+    telemetry.peak_live_slices = adapter.peak_live_slices;
+    telemetry.current_live_slice_bytes = adapter.current_live_slice_bytes;
+    telemetry.peak_live_slice_bytes = adapter.peak_live_slice_bytes;
+    telemetry.coverage_descriptor_bytes =
+        adapter.coverage_descriptor_bytes;
+    telemetry.certificate_bytes = adapter.certificate_bytes;
+    telemetry.dependency_sidecar_bytes = adapter.dependency_sidecar_bytes;
+    telemetry.alternative_obligation_bytes =
+        adapter.alternative_obligation_bytes;
+    telemetry.partition_bytes = adapter.partition_bytes;
+    telemetry.carrier_bytes = adapter.carrier_bytes;
+    telemetry.row_kernel_bytes = adapter.row_kernel_bytes;
+    telemetry.scratch_bytes = adapter.scratch_bytes;
+    telemetry.total_solver_owned_bytes = adapter.total_solver_owned_bytes;
+    telemetry.reference_adapter_invocations =
+        adapter.reference_adapter_invocations;
+}
+
 const char* solve_detail::publication_invariant_invalid_reason(
         const SolveResult& result) {
     const bool finite_upper = std::isfinite(result.upper_bound);
@@ -2919,6 +3039,10 @@ SolveWork::Impl::run_finalization() {
                                         finalization_evaluation_progress =
                                             lift_progress.evaluation;
                                         selected_lift_work.step(1);
+                                        record_live_policy_lift_telemetry(
+                                            telemetry,
+                                            selected_lift_work
+                                                .live_adapter_telemetry());
                                         co_await solve_detail::
                                             CooperativeCheckpoint{
                                                 selected_lift_work
@@ -3883,6 +4007,16 @@ SolveWork::Impl::run_finalization() {
                     finalization_evaluation_progress =
                         lift_progress.evaluation;
                     lift_work.step(1);
+                    {
+                        PolicyRefinementTelemetry& live_telemetry =
+                            result.diagnostics.policy_refinement;
+                        live_telemetry.status = "strict_lift_running";
+                        live_telemetry.strict_lift_status =
+                            "strict_lift_running";
+                        record_live_policy_lift_telemetry(
+                            live_telemetry,
+                            lift_work.live_adapter_telemetry());
+                    }
                     co_await solve_detail::CooperativeCheckpoint{
                         lift_work.retained_bytes()};
                 }

@@ -2621,10 +2621,16 @@ void run_policy_guided_exact_lift_tests() {
             "focused policy-guided exact lift");
         std::uint64_t steps = 0;
         double prior_verified_upper = kInfinity;
+        bool saw_live_session = false;
         while (!work.progress().done) {
             work.step(chunk);
             ++steps;
             PC_CHECK(steps < 1000000);
+            const refinement::PolicyLiftAdapterTelemetry& live =
+                work.live_adapter_telemetry();
+            PC_CHECK(live.strict_full_restarts == 0);
+            saw_live_session = saw_live_session ||
+                live.strict_session_constructions == 1;
             const refinement::PolicyExactLiftProgress progress =
                 work.progress();
             if (std::isfinite(
@@ -2638,6 +2644,8 @@ void run_policy_guided_exact_lift_tests() {
         }
         refinement::PolicyExactLiftCertificate certificate =
             work.take_result();
+        PC_CHECK(saw_live_session);
+        PC_CHECK(certificate.adapter.strict_session_constructions == 1);
         PC_CHECK(near(
             prior_verified_upper,
             certificate.compiled.exact_cost, 1e-12));

@@ -3820,6 +3820,50 @@ struct PolicyExactLiftWork::Impl {
         }
         return bytes;
     }
+
+    void refresh_live_telemetry() {
+        session->oracle.quotient_sync_resource_telemetry();
+        PolicyLiftAdapterTelemetry& telemetry = session->telemetry;
+        const quotient::ProofMemorySnapshot memory =
+            session->bellman.proof_store()->ledger().snapshot();
+        telemetry.coverage_descriptor_bytes = memory.bytes[
+            static_cast<std::size_t>(
+                quotient::ProofMemoryCategory::CoverageDescriptor)];
+        telemetry.certificate_bytes = memory.bytes[
+            static_cast<std::size_t>(
+                quotient::ProofMemoryCategory::Certificate)];
+        telemetry.dependency_sidecar_bytes = memory.bytes[
+            static_cast<std::size_t>(
+                quotient::ProofMemoryCategory::DependencySidecar)];
+        telemetry.alternative_obligation_bytes = memory.bytes[
+            static_cast<std::size_t>(
+                quotient::ProofMemoryCategory::AlternativeObligation)];
+        telemetry.partition_bytes = memory.bytes[
+            static_cast<std::size_t>(
+                quotient::ProofMemoryCategory::Partition)];
+        telemetry.carrier_bytes = memory.bytes[
+            static_cast<std::size_t>(
+                quotient::ProofMemoryCategory::Carrier)];
+        telemetry.row_kernel_bytes = memory.bytes[
+            static_cast<std::size_t>(
+                quotient::ProofMemoryCategory::RowKernel)];
+        telemetry.scratch_bytes = memory.bytes[
+            static_cast<std::size_t>(
+                quotient::ProofMemoryCategory::Scratch)];
+        telemetry.total_solver_owned_bytes =
+            session->oracle.estimated_owned_bytes();
+        saturating_add(
+            telemetry.total_solver_owned_bytes,
+            memory.total_bytes);
+        telemetry.adapter_owned_bytes = retained_bytes();
+        telemetry.peak_adapter_owned_bytes = std::max(
+            telemetry.peak_adapter_owned_bytes,
+            telemetry.adapter_owned_bytes);
+        telemetry.total_ns = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - session->started_at)
+                .count());
+    }
 };
 
 PolicyExactLiftWork::PolicyExactLiftWork(
@@ -3846,6 +3890,12 @@ void PolicyExactLiftWork::step(const std::uint32_t max_work_items) {
 
 PolicyExactLiftProgress PolicyExactLiftWork::progress() const {
     return impl_->progress;
+}
+
+const PolicyLiftAdapterTelemetry&
+PolicyExactLiftWork::live_adapter_telemetry() {
+    impl_->refresh_live_telemetry();
+    return impl_->session->telemetry;
 }
 
 PolicyExactLiftCertificate PolicyExactLiftWork::take_result() {

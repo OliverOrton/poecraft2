@@ -384,6 +384,7 @@ class PolicyExactLiftWork {
 
     void step(std::uint32_t max_work_items);
     PolicyExactLiftProgress progress() const;
+    const PolicyLiftAdapterTelemetry& live_adapter_telemetry();
     PolicyExactLiftCertificate take_result();
     std::uint64_t retained_bytes() const;
 
