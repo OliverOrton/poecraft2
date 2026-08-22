@@ -1,7 +1,7 @@
 {
   "schema_version": "persistent_quotient_session_summary_v1",
   "case_id": "conquest-lamellar-allflame-four-natural-t1",
-  "result": "gate6_stopped_owned_memory_ceiling",
+  "result": "gate6_accepted_owner_adjusted_512_mib_ceiling",
   "source_checkpoint": "bb29378",
   "baseline": {
     "solve_wall_ms": 300102.4209,
@@ -62,9 +62,10 @@
     "warlord_success_rate": 1.0
   },
   "conditional_release": {
-    "wasm_build": "not_run_gate6_failed",
-    "web_tests": "not_run_gate6_failed",
-    "full_pipeline": "not_run_gate6_failed",
+    "wasm_build": "pending_gate7",
+    "web_tests": "pending_gate7",
+    "full_pipeline": "pending_gate7",
     "primary_simulation": "not_run_no_final_strategy"
-  }
+  },
+  "owner_adjusted_native_peak_ceiling_bytes": 536870912
 }

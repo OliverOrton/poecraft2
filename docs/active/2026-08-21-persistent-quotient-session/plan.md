@@ -1,9 +1,12 @@
 # Persistent Quotient Session And In-Place Frontier Growth
 
-**Status: stopped precisely at Gate 6 on 2026-08-22.** The persistent-session
-behavior, progress, value, time, and responsiveness requirements passed, but
-the checked native peak was 419,316,840 bytes against the declared 150 MB
-ceiling. Gate 7 did not start. See [result.md](result.md).
+**Status: Gate 6 accepted by owner adjustment on 2026-08-22; Gate 7 is
+active.** The persistent-session behavior, progress, value, time, and
+responsiveness requirements passed. After reviewing the checked 419,316,840
+byte conservative ownership estimate, Oliver replaced the original 150 MB
+milestone ceiling with 512 MiB (536,870,912 bytes). This is an acceptance
+boundary adjustment only; no engine resource cap or proof behavior changes.
+See [result.md](result.md).
 
 Owner: Oliver
 
@@ -216,8 +219,8 @@ Native acceptance requires all of the following:
   accepted 38.94-second baseline);
 - either completion or at least a 10% reduction from 17,584 open automatic
   alternatives at the 300-second stop;
-- estimated native peak ownership at or below 150 MB, with no hidden or
-  unledgered retained payload; and
+- estimated native peak ownership at or below 512 MiB (536,870,912 bytes),
+  with no hidden or unledgered retained payload; and
 - largest public step at or below 1.65 seconds, with cancellation and progress
   still advancing.
 

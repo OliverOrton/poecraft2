@@ -1,8 +1,10 @@
 # Handoff
 
-**Status: no implementation boundary is active.** The persistent quotient
-session milestone stopped precisely at native Gate 6 on 2026-08-22. Oliver
-must select the next chunk before implementation resumes.
+**Status: conditional release qualification is active.** Oliver reviewed the
+persistent quotient session's 419,316,840-byte conservative native peak on
+2026-08-22 and replaced the original 150 MB milestone ceiling with 512 MiB
+(536,870,912 bytes). Gate 6 therefore passes. This does not change an engine
+resource cap or proof behavior.
 
 ## Current checkpoint
 
@@ -48,9 +50,8 @@ The final native Allflame four-natural-T1 Conquest Lamellar run reached the
 - 419,316,840 native peak owned bytes, with 363,854,278 attributed to the
   live quotient/oracle/proof session.
 
-Every declared native acceptance condition except the 150 MB memory ceiling
-passed. The plan's stop condition therefore fired. The primary produced no
-final strategy, so it was not simulated.
+Every native acceptance condition passed under the owner-adjusted 512 MiB
+ceiling. The primary produced no final strategy, so it was not simulated.
 
 ## Qualification already run
 
@@ -66,10 +67,11 @@ final strategy, so it was not simulated.
 - Final primary derived report:
   `build/solver-diagnostics/persistent-quotient-session/native-primary-final-128.json`.
 
-Release WASM, TypeScript/web acceptance, and `scripts/test.ps1` were not run
-because Gate 6 failed. Do not run them merely to recharacterize this stop.
+Release WASM, TypeScript/web acceptance, the release-WASM five-minute primary,
+and, if those pass, the one full `scripts/test.ps1` acceptance run are now the
+active conditional release boundary.
 
-## Next precise owner
+## Later memory owner
 
 If Oliver selects a successor, begin with behavior-neutral ownership
 telemetry that separates:

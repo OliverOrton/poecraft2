@@ -1,14 +1,18 @@
 # Persistent Quotient Session And In-Place Frontier Growth Result
 
-**Status: stopped precisely at Gate 6 on 2026-08-22.**
+**Status: Gate 6 accepted by owner adjustment on 2026-08-22; conditional
+release qualification is active.**
 
 The production strict lift now extends one durable quotient session through
 competitive frontier growth. The checked four-T1 primary kept one strict
 session, performed four real in-place insertions, and performed no production
 full restart. It preserved the accepted verified upper and materially reduced
-the open exact alternative envelope. The milestone does not pass release
-qualification because retained native ownership is well above its explicit
-150 MB ceiling.
+the open exact alternative envelope. The initial Gate 6 record stopped because
+retained native ownership exceeded its original 150 MB ceiling. Oliver
+reviewed the measured ownership and replaced that milestone-only threshold
+with 512 MiB (536,870,912 bytes), so the 419,316,840-byte result now passes
+Gate 6. No engine resource limit or proof behavior changed. Gate 7 results
+remain pending.
 
 ## Retained implementation
 
@@ -65,9 +69,10 @@ The first strict upper and maximum public step pass their 42.84-second and
 1.65-second boundaries. The one-session, zero-restart, real-growth, value,
 and greater-than-10% progress requirements also pass.
 
-## Gate 6 stop
+## Gate 6 owner adjustment
 
-Memory is the sole failed native acceptance criterion. The quotient telemetry
+Memory was the sole failed criterion under the original 150 MB boundary. The
+quotient telemetry
 reports 363,854,278 total solver-owned bytes; the complete live solve reports
 419,316,840 peak owned bytes. Named retained proof categories include
 104,935,928 row-kernel bytes, 18,905,936 alternative-obligation bytes,
@@ -80,13 +85,15 @@ which subowner dominates. Process working set after the watchdog was
 milestone explicitly qualifies on the conservative owned-memory ledger, not
 working set.
 
-The plan's stop condition therefore fired. This result does not reinterpret
-the 150 MB limit, hide persistent payload, or proceed to conditional release
-acceptance. The next memory work must first split live strict-calculator,
-adapter-map, selected-closure, published-row, and proof-store ownership in the
-telemetry, then remove actual simultaneous duplication or shorten safe cache
-lifetimes. A cap-only change or another cross-generation row cache is not
-supported by the evidence.
+The initial stop was correctly recorded. On 2026-08-22 Oliver explicitly
+accepted the measured increase and set a 512 MiB milestone ceiling. The native
+peak is 117,554,072 bytes below that revised boundary, so Gate 6 now passes and
+conditional release qualification may proceed. This adjustment does not hide
+persistent payload or alter a runtime cap. Future memory work should first
+split live strict-calculator, adapter-map, selected-closure, published-row,
+and proof-store ownership in the telemetry, then remove actual simultaneous
+duplication or shorten safe cache lifetimes. Another cross-generation row
+cache is not supported by the evidence.
 
 ## Qualification
 
@@ -101,8 +108,9 @@ supported by the evidence.
   10,000/10,000 successful simulations.
 - `git diff --check`: pass before documentation finalization.
 - Release WASM, TypeScript/web acceptance, the full repository pipeline, and
-  primary simulation: not run. Gate 6 did not pass and the primary produced
-  progress only, not a final strategy.
+  primary simulation: pending conditional Gate 7 work. The native primary
+  produced progress only, not a final strategy, so its simulation remains
+  inapplicable.
 
 Compact measurements are in
 [native-primary-summary.json](evidence/native-primary-summary.json). Full
