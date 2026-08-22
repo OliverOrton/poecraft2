@@ -552,6 +552,22 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
             saturated_product(
                 state_count, 2 * sizeof(std::uint64_t) +
                                  2 * sizeof(std::uint8_t)));
+        scratch_bytes = saturated_add(
+            scratch_bytes,
+            saturated_product(
+                state_count,
+                2 * sizeof(std::vector<std::uint64_t>) +
+                    4 * sizeof(std::uint32_t)));
+        scratch_bytes = saturated_add(
+            scratch_bytes,
+            saturated_product(
+                transition_cache_.rows.size(),
+                2 * sizeof(std::uint32_t) + 2 * sizeof(std::uint8_t)));
+        scratch_bytes = saturated_add(
+            scratch_bytes,
+            saturated_product(
+                transition_cache_.successors.size(),
+                2 * sizeof(std::uint64_t)));
         ScopedProofMemoryCharge scratch(
             transition_cache_.quotient_proofs->ledger(),
             ProofMemoryCategory::Scratch,
@@ -561,79 +577,108 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
          * any terminal under the already-filtered action vocabulary. Retain
          * that row for the optimistic lower relaxation, but do not let it
          * pull an off-policy dead end into the executable upper envelope. */
+        std::vector<std::uint8_t> current_certified_row(
+            transition_cache_.rows.size(), 0);
+        std::vector<std::uint32_t> source_state_by_row(
+            transition_cache_.rows.size(), kNoId);
+        std::vector<std::vector<std::uint64_t>> rows_by_target(
+            state_count);
+        for (std::uint32_t state = 0; state < state_count; ++state) {
+            for (const std::uint64_t row :
+                 state_row_indices(transition_cache_, state)) {
+                if (!transition_cache_.rows[row].admitted ||
+                    !row_certificate_current(row)) {
+                    continue;
+                }
+                current_certified_row[row] = 1;
+                source_state_by_row[row] = state;
+                const SparseRow& sparse = transition_cache_.rows[row];
+                for (std::uint32_t i = 0;
+                     i < sparse.transition_count; ++i) {
+                    rows_by_target[transition_cache_.successors[
+                        sparse.transition_offset + i]].push_back(row);
+                }
+            }
+        }
+
         std::vector<std::uint8_t> terminal_attractor(state_count, 0);
+        std::vector<std::uint32_t> pending_states;
+        pending_states.reserve(state_count);
         for (std::uint32_t state = 0; state < state_count; ++state) {
             if (cells_.at(cell_by_state_[state]).cell.terminal) {
                 terminal_attractor[state] = 1;
+                pending_states.push_back(state);
             }
         }
-        bool attractor_changed = true;
-        while (attractor_changed) {
-            attractor_changed = false;
+        for (std::size_t pending = 0;
+             pending < pending_states.size(); ++pending) {
+            const std::uint32_t target = pending_states[pending];
+            for (const std::uint64_t row : rows_by_target[target]) {
+                const std::uint32_t source = source_state_by_row[row];
+                if (!terminal_attractor[source]) {
+                    terminal_attractor[source] = 1;
+                    pending_states.push_back(source);
+                }
+            }
+        }
+
+        const auto greatest_supported_subset = [&] (
+                std::vector<std::uint8_t> live,
+                const std::vector<std::uint8_t>& allowed_rows,
+                const bool preserve_terminals) {
+            std::vector<std::uint32_t> outside_count(
+                transition_cache_.rows.size(), 0);
+            std::vector<std::uint32_t> supporting_rows(state_count, 0);
+            for (std::uint64_t row = 0;
+                 row < transition_cache_.rows.size(); ++row) {
+                if (!allowed_rows[row]) continue;
+                const SparseRow& sparse = transition_cache_.rows[row];
+                for (std::uint32_t i = 0;
+                     i < sparse.transition_count; ++i) {
+                    if (!live[transition_cache_.successors[
+                            sparse.transition_offset + i]]) {
+                        ++outside_count[row];
+                    }
+                }
+                if (outside_count[row] == 0) {
+                    ++supporting_rows[source_state_by_row[row]];
+                }
+            }
+            std::vector<std::uint32_t> removals;
+            removals.reserve(state_count);
             for (std::uint32_t state = 0; state < state_count; ++state) {
-                if (terminal_attractor[state]) continue;
-                for (const std::uint64_t row :
-                     state_row_indices(transition_cache_, state)) {
-                    if (!transition_cache_.rows[row].admitted ||
-                        !row_certificate_current(row)) {
+                if (live[state] && supporting_rows[state] == 0 &&
+                    !(preserve_terminals &&
+                      cells_.at(cell_by_state_[state]).cell.terminal)) {
+                    removals.push_back(state);
+                }
+            }
+            for (std::size_t pending = 0;
+                 pending < removals.size(); ++pending) {
+                const std::uint32_t removed = removals[pending];
+                if (!live[removed]) continue;
+                live[removed] = 0;
+                for (const std::uint64_t row : rows_by_target[removed]) {
+                    if (!allowed_rows[row] || outside_count[row]++ != 0) {
                         continue;
                     }
-                    const SparseRow& sparse = transition_cache_.rows[row];
-                    bool reaches_attractor = false;
-                    for (std::uint32_t i = 0;
-                         i < sparse.transition_count; ++i) {
-                        if (terminal_attractor[
-                                transition_cache_.successors[
-                                    sparse.transition_offset + i]]) {
-                            reaches_attractor = true;
-                            break;
-                        }
+                    const std::uint32_t source = source_state_by_row[row];
+                    if (supporting_rows[source] == 0) {
+                        throw std::logic_error(
+                            "quotient support row count underflow");
                     }
-                    if (reaches_attractor) {
-                        terminal_attractor[state] = 1;
-                        attractor_changed = true;
-                        break;
+                    --supporting_rows[source];
+                    if (live[source] && supporting_rows[source] == 0 &&
+                        !(preserve_terminals &&
+                          cells_.at(cell_by_state_[source]).cell.terminal)) {
+                        removals.push_back(source);
                     }
                 }
             }
-        }
-        bool support_changed = true;
-        while (support_changed) {
-            support_changed = false;
-            for (std::uint32_t state = 0; state < state_count; ++state) {
-                if (!terminal_attractor[state] ||
-                    cells_.at(cell_by_state_[state]).cell.terminal) {
-                    continue;
-                }
-                bool has_closed_row = false;
-                for (const std::uint64_t row :
-                     state_row_indices(transition_cache_, state)) {
-                    if (!transition_cache_.rows[row].admitted ||
-                        !row_certificate_current(row)) {
-                        continue;
-                    }
-                    const SparseRow& sparse = transition_cache_.rows[row];
-                    bool closed = true;
-                    for (std::uint32_t i = 0;
-                         i < sparse.transition_count; ++i) {
-                        if (!terminal_attractor[
-                                transition_cache_.successors[
-                                    sparse.transition_offset + i]]) {
-                            closed = false;
-                            break;
-                        }
-                    }
-                    if (closed) {
-                        has_closed_row = true;
-                        break;
-                    }
-                }
-                if (!has_closed_row) {
-                    terminal_attractor[state] = 0;
-                    support_changed = true;
-                }
-            }
-        }
+            return live;
+        };
+        terminal_attractor = greatest_supported_subset(
+            std::move(terminal_attractor), current_certified_row, true);
         const auto row_stays_in_terminal_attractor =
                 [&](const std::uint64_t row) {
             const SparseRow& sparse = transition_cache_.rows[row];
@@ -694,40 +739,16 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
                 closed_seed[state] = 0;
             }
         }
-        bool closed_changed = true;
-        while (closed_changed) {
-            closed_changed = false;
-            for (std::uint32_t state = 0; state < state_count; ++state) {
-                if (!closed_seed[state]) continue;
-                bool has_closed_row = false;
-                for (const std::uint64_t row :
-                     state_row_indices(transition_cache_, state)) {
-                    if (!transition_cache_.rows[row].admitted ||
-                        !row_certificate_current(row) ||
-                        !row_stays_in_terminal_attractor(row)) {
-                        continue;
-                    }
-                    const SparseRow& sparse = transition_cache_.rows[row];
-                    bool closed = true;
-                    for (std::uint32_t i = 0;
-                         i < sparse.transition_count; ++i) {
-                        if (!closed_seed[transition_cache_.successors[
-                                sparse.transition_offset + i]]) {
-                            closed = false;
-                            break;
-                        }
-                    }
-                    if (closed) {
-                        has_closed_row = true;
-                        break;
-                    }
-                }
-                if (!has_closed_row) {
-                    closed_seed[state] = 0;
-                    closed_changed = true;
-                }
-            }
+        std::vector<std::uint8_t> closed_seed_rows(
+            transition_cache_.rows.size(), 0);
+        for (std::uint64_t row = 0;
+             row < transition_cache_.rows.size(); ++row) {
+            closed_seed_rows[row] =
+                current_certified_row[row] &&
+                row_stays_in_terminal_attractor(row);
         }
+        closed_seed = greatest_supported_subset(
+            std::move(closed_seed), closed_seed_rows, false);
 
         std::vector<std::uint64_t> policy_rows(state_count, kNoRow);
         for (std::uint32_t state = 0; state < state_count; ++state) {
@@ -735,9 +756,9 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
             if (cell.cell.terminal) continue;
             if (closed_seed[state]) {
                 for (const std::uint64_t row :
-                     state_row_indices(transition_cache_, state)) {
+                    state_row_indices(transition_cache_, state)) {
                     if (!transition_cache_.rows[row].admitted ||
-                        !row_certificate_current(row) ||
+                        !current_certified_row[row] ||
                         !row_stays_in_terminal_attractor(row)) {
                         continue;
                     }
@@ -762,7 +783,7 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
                 transition_cache_, state,
                 [&](const std::uint64_t row) {
                     return transition_cache_.rows[row].admitted &&
-                           row_certificate_current(row) &&
+                           current_certified_row[row] &&
                            row_stays_in_terminal_attractor(row);
                 },
                 [&](const std::uint64_t row, std::uint32_t& work) {
@@ -812,9 +833,9 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
                 if (cell.cell.terminal) continue;
                 bool saw_certificate = false;
                 for (const std::uint64_t row :
-                     state_row_indices(transition_cache_, state)) {
+                    state_row_indices(transition_cache_, state)) {
                     if (!transition_cache_.rows[row].admitted ||
-                        !row_certificate_current(row) ||
+                        !current_certified_row[row] ||
                         !row_stays_in_terminal_attractor(row)) {
                         continue;
                     }
@@ -829,7 +850,7 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
                     }
                 }
                 if (!saw_certificate || policy_rows[state] == kNoRow ||
-                    !row_certificate_current(policy_rows[state])) {
+                    !current_certified_row[policy_rows[state]]) {
                     out.status = QuotientBellmanStatus::
                         MissingReachableCertificate;
                     out.failure_reason =
@@ -933,7 +954,7 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
                     for (const std::uint64_t row :
                          state_row_indices(transition_cache_, state)) {
                         if (!transition_cache_.rows[row].admitted ||
-                            !row_certificate_current(row) ||
+                            !current_certified_row[row] ||
                             !row_stays_in_terminal_attractor(row) ||
                             row == policy_rows[state]) {
                             continue;
@@ -996,7 +1017,7 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
                     transition_cache_, state,
                     [&](const std::uint64_t row) {
                         return transition_cache_.rows[row].admitted &&
-                               row_certificate_current(row) &&
+                               current_certified_row[row] &&
                                row_stays_in_terminal_attractor(row);
                     },
                     [&](const std::uint64_t row, std::uint32_t& work) {
@@ -1079,7 +1100,7 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
                 }
                 const std::uint64_t row =
                     out.selected_rows_by_state[state];
-                if (row == kNoRow || !row_certificate_current(row)) {
+                if (row == kNoRow || !current_certified_row[row]) {
                     audit.reachable_selected_rows_current = false;
                     audit.closed_target_dependencies = false;
                     continue;
