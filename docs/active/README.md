@@ -1,15 +1,16 @@
 # Active Work
 
-**Status: temporary blocker tier canonicalization is active.**
+**Status: no implementation boundary is active.**
 
 Parent: [Documentation map](../README.md)
 
-The selected
+The completed
 [Temporary Blocker Tier Canonicalization](2026-08-22-temporary-blocker-tier-canonicalization/plan.md)
 boundary moves the existing active-economy price dominance of exact-equivalent
 bench blocker tiers ahead of fixed-option and operator construction. Unpriced
-callers retain all variants, and the broader goal-slot-equivalence finding is
-kept as a separate successor.
+callers retain all variants. Native focused acceptance and the release WASM
+rebuild pass; see the [result](2026-08-22-temporary-blocker-tier-canonicalization/result.md).
+The broader goal-slot-equivalence finding is a separate possible successor.
 
 The completed
 [Persistent Quotient Session And In-Place Frontier Growth](2026-08-21-persistent-quotient-session/plan.md)

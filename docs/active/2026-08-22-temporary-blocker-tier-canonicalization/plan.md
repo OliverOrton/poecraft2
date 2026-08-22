@@ -1,12 +1,14 @@
 # Temporary Blocker Tier Canonicalization
 
-**Status: selected for implementation on 2026-08-22.**
+**Status: completed and accepted on 2026-08-22.**
 
 Owner: Oliver
 
 Starting commit: `e030997e32ea46c0b1f4e26934b08ea6ae70c1cd`
 
 Parent: [Active work](../README.md)
+
+Result: [accepted result](result.md)
 
 ## Objective
 

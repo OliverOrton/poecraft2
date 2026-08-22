@@ -29,6 +29,17 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
+The focused
+[temporary blocker tier canonicalization](active/2026-08-22-temporary-blocker-tier-canonicalization/plan.md)
+boundary is [complete](active/2026-08-22-temporary-blocker-tier-canonicalization/result.md).
+At active solve prices, one exact carrier-local blocker effect now carries only
+its cheapest legal bench tier into fixed-option and operator construction;
+unpriced callers retain every resource variant. Focused native acceptance and
+the release WASM rebuild pass. This removes late planner/decision overhead but
+does not reduce the already tier-collapsed Bellman rows. The separate
+goal-slot-equivalence audit is preserved as a possible successor, and no
+implementation boundary is active.
+
 The
 [persistent quotient session and in-place frontier growth](active/2026-08-21-persistent-quotient-session/plan.md)
 milestone is complete after an explicit

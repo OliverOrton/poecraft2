@@ -1,27 +1,65 @@
 # Handoff
 
-**Status: temporary blocker tier canonicalization is active.** Oliver selected
-the narrow successor on 2026-08-22: for one exact carrier-local blocker effect,
-choose the cheapest legal tier under the active economy before fixed-option,
-operator, Bellman-row, or proof construction. Preserve all differently
-resourced variants for unpriced callers. The broader goal-slot-equivalence
-finding is a separate successor and is not part of this boundary.
+**Status: no implementation boundary is active.** Temporary blocker tier
+canonicalization completed on 2026-08-22. Oliver must select the next chunk
+before implementation resumes. The strongest measured successor is exact
+carrier-local row equivalence across goal-slot-labelled temporary-blocker
+choices; it remains unimplemented.
 
 ## Current checkpoint
 
 - Branch: `main`
 - Local `origin/main` is at release checkpoint `c95e6e1`; this run issued no
-  push. The documentation finalization commits remain local.
-- Retained implementation checkpoint: `bb29378`
-- Release checkpoint: `c95e6e1`
-- Active milestone plan:
+  push. All new checkpoints remain local.
+- Implementation checkpoint: `a8deff0`
+- Parent release checkpoint: `c95e6e1`
+- Completed milestone plan:
   [docs/active/2026-08-22-temporary-blocker-tier-canonicalization/plan.md](docs/active/2026-08-22-temporary-blocker-tier-canonicalization/plan.md)
-- Completed parent milestone:
-  [docs/active/2026-08-21-persistent-quotient-session/plan.md](docs/active/2026-08-21-persistent-quotient-session/plan.md)
 - Result:
+  [docs/active/2026-08-22-temporary-blocker-tier-canonicalization/result.md](docs/active/2026-08-22-temporary-blocker-tier-canonicalization/result.md)
+- Parent milestone:
+  [docs/active/2026-08-21-persistent-quotient-session/plan.md](docs/active/2026-08-21-persistent-quotient-session/plan.md)
+- Parent result:
   [docs/active/2026-08-21-persistent-quotient-session/result.md](docs/active/2026-08-21-persistent-quotient-session/result.md)
-- Compact evidence:
+- Parent compact evidence:
   [docs/active/2026-08-21-persistent-quotient-session/evidence/native-primary-summary.json](docs/active/2026-08-21-persistent-quotient-session/evidence/native-primary-summary.json)
+
+## What completed in this boundary
+
+For one exact carrier-local temporary-blocker effect group, priced solves now
+retain only the strictly cheapest blocker resource variant before planner
+admission. Equal prices retain the first authoritative variant. Unpriced
+callers still retain every differently resourced variant because they have no
+economy with which to prove dominance.
+
+The focused regression proves the selected tier changes when prices reverse,
+the discarded tier does not reach a decision or operator, equal-price ties are
+stable, and the unpriced path retains both variants. Native build, focused
+solver test, and the WASM rebuild passed. The full acceptance pipeline and
+primary were deliberately not run because this boundary did not change the
+admitted Bellman rows or requalify a compiled strategy.
+
+The stored four-T1 envelope contained 4,779 temporary-bench candidate
+decisions; 2,442 were redundant tier variants previously collapsed only at the
+late price-selection boundary. This change removes those variants before
+planner admission. The same envelope still admits 521 temporary-bench Bellman
+rows, so this is a planner-size cleanup rather than the row/proof reduction.
+
+## Possible next owner: goal-slot row equivalence
+
+The stored four-T1 envelope has 45 temporary-bench action identities for only
+12 blocker/follow-up behaviours. Its 521 rows contain 248 unique transition
+templates and 273 exact template repeats. At the retained root witness, 45
+temporary rows fall into 12 state/effect groups; every row in each group has
+identical lower value, upper value, and status, leaving 33 duplicates beyond
+the first.
+
+A safe next chunk should canonicalize only rows proven equivalent after
+carrier mapping: identical transition kernel, immediate active-economy cost,
+and stopping semantics. It must preserve any goal-slot distinction that can
+change whether the strategy stops or continues. A stronger later quality
+owner may deliberately stop on any relevant goal progress, but that is a
+semantic policy change and should not be smuggled into equivalence cleanup.
 
 ## What is retained
 
