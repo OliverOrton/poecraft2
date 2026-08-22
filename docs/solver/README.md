@@ -699,12 +699,30 @@ executable state upper. A row is non-improving only if its complete lower Q
 cannot beat that upper. Overlap remains unresolved. Several admissions can
 therefore compose into a policy and change which later rows are useful.
 
-The incremental lower uses the existing probability-aware optimistic clean
-goal cover where it is finite and admissible. A currently improper
-restricted graph's infinity is never presented as a global lower; the solver
-falls back to the independently admissible state heuristic or zero. Eldritch-
-eligible sessions currently use zero for this clean cover because automatic
-side actions are not represented in that relaxation.
+The incremental lower uses the probability-aware optimistic clean goal cover
+where it is finite and admissible. A currently improper restricted graph's
+infinity is never presented as a global lower; the solver falls back to the
+independently admissible state heuristic or local zero.
+
+On Eldritch-eligible armour, the clean cover explicitly includes optimistic
+side-intent Annul, Chaos, and Exalt macros. They retain the real nonnegative
+price of the final currency while granting setup/dominance, target-side
+selection, junk removal, and retry outcomes no less favorable than the exact
+carrier-local `OptionKernel`. The universal probability-free cover includes
+the same final-action families for carriers outside the clean domain. The
+strict clean pattern database remains excluded on eligible sessions because
+it still models registry primitives rather than carrier-local automatic
+option rows. Missing coverage or a nonfinite abstraction therefore falls back
+locally instead of manufacturing proof.
+
+An independently proved goal-cover floor survives an open incremental action
+envelope and an unfinished strict refinement. It may publish with
+`global_action_relaxation` provenance only up to the amount proved by that
+independent cover; restricted-policy values never gain global authority.
+Operator-price pruning also treats synthetic Restart specially: its exact
+successor is a fresh Normal carrier, so source goal progress is not carried
+through the lower. Other destructive actions retain the conservative
+may-survive union until their complete successor authority is proved.
 
 Exceptional-support successors receive priority over ordinary Q refinement.
 Fossil added/forced mods, Essence guarantees, and automatic Eldritch side

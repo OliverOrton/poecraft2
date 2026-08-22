@@ -1,15 +1,19 @@
 # Active Work
 
-**Status: Eldritch goal-cover coverage is selected.**
+**Status: no implementation boundary is active.**
 
 Parent: [Documentation map](../README.md)
 
-The selected
+The completed
 [Eldritch Goal-Cover Coverage](2026-08-22-eldritch-goal-cover-coverage/plan.md)
 boundary replaces the session-wide zero completion-cost seed on eligible
-armour only after automatic Eldritch Annul, Chaos, and Exalt programs have a
-proved optimistic projection. It preserves local zero fallback and keeps the
-separate delayed executable-upper scheduler outside this scope.
+armour with a Bellman-qualified optimistic projection of automatic Eldritch
+Annul, Chaos, and Exalt programs. The checked primary now publishes a certified
+positive `21.772459401332767` lower but still stops at five minutes with the
+unchanged `3745.7295960574743` upper and exact-refinement plateau. Native,
+release WASM, TypeScript, web, and 10,000-run controls pass; see the
+[result](2026-08-22-eldritch-goal-cover-coverage/result.md). No successor is
+selected.
 
 The completed
 [Temporary Blocker Tier Canonicalization](2026-08-22-temporary-blocker-tier-canonicalization/plan.md)

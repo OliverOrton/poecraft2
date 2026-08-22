@@ -1,6 +1,8 @@
 # Eldritch Goal-Cover Coverage
 
-**Status: selected (2026-08-22).**
+**Status: completed and accepted (2026-08-22).**
+
+Result: [Eldritch Goal-Cover Coverage Result](result.md)
 
 Owner: Oliver
 
@@ -130,4 +132,3 @@ Stop precisely if:
 - the only sound projection measures indistinguishably from zero; or
 - completing coverage requires changing action admission, mechanics, caps, or
   the separate executable-upper scheduler.
-

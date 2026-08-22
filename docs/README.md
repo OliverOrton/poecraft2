@@ -29,13 +29,16 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The selected
+The completed
 [Eldritch goal-cover coverage](active/2026-08-22-eldritch-goal-cover-coverage/plan.md)
 boundary replaces the session-wide zero optimistic completion cost on eligible
-armour only after automatic Eldritch Annul, Chaos, and Exalt programs have a
-proved no-more-expensive, no-less-capable projection. Local zero fallback and
-the separate executable-upper scheduler remain unchanged until independently
-qualified.
+armour with a proved no-more-expensive, no-less-capable projection of automatic
+Eldritch Annul, Chaos, and Exalt programs. The checked primary publishes a
+certified positive `21.772459401332767` lower but retains its accepted
+`3745.7295960574743` upper and five-minute exact-refinement stop. The
+[result](active/2026-08-22-eldritch-goal-cover-coverage/result.md) records the
+native, release-WASM, web, Bellman, and 10,000-run controls. No implementation
+boundary is active until Oliver selects a successor.
 
 The focused
 [temporary blocker tier canonicalization](active/2026-08-22-temporary-blocker-tier-canonicalization/plan.md)

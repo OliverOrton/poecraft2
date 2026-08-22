@@ -194,11 +194,14 @@ The versioned raw telemetry's `policy_result` also carries
 of `open_incremental_envelope_universal_zero`,
 `unclosed_strict_refinement_universal_zero`,
 `closed_incremental_action_envelope`, `global_action_relaxation`,
-`exact_policy_closure`, or `none`. An unclosed strict refinement invalidates
-the coarse relaxation as public lower-bound authority and publishes the
-universal zero floor instead. These diagnostic fields cross native and release
-WASM through the existing telemetry JSON; they do not change ABI v2's fixed
-summary layout.
+`exact_policy_closure`, or `none`. Open incremental or unfinished strict work
+still invalidates restricted/coarse values as public lower-bound authority.
+When a separate goal-cover relaxation proves a positive global floor, that
+floor survives and publishes as `global_action_relaxation`; otherwise the
+corresponding universal-zero provenance remains. The classifier cannot certify
+more than the independent relaxation actually proved. These diagnostic fields
+cross native and release WASM through the existing telemetry JSON; they do not
+change ABI v2's fixed summary layout.
 
 ### Exact strategy evaluation
 

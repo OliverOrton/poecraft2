@@ -175,15 +175,16 @@ exactly. Absolute/relative product gaps only stop qualifying completed rounds;
 they never alter Bellman comparisons, ties, admission, pruning, epsilon, or
 eventual exact results.
 
-Raw solver telemetry additionally reports whether `L` came from a closed
-global proof and names its proof family. An open incremental action envelope
-continues to publish the independently safe zero floor, labeled
-`open_incremental_envelope_universal_zero` with
-`global_lower_bound_certified: false`; closed incremental, unrestricted global
-relaxation, and exact policy closure have distinct provenance labels. The
-boolean describes closed solver-proof authority, not whether zero is
-mathematically safe. A bounded policy may therefore retain a certified
-positive closed-envelope lower without being called exact.
+Raw solver telemetry additionally reports whether `L` came from global proof
+authority and names its proof family. An open incremental action envelope or
+unfinished strict refinement cannot publish a restricted/coarse value. It
+publishes the independently safe zero floor when no stronger independent
+proof exists, or a separately proved goal-cover floor with
+`global_action_relaxation` provenance. The classifier may certify only the
+numeric amount owned by that independent relaxation. Closed incremental,
+unrestricted global relaxation, and exact policy closure retain distinct
+provenance labels. A bounded policy may therefore retain a certified positive
+global lower without being called exact.
 
 `termination = exact_closed` remains orthogonal to bounded policy quality when
 coarse discovery closed and later exact refinement retained only a bounded

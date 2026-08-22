@@ -1,169 +1,110 @@
 # Handoff
 
-**Status: Eldritch goal-cover coverage is active.** Oliver selected the
-[plan](docs/active/2026-08-22-eldritch-goal-cover-coverage/plan.md) on
-2026-08-22. Restore a useful admissible completion-cost seed on eligible
-armour by covering automatic Eldritch Annul, Chaos, and Exalt programs; retain
-local zero fallback until exact-row Bellman controls prove the replacement.
-The separate Essence/Harvest/Fossil executable-upper scheduling issue and the
-goal-slot row-equivalence finding remain outside this boundary.
-
-## Active implementation boundary
-
-- Starting checkpoint: `d2341dd`.
-- Current source witness: `optimistic_completion_cost_for_state()` returns
-  zero for every `session.eldritch_eligible` state.
-- Historical cause: commit `3a6d191` added the guard with automatic Eldritch
-  side actions because the clean-carrier MDP did not represent their one-side
-  preservation.
-- Retained authority: carrier-local automatic options already carry exact
-  expected resource vectors and exact `OptionKernel` transitions.
-- Soundness contract: every real Eldritch option must have a no-more-expensive,
-  no-less-capable optimistic projection before the global guard is removed.
-- Acceptance: focused Bellman inequality controls, complete affected native
-  solver acceptance, primary/Bow measurement, release WASM, non-visual web
-  acceptance, documentation, and local co-authored checkpoints. Do not push.
+**Status: no implementation boundary is active.** The Eldritch goal-cover
+coverage milestone completed on 2026-08-22. Oliver must select the next chunk
+before implementation resumes.
 
 ## Current checkpoint
 
-- Branch: `main`
-- Local `origin/main` is at release checkpoint `c95e6e1`; this run issued no
-  push. All new checkpoints remain local.
-- Implementation checkpoint: `a8deff0`
-- Parent release checkpoint: `c95e6e1`
-- Completed milestone plan:
-  [docs/active/2026-08-22-temporary-blocker-tier-canonicalization/plan.md](docs/active/2026-08-22-temporary-blocker-tier-canonicalization/plan.md)
+- Branch: `main`.
+- Local `origin/main` remains at `c95e6e1`; no push was issued.
+- Starting checkpoint: `d2341dd`.
+- Native implementation checkpoint: `300e9ed`.
+- Release WASM checkpoint: `f74a549`.
+- Plan:
+  [docs/active/2026-08-22-eldritch-goal-cover-coverage/plan.md](docs/active/2026-08-22-eldritch-goal-cover-coverage/plan.md)
 - Result:
-  [docs/active/2026-08-22-temporary-blocker-tier-canonicalization/result.md](docs/active/2026-08-22-temporary-blocker-tier-canonicalization/result.md)
-- Parent milestone:
-  [docs/active/2026-08-21-persistent-quotient-session/plan.md](docs/active/2026-08-21-persistent-quotient-session/plan.md)
-- Parent result:
-  [docs/active/2026-08-21-persistent-quotient-session/result.md](docs/active/2026-08-21-persistent-quotient-session/result.md)
-- Parent compact evidence:
-  [docs/active/2026-08-21-persistent-quotient-session/evidence/native-primary-summary.json](docs/active/2026-08-21-persistent-quotient-session/evidence/native-primary-summary.json)
+  [docs/active/2026-08-22-eldritch-goal-cover-coverage/result.md](docs/active/2026-08-22-eldritch-goal-cover-coverage/result.md)
+- Compact evidence:
+  [docs/active/2026-08-22-eldritch-goal-cover-coverage/evidence/acceptance-summary.json](docs/active/2026-08-22-eldritch-goal-cover-coverage/evidence/acceptance-summary.json)
 
-## What completed in this boundary
+## Completed boundary
 
-For one exact carrier-local temporary-blocker effect group, priced solves now
-retain only the strictly cheapest blocker resource variant before planner
-admission. Equal prices retain the first authoritative variant. Unpriced
-callers still retain every differently resourced variant because they have no
-economy with which to prove dominance.
+Eligible armour no longer receives a session-wide zero completion heuristic.
+The clean and universal goal covers now include admissible optimistic macros
+for automatic Eldritch Annul, Chaos, and Exalt. They retain the real final
+currency price while granting setup/dominance and outcomes no worse than the
+exact carrier-local option. Exact-row Bellman controls cover direct and setup-
+bearing options on both sides.
 
-The focused regression proves the selected tier changes when prices reverse,
-the discarded tier does not reach a decision or operator, equal-price ties are
-stable, and the unpriced path retains both variants. Native build, focused
-solver test, and the WASM rebuild passed. The full acceptance pipeline and
-primary were deliberately not run because this boundary did not change the
-admitted Bellman rows or requalify a compiled strategy.
+The independently proved goal-cover floor survives an open incremental action
+envelope and unfinished strict refinement. It publishes only the numeric
+amount owned by `global_action_relaxation`; restricted-policy values never gain
+global authority. The strict clean pattern database remains excluded on
+eligible sessions because it does not yet model carrier-local automatic rows.
 
-The stored four-T1 envelope contained 4,779 temporary-bench candidate
-decisions; 2,442 were redundant tier variants previously collapsed only at the
-late price-selection boundary. This change removes those variants before
-planner admission. The same envelope still admits 521 temporary-bench Bellman
-rows, so this is a planner-size cleanup rather than the row/proof reduction.
+Synthetic Restart now prices continuation from its exact fresh Normal
+successor instead of carrying source goal progress. Do not generalize that fix
+by subtracting every `destroyed_affixes` match: those selectors mean may be
+destroyed. Annul and stochastic reforges require a proved union of possible
+successor goal masks plus an optimistic post-action shape.
 
-## Possible next owner: goal-slot row equivalence
+## Measured result
 
-The stored four-T1 envelope has 45 temporary-bench action identities for only
-12 blocker/follow-up behaviours. Its 521 rows contain 248 unique transition
-templates and 273 exact template repeats. At the retained root witness, 45
-temporary rows fall into 12 state/effect groups; every row in each group has
-identical lower value, upper value, and status, leaving 33 duplicates beyond
-the first.
+The checked native Allflame four-natural-T1 Conquest Lamellar primary reached
+the 300-second watchdog with:
 
-A safe next chunk should canonicalize only rows proven equivalent after
-carrier mapping: identical transition kernel, immediate active-economy cost,
-and stopping semantics. It must preserve any goal-slot distinction that can
-change whether the strategy stops or continues. A stronger later quality
-owner may deliberately stop on any relevant goal progress, but that is a
-semantic policy change and should not be smuggled into equivalence cleanup.
+- lower `21.772459401332767` instead of zero;
+- unchanged upper `3745.7295960574743`;
+- 3,419 discovered / 1,207 expanded / 2,212 frontier states;
+- 11,384 rows, 29,135 transitions, and 478,002 reforge work; and
+- 419,303,854 peak owned bytes.
 
-## What is retained
+The primary produced no final strategy. The exact Restart correction did not
+change this boundary: its fresh-start relaxation is only about 21.8 Chaos,
+far below the executable incumbent, so it cannot prune the clean branch on
+this case. The remaining stop is exact alternative/refinement work and weak
+rare-carrier proof strength, not lower-bound publication.
 
-Production strict refinement now owns one durable quotient session across
-competitive frontier growth. The strict oracle, selected closure, split-only
-partition, Bellman graph, proof store, alternative obligations, published
-rows, and independently evaluated incumbent survive in-place carrier
-insertions. Source/target splits invalidate dependent proof authority through
-stable generations and reverse indexes; unchanged cells and payloads remain
-live. Alternative proof and final-policy verification remain cooperative.
+The regenerated current Bow case stopped at its root reforge-work cap with
+lower zero, so it is not positive-control evidence. The Warlord control closes
+exactly at `224.1238588972487` and passed 10,000 simulations with empirical
+cost `223.95892804999892`.
 
-The retained code spans the local checkpoints `18e4640` through `bb29378`.
-Do not reset, squash away, or replace this architecture with the rejected
-cross-generation carrier-row cache. A narrower within-obligation absolute-row
-cache was also measured and removed after only nine hits.
-
-## Gate 6 result
-
-The final native Allflame four-natural-T1 Conquest Lamellar run reached the
-300-second watchdog with:
-
-- upper `3745.7295960574743`, lower `0`, and no upper increase;
-- first verified strict upper at 36,462.28 ms;
-- one strict-session construction and zero production full restarts;
-- four in-place frontier insertions containing 138 new states;
-- 17,334 cells retained, 126 cells superseded, 126 source splits, 126 target
-  splits, 6,576 reverse invalidations, and 28,802 row reprojections;
-- 6,963 open alternatives versus the 17,584 parent baseline, a 60.40%
-  reduction;
-- largest public step 1,194.53 ms; and
-- 419,316,840 native peak owned bytes, with 363,854,278 attributed to the
-  live quotient/oracle/proof session.
-
-Every native acceptance condition passed under the owner-adjusted 512 MiB
-ceiling. The primary produced no final strategy, so it was not simulated.
-
-## Release qualification
+## Acceptance
 
 - `powershell -File scripts/build.ps1`: pass.
-- Quotient partition/Bellman/proof: 614 checks, 0 failures.
-- Core refinement: 362 checks, 0 failures.
-- Policy refinement: 1,234 checks, 0 failures.
-- Solver suite: 96,439 checks, 0 failures.
-- Automatic Eldritch product control: converged at
-  `0.018630169563331064`, 10,000/10,000 successful simulations.
-- Warlord product control: converged at `224.1238588972487`,
-  10,000/10,000 successful simulations.
-- Final primary derived report:
-  `build/solver-diagnostics/persistent-quotient-session/native-primary-final-128.json`.
-- Release WASM primary: one session, zero restarts, four insertions / 138
-  states, unchanged upper `3745.7295960574743`, unchanged 6,963 open
-  alternatives, and no unsupported lower or upper increase.
-- Release primary first strict upper: 63,208.70 ms; largest worker slice:
-  2,049.82 ms in the pre-refinement coarse focused-expansion round.
-- Release primary live owned at stop: 366,916,901 bytes; solver-owned quotient
-  telemetry: 315,716,514 bytes; WASM heap growth: 500,498,432 bytes.
-- Release WASM build, `npx tsc --noEmit`, complete web tests, and 28/28 engine
-  smoke checks: pass.
-- `powershell -File scripts/test.ps1`: pass, including 3,464,468 native engine
-  checks with zero failures.
+- Native solver suite: 96,516 checks, zero failures.
+- Automatic Eldritch compiled-policy control: exact `6.630492`, 10,000 runs,
+  empirical `6.820563`.
+- Release `powershell -File scripts/build-wasm.ps1`: pass.
+- `npx tsc --noEmit`: pass.
+- Complete web tests and 28/28 release-WASM engine smoke checks: pass.
+- Full repository pipeline: deliberately not run.
+- Release-WASM five-minute primary: deliberately not rerun; native measured
+  the unchanged finalization boundary and release product tests qualified the
+  artifact.
 
-The release primary reached the five-minute watchdog and produced no final
-strategy, so it was not simulated. Its full local report is
-`build/solver-diagnostics/persistent-quotient-session/wasm-primary-final.json`.
+## Possible successors
 
-## Later memory owner
+No successor is selected. The closest evidence-backed choices are:
 
-If Oliver selects a successor, begin with behavior-neutral ownership
-telemetry that separates:
+1. **Rare-carrier/destructive successor relaxation.** Extend the strict/clean
+   proof to partial rare carriers and derive per-operator maximum achievable
+   goal masks plus optimistic post-action shape. Exact Restart is complete;
+   stochastic actions need may-survive authority before any pruning change.
+2. **Exact alternative/refinement performance.** Continue the retained
+   persistent quotient owner at the 419 MB plateau after the upper is already
+   found. This remains the direct owner of the primary five-minute stop.
+3. **Executable-upper scheduling.** The earlier Essence/Harvest/Fossil early-
+   incumbent issue remains separate from lower-bound proof strength.
+4. **Goal-slot row equivalence.** The measured temporary-bench duplicate rows
+   remain a separate behavior-preserving size/proof opportunity.
 
-1. live strict `CalcContext` states, transition/option/reforge caches, and
-   operator/session payload;
-2. adapter `known_`, exact-policy, recipe, and carrier maps;
-3. persistent selected raw closure and published row metadata;
-4. Bellman sparse rows and projected transitions; and
-5. proof payload, coverage, dependency, and alternative-obligation storage.
+## Retained architecture
 
-The named proof categories total about 134 MB; the unsplit oracle/adapter
-remainder is about 230 MB. Establish its actual subowners, simultaneous
-ownership, and aliasing before choosing compaction or lifetime work. Candidate
-directions are safe cache release between carrier subproofs, compact/shared
-selected raw-row payloads, and removal of duplicated strict-versus-quotient
-transition state.
-Do not make another cap-only adjustment, weaken carrier coverage, trim
-actions, infer identity from hashes, or add another unbounded replay cache
-without a newly selected and evidenced boundary.
+Production strict refinement owns one durable quotient session across
+competitive frontier growth. The strict oracle, split-only partition, Bellman
+graph, proof store, alternative obligations, published rows, and independently
+evaluated incumbent grow in place. Source/target splits invalidate dependent
+proof authority through stable generations and reverse indexes. Do not replace
+this with the rejected cross-generation carrier-row cache or another unbounded
+replay cache.
+
+The retained implementation spans the local checkpoints `18e4640` through
+`bb29378`, with release qualification through `9d447f5`. The prior accepted
+persistent-quotient result remains at
+[docs/active/2026-08-21-persistent-quotient-session/result.md](docs/active/2026-08-21-persistent-quotient-session/result.md).
 
 Five-T1 recovery, Imprint state 928, compiler/router work, mechanics, prices,
-and action admission remain separate and unchanged.
+and action admission remain separate unless Oliver explicitly selects them.
