@@ -571,6 +571,69 @@ void run_alternative_lifecycle_and_invalidation_tests() {
         store.validate_alternative_obligation(
             deferred, deferred_identity, current) ==
         AlternativeObligationValidationStatus::StaleLifecycle);
+
+    ProofStore target_store;
+    const auto [payload, payload_reused] =
+        target_store.intern_payload(make_identity());
+    PC_CHECK(!payload_reused);
+    const UnresolvedAlternativeObligationIdentity affected_identity =
+        make_obligation_identity(50);
+    const UnresolvedAlternativeObligationIdentity retained_identity =
+        make_obligation_identity(51);
+    const UnresolvedAlternativeObligationIdentity conditional_identity =
+        make_obligation_identity(52);
+    const std::uint32_t affected =
+        target_store.intern_alternative_obligation(
+            affected_identity).first;
+    const std::uint32_t retained =
+        target_store.intern_alternative_obligation(
+            retained_identity).first;
+    const std::uint32_t conditional =
+        target_store.intern_alternative_obligation(
+            conditional_identity).first;
+    target_store.attach_row(
+        70, payload, affected_identity.source_cell_id, 1,
+        {{7, 1}}, 1, 1);
+    target_store.attach_row(
+        71, payload, retained_identity.source_cell_id, 1,
+        {{8, 1}}, 1, 1);
+    for (const auto [obligation, row] : {
+             std::pair{affected, std::uint64_t{70}},
+             std::pair{retained, std::uint64_t{71}}}) {
+        target_store.transition_alternative_obligation(
+            obligation, AlternativeObligationStatus::LowerOnly);
+        target_store.transition_alternative_obligation(
+            obligation, AlternativeObligationStatus::Scheduled);
+        target_store.transition_alternative_obligation(
+            obligation, AlternativeObligationStatus::Certified,
+            12, row);
+    }
+    target_store.transition_alternative_obligation(
+        conditional, AlternativeObligationStatus::LowerOnly);
+    target_store.transition_alternative_obligation(
+        conditional,
+        AlternativeObligationStatus::ConditionallyNoncompetitive,
+        9, std::nullopt,
+        conditional_identity.optimistic_lower.lower_q(),
+        target_store.q_generation());
+
+    PC_CHECK(target_store.invalidate_target(7) == 1);
+    PC_CHECK(
+        target_store.alternative_obligation(affected).status ==
+        AlternativeObligationStatus::Scheduled);
+    PC_CHECK(
+        target_store.alternative_obligation(affected).work_completed == 12);
+    PC_CHECK(
+        target_store.alternative_obligation(retained).status ==
+        AlternativeObligationStatus::Certified);
+    PC_CHECK(
+        target_store.alternative_obligation(conditional).status ==
+        AlternativeObligationStatus::Scheduled);
+    PC_CHECK(
+        target_store.alternative_obligation(conditional).work_completed == 9);
+    PC_CHECK((
+        target_store.ordered_pending_alternative_obligations() ==
+        std::vector<std::uint32_t>{affected, conditional}));
 }
 
 AccountedAlternativeAction accounting_entry(

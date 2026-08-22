@@ -1095,16 +1095,32 @@ std::uint64_t ProofStore::invalidate_target(
     bool obligation_invalidated = false;
     for (UnresolvedAlternativeObligation& obligation :
          alternative_obligations_) {
-        if (obligation.status != AlternativeObligationStatus::Stale) {
-            /* An unresolved row has no target dependency sidecar yet. A
-             * target split can therefore invalidate any optimistic verdict;
-             * conservatively revoke all such verdicts until child-cell
-             * obligations are recreated under the new partition. */
-            obligation.status = AlternativeObligationStatus::Stale;
+        if (obligation.status ==
+                AlternativeObligationStatus::ConditionallyNoncompetitive) {
+            /* The optimistic carrier lower remains valid, but the Q value it
+             * was compared with does not. Resume this same obligation under
+             * the new Q generation instead of discarding completed work. */
+            obligation.status = AlternativeObligationStatus::Scheduled;
             obligation.certified_row_id.reset();
             obligation.conditional_upper_q.reset();
             obligation.conditional_q_generation = 0;
             obligation_invalidated = true;
+        } else if (obligation.status ==
+                       AlternativeObligationStatus::Certified &&
+                   obligation.certified_row_id.has_value()) {
+            const std::uint64_t row_id = *obligation.certified_row_id;
+            if (row_id < use_sites_.size() &&
+                use_sites_[row_id].present &&
+                !use_sites_[row_id].valid) {
+                /* Only certified alternatives whose projected row actually
+                 * depended on the split target need reproof. */
+                obligation.status =
+                    AlternativeObligationStatus::Scheduled;
+                obligation.certified_row_id.reset();
+                obligation.conditional_upper_q.reset();
+                obligation.conditional_q_generation = 0;
+                obligation_invalidated = true;
+            }
         }
     }
     if (invalidated != 0 || obligation_invalidated) {

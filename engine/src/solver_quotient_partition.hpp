@@ -139,7 +139,28 @@ struct QuotientPartitionResult {
     std::vector<refinement::RefinementCounterexample> counterexamples;
 };
 
+struct QuotientPartitionUpdate {
+    QuotientPartitionStatus status =
+        QuotientPartitionStatus::EmptySlice;
+    std::string failure_reason;
+    QuotientPartitionTelemetry telemetry;
+    QuotientPartitionState state;
+    /* Indexed by the incoming batch class id. */
+    std::vector<std::uint32_t> cell_id_by_class;
+    std::vector<std::uint32_t> split_previous_cells;
+    std::vector<std::uint32_t> superseded_previous_cells;
+};
+
 StableKey canonical_quotient_cell_identity(const QuotientCell& cell);
+
+/* Assign stable ids/generations to a freshly refined batch partition. The
+ * incoming cells must be indexed by dense batch class id and their internal
+ * arcs/entries must name those batch ids. Existing coverage is preserved,
+ * new coverage may append, and previous cells may split but never merge. */
+QuotientPartitionUpdate stabilize_quotient_partition_state(
+    std::vector<QuotientCell> cells_by_class,
+    std::vector<QuotientEntry> entries_by_class,
+    const QuotientPartitionState* previous);
 
 /*
  * `exact_coverage` must be the live replay of `coverage_descriptor` and must

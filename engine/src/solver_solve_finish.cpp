@@ -4003,6 +4003,18 @@ SolveWork::Impl::run_finalization() {
             }
             telemetry.memory_limit_bytes =
                 options.max_solver_owned_bytes;
+            telemetry.strict_session_constructions =
+                certificate.adapter.strict_session_constructions;
+            telemetry.strict_full_restarts =
+                certificate.adapter.strict_full_restarts;
+            telemetry.strict_partition_updates =
+                certificate.adapter.strict_partition_updates;
+            telemetry.strict_frontier_insertions =
+                certificate.adapter.strict_frontier_insertions;
+            telemetry.strict_frontier_states_inserted =
+                certificate.adapter.strict_frontier_states_inserted;
+            telemetry.strict_frontier_update_max_ns =
+                certificate.adapter.strict_frontier_update_max_ns;
             telemetry.policy_reachable_coarse_states =
                 certificate.refinement.telemetry
                     .policy_reachable_coarse_states;

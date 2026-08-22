@@ -19,6 +19,12 @@ namespace refinement {
  * strict-carrier discovery needed to feed that engine.
  */
 struct PolicyLiftAdapterTelemetry {
+    std::uint64_t strict_session_constructions = 0;
+    std::uint64_t strict_full_restarts = 0;
+    std::uint64_t strict_partition_updates = 0;
+    std::uint64_t strict_frontier_insertions = 0;
+    std::uint64_t strict_frontier_states_inserted = 0;
+    std::uint64_t strict_frontier_update_max_ns = 0;
     std::uint32_t coarse_policy_states = 0;
     std::uint64_t coarse_policy_edges = 0;
     std::uint32_t strict_states_discovered = 0;

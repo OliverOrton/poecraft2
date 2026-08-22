@@ -508,6 +508,28 @@ void run_population_growth_and_reference_tests() {
         PC_CHECK(matching->terminal == persistent_cell.terminal);
         PC_CHECK(matching->coverage == persistent_cell.coverage);
     }
+
+    const QuotientPartitionUpdate stabilized =
+        stabilize_quotient_partition_state(
+            reference.state.cells, reference.state.entries, &first.state);
+    PC_CHECK(stabilized.status == QuotientPartitionStatus::Complete);
+    PC_CHECK(stabilized.telemetry.source_splits == 1);
+    PC_CHECK(stabilized.telemetry.target_splits == 1);
+    PC_CHECK(stabilized.telemetry.new_cells == 2);
+    PC_CHECK(stabilized.telemetry.superseded_cells == 1);
+    PC_CHECK(stabilized.telemetry.retained_cells == 2);
+    PC_CHECK(stabilized.state.partition_generation ==
+             first.state.partition_generation + 1);
+    PC_CHECK(stabilized.state.cells.size() == grown.state.cells.size());
+    for (const QuotientCell& stable_cell : stabilized.state.cells) {
+        const QuotientCell* matching = grown.state.find_cell(
+            stable_cell.cell_id);
+        PC_CHECK(matching != nullptr);
+        PC_CHECK(matching->generation == stable_cell.generation);
+        PC_CHECK(matching->semantic_identity ==
+                 stable_cell.semantic_identity);
+        PC_CHECK(matching->coverage == stable_cell.coverage);
+    }
 }
 
 void run_external_frontier_and_open_rejection_tests() {

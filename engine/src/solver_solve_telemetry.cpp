@@ -1686,6 +1686,12 @@ std::string serialize_solver_telemetry(
         json += ",\"local_policy_changes\":null";
         json += ",\"local_value_changes\":null";
         json += ",\"quotient_proof\":{"
+                "\"strict_session_constructions\":null,"
+                "\"strict_full_restarts\":null,"
+                "\"strict_partition_updates\":null,"
+                "\"strict_frontier_insertions\":null,"
+                "\"strict_frontier_states_inserted\":null,"
+                "\"strict_frontier_update_max_ns\":null,"
                 "\"payload_reuses\":null,\"row_reprojections\":null,"
                 "\"source_splits\":null,\"target_splits\":null,"
                 "\"reverse_invalidations\":null,"
@@ -2903,7 +2909,22 @@ std::string serialize_solver_telemetry(
                 std::to_string(refinement.local_policy_changes);
         json += ",\"local_value_changes\":" +
                 std::to_string(refinement.local_value_changes);
-        json += ",\"quotient_proof\":{\"payload_reuses\":" +
+        json += ",\"quotient_proof\":{\"strict_session_constructions\":" +
+                std::to_string(
+                    refinement.strict_session_constructions);
+        json += ",\"strict_full_restarts\":" +
+                std::to_string(refinement.strict_full_restarts);
+        json += ",\"strict_partition_updates\":" +
+                std::to_string(refinement.strict_partition_updates);
+        json += ",\"strict_frontier_insertions\":" +
+                std::to_string(refinement.strict_frontier_insertions);
+        json += ",\"strict_frontier_states_inserted\":" +
+                std::to_string(
+                    refinement.strict_frontier_states_inserted);
+        json += ",\"strict_frontier_update_max_ns\":" +
+                std::to_string(
+                    refinement.strict_frontier_update_max_ns);
+        json += ",\"payload_reuses\":" +
                 std::to_string(refinement.proof_payload_reuses);
         json += ",\"row_reprojections\":" +
                 std::to_string(refinement.row_reprojections);

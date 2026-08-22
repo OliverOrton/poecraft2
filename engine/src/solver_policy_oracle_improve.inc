@@ -884,6 +884,24 @@ void merge_adapter_telemetry(
                 static_cast<std::uint64_t>(target) +
                 addition);
         };
+    saturating_add(
+        total.strict_session_constructions,
+        pass.strict_session_constructions);
+    saturating_add(
+        total.strict_full_restarts,
+        pass.strict_full_restarts);
+    saturating_add(
+        total.strict_partition_updates,
+        pass.strict_partition_updates);
+    saturating_add(
+        total.strict_frontier_insertions,
+        pass.strict_frontier_insertions);
+    saturating_add(
+        total.strict_frontier_states_inserted,
+        pass.strict_frontier_states_inserted);
+    total.strict_frontier_update_max_ns = std::max(
+        total.strict_frontier_update_max_ns,
+        pass.strict_frontier_update_max_ns);
     add_u32(
         total.coarse_policy_states,
         pass.coarse_policy_states);

@@ -225,6 +225,200 @@ StableKey canonical_quotient_cell_identity(const QuotientCell& cell) {
     return cell_semantic_identity(cell);
 }
 
+QuotientPartitionUpdate stabilize_quotient_partition_state(
+        std::vector<QuotientCell> cells_by_class,
+        std::vector<QuotientEntry> entries_by_class,
+        const QuotientPartitionState* previous) {
+    QuotientPartitionUpdate update;
+    if (cells_by_class.empty()) {
+        update.status = QuotientPartitionStatus::EmptySlice;
+        update.failure_reason = "quotient partition update is empty";
+        return update;
+    }
+    const std::uint32_t class_count =
+        static_cast<std::uint32_t>(cells_by_class.size());
+    for (std::uint32_t cls = 0; cls < class_count; ++cls) {
+        QuotientCell& cell = cells_by_class[cls];
+        if (cell.cell_id != cls || cell.semantic_identity.empty() ||
+            cell.coverage.exact_source_count == 0) {
+            update.status = QuotientPartitionStatus::InvalidCoverage;
+            update.failure_reason =
+                "batch quotient cell lacks dense identity or coverage";
+            return update;
+        }
+    }
+
+    update.state.partition_generation =
+        previous == nullptr ? 1 : previous->partition_generation + 1;
+    update.state.next_cell_id =
+        previous == nullptr ? class_count : previous->next_cell_id;
+    update.cell_id_by_class.resize(class_count, kNoId);
+
+    std::map<StableKey, std::vector<PreviousInterval>> previous_intervals;
+    std::map<std::uint32_t, const QuotientCell*> previous_by_id;
+    std::uint64_t previous_count = 0;
+    if (previous != nullptr) {
+        for (const QuotientCell& cell : previous->cells) {
+            if (!previous_by_id.emplace(cell.cell_id, &cell).second) {
+                update.status =
+                    QuotientPartitionStatus::NonMonotoneRefinement;
+                update.failure_reason =
+                    "previous quotient partition repeats a cell id";
+                return update;
+            }
+            previous_count += cell.coverage.exact_source_count;
+            for (const CoverageRange& range : cell.coverage.ranges) {
+                previous_intervals[range.range_identity].push_back({
+                    range.begin, range.begin + range.count, cell.cell_id});
+            }
+        }
+        for (auto& [unused, intervals] : previous_intervals) {
+            (void)unused;
+            std::sort(
+                intervals.begin(), intervals.end(),
+                [](const PreviousInterval& left,
+                   const PreviousInterval& right) {
+                    return std::tie(left.begin, left.end, left.cell_id) <
+                           std::tie(right.begin, right.end, right.cell_id);
+                });
+            for (std::size_t index = 1; index < intervals.size(); ++index) {
+                if (intervals[index - 1].end > intervals[index].begin) {
+                    update.status =
+                        QuotientPartitionStatus::NonMonotoneRefinement;
+                    update.failure_reason =
+                        "previous quotient partition coverage overlaps";
+                    return update;
+                }
+            }
+        }
+    }
+
+    std::vector<std::optional<std::uint32_t>> old_by_class(class_count);
+    std::map<std::uint32_t, std::set<std::uint32_t>> children_by_old;
+    std::uint64_t matched_previous = 0;
+    for (std::uint32_t cls = 0; cls < class_count; ++cls) {
+        for (const CoverageRange& range :
+             cells_by_class[cls].coverage.ranges) {
+            for (std::uint64_t index = range.begin;
+                 index < range.begin + range.count; ++index) {
+                CoverageCarrier locator;
+                locator.range_identity = range.range_identity;
+                locator.enumeration_index = index;
+                const std::optional<std::uint32_t> old =
+                    previous_cell_for(previous_intervals, locator);
+                if (!old.has_value()) continue;
+                ++matched_previous;
+                if (old_by_class[cls].has_value() &&
+                    *old_by_class[cls] != *old) {
+                    update.status =
+                        QuotientPartitionStatus::NonMonotoneRefinement;
+                    update.failure_reason =
+                        "batch quotient partition merged previous cells";
+                    return update;
+                }
+                old_by_class[cls] = *old;
+                children_by_old[*old].insert(cls);
+            }
+        }
+    }
+    if (previous != nullptr &&
+        (matched_previous != previous_count ||
+         children_by_old.size() != previous->cells.size())) {
+        update.status =
+            QuotientPartitionStatus::NonMonotoneRefinement;
+        update.failure_reason =
+            "batch quotient partition omitted previous coverage";
+        return update;
+    }
+
+    std::set<std::uint32_t> split_old;
+    for (const auto& [old, children] : children_by_old) {
+        if (children.size() > 1) split_old.insert(old);
+    }
+    std::set<std::uint32_t> superseded_old;
+    for (std::uint32_t cls = 0; cls < class_count; ++cls) {
+        QuotientCell& cell = cells_by_class[cls];
+        if (!old_by_class[cls].has_value()) {
+            cell.cell_id = update.state.next_cell_id++;
+            cell.generation = 1;
+            ++update.telemetry.new_cells;
+        } else {
+            const std::uint32_t old_id = *old_by_class[cls];
+            const QuotientCell* old = previous->find_cell(old_id);
+            if (old == nullptr) {
+                update.status =
+                    QuotientPartitionStatus::NonMonotoneRefinement;
+                update.failure_reason =
+                    "previous quotient cell id is missing";
+                return update;
+            }
+            if (split_old.contains(old_id)) {
+                cell.cell_id = update.state.next_cell_id++;
+                cell.generation = old->generation + 1;
+                ++update.telemetry.new_cells;
+            } else {
+                cell.cell_id = old_id;
+                cell.generation = old->generation;
+                if (cell.semantic_identity != old->semantic_identity) {
+                    ++cell.generation;
+                    superseded_old.insert(old_id);
+                    ++update.telemetry.superseded_cells;
+                } else {
+                    ++update.telemetry.retained_cells;
+                }
+            }
+        }
+        update.cell_id_by_class[cls] = cell.cell_id;
+    }
+
+    for (QuotientCell& cell : cells_by_class) {
+        for (QuotientCellArc& arc : cell.arcs) {
+            if (arc.target_cell_id.has_value()) {
+                if (*arc.target_cell_id >= class_count) {
+                    update.status =
+                        QuotientPartitionStatus::InvalidCarrierGraph;
+                    update.failure_reason =
+                        "batch quotient arc names an unknown class";
+                    return update;
+                }
+                arc.target_cell_id =
+                    update.cell_id_by_class[*arc.target_cell_id];
+            }
+        }
+    }
+    for (QuotientEntry& entry : entries_by_class) {
+        if (entry.cell_id >= class_count) {
+            update.status = QuotientPartitionStatus::InvalidCarrierGraph;
+            update.failure_reason =
+                "batch quotient entry names an unknown class";
+            return update;
+        }
+        entry.cell_id = update.cell_id_by_class[entry.cell_id];
+    }
+
+    update.state.cells = std::move(cells_by_class);
+    std::sort(
+        update.state.cells.begin(), update.state.cells.end(),
+        [](const QuotientCell& left, const QuotientCell& right) {
+            return left.cell_id < right.cell_id;
+        });
+    update.state.entries = std::move(entries_by_class);
+    std::sort(
+        update.state.entries.begin(), update.state.entries.end(),
+        [](const QuotientEntry& left, const QuotientEntry& right) {
+            return left.cell_id < right.cell_id;
+        });
+    update.split_previous_cells.assign(
+        split_old.begin(), split_old.end());
+    update.superseded_previous_cells.assign(
+        superseded_old.begin(), superseded_old.end());
+    update.telemetry.source_splits = split_old.size();
+    update.telemetry.target_splits = split_old.size();
+    update.telemetry.requirement_replacements = superseded_old.size();
+    update.status = QuotientPartitionStatus::Complete;
+    return update;
+}
+
 QuotientPartitionResult refine_certified_quotient_partition(
         const CoverageDescriptor& coverage_descriptor,
         const std::vector<CoverageCarrier>& exact_coverage,
