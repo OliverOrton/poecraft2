@@ -316,6 +316,46 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
             }
         }
 
+        /* Automatic Eldritch side intents are synthesized after the first
+         * focused lower seeds may be requested, so their final primitives
+         * are not necessarily present in candidate_operators yet. Include
+         * them explicitly in the universal cover. Granting one primitive
+         * the whole reachable goal subset for only its own price is cheaper
+         * and more capable than every real setup-bearing compound, and is
+         * therefore a safe (if deliberately coarse) fallback outside the
+         * clean-carrier domain. The clean MDP below gives these actions a
+         * stronger side-aware projection instead of using this coarse row. */
+        const auto action_by_id = [&](const char* id) {
+            const auto found = calc.registry().index_by_id.find(id);
+            return found == calc.registry().index_by_id.end()
+                ? kNoId
+                : found->second;
+        };
+        const std::uint32_t eldritch_annul =
+            action_by_id("eldritch_annul");
+        const std::uint32_t eldritch_chaos =
+            action_by_id("eldritch_chaos");
+        const std::uint32_t eldritch_exalt =
+            action_by_id("eldritch_exalt");
+        const std::uint32_t ordinary_chaos = action_by_id("chaos");
+        const std::uint32_t ordinary_exalt = action_by_id("exalt");
+        if (session.eldritch_eligible) {
+            include_action(eldritch_annul);
+            include_action(eldritch_chaos);
+            include_action(eldritch_exalt);
+            /* These also supply the side-macro probability authority. If a
+             * primitive was not requested, allowing it in the relaxation can
+             * only make the lower problem easier, while keeping every
+             * pool/weight calculation in CalcContext. */
+            include_action(ordinary_chaos);
+            include_action(ordinary_exalt);
+        }
+        const auto is_eldritch_explicit_mutator = [](const ActionType type) {
+            return type == ActionType::EldritchAnnul ||
+                   type == ActionType::EldritchChaos ||
+                   type == ActionType::EldritchExalt;
+        };
+
         /* Keep a probability-free cover as the universal proof used for
          * price-bound action pruning and for carriers whose preserved
          * structure can change the pool. It gives every action any reachable
@@ -664,6 +704,8 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                                         ActionType::Augment ||
                                     considered_type ==
                                         ActionType::Regal ||
+                                    is_eldritch_explicit_mutator(
+                                        considered_type) ||
                                     considered_type == ActionType::Scour ||
                                     goal_bench_refined;
                                 if (!refined) {
@@ -701,6 +743,18 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                         }
                         const double cost = priced_action_cost(descriptor);
                         if (!std::isfinite(cost) || cost < 0.0) continue;
+
+                        /* The generic action projection has no intended-side
+                         * identity. Treating an Eldritch mutator as an
+                         * ordinary deterministic reach row would erase its
+                         * stochastic cost and make the useful clean bound
+                         * collapse. The side-aware optimistic macros below
+                         * cover both raw and automatic forms safely. */
+                        if (session.eldritch_eligible &&
+                            is_eldritch_explicit_mutator(
+                                descriptor.params.type)) {
+                            continue;
+                        }
 
                         if (descriptor.synthetic) {
                             const std::size_t successor = abstract_index(
@@ -1058,6 +1112,222 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                                 action);
                         }
                     }
+
+                    if (session.eldritch_eligible &&
+                        rarity == PC_RARITY_RARE) {
+                        std::array<std::uint32_t, 2> side_goal_masks{};
+                        for (std::uint32_t slot = 0;
+                             slot < slot_count; ++slot) {
+                            const std::int8_t side = slot_side[slot];
+                            if (side == PC_SIDE_PREFIX ||
+                                side == PC_SIDE_SUFFIX) {
+                                side_goal_masks[side] |= 1u << slot;
+                            }
+                        }
+                        const auto normalized_successor = [&] (
+                            const std::uint32_t successor_mask)
+                                -> std::optional<std::size_t> {
+                            const std::uint8_t successor_prefixes =
+                                minimum_goal_affixes[successor_mask]
+                                                    [PC_SIDE_PREFIX];
+                            const std::uint8_t successor_suffixes =
+                                minimum_goal_affixes[successor_mask]
+                                                    [PC_SIDE_SUFFIX];
+                            const std::uint8_t cap = rarity_affix_cap(
+                                session, PC_RARITY_RARE);
+                            if (successor_prefixes > cap ||
+                                successor_suffixes > cap) {
+                                return std::nullopt;
+                            }
+                            return abstract_index(
+                                PC_RARITY_RARE, successor_mask,
+                                successor_prefixes, successor_suffixes);
+                        };
+                        const auto final_cost = [&](
+                            const std::uint32_t action) {
+                            return action == kNoId
+                                ? kInfinity
+                                : priced_action_cost(
+                                      calc.registry().actions.at(action));
+                        };
+                        const auto any_goal_probability_upper = [&] (
+                            const std::uint32_t probability_action,
+                            const std::uint32_t preserved_mask,
+                            const std::uint32_t available) {
+                            if (available == 0) return 0.0;
+                            if (probability_action == kNoId ||
+                                relaxation_action_position.find(
+                                    probability_action) ==
+                                    relaxation_action_position.end()) {
+                                return 1.0;
+                            }
+                            const std::uint8_t cap = rarity_affix_cap(
+                                session, PC_RARITY_RARE);
+                            double probability = 0.0;
+                            for (std::uint32_t slot = 0;
+                                 slot < slot_count; ++slot) {
+                                const std::uint32_t bit = 1u << slot;
+                                if ((available & bit) == 0) continue;
+                                const std::int8_t target_side =
+                                    slot_side[slot];
+                                std::uint8_t prefix_blockers = cap;
+                                std::uint8_t suffix_blockers = cap;
+                                const std::uint8_t preserved_prefixes =
+                                    minimum_goal_affixes[preserved_mask]
+                                                        [PC_SIDE_PREFIX];
+                                const std::uint8_t preserved_suffixes =
+                                    minimum_goal_affixes[preserved_mask]
+                                                        [PC_SIDE_SUFFIX];
+                                prefix_blockers = preserved_prefixes < cap
+                                    ? static_cast<std::uint8_t>(
+                                          cap - preserved_prefixes)
+                                    : 0;
+                                suffix_blockers = preserved_suffixes < cap
+                                    ? static_cast<std::uint8_t>(
+                                          cap - preserved_suffixes)
+                                    : 0;
+                                /* Leave one real target-side slot for the
+                                 * satisfying draw. Every other open slot may
+                                 * receive the strongest legal junk-group
+                                 * exclusion. This is at least as favorable as
+                                 * the carrier-local side-forced pool. */
+                                if (target_side == PC_SIDE_PREFIX &&
+                                    prefix_blockers > 0) {
+                                    --prefix_blockers;
+                                } else if (
+                                    target_side == PC_SIDE_SUFFIX &&
+                                    suffix_blockers > 0) {
+                                    --suffix_blockers;
+                                }
+                                probability += cached_subset_probability(
+                                    probability_action, preserved_mask, bit,
+                                    prefix_blockers, suffix_blockers);
+                            }
+                            /* The sum is a union upper bound. On a relaxed
+                             * success the macro grants every missing goal on
+                             * the target side, so it is strictly stronger
+                             * than any real one-attempt outcome. */
+                            return std::clamp(probability, 0.0, 1.0);
+                        };
+                        const auto consider_side_roll = [&] (
+                            const std::uint32_t final_action,
+                            const std::uint32_t probability_action,
+                            const std::int8_t side,
+                            const bool requires_opposite_progress) {
+                            const double cost = final_cost(final_action);
+                            if (!std::isfinite(cost) || cost < 0.0) return;
+                            const std::uint32_t side_mask =
+                                side_goal_masks[side];
+                            const std::uint32_t opposite_mask =
+                                side_goal_masks[side == PC_SIDE_PREFIX
+                                    ? PC_SIDE_SUFFIX
+                                    : PC_SIDE_PREFIX];
+                            const std::uint32_t available =
+                                side_mask & ~mask;
+                            if (available == 0 ||
+                                (requires_opposite_progress &&
+                                 (mask & opposite_mask) == 0)) {
+                                return;
+                            }
+                            const std::uint8_t side_count =
+                                side == PC_SIDE_PREFIX
+                                    ? prefixes
+                                    : suffixes;
+                            if (requires_opposite_progress &&
+                                side_count >= rarity_affix_cap(
+                                    session, rarity)) {
+                                return;
+                            }
+                            const double probability =
+                                any_goal_probability_upper(
+                                    probability_action,
+                                    mask & opposite_mask, available);
+                            if (!(probability > 0.0) ||
+                                !std::isfinite(probability)) {
+                                return;
+                            }
+                            const auto success = normalized_successor(
+                                mask | available);
+                            const auto failure = normalized_successor(mask);
+                            if (!success.has_value() ||
+                                !failure.has_value()) {
+                                return;
+                            }
+                            const double success_value =
+                                clean_goal_cover_cost[*success];
+                            const double failure_value =
+                                clean_goal_cover_cost[*failure];
+                            /* An upper probability is useful only when the
+                             * optimistic success is no worse than failure.
+                             * Otherwise the safe lower endpoint is zero. */
+                            const double favorable_probability =
+                                success_value <= failure_value
+                                    ? probability
+                                    : 0.0;
+                            double self_probability = 0.0;
+                            double continuation = 0.0;
+                            const auto accumulate = [&] (
+                                const std::size_t successor,
+                                const double mass,
+                                const double value) {
+                                if (successor == current) {
+                                    self_probability += mass;
+                                } else {
+                                    continuation += mass * value;
+                                }
+                            };
+                            accumulate(
+                                *success, favorable_probability,
+                                success_value);
+                            accumulate(
+                                *failure, 1.0 - favorable_probability,
+                                failure_value);
+                            if (self_probability < 1.0) {
+                                consider(
+                                    (cost + continuation) /
+                                        (1.0 - self_probability),
+                                    final_action);
+                            }
+                        };
+
+                        for (const std::int8_t side : {
+                                 static_cast<std::int8_t>(PC_SIDE_PREFIX),
+                                 static_cast<std::int8_t>(PC_SIDE_SUFFIX)}) {
+                            /* Setup dominance is granted for free. Chaos may
+                             * improve either side from zero progress; Exalt
+                             * retains its real automatic prerequisite that
+                             * useful opposite-side progress already exists. */
+                            consider_side_roll(
+                                eldritch_chaos, ordinary_chaos, side, false);
+                            consider_side_roll(
+                                eldritch_exalt, ordinary_exalt, side, true);
+
+                            const double annul_cost =
+                                final_cost(eldritch_annul);
+                            const auto normalized =
+                                normalized_successor(mask);
+                            const std::uint8_t minimum_side_count =
+                                minimum_goal_affixes[mask][side];
+                            const std::uint8_t current_side_count =
+                                side == PC_SIDE_PREFIX
+                                    ? prefixes
+                                    : suffixes;
+                            if (std::isfinite(annul_cost) &&
+                                annul_cost >= 0.0 &&
+                                normalized.has_value() &&
+                                current_side_count > minimum_side_count &&
+                                *normalized != current) {
+                                /* One relaxed Annul removes every target-side
+                                 * junk affix, preserves every goal, and grants
+                                 * the best remaining shape. This dominates a
+                                 * real random one-affix removal. */
+                                consider(
+                                    annul_cost +
+                                        clean_goal_cover_cost[*normalized],
+                                    eldritch_annul);
+                            }
+                        }
+                    }
                     if (!std::isfinite(best)) continue;
                     const double next = std::max(previous_current, best);
                     clean_goal_cover_cost[current] = next;
@@ -1211,20 +1481,17 @@ bool SolveWork::Impl::clean_goal_cover_eligible(const std::uint32_t state) const
 double SolveWork::Impl::optimistic_completion_cost_for_state(
         const std::uint32_t state) {
         if (state >= calc.state_count()) return 0.0;
-        /*
-         * Automatic Eldritch side-intent options are state-local compound
-         * actions and are not yet actions in the clean-carrier abstraction.
-         * Until that abstraction explicitly grants their one-side
-         * preservation, zero is the only universally safe seed on eligible
-         * equipment. Exact partial-graph Bellman backups can still raise it.
-         */
-        if (session.eldritch_eligible) return 0.0;
         const AbstractState& carrier = calc.state(state);
         double lower = optimistic_completion_cost(
             satisfied_goal_mask_for_state(state),
             clean_goal_cover_eligible(state), carrier.rarity,
             carrier.prefix_count, carrier.suffix_count);
-        if (state < strict_clean_goal_cover_cost.size() &&
+        /* The strict clean pattern database evaluates registry primitives,
+         * not carrier-local automatic option rows. Keep it out of the
+         * Eldritch maximum until that stricter abstraction has the same
+         * option coverage as the coarse/clean goal cover above. */
+        if (!session.eldritch_eligible &&
+            state < strict_clean_goal_cover_cost.size() &&
             std::isfinite(strict_clean_goal_cover_cost[state])) {
             lower = std::max(
                 lower, strict_clean_goal_cover_cost[state]);
@@ -1247,6 +1514,7 @@ void SolveWork::Impl::prepare_strict_clean_goal_cover() {
         if (strict_clean_goal_cover_state_count == initial_state_count) return;
         strict_clean_goal_cover_state_count = 0;
         strict_clean_goal_cover_cost.clear();
+        if (session.eldritch_eligible) return;
         if (!goal_cover_cost_ready || clean_goal_escape_cost.empty()) return;
 
         const auto refined_action = [&](const std::uint32_t action) {
@@ -1998,6 +2266,40 @@ double SolveWork::Impl::optimistic_operator_lower(
         }
         if (!std::isfinite(immediate) || immediate < 0.0) {
             return -kInfinity;
+        }
+        if (operator_index == restart_operator_index) {
+            /* Restart has one exact successor: a fresh Normal carrier with
+             * no affixes, influences, or Eldritch implicits. Do not credit it
+             * with goal slots from the carrier it deterministically discards.
+             *
+             * This is deliberately narrower than consulting
+             * ActionRefinementContract::destroyed_affixes. Those selectors
+             * describe affixes an action may destroy (Annul is the canonical
+             * example), not affixes absent from every successor. Removing
+             * such slots here could raise the lower above a real outcome and
+             * make incumbent pruning unsound. Restart's fresh successor is
+             * instead exact by its synthetic action contract and evaluator.
+             *
+             * The clean pattern database is valid for that fresh carrier
+             * only when its zero influence/implicit identity matches the
+             * solve's clean-carrier identity. Otherwise retain the universal
+             * goal cover, exactly as optimistic_completion_cost_for_state()
+             * would for the materialized fresh successor. */
+            const AbstractState& start = calc.state(result.start_state);
+            const bool fresh_clean_carrier =
+                start.influence_bits == 0 &&
+                start.searing_exarch_tier == 0 &&
+                start.eater_of_worlds_tier == 0;
+            const double universal_fresh =
+                optimistic_completion_cost(0);
+            const double shaped_fresh =
+                optimistic_completion_cost(
+                    0, fresh_clean_carrier, PC_RARITY_NORMAL, 0, 0);
+            /* Both relaxations are independently admissible. Their maximum
+             * keeps the shape-aware refinement from accidentally weakening
+             * the universal cover on a sparse action envelope. */
+            return immediate + std::max(
+                universal_fresh, shaped_fresh);
         }
         /* Grant the operator every slot any constituent could possibly
          * produce before pricing the remaining optimistic cover. */

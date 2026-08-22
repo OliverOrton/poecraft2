@@ -1,8 +1,15 @@
 # Active Work
 
-**Status: no implementation boundary is active.**
+**Status: Eldritch goal-cover coverage is selected.**
 
 Parent: [Documentation map](../README.md)
+
+The selected
+[Eldritch Goal-Cover Coverage](2026-08-22-eldritch-goal-cover-coverage/plan.md)
+boundary replaces the session-wide zero completion-cost seed on eligible
+armour only after automatic Eldritch Annul, Chaos, and Exalt programs have a
+proved optimistic projection. It preserves local zero fallback and keeps the
+separate delayed executable-upper scheduler outside this scope.
 
 The completed
 [Temporary Blocker Tier Canonicalization](2026-08-22-temporary-blocker-tier-canonicalization/plan.md)

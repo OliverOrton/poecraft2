@@ -29,6 +29,14 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
+The selected
+[Eldritch goal-cover coverage](active/2026-08-22-eldritch-goal-cover-coverage/plan.md)
+boundary replaces the session-wide zero optimistic completion cost on eligible
+armour only after automatic Eldritch Annul, Chaos, and Exalt programs have a
+proved no-more-expensive, no-less-capable projection. Local zero fallback and
+the separate executable-upper scheduler remain unchanged until independently
+qualified.
+
 The focused
 [temporary blocker tier canonicalization](active/2026-08-22-temporary-blocker-tier-canonicalization/plan.md)
 boundary is [complete](active/2026-08-22-temporary-blocker-tier-canonicalization/result.md).

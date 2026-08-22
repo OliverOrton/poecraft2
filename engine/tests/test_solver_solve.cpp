@@ -5889,6 +5889,14 @@ void run_incremental_action_generation_tests() {
         solve_detail::globally_certified_action_envelope_lower_bound(
             3759.5969190413853, true, true),
         3759.5969190413853));
+    PC_CHECK(near(
+        solve_detail::globally_certified_action_envelope_lower_bound(
+            3759.5969190413853, true, false, 21.772459401332767),
+        21.772459401332767));
+    PC_CHECK(near(
+        solve_detail::globally_certified_action_envelope_lower_bound(
+            3759.5969190413853, true, true, 21.772459401332767),
+        3759.5969190413853));
     const solve_detail::SolveLowerBoundAuthority open_authority =
         solve_detail::classify_public_lower_bound_authority(
             0.0, SolvePolicyStatus::BoundedFeasible, true, false);
@@ -5907,6 +5915,31 @@ void run_incremental_action_generation_tests() {
     PC_CHECK(!strict_open_authority.globally_certified);
     PC_CHECK(
         strict_open_authority.provenance ==
+        SolveLowerBoundProvenance::
+            UnclosedStrictRefinementUniversalZero);
+    const solve_detail::SolveLowerBoundAuthority independent_authority =
+        solve_detail::classify_public_lower_bound_authority(
+            21.772459401332767,
+            SolvePolicyStatus::BoundedFeasible,
+            true,
+            false,
+            true,
+            21.772459401332767);
+    PC_CHECK(independent_authority.globally_certified);
+    PC_CHECK(
+        independent_authority.provenance ==
+        SolveLowerBoundProvenance::GlobalActionRelaxation);
+    const solve_detail::SolveLowerBoundAuthority overclaimed_independent =
+        solve_detail::classify_public_lower_bound_authority(
+            22.0,
+            SolvePolicyStatus::BoundedFeasible,
+            true,
+            false,
+            true,
+            21.772459401332767);
+    PC_CHECK(!overclaimed_independent.globally_certified);
+    PC_CHECK(
+        overclaimed_independent.provenance ==
         SolveLowerBoundProvenance::
             UnclosedStrictRefinementUniversalZero);
     const solve_detail::SolveLowerBoundAuthority closed_authority =
@@ -7941,6 +7974,57 @@ void run_automatic_eldritch_side_tests() {
     automatic_lower_options.max_transitions = 100000;
     automatic_lower_options.max_solver_owned_bytes =
         256ull * 1024ull * 1024ull;
+    const auto check_eldritch_completion_bellman = [&] (
+        CalcContext& context,
+        const pc_item_state& start,
+        const std::uint32_t state,
+        const StateLocalAutomaticBatch& batch) {
+        SolveWorkTestAccess::Impl work(
+            context, start, prices, automatic_lower_options);
+        const double state_lower =
+            work.optimistic_completion_cost_for_state(state);
+        PC_CHECK(std::isfinite(state_lower));
+        PC_CHECK(state_lower > 0.0);
+        std::uint32_t rows = 0;
+        for (const StateLocalAutomaticCandidate& decision :
+             batch.decisions) {
+            if (!decision.admitted ||
+                decision.kind != AutomaticCandidateKind::EldritchSide ||
+                decision.operator_index == kNoId) {
+                continue;
+            }
+            const std::uint32_t op = decision.operator_index;
+            const std::int32_t position =
+                work.priced_operator_position.at(op);
+            PC_CHECK(position >= 0);
+            if (position < 0) continue;
+            const OptionKernel& exact = context.option_kernel(state, op);
+            PC_CHECK(exact.observation_choice_groups.empty());
+            PC_CHECK(exact.observation_choice_options.empty());
+            double backup = work.operators.at(
+                static_cast<std::size_t>(position)).cost;
+            double probability_sum = 0.0;
+            for (const OutcomeEntry& exit : exact.exits) {
+                probability_sum += exit.probability;
+                backup += exit.probability *
+                    work.optimistic_completion_cost_for_state(exit.state);
+            }
+            PC_CHECK(std::fabs(probability_sum - 1.0) < 1e-10);
+            if (!(state_lower <= backup +
+                  1e-9 * std::max(1.0, std::fabs(backup)))) {
+                std::printf(
+                    "Eldritch lower Bellman witness: option=%s "
+                    "lower=%.17g backup=%.17g\n",
+                    context.operators().at(op).id.c_str(),
+                    state_lower, backup);
+            }
+            PC_CHECK(
+                state_lower <= backup +
+                    1e-9 * std::max(1.0, std::fabs(backup)));
+            ++rows;
+        }
+        return std::pair{state_lower, rows};
+    };
     CalcContext automatic_lower_calc(
         session, goal, registry, candidates);
     const std::uint32_t automatic_lower_state =
@@ -7951,7 +8035,66 @@ void run_automatic_eldritch_side_tests() {
     SolveWorkTestAccess::Impl automatic_lower_work(
         automatic_lower_calc, repair_prefix, prices,
         automatic_lower_options);
+    const double eligible_completion_lower =
+        automatic_lower_work.optimistic_completion_cost_for_state(
+            automatic_lower_state);
+    PC_CHECK(std::isfinite(eligible_completion_lower));
+    PC_CHECK(eligible_completion_lower > 0.0);
+    PC_CHECK(automatic_lower_work.strict_clean_goal_cover_cost.empty());
+
+    /* Price availability is part of the proof envelope. Removing every
+     * Eldritch final primitive must reduce this to the unchanged ordinary
+     * clean-carrier relaxation; making the additional side macros available
+     * may only lower that minimization. */
+    std::unordered_map<std::string, double> missing_eldritch_prices = prices;
+    missing_eldritch_prices.erase("eldritch_annul");
+    missing_eldritch_prices.erase("eldritch_chaos");
+    missing_eldritch_prices.erase("eldritch_exalt");
+    CalcContext missing_price_calc(
+        session, goal, registry, candidates);
+    const std::uint32_t missing_price_state =
+        missing_price_calc.intern_item(repair_prefix);
+    SolveWorkTestAccess::Impl missing_price_work(
+        missing_price_calc, repair_prefix, missing_eldritch_prices,
+        automatic_lower_options);
+    const double missing_price_lower =
+        missing_price_work.optimistic_completion_cost_for_state(
+            missing_price_state);
+    PC_CHECK(std::isfinite(missing_price_lower));
+
+    auto ineligible_session = make_solve_session();
+    ActionRegistry ineligible_control_registry =
+        build_action_registry(*ineligible_session);
+    const std::vector<std::uint32_t> ineligible_candidates{
+        ineligible_control_registry.index_by_id.at("chaos"),
+        ineligible_control_registry.index_by_id.at("annul")};
+    CalcContext ineligible_calc(
+        ineligible_session, goal, ineligible_control_registry,
+        ineligible_candidates);
+    const std::uint32_t ineligible_state =
+        ineligible_calc.intern_item(repair_prefix);
+    SolveWorkTestAccess::Impl ineligible_work(
+        ineligible_calc, repair_prefix, missing_eldritch_prices,
+        automatic_lower_options);
+    const double ineligible_lower =
+        ineligible_work.optimistic_completion_cost_for_state(
+            ineligible_state);
+    PC_CHECK(near(missing_price_lower, ineligible_lower));
+    PC_CHECK(eligible_completion_lower <= missing_price_lower + 1e-12);
+
+    CalcContext repeated_lower_calc(
+        session, goal, registry, candidates);
+    const std::uint32_t repeated_lower_state =
+        repeated_lower_calc.intern_item(repair_prefix);
+    SolveWorkTestAccess::Impl repeated_lower_work(
+        repeated_lower_calc, repair_prefix, prices,
+        automatic_lower_options);
+    PC_CHECK(near(
+        eligible_completion_lower,
+        repeated_lower_work.optimistic_completion_cost_for_state(
+            repeated_lower_state)));
     bool checked_eldritch_chaos_lower = false;
+    std::uint32_t checked_eldritch_bellman_rows = 0;
     for (const StateLocalAutomaticCandidate& decision :
          automatic_lower_batch.decisions) {
         if (!decision.admitted ||
@@ -7962,6 +8105,32 @@ void run_automatic_eldritch_side_tests() {
         const std::uint32_t op = decision.operator_index;
         const PlannerOperator& planner =
             automatic_lower_calc.operators().at(op);
+        const std::int32_t priced_position =
+            automatic_lower_work.priced_operator_position.at(op);
+        PC_CHECK(priced_position >= 0);
+        if (priced_position >= 0) {
+            const OptionKernel& exact =
+                automatic_lower_calc.option_kernel(
+                    automatic_lower_state, op);
+            PC_CHECK(exact.observation_choice_groups.empty());
+            PC_CHECK(exact.observation_choice_options.empty());
+            double exact_lower_backup =
+                automatic_lower_work.operators.at(
+                    static_cast<std::size_t>(priced_position)).cost;
+            double probability_sum = 0.0;
+            for (const OutcomeEntry& exit : exact.exits) {
+                probability_sum += exit.probability;
+                exact_lower_backup += exit.probability *
+                    automatic_lower_work
+                        .optimistic_completion_cost_for_state(exit.state);
+            }
+            PC_CHECK(std::fabs(probability_sum - 1.0) < 1e-10);
+            PC_CHECK(
+                eligible_completion_lower <=
+                exact_lower_backup + 1e-9 *
+                    std::max(1.0, std::fabs(exact_lower_backup)));
+            ++checked_eldritch_bellman_rows;
+        }
         if (automatic_lower_calc.registry().actions.at(
                 planner.primitive_program.back()).params.type !=
             ActionType::EldritchChaos) {
@@ -7982,6 +8151,99 @@ void run_automatic_eldritch_side_tests() {
         checked_eldritch_chaos_lower = true;
     }
     PC_CHECK(checked_eldritch_chaos_lower);
+    PC_CHECK(checked_eldritch_bellman_rows == 3);
+
+    /* Restart is the one destructive operator whose complete successor set
+     * is known without constructing a stochastic kernel: the synthetic
+     * evaluator deterministically returns a fresh Normal carrier. Its
+     * operator lower must therefore price completion from that fresh state,
+     * not carry goal progress from the partial source. The legacy expression
+     * below is retained only as a regression witness for the lost pruning. */
+    auto restart_lower_session = make_solve_session();
+    restart_lower_session->bench_mod_ids = {0, 3, 5, 6};
+    ActionRegistry restart_lower_registry =
+        build_action_registry(*restart_lower_session);
+    std::unordered_map<std::string, double> restart_lower_prices{
+        {"bench:mod0", 1.0}, {"bench:mod3", 2.0},
+        {"bench:mod5", 3.0}, {"bench:mod6", 4.0},
+        {"base", 1.0}};
+    GoalSpec restart_lower_goal;
+    restart_lower_goal.rarity = PC_RARITY_RARE;
+    for (const std::uint32_t family : {100u, 102u, 104u, 105u}) {
+        GoalSlot restart_slot;
+        restart_slot.family_id = family;
+        restart_slot.min_tier = 1;
+        restart_lower_goal.slots.push_back(restart_slot);
+    }
+    const std::vector<std::uint32_t> restart_lower_candidates{
+        restart_lower_registry.index_by_id.at("bench:mod0"),
+        restart_lower_registry.index_by_id.at("bench:mod3"),
+        restart_lower_registry.index_by_id.at("bench:mod5"),
+        restart_lower_registry.index_by_id.at("bench:mod6"),
+        restart_lower_registry.index_by_id.at("restart")};
+    pc_item_state partial_restart_source;
+    pc_item_clear(&partial_restart_source);
+    partial_restart_source.rarity = PC_RARITY_RARE;
+    place(
+        &partial_restart_source, PC_SIDE_PREFIX, 0,
+        restart_lower_session->primary_group[0]);
+    place(
+        &partial_restart_source, PC_SIDE_PREFIX, 3,
+        restart_lower_session->primary_group[3]);
+    place(
+        &partial_restart_source, PC_SIDE_SUFFIX, 5,
+        restart_lower_session->primary_group[5]);
+    CalcContext restart_lower_calc(
+        restart_lower_session, restart_lower_goal, restart_lower_registry,
+        restart_lower_candidates);
+    SolveWorkTestAccess::Impl restart_lower_work(
+        restart_lower_calc, partial_restart_source,
+        restart_lower_prices, automatic_lower_options);
+    const std::uint32_t restart_source_state =
+        restart_lower_work.result.start_state;
+    const std::uint32_t restart_operator =
+        restart_lower_work.restart_operator_index;
+    PC_CHECK(restart_operator != kNoId);
+    const std::int32_t restart_position =
+        restart_lower_work.priced_operator_position.at(restart_operator);
+    PC_CHECK(restart_position >= 0);
+    if (restart_position >= 0) {
+        const double restart_immediate =
+            restart_lower_work.operators.at(
+                static_cast<std::size_t>(restart_position)).cost;
+        const std::uint32_t carried_mask =
+            restart_lower_work.satisfied_goal_mask_for_state(
+                restart_source_state) |
+            restart_lower_work.planner_goal_reach_mask(restart_operator);
+        PC_CHECK(std::popcount(carried_mask) == 3);
+        const double legacy_carried_progress_lower =
+            restart_immediate +
+            restart_lower_work.optimistic_completion_cost(carried_mask);
+        const double restart_lower =
+            restart_lower_work.optimistic_operator_lower(
+                restart_source_state, restart_operator);
+        const OutcomeDistribution& restart_distribution =
+            restart_lower_calc.outcomes(
+                restart_source_state,
+                restart_lower_calc.operators().at(restart_operator)
+                    .primitive_action);
+        PC_CHECK(restart_distribution.supported);
+        PC_CHECK(restart_distribution.entries.size() == 1);
+        if (restart_distribution.entries.size() == 1) {
+            const double fresh_shaped_relaxation =
+                restart_lower_work.optimistic_completion_cost_for_state(
+                    restart_distribution.entries.front().state);
+            const double exact_successor_relaxation = restart_immediate +
+                std::max(
+                    restart_lower_work.optimistic_completion_cost(0),
+                    fresh_shaped_relaxation);
+            PC_CHECK(near(restart_lower, exact_successor_relaxation));
+        }
+        PC_CHECK(restart_lower > legacy_carried_progress_lower);
+    }
+    std::printf(
+        "solver automatic Eldritch lower: seed=%.9f bellman_rows=%u\n",
+        eligible_completion_lower, checked_eldritch_bellman_rows);
 
     /* Parent-context Eldritch options are fixed two-step programs. If their
      * complete immediate resource cost already exceeds a certified feasible
@@ -8710,6 +8972,14 @@ void run_automatic_eldritch_side_tests() {
     PC_CHECK(
         deferred_closure.termination ==
         SolveTermination::RefusedResourceCap);
+    PC_CHECK(
+        deferred_closure.diagnostics.independent_goal_cover_lower_bound >
+        0.0);
+    PC_CHECK(deferred_closure.lower_bound > 0.0);
+    PC_CHECK(deferred_closure.global_lower_bound_certified);
+    PC_CHECK(
+        deferred_closure.lower_bound_provenance ==
+        SolveLowerBoundProvenance::GlobalActionRelaxation);
     PC_CHECK(std::find(
                  deferred_closure.diagnostics.cap_hits.begin(),
                  deferred_closure.diagnostics.cap_hits.end(),
@@ -8732,6 +9002,12 @@ void run_automatic_eldritch_side_tests() {
         prefix_solve_calc, repair_prefix, prices,
         prefix_solve_options);
     PC_CHECK(prefix_solved.policy_available);
+    PC_CHECK(
+        eligible_completion_lower <=
+        prefix_solved.evaluated_policy_cost + 1e-9 *
+            std::max(
+                1.0,
+                std::fabs(prefix_solved.evaluated_policy_cost)));
     /* Automatic admission may inspect a much larger transient exact kernel
      * than the sparse row ultimately retained by Solve. max_transitions owns
      * only that retained graph; replay the deterministic solve with a cap
@@ -8894,6 +9170,10 @@ void run_automatic_eldritch_side_tests() {
     const StateLocalAutomaticBatch dominant_batch =
         dominant_calc.admit_state_local_automatic_candidates(
             dominant_state, limits);
+    const auto [dominant_lower, dominant_bellman_rows] =
+        check_eldritch_completion_bellman(
+            dominant_calc, dominant, dominant_state, dominant_batch);
+    (void)dominant_lower;
     std::uint32_t direct_count = 0;
     for (const StateLocalAutomaticCandidate& decision :
          dominant_batch.decisions) {
@@ -8912,6 +9192,7 @@ void run_automatic_eldritch_side_tests() {
         ++direct_count;
     }
     PC_CHECK(direct_count == 3);
+    PC_CHECK(dominant_bellman_rows == direct_count);
 
     pc_item_state repair_suffix;
     pc_item_clear(&repair_suffix);
@@ -8930,6 +9211,10 @@ void run_automatic_eldritch_side_tests() {
     const StateLocalAutomaticBatch suffix_batch =
         suffix_calc.admit_state_local_automatic_candidates(
             suffix_state, limits);
+    const auto [suffix_lower, suffix_bellman_rows] =
+        check_eldritch_completion_bellman(
+            suffix_calc, repair_suffix, suffix_state, suffix_batch);
+    (void)suffix_lower;
     std::uint32_t suffix_count = 0;
     bool saw_suffix_exalt = false;
     for (const StateLocalAutomaticCandidate& decision :
@@ -8972,6 +9257,7 @@ void run_automatic_eldritch_side_tests() {
         ++suffix_count;
     }
     PC_CHECK(suffix_count == 3);
+    PC_CHECK(suffix_bellman_rows == suffix_count);
     PC_CHECK(saw_suffix_exalt);
 
     /* A target family blocked by an existing explicit group is not rollable,

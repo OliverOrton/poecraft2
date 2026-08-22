@@ -20,6 +20,26 @@ void SolveWork::Impl::begin_focused_lower_solve() {
             result.values[state] =
                 optimistic_completion_cost_for_state(state);
         }
+        /* Populate the new publication authority only for the sessions this
+         * milestone newly covers. Existing non-Eldritch focused publication
+         * remains numerically unchanged. */
+        if (session.eldritch_eligible &&
+            result.start_state < result.values.size()) {
+            const double independent_lower =
+                result.values[result.start_state];
+            if (std::isfinite(independent_lower) &&
+                independent_lower >= 0.0 &&
+                independent_lower < kValueCeiling) {
+                result.diagnostics.independent_goal_cover_lower_bound =
+                    std::max(
+                        result.diagnostics
+                            .independent_goal_cover_lower_bound,
+                        independent_lower);
+                result.diagnostics.focused_lower_bound = std::max(
+                    result.diagnostics.focused_lower_bound,
+                    independent_lower);
+            }
+        }
         /* Expanding a previously zero-valued frontier can only raise the
          * focused lower bound. Preserve the last round's admissible values
          * for already-known states instead of restarting every exact policy

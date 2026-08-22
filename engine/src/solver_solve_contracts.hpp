@@ -606,6 +606,10 @@ struct SolveDiagnostics {
     bool transition_cache_reused = false;
     bool focused_expansion = false;
     std::uint32_t focused_expansion_rounds = 0;
+    /* Action-envelope-independent admissible floor supplied by the
+     * optimistic goal-cover relaxation. Unlike the currently admitted-row
+     * optimum, this remains globally valid while delayed actions are open. */
+    double independent_goal_cover_lower_bound = 0.0;
     double focused_lower_bound = 0.0;
     double focused_upper_bound = std::numeric_limits<double>::infinity();
     double focused_partial_policy_upper_bound =
@@ -905,7 +909,8 @@ namespace solve_detail {
 double globally_certified_action_envelope_lower_bound(
     double restricted_lower_bound,
     bool incremental_action_generation,
-    bool incremental_action_envelope_closed);
+    bool incremental_action_envelope_closed,
+    double independent_goal_cover_lower_bound = 0.0);
 
 struct SolveLowerBoundAuthority {
     bool globally_certified = false;
@@ -913,16 +918,17 @@ struct SolveLowerBoundAuthority {
         SolveLowerBoundProvenance::None;
 };
 
-/* Classify the proof family behind the already-normalized public lower.
- * Open incremental work deliberately reports the universal zero fail-safe as
- * not globally certified: it is independent of the still-open requested
- * action envelope, while a closed envelope owns an actual solver proof. */
+/* Classify the proof family behind the already-normalized public lower. Open
+ * incremental work may publish a separately proved goal-cover floor; without
+ * that authority it retains the universal-zero fail-safe. A closed envelope
+ * owns the stronger admitted-row solver proof. */
 SolveLowerBoundAuthority classify_public_lower_bound_authority(
     double lower_bound,
     SolvePolicyStatus policy_status,
     bool incremental_action_generation,
     bool incremental_action_envelope_closed,
-    bool unclosed_strict_refinement = false);
+    bool unclosed_strict_refinement = false,
+    double independent_goal_cover_lower_bound = 0.0);
 
 /* One final normalizer shared by direct, strict, and fallback publication.
  * Equality without Exact status is not a global closure certificate. */

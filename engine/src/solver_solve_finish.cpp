@@ -4895,9 +4895,19 @@ SolveWork::Impl::run_finalization() {
             /* Once exact mechanics expose a compatibility witness, the
              * coarse objective is not a lower relaxation of the strict
              * decision problem. A failed or bounded strict lift can retain
-             * its independently evaluated upper, but only the universal
-             * non-negative floor remains a public lower certificate. */
-            result.lower_bound = 0.0;
+             * its independently evaluated upper and the separately proved
+             * action-envelope-independent goal-cover floor, but not the
+             * stronger coarse/restricted policy value. */
+            result.lower_bound =
+                std::isfinite(
+                    result.diagnostics
+                        .independent_goal_cover_lower_bound) &&
+                        result.diagnostics
+                                .independent_goal_cover_lower_bound >=
+                            0.0
+                    ? result.diagnostics
+                          .independent_goal_cover_lower_bound
+                    : 0.0;
         }
         solve_detail::normalize_publication_result(result);
         if (result.policy_available) {
@@ -5020,7 +5030,8 @@ SolveWork::Impl::run_finalization() {
                 result.policy_status,
                 incremental_action_generation,
                 incremental_envelope_closed,
-                unclosed_strict_refinement);
+                unclosed_strict_refinement,
+                result.diagnostics.independent_goal_cover_lower_bound);
         result.global_lower_bound_certified =
             lower_authority.globally_certified;
         result.lower_bound_provenance = lower_authority.provenance;

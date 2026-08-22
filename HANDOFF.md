@@ -1,10 +1,28 @@
 # Handoff
 
-**Status: no implementation boundary is active.** Temporary blocker tier
-canonicalization completed on 2026-08-22. Oliver must select the next chunk
-before implementation resumes. The strongest measured successor is exact
-carrier-local row equivalence across goal-slot-labelled temporary-blocker
-choices; it remains unimplemented.
+**Status: Eldritch goal-cover coverage is active.** Oliver selected the
+[plan](docs/active/2026-08-22-eldritch-goal-cover-coverage/plan.md) on
+2026-08-22. Restore a useful admissible completion-cost seed on eligible
+armour by covering automatic Eldritch Annul, Chaos, and Exalt programs; retain
+local zero fallback until exact-row Bellman controls prove the replacement.
+The separate Essence/Harvest/Fossil executable-upper scheduling issue and the
+goal-slot row-equivalence finding remain outside this boundary.
+
+## Active implementation boundary
+
+- Starting checkpoint: `d2341dd`.
+- Current source witness: `optimistic_completion_cost_for_state()` returns
+  zero for every `session.eldritch_eligible` state.
+- Historical cause: commit `3a6d191` added the guard with automatic Eldritch
+  side actions because the clean-carrier MDP did not represent their one-side
+  preservation.
+- Retained authority: carrier-local automatic options already carry exact
+  expected resource vectors and exact `OptionKernel` transitions.
+- Soundness contract: every real Eldritch option must have a no-more-expensive,
+  no-less-capable optimistic projection before the global guard is removed.
+- Acceptance: focused Bellman inequality controls, complete affected native
+  solver acceptance, primary/Bow measurement, release WASM, non-visual web
+  acceptance, documentation, and local co-authored checkpoints. Do not push.
 
 ## Current checkpoint
 

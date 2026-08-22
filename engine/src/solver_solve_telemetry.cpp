@@ -3673,7 +3673,8 @@ std::string serialize_solver_telemetry(
             : globally_certified_action_envelope_lower_bound(
                   diagnostics->focused_lower_bound,
                   diagnostics->incremental_action_generation,
-                  diagnostics->incremental_action_envelope_closed);
+                  diagnostics->incremental_action_envelope_closed,
+                  diagnostics->independent_goal_cover_lower_bound);
     const double focused_published_gap =
         diagnostics != nullptr &&
                 std::isfinite(diagnostics->focused_upper_bound) &&
@@ -3686,6 +3687,7 @@ std::string serialize_solver_telemetry(
     json += ",\"focused_expansion\":{";
     if (diagnostics == nullptr) {
         json += "\"used\":null,\"rounds\":null,\"lower_bound\":null";
+        json += ",\"independent_goal_cover_lower_bound\":null";
         json += ",\"restricted_action_envelope_lower_bound\":null";
         json += ",\"lower_bound_scope\":null";
         json += ",\"upper_bound\":null,\"partial_policy_upper_bound\":null";
@@ -3709,6 +3711,9 @@ std::string serialize_solver_telemetry(
         };
         json += ",\"lower_bound\":";
         append_bound(focused_published_lower);
+        json += ",\"independent_goal_cover_lower_bound\":";
+        append_bound(
+            diagnostics->independent_goal_cover_lower_bound);
         json += ",\"restricted_action_envelope_lower_bound\":";
         append_bound(diagnostics->focused_lower_bound);
         json += ",\"lower_bound_scope\":\"";

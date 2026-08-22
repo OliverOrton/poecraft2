@@ -2462,24 +2462,33 @@ void SolveWork::Impl::try_install_gated_root_renewal_incumbent(
 double solve_detail::globally_certified_action_envelope_lower_bound(
         const double restricted_lower_bound,
         const bool incremental_action_generation,
-        const bool incremental_action_envelope_closed) {
+        const bool incremental_action_envelope_closed,
+        const double independent_goal_cover_lower_bound) {
+        const double independent =
+            std::isfinite(independent_goal_cover_lower_bound) &&
+                    independent_goal_cover_lower_bound >= 0.0
+                ? independent_goal_cover_lower_bound
+                : 0.0;
         /*
          * A focused solve over the currently admitted rows is a useful
          * scheduling relaxation, but removing delayed actions from a
          * minimization can only raise its optimum. Until every delayed row
          * has been evaluated and classified, that restricted optimum is not
-         * a lower bound for the requested full action envelope. Zero is the
-         * universal independently admissible floor; keep the restricted
-         * value in diagnostics for scheduling only.
+         * a lower bound for the requested full action envelope. The
+         * independently admissible goal-cover relaxation remains valid for
+         * every delayed action; keep the stronger restricted value in
+         * diagnostics for scheduling only until that envelope closes.
          */
         if (incremental_action_generation &&
             !incremental_action_envelope_closed) {
-            return 0.0;
+            return independent;
         }
-        return std::isfinite(restricted_lower_bound) &&
-                       restricted_lower_bound >= 0.0
-            ? restricted_lower_bound
-            : 0.0;
+        const double restricted =
+            std::isfinite(restricted_lower_bound) &&
+                    restricted_lower_bound >= 0.0
+                ? restricted_lower_bound
+                : 0.0;
+        return std::max(independent, restricted);
     }
 
 SolveLowerBoundAuthority
@@ -2488,7 +2497,8 @@ solve_detail::classify_public_lower_bound_authority(
         const SolvePolicyStatus policy_status,
         const bool incremental_action_generation,
         const bool incremental_action_envelope_closed,
-        const bool unclosed_strict_refinement) {
+        const bool unclosed_strict_refinement,
+        const double independent_goal_cover_lower_bound) {
         if (!std::isfinite(lower_bound) || lower_bound < 0.0) {
             return {};
         }
@@ -2496,6 +2506,17 @@ solve_detail::classify_public_lower_bound_authority(
             return {
                 true,
                 SolveLowerBoundProvenance::ExactPolicyClosure,
+            };
+        }
+        const double independent_tolerance = 1e-12 * std::max(
+            1.0, std::fabs(independent_goal_cover_lower_bound));
+        if (std::isfinite(independent_goal_cover_lower_bound) &&
+            independent_goal_cover_lower_bound > 0.0 &&
+            lower_bound <= independent_goal_cover_lower_bound +
+                independent_tolerance) {
+            return {
+                true,
+                SolveLowerBoundProvenance::GlobalActionRelaxation,
             };
         }
         if (unclosed_strict_refinement) {
@@ -2530,7 +2551,8 @@ double SolveWork::Impl::certified_global_lower_bound() const {
         return globally_certified_action_envelope_lower_bound(
             result.diagnostics.focused_lower_bound,
             incremental_action_generation,
-            incremental_envelope_closed);
+            incremental_envelope_closed,
+            result.diagnostics.independent_goal_cover_lower_bound);
     }
 
 SolveGapTarget SolveWork::Impl::satisfied_gap_target() const {
