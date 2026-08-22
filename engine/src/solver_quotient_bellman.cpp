@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <bit>
+#include <chrono>
 #include <cmath>
 #include <map>
 #include <set>
@@ -544,6 +545,14 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
         return out;
     }
     try {
+        auto phase_started = std::chrono::steady_clock::now();
+        const auto finish_phase = [&](std::uint64_t& accumulator) {
+            const auto now = std::chrono::steady_clock::now();
+            accumulator += static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    now - phase_started).count());
+            phase_started = now;
+        };
         const std::size_t state_count = cell_by_state_.size();
         std::uint64_t scratch_bytes =
             saturated_product(state_count, 3 * sizeof(double));
@@ -679,6 +688,7 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
         };
         terminal_attractor = greatest_supported_subset(
             std::move(terminal_attractor), current_certified_row, true);
+        finish_phase(telemetry_.attractor_ns);
         const auto row_stays_in_terminal_attractor =
                 [&](const std::uint64_t row) {
             const SparseRow& sparse = transition_cache_.rows[row];
@@ -726,6 +736,7 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
                     *alternative_lower);
             }
         }
+        finish_phase(telemetry_.lower_relaxation_ns);
 
         /* Compute the greatest certified nonterminal closed set. When one
          * exists, seed it with a deterministic admitted-row witness so the
@@ -793,6 +804,7 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
             telemetry_.bellman_rows_evaluated += selected.evaluated_rows;
             policy_rows[state] = selected.row;
         }
+        finish_phase(telemetry_.policy_seed_ns);
 
         std::vector<std::uint32_t> entries;
         entries.reserve(entry_cell_ids.size());
@@ -936,9 +948,11 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
                     transition_cache_.quotient_proofs->ledger().cap_bytes(),
                     transition_cache_.quotient_proofs->ledger()
                         .snapshot().total_bytes);
+            finish_phase(telemetry_.envelope_construction_ns);
             refinement::PolicyEvaluationResult evaluated =
                 refinement::evaluate_refined_policy_exact(
                     fixed, std::move(evaluation_request));
+            finish_phase(telemetry_.exact_policy_evaluation_ns);
             telemetry_.scc_evaluations +=
                 evaluated.strongly_connected_components;
             if (evaluated.status ==
@@ -980,10 +994,11 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
                             break;
                         }
                     }
-                    if (repaired) {
-                        ++telemetry_.policy_improvements;
-                        ++telemetry_.improper_policy_repairs;
-                        break;
+                if (repaired) {
+                    ++telemetry_.policy_improvements;
+                    ++telemetry_.improper_policy_repairs;
+                    finish_phase(telemetry_.policy_improvement_ns);
+                    break;
                     }
                 }
                 if (repaired) continue;
@@ -1051,6 +1066,7 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
                     }
                 }
             }
+            finish_phase(telemetry_.policy_improvement_ns);
             if (changed) continue;
             if (strict_improvement_suppressed) {
                 out.status = QuotientBellmanStatus::DidNotConverge;
@@ -1176,6 +1192,7 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
             out.status = QuotientBellmanStatus::Complete;
             out.executable_upper = true;
             out.proper = true;
+            finish_phase(telemetry_.publication_audit_ns);
             refresh_row_kernel_bytes();
             telemetry_.memory =
                 transition_cache_.quotient_proofs->ledger().snapshot();

@@ -194,6 +194,18 @@ void record_live_policy_lift_telemetry(
     telemetry.row_kernel_bytes = adapter.row_kernel_bytes;
     telemetry.scratch_bytes = adapter.scratch_bytes;
     telemetry.total_solver_owned_bytes = adapter.total_solver_owned_bytes;
+    telemetry.quotient_attractor_ns = adapter.quotient_attractor_ns;
+    telemetry.quotient_lower_relaxation_ns =
+        adapter.quotient_lower_relaxation_ns;
+    telemetry.quotient_policy_seed_ns = adapter.quotient_policy_seed_ns;
+    telemetry.quotient_envelope_construction_ns =
+        adapter.quotient_envelope_construction_ns;
+    telemetry.quotient_exact_policy_evaluation_ns =
+        adapter.quotient_exact_policy_evaluation_ns;
+    telemetry.quotient_policy_improvement_ns =
+        adapter.quotient_policy_improvement_ns;
+    telemetry.quotient_publication_audit_ns =
+        adapter.quotient_publication_audit_ns;
     telemetry.reference_adapter_invocations =
         adapter.reference_adapter_invocations;
 }
@@ -4348,6 +4360,20 @@ SolveWork::Impl::run_finalization() {
                 certificate.adapter.scratch_bytes;
             telemetry.total_solver_owned_bytes =
                 certificate.adapter.total_solver_owned_bytes;
+            telemetry.quotient_attractor_ns =
+                certificate.adapter.quotient_attractor_ns;
+            telemetry.quotient_lower_relaxation_ns =
+                certificate.adapter.quotient_lower_relaxation_ns;
+            telemetry.quotient_policy_seed_ns =
+                certificate.adapter.quotient_policy_seed_ns;
+            telemetry.quotient_envelope_construction_ns =
+                certificate.adapter.quotient_envelope_construction_ns;
+            telemetry.quotient_exact_policy_evaluation_ns =
+                certificate.adapter.quotient_exact_policy_evaluation_ns;
+            telemetry.quotient_policy_improvement_ns =
+                certificate.adapter.quotient_policy_improvement_ns;
+            telemetry.quotient_publication_audit_ns =
+                certificate.adapter.quotient_publication_audit_ns;
             telemetry.reference_adapter_invocations =
                 certificate.adapter.reference_adapter_invocations;
             telemetry.lumpability_checks =

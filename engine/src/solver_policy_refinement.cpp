@@ -566,6 +566,19 @@ PolicyExactLiftCertificate lift_policy_quotient_materialized_scaffold(
             bellman_telemetry.policy_improvements;
         telemetry.local_policy_changes =
             bellman_telemetry.policy_improvements;
+        telemetry.quotient_attractor_ns = bellman_telemetry.attractor_ns;
+        telemetry.quotient_lower_relaxation_ns =
+            bellman_telemetry.lower_relaxation_ns;
+        telemetry.quotient_policy_seed_ns =
+            bellman_telemetry.policy_seed_ns;
+        telemetry.quotient_envelope_construction_ns =
+            bellman_telemetry.envelope_construction_ns;
+        telemetry.quotient_exact_policy_evaluation_ns =
+            bellman_telemetry.exact_policy_evaluation_ns;
+        telemetry.quotient_policy_improvement_ns =
+            bellman_telemetry.policy_improvement_ns;
+        telemetry.quotient_publication_audit_ns =
+            bellman_telemetry.publication_audit_ns;
         const quotient::ProofMemorySnapshot memory =
             bellman.proof_store()->ledger().snapshot();
         telemetry.coverage_descriptor_bytes = memory.bytes[
@@ -2243,6 +2256,19 @@ lift_policy_quotient_pass_task(
             bellman_telemetry.policy_improvements;
         telemetry.local_policy_changes =
             bellman_telemetry.policy_improvements;
+        telemetry.quotient_attractor_ns = bellman_telemetry.attractor_ns;
+        telemetry.quotient_lower_relaxation_ns =
+            bellman_telemetry.lower_relaxation_ns;
+        telemetry.quotient_policy_seed_ns =
+            bellman_telemetry.policy_seed_ns;
+        telemetry.quotient_envelope_construction_ns =
+            bellman_telemetry.envelope_construction_ns;
+        telemetry.quotient_exact_policy_evaluation_ns =
+            bellman_telemetry.exact_policy_evaluation_ns;
+        telemetry.quotient_policy_improvement_ns =
+            bellman_telemetry.policy_improvement_ns;
+        telemetry.quotient_publication_audit_ns =
+            bellman_telemetry.publication_audit_ns;
         telemetry.exact_carriers_replayed =
             static_cast<std::uint64_t>(locators.size()) *
             (observation_coarse.rounds + partition.rounds + 4);
@@ -3495,6 +3521,20 @@ lift_policy_quotient_pass_task(
             final_bellman_telemetry.policy_improvements;
         telemetry.local_policy_changes =
             final_bellman_telemetry.policy_improvements;
+        telemetry.quotient_attractor_ns =
+            final_bellman_telemetry.attractor_ns;
+        telemetry.quotient_lower_relaxation_ns =
+            final_bellman_telemetry.lower_relaxation_ns;
+        telemetry.quotient_policy_seed_ns =
+            final_bellman_telemetry.policy_seed_ns;
+        telemetry.quotient_envelope_construction_ns =
+            final_bellman_telemetry.envelope_construction_ns;
+        telemetry.quotient_exact_policy_evaluation_ns =
+            final_bellman_telemetry.exact_policy_evaluation_ns;
+        telemetry.quotient_policy_improvement_ns =
+            final_bellman_telemetry.policy_improvement_ns;
+        telemetry.quotient_publication_audit_ns =
+            final_bellman_telemetry.publication_audit_ns;
         const quotient::ProofMemorySnapshot memory =
             ledger.snapshot();
         telemetry.coverage_descriptor_bytes = memory.bytes[

@@ -113,6 +113,13 @@ struct PolicyLiftAdapterTelemetry {
     std::uint64_t scratch_bytes = 0;
     std::uint64_t total_solver_owned_bytes = 0;
     std::uint64_t reference_adapter_invocations = 0;
+    std::uint64_t quotient_attractor_ns = 0;
+    std::uint64_t quotient_lower_relaxation_ns = 0;
+    std::uint64_t quotient_policy_seed_ns = 0;
+    std::uint64_t quotient_envelope_construction_ns = 0;
+    std::uint64_t quotient_exact_policy_evaluation_ns = 0;
+    std::uint64_t quotient_policy_improvement_ns = 0;
+    std::uint64_t quotient_publication_audit_ns = 0;
     std::uint64_t total_ns = 0;
     std::uint64_t carrier_discovery_ns = 0;
     std::uint64_t partition_refinement_ns = 0;

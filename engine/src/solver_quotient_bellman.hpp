@@ -71,6 +71,13 @@ struct QuotientBellmanTelemetry {
     std::uint64_t improper_policy_repairs = 0;
     std::uint64_t scc_evaluations = 0;
     std::uint64_t reference_adapter_invocations = 0;
+    std::uint64_t attractor_ns = 0;
+    std::uint64_t lower_relaxation_ns = 0;
+    std::uint64_t policy_seed_ns = 0;
+    std::uint64_t envelope_construction_ns = 0;
+    std::uint64_t exact_policy_evaluation_ns = 0;
+    std::uint64_t policy_improvement_ns = 0;
+    std::uint64_t publication_audit_ns = 0;
     ProofMemorySnapshot memory;
 };
 

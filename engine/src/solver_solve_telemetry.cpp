@@ -1710,6 +1710,13 @@ std::string serialize_solver_telemetry(
                 "\"partition_bytes\":null,\"carrier_bytes\":null,"
                 "\"row_kernel_bytes\":null,\"scratch_bytes\":null,"
                 "\"total_solver_owned_bytes\":null,"
+                "\"attractor_ns\":null,"
+                "\"lower_relaxation_ns\":null,"
+                "\"policy_seed_ns\":null,"
+                "\"envelope_construction_ns\":null,"
+                "\"exact_policy_evaluation_ns\":null,"
+                "\"policy_improvement_ns\":null,"
+                "\"publication_audit_ns\":null,"
                 "\"reference_adapter_invocations\":null}";
         json += ",\"fixed_point\":{"
                 "\"checked\":null,\"complete\":null,"
@@ -2973,6 +2980,25 @@ std::string serialize_solver_telemetry(
                 std::to_string(refinement.scratch_bytes);
         json += ",\"total_solver_owned_bytes\":" +
                 std::to_string(refinement.total_solver_owned_bytes);
+        json += ",\"attractor_ns\":" +
+                std::to_string(refinement.quotient_attractor_ns);
+        json += ",\"lower_relaxation_ns\":" +
+                std::to_string(
+                    refinement.quotient_lower_relaxation_ns);
+        json += ",\"policy_seed_ns\":" +
+                std::to_string(refinement.quotient_policy_seed_ns);
+        json += ",\"envelope_construction_ns\":" +
+                std::to_string(
+                    refinement.quotient_envelope_construction_ns);
+        json += ",\"exact_policy_evaluation_ns\":" +
+                std::to_string(
+                    refinement.quotient_exact_policy_evaluation_ns);
+        json += ",\"policy_improvement_ns\":" +
+                std::to_string(
+                    refinement.quotient_policy_improvement_ns);
+        json += ",\"publication_audit_ns\":" +
+                std::to_string(
+                    refinement.quotient_publication_audit_ns);
         json += ",\"reference_adapter_invocations\":" +
                 std::to_string(
                     refinement.reference_adapter_invocations) + "}";

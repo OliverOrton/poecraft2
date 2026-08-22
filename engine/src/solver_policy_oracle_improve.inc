@@ -1157,6 +1157,25 @@ void merge_adapter_telemetry(
     total.total_solver_owned_bytes = std::max(
         total.total_solver_owned_bytes, pass.total_solver_owned_bytes);
     saturating_add(
+        total.quotient_attractor_ns, pass.quotient_attractor_ns);
+    saturating_add(
+        total.quotient_lower_relaxation_ns,
+        pass.quotient_lower_relaxation_ns);
+    saturating_add(
+        total.quotient_policy_seed_ns, pass.quotient_policy_seed_ns);
+    saturating_add(
+        total.quotient_envelope_construction_ns,
+        pass.quotient_envelope_construction_ns);
+    saturating_add(
+        total.quotient_exact_policy_evaluation_ns,
+        pass.quotient_exact_policy_evaluation_ns);
+    saturating_add(
+        total.quotient_policy_improvement_ns,
+        pass.quotient_policy_improvement_ns);
+    saturating_add(
+        total.quotient_publication_audit_ns,
+        pass.quotient_publication_audit_ns);
+    saturating_add(
         total.reference_adapter_invocations,
         pass.reference_adapter_invocations);
     saturating_add(total.total_ns, pass.total_ns);
