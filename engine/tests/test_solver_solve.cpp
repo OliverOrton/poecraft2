@@ -2570,6 +2570,9 @@ void run_policy_guided_exact_lift_tests() {
             calc, solved, start, prices, options,
             "focused policy-guided exact lift");
     report_lift_failure("Regal lift", lifted);
+    PC_CHECK(lifted.adapter.strict_session_constructions == 1);
+    PC_CHECK(lifted.adapter.strict_full_restarts == 0);
+    PC_CHECK(lifted.adapter.strict_partition_updates == 1);
     PC_CHECK(
         lifted.status ==
         refinement::PolicyExactLiftStatus::Complete);

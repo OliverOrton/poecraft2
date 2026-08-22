@@ -1096,16 +1096,6 @@ std::uint64_t ProofStore::invalidate_target(
     for (UnresolvedAlternativeObligation& obligation :
          alternative_obligations_) {
         if (obligation.status ==
-                AlternativeObligationStatus::ConditionallyNoncompetitive) {
-            /* The optimistic carrier lower remains valid, but the Q value it
-             * was compared with does not. Resume this same obligation under
-             * the new Q generation instead of discarding completed work. */
-            obligation.status = AlternativeObligationStatus::Scheduled;
-            obligation.certified_row_id.reset();
-            obligation.conditional_upper_q.reset();
-            obligation.conditional_q_generation = 0;
-            obligation_invalidated = true;
-        } else if (obligation.status ==
                        AlternativeObligationStatus::Certified &&
                    obligation.certified_row_id.has_value()) {
             const std::uint64_t row_id = *obligation.certified_row_id;

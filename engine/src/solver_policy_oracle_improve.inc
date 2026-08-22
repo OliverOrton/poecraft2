@@ -902,6 +902,15 @@ void merge_adapter_telemetry(
     total.strict_frontier_update_max_ns = std::max(
         total.strict_frontier_update_max_ns,
         pass.strict_frontier_update_max_ns);
+    saturating_add(
+        total.strict_cells_retained,
+        pass.strict_cells_retained);
+    saturating_add(
+        total.strict_cells_created,
+        pass.strict_cells_created);
+    saturating_add(
+        total.strict_cells_superseded,
+        pass.strict_cells_superseded);
     add_u32(
         total.coarse_policy_states,
         pass.coarse_policy_states);

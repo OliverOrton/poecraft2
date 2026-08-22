@@ -1692,6 +1692,9 @@ std::string serialize_solver_telemetry(
                 "\"strict_frontier_insertions\":null,"
                 "\"strict_frontier_states_inserted\":null,"
                 "\"strict_frontier_update_max_ns\":null,"
+                "\"strict_cells_retained\":null,"
+                "\"strict_cells_created\":null,"
+                "\"strict_cells_superseded\":null,"
                 "\"payload_reuses\":null,\"row_reprojections\":null,"
                 "\"source_splits\":null,\"target_splits\":null,"
                 "\"reverse_invalidations\":null,"
@@ -2924,6 +2927,12 @@ std::string serialize_solver_telemetry(
         json += ",\"strict_frontier_update_max_ns\":" +
                 std::to_string(
                     refinement.strict_frontier_update_max_ns);
+        json += ",\"strict_cells_retained\":" +
+                std::to_string(refinement.strict_cells_retained);
+        json += ",\"strict_cells_created\":" +
+                std::to_string(refinement.strict_cells_created);
+        json += ",\"strict_cells_superseded\":" +
+                std::to_string(refinement.strict_cells_superseded);
         json += ",\"payload_reuses\":" +
                 std::to_string(refinement.proof_payload_reuses);
         json += ",\"row_reprojections\":" +

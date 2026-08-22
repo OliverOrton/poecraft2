@@ -810,8 +810,9 @@ PolicyExactLiftCertificate lift_policy_quotient_materialized_scaffold(
 
 namespace {
 
-struct QuotientFrontierExpansion {
-    std::vector<AbstractState> states;
+struct QuotientPassResult {
+    std::optional<PolicyExactLiftCertificate> certificate;
+    std::vector<AbstractState> frontier_states;
 };
 
 ReoptimizationSeed quotient_reoptimization_seed(
@@ -955,7 +956,7 @@ struct PersistentQuotientSession {
           bellman(limits.max_estimated_memory_bytes) {}
 };
 
-solve_detail::CooperativeTask<PolicyExactLiftCertificate>
+solve_detail::CooperativeTask<QuotientPassResult>
 lift_policy_quotient_pass_task(
         CalcContext& coarse,
         const SolveResult& solved,
@@ -1239,10 +1240,18 @@ lift_policy_quotient_pass_task(
             telemetry.current_live_slice_bytes = 0;
             telemetry.current_live_slices = 0;
 
-            std::uint64_t combined = oracle.estimated_owned_bytes();
+            std::uint64_t discovery_external_bytes =
+                persistent_selected_closure_bytes(closure);
             saturating_add(
-                combined,
-                persistent_selected_closure_bytes(closure));
+                discovery_external_bytes,
+                persistent_published_rows_bytes(
+                    session.published_rows));
+            /* During growth, charge the complete live closure through the
+             * Bellman ledger. The post-discovery split below moves locator
+             * storage to Carrier without ever counting the closure twice. */
+            bellman.set_external_row_kernel_bytes(
+                discovery_external_bytes);
+            std::uint64_t combined = oracle.estimated_owned_bytes();
             saturating_add(combined, ledger.snapshot().total_bytes);
             if (combined > limits.max_estimated_memory_bytes) {
                 throw AdapterFailure(
@@ -1744,6 +1753,15 @@ lift_policy_quotient_pass_task(
                     ? &*previous_partition
                     : nullptr);
         saturating_add(telemetry.strict_partition_updates, 1);
+        saturating_add(
+            telemetry.strict_cells_retained,
+            partition_update.telemetry.retained_cells);
+        saturating_add(
+            telemetry.strict_cells_created,
+            partition_update.telemetry.new_cells);
+        saturating_add(
+            telemetry.strict_cells_superseded,
+            partition_update.telemetry.superseded_cells);
         if (partition_update.status !=
             quotient::QuotientPartitionStatus::Complete) {
             throw AdapterFailure(
@@ -2888,11 +2906,20 @@ lift_policy_quotient_pass_task(
                 }
                 const auto upper = current_upper.find(
                     obligation.identity.source_cell_id);
-                if (upper == current_upper.end() ||
+                if (upper != current_upper.end() &&
+                    std::isfinite(upper->second) &&
+                    obligation.identity.optimistic_lower.lower_q() >=
+                        upper->second) {
                     bellman.proof_store()
-                        ->alternative_obligation_blocks_exactness(
-                            obligation_id, upper->second,
-                            bellman.proof_store()->q_generation())) {
+                        ->transition_alternative_obligation(
+                            obligation_id,
+                            quotient::AlternativeObligationStatus::
+                                ConditionallyNoncompetitive,
+                            obligation.work_completed,
+                            std::nullopt,
+                            upper->second,
+                            bellman.proof_store()->q_generation());
+                } else {
                     bellman.proof_store()
                         ->transition_alternative_obligation(
                             obligation_id,
@@ -3420,7 +3447,8 @@ lift_policy_quotient_pass_task(
                 (void)identity;
                 states.push_back(std::move(state));
             }
-            throw QuotientFrontierExpansion{std::move(states)};
+            co_return QuotientPassResult{
+                std::nullopt, std::move(states)};
         }
 
         const std::map<std::uint32_t, double> published_upper =
@@ -3554,7 +3582,8 @@ lift_policy_quotient_pass_task(
     certificate.adapter = telemetry;
     progress.phase = PolicyExactLiftPhase::Done;
     progress.done = true;
-    co_return certificate;
+    co_return QuotientPassResult{
+        std::move(certificate), {}};
 }
 
 } // namespace
@@ -3572,7 +3601,7 @@ struct PolicyExactLiftWork::Impl {
     SolveOptions active_pass_options;
     PolicyExactLiftProgress progress;
     double best_verified_executable_upper_bound = kInfinity;
-    solve_detail::CooperativeTask<PolicyExactLiftCertificate> pass;
+    solve_detail::CooperativeTask<QuotientPassResult> pass;
     std::optional<CompiledPolicyAssertion> reusable_assertion;
     std::optional<PolicyExactLiftCertificate> completed;
 
@@ -3651,11 +3680,11 @@ struct PolicyExactLiftWork::Impl {
             best_verified_executable_upper_bound;
     }
 
-    void accept_frontier(QuotientFrontierExpansion expansion) {
+    void accept_frontier(std::vector<AbstractState> states) {
         const auto update_started = std::chrono::steady_clock::now();
         bool grew = false;
         std::uint64_t inserted_states = 0;
-        for (AbstractState& state : expansion.states) {
+        for (AbstractState& state : states) {
             const StableKey identity =
                 exact_abstract_state_key(state, 0);
             auto [found, inserted] = frontier_by_identity.emplace(
@@ -3734,22 +3763,24 @@ struct PolicyExactLiftWork::Impl {
         std::uint32_t remaining =
             std::max<std::uint32_t>(1, max_work_items);
         while (remaining-- != 0 && !completed.has_value()) {
-            try {
-                if (!pass.resume()) {
-                    retain_verified_progress_upper();
-                    continue;
-                }
+            if (!pass.resume()) {
                 retain_verified_progress_upper();
-                PolicyExactLiftCertificate certificate =
-                    pass.take_result();
-                progress.phase = PolicyExactLiftPhase::Done;
-                progress.done = true;
-                reusable_assertion.reset();
-                completed = std::move(certificate);
-            } catch (QuotientFrontierExpansion& expansion) {
-                retain_verified_progress_upper();
-                accept_frontier(std::move(expansion));
+                continue;
             }
+            retain_verified_progress_upper();
+            QuotientPassResult result = pass.take_result();
+            if (!result.frontier_states.empty()) {
+                accept_frontier(std::move(result.frontier_states));
+                continue;
+            }
+            if (!result.certificate.has_value()) {
+                throw std::logic_error(
+                    "quotient update produced no certificate or frontier");
+            }
+            progress.phase = PolicyExactLiftPhase::Done;
+            progress.done = true;
+            reusable_assertion.reset();
+            completed = std::move(*result.certificate);
         }
     }
 

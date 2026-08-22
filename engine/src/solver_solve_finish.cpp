@@ -4015,6 +4015,12 @@ SolveWork::Impl::run_finalization() {
                 certificate.adapter.strict_frontier_states_inserted;
             telemetry.strict_frontier_update_max_ns =
                 certificate.adapter.strict_frontier_update_max_ns;
+            telemetry.strict_cells_retained =
+                certificate.adapter.strict_cells_retained;
+            telemetry.strict_cells_created =
+                certificate.adapter.strict_cells_created;
+            telemetry.strict_cells_superseded =
+                certificate.adapter.strict_cells_superseded;
             telemetry.policy_reachable_coarse_states =
                 certificate.refinement.telemetry
                     .policy_reachable_coarse_states;

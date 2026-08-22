@@ -335,6 +335,9 @@ struct PolicyRefinementTelemetry {
     std::uint64_t strict_frontier_insertions = 0;
     std::uint64_t strict_frontier_states_inserted = 0;
     std::uint64_t strict_frontier_update_max_ns = 0;
+    std::uint64_t strict_cells_retained = 0;
+    std::uint64_t strict_cells_created = 0;
+    std::uint64_t strict_cells_superseded = 0;
     std::uint64_t policy_reachable_coarse_states = 0;
     /* Cumulative strict carrier materializations across lift/re-opt passes. */
     std::uint64_t exact_states = 0;

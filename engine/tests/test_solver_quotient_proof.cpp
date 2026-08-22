@@ -628,12 +628,26 @@ void run_alternative_lifecycle_and_invalidation_tests() {
         AlternativeObligationStatus::Certified);
     PC_CHECK(
         target_store.alternative_obligation(conditional).status ==
-        AlternativeObligationStatus::Scheduled);
+        AlternativeObligationStatus::ConditionallyNoncompetitive);
     PC_CHECK(
         target_store.alternative_obligation(conditional).work_completed == 9);
+    PC_CHECK(target_store.alternative_obligation_blocks_exactness(
+        conditional,
+        conditional_identity.optimistic_lower.lower_q(),
+        target_store.q_generation()));
+    target_store.transition_alternative_obligation(
+        conditional,
+        AlternativeObligationStatus::ConditionallyNoncompetitive,
+        9, std::nullopt,
+        conditional_identity.optimistic_lower.lower_q(),
+        target_store.q_generation());
+    PC_CHECK(!target_store.alternative_obligation_blocks_exactness(
+        conditional,
+        conditional_identity.optimistic_lower.lower_q(),
+        target_store.q_generation()));
     PC_CHECK((
         target_store.ordered_pending_alternative_obligations() ==
-        std::vector<std::uint32_t>{affected, conditional}));
+        std::vector<std::uint32_t>{affected}));
 }
 
 AccountedAlternativeAction accounting_entry(
