@@ -29,6 +29,20 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
+The
+[bounded executable-upper completion and Imprint applicability](active/2026-08-22-bounded-executable-upper-completion/plan.md)
+boundary is [complete](active/2026-08-22-bounded-executable-upper-completion/result.md).
+Incremental upper passes now stop after one exact proper fixed-policy proof,
+natural carrier/frontier epochs replace per-row reoptimization, and Calculator
+bounds optional post-solve policy refinement at 5,000 states without limiting
+main discovery or fallback verification. An Imprint grammar refusal remains
+an open exactness obligation but no longer prevents unrelated automatic and
+delayed families from finishing. The checked enabled primary publishes its
+verified 3,759.976-Chaos policy in 14.204 solve seconds; the disabled control
+closes 119,838 alternatives and raises the lower to 2,889.769 in 146.378
+seconds. Dedicated Imprint and Warlord controls remain exact. No implementation
+boundary is active until Oliver selects a successor.
+
 The completed
 [Imprint solve scope and controlled comparison](active/2026-08-22-imprint-solve-scope/plan.md)
 adds a checked-by-default Calculator control that can exclude only generated
