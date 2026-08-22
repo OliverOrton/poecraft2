@@ -156,11 +156,36 @@ cross-pass cache and not a new quotient algorithm by assumption.
 - Release retired partition scratch, superseded projection payloads, obsolete
   indexes, and temporary solve buffers promptly while retaining everything
   required for current proof.
-- Once reference parity is established, extract any shared stable-partition or
-  projection helpers needed by production. Remove the unused materialized
-  scaffold only as a separate mechanical checkpoint after its useful contracts
-  are covered; do not combine speculative broad file cleanup with the proof-
-  critical conversion.
+- Refactor the current oversized production owner when doing so makes state
+  lifetime, phase boundaries, or dependency direction clearer. New private
+  headers or translation units are authorized; update `engine-sources.txt`
+  once and preserve the one-way solver header dependencies.
+- Consolidate duplicate partition, cell-construction, row-projection,
+  publication, memory-accounting, or failure-classification helpers when the
+  persistent path would otherwise create a third implementation. Keep a
+  single named authority for each lifecycle operation.
+- Once reference parity is established, extract the useful contracts from the
+  unused materialized scaffold and remove the dead scaffold in a separate
+  mechanical checkpoint. Remove dead fields, stale restart-only bookkeeping,
+  obsolete exception control flow, redundant adapters, and unreachable
+  branches exposed directly by the new session architecture.
+- Include other low-risk debt discovered in files already touched when it is
+  behavior-neutral, locally provable, and reduces duplication, ambiguous
+  identity, hidden ownership, or unnecessary allocation. Record broader or
+  behavior-changing discoveries instead of silently expanding the milestone.
+
+### Refactoring guardrails
+
+- Structural edits may be large, but each must serve persistent-session
+  ownership, proof clarity, cooperative lifetime, or removal of directly
+  adjacent dead/duplicate code.
+- Preserve stable public and private contracts unless a private contract is
+  deliberately replaced and all callers move in the same checkpoint.
+- Keep mechanical moves separable from semantic changes in the diff and local
+  commit history wherever practical.
+- Do not retain old and new production implementations indefinitely. The
+  from-scratch path remains test/reference authority only; dead production
+  scaffolding is removed after parity is proved.
 
 ## Gate 6 — Native Qualification
 
@@ -221,7 +246,7 @@ accounting before it is accepted.
   approximate proof, or new fallback publication.
 - No state-928 Imprint grammar rewrite or five-T1 recovery.
 - No strategy compiler/router/Fracture compaction, strategy-schema change,
-  frontend presentation work, or broad solver file-splitting campaign.
+  frontend presentation work, or unrelated repository-wide cleanup.
 - No cross-request, cross-price, cross-goal, serialized, or product replay
   cache.
 

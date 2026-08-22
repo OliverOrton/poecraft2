@@ -22,7 +22,13 @@ memory/restart/invalidation diagnostics. The plan then extracts durable
 ownership behavior-neutrally before enabling in-place oracle, partition,
 Bellman, and proof growth. The real 300-second four-T1 case and release WASM
 remain final conditional gates; state-928 Imprint, five-T1 recovery, action-
-admission changes, compiler/router work, and broad cleanup are out of scope.
+admission changes and compiler/router work are out of scope. Oliver explicitly
+authorized the structural file refactoring needed to make the persistent
+session legible, plus behavior-neutral low-hanging debt in directly touched
+code. This includes splitting private owners, consolidating duplicate
+partition/projection/publication helpers, removing the unused materialized
+scaffold after reference parity, and deleting restart-only bookkeeping. It
+does not authorize unrelated repository-wide cleanup or behavior changes.
 
 ### Stopped predecessor
 
