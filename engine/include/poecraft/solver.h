@@ -380,7 +380,10 @@ typedef enum pc_solver_flag {
      * terminal reforge outcomes are grouped, zero-progress outcomes enter a
      * destructive-reforge-only retry basin, and partial progress remains
      * exact. The default unrestricted solver is unchanged. */
-    PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES = 1u << 3
+    PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES = 1u << 3,
+    /* Remove ordinary economic abandonment from the Bellman action scope.
+     * Exact mechanic-owned replacement recovery remains available. */
+    PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART = 1u << 4
 } pc_solver_flag;
 
 typedef enum pc_solve_policy_status {

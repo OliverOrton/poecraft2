@@ -113,6 +113,275 @@ std::uint32_t SolveWork::Impl::planner_goal_reach_mask(
         return mask;
     }
 
+std::uint32_t SolveWork::Impl::planner_goal_may_survive_mask(
+        const std::uint32_t state_id,
+        const std::uint32_t operator_index) {
+        if (state_id >= calc.state_count()) {
+            return calc.layout().slots.empty()
+                ? 0u
+                : (1u << calc.layout().slots.size()) - 1u;
+        }
+        if (operator_index >= calc.operators().size()) {
+            return satisfied_goal_mask_for_state(state_id);
+        }
+        if (operator_index >= operator_goal_survival_paths.size()) {
+            operator_goal_survival_paths.resize(operator_index + 1);
+            operator_goal_survival_computed.resize(operator_index + 1, 0);
+        }
+        OperatorGoalSurvivalPaths& cached =
+            operator_goal_survival_paths[operator_index];
+        if (!operator_goal_survival_computed[operator_index]) {
+            const PlannerOperatorRuntimeSemantics semantics =
+                planner_operator_runtime_semantics(
+                    calc.operators().at(operator_index),
+                    calc.registry());
+            const std::size_t path_count = semantics.execution_paths.empty()
+                ? 1
+                : semantics.execution_paths.size();
+            cached.paths.reserve(path_count);
+            owned_goal_survival_nested_bytes +=
+                cached.paths.capacity() * sizeof(GoalSurvivalPath);
+            const auto cache_path = [&](const auto& runtime_path) {
+                GoalSurvivalPath path;
+                path.actions.reserve(runtime_path.size());
+                for (const PlannerOperatorRuntimeStep& step : runtime_path) {
+                    path.actions.push_back(step.action);
+                }
+                owned_goal_survival_nested_bytes +=
+                    path.actions.capacity() * sizeof(std::uint32_t);
+                cached.paths.push_back(std::move(path));
+            };
+            if (semantics.execution_paths.empty()) {
+                cache_path(semantics.ordered_program);
+            } else {
+                for (const auto& runtime_path : semantics.execution_paths) {
+                    cache_path(runtime_path);
+                }
+            }
+            operator_goal_survival_computed[operator_index] = 1;
+        }
+
+        const AbstractState& source = calc.state(state_id);
+        const std::uint32_t satisfied =
+            satisfied_goal_mask_for_state(state_id);
+        if (satisfied == 0 || cached.paths.empty()) return satisfied;
+
+        const auto item_traits = [](const AbstractState& item) {
+            std::uint8_t traits =
+                item.searing_exarch_tier != item.eater_of_worlds_tier
+                    ? kRefinementItemHasEldritchDominance
+                    : 0;
+            const bool prefix_locked =
+                (item.flags & kFlagPrefixesLocked) != 0;
+            const bool suffix_locked =
+                (item.flags & kFlagSuffixesLocked) != 0;
+            if (prefix_locked != suffix_locked) {
+                traits |= kRefinementItemExactlyOneSideLocked;
+            }
+            return traits;
+        };
+        const auto affix_traits = [&](const std::int8_t side,
+                                      const bool crafted,
+                                      const bool fractured,
+                                      const bool veiled) {
+            std::uint16_t traits = side == PC_SIDE_PREFIX
+                ? kRefinementAffixPrefix
+                : kRefinementAffixSuffix;
+            if (crafted) traits |= kRefinementAffixCrafted;
+            if (fractured) traits |= kRefinementAffixFractured;
+            if (veiled) traits |= kRefinementAffixVeiled;
+            if ((side == PC_SIDE_PREFIX &&
+                 (source.flags & kFlagPrefixesLocked) != 0) ||
+                (side == PC_SIDE_SUFFIX &&
+                 (source.flags & kFlagSuffixesLocked) != 0)) {
+                traits |= kRefinementAffixOnLockedSide;
+            }
+            if (source.searing_exarch_tier !=
+                source.eater_of_worlds_tier) {
+                const std::int8_t dominant =
+                    source.searing_exarch_tier >
+                            source.eater_of_worlds_tier
+                        ? PC_SIDE_PREFIX
+                        : PC_SIDE_SUFFIX;
+                traits |= side == dominant
+                    ? kRefinementAffixOnEldritchDominantSide
+                    : kRefinementAffixOnEldritchNonDominantSide;
+            }
+            return traits;
+        };
+        const auto mod_tags = [&](const std::uint32_t mod) {
+            std::vector<std::uint32_t> tags;
+            if (mod + 1 >= session.class_offsets.size()) return tags;
+            tags.reserve(
+                session.class_offsets[mod + 1] -
+                session.class_offsets[mod]);
+            for (std::uint32_t offset = session.class_offsets[mod];
+                 offset < session.class_offsets[mod + 1]; ++offset) {
+                tags.push_back(session.class_tag_ids.at(offset));
+            }
+            std::sort(tags.begin(), tags.end());
+            tags.erase(std::unique(tags.begin(), tags.end()), tags.end());
+            return tags;
+        };
+        struct TraitVariant {
+            std::uint16_t affix = 0;
+            std::uint8_t item = 0;
+            bool operator==(const TraitVariant&) const = default;
+        };
+        const auto variant_less = [](const TraitVariant& left,
+                                     const TraitVariant& right) {
+            return std::tie(left.affix, left.item) <
+                   std::tie(right.affix, right.item);
+        };
+        constexpr std::uint16_t dynamic_affix_traits =
+            kRefinementAffixOnLockedSide |
+            kRefinementAffixOnEldritchDominantSide |
+            kRefinementAffixOnEldritchNonDominantSide;
+
+        std::uint32_t survivors = 0;
+        for (std::uint32_t slot = 0;
+             slot < calc.layout().slots.size(); ++slot) {
+            const std::uint32_t bit = 1u << slot;
+            if ((satisfied & bit) == 0) continue;
+            const ResolvedGoalSlot& goal_slot =
+                calc.layout().slots.at(slot);
+            const std::uint32_t token =
+                source.goal_member_class_tokens[slot];
+            const std::vector<std::uint64_t>* possible_members =
+                &goal_slot.satisfying_mask;
+            if (token != 0 && token <= goal_slot.member_classes.size()) {
+                possible_members =
+                    &goal_slot.member_classes[token - 1].member_mask;
+            }
+            bool saw_possible_member = false;
+            bool slot_survives = false;
+            if (possible_members->size() < session.words ||
+                goal_slot.satisfying_mask.size() < session.words) {
+                survivors |= bit;
+                continue;
+            }
+            for (std::size_t word = 0;
+                 word < session.words && !slot_survives; ++word) {
+                std::uint64_t members =
+                    possible_members->at(word) &
+                    goal_slot.satisfying_mask.at(word);
+                while (members != 0 && !slot_survives) {
+                    const std::uint32_t offset =
+                        static_cast<std::uint32_t>(std::countr_zero(members));
+                    const std::uint32_t mod =
+                        static_cast<std::uint32_t>(word * 64 + offset);
+                    members &= members - 1;
+                    if (mod >= session.mod_count) continue;
+                    const std::int8_t side = session.gen_type.at(mod);
+                    if (side != PC_SIDE_PREFIX && side != PC_SIDE_SUFFIX) {
+                        continue;
+                    }
+                    saw_possible_member = true;
+                    const std::vector<std::uint32_t> tags = mod_tags(mod);
+                    const bool crafted =
+                        (source.crafted_goal_mask & bit) != 0;
+                    const bool fractured =
+                        (source.fractured_goal_mask & bit) != 0;
+                    const bool veiled = source.veiled_side == side &&
+                        modifier_is_veiled_template(session, mod);
+                    const TraitVariant initial{
+                        affix_traits(side, crafted, fractured, veiled),
+                        item_traits(source)};
+                    for (const GoalSurvivalPath& path : cached.paths) {
+                        std::vector<TraitVariant> variants{initial};
+                        for (const std::uint32_t action : path.actions) {
+                            if (variants.empty()) break;
+                            if (action == kNoId) continue;
+                            if (action >= calc.registry().actions.size()) {
+                                /* Unknown runtime semantics cannot justify
+                                 * removing a source slot from an optimistic
+                                 * set. */
+                                slot_survives = true;
+                                break;
+                            }
+                            const ActionRefinementContract& contract =
+                                calc.registry().actions.at(action).refinement;
+                            if (!contract.complete()) {
+                                slot_survives = true;
+                                break;
+                            }
+                            if (contract.resets_to_fresh_item) {
+                                variants.clear();
+                                break;
+                            }
+                            std::vector<TraitVariant> next;
+                            for (const TraitVariant& variant : variants) {
+                                for (const RefinementAffixFlow& flow :
+                                     contract.affix_flows) {
+                                    if (!flow.preserves_modifier_classification ||
+                                        !refinement_selector_matches(
+                                            flow.source_selector,
+                                            variant.affix,
+                                            variant.item,
+                                            tags)) {
+                                        continue;
+                                    }
+                                    const std::uint16_t transformed =
+                                        static_cast<std::uint16_t>(
+                                            (variant.affix |
+                                             flow.set_affix_traits) &
+                                            ~flow.cleared_affix_traits);
+                                    const std::uint16_t stable =
+                                        transformed & ~dynamic_affix_traits;
+                                    /* Lock and Eldritch dominance can be
+                                     * changed by an earlier program step.
+                                     * Enumerating the complete small trait
+                                     * domain is an existential
+                                     * over-approximation: it may keep a slot,
+                                     * but can never erase a real survivor. */
+                                    for (std::uint8_t locked = 0;
+                                         locked < 2; ++locked) {
+                                        for (std::uint8_t dominance = 0;
+                                             dominance < 3; ++dominance) {
+                                            std::uint16_t dynamic = locked
+                                                ? kRefinementAffixOnLockedSide
+                                                : 0;
+                                            if (dominance == 1) {
+                                                dynamic |=
+                                                    kRefinementAffixOnEldritchDominantSide;
+                                            } else if (dominance == 2) {
+                                                dynamic |=
+                                                    kRefinementAffixOnEldritchNonDominantSide;
+                                            }
+                                            for (std::uint8_t traits = 0;
+                                                 traits <=
+                                                     kAllRefinementItemTraits;
+                                                 ++traits) {
+                                                next.push_back({
+                                                    static_cast<std::uint16_t>(
+                                                        stable | dynamic),
+                                                    traits});
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            std::sort(
+                                next.begin(), next.end(), variant_less);
+                            next.erase(
+                                std::unique(next.begin(), next.end()),
+                                next.end());
+                            variants = std::move(next);
+                        }
+                        if (slot_survives || !variants.empty()) {
+                            slot_survives = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            /* A coarse state that cannot enumerate its representative member
+             * is uncertainty, not proof of destruction. */
+            if (!saw_possible_member || slot_survives) survivors |= bit;
+        }
+        return survivors;
+    }
+
 void SolveWork::Impl::prepare_goal_cover_cost() {
         if (goal_cover_cost_ready) return;
         goal_cover_cost_ready = true;
@@ -368,6 +637,10 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                 for (const std::uint32_t action : relaxation_actions) {
                     const ActionDescriptor& descriptor =
                         calc.registry().actions.at(action);
+                    if (descriptor.synthetic &&
+                        !options.allow_economic_restart) {
+                        continue;
+                    }
                     const double cost = priced_action_cost(descriptor);
                     if (!std::isfinite(cost) || cost < 0.0) continue;
                     const std::uint32_t missing_reach =
@@ -737,6 +1010,10 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                             for (const std::uint32_t action : relaxation_actions) {
                         const ActionDescriptor& descriptor =
                             calc.registry().actions.at(action);
+                        if (descriptor.synthetic &&
+                            !options.allow_economic_restart) {
+                            continue;
+                        }
                         if ((descriptor.legality.rarity_mask &
                              (1u << rarity)) == 0) {
                             continue;
@@ -1418,6 +1695,12 @@ std::uint32_t SolveWork::Impl::satisfied_goal_mask_for_state(
         return mask;
     }
 
+bool SolveWork::Impl::restart_row_allowed(const std::uint32_t state) const {
+        return options.allow_economic_restart &&
+               restart_operator_index != kNoId &&
+               state < calc.state_count();
+    }
+
 double SolveWork::Impl::optimistic_completion_cost(
         const std::uint32_t satisfied_mask,
         const bool clean_carrier ,
@@ -1482,10 +1765,20 @@ double SolveWork::Impl::optimistic_completion_cost_for_state(
         const std::uint32_t state) {
         if (state >= calc.state_count()) return 0.0;
         const AbstractState& carrier = calc.state(state);
-        double lower = optimistic_completion_cost(
-            satisfied_goal_mask_for_state(state),
+        const std::uint32_t satisfied =
+            satisfied_goal_mask_for_state(state);
+        const double universal =
+            optimistic_completion_cost(satisfied);
+        double lower = std::max(
+            universal,
+            optimistic_completion_cost(
+            satisfied,
             clean_goal_cover_eligible(state), carrier.rarity,
-            carrier.prefix_count, carrier.suffix_count);
+            carrier.prefix_count, carrier.suffix_count));
+        /* The universal goal cover is independently admissible for every
+         * carrier shape. A clean/strict specialization may strengthen it but
+         * must never replace it with a weaker value; exact successor Bellman
+         * checks rely on that common lower component. */
         /* The strict clean pattern database evaluates registry primitives,
          * not carrier-local automatic option rows. Keep it out of the
          * Eldritch maximum until that stricter abstraction has the same
@@ -1533,7 +1826,8 @@ void SolveWork::Impl::prepare_strict_clean_goal_cover() {
             const bool goal_bench = type == ActionType::Bench &&
                 (descriptor.sets_flags & kProtectionFlags) == 0 &&
                 action_goal_reach_mask(action) != 0;
-            return descriptor.synthetic ||
+            return (descriptor.synthetic &&
+                    options.allow_economic_restart) ||
                    destructive || type == ActionType::Augment ||
                    type == ActionType::Regal ||
                    type == ActionType::Exalt ||
@@ -2267,7 +2561,7 @@ double SolveWork::Impl::optimistic_operator_lower(
         if (!std::isfinite(immediate) || immediate < 0.0) {
             return -kInfinity;
         }
-        if (operator_index == restart_operator_index) {
+        if (operator_index == replacement_recovery_operator_index) {
             /* Restart has one exact successor: a fresh Normal carrier with
              * no affixes, influences, or Eldritch implicits. Do not credit it
              * with goal slots from the carrier it deterministically discards.
@@ -2301,10 +2595,13 @@ double SolveWork::Impl::optimistic_operator_lower(
             return immediate + std::max(
                 universal_fresh, shaped_fresh);
         }
-        /* Grant the operator every slot any constituent could possibly
-         * produce before pricing the remaining optimistic cover. */
+        /* Carry only source slots with at least one identity-preserving
+         * runtime path, then grant every slot any constituent could possibly
+         * produce. The union is a superset of every exact successor's goal
+         * mask. Since the cover decreases monotonically as slots are added,
+         * its value remains an admissible continuation lower bound. */
         const std::uint32_t optimistic_satisfied =
-            satisfied_goal_mask_for_state(state) |
+            planner_goal_may_survive_mask(state, operator_index) |
             planner_goal_reach_mask(operator_index);
         const double continuation =
             optimistic_completion_cost(optimistic_satisfied);

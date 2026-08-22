@@ -13,7 +13,7 @@
   },
   "comparison_profile": {
     "id": "solver-goal-realignment-five-mod-v1",
-    "product_scope": "calculator_goal_relevant_with_zero_progress_gated_reforges",
+    "product_scope": "calculator_goal_relevant_with_zero_progress_gated_reforges_and_no_economic_restart",
     "exact_required": false,
     "maximum_wall_seconds": 600,
     "compiled_exact_evaluation_required": true,

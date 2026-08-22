@@ -2444,6 +2444,10 @@ CaseResult run_case(
             solve_options.solver_flags |=
                 PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES;
         }
+        if (!optional_bool(caps, "allow_economic_restart", true)) {
+            solve_options.solver_flags |=
+                PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART;
+        }
         if (goal_progress_gated_reforges) {
             solve_options.solver_flags |=
                 PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES;

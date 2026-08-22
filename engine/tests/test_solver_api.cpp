@@ -889,7 +889,8 @@ void run_public_product_eldritch_gate(const char* artifact_dir) {
     solve_options.max_diagnostic_samples = 64;
     solve_options.max_telemetry_json_bytes = 64ull * 1024ull * 1024ull;
     solve_options.solver_flags =
-        PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES;
+        PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES |
+        PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART;
     pc_solve_summary summary{};
     PC_CHECK(pc_solver_solve(
                  solver, &start, economy, &solve_options, &summary,
@@ -906,6 +907,10 @@ void run_public_product_eldritch_gate(const char* artifact_dir) {
              std::string::npos);
     PC_CHECK(solved_telemetry.find(
                  "\"zero_off_policy\":true") != std::string::npos);
+    PC_CHECK(solved_telemetry.find(
+                 "\"start_scope\":\"zero_progress_reroll_and_no_"
+                 "economic_restart_restrictions\"") !=
+             std::string::npos);
 
     std::size_t strategy_length = 0;
     PC_CHECK(pc_solver_compile_strategy(
@@ -917,6 +922,10 @@ void run_public_product_eldritch_gate(const char* artifact_dir) {
                  &strategy_length, &error) == PC_RESULT_OK);
     PC_CHECK(strategy_json.find("eldritch_annul") != std::string::npos ||
              strategy_json.find("eldritch_chaos") != std::string::npos);
+    PC_CHECK(strategy_json.find(
+                 "\"solver_policy_scope\":\"zero_progress_reroll_and_"
+                 "no_economic_restart_restrictions\"") !=
+             std::string::npos);
     pc_strategy_handle strategy = nullptr;
     PC_CHECK(pc_strategy_compile_json(
                  session, strategy_json.c_str(), strategy_length,

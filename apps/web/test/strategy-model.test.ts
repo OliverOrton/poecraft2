@@ -67,6 +67,12 @@ import type { Catalog } from "../src/app/engine-protocol";
         "zero_progress_reroll_policy_restriction",
     );
     assert.equal(isStrategyDocument(reopened), true);
+    reopened.solver_policy_scope =
+        "zero_progress_reroll_and_no_economic_restart_restrictions";
+    assert.equal(isStrategyDocument(reopened), true);
+    reopened.solver_policy_scope =
+        "no_economic_restart_policy_restriction";
+    assert.equal(isStrategyDocument(reopened), true);
     assert.equal(
         isStrategyDocument({ ...reopened, solver_policy_scope: "invalid" }),
         false,

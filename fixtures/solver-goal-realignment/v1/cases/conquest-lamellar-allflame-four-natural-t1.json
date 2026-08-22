@@ -94,6 +94,7 @@
     "worker_step_ms": 20000,
     "cancel_ack_ms": 250,
     "goal_progress_gated_reforges": true,
+    "allow_economic_restart": false,
     "high_impact_executable_uppers": true,
     "full_evidence": true
   },

@@ -69,7 +69,9 @@ std::string compile_policy_strategy_json(
         route_default_mode ==
                 PolicyRouteDefaultMode::CertificationFailClosed
             ? "certification_fail_closed"
-            : "product_safe_restart";
+            : (result.options.allow_economic_restart
+                   ? "product_safe_restart"
+                   : "product_fail_closed_no_economic_restart");
     if (telemetry != nullptr) {
         telemetry->policy_route_default_mode =
             route_default_mode_name;
@@ -450,6 +452,11 @@ std::string compile_policy_strategy_json(
                       satisfied));
         const std::string goal_condition = all_of(goal_parts);
 
+        const std::string solver_scope =
+            result.options.allow_economic_restart
+                ? "zero_progress_reroll_policy_restriction"
+                : "zero_progress_reroll_and_no_economic_restart_"
+                  "restrictions";
         std::string json =
             "{\"version\":\"v1\",\"name\":\"" +
             json_escape(name) +
@@ -460,9 +467,11 @@ std::string compile_policy_strategy_json(
                  : "Bounded executable fixed destructive-renewal policy "
                    "exact within the zero-progress-reroll restriction; "
                    "not a global optimum") +
+            (result.options.allow_economic_restart
+                 ? ""
+                 : "; ordinary fresh-base abandonment is excluded") +
             "\","
-            "\"solver_policy_scope\":\""
-            "zero_progress_reroll_policy_restriction\","
+            "\"solver_policy_scope\":\"" + solver_scope + "\","
             "\"base_state\":{\"base_key\":\"" +
             json_escape(
                 data.string_at(
@@ -1884,7 +1893,8 @@ std::string compile_policy_strategy_json(
                 continue;
             }
             const std::uint32_t leader = policy_region_by_state.at(state);
-            if (leader != restart_region_leader) {
+            if (leader != restart_region_leader ||
+                !result.options.allow_economic_restart) {
                 policy_route_entries.push_back({state, leader});
             }
         }
@@ -1895,7 +1905,7 @@ std::string compile_policy_strategy_json(
         result.policy_status == SolvePolicyStatus::BoundedFeasible ||
         result.policy_status == SolvePolicyStatus::BoundedNearOptimal;
     std::uint32_t bounded_default_restart_action = kNoId;
-    if (bounded_policy && restart_region_leader == kNoId) {
+    if (bounded_policy && result.options.allow_economic_restart) {
         for (std::uint32_t action = 0;
              action < calc.registry().actions.size(); ++action) {
             if (calc.registry().actions[action].synthetic) {
@@ -1907,7 +1917,7 @@ std::string compile_policy_strategy_json(
             gap("bounded policy has no explicit safe Restart default");
         }
     }
-    std::uint32_t product_fracture_restart_action = kNoId;
+    std::uint32_t product_replacement_restart_action = kNoId;
     const bool selected_product_fracture = std::any_of(
         emitted_states.begin(), emitted_states.end(),
         [&](const std::uint32_t state) {
@@ -1918,34 +1928,40 @@ std::string compile_policy_strategy_json(
                    planner.automatic_kind ==
                        AutomaticCandidateKind::Fracture;
         });
-    if (selected_product_fracture) {
+    const bool selected_product_replacement = selected_product_fracture;
+    if (selected_product_replacement) {
         for (std::uint32_t action = 0;
              action < calc.registry().actions.size(); ++action) {
             if (calc.registry().actions[action].synthetic) {
-                product_fracture_restart_action = action;
+                product_replacement_restart_action = action;
                 break;
             }
         }
-        if (product_fracture_restart_action == kNoId) {
-            gap("product-local Fracture route has no Restart operation");
+        if (product_replacement_restart_action == kNoId) {
+            gap("product replacement route has no Restart operation");
         }
     }
-    const bool dedicated_product_fracture_restart =
-        selected_product_fracture && restart_region_leader == kNoId &&
+    const bool dedicated_product_replacement_restart =
+        selected_product_replacement && restart_region_leader == kNoId &&
         bounded_default_restart_action == kNoId;
-    const std::string product_fracture_restart_node =
+    const std::string dedicated_product_replacement_restart_node =
+        "product_fracture_restart";
+    const std::string product_replacement_restart_node =
         restart_region_leader != kNoId
             ? state_node(restart_region_leader)
             : bounded_default_restart_action != kNoId
                   ? "bounded_default_restart"
-                  : "product_fracture_restart";
+                  : dedicated_product_replacement_restart_node;
     const std::string policy_route_default_node =
         route_default_mode ==
                 PolicyRouteDefaultMode::CertificationFailClosed
             ? "offpolicy"
-        : strict_policy_route && restart_region_leader != kNoId
+        : result.options.allow_economic_restart && strict_policy_route &&
+              restart_region_leader != kNoId
             ? state_node(restart_region_leader)
-            : bounded_policy ? "bounded_default_restart" : "offpolicy";
+            : bounded_policy && bounded_default_restart_action != kNoId
+                ? "bounded_default_restart"
+                : "offpolicy";
     std::vector<std::map<std::uint32_t, ConditionExpr>>
         feature_condition_cache(feature_index.width);
     const auto feature_condition =
@@ -2511,7 +2527,7 @@ std::string compile_policy_strategy_json(
         static_cast<std::uint32_t>(
             refined_parent_router.size()) +
         (bounded_default_restart_action != kNoId ? 1u : 0u) +
-        (dedicated_product_fracture_restart ? 1u : 0u);
+        (dedicated_product_replacement_restart ? 1u : 0u);
     const auto check_node_cap = [&]() {
         if (node_count > result.options.max_compiled_nodes) {
             if (telemetry != nullptr) telemetry->cap_hit = "max_compiled_nodes";
@@ -2537,11 +2553,31 @@ std::string compile_policy_strategy_json(
             "\",\"description\":\"Exact within the zero-progress-reroll "
             "policy restriction; excluded zero-progress salvage routes are "
             "not globally optimized";
+        if (!result.options.allow_economic_restart) {
+            json +=
+                "; ordinary fresh-base abandonment is also excluded";
+        }
+    } else if (!result.options.allow_economic_restart) {
+        json +=
+            "\",\"description\":\"Exact within the current-carrier policy "
+            "restriction; ordinary fresh-base abandonment is excluded";
     }
-    json += result.options.goal_progress_gated_reforges
-                ? "\",\"solver_policy_scope\":\""
-                  "zero_progress_reroll_policy_restriction"
-                : "\",\"solver_policy_scope\":\"unrestricted";
+    if (result.options.goal_progress_gated_reforges &&
+        !result.options.allow_economic_restart) {
+        json +=
+            "\",\"solver_policy_scope\":\""
+            "zero_progress_reroll_and_no_economic_restart_restrictions";
+    } else if (result.options.goal_progress_gated_reforges) {
+        json +=
+            "\",\"solver_policy_scope\":\""
+            "zero_progress_reroll_policy_restriction";
+    } else if (!result.options.allow_economic_restart) {
+        json +=
+            "\",\"solver_policy_scope\":\""
+            "no_economic_restart_policy_restriction";
+    } else {
+        json += "\",\"solver_policy_scope\":\"unrestricted";
+    }
     json += "\",\"base_state\":{\"base_key\":\"";
     json += json_escape(
         data.string_at(data.base_metadata_path_sid[session.base_index]));
@@ -2604,12 +2640,13 @@ std::string compile_policy_strategy_json(
             calc.registry().actions.at(bounded_default_restart_action));
         json += "}";
     }
-    if (dedicated_product_fracture_restart) {
-        json +=
-            ",{\"id\":\"product_fracture_restart\",\"kind\":\"operation\",";
+    if (dedicated_product_replacement_restart) {
+        json += ",{\"id\":\"" +
+                dedicated_product_replacement_restart_node +
+                "\",\"kind\":\"operation\",";
         json += "\"operation\":" + operation_json(
             session,
-            calc.registry().actions.at(product_fracture_restart_action));
+            calc.registry().actions.at(product_replacement_restart_action));
         json += "}";
     }
     for (const PolicyRouteNode& route : policy_route_nodes) {
@@ -3077,9 +3114,9 @@ std::string compile_policy_strategy_json(
     if (bounded_default_restart_action != kNoId) {
         edge("bounded_default_restart", root_router_id, 0, "", true);
     }
-    if (dedicated_product_fracture_restart) {
+    if (dedicated_product_replacement_restart) {
         edge(
-            "product_fracture_restart", root_router_id,
+            dedicated_product_replacement_restart_node, root_router_id,
             0, "", true, "retry");
     }
     for (std::uint32_t state_id : emitted_states) {
@@ -3286,7 +3323,7 @@ std::string compile_policy_strategy_json(
                 route, root_router_id, 0,
                 product_fracture_hit_condition(planner), false);
             edge(
-                route, product_fracture_restart_node,
+                route, product_replacement_restart_node,
                 1, "", true, "retry");
             continue;
         }
@@ -3412,7 +3449,7 @@ std::string compile_policy_strategy_json(
             emitted_states.size());
         telemetry->infrastructure_nodes =
             3 + (bounded_default_restart_action != kNoId ? 1u : 0u) +
-            (dedicated_product_fracture_restart ? 1u : 0u);
+            (dedicated_product_replacement_restart ? 1u : 0u);
         telemetry->policy_route_nodes =
             1 + static_cast<std::uint32_t>(policy_route_nodes.size()) +
             static_cast<std::uint32_t>(refined_parent_router.size());

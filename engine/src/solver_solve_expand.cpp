@@ -430,6 +430,7 @@ bool SolveTransitionCache::compatible(
             kernel_reuse != options.kernel_reuse ||
             goal_progress_gated_reforges !=
                 options.goal_progress_gated_reforges ||
+            allow_economic_restart != options.allow_economic_restart ||
             exact_quotient == options.strict_states ||
             operator_indices.size() != priced.size()) {
             return false;
@@ -663,7 +664,7 @@ bool SolveWork::Impl::prepare_state_expansion(
             retain_certified_upper(
                 incremental_certified_upper_values[state]);
         }
-        if (restart_operator_index != kNoId &&
+        if (restart_row_allowed(state) &&
             restart_state < incremental_certified_upper_values.size() &&
             std::isfinite(restart_cost)) {
             /* The closed restricted policy remains executable after later
@@ -696,7 +697,7 @@ bool SolveWork::Impl::prepare_state_expansion(
                 incumbent.policy_reachable[state]) {
                 retain_certified_upper(incumbent.values[state]);
             }
-            if (restart_operator_index != kNoId &&
+            if (restart_row_allowed(state) &&
                 restart_state < incumbent.values.size() &&
                 restart_state < incumbent.policy_reachable.size() &&
                 incumbent.policy_reachable[restart_state] &&
@@ -1197,7 +1198,8 @@ auto SolveWork::Impl::preservation_decision(
             return decision;
         }
 
-        if (restart_operator_index == kNoId || restart_state == kNoId ||
+        if (!restart_row_allowed(row.owner_state) ||
+            restart_state == kNoId ||
             restart_state >= result.values.size() ||
             !std::isfinite(result.values[restart_state]) ||
             result.values[restart_state] >= kValueCeiling ||
@@ -3110,7 +3112,7 @@ bool SolveWork::Impl::expand_one_unit() {
                     nullptr;
                 std::optional<ProductFractureKernel> product_fracture;
                 std::vector<std::pair<std::string, double>>
-                    product_fracture_resources;
+                    product_recovery_resources;
                 std::optional<SolveTransitionCache::AutomaticCandidateRecord>
                     automatic_record;
                 const AutomaticTelemetryKind telemetry_kind =
@@ -3132,7 +3134,18 @@ bool SolveWork::Impl::expand_one_unit() {
                         planner.relevant_goal_mask;
                 }
                 bool append = true;
-                if (planner.kind == PlannerOperatorKind::FixedOption) {
+                if (!options.allow_economic_restart &&
+                    planner.kind == PlannerOperatorKind::Primitive &&
+                    calc.registry().actions.at(
+                        planner.primitive_action).synthetic) {
+                    append = false;
+                }
+                if (!append) {
+                    /* Economic Restart is absent. Mechanic-owned replacement
+                     * recovery is composed by its exact parent kernel (for
+                     * example Product Fracture miss), never as an ordinary
+                     * Bellman row on the carrier. */
+                } else if (planner.kind == PlannerOperatorKind::FixedOption) {
                     const OptionKernel& kernel =
                         calc.option_kernel(state, priced.index);
                     if (automatic_record.has_value()) {
@@ -3255,16 +3268,16 @@ bool SolveWork::Impl::expand_one_unit() {
                                 "no_unfractured_satisfied_goal_carrier";
                             automatic_record->eligible = false;
                         } else {
-                            product_fracture_resources =
+                            product_recovery_resources =
                                 planner.resource_quantities;
                             const auto base = std::find_if(
-                                product_fracture_resources.begin(),
-                                product_fracture_resources.end(),
+                                product_recovery_resources.begin(),
+                                product_recovery_resources.end(),
                                 [](const auto& resource) {
                                     return resource.first == "base";
                                 });
-                            if (base == product_fracture_resources.end()) {
-                                product_fracture_resources.push_back(
+                            if (base == product_recovery_resources.end()) {
+                                product_recovery_resources.push_back(
                                     {"base",
                                      product_fracture->miss_probability});
                             } else {
@@ -3272,7 +3285,7 @@ bool SolveWork::Impl::expand_one_unit() {
                                     product_fracture->miss_probability;
                             }
                             pending.resources =
-                                &product_fracture_resources;
+                                &product_recovery_resources;
                             pending.transitions =
                                 &product_fracture->exits;
 
@@ -3581,9 +3594,10 @@ bool SolveWork::Impl::expand_one_unit() {
                             witness.restart_resource_quantity =
                                 product_fracture->miss_probability;
                             witness.fracture_action_cost = priced.cost;
-                            witness.restart_action_cost = restart_cost;
+                            witness.restart_action_cost =
+                                replacement_recovery_cost;
                             witness.restart_operator_index =
-                                restart_operator_index;
+                                replacement_recovery_operator_index;
                             const auto base_price = prices.find("base");
                             witness.base_unit_cost =
                                 base_price == prices.end()

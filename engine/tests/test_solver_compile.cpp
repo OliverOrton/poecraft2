@@ -1258,6 +1258,40 @@ void run_synthetic_gate() {
             product_telemetry.policy_route_default_edges);
         PC_CHECK(normalized_product == certification);
         PC_CHECK(product != certification);
+
+        SolveResult current_carrier_only = bounded;
+        current_carrier_only.options.allow_economic_restart = false;
+        PolicyCompilationTelemetry restricted_product_telemetry;
+        const std::string restricted_product =
+            compile_policy_strategy_json(
+                calc, current_carrier_only, "bounded current carrier",
+                &restricted_product_telemetry);
+        PolicyCompilationTelemetry restricted_certification_telemetry;
+        const std::string restricted_certification =
+            compile_policy_strategy_json(
+                calc, current_carrier_only, "bounded current carrier",
+                &restricted_certification_telemetry,
+                std::numeric_limits<std::uint64_t>::max(), nullptr,
+                std::numeric_limits<std::uint64_t>::max(),
+                PolicyRouteDefaultMode::CertificationFailClosed);
+        PC_CHECK(
+            restricted_product_telemetry.policy_route_default_mode ==
+            "product_fail_closed_no_economic_restart");
+        PC_CHECK(
+            restricted_product_telemetry
+                .policy_route_offpolicy_default_edges ==
+            restricted_product_telemetry.policy_route_default_edges);
+        PC_CHECK(
+            restricted_product_telemetry
+                .policy_route_restart_default_edges == 0);
+        PC_CHECK(
+            restricted_product.find("bounded_default_restart") ==
+            std::string::npos);
+        PC_CHECK(restricted_product == restricted_certification);
+        PC_CHECK(
+            restricted_product_telemetry.policy_route_default_edges ==
+            restricted_certification_telemetry
+                .policy_route_default_edges);
     }
 
     /* Flagged states compile to exact item-flag guards. A corrupted start

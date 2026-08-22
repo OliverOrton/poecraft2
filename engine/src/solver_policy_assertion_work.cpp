@@ -15,8 +15,13 @@ bool policy_graphs_differ_only_at_bounded_defaults(
         const PolicyCompilationTelemetry& product_compilation,
         const std::string& certification,
         const PolicyCompilationTelemetry& certification_compilation) {
-    if (product_compilation.policy_route_default_mode !=
-            "product_safe_restart" ||
+    const bool product_restart_default =
+        product_compilation.policy_route_default_mode ==
+            "product_safe_restart";
+    const bool product_fail_closed =
+        product_compilation.policy_route_default_mode ==
+            "product_fail_closed_no_economic_restart";
+    if ((!product_restart_default && !product_fail_closed) ||
         certification_compilation.policy_route_default_mode !=
             "certification_fail_closed" ||
         product_compilation.policy_route_default_edges !=
@@ -25,6 +30,11 @@ bool policy_graphs_differ_only_at_bounded_defaults(
             certification_compilation.policy_route_default_edges ||
         product_compilation.nodes != certification_compilation.nodes ||
         product_compilation.edges != certification_compilation.edges) {
+        return false;
+    }
+    if (product_fail_closed &&
+         product_compilation.policy_route_offpolicy_default_edges !=
+             product_compilation.policy_route_default_edges) {
         return false;
     }
 

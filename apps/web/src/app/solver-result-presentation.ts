@@ -265,10 +265,12 @@ export function shouldCompileSolvePolicy(summary: SolveSummary): boolean {
 export function calculatorSolveOptions(
     absoluteGap: number,
     relativeGapPercent: number,
+    allowEconomicRestart = false,
 ): SolveOptions {
     const options: SolveOptions = {
         goal_progress_gated_reforges: true,
         high_impact_executable_uppers: true,
+        allow_economic_restart: allowEconomicRestart,
     };
     if (Number.isFinite(absoluteGap) && absoluteGap > 0) {
         options.max_absolute_optimality_gap = absoluteGap;

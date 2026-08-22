@@ -52,6 +52,10 @@ struct SolveOptions {
     bool strict_states = false;
     bool kernel_reuse = true;
     bool goal_progress_gated_reforges = false;
+    /* Ordinary Bellman authority to abandon the current carrier and buy a
+     * fresh base. Mechanic-owned replacement recovery (currently product
+     * Fracture miss handling) remains available when this is false. */
+    bool allow_economic_restart = true;
     /* Exact operator-major delayed-action scheduling. Calculator release-WASM
      * solves opt in; native callers retain the stable default unless they use
      * the historical diagnostic-bit bridge. */

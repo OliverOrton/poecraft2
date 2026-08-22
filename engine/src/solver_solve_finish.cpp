@@ -1093,6 +1093,7 @@ SolveWork::Impl::run_finalization() {
             result.policy_reachable.clear();
         }
         bool reachable_policy_complete = true;
+        std::string reachable_policy_failure;
         if (!finalization_capped && restore_output_incumbent) {
             result.diagnostics.policy_reachable_states = 0;
             for (std::uint32_t state = 0; state < state_count; ++state) {
@@ -1111,6 +1112,11 @@ SolveWork::Impl::run_finalization() {
                 if (!result.goal_states[state] &&
                     result.policy[state] == kNoId) {
                     reachable_policy_complete = false;
+                    if (reachable_policy_failure.empty()) {
+                        reachable_policy_failure =
+                            "restored_missing_operator:state=" +
+                            std::to_string(state);
+                    }
                 }
             }
         } else if (!finalization_capped &&
@@ -1126,6 +1132,60 @@ SolveWork::Impl::run_finalization() {
                 const std::uint32_t operator_index = result.policy[state];
                 if (operator_index == kNoId) {
                     reachable_policy_complete = false;
+                    if (reachable_policy_failure.empty()) {
+                        const AbstractState& missing = calc.state(state);
+                        std::uint32_t admitted_rows = 0;
+                        std::string admitted_actions;
+                        double admitted_q = kInfinity;
+                        for (const std::uint64_t row_index :
+                             state_row_indices(*transition_cache, state)) {
+                            if (transition_cache->rows.at(row_index).admitted) {
+                                ++admitted_rows;
+                                admitted_q = std::min(
+                                    admitted_q,
+                                    sparse_row_q_for_values(
+                                        row_index, result.values));
+                                if (row_index < priced_rows.size()) {
+                                    const std::uint32_t row_operator =
+                                        priced_rows[row_index].operator_index;
+                                    if (!admitted_actions.empty()) {
+                                        admitted_actions += ',';
+                                    }
+                                    admitted_actions +=
+                                        row_operator < calc.operators().size()
+                                            ? calc.operators()
+                                                  .at(row_operator).id
+                                            : std::to_string(row_operator);
+                                }
+                            }
+                        }
+                        reachable_policy_failure =
+                            "missing_operator:state=" +
+                            std::to_string(state) + ":influences=" +
+                            std::to_string(missing.influence_bits) +
+                            ":rarity=" +
+                            std::to_string(missing.rarity) +
+                            ":prefixes=" +
+                            std::to_string(missing.prefix_count) +
+                            ":suffixes=" +
+                            std::to_string(missing.suffix_count) +
+                            ":satisfied=" + std::to_string(
+                                satisfied_goal_mask_for_state(state)) +
+                            ":value=" + finite_json(result.values[state]) +
+                            ":q=" + finite_json(admitted_q) +
+                            ":restart_allowed=" +
+                            std::to_string(restart_row_allowed(state)) +
+                            ":admitted_rows=" +
+                            std::to_string(admitted_rows) +
+                            ":actions=" + admitted_actions +
+                            ":representative=" +
+                            std::to_string(
+                                result.behavioral_representative_by_state.empty()
+                                    ? state
+                                    : result
+                                          .behavioral_representative_by_state
+                                          .at(state));
+                    }
                     continue;
                 }
                 if (operator_index == restart_operator_index &&
@@ -1149,6 +1209,12 @@ SolveWork::Impl::run_finalization() {
                 }
                 if (selected == nullptr) {
                     reachable_policy_complete = false;
+                    if (reachable_policy_failure.empty()) {
+                        reachable_policy_failure =
+                            "missing_row:state=" + std::to_string(state) +
+                            ":operator=" +
+                            std::to_string(operator_index);
+                    }
                     continue;
                 }
                 for (std::uint32_t i = 0;
@@ -1248,6 +1314,10 @@ SolveWork::Impl::run_finalization() {
                 std::to_string(final_optimization_converged) +
                 ",reachable_policy=" +
                 std::to_string(reachable_policy_complete) +
+                ",reachable_failure=" +
+                (reachable_policy_failure.empty()
+                     ? std::string("none")
+                     : reachable_policy_failure) +
                 ",state_in_range=" +
                 std::to_string(result.start_state < state_count) +
                 ",finite_start=" + std::to_string(

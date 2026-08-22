@@ -755,6 +755,11 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
         bytes += operator_goal_reach_mask.capacity() * sizeof(std::uint32_t);
         bytes += operator_goal_reach_computed.capacity() *
                  sizeof(std::uint8_t);
+        bytes += operator_goal_survival_paths.capacity() *
+                 sizeof(OperatorGoalSurvivalPaths);
+        bytes += operator_goal_survival_computed.capacity() *
+                 sizeof(std::uint8_t);
+        bytes += owned_goal_survival_nested_bytes;
         bytes += goal_cover_cost.capacity() * sizeof(double);
         bytes += clean_goal_cover_cost.capacity() * sizeof(double);
         bytes += clean_goal_escape_cost.capacity() * sizeof(double);
@@ -943,6 +948,17 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
         bytes += operator_goal_reach_mask.capacity() * sizeof(std::uint32_t);
         bytes += operator_goal_reach_computed.capacity() *
                  sizeof(std::uint8_t);
+        bytes += operator_goal_survival_paths.capacity() *
+                 sizeof(OperatorGoalSurvivalPaths);
+        bytes += operator_goal_survival_computed.capacity() *
+                 sizeof(std::uint8_t);
+        for (const OperatorGoalSurvivalPaths& entry :
+             operator_goal_survival_paths) {
+            bytes += entry.paths.capacity() * sizeof(GoalSurvivalPath);
+            for (const GoalSurvivalPath& path : entry.paths) {
+                bytes += path.actions.capacity() * sizeof(std::uint32_t);
+            }
+        }
         bytes += goal_cover_cost.capacity() * sizeof(double);
         bytes += clean_goal_cover_cost.capacity() * sizeof(double);
         bytes += clean_goal_escape_cost.capacity() * sizeof(double);
@@ -4937,9 +4953,17 @@ std::string serialize_solver_telemetry(
         json += snapshot->abandoned ? "\"abandoned_before_completion\""
                                     : "\"solve_in_progress\"";
     } else if (result->converged) {
-        if (result->options.goal_progress_gated_reforges) {
+        if (result->options.goal_progress_gated_reforges &&
+            !result->options.allow_economic_restart) {
+            json +=
+                "\"exact_within_zero_progress_reroll_and_no_economic_"
+                "restart_restrictions\"";
+        } else if (result->options.goal_progress_gated_reforges) {
             json +=
                 "\"exact_within_zero_progress_reroll_restriction\"";
+        } else if (!result->options.allow_economic_restart) {
+            json +=
+                "\"exact_within_no_economic_restart_restriction\"";
         } else {
             json += qualified_action_subset
                         ? "\"exact_supported_priced_subset_within_tolerance\""
@@ -4957,8 +4981,15 @@ std::string serialize_solver_telemetry(
     json += ",\"start_scope\":";
     if (result == nullptr || !result->policy_available) {
         json += "null";
+    } else if (result->options.goal_progress_gated_reforges &&
+               !result->options.allow_economic_restart) {
+        json +=
+            "\"zero_progress_reroll_and_no_economic_restart_"
+            "restrictions\"";
     } else if (result->options.goal_progress_gated_reforges) {
         json += "\"zero_progress_reroll_policy_restriction\"";
+    } else if (!result->options.allow_economic_restart) {
+        json += "\"no_economic_restart_policy_restriction\"";
     } else if (!result->converged) {
         json += "\"executable_returned_policy\"";
     } else {

@@ -1893,6 +1893,19 @@ void run_alt_spam_tests() {
         PC_CHECK(result.converged);
         PC_CHECK(near(result.values[result.start_state], 10.0 + 1.0 / p));
         PC_CHECK(result.policy[result.start_state] == restart);
+
+        SolveOptions current_carrier_only;
+        current_carrier_only.allow_economic_restart = false;
+        const SolveResult restricted = solve(
+            calc, corrupted, prices, current_carrier_only);
+        PC_CHECK(!restricted.converged);
+        PC_CHECK(!restricted.policy_available);
+        PC_CHECK(
+            restricted.termination ==
+            SolveTermination::NoExecutablePolicy);
+        PC_CHECK(
+            restricted.diagnostics.solution_scope ==
+            "exact_within_no_economic_restart_restriction");
     }
 
     /* Price flip: expensive alterations make restart the optimal recovery
@@ -4638,6 +4651,7 @@ void run_primitive_destructive_renewal_upper_tests() {
     product_fracture_options.max_expanded_states = 512;
     product_fracture_options.max_discovered_states = 4096;
     product_fracture_options.state_certificate_control = false;
+    product_fracture_options.allow_economic_restart = false;
     const SolveResult product_fracture_result = solve(
         product_fracture_calc, start, fracture_prices,
         product_fracture_options);
@@ -4732,6 +4746,39 @@ void run_primitive_destructive_renewal_upper_tests() {
     PC_CHECK(
         product_fracture_lift.compiled.strategy_json.find(
             "\"type\":\"restart\"") != std::string::npos);
+    PC_CHECK(
+        product_fracture_lift.compiled.strategy_json.find(
+            "\"solver_policy_scope\":\""
+            "no_economic_restart_policy_restriction\"") !=
+        std::string::npos);
+    const std::shared_ptr<StrategyImpl> product_fracture_strategy =
+        compile_strategy_json(
+            fracture_session,
+            product_fracture_lift.compiled.strategy_json.data(),
+            product_fracture_lift.compiled.strategy_json.size());
+    auto product_fracture_economy = std::make_shared<EconomyImpl>();
+    product_fracture_economy->id =
+        "product-fracture-replacement-recovery-test";
+    product_fracture_economy->prices = fracture_prices;
+    SimulatorImpl product_fracture_simulator;
+    product_fracture_simulator.session = fracture_session;
+    product_fracture_simulator.strategy = product_fracture_strategy;
+    product_fracture_simulator.economy = product_fracture_economy;
+    prepare_simulator_runtime(product_fracture_simulator);
+    SimulationOptionsInternal product_fracture_simulation_options;
+    product_fracture_simulation_options.target_runs = 10000;
+    product_fracture_simulation_options.seed = 0x465241435245434fULL;
+    product_fracture_simulation_options.max_actions_per_run = 100000;
+    run_simulator_chunk(
+        product_fracture_simulator,
+        product_fracture_simulation_options, 10000);
+    PC_CHECK(
+        product_fracture_simulator.summary.completed_runs == 10000);
+    PC_CHECK(product_fracture_simulator.summary.success_count == 10000);
+    PC_CHECK(
+        product_fracture_simulator.summary.action_not_applied_count == 0);
+    PC_CHECK(
+        product_fracture_simulator.summary.no_matching_edge_count == 0);
     std::set<std::pair<std::string, std::uint32_t>>
         product_fracture_behaviors;
     std::uint64_t product_fracture_selected_states = 0;
@@ -8166,6 +8213,7 @@ void run_automatic_eldritch_side_tests() {
     std::unordered_map<std::string, double> restart_lower_prices{
         {"bench:mod0", 1.0}, {"bench:mod3", 2.0},
         {"bench:mod5", 3.0}, {"bench:mod6", 4.0},
+        {"chaos", 100.0}, {"annul", 1.0}, {"scour", 1.0},
         {"base", 1.0}};
     GoalSpec restart_lower_goal;
     restart_lower_goal.rarity = PC_RARITY_RARE;
@@ -8180,6 +8228,9 @@ void run_automatic_eldritch_side_tests() {
         restart_lower_registry.index_by_id.at("bench:mod3"),
         restart_lower_registry.index_by_id.at("bench:mod5"),
         restart_lower_registry.index_by_id.at("bench:mod6"),
+        restart_lower_registry.index_by_id.at("chaos"),
+        restart_lower_registry.index_by_id.at("annul"),
+        restart_lower_registry.index_by_id.at("scour"),
         restart_lower_registry.index_by_id.at("restart")};
     pc_item_state partial_restart_source;
     pc_item_clear(&partial_restart_source);
@@ -8241,6 +8292,67 @@ void run_automatic_eldritch_side_tests() {
         }
         PC_CHECK(restart_lower > legacy_carried_progress_lower);
     }
+    const std::uint32_t source_goal_mask =
+        restart_lower_work.satisfied_goal_mask_for_state(
+            restart_source_state);
+    PC_CHECK(std::popcount(source_goal_mask) == 3);
+    const auto verify_successor_lower =
+        [&](const char* action_id,
+            const std::uint32_t expected_survivors) {
+            const std::uint32_t action =
+                restart_lower_registry.index_by_id.at(action_id);
+            const std::uint32_t survivor_mask =
+                restart_lower_work.planner_goal_may_survive_mask(
+                    restart_source_state, action);
+            PC_CHECK(survivor_mask == expected_survivors);
+            const std::int32_t position =
+                restart_lower_work.priced_operator_position.at(action);
+            PC_CHECK(position >= 0);
+            if (position < 0) return;
+            const double immediate = restart_lower_work.operators.at(
+                static_cast<std::size_t>(position)).cost;
+            const double lower =
+                restart_lower_work.optimistic_operator_lower(
+                    restart_source_state, action);
+            const OutcomeDistribution& exact =
+                restart_lower_calc.outcomes(
+                    restart_source_state, action);
+            PC_CHECK(exact.supported);
+            double probability_sum = 0.0;
+            double exact_relaxed_backup = immediate;
+            for (const OutcomeEntry& outcome : exact.entries) {
+                probability_sum += outcome.probability;
+                exact_relaxed_backup += outcome.probability *
+                    restart_lower_work
+                        .optimistic_completion_cost_for_state(outcome.state);
+            }
+            PC_CHECK(std::fabs(probability_sum - 1.0) < 1e-10);
+            std::printf(
+                "successor lower %s: survive=%u lower=%.9g exact_h=%.9g\n",
+                action_id, survivor_mask, lower, exact_relaxed_backup);
+            PC_CHECK(
+                lower <= exact_relaxed_backup +
+                    1e-9 * std::max(1.0, std::fabs(exact_relaxed_backup)));
+        };
+    verify_successor_lower("chaos", 0);
+    verify_successor_lower("scour", 0);
+    verify_successor_lower("annul", source_goal_mask);
+
+    pc_item_state fractured_source = partial_restart_source;
+    fractured_source.prefixes[0].flags |= PC_MOD_SLOT_FRACTURED;
+    const std::uint32_t fractured_source_state =
+        restart_lower_calc.intern_item(fractured_source);
+    const std::uint32_t fractured_slot_bit = 1u;
+    PC_CHECK(
+        restart_lower_work.planner_goal_may_survive_mask(
+            fractured_source_state,
+            restart_lower_registry.index_by_id.at("chaos")) ==
+        fractured_slot_bit);
+    PC_CHECK(
+        restart_lower_work.planner_goal_may_survive_mask(
+            fractured_source_state,
+            restart_lower_registry.index_by_id.at("scour")) ==
+        fractured_slot_bit);
     std::printf(
         "solver automatic Eldritch lower: seed=%.9f bellman_rows=%u\n",
         eligible_completion_lower, checked_eldritch_bellman_rows);

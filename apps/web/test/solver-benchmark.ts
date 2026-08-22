@@ -1168,6 +1168,8 @@ async function runCase(
                         kernel_reuse: spec.caps.kernel_reuse,
                         goal_progress_gated_reforges:
                             spec.caps.goal_progress_gated_reforges,
+                        allow_economic_restart:
+                            spec.caps.allow_economic_restart,
                         high_impact_executable_uppers:
                             spec.caps.high_impact_executable_uppers,
                     },
@@ -1215,6 +1217,8 @@ async function runCase(
                         kernel_reuse: spec.caps.kernel_reuse,
                         goal_progress_gated_reforges:
                             spec.caps.goal_progress_gated_reforges,
+                        allow_economic_restart:
+                            spec.caps.allow_economic_restart,
                         high_impact_executable_uppers:
                             spec.caps.high_impact_executable_uppers,
                     },

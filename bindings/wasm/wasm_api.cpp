@@ -621,6 +621,14 @@ bool parse_solve_options(
         options.solver_flags |=
             PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES;
     }
+    const Value* allow_economic_restart =
+        spec.find("allow_economic_restart");
+    if (allow_economic_restart != nullptr &&
+        allow_economic_restart->type == Type::Bool &&
+        !allow_economic_restart->boolean) {
+        options.solver_flags |=
+            PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART;
+    }
     const Value* high_impact_uppers =
         spec.find("high_impact_executable_uppers");
     if (high_impact_uppers != nullptr &&

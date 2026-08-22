@@ -55,10 +55,21 @@ SolveWork::Impl::Impl(
             options.max_diagnostic_samples;
         result.diagnostics.telemetry_json_byte_limit =
             options.max_telemetry_json_bytes;
-        result.diagnostics.solution_scope =
-            options.goal_progress_gated_reforges
-                ? "exact_within_zero_progress_reroll_restriction"
-                : "globally_optimal_unrestricted";
+        if (options.goal_progress_gated_reforges &&
+            !options.allow_economic_restart) {
+            result.diagnostics.solution_scope =
+                "exact_within_zero_progress_reroll_and_no_economic_restart_"
+                "restrictions";
+        } else if (options.goal_progress_gated_reforges) {
+            result.diagnostics.solution_scope =
+                "exact_within_zero_progress_reroll_restriction";
+        } else if (!options.allow_economic_restart) {
+            result.diagnostics.solution_scope =
+                "exact_within_no_economic_restart_restriction";
+        } else {
+            result.diagnostics.solution_scope =
+                "globally_optimal_unrestricted";
+        }
         result.diagnostics.registry_actions = static_cast<std::uint32_t>(
             calc.registry().actions.size());
         result.diagnostics.candidate_actions = static_cast<std::uint32_t>(
@@ -133,12 +144,10 @@ SolveWork::Impl::Impl(
                 cost += quantity * found->second;
                 resource_prices.push_back({key, found->second});
             }
-            /*
-             * A product-local Fracture row prices its aggregate miss as a
-             * conditional Restart. Keep the primitive Fracture cost unchanged,
-             * but retain the base unit price so the state-local quantity
-             * (miss probability) can be priced in the sparse variant.
-             */
+            /* A product-local Fracture row prices its aggregate miss as
+             * mechanic-owned replacement recovery. Keep the primitive cost
+             * unchanged, but retain the base unit price so the state-local
+             * miss probability can be priced in the sparse variant. */
             if (priced && calc.product_solver_parent() &&
                 planner.kind == PlannerOperatorKind::Primitive &&
                 planner.automatic_kind ==
@@ -185,8 +194,12 @@ SolveWork::Impl::Impl(
                 {index, cost, std::move(resource_prices)});
             if (planner.kind == PlannerOperatorKind::Primitive &&
                 calc.registry().actions.at(planner.primitive_action).synthetic) {
-                restart_operator_index = index;
-                restart_cost = cost;
+                replacement_recovery_operator_index = index;
+                replacement_recovery_cost = cost;
+                if (options.allow_economic_restart) {
+                    restart_operator_index = index;
+                    restart_cost = cost;
+                }
             }
             ++result.diagnostics.supported_priced_actions;
         }
@@ -253,7 +266,8 @@ SolveWork::Impl::Impl(
                        planner.automatic_kind ==
                            AutomaticCandidateKind::Fracture;
             });
-        if (priced_automatic_fracture && restart_operator_index == kNoId) {
+        if (priced_automatic_fracture &&
+            replacement_recovery_operator_index == kNoId) {
             throw std::invalid_argument(
                 "goal-relevant Fracture planning requires a priced base for "
                 "Restart miss recovery");
@@ -270,6 +284,10 @@ SolveWork::Impl::Impl(
                     }) != operators.end()) {
                 static_operator_indices.push_back(index);
             }
+        }
+        if (!options.allow_economic_restart) {
+            retain_action_reason(
+                "restricted:economic_restart_disabled:mechanic_recovery_only");
         }
         incremental_action_generation =
             options.goal_progress_gated_reforges;
@@ -458,6 +476,8 @@ SolveWork::Impl::Impl(
             transition_cache->kernel_reuse = options.kernel_reuse;
             transition_cache->goal_progress_gated_reforges =
                 options.goal_progress_gated_reforges;
+            transition_cache->allow_economic_restart =
+                options.allow_economic_restart;
             for (const PricedOperator& priced : operators) {
                 transition_cache->operator_indices.push_back(priced.index);
             }

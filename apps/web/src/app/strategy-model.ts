@@ -251,7 +251,9 @@ export interface StrategyViewport {
 /** Non-executable provenance for the solver MDP that produced a strategy. */
 export type SolverPolicyScope =
     | "unrestricted"
-    | "zero_progress_reroll_policy_restriction";
+    | "zero_progress_reroll_policy_restriction"
+    | "no_economic_restart_policy_restriction"
+    | "zero_progress_reroll_and_no_economic_restart_restrictions";
 
 export interface StrategyDocument {
     version: "v1";
@@ -305,6 +307,10 @@ export function isStrategyDocument(value: unknown): value is StrategyDocument {
     const validSolverPolicyScope =
         candidate.solver_policy_scope === undefined ||
         candidate.solver_policy_scope === "unrestricted" ||
+        candidate.solver_policy_scope ===
+            "no_economic_restart_policy_restriction" ||
+        candidate.solver_policy_scope ===
+            "zero_progress_reroll_and_no_economic_restart_restrictions" ||
         candidate.solver_policy_scope ===
             "zero_progress_reroll_policy_restriction";
     return (

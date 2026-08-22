@@ -13,7 +13,7 @@
   },
   "comparison_profile": {
     "id": "solver-goal-realignment-gate6-native-wasm-v1",
-    "product_scope": "calculator_goal_relevant_with_zero_progress_gated_reforges",
+    "product_scope": "calculator_goal_relevant_with_zero_progress_gated_reforges_and_no_economic_restart",
     "exact_required": true,
     "maximum_wall_seconds": 120,
     "compiled_exact_evaluation_required": true,

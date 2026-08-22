@@ -532,6 +532,8 @@ bool SolveWork::Impl::begin_focused_upper_solve() {
         if ((!focused_fallback_policy && !from_incremental_incumbent) ||
             focused_strict_transition_cache != nullptr ||
             (!from_incremental_incumbent &&
+             !options.allow_economic_restart) ||
+            (!from_incremental_incumbent &&
              (!std::isfinite(restart_cost) || restart_cost < 0.0))) {
             return false;
         }

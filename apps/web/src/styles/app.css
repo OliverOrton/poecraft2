@@ -3515,6 +3515,18 @@ pc-run-trace {
     gap: 5px;
 }
 
+.pc-calc-solve-targets .pc-calc-solve-restart-option {
+    grid-column: 1 / 3;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pc-calc-solve-targets .pc-calc-solve-restart-option input {
+    width: auto;
+    margin: 0;
+}
+
 .pc-calc-solve-targets small,
 .pc-calc-solve-targets p {
     color: var(--pc-text-dim);

@@ -670,7 +670,7 @@ void SolveWork::Impl::refresh_incremental_upper_incumbent() {
                 }
                 continue;
             }
-            if (restart_operator_index == kNoId ||
+            if (!restart_row_allowed(state) ||
                 restart_state >= incumbent.values.size() ||
                 !std::isfinite(restart_cost) ||
                 !std::isfinite(incumbent.values[restart_state])) {

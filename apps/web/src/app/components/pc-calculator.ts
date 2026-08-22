@@ -234,6 +234,7 @@ export class PcCalculator extends HTMLElement {
     private solveTelemetry: unknown = null;
     private solveAbsoluteGapTarget = 0;
     private solveRelativeGapPercentTarget = 0;
+    private solveAllowEconomicRestart = false;
     private solveRunning = false;
     private solveProgress: SolveProgress | null = null;
     private solveElapsedMs = 0;
@@ -723,7 +724,7 @@ export class PcCalculator extends HTMLElement {
         if (readiness.missingFractureBasePrice) {
             this.solveError = {
                 heading: "Set a fresh-base price to plan Fracture.",
-                detail: "Goal-relevant Fracture miss recovery uses Restart. Set the base price in the shared action price table, or remove the Fracture price before solving.",
+                detail: "Goal-relevant Fracture miss recovery replaces the failed item with a fresh base. Set the base price in the shared action price table, or remove the Fracture price before solving.",
             };
             this.renderSolvePanel();
             return;
@@ -793,6 +794,7 @@ export class PcCalculator extends HTMLElement {
             const solveOptions = calculatorSolveOptions(
                 this.solveAbsoluteGapTarget,
                 this.solveRelativeGapPercentTarget,
+                this.solveAllowEconomicRestart,
             );
             const result = await this.client.solverSolve(
                 solveSolver,
@@ -1922,11 +1924,16 @@ export class PcCalculator extends HTMLElement {
                     <input type="number" min="0" step="any" data-solve-target="relative"
                         value="${this.solveRelativeGapPercentTarget || ""}" placeholder="Disabled">
                 </label>
+                <label class="pc-calc-solve-restart-option">
+                    <input type="checkbox" data-solve-economic-restart
+                        ${this.solveAllowEconomicRestart ? "checked" : ""}>
+                    <span>Allow abandoning this item and buying a fresh base</span>
+                </label>
                 <p>Either positive target may stop the solve after a complete lower/upper round. Targets do not change Bellman comparisons or exact results.</p>
             </div>
             ${
                 readiness.missingFractureBasePrice
-                    ? '<p class="pc-calc-solve-warning"><strong>Fracture needs Restart:</strong> set the <code>base</code> price below so a missed fracture has a priced recovery route.</p>'
+                    ? '<p class="pc-calc-solve-warning"><strong>Fracture needs a replacement base:</strong> set the <code>base</code> price below so a missed fracture has a priced recovery route.</p>'
                     : ""
             }
             ${progressMarkup}
@@ -1980,6 +1987,11 @@ export class PcCalculator extends HTMLElement {
                 });
             },
         );
+        host.querySelector<HTMLInputElement>("[data-solve-economic-restart]")
+            ?.addEventListener("change", (event) => {
+                this.solveAllowEconomicRestart =
+                    (event.currentTarget as HTMLInputElement).checked;
+            });
         host.querySelectorAll<HTMLButtonElement>("[data-solve-cmd]").forEach(
             (button) => {
                 button.addEventListener("click", () => {

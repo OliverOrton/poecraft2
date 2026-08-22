@@ -1804,7 +1804,8 @@ void SolveWork::Impl::install_output_incumbent(
 
 void SolveWork::Impl::install_fallback_output_incumbent(
         const FocusedFallbackWitness& witness) {
-        if (!witness || restart_operator_index == kNoId ||
+        if (!options.allow_economic_restart || !witness ||
+            restart_operator_index == kNoId ||
             !std::isfinite(restart_cost) ||
             !std::isfinite(witness->anchor_state_value)) {
             return;
@@ -2926,7 +2927,8 @@ double SolveWork::Impl::fallback_terminal_upper(
     }
 
 auto SolveWork::Impl::magic_regal_fallback() -> std::optional<FocusedFallbackPolicy> {
-        if (restart_state == kNoId || restart_state >= calc.state_count() ||
+        if (!options.allow_economic_restart || restart_state == kNoId ||
+            restart_state >= calc.state_count() ||
             !std::isfinite(restart_cost) || restart_cost < 0.0) {
             return std::nullopt;
         }
@@ -3645,6 +3647,7 @@ auto SolveWork::Impl::magic_regal_fallback() -> std::optional<FocusedFallbackPol
 bool SolveWork::Impl::advance_primitive_destructive_renewal_fallback(
         std::optional<FocusedFallbackPolicy>& completed) {
         completed.reset();
+        if (!options.allow_economic_restart) return true;
         PrimitiveDestructiveRenewalWork& work =
             primitive_destructive_renewal_work;
         if (!work.active) {
@@ -4414,6 +4417,7 @@ auto SolveWork::Impl::progressive_fracture_fallback(
 auto SolveWork::Impl::focused_fallback(bool& complete)
         -> std::optional<FocusedFallbackPolicy> {
         complete = true;
+        if (!options.allow_economic_restart) return std::nullopt;
         const std::uint32_t renewal_source = result.start_state;
         if (!constructive_fallback_pending) {
             ++result.diagnostics.constructive_policy_anchor_checks;

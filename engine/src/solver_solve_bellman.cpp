@@ -228,7 +228,10 @@ void SolveWork::Impl::prepare_iteration() {
                 std::numeric_limits<std::uint64_t>::max();
             for (std::uint32_t state = 0; state < state_count; ++state) {
                 if (result.goal_states[state]) continue;
-                std::uint32_t operator_index = restart_operator_index;
+                std::uint32_t operator_index =
+                    restart_row_allowed(state)
+                        ? restart_operator_index
+                        : kNoId;
                 if (state <
                         focused_previous_frontier_upper_operator.size() &&
                     focused_previous_frontier_upper_operator[state] !=
@@ -601,7 +604,42 @@ bool SolveWork::Impl::initialize_focused_proper_policy() {
                 progress = true;
             }
         }
-        if (remaining != 0) return false;
+        if (remaining != 0) {
+            if (options.allow_economic_restart ||
+                output_incumbent.has_value()) {
+                return false;
+            }
+            /* A proper stochastic policy can contain a mutually reachable
+             * retry basin with positive escape probability. The strict rank
+             * construction above deliberately cannot orient such a basin.
+             * Complete the seed with deterministic first-row choices so the
+             * exact SCC evaluator can either prove it proper or identify a
+             * closed component for repair. Do this only when restricted mode
+             * has no independently certified incumbent; otherwise the normal
+             * bounded publication path already owns an executable strategy
+             * and this broad repair would add work without improving safety.
+             * The seed is never publication authority: only the subsequent
+             * fixed-policy proof may make it executable. */
+            for (const std::uint32_t state : order) {
+                if (assigned[state]) continue;
+                std::uint64_t seed_row =
+                    std::numeric_limits<std::uint64_t>::max();
+                for (const std::uint64_t absolute :
+                     state_row_indices(*transition_cache, state)) {
+                    if (preservation_prunes(absolute) ||
+                        !transition_cache->rows.at(absolute).admitted) {
+                        continue;
+                    }
+                    seed_row = absolute;
+                    break;
+                }
+                if (seed_row ==
+                    std::numeric_limits<std::uint64_t>::max()) {
+                    return false;
+                }
+                policy_rows[state] = seed_row;
+            }
+        }
         policy_selection_active = false;
         policy_selection_cursor = 0;
         policy_selection_states.clear();

@@ -2004,6 +2004,7 @@ test("product Eldritch dependency wins through release WASM", async () => {
         max_telemetry_json_bytes: 64 * 1024 * 1024,
         goal_progress_gated_reforges: true,
         high_impact_executable_uppers: true,
+        allow_economic_restart: false,
     });
     assert.equal(solve.cancelled, false);
     assert.equal(solve.policy_available, true, JSON.stringify(solve));

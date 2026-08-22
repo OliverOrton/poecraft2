@@ -642,6 +642,9 @@ solver::SolveOptions solve_options(const pc_solve_options* options) {
         value.goal_progress_gated_reforges =
             (options->solver_flags &
              PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES) != 0;
+        value.allow_economic_restart =
+            (options->solver_flags &
+             PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART) == 0;
         value.high_impact_executable_uppers =
             (options->solver_flags &
              solver::kHighImpactExecutableUppersDiagnosticFlag) != 0;

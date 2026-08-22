@@ -119,6 +119,7 @@ export interface SolverBenchmarkCase {
         strict_states?: boolean;
         kernel_reuse?: boolean;
         goal_progress_gated_reforges?: boolean;
+        allow_economic_restart?: boolean;
         high_impact_executable_uppers?: boolean;
         worker_step_ms: number;
         cancel_ack_ms: number;
@@ -430,6 +431,7 @@ function validateCase(value: unknown, path: string): SolverBenchmarkCase {
         "strict_states",
         "kernel_reuse",
         "goal_progress_gated_reforges",
+        "allow_economic_restart",
         "high_impact_executable_uppers",
     ]) {
         if (key in caps && typeof caps[key] !== "boolean") {

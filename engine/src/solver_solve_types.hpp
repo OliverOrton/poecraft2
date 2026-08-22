@@ -492,6 +492,7 @@ struct SolveTransitionCache {
     bool full_evidence = false;
     bool kernel_reuse = true;
     bool goal_progress_gated_reforges = false;
+    bool allow_economic_restart = true;
     std::uint32_t discovered_states = 0;
     std::uint32_t expanded_states = 0;
     std::uint32_t strict_discovered_states = 0;
@@ -777,6 +778,11 @@ struct SolveWork::Impl {
     std::vector<PricedSparseRow> priced_rows;
     std::size_t pricing_diagnostics_cursor = 0;
     std::vector<std::int32_t> priced_operator_position;
+    /* The priced synthetic action is always retained as mechanic-owned
+     * replacement recovery infrastructure. Ordinary Bellman authority uses
+     * restart_operator_index/cost only when economic Restart is enabled. */
+    std::uint32_t replacement_recovery_operator_index = kNoId;
+    double replacement_recovery_cost = kInfinity;
     std::uint32_t restart_operator_index = kNoId;
     std::uint32_t restart_state = kNoId;
     double restart_cost = kInfinity;
@@ -1091,6 +1097,18 @@ struct SolveWork::Impl {
      * retained as the price-independent transition cache. */
     std::vector<std::uint32_t> operator_goal_reach_mask;
     std::vector<std::uint8_t> operator_goal_reach_computed;
+    struct GoalSurvivalPath {
+        /* kNoId is the internal identity-only checkpoint step used by
+         * Imprint retry runtime semantics. */
+        std::vector<std::uint32_t> actions;
+    };
+    struct OperatorGoalSurvivalPaths {
+        std::vector<GoalSurvivalPath> paths;
+    };
+    std::vector<OperatorGoalSurvivalPaths>
+        operator_goal_survival_paths;
+    std::vector<std::uint8_t> operator_goal_survival_computed;
+    std::uint64_t owned_goal_survival_nested_bytes = 0;
     std::vector<double> goal_cover_cost;
     std::vector<double> clean_goal_cover_cost;
     /* Final one-step lower value of every non-refined action in the clean
@@ -1280,10 +1298,16 @@ struct SolveWork::Impl {
     std::uint32_t planner_goal_reach_mask(
         const std::uint32_t operator_index);
 
+    std::uint32_t planner_goal_may_survive_mask(
+        const std::uint32_t state,
+        const std::uint32_t operator_index);
+
     void prepare_goal_cover_cost();
 
     std::uint32_t satisfied_goal_mask_for_state(
         const std::uint32_t state) const;
+
+    bool restart_row_allowed(const std::uint32_t state) const;
 
     double optimistic_completion_cost(
         const std::uint32_t satisfied_mask,

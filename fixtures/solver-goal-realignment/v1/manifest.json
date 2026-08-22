@@ -13,7 +13,7 @@
   },
   "comparison_profile": {
     "id": "solver-goal-realignment-native-wasm-v1",
-    "product_scope": "calculator_goal_relevant_with_zero_progress_gated_reforges",
+    "product_scope": "calculator_goal_relevant_with_zero_progress_gated_reforges_and_no_economic_restart",
     "v_start_absolute_tolerance": 1e-7,
     "exact_required": true,
     "maximum_wall_seconds": 300,
@@ -23,7 +23,7 @@
   "owner_decisions": [
     "The primary fixture uses an explicit five-chaos base and Restart price; this is a fixture input, not a universal default.",
     "All four goal slots require the named naturally rolled T1 modifier families; crafted or unveiled relatives do not satisfy them.",
-    "The solve uses Calculator goal-relevant action discovery and goal-progress-gated destructive reforges.",
+    "The solve uses Calculator goal-relevant action discovery and goal-progress-gated destructive reforges, excludes optional economic Restart, and retains mechanic-owned replacement recovery such as a failed Fracture attempt.",
     "The automatic Eldritch Exalt case keeps the primitive dependency-only and requires its carrier-local prefix retry option to retain an already satisfied fractured suffix goal on every continuation; its disclosed 0.001-chaos Eldritch Exalt and paired 0.001-chaos Eldritch Annul cleanup overrides against the pinned 3.59- and 40.53-chaos snapshot quotes are synthetic bounded-retry forced-winner inputs, not a live-optimality claim.",
     "The Influence Exalt case uses a Warlord-only natural family goal on an uninfluenced Vaal Regalia, so the canonical market-priced Warlord Exalt must be retained and selected through the ordinary product path without a forced action-price override.",
     "The Imprint case freezes the dynamic public-product gate's lowest-weight natural prefix and highest-weight compatible natural suffix, retains the quoted Craicic Croaker and owner-default rare-beast prices, and discloses only the two non-Bestiary retry-route overrides already qualified by that gate.",
