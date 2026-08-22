@@ -1111,6 +1111,15 @@ void SolveWork::Impl::run_focused_lower_unit() {
             }
         }
         if (!backup_active && numerical_stability_stop) {
+            if (focused_upper_mode) {
+                /* A numerical stop rejects this temporary upper-policy
+                 * experiment; it does not terminate the surrounding finite
+                 * action envelope. Finalizing the pass rolls back its
+                 * temporary rows and lets the incremental scheduler continue
+                 * with the next candidate. */
+                finish_focused_upper_solve(false);
+                return;
+            }
             phase = SolvePhase::Done;
             return;
         }

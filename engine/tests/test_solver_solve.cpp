@@ -7442,6 +7442,47 @@ void run_automatic_imprint_cooperative_tests() {
         scheduled.diagnostics.automatic_admission_phases
             .imprint_price_bound_complete_carriers > 0);
 
+    /* A numerical latch inside a temporary high-impact upper pass rejects
+     * that pass only. It must restore the surrounding lower snapshot and
+     * release the pass flags so the finite action scheduler can continue.
+     * The former direct Done path stranded the active pass and silently left
+     * later automatic carriers unevaluated. */
+    CalcContext numerical_pass_calc(
+        scheduled_session, scheduled_goal, scheduled_registry,
+        {scheduled_transmute, scheduled_alteration,
+         scheduled_augment, scheduled_regal,
+         scheduled_restart, scheduled_delayed});
+    SolveWorkTestAccess::Impl numerical_pass_work(
+        numerical_pass_calc, scheduled_start,
+        scheduled_prices, scheduled_options);
+    numerical_pass_work.focused_round_lower_values =
+        numerical_pass_work.result.values;
+    numerical_pass_work.focused_round_lower_policy_rows =
+        numerical_pass_work.policy_rows;
+    numerical_pass_work.focused_upper_mode = true;
+    numerical_pass_work.focused_lower_mode = true;
+    numerical_pass_work.focus_optimizing = true;
+    numerical_pass_work.incremental_upper_policy_pass = true;
+    numerical_pass_work.incremental_action_generation = true;
+    numerical_pass_work.incremental_envelope_closed = false;
+    numerical_pass_work.incremental_unevaluated_actions = 1;
+    numerical_pass_work.numerical_stability_stop = true;
+    numerical_pass_work.result.diagnostics.policy_evaluation_failure =
+        "strict_policy_order_unreconciled_at_numerical_stability";
+    numerical_pass_work.backup_active = false;
+    numerical_pass_work.policy_iteration_failed = true;
+    const std::uint64_t rejected_before =
+        numerical_pass_work.incremental_upper_policy_passes_rejected;
+    numerical_pass_work.run_focused_lower_unit();
+    PC_CHECK(!numerical_pass_work.focused_upper_mode);
+    PC_CHECK(!numerical_pass_work.incremental_upper_policy_pass);
+    PC_CHECK(
+        numerical_pass_work.incremental_upper_policy_passes_rejected ==
+        rejected_before + 1);
+    PC_CHECK(
+        numerical_pass_work.incremental_upper_policy_last_failure ==
+        "strict_policy_order_unreconciled_at_numerical_stability");
+
     /* Resuming one cooperative checkpoint at a time must produce the same
      * complete envelope without replaying a discovery unit. Every returned
      * worker slice and every still-atomic Calc outcomes leaf stays below the

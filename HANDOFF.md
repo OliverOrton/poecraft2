@@ -5,6 +5,33 @@
 ## Current boundary
 
 The
+[Batched Automatic-Alternative Publication Recovery](docs/active/2026-08-21-four-t1-automatic-envelope-qualification/batched-alternative-publication-plan.md)
+has stopped. The newly admitted actions are valid carrier-local candidates;
+five publication-batching variants were measured and rejected, then removed.
+The audit did find and retain a narrower lifecycle repair: numerical stability
+inside a temporary focused upper-policy pass now rejects and rolls back that
+pass through the existing finalizer instead of terminating the whole solve.
+Generic numerical-stop behavior is unchanged.
+
+The final-source primary requested and started all 717 upper passes (439
+proper, 278 explicitly rejected), eliminating the former stranded 440th pass.
+It still reached the 300-second watchdog with a 1.41-second largest public
+step, raw upper `3759.5969190423507`, no lower certificate, and 17,584 open
+actions (13,379 unevaluated plus 4,205 unresolved). No outer solver resource
+cap fired.
+
+The repaired lifecycle exposed one deferred Imprint carrier at state 928. Its
+generic 256-program work allowance is exhausted after 182,778 action-state
+evaluations and 2,570,418 merged outcomes. Flat 512/1,024 cap increases and
+simple price/dominance word-order changes did not close it and were removed.
+The next Imprint owner is a unique exact-kernel graph/shortest-path search,
+while collision-safe semantic reuse remains the separate owner of the older
+strict alternative-closure cost. Do not resume either, five-T1 work, release
+WASM, or the full pipeline until Oliver selects the next chunk.
+
+### Predecessor stopped boundary
+
+The
 [Four-T1 Automatic-Envelope Replacement Qualification](docs/active/2026-08-21-four-t1-automatic-envelope-qualification/plan.md)
 hit its explicit stop condition and remains stopped. A follow-up history audit
 confirmed that the old fast result at `c955d02` prepared zero automatic

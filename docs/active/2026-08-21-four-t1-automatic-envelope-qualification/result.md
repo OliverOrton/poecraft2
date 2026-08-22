@@ -190,7 +190,46 @@ WASM, the four-T1 10,000-run verification, web acceptance, and the full
 repository pipeline were not run because the repaired native primary again
 hit the explicit stop condition before publication.
 
-## Acceptance
+## Numerical Upper-Pass Lifecycle Follow-Up
+
+A subsequent audit rejected publication batching as the owner: full batching,
+64-row batching, Q-triggered batching, an internal 16-row Bellman batch, and
+publication-only deferral all made the checked path worse. Their source
+changes were removed.
+
+The audit found one real defect caused by the now-complete action envelope.
+When a temporary focused upper-policy experiment latched numerical stability,
+`run_focused_lower_unit()` terminated the complete solve rather than rejecting
+that experiment. The retained repair calls the existing failed-pass finalizer,
+which restores the lower snapshot and temporary rows, records the rejection,
+and resumes the incremental scheduler. A focused regression covers the
+rollback and pass-ledger transition.
+
+The final-source run stopped at 300,868.57 ms of solve time / 300,905.34 ms
+total. Its largest public step was 1,407.25 ms. All 717 requested upper passes
+started; 439 were proper and 278 were rejected with the final numerical-
+ordering reason. It completed strict frontiers through 5,961 states / 5,927
+kernels / 30,694 transitions. The raw finite upper remained
+`3759.5969190423507`; no lower certificate was published. The envelope stayed
+open with 13,379 unevaluated and 4,205 unresolved actions.
+
+One magic, one-prefix/one-suffix Imprint carrier now defers at the generic
+256-program work allowance after 182,778 action-state evaluations and
+2,570,418 merged outcomes. Flat 512/1,024 cap probes and scalar/price-order
+word-enumeration changes failed to close it and were removed. The sound next
+architecture is unique exact-kernel graph search rather than a larger flat
+word budget. The five-minute stop also shows this is not by itself sufficient:
+strict semantic row/proof reuse remains independently necessary.
+
+The final native build, S8.3 automatic-admission control (534 checks, including
+its pinned 10,000-run Veiled simulation), and focused solver controls (3,188
+checks) pass. The aggregate automatic-Eldritch executable still reports 13
+pre-existing resource-stop test failures; an exact source A/B against accepted
+HEAD reproduces the same 13 failures with this lifecycle patch absent. The four
+new lifecycle assertions add no failure. Release WASM, primary verification,
+and the full pipeline were not run because the primary stopped.
+
+## Earlier Acceptance
 
 The following passed:
 
