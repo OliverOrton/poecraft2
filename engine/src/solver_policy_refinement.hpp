@@ -348,6 +348,12 @@ struct PolicyExactLiftProgress {
     std::uint64_t strict_transitions = 0;
     std::uint32_t partition_rounds = 0;
     std::uint32_t partition_classes = 0;
+    /* A compiled, independently evaluated, proper executable policy may be
+     * published before alternative-action refinement finishes.  Keep that
+     * certified incumbent observable without promoting the unfinished lift
+     * to an exact result. */
+    double verified_executable_upper_bound =
+        std::numeric_limits<double>::infinity();
     StrategyEvalProgress evaluation;
 };
 

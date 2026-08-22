@@ -1,0 +1,33 @@
+{
+  "schema_version": "verified_interim_upper_publication_summary_v1",
+  "case_id": "conquest-lamellar-allflame-four-natural-t1",
+  "result": "live_upper_publication_pass_exact_closure_watchdog",
+  "solve_wall_ms": 300102.4209,
+  "watchdog_expired": true,
+  "coarse_upper_bound": 3759.5969190423507,
+  "first_strict_upper_bound": 3745.7295960574743,
+  "first_strict_upper_elapsed_ms": 38943.047,
+  "final_live_upper_bound": 3745.7295960574743,
+  "global_lower_bound": 0,
+  "bound_trace_samples": 465,
+  "upper_increase_samples": 0,
+  "coarse_states": {
+    "discovered": 3419,
+    "expanded": 1207,
+    "rows": 11384,
+    "transitions": 29135
+  },
+  "automatic_action_envelope": {
+    "closed": false,
+    "upper_passes_requested": 717,
+    "upper_passes_started": 717,
+    "upper_passes_proper": 439,
+    "upper_passes_rejected": 278,
+    "open": 17584,
+    "unevaluated": 13379,
+    "unresolved": 4205
+  },
+  "strict_pass_state_counts_observed": [5820, 5924, 5961],
+  "native_solver_checks": 96174,
+  "wasm_engine_smoke_checks": 28
+}

@@ -5,6 +5,31 @@ chunk before implementation resumes.**
 
 ## Current boundary
 
+The focused
+[Verified Interim Upper Publication](docs/active/2026-08-21-verified-interim-upper-publication/plan.md)
+repair is complete and accepted. Strict refinement now exposes a compiled,
+independently evaluated, proper executable policy through the existing live
+progress upper while alternative-action proof remains unfinished. The lower
+bound, exactness, action envelope, Bellman authority, and final result contract
+are unchanged.
+
+On the checked Allflame four-natural-T1 primary, the live upper falls from
+`3759.5969190423507` to `3745.7295960574743` at 38.94 seconds and never rises
+across the repeated approximately 5,820-, 5,924-, and 5,961-state strict
+frontier passes. The five-minute watchdog still fires with global lower zero
+and the same 17,584 open automatic actions. This fixes browser incumbent
+visibility, not exact-closure speed, and an unfinished solve still cannot
+return the compiled strategy.
+
+Native build, the 96,174-check solver suite, release WASM, TypeScript, and the
+28-check WASM engine smoke pass. The full pipeline and primary 10,000-run
+verification were not run because the primary did not finish. The next owner
+remains persistent strict frontier growth; the state-928 Imprint grammar is a
+separate boundary. Oliver must select the next implementation chunk before
+work resumes.
+
+### Predecessor stopped boundary
+
 The
 [Automatic Action Relevance And Proof Reuse](docs/active/2026-08-21-automatic-action-relevance-and-proof-reuse/plan.md)
 boundary is [stopped precisely](docs/active/2026-08-21-automatic-action-relevance-and-proof-reuse/result.md).

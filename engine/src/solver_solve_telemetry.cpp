@@ -405,6 +405,11 @@ SolveProgress SolveWork::Impl::progress() const {
                 value.lower_bound = value.start_value_bound;
             }
         }
+        if (std::isfinite(finalization_verified_upper_bound)) {
+            value.upper_bound = std::min(
+                value.upper_bound,
+                finalization_verified_upper_bound);
+        }
         if (std::isfinite(value.lower_bound) &&
             std::isfinite(value.upper_bound)) {
             value.absolute_optimality_gap = std::max(

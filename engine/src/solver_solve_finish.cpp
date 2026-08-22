@@ -2911,6 +2911,11 @@ SolveWork::Impl::run_finalization() {
                                             lift_progress.partition_rounds;
                                         finalization_refinement_classes =
                                             lift_progress.partition_classes;
+                                        finalization_verified_upper_bound =
+                                            std::min(
+                                                finalization_verified_upper_bound,
+                                                lift_progress
+                                                    .verified_executable_upper_bound);
                                         finalization_evaluation_progress =
                                             lift_progress.evaluation;
                                         selected_lift_work.step(1);
@@ -3871,6 +3876,10 @@ SolveWork::Impl::run_finalization() {
                         lift_progress.partition_rounds;
                     finalization_refinement_classes =
                         lift_progress.partition_classes;
+                    finalization_verified_upper_bound = std::min(
+                        finalization_verified_upper_bound,
+                        lift_progress
+                            .verified_executable_upper_bound);
                     finalization_evaluation_progress =
                         lift_progress.evaluation;
                     lift_work.step(1);

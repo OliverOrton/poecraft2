@@ -2549,6 +2549,9 @@ lift_policy_quotient_pass_task(
         }
         certificate.status = PolicyExactLiftStatus::Complete;
         certificate.executable = true;
+        progress.verified_executable_upper_bound = std::min(
+            progress.verified_executable_upper_bound,
+            certificate.compiled.exact_cost);
         co_return true;
         };
         {
@@ -3346,6 +3349,7 @@ struct PolicyExactLiftWork::Impl {
     SolveOptions pass_options;
     SolveOptions active_pass_options;
     PolicyExactLiftProgress progress;
+    double best_verified_executable_upper_bound = kInfinity;
     solve_detail::CooperativeTask<PolicyExactLiftCertificate> pass;
     std::optional<CompiledPolicyAssertion> reusable_assertion;
     std::optional<PolicyExactLiftCertificate> completed;
@@ -3410,6 +3414,19 @@ struct PolicyExactLiftWork::Impl {
             active_pass_options,
             strategy_name, &pass_limits, std::move(frontier_seeds),
             progress, &reusable_assertion);
+        progress.verified_executable_upper_bound =
+            best_verified_executable_upper_bound;
+    }
+
+    void retain_verified_progress_upper() {
+        if (std::isfinite(
+                progress.verified_executable_upper_bound)) {
+            best_verified_executable_upper_bound = std::min(
+                best_verified_executable_upper_bound,
+                progress.verified_executable_upper_bound);
+        }
+        progress.verified_executable_upper_bound =
+            best_verified_executable_upper_bound;
     }
 
     void accept_frontier(QuotientFrontierExpansion expansion) {
@@ -3496,7 +3513,11 @@ struct PolicyExactLiftWork::Impl {
             std::max<std::uint32_t>(1, max_work_items);
         while (remaining-- != 0 && !completed.has_value()) {
             try {
-                if (!pass.resume()) continue;
+                if (!pass.resume()) {
+                    retain_verified_progress_upper();
+                    continue;
+                }
+                retain_verified_progress_upper();
                 PolicyExactLiftCertificate certificate =
                     pass.take_result();
                 PolicyLiftAdapterTelemetry total = prior_telemetry;
@@ -3507,6 +3528,7 @@ struct PolicyExactLiftWork::Impl {
                 reusable_assertion.reset();
                 completed = std::move(certificate);
             } catch (QuotientFrontierExpansion& expansion) {
+                retain_verified_progress_upper();
                 accept_frontier(std::move(expansion));
             }
         }

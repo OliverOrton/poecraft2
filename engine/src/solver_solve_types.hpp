@@ -1116,6 +1116,9 @@ struct SolveWork::Impl {
     std::uint64_t finalization_refinement_transitions = 0;
     std::uint32_t finalization_refinement_rounds = 0;
     std::uint32_t finalization_refinement_classes = 0;
+    /* Best independently verified executable strategy observed while a
+     * cooperative finalization child continues proving alternatives. */
+    double finalization_verified_upper_bound = kInfinity;
     StrategyEvalProgress finalization_evaluation_progress;
     std::optional<solve_detail::CooperativeTask<SolveResult>>
         finalization_task;

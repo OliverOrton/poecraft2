@@ -29,6 +29,16 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
+The focused
+[verified interim upper publication](active/2026-08-21-verified-interim-upper-publication/plan.md)
+repair is [complete](active/2026-08-21-verified-interim-upper-publication/result.md).
+A compiled, independently evaluated, proper executable strict strategy now
+tightens the existing live progress upper while exact alternative refinement
+continues. The checked four-T1 upper falls to `3745.7295960574743` at 38.94
+seconds and remains monotone across strict frontier restarts. The solve still
+expires with lower zero, so persistent strict frontier growth remains the next
+possible owner and no implementation boundary is active.
+
 The
 [automatic action relevance and proof reuse](active/2026-08-21-automatic-action-relevance-and-proof-reuse/plan.md)
 boundary is [stopped precisely](active/2026-08-21-automatic-action-relevance-and-proof-reuse/result.md).

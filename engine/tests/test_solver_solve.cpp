@@ -2155,6 +2155,25 @@ void run_policy_guided_exact_lift_tests() {
         {"regal", 0.01},
         {"base", 10.0}};
     SolveOptions options;
+    {
+        CalcContext progress_calc(
+            session, goal, registry, candidates,
+            false, true, false, std::nullopt, {}, true);
+        SolveWorkTestAccess::Impl progress_work(
+            progress_calc, start, prices, options);
+        progress_work.result.diagnostics.focused_expansion = true;
+        progress_work.result.diagnostics.focused_upper_bound = 100.0;
+        progress_work.finalization_verified_upper_bound = 12.5;
+        SolveProgress live_progress = progress_work.progress();
+        PC_CHECK(near(live_progress.upper_bound, 12.5, 1e-12));
+        PC_CHECK(near(
+            live_progress.absolute_optimality_gap,
+            live_progress.upper_bound - live_progress.lower_bound,
+            1e-12));
+        progress_work.result.diagnostics.focused_upper_bound = 10.0;
+        live_progress = progress_work.progress();
+        PC_CHECK(near(live_progress.upper_bound, 10.0, 1e-12));
+    }
     const SolveResult solved =
         solve(calc, start, prices, options);
     {
@@ -2598,12 +2617,28 @@ void run_policy_guided_exact_lift_tests() {
             calc, solved, start, prices, options,
             "focused policy-guided exact lift");
         std::uint64_t steps = 0;
+        double prior_verified_upper = kInfinity;
         while (!work.progress().done) {
             work.step(chunk);
             ++steps;
             PC_CHECK(steps < 1000000);
+            const refinement::PolicyExactLiftProgress progress =
+                work.progress();
+            if (std::isfinite(
+                    progress.verified_executable_upper_bound)) {
+                PC_CHECK(
+                    progress.verified_executable_upper_bound <=
+                    prior_verified_upper + 1e-12);
+                prior_verified_upper =
+                    progress.verified_executable_upper_bound;
+            }
         }
-        return work.take_result();
+        refinement::PolicyExactLiftCertificate certificate =
+            work.take_result();
+        PC_CHECK(near(
+            prior_verified_upper,
+            certificate.compiled.exact_cost, 1e-12));
+        return certificate;
     };
     for (const std::uint32_t chunk : {1u, 8u}) {
         const refinement::PolicyExactLiftCertificate chunked =
