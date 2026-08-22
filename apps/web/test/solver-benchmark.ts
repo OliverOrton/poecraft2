@@ -1163,6 +1163,8 @@ async function runCase(
                         max_strategy_json_bytes: spec.caps.max_strategy_json_bytes,
                         max_diagnostic_samples: spec.caps.max_diagnostic_samples,
                         max_telemetry_json_bytes: spec.caps.max_telemetry_json_bytes,
+                        max_policy_refinement_states:
+                            spec.caps.max_policy_refinement_states,
                         full_evidence: spec.caps.full_evidence,
                         strict_states: spec.caps.strict_states,
                         kernel_reuse: spec.caps.kernel_reuse,
@@ -1212,6 +1214,8 @@ async function runCase(
                         max_strategy_json_bytes: spec.caps.max_strategy_json_bytes,
                         max_diagnostic_samples: spec.caps.max_diagnostic_samples,
                         max_telemetry_json_bytes: spec.caps.max_telemetry_json_bytes,
+                        max_policy_refinement_states:
+                            spec.caps.max_policy_refinement_states,
                         full_evidence: spec.caps.full_evidence,
                         strict_states: spec.caps.strict_states,
                         kernel_reuse: spec.caps.kernel_reuse,

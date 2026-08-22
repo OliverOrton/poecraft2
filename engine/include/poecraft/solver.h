@@ -370,6 +370,11 @@ typedef struct pc_solve_options {
      * never participate in Bellman comparisons or exact closure. */
     double max_absolute_optimality_gap;
     double max_relative_optimality_gap;
+    /* Optional deterministic work boundary for post-solve attempts to
+     * certify or strictly lift a cheaper policy. Zero inherits
+     * max_discovered_states. A verified executable fallback is retained when
+     * this optional improvement budget is exhausted. */
+    uint32_t max_policy_refinement_states;
 } pc_solve_options;
 
 typedef enum pc_solver_flag {

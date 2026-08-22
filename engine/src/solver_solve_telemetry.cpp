@@ -575,6 +575,9 @@ SolveTelemetrySnapshot SolveWork::Impl::telemetry_snapshot(bool abandoned) const
         snapshot.diagnostics
             .incremental_upper_policy_passes_rejected =
             incremental_upper_policy_passes_rejected;
+        snapshot.diagnostics
+            .incremental_upper_policy_fixed_policy_proofs =
+            incremental_upper_policy_fixed_policy_proofs;
         snapshot.diagnostics.incremental_upper_policy_last_failure =
             incremental_upper_policy_last_failure;
         snapshot.diagnostics.incremental_refinement_uncertainty =
@@ -4312,6 +4315,10 @@ std::string serialize_solver_telemetry(
                 std::to_string(
                     diagnostics
                         ->incremental_upper_policy_passes_rejected);
+        json += ",\"fixed_policy_proofs\":" +
+                std::to_string(
+                    diagnostics
+                        ->incremental_upper_policy_fixed_policy_proofs);
         json += ",\"last_failure\":";
         append_telemetry_json_string(
             json,

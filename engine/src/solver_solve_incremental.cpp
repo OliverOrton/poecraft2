@@ -77,9 +77,26 @@ bool SolveWork::Impl::advance_incremental_dynamic_preparation() {
     return true;
 }
 
-bool SolveWork::Impl::schedule_next_incremental_alternative() {
+bool SolveWork::Impl::schedule_next_incremental_alternative(
+        const bool continue_current_epoch_request) {
     if (!incremental_action_generation || incremental_envelope_closed) {
         return false;
+    }
+    const bool continue_current_epoch =
+        continue_current_epoch_request ||
+        incremental_resume_epoch_after_dynamic_prepare;
+    incremental_resume_epoch_after_dynamic_prepare = false;
+    if (!continue_current_epoch) {
+        incremental_epoch_added_states = false;
+        if (incremental_automatic_carrier_cursor <
+            incremental_carriers.size()) {
+            /* Freeze the currently reachable automatic carrier frontier.
+             * Support discovered by this epoch is expanded before the next
+             * epoch and therefore cannot move this boundary underneath the
+             * running carrier-local admission pass. */
+            incremental_automatic_epoch_end =
+                incremental_carriers.size();
+        }
     }
     if (options.high_impact_executable_uppers) {
         const auto pair_key = [](
@@ -127,6 +144,8 @@ bool SolveWork::Impl::schedule_next_incremental_alternative() {
             const std::uint32_t state = incremental_carriers[
                 incremental_automatic_carrier_cursor];
             if (!incremental_dynamic_prepared) {
+                incremental_resume_epoch_after_dynamic_prepare =
+                    continue_current_epoch;
                 incremental_dynamic_prepare_active = true;
                 phase = SolvePhase::Expanding;
                 return true;
@@ -151,6 +170,11 @@ bool SolveWork::Impl::schedule_next_incremental_alternative() {
             incremental_dynamic_prepare_active = false;
             incremental_dynamic_operator_cursor = 0;
             incremental_dynamic_operator_indices.clear();
+            if (continue_current_epoch &&
+                incremental_automatic_carrier_cursor >=
+                    incremental_automatic_epoch_end) {
+                return false;
+            }
         }
         while (incremental_priority_task_cursor <
                incremental_priority_tasks.size()) {
@@ -164,6 +188,7 @@ bool SolveWork::Impl::schedule_next_incremental_alternative() {
             schedule_pair(task.state, task.operator_index);
             return true;
         }
+        if (continue_current_epoch) return false;
         if (!incremental_priority_tasks.empty()) {
             incremental_priority_tasks.clear();
             incremental_priority_task_cursor = 0;
@@ -179,6 +204,7 @@ bool SolveWork::Impl::schedule_next_incremental_alternative() {
                delayed_operator_indices.size()) {
             if (incremental_carrier_cursor >=
                 incremental_carriers.size()) {
+                if (continue_current_epoch) return false;
                 if (incremental_operator_cursor == 0 &&
                     !incremental_high_impact_continuation_refined) {
                     incremental_high_impact_continuation_refined = true;
@@ -219,6 +245,7 @@ bool SolveWork::Impl::schedule_next_incremental_alternative() {
          * sweep. Close the exact Cartesian ledger before reporting that no
          * alternative remains; this scan is reached only after the fast
          * operator-major cursors are exhausted. */
+        if (continue_current_epoch) return false;
         for (const std::uint32_t operator_index :
              delayed_operator_indices) {
             for (const std::uint32_t state : incremental_carriers) {
@@ -304,6 +331,7 @@ bool SolveWork::Impl::begin_incremental_upper_policy_pass() {
     retain_action_reason(
         "included:high_impact_executable_uppers:policy_pass_requested");
     incremental_upper_policy_pass = true;
+    incremental_upper_fixed_policy_proved = false;
     incremental_upper_policy_prior_bound =
         output_incumbent->certified_upper_bound;
     incremental_upper_temporary_rows.clear();
@@ -327,6 +355,7 @@ bool SolveWork::Impl::begin_incremental_upper_policy_pass() {
         retain_action_reason(
             "rejected:high_impact_executable_uppers:policy_pass_seed");
         incremental_upper_policy_pass = false;
+        incremental_upper_fixed_policy_proved = false;
         for (const std::uint64_t row :
              incremental_upper_temporary_rows) {
             transition_cache->rows.at(row).admitted = false;
@@ -753,6 +782,184 @@ void SolveWork::Impl::refresh_incremental_upper_incumbent() {
             incumbent.certified_upper_bound -
                 result.values[result.start_state]);
     }
+}
+
+void SolveWork::Impl::capture_initial_incremental_selected_policy() {
+    if (unverified_selected_policy_candidate.has_value() ||
+        !incremental_action_generation || incremental_envelope_closed ||
+        policy_iteration_failed || !policy_initialized || !policy_stable ||
+        !improper_policy_states.empty() ||
+        result.start_state >= result.values.size() ||
+        result.start_state >= policy_rows.size() ||
+        !std::isfinite(result.values[result.start_state]) ||
+        result.values[result.start_state] < 0.0) {
+        return;
+    }
+    const std::uint64_t no_row =
+        std::numeric_limits<std::uint64_t>::max();
+    if (policy_rows[result.start_state] == no_row) return;
+
+    const std::size_t state_count = result.values.size();
+    std::vector<std::uint8_t> reachable(state_count, 0);
+    std::vector<std::uint32_t> pending;
+    pending.reserve(state_count);
+    pending.push_back(result.start_state);
+    reachable[result.start_state] = 1;
+    bool materializable = true;
+    for (std::size_t cursor = 0;
+         cursor < pending.size() && materializable; ++cursor) {
+        const std::uint32_t state = pending[cursor];
+        if (state >= state_count || calc.is_goal_state(calc.state(state))) {
+            continue;
+        }
+        if (state >= policy_rows.size()) {
+            materializable = false;
+            break;
+        }
+        const std::uint64_t row_index = policy_rows[state];
+        if (row_index == no_row ||
+            row_index >= transition_cache->rows.size() ||
+            row_index >= priced_rows.size() ||
+            !transition_cache->rows[row_index].admitted) {
+            materializable = false;
+            break;
+        }
+        const SparseRow& row = transition_cache->rows[row_index];
+        const auto add_successor = [&](const std::uint32_t successor) {
+            if (successor >= state_count) {
+                materializable = false;
+            } else if (!reachable[successor]) {
+                reachable[successor] = 1;
+                pending.push_back(successor);
+            }
+        };
+        for (std::uint32_t i = 0;
+             materializable && i < row.transition_count; ++i) {
+            const std::uint64_t offset = row.transition_offset + i;
+            if (transition_cache->probabilities.at(offset) > 0.0) {
+                add_successor(
+                    transition_cache->successors.at(offset));
+            }
+        }
+        for (std::uint32_t i = 0;
+             materializable && i < row.choice_count; ++i) {
+            const SparseChoiceGroup& choice =
+                transition_cache->choices.at(row.choice_offset + i);
+            if (choice.probability <= 0.0) continue;
+            const std::uint32_t successor =
+                select_sparse_policy_choice_successor(
+                    *transition_cache, choice, state, result.values);
+            if (successor == kNoId) {
+                materializable = false;
+            } else {
+                add_successor(successor);
+            }
+        }
+    }
+    if (!materializable) return;
+
+    UnverifiedSelectedPolicyCandidate selected;
+    selected.has_exact_start_item = result.has_exact_start_item;
+    selected.exact_start_item = result.exact_start_item;
+    selected.selected_estimate = result.values[result.start_state];
+    selected.numerical_stability_stop = numerical_stability_stop;
+    BoundedPolicyIncumbent& snapshot = selected.snapshot;
+    snapshot.certified_upper_bound = selected.selected_estimate;
+    snapshot.evaluated_policy_cost = kInfinity;
+    snapshot.values = result.values;
+    snapshot.policy_rows = policy_rows;
+    snapshot.policy_rows.resize(state_count, no_row);
+    snapshot.policy_reachable = std::move(reachable);
+    snapshot.behavioral_representative_by_state =
+        result.behavioral_representative_by_state;
+    snapshot.restart_operator = restart_operator_index;
+    snapshot.restart_state = restart_state;
+    snapshot.round = result.diagnostics.focused_expansion_rounds;
+    snapshot.kind = "initial_selected_coarse_policy";
+    snapshot.goal_identity = goal_identity();
+    snapshot.economy_identity = economy_identity();
+    snapshot.action_vocabulary_identity =
+        action_vocabulary_identity();
+    snapshot.action_vocabulary_size = operators.size();
+    snapshot.graph_identity = graph_identity();
+    snapshot.artifact_identity = artifact_identity();
+    snapshot.source_generation = transition_cache->rows.size();
+    snapshot.target_generation = calc.state_count();
+    snapshot.graph_row_count = transition_cache->rows.size();
+    snapshot.graph_priced_row_count = priced_rows.size();
+    snapshot.graph_successor_count =
+        transition_cache->successors.size();
+    snapshot.graph_probability_count =
+        transition_cache->probabilities.size();
+    snapshot.graph_choice_count = transition_cache->choices.size();
+    snapshot.graph_choice_successor_count =
+        transition_cache->choice_successors.size();
+    snapshot.graph_choice_option_count =
+        transition_cache->choice_options.size();
+    snapshot.graph_prefix_identity =
+        incumbent_graph_prefix_identity(
+            snapshot.graph_row_count,
+            snapshot.graph_priced_row_count,
+            snapshot.graph_successor_count,
+            snapshot.graph_probability_count,
+            snapshot.graph_choice_count,
+            snapshot.graph_choice_successor_count,
+            snapshot.graph_choice_option_count);
+    snapshot.strict_state_provenance =
+        result.behavioral_representative_by_state.empty();
+    snapshot.policy_materialized = false;
+
+    std::uint64_t policy_hash = 1469598103934665603ULL;
+    const auto mix = [&policy_hash](const std::uint64_t value) {
+        policy_hash ^= value;
+        policy_hash *= 1099511628211ULL;
+    };
+    for (std::size_t state = 0;
+         state < snapshot.policy_rows.size(); ++state) {
+        const std::uint64_t row = snapshot.policy_rows[state];
+        mix(state);
+        mix(row);
+        if (row == no_row) continue;
+        mix(priced_rows[row].operator_index);
+        mix(std::bit_cast<std::uint64_t>(priced_rows[row].cost));
+    }
+    selected.selected_policy_hash = policy_hash;
+    try {
+        capture_incumbent_policy(snapshot);
+    } catch (const std::exception&) {
+        return;
+    }
+    std::uint64_t identity = 1469598103934665603ULL;
+    identity_mix(identity, selected.selected_policy_hash);
+    identity_mix(identity, snapshot.goal_identity);
+    identity_mix(identity, snapshot.economy_identity);
+    identity_mix(identity, snapshot.action_vocabulary_identity);
+    identity_mix(identity, snapshot.artifact_identity);
+    identity_mix(identity, snapshot.graph_prefix_identity);
+    identity_mix(identity, snapshot.source_generation);
+    identity_mix(identity, snapshot.target_generation);
+    identity_mix_string(identity, snapshot.kind);
+    selected.capture_identity = identity;
+    snapshot.portfolio_identity = identity;
+    snapshot.retained_owned_bytes = incumbent_owned_bytes(snapshot);
+    const std::uint64_t live = fast_estimated_owned_bytes();
+    if (!certified_fallback_fits_memory(
+            live, snapshot.retained_owned_bytes,
+            options.max_solver_owned_bytes)) {
+        return;
+    }
+    PolicyRefinementTelemetry& telemetry =
+        result.diagnostics.policy_refinement;
+    telemetry.selected_candidate_capture_attempted = true;
+    telemetry.selected_candidate_captured = true;
+    telemetry.selected_candidate_estimated_cost =
+        selected.selected_estimate;
+    telemetry.selected_candidate_owned_bytes =
+        snapshot.retained_owned_bytes;
+    telemetry.selected_candidate_identity = identity;
+    telemetry.selected_candidate_status =
+        "initial_restricted_policy_captured";
+    unverified_selected_policy_candidate = std::move(selected);
 }
 
 bool SolveWork::Impl::schedule_incremental_refinement(
@@ -1185,32 +1392,54 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
     if (admitted) return true;
 
     if (incremental_unevaluated_actions == 0) {
-        const auto unresolved = std::find_if(
+        if (incremental_resource_unresolved_actions != 0) {
+            /* All work outside a previously refused automatic family is now
+             * complete. Publish the retained executable policy as bounded;
+             * the family cap stays explicit and the action envelope cannot
+             * earn exact closure. */
+            record_cap(
+                incremental_deferred_resource_cap.empty()
+                    ? "automatic_action_envelope"
+                    : incremental_deferred_resource_cap);
+            incremental_envelope_closed = false;
+            return false;
+        }
+        const bool automatic_preparation_closed =
+            !options.high_impact_executable_uppers ||
+            (incremental_automatic_carrier_cursor >=
+                 incremental_carriers.size() &&
+             !incremental_dynamic_prepare_active &&
+             !incremental_dynamic_prepared);
+        const auto unadmitted = std::find_if(
             incremental_alternative_rows.begin(),
             incremental_alternative_rows.end(),
             [](const IncrementalAlternativeRow& candidate) {
-                return candidate.status ==
-                       IncrementalAlternativeRow::Status::Unresolved;
+                return candidate.status !=
+                       IncrementalAlternativeRow::Status::Admitted;
             });
         /*
          * Once every non-goal state and every filtered action are complete,
          * there is no fringe estimate left to refine. Overlap can then mean
          * that several rows form a proper/improving policy only together.
-         * Admit those rows to the exact closed Bellman problem together and
-         * let the following solve decide among them. They are already fully
-         * materialized legal alternatives; admission does not prescribe a
-         * row. One batch avoids repeating the same exact SCC proof once per
-         * row. This closure rule cannot run on the large incomplete Chaos
-         * fringe and is not the removed broad-graph overlap fallback.
+         * Earlier NonImproving classifications compare a row with a carrier
+         * upper used for scheduling; until that upper has survived compiled
+         * exact evaluation it cannot remove the row from a global closure
+         * claim. Admit every remaining fully materialized legal alternative
+         * to the exact closed Bellman problem together and let the following
+         * solve decide among them. Admission does not prescribe a row. One
+         * batch avoids repeating the same exact SCC proof once per row. This
+         * closure rule cannot run on the large incomplete Chaos fringe and is
+         * not the removed broad-graph overlap fallback.
          */
-        if (unresolved != incremental_alternative_rows.end() &&
+        if (unadmitted != incremental_alternative_rows.end() &&
             restricted_graph_closed &&
             incremental_restricted_values_ready &&
+            automatic_preparation_closed &&
             !result.diagnostics.resource_cap_hit) {
             for (IncrementalAlternativeRow& candidate :
                  incremental_alternative_rows) {
-                if (candidate.status !=
-                    IncrementalAlternativeRow::Status::Unresolved) {
+                if (candidate.status ==
+                    IncrementalAlternativeRow::Status::Admitted) {
                     continue;
                 }
                 transition_cache->rows.at(
@@ -1219,15 +1448,16 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
                     IncrementalAlternativeRow::Status::Admitted;
                 candidate.improvement_margin = 0.0;
             }
+            /* The next restart must be the ordinary closed-envelope lower
+             * optimization, not another one-proof upper-witness pass. If
+             * closure were delayed until the following classification, that
+             * upper pass would restore the stale restricted lower snapshot
+             * and the solver could publish ExactClosed without ever running
+             * Howard selection over this final joint row set. */
+            incremental_envelope_closed = true;
             return true;
         }
-        const bool automatic_preparation_closed =
-            !options.high_impact_executable_uppers ||
-            (incremental_automatic_carrier_cursor >=
-                 incremental_carriers.size() &&
-             !incremental_dynamic_prepare_active &&
-             !incremental_dynamic_prepared);
-        if (unresolved == incremental_alternative_rows.end() &&
+        if (unadmitted == incremental_alternative_rows.end() &&
             incremental_unevaluated_actions == 0 &&
             automatic_preparation_closed) {
             incremental_envelope_closed = true;
@@ -1304,6 +1534,8 @@ void SolveWork::Impl::finalize_incremental_diagnostics() {
         incremental_upper_policy_passes_proper;
     diagnostics.incremental_upper_policy_passes_rejected =
         incremental_upper_policy_passes_rejected;
+    diagnostics.incremental_upper_policy_fixed_policy_proofs =
+        incremental_upper_policy_fixed_policy_proofs;
     diagnostics.incremental_upper_policy_last_failure =
         incremental_upper_policy_last_failure;
     diagnostics.incremental_refinement_uncertainty =

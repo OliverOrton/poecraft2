@@ -22,6 +22,10 @@ struct SolveOptions {
     std::uint64_t max_strategy_json_bytes = 67108864;
     std::uint32_t max_diagnostic_samples = 32;
     std::uint64_t max_telemetry_json_bytes = 1048576;
+    /* Zero inherits max_discovered_states. A nonzero value bounds each
+     * optional post-solve policy certification/lift state space; exhausting
+     * it must retain an already independently verified executable policy. */
+    std::uint32_t max_policy_refinement_states = 0;
     /* Exact work-scheduling controls. These do not change the admitted
      * action set, state identity, transition kernels, or production caps. */
     std::uint32_t focused_expansion_checkpoint = 32;
@@ -697,6 +701,7 @@ struct SolveDiagnostics {
     std::uint64_t incremental_upper_policy_passes_started = 0;
     std::uint64_t incremental_upper_policy_passes_proper = 0;
     std::uint64_t incremental_upper_policy_passes_rejected = 0;
+    std::uint64_t incremental_upper_policy_fixed_policy_proofs = 0;
     std::string incremental_upper_policy_last_failure;
     double incremental_refinement_uncertainty = 0.0;
     std::vector<std::string> incremental_action_witnesses;

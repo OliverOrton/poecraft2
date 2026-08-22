@@ -115,6 +115,7 @@ export interface SolverBenchmarkCase {
         max_strategy_json_bytes: number;
         max_diagnostic_samples?: number;
         max_telemetry_json_bytes?: number;
+        max_policy_refinement_states?: number;
         full_evidence?: boolean;
         strict_states?: boolean;
         kernel_reuse?: boolean;
@@ -425,6 +426,15 @@ function validateCase(value: unknown, path: string): SolverBenchmarkCase {
         if (typeof caps[key] !== "number" || (caps[key] as number) < 0) {
             throw new Error(`${path}.caps.${key} must be a non-negative number`);
         }
+    }
+    if (
+        caps.max_policy_refinement_states !== undefined &&
+        (typeof caps.max_policy_refinement_states !== "number" ||
+            caps.max_policy_refinement_states < 0)
+    ) {
+        throw new Error(
+            `${path}.caps.max_policy_refinement_states must be a non-negative number`,
+        );
     }
     for (const key of [
         "full_evidence",

@@ -2425,6 +2425,8 @@ CaseResult run_case(
             caps, "max_diagnostic_samples", 32);
         solve_options.max_telemetry_json_bytes = optional_u64(
             caps, "max_telemetry_json_bytes", 1048576);
+        solve_options.max_policy_refinement_states = optional_u32(
+            caps, "max_policy_refinement_states", 0);
         solve_options.max_absolute_optimality_gap = optional_nonnegative_double(
             caps, "max_absolute_optimality_gap", 0.0);
         solve_options.max_relative_optimality_gap = optional_nonnegative_double(

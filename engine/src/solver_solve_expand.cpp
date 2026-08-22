@@ -648,7 +648,8 @@ bool SolveWork::Impl::prepare_state_expansion(
         limits.max_imprint_program_work =
             options.max_imprint_program_work;
         limits.consider_imprint_programs =
-            options.consider_imprint_programs;
+            options.consider_imprint_programs &&
+            !imprint_family_resource_deferred;
         limits.prices = &prices;
         const auto retain_certified_upper = [&](const double upper) {
             if (!std::isfinite(upper) || upper < 0.0 ||
@@ -917,13 +918,34 @@ bool SolveWork::Impl::prepare_state_expansion(
                 incremental_action_generation = true;
                 ++incremental_resource_unresolved_actions;
                 incremental_envelope_closed = false;
-                expansion_incremental_resource_limited = true;
                 result.diagnostics.incremental_action_generation = true;
                 result.diagnostics.incremental_action_envelope_closed =
                     false;
                 result.diagnostics.incremental_actions_unresolved =
                     incremental_resource_unresolved_actions;
             }
+            if (options.consider_imprint_programs &&
+                (batch.resource_cap == "max_imprint_program_work" ||
+                 batch.resource_cap == "max_imprint_program_depth")) {
+                /* Imprint is one optional automatic family inside a larger
+                 * carrier-local transaction. Its unfinished grammar remains
+                 * an exactness obligation, but it must not prevent priced
+                 * Eldritch, bench, protection, and other families from being
+                 * materialized. The admission transaction above rolled back;
+                 * the next cooperative call replays this carrier once with
+                 * only Imprint disabled, and later carriers inherit the same
+                 * already-exhausted family budget. */
+                imprint_family_resource_deferred = true;
+                incremental_deferred_resource_cap = batch.resource_cap;
+                result.diagnostics.expansion_prepare_ns +=
+                    static_cast<std::uint64_t>(
+                        std::chrono::duration_cast<std::chrono::nanoseconds>(
+                            std::chrono::steady_clock::now() -
+                            prepare_started)
+                            .count());
+                return false;
+            }
+            expansion_incremental_resource_limited = true;
             throw SolverResourceLimit(
                 batch.resource_cap, batch.resource_limit);
         }

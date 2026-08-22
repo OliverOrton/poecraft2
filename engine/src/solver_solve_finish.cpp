@@ -2735,10 +2735,18 @@ SolveWork::Impl::run_finalization() {
                 invalid_reason = "goal_identity_changed";
             } else if (snapshot.economy_identity != economy_identity()) {
                 invalid_reason = "economy_identity_changed";
-            } else if (snapshot.action_vocabulary_size != operators.size() ||
+            } else if (operators.size() <
+                           snapshot.action_vocabulary_size ||
                        snapshot.action_vocabulary_identity !=
-                           action_vocabulary_identity()) {
-                invalid_reason = "action_vocabulary_changed";
+                           action_vocabulary_prefix_identity(
+                               snapshot.action_vocabulary_size)) {
+                /* State-local automatic operators append to the vocabulary
+                 * while the saved policy waits for final certification. The
+                 * captured row/operator indices remain valid when their
+                 * original prefix is unchanged; later operators are merely
+                 * additional alternatives and cannot invalidate execution
+                 * of this immutable candidate. */
+                invalid_reason = "action_vocabulary_prefix_changed";
             } else if (snapshot.artifact_identity != artifact_identity()) {
                 invalid_reason = "artifact_generation_changed";
             } else if (snapshot.source_generation >
@@ -3477,8 +3485,16 @@ SolveWork::Impl::run_finalization() {
                 std::chrono::steady_clock::now();
             refinement::CompiledPolicyAssertion assertion;
             if (assertion_options.has_value()) {
+                SolveOptions scoped_assertion_options =
+                    *assertion_options;
+                if (options.max_policy_refinement_states != 0) {
+                    scoped_assertion_options.max_discovered_states =
+                        std::min(
+                            scoped_assertion_options.max_discovered_states,
+                            options.max_policy_refinement_states);
+                }
                 refinement::CompiledPolicyAssertionWork assertion_work(
-                    calc, result, prices, *assertion_options,
+                    calc, result, prices, scoped_assertion_options,
                     "selected core policy");
                 while (!assertion_work.progress().done) {
                     const auto assertion_progress =
@@ -3530,7 +3546,10 @@ SolveWork::Impl::run_finalization() {
             telemetry.direct_certification_failure_classification =
                 assertion.failure_classification;
             telemetry.direct_certification_resource_cap =
-                assertion.resource_cap;
+                options.max_policy_refinement_states != 0 &&
+                        assertion.resource_cap == "max_discovered_states"
+                    ? "max_policy_refinement_states"
+                    : assertion.resource_cap;
             telemetry.direct_certification_solver_cost =
                 assertion.solver_cost;
             telemetry.direct_certification_exact_cost =
@@ -4020,8 +4039,22 @@ SolveWork::Impl::run_finalization() {
                     assertion, "direct_compiled_core_policy",
                     "direct_final_graph_evaluation",
                     telemetry.preferred_publication_failure_reason);
+                const bool refinement_state_budget_exhausted =
+                    options.max_policy_refinement_states != 0 &&
+                    assertion.resource_cap == "max_discovered_states";
+                if (refinement_state_budget_exhausted) {
+                    /* This cap owns optional proof improvement, not the
+                     * already verified executable fallback. Do not spend the
+                     * same exhausted allowance again in strict lift before
+                     * returning that bounded policy. */
+                    verify_retained_portfolio();
+                    if (best_current_certified_fallback() != nullptr) {
+                        skip_strict_lift = publish_certified_fallback(
+                            core_solve_termination);
+                    }
+                }
                 direct_certification_requires_strict_lift =
-                    telemetry.triggers == 0;
+                    telemetry.triggers == 0 && !skip_strict_lift;
             }
         }
         if (result.policy_available &&
@@ -4068,10 +4101,16 @@ SolveWork::Impl::run_finalization() {
                 std::chrono::steady_clock::now();
             refinement::PolicyExactLiftCertificate certificate;
             if (lift_options.has_value()) {
+                SolveOptions scoped_lift_options = *lift_options;
+                if (options.max_policy_refinement_states != 0) {
+                    scoped_lift_options.max_discovered_states = std::min(
+                        scoped_lift_options.max_discovered_states,
+                        options.max_policy_refinement_states);
+                }
                 co_await solve_detail::CooperativeCheckpoint{};
                 refinement::PolicyExactLiftWork lift_work(
                     calc, result, exact_start_item, prices,
-                    *lift_options, "solved policy");
+                    scoped_lift_options, "solved policy");
                 co_await solve_detail::CooperativeCheckpoint{
                     lift_work.retained_bytes()};
                 while (!lift_work.progress().done) {
@@ -4159,7 +4198,10 @@ SolveWork::Impl::run_finalization() {
             telemetry.strict_lift_failure_reason =
                 certificate.failure_reason;
             telemetry.strict_lift_resource_cap =
-                certificate.resource_cap;
+                options.max_policy_refinement_states != 0 &&
+                        certificate.resource_cap == "max_discovered_states"
+                    ? "max_policy_refinement_states"
+                    : certificate.resource_cap;
             telemetry.strict_global_lower_bound_closed =
                 certificate.global_lower_bound_closed;
             telemetry.global_lower_bound_closed =

@@ -85,6 +85,11 @@ SolveWork::Impl::Impl(
             retain_action_reason(
                 "excluded:automatic_imprint_programs:caller_action_scope");
         }
+        if (options.max_policy_refinement_states != 0) {
+            retain_action_reason(
+                "bounded:optional_policy_refinement_states:" +
+                std::to_string(options.max_policy_refinement_states));
+        }
         result.diagnostics.registry_actions = static_cast<std::uint32_t>(
             calc.registry().actions.size());
         result.diagnostics.candidate_actions = static_cast<std::uint32_t>(

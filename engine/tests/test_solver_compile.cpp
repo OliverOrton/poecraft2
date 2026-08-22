@@ -1135,6 +1135,43 @@ void run_synthetic_gate() {
         PC_CHECK(std::fabs(mean - expected) < 0.15);
         PC_CHECK(std::fabs(expected - 1.0 / p) < 1e-6);
 
+        /* A quotient member can retain a non-authoritative infinite cached
+         * value after its proper fixed policy has been evaluated at the
+         * root. That must only suppress presentation metadata; it must not
+         * turn the executable strategy document into invalid JSON. */
+        SolveResult nonfinite_annotation = solved;
+        std::uint32_t non_start_working_state = kNoId;
+        for (std::uint32_t state = 0;
+             state < nonfinite_annotation.values.size(); ++state) {
+            if (state != nonfinite_annotation.start_state &&
+                nonfinite_annotation.policy_reachable[state] &&
+                !nonfinite_annotation.goal_states[state]) {
+                non_start_working_state = state;
+                break;
+            }
+        }
+        PC_CHECK(non_start_working_state != kNoId);
+        if (non_start_working_state != kNoId) {
+            nonfinite_annotation.values[non_start_working_state] =
+                std::numeric_limits<double>::infinity();
+            const std::string annotation_json =
+                compile_policy_strategy_json(
+                    calc, nonfinite_annotation,
+                    "nonfinite-annotation");
+            PC_CHECK(annotation_json.find(":inf") == std::string::npos);
+            PC_CHECK(annotation_json.find(":nan") == std::string::npos);
+            auto annotation_strategy = compile_strategy_json(
+                session, annotation_json.data(), annotation_json.size());
+            PC_CHECK(annotation_strategy != nullptr);
+            const StrategyEvalResult annotation_exact =
+                evaluate_compiled(session, annotation_json, prices);
+            PC_CHECK(annotation_exact.converged);
+            PC_CHECK(annotation_exact.cost_complete);
+            PC_CHECK(std::fabs(
+                         annotation_exact.total_expected_cost - expected) <
+                     1e-9);
+        }
+
         /* The strict-state oracle takes the exact decision-DAG compiler path
          * rather than the completed behavioral-quotient predicates. It must
          * remain executable and preserve the same start value. */

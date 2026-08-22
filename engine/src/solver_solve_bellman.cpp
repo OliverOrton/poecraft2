@@ -1746,15 +1746,19 @@ bool SolveWork::Impl::run_policy_iteration_unit() {
             return false;
         }
         if (policy_unit_stage == PolicyUnitStage::Evaluate) {
-            if (incremental_upper_policy_pass &&
-                residual <= acceptable_residual()) {
+            if (incremental_upper_policy_pass) {
                 /*
                  * The current policy has just been evaluated exactly and
-                 * proved proper. At executable-upper scale, a residual below
-                 * the ordinary relative convergence tolerance is enough to
-                 * publish that feasible policy; upper qualification does not
-                 * claim an optimal policy on the partial graph.
+                 * proved proper. That is the complete proof required for an
+                 * executable upper witness: Bellman improvement would only
+                 * optimize this open partial graph and is neither required
+                 * for feasibility nor authority to close the action envelope.
+                 * In particular, `residual` still describes the pre-evaluation
+                 * seed/selection comparison and may be large even though the
+                 * selected fixed policy now has exact finite values.
                  */
+                ++incremental_upper_policy_fixed_policy_proofs;
+                incremental_upper_fixed_policy_proved = true;
                 policy_stable = true;
                 backup_active = false;
                 finish_unit();
@@ -1996,13 +2000,30 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                     const bool action_added_states =
                         !incremental_alternative_rows.empty() &&
                         incremental_alternative_rows.back().states_added != 0;
-                    if (action_added_states) {
+                    incremental_epoch_added_states =
+                        incremental_epoch_added_states ||
+                        action_added_states;
+                    /* Evaluate every automatic option on the frozen reachable
+                     * carrier frontier, or every carrier for one delayed
+                     * primitive, against the same incumbent/frontier epoch
+                     * before restarting lower optimization and proving
+                     * another executable upper.
+                     * Row materialization is independent of Bellman values;
+                     * newly interned support remains an open obligation until
+                     * this natural scheduler boundary is reached. */
+                    if (options.high_impact_executable_uppers &&
+                        schedule_next_incremental_alternative(true)) {
+                        continue;
+                    }
+                    if (incremental_epoch_added_states) {
                         /*
-                         * Publish late support into the value vectors before
-                         * classification. Goal terminals need no expansion;
-                         * non-goal deltas remain zero/feasible-bound fringe
-                         * and are selected by the following Q refinement.
+                         * Publish the epoch's late support into the value
+                         * vectors before classification. Goal terminals need
+                         * no expansion; non-goal deltas remain
+                         * zero/feasible-bound fringe and are selected by the
+                         * following Q refinement.
                          */
+                        incremental_epoch_added_states = false;
                         incremental_restricted_values_ready = false;
                         incremental_upper_policy_dirty = true;
                         begin_focused_lower_solve();

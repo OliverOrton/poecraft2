@@ -1807,12 +1807,23 @@ std::string compile_policy_strategy_json(
     for (const std::uint32_t leader : emitted_states) {
         const std::vector<std::uint32_t>& members =
             states_by_leader.at(leader);
-        const std::string first_value = number(result.values[members.front()]);
-        const bool uniform = std::all_of(
-            members.begin() + 1, members.end(),
-            [&](const std::uint32_t member) {
-                return number(result.values[member]) == first_value;
-            });
+        const double first_cost = result.values[members.front()];
+        const std::string first_value = number(first_cost);
+        const bool uniform = std::isfinite(first_cost) &&
+            std::all_of(
+                members.begin() + 1, members.end(),
+                [&](const std::uint32_t member) {
+                    return std::isfinite(result.values[member]) &&
+                           number(result.values[member]) == first_value;
+                });
+        /* Expected cost is presentation metadata, not routing or execution
+         * authority. Some independently solved quotient policies leave
+         * non-authoritative member values at infinity while still carrying a
+         * complete proper policy and a finite evaluated root cost. Emitting
+         * snprintf(infinity) produces bare `inf`, which is invalid JSON and
+         * prevents the executable policy from reaching exact evaluation.
+         * Omit the annotation for such a region just as we already do for a
+         * finite merged region whose member values differ. */
         region_expected_cost.emplace(
             leader, uniform ? std::optional<std::string>{first_value}
                             : std::nullopt);

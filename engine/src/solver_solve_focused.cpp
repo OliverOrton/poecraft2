@@ -545,6 +545,20 @@ bool SolveWork::Impl::begin_focused_upper_solve() {
         if (from_incremental_incumbent) {
             result.values = output_incumbent->values;
             result.values.resize(calc.state_count(), kInfinity);
+            /* The upper pass owns one exact fixed-policy proof, so its
+             * InitialSelect step must start from the incumbent's executable
+             * row choices. Re-running the generic ranked initializer would
+             * choose the first merely proper row at every affected carrier;
+             * without later Howard sweeps that proves an arbitrary policy
+             * and can discard a much cheaper incumbent. Preserve the known
+             * policy, then let ordinary selection propose the best newly
+             * admitted row against the incumbent value vector before the
+             * single proof. */
+            policy_rows = output_incumbent->policy_rows;
+            policy_rows.resize(
+                calc.state_count(),
+                std::numeric_limits<std::uint64_t>::max());
+            policy_initialized = true;
             focused_frontier_upper_operator =
                 output_incumbent->frontier_operators;
             focused_frontier_upper_operator.resize(
@@ -1058,6 +1072,7 @@ void SolveWork::Impl::finish_focused_upper_solve(const bool succeeded) {
         focused_frontier_upper_operator.clear();
         focused_upper_mode = false;
         incremental_upper_policy_pass = false;
+        incremental_upper_fixed_policy_proved = false;
         policy_iteration_failed = false;
         policy_initialized = true;
         policy_stable = true;
@@ -1145,6 +1160,16 @@ void SolveWork::Impl::run_focused_lower_unit() {
             phase = SolvePhase::Done;
             return;
         }
+        if (!backup_active && focused_upper_mode &&
+            incremental_upper_policy_pass &&
+            incremental_upper_fixed_policy_proved) {
+            /* A completed exact proper fixed-policy evaluation is the whole
+             * executable-upper proof. Its inherited Bellman residual is an
+             * optimality measure for the open partial graph and must neither
+             * trigger Howard improvement nor prevent witness publication. */
+            finish_focused_upper_solve(true);
+            return;
+        }
         if (!backup_active && optimization_converged()) {
             if (focused_upper_mode) {
                 finish_focused_upper_solve(true);
@@ -1161,6 +1186,7 @@ void SolveWork::Impl::run_focused_lower_unit() {
                         result.diagnostics.focused_upper_bound -
                             result.diagnostics.focused_lower_bound);
                 }
+                capture_initial_incremental_selected_policy();
                 if (begin_incremental_upper_policy_pass()) return;
                 focus_optimizing = false;
                 focused_lower_mode = false;

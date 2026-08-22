@@ -237,6 +237,19 @@ active, invalidates incompatible retained transition/admission caches, and
 records the exclusion in telemetry and compiled-strategy provenance. Any
 exact result is exact only within that reduced action scope.
 
+If requested Imprint discovery reaches its depth/work boundary, its staged
+carrier transaction rolls back and the Imprint family remains open. Solve
+replays that carrier without Imprint, drains the other automatic/delayed
+families, and can publish its verified incumbent as bounded; it never converts
+the unfinished grammar into a reduced-scope exact result.
+
+Post-solve direct certification and strict lift are optional attempts to
+improve or strengthen publication after an executable fallback is already
+verified. `max_policy_refinement_states` bounds those attempts independently
+of main discovery. Exhausting a nonzero direct-certification budget publishes
+the verified fallback without launching a second strict-lift attempt against
+the same exhausted allowance. Zero inherits the main discovered-state cap.
+
 When a completed gated root destructive-reforge row has positive terminal
 mass and every non-goal exit proves the same legal exact action-local kernel,
 Solve immediately records the executable fixed policy “repeat that reforge

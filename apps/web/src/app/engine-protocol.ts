@@ -693,6 +693,8 @@ export interface SolveOptions {
     max_strategy_json_bytes?: number;
     max_diagnostic_samples?: number;
     max_telemetry_json_bytes?: number;
+    /** Optional post-solve certification/lift state budget. */
+    max_policy_refinement_states?: number;
     max_absolute_optimality_gap?: number;
     max_relative_optimality_gap?: number;
     full_evidence?: boolean;

@@ -674,6 +674,11 @@ solver::SolveOptions solve_options(const pc_solve_options* options) {
         value.max_relative_optimality_gap =
             options->max_relative_optimality_gap;
     }
+    if (PC_SOLVE_OPTION_HAS(max_policy_refinement_states) &&
+        options->max_policy_refinement_states != 0) {
+        value.max_policy_refinement_states =
+            options->max_policy_refinement_states;
+    }
     return value;
 #undef PC_SOLVE_OPTION_HAS
 }

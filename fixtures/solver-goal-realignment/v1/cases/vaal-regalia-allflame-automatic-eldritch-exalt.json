@@ -134,6 +134,7 @@
     "max_solver_owned_bytes": 536870912,
     "max_diagnostic_samples": 64,
     "max_telemetry_json_bytes": 67108864,
+    "max_policy_refinement_states": 5000,
     "max_compiled_nodes": 100000,
     "max_compiled_edges": 400000,
     "max_strategy_json_bytes": 67108864,

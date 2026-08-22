@@ -6125,8 +6125,12 @@ void run_incremental_action_generation_tests() {
     PC_CHECK(
         result.diagnostics.incremental_action_envelope_closed);
     PC_CHECK(result.diagnostics.incremental_actions_admitted > 0);
+    /* Scheduling may provisionally call a completed row non-improving, but
+     * exact envelope closure admits every materialized legal row before the
+     * final joint Bellman solve. No such scheduling classification may
+     * survive as an excluded action in an exact result. */
     PC_CHECK(
-        result.diagnostics.incremental_actions_non_improving > 0);
+        result.diagnostics.incremental_actions_non_improving == 0);
     PC_CHECK(
         result.diagnostics.incremental_bellman_reoptimizations > 0);
     PC_CHECK(
@@ -7634,6 +7638,78 @@ void run_automatic_imprint_cooperative_tests() {
         numerical_pass_work.incremental_upper_policy_last_failure ==
         "strict_policy_order_unreconciled_at_numerical_stability");
 
+    /* A one-proof incremental pass has no later Howard round in which to
+     * recover from the generic first-proper-row initializer. Seed selection
+     * with the executable incumbent policy so newly admitted rows are tested
+     * as changes to the known witness rather than as a replacement by an
+     * arbitrary proper policy. */
+    CalcContext incumbent_seed_calc(
+        scheduled_session, scheduled_goal, scheduled_registry,
+        {scheduled_transmute, scheduled_alteration,
+         scheduled_augment, scheduled_regal,
+         scheduled_restart, scheduled_delayed});
+    SolveWorkTestAccess::Impl incumbent_seed_work(
+        incumbent_seed_calc, scheduled_start,
+        scheduled_prices, scheduled_options);
+    SolveWorkTestAccess::Impl::BoundedPolicyIncumbent seed_incumbent;
+    seed_incumbent.certified_upper_bound = 17.0;
+    seed_incumbent.evaluated_policy_cost = 17.0;
+    seed_incumbent.values.assign(
+        incumbent_seed_calc.state_count(), 17.0);
+    seed_incumbent.policy_rows.assign(
+        incumbent_seed_calc.state_count(), 7);
+    seed_incumbent.frontier_operators.assign(
+        incumbent_seed_calc.state_count(), scheduled_restart);
+    incumbent_seed_work.output_incumbent = std::move(seed_incumbent);
+    incumbent_seed_work.incremental_upper_policy_pass = true;
+    PC_CHECK(incumbent_seed_work.begin_focused_upper_solve());
+    PC_CHECK(incumbent_seed_work.policy_initialized);
+    PC_CHECK(
+        incumbent_seed_work.policy_rows.size() ==
+        incumbent_seed_calc.state_count());
+    PC_CHECK(std::all_of(
+        incumbent_seed_work.policy_rows.begin(),
+        incumbent_seed_work.policy_rows.end(),
+        [](const std::uint64_t row) { return row == 7; }));
+
+    /* An incremental executable-upper pass proves feasibility, not Bellman
+     * optimality on the still-open partial graph. Once its selected fixed
+     * policy has completed exact proper evaluation, even an inherited
+     * ceiling residual must publish the witness without entering Howard
+     * improvement. The goal-only carrier is the smallest proper policy and
+     * isolates this stage boundary from expansion scheduling. */
+    CalcContext fixed_proof_calc(
+        scheduled_session, scheduled_goal, scheduled_registry,
+        {scheduled_transmute, scheduled_alteration,
+         scheduled_augment, scheduled_regal,
+         scheduled_restart, scheduled_delayed});
+    SolveWorkTestAccess::Impl fixed_proof_work(
+        fixed_proof_calc, scheduled_start,
+        scheduled_prices, scheduled_options);
+    fixed_proof_work.incremental_upper_policy_pass = true;
+    fixed_proof_work.policy_unit_stage =
+        SolveWorkTestAccess::Impl::PolicyUnitStage::Evaluate;
+    fixed_proof_work.policy_initialized = true;
+    fixed_proof_work.backup_active = true;
+    fixed_proof_work.residual = kValueCeiling;
+    fixed_proof_work.result.expanded.assign(
+        fixed_proof_calc.state_count(), 0);
+    fixed_proof_work.result.goal_states.assign(
+        fixed_proof_calc.state_count(), 0);
+    fixed_proof_work.result.expanded[
+        fixed_proof_work.result.start_state] = 1;
+    fixed_proof_work.result.goal_states[
+        fixed_proof_work.result.start_state] = 1;
+    PC_CHECK(fixed_proof_work.run_policy_iteration_unit());
+    PC_CHECK(
+        fixed_proof_work
+            .incremental_upper_policy_fixed_policy_proofs == 1);
+    PC_CHECK(fixed_proof_work.incremental_upper_fixed_policy_proved);
+    PC_CHECK(fixed_proof_work.policy_stable);
+    PC_CHECK(!fixed_proof_work.backup_active);
+    PC_CHECK(fixed_proof_work.sweeps == 0);
+    PC_CHECK(fixed_proof_work.residual == kValueCeiling);
+
     /* Resuming one cooperative checkpoint at a time must produce the same
      * complete envelope without replaying a discovery unit. Every returned
      * worker slice and every still-atomic Calc outcomes leaf stays below the
@@ -7860,6 +7936,41 @@ void run_automatic_imprint_cooperative_tests() {
     PC_CHECK(
         deferred_cached.status ==
         StateLocalAutomaticBatchStatus::Complete);
+
+    /* A solve-wide Imprint refusal leaves that family unresolved but must
+     * not abort the remaining incremental action envelope. The interrupted
+     * carrier is replayed without Imprint and every other scheduled action
+     * reaches a terminal row classification before bounded publication. */
+    CalcContext deferred_solve_calc(
+        session, goal, registry, candidates,
+        false, true, false, std::nullopt, {}, false);
+    SolveOptions deferred_solve_options;
+    deferred_solve_options.goal_progress_gated_reforges = true;
+    deferred_solve_options.allow_economic_restart = false;
+    deferred_solve_options.high_impact_executable_uppers = true;
+    deferred_solve_options.max_imprint_program_work = 1;
+    deferred_solve_options.max_discovered_states = 4096;
+    deferred_solve_options.max_expanded_states = 4096;
+    deferred_solve_options.max_state_action_rows = 50000;
+    deferred_solve_options.max_transitions = 500000;
+    deferred_solve_options.max_reforge_work = 1000000;
+    deferred_solve_options.max_policy_refinement_states = 64;
+    const SolveResult deferred_solve = solve(
+        deferred_solve_calc, magic, prices, deferred_solve_options);
+    PC_CHECK(std::find(
+                 deferred_solve.diagnostics.cap_hits.begin(),
+                 deferred_solve.diagnostics.cap_hits.end(),
+                 "max_imprint_program_work") !=
+             deferred_solve.diagnostics.cap_hits.end());
+    PC_CHECK(
+        !deferred_solve.diagnostics.incremental_action_envelope_closed);
+    PC_CHECK(
+        deferred_solve.diagnostics.incremental_actions_unresolved > 0);
+    PC_CHECK(
+        deferred_solve.diagnostics.incremental_actions_unevaluated == 0);
+    PC_CHECK(
+        deferred_solve.diagnostics.incremental_upper_policy_passes_started >
+        0);
 
     std::printf(
         "automatic Imprint cooperative: resumes=%llu max_slice_ms=%.3f "

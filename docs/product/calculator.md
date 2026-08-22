@@ -99,7 +99,8 @@ The Solve surface is distinct from one-action odds:
 5. Open a fresh scoped solve handle with
    `goal_progress_gated_reforges: true`,
    `allow_economic_restart: false`, and the user-selected
-   `consider_imprint_programs` scope (default checked), then run the stateful native
+   `consider_imprint_programs` scope (default checked), plus a 5,000-state
+   `max_policy_refinement_states` allowance, then run the stateful native
    begin/step/finish API in the worker with progress and cancellation.
    Calculator therefore does not abandon an ordinary carrier merely because a
    fresh start is cheaper. An unchecked “Allow abandoning this item and buying
@@ -110,6 +111,10 @@ The Solve surface is distinct from one-action odds:
    programs; other automatic families remain eligible. Results and compiled
    strategies disclose that reduced action scope and make no optimality claim
    over the excluded family.
+   The refinement allowance affects only optional attempts to certify a
+   cheaper broad/strict policy after an executable fallback is already
+   independently verified. Main solving and the fallback's exact evaluation
+   retain their normal caps.
 6. Compile whenever the result has `policy_available`, including bounded cap
    and target-gap results. Transfer the compiled document as one byte buffer,
    decode/parse it once on the main thread, assign missing board positions,

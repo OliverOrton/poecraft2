@@ -579,6 +579,24 @@ historical default is `true`. This is a caller-selected action restriction,
 not a dominance proof; telemetry and compiled strategy provenance disclose
 the choice.
 
+An Imprint depth/work refusal is family-local scheduling evidence. Its
+transaction is rolled back, the family stays unresolved and blocks exact
+closure, and Solve may replay the carrier without Imprint to finish unrelated
+automatic and delayed actions before bounded publication. A refusal on one
+carrier exhausts that solve's Imprint-family budget; it is not repeatedly
+spent on later carriers.
+
+`max_policy_refinement_states` is an append-only deterministic allowance for
+optional post-solve certification of a cheaper broad policy or strict lift.
+Zero inherits `max_discovered_states`, preserving historical native behavior.
+When a nonzero allowance is exhausted after an executable fallback has been
+independently compiled and exact-evaluated, that fallback publishes bounded
+and the solver does not repeat the exhausted allowance in strict lift. The
+option never limits main state/action discovery, lower-bound authority, or
+fallback verification. Calculator supplies 5,000 states so a speculative
+policy improvement cannot delay an already verified result through the whole
+200,000-state solve envelope.
+
 There is no Monte Carlo fallback in the calculation engine. Sampling is used
 as test or simulator evidence, not to produce `pc_calc_action_outcomes` or
 solver rows. There is also no public `pc_calc_batch_outcomes` function; the

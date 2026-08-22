@@ -598,6 +598,8 @@ bool parse_solve_options(
         spec, "max_absolute_optimality_gap");
     options.max_relative_optimality_gap = obj_double(
         spec, "max_relative_optimality_gap");
+    options.max_policy_refinement_states = obj_u32(
+        spec, "max_policy_refinement_states");
     const Value* full_evidence = spec.find("full_evidence");
     if (full_evidence != nullptr && full_evidence->type == Type::Bool &&
         full_evidence->boolean) {

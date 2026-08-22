@@ -715,17 +715,21 @@ struct SolveWork::Impl {
     std::uint32_t incremental_high_impact_wave = 0;
     bool incremental_upper_policy_dirty = true;
     bool incremental_upper_policy_pass = false;
+    bool incremental_upper_fixed_policy_proved = false;
     double incremental_upper_policy_prior_bound = kInfinity;
     std::vector<std::uint64_t> incremental_upper_temporary_rows;
+    bool incremental_epoch_added_states = false;
     std::vector<std::uint32_t> incremental_carriers;
     std::size_t incremental_carrier_cursor = 0;
     /* High-impact delayed rows use operator-major scheduling and therefore
      * cannot share incremental_carrier_cursor with carrier-local automatic
      * preparation. This cursor is the exact automatic-envelope obligation. */
     std::size_t incremental_automatic_carrier_cursor = 0;
+    std::size_t incremental_automatic_epoch_end = 0;
     std::size_t incremental_operator_cursor = 0;
     bool incremental_dynamic_prepared = false;
     bool incremental_dynamic_prepare_active = false;
+    bool incremental_resume_epoch_after_dynamic_prepare = false;
     std::size_t incremental_dynamic_operator_cursor = 0;
     std::vector<std::uint32_t> incremental_dynamic_operator_indices;
     struct IncrementalAlternativeRow {
@@ -767,6 +771,7 @@ struct SolveWork::Impl {
     std::uint64_t incremental_upper_policy_passes_started = 0;
     std::uint64_t incremental_upper_policy_passes_proper = 0;
     std::uint64_t incremental_upper_policy_passes_rejected = 0;
+    std::uint64_t incremental_upper_policy_fixed_policy_proofs = 0;
     std::string incremental_upper_policy_last_failure;
     double incremental_refinement_uncertainty = 0.0;
     std::uint32_t expansion_states_outside_chaos_support = 0;
@@ -801,6 +806,12 @@ struct SolveWork::Impl {
     std::unordered_map<const OutcomeDistribution*, SharedKernelMemo>
         shared_kernel_rows;
     std::unordered_set<std::uint64_t> automatic_admission_records;
+    /* An Imprint grammar refusal is a solve-wide open family obligation.
+     * Retry the interrupted carrier without Imprint so unrelated automatic
+     * families can still close, but never spend the same family budget again
+     * on a later carrier in this solve. */
+    bool imprint_family_resource_deferred = false;
+    std::string incremental_deferred_resource_cap;
     struct AutomaticCarrierWork {
         std::uint64_t candidates = 0;
         std::uint64_t candidate_variants = 0;
@@ -1454,7 +1465,8 @@ struct SolveWork::Impl {
 
     void retain_incremental_carrier(const std::uint32_t state);
 
-    bool schedule_next_incremental_alternative();
+    bool schedule_next_incremental_alternative(
+        bool continue_current_epoch = false);
 
     bool classify_incremental_alternatives();
 
@@ -1473,6 +1485,8 @@ struct SolveWork::Impl {
     bool begin_incremental_upper_policy_pass();
 
     void refresh_incremental_upper_incumbent();
+
+    void capture_initial_incremental_selected_policy();
 
     void restart_incremental_optimization();
 
