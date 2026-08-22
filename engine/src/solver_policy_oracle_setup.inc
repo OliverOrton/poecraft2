@@ -305,6 +305,18 @@
         sync_strict_reforge_resource_telemetry();
     }
 
+    void quotient_release_transient_kernel_caches() {
+        /* Published compact rows and proof payloads are the persistent
+         * quotient authority. Calculator distributions remain shared for the
+         * complete carrier-wide proof that is currently being built, then can
+         * be recreated if a later obligation needs the same mechanic row. */
+        strict_->release_solve_transition_caches();
+        adapter_memory_cache_initialized_ = false;
+        adapter_memory_checks_since_audit_ = 0;
+        adapter_memory_cached_non_child_bytes_ = 0;
+        adapter_memory_projected_growth_bytes_ = 0;
+    }
+
     ExactState quotient_materialize_locator(
             const std::uint32_t strict_state) {
         auto [state, inserted] = intern_strict_state(strict_state);

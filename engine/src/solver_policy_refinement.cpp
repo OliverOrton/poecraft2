@@ -1280,6 +1280,7 @@ lift_policy_quotient_pass_task(
                 telemetry.strict_transitions_built;
             co_await solve_detail::CooperativeCheckpoint{combined};
         }
+        oracle.quotient_release_transient_kernel_caches();
 
         const std::uint64_t locator_bytes =
             locators.capacity() * sizeof(std::uint32_t) +
@@ -2361,7 +2362,8 @@ lift_policy_quotient_pass_task(
                     : std::string{});
         }
         const auto publish_current_upper =
-                [&](const quotient::QuotientBellmanResult& solved_upper)
+                [&](const quotient::QuotientBellmanResult& solved_upper,
+                    const bool allow_reusable_assertion = true)
                     -> solve_detail::CooperativeTask<bool> {
         std::optional<CompiledPolicyAssertion> previous_assertion;
         bool previous_assertion_already_debited = false;
@@ -2369,7 +2371,8 @@ lift_policy_quotient_pass_task(
             !certificate.compiled.certification_strategy_json.empty()) {
             previous_assertion.emplace(
                 std::move(certificate.compiled));
-        } else if (reusable_assertion != nullptr &&
+        } else if (allow_reusable_assertion &&
+                   reusable_assertion != nullptr &&
                    reusable_assertion->has_value()) {
             previous_assertion.emplace(
                 std::move(**reusable_assertion));
@@ -2869,14 +2872,106 @@ lift_policy_quotient_pass_task(
             certificate.compiled.exact_cost);
         co_return true;
         };
-        {
-            auto publication_task = publish_current_upper(solved_quotient);
-            while (!publication_task.resume()) {
-                ++progress.work_items;
-                co_await solve_detail::CooperativeCheckpoint{
-                    oracle.estimated_owned_bytes()};
+
+        const auto retain_compiled_incumbent = [&] {
+            if (reusable_assertion == nullptr ||
+                (certificate.compiled.strategy_json.empty() &&
+                 certificate.compiled
+                     .certification_strategy_json.empty())) {
+                return;
             }
-            (void)publication_task.take_result();
+            *reusable_assertion = std::move(certificate.compiled);
+        };
+        const auto reuse_compiled_incumbent =
+                [&](const quotient::QuotientBellmanResult& solved_upper) {
+            if (reusable_assertion == nullptr ||
+                !reusable_assertion->has_value()) {
+                return false;
+            }
+            CompiledPolicyAssertion& incumbent = **reusable_assertion;
+            if (incumbent.status !=
+                    CompiledPolicyAssertionStatus::Complete ||
+                !incumbent.paired_default_only ||
+                !incumbent.executable || !incumbent.proper ||
+                !incumbent.zero_off_policy ||
+                !incumbent.evaluation.cost_complete ||
+                !std::isfinite(incumbent.exact_cost) ||
+                incumbent.exact_cost < 0.0) {
+                return false;
+            }
+            const std::optional<std::uint32_t> root_state =
+                bellman.state_index_for_cell(root_cell);
+            if (!root_state.has_value() ||
+                *root_state >= solved_upper.values_by_state.size()) {
+                return false;
+            }
+            const double current_root_cost =
+                solved_upper.values_by_state[*root_state];
+            double absolute_delta = kInfinity;
+            double relative_delta = kInfinity;
+            const bool current_q_reconciled = reconciled(
+                incumbent.exact_cost, current_root_cost,
+                absolute_delta, relative_delta);
+            /* The compiled graph was parsed and independently evaluated in
+             * the preceding frontier prefix. Growing the quotient cannot
+             * invalidate that executable upper. Keep it while the expanded
+             * proof graph schedules alternatives; only an actual public
+             * policy improvement rebuilds below. A changed current Q remains
+             * proof state, not publication authority, and cannot establish
+             * exact closure without reconciliation below. */
+            if (current_q_reconciled) {
+                incumbent.solver_cost = current_root_cost;
+                incumbent.absolute_cost_delta = absolute_delta;
+                incumbent.relative_cost_delta = relative_delta;
+                incumbent.cost_reconciled = true;
+            }
+            certificate.refinement.status = RefinementStatus::Complete;
+            certificate.refinement.executable = true;
+            certificate.refinement.lumpable = true;
+            certificate.refinement.telemetry.exact_states = locators.size();
+            certificate.refinement.telemetry.final_refinement_classes =
+                solved_upper.reachable_cell_ids.size();
+            certificate.class_evaluation.status =
+                PolicyEvaluationStatus::Complete;
+            certificate.class_evaluation.converged = true;
+            certificate.class_evaluation.proper = true;
+            certificate.class_evaluation.reachable_classes =
+                static_cast<std::uint32_t>(
+                    solved_upper.reachable_cell_ids.size());
+            certificate.class_evaluation.start_values = {
+                current_root_cost};
+            certificate.root_refinement_class = 0;
+            certificate.exact_start_cost = current_root_cost;
+            certificate.absolute_cost_delta = absolute_delta;
+            certificate.relative_cost_delta = relative_delta;
+            certificate.coarse_value_reconciled = reconciled(
+                current_root_cost, certificate.solver_cost,
+                certificate.absolute_cost_delta,
+                certificate.relative_cost_delta);
+            certificate.policy_changed =
+                bellman_telemetry.policy_improvements != 0;
+            certificate.lumpable = true;
+            certificate.executable = true;
+            certificate.status = PolicyExactLiftStatus::Complete;
+            progress.verified_executable_upper_bound = std::min(
+                progress.verified_executable_upper_bound,
+                incumbent.exact_cost);
+            return true;
+        };
+        bool compiled_publication_built_this_pass = false;
+        {
+            if (!reuse_compiled_incumbent(solved_quotient)) {
+                auto publication_task =
+                    publish_current_upper(solved_quotient);
+                while (!publication_task.resume()) {
+                    ++progress.work_items;
+                    co_await solve_detail::CooperativeCheckpoint{
+                        oracle.estimated_owned_bytes()};
+                }
+                (void)publication_task.take_result();
+                compiled_publication_built_this_pass = true;
+                retain_compiled_incumbent();
+            }
         }
         progress.phase = PolicyExactLiftPhase::LocalReoptimization;
         progress.evaluation = {};
@@ -3305,6 +3400,7 @@ lift_policy_quotient_pass_task(
                                 .alternative_obligations_partially_evaluated,
                             1);
                         attempted_obligations.insert(obligation_id);
+                        oracle.quotient_release_transient_kernel_caches();
                         continue;
                     }
 
@@ -3379,6 +3475,7 @@ lift_policy_quotient_pass_task(
                     saturating_add(
                         telemetry.alternative_obligations_certified, 1);
                     attempted_obligations.insert(obligation_id);
+                    oracle.quotient_release_transient_kernel_caches();
 
                     std::vector<std::uint32_t> target_cells;
                     target_cells.reserve(certified_projection.size());
@@ -3458,13 +3555,16 @@ lift_policy_quotient_pass_task(
                     if (public_policy_changed) {
                         try {
                             auto publication_task =
-                                publish_current_upper(current_solved);
+                                publish_current_upper(
+                                    current_solved, false);
                             while (!publication_task.resume()) {
                                 ++progress.work_items;
                                 co_await solve_detail::CooperativeCheckpoint{
                                     oracle.estimated_owned_bytes()};
                             }
                             (void)publication_task.take_result();
+                            compiled_publication_built_this_pass = true;
+                            retain_compiled_incumbent();
                             progress.phase =
                                 PolicyExactLiftPhase::LocalReoptimization;
                             progress.evaluation = {};
@@ -3499,6 +3599,7 @@ lift_policy_quotient_pass_task(
                         candidate_improves || proof_envelope_grew;
                     break;
                 } catch (const AdapterFailure& error) {
+                    oracle.quotient_release_transient_kernel_caches();
                     const std::uint64_t completed_work =
                         before.work_completed +
                         (telemetry.alternative_reforge_work >= work_before
@@ -3526,6 +3627,7 @@ lift_policy_quotient_pass_task(
                     }
                     throw;
                 } catch (const quotient::ProofMemoryLimit&) {
+                    oracle.quotient_release_transient_kernel_caches();
                     const std::uint64_t completed_work =
                         before.work_completed +
                         (telemetry.alternative_reforge_work >= work_before
@@ -3536,6 +3638,7 @@ lift_policy_quotient_pass_task(
                         obligation_id, completed_work);
                     break;
                 } catch (const SolverResourceLimit&) {
+                    oracle.quotient_release_transient_kernel_caches();
                     const std::uint64_t completed_work =
                         before.work_completed +
                         (telemetry.alternative_reforge_work >= work_before
@@ -3587,9 +3690,81 @@ lift_policy_quotient_pass_task(
                 "competitive alternative scheduler lost admitted-action accounting");
         }
         telemetry.action_accounting_complete = true;
-        const bool exact_alternative_envelope_closed =
+        const std::optional<std::uint32_t> final_root_state =
+            bellman.state_index_for_cell(root_cell);
+        const auto assertion_reconciles_current_q =
+                [&](const CompiledPolicyAssertion& assertion) {
+            double absolute_delta = kInfinity;
+            double relative_delta = kInfinity;
+            return final_root_state.has_value() &&
+                   *final_root_state <
+                       current_solved.values_by_state.size() &&
+                   std::isfinite(assertion.exact_cost) &&
+                   reconciled(
+                       assertion.exact_cost,
+                       current_solved.values_by_state[*final_root_state],
+                       absolute_delta, relative_delta);
+        };
+        const bool envelope_ready_for_exact_publication =
             final_action_audit.exact_alternative_envelope_closed &&
             !publication_blocked_after_improvement;
+        if (envelope_ready_for_exact_publication &&
+            reusable_assertion != nullptr &&
+            reusable_assertion->has_value() &&
+            !assertion_reconciles_current_q(**reusable_assertion)) {
+            /* A retained incumbent is sufficient during lazy proof work.
+             * Exact closure additionally needs the final selected quotient
+             * policy to compile and independently evaluate once. */
+            const PolicyExactLiftCertificate retained = certificate;
+            try {
+                auto publication_task =
+                    publish_current_upper(current_solved, false);
+                while (!publication_task.resume()) {
+                    ++progress.work_items;
+                    co_await solve_detail::CooperativeCheckpoint{
+                        oracle.estimated_owned_bytes()};
+                }
+                (void)publication_task.take_result();
+                compiled_publication_built_this_pass = true;
+                reusable_assertion->reset();
+            } catch (const AdapterFailure& error) {
+                if (error.status != PolicyExactLiftStatus::ResourceCap) {
+                    throw;
+                }
+                certificate = retained;
+                publication_blocked_after_improvement = true;
+            } catch (const quotient::ProofMemoryLimit&) {
+                certificate = retained;
+                publication_blocked_after_improvement = true;
+            } catch (const SolverResourceLimit&) {
+                certificate = retained;
+                publication_blocked_after_improvement = true;
+            }
+        }
+        if (reusable_assertion != nullptr &&
+            reusable_assertion->has_value() &&
+            certificate.compiled.strategy_json.empty() &&
+            certificate.compiled.certification_strategy_json.empty()) {
+            certificate.compiled =
+                std::move(**reusable_assertion);
+            reusable_assertion->reset();
+        }
+        double publication_q_absolute_delta = kInfinity;
+        double publication_q_relative_delta = kInfinity;
+        const bool publication_reconciles_current_q =
+            final_root_state.has_value() &&
+            *final_root_state < current_solved.values_by_state.size() &&
+            std::isfinite(certificate.compiled.exact_cost) &&
+            reconciled(
+                certificate.compiled.exact_cost,
+                current_solved.values_by_state[*final_root_state],
+                publication_q_absolute_delta,
+                publication_q_relative_delta);
+        const bool exact_alternative_envelope_closed =
+            final_action_audit.exact_alternative_envelope_closed &&
+            !publication_blocked_after_improvement &&
+            (publication_reconciles_current_q ||
+             compiled_publication_built_this_pass);
         /*
          * Reconciliation with an already-exact coarse lower is the cheap
          * closure path above. When a strict quotient changes that value, the

@@ -9,6 +9,16 @@ namespace solver {
 
 using namespace solve_detail;
 
+/* Policy-lift coroutines already suspend at carrier, partition, proof, and
+ * compiled-evaluation boundaries. Advancing one suspension per public solve
+ * step made progress/memory telemetry dominate tiny proof items. Keep
+ * bounded batches so cancellation remains responsive while telemetry is
+ * audited once per useful slice. Alternative proof uses the request's
+ * measured 128-item slice; heavier construction phases keep a smaller
+ * batch. */
+constexpr std::uint32_t kCooperativePolicyLiftBatch = 32;
+constexpr std::uint32_t kCooperativeAlternativeProofBatch = 128;
+
 void order_observed_modifier_choices(
         const ActionDescriptor& action,
         std::vector<OutcomeChoiceOption>& choices,
@@ -3050,7 +3060,13 @@ SolveWork::Impl::run_finalization() {
                                                     .verified_executable_upper_bound);
                                         finalization_evaluation_progress =
                                             lift_progress.evaluation;
-                                        selected_lift_work.step(1);
+                                        selected_lift_work.step(
+                                            lift_progress.phase ==
+                                                    refinement::
+                                                        PolicyExactLiftPhase::
+                                                            LocalReoptimization
+                                                ? kCooperativeAlternativeProofBatch
+                                                : kCooperativePolicyLiftBatch);
                                         record_live_policy_lift_telemetry(
                                             telemetry,
                                             selected_lift_work
@@ -4018,7 +4034,11 @@ SolveWork::Impl::run_finalization() {
                             .verified_executable_upper_bound);
                     finalization_evaluation_progress =
                         lift_progress.evaluation;
-                    lift_work.step(1);
+                    lift_work.step(
+                        lift_progress.phase == refinement::
+                                PolicyExactLiftPhase::LocalReoptimization
+                            ? kCooperativeAlternativeProofBatch
+                            : kCooperativePolicyLiftBatch);
                     {
                         PolicyRefinementTelemetry& live_telemetry =
                             result.diagnostics.policy_refinement;
