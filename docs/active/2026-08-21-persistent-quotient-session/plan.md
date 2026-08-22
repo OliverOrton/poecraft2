@@ -1,6 +1,9 @@
 # Persistent Quotient Session And In-Place Frontier Growth
 
-**Status: selected on 2026-08-21; implementation has not started.**
+**Status: stopped precisely at Gate 6 on 2026-08-22.** The persistent-session
+behavior, progress, value, time, and responsiveness requirements passed, but
+the checked native peak was 419,316,840 bytes against the declared 150 MB
+ceiling. Gate 7 did not start. See [result.md](result.md).
 
 Owner: Oliver
 

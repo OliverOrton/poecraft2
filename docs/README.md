@@ -31,13 +31,16 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 The
 [persistent quotient session and in-place frontier growth](active/2026-08-21-persistent-quotient-session/plan.md)
-boundary is selected. It will keep one live strict oracle, stable partition,
-Bellman graph, proof store, alternative scheduler, and verified incumbent while
-competitive carriers extend the frontier. The plan begins with a forced-
-frontier from-scratch reference oracle and explicit identity, invalidation,
-memory, and cooperative-step evidence. It does not change mechanics, action
-scope, prices, exactness, Imprint grammar, five-T1 recovery, or strategy
-compilation.
+boundary is [stopped precisely at native Gate 6](active/2026-08-21-persistent-quotient-session/result.md).
+Production now keeps one live strict oracle, stable split-only partition,
+Bellman graph, proof store, alternative scheduler, and verified incumbent
+through competitive frontier growth. The checked four-T1 primary uses one
+session, zero full restarts, four in-place insertions, the unchanged
+`3745.7295960574743` upper, a 60.40% smaller open alternative envelope, and a
+1.195-second largest public step. Its conservative native peak is 419,316,840
+bytes against the selected 150 MB ceiling, so release WASM and the full
+pipeline did not run. No implementation boundary is active until Oliver
+selects a memory-lifetime/representation successor.
 
 The predecessor
 [persistent strict-frontier growth](active/2026-08-21-persistent-strict-frontier-growth/plan.md)
