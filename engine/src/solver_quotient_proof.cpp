@@ -455,9 +455,24 @@ void CoverageReplaySlice::reset() {
     std::vector<CoverageCarrier>().swap(carriers_);
 }
 
-CoverageDescriptor canonical_coverage_descriptor(CoverageDescriptor value) {
+namespace {
+
+bool coverage_range_less(
+        const CoverageRange& left,
+        const CoverageRange& right) {
+    return std::tuple{
+               left.range_identity, left.begin, left.count,
+               std::bit_cast<std::uint64_t>(left.total_probability)} <
+           std::tuple{
+               right.range_identity, right.begin, right.count,
+               std::bit_cast<std::uint64_t>(right.total_probability)};
+}
+
+void require_canonical_coverage_descriptor(
+        const CoverageDescriptor& value) {
     require_identity(value.strict_kernel_identity, "strict kernel identity");
-    require_identity(value.replay_authority_identity, "replay authority identity");
+    require_identity(
+        value.replay_authority_identity, "replay authority identity");
     require_identity(
         value.normalized_enumeration_identity,
         "normalized enumeration identity");
@@ -471,22 +486,16 @@ CoverageDescriptor canonical_coverage_descriptor(CoverageDescriptor value) {
         }
         (void)checked_add(range.begin, range.count);
     }
-    std::sort(
-        value.ranges.begin(), value.ranges.end(),
-        [](const CoverageRange& left, const CoverageRange& right) {
-            return std::tuple{
-                       left.range_identity, left.begin, left.count,
-                       std::bit_cast<std::uint64_t>(left.total_probability)} <
-                   std::tuple{
-                       right.range_identity, right.begin, right.count,
-                       std::bit_cast<std::uint64_t>(right.total_probability)};
-        });
     std::uint64_t count = 0;
     for (std::size_t i = 0; i < value.ranges.size(); ++i) {
         const CoverageRange& range = value.ranges[i];
         count = checked_add(count, range.count);
         if (i == 0) continue;
         const CoverageRange& previous = value.ranges[i - 1];
+        if (coverage_range_less(range, previous)) {
+            throw std::invalid_argument(
+                "coverage replay ranges are not canonical");
+        }
         if (previous.range_identity == range.range_identity &&
             checked_add(previous.begin, previous.count) > range.begin) {
             throw std::invalid_argument("coverage replay ranges overlap");
@@ -501,6 +510,14 @@ CoverageDescriptor canonical_coverage_descriptor(CoverageDescriptor value) {
             }) != value.exact_total_probability) {
         throw std::invalid_argument("coverage descriptor count/mass mismatch");
     }
+}
+
+} // namespace
+
+CoverageDescriptor canonical_coverage_descriptor(CoverageDescriptor value) {
+    std::sort(
+        value.ranges.begin(), value.ranges.end(), coverage_range_less);
+    require_canonical_coverage_descriptor(value);
     return value;
 }
 
@@ -716,14 +733,13 @@ CarrierWideOptimisticLowerQ certify_uniform_carrier_wide_lower_q(
     if (!std::isfinite(lower_q) || lower_q < 0.0) {
         throw std::invalid_argument("invalid uniform carrier lower-Q witness");
     }
-    const CoverageDescriptor canonical =
-        canonical_coverage_descriptor(coverage);
+    require_canonical_coverage_descriptor(coverage);
     return {
         OptimisticLowerQProvenanceKind::UniformCarrierWideWitness,
         std::move(authority_identity),
         source_cell_identity,
-        canonical.exact_source_count,
-        canonical.exact_total_probability,
+        coverage.exact_source_count,
+        coverage.exact_total_probability,
         lower_q};
 }
 
@@ -754,14 +770,6 @@ canonical_unresolved_alternative_obligation_identity(
     require_identity(
         value.resumable_work_identity.value(),
         "alternative resumable-work identity");
-    ObservationRequirement canonical_requirement =
-        refinement::canonical_observation_requirement(
-            value.observation_requirement.value());
-    if (canonical_requirement != value.observation_requirement.value()) {
-        value.observation_requirement =
-            SharedObservationRequirement{
-                std::move(canonical_requirement)};
-    }
     value.action =
         canonical_alternative_action_identity(std::move(value.action));
     const CarrierWideOptimisticLowerQ& lower = value.optimistic_lower;

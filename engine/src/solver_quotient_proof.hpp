@@ -74,7 +74,8 @@ public:
     SharedObservationRequirement() = default;
     SharedObservationRequirement(ObservationRequirement value)
         : value_(std::make_shared<const ObservationRequirement>(
-              std::move(value))) {}
+              refinement::canonical_observation_requirement(
+                  std::move(value)))) {}
 
     const ObservationRequirement& value() const {
         static const ObservationRequirement empty;

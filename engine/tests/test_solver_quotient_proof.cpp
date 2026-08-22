@@ -399,9 +399,11 @@ void run_alternative_lower_and_collision_tests() {
     PC_CHECK(
         trivial.kind() ==
         OptimisticLowerQProvenanceKind::TrivialNonnegativeCost);
+    const CoverageDescriptor canonical_coverage =
+        canonical_coverage_descriptor(row.coverage);
     const CarrierWideOptimisticLowerQ uniform =
         certify_uniform_carrier_wide_lower_q(
-            source_cell, row.coverage, {5601}, 7.5);
+            source_cell, canonical_coverage, {5601}, 7.5);
     PC_CHECK(
         uniform.kind() ==
         OptimisticLowerQProvenanceKind::UniformCarrierWideWitness);

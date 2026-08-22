@@ -2103,8 +2103,7 @@ lift_policy_quotient_pass_task(
             if (retained_global_lower_authority) continue;
             const quotient::SharedObservationRequirement
                 shared_observation_requirement{
-                    canonical_observation_requirement(
-                        cell.observation_requirement)};
+                    cell.observation_requirement};
             for (const std::uint32_t operator_index :
                  alternative_operator_ids) {
                 const QuotientAlternativeDescriptor& descriptor =
@@ -2130,21 +2129,15 @@ lift_policy_quotient_pass_task(
                 const double immediate_cost_lower =
                     oracle.quotient_operator_immediate_cost_lower(
                         operator_index);
-                if (immediate_cost_lower > 0.0) {
-                    identity.optimistic_lower =
-                        quotient::certify_uniform_carrier_wide_lower_q(
-                            shared_cell_identity, cell.coverage,
-                            {0x706371707269636cull,
-                             operator_index,
-                             std::bit_cast<std::uint64_t>(
-                                 immediate_cost_lower),
-                             1},
-                            immediate_cost_lower);
-                } else {
-                    identity.optimistic_lower =
-                        quotient::trivial_carrier_wide_lower_q(
-                            shared_cell_identity, cell.coverage);
-                }
+                identity.optimistic_lower =
+                    quotient::certify_uniform_carrier_wide_lower_q(
+                        shared_cell_identity, cell.coverage,
+                        {0x706371707269636cull,
+                         operator_index,
+                         std::bit_cast<std::uint64_t>(
+                             immediate_cost_lower),
+                         1},
+                        immediate_cost_lower);
                 identity.scheduling_priority = 0.0;
                 identity.resumable_work_identity =
                     descriptor.resumable_work_identity;
