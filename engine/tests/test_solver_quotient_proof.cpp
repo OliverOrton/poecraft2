@@ -250,6 +250,11 @@ void run_dependency_generation_tests() {
     store.attach_row(10, payload_id, 4, 1, {{7, 2}}, 3, 5);
     PC_CHECK(
         store.validate_row(
+            10, store.payload(payload_id).identity,
+            validation_context(1, {{7, 2}})) ==
+        ProofValidationStatus::Current);
+    PC_CHECK(
+        store.validate_row(
             10, identity, validation_context(1, {{7, 2}})) ==
         ProofValidationStatus::Current);
     PC_CHECK(

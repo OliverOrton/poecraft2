@@ -1282,14 +1282,18 @@ ProofValidationStatus ProofStore::validate_row(
     if (use.payload_id >= payloads_.size() || payloads_[use.payload_id] == nullptr) {
         return ProofValidationStatus::CorruptPayload;
     }
-    CertifiedRowIdentity canonical;
-    try {
-        canonical = canonical_certified_row_identity(expected_identity);
-    } catch (const std::exception&) {
-        return ProofValidationStatus::FullKeyMismatch;
-    }
-    if (payloads_[use.payload_id]->identity != canonical) {
-        return ProofValidationStatus::FullKeyMismatch;
+    const CertifiedRowIdentity& stored =
+        payloads_[use.payload_id]->identity;
+    if (&stored != &expected_identity) {
+        CertifiedRowIdentity canonical;
+        try {
+            canonical = canonical_certified_row_identity(expected_identity);
+        } catch (const std::exception&) {
+            return ProofValidationStatus::FullKeyMismatch;
+        }
+        if (stored != canonical) {
+            return ProofValidationStatus::FullKeyMismatch;
+        }
     }
     if (use.source_generation != context.source_generation) {
         return ProofValidationStatus::StaleSourceGeneration;
