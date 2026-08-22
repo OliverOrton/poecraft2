@@ -109,6 +109,9 @@ enum class QuotientPartitionStatus : std::uint8_t {
 struct QuotientPartitionTelemetry {
     std::uint64_t exact_carriers_replayed = 0;
     std::uint64_t retained_coverage_ranges = 0;
+    std::uint32_t retained_cells = 0;
+    std::uint32_t new_cells = 0;
+    std::uint32_t superseded_cells = 0;
     std::uint32_t initial_classes = 0;
     std::uint32_t final_classes = 0;
     std::uint32_t refinement_rounds = 0;
@@ -141,9 +144,11 @@ StableKey canonical_quotient_cell_identity(const QuotientCell& cell);
 /*
  * `exact_coverage` must be the live replay of `coverage_descriptor` and must
  * cover every submitted node exactly once. `previous` is optional on first
- * construction. When supplied, refinement must be split-only; unchanged
- * cells retain stable IDs, while split children receive deterministic new
- * IDs. Proof-store invalidation is deterministic and optional for pure
+ * construction. When supplied, its exact coverage must be a preserved subset
+ * of the new replay. Refinement is split/append-only: unchanged cells retain
+ * stable IDs, coverage-grown cells advance generation, split children and
+ * wholly new cells receive deterministic new IDs, and no previous cells may
+ * merge. Proof-store invalidation is deterministic and optional for pure
  * structural tests.
  */
 QuotientPartitionResult refine_certified_quotient_partition(

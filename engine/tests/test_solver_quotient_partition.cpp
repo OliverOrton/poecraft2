@@ -399,6 +399,117 @@ void run_split_invalidation_and_requirement_tests() {
         retained_predecessor->generation == predecessor->generation);
 }
 
+void run_population_growth_and_reference_tests() {
+    std::vector<CertifiedCarrierNode> prefix{
+        node(10, 0, 1, 100),
+        node(11, 0, 1, 100),
+        node(20, 1, 2, 200),
+        node(30, 2, 3, 0, true)};
+    internal_arc(prefix[0], 30, 1.0);
+    internal_arc(prefix[1], 30, 1.0);
+    internal_arc(prefix[2], 10, 0.5);
+    internal_arc(prefix[2], 11, 0.5);
+    const std::vector<CertifiedEntry> entries{{{20}, 1.0}};
+
+    const QuotientPartitionResult initial = partition(
+        coverage_for(prefix, 7600), prefix, entries);
+    PC_CHECK(initial.status == QuotientPartitionStatus::Complete);
+    PC_CHECK(initial.state.cells.size() == 3);
+    PC_CHECK(initial.telemetry.new_cells == 3);
+    PC_CHECK(initial.telemetry.retained_cells == 0);
+    PC_CHECK(initial.telemetry.superseded_cells == 0);
+
+    std::vector<CertifiedCarrierNode> first_growth = prefix;
+    first_growth.push_back(node(40, 3, 4, 0, true));
+    ProofStore proofs;
+    const QuotientPartitionResult first = partition(
+        coverage_for(first_growth, 7600), first_growth, entries,
+        &initial.state, &proofs);
+    PC_CHECK(first.status == QuotientPartitionStatus::Complete);
+    PC_CHECK(first.state.cells.size() == 4);
+    PC_CHECK(first.telemetry.retained_cells == 3);
+    PC_CHECK(first.telemetry.new_cells == 1);
+    PC_CHECK(first.telemetry.superseded_cells == 0);
+    PC_CHECK(first.telemetry.source_splits == 0);
+    PC_CHECK(first.telemetry.target_splits == 0);
+
+    const QuotientCell* merged = cell_for_coarse(first.state, 0);
+    const QuotientCell* predecessor = cell_for_coarse(first.state, 1);
+    const QuotientCell* stable_terminal = cell_for_coarse(first.state, 2);
+    const QuotientCell* growing_terminal = cell_for_coarse(first.state, 3);
+    PC_CHECK(merged != nullptr);
+    PC_CHECK(predecessor != nullptr);
+    PC_CHECK(stable_terminal != nullptr);
+    PC_CHECK(growing_terminal != nullptr);
+    const std::uint32_t payload =
+        proofs.intern_payload(proof_identity()).first;
+    proofs.attach_row(
+        0, payload, merged->cell_id, merged->generation,
+        {{stable_terminal->cell_id, stable_terminal->generation}}, 1, 1);
+    proofs.attach_row(
+        1, payload, predecessor->cell_id, predecessor->generation,
+        {{merged->cell_id, merged->generation}}, 1, 1);
+    proofs.attach_row(
+        2, payload, stable_terminal->cell_id, stable_terminal->generation,
+        {{stable_terminal->cell_id, stable_terminal->generation}}, 1, 1);
+    proofs.attach_row(
+        3, payload, growing_terminal->cell_id,
+        growing_terminal->generation,
+        {{growing_terminal->cell_id, growing_terminal->generation}}, 1, 1);
+
+    std::vector<CertifiedCarrierNode> second_growth = first_growth;
+    second_growth.push_back(node(41, 3, 4, 0, true));
+    apply_rarity_requirement(second_growth[0], PC_RARITY_RARE);
+    apply_rarity_requirement(second_growth[1], PC_RARITY_MAGIC);
+    const CoverageFixture second_coverage =
+        coverage_for(second_growth, 7600);
+    const QuotientPartitionResult grown = partition(
+        second_coverage, second_growth, entries, &first.state, &proofs);
+    PC_CHECK(grown.status == QuotientPartitionStatus::Complete);
+    PC_CHECK(grown.state.partition_generation ==
+             first.state.partition_generation + 1);
+    PC_CHECK(grown.state.cells.size() == 5);
+    PC_CHECK(grown.telemetry.source_splits == 1);
+    PC_CHECK(grown.telemetry.target_splits == 1);
+    PC_CHECK(grown.telemetry.new_cells == 2);
+    PC_CHECK(grown.telemetry.superseded_cells == 1);
+    PC_CHECK(grown.telemetry.retained_cells == 2);
+    PC_CHECK(!proofs.use_site(0).valid);
+    PC_CHECK(!proofs.use_site(1).valid);
+    PC_CHECK(proofs.use_site(2).valid);
+    PC_CHECK(!proofs.use_site(3).valid);
+
+    const QuotientCell* retained_terminal =
+        cell_for_coarse(grown.state, 2);
+    const QuotientCell* superseded_terminal =
+        cell_for_coarse(grown.state, 3);
+    PC_CHECK(retained_terminal != nullptr);
+    PC_CHECK(superseded_terminal != nullptr);
+    PC_CHECK(retained_terminal->cell_id == stable_terminal->cell_id);
+    PC_CHECK(retained_terminal->generation == stable_terminal->generation);
+    PC_CHECK(superseded_terminal->cell_id == growing_terminal->cell_id);
+    PC_CHECK(superseded_terminal->generation ==
+             growing_terminal->generation + 1);
+    PC_CHECK(superseded_terminal->coverage.exact_source_count == 2);
+
+    const QuotientPartitionResult reference = partition(
+        second_coverage, second_growth, entries);
+    PC_CHECK(reference.status == QuotientPartitionStatus::Complete);
+    PC_CHECK(reference.state.cells.size() == grown.state.cells.size());
+    for (const QuotientCell& persistent_cell : grown.state.cells) {
+        const auto matching = std::find_if(
+            reference.state.cells.begin(), reference.state.cells.end(),
+            [&](const QuotientCell& candidate) {
+                return candidate.semantic_identity ==
+                       persistent_cell.semantic_identity;
+            });
+        PC_CHECK(matching != reference.state.cells.end());
+        PC_CHECK(matching->coarse_state == persistent_cell.coarse_state);
+        PC_CHECK(matching->terminal == persistent_cell.terminal);
+        PC_CHECK(matching->coverage == persistent_cell.coverage);
+    }
+}
+
 void run_external_frontier_and_open_rejection_tests() {
     std::vector<CertifiedCarrierNode> external{
         node(80, 0, 8, 800), node(81, 0, 8, 800)};
@@ -559,6 +670,7 @@ void run_solver_quotient_partition_tests() {
     run_four_node_and_equal_cycle_tests();
     run_multiple_entry_and_determinism_tests();
     run_split_invalidation_and_requirement_tests();
+    run_population_growth_and_reference_tests();
     run_external_frontier_and_open_rejection_tests();
     run_replay_backed_shared_partition_tests();
 }
