@@ -345,7 +345,11 @@
                          ? choice_recipes_.erase(recipe)
                          : std::next(recipe);
         }
-        known_.erase(key);
+        /* The persistent quotient session re-enters discovery from this
+         * collision-checked root after every in-place frontier insertion.
+         * Release its transient kernels and recipes above, but retain the one
+         * durable replay locator needed to resume the same oracle. */
+        if (key != root_key_) known_.erase(key);
         adapter_memory_cache_initialized_ = false;
         adapter_memory_checks_since_audit_ = 0;
         adapter_memory_cached_non_child_bytes_ = 0;

@@ -2039,39 +2039,36 @@ lift_policy_quotient_pass_task(
         std::vector<quotient::AccountedAlternativeAction>
             completed_action_accounting;
         std::uint64_t current_alternative_admissions = 0;
+        std::map<std::uint32_t, std::uint32_t> scheduler_class_by_cell;
         for (std::uint32_t cls = 0; cls < final_cell_id.size(); ++cls) {
-            if (cls != 0) {
-                ++progress.work_items;
-                std::uint64_t retained = oracle.estimated_owned_bytes();
-                saturating_add(retained, ledger.snapshot().total_bytes);
-                saturating_add(
-                    retained,
-                    admitted_action_accounting.capacity() *
-                        sizeof(quotient::AccountedAlternativeAction));
-                saturating_add(
-                    retained,
-                    completed_action_accounting.capacity() *
-                        sizeof(quotient::AccountedAlternativeAction));
-                co_await solve_detail::CooperativeCheckpoint{retained};
+            scheduler_class_by_cell.emplace(final_cell_id[cls], cls);
+        }
+        std::set<std::uint32_t> accounted_source_cells;
+        std::set<std::uint32_t> selected_closure_scanned_cells;
+        const auto account_source_cell =
+                [&](const std::uint32_t source_cell_id) {
+            const auto source_class = scheduler_class_by_cell.find(
+                source_cell_id);
+            if (source_class == scheduler_class_by_cell.end()) {
+                throw AdapterFailure(
+                    PolicyExactLiftStatus::RefinementFailure,
+                    "proof envelope reached an unknown quotient cell");
             }
+            if (!accounted_source_cells.insert(source_cell_id).second) {
+                return false;
+            }
+            const std::uint32_t cls = source_class->second;
             const quotient::QuotientCell& cell = cell_for_class(cls);
-            if (cell.terminal) continue;
+            if (cell.terminal) return true;
             const std::uint32_t representative = representative_for(
                 partition.class_by_node, cls);
             const auto& alternative_operator_ids =
                 *alternatives_by_ordinal.at(representative);
-            for (const quotient::CoverageRange& range :
-                 cell.coverage.ranges) {
-                for (std::uint64_t ordinal = range.begin;
-                     ordinal < range.begin + range.count; ++ordinal) {
-                    if (*alternatives_by_ordinal.at(ordinal) !=
-                        alternative_operator_ids) {
-                        throw AdapterFailure(
-                            PolicyExactLiftStatus::RefinementFailure,
-                            "one quotient cell merged incompatible admitted alternatives");
-                    }
-                }
-            }
+            /* The closed partition's collision-checked immediate key contains
+             * the interned full alternative-descriptor payload id. Therefore
+             * every carrier in this cell has this same admitted vocabulary;
+             * rescanning the complete carrier range here merely repeated the
+             * partition proof. */
             const auto selected = std::find_if(
                 published_rows.begin(), published_rows.end(),
                 [&](const PublishedRow& row) {
@@ -2113,7 +2110,7 @@ lift_policy_quotient_pass_task(
                     CurrentSelectedCertified,
                 selected->sparse_row,
                 std::nullopt});
-            if (retained_global_lower_authority) continue;
+            if (retained_global_lower_authority) return true;
             const quotient::SharedObservationRequirement
                 shared_observation_requirement{
                     cell.observation_requirement};
@@ -2198,10 +2195,100 @@ lift_policy_quotient_pass_task(
                 }
                 ++current_alternative_admissions;
             }
-        }
+            return true;
+        };
         ++progress.work_items;
         co_await solve_detail::CooperativeCheckpoint{
             ledger.snapshot().total_bytes};
+
+        const std::uint32_t root_class = partition.class_by_node.at(0);
+        const std::uint32_t root_cell = final_cell_id.at(root_class);
+        const quotient::QuotientBellmanResult solved_quotient =
+            retained_global_lower_authority
+                ? bellman.project_unique_certified_policy({root_cell})
+                : bellman.solve(
+                      {root_cell}, limits.max_refinement_rounds,
+                      std::max<std::uint32_t>(1, options.max_sweeps));
+        ++progress.work_items;
+        co_await solve_detail::CooperativeCheckpoint{
+            ledger.snapshot().total_bytes};
+        const auto account_selected_closure =
+                [&](std::vector<std::uint32_t> seeds,
+                    const quotient::QuotientBellmanResult& upper)
+                    -> solve_detail::CooperativeTask<bool> {
+            bool grew = false;
+            std::set<std::uint32_t> pending_sources(
+                seeds.begin(), seeds.end());
+            std::set<std::uint32_t> visited;
+            const SolveTransitionCache& graph = bellman.transition_cache();
+            while (!pending_sources.empty()) {
+                const std::uint32_t cell_id = *pending_sources.begin();
+                pending_sources.erase(pending_sources.begin());
+                if (!visited.insert(cell_id).second) continue;
+                const bool source_grew = account_source_cell(cell_id);
+                grew = source_grew || grew;
+                const std::optional<std::uint32_t> state =
+                    bellman.state_index_for_cell(cell_id);
+                if (!state.has_value() ||
+                    *state >= upper.selected_rows_by_state.size()) {
+                    throw AdapterFailure(
+                        PolicyExactLiftStatus::RefinementFailure,
+                        "proof envelope lost its selected quotient state");
+                }
+                const std::uint64_t row =
+                    upper.selected_rows_by_state[*state];
+                if (!selected_closure_scanned_cells.insert(cell_id).second) {
+                    continue;
+                }
+                if (row == std::numeric_limits<std::uint64_t>::max()) {
+                    if (source_grew) {
+                        co_await solve_detail::CooperativeCheckpoint{
+                            oracle.estimated_owned_bytes()};
+                    }
+                    continue;
+                }
+                /* Later selected-row changes can only select a row that was
+                 * already certified from an accounted source. Its targets
+                 * entered this proof envelope when that row was certified, so
+                 * the original selected closure is traversed exactly once. */
+                const SparseRow& sparse = graph.rows.at(row);
+                for (std::uint32_t i = 0;
+                     i < sparse.transition_count; ++i) {
+                    const std::uint32_t target_state =
+                        graph.successors.at(sparse.transition_offset + i);
+                    const std::optional<std::uint32_t> target_cell =
+                        bellman.cell_id_for_state(target_state);
+                    if (!target_cell.has_value()) {
+                        throw AdapterFailure(
+                            PolicyExactLiftStatus::RefinementFailure,
+                            "selected quotient row lost its target cell");
+                    }
+                    if (!visited.contains(*target_cell)) {
+                        pending_sources.insert(*target_cell);
+                    }
+                }
+                std::uint64_t retained = oracle.estimated_owned_bytes();
+                saturating_add(retained, ledger.snapshot().total_bytes);
+                saturating_add(
+                    retained,
+                    admitted_action_accounting.capacity() *
+                        sizeof(quotient::AccountedAlternativeAction));
+                saturating_add(
+                    retained,
+                    completed_action_accounting.capacity() *
+                        sizeof(quotient::AccountedAlternativeAction));
+                co_await solve_detail::CooperativeCheckpoint{retained};
+            }
+            co_return grew;
+        };
+        auto initial_accounting =
+            account_selected_closure({root_cell}, solved_quotient);
+        while (!initial_accounting.resume()) {
+            ++progress.work_items;
+            co_await solve_detail::CooperativeCheckpoint{
+                initial_accounting.retained_bytes()};
+        }
+        (void)initial_accounting.take_result();
         const quotient::AlternativeActionAccountingAudit action_audit =
             bellman.proof_store()->audit_alternative_actions(
                 admitted_action_accounting,
@@ -2219,21 +2306,6 @@ lift_policy_quotient_pass_task(
                 PolicyExactLiftStatus::RefinementFailure,
                 "selected-first quotient lost admitted-action accounting");
         }
-        ++progress.work_items;
-        co_await solve_detail::CooperativeCheckpoint{
-            ledger.snapshot().total_bytes};
-
-        const std::uint32_t root_class = partition.class_by_node.at(0);
-        const std::uint32_t root_cell = final_cell_id.at(root_class);
-        const quotient::QuotientBellmanResult solved_quotient =
-            retained_global_lower_authority
-                ? bellman.project_unique_certified_policy({root_cell})
-                : bellman.solve(
-                      {root_cell}, limits.max_refinement_rounds,
-                      std::max<std::uint32_t>(1, options.max_sweeps));
-        ++progress.work_items;
-        co_await solve_detail::CooperativeCheckpoint{
-            ledger.snapshot().total_bytes};
         const quotient::QuotientBellmanTelemetry& bellman_telemetry =
             bellman.telemetry();
         telemetry.proof_payload_reuses =
@@ -2841,20 +2913,12 @@ lift_policy_quotient_pass_task(
          * split remains explicitly partial; no synthetic arc is installed.
          */
         quotient::QuotientBellmanResult current_solved = solved_quotient;
-        quotient::QuotientBellmanResult published_solved = solved_quotient;
         PolicyExactLiftCertificate retained_publication = certificate;
-        std::uint64_t published_q_generation =
-            bellman.proof_store()->q_generation();
         bool publication_blocked_after_improvement = false;
         bool stop_alternative_scheduling =
             certificate.global_lower_bound_closed;
         std::set<std::uint32_t> attempted_obligations;
         std::map<StableKey, AbstractState> frontier_states;
-        std::map<std::uint32_t, std::uint32_t>
-            scheduler_class_by_cell;
-        for (std::uint32_t cls = 0; cls < final_cell_id.size(); ++cls) {
-            scheduler_class_by_cell.emplace(final_cell_id[cls], cls);
-        }
         const auto upper_by_source =
                 [&](const quotient::QuotientBellmanResult& upper) {
             std::map<std::uint32_t, double> values;
@@ -2941,7 +3005,7 @@ lift_policy_quotient_pass_task(
                 pending.end());
             if (pending.empty()) break;
             saturating_add(telemetry.alternative_scheduling_rounds, 1);
-            bool policy_improved_this_round = false;
+            bool scheduler_progress_this_round = false;
 
             for (std::size_t pending_index = 0;
                  pending_index < pending.size(); ++pending_index) {
@@ -2955,7 +3019,7 @@ lift_policy_quotient_pass_task(
                 }
                 const std::uint32_t obligation_id =
                     pending[pending_index];
-                const quotient::UnresolvedAlternativeObligation& before =
+                const quotient::UnresolvedAlternativeObligation before =
                     bellman.proof_store()->alternative_obligation(
                         obligation_id);
                 const auto source_class = scheduler_class_by_cell.find(
@@ -3316,9 +3380,12 @@ lift_policy_quotient_pass_task(
                         telemetry.alternative_obligations_certified, 1);
                     attempted_obligations.insert(obligation_id);
 
+                    std::vector<std::uint32_t> target_cells;
+                    target_cells.reserve(certified_projection.size());
                     double candidate_q = certified_cost;
                     for (const auto& [target, probability] :
                          certified_projection) {
+                        target_cells.push_back(target);
                         const std::uint32_t target_state =
                             *bellman.state_index_for_cell(target);
                         candidate_q += probability *
@@ -3327,12 +3394,21 @@ lift_policy_quotient_pass_task(
                     }
                     const std::uint32_t source_state =
                         *bellman.state_index_for_cell(cell.cell_id);
-                    if (!solve_detail::
-                            sparse_policy_value_improvement_exceeds_tolerance(
-                                candidate_q,
-                                current_solved.values_by_state.at(
-                                    source_state),
-                                1e-12)) {
+                    auto account_targets = account_selected_closure(
+                        target_cells, current_solved);
+                    while (!account_targets.resume()) {
+                        ++progress.work_items;
+                        co_await solve_detail::CooperativeCheckpoint{
+                            account_targets.retained_bytes()};
+                    }
+                    const bool proof_envelope_grew =
+                        account_targets.take_result();
+                    const bool candidate_improves = solve_detail::
+                        sparse_policy_value_improvement_exceeds_tolerance(
+                            candidate_q,
+                            current_solved.values_by_state.at(source_state),
+                            1e-12);
+                    if (!proof_envelope_grew && !candidate_improves) {
                         continue;
                     }
 
@@ -3351,49 +3427,76 @@ lift_policy_quotient_pass_task(
                         stop_alternative_scheduling = true;
                         break;
                     }
-                    current_solved = std::move(improved);
-                    try {
-                        auto publication_task =
-                            publish_current_upper(current_solved);
-                        while (!publication_task.resume()) {
-                            ++progress.work_items;
-                            co_await solve_detail::CooperativeCheckpoint{
-                                oracle.estimated_owned_bytes()};
+                    const std::uint32_t root_state =
+                        *bellman.state_index_for_cell(root_cell);
+                    bool public_policy_changed =
+                        improved.reachable_cell_ids !=
+                        current_solved.reachable_cell_ids;
+                    if (!public_policy_changed) {
+                        for (const std::uint32_t reachable_cell :
+                             current_solved.reachable_cell_ids) {
+                            const std::uint32_t reachable_state =
+                                *bellman.state_index_for_cell(
+                                    reachable_cell);
+                            if (improved.selected_rows_by_state.at(
+                                    reachable_state) !=
+                                current_solved.selected_rows_by_state.at(
+                                    reachable_state)) {
+                                public_policy_changed = true;
+                                break;
+                            }
                         }
-                        (void)publication_task.take_result();
-                        progress.phase =
-                            PolicyExactLiftPhase::LocalReoptimization;
-                        progress.evaluation = {};
-                    } catch (const AdapterFailure& error) {
-                        if (error.status !=
-                            PolicyExactLiftStatus::ResourceCap) {
-                            throw;
-                        }
-                        certificate = retained_publication;
-                        publication_blocked_after_improvement = true;
-                        telemetry.bounded_publication_retained = true;
-                        stop_alternative_scheduling = true;
-                        break;
-                    } catch (const quotient::ProofMemoryLimit&) {
-                        certificate = retained_publication;
-                        publication_blocked_after_improvement = true;
-                        telemetry.bounded_publication_retained = true;
-                        stop_alternative_scheduling = true;
-                        break;
-                    } catch (const SolverResourceLimit&) {
-                        certificate = retained_publication;
-                        publication_blocked_after_improvement = true;
-                        telemetry.bounded_publication_retained = true;
-                        stop_alternative_scheduling = true;
-                        break;
                     }
-                    retained_publication = certificate;
-                    published_solved = current_solved;
-                    published_q_generation =
-                        bellman.proof_store()->q_generation();
-                    saturating_add(
-                        telemetry.alternative_policy_improvements, 1);
-                    policy_improved_this_round = true;
+                    public_policy_changed =
+                        public_policy_changed ||
+                        solve_detail::
+                            sparse_policy_value_improvement_exceeds_tolerance(
+                                improved.values_by_state.at(root_state),
+                                current_solved.values_by_state.at(root_state),
+                                1e-12);
+                    current_solved = std::move(improved);
+                    if (public_policy_changed) {
+                        try {
+                            auto publication_task =
+                                publish_current_upper(current_solved);
+                            while (!publication_task.resume()) {
+                                ++progress.work_items;
+                                co_await solve_detail::CooperativeCheckpoint{
+                                    oracle.estimated_owned_bytes()};
+                            }
+                            (void)publication_task.take_result();
+                            progress.phase =
+                                PolicyExactLiftPhase::LocalReoptimization;
+                            progress.evaluation = {};
+                        } catch (const AdapterFailure& error) {
+                            if (error.status !=
+                                PolicyExactLiftStatus::ResourceCap) {
+                                throw;
+                            }
+                            certificate = retained_publication;
+                            publication_blocked_after_improvement = true;
+                            telemetry.bounded_publication_retained = true;
+                            stop_alternative_scheduling = true;
+                            break;
+                        } catch (const quotient::ProofMemoryLimit&) {
+                            certificate = retained_publication;
+                            publication_blocked_after_improvement = true;
+                            telemetry.bounded_publication_retained = true;
+                            stop_alternative_scheduling = true;
+                            break;
+                        } catch (const SolverResourceLimit&) {
+                            certificate = retained_publication;
+                            publication_blocked_after_improvement = true;
+                            telemetry.bounded_publication_retained = true;
+                            stop_alternative_scheduling = true;
+                            break;
+                        }
+                        retained_publication = certificate;
+                        saturating_add(
+                            telemetry.alternative_policy_improvements, 1);
+                    }
+                    scheduler_progress_this_round =
+                        candidate_improves || proof_envelope_grew;
                     break;
                 } catch (const AdapterFailure& error) {
                     const std::uint64_t completed_work =
@@ -3444,7 +3547,7 @@ lift_policy_quotient_pass_task(
                     break;
                 }
             }
-            if (!policy_improved_this_round) break;
+            if (!scheduler_progress_this_round) break;
         }
 
         if (!frontier_states.empty()) {
@@ -3470,14 +3573,14 @@ lift_policy_quotient_pass_task(
                 std::nullopt, std::move(states)};
         }
 
-        const std::map<std::uint32_t, double> published_upper =
-            upper_by_source(published_solved);
+        const std::map<std::uint32_t, double> current_upper =
+            upper_by_source(current_solved);
         const quotient::AlternativeActionAccountingAudit final_action_audit =
             bellman.proof_store()->audit_alternative_actions(
                 admitted_action_accounting,
                 completed_action_accounting,
-                published_upper,
-                published_q_generation);
+                current_upper,
+                bellman.proof_store()->q_generation());
         if (!final_action_audit.complete) {
             throw AdapterFailure(
                 PolicyExactLiftStatus::RefinementFailure,
@@ -3491,10 +3594,13 @@ lift_policy_quotient_pass_task(
          * Reconciliation with an already-exact coarse lower is the cheap
          * closure path above. When a strict quotient changes that value, the
          * complete action-accounting audit is the independent closure proof:
-         * every admitted action is either a carrier-wide certified row or is
-         * dominated by a carrier-wide lower-Q certificate at the published
-         * Q generation. With no blocked improved publication, the proper
-         * exact class policy is therefore the global Bellman fixed point.
+         * the root-selected closure is expanded through every certified
+         * alternative row, and every admitted action at every cell in that
+         * proof envelope is either carrier-wide certified or dominated by a
+         * carrier-wide lower-Q certificate at the current Q generation. With
+         * no blocked improved publication, the retained proper root policy is
+         * therefore the global Bellman fixed point even when unrelated live
+         * quotient cells were never materialized into obligations.
          */
         certificate.global_lower_bound_closed =
             certificate.global_lower_bound_closed ||
