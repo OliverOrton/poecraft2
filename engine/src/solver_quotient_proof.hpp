@@ -53,14 +53,45 @@ public:
     }
 
     bool operator==(const SharedStableKey& other) const {
+        if (storage_identity() == other.storage_identity()) return true;
         return value() == other.value();
     }
     auto operator<=>(const SharedStableKey& other) const {
+        if (storage_identity() == other.storage_identity()) {
+            return std::strong_ordering::equal;
+        }
         return value() <=> other.value();
     }
 
 private:
     std::shared_ptr<const StableKey> value_;
+};
+
+/* One quotient cell has one canonical observation contract but commonly has
+ * many admitted actions. Share the immutable contract across obligations. */
+class SharedObservationRequirement {
+public:
+    SharedObservationRequirement() = default;
+    SharedObservationRequirement(ObservationRequirement value)
+        : value_(std::make_shared<const ObservationRequirement>(
+              std::move(value))) {}
+
+    const ObservationRequirement& value() const {
+        static const ObservationRequirement empty;
+        return value_ == nullptr ? empty : *value_;
+    }
+    operator const ObservationRequirement&() const { return value(); }
+    const ObservationRequirement* storage_identity() const {
+        return value_.get();
+    }
+
+    bool operator==(const SharedObservationRequirement& other) const {
+        if (storage_identity() == other.storage_identity()) return true;
+        return value() == other.value();
+    }
+
+private:
+    std::shared_ptr<const ObservationRequirement> value_;
 };
 
 enum class ProofMemoryCategory : std::uint8_t {
@@ -324,11 +355,12 @@ CarrierWideOptimisticLowerQ certify_carrier_wide_lower_q(
 
 struct AlternativeActionIdentity {
     std::uint32_t action_id = 0;
-    StableKey semantic_action_identity;
-    StableKey runtime_contract_program_identity;
-    StableKey exact_choice_recipe_identity;
+    SharedStableKey semantic_action_identity;
+    SharedStableKey runtime_contract_program_identity;
+    SharedStableKey exact_choice_recipe_identity;
 
     bool operator==(const AlternativeActionIdentity&) const = default;
+    auto operator<=>(const AlternativeActionIdentity&) const = default;
 };
 
 AlternativeActionIdentity canonical_alternative_action_identity(
@@ -337,7 +369,7 @@ AlternativeActionIdentity canonical_alternative_action_identity(
 struct UnresolvedAlternativeObligationIdentity {
     std::uint32_t source_cell_id = 0;
     SharedStableKey source_cell_identity;
-    ObservationRequirement observation_requirement;
+    SharedObservationRequirement observation_requirement;
     AlternativeActionIdentity action;
     SharedStableKey price_identity;
     SharedStableKey vocabulary_identity;
@@ -351,7 +383,7 @@ struct UnresolvedAlternativeObligationIdentity {
     std::uint64_t vocabulary_generation = 0;
     CarrierWideOptimisticLowerQ optimistic_lower;
     double scheduling_priority = 0.0;
-    StableKey resumable_work_identity;
+    SharedStableKey resumable_work_identity;
 
     bool operator==(
         const UnresolvedAlternativeObligationIdentity&) const = default;
@@ -388,11 +420,6 @@ struct UnresolvedAlternativeObligation {
     std::optional<std::uint64_t> certified_row_id;
     std::optional<double> conditional_upper_q;
     std::uint64_t conditional_q_generation = 0;
-};
-
-struct AlternativeObligationHashBucket {
-    std::uint64_t hash = 0;
-    std::vector<std::uint32_t> obligation_ids;
 };
 
 struct AlternativeObligationValidationContext {
@@ -621,12 +648,14 @@ struct ProofStoreStorageStats {
     std::uint64_t target_index_outer_capacity = 0;
     std::uint64_t target_index_row_capacity = 0;
     std::uint64_t obligation_capacity = 0;
-    std::uint64_t obligation_bucket_capacity = 0;
+    std::uint64_t obligation_bucket_count = 0;
     std::uint64_t obligation_bucket_id_capacity = 0;
     std::uint64_t obligation_key_u64_capacity = 0;
     std::uint64_t obligation_shared_key_allocation_capacity = 0;
     std::uint64_t obligation_shared_key_object_count = 0;
     std::uint64_t obligation_shared_key_u64_capacity = 0;
+    std::uint64_t obligation_shared_requirement_allocation_capacity = 0;
+    std::uint64_t obligation_shared_requirement_object_count = 0;
     std::uint64_t obligation_requirement_tag_capacity = 0;
     std::uint64_t obligation_requirement_affix_capacity = 0;
     std::uint64_t obligation_requirement_selector_tag_capacity = 0;
@@ -739,9 +768,12 @@ private:
     std::vector<std::vector<std::uint64_t>> source_rows_;
     std::vector<std::vector<std::uint64_t>> target_rows_;
     std::vector<UnresolvedAlternativeObligation> alternative_obligations_;
-    std::vector<AlternativeObligationHashBucket> alternative_buckets_;
+    std::map<std::uint64_t, std::vector<std::uint32_t>>
+        alternative_buckets_;
     std::vector<ObligationSharedKeyAllocation>
         obligation_shared_key_allocations_;
+    std::vector<const ObservationRequirement*>
+        obligation_shared_requirement_allocations_;
     std::uint64_t price_generation_ = 0;
     std::uint64_t q_generation_ = 0;
     std::uint64_t policy_generation_ = 0;

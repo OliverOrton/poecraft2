@@ -56,7 +56,7 @@ struct QuotientAlternativeDescriptor {
     std::uint32_t operator_index = kNoId;
     quotient::AlternativeActionIdentity action;
     ObservationRequirement routing_observes;
-    StableKey resumable_work_identity;
+    quotient::SharedStableKey resumable_work_identity;
 
     bool operator==(const QuotientAlternativeDescriptor&) const = default;
 };
@@ -2027,7 +2027,7 @@ lift_policy_quotient_pass_task(
             completed_action_accounting;
         std::uint64_t current_alternative_admissions = 0;
         for (std::uint32_t cls = 0; cls < final_cell_id.size(); ++cls) {
-            if (cls != 0 && (cls & 15u) == 0u) {
+            if (cls != 0) {
                 ++progress.work_items;
                 std::uint64_t retained = oracle.estimated_owned_bytes();
                 saturating_add(retained, ledger.snapshot().total_bytes);
@@ -2101,31 +2101,21 @@ lift_policy_quotient_pass_task(
                 selected->sparse_row,
                 std::nullopt});
             if (retained_global_lower_authority) continue;
+            const quotient::SharedObservationRequirement
+                shared_observation_requirement{
+                    canonical_observation_requirement(
+                        cell.observation_requirement)};
             for (const std::uint32_t operator_index :
                  alternative_operator_ids) {
-                const QuotientAlternativeDescriptor descriptor =
+                const QuotientAlternativeDescriptor& descriptor =
                     oracle.quotient_alternative_descriptor(operator_index);
                 const quotient::SharedStableKey& shared_cell_identity =
                     bellman.shared_semantic_identity_for_cell(cell.cell_id);
-                const StableKey& cell_identity = shared_cell_identity.value();
-                StableKey resumable{
-                    0x70637163656c6c72ull,
-                    cell_identity.size()};
-                resumable.insert(
-                    resumable.end(),
-                    cell_identity.begin(),
-                    cell_identity.end());
-                resumable.push_back(
-                    descriptor.resumable_work_identity.size());
-                resumable.insert(
-                    resumable.end(),
-                    descriptor.resumable_work_identity.begin(),
-                    descriptor.resumable_work_identity.end());
                 quotient::UnresolvedAlternativeObligationIdentity identity;
                 identity.source_cell_id = cell.cell_id;
                 identity.source_cell_identity = shared_cell_identity;
                 identity.observation_requirement =
-                    cell.observation_requirement;
+                    shared_observation_requirement;
                 identity.action = descriptor.action;
                 identity.price_identity = price_identity;
                 identity.vocabulary_identity = vocabulary_identity;
@@ -2169,7 +2159,7 @@ lift_policy_quotient_pass_task(
                 }
                 identity.scheduling_priority = 0.0;
                 identity.resumable_work_identity =
-                    std::move(resumable);
+                    descriptor.resumable_work_identity;
                 const auto [obligation_id, obligation_reused] =
                     bellman.proof_store()
                         ->intern_alternative_obligation(
@@ -3039,7 +3029,7 @@ lift_policy_quotient_pass_task(
                     attempted_obligations.insert(obligation_id);
                     continue;
                 }
-                const QuotientAlternativeDescriptor descriptor =
+                const QuotientAlternativeDescriptor& descriptor =
                     oracle.quotient_alternative_descriptor(*operator_it);
                 if (descriptor.action != before.identity.action) {
                     bellman.proof_store()

@@ -216,24 +216,30 @@ void add_obligation_identity_storage(
         ProofStoreStorageStats& stats,
         const UnresolvedAlternativeObligationIdentity& identity,
         std::vector<ObligationSharedKeyAllocation>&
-            shared_key_allocations) {
+            shared_key_allocations,
+        std::vector<const ObservationRequirement*>&
+            shared_requirement_allocations) {
     const auto add_key = [&](const StableKey& key) {
         stats.obligation_key_u64_capacity = checked_add(
             stats.obligation_key_u64_capacity, key.capacity());
     };
-    add_key(identity.action.semantic_action_identity);
-    add_key(identity.action.runtime_contract_program_identity);
-    add_key(identity.action.exact_choice_recipe_identity);
     const auto add_shared_key = [&](const SharedStableKey& key) {
         const StableKey* storage = key.storage_identity();
         if (storage == nullptr) return;
-        const auto found = std::find_if(
+        const auto found = std::lower_bound(
             shared_key_allocations.begin(), shared_key_allocations.end(),
-            [&](const ObligationSharedKeyAllocation& candidate) {
-                return candidate.identity == storage;
+            storage,
+            [](const ObligationSharedKeyAllocation& candidate,
+               const StableKey* sought) {
+                return std::less<const StableKey*>{}(
+                    candidate.identity, sought);
             });
-        if (found != shared_key_allocations.end()) return;
-        shared_key_allocations.push_back({storage, key.capacity()});
+        if (found != shared_key_allocations.end() &&
+            found->identity == storage) {
+            return;
+        }
+        shared_key_allocations.insert(
+            found, {storage, key.capacity()});
         stats.obligation_shared_key_allocation_capacity =
             shared_key_allocations.capacity();
         stats.obligation_shared_key_object_count =
@@ -241,18 +247,42 @@ void add_obligation_identity_storage(
         stats.obligation_shared_key_u64_capacity = checked_add(
             stats.obligation_shared_key_u64_capacity, key.capacity());
     };
+    add_shared_key(identity.action.semantic_action_identity);
+    add_shared_key(identity.action.runtime_contract_program_identity);
+    add_shared_key(identity.action.exact_choice_recipe_identity);
     add_shared_key(identity.price_identity);
     add_shared_key(identity.vocabulary_identity);
     add_key(identity.optimistic_lower.authority_identity());
-    add_key(identity.resumable_work_identity);
+    add_shared_key(identity.resumable_work_identity);
+    const ObservationRequirement* requirement_storage =
+        identity.observation_requirement.storage_identity();
+    if (requirement_storage == nullptr) {
+        return;
+    }
+    const auto requirement_found = std::lower_bound(
+        shared_requirement_allocations.begin(),
+        shared_requirement_allocations.end(), requirement_storage,
+        std::less<const ObservationRequirement*>{});
+    if (requirement_found != shared_requirement_allocations.end() &&
+        *requirement_found == requirement_storage) {
+        return;
+    }
+    shared_requirement_allocations.insert(
+        requirement_found, requirement_storage);
+    stats.obligation_shared_requirement_allocation_capacity =
+        shared_requirement_allocations.capacity();
+    stats.obligation_shared_requirement_object_count =
+        shared_requirement_allocations.size();
+    const ObservationRequirement& requirement =
+        identity.observation_requirement.value();
     stats.obligation_requirement_tag_capacity = checked_add(
         stats.obligation_requirement_tag_capacity,
-        identity.observation_requirement.modifier_tag_ids.capacity());
+        requirement.modifier_tag_ids.capacity());
     stats.obligation_requirement_affix_capacity = checked_add(
         stats.obligation_requirement_affix_capacity,
-        identity.observation_requirement.affix_observations.capacity());
+        requirement.affix_observations.capacity());
     for (const RefinementAffixObservation& observation :
-         identity.observation_requirement.affix_observations) {
+         requirement.affix_observations) {
         stats.obligation_requirement_selector_tag_capacity = checked_add(
             stats.obligation_requirement_selector_tag_capacity,
             observation.selector.required_tag_ids.capacity());
@@ -668,13 +698,13 @@ CarrierWideOptimisticLowerQ certify_carrier_wide_lower_q(
 AlternativeActionIdentity canonical_alternative_action_identity(
         AlternativeActionIdentity value) {
     require_identity(
-        value.semantic_action_identity,
+        value.semantic_action_identity.value(),
         "alternative semantic action identity");
     require_identity(
-        value.runtime_contract_program_identity,
+        value.runtime_contract_program_identity.value(),
         "alternative runtime contract/program identity");
     require_identity(
-        value.exact_choice_recipe_identity,
+        value.exact_choice_recipe_identity.value(),
         "alternative exact choice recipe identity");
     return value;
 }
@@ -690,11 +720,16 @@ canonical_unresolved_alternative_obligation_identity(
         value.vocabulary_identity,
         "alternative vocabulary identity");
     require_identity(
-        value.resumable_work_identity,
+        value.resumable_work_identity.value(),
         "alternative resumable-work identity");
-    value.observation_requirement =
+    ObservationRequirement canonical_requirement =
         refinement::canonical_observation_requirement(
-            std::move(value.observation_requirement));
+            value.observation_requirement.value());
+    if (canonical_requirement != value.observation_requirement.value()) {
+        value.observation_requirement =
+            SharedObservationRequirement{
+                std::move(canonical_requirement)};
+    }
     value.action =
         canonical_alternative_action_identity(std::move(value.action));
     const CarrierWideOptimisticLowerQ& lower = value.optimistic_lower;
@@ -725,11 +760,11 @@ std::uint64_t unresolved_alternative_obligation_identity_hash(
     std::uint64_t hash = kFnvOffset;
     hash_token(hash, identity.source_cell_id);
     hash_key(hash, identity.source_cell_identity.value());
-    hash_requirement(hash, identity.observation_requirement);
+    hash_requirement(hash, identity.observation_requirement.value());
     hash_token(hash, identity.action.action_id);
-    hash_key(hash, identity.action.semantic_action_identity);
-    hash_key(hash, identity.action.runtime_contract_program_identity);
-    hash_key(hash, identity.action.exact_choice_recipe_identity);
+    hash_key(hash, identity.action.semantic_action_identity.value());
+    hash_key(hash, identity.action.runtime_contract_program_identity.value());
+    hash_key(hash, identity.action.exact_choice_recipe_identity.value());
     hash_key(hash, identity.price_identity);
     hash_key(hash, identity.vocabulary_identity);
     hash_token(hash, identity.requirement_generation);
@@ -756,7 +791,7 @@ std::uint64_t unresolved_alternative_obligation_identity_hash(
     hash_token(
         hash,
         std::bit_cast<std::uint64_t>(identity.scheduling_priority));
-    hash_key(hash, identity.resumable_work_identity);
+    hash_key(hash, identity.resumable_work_identity.value());
     return hash;
 }
 
@@ -1289,28 +1324,19 @@ std::pair<std::uint32_t, bool> ProofStore::intern_alternative_obligation(
         unresolved_alternative_obligation_identity_hash(identity);
     const std::uint64_t bucket_hash =
         forced_hash_for_test.value_or(semantic_hash);
-    auto bucket = std::lower_bound(
-        alternative_buckets_.begin(), alternative_buckets_.end(),
-        bucket_hash,
-        [](const AlternativeObligationHashBucket& candidate,
-           const std::uint64_t hash) {
-            return candidate.hash < hash;
-        });
-    if (bucket != alternative_buckets_.end() &&
-        bucket->hash == bucket_hash) {
-        for (const std::uint32_t obligation_id : bucket->obligation_ids) {
+    auto [bucket, bucket_inserted] =
+        alternative_buckets_.try_emplace(bucket_hash);
+    if (!bucket_inserted) {
+        for (const std::uint32_t obligation_id : bucket->second) {
             const UnresolvedAlternativeObligation& candidate =
                 alternative_obligations_.at(obligation_id);
             if (candidate.identity == identity) {
                 return {obligation_id, true};
             }
         }
-    } else {
-        bucket = alternative_buckets_.insert(
-            bucket, AlternativeObligationHashBucket{bucket_hash, {}});
     }
-    storage_stats_.obligation_bucket_capacity =
-        alternative_buckets_.capacity();
+    storage_stats_.obligation_bucket_count =
+        alternative_buckets_.size();
     const std::uint32_t obligation_id =
         static_cast<std::uint32_t>(alternative_obligations_.size());
     alternative_obligations_.push_back({
@@ -1326,20 +1352,13 @@ std::pair<std::uint32_t, bool> ProofStore::intern_alternative_obligation(
         alternative_obligations_.capacity();
     add_obligation_identity_storage(
         storage_stats_, alternative_obligations_.back().identity,
-        obligation_shared_key_allocations_);
-    bucket = std::lower_bound(
-        alternative_buckets_.begin(), alternative_buckets_.end(),
-        bucket_hash,
-        [](const AlternativeObligationHashBucket& candidate,
-           const std::uint64_t hash) {
-            return candidate.hash < hash;
-        });
-    const std::size_t previous_bucket_capacity =
-        bucket->obligation_ids.capacity();
-    bucket->obligation_ids.push_back(obligation_id);
+        obligation_shared_key_allocations_,
+        obligation_shared_requirement_allocations_);
+    const std::size_t previous_bucket_capacity = bucket->second.capacity();
+    bucket->second.push_back(obligation_id);
     replace_capacity(
         storage_stats_.obligation_bucket_id_capacity,
-        previous_bucket_capacity, bucket->obligation_ids.capacity());
+        previous_bucket_capacity, bucket->second.capacity());
     refresh_owned_bytes();
     return {obligation_id, false};
 }
@@ -1627,34 +1646,81 @@ AlternativeActionAccountingAudit ProofStore::audit_alternative_actions(
         return left.source_cell_id == right.source_cell_id &&
                left.action == right.action;
     };
-    for (std::size_t i = 0; i < admitted.size(); ++i) {
+    const auto action_less = [](const AccountedAlternativeAction& left,
+                                const AccountedAlternativeAction& right) {
+        return std::tie(left.source_cell_id, left.action) <
+               std::tie(right.source_cell_id, right.action);
+    };
+    std::vector<const AccountedAlternativeAction*> ordered_admitted;
+    std::vector<const AccountedAlternativeAction*> ordered_valid_admitted;
+    std::vector<const AccountedAlternativeAction*> ordered_accounted;
+    ordered_admitted.reserve(admitted.size());
+    ordered_valid_admitted.reserve(admitted.size());
+    ordered_accounted.reserve(accounted.size());
+    for (const AccountedAlternativeAction& entry : admitted) {
+        ordered_admitted.push_back(&entry);
         try {
-            (void)canonical_alternative_action_identity(admitted[i].action);
+            (void)canonical_alternative_action_identity(entry.action);
+            ordered_valid_admitted.push_back(&entry);
         } catch (const std::exception&) {
             ++audit.invalid_accounting;
-            continue;
         }
-        if (std::any_of(
-                admitted.begin(), admitted.begin() + i,
-                [&](const AccountedAlternativeAction& prior) {
-                    return same_action(prior, admitted[i]);
-                })) {
-            ++audit.duplicate_admissions;
-            continue;
+    }
+    for (const AccountedAlternativeAction& entry : accounted) {
+        ordered_accounted.push_back(&entry);
+    }
+    const auto pointer_less = [&](const AccountedAlternativeAction* left,
+                                  const AccountedAlternativeAction* right) {
+        return action_less(*left, *right);
+    };
+    std::sort(
+        ordered_admitted.begin(), ordered_admitted.end(), pointer_less);
+    std::sort(
+        ordered_valid_admitted.begin(), ordered_valid_admitted.end(),
+        pointer_less);
+    std::sort(
+        ordered_accounted.begin(), ordered_accounted.end(), pointer_less);
+
+    std::size_t accounted_cursor = 0;
+    for (std::size_t begin = 0;
+         begin < ordered_valid_admitted.size();) {
+        std::size_t end = begin + 1;
+        while (end < ordered_valid_admitted.size() &&
+               same_action(
+                   *ordered_valid_admitted[begin],
+                   *ordered_valid_admitted[end])) {
+            ++end;
         }
-        std::vector<const AccountedAlternativeAction*> matches;
-        for (const AccountedAlternativeAction& entry : accounted) {
-            if (same_action(admitted[i], entry)) matches.push_back(&entry);
+        audit.duplicate_admissions += end - begin - 1;
+        const AccountedAlternativeAction* admitted_entry =
+            ordered_valid_admitted[begin];
+        while (accounted_cursor < ordered_accounted.size() &&
+               pointer_less(
+                   ordered_accounted[accounted_cursor], admitted_entry)) {
+            ++accounted_cursor;
         }
-        if (matches.empty()) {
+        const std::size_t first_match = accounted_cursor;
+        while (accounted_cursor < ordered_accounted.size() &&
+               same_action(
+                   *ordered_accounted[accounted_cursor],
+                   *admitted_entry)) {
+            ++accounted_cursor;
+        }
+        const std::size_t after_matches = accounted_cursor;
+        const std::size_t match_count =
+            after_matches - first_match;
+        if (match_count == 0) {
             ++audit.unaccounted_actions;
+            begin = end;
             continue;
         }
-        if (matches.size() != 1) {
+        if (match_count != 1) {
             ++audit.duplicate_accounting;
+            begin = end;
             continue;
         }
-        const AccountedAlternativeAction& entry = *matches.front();
+        const AccountedAlternativeAction& entry =
+            *ordered_accounted[first_match];
         switch (entry.kind) {
         case AlternativeActionAccountingKind::CurrentSelectedCertified:
             if (!entry.certified_row_id.has_value() ||
@@ -1706,13 +1772,16 @@ AlternativeActionAccountingAudit ProofStore::audit_alternative_actions(
             }
             break;
         }
+        begin = end;
     }
-    for (const AccountedAlternativeAction& entry : accounted) {
-        if (std::none_of(
-                admitted.begin(), admitted.end(),
-                [&](const AccountedAlternativeAction& candidate) {
-                    return same_action(candidate, entry);
-                })) {
+    std::size_t admitted_cursor = 0;
+    for (const AccountedAlternativeAction* entry : ordered_accounted) {
+        while (admitted_cursor < ordered_admitted.size() &&
+               pointer_less(ordered_admitted[admitted_cursor], entry)) {
+            ++admitted_cursor;
+        }
+        if (admitted_cursor == ordered_admitted.size() ||
+            !same_action(*ordered_admitted[admitted_cursor], *entry)) {
             ++audit.invalid_accounting;
         }
     }
@@ -1832,16 +1901,20 @@ ProofStoreStorageStats ProofStore::storage_stats() const {
             stats.target_index_row_capacity, rows.capacity());
     }
     stats.obligation_capacity = alternative_obligations_.capacity();
-    stats.obligation_bucket_capacity = alternative_buckets_.capacity();
+    stats.obligation_bucket_count = alternative_buckets_.size();
     stats.obligation_shared_key_allocation_capacity =
         obligation_shared_key_allocations_.capacity();
-    for (const AlternativeObligationHashBucket& bucket :
-         alternative_buckets_) {
+    stats.obligation_shared_requirement_allocation_capacity =
+        obligation_shared_requirement_allocations_.capacity();
+    for (const auto& [unused_hash, obligation_ids] : alternative_buckets_) {
+        (void)unused_hash;
         stats.obligation_bucket_id_capacity = checked_add(
             stats.obligation_bucket_id_capacity,
-            bucket.obligation_ids.capacity());
+            obligation_ids.capacity());
     }
     std::vector<const StableKey*> shared_obligation_keys;
+    std::vector<const ObservationRequirement*>
+        shared_obligation_requirements;
     for (const UnresolvedAlternativeObligation& obligation :
          alternative_obligations_) {
         const UnresolvedAlternativeObligationIdentity& identity =
@@ -1850,34 +1923,53 @@ ProofStoreStorageStats ProofStore::storage_stats() const {
             stats.obligation_key_u64_capacity = checked_add(
                 stats.obligation_key_u64_capacity, key.capacity());
         };
-        add_key(identity.action.semantic_action_identity);
-        add_key(identity.action.runtime_contract_program_identity);
-        add_key(identity.action.exact_choice_recipe_identity);
         const auto add_shared_key = [&](const SharedStableKey& key) {
             const StableKey* storage = key.storage_identity();
-            if (storage == nullptr ||
-                std::find(
-                    shared_obligation_keys.begin(),
-                    shared_obligation_keys.end(), storage) !=
-                    shared_obligation_keys.end()) {
+            if (storage == nullptr) return;
+            const auto found = std::lower_bound(
+                shared_obligation_keys.begin(),
+                shared_obligation_keys.end(), storage,
+                std::less<const StableKey*>{});
+            if (found != shared_obligation_keys.end() &&
+                *found == storage) {
                 return;
             }
-            shared_obligation_keys.push_back(storage);
+            shared_obligation_keys.insert(found, storage);
             stats.obligation_shared_key_u64_capacity = checked_add(
                 stats.obligation_shared_key_u64_capacity, key.capacity());
         };
+        add_shared_key(identity.action.semantic_action_identity);
+        add_shared_key(identity.action.runtime_contract_program_identity);
+        add_shared_key(identity.action.exact_choice_recipe_identity);
         add_shared_key(identity.price_identity);
         add_shared_key(identity.vocabulary_identity);
         add_key(identity.optimistic_lower.authority_identity());
-        add_key(identity.resumable_work_identity);
+        add_shared_key(identity.resumable_work_identity);
+        const ObservationRequirement* requirement_storage =
+            identity.observation_requirement.storage_identity();
+        if (requirement_storage == nullptr) {
+            continue;
+        }
+        const auto requirement_found = std::lower_bound(
+            shared_obligation_requirements.begin(),
+            shared_obligation_requirements.end(), requirement_storage,
+            std::less<const ObservationRequirement*>{});
+        if (requirement_found != shared_obligation_requirements.end() &&
+            *requirement_found == requirement_storage) {
+            continue;
+        }
+        shared_obligation_requirements.insert(
+            requirement_found, requirement_storage);
+        const ObservationRequirement& requirement =
+            identity.observation_requirement.value();
         stats.obligation_requirement_tag_capacity = checked_add(
             stats.obligation_requirement_tag_capacity,
-            identity.observation_requirement.modifier_tag_ids.capacity());
+            requirement.modifier_tag_ids.capacity());
         stats.obligation_requirement_affix_capacity = checked_add(
             stats.obligation_requirement_affix_capacity,
-            identity.observation_requirement.affix_observations.capacity());
+            requirement.affix_observations.capacity());
         for (const RefinementAffixObservation& observation :
-             identity.observation_requirement.affix_observations) {
+             requirement.affix_observations) {
             stats.obligation_requirement_selector_tag_capacity = checked_add(
                 stats.obligation_requirement_selector_tag_capacity,
                 observation.selector.required_tag_ids.capacity());
@@ -1885,6 +1977,8 @@ ProofStoreStorageStats ProofStore::storage_stats() const {
     }
     stats.obligation_shared_key_object_count =
         shared_obligation_keys.size();
+    stats.obligation_shared_requirement_object_count =
+        shared_obligation_requirements.size();
     return stats;
 }
 
@@ -1991,8 +2085,11 @@ void ProofStore::refresh_owned_bytes() {
     obligation_bytes = checked_add(
         obligation_bytes,
         checked_multiply(
-            stats.obligation_bucket_capacity,
-            sizeof(AlternativeObligationHashBucket)));
+            stats.obligation_bucket_count,
+            sizeof(std::pair<
+                       const std::uint64_t,
+                       std::vector<std::uint32_t>>) +
+                3 * sizeof(void*)));
     obligation_bytes = checked_add(
         obligation_bytes,
         checked_multiply(
@@ -2018,6 +2115,16 @@ void ProofStore::refresh_owned_bytes() {
         checked_multiply(
             stats.obligation_shared_key_u64_capacity,
             sizeof(std::uint64_t)));
+    obligation_bytes = checked_add(
+        obligation_bytes,
+        checked_multiply(
+            stats.obligation_shared_requirement_allocation_capacity,
+            sizeof(const ObservationRequirement*)));
+    obligation_bytes = checked_add(
+        obligation_bytes,
+        checked_multiply(
+            stats.obligation_shared_requirement_object_count,
+            sizeof(ObservationRequirement) + 2 * sizeof(void*)));
     obligation_bytes = checked_add(
         obligation_bytes,
         checked_multiply(
@@ -2059,10 +2166,12 @@ void ProofStore::clear_and_release() {
     std::vector<std::vector<std::uint64_t>>().swap(target_rows_);
     std::vector<UnresolvedAlternativeObligation>().swap(
         alternative_obligations_);
-    std::vector<AlternativeObligationHashBucket>().swap(
+    std::map<std::uint64_t, std::vector<std::uint32_t>>().swap(
         alternative_buckets_);
     std::vector<ObligationSharedKeyAllocation>().swap(
         obligation_shared_key_allocations_);
+    std::vector<const ObservationRequirement*>().swap(
+        obligation_shared_requirement_allocations_);
     storage_stats_ = {};
     price_generation_ = 0;
     q_generation_ = 0;

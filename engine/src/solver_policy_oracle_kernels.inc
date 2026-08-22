@@ -402,6 +402,23 @@
                  sizeof(std::uint32_t);
         bytes += admitted_operators_.capacity() *
                  sizeof(std::uint32_t);
+        bytes += quotient_alternative_descriptor_cache_.capacity() *
+                 sizeof(std::optional<QuotientAlternativeDescriptor>);
+        for (const auto& descriptor :
+             quotient_alternative_descriptor_cache_) {
+            if (!descriptor.has_value()) continue;
+            bytes += descriptor->action.semantic_action_identity.capacity() *
+                     sizeof(std::uint64_t);
+            bytes += descriptor->action.runtime_contract_program_identity
+                         .capacity() *
+                     sizeof(std::uint64_t);
+            bytes += descriptor->action.exact_choice_recipe_identity
+                         .capacity() *
+                     sizeof(std::uint64_t);
+            bytes += descriptor->resumable_work_identity.capacity() *
+                     sizeof(std::uint64_t);
+            bytes += requirement_bytes(descriptor->routing_observes);
+        }
         bytes += reoptimization_parents_.size() *
                  (sizeof(std::uint32_t) + 3 * sizeof(void*));
         bytes +=
@@ -573,6 +590,8 @@
     std::vector<std::uint32_t> admitted_actions_;
     std::vector<std::uint32_t> admitted_coarse_operators_;
     std::vector<std::uint32_t> admitted_operators_;
+    mutable std::vector<std::optional<QuotientAlternativeDescriptor>>
+        quotient_alternative_descriptor_cache_;
     std::map<std::uint32_t, std::uint32_t>
         strict_operator_by_coarse_;
     std::map<std::uint32_t, std::uint32_t>

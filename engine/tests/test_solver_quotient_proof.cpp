@@ -453,6 +453,60 @@ void run_alternative_lower_and_collision_tests() {
         store.alternative_obligation(collision_id).semantic_hash);
 }
 
+void run_shared_alternative_identity_storage_test() {
+    constexpr std::uint32_t kObligationCount = 128;
+    constexpr std::size_t kLargeKeyTokens = 256;
+    const auto large_key = [](const std::uint64_t prefix) {
+        StableKey key(kLargeKeyTokens, prefix);
+        key.front() = prefix;
+        key.back() = prefix + 1;
+        return key;
+    };
+    const AlternativeActionIdentity shared_action =
+        canonical_alternative_action_identity({
+            77,
+            large_key(6100),
+            large_key(6200),
+            large_key(6300)});
+    const SharedStableKey shared_price{large_key(6400)};
+    const SharedStableKey shared_vocabulary{large_key(6500)};
+    const SharedStableKey shared_resumable{large_key(6600)};
+    const SharedObservationRequirement shared_requirement{
+        refinement::canonical_observation_requirement(
+            make_identity().observation_requirement)};
+
+    ProofStore store;
+    for (std::uint32_t index = 0; index < kObligationCount; ++index) {
+        UnresolvedAlternativeObligationIdentity identity =
+            make_obligation_identity(index + 1000);
+        identity.action = shared_action;
+        identity.price_identity = shared_price;
+        identity.vocabulary_identity = shared_vocabulary;
+        identity.resumable_work_identity = shared_resumable;
+        identity.observation_requirement = shared_requirement;
+        const auto [unused, reused] =
+            store.intern_alternative_obligation(std::move(identity));
+        (void)unused;
+        PC_CHECK(!reused);
+    }
+
+    const ProofStoreStorageStats stats = store.storage_stats();
+    PC_CHECK(stats.obligation_shared_key_object_count == 6);
+    PC_CHECK(stats.obligation_shared_requirement_object_count == 1);
+    PC_CHECK(
+        stats.obligation_shared_key_u64_capacity ==
+        6 * kLargeKeyTokens);
+    const std::uint64_t naive_flat_action_and_resume_bytes =
+        static_cast<std::uint64_t>(kObligationCount) *
+        4 * kLargeKeyTokens * sizeof(std::uint64_t);
+    const std::uint64_t retained_obligation_bytes =
+        store.ledger().snapshot().bytes[static_cast<std::size_t>(
+            ProofMemoryCategory::AlternativeObligation)];
+    PC_CHECK(
+        retained_obligation_bytes <
+        naive_flat_action_and_resume_bytes / 2);
+}
+
 void run_alternative_lifecycle_and_invalidation_tests() {
     ProofStore store;
     const UnresolvedAlternativeObligationIdentity identity =
@@ -689,8 +743,11 @@ void run_alternative_verdict_revocation_tests() {
             AlternativeObligationValidationStatus::
                 StaleRequirementGeneration,
             [](auto& identity, auto& context) {
-                identity.observation_requirement.modifier_tag_ids
-                    .push_back(9003);
+                ObservationRequirement requirement =
+                    identity.observation_requirement.value();
+                requirement.modifier_tag_ids.push_back(9003);
+                identity.observation_requirement =
+                    std::move(requirement);
                 ++identity.requirement_generation;
                 context = obligation_context(identity, 31);
             },
@@ -963,8 +1020,11 @@ independent_store_bytes(
     expected[index(ProofMemoryCategory::AlternativeObligation)] =
         stats.obligation_capacity *
             sizeof(UnresolvedAlternativeObligation) +
-        stats.obligation_bucket_capacity *
-            sizeof(AlternativeObligationHashBucket) +
+        stats.obligation_bucket_count *
+            (sizeof(std::pair<
+                 const std::uint64_t,
+                 std::vector<std::uint32_t>>) +
+             3 * sizeof(void*)) +
         stats.obligation_bucket_id_capacity * sizeof(std::uint32_t) +
         stats.obligation_key_u64_capacity * sizeof(std::uint64_t) +
         stats.obligation_shared_key_allocation_capacity *
@@ -972,6 +1032,10 @@ independent_store_bytes(
         stats.obligation_shared_key_object_count *
             (sizeof(StableKey) + 2 * sizeof(void*)) +
         stats.obligation_shared_key_u64_capacity * sizeof(std::uint64_t) +
+        stats.obligation_shared_requirement_allocation_capacity *
+            sizeof(const ObservationRequirement*) +
+        stats.obligation_shared_requirement_object_count *
+            (sizeof(ObservationRequirement) + 2 * sizeof(void*)) +
         stats.obligation_requirement_tag_capacity * sizeof(std::uint32_t) +
         stats.obligation_requirement_affix_capacity *
             sizeof(RefinementAffixObservation) +
@@ -1084,6 +1148,7 @@ void run_solver_quotient_proof_tests() {
     run_dependency_generation_tests();
     run_coverage_replay_tests();
     run_alternative_lower_and_collision_tests();
+    run_shared_alternative_identity_storage_test();
     run_alternative_lifecycle_and_invalidation_tests();
     run_alternative_verdict_revocation_tests();
     run_alternative_order_and_accounting_tests();

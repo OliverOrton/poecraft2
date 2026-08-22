@@ -414,8 +414,16 @@
         return operator_ids;
     }
 
-    QuotientAlternativeDescriptor quotient_alternative_descriptor(
+    const QuotientAlternativeDescriptor& quotient_alternative_descriptor(
             const std::uint32_t operator_index) const {
+        if (quotient_alternative_descriptor_cache_.size() <
+                strict_->operators().size()) {
+            quotient_alternative_descriptor_cache_.resize(
+                strict_->operators().size());
+        }
+        std::optional<QuotientAlternativeDescriptor>& cached =
+            quotient_alternative_descriptor_cache_.at(operator_index);
+        if (cached.has_value()) return *cached;
         const PlannerOperator& planner =
             strict_->operators().at(operator_index);
         SelectedAction runtime;
@@ -456,7 +464,9 @@
             std::move(runtime.routing_observes);
         descriptor.resumable_work_identity =
             std::move(resumable_identity);
-        return descriptor;
+        cached = std::move(descriptor);
+        adapter_memory_cache_initialized_ = false;
+        return *cached;
     }
 
     std::vector<QuotientAlternativeDescriptor>
