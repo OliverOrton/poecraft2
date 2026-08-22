@@ -1,16 +1,18 @@
 # Active Work
 
-**Status: persistent quotient-session implementation is selected.**
+**Status: no implementation boundary is active.**
 
 Parent: [Documentation map](../README.md)
 
-The selected
+The completed
 [Persistent Quotient Session And In-Place Frontier Growth](2026-08-21-persistent-quotient-session/plan.md)
 milestone replaces strict frontier restarts with localized growth of one live
 oracle, stable partition, Bellman graph, proof store, alternative scheduler,
-and verified incumbent. A forced-frontier from-scratch reference and explicit
-identity, proof-generation, memory, and cooperative-step evidence are required
-before the real four-T1 and conditional release-WASM gates.
+and verified incumbent. The native and release-WASM four-T1 controls preserve
+one session, zero restarts, four in-place insertions, the accepted upper, and a
+60.40% reduction in open alternatives. Oliver accepted the measured ownership
+under a 512 MiB milestone boundary. Focused native, release WASM, TypeScript,
+web, and full-pipeline acceptance pass; see the [result](2026-08-21-persistent-quotient-session/result.md).
 
 The stopped
 [Four-T1 Automatic-Envelope Replacement Qualification](2026-08-21-four-t1-automatic-envelope-qualification/plan.md)

@@ -1,12 +1,13 @@
 # Persistent Quotient Session And In-Place Frontier Growth
 
-**Status: Gate 6 accepted by owner adjustment on 2026-08-22; Gate 7 is
-active.** The persistent-session behavior, progress, value, time, and
-responsiveness requirements passed. After reviewing the checked 419,316,840
-byte conservative ownership estimate, Oliver replaced the original 150 MB
-milestone ceiling with 512 MiB (536,870,912 bytes). This is an acceptance
-boundary adjustment only; no engine resource cap or proof behavior changes.
-See [result.md](result.md).
+**Status: complete on 2026-08-22.** The persistent-session behavior, progress,
+value, time, and responsiveness requirements passed. After reviewing the
+checked 419,316,840-byte conservative ownership estimate, Oliver replaced the
+original 150 MB milestone ceiling with 512 MiB (536,870,912 bytes). Release
+WASM preserved the native session, value, insertion, and proof-progress
+results; TypeScript, web/WASM acceptance, and the one full repository pipeline
+pass. No engine resource cap or proof behavior changed. See
+[result.md](result.md).
 
 Owner: Oliver
 

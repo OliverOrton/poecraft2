@@ -1,16 +1,18 @@
 # Handoff
 
-**Status: conditional release qualification is active.** Oliver reviewed the
-persistent quotient session's 419,316,840-byte conservative native peak on
-2026-08-22 and replaced the original 150 MB milestone ceiling with 512 MiB
-(536,870,912 bytes). Gate 6 therefore passes. This does not change an engine
-resource cap or proof behavior.
+**Status: no implementation boundary is active.** The persistent quotient
+session milestone completed on 2026-08-22. Oliver reviewed its 419,316,840-byte
+conservative native peak and replaced the original 150 MB milestone ceiling
+with 512 MiB (536,870,912 bytes). Native and release acceptance pass without
+changing an engine resource cap or proof behavior. Oliver must select the next
+chunk before implementation resumes.
 
 ## Current checkpoint
 
 - Branch: `main`
 - Upstream remains at `65d4d76`; nothing was pushed.
 - Retained implementation checkpoint: `bb29378`
+- Release checkpoint: `c95e6e1`
 - Milestone plan:
   [docs/active/2026-08-21-persistent-quotient-session/plan.md](docs/active/2026-08-21-persistent-quotient-session/plan.md)
 - Result:
@@ -53,7 +55,7 @@ The final native Allflame four-natural-T1 Conquest Lamellar run reached the
 Every native acceptance condition passed under the owner-adjusted 512 MiB
 ceiling. The primary produced no final strategy, so it was not simulated.
 
-## Qualification already run
+## Release qualification
 
 - `powershell -File scripts/build.ps1`: pass.
 - Quotient partition/Bellman/proof: 614 checks, 0 failures.
@@ -66,10 +68,21 @@ ceiling. The primary produced no final strategy, so it was not simulated.
   10,000/10,000 successful simulations.
 - Final primary derived report:
   `build/solver-diagnostics/persistent-quotient-session/native-primary-final-128.json`.
+- Release WASM primary: one session, zero restarts, four insertions / 138
+  states, unchanged upper `3745.7295960574743`, unchanged 6,963 open
+  alternatives, and no unsupported lower or upper increase.
+- Release primary first strict upper: 63,208.70 ms; largest worker slice:
+  2,049.82 ms in the pre-refinement coarse focused-expansion round.
+- Release primary live owned at stop: 366,916,901 bytes; solver-owned quotient
+  telemetry: 315,716,514 bytes; WASM heap growth: 500,498,432 bytes.
+- Release WASM build, `npx tsc --noEmit`, complete web tests, and 28/28 engine
+  smoke checks: pass.
+- `powershell -File scripts/test.ps1`: pass, including 3,464,468 native engine
+  checks with zero failures.
 
-Release WASM, TypeScript/web acceptance, the release-WASM five-minute primary,
-and, if those pass, the one full `scripts/test.ps1` acceptance run are now the
-active conditional release boundary.
+The release primary reached the five-minute watchdog and produced no final
+strategy, so it was not simulated. Its full local report is
+`build/solver-diagnostics/persistent-quotient-session/wasm-primary-final.json`.
 
 ## Later memory owner
 
@@ -85,11 +98,13 @@ telemetry that separates:
 
 The named proof categories total about 134 MB; the unsplit oracle/adapter
 remainder is about 230 MB. Establish its actual subowners, simultaneous
-ownership, and aliasing before choosing compaction or lifetime work. Candidate directions are
-safe cache release between carrier subproofs, compact/shared selected raw-row
-payloads, and removal of duplicated strict-versus-quotient transition state.
-Do not raise the memory cap, weaken carrier coverage, trim actions, infer
-identity from hashes, or add another unbounded replay cache.
+ownership, and aliasing before choosing compaction or lifetime work. Candidate
+directions are safe cache release between carrier subproofs, compact/shared
+selected raw-row payloads, and removal of duplicated strict-versus-quotient
+transition state.
+Do not make another cap-only adjustment, weaken carrier coverage, trim
+actions, infer identity from hashes, or add another unbounded replay cache
+without a newly selected and evidenced boundary.
 
 Five-T1 recovery, Imprint state 928, compiler/router work, mechanics, prices,
 and action admission remain separate and unchanged.
