@@ -1295,18 +1295,19 @@ lift_policy_quotient_pass_task(
             ledger, quotient::ProofMemoryCategory::Carrier,
             locator_bytes);
 
+        /* These keys name the live session authorities, not a population
+         * snapshot. Canonical coverage ranges/counts below commit each exact
+         * prefix; keeping the authority stable lets an untouched cell retain
+         * its semantic identity when another range grows. */
         const StableKey strict_identity{
             0x7063717374726b32ull,
-            root_locator,
-            locators.size()};
+            root_locator};
         const StableKey replay_identity{
             0x7063717265706c32ull,
-            root_locator,
-            locators.size()};
+            root_locator};
         const StableKey enumeration_identity{
             0x706371656e756d32ull,
-            root_locator,
-            locators.size()};
+            root_locator};
         const StableKey range_identity{0x70637172616e6732ull};
 
         std::vector<std::optional<std::uint32_t>>
