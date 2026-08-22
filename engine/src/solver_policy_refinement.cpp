@@ -4116,8 +4116,9 @@ struct PolicyExactLiftWork::Impl {
                 persistent_published_rows_bytes(
                     session->published_rows));
         }
-        std::uint64_t bytes = std::max(
-            pass.retained_bytes(), session_bytes);
+        std::uint64_t bytes = std::max<std::uint64_t>(
+            static_cast<std::uint64_t>(pass.retained_bytes()),
+            session_bytes);
         if (reusable_assertion.has_value()) {
             saturating_add(
                 bytes,
