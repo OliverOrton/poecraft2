@@ -2945,7 +2945,10 @@ lift_policy_quotient_pass_task(
 
             for (std::size_t pending_index = 0;
                  pending_index < pending.size(); ++pending_index) {
-                if (pending_index != 0 && (pending_index & 31u) == 0u) {
+                /* One obligation can replay a large quotient carrier. Keep
+                 * the scheduler boundary visible even when the preceding
+                 * obligation happened to finish after only one carrier. */
+                if (pending_index != 0) {
                     ++progress.work_items;
                     co_await solve_detail::CooperativeCheckpoint{
                         oracle.estimated_owned_bytes()};
@@ -3065,11 +3068,29 @@ lift_policy_quotient_pass_task(
                 std::vector<std::pair<std::uint32_t, double>>
                     certified_projection;
                 try {
+                    bool replayed_carrier = false;
                     for (const quotient::CoverageRange& range :
                          cell.coverage.ranges) {
                         for (std::uint64_t ordinal = range.begin;
                              ordinal < range.begin + range.count;
                              ++ordinal) {
+                            /* The previous implementation made the complete
+                             * carrier-wide proof one atomic public solve step.
+                             * Yield before every carrier after the first so
+                             * large cells remain cancellable without retaining
+                             * a materialized carrier or compact row across the
+                             * suspension point. */
+                            if (replayed_carrier) {
+                                ++progress.work_items;
+                                std::uint64_t retained =
+                                    oracle.estimated_owned_bytes();
+                                saturating_add(
+                                    retained,
+                                    ledger.snapshot().total_bytes);
+                                co_await solve_detail::CooperativeCheckpoint{
+                                    retained};
+                            }
+                            replayed_carrier = true;
                             ExactState source =
                                 oracle.quotient_materialize_locator(
                                     locators.at(ordinal));
