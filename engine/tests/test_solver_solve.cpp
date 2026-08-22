@@ -7881,6 +7881,103 @@ void run_automatic_eldritch_side_tests() {
     PC_CHECK(saw_prefix_chaos);
     PC_CHECK(saw_prefix_exalt);
 
+    /* Automatic fixed options carry the exact carrier-local expected
+     * resource vector installed from their OptionKernel. The optimistic
+     * state bound must therefore price the complete Eldritch program, not
+     * only its setup primitive as required for authored conditional fixed
+     * options. This lets the existing state-incumbent filter reject a whole
+     * exact option before scheduling its sparse row. */
+    SolveOptions automatic_lower_options;
+    automatic_lower_options.max_states = 10000;
+    automatic_lower_options.max_discovered_states = 10000;
+    automatic_lower_options.max_expanded_states = 10000;
+    automatic_lower_options.max_state_action_rows = 10000;
+    automatic_lower_options.max_transitions = 100000;
+    automatic_lower_options.max_solver_owned_bytes =
+        256ull * 1024ull * 1024ull;
+    CalcContext automatic_lower_calc(
+        session, goal, registry, candidates);
+    const std::uint32_t automatic_lower_state =
+        automatic_lower_calc.intern_item(repair_prefix);
+    const StateLocalAutomaticBatch automatic_lower_batch =
+        automatic_lower_calc.admit_state_local_automatic_candidates(
+            automatic_lower_state, limits);
+    SolveWorkTestAccess::Impl automatic_lower_work(
+        automatic_lower_calc, repair_prefix, prices,
+        automatic_lower_options);
+    bool checked_eldritch_chaos_lower = false;
+    for (const StateLocalAutomaticCandidate& decision :
+         automatic_lower_batch.decisions) {
+        if (!decision.admitted ||
+            decision.kind != AutomaticCandidateKind::EldritchSide ||
+            decision.operator_index == kNoId) {
+            continue;
+        }
+        const std::uint32_t op = decision.operator_index;
+        const PlannerOperator& planner =
+            automatic_lower_calc.operators().at(op);
+        if (automatic_lower_calc.registry().actions.at(
+                planner.primitive_program.back()).params.type !=
+            ActionType::EldritchChaos) {
+            continue;
+        }
+        const std::int32_t position =
+            automatic_lower_work.priced_operator_position.at(op);
+        PC_CHECK(position >= 0);
+        if (position < 0) continue;
+        const double full_immediate =
+            automatic_lower_work.operators.at(
+                static_cast<std::size_t>(position)).cost;
+        const double lower =
+            automatic_lower_work.optimistic_operator_lower(
+                automatic_lower_state, op);
+        PC_CHECK(std::fabs(full_immediate - 4.0) < 1e-12);
+        PC_CHECK(lower >= full_immediate);
+        checked_eldritch_chaos_lower = true;
+    }
+    PC_CHECK(checked_eldritch_chaos_lower);
+
+    /* Parent-context Eldritch options are fixed two-step programs. If their
+     * complete immediate resource cost already exceeds a certified feasible
+     * value for this carrier, nonnegative continuation cost makes them
+     * strictly non-improving. Reject them before constructing the expensive
+     * parent reforge kernels, just as local automatic options are rejected
+     * against the same incumbent authority. */
+    CalcContext price_dominated_calc(
+        session, goal, registry, candidates);
+    const std::uint32_t price_dominated_state =
+        price_dominated_calc.intern_item(repair_prefix);
+    AutomaticAdmissionLimits price_dominated_limits = limits;
+    price_dominated_limits.incumbent_upper_bound = 0.5;
+    const StateLocalAutomaticBatch price_dominated_batch =
+        price_dominated_calc.admit_state_local_automatic_candidates(
+            price_dominated_state, price_dominated_limits);
+    std::uint64_t price_dominated_eldritch = 0;
+    for (const StateLocalAutomaticCandidate& decision :
+         price_dominated_batch.decisions) {
+        if (decision.kind !=
+            AutomaticCandidateKind::EldritchSide) {
+            continue;
+        }
+        ++price_dominated_eldritch;
+        PC_CHECK(!decision.admitted);
+        PC_CHECK(!decision.collapsed);
+        PC_CHECK(!decision.missing_price);
+        PC_CHECK(decision.operator_index == kNoId);
+        PC_CHECK(decision.raw_outcomes == 0);
+        PC_CHECK(
+            decision.evidence.legality_result ==
+            "dominated_by_incumbent");
+        PC_CHECK(
+            decision.evidence.reason ==
+            "exact_expected_cost_exceeds_feasible_state_upper");
+    }
+    PC_CHECK(price_dominated_eldritch == 3);
+    PC_CHECK(
+        admitted_ids(
+            price_dominated_calc, price_dominated_batch,
+            AutomaticCandidateKind::EldritchSide).empty());
+
     /* Carrier-local automatic preparation is one resumable transaction. A
      * one-checkpoint advance must never replay a completed candidate, every
      * suspension must reconcile the selected-owned-byte ledger, and no leaf

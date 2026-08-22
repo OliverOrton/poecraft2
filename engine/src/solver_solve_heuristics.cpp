@@ -1965,7 +1965,8 @@ double SolveWork::Impl::optimistic_operator_lower(
             calc.operators().at(operator_index);
         double immediate =
             operators.at(static_cast<std::size_t>(position)).cost;
-        if (planner.kind == PlannerOperatorKind::FixedOption) {
+        if (planner.kind == PlannerOperatorKind::FixedOption &&
+            planner.automatic_kind == AutomaticCandidateKind::None) {
             /* Some fixed programs have conditional later primitives whose
              * aggregate planner quantity is not an admissible immediate
              * lower bound. Every legal program executes its first ordinary
@@ -1983,6 +1984,16 @@ double SolveWork::Impl::optimistic_operator_lower(
                     return -kInfinity;
                 }
                 immediate += found->second;
+            }
+        } else if (planner.kind == PlannerOperatorKind::FixedOption) {
+            /* State-local automatic operators are published only after their
+             * exact OptionKernel has replaced the planner's construction
+             * quantities with the complete expected resource vector for
+             * this carrier. Unlike an authored conditional fixed option,
+             * that priced vector is an exact part of Q, so retaining only
+             * the first primitive needlessly weakens the incumbent proof. */
+            if (!std::isfinite(immediate) || immediate < 0.0) {
+                return -kInfinity;
             }
         }
         if (!std::isfinite(immediate) || immediate < 0.0) {

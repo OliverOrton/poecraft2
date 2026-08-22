@@ -1234,6 +1234,13 @@ CalcContext::build_state_local_automatic_candidates(
                 *session_, parent_goal, registry_, candidates_);
         const std::size_t first_staged_operator = operators_.size();
         std::vector<StateLocalAutomaticCandidate> staged_decisions;
+        struct ParentEldritchRepresentative {
+            std::uint32_t operator_index = kNoId;
+            std::size_t decision_index = 0;
+            double immediate_cost = 0.0;
+        };
+        std::vector<ParentEldritchRepresentative>
+            parent_eldritch_representatives;
         const auto parent_eldritch_cursor_bytes = [&]() {
             std::uint64_t cursor_bytes =
                 retained_cursor_nested_bytes();
@@ -1272,6 +1279,37 @@ CalcContext::build_state_local_automatic_candidates(
                     AutomaticCandidateKind::EldritchSide;
                 decision.telemetry_kind =
                     AutomaticTelemetryKind::EldritchSide;
+                decision.evidence.candidate = true;
+                const bool proposed_has_prices =
+                    program_has_prices(proposed);
+                double exact_immediate_cost = 0.0;
+                if (limits.prices != nullptr && proposed_has_prices) {
+                    for (const auto& [key, quantity] :
+                         proposed.resource_quantities) {
+                        exact_immediate_cost +=
+                            limits.prices->at(key) * quantity;
+                    }
+                }
+                /* Parent-context Eldritch options used to bypass the exact
+                 * immediate-cost authority applied to every locally mapped
+                 * automatic option. This fixed program pays its complete
+                 * resource vector before any continuation. A certified
+                 * feasible carrier upper below that nonnegative cost proves
+                 * the option cannot improve, without constructing its often
+                 * large exact reforge kernel. */
+                if (proposed_has_prices &&
+                    std::isfinite(limits.incumbent_upper_bound) &&
+                    exact_immediate_cost >
+                        limits.incumbent_upper_bound + 1e-12) {
+                    decision.evidence.eligible = false;
+                    decision.evidence.legality_result =
+                        "dominated_by_incumbent";
+                    decision.evidence.reason =
+                        "exact_expected_cost_exceeds_feasible_state_upper";
+                    staged_decisions.push_back(std::move(decision));
+                    check_limits(true);
+                    continue;
+                }
                 const auto existing = std::find_if(
                     operators_.begin(), operators_.end(),
                     [&](const PlannerOperator& candidate) {
@@ -1341,9 +1379,53 @@ CalcContext::build_state_local_automatic_candidates(
                     decision.evidence.reason =
                         "automatic_candidate_missing_price";
                 } else if (decision.evidence.eligible) {
-                    decision.admitted = true;
+                    bool collapsed = false;
+                    for (auto representative =
+                             parent_eldritch_representatives.begin();
+                         representative !=
+                             parent_eldritch_representatives.end();
+                         ++representative) {
+                        const OptionKernel& retained = option_kernel(
+                            state_id, representative->operator_index);
+                        if (same_complete_option_kernel(retained, kernel)) {
+                            collapsed = true;
+                            break;
+                        }
+                        if (limits.prices == nullptr ||
+                            !same_option_transition_kernel(
+                                retained, kernel)) {
+                            continue;
+                        }
+                        if (exact_immediate_cost <
+                            representative->immediate_cost) {
+                            StateLocalAutomaticCandidate& prior =
+                                staged_decisions.at(
+                                    representative->decision_index);
+                            prior.admitted = false;
+                            prior.collapsed = true;
+                            prior.evidence.reason =
+                                "equivalent_exact_kernel_price_dominated";
+                            parent_eldritch_representatives.erase(
+                                representative);
+                        } else {
+                            collapsed = true;
+                        }
+                        break;
+                    }
+                    decision.collapsed = collapsed;
+                    if (collapsed) {
+                        decision.evidence.reason =
+                            "equivalent_exact_kernel_price_dominated";
+                    } else {
+                        decision.admitted = true;
+                    }
                 }
                 staged_decisions.push_back(std::move(decision));
+                if (staged_decisions.back().admitted) {
+                    parent_eldritch_representatives.push_back({
+                        operator_index, staged_decisions.size() - 1,
+                        exact_immediate_cost});
+                }
                 check_limits(true);
             }
         } catch (const SolverResourceLimit& limit) {
@@ -1543,9 +1625,7 @@ CalcContext::build_state_local_automatic_candidates(
                 std::string("automatic_imprint_program_generation_") + cap +
                 "_limit_" + std::to_string(limit) + "_work_" +
                 std::to_string(imprint.work_used);
-            if (std::string_view(cap) ==
-                    "max_imprint_program_depth" &&
-                !imprint.depth_deferred_samples.empty()) {
+            if (!imprint.depth_deferred_samples.empty()) {
                 deferred.evidence.reason += "_frontier_samples_";
                 for (std::size_t i = 0;
                      i < imprint.depth_deferred_samples.size(); ++i) {

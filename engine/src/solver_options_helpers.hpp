@@ -1565,8 +1565,8 @@ std::uint64_t attempt_kernel_hash(const AttemptKernel& attempt) {
 
 struct ImprintDiscoveryResult {
     std::vector<FixedOptionSpec> specs;
-    /* Bounded evidence for a mechanically open depth frontier. These are
-     * diagnostic witnesses only; they never participate in admission or
+    /* Bounded evidence for a mechanically open depth/work frontier. These
+     * are diagnostic witnesses only; they never participate in admission or
      * cache identity. */
     std::vector<std::string> depth_deferred_samples;
     bool missing_price = false;
@@ -2332,6 +2332,9 @@ discover_automatic_imprint_options_cooperatively(
                 if (!extension_fully_legal) continue;
                 if (result.work_used >= result.work_limit) {
                     result.work_deferred = true;
+                    retain_depth_deferred_sample(
+                        frontier[prefix_index].program, action,
+                        "work_cap_before_evaluation");
                     co_return result;
                 }
                 program = frontier[prefix_index].program;
