@@ -10,7 +10,8 @@ chunk before implementation resumes.
 ## Current checkpoint
 
 - Branch: `main`
-- Upstream remains at `65d4d76`; nothing was pushed.
+- Local `origin/main` is at release checkpoint `c95e6e1`; this run issued no
+  push. The documentation finalization commits remain local.
 - Retained implementation checkpoint: `bb29378`
 - Release checkpoint: `c95e6e1`
 - Milestone plan:
