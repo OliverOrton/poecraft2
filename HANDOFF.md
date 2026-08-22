@@ -1,11 +1,11 @@
 # Handoff
 
-**Status: no implementation boundary is active.** The persistent quotient
-session milestone completed on 2026-08-22. Oliver reviewed its 419,316,840-byte
-conservative native peak and replaced the original 150 MB milestone ceiling
-with 512 MiB (536,870,912 bytes). Native and release acceptance pass without
-changing an engine resource cap or proof behavior. Oliver must select the next
-chunk before implementation resumes.
+**Status: temporary blocker tier canonicalization is active.** Oliver selected
+the narrow successor on 2026-08-22: for one exact carrier-local blocker effect,
+choose the cheapest legal tier under the active economy before fixed-option,
+operator, Bellman-row, or proof construction. Preserve all differently
+resourced variants for unpriced callers. The broader goal-slot-equivalence
+finding is a separate successor and is not part of this boundary.
 
 ## Current checkpoint
 
@@ -14,7 +14,9 @@ chunk before implementation resumes.
   push. The documentation finalization commits remain local.
 - Retained implementation checkpoint: `bb29378`
 - Release checkpoint: `c95e6e1`
-- Milestone plan:
+- Active milestone plan:
+  [docs/active/2026-08-22-temporary-blocker-tier-canonicalization/plan.md](docs/active/2026-08-22-temporary-blocker-tier-canonicalization/plan.md)
+- Completed parent milestone:
   [docs/active/2026-08-21-persistent-quotient-session/plan.md](docs/active/2026-08-21-persistent-quotient-session/plan.md)
 - Result:
   [docs/active/2026-08-21-persistent-quotient-session/result.md](docs/active/2026-08-21-persistent-quotient-session/result.md)

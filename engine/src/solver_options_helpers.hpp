@@ -776,6 +776,14 @@ AutomaticOptionSynthesis synthesize_automatic_options(
             group_by_effect;
         std::unordered_map<std::uint32_t, std::vector<std::uint64_t>>
             eligible_by_followup;
+        const auto blocker_price = [&](const std::uint32_t action) {
+            double cost = 0.0;
+            for (const std::string& key :
+                 registry.actions.at(action).cost_keys) {
+                cost += prices->at(key);
+            }
+            return cost;
+        };
         for (const TemporaryBenchEffectClass& effect : precompiled) {
             if (!target_slot_missing(state, effect.goal_slot) ||
                 !action_has_prices(effect.followup_action) ||
@@ -859,6 +867,26 @@ AutomaticOptionSynthesis synthesize_automatic_options(
             }
             for (const std::uint32_t blocker : effect.blocker_actions) {
                 if (!blocker_usable(blocker)) continue;
+                if (prices != nullptr) {
+                    if (group->blocker_variants.empty()) {
+                        group->representative_blocker = blocker;
+                        group->blocker_variants.push_back(blocker);
+                    } else if (
+                        blocker_price(blocker) <
+                        blocker_price(group->blocker_variants.front())) {
+                        /* All members of this carrier-local group have the
+                         * same exact blocked eligible pool, side, follow-up,
+                         * and goal-slot semantics. Only the blocker resource
+                         * vector differs, so the cheapest priced blocker is
+                         * globally dominant for every continuation value.
+                         * Canonicalize here, before child option, kernel, or
+                         * planner construction. Strict comparison preserves
+                         * first-admitted authority for exact price ties. */
+                        group->representative_blocker = blocker;
+                        group->blocker_variants.front() = blocker;
+                    }
+                    continue;
+                }
                 const auto duplicate = std::find_if(
                     group->blocker_variants.begin(),
                     group->blocker_variants.end(),

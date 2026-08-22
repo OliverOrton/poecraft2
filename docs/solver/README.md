@@ -342,6 +342,14 @@ protected metamod and Cannot Roll routes, cleanup compositions, Multimod
 finishes, and automatic Imprint attempt/restore programs. Imprint programs are
 not user-authored in product mode.
 
+At fixed solve prices, temporary blocker synthesis groups actions only after
+proving the same carrier-local blocked eligible pool, blocker side, follow-up,
+pool-tag behavior, and goal-slot semantics. It then carries only the cheapest
+legal blocker in that exact effect class into child fixed-option and operator
+construction; strict price ties retain first-admitted authority. An unpriced
+Calculator call retains every differently resourced variant because no economy
+owns their ordering.
+
 Automatic Imprint discovery closes an otherwise open supported-program grammar
 only from mechanical certificates. Exact terminal-kernel equality plus
 componentwise primitive-resource dominance removes a word only when every

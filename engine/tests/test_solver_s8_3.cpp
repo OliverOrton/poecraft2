@@ -797,16 +797,64 @@ void run_temporary_blocker_price_flip() {
     PC_CHECK(variant_batch.temporary_collapsed_variants > 0);
     PC_CHECK(first_variant == kNoId);
     PC_CHECK(cheaper_variant != kNoId);
-    PC_CHECK(std::any_of(
+    PC_CHECK(std::none_of(
         variant_batch.decisions.begin(),
         variant_batch.decisions.end(),
         [](const StateLocalAutomaticCandidate& decision) {
-            return decision.collapsed &&
-                   decision.id.find("bench:s83_mod_8") !=
-                       std::string::npos &&
-                   decision.evidence.reason ==
-                       "equivalent_exact_kernel_price_dominated";
+            return decision.id.find("bench:s83_mod_8") !=
+                   std::string::npos;
         }));
+
+    /* Price authority belongs to the active economy. Reversing the two
+     * equivalent blocker prices must reverse the sole variant that reaches
+     * fixed-option and operator construction. */
+    CalcContext reverse_variant_calc(
+        session, goal, registry, {exalt, restart},
+        false, true, true);
+    const std::uint32_t reverse_variant_state =
+        reverse_variant_calc.intern_item(start);
+    const StateLocalAutomaticBatch reverse_variant_batch = admit_automatic(
+        reverse_variant_calc, reverse_variant_state,
+        {{"exalt", 10.0},
+         {"base", 100.0},
+         {"scour", 1.0},
+         {"bench:s83_mod_8", 1.0},
+         {"bench:s83_mod_15", 2.0}});
+    PC_CHECK(reverse_variant_batch.temporary_collapsed_variants > 0);
+    PC_CHECK(operator_by_fragment(
+        reverse_variant_calc,
+        "option:temporary_bench_repeat:bench:s83_mod_8:exalt") != kNoId);
+    PC_CHECK(operator_by_fragment(
+        reverse_variant_calc,
+        "option:temporary_bench_repeat:bench:s83_mod_15:exalt") == kNoId);
+    PC_CHECK(std::none_of(
+        reverse_variant_batch.decisions.begin(),
+        reverse_variant_batch.decisions.end(),
+        [](const StateLocalAutomaticCandidate& decision) {
+            return decision.id.find("bench:s83_mod_15") !=
+                   std::string::npos;
+        }));
+    check_owned_byte_ledger(reverse_variant_calc);
+
+    CalcContext tied_variant_calc(
+        session, goal, registry, {exalt, restart},
+        false, true, true);
+    const std::uint32_t tied_variant_state =
+        tied_variant_calc.intern_item(start);
+    (void)admit_automatic(
+        tied_variant_calc, tied_variant_state,
+        {{"exalt", 10.0},
+         {"base", 100.0},
+         {"scour", 1.0},
+         {"bench:s83_mod_8", 2.0},
+         {"bench:s83_mod_15", 2.0}});
+    PC_CHECK(operator_by_fragment(
+        tied_variant_calc,
+        "option:temporary_bench_repeat:bench:s83_mod_8:exalt") != kNoId);
+    PC_CHECK(operator_by_fragment(
+        tied_variant_calc,
+        "option:temporary_bench_repeat:bench:s83_mod_15:exalt") == kNoId);
+    check_owned_byte_ledger(tied_variant_calc);
 
     /* Kernel equivalence alone does not order different resource vectors.
      * A caller without an economy must retain every variant so a later
