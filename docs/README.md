@@ -29,6 +29,17 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
+The completed
+[Imprint solve scope and controlled comparison](active/2026-08-22-imprint-solve-scope/plan.md)
+adds a checked-by-default Calculator control that can exclude only generated
+Imprint checkpoint/retry programs while retaining every other automatic
+family. The reduced scope is disclosed through native telemetry, result copy,
+and compiled-strategy provenance. Its
+[result](active/2026-08-22-imprint-solve-scope/result.md) shows Imprint was the
+first four-T1 blocker, but not the only one: disabled avoids the 45-second cap
+and then expires at five minutes in repeated incremental upper-policy passes
+without packaging a policy. No implementation boundary is active.
+
 The stopped
 [finite Imprint-program closure](active/2026-08-22-finite-imprint-program-closure/plan.md)
 boundary measured and removed two sound pre-evaluation renewal-dominance

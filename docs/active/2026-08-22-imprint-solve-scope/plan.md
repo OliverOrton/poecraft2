@@ -1,6 +1,6 @@
 # Imprint Solve Scope And Controlled Comparison
 
-**Status: active.** Oliver selected this boundary on 2026-08-22.
+**Status: complete and accepted.** See [result](result.md).
 
 Parent: [Active work](../README.md)
 

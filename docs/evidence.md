@@ -6,6 +6,18 @@ routes to them rather than duplicating complete reports.
 
 Parent: [Documentation map](README.md)
 
+## Imprint Solve-Scope Comparison
+
+The 2026-08-22
+[controlled comparison](active/2026-08-22-imprint-solve-scope/result.md)
+pins the same Allflame four-natural-T1 Conquest Lamellar solve with automatic
+Imprint programs enabled and disabled. Enabled stops at the 256-program cap in
+44.823 seconds and publishes the unchanged verified `3759.9763122101763`
+bounded policy. Disabled performs zero Imprint program work, retains the same
+`21.772459401332767` lower, and reaches the external 300-second watchdog during
+incremental executable-upper reoptimization without publishing a policy. The
+raw reports and enabled compiled strategy live beside the result.
+
 ## Active Five-T1 Certification Boundary
 
 The 2026-08-16

@@ -1,25 +1,34 @@
 # Handoff
 
-**Status: Imprint solve scope and controlled comparison is active.** Oliver
-selected an explicit Calculator toggle for automatic Imprint programs, with a
-checked four-T1 enabled/disabled comparison. The deeper carrier-equivalent
-recovery dominance proof is recorded but is not part of this first boundary.
+**Status: no implementation boundary is active.** The Imprint solve-scope
+control and checked enabled/disabled comparison are complete. Oliver must
+select the next chunk before implementation resumes.
 
 ## Current checkpoint
 
 - Branch: `main`.
-- Local `origin/main` remains at `c95e6e1`; no push was issued.
-- Starting checkpoint: `f8c5932`.
-- Stopped plan:
-  [docs/active/2026-08-22-finite-imprint-program-closure/plan.md](docs/active/2026-08-22-finite-imprint-program-closure/plan.md)
-- Stopped result:
-  [docs/active/2026-08-22-finite-imprint-program-closure/result.md](docs/active/2026-08-22-finite-imprint-program-closure/result.md)
-- Previous accepted result:
-  [docs/active/2026-08-22-recovery-scoped-restart-successor-bounds/result.md](docs/active/2026-08-22-recovery-scoped-restart-successor-bounds/result.md)
-- Active plan:
+- Local `origin/main` remains at `40eeb87`; no push was issued.
+- Implementation checkpoint: `ee5e507`.
+- Completed plan:
   [docs/active/2026-08-22-imprint-solve-scope/plan.md](docs/active/2026-08-22-imprint-solve-scope/plan.md)
+- Accepted result:
+  [docs/active/2026-08-22-imprint-solve-scope/result.md](docs/active/2026-08-22-imprint-solve-scope/result.md)
 
-## Stopped Imprint boundary
+## Completed Imprint scope boundary
+
+Calculator exposes a checked-by-default “Consider automatic Imprint
+checkpoint/retry programs” control. The option crosses TypeScript, release
+WASM, the append-only C ABI flag set, native solve/cache identity, and
+carrier-local admission. False bypasses only generated Imprint programs;
+other automatic families remain active. Native telemetry, result copy,
+solution scope, and compiled-strategy provenance disclose the restriction.
+
+Default-on native behavior is unchanged. The checked enabled four-T1 control
+reproduced the existing `max_imprint_program_work` stop, certified lower, and
+verified bounded policy. Release WASM also executed a completed false-scope
+solve and preserved the provenance through strategy compilation.
+
+## Prior stopped Imprint proof boundary
 
 Two sound pre-evaluation terminal-renewal dominance proofs increased exact
 program pruning from 169 to 385 and then 461, but the checked carrier still
@@ -34,7 +43,7 @@ Do not repeat local renewal predicates, scalar-price ordering, or a cap-only
 increase. The retained work counter also fails to describe the several-orders-
 of-magnitude support-processing spread between programs.
 
-## Completed boundary
+## Prior recovery-scoped Restart boundary
 
 Calculator-default Solve scope now excludes voluntary discard-and-buy-new-base.
 The UI has an unchecked explicit opt-in, while native/explicit callers retain
@@ -62,29 +71,30 @@ no executable incumbent exists. The deterministic seed is evaluated by the
 existing exact SCC solver and never gains publication authority by itself.
 Historical unrestricted initialization remains unchanged.
 
-## Measured result
+## Current measured result
 
-The checked native Allflame four-natural-T1 Conquest Lamellar primary stopped
-at the pre-existing `max_imprint_program_work` cap after 47.789 seconds, not at
-the watchdog. It retained a certified `21.772459401332767` lower and an
-independently evaluated `3759.9763122101763` upper. The 87-node / 241-edge
-strategy passed exact evaluation and 10,000/10,000 simulations with empirical
-mean `3737.4451776349074`. It has zero ordinary Restart rows and one Restart
-operation, used only for Product Fracture miss recovery.
+With Imprint enabled, the checked native Allflame four-natural-T1 Conquest
+Lamellar primary stopped at `max_imprint_program_work` after 44.823 seconds. It
+retained the certified `21.772459401332767` lower and independently evaluated
+`3759.9763122101763` upper in an 87-node / 241-edge strategy. The default-on
+run evaluated 256 Imprint programs, pruned 169, and merged 2,570,418 outcomes.
 
-The Warlord control closes exactly at `224.1238588972487` in 1.930 seconds. Its
-8-node / 13-edge strategy uses Influence Exalt plus Harvest Reforge Fire,
-contains no Restart, exact-evaluates at the solver value, and passed
-10,000/10,000 simulations with empirical mean `223.95892804999892`.
+With only `consider_imprint_programs: false`, Imprint work was exactly zero and
+the solve passed the earlier cap, but it expired at the unchanged 300-second
+case watchdog without publishing a policy. Its last trace retained the same
+lower, a provisional `22103.31023739946` raw upper, 3,324 discovered / 1,207
+expanded states, and 18,210 open alternatives. Five additional incremental
+upper-policy passes consumed almost all extra wall; 785 started, 784 proved
+proper, and telemetry charged 284.232 seconds to optimization. The next owner
+is delayed/automatic envelope reoptimization and bounded publication, not an
+Imprint-default change.
 
 ## Acceptance
 
 - `powershell -File scripts/build.ps1`: pass.
 - Native solver suite: 96,543 checks, zero failures.
+- Native API suite: 2,980 checks, zero failures.
 - Native compiler suite: 840 checks, zero failures.
-- Native API suite: 2,978 checks, zero failures.
-- Native Calculator suite: 436,308 checks, zero failures.
-- Native refinement suite: 362 checks, zero failures.
 - Release `powershell -File scripts/build-wasm.ps1`: pass.
 - `npx tsc --noEmit`: pass.
 - Complete web tests and 28/28 release-WASM engine smoke checks: pass.
@@ -95,16 +105,24 @@ contains no Restart, exact-evaluates at the solver value, and passed
 
 No successor is selected. The closest evidence-backed choices are:
 
-1. **Bounded continuation past local automatic deferral (recommended product
-   owner).** Preserve the unresolved Imprint obligation and bounded status, but
-   allow independent automatic families and executable-upper scheduling to
-   continue so one capped carrier cannot starve Harvest, Essence, Fossil, or
-   later refinement.
-2. **First-class exact Imprint kernel/label search (research owner).** Replace
-   flat word budgeting with collision-checked kernel labels and a support-work
-   contract designed against the novel Fossil/Harvest/Fracture witness.
-3. **Goal-slot row equivalence.** The measured temporary-bench duplicate rows
-   remain a separate behavior-preserving size/proof opportunity.
+1. **Bounded incremental-envelope publication (recommended product owner).**
+   Add a native work/deadline stop for delayed and automatic action closure,
+   preserve every open obligation as bounded, and finalize the best already
+   certified incumbent instead of relying on an external watchdog that
+   abandons the solve without a policy.
+2. **Batch or epoch executable-upper reoptimization (recommended performance
+   owner).** Accumulate competitive carrier/action rows before marking the
+   upper policy dirty, then run one proper global pass per proved batch/epoch.
+   The disabled witness started only five more passes but spent 284 seconds in
+   optimization.
+3. **Carrier-equivalent Imprint recovery dominance (exact research owner).**
+   Compare checkpoint restore against a proper non-Imprint recovery policy to
+   the same observable Magic carrier class from every relevant failure class,
+   including distributions and continuation value. Primitive-price or
+   arbitrary-Magic comparisons are insufficient.
+4. **First-class exact Imprint kernel/label search.** Retain this only if exact
+   closure over the included Imprint family remains the selected goal after
+   the product bounded-publication path is healthy.
 
 ## Retained architecture
 
