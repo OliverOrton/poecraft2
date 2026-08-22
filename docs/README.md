@@ -29,6 +29,16 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
+The
+[automatic action relevance and proof reuse](active/2026-08-21-automatic-action-relevance-and-proof-reuse/plan.md)
+boundary is [stopped precisely](active/2026-08-21-automatic-action-relevance-and-proof-reuse/result.md).
+It retained exact Eldritch cost/kernel rejection and more complete automatic-
+option lower bounds, and corrected the proposed Imprint rewrite after finding
+that exact support-kernel Pareto search already exists. The checked primary
+still expires with 17,584 open actions and repeated near-complete strict
+frontier rebuilds. Persistent strict frontier growth is the next precise
+possible owner; the bounded state-928 Imprint grammar remains separate.
+
 The stopped
 [four-T1 automatic-envelope replacement qualification](active/2026-08-21-four-t1-automatic-envelope-qualification/plan.md)
 made strict finalization cooperative, repaired refined-parent paired-default

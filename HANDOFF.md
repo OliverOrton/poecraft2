@@ -1,8 +1,50 @@
 # Session Handoff
 
-**Status: no implementation boundary is active.**
+**Status: no implementation boundary is active. Oliver must select the next
+chunk before implementation resumes.**
 
 ## Current boundary
+
+The
+[Automatic Action Relevance And Proof Reuse](docs/active/2026-08-21-automatic-action-relevance-and-proof-reuse/plan.md)
+boundary is [stopped precisely](docs/active/2026-08-21-automatic-action-relevance-and-proof-reuse/result.md).
+It retained exact parent-context Eldritch immediate-cost rejection and
+same-kernel price dominance, complete automatic-option cost in the existing
+state-incumbent lower, and an explicit Imprint work-frontier witness. Protected
+side/metamod synthesis was confirmed already narrow and was not changed.
+
+The Imprint rewrite proposed by the plan was not implemented: the current
+search already owns collision-checked exact support-kernel Pareto
+representatives, componentwise primitive-count dominance, exact cycle
+elimination, and positive-price bounds. State 928 remains precisely open at
+the 256-program work boundary (61 maximum frontier entries, depth 3, 182,778
+action-state evaluations, and 2,570,418 merged outcomes), now with the next
+unevaluated program recorded.
+
+The checked retained-source primary still stops at 300.25 seconds with upper
+`3759.5969190423507`, global lower zero, and 17,584 open automatic actions
+(13,379 unevaluated plus 4,205 unresolved). It requested and started all 717
+upper passes, then repeatedly rebuilt strict closures near 5,820, 5,924, and
+5,961 states as competitive frontier carriers appeared. A trial that reused
+the coarse admissible goal-cover lower in strict obligations produced the same
+rows, transitions, open-action counts, and repeated-pass shape; it was
+removed.
+
+The next precise owner is persistent strict frontier growth: retain or
+incrementally extend the existing strict oracle/partition/proof state when a
+new competitive carrier appears instead of restarting almost the full
+5,800-carrier quotient pass. Generation invalidation and complete exact
+carrier coverage must remain authoritative. The state-928 Imprint grammar is
+a separate owner. Do not mix either with five-T1 recovery, cap-only increases,
+compiler work, heuristic action removal, or weakened publication.
+
+The native build, 962-check policy-refinement focus, and 534-check S8.3 focus
+pass. The automatic Eldritch/Imprint focus has 576 checks and the same 13 known
+resource-stop expectation failures; the new proof checks add no failures.
+Release WASM, primary verification, web acceptance, and the full pipeline were
+not run because the native primary hit the declared stop condition.
+
+### Predecessor stopped boundary
 
 The
 [Batched Automatic-Alternative Publication Recovery](docs/active/2026-08-21-four-t1-automatic-envelope-qualification/batched-alternative-publication-plan.md)
