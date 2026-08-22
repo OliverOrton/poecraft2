@@ -5,8 +5,9 @@
 Parent: [Product](README.md)
 
 Verified against code, complete non-visual R4 acceptance, the final Solver Goal
-Realignment native/release-WASM acceptance, and selected-policy cooperative
-finalization acceptance: 2026-08-16. Scope:
+Realignment native/release-WASM acceptance, selected-policy cooperative
+finalization acceptance, and recovery-scoped Restart native/release-WASM/web
+acceptance: 2026-08-22 @ `1e21260` / `cfd8904`. Scope:
 `pc-calculator`, goal/draft models, solver worker orchestration, exact-outcome
 presentation, and shared economy access. No rendered or visual review was
 performed; that review remains Oliver's.
@@ -94,12 +95,15 @@ The Solve surface is distinct from one-action odds:
    app contains independently selectable candidates only.
 4. Keep only candidates whose complete price vectors resolve. If priced
    Fracture is relevant, require an explicit `base` price because miss recovery
-   uses Restart.
+   owns an exact fresh-base replacement branch.
 5. Open a fresh scoped solve handle with
-   `goal_progress_gated_reforges: true` and run the stateful native
-   begin/step/finish API in the worker with progress and cancellation. This is
-   the Calculator product scope; the native/WASM option remains optional and
-   other callers retain their explicit scope or the unrestricted default.
+   `goal_progress_gated_reforges: true` and
+   `allow_economic_restart: false`, then run the stateful native
+   begin/step/finish API in the worker with progress and cancellation.
+   Calculator therefore does not abandon an ordinary carrier merely because a
+   fresh start is cheaper. An unchecked “Allow abandoning this item and buying
+   a fresh base” control explicitly restores that economic action. The native
+   engine default remains unrestricted for backward compatibility.
 6. Compile whenever the result has `policy_available`, including bounded cap
    and target-gap results. Transfer the compiled document as one byte buffer,
    decode/parse it once on the main thread, assign missing board positions,
@@ -150,18 +154,21 @@ strategy nodes; the web app does not execute opaque macros.
 
 Near policy quality, the result discloses the actual product scope without
 listing every action: goal-relevant action discovery, the zero-progress
-destructive-reforge retry restriction, admitted priced counts grouped by
-family, missing-price exclusions, bounded automatic Veiled dependencies, and
-any unresolved action obligations left by a resource stop. Detailed admitted
-action IDs stay in the existing collapsible section. Solver telemetry is therefore retrieved
-for successful exact results as well as bounded or refused results.
+destructive-reforge retry restriction, whether economic Restart was admitted,
+admitted priced counts grouped by family, missing-price exclusions, bounded
+automatic Veiled dependencies, and any unresolved action obligations left by
+a resource stop. Detailed admitted action IDs stay in the existing collapsible
+section. Solver telemetry is therefore retrieved for successful exact results
+as well as bounded or refused results.
 
 Every solver-generated document records its non-executable scope as optional
-`solver_policy_scope` metadata. Calculator results use
-`zero_progress_reroll_policy_restriction`; unrestricted callers use
-`unrestricted`. Legacy authored documents may omit the field. The metadata is
-provenance for presentation and persistence, never simulator routing
-authority.
+`solver_policy_scope` metadata. Default Calculator results use
+`zero_progress_reroll_and_no_economic_restart_restrictions`; opting into
+economic Restart uses `zero_progress_reroll_policy_restriction`. Engine callers
+can also produce `unrestricted` or
+`no_economic_restart_policy_restriction`. Legacy authored documents may omit
+the field. The metadata is provenance for presentation and persistence, never
+simulator routing authority.
 
 The product publishes a Strategy Board document only when the selected policy
 has exact executable identity. When a coarse-parent action or downstream route

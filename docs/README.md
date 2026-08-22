@@ -30,6 +30,20 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 ## Execution State
 
 The completed
+[recovery-scoped Restart and successor-aware bounds](active/2026-08-22-recovery-scoped-restart-successor-bounds/plan.md)
+boundary separates optional economic abandonment from mechanic-owned
+replacement recovery. Calculator defaults voluntary Restart off but retains
+the exact product-local Fracture miss route; explicit engine callers remain
+backward compatible. Operator lower bounds may remove source goal progress
+only when no admitted successor path can preserve it. The checked primary has
+zero ordinary Restart rows and one dedicated Fracture replacement operation;
+its 3,759.98-Chaos executable policy remains bounded by the existing Imprint-
+program work cap. The Warlord control closes exactly without Restart. The
+[result](active/2026-08-22-recovery-scoped-restart-successor-bounds/result.md)
+qualifies native/release-WASM behavior. No implementation boundary is active
+until Oliver selects a successor.
+
+The completed
 [Eldritch goal-cover coverage](active/2026-08-22-eldritch-goal-cover-coverage/plan.md)
 boundary replaces the session-wide zero optimistic completion cost on eligible
 armour with a proved no-more-expensive, no-less-capable projection of automatic

@@ -4,8 +4,8 @@
 
 Parent: [Mechanics](README.md)
 
-Verified against code through the final Solver Goal Realignment native/release-
-WASM acceptance: 2026-08-13.
+Verified against code through recovery-scoped Restart native/release-WASM/web
+acceptance: 2026-08-22 @ `1e21260` / `cfd8904`.
 
 Verification scope: strategy compiler and simulator parsers, condition
 compiler/evaluator, exact whole-graph evaluator, solver registry/request
@@ -221,8 +221,11 @@ vocabulary.
 
 All 26 primitives and Restart have single-action exact-calculation support.
 The registry is session-dependent and may omit parameterized actions whose
-data/pool is unavailable. Relevance, legality, price, and automatic-candidate
-filters can further narrow a solve without changing the vocabulary.
+data/pool is unavailable. Relevance, legality, price, automatic-candidate, and
+solver-scope filters can further narrow a solve without changing the
+vocabulary. Economic Restart is an ordinary optional Bellman action; exact
+mechanic-owned replacement, such as product Fracture miss recovery, is a
+separate action-local branch even when economic Restart is disabled.
 
 Whole-graph exact strategy evaluation resolves `mod_count`,
 `mod_family_count` (including crafted/fractured requirements),
@@ -233,11 +236,15 @@ rather than ordinary one-item evaluator actions.
 
 ## Calculator Support
 
-The Calculator exposes Restart in its basic panel, uses the complete solver
-registry for action selection and solves, and has a dedicated Bestiary
-calculation path. It does not present `condition_check_only` as a user action.
-Solver-generated strategies can contain Restart and automatic compound-option
-expansions.
+The Calculator exposes Restart for single-action inspection and uses the
+complete solver registry for action selection, but Solve excludes ordinary
+economic Restart by default. An unchecked control can explicitly allow
+abandoning the current item and buying a fresh base. Product Fracture retains
+its exact paid replacement branch regardless of that option. Calculator has a
+dedicated Bestiary calculation path and does not present
+`condition_check_only` as a user action. Solver-generated strategies can
+contain explicitly enabled economic Restart, action-owned replacement Restart,
+and automatic compound-option expansions.
 
 ## Explicitly Unsupported Behavior
 

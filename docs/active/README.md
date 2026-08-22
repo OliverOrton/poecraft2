@@ -1,8 +1,21 @@
 # Active Work
 
-**Status: no implementation boundary is active.**
+**Status: no implementation boundary is selected.**
 
 Parent: [Documentation map](../README.md)
+
+The completed
+[Recovery-Scoped Restart And Successor-Aware Bounds](2026-08-22-recovery-scoped-restart-successor-bounds/plan.md)
+boundary makes voluntary discard-and-buy-new-base an explicit Calculator
+opt-in while retaining exact mechanic-owned Fracture miss recovery. It also
+strengthens operator lower bounds only through proved may-survive successor
+contracts. Unrestricted engine callers retain the historical economic-Restart
+default. The checked primary has zero ordinary Restart rows, retains one exact
+Fracture miss replacement operation, and publishes a verified 3,759.98-Chaos
+bounded policy before the existing Imprint-program work cap. The Warlord
+control closes exactly without Restart. Native, release-WASM, TypeScript, web,
+and 10,000-run controls pass; see the [result](2026-08-22-recovery-scoped-restart-successor-bounds/result.md).
+No successor is selected.
 
 The completed
 [Eldritch Goal-Cover Coverage](2026-08-22-eldritch-goal-cover-coverage/plan.md)

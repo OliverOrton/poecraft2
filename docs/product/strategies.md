@@ -4,7 +4,8 @@
 
 Parent: [Product](README.md)
 
-Verified against code: 2026-08-04 through Goal-Gated Semantic Policy Routing.
+Verified against code: 2026-08-22 through recovery-scoped Restart at
+`1e21260` / release WASM `cfd8904`.
 Scope: web strategy document, authoring/validation, native
 compile/run/evaluate semantics, board degradation, and current runner
 presentation. No rendered or visual review was performed.
@@ -19,8 +20,10 @@ A saved v1 `StrategyDocument` contains:
 - start, operation, router, and terminal nodes;
 - prioritized guarded edges;
 - optional economy identity and UI viewport metadata; and
-- optional non-executable `solver_policy_scope` provenance, either
-  `unrestricted` or `zero_progress_reroll_policy_restriction`.
+- optional non-executable `solver_policy_scope` provenance: `unrestricted`,
+  `zero_progress_reroll_policy_restriction`,
+  `no_economic_restart_policy_restriction`, or
+  `zero_progress_reroll_and_no_economic_restart_restrictions`.
 
 `base_state` can preserve base key, item level, rarity, quality, item flags,
 generic influence, both Eldritch tiers, and prefix/suffix modifier keys with

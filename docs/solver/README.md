@@ -26,6 +26,15 @@ generated corpus lives in
 [seeded natural-T1 v1](../../fixtures/solver-natural-t1/v1/README.md). This
 stamp does not claim rendered-browser review or a mechanic ruling.
 
+Recovery-scoped Restart addendum: on 2026-08-22 @ `1e21260`, with release
+WASM `cfd8904`, Calculator-default solves stopped admitting voluntary fresh-
+base abandonment while product Fracture retained its exact paid replacement
+branch. Operator lowers gained proved may-survive successor masks, and the
+restricted proper-policy initializer learned to hand stochastic retry SCCs to
+the existing exact evaluator. Focused native, release-WASM, TypeScript, web,
+and 10,000-run strategy controls pass; the full repository pipeline was not
+run.
+
 Solver Goal Realignment addendum: the full native/release-WASM product path was
 qualified on 2026-08-13. The four-natural-T1 primary closes exactly at
 `3745.7309340083884` inside five minutes in both runtimes, every one of the 979
@@ -392,10 +401,12 @@ class is otherwise equal.
 Product-local Fracture is the one deliberate parent/local composition. For a
 coarse carrier with `n` live affixes and `k` provably distinct acceptable
 physical goal affixes, it emits one `1/n` hit per acceptable affix and one
-`(n-k)/n` miss through priced Restart. It refuses ambiguous physical identity,
-overlapping goal satisfaction, or non-uniform persistent identity. No
-fractured-junk miss state is interned. Compilation uses the existing Fracture,
-condition-router, and Restart vocabulary; primitive Fracture remains exact.
+`(n-k)/n` miss through a priced fresh-base replacement. It refuses ambiguous
+physical identity, overlapping goal satisfaction, or non-uniform persistent
+identity. No fractured-junk miss state is interned. Compilation uses the
+existing Fracture, condition-router, and Restart operation vocabulary, but the
+replacement branch is not ordinary economic-Restart Bellman authority;
+primitive Fracture remains exact.
 
 The goal-relevant product envelope excludes standalone Veiled and Eldritch
 primitive use. Veiled Chaos and Veiled Exalt are dependencies of bounded
@@ -721,8 +732,14 @@ envelope and an unfinished strict refinement. It may publish with
 independent cover; restricted-policy values never gain global authority.
 Operator-price pruning also treats synthetic Restart specially: its exact
 successor is a fresh Normal carrier, so source goal progress is not carried
-through the lower. Other destructive actions retain the conservative
-may-survive union until their complete successor authority is proved.
+through the lower. Every other operator now carries only
+`may_survive(source, operator) | may_reach(operator)`: sequential runtime paths
+apply the action refinement contracts, exact reset removes a slot, and
+uncertainty or any preserving path retains it. This makes destructive rows
+tighter without treating may-destroy selectors as must-destroy authority.
+State lowers take the maximum of independently admissible universal and proved
+carrier-shape components; the existing strict rare-carrier component remains
+excluded on Eldritch-eligible sessions until it models automatic side rows.
 
 Exceptional-support successors receive priority over ordinary Q refinement.
 Fossil added/forced mods, Essence guarantees, and automatic Eldritch side
@@ -788,13 +805,13 @@ A solve performs these implemented stages:
 2. Admit legal state-local candidates. Exact action producibility and setup
    legality reject impossible protected-repeat programs before option-kernel
    construction.
-3. Evaluate deterministic goal finishes and Restart before broad stochastic
-   kernels. A price-bound constructive state certificate may stop a carrier
-   early only when every other admitted operator has an optimistic lower
-   bound strictly above an executable row upper bound. The lower bound grants
-   an operator every goal slot any constituent primitive could possibly
-   produce, then prices the cheapest relaxed primitive cover of the remaining
-   goal requirement.
+3. Evaluate deterministic goal finishes and any admitted economic Restart
+   before broad stochastic kernels. A price-bound constructive state
+   certificate may stop a carrier early only when every other admitted
+   operator has an optimistic lower bound strictly above an executable row
+   upper bound. The lower carries every source goal slot that any runtime path
+   may preserve, grants every slot a constituent may produce, then prices the
+   cheapest relaxed cover of the remaining goal requirement.
 4. Copy required exact outcomes into one sparse
    transition graph, subject to state, row, transition, reforge-work,
    diagnostic, output, and owned-byte caps. Collision-checked observation
@@ -805,7 +822,11 @@ A solve performs these implemented stages:
 6. Refine a completed all-action strict graph into the exact quotient, then
    optimize cyclic components with SCC-based policy iteration and sparse
    component solves. A prioritized Bellman path remains the explicit fallback
-   if policy evaluation fails.
+   if policy evaluation fails. Without economic Restart, a proper initial
+   policy need not admit a strict global rank: when no executable incumbent is
+   available, unresolved states receive a deterministic seed and the same SCC
+   evaluator must prove the resulting retry components proper before they gain
+   any publication authority.
 7. Extract deterministic policy choices, observation-owned Unveil choices,
    values, reachability, diagnostics, hashes, and optional solve-log records.
 
@@ -906,9 +927,10 @@ the main renewal signature, but legal Annul, Exalt, Fracture, Harvest Augment,
 Scour, and state-local automatic candidates observed the ordinary carriers.
 Only the existing gated retry basin passed the combined renewal and
 non-renewal-observer contract; no new merge was applied. Same-carrier renewal
-continues to pay its crafting currency without a base purchase. Mandatory
-Restart remains reserved for a certified dead carrier, and optional economic
-Restart remains an ordinary priced action.
+continues to pay its crafting currency without a base purchase. Economic
+Restart remains an ordinary priced action only when the caller admits it.
+Calculator defaults it off; mechanic-owned replacement such as a failed
+product Fracture attempt remains local to that action's exact kernel.
 
 The recovered focused-upper incumbent now captures an explicit policy-walk
 reachability mask. Finalization validates only those selected-policy states,
@@ -1091,9 +1113,11 @@ The document otherwise contains ordinary start, router,
 operation, and terminal nodes, deterministic prioritized edges,
 `expected_cost` annotations, and non-executable accounting-role metadata.
 Fixed and automatic operators expand to their primitive programs. Exact closed
-policies retain the explicit off-policy failure terminal. Bounded policies use
-an explicit safe Restart/fallback default for unmatched compiled states; a
-frontier heuristic is never emitted as an action.
+policies retain the explicit off-policy failure terminal. A bounded policy may
+use explicit safe Restart as its unmatched default only when economic Restart
+is in scope. Otherwise unmatched routing fails closed; mechanic-owned Fracture
+replacement still emits its dedicated retry node. A frontier heuristic is
+never emitted as an action.
 
 The compiled `base_state` preserves the solve start, not merely the base type:
 it serializes rarity, item flags, generic influence bits, both Eldritch tiers,

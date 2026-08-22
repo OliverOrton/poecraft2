@@ -1,91 +1,88 @@
 # Handoff
 
-**Status: no implementation boundary is active.** The Eldritch goal-cover
-coverage milestone completed on 2026-08-22. Oliver must select the next chunk
-before implementation resumes.
+**Status: no implementation boundary is active.** Recovery-scoped Restart and
+successor-aware bounds are complete. Oliver must select the next chunk before
+implementation resumes.
 
 ## Current checkpoint
 
 - Branch: `main`.
 - Local `origin/main` remains at `c95e6e1`; no push was issued.
-- Starting checkpoint: `d2341dd`.
-- Native implementation checkpoint: `300e9ed`.
-- Release WASM checkpoint: `f74a549`.
-- Plan:
-  [docs/active/2026-08-22-eldritch-goal-cover-coverage/plan.md](docs/active/2026-08-22-eldritch-goal-cover-coverage/plan.md)
-- Result:
-  [docs/active/2026-08-22-eldritch-goal-cover-coverage/result.md](docs/active/2026-08-22-eldritch-goal-cover-coverage/result.md)
-- Compact evidence:
-  [docs/active/2026-08-22-eldritch-goal-cover-coverage/evidence/acceptance-summary.json](docs/active/2026-08-22-eldritch-goal-cover-coverage/evidence/acceptance-summary.json)
+- Starting checkpoint: `40eeb87`.
+- Native implementation checkpoint: `1e21260`.
+- Release-WASM checkpoint: `cfd8904`.
+- Completed plan:
+  [docs/active/2026-08-22-recovery-scoped-restart-successor-bounds/plan.md](docs/active/2026-08-22-recovery-scoped-restart-successor-bounds/plan.md)
+- Accepted result:
+  [docs/active/2026-08-22-recovery-scoped-restart-successor-bounds/result.md](docs/active/2026-08-22-recovery-scoped-restart-successor-bounds/result.md)
 
 ## Completed boundary
 
-Eligible armour no longer receives a session-wide zero completion heuristic.
-The clean and universal goal covers now include admissible optimistic macros
-for automatic Eldritch Annul, Chaos, and Exalt. They retain the real final
-currency price while granting setup/dominance and outcomes no worse than the
-exact carrier-local option. Exact-row Bellman controls cover direct and setup-
-bearing options on both sides.
+Calculator-default Solve scope now excludes voluntary discard-and-buy-new-base.
+The UI has an unchecked explicit opt-in, while native/explicit callers retain
+the historical unrestricted default. No ordinary Bellman state receives a
+Restart row in restricted mode, and unmatched bounded compilation fails
+closed.
 
-The independently proved goal-cover floor survives an open incremental action
-envelope and unfinished strict refinement. It publishes only the numeric
-amount owned by `global_action_relaxation`; restricted-policy values never gain
-global authority. The strict clean pattern database remains excluded on
-eligible sessions because it does not yet model carrier-local automatic rows.
+Product-local Fracture replacement is independent of that action scope. A
+miss still pays `base`, reaches a fresh Normal carrier, and compiles the
+dedicated `product_fracture_restart` retry operation. Do not generalize this
+authority to Influence Exalt or another miss: the Warlord control continues on
+the influenced carrier with Harvest Reforge Fire and requires no replacement.
 
-Synthetic Restart now prices continuation from its exact fresh Normal
-successor instead of carrying source goal progress. Do not generalize that fix
-by subtracting every `destroyed_affixes` match: those selectors mean may be
-destroyed. Annul and stochastic reforges require a proved union of possible
-successor goal masks plus an optimistic post-action shape.
+Operator lowers now carry only source goal slots retained by at least one
+proved runtime execution path, then add all possibly reached slots. Sequential
+refinement contracts are the authority. Exact reset removes progress;
+incomplete semantics and may-destroy selectors retain it. The universal and
+proved shape-aware state covers combine by maximum, never replacement. The
+strict rare-carrier cover remains excluded on Eldritch-eligible sessions until
+it models automatic side options. The reported concrete-rare ordering bug was
+stale and current source already counts both sides correctly.
+
+Restricted proper-policy initialization now permits stochastic retry SCCs when
+no executable incumbent exists. The deterministic seed is evaluated by the
+existing exact SCC solver and never gains publication authority by itself.
+Historical unrestricted initialization remains unchanged.
 
 ## Measured result
 
-The checked native Allflame four-natural-T1 Conquest Lamellar primary reached
-the 300-second watchdog with:
+The checked native Allflame four-natural-T1 Conquest Lamellar primary stopped
+at the pre-existing `max_imprint_program_work` cap after 47.789 seconds, not at
+the watchdog. It retained a certified `21.772459401332767` lower and an
+independently evaluated `3759.9763122101763` upper. The 87-node / 241-edge
+strategy passed exact evaluation and 10,000/10,000 simulations with empirical
+mean `3737.4451776349074`. It has zero ordinary Restart rows and one Restart
+operation, used only for Product Fracture miss recovery.
 
-- lower `21.772459401332767` instead of zero;
-- unchanged upper `3745.7295960574743`;
-- 3,419 discovered / 1,207 expanded / 2,212 frontier states;
-- 11,384 rows, 29,135 transitions, and 478,002 reforge work; and
-- 419,303,854 peak owned bytes.
-
-The primary produced no final strategy. The exact Restart correction did not
-change this boundary: its fresh-start relaxation is only about 21.8 Chaos,
-far below the executable incumbent, so it cannot prune the clean branch on
-this case. The remaining stop is exact alternative/refinement work and weak
-rare-carrier proof strength, not lower-bound publication.
-
-The regenerated current Bow case stopped at its root reforge-work cap with
-lower zero, so it is not positive-control evidence. The Warlord control closes
-exactly at `224.1238588972487` and passed 10,000 simulations with empirical
-cost `223.95892804999892`.
+The Warlord control closes exactly at `224.1238588972487` in 1.930 seconds. Its
+8-node / 13-edge strategy uses Influence Exalt plus Harvest Reforge Fire,
+contains no Restart, exact-evaluates at the solver value, and passed
+10,000/10,000 simulations with empirical mean `223.95892804999892`.
 
 ## Acceptance
 
 - `powershell -File scripts/build.ps1`: pass.
-- Native solver suite: 96,516 checks, zero failures.
-- Automatic Eldritch compiled-policy control: exact `6.630492`, 10,000 runs,
-  empirical `6.820563`.
+- Native solver suite: 96,543 checks, zero failures.
+- Native compiler suite: 840 checks, zero failures.
+- Native API suite: 2,978 checks, zero failures.
+- Native Calculator suite: 436,308 checks, zero failures.
+- Native refinement suite: 362 checks, zero failures.
 - Release `powershell -File scripts/build-wasm.ps1`: pass.
 - `npx tsc --noEmit`: pass.
 - Complete web tests and 28/28 release-WASM engine smoke checks: pass.
 - Full repository pipeline: deliberately not run.
-- Release-WASM five-minute primary: deliberately not rerun; native measured
-  the unchanged finalization boundary and release product tests qualified the
-  artifact.
+- Rendered/visual review: deliberately not run; it remains Oliver's.
 
 ## Possible successors
 
 No successor is selected. The closest evidence-backed choices are:
 
-1. **Rare-carrier/destructive successor relaxation.** Extend the strict/clean
-   proof to partial rare carriers and derive per-operator maximum achievable
-   goal masks plus optimistic post-action shape. Exact Restart is complete;
-   stochastic actions need may-survive authority before any pruning change.
+1. **Finite Imprint-program closure.** The primary now completes well inside
+   its watchdog and publishes a verified bounded policy, but exact closure
+   stops at `max_imprint_program_work`.
 2. **Exact alternative/refinement performance.** Continue the retained
-   persistent quotient owner at the 419 MB plateau after the upper is already
-   found. This remains the direct owner of the primary five-minute stop.
+   persistent quotient owner after a wider Imprint closure if that closure
+   exposes a downstream plateau.
 3. **Executable-upper scheduling.** The earlier Essence/Harvest/Fossil early-
    incumbent issue remains separate from lower-bound proof strength.
 4. **Goal-slot row equivalence.** The measured temporary-bench duplicate rows
@@ -106,5 +103,5 @@ The retained implementation spans the local checkpoints `18e4640` through
 persistent-quotient result remains at
 [docs/active/2026-08-21-persistent-quotient-session/result.md](docs/active/2026-08-21-persistent-quotient-session/result.md).
 
-Five-T1 recovery, Imprint state 928, compiler/router work, mechanics, prices,
-and action admission remain separate unless Oliver explicitly selects them.
+Five-T1 recovery, broader compiler/router work, mechanics, prices, and action
+admission remain separate unless Oliver explicitly selects them.
