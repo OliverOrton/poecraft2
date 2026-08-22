@@ -1,8 +1,16 @@
 # Active Work
 
-**Status: no implementation boundary is active.**
+**Status: persistent quotient-session implementation is selected.**
 
 Parent: [Documentation map](../README.md)
+
+The selected
+[Persistent Quotient Session And In-Place Frontier Growth](2026-08-21-persistent-quotient-session/plan.md)
+milestone replaces strict frontier restarts with localized growth of one live
+oracle, stable partition, Bellman graph, proof store, alternative scheduler,
+and verified incumbent. A forced-frontier from-scratch reference and explicit
+identity, proof-generation, memory, and cooperative-step evidence are required
+before the real four-T1 and conditional release-WASM gates.
 
 The stopped
 [Four-T1 Automatic-Envelope Replacement Qualification](2026-08-21-four-t1-automatic-envelope-qualification/plan.md)
@@ -14,7 +22,7 @@ envelope, so no replacement exact value was accepted. An owner-authorized
 600-second diagnostic also stops after 78.7 million advancing solve steps,
 with the strict graph fixed and the action envelope still open. See the
 [precise result](2026-08-21-four-t1-automatic-envelope-qualification/result.md).
-Oliver must select the next chunk before implementation resumes.
+Its repeated strict-generation owner is now selected by the plan above.
 
 The completed
 [High-Impact Automatic Admission Closure](2026-08-21-high-impact-automatic-admission/plan.md)

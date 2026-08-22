@@ -1,9 +1,30 @@
 # Session Handoff
 
-**Status: no implementation boundary is active. Oliver must select the next
-chunk before source work resumes.**
+**Status: the persistent quotient-session implementation boundary is selected;
+source implementation has not started.**
 
 ## Current boundary
+
+The
+[Persistent Quotient Session And In-Place Frontier Growth](docs/active/2026-08-21-persistent-quotient-session/plan.md)
+plan is the active boundary, selected by Oliver from starting commit
+`65d4d76ccd98a08b1eb3ce4265fc59fd4c6c8ab0`. It will replace thrown strict-
+frontier restarts with one durable production session that extends the strict
+oracle and locator set, evolves a stable split-only partition, invalidates and
+rebuilds only affected Bellman/proof dependencies, preserves the automatic-
+alternative cursor and action accounting, and retains independently verified
+executable uppers.
+
+The first implementation gate is a deterministic forced-frontier fixture plus
+a test-only from-scratch reference. It must force multiple carrier insertions,
+source and target splits, preserved cells, and obligation revocation, with live
+memory/restart/invalidation diagnostics. The plan then extracts durable
+ownership behavior-neutrally before enabling in-place oracle, partition,
+Bellman, and proof growth. The real 300-second four-T1 case and release WASM
+remain final conditional gates; state-928 Imprint, five-T1 recovery, action-
+admission changes, compiler/router work, and broad cleanup are out of scope.
+
+### Stopped predecessor
 
 The
 [Persistent Strict Frontier Growth](docs/active/2026-08-21-persistent-strict-frontier-growth/plan.md)

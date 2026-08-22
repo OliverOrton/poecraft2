@@ -30,6 +30,16 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 ## Execution State
 
 The
+[persistent quotient session and in-place frontier growth](active/2026-08-21-persistent-quotient-session/plan.md)
+boundary is selected. It will keep one live strict oracle, stable partition,
+Bellman graph, proof store, alternative scheduler, and verified incumbent while
+competitive carriers extend the frontier. The plan begins with a forced-
+frontier from-scratch reference oracle and explicit identity, invalidation,
+memory, and cooperative-step evidence. It does not change mechanics, action
+scope, prices, exactness, Imprint grammar, five-T1 recovery, or strategy
+compilation.
+
+The predecessor
 [persistent strict-frontier growth](active/2026-08-21-persistent-strict-frontier-growth/plan.md)
 boundary is [stopped precisely](active/2026-08-21-persistent-strict-frontier-growth/result.md).
 Exact carrier/action-row replay preserved proof boundaries but did not reduce
@@ -37,7 +47,7 @@ the checked final-work stop, regressed time to the first strict upper, and
 increased estimated peak ownership nearly sevenfold, so it was removed. The
 next possible owner is in-place extension of the live strict
 oracle/partition/Bellman/proof generation; another cross-pass row cache is not
-justified. No implementation boundary is active until Oliver selects one.
+justified. Oliver selected that owner in the plan above.
 
 The focused
 [verified interim upper publication](active/2026-08-21-verified-interim-upper-publication/plan.md)
