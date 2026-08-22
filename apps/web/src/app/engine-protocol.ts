@@ -699,6 +699,8 @@ export interface SolveOptions {
     strict_states?: boolean;
     kernel_reuse?: boolean;
     goal_progress_gated_reforges?: boolean;
+    /** Include carrier-local automatic Imprint checkpoint/retry programs. */
+    consider_imprint_programs?: boolean;
     /** Permit ordinary policy choice to abandon the carrier for a fresh base. */
     allow_economic_restart?: boolean;
     /** Exact operator-major delayed-action scheduler used by Calculator. */

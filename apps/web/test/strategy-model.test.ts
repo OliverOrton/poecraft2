@@ -51,6 +51,7 @@ import type { Catalog } from "../src/app/engine-protocol";
     const strategy = createDefaultStrategy();
     strategy.solver_policy_scope =
         "zero_progress_reroll_policy_restriction";
+    strategy.solver_imprint_programs_considered = false;
     strategy.nodes[1].position = { x: 913, y: 417 };
     strategy.edges[1].condition = {
         type: "all",
@@ -66,6 +67,7 @@ import type { Catalog } from "../src/app/engine-protocol";
         reopened.solver_policy_scope,
         "zero_progress_reroll_policy_restriction",
     );
+    assert.equal(reopened.solver_imprint_programs_considered, false);
     assert.equal(isStrategyDocument(reopened), true);
     reopened.solver_policy_scope =
         "zero_progress_reroll_and_no_economic_restart_restrictions";
@@ -79,6 +81,13 @@ import type { Catalog } from "../src/app/engine-protocol";
     );
     delete reopened.solver_policy_scope;
     assert.equal(isStrategyDocument(reopened), true);
+    assert.equal(
+        isStrategyDocument({
+            ...reopened,
+            solver_imprint_programs_considered: "no",
+        }),
+        false,
+    );
     console.log("  ok - strategy layout, semantics, and optional solver provenance round-trip");
 }
 

@@ -52,6 +52,10 @@ struct SolveOptions {
     bool strict_states = false;
     bool kernel_reuse = true;
     bool goal_progress_gated_reforges = false;
+    /* Caller-selected automatic-action scope. False excludes only generated
+     * Imprint checkpoint/retry programs; all other automatic families retain
+     * their normal admission authority. */
+    bool consider_imprint_programs = true;
     /* Ordinary Bellman authority to abandon the current carrier and buy a
      * fresh base. Mechanic-owned replacement recovery (currently product
      * Fracture miss handling) remains available when this is false. */
@@ -606,6 +610,7 @@ struct SolveDiagnostics {
     std::uint64_t transition_bits_hash = 0;
     std::uint64_t policy_bits_hash = 0;
     std::string solution_scope = "globally_optimal_unrestricted";
+    bool consider_imprint_programs = true;
     std::uint64_t algebraic_self_loops = 0;
     bool transition_cache_reused = false;
     bool focused_expansion = false;

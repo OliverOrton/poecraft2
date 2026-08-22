@@ -3273,6 +3273,12 @@ std::string serialize_solver_telemetry(
     json += "},\"automatic_candidates\":{";
     json += "\"enabled\":" + std::string(bool_json(
         calc.goal().automatic_candidates));
+    json += ",\"imprint_programs_considered\":";
+    if (diagnostics == nullptr) {
+        json += "null";
+    } else {
+        json += bool_json(diagnostics->consider_imprint_programs);
+    }
     json += ",\"operators\":" + std::to_string(
         calc.action_control().automatic_options);
     json += ",\"dependency_primitives\":" + std::to_string(

@@ -230,6 +230,13 @@ action envelope. A completed result is labelled exact only within that
 zero-progress-reroll restriction. Omitting the option preserves the
 unrestricted globally optimal solve contract.
 
+Automatic Imprint discovery has an independent, default-on caller scope.
+`consider_imprint_programs: false` bypasses only generated Imprint
+checkpoint/retry programs, keeps the remaining automatic admission pipeline
+active, invalidates incompatible retained transition/admission caches, and
+records the exclusion in telemetry and compiled-strategy provenance. Any
+exact result is exact only within that reduced action scope.
+
 When a completed gated root destructive-reforge row has positive terminal
 mass and every non-goal exit proves the same legal exact action-local kernel,
 Solve immediately records the executable fixed policy “repeat that reforge

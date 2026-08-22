@@ -15,6 +15,8 @@ bool same_automatic_admission_limits(
                right.max_imprint_program_depth &&
            left.max_imprint_program_work ==
                right.max_imprint_program_work &&
+           left.consider_imprint_programs ==
+               right.consider_imprint_programs &&
            left.prices == right.prices &&
            left.incumbent_upper_bound == right.incumbent_upper_bound;
 }
@@ -1009,7 +1011,10 @@ CalcContext::build_state_local_automatic_candidates(
         local_option_indices.push_back(index);
     }
     std::array<std::uint64_t, kAutomaticTelemetryKindCount> shared_weights{};
-    ++shared_weights[static_cast<std::size_t>(AutomaticTelemetryKind::Imprint)];
+    if (limits.consider_imprint_programs) {
+        ++shared_weights[
+            static_cast<std::size_t>(AutomaticTelemetryKind::Imprint)];
+    }
     for (const std::uint32_t index : permanent_benches) {
         (void)index;
         ++shared_weights[static_cast<std::size_t>(

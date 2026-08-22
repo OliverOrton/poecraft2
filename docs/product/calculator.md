@@ -97,13 +97,19 @@ The Solve surface is distinct from one-action odds:
    Fracture is relevant, require an explicit `base` price because miss recovery
    owns an exact fresh-base replacement branch.
 5. Open a fresh scoped solve handle with
-   `goal_progress_gated_reforges: true` and
-   `allow_economic_restart: false`, then run the stateful native
+   `goal_progress_gated_reforges: true`,
+   `allow_economic_restart: false`, and the user-selected
+   `consider_imprint_programs` scope (default checked), then run the stateful native
    begin/step/finish API in the worker with progress and cancellation.
    Calculator therefore does not abandon an ordinary carrier merely because a
    fresh start is cheaper. An unchecked “Allow abandoning this item and buying
    a fresh base” control explicitly restores that economic action. The native
    engine default remains unrestricted for backward compatibility.
+   “Consider automatic Imprint checkpoint/retry programs” is a separate,
+   checked-by-default control. Clearing it excludes only generated Imprint
+   programs; other automatic families remain eligible. Results and compiled
+   strategies disclose that reduced action scope and make no optimality claim
+   over the excluded family.
 6. Compile whenever the result has `policy_available`, including bounded cap
    and target-gap results. Transfer the compiled document as one byte buffer,
    decode/parse it once on the main thread, assign missing board positions,

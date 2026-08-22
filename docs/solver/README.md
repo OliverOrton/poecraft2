@@ -573,6 +573,11 @@ follows from the projection.
 Compound Bestiary actions use their own exact calculation API because their
 state includes an optional saved checkpoint. Automatic Imprint retry is still
 an exact solver operator assembled from those native Bestiary transitions.
+Solve callers may set `consider_imprint_programs: false` to omit generated
+checkpoint/retry programs while retaining every other automatic family. The
+historical default is `true`. This is a caller-selected action restriction,
+not a dominance proof; telemetry and compiled strategy provenance disclose
+the choice.
 
 There is no Monte Carlo fallback in the calculation engine. Sampling is used
 as test or simulator evidence, not to produce `pc_calc_action_outcomes` or

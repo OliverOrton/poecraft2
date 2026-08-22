@@ -1837,6 +1837,7 @@ discover_automatic_imprint_options_cooperatively(
     const std::uint32_t state_id,
     AutomaticAdmissionLimits limits) {
     ImprintDiscoveryResult result;
+    if (!limits.consider_imprint_programs) co_return result;
     result.depth_limit = limits.max_imprint_program_depth == 0
                              ? kDefaultImprintProgramDepth
                              : limits.max_imprint_program_depth;

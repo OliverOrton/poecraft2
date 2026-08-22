@@ -51,6 +51,8 @@ SolveWork::Impl::Impl(
             options.max_absolute_optimality_gap;
         result.requested_relative_optimality_gap =
             options.max_relative_optimality_gap;
+        result.diagnostics.consider_imprint_programs =
+            options.consider_imprint_programs;
         result.diagnostics.diagnostic_sample_limit =
             options.max_diagnostic_samples;
         result.diagnostics.telemetry_json_byte_limit =
@@ -69,6 +71,19 @@ SolveWork::Impl::Impl(
         } else {
             result.diagnostics.solution_scope =
                 "globally_optimal_unrestricted";
+        }
+        if (!options.consider_imprint_programs) {
+            if (result.diagnostics.solution_scope ==
+                "globally_optimal_unrestricted") {
+                result.diagnostics.solution_scope =
+                    "exact_within_no_automatic_imprint_programs_"
+                    "action_scope";
+            } else {
+                result.diagnostics.solution_scope +=
+                    "_without_automatic_imprint_programs";
+            }
+            retain_action_reason(
+                "excluded:automatic_imprint_programs:caller_action_scope");
         }
         result.diagnostics.registry_actions = static_cast<std::uint32_t>(
             calc.registry().actions.size());
@@ -476,6 +491,8 @@ SolveWork::Impl::Impl(
             transition_cache->kernel_reuse = options.kernel_reuse;
             transition_cache->goal_progress_gated_reforges =
                 options.goal_progress_gated_reforges;
+            transition_cache->consider_imprint_programs =
+                options.consider_imprint_programs;
             transition_cache->allow_economic_restart =
                 options.allow_economic_restart;
             for (const PricedOperator& priced : operators) {

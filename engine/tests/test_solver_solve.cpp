@@ -6925,6 +6925,31 @@ void run_automatic_imprint_cooperative_tests() {
         return success;
     };
 
+    /* The caller scope switch excludes only generated Imprint programs and
+     * does not turn their work cap into an unresolved obligation. */
+    AutomaticAdmissionLimits no_imprint_limits = limits;
+    no_imprint_limits.consider_imprint_programs = false;
+    CalcContext no_imprint_calc(
+        session, goal, registry, candidates,
+        false, true, false, std::nullopt, {}, false);
+    const std::uint32_t no_imprint_state =
+        no_imprint_calc.intern_item(magic);
+    const StateLocalAutomaticBatch no_imprint_batch =
+        no_imprint_calc.admit_state_local_automatic_candidates(
+            no_imprint_state, no_imprint_limits);
+    PC_CHECK(
+        no_imprint_batch.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+    PC_CHECK(
+        no_imprint_batch.phases.imprint_programs_evaluated == 0);
+    PC_CHECK(
+        no_imprint_batch.phases.imprint_action_state_evaluations == 0);
+    PC_CHECK(
+        no_imprint_batch.phases.imprint_outcomes_merged == 0);
+    PC_CHECK(
+        admitted_imprint_programs(
+            no_imprint_calc, no_imprint_batch).empty());
+
     /* Use the strict parent as the deterministic complete-envelope reference.
      * The retained local admission context always distinguishes exclusion
      * effects independently of its parent's product setting. */

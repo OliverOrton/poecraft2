@@ -1562,9 +1562,13 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
 
     // Solve, then verify the compiled policy through the simulator.
     const solveProgress: SolveProgress[] = [];
-    const solve = await client.solverSolve(solver, item, economy, undefined, {
-        onProgress: (progress) => solveProgress.push(progress),
-    });
+    const solve = await client.solverSolve(
+        solver,
+        item,
+        economy,
+        { consider_imprint_programs: false },
+        { onProgress: (progress) => solveProgress.push(progress) },
+    );
     assert.equal(solve.cancelled, false);
     if (solve.cancelled) assert.fail("completed solve was cancelled");
     assert.ok(solveProgress.length >= 2);
@@ -1631,6 +1635,15 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
         (solveTelemetry.optimization as Record<string, unknown>).status,
         "exact_abstract",
     );
+    const solveExecution = solveTelemetry.execution as Record<string, unknown>;
+    assert.equal(
+        solveExecution.solution_scope,
+        "exact_within_no_automatic_imprint_programs_action_scope",
+    );
+    const automaticCandidates = (
+        solveTelemetry.action_control as Record<string, unknown>
+    ).automatic_candidates as Record<string, unknown>;
+    assert.equal(automaticCandidates.imprint_programs_considered, false);
 
     const startState = await client.solverProject(solver, item);
     assert.equal(startState, solve.start_state);
@@ -1666,6 +1679,7 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
         `    solver strategy transfer: ${(compilation.strategy_json_bytes as number).toLocaleString()} bytes in ${transferMs.toFixed(2)} ms`,
     );
     const prepared = prepareSolverStrategy(compiled);
+    assert.equal(prepared.solver_imprint_programs_considered, false);
     assert.ok(
         prepared.nodes.every(
             (node) =>

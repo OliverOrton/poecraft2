@@ -16,6 +16,7 @@ export interface SolveResultMarkupOptions {
     terminationDetail: string;
     productActionScope: "goal_relevant" | "explicit_requested";
     goalProgressGatedReforges: boolean;
+    considerImprintPrograms?: boolean;
     hasCompiledStrategy: boolean;
     compiledOperationTypes: readonly string[];
     busy: boolean;
@@ -266,11 +267,13 @@ export function calculatorSolveOptions(
     absoluteGap: number,
     relativeGapPercent: number,
     allowEconomicRestart = false,
+    considerImprintPrograms = true,
 ): SolveOptions {
     const options: SolveOptions = {
         goal_progress_gated_reforges: true,
         high_impact_executable_uppers: true,
         allow_economic_restart: allowEconomicRestart,
+        consider_imprint_programs: considerImprintPrograms,
     };
     if (Number.isFinite(absoluteGap) && absoluteGap > 0) {
         options.max_absolute_optimality_gap = absoluteGap;
@@ -618,6 +621,7 @@ export function solveResultMarkup(options: SolveResultMarkupOptions): string {
         terminationDetail,
         productActionScope,
         goalProgressGatedReforges,
+        considerImprintPrograms = true,
         hasCompiledStrategy,
         compiledOperationTypes,
         busy,
@@ -682,11 +686,14 @@ export function solveResultMarkup(options: SolveResultMarkupOptions): string {
     const gatingLabel = goalProgressGatedReforges
         ? "Goal-progress-gated reforges enabled: zero-progress outcomes retry through destructive reforges only."
         : "Goal-progress-gated reforges disabled.";
+    const imprintScopeLabel = considerImprintPrograms
+        ? "Automatic Imprint checkpoint/retry programs are considered."
+        : "Automatic Imprint checkpoint/retry programs are excluded by caller scope; bounds and exactness apply only without that family.";
     const obligationText = actionObligationText(obligations);
     const obligationWarning = hasExplicitlyOpenObligations(obligations);
     const canUseCompiledPolicy = summary.policy_available && hasCompiledStrategy;
 
-    return `<section class="pc-calc-solve-result" data-policy-status="${summary.policy_status}" data-policy-available="${summary.policy_available}" data-exact-authority="${exactExecutablePolicy}" data-product-scope="${productActionScope}" data-goal-progress-gated-reforges="${goalProgressGatedReforges}" data-termination="${summary.termination}" data-stop-cause="${summary.stop_cause}">
+    return `<section class="pc-calc-solve-result" data-policy-status="${summary.policy_status}" data-policy-available="${summary.policy_available}" data-exact-authority="${exactExecutablePolicy}" data-product-scope="${productActionScope}" data-goal-progress-gated-reforges="${goalProgressGatedReforges}" data-consider-imprint-programs="${considerImprintPrograms}" data-termination="${summary.termination}" data-stop-cause="${summary.stop_cause}">
         <div class="pc-calc-solve-headline">
             <span>Returned policy expected cost</span>
             <strong data-solve-result="evaluated-policy-cost">${evaluatedPolicyCost}</strong>
@@ -702,6 +709,7 @@ export function solveResultMarkup(options: SolveResultMarkupOptions): string {
         <div class="pc-calc-solve-scope" data-solve-result="scope">
             <strong>${scopeLabel}</strong>
             <span>${gatingLabel}</span>
+            <span class="${considerImprintPrograms ? "" : "is-warning"}">${imprintScopeLabel}</span>
             <span>Admitted priced primitive families: ${escapeHtml(admittedFamilies)}.</span>
             <span>${escapeHtml(automaticFamilyText(automatic))}</span>
             ${compiledOperations ? `<span>Compiled policy operations: ${escapeHtml(compiledOperations)}.</span>` : ""}

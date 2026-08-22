@@ -2448,6 +2448,10 @@ CaseResult run_case(
             solve_options.solver_flags |=
                 PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART;
         }
+        if (!optional_bool(caps, "consider_imprint_programs", true)) {
+            solve_options.solver_flags |=
+                PC_SOLVER_FLAG_DISABLE_IMPRINT_PROGRAMS;
+        }
         if (goal_progress_gated_reforges) {
             solve_options.solver_flags |=
                 PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES;

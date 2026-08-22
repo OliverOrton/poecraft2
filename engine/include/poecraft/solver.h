@@ -383,7 +383,11 @@ typedef enum pc_solver_flag {
     PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES = 1u << 3,
     /* Remove ordinary economic abandonment from the Bellman action scope.
      * Exact mechanic-owned replacement recovery remains available. */
-    PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART = 1u << 4
+    PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART = 1u << 4,
+    /* Exclude generated Imprint checkpoint/retry programs from the requested
+     * solve action scope. Omitted/default behavior continues to consider
+     * them. Other automatic families are unaffected. */
+    PC_SOLVER_FLAG_DISABLE_IMPRINT_PROGRAMS = 1u << 5
 } pc_solver_flag;
 
 typedef enum pc_solve_policy_status {

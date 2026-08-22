@@ -430,6 +430,8 @@ bool SolveTransitionCache::compatible(
             kernel_reuse != options.kernel_reuse ||
             goal_progress_gated_reforges !=
                 options.goal_progress_gated_reforges ||
+            consider_imprint_programs !=
+                options.consider_imprint_programs ||
             allow_economic_restart != options.allow_economic_restart ||
             exact_quotient == options.strict_states ||
             operator_indices.size() != priced.size()) {
@@ -645,6 +647,8 @@ bool SolveWork::Impl::prepare_state_expansion(
             options.max_imprint_program_depth;
         limits.max_imprint_program_work =
             options.max_imprint_program_work;
+        limits.consider_imprint_programs =
+            options.consider_imprint_programs;
         limits.prices = &prices;
         const auto retain_certified_upper = [&](const double upper) {
             if (!std::isfinite(upper) || upper < 0.0 ||

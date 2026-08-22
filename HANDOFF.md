@@ -1,8 +1,9 @@
 # Handoff
 
-**Status: no implementation boundary is active.** The finite Imprint-program
-closure trial stopped precisely and production source was restored. Oliver
-must select the next chunk before implementation resumes.
+**Status: Imprint solve scope and controlled comparison is active.** Oliver
+selected an explicit Calculator toggle for automatic Imprint programs, with a
+checked four-T1 enabled/disabled comparison. The deeper carrier-equivalent
+recovery dominance proof is recorded but is not part of this first boundary.
 
 ## Current checkpoint
 
@@ -15,6 +16,8 @@ must select the next chunk before implementation resumes.
   [docs/active/2026-08-22-finite-imprint-program-closure/result.md](docs/active/2026-08-22-finite-imprint-program-closure/result.md)
 - Previous accepted result:
   [docs/active/2026-08-22-recovery-scoped-restart-successor-bounds/result.md](docs/active/2026-08-22-recovery-scoped-restart-successor-bounds/result.md)
+- Active plan:
+  [docs/active/2026-08-22-imprint-solve-scope/plan.md](docs/active/2026-08-22-imprint-solve-scope/plan.md)
 
 ## Stopped Imprint boundary
 

@@ -470,8 +470,15 @@ std::string compile_policy_strategy_json(
             (result.options.allow_economic_restart
                  ? ""
                  : "; ordinary fresh-base abandonment is excluded") +
+            (result.options.consider_imprint_programs
+                 ? ""
+                 : "; automatic Imprint programs are excluded") +
             "\","
             "\"solver_policy_scope\":\"" + solver_scope + "\","
+            "\"solver_imprint_programs_considered\":" +
+            std::string(
+                result.options.consider_imprint_programs ? "true" : "false") +
+            ","
             "\"base_state\":{\"base_key\":\"" +
             json_escape(
                 data.string_at(
@@ -2557,10 +2564,20 @@ std::string compile_policy_strategy_json(
             json +=
                 "; ordinary fresh-base abandonment is also excluded";
         }
+        if (!result.options.consider_imprint_programs) {
+            json += "; automatic Imprint programs are excluded";
+        }
     } else if (!result.options.allow_economic_restart) {
         json +=
             "\",\"description\":\"Exact within the current-carrier policy "
             "restriction; ordinary fresh-base abandonment is excluded";
+        if (!result.options.consider_imprint_programs) {
+            json += "; automatic Imprint programs are excluded";
+        }
+    } else if (!result.options.consider_imprint_programs) {
+        json +=
+            "\",\"description\":\"Exact within an action scope excluding "
+            "automatic Imprint programs";
     }
     if (result.options.goal_progress_gated_reforges &&
         !result.options.allow_economic_restart) {
@@ -2578,7 +2595,9 @@ std::string compile_policy_strategy_json(
     } else {
         json += "\",\"solver_policy_scope\":\"unrestricted";
     }
-    json += "\",\"base_state\":{\"base_key\":\"";
+    json += "\",\"solver_imprint_programs_considered\":";
+    json += result.options.consider_imprint_programs ? "true" : "false";
+    json += ",\"base_state\":{\"base_key\":\"";
     json += json_escape(
         data.string_at(data.base_metadata_path_sid[session.base_index]));
     json += "\",\"item_level\":";

@@ -629,6 +629,14 @@ bool parse_solve_options(
         options.solver_flags |=
             PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART;
     }
+    const Value* consider_imprint_programs =
+        spec.find("consider_imprint_programs");
+    if (consider_imprint_programs != nullptr &&
+        consider_imprint_programs->type == Type::Bool &&
+        !consider_imprint_programs->boolean) {
+        options.solver_flags |=
+            PC_SOLVER_FLAG_DISABLE_IMPRINT_PROGRAMS;
+    }
     const Value* high_impact_uppers =
         spec.find("high_impact_executable_uppers");
     if (high_impact_uppers != nullptr &&

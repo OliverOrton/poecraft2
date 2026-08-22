@@ -890,7 +890,8 @@ void run_public_product_eldritch_gate(const char* artifact_dir) {
     solve_options.max_telemetry_json_bytes = 64ull * 1024ull * 1024ull;
     solve_options.solver_flags =
         PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES |
-        PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART;
+        PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART |
+        PC_SOLVER_FLAG_DISABLE_IMPRINT_PROGRAMS;
     pc_solve_summary summary{};
     PC_CHECK(pc_solver_solve(
                  solver, &start, economy, &solve_options, &summary,
@@ -903,7 +904,11 @@ void run_public_product_eldritch_gate(const char* artifact_dir) {
              std::string::npos);
     PC_CHECK(solved_telemetry.find(
                  "\"automatic_candidates\":{\"enabled\":true,"
+                 "\"imprint_programs_considered\":false,"
                  "\"operators\":6,\"dependency_primitives\":2") !=
+             std::string::npos);
+    PC_CHECK(solved_telemetry.find(
+                 "excluded:automatic_imprint_programs:caller_action_scope") !=
              std::string::npos);
     PC_CHECK(solved_telemetry.find(
                  "\"zero_off_policy\":true") != std::string::npos);
@@ -925,6 +930,9 @@ void run_public_product_eldritch_gate(const char* artifact_dir) {
     PC_CHECK(strategy_json.find(
                  "\"solver_policy_scope\":\"zero_progress_reroll_and_"
                  "no_economic_restart_restrictions\"") !=
+             std::string::npos);
+    PC_CHECK(strategy_json.find(
+                 "\"solver_imprint_programs_considered\":false") !=
              std::string::npos);
     pc_strategy_handle strategy = nullptr;
     PC_CHECK(pc_strategy_compile_json(

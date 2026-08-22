@@ -34,6 +34,7 @@ import {
         terminationDetail: solveTerminationDetail(summary, null),
         productActionScope: "goal_relevant",
         goalProgressGatedReforges: true,
+        considerImprintPrograms: false,
         hasCompiledStrategy: true,
         compiledOperationTypes: ["chaos"],
         busy: false,
@@ -103,6 +104,8 @@ import {
     assert.doesNotMatch(markup, /is 10% suboptimal/i);
     assert.doesNotMatch(markup, /upper bound[^<]*optimum/i);
     assert.doesNotMatch(markup, /Did not converge/);
+    assert.match(markup, /Automatic Imprint checkpoint\/retry programs are excluded by caller scope/);
+    assert.match(markup, /data-consider-imprint-programs="false"/);
     console.log("  ok - bounded target results use the approved certificate DOM");
 }
 
@@ -111,6 +114,7 @@ import {
         goal_progress_gated_reforges: true,
         high_impact_executable_uppers: true,
         allow_economic_restart: false,
+        consider_imprint_programs: true,
         max_absolute_optimality_gap: 5,
         max_relative_optimality_gap: 0.1,
     });
@@ -118,16 +122,25 @@ import {
         goal_progress_gated_reforges: true,
         high_impact_executable_uppers: true,
         allow_economic_restart: false,
+        consider_imprint_programs: true,
     });
     assert.deepEqual(calculatorSolveOptions(Number.NaN, 0), {
         goal_progress_gated_reforges: true,
         high_impact_executable_uppers: true,
         allow_economic_restart: false,
+        consider_imprint_programs: true,
     });
     assert.deepEqual(calculatorSolveOptions(0, 0, true), {
         goal_progress_gated_reforges: true,
         high_impact_executable_uppers: true,
         allow_economic_restart: true,
+        consider_imprint_programs: true,
+    });
+    assert.deepEqual(calculatorSolveOptions(0, 0, false, false), {
+        goal_progress_gated_reforges: true,
+        high_impact_executable_uppers: true,
+        allow_economic_restart: false,
+        consider_imprint_programs: false,
     });
     console.log("  ok - Calculator solves use exact operator-major scheduling and map optional targets");
 }

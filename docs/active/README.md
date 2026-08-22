@@ -1,8 +1,16 @@
 # Active Work
 
-**Status: no implementation boundary is selected.**
+**Status: Imprint solve scope and controlled comparison is active.**
 
 Parent: [Documentation map](../README.md)
+
+The active
+[Imprint Solve Scope And Controlled Comparison](2026-08-22-imprint-solve-scope/plan.md)
+adds an explicit, historically-on Calculator control for automatic Imprint
+programs and measures the checked four-T1 solve with that family excluded. A
+reduced-scope result must disclose the exclusion. Carrier-equivalent economic
+recovery dominance is recorded as the sound deeper successor, not approximated
+by a primitive-price shortcut in this boundary.
 
 The stopped
 [Finite Imprint-Program Closure](2026-08-22-finite-imprint-program-closure/plan.md)

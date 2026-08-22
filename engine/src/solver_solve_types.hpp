@@ -492,6 +492,7 @@ struct SolveTransitionCache {
     bool full_evidence = false;
     bool kernel_reuse = true;
     bool goal_progress_gated_reforges = false;
+    bool consider_imprint_programs = true;
     bool allow_economic_restart = true;
     std::uint32_t discovered_states = 0;
     std::uint32_t expanded_states = 0;

@@ -264,6 +264,8 @@ export interface StrategyDocument {
     nodes: StrategyNode[];
     edges: StrategyEdge[];
     solver_policy_scope?: SolverPolicyScope;
+    /** Solver provenance; absent on historical strategies. */
+    solver_imprint_programs_considered?: boolean;
     economy?: EconomyIdentity;
     ui?: {
         viewport?: StrategyViewport;
@@ -313,13 +315,17 @@ export function isStrategyDocument(value: unknown): value is StrategyDocument {
             "zero_progress_reroll_and_no_economic_restart_restrictions" ||
         candidate.solver_policy_scope ===
             "zero_progress_reroll_policy_restriction";
+    const validImprintProgramScope =
+        candidate.solver_imprint_programs_considered === undefined ||
+        typeof candidate.solver_imprint_programs_considered === "boolean";
     return (
         candidate.version === "v1" &&
         Array.isArray(candidate.nodes) &&
         Array.isArray(candidate.edges) &&
         typeof candidate.start_node_id === "string" &&
         Boolean(candidate.base_state) &&
-        validSolverPolicyScope
+        validSolverPolicyScope &&
+        validImprintProgramScope
     );
 }
 

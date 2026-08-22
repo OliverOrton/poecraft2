@@ -578,6 +578,7 @@ struct AutomaticAdmissionLimits {
      * owned-byte cap remain unconditional. */
     std::uint32_t max_imprint_program_depth = 0;
     std::uint64_t max_imprint_program_work = 0;
+    bool consider_imprint_programs = true;
     const std::unordered_map<std::string, double>* prices = nullptr;
     double incumbent_upper_bound = std::numeric_limits<double>::infinity();
 };

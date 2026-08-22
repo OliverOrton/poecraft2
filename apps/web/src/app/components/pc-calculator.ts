@@ -235,6 +235,7 @@ export class PcCalculator extends HTMLElement {
     private solveAbsoluteGapTarget = 0;
     private solveRelativeGapPercentTarget = 0;
     private solveAllowEconomicRestart = false;
+    private solveConsiderImprintPrograms = true;
     private solveRunning = false;
     private solveProgress: SolveProgress | null = null;
     private solveElapsedMs = 0;
@@ -795,6 +796,7 @@ export class PcCalculator extends HTMLElement {
                 this.solveAbsoluteGapTarget,
                 this.solveRelativeGapPercentTarget,
                 this.solveAllowEconomicRestart,
+                this.solveConsiderImprintPrograms,
             );
             const result = await this.client.solverSolve(
                 solveSolver,
@@ -1869,6 +1871,7 @@ export class PcCalculator extends HTMLElement {
                   terminationDetail: this.solveStopDetail,
                   productActionScope: "goal_relevant",
                   goalProgressGatedReforges: true,
+                  considerImprintPrograms: this.solveConsiderImprintPrograms,
                   hasCompiledStrategy: this.solvedStrategy !== null,
                   compiledOperationTypes: this.solvedStrategy
                       ? this.solvedStrategy.nodes.flatMap((node) =>
@@ -1928,6 +1931,11 @@ export class PcCalculator extends HTMLElement {
                     <input type="checkbox" data-solve-economic-restart
                         ${this.solveAllowEconomicRestart ? "checked" : ""}>
                     <span>Allow abandoning this item and buying a fresh base</span>
+                </label>
+                <label class="pc-calc-solve-restart-option">
+                    <input type="checkbox" data-solve-consider-imprints
+                        ${this.solveConsiderImprintPrograms ? "checked" : ""}>
+                    <span>Consider automatic Imprint checkpoint/retry programs</span>
                 </label>
                 <p>Either positive target may stop the solve after a complete lower/upper round. Targets do not change Bellman comparisons or exact results.</p>
             </div>
@@ -1990,6 +1998,11 @@ export class PcCalculator extends HTMLElement {
         host.querySelector<HTMLInputElement>("[data-solve-economic-restart]")
             ?.addEventListener("change", (event) => {
                 this.solveAllowEconomicRestart =
+                    (event.currentTarget as HTMLInputElement).checked;
+            });
+        host.querySelector<HTMLInputElement>("[data-solve-consider-imprints]")
+            ?.addEventListener("change", (event) => {
+                this.solveConsiderImprintPrograms =
                     (event.currentTarget as HTMLInputElement).checked;
             });
         host.querySelectorAll<HTMLButtonElement>("[data-solve-cmd]").forEach(
