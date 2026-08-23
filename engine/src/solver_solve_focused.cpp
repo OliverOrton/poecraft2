@@ -444,13 +444,14 @@ void SolveWork::Impl::schedule_next_focused_expansion(
         std::sort(fringe.begin(), fringe.end());
         fringe.erase(std::unique(fringe.begin(), fringe.end()), fringe.end());
         telemetry.schedule_candidates = fringe.size();
+        const auto state_priority = [&](const std::uint32_t state) {
+            return state < priority.size() ? priority[state] : 0.0;
+        };
         std::stable_sort(
             fringe.begin(), fringe.end(),
             [&](const std::uint32_t left, const std::uint32_t right) {
-                const double left_priority =
-                    left < priority.size() ? priority[left] : 0.0;
-                const double right_priority =
-                    right < priority.size() ? priority[right] : 0.0;
+                const double left_priority = state_priority(left);
+                const double right_priority = state_priority(right);
                 return left_priority != right_priority
                            ? left_priority > right_priority
                            : left < right;
@@ -465,6 +466,7 @@ void SolveWork::Impl::schedule_next_focused_expansion(
                 return focused_schedule_signature(state);
             });
         std::vector<std::uint32_t> selected_per_class(coarse_count, 0);
+        std::vector<std::uint8_t> selected(calc.state_count(), 0);
         std::vector<std::uint32_t> selected_fringe;
         selected_fringe.reserve(
             std::min<std::size_t>(
@@ -475,7 +477,88 @@ void SolveWork::Impl::schedule_next_focused_expansion(
             restart_state != kNoId && restart_state < queued.size() &&
             !queued[restart_state]) {
             selected_fringe.push_back(restart_state);
+            selected[restart_state] = 1;
             ++selected_per_class[coarse.at(restart_state)];
+        }
+
+        /* Reserve half the round for a carrier ladder stratified by the
+         * complete satisfied-goal subset. This is work ordering only: no
+         * state is merged, pruned, or granted terminal authority. Cycling
+         * across masks lets rare 2/5, 3/5, and 4/5 carriers receive rows even
+         * when a common zero-progress branch owns most of the path mass, and
+         * naturally permits a direct 3 -> 5 transition because terminal
+         * successors never need another expansion. Dirty carriers remain in
+         * the same competition as clean ones; the structural schedule class
+         * above distinguishes the engine-observed junk/protection shape. */
+        std::map<std::uint32_t, std::vector<std::uint32_t>> by_goal_subset;
+        for (const std::uint32_t state : fringe) {
+            if (state >= selected.size() || selected[state] ||
+                queued.at(state) ||
+                (state == restart_state && !focused_fallback_policy)) {
+                continue;
+            }
+            by_goal_subset[satisfied_goal_mask_for_state(state)]
+                .push_back(state);
+            ++telemetry.carrier_ladder_candidates;
+        }
+        telemetry.carrier_ladder_goal_subsets = by_goal_subset.size();
+        std::vector<std::uint32_t> subset_order;
+        subset_order.reserve(by_goal_subset.size());
+        for (const auto& [mask, unused] : by_goal_subset) {
+            (void)unused;
+            subset_order.push_back(mask);
+        }
+        std::stable_sort(
+            subset_order.begin(), subset_order.end(),
+            [&](const std::uint32_t left, const std::uint32_t right) {
+                const std::uint32_t left_progress = std::popcount(left);
+                const std::uint32_t right_progress = std::popcount(right);
+                if (left_progress != right_progress) {
+                    return left_progress > right_progress;
+                }
+                const double left_priority =
+                    state_priority(by_goal_subset.at(left).front());
+                const double right_priority =
+                    state_priority(by_goal_subset.at(right).front());
+                return left_priority != right_priority
+                    ? left_priority > right_priority
+                    : left < right;
+            });
+        std::map<std::uint32_t, std::size_t> subset_cursor;
+        const std::size_t batch = std::max<std::uint32_t>(
+            1, options.focused_expansion_batch_states);
+        const std::size_t ladder_limit = std::min<std::size_t>(
+            batch / 2, batch - selected_fringe.size());
+        bool ladder_advanced = true;
+        while (telemetry.carrier_ladder_admissions < ladder_limit &&
+               ladder_advanced) {
+            ladder_advanced = false;
+            for (const std::uint32_t mask : subset_order) {
+                if (telemetry.carrier_ladder_admissions >= ladder_limit) {
+                    break;
+                }
+                auto& bucket = by_goal_subset.at(mask);
+                std::size_t& cursor = subset_cursor[mask];
+                while (cursor < bucket.size()) {
+                    const std::uint32_t state = bucket[cursor++];
+                    const std::uint32_t candidate = coarse.at(state);
+                    if (selected[state] || queued.at(state) ||
+                        selected_per_class[candidate] >=
+                            members_per_class) {
+                        if (selected_per_class[candidate] >=
+                            members_per_class) {
+                            ++telemetry.per_class_cap_hits;
+                        }
+                        continue;
+                    }
+                    selected[state] = 1;
+                    ++selected_per_class[candidate];
+                    selected_fringe.push_back(state);
+                    ++telemetry.carrier_ladder_admissions;
+                    ladder_advanced = true;
+                    break;
+                }
+            }
         }
         for (const std::uint32_t state : fringe) {
             if (selected_fringe.size() >=
@@ -484,6 +567,7 @@ void SolveWork::Impl::schedule_next_focused_expansion(
                 break;
             }
             if (queued.at(state) ||
+                selected.at(state) ||
                 (state == restart_state &&
                  !focused_fallback_policy)) {
                 continue;
@@ -494,6 +578,7 @@ void SolveWork::Impl::schedule_next_focused_expansion(
                 continue;
             }
             ++selected_per_class[candidate];
+            selected[state] = 1;
             selected_fringe.push_back(state);
         }
         fringe = std::move(selected_fringe);
@@ -1139,6 +1224,9 @@ void SolveWork::Impl::finish_focused_upper_solve(const bool succeeded) {
             }
             if (classify_incremental_alternatives()) {
                 restart_incremental_optimization();
+            } else if (!incremental_anytime_missing_frontier_states.empty() &&
+                       schedule_incremental_refinement()) {
+                return;
             } else if (options.high_impact_executable_uppers &&
                        schedule_next_incremental_alternative()) {
                 return;

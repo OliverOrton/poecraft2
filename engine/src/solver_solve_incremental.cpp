@@ -34,16 +34,21 @@ void SolveWork::Impl::retain_incremental_carrier(
 }
 
 bool SolveWork::Impl::advance_incremental_dynamic_preparation() {
-    const std::size_t carrier_cursor =
-        options.high_impact_executable_uppers
-            ? incremental_automatic_carrier_cursor
-            : incremental_carrier_cursor;
-    if (carrier_cursor >= incremental_carriers.size()) {
+    const bool automatic_order =
+        options.high_impact_executable_uppers;
+    const std::size_t carrier_cursor = automatic_order
+        ? incremental_automatic_order_cursor
+        : incremental_carrier_cursor;
+    const std::size_t carrier_count = automatic_order
+        ? incremental_automatic_carrier_order.size()
+        : incremental_carriers.size();
+    if (carrier_cursor >= carrier_count) {
         throw std::logic_error(
             "incremental automatic preparation lost its carrier");
     }
-    const std::uint32_t state =
-        incremental_carriers[carrier_cursor];
+    const std::uint32_t state = automatic_order
+        ? incremental_automatic_carrier_order[carrier_cursor]
+        : incremental_carriers[carrier_cursor];
     const std::uint64_t unresolved_before =
         incremental_resource_unresolved_actions;
     try {
@@ -96,6 +101,106 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
              * running carrier-local admission pass. */
             incremental_automatic_epoch_end =
                 incremental_carriers.size();
+
+            /* The product path reaches carrier-local automatic admission
+             * before the later focused-fringe scheduler. Stratify this real
+             * frozen epoch by complete goal subset so discovery order cannot
+             * make common zero-progress carriers consume the whole bounded
+             * solve. This changes only work order: every carrier remains in
+             * the exact append-only obligation and the final Cartesian scan
+             * still owns closure.
+             *
+             * Round-robin across masks preserves direct subset jumps and
+             * prevents one popular 4/5 shape from excluding other feasible
+             * ladders. Within a mask, already-fractured/protected carriers
+             * and carriers with less unrelated occupancy go first; dirty
+             * carriers are delayed, never rejected. */
+            const std::size_t begin =
+                incremental_automatic_carrier_cursor;
+            const std::size_t end = incremental_automatic_epoch_end;
+            std::map<std::uint32_t, std::vector<std::uint32_t>> by_subset;
+            for (std::size_t index = begin; index < end; ++index) {
+                const std::uint32_t state = incremental_carriers[index];
+                by_subset[satisfied_goal_mask_for_state(state)]
+                    .push_back(state);
+            }
+            const auto structural_order = [&](const std::uint32_t left,
+                                              const std::uint32_t right) {
+                const AbstractState& a = calc.state(left);
+                const AbstractState& b = calc.state(right);
+                const std::uint32_t a_fractured =
+                    std::popcount(a.fractured_goal_mask);
+                const std::uint32_t b_fractured =
+                    std::popcount(b.fractured_goal_mask);
+                if (a_fractured != b_fractured) {
+                    return a_fractured > b_fractured;
+                }
+                const std::uint32_t a_protection = std::popcount(
+                    a.flags & (kFlagPrefixesLocked | kFlagSuffixesLocked));
+                const std::uint32_t b_protection = std::popcount(
+                    b.flags & (kFlagPrefixesLocked | kFlagSuffixesLocked));
+                if (a_protection != b_protection) {
+                    return a_protection > b_protection;
+                }
+                const std::uint32_t a_satisfied = std::popcount(
+                    satisfied_goal_mask_for_state(left));
+                const std::uint32_t b_satisfied = std::popcount(
+                    satisfied_goal_mask_for_state(right));
+                const std::uint32_t a_explicit =
+                    a.prefix_count + a.suffix_count;
+                const std::uint32_t b_explicit =
+                    b.prefix_count + b.suffix_count;
+                const std::uint32_t a_unrelated =
+                    a_explicit > a_satisfied
+                        ? a_explicit - a_satisfied
+                        : 0;
+                const std::uint32_t b_unrelated =
+                    b_explicit > b_satisfied
+                        ? b_explicit - b_satisfied
+                        : 0;
+                return a_unrelated != b_unrelated
+                    ? a_unrelated < b_unrelated
+                    : left < right;
+            };
+            std::vector<std::uint32_t> subset_order;
+            subset_order.reserve(by_subset.size());
+            for (auto& [mask, carriers] : by_subset) {
+                std::stable_sort(
+                    carriers.begin(), carriers.end(), structural_order);
+                subset_order.push_back(mask);
+            }
+            std::stable_sort(
+                subset_order.begin(), subset_order.end(),
+                [](const std::uint32_t left, const std::uint32_t right) {
+                    const std::uint32_t left_progress = std::popcount(left);
+                    const std::uint32_t right_progress = std::popcount(right);
+                    return left_progress != right_progress
+                        ? left_progress > right_progress
+                        : left < right;
+                });
+            std::map<std::uint32_t, std::size_t> cursors;
+            std::vector<std::uint32_t> ordered;
+            ordered.reserve(end - begin);
+            bool advanced = true;
+            while (advanced) {
+                advanced = false;
+                for (const std::uint32_t mask : subset_order) {
+                    auto& carriers = by_subset.at(mask);
+                    std::size_t& cursor = cursors[mask];
+                    if (cursor >= carriers.size()) continue;
+                    ordered.push_back(carriers[cursor++]);
+                    advanced = true;
+                }
+            }
+            incremental_automatic_carrier_order = std::move(ordered);
+            incremental_automatic_order_cursor = 0;
+            ++incremental_carrier_ladder_epochs;
+            incremental_carrier_ladder_candidates +=
+                incremental_automatic_carrier_order.size();
+            incremental_carrier_ladder_goal_subsets += by_subset.size();
+        } else {
+            incremental_automatic_carrier_order.clear();
+            incremental_automatic_order_cursor = 0;
         }
     }
     if (options.high_impact_executable_uppers) {
@@ -139,10 +244,11 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
          * but automatic compounds remain carrier-local. Drain that distinct
          * ledger first so an early executable-upper checkpoint cannot skip
          * synthesis and later earn exact closure from delayed rows alone. */
-        while (incremental_automatic_carrier_cursor <
-               incremental_carriers.size()) {
-            const std::uint32_t state = incremental_carriers[
-                incremental_automatic_carrier_cursor];
+        while (incremental_automatic_order_cursor <
+               incremental_automatic_carrier_order.size()) {
+            const std::uint32_t state =
+                incremental_automatic_carrier_order[
+                    incremental_automatic_order_cursor];
             if (!incremental_dynamic_prepared) {
                 incremental_resume_epoch_after_dynamic_prepare =
                     continue_current_epoch;
@@ -166,6 +272,7 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
                 return true;
             }
             ++incremental_automatic_carrier_cursor;
+            ++incremental_automatic_order_cursor;
             incremental_dynamic_prepared = false;
             incremental_dynamic_prepare_active = false;
             incremental_dynamic_operator_cursor = 0;
@@ -650,6 +757,7 @@ bool SolveWork::Impl::maybe_install_incremental_anytime_incumbent() {
 
     const std::size_t completed = incremental_alternative_rows.size();
     ++incremental_anytime_policy_attempts;
+    incremental_anytime_policy_last_failure.clear();
     incremental_anytime_policy_last_completed_rows = completed;
     /* Geometric checkpoints make the total selection/evaluation work
      * logarithmic in completed rows. This is a scheduling cadence, not a
@@ -1021,6 +1129,16 @@ bool SolveWork::Impl::schedule_incremental_refinement(
         std::numeric_limits<double>::max() / 16.0;
     bool has_unresolved = false;
 
+    for (const std::uint32_t state :
+         incremental_anytime_missing_frontier_states) {
+        if (state < state_count &&
+            !calc.is_goal_state(calc.state(state)) &&
+            (state >= expanded.size() || !expanded[state])) {
+            priority[state] = unbounded_priority;
+            has_unresolved = true;
+        }
+    }
+
     const auto state_width =
         [&](const std::uint32_t state) {
             if (state >= lower.size() || state >= upper.size() ||
@@ -1222,6 +1340,14 @@ bool SolveWork::Impl::schedule_incremental_refinement(
             unbounded_priority,
             selected_uncertainty + priority[state]);
     }
+    incremental_anytime_missing_frontier_states.erase(
+        std::remove_if(
+            incremental_anytime_missing_frontier_states.begin(),
+            incremental_anytime_missing_frontier_states.end(),
+            [&](const std::uint32_t state) {
+                return state < selected.size() && selected[state];
+            }),
+        incremental_anytime_missing_frontier_states.end());
     std::deque<std::uint32_t> remainder;
     for (const std::uint32_t state : queue) {
         if (state >= selected.size() || !selected[state]) {
@@ -1549,6 +1675,12 @@ void SolveWork::Impl::finalize_incremental_diagnostics() {
         incremental_unique_kernel_evaluations;
     diagnostics.incremental_carrier_kernel_reuses =
         incremental_carrier_kernel_reuses;
+    diagnostics.incremental_carrier_ladder_epochs =
+        incremental_carrier_ladder_epochs;
+    diagnostics.incremental_carrier_ladder_candidates =
+        incremental_carrier_ladder_candidates;
+    diagnostics.incremental_carrier_ladder_goal_subsets =
+        incremental_carrier_ladder_goal_subsets;
     diagnostics.incremental_bellman_reoptimizations =
         incremental_reoptimizations;
     diagnostics.incremental_first_alternative_expanded_states =
@@ -1581,6 +1713,8 @@ void SolveWork::Impl::finalize_incremental_diagnostics() {
         incremental_anytime_policy_last_completed_rows;
     diagnostics.incremental_anytime_policy_best_upper =
         incremental_anytime_policy_best_upper;
+    diagnostics.incremental_anytime_policy_last_failure =
+        incremental_anytime_policy_last_failure;
     diagnostics.incremental_refinement_uncertainty =
         incremental_refinement_uncertainty;
     diagnostics.incremental_action_witnesses.clear();

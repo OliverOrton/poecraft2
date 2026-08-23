@@ -1,18 +1,58 @@
 # Handoff
 
-**Status: no implementation boundary is active.** The
-[five-T1 goal-band recovery](docs/active/2026-08-22-five-t1-goal-band-recovery/plan.md)
-boundary is [complete and accepted locally](docs/active/2026-08-22-five-t1-goal-band-recovery/result.md).
-Oliver must select a successor before implementation resumes.
+**Status: the
+[Exact-Goal Carrier Ladder](docs/active/2026-08-22-exact-goal-carrier-ladder/plan.md)
+boundary is [complete](docs/active/2026-08-22-exact-goal-carrier-ladder/result.md).
+No implementation boundary is active.** Oliver must select a successor before
+implementation resumes.
 
 ## Current checkpoint
 
 - Branch: `main`.
 - Local `origin/main` remains at `40eeb87`; no push was issued.
-- Implementation checkpoint: `c192311` (`Recover bounded five-T1 publication`).
+- The accepted implementation and evidence are in the local checkpoint that
+  contains this handoff.
 - Result:
-  [docs/active/2026-08-22-five-t1-goal-band-recovery/result.md](docs/active/2026-08-22-five-t1-goal-band-recovery/result.md)
+  [docs/active/2026-08-22-exact-goal-carrier-ladder/result.md](docs/active/2026-08-22-exact-goal-carrier-ladder/result.md)
 - Full repository pipeline and rendered UI review were deliberately not run.
+
+## Completed exact-goal carrier ladder boundary
+
+Every solver terminal now has exact explicit-affix semantics: all occupied
+prefixes and suffixes must be satisfied requested goal slots, while empty
+slots and implicits remain allowed. Intermediate junk, temporary blockers, and
+metamods remain legal. Native goal classification, compiled success routing,
+reforge terminal handling, fixed options, constructive policies, and clean-
+carrier lower models use the same boundary. Protected-side/tagged-side
+regressions prove disposable junk is not cleaned merely because it exists;
+paired obstruction cases retain useful cleanup.
+
+Focused and incremental carrier scheduling now round-robins achieved goal
+subsets and uses fracture, protection, occupancy, and unrelated-affix shape to
+order work. This preserves direct multi-slot jumps and delays rather than
+rejects dirty carriers. Completed cooperative rows can be joined to an already
+certified executable frontier, missing carriers feed grow-in-place refinement,
+and exact Howard improvement chooses among all completed rows before an
+immutable upper candidate is retained. None of this gains lower-bound or
+closure authority.
+
+On the clean Allflame five-T1 Conquest Lamellar, the 60-second requested
+bounded finish publishes an independently exact-evaluated
+`87361.1690420501`-Chaos policy instead of the roughly 470.5-million-Chaos
+renewal fallback. The 607-node / 1,460-edge graph has success probability 1,
+zero off-policy mass, and complete cost accounting. It completes 10,000 /
+10,000 simulations with zero failures or run limits; sampled mean cost is
+`86677.1523926521`. The selected policy uses Chaos, Eldritch Annul/Chaos/Exalt,
+Exalt, temporary blockers/cleanup, and small Harvest Augment/Reforge branches.
+Imprint remains enabled but is not selected.
+
+The result remains honestly bounded. Native Solve takes 71.880 seconds,
+discovers 14,372 states, expands 5,722, and retains a certified global lower
+of only `36.4286171890906`. The 87,324.74 absolute gap and roughly 8,303
+expected primitive actions identify the next quality boundary; no optimality
+or exact-closure claim was made. Selected-allocation telemetry reports
+209,362,905 live solver-owned bytes, 387,387,874 total solver-owned bytes, and
+a 3.226-second largest native cooperative step.
 
 ## Completed five-T1 recovery boundary
 
@@ -206,27 +246,29 @@ Historical unrestricted initialization remains unchanged.
 
 No successor is selected. The closest evidence-backed choices are:
 
-1. **WASM exact-evaluator responsiveness.** The compact Imprint-disabled Solve
-   now publishes under five minutes, but a work item can occupy the worker for
-   47.45 seconds and heap reaches about 917 MB. Split the measured pair
-   refinement/evaluation stages cooperatively or reduce their retained
-   carrier payload without weakening exact graph evaluation.
-2. **Carrier-equivalent Imprint recovery dominance (exact research owner).**
+1. **Rare-carrier successor-aware lower bounds.** The exact five-T1 policy is
+   executable at 87,361.17 Chaos, but the certified global lower is only
+   36.43. Extend the existing admissible cover with proved post-action carrier
+   shapes and rare successors so focused expansion has a useful gradient and
+   branch-and-bound can reject obviously weaker continuations.
+2. **Carrier/action quality scheduling.** Use the recovered goal-subset ladder
+   as an incumbent generator: prioritize actions that can move between useful
+   exact carrier shapes, including direct multi-slot jumps, without turning a
+   preferred subgoal order into pruning or exactness authority. The current
+   policy still averages roughly 8,303 primitive actions.
+3. **WASM/cooperative responsiveness.** The accepted native witness has a
+   3.226-second largest solve step, while predecessor exact evaluation reached
+   47.45 seconds and about 917 MB in release WASM. Split measured row/kernel
+   and exact-pair stages cooperatively or reduce retained carrier payload
+   without weakening exact evaluation.
+4. **Carrier-equivalent Imprint recovery dominance (exact research owner).**
    Compare checkpoint restore against a proper non-Imprint recovery policy to
    the same observable Magic carrier class from every relevant failure class,
    including distributions and continuation value. Primitive-price or
    arbitrary-Magic comparisons are insufficient.
-3. **First-class exact Imprint kernel/label search.** Retain this only if exact
+5. **First-class exact Imprint kernel/label search.** Retain this only if exact
    closure over the included Imprint family remains the selected goal after
    the now-healthy product bounded-publication path.
-4. **Partial-frontier executable materialization.** The new non-armour Bow
-   control sees a cheap provisional policy that cannot yet compile from its
-   incomplete frontier and therefore publishes a much weaker verified renewal.
-5. **Open-Imprint candidate competition.** The cheaper 2,823.05 policy is
-   published when Imprint is explicitly excluded. The default enabled solve
-   still publishes 3,759.976 at its Imprint work refusal; independently retain
-   and compare a non-Imprint candidate under that open obligation if this is
-   selected, without treating the open family as evaluated or dominated.
 
 ## Retained architecture
 
@@ -243,5 +285,5 @@ The retained implementation spans the local checkpoints `18e4640` through
 persistent-quotient result remains at
 [docs/active/2026-08-21-persistent-quotient-session/result.md](docs/active/2026-08-21-persistent-quotient-session/result.md).
 
-Five-T1 recovery, broader compiler/router work, mechanics, prices, and action
-admission remain separate unless Oliver explicitly selects them.
+Exact-goal quality proof, broader compiler/router work, mechanics, prices, and
+action admission remain separate unless Oliver explicitly selects them.

@@ -146,6 +146,9 @@ struct FocusedScheduleRoundTelemetry {
     std::uint64_t upper_fill_admissions = 0;
     std::uint64_t schedule_candidates = 0;
     std::uint64_t schedule_admissions = 0;
+    std::uint64_t carrier_ladder_candidates = 0;
+    std::uint64_t carrier_ladder_goal_subsets = 0;
+    std::uint64_t carrier_ladder_admissions = 0;
     std::uint64_t global_batch_cap_hits = 0;
     std::uint64_t per_class_cap_hits = 0;
 };
@@ -697,6 +700,9 @@ struct SolveDiagnostics {
     std::uint64_t incremental_actions_inapplicable = 0;
     std::uint64_t incremental_unique_kernel_evaluations = 0;
     std::uint64_t incremental_carrier_kernel_reuses = 0;
+    std::uint64_t incremental_carrier_ladder_epochs = 0;
+    std::uint64_t incremental_carrier_ladder_candidates = 0;
+    std::uint64_t incremental_carrier_ladder_goal_subsets = 0;
     std::uint64_t incremental_states_outside_chaos_support = 0;
     std::uint64_t incremental_bellman_reoptimizations = 0;
     std::uint32_t incremental_first_alternative_expanded_states = 0;
@@ -715,6 +721,7 @@ struct SolveDiagnostics {
     std::uint64_t incremental_anytime_policy_last_completed_rows = 0;
     double incremental_anytime_policy_best_upper =
         std::numeric_limits<double>::infinity();
+    std::string incremental_anytime_policy_last_failure;
     double incremental_refinement_uncertainty = 0.0;
     std::vector<std::string> incremental_action_witnesses;
     std::uint64_t incremental_action_witnesses_omitted = 0;

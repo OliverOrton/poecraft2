@@ -1304,7 +1304,15 @@ bool CalcContext::is_goal_state(const AbstractState& state) const {
             ++satisfied;
         }
     }
-    return satisfied >= goal_.required_satisfied_slots();
+    /* Success is an exact explicit-affix target. Empty slots are fine, but
+     * every occupied prefix/suffix must be one of the satisfied requested
+     * slots. This deliberately says nothing about implicits and does not
+     * constrain intermediate carriers: junk and temporary crafts remain
+     * ordinary nonterminal state until a policy removes or replaces them. */
+    const std::size_t explicit_affixes =
+        static_cast<std::size_t>(state.prefix_count) + state.suffix_count;
+    return satisfied >= goal_.required_satisfied_slots() &&
+           explicit_affixes == satisfied;
 }
 
 std::uint32_t CalcContext::intern_state(const AbstractState& state) {

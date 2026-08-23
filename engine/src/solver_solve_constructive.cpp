@@ -161,6 +161,7 @@ CapturedBoundedPolicyRow solve_detail::capture_bounded_policy_row(
 
 std::uint64_t SolveWork::Impl::goal_identity() const {
         std::uint64_t hash = 1469598103934665603ULL;
+        identity_mix(hash, 2); /* exact-explicit-affix terminal schema */
         identity_mix(hash, calc.goal().rarity);
         identity_mix(hash, calc.goal().required_satisfied_slots());
         identity_mix(hash, calc.layout().slots.size());
@@ -1923,25 +1924,56 @@ void SolveWork::Impl::install_direct_output_incumbent(
 
 bool SolveWork::Impl::try_install_reachable_incumbent(
         const bool require_resource_stop) {
+        const auto record_attempt_failure = [&](std::string failure) {
+            if (!require_resource_stop) {
+                incremental_anytime_policy_last_failure =
+                    std::move(failure);
+            }
+        };
         if ((require_resource_stop &&
              !result.diagnostics.resource_cap_hit) ||
             transition_cache == nullptr ||
             result.start_state == kNoId ||
             result.start_state >= calc.state_count() ||
             transition_cache->rows.empty() || priced_rows.empty()) {
+            record_attempt_failure("precondition_not_satisfied");
             return false;
         }
 
         const std::size_t state_count = calc.state_count();
         const std::uint64_t no_row =
             std::numeric_limits<std::uint64_t>::max();
+        /* A completed staged row does not need every stochastic successor to
+         * have another materialized row. The currently selected output is
+         * already an independently executable continuation. Treat its
+         * captured frontier actions (and, while still available, its exact
+         * primitive-renewal witness) as fixed boundary conditions for this
+         * candidate proof. The shared fixed-policy evaluator then proves the
+         * materialized prefix against those certified terminal values. */
+        std::vector<double> certified_boundary_values;
+        std::vector<std::uint32_t> certified_frontier_operators;
+        FocusedFallbackWitness certified_fallback;
+        PrimitiveRenewalWitness certified_renewal;
+        if (output_incumbent.has_value()) {
+            certified_boundary_values = output_incumbent->values;
+            certified_boundary_values.resize(state_count, kInfinity);
+            certified_frontier_operators =
+                output_incumbent->frontier_operators;
+            certified_frontier_operators.resize(state_count, kNoId);
+            certified_fallback = output_incumbent->fallback;
+            certified_renewal =
+                output_incumbent->primitive_renewal_witness;
+        }
         const std::uint64_t predicted_scratch =
             static_cast<std::uint64_t>(state_count) *
-                (2 * sizeof(double) + 2 * sizeof(std::uint64_t) +
-                 5 * sizeof(std::uint8_t) + 2 * sizeof(std::uint32_t)) +
+                (3 * sizeof(double) + 2 * sizeof(std::uint64_t) +
+                 6 * sizeof(std::uint8_t) + 3 * sizeof(std::uint32_t)) +
             static_cast<std::uint64_t>(transition_cache->rows.size()) *
                 (sizeof(std::uint8_t) + sizeof(std::uint64_t));
-        if (check_solver_byte_cap_fast(predicted_scratch)) return false;
+        if (check_solver_byte_cap_fast(predicted_scratch)) {
+            record_attempt_failure("entry_scratch_exceeds_byte_cap");
+            return false;
+        }
 
         std::vector<std::uint8_t> completed(
             transition_cache->rows.size(), 0);
@@ -1982,6 +2014,7 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
             policy_evaluation_incomplete;
 
         std::vector<std::uint8_t> reachable(state_count, 0);
+        std::vector<std::uint8_t> materialized(state_count, 0);
         std::vector<std::uint8_t> prior_reachable;
         std::vector<std::uint32_t> walk;
         const auto refresh_scratch_bytes = [&] {
@@ -2001,13 +2034,23 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
             add(saved_policy_evaluation_failure.capacity() + 1);
             add(completed.capacity() * sizeof(std::uint8_t));
             add(temporarily_admitted.capacity() * sizeof(std::uint64_t));
+            add(certified_boundary_values.capacity() * sizeof(double));
+            add(certified_frontier_operators.capacity() *
+                sizeof(std::uint32_t));
+            add(certified_renewal.kernel_signature.capacity() *
+                sizeof(std::uint64_t));
             add(reachable.capacity() * sizeof(std::uint8_t));
+            add(materialized.capacity() * sizeof(std::uint8_t));
             add(prior_reachable.capacity() * sizeof(std::uint8_t));
             add(walk.capacity() * sizeof(std::uint32_t));
         };
         refresh_scratch_bytes();
 
         bool installed = false;
+        std::string attempt_failure;
+        std::uint64_t certified_frontier_uses = 0;
+        std::uint64_t renewal_boundary_attempts = 0;
+        std::uint64_t renewal_boundary_successes = 0;
         const auto restore = [&](const bool preserve_success_diagnostic) {
             reset_policy_iteration_units();
             result.values = std::move(saved_values);
@@ -2029,7 +2072,9 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
         };
 
         try {
-            result.values = saved_values;
+            result.values = certified_boundary_values.empty()
+                ? saved_values
+                : certified_boundary_values;
             result.values.resize(state_count, kValueCeiling);
             result.expanded.assign(state_count, 0);
             policy_rows.assign(state_count, no_row);
@@ -2048,8 +2093,67 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                     result.values[state] = kValueCeiling;
                 }
             }
-            focused_lower_mode = false;
+            /* In the fixed-policy evaluator this mode means non-expanded
+             * successors retain their supplied boundary value. These are
+             * upper-policy terminals here, not optimistic lower estimates. */
+            focused_lower_mode = !certified_boundary_values.empty();
             reset_policy_iteration_units();
+
+            const auto install_certified_renewal_boundary =
+                [&](const std::uint32_t state) {
+                    ++renewal_boundary_attempts;
+                    if (!certified_renewal.valid ||
+                        state >= certified_boundary_values.size() ||
+                        state >= certified_frontier_operators.size() ||
+                        certified_renewal.operator_index >=
+                            calc.operators().size()) {
+                        return false;
+                    }
+                    const PlannerOperator& planner = calc.operators().at(
+                        certified_renewal.operator_index);
+                    if (planner.kind != PlannerOperatorKind::Primitive ||
+                        planner.primitive_action !=
+                            certified_renewal.primitive_action ||
+                        planner.primitive_action >=
+                            calc.registry().actions.size() ||
+                        !action_legal(
+                            session,
+                            calc.registry().actions.at(
+                                planner.primitive_action),
+                            calc.state(state))) {
+                        return false;
+                    }
+                    std::vector<std::uint64_t> signature;
+                    if (!calc.exact_reforge_kernel_signature(
+                            state, planner.primitive_action, signature) ||
+                        signature != certified_renewal.kernel_signature) {
+                        return false;
+                    }
+                    certified_boundary_values[state] =
+                        certified_renewal.value;
+                    certified_frontier_operators[state] =
+                        certified_renewal.operator_index;
+                    result.values[state] = certified_renewal.value;
+                    ++renewal_boundary_successes;
+                    return true;
+                };
+
+            const auto has_certified_boundary =
+                [&](const std::uint32_t state) {
+                    if (state >= result.values.size()) return false;
+                    if (state < certified_frontier_operators.size() &&
+                        certified_frontier_operators[state] != kNoId &&
+                        std::isfinite(result.values[state]) &&
+                        result.values[state] >= 0.0 &&
+                        result.values[state] < kValueCeiling) {
+                        ++certified_frontier_uses;
+                        return true;
+                    }
+                    const bool installed_renewal =
+                        install_certified_renewal_boundary(state);
+                    certified_frontier_uses += installed_renewal ? 1 : 0;
+                    return installed_renewal;
+                };
 
             const auto row_goal_probability =
                 [&](const std::uint32_t owner,
@@ -2091,12 +2195,56 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                     return probability.value();
                 };
 
+            const auto row_progress_probability =
+                [&](const std::uint32_t owner,
+                    const std::uint64_t row_index) {
+                    const SparseRow& row =
+                        transition_cache->rows.at(row_index);
+                    const std::uint32_t owner_progress = std::popcount(
+                        satisfied_goal_mask_for_state(owner));
+                    const auto advances = [&](const std::uint32_t successor) {
+                        return successor < result.goal_states.size() &&
+                            (result.goal_states[successor] ||
+                             std::popcount(
+                                 satisfied_goal_mask_for_state(successor)) >
+                                 owner_progress);
+                    };
+                    WideFloat probability{0.0};
+                    for (std::uint32_t i = 0;
+                         i < row.transition_count; ++i) {
+                        const std::uint64_t offset =
+                            row.transition_offset + i;
+                        if (advances(
+                                transition_cache->successors.at(offset))) {
+                            probability += WideFloat{
+                                transition_cache->probabilities.at(offset)};
+                        }
+                    }
+                    for (std::uint32_t i = 0; i < row.choice_count; ++i) {
+                        const SparseChoiceGroup& group =
+                            transition_cache->choices.at(
+                                row.choice_offset + i);
+                        bool can_choose_progress = false;
+                        for (std::uint32_t option = 0;
+                             option < group.successor_count; ++option) {
+                            can_choose_progress |= advances(
+                                transition_cache->choice_successors.at(
+                                    group.successor_offset + option));
+                        }
+                        if (can_choose_progress) {
+                            probability += WideFloat{group.probability};
+                        }
+                    }
+                    return probability.value();
+                };
+
             const auto select_initial_row =
                 [&](const std::uint32_t state) {
                     std::uint64_t best = no_row;
-                    std::tuple<int, double, double, std::uint64_t> best_key{
+                    std::tuple<int, double, double, double, std::uint64_t>
+                        best_key{
                         std::numeric_limits<int>::max(), kInfinity,
-                        kInfinity, no_row};
+                        kInfinity, kInfinity, no_row};
                     for (const std::uint64_t row_index :
                          state_row_indices(*transition_cache, state)) {
                         if (row_index >= completed.size() ||
@@ -2113,22 +2261,28 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                         }
                         const double goal_probability =
                             row_goal_probability(state, row_index);
+                        const double progress_probability =
+                            row_progress_probability(state, row_index);
                         const bool restart =
                             priced.operator_index == restart_operator_index;
-                        const int class_rank =
-                            state == result.start_state &&
-                                    goal_probability > 0.0
-                                ? 0
-                                : state != result.start_state && restart
-                                      ? 0
-                                      : goal_probability > 0.0 ? 1 : 2;
+                        /* This is only a seed for the existing exact proper-
+                         * policy evaluator. Prefer rows that can advance to
+                         * any larger requested subset (or exact terminal),
+                         * then rank them by cost per advancement. Treating
+                         * only direct five-mod success as useful caused tiny-
+                         * probability renewal spam to hide already-completed
+                         * 0 -> ... -> 4 -> 5 carrier ladders. */
+                        const int class_rank = progress_probability > 0.0
+                            ? 0
+                            : restart ? 1 : 2;
                         const double attempt_cost =
-                            goal_probability > 0.0
-                                ? priced.cost / goal_probability
+                            progress_probability > 0.0
+                                ? priced.cost / progress_probability
                                 : priced.cost;
                         const auto key = std::tuple{
                             class_rank, attempt_cost,
-                            -goal_probability, row_index};
+                            -goal_probability, -progress_probability,
+                            row_index};
                         if (key < best_key) {
                             best_key = key;
                             best = row_index;
@@ -2148,6 +2302,7 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
             const auto rebuild_reachable =
                 [&](std::uint64_t& choice_identity) {
                     reachable.assign(state_count, 0);
+                    materialized.assign(state_count, 0);
                     walk.clear();
                     walk.push_back(result.start_state);
                     choice_identity = 1469598103934665603ULL;
@@ -2158,7 +2313,11 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                     for (std::size_t cursor = 0;
                          cursor < walk.size(); ++cursor) {
                         const std::uint32_t state = walk[cursor];
-                        if (state >= state_count) return false;
+                        if (state >= state_count) {
+                            attempt_failure =
+                                "reachable_state_outside_cached_closure";
+                            return false;
+                        }
                         if (reachable[state]) continue;
                         reachable[state] = 1;
                         if (result.goal_states[state]) continue;
@@ -2166,8 +2325,34 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                             policy_rows[state] = select_initial_row(state);
                         }
                         if (!row_is_completed(state, policy_rows[state])) {
-                            return false;
+                            if (!has_certified_boundary(state)) {
+                                if (!require_resource_stop &&
+                                    std::find(
+                                        incremental_anytime_missing_frontier_states
+                                            .begin(),
+                                        incremental_anytime_missing_frontier_states
+                                            .end(),
+                                        state) ==
+                                        incremental_anytime_missing_frontier_states
+                                            .end()) {
+                                    incremental_anytime_missing_frontier_states
+                                        .push_back(state);
+                                }
+                                attempt_failure =
+                                    "missing_completed_row_and_certified_"
+                                    "frontier:state=" +
+                                    std::to_string(state) +
+                                    ":goal_mask=" + std::to_string(
+                                        satisfied_goal_mask_for_state(state));
+                                return false;
+                            }
+                            policy_rows[state] = no_row;
+                            mix(state);
+                            mix(static_cast<std::uint64_t>(
+                                certified_frontier_operators[state]));
+                            continue;
                         }
+                        materialized[state] = 1;
                         const std::uint64_t row_index = policy_rows[state];
                         const SparseRow& row =
                             transition_cache->rows.at(row_index);
@@ -2203,14 +2388,23 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                                 select_sparse_policy_choice_successor(
                                     *transition_cache, choice, state,
                                     result.values);
-                            if (selected == kNoId) return false;
+                            if (selected == kNoId) {
+                                attempt_failure =
+                                    "empty_observation_choice";
+                                return false;
+                            }
                             mix(selected);
                             if (!route(selected)) return false;
                         }
                     }
-                    result.expanded = reachable;
+                    result.expanded = materialized;
                     refresh_scratch_bytes();
-                    return !check_solver_byte_cap_fast();
+                    if (check_solver_byte_cap_fast()) {
+                        attempt_failure =
+                            "reachable_walk_exceeds_byte_cap";
+                        return false;
+                    }
+                    return true;
                 };
 
             const std::size_t maximum_rounds = std::min<std::size_t>(
@@ -2241,10 +2435,32 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                         evaluated_choice_identity != prior_choice_identity) {
                         continue;
                     }
+                    /* The progress-aware row ranking is only a proper seed.
+                     * Once that complete policy has exact values, run the
+                     * ordinary strict row selection over the same completed
+                     * joint envelope. Without this step the first feasible
+                     * Fossil/Harvest ladder was published or rejected as-is,
+                     * even when another completed row was much cheaper at a
+                     * 3/5 or 4/5 carrier. Every replacement is re-evaluated by
+                     * the same SCC proof on the next round. */
+                    bool improved = false;
+                    while (!advance_policy_selection(improved)) {
+                        if (check_solver_byte_cap_fast()) {
+                            attempt_failure =
+                                "policy_selection_exceeds_byte_cap";
+                            break;
+                        }
+                    }
+                    if (!attempt_failure.empty()) break;
+                    if (improved) {
+                        reset_policy_iteration_units();
+                        continue;
+                    }
                     const double upper =
                         result.values.at(result.start_state);
                     if (!std::isfinite(upper) || upper < 0.0 ||
                         upper >= kValueCeiling) {
+                        attempt_failure = "evaluated_upper_is_invalid";
                         break;
                     }
                     result.diagnostics.policy_evaluation_failure.clear();
@@ -2255,7 +2471,9 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                             ? output_incumbent->portfolio_identity
                             : 0;
                     install_output_incumbent(
-                        upper, result.values, policy_rows, {}, {},
+                        upper, result.values, policy_rows,
+                        certified_frontier_operators,
+                        certified_fallback,
                         require_resource_stop
                             ? "resource_stop_reachable_proper_policy"
                             : "anytime_reachable_proper_policy",
@@ -2264,10 +2482,24 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                         (!had_prior_incumbent ||
                          output_incumbent->portfolio_identity !=
                              prior_identity);
+                    if (!installed) {
+                        attempt_failure =
+                            "proved_candidate_not_preferred:upper=" +
+                            finite_json(upper) + ":prior=" +
+                            finite_json(
+                                had_prior_incumbent
+                                    ? output_incumbent
+                                          ->certified_upper_bound
+                                    : kInfinity);
+                    }
                     break;
                 }
                 if (improper_policy_states.empty() ||
                     !repair_improper_policy()) {
+                    attempt_failure =
+                        result.diagnostics.policy_evaluation_failure.empty()
+                            ? "fixed_policy_not_proved"
+                            : result.diagnostics.policy_evaluation_failure;
                     break;
                 }
             }
@@ -2281,6 +2513,27 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
         }
 
         restore(installed);
+        if (!installed) {
+            if (attempt_failure.empty()) {
+                attempt_failure = "selection_rounds_exhausted";
+            }
+            attempt_failure +=
+                ":frontier_uses=" +
+                std::to_string(certified_frontier_uses) +
+                ":renewal_boundaries=" +
+                std::to_string(renewal_boundary_successes) + "/" +
+                std::to_string(renewal_boundary_attempts);
+            if (!require_resource_stop &&
+                attempt_failure.starts_with(
+                    "missing_completed_row_and_certified_frontier")) {
+                incremental_anytime_next_row_checkpoint =
+                    incremental_alternative_rows.size() ==
+                            std::numeric_limits<std::size_t>::max()
+                        ? std::numeric_limits<std::size_t>::max()
+                        : incremental_alternative_rows.size() + 1;
+            }
+            record_attempt_failure(std::move(attempt_failure));
+        }
         if (installed) {
             retain_action_reason(
                 require_resource_stop
@@ -2794,7 +3047,13 @@ std::pair<double, std::uint32_t> SolveWork::Impl::constructive_direct_action_upp
         if ((side == PC_SIDE_PREFIX && carrier.prefix_count >= cap) ||
             (side == PC_SIDE_SUFFIX && carrier.suffix_count >= cap) ||
             (side != PC_SIDE_PREFIX && side != PC_SIDE_SUFFIX)) {
-                return {kInfinity, kNoId};
+            return {kInfinity, kNoId};
+        }
+        const std::uint32_t resulting_explicit_count =
+            carrier.prefix_count + carrier.suffix_count + 1u;
+        if (resulting_explicit_count !=
+            std::popcount(satisfied | finish_mask)) {
+            return {kInfinity, kNoId};
         }
         return {priced.cost, priced.index};
     }

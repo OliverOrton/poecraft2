@@ -343,6 +343,51 @@ SlotVocabulary slot_vocabulary(const SessionImpl& session,
     return vocabulary;
 }
 
+std::string total_explicit_affix_count_condition(
+    const std::uint8_t count) {
+    std::vector<std::string> shapes;
+    for (std::uint8_t prefixes = 0;
+         prefixes <= PC_MAX_PREFIXES && prefixes <= count; ++prefixes) {
+        const std::uint8_t suffixes =
+            static_cast<std::uint8_t>(count - prefixes);
+        if (suffixes > PC_MAX_SUFFIXES) continue;
+        shapes.push_back(all_of({
+            count_condition("prefix_count_range", prefixes),
+            count_condition("suffix_count_range", suffixes)}));
+    }
+    return any_of(shapes);
+}
+
+/* Shared compiled terminal authority. A threshold goal may accept more than
+ * the minimum number of requested slots, but it accepts no unrelated or
+ * below-tier explicit affix. Enumerating the at-most-six possible occupied
+ * counts expresses the same rule as CalcContext::is_goal_state using the
+ * existing strategy condition vocabulary. */
+std::string exact_goal_condition(
+    const CalcContext& calc,
+    const std::vector<SlotVocabulary>& vocabulary) {
+    std::vector<std::string> satisfied;
+    satisfied.reserve(vocabulary.size());
+    for (const SlotVocabulary& slot : vocabulary) {
+        satisfied.push_back(slot.satisfied);
+    }
+    std::vector<std::string> accepted_counts;
+    const std::size_t maximum = std::min<std::size_t>(
+        satisfied.size(), kMaxExplicitAffixes);
+    for (std::size_t count = calc.goal().required_satisfied_slots();
+         count <= maximum; ++count) {
+        accepted_counts.push_back(all_of({
+            count == satisfied.size()
+                ? all_of(satisfied)
+                : at_least(count, satisfied),
+            total_explicit_affix_count_condition(
+                static_cast<std::uint8_t>(count))}));
+    }
+    return all_of({
+        rarity_condition(calc.goal().rarity),
+        any_of(accepted_counts)});
+}
+
 std::string abstract_state_condition(
     const SessionImpl& session,
     const AbstractLayout& layout,
@@ -753,18 +798,7 @@ std::string policy_region_condition(
     const std::size_t outsider_count =
         feature_index.non_goal_states - class_size;
     if (outsider_count == 0) {
-        std::vector<std::string> goal_parts{
-            rarity_condition(calc.goal().rarity)};
-        std::vector<std::string> satisfied;
-        for (const SlotVocabulary& slot : vocabulary) {
-            satisfied.push_back(slot.satisfied);
-        }
-        goal_parts.push_back(
-            calc.goal().required_satisfied_slots() == satisfied.size()
-                ? all_of(satisfied)
-                : at_least(
-                      calc.goal().required_satisfied_slots(), satisfied));
-        return not_of(all_of(goal_parts));
+        return not_of(exact_goal_condition(calc, vocabulary));
     }
 
     /* The old implementation evaluated every feature against every strict
@@ -835,18 +869,7 @@ std::string policy_region_condition(
             remaining.end());
     }
     if (selected.empty()) {
-        std::vector<std::string> goal_parts{
-            rarity_condition(calc.goal().rarity)};
-        std::vector<std::string> satisfied;
-        for (const SlotVocabulary& slot : vocabulary) {
-            satisfied.push_back(slot.satisfied);
-        }
-        goal_parts.push_back(
-            calc.goal().required_satisfied_slots() == satisfied.size()
-                ? all_of(satisfied)
-                : at_least(
-                      calc.goal().required_satisfied_slots(), satisfied));
-        return not_of(all_of(goal_parts));
+        return not_of(exact_goal_condition(calc, vocabulary));
     }
     std::vector<std::string> conditions;
     conditions.reserve(selected.size());

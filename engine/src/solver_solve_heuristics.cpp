@@ -718,9 +718,12 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
         const std::uint32_t required =
             calc.goal().required_satisfied_slots();
         const auto is_abstract_goal = [&](const std::uint8_t rarity,
-                                          const std::uint32_t mask) {
+                                          const std::uint32_t mask,
+                                          const std::uint8_t prefixes,
+                                          const std::uint8_t suffixes) {
             return rarity == calc.goal().rarity &&
-                   std::popcount(mask) >= required;
+                   std::popcount(mask) >= required &&
+                   prefixes + suffixes == std::popcount(mask);
         };
         const auto output_rarity = [](const ActionType type,
                                       const std::uint8_t input) {
@@ -938,7 +941,8 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                                 rarity, mask, prefixes, suffixes);
                             const double previous_current =
                                 clean_goal_cover_cost[current];
-                            if (is_abstract_goal(rarity, mask)) {
+                            if (is_abstract_goal(
+                                    rarity, mask, prefixes, suffixes)) {
                                 clean_goal_cover_cost[current] = 0.0;
                                 continue;
                             }
@@ -1652,11 +1656,14 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                  static_cast<std::uint8_t>(PC_RARITY_MAGIC),
                  static_cast<std::uint8_t>(PC_RARITY_RARE)}) {
             for (std::uint32_t mask = 0; mask < mask_count; ++mask) {
-                if (is_abstract_goal(rarity, mask)) continue;
                 const std::uint8_t prefixes =
                     minimum_goal_affixes[mask][PC_SIDE_PREFIX];
                 const std::uint8_t suffixes =
                     minimum_goal_affixes[mask][PC_SIDE_SUFFIX];
+                if (is_abstract_goal(
+                        rarity, mask, prefixes, suffixes)) {
+                    continue;
+                }
                 const std::uint8_t cap = rarity_affix_cap(session, rarity);
                 if (prefixes > cap || suffixes > cap) continue;
                 const std::size_t index = abstract_index(
@@ -1710,8 +1717,14 @@ double SolveWork::Impl::optimistic_completion_cost(
         prepare_goal_cover_cost();
         const std::uint32_t required =
             calc.goal().required_satisfied_slots();
-        if (std::popcount(satisfied_mask) >= required &&
-            (!clean_carrier || carrier_rarity == calc.goal().rarity)) {
+        const std::uint32_t satisfied_count =
+            std::popcount(satisfied_mask);
+        if (!clean_carrier && satisfied_count >= required) {
+            return 0.0;
+        }
+        if (clean_carrier && carrier_rarity == calc.goal().rarity &&
+            satisfied_count >= required &&
+            carrier_prefixes + carrier_suffixes == satisfied_count) {
             return 0.0;
         }
         if (clean_carrier) {
@@ -2194,25 +2207,9 @@ void SolveWork::Impl::prepare_strict_clean_goal_cover() {
             strict_clean_goal_cover_cost[state] = 0.0;
         }
         std::vector<double> rare_value(
-            clean_goal_cover_cost.size(), kInfinity);
+            clean_goal_cover_cost.size(), 0.0);
         std::vector<std::uint32_t> rare_policy(
             clean_goal_cover_cost.size(), kNoId);
-        for (std::uint32_t mask = 0; mask < mask_count; ++mask) {
-            for (std::uint8_t prefixes = 0; prefixes <= 3; ++prefixes) {
-                for (std::uint8_t suffixes = 0; suffixes <= 3; ++suffixes) {
-                    const std::size_t index =
-                        (((static_cast<std::size_t>(PC_RARITY_RARE) *
-                           mask_count + mask) * kAffixCountStates +
-                          prefixes) * kAffixCountStates + suffixes);
-                    rare_value[index] =
-                        calc.goal().rarity == PC_RARITY_RARE &&
-                                std::popcount(mask) >=
-                                    calc.goal().required_satisfied_slots()
-                            ? 0.0
-                            : 0.0;
-                }
-            }
-        }
         double cheapest_reset = kInfinity;
         std::uint32_t cheapest_reset_action = kNoId;
         for (const std::uint32_t action : actions) {
@@ -2248,7 +2245,8 @@ void SolveWork::Impl::prepare_strict_clean_goal_cover() {
                               prefixes) * kAffixCountStates + suffixes);
                         if (calc.goal().rarity == PC_RARITY_RARE &&
                             std::popcount(mask) >=
-                                calc.goal().required_satisfied_slots()) {
+                                calc.goal().required_satisfied_slots() &&
+                            prefixes + suffixes == std::popcount(mask)) {
                             rare_value[index] = 0.0;
                             continue;
                         }

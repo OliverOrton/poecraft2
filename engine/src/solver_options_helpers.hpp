@@ -699,9 +699,11 @@ AutomaticOptionSynthesis synthesize_automatic_options(
         }
     }
 
-    /* Deterministic Multimod finishes are generated only for pairs of legal
-     * permanent goal crafts. The fixed kernel retains native group, crafted
-     * count, replacement, and open-side legality. */
+    /* Multimod remains an explicit crafted affix. Under exact terminal
+     * semantics it can only be part of a deterministic finish when that
+     * metamod is itself requested; otherwise the program necessarily leaves
+     * unrelated junk on the carrier. The fixed kernel below remains the
+     * final authority for exact terminal legality. */
     const auto multimod_entry = std::find_if(
             registry.index_by_id.begin(), registry.index_by_id.end(),
             [&](const auto& entry) {
@@ -711,18 +713,28 @@ AutomaticOptionSynthesis synthesize_automatic_options(
                        session.metamod_type[action.params.mod_id] ==
                            session.data->metamod_multimod_code;
             });
+    const std::uint32_t satisfied = satisfied_goal_mask(state);
+    const std::uint32_t multimod_goal_mask =
+        multimod_entry == registry.index_by_id.end()
+            ? 0
+            : goal_mask_for_mod(
+                  session, goal,
+                  registry.actions.at(multimod_entry->second).params.mod_id);
     if (multimod_entry != registry.index_by_id.end() &&
+        (multimod_goal_mask & ~satisfied) != 0 &&
         action_legal(
             session, registry.actions.at(multimod_entry->second), state)) {
         for (std::size_t a = 0; a < goal_bench.size(); ++a) {
             for (std::size_t b = a + 1; b < goal_bench.size(); ++b) {
                 const ActionDescriptor& left = registry.actions[goal_bench[a]];
                 const ActionDescriptor& right = registry.actions[goal_bench[b]];
-                const std::uint32_t mask =
+                const std::uint32_t bench_mask =
                     goal_mask_for_mod(session, goal, left.params.mod_id) |
                     goal_mask_for_mod(session, goal, right.params.mod_id);
-                if ((mask & (mask - 1)) == 0 ||
-                    (mask & ~satisfied_goal_mask(state)) == 0 ||
+                const std::uint32_t mask =
+                    multimod_goal_mask | bench_mask;
+                if ((bench_mask & (bench_mask - 1)) == 0 ||
+                    (bench_mask & ~satisfied) == 0 ||
                     mods_conflict(
                         session, left.params.mod_id, right.params.mod_id)) {
                     continue;

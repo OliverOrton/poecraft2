@@ -473,14 +473,17 @@ const OptionKernel& CalcContext::option_kernel(
             entry_reforge_action = option.followup_action;
             entry_reforge_kernel =
                 protected_reforge_kernel(state_id).distribution;
-        } else if (option.primitive_program.size() == 1) {
+        } else if (!option.primitive_program.empty()) {
             entry_reforge_action = option.primitive_program.front();
             const ActionDescriptor& action =
                 registry_.actions.at(entry_reforge_action);
             if (approved_renewal_roll(action)) {
                 /* The reforge cache owns immutable shared distributions keyed
                  * by action and preserved base. Pointer identity is therefore
-                 * an exact same-kernel certificate for a one-action renewal. */
+                 * an exact same-kernel certificate for the destructive first
+                 * step. The remaining fixed program is identical on both
+                 * carriers, including any observed final choice, so equal
+                 * first-step kernels prove equal complete attempt kernels. */
                 entry_reforge_kernel =
                     &outcomes(state_id, entry_reforge_action);
             }
@@ -526,10 +529,20 @@ const OptionKernel& CalcContext::option_kernel(
                 !protected_reforge_certificate &&
                 action_legal(
                     *session_, registry_.actions.at(entry_reforge_action),
-                    state(candidate)) &&
-                &outcomes(candidate, entry_reforge_action) ==
-                    entry_reforge_kernel) {
-                return true;
+                    state(candidate))) {
+                const OutcomeDistribution& candidate_kernel =
+                    outcomes(candidate, entry_reforge_action);
+                const bool same_first_step_kernel =
+                    &candidate_kernel == entry_reforge_kernel ||
+                    (candidate_kernel.supported ==
+                         entry_reforge_kernel->supported &&
+                     candidate_kernel.entries ==
+                         entry_reforge_kernel->entries &&
+                     candidate_kernel.choice_groups ==
+                         entry_reforge_kernel->choice_groups &&
+                     candidate_kernel.choice_options ==
+                         entry_reforge_kernel->choice_options);
+                if (same_first_step_kernel) return true;
             }
             if (protected_reforge_certificate) {
                 ++telemetry_.protected_retry_fallbacks;
@@ -548,6 +561,22 @@ const OptionKernel& CalcContext::option_kernel(
         add_scaled_resources(resources, attempt.expected_resources);
         result->expected_primitive_actions =
             attempt.expected_primitive_actions;
+        const bool exit_contract_can_complete_goal =
+            option.exit_min_satisfied >=
+            goal_.required_satisfied_slots();
+        const auto matches_option_exit =
+            [&](const std::uint32_t candidate) {
+                if (!option_exit_matches(state(candidate), option)) {
+                    return false;
+                }
+                /* A declared all-goal exit is a terminal promise, not merely
+                 * a slot-progress promise. It may not strand a carrier whose
+                 * requested slots are present alongside unrelated explicit
+                 * affixes. Subset programs remain ordinary intermediate
+                 * carrier producers for the outer policy. */
+                return !exit_contract_can_complete_goal ||
+                       is_goal_state(state(candidate));
+            };
 
         if (option.option_kind == FixedOptionKind::ImprintRetry) {
             if (!attempt.choice_groups.empty() ||
@@ -567,7 +596,7 @@ const OptionKernel& CalcContext::option_kernel(
             std::map<std::uint32_t, double> exits;
             double retry_probability = 0.0;
             for (const OutcomeEntry& outcome : attempt.entries) {
-                if (option_exit_matches(state(outcome.state), option)) {
+                if (matches_option_exit(outcome.state)) {
                     exits[outcome.state] += outcome.probability;
                 } else {
                     exits[kNoId] += outcome.probability;
@@ -713,7 +742,7 @@ const OptionKernel& CalcContext::option_kernel(
             option.option_kind == FixedOptionKind::ProtectedRepeat
                 ? std::chrono::steady_clock::now()
                 : std::chrono::steady_clock::time_point{};
-        if (option_exit_matches(state(state_id), option)) {
+        if (matches_option_exit(state_id)) {
             result->legal = false;
             result->terminates_almost_surely = false;
             return finish();
@@ -727,7 +756,7 @@ const OptionKernel& CalcContext::option_kernel(
             const auto cached = normalized.find(actual);
             if (cached != normalized.end()) return cached->second;
             const bool retry =
-                !option_exit_matches(state(actual), option) &&
+                !matches_option_exit(actual) &&
                 retry_equivalent(actual);
             const std::uint32_t successor = retry ? kNoId : actual;
             normalized.emplace(actual, successor);
@@ -994,8 +1023,19 @@ const OptionKernel& CalcContext::option_kernel(
             result->automatic.kernel_change_mechanisms =
                 kAutomaticDeterministicFinish;
             result->automatic.setup_complete = result->legal;
-            result->automatic.cleanup_complete = true;
-            if (!advances_goal_mask(
+            const bool exact_finish = std::all_of(
+                result->exits.begin(), result->exits.end(),
+                [&](const OutcomeEntry& exit) {
+                    return exit.state != kNoId &&
+                           is_goal_state(state(exit.state));
+                });
+            result->automatic.cleanup_complete = exact_finish;
+            if (!exact_finish) {
+                result->legal = false;
+                result->terminates_almost_surely = false;
+                result->automatic.reason =
+                    "multimod_program_leaves_non_goal_explicit_affix";
+            } else if (!advances_goal_mask(
                     *this, entry, result->exits,
                     option.relevant_goal_mask)) {
                 result->legal = false;

@@ -436,21 +436,8 @@ std::string compile_policy_strategy_json(
             }
         }
 
-        std::vector<std::string> goal_parts{
-            rarity_condition(calc.goal().rarity)};
-        std::vector<std::string> satisfied;
-        satisfied.reserve(vocabulary.size());
-        for (const SlotVocabulary& slot : vocabulary) {
-            satisfied.push_back(slot.satisfied);
-        }
-        goal_parts.push_back(
-            calc.goal().required_satisfied_slots() ==
-                    satisfied.size()
-                ? all_of(satisfied)
-                : at_least(
-                      calc.goal().required_satisfied_slots(),
-                      satisfied));
-        const std::string goal_condition = all_of(goal_parts);
+        const std::string goal_condition =
+            exact_goal_condition(calc, vocabulary);
 
         const std::string solver_scope =
             result.options.allow_economic_restart
@@ -3138,20 +3125,12 @@ std::string compile_policy_strategy_json(
 
     edge("start", root_router_id, 0, "", true);
 
-    /* Goal first: the configured number of satisfied slots at the finished
-     * rarity succeeds regardless of junk. */
+    /* Goal first: success has the configured requested slots and no other
+     * explicit affixes. Intermediate policy regions still retain junk. */
     {
-        std::vector<std::string> parts{rarity_condition(calc.goal().rarity)};
-        std::vector<std::string> satisfied;
-        for (std::size_t i = 0; i < layout.slots.size(); ++i) {
-            satisfied.push_back(vocabulary[i].satisfied);
-        }
-        parts.push_back(
-            calc.goal().required_satisfied_slots() == satisfied.size()
-                ? all_of(satisfied)
-                : at_least(calc.goal().required_satisfied_slots(),
-                           satisfied));
-        edge(root_router_id, "goal", 0, all_of(parts), false);
+        edge(
+            root_router_id, "goal", 0,
+            exact_goal_condition(calc, vocabulary), false);
     }
 
     int root_default_priority = 2;

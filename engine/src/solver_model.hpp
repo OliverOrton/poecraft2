@@ -290,7 +290,10 @@ struct GoalSpec {
     std::uint8_t rarity = PC_RARITY_RARE; /* required finished rarity */
     /* Minimum slots that must be satisfied together. Zero is the internal
      * default and means every slot, preserving callers that construct a
-     * GoalSpec directly instead of going through the JSON parser. */
+     * GoalSpec directly instead of going through the JSON parser. Terminal
+     * success is exact over explicit affixes: every occupied prefix/suffix
+     * must be one of the satisfied requested slots. Empty slots, implicits,
+     * and unrestricted intermediate carriers remain allowed. */
     std::uint32_t min_satisfied_slots = 0;
     bool primitive_actions_explicit = false;
     /* Product goal-relevant solves enable native S8.3 candidate synthesis.

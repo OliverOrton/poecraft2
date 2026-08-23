@@ -470,19 +470,43 @@ std::vector<std::uint64_t> SolveWork::Impl::focused_schedule_signature(
          * state. Preserve representatives from distinct exact goal-progress
          * and affix-capacity regions so a large renewal outcome set cannot
          * make its most common zero-progress carriers monopolize a round. */
-        return {
+        const auto count_vector_hash = [](
+                const CompactCountVector& counts) {
+            std::uint64_t hash = 1469598103934665603ull;
+            for (std::size_t index = 0; index < counts.size(); ++index) {
+                const std::uint8_t count = counts[index];
+                if (count == 0) continue;
+                hash ^= index;
+                hash *= 1099511628211ull;
+                hash ^= count;
+                hash *= 1099511628211ull;
+            }
+            return hash;
+        };
+        std::vector<std::uint64_t> signature{
             calc.is_goal_state(state) ? 1u : 0u,
             state.goal_progress_retry_basin != 0 ? 1u : 0u,
             satisfied_goal_mask_for_state(state_id),
             carrier_facts(state).goal_family_mask,
             state.blocked_mask,
+            state.fractured_goal_mask,
+            state.crafted_goal_mask,
             state.rarity,
             state.prefix_count,
             state.suffix_count,
-            static_cast<std::uint64_t>(
-                state.flags &
-                (kFlagCraftedMod | kFlagPrefixesLocked |
-                 kFlagSuffixesLocked))};
+            state.influence_bits,
+            state.searing_exarch_tier,
+            state.eater_of_worlds_tier,
+            state.flags,
+            state.fractured_metamod_flags,
+            count_vector_hash(state.junk_counts),
+            count_vector_hash(state.crafted_junk_counts),
+            count_vector_hash(state.fractured_junk_counts),
+            count_vector_hash(state.fractured_crafted_junk_counts)};
+        signature.insert(
+            signature.end(), state.goal_member_class_tokens.begin(),
+            state.goal_member_class_tokens.end());
+        return signature;
     }
 
  std::uint64_t SolveWork::Impl::observation_signature_hash(

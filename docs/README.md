@@ -30,6 +30,19 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 ## Execution State
 
 The
+[Exact-Goal Carrier Ladder](active/2026-08-22-exact-goal-carrier-ladder/plan.md)
+boundary is [complete](active/2026-08-22-exact-goal-carrier-ladder/result.md).
+Every solver terminal now contains only requested explicit affixes, while
+junk and temporary crafts remain legal intermediate state. Carrier-subset
+scheduling plus joint proper-policy improvement reduces the checked clean
+five-T1 Conquest Lamellar from a roughly 470.5-million-Chaos renewal fallback
+to an independently exact-evaluated `87361.1690420501`-Chaos, 607-node policy.
+It passes 10,000 simulations with 100% success and zero off-policy failures.
+The global lower remains only `36.4286171890906`, so quality proof and search
+efficiency remain open. No implementation boundary is active until Oliver
+selects a successor.
+
+The
 [five-T1 goal-band recovery](active/2026-08-22-five-t1-goal-band-recovery/plan.md)
 boundary is [complete](active/2026-08-22-five-t1-goal-band-recovery/result.md).
 Completed alternative rows now receive periodic joint proper-policy capture,

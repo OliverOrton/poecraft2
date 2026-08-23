@@ -1,8 +1,20 @@
 # Active Work
 
-**Status: no implementation boundary is selected.**
+**Status: no implementation boundary is active.**
 
 Parent: [Documentation map](../README.md)
+
+The selected
+[Exact-Goal Carrier Ladder](2026-08-22-exact-goal-carrier-ladder/plan.md)
+is [complete](2026-08-22-exact-goal-carrier-ladder/result.md). Solver success
+now permits only requested explicit modifiers, while junk and temporary crafts
+remain legal intermediate state and cleanup remains successor-driven.
+Carrier-subset scheduling and joint proper-policy improvement publish an
+independently exact-evaluated `87361.1690420501`-Chaos policy for the checked
+clean five-T1 Conquest Lamellar instead of the roughly 470.5-million-Chaos
+renewal fallback. Its 607-node graph completes 10,000 / 10,000 simulations
+with zero off-policy failures. The lower remains `36.4286171890906`, so the
+accepted result is useful but bounded. No successor is selected.
 
 The completed
 [Five-T1 Goal-Band Recovery](2026-08-22-five-t1-goal-band-recovery/plan.md)

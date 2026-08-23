@@ -550,6 +550,12 @@ SolveTelemetrySnapshot SolveWork::Impl::telemetry_snapshot(bool abandoned) const
             incremental_unique_kernel_evaluations;
         snapshot.diagnostics.incremental_carrier_kernel_reuses =
             incremental_carrier_kernel_reuses;
+        snapshot.diagnostics.incremental_carrier_ladder_epochs =
+            incremental_carrier_ladder_epochs;
+        snapshot.diagnostics.incremental_carrier_ladder_candidates =
+            incremental_carrier_ladder_candidates;
+        snapshot.diagnostics.incremental_carrier_ladder_goal_subsets =
+            incremental_carrier_ladder_goal_subsets;
         snapshot.diagnostics.incremental_bellman_reoptimizations =
             incremental_reoptimizations;
         snapshot.diagnostics
@@ -588,6 +594,8 @@ SolveTelemetrySnapshot SolveWork::Impl::telemetry_snapshot(bool abandoned) const
             incremental_anytime_policy_last_completed_rows;
         snapshot.diagnostics.incremental_anytime_policy_best_upper =
             incremental_anytime_policy_best_upper;
+        snapshot.diagnostics.incremental_anytime_policy_last_failure =
+            incremental_anytime_policy_last_failure;
         snapshot.diagnostics.incremental_refinement_uncertainty =
             incremental_refinement_uncertainty;
         snapshot.diagnostics.solve_owned_byte_ledger_requests =
@@ -720,6 +728,10 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
         bytes += expansion_operator_indices.capacity() *
                  sizeof(std::uint32_t);
         bytes += incremental_carriers.capacity() * sizeof(std::uint32_t);
+        bytes += incremental_automatic_carrier_order.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += incremental_anytime_missing_frontier_states.capacity() *
+                 sizeof(std::uint32_t);
         bytes += incremental_certified_upper_values.capacity() *
                  sizeof(double);
         bytes += incremental_dynamic_operator_indices.capacity() *
@@ -914,6 +926,10 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
         bytes += expansion_operator_indices.capacity() *
                  sizeof(std::uint32_t);
         bytes += incremental_carriers.capacity() * sizeof(std::uint32_t);
+        bytes += incremental_automatic_carrier_order.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += incremental_anytime_missing_frontier_states.capacity() *
+                 sizeof(std::uint32_t);
         bytes += incremental_certified_upper_values.capacity() *
                  sizeof(double);
         bytes += incremental_dynamic_operator_indices.capacity() *
@@ -3832,6 +3848,12 @@ std::string serialize_solver_telemetry(
                 round.schedule_candidates;
             schedule_totals.schedule_admissions +=
                 round.schedule_admissions;
+            schedule_totals.carrier_ladder_candidates +=
+                round.carrier_ladder_candidates;
+            schedule_totals.carrier_ladder_goal_subsets +=
+                round.carrier_ladder_goal_subsets;
+            schedule_totals.carrier_ladder_admissions +=
+                round.carrier_ladder_admissions;
             schedule_totals.global_batch_cap_hits +=
                 round.global_batch_cap_hits;
             schedule_totals.per_class_cap_hits +=
@@ -3860,6 +3882,15 @@ std::string serialize_solver_telemetry(
                 std::to_string(schedule_totals.schedule_candidates);
         json += ",\"schedule_admissions\":" +
                 std::to_string(schedule_totals.schedule_admissions);
+        json += ",\"carrier_ladder_candidates\":" +
+                std::to_string(
+                    schedule_totals.carrier_ladder_candidates);
+        json += ",\"carrier_ladder_goal_subsets\":" +
+                std::to_string(
+                    schedule_totals.carrier_ladder_goal_subsets);
+        json += ",\"carrier_ladder_admissions\":" +
+                std::to_string(
+                    schedule_totals.carrier_ladder_admissions);
         json += ",\"global_batch_cap_hits\":" +
                 std::to_string(schedule_totals.global_batch_cap_hits);
         json += ",\"per_class_cap_hits\":" +
@@ -3893,6 +3924,12 @@ std::string serialize_solver_telemetry(
                     std::to_string(round.schedule_candidates);
             json += ",\"schedule_admissions\":" +
                     std::to_string(round.schedule_admissions);
+            json += ",\"carrier_ladder_candidates\":" +
+                    std::to_string(round.carrier_ladder_candidates);
+            json += ",\"carrier_ladder_goal_subsets\":" +
+                    std::to_string(round.carrier_ladder_goal_subsets);
+            json += ",\"carrier_ladder_admissions\":" +
+                    std::to_string(round.carrier_ladder_admissions);
             json += ",\"global_batch_cap_hits\":" +
                     std::to_string(round.global_batch_cap_hits);
             json += ",\"per_class_cap_hits\":" +
@@ -4276,6 +4313,16 @@ std::string serialize_solver_telemetry(
         json += ",\"carrier_reuses\":" +
                 std::to_string(
                     diagnostics->incremental_carrier_kernel_reuses) + "}";
+        json += ",\"carrier_ladder\":{\"epochs\":" +
+                std::to_string(
+                    diagnostics->incremental_carrier_ladder_epochs);
+        json += ",\"candidates\":" +
+                std::to_string(
+                    diagnostics->incremental_carrier_ladder_candidates);
+        json += ",\"goal_subsets\":" +
+                std::to_string(
+                    diagnostics->incremental_carrier_ladder_goal_subsets) +
+                "}";
         json += ",\"states_outside_chaos_support\":" +
                 std::to_string(
                     diagnostics
@@ -4350,7 +4397,11 @@ std::string serialize_solver_telemetry(
                      ? std::to_string(
                            diagnostics
                                ->incremental_anytime_policy_best_upper)
-                     : std::string("null"));
+                      : std::string("null"));
+        json += ",\"last_failure\":";
+        append_telemetry_json_string(
+            json,
+            diagnostics->incremental_anytime_policy_last_failure);
         json += "}";
         json += ",\"remaining_action_envelope\":" +
                 std::to_string(

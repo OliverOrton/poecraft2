@@ -1746,19 +1746,25 @@ void run_goal_threshold_tests() {
     state.rarity = PC_RARITY_RARE;
     state.slot_status[0] =
         static_cast<std::uint8_t>(GoalSlotStatus::Satisfied);
+    state.prefix_count = 1;
     PC_CHECK(calc.is_goal_state(state));
     state.slot_status[0] =
         static_cast<std::uint8_t>(GoalSlotStatus::Absent);
+    state.prefix_count = 0;
     PC_CHECK(!calc.is_goal_state(state));
     state.slot_status[1] =
         static_cast<std::uint8_t>(GoalSlotStatus::Satisfied);
+    state.suffix_count = 1;
     PC_CHECK(calc.is_goal_state(state));
+    state.prefix_count = 1;
+    PC_CHECK(!calc.is_goal_state(state));
+    state.prefix_count = 0;
     state.rarity = PC_RARITY_MAGIC;
     PC_CHECK(!calc.is_goal_state(state));
 
-    /* Fracture status is exact carrier/action state, not part of the goal
-     * predicate. A fractured goal satisfies its slot and unrelated
-     * fractured junk does not invalidate the permissive goal. */
+    /* Fracture status is exact carrier/action state, not itself a terminal
+     * requirement. A fractured requested mod is valid, while an unrelated
+     * fractured explicit remains junk and prevents exact success. */
     pc_item_state fractured_item;
     pc_item_clear(&fractured_item);
     fractured_item.rarity = PC_RARITY_RARE;
@@ -1773,15 +1779,27 @@ void run_goal_threshold_tests() {
     const AbstractState& fractured = calc.state(fractured_state);
     PC_CHECK((fractured.fractured_goal_mask & 1u) != 0);
     PC_CHECK((fractured.flags & kFlagFractured) != 0);
-    PC_CHECK(calc.is_goal_state(fractured));
+    PC_CHECK(!calc.is_goal_state(fractured));
+
+    pc_item_state exact_fractured_item;
+    pc_item_clear(&exact_fractured_item);
+    exact_fractured_item.rarity = PC_RARITY_RARE;
+    place(
+        &exact_fractured_item, PC_SIDE_PREFIX, 0, 10,
+        PC_MOD_SLOT_FRACTURED);
+    const std::uint32_t exact_fractured_state =
+        calc.intern_item(exact_fractured_item);
+    PC_CHECK(calc.is_goal_state(calc.state(exact_fractured_state)));
 
     /* Direct GoalSpec callers retain the old all-slots default. */
     goal.min_satisfied_slots = 0;
     CalcContext all_calc(session, goal, registry, basic_indices(registry));
     state.rarity = PC_RARITY_RARE;
+    state.prefix_count = 0;
     PC_CHECK(!all_calc.is_goal_state(state));
     state.slot_status[0] =
         static_cast<std::uint8_t>(GoalSlotStatus::Satisfied);
+    state.prefix_count = 1;
     PC_CHECK(all_calc.is_goal_state(state));
 }
 
@@ -3037,12 +3055,68 @@ void run_artifact_calc_tests(const char* artifact_dir) {
             "chaos/essence/fossil/harvest\n",
             reforge_calc.state_count());
 
-        std::unordered_map<std::string, double> bellman_prices;
-        for (const std::uint32_t action_index : candidates) {
+        /* Give the policy-parity solve an exact one-affix escape row. Under
+         * the exact-goal contract, destructive Rare reforges cannot finish a
+         * one-slot goal by themselves because their additional affixes are
+         * deliberately nonterminal. The bench row keeps this a Bellman
+         * policy test while the reforge rows remain admitted off policy. */
+        GoalSpec bellman_goal;
+        std::uint32_t bellman_goal_bench_action = kNoId;
+        for (std::uint32_t action_index = 0;
+             action_index < registry.actions.size() &&
+             bellman_goal_bench_action == kNoId;
+             ++action_index) {
+            const ActionDescriptor& action = registry.actions[action_index];
+            if (action.params.type != ActionType::Bench ||
+                action.params.mod_id == kNoId) {
+                continue;
+            }
+            const std::uint32_t candidate_group =
+                session->primary_group[action.params.mod_id];
+            bool naturally_rollable = false;
+            for (std::uint32_t mod = 0; mod < session->mod_count; ++mod) {
+                if (session->primary_group[mod] == candidate_group &&
+                    pc_bitset_test(
+                        session->normal_random_roll_mask.data(), mod) &&
+                    pc_bitset_test(
+                        session->positive_base_weight_mask.data(), mod)) {
+                    naturally_rollable = true;
+                    break;
+                }
+            }
+            if (!naturally_rollable) continue;
+            GoalSlot bellman_slot;
+            bellman_slot.group_id = candidate_group;
+            bellman_goal.slots = {bellman_slot};
+            bellman_goal_bench_action = action_index;
+        }
+        PC_CHECK(bellman_goal_bench_action != kNoId);
+        if (bellman_goal_bench_action == kNoId) return;
+        std::vector<std::uint32_t> bellman_candidates = candidates;
+        bellman_candidates.push_back(bellman_goal_bench_action);
+        CalcContext raw_bellman_calc(
+            session, bellman_goal, registry, bellman_candidates);
+        CalcContext projected_bellman_calc(
+            session, bellman_goal, registry, bellman_candidates,
+            false, false, false, std::nullopt, {}, false, {}, false,
+            true, true);
+        CalcContext factored_bellman_calc(
+            session, bellman_goal, registry, bellman_candidates,
+            false, false, false, std::nullopt, {}, false, {}, false,
+            true, true, false, true);
+
+        std::set<std::string> bellman_price_keys;
+        for (const std::uint32_t action_index : bellman_candidates) {
             for (const std::string& key :
                  registry.actions[action_index].cost_keys) {
-                bellman_prices[key] = 1.0;
+                bellman_price_keys.insert(key);
             }
+        }
+        std::unordered_map<std::string, double> bellman_prices;
+        std::uint32_t bellman_price_ordinal = 0;
+        for (const std::string& key : bellman_price_keys) {
+            bellman_prices[key] =
+                1.0 + 0.125 * bellman_price_ordinal++;
         }
         SolveOptions bellman_options;
         bellman_options.max_states = 50000;
@@ -3053,12 +3127,12 @@ void run_artifact_calc_tests(const char* artifact_dir) {
         bellman_options.max_reforge_work = 50000000;
         bellman_options.goal_progress_gated_reforges = true;
         const SolveResult raw_bellman = solve(
-            reforge_calc, empty_rare, bellman_prices, bellman_options);
+            raw_bellman_calc, empty_rare, bellman_prices, bellman_options);
         const SolveResult projected_bellman = solve(
-            projected_reforge_calc, empty_rare, bellman_prices,
+            projected_bellman_calc, empty_rare, bellman_prices,
             bellman_options);
         const SolveResult factored_bellman = solve(
-            factored_reforge_calc, empty_rare, bellman_prices,
+            factored_bellman_calc, empty_rare, bellman_prices,
             bellman_options);
         PC_CHECK(raw_bellman.policy_available);
         PC_CHECK(projected_bellman.policy_available);
@@ -3081,8 +3155,8 @@ void run_artifact_calc_tests(const char* artifact_dir) {
             PC_CHECK(
                 raw_selected.kind == projected_selected.kind);
             PC_CHECK(
-                reforge_calc.operators()[raw_selected.index].id ==
-                projected_reforge_calc
+                raw_bellman_calc.operators()[raw_selected.index].id ==
+                projected_bellman_calc
                     .operators()[projected_selected.index].id);
         }
         if (raw_bellman.policy_available &&
@@ -3094,8 +3168,8 @@ void run_artifact_calc_tests(const char* artifact_dir) {
                     factored_bellman.start_state];
             PC_CHECK(raw_selected.kind == factored_selected.kind);
             PC_CHECK(
-                reforge_calc.operators()[raw_selected.index].id ==
-                factored_reforge_calc
+                raw_bellman_calc.operators()[raw_selected.index].id ==
+                factored_bellman_calc
                     .operators()[factored_selected.index].id);
         }
 

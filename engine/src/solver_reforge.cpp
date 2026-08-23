@@ -2357,11 +2357,6 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                static_cast<std::uint32_t>(
                    std::popcount(roll.sat_mask));
     };
-    const auto roll_is_goal = [&](const RollState& roll) {
-        return base_state.rarity == goal_.rarity &&
-               roll_satisfied_count(roll) >=
-                   goal_.required_satisfied_slots();
-    };
     const auto roll_has_zero_progress = [&](const RollState& roll) {
         return roll_satisfied_count(roll) == 0;
     };
@@ -3166,7 +3161,6 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             for (const auto& [roll, unused_probability] :
                  ordered_frontier) {
                 (void)unused_probability;
-                if (roll_is_goal(roll)) continue;
                 const TerminalPickKey key = terminal_pick_key(roll);
                 auto [found, inserted] =
                     factored_terminal_predecessors.try_emplace(
@@ -3221,23 +3215,11 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 attribution.frontier_work +=
                     active_node_work;
             }
-            if (goal_progress_gated && roll_is_goal(roll)) {
-                if (capture_attribution) {
-                    for (const auto& [target, target_probability] :
-                         targets) {
-                        if (target >= depth) {
-                            record_target_contribution(
-                                target,
-                                probability * target_probability,
-                                false);
-                        }
-                    }
-                }
-                commit_outcome(
-                    roll, probability * (stop_here + deeper));
-                ++result.gated_terminal_short_circuits;
-                continue;
-            }
+            /* Exact explicit-affix goals cannot short-circuit a reforge at an
+             * intermediate roll depth. A deeper pick may be another requested
+             * goal or may be junk, and those outcomes no longer share terminal
+             * status. Commit only at the action's real target depths and let
+             * is_goal_state classify the finished carrier. */
             if (stop_here > 0.0) {
                 record_target_contribution(
                     depth, probability * stop_here, false);

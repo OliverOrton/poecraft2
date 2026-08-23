@@ -2126,6 +2126,19 @@ test("automatic S8.3 bench selects and executes through WASM", async () => {
         rarity: "rare",
         slots: [
             {
+                family_mod_key: "LocalIncreasedEnergyShield11",
+                min_tier: 1,
+            },
+            {
+                family_mod_key: "LocalIncreasedEnergyShieldPercent8",
+                min_tier: 1,
+            },
+            {
+                family_mod_key:
+                    "LocalIncreasedEnergyShieldPercentAndStunRecovery6",
+                min_tier: 1,
+            },
+            {
                 family_mod_key: "EinharMasterColdResist3__",
                 min_tier: 3,
             },

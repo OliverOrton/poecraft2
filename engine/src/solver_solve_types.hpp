@@ -727,6 +727,8 @@ struct SolveWork::Impl {
      * preparation. This cursor is the exact automatic-envelope obligation. */
     std::size_t incremental_automatic_carrier_cursor = 0;
     std::size_t incremental_automatic_epoch_end = 0;
+    std::vector<std::uint32_t> incremental_automatic_carrier_order;
+    std::size_t incremental_automatic_order_cursor = 0;
     std::size_t incremental_operator_cursor = 0;
     bool incremental_dynamic_prepared = false;
     bool incremental_dynamic_prepare_active = false;
@@ -760,6 +762,9 @@ struct SolveWork::Impl {
     std::uint64_t incremental_resource_unresolved_actions = 0;
     std::uint64_t incremental_unique_kernel_evaluations = 0;
     std::uint64_t incremental_carrier_kernel_reuses = 0;
+    std::uint64_t incremental_carrier_ladder_epochs = 0;
+    std::uint64_t incremental_carrier_ladder_candidates = 0;
+    std::uint64_t incremental_carrier_ladder_goal_subsets = 0;
     std::uint64_t incremental_reoptimizations = 0;
     std::uint32_t incremental_first_alternative_expanded_states = 0;
     bool incremental_refinement_active = false;
@@ -784,6 +789,11 @@ struct SolveWork::Impl {
     std::uint64_t incremental_anytime_policy_successes = 0;
     std::uint64_t incremental_anytime_policy_last_completed_rows = 0;
     double incremental_anytime_policy_best_upper = kInfinity;
+    std::string incremental_anytime_policy_last_failure;
+    /* A joint upper proof can expose a stochastic successor whose incumbent
+     * continuation is not valid for that carrier shape. Feed that concrete
+     * state back into ordinary exact expansion before retrying composition. */
+    std::vector<std::uint32_t> incremental_anytime_missing_frontier_states;
     double incremental_refinement_uncertainty = 0.0;
     std::uint32_t expansion_states_outside_chaos_support = 0;
     std::vector<std::uint8_t> incremental_chaos_support;

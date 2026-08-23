@@ -4959,9 +4959,36 @@ SolveWork::Impl::run_finalization() {
                         exact_policy_cost;
                     result.diagnostics.focused_optimality_gap =
                         result.absolute_optimality_gap;
-                    result.diagnostics.solution_scope = globally_exact
-                        ? "policy_guided_exact_refinement_global"
-                        : "policy_guided_exact_refinement_bounded";
+                    if (!globally_exact) {
+                        result.diagnostics.solution_scope =
+                            "policy_guided_exact_refinement_bounded";
+                    } else if (options.goal_progress_gated_reforges &&
+                               !options.allow_economic_restart) {
+                        result.diagnostics.solution_scope =
+                            "exact_within_zero_progress_reroll_and_no_"
+                            "economic_restart_restrictions";
+                    } else if (options.goal_progress_gated_reforges) {
+                        result.diagnostics.solution_scope =
+                            "exact_within_zero_progress_reroll_restriction";
+                    } else if (!options.allow_economic_restart) {
+                        result.diagnostics.solution_scope =
+                            "exact_within_no_economic_restart_restriction";
+                    } else {
+                        result.diagnostics.solution_scope =
+                            "policy_guided_exact_refinement_global";
+                    }
+                    if (globally_exact &&
+                        !options.consider_imprint_programs) {
+                        if (result.diagnostics.solution_scope ==
+                            "policy_guided_exact_refinement_global") {
+                            result.diagnostics.solution_scope =
+                                "exact_within_no_automatic_imprint_programs_"
+                                "action_scope";
+                        } else {
+                            result.diagnostics.solution_scope +=
+                                "_without_automatic_imprint_programs";
+                        }
+                    }
                     result.diagnostics.incumbent_kind =
                         "policy_guided_exact_refinement";
                     telemetry.publication_status = globally_exact

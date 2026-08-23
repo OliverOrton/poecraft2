@@ -391,7 +391,7 @@ pc_item_state compile_item(
         const std::int8_t side) {
     pc_item_state item;
     pc_item_clear(&item);
-    item.rarity = PC_RARITY_RARE;
+    item.rarity = PC_RARITY_MAGIC;
     PC_CHECK(
         pc_item_add_mod(
             &item, side, mod, session.primary_group.at(mod), 0,
@@ -459,10 +459,10 @@ StructuredRouteFixture make_structured_route_fixture() {
     wanted.family_id = fixture.session->family_id.at(7);
     wanted.min_tier = 1;
     goal.slots.push_back(wanted);
-    goal.rarity = PC_RARITY_RARE;
+    goal.rarity = PC_RARITY_MAGIC;
     FixedOptionSpec renewal;
     renewal.kind = FixedOptionKind::Renewal;
-    renewal.program_action_ids = {"chaos"};
+    renewal.program_action_ids = {"alteration"};
     renewal.exit_goal_slots = {0};
     renewal.exit_min_satisfied = 1;
     goal.fixed_options.push_back(renewal);
@@ -984,7 +984,7 @@ void run_structured_observation_route_tests() {
         PC_CHECK(
             strategy.find("_retry") != std::string::npos);
         PC_CHECK(
-            strategy.find("\"type\":\"chaos\"") !=
+            strategy.find("\"type\":\"alteration\"") !=
             std::string::npos);
     }
     {
@@ -1048,9 +1048,9 @@ void run_synthetic_gate() {
     CalcContext calc(session, goal, registry,
                      {transmute, alteration, restart});
 
-    const double p =
-        0.5 * (100.0 / 1100.0) +
-        0.5 * (100.0 / 1100.0 + (600.0 / 1100.0) * (100.0 / 500.0));
+    /* Only the one-affix goal roll is terminal. A two-affix roll containing
+     * the requested family plus unrelated junk must continue. */
+    const double p = 0.5 * (100.0 / 1100.0);
 
     pc_item_state start;
     pc_item_clear(&start);
@@ -1579,30 +1579,54 @@ void run_synthetic_gate() {
      * compiler emits preference-ordered option guards and concrete unveil
      * operations; simulation must reproduce the Bellman value. */
     {
+        pc_bitset_zero(
+            session->unveiled_generic_mask.data(), session->words);
+        pc_bitset_zero(
+            session->unveiled_mask.data(), session->words);
+        for (const std::uint32_t mod : {0u, 3u, 4u}) {
+            pc_bitset_set(session->unveiled_generic_mask.data(), mod);
+            pc_bitset_set(session->unveiled_mask.data(), mod);
+        }
         GoalSpec unveil_goal;
         GoalSlot life;
         life.family_id = 100;
         life.min_tier = 1;
         unveil_goal.slots.push_back(life);
+        for (const std::uint32_t family : {104u, 105u, 106u}) {
+            GoalSlot retained;
+            retained.family_id = family;
+            retained.min_tier = 1;
+            unveil_goal.slots.push_back(retained);
+        }
         unveil_goal.rarity = PC_RARITY_RARE;
         const std::uint32_t veiled_exalt =
             registry.index_by_id.at("veiled_exalt");
         const std::uint32_t unveil = registry.index_by_id.at("unveil");
+        const std::uint32_t annul = registry.index_by_id.at("annul");
         CalcContext unveil_calc(
             session, unveil_goal, registry,
-            {veiled_exalt, unveil, restart});
+            {veiled_exalt, unveil, annul, restart});
         const std::unordered_map<std::string, double> prices{
-            {"veiled_exalt", 1.0}, {"base", 10.0}};
+            {"veiled_exalt", 1.0}, {"annul", 0.1},
+            {"base", 10.0}};
         pc_item_state rare;
         pc_item_clear(&rare);
         rare.rarity = PC_RARITY_RARE;
+        for (const std::uint32_t mod : {5u, 6u, 7u}) {
+            PC_CHECK(pc_item_add_mod(
+                &rare, PC_SIDE_SUFFIX, mod,
+                session->primary_group[mod], 0, nullptr) == PC_RESULT_OK);
+        }
         const SolveResult solved = solve(unveil_calc, rare, prices);
+        report_compile_solve_issue("policy-selected unveil", solved);
         PC_CHECK(solved.converged);
         const std::string json = compile_policy_strategy_json(
             unveil_calc, solved, "policy-selected unveil");
         PC_CHECK(json.find("\"type\":\"has_unveil_option\"") !=
                  std::string::npos);
         PC_CHECK(json.find("\"type\":\"unveil\"") !=
+                 std::string::npos);
+        PC_CHECK(json.find("\"type\":\"prefix_count_range\"") !=
                  std::string::npos);
         const StrategyEvalResult exact =
             evaluate_compiled(session, json, prices);
@@ -1643,24 +1667,38 @@ void run_synthetic_gate() {
         life.family_id = 100;
         life.min_tier = 1;
         unveil_goal.slots.push_back(life);
+        for (const std::uint32_t family : {104u, 105u, 106u}) {
+            GoalSlot retained;
+            retained.family_id = family;
+            retained.min_tier = 1;
+            unveil_goal.slots.push_back(retained);
+        }
         unveil_goal.rarity = PC_RARITY_RARE;
         const std::uint32_t veiled_exalt =
             registry.index_by_id.at("veiled_exalt");
         const std::uint32_t unveil = registry.index_by_id.at("unveil");
+        const std::uint32_t annul = registry.index_by_id.at("annul");
         CalcContext unveil_calc(
             session, unveil_goal, registry,
-            {veiled_exalt, unveil, restart});
+            {veiled_exalt, unveil, annul, restart});
         pc_item_state veiled_start;
         pc_item_clear(&veiled_start);
         veiled_start.rarity = PC_RARITY_RARE;
+        for (const std::uint32_t mod : {5u, 6u, 7u}) {
+            PC_CHECK(pc_item_add_mod(
+                &veiled_start, PC_SIDE_SUFFIX, mod,
+                session->primary_group[mod], 0, nullptr) == PC_RESULT_OK);
+        }
         PC_CHECK(
             pc_item_add_mod(
                 &veiled_start, PC_SIDE_PREFIX, 8, 30,
                 PC_MOD_SLOT_VEILED, nullptr) == PC_RESULT_OK);
         const std::unordered_map<std::string, double> prices{
-            {"veiled_exalt", 1.0}, {"base", 10.0}};
+            {"veiled_exalt", 1.0}, {"annul", 0.1},
+            {"base", 10.0}};
         const SolveResult solved =
             solve(unveil_calc, veiled_start, prices);
+        report_compile_solve_issue("imported veiled start", solved);
         PC_CHECK(solved.converged);
         const std::string json = compile_policy_strategy_json(
             unveil_calc, solved, "imported veiled start");
@@ -1937,21 +1975,23 @@ void run_artifact_gate(const char* artifact_dir) {
 
     /* S7.4 renewal normalizes only certified same-kernel failures to the
      * entry state; the compiled graph expands that normalization back into
-     * an ordinary primitive retry router. */
+     * an ordinary primitive retry router. A Magic Alteration can terminate
+     * with exactly one requested affix; a Rare Chaos roll cannot. */
     {
         GoalSpec renewal_goal = goal;
+        renewal_goal.rarity = PC_RARITY_MAGIC;
         FixedOptionSpec option;
         option.kind = FixedOptionKind::Renewal;
-        option.program_action_ids = {"chaos"};
+        option.program_action_ids = {"alteration"};
         option.exit_goal_slots = {0};
         option.exit_min_satisfied = 1;
         renewal_goal.fixed_options.push_back(option);
         CalcContext option_calc(
             session, renewal_goal, registry, {}, false, false);
-        pc_item_state rare;
-        pc_item_clear(&rare);
-        rare.rarity = PC_RARITY_RARE;
-        const std::uint32_t state = option_calc.intern_item(rare);
+        pc_item_state magic;
+        pc_item_clear(&magic);
+        magic.rarity = PC_RARITY_MAGIC;
+        const std::uint32_t state = option_calc.intern_item(magic);
         const std::uint32_t op =
             static_cast<std::uint32_t>(registry.actions.size());
         const OptionKernel& kernel = option_calc.option_kernel(state, op);
@@ -1963,13 +2003,13 @@ void run_artifact_gate(const char* artifact_dir) {
         PC_CHECK(kernel.observation_choice_groups.empty());
 
         const SolveResult solved = solve(
-            option_calc, rare, {{"chaos", 1.0}});
-        report_compile_solve_issue("renewal chaos", solved);
+            option_calc, magic, {{"alteration", 1.0}});
+        report_compile_solve_issue("renewal alteration", solved);
         PC_CHECK(solved.converged);
         PC_CHECK(solved.policy[solved.start_state] == op);
         const std::string strategy = compile_policy_strategy_json(
-            option_calc, solved, "renewal-chaos");
-        PC_CHECK(strategy.find("\"type\":\"chaos\"") !=
+            option_calc, solved, "renewal-alteration");
+        PC_CHECK(strategy.find("\"type\":\"alteration\"") !=
                  std::string::npos);
         PC_CHECK(strategy.find("_retry") != std::string::npos);
     }
@@ -2001,6 +2041,23 @@ void run_artifact_gate(const char* artifact_dir) {
      * exact synthetic pool; full canonical Veiled Chaos expansion is a
      * performance-corpus responsibility. */
     auto observed_session = make_compile_session();
+    pc_bitset_zero(
+        observed_session->normal_random_roll_mask.data(),
+        observed_session->words);
+    pc_bitset_zero(
+        observed_session->positive_spawn_weight_mask.data(),
+        observed_session->words);
+    pc_bitset_zero(
+        observed_session->positive_base_weight_mask.data(),
+        observed_session->words);
+    for (const std::uint32_t mod : {5u, 6u, 7u}) {
+        pc_bitset_set(
+            observed_session->normal_random_roll_mask.data(), mod);
+        pc_bitset_set(
+            observed_session->positive_spawn_weight_mask.data(), mod);
+        pc_bitset_set(
+            observed_session->positive_base_weight_mask.data(), mod);
+    }
     ActionRegistry observed_registry = build_action_registry(*observed_session);
     std::uint32_t unveiled_goal_mod = kNoId;
     if (!observed_session->unveiled_generic_mask.empty()) {
@@ -2018,12 +2075,20 @@ void run_artifact_gate(const char* artifact_dir) {
         GoalSlot unveil_slot;
         unveil_slot.family_id =
             observed_session->family_id[unveiled_goal_mod];
+        unveil_slot.min_tier = 1;
         unveil_goal.slots.push_back(unveil_slot);
+        for (const std::uint32_t family : {104u, 105u, 106u}) {
+            GoalSlot permanent;
+            permanent.family_id = family;
+            permanent.min_tier = 1;
+            unveil_goal.slots.push_back(permanent);
+        }
+        unveil_goal.rarity = PC_RARITY_RARE;
         FixedOptionSpec option;
         option.kind = FixedOptionKind::Renewal;
         option.program_action_ids = {"veiled_chaos", "unveil"};
-        option.exit_goal_slots = {0};
-        option.exit_min_satisfied = 1;
+        option.exit_goal_slots = {0, 1, 2, 3};
+        option.exit_min_satisfied = 4;
         unveil_goal.fixed_options.push_back(option);
         CalcContext option_calc(
             observed_session, unveil_goal, observed_registry, {}, false,
@@ -2153,6 +2218,7 @@ void run_artifact_gate(const char* artifact_dir) {
      * force the deterministic Multimod option as the only candidate. */
     std::uint32_t finish_prefix = kNoId;
     std::uint32_t finish_suffix = kNoId;
+    std::uint32_t finish_multimod = kNoId;
     const auto conflicts = [&](std::uint32_t left, std::uint32_t right) {
         for (std::uint32_t a = session->group_offsets[left];
              a < session->group_offsets[left + 1]; ++a) {
@@ -2239,6 +2305,10 @@ void run_artifact_gate(const char* artifact_dir) {
 
     for (std::uint32_t index = 0; index < registry.actions.size(); ++index) {
         const ActionDescriptor& action = registry.actions[index];
+        if (action.params.type == ActionType::Bench &&
+            (action.sets_flags & kFlagMultimod) != 0) {
+            finish_multimod = index;
+        }
         if (action.params.type != ActionType::Bench ||
             action.params.mod_id >= session->metamod_type.size() ||
             session->metamod_type[action.params.mod_id] >= 0) {
@@ -2250,15 +2320,17 @@ void run_artifact_gate(const char* artifact_dir) {
         }
         if (session->gen_type[action.params.mod_id] == PC_SIDE_SUFFIX &&
             finish_prefix != kNoId &&
+            finish_suffix == kNoId &&
             !conflicts(registry.actions[finish_prefix].params.mod_id,
                        action.params.mod_id)) {
             finish_suffix = index;
-            break;
         }
     }
     PC_CHECK(finish_prefix != kNoId);
     PC_CHECK(finish_suffix != kNoId);
-    if (finish_prefix != kNoId && finish_suffix != kNoId) {
+    PC_CHECK(finish_multimod != kNoId);
+    if (finish_prefix != kNoId && finish_suffix != kNoId &&
+        finish_multimod != kNoId) {
         GoalSpec finish_goal;
         for (const std::uint32_t action_index :
              {finish_prefix, finish_suffix}) {
@@ -2267,6 +2339,10 @@ void run_artifact_gate(const char* artifact_dir) {
                 registry.actions[action_index].params.mod_id];
             finish_goal.slots.push_back(finish_slot);
         }
+        GoalSlot multimod_slot;
+        multimod_slot.family_id = session->family_id[
+            registry.actions[finish_multimod].params.mod_id];
+        finish_goal.slots.push_back(multimod_slot);
         finish_goal.rarity = PC_RARITY_RARE;
         FixedOptionSpec option;
         option.kind = FixedOptionKind::MultimodFinish;
@@ -2342,9 +2418,8 @@ void run_artifact_gate(const char* artifact_dir) {
     PC_CHECK(std::fabs(mean - expected) < 0.25);
 }
 
-/* S8.4R.3 focused fixture: the final goal is rare, but the solver reaches a
- * magic carrier, discovers an exact Augment Imprint stage and intermediate
- * magic exit, then continues through the ordinary Regal Bellman value. */
+/* S8.4R.3 focused fixture: the final goal is rare, and the solver discovers
+ * the exact direct-Regal Imprint retry from a one-mod magic carrier. */
 void run_imprint_gate(const char* artifact_dir) {
     if (artifact_dir == nullptr) {
         std::printf("solver Imprint fixture skipped (missing path)\n");
@@ -2475,7 +2550,7 @@ void run_imprint_gate(const char* artifact_dir) {
     PC_CHECK(planner.automatic_kind == AutomaticCandidateKind::Imprint);
     PC_CHECK(planner.primitive_program.size() == 1);
     PC_CHECK(planner.primitive_program.front() ==
-             registry.index_by_id.at("augment"));
+             registry.index_by_id.at("regal"));
 
     const OptionKernel& kernel = calc.option_kernel(
         solved.start_state, selected);
@@ -2483,25 +2558,25 @@ void run_imprint_gate(const char* artifact_dir) {
     PC_CHECK(kernel.legal);
     PC_CHECK(kernel.terminates_almost_surely);
     PC_CHECK(!kernel.retry_states.empty());
-    bool has_magic_intermediate = false;
+    bool has_exact_rare_exit = false;
     for (const OutcomeEntry& exit : kernel.exits) {
         if (exit.state == kNoId || exit.state == solved.start_state) continue;
         const AbstractState& successor = calc.state(exit.state);
-        if (successor.rarity == PC_RARITY_MAGIC &&
+        if (successor.rarity == PC_RARITY_RARE &&
             successor.slot_status[1] == static_cast<std::uint8_t>(
                 GoalSlotStatus::Satisfied) &&
-            !calc.is_goal_state(successor)) {
-            has_magic_intermediate = true;
+            calc.is_goal_state(successor)) {
+            has_exact_rare_exit = true;
         }
     }
-    PC_CHECK(has_magic_intermediate);
+    PC_CHECK(has_exact_rare_exit);
     const auto quantity = [&](const char* key) {
         for (const auto& [resource, amount] : kernel.expected_resources) {
             if (resource == key) return amount;
         }
         return 0.0;
     };
-    PC_CHECK(quantity("augment") == 1.0);
+    PC_CHECK(quantity("regal") == 1.0);
     PC_CHECK(quantity("beast:craicic-croaker") == 1.0);
     PC_CHECK(quantity("beast:rare") == 3.0);
     CalcContext work_limited_calc(session, goal, registry);
@@ -2522,7 +2597,7 @@ void run_imprint_gate(const char* artifact_dir) {
         calc, solved, "automatic-imprint-to-rare");
     PC_CHECK(strategy.find("\"type\":\"bestiary:imprint\"") !=
              std::string::npos);
-    PC_CHECK(strategy.find("\"type\":\"augment\"") !=
+    PC_CHECK(strategy.find("\"type\":\"augment\"") ==
              std::string::npos);
     PC_CHECK(strategy.find("\"type\":\"bestiary:restore_imprint\"") !=
              std::string::npos);
@@ -2615,8 +2690,8 @@ void run_imprint_gate(const char* artifact_dir) {
         }
     }
     PC_CHECK(imprint_count == restore_count + 64);
-    PC_CHECK(simulator.action_descriptor_counts["augment"] == imprint_count);
-    PC_CHECK(simulator.action_descriptor_counts["regal"] == 64);
+    PC_CHECK(simulator.action_descriptor_counts["augment"] == 0);
+    PC_CHECK(simulator.action_descriptor_counts["regal"] == imprint_count);
     PC_CHECK(simulator.action_descriptor_counts["bestiary:imprint"] ==
              imprint_count);
     PC_CHECK(simulator.action_descriptor_counts[
