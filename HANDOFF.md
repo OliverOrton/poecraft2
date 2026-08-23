@@ -1,18 +1,63 @@
 # Handoff
 
 **Status: no implementation boundary is active.** The
-[compact better-policy certification](docs/active/2026-08-22-compact-policy-certification/plan.md)
-milestone is [complete and accepted](docs/active/2026-08-22-compact-policy-certification/result.md).
-Oliver must select the next chunk before implementation resumes.
+[five-T1 goal-band recovery](docs/active/2026-08-22-five-t1-goal-band-recovery/plan.md)
+boundary is [complete and accepted locally](docs/active/2026-08-22-five-t1-goal-band-recovery/result.md).
+Oliver must select a successor before implementation resumes.
 
 ## Current checkpoint
 
 - Branch: `main`.
 - Local `origin/main` remains at `40eeb87`; no push was issued.
-- Implementation checkpoint: `5fb9194` (`Compact direct policy certification`).
+- Implementation checkpoint: `c192311` (`Recover bounded five-T1 publication`).
 - Result:
-  [docs/active/2026-08-22-compact-policy-certification/result.md](docs/active/2026-08-22-compact-policy-certification/result.md)
+  [docs/active/2026-08-22-five-t1-goal-band-recovery/result.md](docs/active/2026-08-22-five-t1-goal-band-recovery/result.md)
 - Full repository pipeline and rendered UI review were deliberately not run.
+
+## Completed five-T1 recovery boundary
+
+Completed delayed rows now receive geometric joint-policy checkpoints. Each
+checkpoint temporarily considers only fully materialized rows, constructs a
+start-reachable proper policy, retains an improved immutable executable
+incumbent, and restores prior row admission. It is upper-only evidence and
+does not close an action family or strengthen the lower bound.
+
+Stepped Solve now has an append-only `request_bounded_finish` lifecycle across
+native C, WASM, worker, and TypeScript surfaces. A request stops discovery at a
+cooperative boundary and runs the ordinary compile/certify/exact-evaluate
+finalizer. It reports `requested_bounded_finish`, never a fabricated cap or
+exact closure. Abort remains abandon. Calculator requests bounded finish after
+four minutes so a long five-mod solve no longer expands indefinitely.
+
+The exact owner-supplied four-of-five Conquest Lamellar publishes an
+independently evaluated `2083.88214353439`-Chaos policy. Native Solve takes
+21.289 seconds and release WASM 21.852 seconds; total qualification wall is
+23.183 and 26.519 seconds respectively. Both emit the same 23-node / 36-edge
+graph and complete 10,000 / 10,000 simulations with 100% success and zero
+off-policy failures. The strategy uses Exalt, a temporary blocker and cleanup,
+Prefixes Cannot Be Changed plus Harvest Reforge Physical, and Eldritch Ichor
+plus Eldritch Chaos. It is not Chaos spam.
+
+At bounded finish the native graph has 3,047 discovered / 898 expanded states,
+22,856 rows, 79,612 transitions, and 188,182 reforge work. Selected-owned
+memory is 53,307,653 live / 124,297,621 peak bytes. The public lower is
+`0.01165` and 17,636 action obligations remain open, so the result is useful
+but not exact. Candidate scope has zero missing prices: 10 currency, 13
+Fossil, four Harvest, and one Fracture candidates, plus 158 carrier-local
+automatic dependencies including Bench and Eldritch programs.
+
+Warlord remains exact at `224.123858897249`; Magic Imprint retry remains exact
+at `252.653520212745`; both pass 10,000 simulations. The four-T1 control retains
+its accepted bounded Imprint-work refusal at `3759.97631221018` and also passes
+10,000 simulations. A new non-armour partial-five Bow control publishes an
+honest exact-evaluated bounded fallback but shows that an attractive early
+partial-frontier row policy can remain structurally unmaterializable; that is
+separate cross-base quality debt.
+
+Release WASM keeps the 278,396,928-byte reported linear-memory high-water and
+has a 6.942-second largest worker slice on the primary. The headless Node RSS
+measurement grows to 3.278 GB, so browser/device memory and responsiveness
+remain open measurement owners rather than inferred guarantees.
 
 ## Completed compact-certification boundary
 
@@ -174,8 +219,9 @@ No successor is selected. The closest evidence-backed choices are:
 3. **First-class exact Imprint kernel/label search.** Retain this only if exact
    closure over the included Imprint family remains the selected goal after
    the now-healthy product bounded-publication path.
-4. **Five-T1 certification recovery.** The separate five-goal resource-cap
-   boundary and strategy-quality work remain unchanged by this milestone.
+4. **Partial-frontier executable materialization.** The new non-armour Bow
+   control sees a cheap provisional policy that cannot yet compile from its
+   incomplete frontier and therefore publishes a much weaker verified renewal.
 5. **Open-Imprint candidate competition.** The cheaper 2,823.05 policy is
    published when Imprint is explicitly excluded. The default enabled solve
    still publishes 3,759.976 at its Imprint work refusal; independently retain
