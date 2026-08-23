@@ -1601,6 +1601,36 @@ std::string compile_policy_strategy_json(
             }
             return key;
         };
+    const auto ordinary_primitive_region_key = [&]
+        (const PlannerOperator& planner) {
+            if (planner.kind != PlannerOperatorKind::Primitive ||
+                planner.primitive_program.size() != 1 ||
+                planner.primitive_action == kNoId ||
+                planner.primitive_action >=
+                    calc.registry().actions.size()) {
+                gap(
+                    "ordinary primitive policy region has no single "
+                    "runtime operation");
+            }
+            const std::uint32_t action =
+                planner.primitive_program.front();
+            if (action != planner.primitive_action) {
+                gap(
+                    "ordinary primitive policy region disagrees with its "
+                    "runtime action");
+            }
+            const std::array<std::string, 3> components{
+                operation_json(
+                    session, calc.registry().actions.at(action)),
+                accounting_roles_json(planner, action),
+                "return_to_master_policy_route"};
+            std::string key = "ordinary_primitive:";
+            for (const std::string& component : components) {
+                key += std::to_string(component.size()) + ":" +
+                       component + ";";
+            }
+            return key;
+        };
 
     /* Exact policy-region compression. States may share one emitted
      * continuation when the selected program is state-independent. Expected
@@ -1610,7 +1640,24 @@ std::string compile_policy_strategy_json(
      * conflated. Product-local Fracture shares its complete emitted operation,
      * global goal-hit route, accounting, and common retry default; its
      * state-local k/n Bellman kernels remain distinct solver rows. */
-    std::map<std::string, std::vector<std::uint32_t>> leaders_by_key;
+    /* Operator indices and solver-side admission metadata are not executable
+     * behavior identity. State-local discovery can append several primitive
+     * operators that compile to the same exact operation, accounting roles,
+     * and return-to-policy continuation. Emitting one region per transient
+     * index forces the master route to observe carrier distinctions that have
+     * no runtime consequence. The length-delimited emitted-recipe key above
+     * is full equality authority for ordinary primitive regions. Product
+     * Fracture retains its stronger hit/replacement proof, gated repeats keep
+     * their fixed-point semantic partition, and observation-owned/state-local
+     * options remain deliberately unshared. */
+    std::map<std::string, std::uint32_t>
+        ordinary_primitive_region_leader;
+    std::map<std::vector<std::uint64_t>, std::uint32_t>
+        gated_semantic_region_leader;
+    std::map<std::string, std::uint32_t>
+        product_fracture_region_leader;
+    std::map<std::uint32_t, std::uint32_t>
+        fixed_option_region_leader;
     std::map<std::uint32_t, std::vector<std::uint32_t>> states_by_leader;
     std::vector<std::uint32_t> emitted_states;
     std::set<std::uint32_t> shared_gated_repeat_leaders;
@@ -1632,8 +1679,10 @@ std::string compile_policy_strategy_json(
              planner.option_kind == FixedOptionKind::ImprintRetry);
         const auto gated_retry =
             gated_retry_state_by_state.find(state_id);
+        const bool has_gated_retry =
+            gated_retry != gated_retry_state_by_state.end();
         bool shareable_gated_repeat = false;
-        if (gated_retry != gated_retry_state_by_state.end()) {
+        if (has_gated_retry) {
             const std::uint32_t retry_state = gated_retry->second;
             const PlannerOperator& retry_planner =
                 calc.operators().at(result.policy[retry_state]);
@@ -1645,18 +1694,55 @@ std::string compile_policy_strategy_json(
         std::uint32_t leader = state_id;
         if (!primitive_observed_choice &&
             !state_local_option &&
-            (!gated_primitive_reforge(state_id) ||
+            (!has_gated_retry ||
              shareable_gated_repeat)) {
-            const std::string key = product_local_fracture
-                ? product_fracture_region_key(planner)
-                : std::to_string(result.policy[state_id].index) +
-                      (shareable_gated_repeat ? ":gated_repeat" : "");
-            std::vector<std::uint32_t>& leaders = leaders_by_key[key];
-            if (leaders.empty()) {
-                leaders.push_back(state_id);
-                emitted_states.push_back(state_id);
+            bool inserted = false;
+            if (product_local_fracture) {
+                const auto [entry, was_inserted] =
+                    product_fracture_region_leader.try_emplace(
+                        product_fracture_region_key(planner), state_id);
+                leader = entry->second;
+                inserted = was_inserted;
+            } else if (planner.kind == PlannerOperatorKind::Primitive &&
+                       !has_gated_retry) {
+                const auto [entry, was_inserted] =
+                    ordinary_primitive_region_leader.try_emplace(
+                        ordinary_primitive_region_key(planner), state_id);
+                leader = entry->second;
+                inserted = was_inserted;
+            } else if (shareable_gated_repeat) {
+                std::vector<std::uint64_t> key =
+                    planner_operator_semantic_key(planner);
+                /* An otherwise identical gated repeat owns a local
+                 * zero-progress self-loop; an ordinary primitive returns
+                 * directly to the master policy route. Keep those route
+                 * shapes in different executable regions. */
+                key.push_back(shareable_gated_repeat ? 1u : 0u);
+                const auto [entry, was_inserted] =
+                    gated_semantic_region_leader.try_emplace(
+                        std::move(key), state_id);
+                leader = entry->second;
+                inserted = was_inserted;
+                if (!inserted &&
+                    !planner_operator_structurally_equal(
+                        planner,
+                        calc.operators().at(result.policy[leader]))) {
+                    gap(
+                        "equal planner semantic keys disagree structurally "
+                        "during policy-region sharing");
+                }
+            } else {
+                /* Compound fixed options have state-independent programs but
+                 * option-specific routing below. Preserve the established
+                 * operator-index authority until each option family has its
+                 * own complete emitted-behavior proof. */
+                const auto [entry, was_inserted] =
+                    fixed_option_region_leader.try_emplace(
+                        result.policy[state_id].index, state_id);
+                leader = entry->second;
+                inserted = was_inserted;
             }
-            leader = leaders.back();
+            if (inserted) emitted_states.push_back(state_id);
             if (shareable_gated_repeat) {
                 shared_gated_repeat_leaders.insert(leader);
             }
@@ -2345,13 +2431,36 @@ std::string compile_policy_strategy_json(
             add_owned_bytes(bytes, refined_route_owned_bytes());
             add_u32_vector(canonical_state_ids);
             add_map_nodes(
-                leaders_by_key.size(),
-                sizeof(std::string) +
-                    sizeof(std::vector<std::uint32_t>));
-            for (const auto& [key, leaders] : leaders_by_key) {
+                ordinary_primitive_region_leader.size(),
+                sizeof(std::string) + sizeof(std::uint32_t));
+            for (const auto& [key, unused_leader] :
+                 ordinary_primitive_region_leader) {
+                (void)unused_leader;
                 add_string(key);
-                add_u32_vector(leaders);
             }
+            add_map_nodes(
+                gated_semantic_region_leader.size(),
+                sizeof(std::vector<std::uint64_t>) +
+                    sizeof(std::uint32_t));
+            for (const auto& [key, unused_leader] :
+                 gated_semantic_region_leader) {
+                (void)unused_leader;
+                add_owned_bytes(
+                    bytes,
+                    static_cast<std::uint64_t>(key.capacity()) *
+                        sizeof(std::uint64_t));
+            }
+            add_map_nodes(
+                product_fracture_region_leader.size(),
+                sizeof(std::string) + sizeof(std::uint32_t));
+            for (const auto& [key, unused_leader] :
+                 product_fracture_region_leader) {
+                (void)unused_leader;
+                add_string(key);
+            }
+            add_map_nodes(
+                fixed_option_region_leader.size(),
+                sizeof(std::uint32_t) + sizeof(std::uint32_t));
             add_map_nodes(
                 states_by_leader.size(),
                 sizeof(std::uint32_t) +

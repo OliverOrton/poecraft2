@@ -122,6 +122,7 @@ export interface SolverBenchmarkCase {
         goal_progress_gated_reforges?: boolean;
         allow_economic_restart?: boolean;
         high_impact_executable_uppers?: boolean;
+        consider_imprint_programs?: boolean;
         worker_step_ms: number;
         cancel_ack_ms: number;
         [key: string]: number | boolean | undefined;

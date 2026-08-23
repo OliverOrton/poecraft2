@@ -274,10 +274,10 @@ export function calculatorSolveOptions(
         high_impact_executable_uppers: true,
         allow_economic_restart: allowEconomicRestart,
         consider_imprint_programs: considerImprintPrograms,
-        // Keep optional attempts to certify a cheaper broad/strict policy
-        // from delaying an already independently verified executable result
-        // through the whole 200k-state solve allowance.
-        max_policy_refinement_states: 5_000,
+        // The four-T1 direct graph closes at about 163k exact carrier pairs.
+        // This separate allowance lets that cheaper policy be independently
+        // evaluated without widening the main solve or requiring strict lift.
+        max_policy_refinement_states: 200_000,
     };
     if (Number.isFinite(absoluteGap) && absoluteGap > 0) {
         options.max_absolute_optimality_gap = absoluteGap;

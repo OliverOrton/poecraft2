@@ -3830,6 +3830,9 @@ SolveWork::Impl::run_finalization() {
                     cheaper_verified != nullptr &&
                     cheaper_verified->evaluated_policy_cost <
                         candidate.evaluated_policy_cost;
+                const bool direct_precedes_verified =
+                    cheaper_verified == nullptr ||
+                    incumbent_precedes(candidate, *cheaper_verified);
                 const bool exact_without_refinement =
                     assertion.status ==
                         refinement::CompiledPolicyAssertionStatus::Complete &&
@@ -3955,6 +3958,23 @@ SolveWork::Impl::run_finalization() {
                                incumbent_owned_bytes(candidate) -
                                    sizeof(BoundedPolicyIncumbent))) {
                     telemetry.direct_candidate_retained = true;
+                    /* A nonzero refinement allowance is the product's
+                     * bounded optional-proof budget. Once direct compilation
+                     * has independently established a proper, zero-offpolicy,
+                     * completely priced executable that improves the retained
+                     * portfolio, publish that exact evaluated cost as the
+                     * bounded upper. A solver/exact cost mismatch still
+                     * blocks exactness, but it must not trigger a second
+                     * strict-lift traversal that delays the better strategy
+                     * past the product boundary. Native callers that leave
+                     * the allowance at zero retain the historical exhaustive
+                     * strict-lift behavior. */
+                    if (options.max_policy_refinement_states != 0 &&
+                        direct_precedes_verified) {
+                        skip_strict_lift =
+                            publish_certified_fallback(
+                                core_solve_termination);
+                    }
                 } else {
                     verify_retained_portfolio();
                     BoundedPolicyIncumbent* retained =

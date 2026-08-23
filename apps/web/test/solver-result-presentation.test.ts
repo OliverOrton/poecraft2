@@ -115,7 +115,7 @@ import {
         high_impact_executable_uppers: true,
         allow_economic_restart: false,
         consider_imprint_programs: true,
-        max_policy_refinement_states: 5_000,
+        max_policy_refinement_states: 200_000,
         max_absolute_optimality_gap: 5,
         max_relative_optimality_gap: 0.1,
     });
@@ -124,28 +124,28 @@ import {
         high_impact_executable_uppers: true,
         allow_economic_restart: false,
         consider_imprint_programs: true,
-        max_policy_refinement_states: 5_000,
+        max_policy_refinement_states: 200_000,
     });
     assert.deepEqual(calculatorSolveOptions(Number.NaN, 0), {
         goal_progress_gated_reforges: true,
         high_impact_executable_uppers: true,
         allow_economic_restart: false,
         consider_imprint_programs: true,
-        max_policy_refinement_states: 5_000,
+        max_policy_refinement_states: 200_000,
     });
     assert.deepEqual(calculatorSolveOptions(0, 0, true), {
         goal_progress_gated_reforges: true,
         high_impact_executable_uppers: true,
         allow_economic_restart: true,
         consider_imprint_programs: true,
-        max_policy_refinement_states: 5_000,
+        max_policy_refinement_states: 200_000,
     });
     assert.deepEqual(calculatorSolveOptions(0, 0, false, false), {
         goal_progress_gated_reforges: true,
         high_impact_executable_uppers: true,
         allow_economic_restart: false,
         consider_imprint_programs: false,
-        max_policy_refinement_states: 5_000,
+        max_policy_refinement_states: 200_000,
     });
     console.log("  ok - Calculator solves use exact operator-major scheduling and map optional targets");
 }

@@ -1221,6 +1221,112 @@ void run_synthetic_gate() {
         PC_CHECK(strict_summary.no_matching_edge_count == 0);
     }
 
+    /* A gated-capable destructive reforge whose exact row has no retry mass
+     * is an ordinary act-then-return region. Two such carrier states must
+     * share the emitted operation even though their exact state predicates
+     * differ. A third Scour state prevents the uniform-renewal fast path and
+     * makes this a direct regression for general policy-region grouping. */
+    {
+        GoalSpec two_slot_goal;
+        two_slot_goal.rarity = PC_RARITY_RARE;
+        for (const std::uint32_t family : {100u, 101u}) {
+            GoalSlot wanted;
+            wanted.family_id = family;
+            wanted.min_tier = 1;
+            two_slot_goal.slots.push_back(wanted);
+        }
+        const std::uint32_t chaos = registry.index_by_id.at("chaos");
+        const std::uint32_t scour = registry.index_by_id.at("scour");
+        CalcContext zero_retry_calc(
+            session, two_slot_goal, registry, {chaos, scour});
+        const auto fractured_carrier = [&](const std::uint32_t junk_mod) {
+            pc_item_state item;
+            pc_item_clear(&item);
+            item.rarity = PC_RARITY_RARE;
+            PC_CHECK(pc_item_add_mod(
+                         &item, PC_SIDE_PREFIX, 0,
+                         static_cast<std::uint16_t>(
+                             session->primary_group[0]),
+                         PC_MOD_SLOT_FRACTURED, nullptr) == PC_RESULT_OK);
+            PC_CHECK(pc_item_add_mod(
+                         &item, session->gen_type[junk_mod], junk_mod,
+                         static_cast<std::uint16_t>(
+                             session->primary_group[junk_mod]),
+                         0, nullptr) == PC_RESULT_OK);
+            return item;
+        };
+        const pc_item_state left_item = fractured_carrier(3);
+        const pc_item_state right_item = fractured_carrier(4);
+        const std::uint32_t left = zero_retry_calc.intern_item(left_item);
+        const std::uint32_t right = zero_retry_calc.intern_item(right_item);
+        const OutcomeDistribution& left_kernel =
+            zero_retry_calc.outcomes(left, chaos, true);
+        const OutcomeDistribution& right_kernel =
+            zero_retry_calc.outcomes(right, chaos, true);
+        PC_CHECK(left_kernel.supported);
+        PC_CHECK(right_kernel.supported);
+        PC_CHECK(left_kernel.goal_progress_gated);
+        PC_CHECK(right_kernel.goal_progress_gated);
+        PC_CHECK(left_kernel.gated_retry_probability == 0.0);
+        PC_CHECK(right_kernel.gated_retry_probability == 0.0);
+
+        pc_item_state scour_item;
+        pc_item_clear(&scour_item);
+        scour_item.rarity = PC_RARITY_RARE;
+        PC_CHECK(pc_item_add_mod(
+                     &scour_item, PC_SIDE_PREFIX, 3,
+                     static_cast<std::uint16_t>(
+                         session->primary_group[3]),
+                     0, nullptr) == PC_RESULT_OK);
+        const std::uint32_t scour_state =
+            zero_retry_calc.intern_item(scour_item);
+
+        SolveResult authored;
+        authored.policy_available = true;
+        authored.policy_status = SolvePolicyStatus::BoundedFeasible;
+        authored.termination = SolveTermination::NumericalStability;
+        authored.start_state = left;
+        authored.has_exact_start_item = true;
+        authored.exact_start_item = left_item;
+        authored.evaluated_policy_cost = 10.0;
+        authored.upper_bound = 10.0;
+        authored.options.goal_progress_gated_reforges = true;
+        authored.options.allow_economic_restart = false;
+        const std::size_t state_count = zero_retry_calc.state_count();
+        authored.values.assign(state_count, 1.0);
+        authored.policy.resize(state_count);
+        authored.expanded.assign(state_count, 0);
+        authored.goal_states.assign(state_count, 0);
+        authored.policy_reachable.assign(state_count, 0);
+        authored.unveil_preferences.resize(state_count);
+        authored.option_unveil_preferences.resize(state_count);
+        for (std::uint32_t state = 0; state < state_count; ++state) {
+            authored.goal_states[state] =
+                zero_retry_calc.is_goal_state(
+                    zero_retry_calc.state(state));
+        }
+        for (const std::uint32_t state : {left, right}) {
+            authored.policy[state] = PolicyOperatorRef{chaos};
+            authored.policy_reachable[state] = 1;
+            authored.expanded[state] = 1;
+        }
+        authored.policy[scour_state] = PolicyOperatorRef{scour};
+        authored.policy_reachable[scour_state] = 1;
+        authored.expanded[scour_state] = 1;
+
+        PolicyCompilationTelemetry compilation;
+        const std::string json = compile_policy_strategy_json(
+            zero_retry_calc, authored,
+            "zero-retry renewal region sharing", &compilation);
+        PC_CHECK(compilation.policy_regions == 2);
+        PC_CHECK(compilation.primitive_region_nodes == 2);
+        PC_CHECK(compilation.local_gated_route_nodes == 0);
+        PC_CHECK(json.find("\"type\":\"chaos\"") !=
+                 std::string::npos);
+        PC_CHECK(json.find("\"type\":\"scour\"") !=
+                 std::string::npos);
+    }
+
     /* Price flip: the compiled strategy must include restart operations
      * and still land on V(start) = (2-p)/p. */
     {
