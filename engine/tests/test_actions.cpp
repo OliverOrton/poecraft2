@@ -388,6 +388,20 @@ void run_reforge_unit_tests() {
         PC_CHECK(item.prefixes[0].flags & PC_MOD_SLOT_FRACTURED);
     }
 
+    // C2) A rarity-only Scour is still an applied action. The simulator must
+    // not reject the same rare-to-magic transition modeled by the solver.
+    {
+        pc_item_state item;
+        pc_item_clear(&item);
+        item.rarity = PC_RARITY_RARE;
+        place(&item, PC_SIDE_PREFIX, 0, 10, PC_MOD_SLOT_FRACTURED);
+        ActionOutcome out = run(&item, ActionType::Scour);
+        PC_CHECK(out.applied);
+        PC_CHECK(out.removed == 0);
+        PC_CHECK(item.rarity == PC_RARITY_MAGIC);
+        PC_CHECK(item.prefix_count == 1 && item.suffix_count == 0);
+    }
+
     // D) Scour with no fractured mod returns to normal with no mods.
     {
         pc_item_state item;

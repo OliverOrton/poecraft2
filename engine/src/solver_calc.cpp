@@ -2427,10 +2427,18 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
         accumulated[intern_item(item)] += p;
     };
 
-    /* Illegal actions leave the item unchanged (engine semantics). */
+    /* The calculator historically represents illegal ordinary actions as
+     * native no-op self-loops. Scour is also emitted inside compound programs,
+     * where skipping an illegal primitive would compile a policy that the
+     * strategy runtime terminates as action_not_applied. Keep that action
+     * fail-closed instead. */
     if (!action_legal(session, action, states_.at(state_id))) {
-        result.supported = true;
-        self_loop();
+        if (!action.synthetic && action.params.type == ActionType::Scour) {
+            result.supported = false;
+        } else {
+            result.supported = true;
+            self_loop();
+        }
     } else if (action.synthetic) {
         /* restart: a fresh base with probability 1. */
         pc_item_state fresh;
@@ -2461,10 +2469,18 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
         case ActionType::Scour:
         case ActionType::RemoveCraftedModifiers:
         case ActionType::Bench: {
-            /* RNG-free engine actions: apply and project. */
+            /* Scour is usable only when the execution authority reports that
+             * it actually applied. Bench and crafted-mod cleanup retain their
+             * historical projection contract pending a separate audit. */
             pc_item_state copy = item;
-            apply_action(context_, &copy, action.params);
-            result.supported = true;
+            const ActionOutcome outcome =
+                apply_action(context_, &copy, action.params);
+            const bool scour_not_applied =
+                action.params.type == ActionType::Scour && !outcome.applied;
+            result.supported = !scour_not_applied;
+            if (scour_not_applied) {
+                break;
+            }
             add_successor(copy, 1.0);
             break;
         }

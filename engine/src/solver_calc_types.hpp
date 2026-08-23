@@ -44,8 +44,10 @@ struct OutcomeChoiceOption {
 };
 
 struct OutcomeDistribution {
-    /* True when an exact evaluator exists for this action. Unsupported
-     * mechanics report false so callers can skip or surface the gap. */
+    /* True when an exact evaluator exists and the action applies on this
+     * carrier. Unsupported mechanics and concrete not-applied Scour
+     * transitions report false so planner callers cannot retain an
+     * unexecutable row. */
     bool supported = false;
     /* Reforge memo entries with no query-state-dependent fallback keep one
      * immutable absolute successor kernel alive for the solve. Consumers may

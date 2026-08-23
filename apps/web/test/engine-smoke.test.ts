@@ -1449,6 +1449,31 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
         Math.abs(odds.success_probability - odds.slot_satisfied[0]) < 1e-9,
     );
 
+    // A Scour that the native executor would reject must not become an exact
+    // self-loop row. Compound solver programs compile primitives, so treating
+    // this as supported would publish a graph that fails in the simulator.
+    const fracturedMagic = await client.createItem(sessionId, {
+        rarity: "magic",
+        withImplicits: false,
+    });
+    await client.addMod(fracturedMagic, sessionId, {
+        key: goalMod.key,
+        side: "prefix",
+    });
+    await client.setModFractured(fracturedMagic, {
+        modId: goalMod.session_mod_id,
+        side: "prefix",
+    });
+    const noOpScour = await client.solverCalc(
+        solver,
+        fracturedMagic,
+        "scour",
+    );
+    assert.equal(noOpScour.legal, true);
+    assert.equal(noOpScour.supported, false);
+    assert.equal(noOpScour.outcomes.length, 0);
+    await client.closeItem(fracturedMagic);
+
     // The combined threshold is engine-owned, including finished rarity.
     const suffixPool = await client.debugPool(contextId, item, {
         action: { type: "exalt" },

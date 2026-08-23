@@ -1957,8 +1957,33 @@ void run_exact_distribution_tests() {
         PC_CHECK(fresh.prefix_count == 0 && fresh.suffix_count == 0);
     }
 
-    /* Illegal action: exalt on a full rare self-loops (engine leaves the
-     * item unchanged). Reforge evaluators are S3: chaos is unsupported. */
+    /* An already-magic carrier containing only a fracture cannot be Scoured.
+     * The native action reports not-applied, so exposing a deterministic
+     * self-loop here would let a solver option compile to a strategy that the
+     * simulator rejects. */
+    {
+        pc_item_state item;
+        pc_item_clear(&item);
+        item.rarity = PC_RARITY_MAGIC;
+        place(
+            &item, PC_SIDE_PREFIX, 0, 10,
+            PC_MOD_SLOT_FRACTURED);
+        const std::uint32_t start = calc.intern_item(item);
+        const OutcomeDistribution& no_op = calc.outcomes(start, scour);
+        PC_CHECK(!no_op.supported);
+        PC_CHECK(no_op.entries.empty());
+
+        pc_item_state normal;
+        pc_item_clear(&normal);
+        const OutcomeDistribution& illegal =
+            calc.outcomes(calc.intern_item(normal), scour);
+        PC_CHECK(!illegal.supported);
+        PC_CHECK(illegal.entries.empty());
+    }
+
+    /* Illegal ordinary actions retain the calculator's native self-loop
+     * convention. Scour is stricter above because it is emitted inside
+     * compound programs and a not-applied Scour cannot be skipped at runtime. */
     {
         pc_item_state item;
         pc_item_clear(&item);

@@ -677,6 +677,7 @@ ActionOutcome do_scour(
     if (item->rarity == PC_RARITY_NORMAL) {
         return out; // nothing to scour
     }
+    const std::uint8_t rarity_before = item->rarity;
     const int before = item->prefix_count + item->suffix_count;
     const bool prefix_locked = side_locked(session, item, PC_SIDE_PREFIX);
     const bool suffix_locked = side_locked(session, item, PC_SIDE_SUFFIX);
@@ -715,7 +716,7 @@ ActionOutcome do_scour(
     } else {
         item->rarity = remaining > 0 ? PC_RARITY_MAGIC : PC_RARITY_NORMAL;
     }
-    out.applied = before != remaining || item->rarity == PC_RARITY_NORMAL;
+    out.applied = before != remaining || item->rarity != rarity_before;
     out.removed = before - remaining;
     return out;
 }

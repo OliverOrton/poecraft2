@@ -16,6 +16,48 @@ implementation resumes.
   [docs/active/2026-08-22-exact-goal-carrier-ladder/result.md](docs/active/2026-08-22-exact-goal-carrier-ladder/result.md)
 - Full repository pipeline and rendered UI review were deliberately not run.
 
+## Post-boundary Scour applicability repair
+
+After the accepted ladder checkpoint, Oliver reported a release-WASM strategy
+sample in which node `s1` attempted Scour once in every run and all 1,000 runs
+ended with `action was not applicable`. The checked accepted clean-five and
+partial-five artifacts do not contain that failing node, and the live Strategy
+Board document was not available for direct replay. Source inspection still
+found and closed a concrete solver/runtime mismatch that can produce exactly
+that class of graph.
+
+The native Scour action now counts a rarity-only rare-to-magic transition as
+applied even when it removes zero modifiers. The exact calculator no longer
+models an illegal or genuinely not-applied Scour as a supported deterministic
+self-loop. This is especially important for compound planner programs: an
+unusable Scour can no longer be silently skipped during planning and then
+emitted as a primitive operation that the strategy runtime rejects. A compiled
+candidate that somehow reaches this boundary fails its independent exact graph
+evaluation instead of publishing.
+
+The repair is deliberately Scour-specific. The shared RNG-free calculator
+branch also discards `ActionOutcome.applied` for Bench and Remove Crafted
+Modifiers. A broad change was tested and correctly exposed existing fractured-
+crafted cleanup assumptions plus changed several established option contracts;
+it was not retained in this focused repair. That separate deterministic-action
+applicability audit remains worthwhile, but it needs its own witnesses and
+publication review rather than an incidental behavior change here.
+
+Post-repair checks:
+
+- Native build: pass.
+- Artifact-backed core action/simulator suite: 2,861,290 checks, zero failures.
+- Solver Calc: 436,636 checks, zero failures.
+- Solver exact evaluator: 18,065 checks, zero failures.
+- Release WASM rebuild: pass.
+- Release-WASM engine smoke, including the new magic fractured-carrier Scour
+  refusal: 28/28 pass.
+- `npx tsc --noEmit`: pass.
+- `git diff --check`: pass.
+- The focused solver API executable still has the same 13 stale expectation
+  failures on both this tree and a separately built untouched `2b8d5ac`
+  worktree; none were introduced by this repair.
+
 ## Completed exact-goal carrier ladder boundary
 
 Every solver terminal now has exact explicit-affix semantics: all occupied
