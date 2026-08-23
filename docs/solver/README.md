@@ -593,9 +593,13 @@ When a nonzero allowance is exhausted after an executable fallback has been
 independently compiled and exact-evaluated, that fallback publishes bounded
 and the solver does not repeat the exhausted allowance in strict lift. The
 option never limits main state/action discovery, lower-bound authority, or
-fallback verification. Calculator supplies 5,000 states so a speculative
-policy improvement cannot delay an already verified result through the whole
-200,000-state solve envelope.
+fallback verification. Calculator supplies 200,000 states after the compact
+four-T1 direct graph was measured to close at 162,829 raw pairs and 43,833
+refined behavioral pairs. When that direct graph is proper, zero-off-policy,
+completely priced, and cheaper than the retained portfolio, its independently
+evaluated cost publishes as a bounded upper without launching strict lift. A
+solver/exact cost mismatch still blocks exactness. Exhausting the allowance
+still retains the previously verified result.
 
 There is no Monte Carlo fallback in the calculation engine. Sampling is used
 as test or simulator evidence, not to produce `pc_calc_action_outcomes` or

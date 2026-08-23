@@ -248,7 +248,11 @@ improve or strengthen publication after an executable fallback is already
 verified. `max_policy_refinement_states` bounds those attempts independently
 of main discovery. Exhausting a nonzero direct-certification budget publishes
 the verified fallback without launching a second strict-lift attempt against
-the same exhausted allowance. Zero inherits the main discovered-state cap.
+the same exhausted allowance. Under a nonzero product allowance, a direct
+graph that independently proves proper, zero-off-policy, completely priced
+execution and improves the verified portfolio publishes its exact evaluated
+cost as a bounded upper without strict lift; any solver-cost mismatch remains
+explicit and blocks exactness. Zero inherits the main discovered-state cap.
 
 When a completed gated root destructive-reforge row has positive terminal
 mass and every non-goal exit proves the same legal exact action-local kernel,

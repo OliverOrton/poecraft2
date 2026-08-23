@@ -30,6 +30,17 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 ## Execution State
 
 The
+[compact better-policy certification](active/2026-08-22-compact-policy-certification/plan.md)
+boundary is [complete](active/2026-08-22-compact-policy-certification/result.md).
+Exact emitted-behavior sharing reduces the checked Imprint-disabled four-T1
+direct graph from 3,208 to 570 nodes, and its independently evaluated
+`2823.050846721888`-Chaos policy now publishes bounded instead of the
+3,759.982 fallback. Native exact evaluation and 10,000 simulations pass. The
+release-WASM Solve reaches the same result in 267.181 seconds, while its
+47.45-second maximum work slice remains explicit performance debt. No
+implementation boundary is active until Oliver selects a successor.
+
+The prior
 [bounded executable-upper completion and Imprint applicability](active/2026-08-22-bounded-executable-upper-completion/plan.md)
 boundary is [complete](active/2026-08-22-bounded-executable-upper-completion/result.md).
 Incremental upper passes now stop after one exact proper fixed-policy proof,
@@ -40,8 +51,9 @@ an open exactness obligation but no longer prevents unrelated automatic and
 delayed families from finishing. The checked enabled primary publishes its
 verified 3,759.976-Chaos policy in 14.204 solve seconds; the disabled control
 closes 119,838 alternatives and raises the lower to 2,889.769 in 146.378
-seconds. Dedicated Imprint and Warlord controls remain exact. No implementation
-boundary is active until Oliver selects a successor.
+seconds. Dedicated Imprint and Warlord controls remain exact. Its former
+5,000-state product refinement setting is superseded by the compact
+certification result above.
 
 The completed
 [Imprint solve scope and controlled comparison](active/2026-08-22-imprint-solve-scope/plan.md)

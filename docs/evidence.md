@@ -17,9 +17,14 @@ its verified 3,759.976-Chaos policy in 14.204 solve seconds and completes
 10,000 successful simulations in 74.072 seconds total. With Imprint explicitly
 disabled, all 119,838 remaining alternatives close, the certified lower rises
 to 2,889.769, and bounded publication completes in 146.378 seconds. The
-Calculator's separate 5,000-state optional-refinement budget prevents a known
-doomed broad certification plus strict-lift retry from consuming the full
-five-minute product boundary.
+That result used Calculator's former 5,000-state optional-refinement budget.
+The later [compact-policy certification result](active/2026-08-22-compact-policy-certification/result.md)
+reduces the direct graph from 3,208 to 570 nodes, measures closure at 162,829
+raw exact pairs, and publishes its independently evaluated
+2,823.051-Chaos policy bounded under the measured 200,000-pair product
+allowance. Native exact evaluation and 10,000 simulations pass; release WASM
+publishes the same Solve result in 267.181 seconds, with long worker slices
+retained as explicit performance debt.
 
 ## Imprint Solve-Scope Comparison
 

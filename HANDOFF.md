@@ -1,20 +1,57 @@
 # Handoff
 
 **Status: no implementation boundary is active.** The
-[bounded executable-upper completion and Imprint applicability](docs/active/2026-08-22-bounded-executable-upper-completion/plan.md)
-milestone is complete and accepted. Oliver must select the next chunk before
-implementation resumes.
+[compact better-policy certification](docs/active/2026-08-22-compact-policy-certification/plan.md)
+milestone is [complete and accepted](docs/active/2026-08-22-compact-policy-certification/result.md).
+Oliver must select the next chunk before implementation resumes.
 
 ## Current checkpoint
 
 - Branch: `main`.
 - Local `origin/main` remains at `40eeb87`; no push was issued.
-- Implementation checkpoint: `20e8a04` (`Complete bounded solver publication`).
+- Implementation checkpoint: `5fb9194` (`Compact direct policy certification`).
 - Result:
-  [docs/active/2026-08-22-bounded-executable-upper-completion/result.md](docs/active/2026-08-22-bounded-executable-upper-completion/result.md)
+  [docs/active/2026-08-22-compact-policy-certification/result.md](docs/active/2026-08-22-compact-policy-certification/result.md)
 - Full repository pipeline and rendered UI review were deliberately not run.
 
-## Completed bounded-publication boundary
+## Completed compact-certification boundary
+
+Ordinary primitive policy regions now share by their complete emitted runtime
+behavior: operation JSON, accounting roles, and common master-policy
+continuation. Gated-capable reforges with zero retry mass participate as
+ordinary regions. Product Fracture, positive-mass gated repeats,
+observation-owned choices, state-local choices, and compound fixed options
+retain their stronger or local sharing authority.
+
+On the Imprint-disabled four-T1 witness this reduces the direct graph from
+3,208 nodes / 7,139 edges / 1,356 policy regions to 570 nodes / 1,690 edges /
+33 regions. Exact evaluation still discovers 162,829 real carrier pairs and
+refines them to 43,833 behavioral pairs, so Calculator's optional direct-proof
+allowance is raised from 5,000 to the measured 200,000 boundary.
+
+The independently evaluated direct policy costs `2823.050846721888`, improving
+the prior `3759.9822404728984` fallback by 24.9%. It is proper, completely
+priced, and zero-off-policy. It remains bounded because the coarse estimate /
+former lower is `2889.7687877196995`; the 66.718 mismatch invalidates that
+coarse lower as publication authority, so the public lower is zero. Under a
+nonzero product optional-proof allowance, this cheaper verified candidate now
+publishes without a redundant strict lift. Zero-allowance native callers keep
+historical exhaustive behavior.
+
+Native acceptance solves in 174.221 seconds, independently matches the exact
+compiled cost, and completes 10,000 / 10,000 simulator runs with zero
+off-policy failures; sampled mean is `2818.5691565639445`. Direct certification
+peaks at 583,591,051 owned bytes.
+
+The corrected release-WASM diagnostic publishes the same bounded result in
+267.181 seconds with the same graph. Its duplicate post-solve exact evaluation
+crosses the shared 300-second benchmark watchdog. WASM heap grows from about
+278 MB to 917 MB, and the maximum worker slice is 47.45 seconds. These remain
+explicit speed, memory, and cancellation-responsiveness debts. The WASM
+benchmark runner now forwards `consider_imprint_programs`; its prior omission
+had accidentally labeled an enabled control as the disabled diagnostic.
+
+## Retained bounded-publication boundary
 
 Incremental executable-upper passes perform exactly one proper fixed-policy
 proof on an open graph; they no longer continue Howard improvement merely to
@@ -28,11 +65,11 @@ Appending state-local operators does not invalidate an unchanged captured
 vocabulary prefix. Non-finite compiler `expected_cost` metadata is omitted,
 so compiled JSON stays valid.
 
-Calculator passes `max_policy_refinement_states: 5000`. It bounds only
+Calculator passes `max_policy_refinement_states: 200000`. It bounds only
 optional direct certification/strict lift after fallback verification; native
 callers omitting the append-only ABI field retain the historical allowance.
-When direct certification exhausts this budget, the verified fallback is
-published without repeating the budget in strict lift.
+The new value is the measured compact direct-graph closure boundary. When
+direct certification exhausts it, the verified fallback remains available.
 
 An Imprint work/depth refusal is now family-local. Its transaction rolls back,
 the family stays unresolved and blocks exactness, and the same carrier is
@@ -41,7 +78,7 @@ The solve does not spend the exhausted Imprint-family budget again on later
 carriers. Mechanical applicability remains the native exact carrier check;
 no rarity-, goal-count-, or scalar-price dominance heuristic was added.
 
-## Accepted measurement
+## Retained predecessor measurement
 
 The enabled four-T1 primary solves in 14.204 seconds, retains the certified
 `21.772459401332767` lower, and publishes the independently evaluated
@@ -58,17 +95,22 @@ evaluated `3759.9822404728984` policy in 146.378 seconds. The optional direct
 attempt reaches the 5,000-state refinement budget in 2.168 seconds and strict
 lift does not run.
 
-The Warlord control remains exact at `224.123858897249`; the dedicated Magic
-Imprint retry remains exact at `252.653520212745` and contains native create /
-restore operations. Both completed 10,000 simulations at 100% success.
+The current rerun keeps the Warlord control exact at `224.123858897249` and the
+dedicated Magic Imprint retry exact at `252.653520212745`; both complete 10,000
+simulations at 100% success and zero off-policy. The enabled primary retains
+its `3759.9763122101763` bounded upper and 10,000 / 10,000 successful trials;
+compiler compaction reduces its graph from 87 to 79 nodes without changing
+cost.
 
 ## Acceptance
 
 - `powershell -File scripts/build.ps1`: pass.
-- Native engine tests: 177,542 checks, zero failures.
+- Focused native solver tests: 96,550 checks, zero failures.
+- Focused compiler tests: 863 checks, zero failures.
 - Release `powershell -File scripts/build-wasm.ps1`: pass.
 - Complete `npm test`, including 28/28 release-WASM smoke checks: pass.
 - `npx tsc --noEmit`: pass.
+- `git diff --check`: pass.
 - Full repository pipeline: deliberately not run.
 - Rendered/visual review: deliberately not run; it remains Oliver's.
 
@@ -119,11 +161,11 @@ Historical unrestricted initialization remains unchanged.
 
 No successor is selected. The closest evidence-backed choices are:
 
-1. **Compact better-upper certification / strategy-quality owner.** The
-   Imprint-disabled graph certifies a 2,889.77 lower but can only publish the
-   3,759.98 early policy within the 5,000-state product refinement budget.
-   Improve the candidate or its exact evaluator without weakening the new
-   bounded-return contract.
+1. **WASM exact-evaluator responsiveness.** The compact Imprint-disabled Solve
+   now publishes under five minutes, but a work item can occupy the worker for
+   47.45 seconds and heap reaches about 917 MB. Split the measured pair
+   refinement/evaluation stages cooperatively or reduce their retained
+   carrier payload without weakening exact graph evaluation.
 2. **Carrier-equivalent Imprint recovery dominance (exact research owner).**
    Compare checkpoint restore against a proper non-Imprint recovery policy to
    the same observable Magic carrier class from every relevant failure class,
@@ -134,6 +176,11 @@ No successor is selected. The closest evidence-backed choices are:
    the now-healthy product bounded-publication path.
 4. **Five-T1 certification recovery.** The separate five-goal resource-cap
    boundary and strategy-quality work remain unchanged by this milestone.
+5. **Open-Imprint candidate competition.** The cheaper 2,823.05 policy is
+   published when Imprint is explicitly excluded. The default enabled solve
+   still publishes 3,759.976 at its Imprint work refusal; independently retain
+   and compare a non-Imprint candidate under that open obligation if this is
+   selected, without treating the open family as evaluated or dominated.
 
 ## Retained architecture
 
