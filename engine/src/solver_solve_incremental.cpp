@@ -639,6 +639,41 @@ double SolveWork::Impl::sparse_row_q_for_values(
         &context);
 }
 
+bool SolveWork::Impl::maybe_install_incremental_anytime_incumbent() {
+    if (!options.high_impact_executable_uppers ||
+        !incremental_action_generation || incremental_envelope_closed ||
+        incremental_upper_policy_pass == false ||
+        incremental_alternative_rows.size() <
+            incremental_anytime_next_row_checkpoint) {
+        return false;
+    }
+
+    const std::size_t completed = incremental_alternative_rows.size();
+    ++incremental_anytime_policy_attempts;
+    incremental_anytime_policy_last_completed_rows = completed;
+    /* Geometric checkpoints make the total selection/evaluation work
+     * logarithmic in completed rows. This is a scheduling cadence, not a
+     * semantic cap: skipped checkpoints neither reject a row nor close the
+     * envelope. Saturate instead of wrapping on a pathological ledger. */
+    incremental_anytime_next_row_checkpoint =
+        completed > std::numeric_limits<std::size_t>::max() / 2
+            ? std::numeric_limits<std::size_t>::max()
+            : std::max<std::size_t>(completed + 1, completed * 2);
+
+    const double prior = output_incumbent.has_value()
+        ? output_incumbent->certified_upper_bound
+        : kInfinity;
+    const bool installed = try_install_reachable_incumbent(false);
+    if (installed && output_incumbent.has_value() &&
+        output_incumbent->certified_upper_bound < prior) {
+        ++incremental_anytime_policy_successes;
+        incremental_anytime_policy_best_upper = std::min(
+            incremental_anytime_policy_best_upper,
+            output_incumbent->certified_upper_bound);
+    }
+    return installed;
+}
+
 std::vector<double>
 SolveWork::Impl::certified_incremental_lower_values() {
     std::vector<double> lower(calc.state_count(), 0.0);
@@ -1538,6 +1573,14 @@ void SolveWork::Impl::finalize_incremental_diagnostics() {
         incremental_upper_policy_fixed_policy_proofs;
     diagnostics.incremental_upper_policy_last_failure =
         incremental_upper_policy_last_failure;
+    diagnostics.incremental_anytime_policy_attempts =
+        incremental_anytime_policy_attempts;
+    diagnostics.incremental_anytime_policy_successes =
+        incremental_anytime_policy_successes;
+    diagnostics.incremental_anytime_policy_last_completed_rows =
+        incremental_anytime_policy_last_completed_rows;
+    diagnostics.incremental_anytime_policy_best_upper =
+        incremental_anytime_policy_best_upper;
     diagnostics.incremental_refinement_uncertainty =
         incremental_refinement_uncertainty;
     diagnostics.incremental_action_witnesses.clear();

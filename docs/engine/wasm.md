@@ -7,12 +7,12 @@ evidence boundaries.
 Parent: [Engine](README.md)
 
 Verified against code, rebuilt release module, and complete non-visual web
-acceptance: 2026-08-16 on `codex/solver-goal-realignment`.
+acceptance: 2026-08-22 on `main`.
 
 Release-wrapper export map verified in the tracked
 `bindings/wasm/dist/poecraft_engine.mjs` generated at this boundary. The
 tracked `.wasm` SHA-256 is
-`c1b873930209fe86fae066ea85cf24130f0638eba0783c214bfa22ffcc5fd528`.
+`a20c607884642fe8871dbbb07999dce76ed49aead304fc95d8fafd1fa5b4406b`.
 
 ## Architecture
 
@@ -58,7 +58,7 @@ are not release behavior.
 
 `scripts/dev-wasm.ps1` is the incremental development path. Its Emscripten-only
 CMake/Ninja target compiles the same source inventory to separate objects and
-emits the same module pair with the same flags and 61-symbol export manifest.
+emits the same module pair with the same flags and 62-symbol export manifest.
 The direct script remains the release fallback and diagnostics owner. On the
 current machine the direct release took 124.885 s; incremental clean, leaf
 edit/relink, and no-op builds took 29.607 s, 17.367 s, and 0.711 s. The retained
@@ -80,7 +80,7 @@ The tracked release module exports these facade groups:
 | Craft actions | Apply one, run a batch, pool debug, Bestiary apply/calculate |
 | Strategy evaluation | Compile/close, synchronous evaluate, and stepped begin/step/finish/close |
 | Economy/simulation | Economy open/close; simulator open/close/chunk/result |
-| Solver | Open/close, enumerate actions, calculator odds, synchronous solve, stepped solve begin/step/finish/abandon, state value, projection, compile, raw compiled-strategy transfer, log, telemetry |
+| Solver | Open/close, enumerate actions, calculator odds, synchronous solve, stepped solve begin/step/request-bounded-finish/finish/abandon, state value, projection, compile, raw compiled-strategy transfer, log, telemetry |
 | Response transfer | Result status, raw response-data pointer/size, and explicit response clear |
 | Diagnostics | Live-handle count and memory statistics |
 | Emscripten plumbing | `malloc`, `free`, and the runtime helpers listed above |
@@ -173,6 +173,15 @@ On cancellation the worker returns a cancelled result with its latest
 progress/worker telemetry and calls `pcw_solver_solve_abandon` in cleanup.
 Abandon resets the native in-progress solve while retaining bounded abandoned
 telemetry for diagnosis.
+
+The worker also accepts an optional `boundedFinishAfterMs` policy. When that
+wall time expires it calls `pcw_solver_solve_request_bounded_finish` and keeps
+stepping through ordinary native finalization. This differs from cancellation:
+open discovery stops, the retained executable incumbent is compiled and
+independently evaluated, and the result reports
+`requested_bounded_finish` without a cap or exactness claim. Calculator uses
+four minutes, reserving the remainder of its five-minute product target for
+finalization. AbortSignal remains the prompt abandon path.
 
 Policy extraction, exact lift, compilation, and independent graph assertion
 all remain inside repeated native `step` calls. Native `Done` is emitted only
@@ -307,11 +316,12 @@ WASM integration evidence, but it is not a real-browser/device benchmark.
 
 The source facade marks all public functions `EMSCRIPTEN_KEEPALIVE`. The
 explicit `bindings/wasm/wasm-exports.txt` manifest and the tracked release
-module include the four stepped solver functions:
+module include the five stepped solver functions:
 
 ```text
 pcw_solver_solve_begin
 pcw_solver_solve_step
+pcw_solver_solve_request_bounded_finish
 pcw_solver_solve_finish
 pcw_solver_solve_abandon
 ```

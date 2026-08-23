@@ -1921,8 +1921,10 @@ void SolveWork::Impl::install_direct_output_incumbent(
         commit_output_incumbent(std::move(candidate));
     }
 
-bool SolveWork::Impl::try_install_resource_stop_reachable_incumbent() {
-        if (!result.diagnostics.resource_cap_hit ||
+bool SolveWork::Impl::try_install_reachable_incumbent(
+        const bool require_resource_stop) {
+        if ((require_resource_stop &&
+             !result.diagnostics.resource_cap_hit) ||
             transition_cache == nullptr ||
             result.start_state == kNoId ||
             result.start_state >= calc.state_count() ||
@@ -2254,7 +2256,9 @@ bool SolveWork::Impl::try_install_resource_stop_reachable_incumbent() {
                             : 0;
                     install_output_incumbent(
                         upper, result.values, policy_rows, {}, {},
-                        "resource_stop_reachable_proper_policy",
+                        require_resource_stop
+                            ? "resource_stop_reachable_proper_policy"
+                            : "anytime_reachable_proper_policy",
                         &reachable, nullptr, true, true);
                     installed = output_incumbent.has_value() &&
                         (!had_prior_incumbent ||
@@ -2279,7 +2283,9 @@ bool SolveWork::Impl::try_install_resource_stop_reachable_incumbent() {
         restore(installed);
         if (installed) {
             retain_action_reason(
-                "included:resource_stop_start_reachable_proper_policy");
+                require_resource_stop
+                    ? "included:resource_stop_start_reachable_proper_policy"
+                    : "included:anytime_start_reachable_proper_policy");
         }
         return installed;
     }

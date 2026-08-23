@@ -68,6 +68,10 @@ SolveTermination successful_refined_publication_termination(
     if (coarse_termination == SolveTermination::NumericalStability) {
         return SolveTermination::NumericalStability;
     }
+    if (coarse_termination ==
+        SolveTermination::RequestedBoundedFinish) {
+        return SolveTermination::RequestedBoundedFinish;
+    }
     if (coarse_termination == SolveTermination::ExactClosed) {
         /* Exact closure of a coarse quotient cannot survive a failed or
          * incomplete strict publication proof. The executable graph still
@@ -352,8 +356,10 @@ SolveWork::Impl::run_finalization() {
         }
         co_await solve_detail::CooperativeCheckpoint{};
         const auto extraction_started = std::chrono::steady_clock::now();
-        if (result.diagnostics.resource_cap_hit) {
-            (void)try_install_resource_stop_reachable_incumbent();
+        if (result.diagnostics.resource_cap_hit ||
+            (requested_bounded_finish && output_incumbent.has_value())) {
+            (void)try_install_reachable_incumbent(
+                !requested_bounded_finish);
         }
         const auto finalize_diagnostic =
             [&](auto&& finalizer) {
@@ -450,6 +456,7 @@ SolveWork::Impl::run_finalization() {
             }
         }
         const bool current_policy_can_still_be_exact =
+            !requested_bounded_finish &&
             optimization_converged() &&
             (!incremental_action_generation ||
              incremental_envelope_closed) &&
@@ -463,6 +470,7 @@ SolveWork::Impl::run_finalization() {
               result.diagnostics.focused_optimality_gap <=
                   exact_gap_proof_tolerance()));
         const bool coarse_discovery_closed =
+            !requested_bounded_finish &&
             (!incremental_action_generation ||
              incremental_envelope_closed) &&
             !result.diagnostics.state_cap_hit &&
@@ -1883,9 +1891,11 @@ SolveWork::Impl::run_finalization() {
             result.termination =
                 target_gap_stop
                     ? SolveTermination::TargetGap
-                    : numerical_stability_stop
-                          ? SolveTermination::NumericalStability
-                          : SolveTermination::RefusedResourceCap;
+                    : requested_bounded_finish
+                          ? SolveTermination::RequestedBoundedFinish
+                          : numerical_stability_stop
+                                ? SolveTermination::NumericalStability
+                                : SolveTermination::RefusedResourceCap;
             result.lower_bound = certified_global_lower_bound();
             result.upper_bound = incumbent.certified_upper_bound;
             result.evaluated_policy_cost =
@@ -1916,11 +1926,13 @@ SolveWork::Impl::run_finalization() {
              * without an incumbent is still a resource-cap result; callers
              * must not have to infer it from optional telemetry. */
             result.termination =
-                numerical_stability_stop
-                    ? SolveTermination::NumericalStability
-                    : result.diagnostics.resource_cap_hit
-                    ? SolveTermination::RefusedResourceCap
-                    : SolveTermination::NoExecutablePolicy;
+                requested_bounded_finish
+                    ? SolveTermination::RequestedBoundedFinish
+                    : numerical_stability_stop
+                          ? SolveTermination::NumericalStability
+                          : result.diagnostics.resource_cap_hit
+                                ? SolveTermination::RefusedResourceCap
+                                : SolveTermination::NoExecutablePolicy;
             result.lower_bound = certified_global_lower_bound();
             result.upper_bound = kInfinity;
             result.evaluated_policy_cost = kInfinity;
@@ -2018,7 +2030,9 @@ SolveWork::Impl::run_finalization() {
                 result.termination =
                     result.diagnostics.resource_cap_hit
                         ? SolveTermination::RefusedResourceCap
-                        : SolveTermination::NoExecutablePolicy;
+                        : requested_bounded_finish
+                              ? SolveTermination::RequestedBoundedFinish
+                              : SolveTermination::NoExecutablePolicy;
                 result.lower_bound = certified_global_lower_bound();
                 result.upper_bound = kInfinity;
                 result.evaluated_policy_cost = kInfinity;
@@ -2665,6 +2679,7 @@ SolveWork::Impl::run_finalization() {
         const auto classify_bounded_publication = [&] {
             SolveGapTarget fired = SolveGapTarget::None;
             const bool eligible =
+                !requested_bounded_finish &&
                 !result.diagnostics.resource_cap_hit &&
                 !result.diagnostics.state_cap_hit &&
                 std::isfinite(result.lower_bound) &&

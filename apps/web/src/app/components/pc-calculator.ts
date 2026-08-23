@@ -805,6 +805,10 @@ export class PcCalculator extends HTMLElement {
                 solveOptions,
                 {
                     signal: solveAbort.signal,
+                    /* Reserve the last minute of the five-minute product
+                     * boundary for compile/certify/exact evaluation of the
+                     * best executable incumbent found during discovery. */
+                    boundedFinishAfterMs: 4 * 60 * 1000,
                     onProgress: (progress) => {
                         this.solveProgress = progress;
                         refreshSolveElapsed();

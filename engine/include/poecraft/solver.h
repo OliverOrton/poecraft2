@@ -408,7 +408,10 @@ typedef enum pc_solve_termination {
     PC_SOLVE_TERMINATION_TARGET_GAP = 2,
     PC_SOLVE_TERMINATION_EXACT_CLOSED = 3,
     PC_SOLVE_TERMINATION_NO_EXECUTABLE_POLICY = 4,
-    PC_SOLVE_TERMINATION_NUMERICAL_STABILITY = 5
+    PC_SOLVE_TERMINATION_NUMERICAL_STABILITY = 5,
+    /* The stepped host stopped open discovery and requested normal bounded
+     * policy finalization. This is not a resource cap or exact closure. */
+    PC_SOLVE_TERMINATION_REQUESTED_BOUNDED_FINISH = 6
 } pc_solve_termination;
 
 /* Precise stopping cause is independent of policy availability. A capped
@@ -428,7 +431,8 @@ typedef enum pc_solve_stop_cause {
     PC_SOLVE_STOP_COMPILED_OUTPUT_CAP = 9,
     PC_SOLVE_STOP_OTHER_RESOURCE_CAP = 10,
     PC_SOLVE_STOP_NO_EXECUTABLE_POLICY = 11,
-    PC_SOLVE_STOP_NUMERICAL_STABILITY = 12
+    PC_SOLVE_STOP_NUMERICAL_STABILITY = 12,
+    PC_SOLVE_STOP_REQUESTED_BOUNDED_FINISH = 13
 } pc_solve_stop_cause;
 
 typedef enum pc_solve_cap_hit {
@@ -560,6 +564,14 @@ pc_result pc_solver_solve_step(
     pc_solver_handle solver,
     uint32_t max_work_items,
     pc_solve_progress* out_progress,
+    pc_error_info* out_error);
+
+/* Request a truthful anytime result from an active stepped solve. The next
+ * step stops open graph/action discovery at its cooperative boundary and
+ * enters the ordinary compile/certify/evaluate finalizer. This call does not
+ * make an exactness claim and is distinct from abandon/cancellation. */
+pc_result pc_solver_solve_request_bounded_finish(
+    pc_solver_handle solver,
     pc_error_info* out_error);
 
 pc_result pc_solver_solve_finish(

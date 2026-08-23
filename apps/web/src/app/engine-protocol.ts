@@ -644,7 +644,8 @@ export interface SolveSummary {
         | "compiled_output_cap"
         | "other_resource_cap"
         | "no_executable_policy"
-        | "numerical_stability";
+        | "numerical_stability"
+        | "requested_bounded_finish";
     cap_hit_mask: number;
     registry_actions: number;
     candidate_actions: number;
@@ -664,7 +665,8 @@ export interface SolveSummary {
         | "target_gap"
         | "exact_closed"
         | "no_executable_policy"
-        | "numerical_stability";
+        | "numerical_stability"
+        | "requested_bounded_finish";
     lower_bound: number | null;
     upper_bound: number | null;
     evaluated_policy_cost: number | null;

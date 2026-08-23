@@ -84,6 +84,9 @@ export interface SolverRunOptions {
     /** Instrumentation/control mode for callers that need cancellation
      * acknowledgement after each exact engine work unit. */
     yieldEveryStep?: boolean;
+    /** Stop open discovery after this worker wall time and run the engine's
+     * normal bounded-policy finalizer. AbortSignal remains prompt abandon. */
+    boundedFinishAfterMs?: number;
     onProgress?: (progress: SolveProgress) => void;
     signal?: AbortSignal;
 }
@@ -559,6 +562,7 @@ export class EngineClient {
                 options,
                 chunkSize: runOptions?.chunkSize,
                 yieldEveryStep: runOptions?.yieldEveryStep,
+                boundedFinishAfterMs: runOptions?.boundedFinishAfterMs,
                 reportProgress: runOptions?.onProgress !== undefined,
             },
             {

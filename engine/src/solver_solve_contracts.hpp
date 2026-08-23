@@ -90,6 +90,7 @@ enum class SolveTermination : std::uint8_t {
     ExactClosed,
     NoExecutablePolicy,
     NumericalStability,
+    RequestedBoundedFinish,
 };
 
 inline bool advance_unreconciled_stable_policy_latch(
@@ -541,6 +542,12 @@ struct SolveDiagnostics {
     double residual = 0.0;
     bool state_cap_hit = false;
     bool resource_cap_hit = false;
+    /* The stepped host asked discovery to stop at a cooperative boundary and
+     * publish the best independently verified executable policy retained so
+     * far. This is neither graph closure nor a solver resource refusal. */
+    bool requested_bounded_finish = false;
+    std::uint32_t requested_bounded_finish_expanded_states = 0;
+    std::uint64_t requested_bounded_finish_rows = 0;
     std::vector<std::string> cap_hits;
     std::uint32_t registry_actions = 0;
     std::uint32_t candidate_actions = 0;
@@ -703,6 +710,11 @@ struct SolveDiagnostics {
     std::uint64_t incremental_upper_policy_passes_rejected = 0;
     std::uint64_t incremental_upper_policy_fixed_policy_proofs = 0;
     std::string incremental_upper_policy_last_failure;
+    std::uint64_t incremental_anytime_policy_attempts = 0;
+    std::uint64_t incremental_anytime_policy_successes = 0;
+    std::uint64_t incremental_anytime_policy_last_completed_rows = 0;
+    double incremental_anytime_policy_best_upper =
+        std::numeric_limits<double>::infinity();
     double incremental_refinement_uncertainty = 0.0;
     std::vector<std::string> incremental_action_witnesses;
     std::uint64_t incremental_action_witnesses_omitted = 0;
@@ -1023,6 +1035,10 @@ class SolveWork {
     SolveWork& operator=(const SolveWork&) = delete;
 
     void step(std::uint32_t max_work_items);
+    /* Stop graph/action discovery at the next cooperative step boundary and
+     * run normal bounded-policy finalization. Ordinary abandon remains the
+     * prompt cancellation path and does not publish partial work. */
+    void request_bounded_finish();
     SolveProgress progress() const;
     SolveTelemetrySnapshot telemetry_snapshot(bool abandoned = false) const;
     SolveResult finish();

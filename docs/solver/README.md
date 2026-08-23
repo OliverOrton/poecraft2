@@ -711,6 +711,17 @@ filtered action is admitted, proved non-improving, or inapplicable.
 Unrestricted mode retains its previous atomic complete-envelope behavior and
 global exactness contract.
 
+Completed delayed rows can also form a useful proper policy jointly even when
+no row wins the one-at-a-time incremental comparison. At geometrically growing
+completed-row checkpoints, the high-impact executable-upper path temporarily
+considers every fully materialized row, constructs and exactly evaluates a
+start-reachable fixed policy, and retains an improved immutable output
+incumbent. It then restores every row's prior admission state. This is
+upper-only anytime evidence: it does not admit alternatives to the lower
+problem, close their action families, or authorize exactness. Final
+publication still compiles and independently evaluates the complete runtime
+strategy graph.
+
 #### Q-directed deep refinement
 
 Completed delayed rows are retained for the lifetime of a gated solve.
@@ -1051,6 +1062,14 @@ only transfers the already finalized result. Exact lift, compiled-policy
 assertion, their continuations, and a completed result awaiting transfer are
 included in both fast and audited selected-owned-byte accounting.
 
+An active stepped solve may receive `request_bounded_finish()`. At the next
+public work boundary it rolls back any staged state-local automatic
+transaction, restores temporary upper-pass admissions, stops further graph and
+action discovery, and enters the same cooperative finalizer. It preserves the
+best immutable executable incumbent and every honest open obligation. The
+request cannot claim exact closure or satisfy a gap target. It is distinct from
+`abandon()`, which cancels the work and publishes no result.
+
 Transition caches are price-independent and can be reused by a solver handle.
 The browser product deliberately does not retain its scoped Solve handle:
 after summary, telemetry, and compiled-strategy transfer it closes the handle
@@ -1076,6 +1095,9 @@ resource stop. It also names `numerical_stability` when repeated complete
 fixed-policy evaluations select the same policy but cannot reconcile a strict
 row comparison inside the numerical tolerance. That stop cannot claim
 exactness; it may retain only an independently evaluated executable upper.
+`requested_bounded_finish` names an explicit host decision to stop open
+discovery and publish the best independently evaluated executable incumbent;
+it is neither a cap nor exact closure.
 `cap_hit_mask` retains every observed cap, including when a proper bounded
 policy survives.
 

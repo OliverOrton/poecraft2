@@ -699,6 +699,7 @@ struct SolveWork::Impl {
         std::numeric_limits<std::uint64_t>::max();
     bool incremental_action_generation = false;
     bool incremental_envelope_closed = false;
+    bool requested_bounded_finish = false;
     bool incremental_restricted_values_ready = false;
     /* Exactly optimized values of a closed restricted action graph. They are
      * feasible per-carrier uppers after later actions are added; never use
@@ -773,6 +774,16 @@ struct SolveWork::Impl {
     std::uint64_t incremental_upper_policy_passes_rejected = 0;
     std::uint64_t incremental_upper_policy_fixed_policy_proofs = 0;
     std::string incremental_upper_policy_last_failure;
+    /* A single completed row can look non-improving against the current
+     * incumbent even when several completed rows form a much better proper
+     * policy together. Periodically synthesize that joint executable witness
+     * at geometrically growing row checkpoints; this never admits the rows to
+     * the lower problem or closes their exact envelope. */
+    std::size_t incremental_anytime_next_row_checkpoint = 64;
+    std::uint64_t incremental_anytime_policy_attempts = 0;
+    std::uint64_t incremental_anytime_policy_successes = 0;
+    std::uint64_t incremental_anytime_policy_last_completed_rows = 0;
+    double incremental_anytime_policy_best_upper = kInfinity;
     double incremental_refinement_uncertainty = 0.0;
     std::uint32_t expansion_states_outside_chaos_support = 0;
     std::vector<std::uint8_t> incremental_chaos_support;
@@ -1170,6 +1181,8 @@ struct SolveWork::Impl {
     ~Impl();
 
     solve_detail::CooperativeTask<SolveResult> run_finalization();
+    bool can_prepare_requested_bounded_finish() const;
+    void prepare_requested_bounded_finish();
 
     void begin_finalization();
 
@@ -1288,7 +1301,9 @@ struct SolveWork::Impl {
     void install_direct_output_incumbent(
         const double upper, const std::uint64_t row);
 
-    bool try_install_resource_stop_reachable_incumbent();
+    bool try_install_reachable_incumbent(bool require_resource_stop);
+
+    bool maybe_install_incremental_anytime_incumbent();
 
     void try_install_gated_root_renewal_incumbent(
         std::uint32_t state,
@@ -1759,6 +1774,8 @@ struct SolveWork::Impl {
         FocusedScheduleRoundTelemetry telemetry);
 
     bool begin_focused_upper_solve();
+
+    void abort_incremental_upper_policy_pass_for_bounded_finish();
 
     void sync_constructive_discovered_states();
 

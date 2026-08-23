@@ -272,6 +272,8 @@ function disabledReport(spec: SolverBenchmarkCase, status?: string): CaseReport 
                     ? "native-unit-only"
                     : "native-wasm-solver-v1"),
             watchdog_seconds: spec.watchdog_seconds ?? null,
+            requested_bounded_finish_seconds:
+                spec.requested_bounded_finish_seconds ?? null,
             session: spec.session ?? null,
             start: spec.start ?? null,
             goal: spec.goal ?? null,
@@ -1232,6 +1234,10 @@ async function runCase(
                     },
                     {
                         chunkSize: spec.caps.solve_step_work_items,
+                        boundedFinishAfterMs:
+                            spec.requested_bounded_finish_seconds === undefined
+                                ? undefined
+                                : spec.requested_bounded_finish_seconds * 1000,
                         signal: caseAbort.signal,
                         onProgress: recordSolveProgress,
                     },
@@ -1569,6 +1575,8 @@ async function runCase(
             comparison_profile:
                 spec.comparison_profile ?? "native-wasm-solver-v1",
             watchdog_seconds: spec.watchdog_seconds ?? null,
+            requested_bounded_finish_seconds:
+                spec.requested_bounded_finish_seconds ?? null,
             session: spec.session,
             start: spec.start,
             goal: spec.goal,

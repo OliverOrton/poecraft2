@@ -5,6 +5,18 @@
 Parent: [Documentation map](../README.md)
 
 The completed
+[Five-T1 Goal-Band Recovery](2026-08-22-five-t1-goal-band-recovery/plan.md)
+retains joint proper executable policies at geometric completed-row
+checkpoints and gives stepped Solve a distinct host-requested bounded finish.
+The exact owner-supplied four-of-five Conquest Lamellar now publishes an
+independently evaluated `2083.88214353439`-Chaos, 23-node policy in about 22
+native and release-WASM solve seconds. Both complete exact evaluation and
+10,000 / 10,000 simulator runs with zero off-policy failures. The result is
+honestly bounded with 17,636 open alternatives; see the
+[result](2026-08-22-five-t1-goal-band-recovery/result.md). No successor is
+selected.
+
+The completed
 [Imprint Solve Scope And Controlled Comparison](2026-08-22-imprint-solve-scope/plan.md)
 adds an explicit, historically-on Calculator control for automatic Imprint
 programs and measures the checked four-T1 solve with that family excluded. A

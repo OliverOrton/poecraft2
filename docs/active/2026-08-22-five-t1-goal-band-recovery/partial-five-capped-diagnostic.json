@@ -1,0 +1,116 @@
+{
+  "schema_version": "solver_benchmark_case_v1",
+  "id": "conquest-lamellar-allflame-partial-five-capped-diagnostic",
+  "category": "five_t1_goal_band_recovery",
+  "approval_status": "diagnostic_only",
+  "benchmark_enabled": true,
+  "description": "The exact owner-supplied four-of-five carrier with a deliberately small expansion cap so its current executable policy can be finalized and inspected.",
+  "comparison_profile": "five-t1-goal-band-recovery-capped-diagnostic-v1",
+  "watchdog_seconds": 180,
+  "session": {
+    "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+    "base_name": "Conquest Lamellar",
+    "item_class_key": "Body Armour",
+    "item_level": 86,
+    "minimum_item_level": 86
+  },
+  "start": {
+    "rarity": "rare",
+    "with_implicits": false,
+    "mods": [
+      {"key": "LocalIncreasedArmourAndEvasionAndStunRecovery6", "flags": []},
+      {"key": "LocalBaseArmourAndEvasionRating8", "flags": []},
+      {"key": "LocalIncreasedArmourAndEvasion8", "flags": []},
+      {"key": "ChanceToSuppressSpellsHigh5___", "flags": ["fractured"]}
+    ]
+  },
+  "goal": {
+    "version": "v1",
+    "rarity": "rare",
+    "action_mode": "goal_relevant",
+    "min_satisfied_slots": 5,
+    "slots": [
+      {"family_mod_key": "LocalIncreasedArmourAndEvasion8", "min_tier": 1},
+      {"family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6", "min_tier": 1},
+      {"family_mod_key": "LocalBaseArmourAndEvasionRating8", "min_tier": 1},
+      {"family_mod_key": "AdditionalPhysicalDamageReduction5_", "min_tier": 1},
+      {"family_mod_key": "ChanceToSuppressSpellsHigh5___", "min_tier": 1}
+    ]
+  },
+  "product_action_envelope": {
+    "mode": "calculator_goal_relevant_priced_v1",
+    "envelope_goal": {
+      "version": "v1",
+      "rarity": "rare",
+      "action_mode": "goal_relevant",
+      "fossil_mode": "goal_relevant",
+      "requested_fossil_actions": [],
+      "min_satisfied_slots": 5,
+      "slots": [
+        {"family_mod_key": "LocalIncreasedArmourAndEvasion8", "min_tier": 1},
+        {"family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6", "min_tier": 1},
+        {"family_mod_key": "LocalBaseArmourAndEvasionRating8", "min_tier": 1},
+        {"family_mod_key": "AdditionalPhysicalDamageReduction5_", "min_tier": 1},
+        {"family_mod_key": "ChanceToSuppressSpellsHigh5___", "min_tier": 1}
+      ]
+    },
+    "pricing_filter": "all_declared_cost_keys_present",
+    "bench_goal_slots_forbidden": true
+  },
+  "allowed_mechanic_families": ["calculator_goal_relevant_product_envelope"],
+  "economy": {
+    "version": "v1",
+    "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+    "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+    "league_key": "allflame",
+    "league_name": "Allflame",
+    "manual_overrides": {"base": 5.0},
+    "fallback_price": null,
+    "missing_price_decisions": {"base": "owner_reconstructed_live_override_5_chaos"}
+  },
+  "expected": {
+    "solve_status": "reliability_classified",
+    "optimality_status": "classified",
+    "compile_status": "compiled",
+    "verification_status": "not_required"
+  },
+  "caps": {
+    "max_states": 200000,
+    "max_sweeps": 100000,
+    "solve_step_work_items": 1024,
+    "max_discovered_states": 200000,
+    "max_expanded_states": 1000,
+    "max_state_action_rows": 1215000,
+    "max_transitions": 10000000,
+    "max_reforge_work": 50000000,
+    "max_solver_owned_bytes": 1073741824,
+    "max_diagnostic_samples": 64,
+    "max_telemetry_json_bytes": 2097152,
+    "max_policy_refinement_states": 200000,
+    "max_compiled_nodes": 100000,
+    "max_compiled_edges": 400000,
+    "max_strategy_json_bytes": 67108864,
+    "worker_step_ms": 20000,
+    "cancel_ack_ms": 250,
+    "goal_progress_gated_reforges": true,
+    "allow_economic_restart": false,
+    "high_impact_executable_uppers": true,
+    "consider_imprint_programs": false,
+    "full_evidence": true
+  },
+  "verification": {
+    "runs": 0,
+    "seed": 20260822,
+    "max_actions_per_run": 100000,
+    "max_graph_steps_per_run": 4000000,
+    "exact_evaluation": true,
+    "exact_max_states": 1000000,
+    "exact_max_pairs": 5000000,
+    "exact_max_transitions": 20000000,
+    "exact_max_owned_bytes": 1073741824,
+    "exact_cost_absolute_tolerance": 1e-7,
+    "exact_cost_relative_tolerance": 1e-9
+  }
+}

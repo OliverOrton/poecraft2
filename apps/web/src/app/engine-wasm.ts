@@ -551,6 +551,14 @@ export class EngineBindings {
         ).progress as unknown as SolveProgress;
     }
 
+    requestSolverSolveBoundedFinish(solver: number): void {
+        this.callJson(
+            "pcw_solver_solve_request_bounded_finish",
+            ["number"],
+            [solver],
+        );
+    }
+
     finishSolverSolve(solver: number): SolveSummary {
         const { ok, ...rest } = this.callJson(
             "pcw_solver_solve_finish",

@@ -30,6 +30,19 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 ## Execution State
 
 The
+[five-T1 goal-band recovery](active/2026-08-22-five-t1-goal-band-recovery/plan.md)
+boundary is [complete](active/2026-08-22-five-t1-goal-band-recovery/result.md).
+Completed alternative rows now receive periodic joint proper-policy capture,
+and stepped Solve has an honest host-requested bounded-finalization lifecycle.
+The owner-supplied four-of-five Conquest Lamellar publishes the same verified
+`2083.88214353439`-Chaos, 23-node strategy natively and in release WASM in
+about 22 solve seconds. Exact evaluation and 10,000 simulations pass; Warlord,
+Imprint, and four-T1 controls retain their classifications. The primary still
+has 17,636 open action obligations and a `0.01165` lower, so this is useful
+bounded publication rather than exact closure. No implementation boundary is
+active until Oliver selects a successor.
+
+The
 [compact better-policy certification](active/2026-08-22-compact-policy-certification/plan.md)
 boundary is [complete](active/2026-08-22-compact-policy-certification/result.md).
 Exact emitted-behavior sharing reduces the checked Imprint-disabled four-T1

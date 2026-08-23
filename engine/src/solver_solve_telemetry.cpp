@@ -580,6 +580,14 @@ SolveTelemetrySnapshot SolveWork::Impl::telemetry_snapshot(bool abandoned) const
             incremental_upper_policy_fixed_policy_proofs;
         snapshot.diagnostics.incremental_upper_policy_last_failure =
             incremental_upper_policy_last_failure;
+        snapshot.diagnostics.incremental_anytime_policy_attempts =
+            incremental_anytime_policy_attempts;
+        snapshot.diagnostics.incremental_anytime_policy_successes =
+            incremental_anytime_policy_successes;
+        snapshot.diagnostics.incremental_anytime_policy_last_completed_rows =
+            incremental_anytime_policy_last_completed_rows;
+        snapshot.diagnostics.incremental_anytime_policy_best_upper =
+            incremental_anytime_policy_best_upper;
         snapshot.diagnostics.incremental_refinement_uncertainty =
             incremental_refinement_uncertainty;
         snapshot.diagnostics.solve_owned_byte_ledger_requests =
@@ -1408,6 +1416,8 @@ std::string serialize_solver_telemetry(
             return "no_executable_policy";
         case SolveTermination::NumericalStability:
             return "numerical_stability";
+        case SolveTermination::RequestedBoundedFinish:
+            return "requested_bounded_finish";
         }
         return "none";
     };
@@ -4324,6 +4334,24 @@ std::string serialize_solver_telemetry(
             json,
             diagnostics->incremental_upper_policy_last_failure);
         json += "}";
+        json += ",\"joint_anytime_policy\":{\"attempts\":" +
+                std::to_string(
+                    diagnostics->incremental_anytime_policy_attempts);
+        json += ",\"successes\":" +
+                std::to_string(
+                    diagnostics->incremental_anytime_policy_successes);
+        json += ",\"last_completed_rows\":" +
+                std::to_string(
+                    diagnostics
+                        ->incremental_anytime_policy_last_completed_rows);
+        json += ",\"best_upper\":" +
+                (std::isfinite(
+                     diagnostics->incremental_anytime_policy_best_upper)
+                     ? std::to_string(
+                           diagnostics
+                               ->incremental_anytime_policy_best_upper)
+                     : std::string("null"));
+        json += "}";
         json += ",\"remaining_action_envelope\":" +
                 std::to_string(
                     diagnostics->incremental_actions_unevaluated +
@@ -4538,6 +4566,15 @@ std::string serialize_solver_telemetry(
                 std::string(bool_json(diagnostics->state_cap_hit));
         json += ",\"resource_cap_hit\":" +
                 std::string(bool_json(diagnostics->resource_cap_hit));
+        json += ",\"requested_bounded_finish\":" +
+                std::string(bool_json(
+                    diagnostics->requested_bounded_finish));
+        json += ",\"requested_bounded_finish_expanded_states\":" +
+                std::to_string(
+                    diagnostics->requested_bounded_finish_expanded_states);
+        json += ",\"requested_bounded_finish_rows\":" +
+                std::to_string(
+                    diagnostics->requested_bounded_finish_rows);
         json += ",\"cap_hits\":[";
         for (std::size_t i = 0; i < diagnostics->cap_hits.size(); ++i) {
             if (i != 0) json += ',';
@@ -4583,6 +4620,15 @@ std::string serialize_solver_telemetry(
                 std::string(bool_json(diagnostics->state_cap_hit));
         json += ",\"resource_cap_hit\":" +
                 std::string(bool_json(diagnostics->resource_cap_hit));
+        json += ",\"requested_bounded_finish\":" +
+                std::string(bool_json(
+                    diagnostics->requested_bounded_finish));
+        json += ",\"requested_bounded_finish_expanded_states\":" +
+                std::to_string(
+                    diagnostics->requested_bounded_finish_expanded_states);
+        json += ",\"requested_bounded_finish_rows\":" +
+                std::to_string(
+                    diagnostics->requested_bounded_finish_rows);
         json += ",\"cap_hits\":[";
         for (std::size_t i = 0; i < diagnostics->cap_hits.size(); ++i) {
             if (i != 0) json += ',';
@@ -4592,6 +4638,9 @@ std::string serialize_solver_telemetry(
         json += ",\"full_request_status\":\"";
         if (result->termination == SolveTermination::TargetGap) {
             json += "target_gap";
+        } else if (result->termination ==
+                   SolveTermination::RequestedBoundedFinish) {
+            json += "incomplete_requested_bounded_finish";
         } else if (diagnostics->state_cap_hit) {
             json += "incomplete_state_cap";
         } else if (diagnostics->resource_cap_hit) {

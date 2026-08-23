@@ -972,7 +972,11 @@ void enforce_bounded_best_policy_contract(
             (report.solve_summary.termination ==
                  PC_SOLVE_TERMINATION_NUMERICAL_STABILITY &&
              report.solve_summary.stop_cause ==
-                 PC_SOLVE_STOP_NUMERICAL_STABILITY);
+                 PC_SOLVE_STOP_NUMERICAL_STABILITY) ||
+            (report.solve_summary.termination ==
+                 PC_SOLVE_TERMINATION_REQUESTED_BOUNDED_FINISH &&
+             report.solve_summary.stop_cause ==
+                 PC_SOLVE_STOP_REQUESTED_BOUNDED_FINISH);
         report.bounded_best_policy_strict_gap =
             std::isfinite(report.solve_summary.lower_bound) &&
             std::isfinite(report.solve_summary.upper_bound) &&
@@ -1944,6 +1948,23 @@ void validate_case_shape(const Value& specification) {
                 "case watchdog_seconds must be a positive finite number");
         }
     }
+    if (const Value* bounded_finish = optional(
+            specification, "requested_bounded_finish_seconds",
+            Type::Number)) {
+        if (!std::isfinite(bounded_finish->number) ||
+            bounded_finish->number <= 0.0) {
+            throw std::runtime_error(
+                "case requested_bounded_finish_seconds must be a positive "
+                "finite number");
+        }
+        if (const Value* watchdog = optional(
+                specification, "watchdog_seconds", Type::Number);
+            watchdog != nullptr &&
+            bounded_finish->number >= watchdog->number) {
+            throw std::runtime_error(
+                "case requested bounded finish must precede its watchdog");
+        }
+    }
     required(specification, "benchmark_enabled", Type::Bool);
     if (const Value* expected = specification.find("expected")) {
         if (expected->type != Type::Object) {
@@ -2616,6 +2637,14 @@ CaseResult run_case(
             if (checkpoint) checkpoint(report);
         };
         bool watchdog_abandoned = false;
+        const Value* requested_bounded_finish_value = optional(
+            specification, "requested_bounded_finish_seconds",
+            Type::Number);
+        const double requested_bounded_finish_seconds =
+            requested_bounded_finish_value == nullptr
+                ? 0.0
+                : requested_bounded_finish_value->number;
+        bool requested_bounded_finish = false;
         do {
             const auto step_begin = Clock::now();
             result = pc_solver_solve_step(
@@ -2658,6 +2687,19 @@ CaseResult run_case(
                 report.actual_status = "watchdog_expired";
                 report.diagnostic_stop_reason = "watchdog_seconds";
                 break;
+            }
+            if (!progress.done && !requested_bounded_finish &&
+                requested_bounded_finish_seconds > 0.0 &&
+                milliseconds(solve_begin, after_step) >=
+                    requested_bounded_finish_seconds * 1000.0) {
+                result = pc_solver_solve_request_bounded_finish(
+                    handles.solver, &error);
+                if (result != PC_RESULT_OK) {
+                    throw std::runtime_error(api_error(
+                        "pc_solver_solve_request_bounded_finish",
+                        result, error));
+                }
+                requested_bounded_finish = true;
             }
             if (emit_progress && Clock::now() >= next_progress) {
                 std::cout << required_string(specification, "id")
@@ -3378,6 +3420,8 @@ const char* termination_name(const int32_t termination) {
         return "no_executable_policy";
     case PC_SOLVE_TERMINATION_NUMERICAL_STABILITY:
         return "numerical_stability";
+    case PC_SOLVE_TERMINATION_REQUESTED_BOUNDED_FINISH:
+        return "requested_bounded_finish";
     default: return "none";
     }
 }
@@ -3401,6 +3445,8 @@ const char* stop_cause_name(const int32_t cause) {
         return "no_executable_policy";
     case PC_SOLVE_STOP_NUMERICAL_STABILITY:
         return "numerical_stability";
+    case PC_SOLVE_STOP_REQUESTED_BOUNDED_FINISH:
+        return "requested_bounded_finish";
     default: return "none";
     }
 }
@@ -3469,7 +3515,7 @@ void append_case_report(
         << (result.verification_skipped ? "true" : "false") << ",\n";
     out << "  \"input\":{";
     bool first_input = true;
-    for (const char* key : {"comparison_profile", "watchdog_seconds", "session", "start", "goal", "corpus", "feasibility", "generation", "product_action_envelope", "allowed_mechanic_families", "compiled_operation_contract", "compiled_operation_contracts", "material_ratio_contract", "market_price_override_contracts", "forced_winner_contract", "bounded_best_policy_contract", "economy", "caps", "verification"}) {
+    for (const char* key : {"comparison_profile", "watchdog_seconds", "requested_bounded_finish_seconds", "session", "start", "goal", "corpus", "feasibility", "generation", "product_action_envelope", "allowed_mechanic_families", "compiled_operation_contract", "compiled_operation_contracts", "material_ratio_contract", "market_price_override_contracts", "forced_winner_contract", "bounded_best_policy_contract", "economy", "caps", "verification"}) {
         const Value* value = specification.find(key);
         if (value == nullptr) continue;
         if (!first_input) out << ',';

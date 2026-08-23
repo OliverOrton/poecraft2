@@ -15,6 +15,7 @@ export interface SolverBenchmarkCase {
     description?: string;
     comparison_profile?: string;
     watchdog_seconds?: number;
+    requested_bounded_finish_seconds?: number;
     session: {
         base_metadata_path: string;
         base_name: string;

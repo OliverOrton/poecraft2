@@ -304,6 +304,14 @@ async function solveSolver(
     let lastProgressAt = -Infinity;
     let yieldCount = 0;
     let unyieldedStepMs = 0;
+    const boundedFinishAfterMs =
+        typeof params.boundedFinishAfterMs === "number" &&
+        Number.isFinite(params.boundedFinishAfterMs) &&
+        params.boundedFinishAfterMs > 0
+            ? params.boundedFinishAfterMs
+            : null;
+    let boundedFinishRequested = false;
+    let solveStartedAt = 0;
     const worker: SolverWorkerMetrics = {
         step_count: 0,
         yield_count: 0,
@@ -377,6 +385,7 @@ async function solveSolver(
             params.options as SolveOptions | undefined,
         );
         begun = true;
+        solveStartedAt = performance.now();
 
         do {
             if (cancelled.has(id)) {
@@ -409,6 +418,16 @@ async function solveSolver(
                 );
             }
             observedPhase = progress.phase;
+
+            if (
+                !progress.done &&
+                !boundedFinishRequested &&
+                boundedFinishAfterMs !== null &&
+                performance.now() - solveStartedAt >= boundedFinishAfterMs
+            ) {
+                bindings.requestSolverSolveBoundedFinish(solver);
+                boundedFinishRequested = true;
+            }
 
             const now = performance.now();
             if (!progress.done && (

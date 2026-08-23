@@ -2064,6 +2064,45 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(pc_solver_solve_step(solver, 1, &solve_progress, &error) ==
              PC_RESULT_NOT_FOUND);
 
+    /* Requested bounded finish is a publication boundary, not cancellation
+     * and not a fabricated resource cap. It must remain cooperative even
+     * when requested during a partially expanded carrier. */
+    static_assert(PC_SOLVE_TERMINATION_REQUESTED_BOUNDED_FINISH == 6);
+    static_assert(PC_SOLVE_STOP_REQUESTED_BOUNDED_FINISH == 13);
+    PC_CHECK(pc_solver_solve_begin(solver, &item, economy, nullptr, &error) ==
+             PC_RESULT_OK);
+    PC_CHECK(pc_solver_solve_step(solver, 1, &solve_progress, &error) ==
+             PC_RESULT_OK);
+    PC_CHECK(!solve_progress.done);
+    PC_CHECK(pc_solver_solve_request_bounded_finish(solver, &error) ==
+             PC_RESULT_OK);
+    const std::string requested_telemetry =
+        solver_telemetry_json(solver, &error);
+    PC_CHECK(requested_telemetry.find(
+                 "\"requested_bounded_finish\":true") !=
+             std::string::npos);
+    PC_CHECK(pc_solver_solve_step(solver, 1, &solve_progress, &error) ==
+             PC_RESULT_OK);
+    PC_CHECK(solve_progress.phase == PC_SOLVE_PHASE_REFINING ||
+             solve_progress.phase == PC_SOLVE_PHASE_COMPILING ||
+             solve_progress.phase == PC_SOLVE_PHASE_CERTIFYING ||
+             solve_progress.done);
+    if (solve_progress.done) {
+        pc_solve_summary requested_summary{};
+        PC_CHECK(pc_solver_solve_finish(
+                     solver, &requested_summary, &error) == PC_RESULT_OK);
+        PC_CHECK(requested_summary.converged == 0);
+        PC_CHECK(requested_summary.termination ==
+                 PC_SOLVE_TERMINATION_REQUESTED_BOUNDED_FINISH);
+        PC_CHECK(requested_summary.stop_cause ==
+                 PC_SOLVE_STOP_REQUESTED_BOUNDED_FINISH);
+        PC_CHECK(requested_summary.cap_hit_mask == 0);
+    } else {
+        pc_solver_solve_abandon(solver);
+    }
+    PC_CHECK(pc_solver_solve_request_bounded_finish(solver, &error) ==
+             PC_RESULT_NOT_FOUND);
+
     /* Finalization phases are append-only ABI values and remain abandonable;
      * Done is reserved for an already-certified, packaging-only result. */
     static_assert(PC_SOLVE_PHASE_EXPANDING == 1);

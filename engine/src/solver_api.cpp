@@ -729,6 +729,8 @@ int32_t solve_termination(const solver::SolveTermination termination) {
         return PC_SOLVE_TERMINATION_NO_EXECUTABLE_POLICY;
     case solver::SolveTermination::NumericalStability:
         return PC_SOLVE_TERMINATION_NUMERICAL_STABILITY;
+    case solver::SolveTermination::RequestedBoundedFinish:
+        return PC_SOLVE_TERMINATION_REQUESTED_BOUNDED_FINISH;
     }
     return PC_SOLVE_TERMINATION_NONE;
 }
@@ -790,6 +792,8 @@ int32_t solve_stop_cause(const solver::SolveResult& result) {
         return PC_SOLVE_STOP_NO_EXECUTABLE_POLICY;
     case solver::SolveTermination::NumericalStability:
         return PC_SOLVE_STOP_NUMERICAL_STABILITY;
+    case solver::SolveTermination::RequestedBoundedFinish:
+        return PC_SOLVE_STOP_REQUESTED_BOUNDED_FINISH;
     case solver::SolveTermination::RefusedResourceCap:
         return PC_SOLVE_STOP_OTHER_RESOURCE_CAP;
     case solver::SolveTermination::None:
@@ -1521,6 +1525,28 @@ pc_result pc_solver_solve_step(
     try {
         solver->solve_work->step(max_work_items);
         copy_solve_progress(solver->solve_work->progress(), *out_progress);
+        clear_error(out_error);
+        return PC_RESULT_OK;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INTERNAL_ERROR, ex.what());
+        return PC_RESULT_INTERNAL_ERROR;
+    }
+}
+
+pc_result pc_solver_solve_request_bounded_finish(
+    pc_solver_handle solver,
+    pc_error_info* out_error) {
+    if (solver == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (!solver->solve_work) {
+        set_error(out_error, PC_RESULT_NOT_FOUND,
+                  "no stepped solve is in progress");
+        return PC_RESULT_NOT_FOUND;
+    }
+    try {
+        solver->solve_work->request_bounded_finish();
         clear_error(out_error);
         return PC_RESULT_OK;
     } catch (const std::exception& ex) {

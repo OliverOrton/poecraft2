@@ -13,6 +13,26 @@ import {
     const summary = solveSummary({
         converged: false,
         policy_available: true,
+        policy_status: "bounded_feasible",
+        termination: "requested_bounded_finish",
+        stop_cause: "requested_bounded_finish",
+        lower_bound: 10,
+        upper_bound: 2000,
+        evaluated_policy_cost: 1900,
+        absolute_optimality_gap: 1990,
+        relative_optimality_gap: 199,
+    });
+    assert.equal(shouldCompileSolvePolicy(summary), true);
+    assert.match(
+        solveTerminationDetail(summary, null),
+        /product discovery budget/i,
+    );
+}
+
+{
+    const summary = solveSummary({
+        converged: false,
+        policy_available: true,
         policy_status: "bounded_near_optimal",
         termination: "target_gap",
         lower_bound: 100,

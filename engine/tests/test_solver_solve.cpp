@@ -2110,6 +2110,10 @@ void run_policy_guided_exact_lift_tests() {
         SolveTermination::NumericalStability);
     PC_CHECK(
         successful_refined_publication_termination(
+            SolveTermination::RequestedBoundedFinish, false) ==
+        SolveTermination::RequestedBoundedFinish);
+    PC_CHECK(
+        successful_refined_publication_termination(
             SolveTermination::NumericalStability, false, true) ==
         SolveTermination::ExactClosed);
     PC_CHECK(
@@ -6591,7 +6595,7 @@ void run_resource_stop_reachable_policy_tests() {
     PC_CHECK(!scratch_cap_work.check_solver_byte_cap_fast(
         outer_preflight));
     PC_CHECK(
-        !scratch_cap_work.try_install_resource_stop_reachable_incumbent());
+        !scratch_cap_work.try_install_reachable_incumbent(true));
     PC_CHECK(!scratch_cap_work.output_incumbent.has_value());
     PC_CHECK(std::find(
                  scratch_cap_work.result.diagnostics.cap_hits.begin(),
@@ -6641,7 +6645,7 @@ void run_resource_stop_reachable_policy_tests() {
         candidate_probe_work.peak_owned_bytes;
     PC_CHECK(
         candidate_probe_work
-            .try_install_resource_stop_reachable_incumbent());
+            .try_install_reachable_incumbent(true));
     PC_CHECK(candidate_probe_work.output_incumbent.has_value());
     const std::uint64_t candidate_construction_peak =
         candidate_probe_work.peak_owned_bytes;
@@ -6667,7 +6671,7 @@ void run_resource_stop_reachable_policy_tests() {
     candidate_cap_calc.refresh_solve_owned_bytes_cap(candidate_cap);
     PC_CHECK(
         !candidate_cap_work
-            .try_install_resource_stop_reachable_incumbent());
+            .try_install_reachable_incumbent(true));
     PC_CHECK(!candidate_cap_work.output_incumbent.has_value());
     PC_CHECK(
         candidate_cap_work.peak_policy_scratch_bytes ==

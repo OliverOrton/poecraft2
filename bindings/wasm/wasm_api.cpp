@@ -727,6 +727,8 @@ const char* solve_termination_name(const int32_t termination) {
         return "no_executable_policy";
     case PC_SOLVE_TERMINATION_NUMERICAL_STABILITY:
         return "numerical_stability";
+    case PC_SOLVE_TERMINATION_REQUESTED_BOUNDED_FINISH:
+        return "requested_bounded_finish";
     default: return "none";
     }
 }
@@ -750,6 +752,8 @@ const char* solve_stop_cause_name(const int32_t cause) {
         return "no_executable_policy";
     case PC_SOLVE_STOP_NUMERICAL_STABILITY:
         return "numerical_stability";
+    case PC_SOLVE_STOP_REQUESTED_BOUNDED_FINISH:
+        return "requested_bounded_finish";
     default: return "none";
     }
 }
@@ -2678,6 +2682,18 @@ const char* pcw_solver_solve_step(uint32_t solver_id,
     append_solve_progress(out, progress);
     out.push_back('}');
     return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_solver_solve_request_bounded_finish(
+        uint32_t solver_id) {
+    pc_solver_handle* solver = find(g_solvers, solver_id);
+    if (solver == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown solver");
+    pc_error_info error = make_error();
+    const pc_result rc = pc_solver_solve_request_bounded_finish(
+        *solver, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    return respond("{\"ok\":true}");
 }
 
 EMSCRIPTEN_KEEPALIVE

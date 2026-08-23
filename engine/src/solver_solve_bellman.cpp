@@ -1901,6 +1901,18 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
     try {
         std::uint32_t remaining = std::max<std::uint32_t>(1, max_work_items);
         while (remaining > 0 && phase != SolvePhase::Done) {
+            if (requested_bounded_finish &&
+                incremental_upper_policy_pass) {
+                abort_incremental_upper_policy_pass_for_bounded_finish();
+            }
+            if (requested_bounded_finish &&
+                (phase == SolvePhase::Expanding ||
+                 phase == SolvePhase::Iterating) &&
+                can_prepare_requested_bounded_finish()) {
+                prepare_requested_bounded_finish();
+                begin_finalization();
+                continue;
+            }
             if (phase == SolvePhase::Refining ||
                 phase == SolvePhase::Compiling ||
                 phase == SolvePhase::Certifying) {
@@ -1916,6 +1928,10 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                         advance_incremental_dynamic_preparation();
                     --remaining;
                     if (!preparation_complete) continue;
+                    if (requested_bounded_finish) {
+                        phase = SolvePhase::Done;
+                        break;
+                    }
                     if (schedule_next_incremental_alternative()) continue;
                     if (schedule_incremental_refinement()) {
                         incremental_restricted_values_ready = false;
@@ -1997,6 +2013,10 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                         phase = SolvePhase::Done;
                         break;
                     }
+                    if (requested_bounded_finish) {
+                        phase = SolvePhase::Done;
+                        break;
+                    }
                     const bool action_added_states =
                         !incremental_alternative_rows.empty() &&
                         incremental_alternative_rows.back().states_added != 0;
@@ -2048,6 +2068,10 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                         incremental_restricted_values_ready = false;
                         continue;
                     }
+                    phase = SolvePhase::Done;
+                    break;
+                }
+                if (completed_state && requested_bounded_finish) {
                     phase = SolvePhase::Done;
                     break;
                 }
@@ -2225,13 +2249,88 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
          * progress() can publish Done.
          */
         if (phase == SolvePhase::Done &&
+            !requested_bounded_finish &&
             begin_incremental_upper_policy_pass()) {
             phase = SolvePhase::Expanding;
         }
         if (phase == SolvePhase::Done &&
             !finalized_result.has_value()) {
+            if (requested_bounded_finish) {
+                prepare_requested_bounded_finish();
+            }
             begin_finalization();
         }
+    }
+
+bool SolveWork::Impl::can_prepare_requested_bounded_finish() const {
+        /* Public SolveWork::step boundaries never suspend inside a sparse-row
+         * append. Ordinary expansion/focused scratch can therefore be
+         * discarded transactionally here. The incremental upper pass is the
+         * sole owner of a moved lower snapshot and must first use its
+         * dedicated restore path above. */
+        return !incremental_upper_policy_pass;
+    }
+
+void SolveWork::Impl::prepare_requested_bounded_finish() {
+        if (!can_prepare_requested_bounded_finish()) {
+            throw std::logic_error(
+                "requested bounded finish crossed live solver scratch");
+        }
+        /* A public step boundary never suspends halfway through appending a
+         * sparse row. It can, however, retain a state-local automatic
+         * admission coroutine or focused-policy scratch. Roll back only that
+         * staged transaction and leave every completed row immutable for the
+         * reachable anytime-policy builder. */
+        calc.cancel_state_local_automatic_candidates();
+        incremental_dynamic_prepare_active = false;
+        incremental_dynamic_prepared = false;
+        incremental_dynamic_operator_cursor = 0;
+        incremental_dynamic_operator_indices.clear();
+
+        /* A high-impact upper pass temporarily admits completed alternatives
+         * to its private minimization problem. The independently retained
+         * incumbent survives, but open rows must not leak into lower-bound or
+         * exact-envelope authority during requested finalization. */
+        for (const std::uint64_t row :
+             incremental_upper_temporary_rows) {
+            if (row < transition_cache->rows.size()) {
+                transition_cache->rows[row].admitted = false;
+            }
+        }
+        incremental_upper_temporary_rows.clear();
+        incremental_upper_policy_pass = false;
+        incremental_upper_fixed_policy_proved = false;
+
+        expansion_active = false;
+        expansion_prepared = false;
+        expansion_is_incremental_alternative = false;
+        expansion_operator_indices.clear();
+        expansion_operator_cursor = 0;
+        focus_optimizing = false;
+        focused_lower_mode = false;
+        focused_upper_mode = false;
+        constructive_policy_active = false;
+        constructive_fallback_pending = false;
+        constructive_progress_fallback.reset();
+        primitive_destructive_renewal_work = {};
+        backup_active = false;
+        reset_policy_iteration_units();
+
+        const std::uint32_t discovered = calc.state_count();
+        transition_cache->discovered_states = discovered;
+        transition_cache->expanded_states = expanded_count;
+        transition_cache->state_rows.resize(discovered);
+        result.diagnostics.discovered_states = discovered;
+        result.diagnostics.strict_discovered_states = discovered;
+        result.diagnostics.quotient_states = discovered;
+        result.diagnostics.expanded_states = expanded_count;
+        result.diagnostics.frontier_states =
+            discovered >= expanded_count ? discovered - expanded_count : 0;
+        result.diagnostics.sparse_rows = transition_cache->rows.size();
+        result.diagnostics.sparse_transitions =
+            transition_cache->successors.size() +
+            transition_cache->choice_successors.size();
+        result.converged = false;
     }
 
 }

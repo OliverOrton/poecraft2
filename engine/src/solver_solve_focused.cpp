@@ -623,6 +623,46 @@ bool SolveWork::Impl::begin_focused_upper_solve() {
         return true;
     }
 
+void SolveWork::Impl::abort_incremental_upper_policy_pass_for_bounded_finish() {
+        if (!incremental_upper_policy_pass) return;
+        /* The request arrives only between public work units, so no sparse
+         * row append is live. Restore the complete lower snapshot and every
+         * temporary admission exactly as a rejected upper pass would, but do
+         * not finish the potentially large fixed-policy proof first. The
+         * last completed output_incumbent remains immutable publication
+         * evidence. */
+        for (const std::uint64_t row :
+             incremental_upper_temporary_rows) {
+            if (row < transition_cache->rows.size()) {
+                transition_cache->rows[row].admitted = false;
+            }
+        }
+        incremental_upper_temporary_rows.clear();
+        result.values = std::move(focused_round_lower_values);
+        policy_rows = std::move(focused_round_lower_policy_rows);
+        result.expanded = expanded;
+        result.expanded.resize(calc.state_count(), 0);
+        focused_frontier_upper_operator.clear();
+        focused_pending_upper_fringe.clear();
+        focused_pending_upper_priority.clear();
+        focused_pending_upper_complete = false;
+        focused_upper_mode = false;
+        focused_lower_mode = false;
+        focus_optimizing = false;
+        incremental_upper_policy_pass = false;
+        incremental_upper_fixed_policy_proved = false;
+        incremental_restricted_values_ready = true;
+        policy_iteration_failed = false;
+        policy_initialized = true;
+        policy_stable = true;
+        reset_policy_iteration_units();
+        ++incremental_upper_policy_passes_rejected;
+        incremental_upper_policy_last_failure =
+            "requested_bounded_finish";
+        retain_action_reason(
+            "rejected:high_impact_executable_uppers:requested_bounded_finish");
+    }
+
 void SolveWork::Impl::finish_focused_lower_solve(
         const bool allow_upper_pass ) {
         if (allow_upper_pass) {
@@ -1062,6 +1102,13 @@ void SolveWork::Impl::finish_focused_upper_solve(const bool succeeded) {
             }
             incremental_upper_temporary_rows.clear();
             incremental_reclassify_all = true;
+            /* The temporary fixed-policy pass tests rows against the current
+             * incumbent one at a time. Before restoring the lower snapshot,
+             * also give the completed rows an amortized chance to form a
+             * jointly proper executable policy. This is upper-only: every
+             * row is restored to its prior admission status and the open
+             * action envelope remains open. */
+            (void)maybe_install_incremental_anytime_incumbent();
         }
         result.values = std::move(focused_round_lower_values);
         policy_rows = std::move(focused_round_lower_policy_rows);
@@ -1082,6 +1129,14 @@ void SolveWork::Impl::finish_focused_upper_solve(const bool succeeded) {
             focus_optimizing = false;
             focused_lower_mode = false;
             incremental_restricted_values_ready = true;
+            /* A host-requested bounded publication is latched while this
+             * upper pass owns temporary admissions. Stop only after the pass
+             * has restored/promoted them and released policy scratch; do not
+             * schedule the next open-envelope alternative. */
+            if (requested_bounded_finish) {
+                phase = SolvePhase::Done;
+                return;
+            }
             if (classify_incremental_alternatives()) {
                 restart_incremental_optimization();
             } else if (options.high_impact_executable_uppers &&

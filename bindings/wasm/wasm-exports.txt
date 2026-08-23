@@ -57,6 +57,7 @@ _pcw_solver_log
 _pcw_solver_telemetry
 _pcw_solver_solve_begin
 _pcw_solver_solve_step
+_pcw_solver_solve_request_bounded_finish
 _pcw_solver_solve_finish
 _pcw_solver_solve_abandon
 _malloc

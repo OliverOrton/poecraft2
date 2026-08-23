@@ -557,6 +557,23 @@ void SolveWork::step(const std::uint32_t max_work_items) {
     impl_->step(max_work_items);
 }
 
+void SolveWork::request_bounded_finish() {
+    if (impl_->phase == SolvePhase::Done ||
+        impl_->phase == SolvePhase::Refining ||
+        impl_->phase == SolvePhase::Compiling ||
+        impl_->phase == SolvePhase::Certifying) {
+        return;
+    }
+    impl_->requested_bounded_finish = true;
+    impl_->result.diagnostics.requested_bounded_finish = true;
+    impl_->result.diagnostics.requested_bounded_finish_expanded_states =
+        impl_->expanded_count;
+    impl_->result.diagnostics.requested_bounded_finish_rows =
+        impl_->transition_cache == nullptr
+            ? 0
+            : impl_->transition_cache->rows.size();
+}
+
 SolveProgress SolveWork::progress() const {
     return impl_->progress();
 }
