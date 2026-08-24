@@ -2046,6 +2046,18 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                         incremental_epoch_added_states = false;
                         incremental_restricted_values_ready = false;
                         incremental_upper_policy_dirty = true;
+                        /* Newly interned support from a frozen automatic
+                         * epoch is exactly the continuation frontier whose
+                         * cleanup/recovery rows can complete a multi-action
+                         * carrier ladder. Schedule that exceptional support
+                         * before re-solving the unchanged Chaos restriction;
+                         * otherwise the focused pass can converge without
+                         * ever making a second automatic carrier epoch and
+                         * finalize with thousands of known actions still
+                         * unevaluated. */
+                        if (schedule_incremental_refinement(true)) {
+                            continue;
+                        }
                         begin_focused_lower_solve();
                         continue;
                     }

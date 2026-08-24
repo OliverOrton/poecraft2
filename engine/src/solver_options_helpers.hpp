@@ -1334,6 +1334,10 @@ execute_attempt_cooperatively(
                 result.supported = false;
                 co_return result;
             }
+            if (!distribution.applicable) {
+                result.fully_legal = false;
+                co_return result;
+            }
             result.entries = distribution.entries;
             result.terminal_uniform_entries = distribution.entries;
             result.outcomes_merged = distribution.entries.size();
@@ -1408,6 +1412,10 @@ execute_attempt_cooperatively(
                 (!observed && !distribution.choice_groups.empty())) {
                 result.supported = false;
                 break;
+            }
+            if (!distribution.applicable) {
+                result.fully_legal = false;
+                co_return result;
             }
             if (final_step && terminal_kernel_uniform) {
                 if (!distribution.choice_groups.empty() ||

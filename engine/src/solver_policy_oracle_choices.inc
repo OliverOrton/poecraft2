@@ -616,6 +616,32 @@
     std::vector<std::uint32_t> chosen_successors(
             const std::uint32_t coarse_state,
             const PlannerOperator& planner) {
+        const auto policy_successor =
+            [&](const std::uint32_t raw_state) {
+                const std::uint32_t successor =
+                    raw_state == kNoId ? coarse_state : raw_state;
+                if (solved_.behavioral_representative_by_state.empty()) {
+                    return successor;
+                }
+                if (successor >=
+                    solved_.behavioral_representative_by_state.size()) {
+                    throw AdapterFailure(
+                        PolicyExactLiftStatus::InvalidSolveState,
+                        "coarse kernel successor is outside the "
+                        "behavioral representative table");
+                }
+                const std::uint32_t representative =
+                    solved_.behavioral_representative_by_state[
+                        successor];
+                if (representative == kNoId ||
+                    representative >= coarse_.state_count()) {
+                    throw AdapterFailure(
+                        PolicyExactLiftStatus::InvalidSolveState,
+                        "coarse kernel successor has no behavioral "
+                        "representative");
+                }
+                return representative;
+            };
         if (planner.automatic_kind ==
                 AutomaticCandidateKind::Fracture &&
             coarse_.product_solver_parent()) {
@@ -633,7 +659,8 @@
             result.reserve(kernel.exits.size());
             for (const OutcomeEntry& exit : kernel.exits) {
                 if (exit.probability != 0.0) {
-                    result.push_back(exit.state);
+                    result.push_back(
+                        policy_successor(exit.state));
                 }
             }
             return result;
@@ -661,18 +688,16 @@
                         kernel, false);
             for (const OutcomeEntry& exit : kernel.exits) {
                 if (exit.probability != 0.0) {
-                    result.push_back(
-                        exit.state == kNoId
-                            ? coarse_state
-                            : exit.state);
+                    result.push_back(policy_successor(exit.state));
                 }
             }
             for (const OutcomeChoiceGroup& group :
                  kernel.observation_choice_groups) {
                 if (group.probability == 0.0) continue;
-                result.push_back(resolve_option_choice(
-                    preferences, coarse_state,
-                    group, kernel));
+                result.push_back(policy_successor(
+                    resolve_option_choice(
+                        preferences, coarse_state,
+                        group, kernel)));
             }
             return result;
         }
@@ -703,7 +728,8 @@
             result.reserve(distribution.entries.size());
             for (const OutcomeEntry& entry : distribution.entries) {
                 if (entry.probability != 0.0) {
-                    result.push_back(entry.state);
+                    result.push_back(
+                        policy_successor(entry.state));
                 }
             }
             return result;
@@ -717,9 +743,10 @@
         for (const OutcomeChoiceGroup& group :
              distribution.choice_groups) {
             if (group.probability == 0.0) continue;
-            result.push_back(resolve_primitive_choice(
-                preferences, coarse_state,
-                group, distribution));
+            result.push_back(policy_successor(
+                resolve_primitive_choice(
+                    preferences, coarse_state,
+                    group, distribution)));
         }
         return result;
     }

@@ -356,9 +356,16 @@ SolveWork::Impl::run_finalization() {
         }
         co_await solve_detail::CooperativeCheckpoint{};
         const auto extraction_started = std::chrono::steady_clock::now();
+        const bool open_incremental_anytime_candidate =
+            incremental_action_generation &&
+            !incremental_envelope_closed &&
+            output_incumbent.has_value() &&
+            !incremental_alternative_rows.empty();
         if (result.diagnostics.resource_cap_hit ||
-            (requested_bounded_finish && output_incumbent.has_value())) {
+            (requested_bounded_finish && output_incumbent.has_value()) ||
+            open_incremental_anytime_candidate) {
             (void)try_install_reachable_incumbent(
+                result.diagnostics.resource_cap_hit &&
                 !requested_bounded_finish);
         }
         const auto finalize_diagnostic =
@@ -5221,6 +5228,40 @@ void SolveWork::Impl::begin_finalization() {
         if (finalization_task.has_value() ||
             finalized_result.has_value()) {
             return;
+        }
+        if (!requested_bounded_finish &&
+            incremental_action_generation &&
+            !incremental_envelope_closed &&
+            options.high_impact_executable_uppers &&
+            output_incumbent.has_value() &&
+            !incremental_alternative_rows.empty()) {
+            /* This is the definitive reversible publication boundary.
+             * Anytime proof attempts can discover their next missing carrier
+             * after the ordinary scheduler has already selected Done. Feed
+             * both an existing witness and one newly exposed by this final
+             * preflight back into exact refinement before constructing the
+             * irreversible publication coroutine. */
+            if (incremental_refinement_active && !expansion_active) {
+                /* Reaching Done proves no refinement row transaction is
+                 * live. Clear a nominal target whose queue was exhausted
+                 * early so the concrete publication witness can reopen a
+                 * fresh batch. */
+                incremental_refinement_active = false;
+            }
+            if (!incremental_anytime_missing_frontier_states.empty() &&
+                (schedule_incremental_refinement(true) ||
+                 schedule_next_incremental_alternative())) {
+                return;
+            }
+            const std::size_t missing_before =
+                incremental_anytime_missing_frontier_states.size();
+            (void)try_install_reachable_incumbent(false);
+            if (incremental_anytime_missing_frontier_states.size() >
+                    missing_before &&
+                (schedule_incremental_refinement(true) ||
+                 schedule_next_incremental_alternative())) {
+                return;
+            }
         }
         phase = SolvePhase::Refining;
         finalization_task.emplace(run_finalization());

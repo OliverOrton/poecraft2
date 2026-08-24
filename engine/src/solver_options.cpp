@@ -536,6 +536,8 @@ const OptionKernel& CalcContext::option_kernel(
                     &candidate_kernel == entry_reforge_kernel ||
                     (candidate_kernel.supported ==
                          entry_reforge_kernel->supported &&
+                     candidate_kernel.applicable ==
+                         entry_reforge_kernel->applicable &&
                      candidate_kernel.entries ==
                          entry_reforge_kernel->entries &&
                      candidate_kernel.choice_groups ==
@@ -941,6 +943,12 @@ const OptionKernel& CalcContext::option_kernel(
                             : "eldritch_side_choice_distribution_unsupported:" +
                                   action.id;
                 }
+                frontier.clear();
+                break;
+            }
+            if (!distribution.applicable) {
+                result->legal = false;
+                result->terminates_almost_surely = false;
                 frontier.clear();
                 break;
             }

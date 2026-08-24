@@ -1492,7 +1492,8 @@ void SolveWork::Impl::install_output_incumbent(
         const std::vector<std::uint8_t>* policy_reachable,
         const PrimitiveRenewalWitness* primitive_renewal_witness,
         const bool replace_equal_incumbent,
-        const bool record_memory_refusal) {
+        const bool record_memory_refusal,
+        const bool prefer_materialized_over_unverified) {
         if (!std::isfinite(upper) || upper < 0.0 ||
             result.start_state >= values.size()) {
             return;
@@ -1788,7 +1789,16 @@ void SolveWork::Impl::install_output_incumbent(
                 replace_equal_incumbent &&
                 upper == incumbent_upper &&
                 incumbent_precedes(candidate, *output_incumbent);
-            if (!strictly_better && !replace_equal) {
+            const bool replace_unverified =
+                prefer_materialized_over_unverified;
+            /* The reachable-policy path has just proved this complete row /
+             * certified-frontier composition proper. Preserve it as the
+             * output candidate even when a cheaper coarse estimate is
+             * already present: finalization captures that selected estimate
+             * separately, while only this slot carries the diverse joint
+             * policy forward to independent compilation and evaluation. */
+            if (!strictly_better && !replace_equal &&
+                !replace_unverified) {
                 if (!candidate.compiled_artifact.strategy_json.empty()) {
                     (void)retain_certified_incumbent(
                         candidate, candidate_dynamic);
@@ -1952,6 +1962,7 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
          * materialized prefix against those certified terminal values. */
         std::vector<double> certified_boundary_values;
         std::vector<std::uint32_t> certified_frontier_operators;
+        std::vector<std::uint8_t> certified_boundary_reachable;
         FocusedFallbackWitness certified_fallback;
         PrimitiveRenewalWitness certified_renewal;
         if (output_incumbent.has_value()) {
@@ -1960,6 +1971,9 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
             certified_frontier_operators =
                 output_incumbent->frontier_operators;
             certified_frontier_operators.resize(state_count, kNoId);
+            certified_boundary_reachable =
+                output_incumbent->policy_reachable;
+            certified_boundary_reachable.resize(state_count, 0);
             certified_fallback = output_incumbent->fallback;
             certified_renewal =
                 output_incumbent->primitive_renewal_witness;
@@ -2037,6 +2051,8 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
             add(certified_boundary_values.capacity() * sizeof(double));
             add(certified_frontier_operators.capacity() *
                 sizeof(std::uint32_t));
+            add(certified_boundary_reachable.capacity() *
+                sizeof(std::uint8_t));
             add(certified_renewal.kernel_signature.capacity() *
                 sizeof(std::uint64_t));
             add(reachable.capacity() * sizeof(std::uint8_t));
@@ -2343,7 +2359,25 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                                     "frontier:state=" +
                                     std::to_string(state) +
                                     ":goal_mask=" + std::to_string(
-                                        satisfied_goal_mask_for_state(state));
+                                        satisfied_goal_mask_for_state(state)) +
+                                    ":broad_expanded=" +
+                                    std::to_string(
+                                        state < expanded.size() &&
+                                        expanded[state] ? 1 : 0) +
+                                    ":is_carrier=" +
+                                    std::to_string(
+                                        std::find(
+                                            incremental_carriers.begin(),
+                                            incremental_carriers.end(),
+                                            state) !=
+                                        incremental_carriers.end() ? 1 : 0) +
+                                    ":owner_rows=" +
+                                    std::to_string(
+                                        state < transition_cache
+                                                    ->state_rows.size()
+                                            ? transition_cache
+                                                  ->state_rows[state].count
+                                            : 0);
                                 return false;
                             }
                             policy_rows[state] = no_row;
@@ -2464,6 +2498,267 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                         break;
                     }
                     result.diagnostics.policy_evaluation_failure.clear();
+                    /* A certified frontier is a complete executable policy,
+                     * not a scalar terminal in the compiled strategy. The
+                     * joint proof may evaluate only the newly materialized
+                     * prefix against its certified values, but publication
+                     * must retain the frontier's whole reachable policy as
+                     * well. `prior_reachable` is no longer needed for another
+                     * comparison after this stable round, so reuse its
+                     * accounted storage for the publication union. */
+                    prior_reachable = reachable;
+                    if (!certified_boundary_reachable.empty()) {
+                        for (std::size_t state = 0;
+                             state < prior_reachable.size(); ++state) {
+                            prior_reachable[state] =
+                                prior_reachable[state] ||
+                                certified_boundary_reachable[state];
+                        }
+                    }
+                    /* Goal-progress-gated renewal compresses every
+                     * zero-progress outcome into a synthetic retry carrier.
+                     * That carrier need not be a raw outcome in the frontier
+                     * witness, but the generic strategy compiler needs the
+                     * explicit retry policy node. Close only certified
+                     * frontier actions here: their values and operator are
+                     * already owned by the incumbent, so this adds no new
+                     * optimization claim. Exact compiled evaluation remains
+                     * the publication authority for the composition. */
+                    for (std::size_t state = 0;
+                         state < certified_boundary_reachable.size();
+                         ++state) {
+                        if (!certified_boundary_reachable[state] ||
+                            state >= certified_frontier_operators.size()) {
+                            continue;
+                        }
+                        const std::uint32_t operator_index =
+                            certified_frontier_operators[state];
+                        if (operator_index == kNoId ||
+                            operator_index >= calc.operators().size()) {
+                            continue;
+                        }
+                        const PlannerOperator& planner =
+                            calc.operators()[operator_index];
+                        if (planner.kind !=
+                                PlannerOperatorKind::Primitive ||
+                            planner.primitive_action >=
+                                calc.registry().actions.size()) {
+                            continue;
+                        }
+                        const OutcomeDistribution& distribution =
+                            calc.outcomes(
+                                static_cast<std::uint32_t>(state),
+                                planner.primitive_action, true);
+                        if (!distribution.supported ||
+                            !distribution.goal_progress_gated ||
+                            !(distribution.gated_retry_probability > 0.0) ||
+                            distribution.gated_retry_state == kNoId ||
+                            distribution.gated_retry_state >= state_count) {
+                            continue;
+                        }
+                        std::uint32_t retry_policy_state =
+                            distribution.gated_retry_state;
+                        if (!result.behavioral_representative_by_state
+                                 .empty()) {
+                            if (retry_policy_state >=
+                                result.behavioral_representative_by_state
+                                    .size()) {
+                                continue;
+                            }
+                            retry_policy_state =
+                                result.behavioral_representative_by_state[
+                                    retry_policy_state];
+                        }
+                        if (retry_policy_state == kNoId ||
+                            retry_policy_state >= state_count ||
+                            calc.is_goal_state(
+                                calc.state(retry_policy_state))) {
+                            continue;
+                        }
+                        prior_reachable[retry_policy_state] = 1;
+                        if (certified_frontier_operators[
+                                retry_policy_state] == kNoId) {
+                            certified_frontier_operators[
+                                retry_policy_state] = operator_index;
+                        }
+                    }
+                    /* Sparse Bellman rows are stored on behavioral
+                     * representatives. The strict publication adapter,
+                     * however, expands each selected operator's complete
+                     * coarse kernel before it discovers strict carriers.
+                     * Close the publication witness over those projected
+                     * successors as well, supplying the already-certified
+                     * renewal boundary wherever the materialized prefix has
+                     * no row. Without this closure a candidate can be
+                     * numerically proper in the quotient yet present the
+                     * strict adapter with an unselected non-goal successor. */
+                    walk.clear();
+                    for (std::uint32_t state = 0;
+                         state < prior_reachable.size(); ++state) {
+                        if (prior_reachable[state]) walk.push_back(state);
+                    }
+                    bool publication_complete = true;
+                    for (std::size_t cursor = 0;
+                         cursor < walk.size() && publication_complete;
+                         ++cursor) {
+                        const std::uint32_t state = walk[cursor];
+                        if (calc.is_goal_state(calc.state(state))) continue;
+                        std::uint32_t operator_index = kNoId;
+                        if (!row_is_completed(
+                                state, policy_rows[state])) {
+                            /* Strict-kernel closure can expose a successor
+                             * that was not reachable in the coarse selected
+                             * row, while the append-only action ledger
+                             * already owns complete legal rows for it. Seed
+                             * that strict-only carrier from the same
+                             * progress-aware authority used by the joint
+                             * proof. The downstream strict evaluator remains
+                             * the cost/properness authority for the enlarged
+                             * composition. */
+                            policy_rows[state] =
+                                select_initial_row(state);
+                        }
+                        const bool has_materialized_policy_row =
+                            row_is_completed(state, policy_rows[state]);
+                        if (has_materialized_policy_row) {
+                            operator_index = priced_rows[
+                                policy_rows[state]].operator_index;
+                        } else if (state <
+                                   certified_frontier_operators.size()) {
+                            operator_index =
+                                certified_frontier_operators[state];
+                        }
+                        if (operator_index == kNoId &&
+                            install_certified_renewal_boundary(state)) {
+                            operator_index =
+                                certified_frontier_operators[state];
+                        }
+                        if (operator_index == kNoId ||
+                            operator_index >= calc.operators().size()) {
+                            publication_complete = false;
+                            if (!require_resource_stop &&
+                                std::find(
+                                    incremental_anytime_missing_frontier_states
+                                        .begin(),
+                                    incremental_anytime_missing_frontier_states
+                                        .end(),
+                                    state) ==
+                                    incremental_anytime_missing_frontier_states
+                                        .end()) {
+                                incremental_anytime_missing_frontier_states
+                                    .push_back(state);
+                            }
+                            attempt_failure =
+                                "publication_successor_has_no_certified_"
+                                "action:state=" +
+                                std::to_string(state);
+                            break;
+                        }
+                        const PlannerOperator& planner =
+                            calc.operators()[operator_index];
+                        const auto retain_successor =
+                            [&](std::uint32_t successor) {
+                                if (successor == kNoId) successor = state;
+                                if (successor >= state_count) {
+                                    publication_complete = false;
+                                    return;
+                                }
+                                if (!result
+                                         .behavioral_representative_by_state
+                                         .empty()) {
+                                    if (successor >=
+                                        result
+                                            .behavioral_representative_by_state
+                                            .size()) {
+                                        publication_complete = false;
+                                        return;
+                                    }
+                                    successor =
+                                        result
+                                            .behavioral_representative_by_state
+                                                [successor];
+                                }
+                                if (successor == kNoId ||
+                                    successor >= state_count) {
+                                    publication_complete = false;
+                                    return;
+                                }
+                                if (!prior_reachable[successor]) {
+                                    prior_reachable[successor] = 1;
+                                    walk.push_back(successor);
+                                }
+                            };
+                        if (planner.kind ==
+                            PlannerOperatorKind::Primitive) {
+                            if (planner.primitive_action >=
+                                calc.registry().actions.size()) {
+                                publication_complete = false;
+                                break;
+                            }
+                            const OutcomeDistribution& distribution =
+                                calc.outcomes(
+                                    state, planner.primitive_action,
+                                    options.goal_progress_gated_reforges);
+                            if (!distribution.supported ||
+                                !distribution.applicable) {
+                                publication_complete = false;
+                                attempt_failure =
+                                    "publication_primitive_kernel_invalid:"
+                                    "state=" + std::to_string(state);
+                                break;
+                            }
+                            for (const OutcomeEntry& exit :
+                                 distribution.entries) {
+                                if (exit.probability > 0.0) {
+                                    retain_successor(exit.state);
+                                }
+                            }
+                            for (const OutcomeChoiceGroup& group :
+                                 distribution.choice_groups) {
+                                if (!(group.probability > 0.0)) continue;
+                                for (const std::uint32_t successor :
+                                     group.states) {
+                                    retain_successor(successor);
+                                }
+                            }
+                            if (distribution.goal_progress_gated &&
+                                distribution.gated_retry_probability > 0.0) {
+                                retain_successor(
+                                    distribution.gated_retry_state);
+                            }
+                            continue;
+                        }
+                        const OptionKernel& kernel =
+                            calc.option_kernel(state, operator_index);
+                        if (!kernel.supported || !kernel.legal ||
+                            !kernel.terminates_almost_surely) {
+                            publication_complete = false;
+                            attempt_failure =
+                                "publication_fixed_option_kernel_invalid:"
+                                "state=" + std::to_string(state);
+                            break;
+                        }
+                        for (const OutcomeEntry& exit : kernel.exits) {
+                            if (exit.probability > 0.0) {
+                                retain_successor(exit.state);
+                            }
+                        }
+                        for (const OutcomeChoiceGroup& group :
+                             kernel.observation_choice_groups) {
+                            if (!(group.probability > 0.0)) continue;
+                            for (const std::uint32_t successor :
+                                 group.states) {
+                                retain_successor(successor);
+                            }
+                        }
+                    }
+                    if (!publication_complete) {
+                        if (attempt_failure.empty()) {
+                            attempt_failure =
+                                "publication_fixed_option_closure_failed";
+                        }
+                        break;
+                    }
                     const bool had_prior_incumbent =
                         output_incumbent.has_value();
                     const std::uint64_t prior_identity =
@@ -2477,7 +2772,11 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                         require_resource_stop
                             ? "resource_stop_reachable_proper_policy"
                             : "anytime_reachable_proper_policy",
-                        &reachable, nullptr, true, true);
+                        &prior_reachable,
+                        certified_renewal.valid
+                            ? &certified_renewal
+                            : nullptr,
+                        true, true, true);
                     installed = output_incumbent.has_value() &&
                         (!had_prior_incumbent ||
                          output_incumbent->portfolio_identity !=
@@ -2524,8 +2823,10 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                 std::to_string(renewal_boundary_successes) + "/" +
                 std::to_string(renewal_boundary_attempts);
             if (!require_resource_stop &&
-                attempt_failure.starts_with(
-                    "missing_completed_row_and_certified_frontier")) {
+                (attempt_failure.starts_with(
+                     "missing_completed_row_and_certified_frontier") ||
+                 attempt_failure.starts_with(
+                     "publication_successor_has_no_certified_action"))) {
                 incremental_anytime_next_row_checkpoint =
                     incremental_alternative_rows.size() ==
                             std::numeric_limits<std::size_t>::max()
@@ -3276,6 +3577,7 @@ auto SolveWork::Impl::magic_regal_fallback() -> std::optional<FocusedFallbackPol
         const auto same_kernel = [](const OutcomeDistribution& left,
                                     const OutcomeDistribution& right) {
             return left.supported == right.supported &&
+                   left.applicable == right.applicable &&
                    left.entries == right.entries &&
                    left.choice_groups == right.choice_groups &&
                    left.choice_options == right.choice_options;

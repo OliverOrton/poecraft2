@@ -1,6 +1,7 @@
 #include "solver_model.hpp"
 
 #include <algorithm>
+#include <bit>
 #include <cstring>
 #include <limits>
 #include <map>
@@ -1042,6 +1043,39 @@ bool action_legal(
     if (state.prefix_count + state.suffix_count <
         legality.min_total_affixes) {
         return false;
+    }
+    if (!action.synthetic && action.params.type == ActionType::Scour) {
+        const bool prefix_locked =
+            (state.flags & kFlagPrefixesLocked) != 0;
+        const bool suffix_locked =
+            (state.flags & kFlagSuffixesLocked) != 0;
+        const std::uint32_t before =
+            static_cast<std::uint32_t>(state.prefix_count) +
+            state.suffix_count;
+        std::uint32_t remaining = 0;
+        std::uint8_t resulting_rarity = PC_RARITY_NORMAL;
+        if (prefix_locked != suffix_locked) {
+            remaining = prefix_locked ? state.prefix_count
+                                      : state.suffix_count;
+            resulting_rarity =
+                remaining > 0 ? PC_RARITY_RARE : PC_RARITY_NORMAL;
+        } else {
+            remaining = static_cast<std::uint32_t>(
+                std::popcount(state.fractured_goal_mask));
+            for (const std::uint8_t count :
+                 state.fractured_junk_counts) {
+                remaining += count;
+            }
+            resulting_rarity =
+                remaining > 0 ? PC_RARITY_MAGIC : PC_RARITY_NORMAL;
+        }
+        /* Scour is an operation only when native execution would remove an
+         * affix or change rarity. In particular, a magic carrier containing
+         * only fractured affixes is a carrier-local rejection, not an
+         * unsupported evaluator family and not a paid self-loop. */
+        if (remaining == before && resulting_rarity == state.rarity) {
+            return false;
+        }
     }
     return true;
 }

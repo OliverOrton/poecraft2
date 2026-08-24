@@ -1450,8 +1450,8 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
     );
 
     // A Scour that the native executor would reject must not become an exact
-    // self-loop row. Compound solver programs compile primitives, so treating
-    // this as supported would publish a graph that fails in the simulator.
+    // self-loop row. The evaluator still supports the mechanic, but the
+    // carrier-local invocation is illegal and has no outcomes.
     const fracturedMagic = await client.createItem(sessionId, {
         rarity: "magic",
         withImplicits: false,
@@ -1469,8 +1469,8 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
         fracturedMagic,
         "scour",
     );
-    assert.equal(noOpScour.legal, true);
-    assert.equal(noOpScour.supported, false);
+    assert.equal(noOpScour.legal, false);
+    assert.equal(noOpScour.supported, true);
     assert.equal(noOpScour.outcomes.length, 0);
     await client.closeItem(fracturedMagic);
 

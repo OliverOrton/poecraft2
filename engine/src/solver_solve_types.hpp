@@ -1303,7 +1303,8 @@ struct SolveWork::Impl {
         const std::vector<std::uint8_t>* policy_reachable = nullptr,
         const PrimitiveRenewalWitness* primitive_renewal_witness = nullptr,
         bool replace_equal_incumbent = false,
-        bool record_memory_refusal = false);
+        bool record_memory_refusal = false,
+        bool prefer_materialized_over_unverified = false);
 
     void install_fallback_output_incumbent(
         const FocusedFallbackWitness& witness);

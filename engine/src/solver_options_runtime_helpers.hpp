@@ -261,6 +261,7 @@ bool same_complete_distribution(
     const OutcomeDistribution& left,
     const OutcomeDistribution& right) {
     return left.supported == right.supported &&
+           left.applicable == right.applicable &&
            left.entries == right.entries &&
            left.choice_groups == right.choice_groups &&
            left.choice_options == right.choice_options &&

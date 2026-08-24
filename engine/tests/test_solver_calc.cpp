@@ -1969,15 +1969,23 @@ void run_exact_distribution_tests() {
             &item, PC_SIDE_PREFIX, 0, 10,
             PC_MOD_SLOT_FRACTURED);
         const std::uint32_t start = calc.intern_item(item);
+        PC_CHECK(!action_legal(
+            *session, registry.actions.at(scour), calc.state(start)));
         const OutcomeDistribution& no_op = calc.outcomes(start, scour);
-        PC_CHECK(!no_op.supported);
+        PC_CHECK(no_op.supported);
+        PC_CHECK(!no_op.applicable);
         PC_CHECK(no_op.entries.empty());
 
         pc_item_state normal;
         pc_item_clear(&normal);
+        const std::uint32_t normal_state = calc.intern_item(normal);
+        PC_CHECK(!action_legal(
+            *session, registry.actions.at(scour),
+            calc.state(normal_state)));
         const OutcomeDistribution& illegal =
-            calc.outcomes(calc.intern_item(normal), scour);
-        PC_CHECK(!illegal.supported);
+            calc.outcomes(normal_state, scour);
+        PC_CHECK(illegal.supported);
+        PC_CHECK(!illegal.applicable);
         PC_CHECK(illegal.entries.empty());
     }
 

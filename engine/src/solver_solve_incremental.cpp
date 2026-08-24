@@ -87,9 +87,14 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
     if (!incremental_action_generation || incremental_envelope_closed) {
         return false;
     }
+    const bool frozen_automatic_epoch_pending =
+        options.high_impact_executable_uppers &&
+        incremental_automatic_order_cursor <
+            incremental_automatic_carrier_order.size();
     const bool continue_current_epoch =
         continue_current_epoch_request ||
-        incremental_resume_epoch_after_dynamic_prepare;
+        incremental_resume_epoch_after_dynamic_prepare ||
+        frozen_automatic_epoch_pending;
     incremental_resume_epoch_after_dynamic_prepare = false;
     if (!continue_current_epoch) {
         incremental_epoch_added_states = false;
@@ -181,15 +186,39 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
             std::map<std::uint32_t, std::size_t> cursors;
             std::vector<std::uint32_t> ordered;
             ordered.reserve(end - begin);
+            /* A failed joint-policy proof names the exact carrier whose
+             * continuation is missing. Expansion alone does not complete its
+             * carrier-local automatic rows, so preserve that witness through
+             * the second scheduling stage and put it ahead of the ordinary
+             * fair ladder. This is executable-upper work ordering only. */
+            for (const std::uint32_t urgent :
+                 incremental_anytime_missing_frontier_states) {
+                const auto found = std::find(
+                    incremental_carriers.begin() + begin,
+                    incremental_carriers.begin() + end, urgent);
+                if (found != incremental_carriers.begin() + end &&
+                    std::find(ordered.begin(), ordered.end(), urgent) ==
+                        ordered.end()) {
+                    ordered.push_back(urgent);
+                }
+            }
             bool advanced = true;
             while (advanced) {
                 advanced = false;
                 for (const std::uint32_t mask : subset_order) {
                     auto& carriers = by_subset.at(mask);
                     std::size_t& cursor = cursors[mask];
-                    if (cursor >= carriers.size()) continue;
-                    ordered.push_back(carriers[cursor++]);
-                    advanced = true;
+                    while (cursor < carriers.size()) {
+                        const std::uint32_t carrier = carriers[cursor++];
+                        if (std::find(
+                                ordered.begin(), ordered.end(), carrier) !=
+                            ordered.end()) {
+                            continue;
+                        }
+                        ordered.push_back(carrier);
+                        advanced = true;
+                        break;
+                    }
                 }
             }
             incremental_automatic_carrier_order = std::move(ordered);
@@ -273,6 +302,12 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
             }
             ++incremental_automatic_carrier_cursor;
             ++incremental_automatic_order_cursor;
+            incremental_anytime_missing_frontier_states.erase(
+                std::remove(
+                    incremental_anytime_missing_frontier_states.begin(),
+                    incremental_anytime_missing_frontier_states.end(),
+                    state),
+                incremental_anytime_missing_frontier_states.end());
             incremental_dynamic_prepared = false;
             incremental_dynamic_prepare_active = false;
             incremental_dynamic_operator_cursor = 0;
@@ -1151,7 +1186,9 @@ bool SolveWork::Impl::schedule_incremental_refinement(
     for (const IncrementalAlternativeRow& candidate :
          incremental_alternative_rows) {
         if (candidate.status !=
-            IncrementalAlternativeRow::Status::Unresolved) {
+                IncrementalAlternativeRow::Status::Unresolved &&
+            !(force && candidate.status ==
+                IncrementalAlternativeRow::Status::PendingValues)) {
             continue;
         }
         has_unresolved = true;
@@ -1340,14 +1377,6 @@ bool SolveWork::Impl::schedule_incremental_refinement(
             unbounded_priority,
             selected_uncertainty + priority[state]);
     }
-    incremental_anytime_missing_frontier_states.erase(
-        std::remove_if(
-            incremental_anytime_missing_frontier_states.begin(),
-            incremental_anytime_missing_frontier_states.end(),
-            [&](const std::uint32_t state) {
-                return state < selected.size() && selected[state];
-            }),
-        incremental_anytime_missing_frontier_states.end());
     std::deque<std::uint32_t> remainder;
     for (const std::uint32_t state : queue) {
         if (state >= selected.size() || !selected[state]) {

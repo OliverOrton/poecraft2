@@ -2430,11 +2430,12 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
     /* The calculator historically represents illegal ordinary actions as
      * native no-op self-loops. Scour is also emitted inside compound programs,
      * where skipping an illegal primitive would compile a policy that the
-     * strategy runtime terminates as action_not_applied. Keep that action
-     * fail-closed instead. */
+     * strategy runtime terminates as action_not_applied. Keep that refusal
+     * carrier-local: the exact evaluator still exists for Scour. */
     if (!action_legal(session, action, states_.at(state_id))) {
         if (!action.synthetic && action.params.type == ActionType::Scour) {
-            result.supported = false;
+            result.supported = true;
+            result.applicable = false;
         } else {
             result.supported = true;
             self_loop();
@@ -2477,8 +2478,9 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
                 apply_action(context_, &copy, action.params);
             const bool scour_not_applied =
                 action.params.type == ActionType::Scour && !outcome.applied;
-            result.supported = !scour_not_applied;
+            result.supported = true;
             if (scour_not_applied) {
+                result.applicable = false;
                 break;
             }
             add_successor(copy, 1.0);

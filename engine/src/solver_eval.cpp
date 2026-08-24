@@ -2715,7 +2715,8 @@ struct StrategyEvalWork::Impl {
                             "a reachable state");
                     }
                     ensure_state_limit();
-                    if (outcomes.choice_groups.empty()) {
+                    if (!outcomes.applicable ||
+                        outcomes.choice_groups.empty()) {
                         route(
                             state_id, 1.0, nullptr,
                             checkpoint_state_id);
@@ -2844,11 +2845,10 @@ struct StrategyEvalWork::Impl {
                         }
                     }
                     if (selected_outcomes == nullptr) {
-                        selected_outcomes = &exact_outcomes(
-                            state_id, action_index, false);
+                        selected_outcomes =
+                            &exact_outcomes(state_id, action_index, false);
                     }
-                    const OutcomeDistribution& outcomes =
-                        *selected_outcomes;
+                    const OutcomeDistribution& outcomes = *selected_outcomes;
                     if (!outcomes.supported) {
                         throw StrategyEvalUnsupported(
                             "strategy evaluation unsupported:\n- node '" +
@@ -2856,116 +2856,132 @@ struct StrategyEvalWork::Impl {
                             "' has no exact distribution for a reachable "
                             "state");
                     }
-                    ensure_state_limit();
-                    census_operation_distribution = true;
-                    census_goal_progress_gated =
-                        outcomes.goal_progress_gated;
-                    census_stable_shared_kernel =
-                        outcomes.stable_shared_kernel;
-                    census_outcome_entries =
-                        action_observes_modifier_offer(action)
-                            ? 1
-                            : outcomes.entries.size();
-                    census_outcome_payload_bytes =
-                        outcome_payload_bytes(outcomes);
-                    if (outcomes.stable_shared_kernel) {
-                        const auto shared = row_by_distribution.find(
-                            {node_index, checkpoint_state_id, &outcomes});
-                        if (shared != row_by_distribution.end()) {
-                            EvalPair& pair = pairs.at(pair_id);
-                            pair.consumes = consumes;
-                            pair.row = shared->second;
-                            auto& total = output.operation_row_census;
-                            ++total.shared_row_reuses;
-                            total.projected_u32_route_tokens_bytes =
-                                total.exact_outcome_entries *
-                                sizeof(std::uint32_t);
-                            if (action_index <
-                                operation_row_census_by_action.size()) {
-                                ++operation_row_census_by_action[action_index]
-                                      .shared_row_reuses;
-                            }
-                            record_expanded_pair(
-                                pair_id, rows.at(pair.row), true);
-                            return;
+                    if (!outcomes.applicable) {
+                        consumes = false;
+                        add_absorption(
+                            {static_cast<int>(
+                                 EvalAbsorptionKind::ActionNotApplied),
+                             node_index, state_id, kNoId, kNoId},
+                            1.0);
+                        if (!outcomes.stable_shared_kernel) {
+                            model.calc->release_outcome(
+                                state_id, action_index,
+                                outcomes.goal_progress_gated);
                         }
-                        shared_distribution = &outcomes;
                     } else {
-                        release_operation_outcome = true;
-                        release_goal_progress_gated_outcome =
+                        ensure_state_limit();
+                        census_operation_distribution = true;
+                        census_goal_progress_gated =
                             outcomes.goal_progress_gated;
-                    }
-                    double distribution_mass = 0.0;
-                    const std::uint32_t successor_checkpoint =
-                        resolved.kind ==
-                                ResolvedStrategyOperationKind::Restart
-                            ? kNoId
-                            : checkpoint_state_id;
-                    if (action_observes_modifier_offer(action)) {
-                        if (active_unveil_offer == nullptr ||
-                            std::find(
-                                active_unveil_offer->begin(),
-                                active_unveil_offer->end(),
-                                node.action.mod_id) ==
-                                active_unveil_offer->end()) {
-                            throw std::logic_error(
-                                "authored modifier selection is not present "
-                                "in the sampled offer carried to node '" +
+                        census_stable_shared_kernel =
+                            outcomes.stable_shared_kernel;
+                        census_outcome_entries =
+                            action_observes_modifier_offer(action)
+                                ? 1
+                                : outcomes.entries.size();
+                        census_outcome_payload_bytes =
+                            outcome_payload_bytes(outcomes);
+                        if (outcomes.stable_shared_kernel) {
+                            const auto shared = row_by_distribution.find(
+                                {node_index, checkpoint_state_id, &outcomes});
+                            if (shared != row_by_distribution.end()) {
+                                EvalPair& pair = pairs.at(pair_id);
+                                pair.consumes = consumes;
+                                pair.row = shared->second;
+                                auto& total = output.operation_row_census;
+                                ++total.shared_row_reuses;
+                                total.projected_u32_route_tokens_bytes =
+                                    total.exact_outcome_entries *
+                                    sizeof(std::uint32_t);
+                                if (action_index <
+                                    operation_row_census_by_action.size()) {
+                                    ++operation_row_census_by_action
+                                          [action_index]
+                                              .shared_row_reuses;
+                                }
+                                record_expanded_pair(pair_id, rows.at(pair.row),
+                                                     true);
+                                return;
+                            }
+                            shared_distribution = &outcomes;
+                        } else {
+                            release_operation_outcome = true;
+                            release_goal_progress_gated_outcome =
+                                outcomes.goal_progress_gated;
+                        }
+                        double distribution_mass = 0.0;
+                        const std::uint32_t successor_checkpoint =
+                            resolved.kind ==
+                                    ResolvedStrategyOperationKind::Restart
+                                ? kNoId
+                                : checkpoint_state_id;
+                        if (action_observes_modifier_offer(action)) {
+                            if (active_unveil_offer == nullptr ||
+                                std::find(active_unveil_offer->begin(),
+                                          active_unveil_offer->end(),
+                                          node.action.mod_id) ==
+                                    active_unveil_offer->end()) {
+                                throw std::logic_error(
+                                    "authored modifier selection is not "
+                                    "present "
+                                    "in the sampled offer carried to node '" +
+                                    node.id + "'");
+                            }
+                            const auto selected = std::find_if(
+                                outcomes.choice_options.begin(),
+                                outcomes.choice_options.end(),
+                                [&](const OutcomeChoiceOption& option) {
+                                    return option.mod_id == node.action.mod_id;
+                                });
+                            if (selected == outcomes.choice_options.end()) {
+                                throw std::logic_error(
+                                    "authored modifier selection is absent "
+                                    "from "
+                                    "its reachable exact offer vocabulary at "
+                                    "node '" +
+                                    node.id + "'");
+                            }
+                            const std::uint32_t successor =
+                                selected->actual_state != kNoId
+                                    ? selected->actual_state
+                                    : selected->state;
+                            distribution_mass = 1.0;
+                            route(successor, 1.0, nullptr,
+                                  successor_checkpoint);
+                        } else {
+                            if (outcomes.stable_shared_kernel) {
+                                replay_distribution = &outcomes;
+                                replay_checkpoint_state = successor_checkpoint;
+                                check_owned_projection(
+                                    owned_before_expansion,
+                                    outcomes.entries.size() *
+                                        sizeof(std::uint32_t));
+                                replay_route_tokens.reserve(
+                                    outcomes.entries.size());
+                                capture_replay_routes = true;
+                            }
+                            for (const OutcomeEntry& outcome :
+                                 outcomes.entries) {
+                                distribution_mass += outcome.probability;
+                                route(outcome.state, outcome.probability,
+                                      nullptr, successor_checkpoint);
+                            }
+                            capture_replay_routes = false;
+                        }
+                        if (std::fabs(distribution_mass - 1.0) > 1e-9) {
+                            throw std::runtime_error(
+                                "strategy evaluation action distribution does "
+                                "not sum to one at node '" +
                                 node.id + "'");
                         }
-                        const auto selected = std::find_if(
-                            outcomes.choice_options.begin(),
-                            outcomes.choice_options.end(),
-                            [&](const OutcomeChoiceOption& option) {
-                                return option.mod_id == node.action.mod_id;
-                            });
-                        if (selected == outcomes.choice_options.end()) {
-                            throw std::logic_error(
-                                "authored modifier selection is absent from "
-                                "its reachable exact offer vocabulary at "
-                                "node '" + node.id + "'");
-                        }
-                        const std::uint32_t successor =
-                            selected->actual_state != kNoId
-                                ? selected->actual_state
-                                : selected->state;
-                        distribution_mass = 1.0;
-                        route(
-                            successor, 1.0, nullptr,
-                            successor_checkpoint);
-                    } else {
-                        if (outcomes.stable_shared_kernel) {
-                            replay_distribution = &outcomes;
-                            replay_checkpoint_state =
-                                successor_checkpoint;
-                            check_owned_projection(
-                                owned_before_expansion,
-                                outcomes.entries.size() *
-                                    sizeof(std::uint32_t));
-                            replay_route_tokens.reserve(
-                                outcomes.entries.size());
-                            capture_replay_routes = true;
-                        }
-                        for (const OutcomeEntry& outcome : outcomes.entries) {
-                            distribution_mass += outcome.probability;
-                            route(
-                                outcome.state, outcome.probability,
-                                nullptr, successor_checkpoint);
-                        }
-                        capture_replay_routes = false;
-                    }
-                    if (std::fabs(distribution_mass - 1.0) > 1e-9) {
-                        throw std::runtime_error(
-                            "strategy evaluation action distribution does "
-                            "not sum to one at node '" + node.id + "'");
                     }
                 }
             }
         }
 
         const bool sampled_row_completion =
-            node.kind == StrategyNodeKind::Operation && census_sample(
-                route_sample_key(node_index, state_id));
+            node.kind == StrategyNodeKind::Operation &&
+            census_sample(route_sample_key(node_index, state_id));
         const Clock::time_point row_completion_started =
             sampled_row_completion ? Clock::now() : Clock::time_point{};
         EvalPair& pair = pairs.at(pair_id);

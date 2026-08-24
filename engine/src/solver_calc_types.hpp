@@ -44,11 +44,14 @@ struct OutcomeChoiceOption {
 };
 
 struct OutcomeDistribution {
-    /* True when an exact evaluator exists and the action applies on this
-     * carrier. Unsupported mechanics and concrete not-applied Scour
-     * transitions report false so planner callers cannot retain an
-     * unexecutable row. */
+    /* True when an exact evaluator exists for this action family. This is
+     * mechanic authority, not carrier-local applicability. */
     bool supported = false;
+    /* False when the exact evaluator exists but the native executor would
+     * report that this invocation did not apply. Such a distribution has no
+     * outcomes and must be rejected locally without poisoning the action
+     * family as unsupported. */
+    bool applicable = true;
     /* Reforge memo entries with no query-state-dependent fallback keep one
      * immutable absolute successor kernel alive for the solve. Consumers may
      * share storage and route its fringe once by object identity. */

@@ -1372,7 +1372,7 @@ pc_result pc_calc_action_outcomes(
             calc.outcomes(state_id, action_index);
         const bool legal = solver::action_legal(
             calc.session(), calc.registry().actions[action_index],
-            calc.state(state_id));
+            calc.state(state_id)) && distribution.applicable;
         *out_count = static_cast<uint32_t>(distribution.entries.size());
         if (out_summary != nullptr) {
             out_summary->struct_size =

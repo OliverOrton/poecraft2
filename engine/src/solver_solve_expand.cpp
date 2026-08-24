@@ -3361,6 +3361,12 @@ bool SolveWork::Impl::expand_one_unit() {
                                     "exact_evaluator_unavailable");
                             }
                             append = false;
+                        } else if (!distribution.applicable) {
+                            /* The evaluator exists, but this exact carrier
+                             * makes the primitive a native not-applied
+                             * operation. Reject only this row; it is not an
+                             * unsupported action-family witness. */
+                            append = false;
                         } else if (distribution.choice_groups.empty()) {
                             pending.transitions = &distribution.entries;
                             if (calc.registry().actions[action_index].synthetic &&
