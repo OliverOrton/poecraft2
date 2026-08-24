@@ -67,3 +67,17 @@ whole-graph work, but a batch-only change leaves an approximately 11.5-second
 solve step and fails the fixed responsiveness budget. The formerly measured
 start-properness owner is no longer an open lead: the retained versioned cache
 reduced its owner case from 17 full checks to one plus 16 validated reuses.
+
+### 2026-08-24 — #lower — Lower-bound and carrier-prioritization findings
+
+Status: raw investigation input; selects no boundary.
+
+Source reading plus committed run artifacts, gathered to support a future
+milestone plan on lower-bound quality and carrier/action prioritization. The
+findings are collected in
+[Lower-bound and carrier-prioritization findings](lower-bound-findings.md):
+what the published lower actually is, why it is static across a whole solve,
+where the goal cover is weak and where it is already correct, which components
+consume lower bounds, the prior art that constrains the design, and the open
+questions that need a run. Nothing was executed while assembling it; the
+checkout has no canonical database or compiled artifact.
