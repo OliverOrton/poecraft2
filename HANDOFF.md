@@ -1,62 +1,117 @@
 # Handoff
 
-**Status: the
-[Exact-Goal Carrier Ladder](docs/active/2026-08-22-exact-goal-carrier-ladder/plan.md)
-boundary is [complete](docs/active/2026-08-22-exact-goal-carrier-ladder/result.md).
-No implementation boundary is active.** Oliver must select a successor before
+**Status: the Multi-Epoch Exact-Carrier Recovery boundary is complete. No
+implementation boundary is active.** Oliver must select a successor before
 implementation resumes.
 
 ## Current checkpoint
 
 - Branch: `main`.
-- Local `origin/main` remains at `40eeb87`; no push was issued.
-- The accepted implementation and evidence are in the local checkpoint that
-  contains this handoff.
-- Result:
-  [docs/active/2026-08-22-exact-goal-carrier-ladder/result.md](docs/active/2026-08-22-exact-goal-carrier-ladder/result.md)
+- Implementation checkpoint: `b6fb861` (`Recover multi-epoch exact carrier
+  strategies`).
+- Local `origin/main` remains at `1f68497`; no push was issued.
+- The documentation checkpoint containing this handoff follows the
+  implementation commit locally.
 - Full repository pipeline and rendered UI review were deliberately not run.
 
-## Post-boundary Scour applicability repair
+## Completed multi-epoch exact-carrier recovery
 
-After the accepted ladder checkpoint, Oliver reported a release-WASM strategy
-sample in which node `s1` attempted Scour once in every run and all 1,000 runs
-ended with `action was not applicable`. The checked accepted clean-five and
-partial-five artifacts do not contain that failing node, and the live Strategy
-Board document was not available for direct replay. Source inspection still
-found and closed a concrete solver/runtime mismatch that can produce exactly
-that class of graph.
+The reported `Scour 1/run; action was not applicable` graph exposed a real
+solver/runtime contract mismatch. Exact distributions now distinguish
+evaluator-family support from carrier-local applicability. A no-op Scour is
+still a supported mechanic, but it is inapplicable, has no outcomes, and is
+illegal through the public odds/action surface. Option construction and sparse
+expansion reject it locally, while exact strategy evaluation records an
+`action_not_applied` absorption if an invalid compiled graph somehow reaches
+it. This avoids globally poisoning Scour support on carriers where it is valid.
 
-The native Scour action now counts a rarity-only rare-to-magic transition as
-applied even when it removes zero modifiers. The exact calculator no longer
-models an illegal or genuinely not-applied Scour as a supported deterministic
-self-loop. This is especially important for compound planner programs: an
-unusable Scour can no longer be silently skipped during planning and then
-emitted as a primitive operation that the strategy runtime rejects. A compiled
-candidate that somehow reaches this boundary fails its independent exact graph
-evaluation instead of publishing.
+The partial-five failure was not only Scour. A frozen automatic carrier epoch
+could intern exceptional support, run one refinement batch, and then solve the
+unchanged restricted graph without ever opening another carrier epoch. The
+continuation scheduler now:
 
-The repair is deliberately Scour-specific. The shared RNG-free calculator
-branch also discards `ActionOutcome.applied` for Bench and Remove Crafted
-Modifiers. A broad change was tested and correctly exposed existing fractured-
-crafted cleanup assumptions plus changed several established option contracts;
-it was not retained in this focused repair. That separate deterministic-action
-applicability audit remains worthwhile, but it needs its own witnesses and
-publication review rather than an incidental behavior change here.
+- preserves a frozen automatic epoch until all of its carrier rows finish;
+- prioritizes the exact carrier named by a failed joint-policy proof;
+- includes still-unclassified `PendingValues` rows in forced refinement;
+- reopens a stale nominal refinement target at the last reversible
+  finalization boundary; and
+- expands new exceptional support before another restricted lower solve.
 
-Post-repair checks:
+Joint executable publication now keeps the certified frontier's reachable
+policy and primitive-renewal witness, closes goal-progress retry carriers,
+projects coarse successors through behavioral representatives, and walks the
+selected operators' exact kernels. If strict closure exposes a successor that
+was absent from coarse reachability but already owns a complete legal row, the
+publisher seeds that row and lets strict refinement plus independent exact
+graph evaluation decide properness and cost. A successor with no row is fed
+back into ordinary carrier refinement instead of first appearing after natural
+finalization. None of these paths earns lower-bound or exact-envelope closure
+authority.
+
+### Representative controls
+
+The exact owner-supplied four-of-five Conquest Lamellar now publishes at the
+tracked 20-second bounded request:
+
+- independently exact-evaluated cost `2698.87479601436` Chaos;
+- success probability `1`, off-policy mass `0`;
+- 211 nodes / 559 edges;
+- 6,812 expanded carriers across three automatic carrier epochs;
+- public lower `0.01165`, so the result remains honestly bounded;
+- 10,000 / 10,000 simulator successes, zero failures, zero action-not-applied
+  runs, sampled mean `2721.852533999933`;
+- 21.093 seconds Solve, 22.540 seconds total qualification, including 1.138
+  seconds for the 10,000-run simulation.
+
+The strategy uses Prefixes Cannot Be Changed, Harvest Reforge Physical,
+Eldritch Ichor, Eldritch Annul, and Eldritch Exalt. It is not Chaos spam. The
+previous exact-semantics fallback was `14048002.568560576` Chaos. The older
+`2083.882...` result predates exact no-junk terminal semantics and is not a
+like-for-like acceptance value.
+
+The non-armour four-of-five Spine Bow control at a 40-second bounded request
+publishes:
+
+- independently exact-evaluated cost `577532.360249086` Chaos;
+- success probability `1`, off-policy mass `0`;
+- 25 nodes / 37 edges;
+- 704 expanded carriers across five automatic carrier epochs.
+
+That is about 29,563 times cheaper than the prior `17073119504` pure-Chaos
+fallback. The tracked Bow fixture remains a 10-second stop; that shorter
+boundary still arrives before the useful carrier ladder closes and is not a
+quality acceptance claim.
+
+### Verification
 
 - Native build: pass.
-- Artifact-backed core action/simulator suite: 2,861,290 checks, zero failures.
-- Solver Calc: 436,636 checks, zero failures.
+- Solver Calc: 436,640 checks, zero failures.
 - Solver exact evaluator: 18,065 checks, zero failures.
+- S8.3 automatic actions: 536 checks, zero failures, including its 10,000-run
+  control.
+- Solver Solve: 101,134 checks, zero failures.
+- Solver compiler: 583 checks, zero failures, including its 10,000-run
+  controls.
+- Solver refinement: 362 checks, zero failures.
+- Solver policy refinement: 2,063 checks, zero failures.
 - Release WASM rebuild: pass.
-- Release-WASM engine smoke, including the new magic fractured-carrier Scour
-  refusal: 28/28 pass.
+- Complete `npm test`: pass; release-WASM engine smoke 28/28.
 - `npx tsc --noEmit`: pass.
 - `git diff --check`: pass.
-- The focused solver API executable still has the same 13 stale expectation
-  failures on both this tree and a separately built untouched `2b8d5ac`
-  worktree; none were introduced by this repair.
+- Full repository pipeline: deliberately not run.
+- Rendered/visual review: deliberately not run; it remains Oliver's.
+
+### Remaining measured boundary
+
+Large automatic envelopes are active but visually opaque. In longer diagnostic
+armour runs the expanded-state count can remain unchanged for tens of seconds
+while carrier/action pairs are materialized. A 120-second stop reached 9,639
+expanded carriers with 134,518 actions still unevaluated. Current progress
+telemetry does not expose that row cursor, so this work looks frozen in the UI.
+The accepted 20-second armour incumbent avoids that wait, but five-goal solves
+that need later epochs still need action-envelope prioritization and visible
+row-progress/cancellation slicing. Bow also spends about 10.7 seconds after its
+40-second request in mandatory compile/exact verification.
 
 ## Completed exact-goal carrier ladder boundary
 
