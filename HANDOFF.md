@@ -1,18 +1,85 @@
 # Handoff
 
-**Status: the Multi-Epoch Exact-Carrier Recovery boundary is complete. No
+**Status: the Executable-Policy Default Recovery boundary is complete. No
 implementation boundary is active.** Oliver must select a successor before
 implementation resumes.
 
 ## Current checkpoint
 
 - Branch: `main`.
-- Implementation checkpoint: `b6fb861` (`Recover multi-epoch exact carrier
-  strategies`).
+- Implementation checkpoint: `d128b12` (`Recover executable policies from
+  safe restart defaults`).
 - Local `origin/main` remains at `1f68497`; no push was issued.
 - The documentation checkpoint containing this handoff follows the
   implementation commit locally.
 - Full repository pipeline and rendered UI review were deliberately not run.
+
+## Completed executable-policy default recovery
+
+The owner-reported clean rare Spine Bow with exact T1 fire, cold, and
+lightning prefixes was reconstructed from its release-WASM telemetry. Before
+this repair it reproducibly converged its 421-state admitted graph to
+`79588.79300138548` Chaos, left 8,652 incremental action obligations open, and
+returned `no_executable_policy` after about six seconds.
+
+Two independent publication gaps caused that result:
+
+- stable restricted Bellman convergence could finish an open incremental
+  envelope without preserving the selected policy or running the ordinary
+  delayed-action continuation scheduler; and
+- exact certification correctly found that the fail-closed compiled graph had
+  about 0.2763% compiler-default/off-policy mass, but it requested an
+  exhaustive strict lift without testing the separately valid product graph
+  whose compiler-designated defaults use the already-priced economic restart.
+
+Restricted convergence now preserves an independently certifiable selected
+policy and resumes the same finite-envelope scheduler from focused, ordinary,
+and numerical-stability exits. Certification remains fail-closed first. A
+restart-backed retry is permitted only when economic restart is explicitly in
+scope, exact evaluation converged with complete prices, and all nonsuccess
+mass is the fail-closed failure terminal: stop, action-not-applied,
+no-matching-edge, and unresolved mass must each be zero within tolerance. The
+product and certification graphs are then structurally proved identical
+except at compiler-designated bounded defaults, and the product graph receives
+its own exact evaluation. No route miss is silently relabeled as success.
+
+The rebuilt release WASM now returns and compiles a usable bounded strategy on
+the exact reconstructed request:
+
+- independently evaluated upper/cost `79285.28516643059` Chaos;
+- 83 nodes / 239 edges, with paired product-safe restart defaults;
+- 421 expanded states, no resource cap, no watchdog expiry;
+- 88.914 seconds Solve, 35.838 seconds compile/qualification, 129.103 seconds
+  total in the headless WASM diagnostic;
+- public lower `0`, with 8,437 incremental alternatives still open; and
+- `bounded_feasible` / `requested_bounded_finish`, not exact closure or an
+  optimality claim.
+
+The previous raw restricted value remains visible as
+`79588.79300138548`; the published value is the independently evaluated
+compiled policy cost above. The remaining open envelope means Harvest,
+Fossil, and other delayed alternatives have not all been evaluated. This
+boundary repairs the false absence of an executable policy; strategy quality
+and faster alternative admission remain successor work.
+
+### Verification
+
+- Native build: pass.
+- Solver Solve: 101,289 checks, zero failures.
+- Solver compiler: 583 checks, zero failures, including its 10,000-run
+  controls.
+- Solver policy refinement: 2,063 checks, zero failures.
+- Solver exact evaluator: 18,065 checks, zero failures.
+- S8.3 automatic actions: 536 checks, zero failures, including its 10,000-run
+  control.
+- Release WASM rebuild: pass.
+- Exact reconstructed release-WASM diagnostic: all expectations met; compiled
+  exact evaluation matched; verification simulation deliberately not
+  requested.
+- `npx tsc --noEmit`: pass.
+- `git diff --check`: pass.
+- Full repository pipeline: deliberately not run.
+- Rendered/visual review: deliberately not run; it remains Oliver's.
 
 ## Completed multi-epoch exact-carrier recovery
 
