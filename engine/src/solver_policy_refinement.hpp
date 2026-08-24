@@ -225,6 +225,13 @@ struct CompiledPolicyAssertion {
 void finalize_compiled_policy_assertion(
     CompiledPolicyAssertion& assertion);
 
+/* A fail-closed certification graph may be retried as the priced-restart
+ * product graph only when its exact loss is exclusively the compiler's
+ * off-policy failure terminal. */
+bool certification_default_failure_can_use_product_restart(
+    const StrategyEvalResult& evaluation,
+    bool allow_economic_restart);
+
 /* Reuse an independently completed exact graph evaluation only when the
  * newly compiled fail-closed graph is byte-identical. Reconciliation remains
  * owned by the current class-policy value. The cache is consumed on a hit. */

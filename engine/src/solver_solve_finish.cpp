@@ -3389,6 +3389,23 @@ SolveWork::Impl::run_finalization() {
                 }
             }
         }
+        if (!result.policy_available &&
+            best_current_certified_fallback() != nullptr) {
+            /* Selected-policy certification can be the first executable
+             * evidence in an open incremental envelope. It is already
+             * compiled and independently exact-evaluated here, so publish
+             * it directly instead of requiring a pre-existing incumbent or
+             * rerunning the same core-policy assertion below. A natural
+             * stable restricted stop has no dedicated public enum; preserve
+             * it as NumericalStability unless the host requested bounded
+             * finish explicitly. */
+            const SolveTermination selected_stop =
+                requested_bounded_finish
+                    ? SolveTermination::RequestedBoundedFinish
+                    : SolveTermination::NumericalStability;
+            skip_strict_lift =
+                publish_certified_fallback(selected_stop);
+        }
         {
             PolicyRefinementTelemetry& telemetry =
                 result.diagnostics.policy_refinement;
@@ -3401,7 +3418,7 @@ SolveWork::Impl::run_finalization() {
                     "retained_candidate_not_yet_published";
             }
         }
-        if (result.policy_available) {
+        if (result.policy_available && !skip_strict_lift) {
             PolicyRefinementTelemetry& telemetry =
                 result.diagnostics.policy_refinement;
             telemetry.core_policy_candidate_present = true;

@@ -1300,6 +1300,9 @@ void SolveWork::Impl::run_focused_lower_unit() {
                 finish_focused_upper_solve(false);
                 return;
             }
+            if (continue_open_incremental_envelope()) {
+                return;
+            }
             phase = SolvePhase::Done;
             return;
         }
@@ -1329,34 +1332,15 @@ void SolveWork::Impl::run_focused_lower_unit() {
                         result.diagnostics.focused_upper_bound -
                             result.diagnostics.focused_lower_bound);
                 }
-                capture_initial_incremental_selected_policy();
-                if (begin_incremental_upper_policy_pass()) return;
-                focus_optimizing = false;
-                focused_lower_mode = false;
-                incremental_restricted_values_ready = true;
-                if (classify_incremental_alternatives()) {
-                    restart_incremental_optimization();
-                } else if (options.high_impact_executable_uppers &&
-                           schedule_next_incremental_alternative()) {
-                    return;
-                } else if (schedule_incremental_refinement()) {
-                    return;
-                } else if (!schedule_next_incremental_alternative()) {
-                    if (!schedule_incremental_refinement(true)) {
-                        /*
-                         * classify_incremental_alternatives() may close the
-                         * last delayed-action envelope in this optimized
-                         * focused round. Give the now-complete graph its
-                         * normal focused closure/direct-upper proof instead
-                         * of finalizing with an exact value but no publishable
-                         * policy.
-                         */
-                        if (incremental_envelope_closed) {
-                            finish_focused_lower_solve();
-                        } else {
-                            phase = SolvePhase::Done;
-                        }
-                    }
+                if (continue_open_incremental_envelope()) return;
+                /* classify_incremental_alternatives() may close the last
+                 * delayed-action envelope in this optimized focused round.
+                 * Give the now-complete graph its normal focused closure or
+                 * direct-upper proof. */
+                if (incremental_envelope_closed) {
+                    finish_focused_lower_solve();
+                } else {
+                    phase = SolvePhase::Done;
                 }
             } else {
                 finish_focused_lower_solve();

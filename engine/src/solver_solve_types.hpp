@@ -1514,6 +1514,8 @@ struct SolveWork::Impl {
 
     void capture_initial_incremental_selected_policy();
 
+    bool continue_open_incremental_envelope();
+
     void restart_incremental_optimization();
 
     void finalize_incremental_diagnostics();

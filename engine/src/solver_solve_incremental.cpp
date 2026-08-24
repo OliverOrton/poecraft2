@@ -973,6 +973,18 @@ void SolveWork::Impl::capture_initial_incremental_selected_policy() {
         result.values[result.start_state] < 0.0) {
         return;
     }
+    if (output_incumbent.has_value() &&
+        result.values[result.start_state] >=
+            output_incumbent->certified_upper_bound -
+                value_comparison_tolerance(
+                    output_incumbent->certified_upper_bound)) {
+        /* A compact independently certifiable incumbent already covers this
+         * cost. Capturing the equivalent coarse selected policy would make
+         * bounded finalization exact-evaluate a much larger graph before it
+         * can publish the same upper. Keep selected-policy capture for a
+         * genuinely cheaper candidate only. */
+        return;
+    }
     const std::uint64_t no_row =
         std::numeric_limits<std::uint64_t>::max();
     if (policy_rows[result.start_state] == no_row) return;
@@ -1138,6 +1150,35 @@ void SolveWork::Impl::capture_initial_incremental_selected_policy() {
     telemetry.selected_candidate_status =
         "initial_restricted_policy_captured";
     unverified_selected_policy_candidate = std::move(selected);
+}
+
+bool SolveWork::Impl::continue_open_incremental_envelope() {
+    if (!incremental_action_generation || incremental_envelope_closed ||
+        requested_bounded_finish || result.diagnostics.resource_cap_hit) {
+        return false;
+    }
+
+    /* Convergence (including the numerical-stability latch) closes only the
+     * current admitted-row policy iteration. It does not evaluate, reject,
+     * or close delayed and carrier-local action obligations. Preserve the
+     * selected policy as an independently certifiable bounded candidate,
+     * then resume the ordinary finite-envelope scheduler. */
+    capture_initial_incremental_selected_policy();
+    focus_optimizing = false;
+    focused_lower_mode = false;
+    incremental_restricted_values_ready = true;
+    if (begin_incremental_upper_policy_pass()) return true;
+    if (classify_incremental_alternatives()) {
+        restart_incremental_optimization();
+        return true;
+    }
+    if (options.high_impact_executable_uppers &&
+        schedule_next_incremental_alternative()) {
+        return true;
+    }
+    if (schedule_incremental_refinement()) return true;
+    if (schedule_next_incremental_alternative()) return true;
+    return schedule_incremental_refinement(true);
 }
 
 bool SolveWork::Impl::schedule_incremental_refinement(

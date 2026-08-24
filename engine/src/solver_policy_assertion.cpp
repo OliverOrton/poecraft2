@@ -7,6 +7,21 @@ namespace poecraft {
 namespace solver {
 namespace refinement {
 
+bool certification_default_failure_can_use_product_restart(
+        const StrategyEvalResult& evaluation,
+        const bool allow_economic_restart) {
+    return allow_economic_restart &&
+        evaluation.converged &&
+        evaluation.cost_complete &&
+        evaluation.failure_probability > kOffPolicyTolerance &&
+        evaluation.stop_probability <= kOffPolicyTolerance &&
+        evaluation.action_not_applied_probability <=
+            kOffPolicyTolerance &&
+        evaluation.no_matching_edge_probability <=
+            kOffPolicyTolerance &&
+        evaluation.unresolved_probability <= kOffPolicyTolerance;
+}
+
 std::string compiled_policy_failure_classification(
         const CompiledPolicyAssertion& result) {
     if (result.status == CompiledPolicyAssertionStatus::Complete) {

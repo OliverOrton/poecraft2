@@ -386,6 +386,26 @@ void run_direct_certification_contract_tests() {
     PC_CHECK(
         off_policy.failure_classification ==
         "route_coverage_failure");
+    PC_CHECK(
+        refinement::
+            certification_default_failure_can_use_product_restart(
+                off_policy.evaluation, true));
+    PC_CHECK(
+        !refinement::
+            certification_default_failure_can_use_product_restart(
+                off_policy.evaluation, false));
+    StrategyEvalResult non_default_failure = off_policy.evaluation;
+    non_default_failure.action_not_applied_probability = 0.01;
+    PC_CHECK(
+        !refinement::
+            certification_default_failure_can_use_product_restart(
+                non_default_failure, true));
+    non_default_failure = off_policy.evaluation;
+    non_default_failure.no_matching_edge_probability = 0.01;
+    PC_CHECK(
+        !refinement::
+            certification_default_failure_can_use_product_restart(
+                non_default_failure, true));
 
     refinement::CompiledPolicyAssertion prepared;
     prepared.solver_cost = 10.0;
@@ -6661,6 +6681,46 @@ void run_incremental_action_generation_tests() {
     PC_CHECK(
         varying.policy[varying_magic_state].index ==
         varying_alteration);
+
+    /* Restricted Bellman convergence closes only the current admitted-row
+     * policy. It must not finalize an open incremental action envelope with
+     * unevaluated carrier rows and no executable publication attempt. */
+    SolveOptions numerical_lower_options = options;
+    numerical_lower_options.high_impact_executable_uppers = true;
+    CalcContext numerical_lower_calc(
+        varying_session, varying_goal, varying_registry,
+        {varying_transmute, varying_alteration,
+         inert_essence_index});
+    SolveWorkTestAccess::Impl numerical_lower_work(
+        numerical_lower_calc, varying_start,
+        {{"transmute", 1.0},
+         {"alteration", 1.0},
+         {"essence:incremental_inapplicable", 1000.0}},
+        numerical_lower_options);
+    numerical_lower_work.incremental_action_generation = true;
+    numerical_lower_work.incremental_envelope_closed = false;
+    numerical_lower_work.incremental_carriers.clear();
+    numerical_lower_work.incremental_carriers.push_back(
+        numerical_lower_work.result.start_state);
+    numerical_lower_work.incremental_automatic_carrier_cursor = 0;
+    numerical_lower_work.incremental_automatic_order_cursor = 0;
+    numerical_lower_work.incremental_automatic_carrier_order.clear();
+    numerical_lower_work.incremental_unevaluated_actions = 1;
+    numerical_lower_work.phase = SolvePhase::Iterating;
+    numerical_lower_work.backup_active = false;
+    numerical_lower_work.policy_iteration_failed = false;
+    numerical_lower_work.policy_initialized = true;
+    numerical_lower_work.policy_stable = true;
+    numerical_lower_work.policy_strict_order_reconciled = true;
+    numerical_lower_work.residual = 0.0;
+    numerical_lower_work.numerical_stability_stop = false;
+    numerical_lower_work.step(1);
+    PC_CHECK(numerical_lower_work.phase == SolvePhase::Expanding);
+    PC_CHECK(
+        numerical_lower_work.incremental_dynamic_prepare_active ||
+        numerical_lower_work.incremental_dynamic_prepared ||
+        numerical_lower_work.expansion_active);
+    PC_CHECK(!numerical_lower_work.finalization_task.has_value());
 }
 
 void run_resource_stop_reachable_policy_tests() {

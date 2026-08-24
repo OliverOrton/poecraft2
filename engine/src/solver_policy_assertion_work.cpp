@@ -191,6 +191,7 @@ struct CompiledPolicyAssertionWork::Impl {
     std::shared_ptr<EconomyImpl> economy;
     std::unique_ptr<StrategyEvalWork> evaluation_work;
     std::chrono::steady_clock::time_point evaluation_started{};
+    bool evaluating_product_restart_recovery = false;
 
     Impl(
             CalcContext& coarse_value,
@@ -270,10 +271,29 @@ struct CompiledPolicyAssertionWork::Impl {
         }
         result.retained_solver_bytes =
             estimated_retained_solver_bytes(coarse, &solved);
-        result.publication_peak_owned_bytes =
-            result.retained_solver_bytes;
+        std::uint64_t paired_certification_bytes = 0;
+        if (evaluating_product_restart_recovery) {
+            paired_certification_bytes =
+                result.certification_strategy_json.capacity() + 1;
+            saturating_add(
+                paired_certification_bytes,
+                result.certification_compilation
+                        .policy_route_default_mode.capacity() +
+                    1);
+            saturating_add(
+                paired_certification_bytes,
+                result.certification_compilation.cap_hit.capacity() + 1);
+        }
+        std::uint64_t retained_with_pair = result.retained_solver_bytes;
+        saturating_add(retained_with_pair, paired_certification_bytes);
+        result.publication_peak_owned_bytes = std::max(
+            result.publication_peak_owned_bytes,
+            retained_with_pair);
         if (result.retained_solver_bytes >=
-            options.max_solver_owned_bytes) {
+                options.max_solver_owned_bytes ||
+            paired_certification_bytes >=
+                options.max_solver_owned_bytes -
+                    result.retained_solver_bytes) {
             finish_failure(
                 CompiledPolicyAssertionStatus::ResourceCap,
                 "retained solver state leaves no memory for exact policy "
@@ -283,7 +303,8 @@ struct CompiledPolicyAssertionWork::Impl {
         }
         const std::uint64_t compilation_memory =
             options.max_solver_owned_bytes -
-            result.retained_solver_bytes;
+            result.retained_solver_bytes -
+            paired_certification_bytes;
         if (compilation_memory <= 1) {
             finish_failure(
                 CompiledPolicyAssertionStatus::ResourceCap,
@@ -342,7 +363,9 @@ struct CompiledPolicyAssertionWork::Impl {
                     coarse, solved, strategy_name, &result.compilation,
                     compilation_json_limit, refined_routing,
                     compilation_memory,
-                    PolicyRouteDefaultMode::CertificationFailClosed);
+                    evaluating_product_restart_recovery
+                        ? PolicyRouteDefaultMode::ProductSafeRestart
+                        : PolicyRouteDefaultMode::CertificationFailClosed);
                 record_compilation_time();
                 std::uint64_t live = result.retained_solver_bytes;
                 saturating_add(
@@ -400,6 +423,21 @@ struct CompiledPolicyAssertionWork::Impl {
             }
         }
 
+        if (evaluating_product_restart_recovery) {
+            if (!policy_graphs_differ_only_at_bounded_defaults(
+                    result.strategy_json,
+                    result.compilation,
+                    result.certification_strategy_json,
+                    result.certification_compilation)) {
+                finish_failure(
+                    CompiledPolicyAssertionStatus::CompilationFailure,
+                    "paired product and certification graphs differ "
+                    "outside compiler-designated bounded defaults");
+                return;
+            }
+            result.paired_default_only = true;
+        }
+
         evaluation_started = std::chrono::steady_clock::now();
         try {
             const std::uint64_t strategy_json_bytes =
@@ -420,6 +458,12 @@ struct CompiledPolicyAssertionWork::Impl {
                 remaining_memory -= bytes;
                 return true;
             };
+            if (!consume_memory(
+                    paired_certification_bytes,
+                    "the paired certification graph")) {
+                record_evaluation_time();
+                return;
+            }
             if (!consume_memory(
                     strategy_json_bytes,
                     "parsed exact policy evaluation")) {
@@ -526,6 +570,44 @@ struct CompiledPolicyAssertionWork::Impl {
             result.publication_peak_owned_bytes = std::max(
                 result.publication_peak_owned_bytes, live);
             finalize_compiled_policy_assertion(result);
+            const bool certification_default_only_failure =
+                !evaluating_product_restart_recovery &&
+                certification_default_failure_can_use_product_restart(
+                    result.evaluation,
+                    options.allow_economic_restart);
+            if (certification_default_only_failure) {
+                /* The fail-closed graph proved that its only loss is the
+                 * compiler-designated policy-router default. When economic
+                 * restart is in scope, the product graph replaces exactly
+                 * those defaults with a priced fresh-base restart. Evaluate
+                 * that real product policy before requesting an exhaustive
+                 * strict quotient lift. The paired-graph structural check in
+                 * compile_and_prepare prevents any other graph change from
+                 * gaining this authority. */
+                result.certification_strategy_json =
+                    std::move(result.strategy_json);
+                result.certification_compilation = result.compilation;
+                result.compilation = {};
+                result.evaluation = {};
+                result.status = CompiledPolicyAssertionStatus::NoPolicy;
+                result.failure_reason.clear();
+                result.failure_classification.clear();
+                result.resource_cap.clear();
+                result.off_policy_probability =
+                    std::numeric_limits<double>::infinity();
+                result.zero_off_policy = false;
+                result.proper = false;
+                result.executable = false;
+                result.cost_reconciled = false;
+                result.exact_cost =
+                    std::numeric_limits<double>::infinity();
+                evaluation_work.reset();
+                parsed_strategy.reset();
+                economy.reset();
+                evaluating_product_restart_recovery = true;
+                stage = Stage::Compiling;
+                return;
+            }
             if (result.executable && result.proper &&
                 result.zero_off_policy &&
                 result.evaluation.cost_complete &&

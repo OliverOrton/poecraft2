@@ -2147,6 +2147,9 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
             }
 
             if (!backup_active && numerical_stability_stop) {
+                if (continue_open_incremental_envelope()) {
+                    continue;
+                }
                 phase = SolvePhase::Done;
                 break;
             }
@@ -2155,27 +2158,7 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                  sweeps >= options.max_sweeps)) {
                 if (incremental_action_generation &&
                     !incremental_envelope_closed) {
-                    incremental_restricted_values_ready = true;
-                    if (begin_incremental_upper_policy_pass()) {
-                        continue;
-                    }
-                    if (classify_incremental_alternatives()) {
-                        restart_incremental_optimization();
-                        continue;
-                    }
-                    if (options.high_impact_executable_uppers &&
-                        schedule_next_incremental_alternative()) {
-                        continue;
-                    }
-                    if (schedule_incremental_refinement()) {
-                        continue;
-                    }
-                    if (schedule_next_incremental_alternative()) {
-                        continue;
-                    }
-                    if (schedule_incremental_refinement(true)) {
-                        continue;
-                    }
+                    if (continue_open_incremental_envelope()) continue;
                 }
                 phase = SolvePhase::Done;
                 break;
@@ -2189,6 +2172,9 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
             }
             --remaining;
             if (!backup_active && numerical_stability_stop) {
+                if (continue_open_incremental_envelope()) {
+                    continue;
+                }
                 phase = SolvePhase::Done;
                 break;
             }
@@ -2197,23 +2183,7 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                  sweeps >= options.max_sweeps)) {
                 if (incremental_action_generation &&
                     !incremental_envelope_closed) {
-                    incremental_restricted_values_ready = true;
-                    if (begin_incremental_upper_policy_pass()) {
-                        continue;
-                    }
-                    if (classify_incremental_alternatives()) {
-                        restart_incremental_optimization();
-                        continue;
-                    }
-                    if (schedule_incremental_refinement()) {
-                        continue;
-                    }
-                    if (schedule_next_incremental_alternative()) {
-                        continue;
-                    }
-                    if (schedule_incremental_refinement(true)) {
-                        continue;
-                    }
+                    if (continue_open_incremental_envelope()) continue;
                 }
                 phase = SolvePhase::Done;
             }
