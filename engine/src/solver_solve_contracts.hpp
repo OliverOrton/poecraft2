@@ -729,6 +729,42 @@ struct SolveDiagnostics {
      * serialized aggregate is observational and the scheduler-consumer flag
      * remains false until a later gate explicitly migrates work ordering. */
     std::string action_envelope_ledger_json;
+    struct IncumbentPortfolioSnapshot {
+        struct Identity {
+            std::uint64_t portfolio = 0;
+            std::uint64_t goal = 0;
+            std::uint64_t economy = 0;
+            std::uint64_t action_vocabulary = 0;
+            std::uint64_t caller_scope = 0;
+            std::uint64_t graph_prefix = 0;
+            std::uint64_t artifact = 0;
+            std::uint64_t source_generation = 0;
+        };
+        bool candidate_present = false;
+        double candidate_estimate =
+            std::numeric_limits<double>::infinity();
+        std::string candidate_source;
+        std::string candidate_stage = "none";
+        bool candidate_verified = false;
+        Identity candidate_identity;
+        bool verified_upper_present = false;
+        double verified_executable_upper =
+            std::numeric_limits<double>::infinity();
+        std::uint64_t verified_portfolio_identity = 0;
+        Identity verified_identity;
+        std::uint64_t verified_observations = 0;
+        std::uint64_t verified_replacements = 0;
+        bool verified_upper_monotone = true;
+        double independent_global_lower = 0.0;
+        SolveLowerBoundProvenance independent_global_lower_provenance =
+            SolveLowerBoundProvenance::None;
+        bool independent_global_lower_certified = false;
+        double restricted_search_lower = 0.0;
+        bool restricted_search_envelope_global = false;
+        bool exact_closure_proved = false;
+        double exact_closure_value =
+            std::numeric_limits<double>::infinity();
+    } incumbent_portfolio;
     /*
      * Finalization-only observational samples explaining the executable
      * upper inherited by high-impact successors of completed root

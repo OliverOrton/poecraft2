@@ -54,6 +54,51 @@ std::size_t count_occurrences(
     return count;
 }
 
+void run_incumbent_portfolio_monotonicity_tests() {
+    using Impl = SolveWorkTestAccess::Impl;
+    Impl::IncumbentPortfolio portfolio;
+
+    Impl::BoundedPolicyIncumbent cheap;
+    cheap.evaluated_policy_cost = 10.0;
+    cheap.certified_upper_bound = 10.0;
+    cheap.portfolio_identity = 101;
+    cheap.source_generation = 7;
+    cheap.independently_certified = true;
+    cheap.independently_evaluated = true;
+    cheap.proper = true;
+    cheap.executable = true;
+    portfolio.observe_verified(cheap);
+
+    /* A later graph epoch and a worse direct candidate cannot erase the
+     * already verified executable upper. An unverified coarse candidate is
+     * intentionally invisible to the verified authority. */
+    Impl::BoundedPolicyIncumbent later_worse = cheap;
+    later_worse.evaluated_policy_cost = 14.0;
+    later_worse.certified_upper_bound = 14.0;
+    later_worse.portfolio_identity = 202;
+    later_worse.source_generation = 99;
+    portfolio.observe_verified(later_worse);
+    Impl::BoundedPolicyIncumbent coarse = later_worse;
+    coarse.evaluated_policy_cost = 3.0;
+    coarse.independently_certified = false;
+    coarse.independently_evaluated = false;
+    portfolio.observe_verified(coarse);
+    PC_CHECK(portfolio.verified_executable_upper() == 10.0);
+    PC_CHECK(portfolio.best_verified_identity == 101);
+    PC_CHECK(portfolio.verified_replacements == 0);
+
+    Impl::BoundedPolicyIncumbent later_cheaper = cheap;
+    later_cheaper.evaluated_policy_cost = 8.0;
+    later_cheaper.certified_upper_bound = 8.0;
+    later_cheaper.portfolio_identity = 303;
+    later_cheaper.source_generation = 100;
+    portfolio.observe_verified(later_cheaper);
+    PC_CHECK(portfolio.verified_executable_upper() == 8.0);
+    PC_CHECK(portfolio.best_verified_identity == 303);
+    PC_CHECK(portfolio.verified_replacements == 1);
+    PC_CHECK(!portfolio.monotonicity_violation);
+}
+
 void run_bounded_policy_row_capture_tests() {
     auto session = make_solve_session();
     /* Preserve the policy-lift observer collision without relying on the old
@@ -1429,6 +1474,25 @@ void run_alt_spam_tests() {
         refinement.evaluator_memory_samples_omitted = 3;
         refinement.evaluator_memory_sample_bytes =
             refinement.evaluator_memory_samples.front().size();
+        auto& incumbent_snapshot =
+            refinement_sample.diagnostics.incumbent_portfolio;
+        incumbent_snapshot.candidate_present = true;
+        incumbent_snapshot.candidate_estimate = 31.0;
+        incumbent_snapshot.candidate_source = "selected_coarse_policy";
+        incumbent_snapshot.candidate_stage = "materialized_policy";
+        incumbent_snapshot.verified_upper_present = true;
+        incumbent_snapshot.verified_executable_upper = 30.0;
+        incumbent_snapshot.verified_portfolio_identity = 42;
+        incumbent_snapshot.verified_identity.portfolio = 42;
+        incumbent_snapshot.verified_identity.caller_scope = 43;
+        incumbent_snapshot.verified_observations = 3;
+        incumbent_snapshot.verified_replacements = 1;
+        incumbent_snapshot.independent_global_lower = 29.0;
+        incumbent_snapshot.independent_global_lower_provenance =
+            SolveLowerBoundProvenance::GlobalActionRelaxation;
+        incumbent_snapshot.independent_global_lower_certified = true;
+        incumbent_snapshot.restricted_search_lower = 29.5;
+        incumbent_snapshot.restricted_search_envelope_global = false;
         PolicyCompilationTelemetry compilation_sample;
         compilation_sample.working_states = 23;
         compilation_sample.behavioral_classes = 22;
@@ -1469,6 +1533,30 @@ void run_alt_spam_tests() {
                 calc, &refinement_sample, nullptr, std::nullopt,
                 &compilation_sample);
         PC_CHECK(valid_json_object(refinement_telemetry));
+        PC_CHECK(refinement_telemetry.find(
+                     "\"incumbent_portfolio\":{"
+                     "\"candidate_estimate\":{\"present\":true,"
+                     "\"cost\":31,\"source\":\"selected_coarse_policy\","
+                     "\"stage\":\"materialized_policy\","
+                     "\"verified\":false,\"identity\":{") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"verified_executable_upper\":{\"present\":true,"
+                     "\"cost\":30,"
+                     "\"portfolio_identity\":\"000000000000002a\","
+                     "\"identity\":{"
+                     "\"portfolio\":\"000000000000002a\","
+                     "\"goal\":\"0000000000000000\","
+                     "\"economy\":\"0000000000000000\","
+                     "\"action_vocabulary\":\"0000000000000000\","
+                     "\"caller_scope\":\"000000000000002b\","
+                     "\"graph_prefix\":\"0000000000000000\","
+                     "\"artifact\":\"0000000000000000\","
+                     "\"source_generation\":0},"
+                     "\"observations\":3,"
+                     "\"strictly_cheaper_replacements\":1,"
+                     "\"monotone\":true}") !=
+                 std::string::npos);
         PC_CHECK(refinement_telemetry.find(
                      "\"policy_refinement\":{\"triggers\":1,"
                      "\"status\":\"complete\",\"resource_cap\":null,") !=
@@ -2245,7 +2333,10 @@ void run_policy_guided_exact_lift_tests() {
             1e-12));
         progress_work.result.diagnostics.focused_upper_bound = 10.0;
         live_progress = progress_work.progress();
-        PC_CHECK(near(live_progress.upper_bound, 10.0, 1e-12));
+        /* A later cheaper coarse estimate is candidate progress, not public
+         * executable authority. The verified upper remains monotone until
+         * that candidate completes independent graph evaluation. */
+        PC_CHECK(near(live_progress.upper_bound, 12.5, 1e-12));
     }
     const SolveResult solved =
         solve(calc, start, prices, options);
@@ -10809,6 +10900,7 @@ void run_solver_solve_tests(const char* artifact_dir) {
     PC_CHECK(
         default_options.max_solver_owned_bytes ==
         1024ull * 1024ull * 1024ull);
+    run_incumbent_portfolio_monotonicity_tests();
     run_bounded_policy_row_capture_tests();
     run_certified_fallback_contract_tests();
     run_direct_certification_contract_tests();

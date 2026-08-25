@@ -1094,6 +1094,7 @@ void SolveWork::Impl::capture_initial_incremental_selected_policy() {
     snapshot.action_vocabulary_identity =
         action_vocabulary_identity();
     snapshot.action_vocabulary_size = operators.size();
+    snapshot.caller_scope_identity = caller_scope_identity();
     snapshot.graph_identity = graph_identity();
     snapshot.artifact_identity = artifact_identity();
     snapshot.source_generation = transition_cache->rows.size();
@@ -1147,6 +1148,7 @@ void SolveWork::Impl::capture_initial_incremental_selected_policy() {
     identity_mix(identity, snapshot.goal_identity);
     identity_mix(identity, snapshot.economy_identity);
     identity_mix(identity, snapshot.action_vocabulary_identity);
+    identity_mix(identity, snapshot.caller_scope_identity);
     identity_mix(identity, snapshot.artifact_identity);
     identity_mix(identity, snapshot.graph_prefix_identity);
     identity_mix(identity, snapshot.source_generation);

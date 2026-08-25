@@ -22,6 +22,11 @@ constexpr std::uint64_t kUpperPolicyProvenanceStructuralBytes =
  */
 constexpr std::uint64_t kUpperPolicyProvenanceAccountingOffset =
     2 * kUpperPolicyProvenanceStructuralBytes;
+/* Gate 2 keeps four source-compatible references into the typed portfolio
+ * while call sites migrate. Their pointer-sized shells are not independent
+ * solver-owned payload and must not perturb the legacy cap authority. */
+constexpr std::uint64_t kIncumbentPortfolioAliasAccountingOffset =
+    4 * sizeof(void*);
 
 std::uint64_t SparseVariantArena::selected_bytes() const {
         return sizeof(*this) +
@@ -903,6 +908,8 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
            diagnostics.progressive_fracture_roll_action_id.capacity() + 1 +
            diagnostics.progressive_fracture_status.capacity() + 1 +
            diagnostics.action_envelope_ledger_json.capacity() + 1 +
+           diagnostics.incumbent_portfolio.candidate_source.capacity() + 1 +
+           diagnostics.incumbent_portfolio.candidate_stage.capacity() + 1 +
            diagnostics.carrier_bound_attribution_json.capacity() + 1;
     bytes += diagnostics.action_search_costs_owned_bytes;
     for (const auto& [id, unused] :
@@ -1074,12 +1081,12 @@ SolveProgress SolveWork::Impl::progress() const {
         }
         if (result.diagnostics.focused_expansion) {
             value.lower_bound = certified_global_lower_bound();
-            value.upper_bound = output_incumbent.has_value()
-                                    ? output_incumbent->certified_upper_bound
-                                    : result.diagnostics.focused_upper_bound;
+            value.upper_bound =
+                incumbent_portfolio.verified_executable_upper();
         } else {
             value.lower_bound = 0.0;
-            value.upper_bound = value.start_value_bound;
+            value.upper_bound =
+                incumbent_portfolio.verified_executable_upper();
             bool full_non_goal_closure = value.done;
             if (full_non_goal_closure) {
                 for (std::uint32_t state = 0;
@@ -1107,11 +1114,6 @@ SolveProgress SolveWork::Impl::progress() const {
             if (exact_closed) {
                 value.lower_bound = value.start_value_bound;
             }
-        }
-        if (std::isfinite(finalization_verified_upper_bound)) {
-            value.upper_bound = std::min(
-                value.upper_bound,
-                finalization_verified_upper_bound);
         }
         if (std::isfinite(value.lower_bound) &&
             std::isfinite(value.upper_bound)) {
@@ -1150,6 +1152,112 @@ SolveProgress SolveWork::Impl::progress() const {
             peak_owned_bytes, value.live_owned_bytes);
         return value;
     }
+
+void SolveWork::Impl::refresh_incumbent_portfolio_diagnostics(
+        SolveDiagnostics& diagnostics,
+        const SolveResult* published) const {
+    SolveDiagnostics::IncumbentPortfolioSnapshot& snapshot =
+        diagnostics.incumbent_portfolio;
+    snapshot = {};
+
+    const BoundedPolicyIncumbent* candidate = nullptr;
+    double candidate_estimate = kInfinity;
+    if (unverified_selected_policy_candidate.has_value()) {
+        candidate = &unverified_selected_policy_candidate->snapshot;
+        candidate_estimate =
+            unverified_selected_policy_candidate->selected_estimate;
+    } else if (output_incumbent.has_value()) {
+        candidate = &*output_incumbent;
+        candidate_estimate = candidate->certified_upper_bound;
+    }
+    if (candidate != nullptr) {
+        snapshot.candidate_present = true;
+        snapshot.candidate_estimate = candidate_estimate;
+        snapshot.candidate_source = candidate->kind;
+        snapshot.candidate_identity = {
+            candidate->portfolio_identity,
+            candidate->goal_identity,
+            candidate->economy_identity,
+            candidate->action_vocabulary_identity,
+            candidate->caller_scope_identity,
+            candidate->graph_prefix_identity,
+            candidate->artifact_identity,
+            candidate->source_generation};
+        snapshot.candidate_verified =
+            candidate->independently_certified &&
+            candidate->independently_evaluated && candidate->proper &&
+            candidate->executable;
+        if (snapshot.candidate_verified) {
+            snapshot.candidate_stage = "exact_evaluated_policy";
+        } else if (!candidate->compiled_artifact.strategy_json.empty()) {
+            snapshot.candidate_stage = "compiled_artifact";
+        } else if (candidate->policy_materialized) {
+            snapshot.candidate_stage = "materialized_policy";
+        } else {
+            snapshot.candidate_stage = "coarse_estimate";
+        }
+    } else if (result.start_state < result.values.size() &&
+               std::isfinite(result.values[result.start_state])) {
+        snapshot.candidate_present = true;
+        snapshot.candidate_estimate = result.values[result.start_state];
+        snapshot.candidate_source = "bellman_selected_policy";
+        snapshot.candidate_stage = "coarse_estimate";
+    }
+
+    snapshot.verified_executable_upper =
+        incumbent_portfolio.verified_executable_upper();
+    snapshot.verified_upper_present =
+        std::isfinite(snapshot.verified_executable_upper);
+    snapshot.verified_portfolio_identity =
+        incumbent_portfolio.best_verified_identity;
+    snapshot.verified_identity = {
+        incumbent_portfolio.best_verified_identity,
+        incumbent_portfolio.best_verified_goal_identity,
+        incumbent_portfolio.best_verified_economy_identity,
+        incumbent_portfolio.best_verified_action_vocabulary_identity,
+        incumbent_portfolio.best_verified_caller_scope_identity,
+        incumbent_portfolio.best_verified_graph_prefix_identity,
+        incumbent_portfolio.best_verified_artifact_identity,
+        incumbent_portfolio.best_verified_source_generation};
+    snapshot.verified_observations =
+        incumbent_portfolio.verified_observations;
+    snapshot.verified_replacements =
+        incumbent_portfolio.verified_replacements;
+    snapshot.verified_upper_monotone =
+        !incumbent_portfolio.monotonicity_violation;
+
+    snapshot.independent_global_lower = certified_global_lower_bound();
+    snapshot.independent_global_lower_certified = true;
+    snapshot.independent_global_lower_provenance =
+        snapshot.independent_global_lower > 0.0
+            ? SolveLowerBoundProvenance::GlobalActionRelaxation
+            : SolveLowerBoundProvenance::
+                  OpenIncrementalEnvelopeUniversalZero;
+    snapshot.restricted_search_lower = diagnostics.focused_lower_bound;
+    snapshot.restricted_search_envelope_global =
+        !diagnostics.incremental_action_generation ||
+        diagnostics.incremental_action_envelope_closed;
+    if (published != nullptr) {
+        snapshot.independent_global_lower = published->lower_bound;
+        snapshot.independent_global_lower_certified =
+            published->global_lower_bound_certified;
+        snapshot.independent_global_lower_provenance =
+            published->lower_bound_provenance;
+        snapshot.exact_closure_proved =
+            published->lower_bound_provenance ==
+            SolveLowerBoundProvenance::ExactPolicyClosure;
+        if (snapshot.exact_closure_proved) {
+            snapshot.exact_closure_value = published->lower_bound;
+        }
+        if (published->policy_available &&
+            std::isfinite(published->evaluated_policy_cost)) {
+            snapshot.verified_upper_present = true;
+            snapshot.verified_executable_upper = std::min(
+                snapshot.verified_executable_upper,
+                published->evaluated_policy_cost);
+        }
+    }
+}
 
 SolveTelemetrySnapshot SolveWork::Impl::telemetry_snapshot(bool abandoned) const {
         SolveTelemetrySnapshot snapshot;
@@ -1302,6 +1410,9 @@ SolveTelemetrySnapshot SolveWork::Impl::telemetry_snapshot(bool abandoned) const
         snapshot.diagnostics.incremental_refinement_uncertainty =
             incremental_refinement_uncertainty;
         refresh_action_envelope_ledger_diagnostics(snapshot.diagnostics);
+        refresh_incumbent_portfolio_diagnostics(
+            snapshot.diagnostics,
+            finalized_result.has_value() ? &*finalized_result : nullptr);
         snapshot.diagnostics.solve_owned_byte_ledger_requests =
             owned_byte_ledger_requests;
         snapshot.diagnostics.solve_owned_byte_reconciliations =
@@ -1416,7 +1527,8 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
         const std::uint64_t calc_bytes) const {
         std::uint64_t bytes =
             sizeof(*this) -
-            kUpperPolicyProvenanceAccountingOffset +
+            kUpperPolicyProvenanceAccountingOffset -
+            kIncumbentPortfolioAliasAccountingOffset +
             calc_bytes;
         bytes += prices.bucket_count() * sizeof(void*);
         bytes += prices.size() *
@@ -1615,7 +1727,8 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
         const std::uint64_t calc_bytes) const {
         std::uint64_t bytes =
             sizeof(*this) -
-            kUpperPolicyProvenanceAccountingOffset +
+            kUpperPolicyProvenanceAccountingOffset -
+            kIncumbentPortfolioAliasAccountingOffset +
             calc_bytes;
         bytes += prices.bucket_count() * sizeof(void*);
         bytes += prices.size() *
@@ -4446,6 +4559,125 @@ std::string serialize_solver_telemetry(
         json += "null";
     } else {
         json += diagnostics->carrier_bound_attribution_json;
+    }
+
+    json += ",\"incumbent_portfolio\":";
+    if (diagnostics == nullptr) {
+        json += "null";
+    } else {
+        const SolveDiagnostics::IncumbentPortfolioSnapshot& portfolio =
+            diagnostics->incumbent_portfolio;
+        const auto append_portfolio_number = [&](const double value) {
+            if (!std::isfinite(value)) {
+                json += "null";
+                return;
+            }
+            char buffer[40];
+            std::snprintf(buffer, sizeof(buffer), "%.17g", value);
+            json += buffer;
+        };
+        const auto append_lower_provenance = [&] {
+            switch (portfolio.independent_global_lower_provenance) {
+            case SolveLowerBoundProvenance::None:
+                append_telemetry_json_string(json, "none");
+                break;
+            case SolveLowerBoundProvenance::
+                    OpenIncrementalEnvelopeUniversalZero:
+                append_telemetry_json_string(
+                    json, "open_incremental_envelope_universal_zero");
+                break;
+            case SolveLowerBoundProvenance::
+                    UnclosedStrictRefinementUniversalZero:
+                append_telemetry_json_string(
+                    json, "unclosed_strict_refinement_universal_zero");
+                break;
+            case SolveLowerBoundProvenance::
+                    ClosedIncrementalActionEnvelope:
+                append_telemetry_json_string(
+                    json, "closed_incremental_action_envelope");
+                break;
+            case SolveLowerBoundProvenance::GlobalActionRelaxation:
+                append_telemetry_json_string(
+                    json, "global_action_relaxation");
+                break;
+            case SolveLowerBoundProvenance::ExactPolicyClosure:
+                append_telemetry_json_string(json, "exact_policy_closure");
+                break;
+            }
+        };
+        const auto append_portfolio_identity = [&json](
+                const SolveDiagnostics::IncumbentPortfolioSnapshot::Identity&
+                    identity) {
+            json += "{\"portfolio\":\"" +
+                    telemetry_hex_u64(identity.portfolio) + "\"";
+            json += ",\"goal\":\"" + telemetry_hex_u64(identity.goal) +
+                    "\"";
+            json += ",\"economy\":\"" +
+                    telemetry_hex_u64(identity.economy) + "\"";
+            json += ",\"action_vocabulary\":\"" +
+                    telemetry_hex_u64(identity.action_vocabulary) + "\"";
+            json += ",\"caller_scope\":\"" +
+                    telemetry_hex_u64(identity.caller_scope) + "\"";
+            json += ",\"graph_prefix\":\"" +
+                    telemetry_hex_u64(identity.graph_prefix) + "\"";
+            json += ",\"artifact\":\"" +
+                    telemetry_hex_u64(identity.artifact) + "\"";
+            json += ",\"source_generation\":" +
+                    std::to_string(identity.source_generation) + "}";
+        };
+        json += "{\"candidate_estimate\":{";
+        json += "\"present\":" +
+                std::string(bool_json(portfolio.candidate_present));
+        json += ",\"cost\":";
+        append_portfolio_number(portfolio.candidate_estimate);
+        json += ",\"source\":";
+        if (portfolio.candidate_source.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(json, portfolio.candidate_source);
+        }
+        json += ",\"stage\":";
+        append_telemetry_json_string(json, portfolio.candidate_stage);
+        json += ",\"verified\":" +
+                std::string(bool_json(portfolio.candidate_verified));
+        json += ",\"identity\":";
+        append_portfolio_identity(portfolio.candidate_identity);
+        json += "}";
+        json += ",\"verified_executable_upper\":{";
+        json += "\"present\":" +
+                std::string(bool_json(portfolio.verified_upper_present));
+        json += ",\"cost\":";
+        append_portfolio_number(portfolio.verified_executable_upper);
+        json += ",\"portfolio_identity\":\"" +
+                telemetry_hex_u64(portfolio.verified_portfolio_identity) +
+                "\"";
+        json += ",\"identity\":";
+        append_portfolio_identity(portfolio.verified_identity);
+        json += ",\"observations\":" +
+                std::to_string(portfolio.verified_observations);
+        json += ",\"strictly_cheaper_replacements\":" +
+                std::to_string(portfolio.verified_replacements);
+        json += ",\"monotone\":" + std::string(bool_json(
+            portfolio.verified_upper_monotone)) + "}";
+        json += ",\"independent_global_lower\":{";
+        json += "\"value\":";
+        append_portfolio_number(portfolio.independent_global_lower);
+        json += ",\"certified\":" + std::string(bool_json(
+            portfolio.independent_global_lower_certified));
+        json += ",\"provenance\":";
+        append_lower_provenance();
+        json += "}";
+        json += ",\"restricted_search_lower\":{";
+        json += "\"value\":";
+        append_portfolio_number(portfolio.restricted_search_lower);
+        json += ",\"envelope_global\":" + std::string(bool_json(
+            portfolio.restricted_search_envelope_global)) + "}";
+        json += ",\"exact_closure\":{";
+        json += "\"proved\":" + std::string(bool_json(
+            portfolio.exact_closure_proved));
+        json += ",\"value\":";
+        append_portfolio_number(portfolio.exact_closure_value);
+        json += "}}";
     }
 
     const bool focused_restricted_envelope_open =

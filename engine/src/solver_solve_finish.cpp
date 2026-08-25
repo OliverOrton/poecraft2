@@ -671,6 +671,8 @@ SolveWork::Impl::run_finalization() {
                     snapshot.action_vocabulary_identity =
                         action_vocabulary_identity();
                     snapshot.action_vocabulary_size = operators.size();
+                    snapshot.caller_scope_identity =
+                        caller_scope_identity();
                     snapshot.graph_identity = graph_identity();
                     snapshot.artifact_identity = artifact_identity();
                     snapshot.source_generation =
@@ -715,6 +717,8 @@ SolveWork::Impl::run_finalization() {
                         identity_mix(
                             identity,
                             snapshot.action_vocabulary_identity);
+                        identity_mix(
+                            identity, snapshot.caller_scope_identity);
                         identity_mix(identity, snapshot.artifact_identity);
                         identity_mix(
                             identity, snapshot.graph_prefix_identity);
@@ -2275,6 +2279,7 @@ SolveWork::Impl::run_finalization() {
                         "+independent_final_graph_evaluation_v1";
                     candidate.retained_owned_bytes =
                         incumbent_owned_bytes(candidate);
+                    incumbent_portfolio.observe_verified(candidate);
                     record_candidate_sample(
                         candidate, "final_graph_evaluation",
                         "eligible_verified_candidate",
@@ -2664,10 +2669,12 @@ SolveWork::Impl::run_finalization() {
                 candidate.executable = false;
                 candidate.goal_identity = goal_identity();
                 candidate.economy_identity = economy_identity();
+                candidate.caller_scope_identity = caller_scope_identity();
                 candidate.artifact_identity = artifact_identity();
                 std::uint64_t identity = 1469598103934665603ULL;
                 identity_mix(identity, candidate.goal_identity);
                 identity_mix(identity, candidate.economy_identity);
+                identity_mix(identity, candidate.caller_scope_identity);
                 identity_mix(identity, candidate.artifact_identity);
                 identity_mix_string(identity, candidate.kind);
                 identity_mix_string(
@@ -2773,6 +2780,9 @@ SolveWork::Impl::run_finalization() {
                  * additional alternatives and cannot invalidate execution
                  * of this immutable candidate. */
                 invalid_reason = "action_vocabulary_prefix_changed";
+            } else if (snapshot.caller_scope_identity !=
+                       caller_scope_identity()) {
+                invalid_reason = "caller_scope_changed";
             } else if (snapshot.artifact_identity != artifact_identity()) {
                 invalid_reason = "artifact_generation_changed";
             } else if (snapshot.source_generation >
@@ -3795,6 +3805,7 @@ SolveWork::Impl::run_finalization() {
                 candidate.action_vocabulary_identity =
                     action_vocabulary_identity();
                 candidate.action_vocabulary_size = operators.size();
+                candidate.caller_scope_identity = caller_scope_identity();
                 candidate.graph_identity = graph_identity();
                 candidate.artifact_identity = artifact_identity();
                 candidate.source_generation =
@@ -3843,6 +3854,7 @@ SolveWork::Impl::run_finalization() {
                 identity_mix(identity, candidate.economy_identity);
                 identity_mix(
                     identity, candidate.action_vocabulary_identity);
+                identity_mix(identity, candidate.caller_scope_identity);
                 identity_mix(identity, candidate.artifact_identity);
                 identity_mix(identity, candidate.graph_prefix_identity);
                 identity_mix(
@@ -5303,6 +5315,8 @@ void SolveWork::Impl::advance_finalization() {
         ++finalization_work_items;
         if (!finalization_task->resume()) return;
         finalized_result.emplace(finalization_task->take_result());
+        refresh_incumbent_portfolio_diagnostics(
+            finalized_result->diagnostics, &*finalized_result);
         finalization_task.reset();
         phase = SolvePhase::Done;
     }

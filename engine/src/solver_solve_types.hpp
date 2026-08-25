@@ -604,6 +604,7 @@ struct CertifiedFallbackContract {
     std::uint64_t economy_identity = 0;
     std::uint64_t action_vocabulary_identity = 0;
     std::uint64_t action_vocabulary_size = 0;
+    std::uint64_t caller_scope_identity = 0;
     std::uint64_t artifact_identity = 0;
     std::uint64_t source_generation = 0;
     std::uint64_t target_generation = 0;
@@ -625,6 +626,7 @@ struct CertifiedFallbackCurrentContext {
     std::uint64_t economy_identity = 0;
     std::uint64_t action_vocabulary_identity = 0;
     std::uint64_t action_vocabulary_size = 0;
+    std::uint64_t caller_scope_identity = 0;
     std::uint64_t artifact_identity = 0;
     std::uint64_t source_generation = 0;
     std::uint64_t target_generation = 0;
@@ -1098,6 +1100,7 @@ struct SolveWork::Impl {
         std::uint64_t economy_identity = 0;
         std::uint64_t action_vocabulary_identity = 0;
         std::uint64_t action_vocabulary_size = 0;
+        std::uint64_t caller_scope_identity = 0;
         std::uint64_t graph_identity = 0;
         std::uint64_t artifact_identity = 0;
         std::uint64_t source_generation = 0;
@@ -1140,12 +1143,76 @@ struct SolveWork::Impl {
         std::uint64_t capture_identity = 0;
         bool numerical_stability_stop = false;
     };
-    std::optional<BoundedPolicyIncumbent> output_incumbent;
-    std::optional<UnverifiedSelectedPolicyCandidate>
-        unverified_selected_policy_candidate;
-    /* Best-first, deterministic, bounded collection of independently
-     * executable candidates displaced by cheaper preferred policies. */
-    std::vector<BoundedPolicyIncumbent> certified_fallback_portfolio;
+    /*
+     * One owner for candidates produced by coarse selection, constructive
+     * renewal, direct certification, strict lift, and final graph assertion.
+     * The compatibility aliases below keep Gate 2 behavior-neutral while
+     * later gates migrate the remaining call sites to portfolio methods.
+     */
+    struct IncumbentPortfolio {
+        std::optional<BoundedPolicyIncumbent> output;
+        std::optional<UnverifiedSelectedPolicyCandidate> pending_candidate;
+        /* Best-first, deterministic, bounded collection of materialized or
+         * independently verified candidates displaced by another preferred
+         * output. Verification state remains explicit on every entry. */
+        std::vector<BoundedPolicyIncumbent> retained_candidates;
+        double finalization_verified_upper = kInfinity;
+        double best_verified_upper = kInfinity;
+        std::uint64_t best_verified_identity = 0;
+        std::uint64_t best_verified_goal_identity = 0;
+        std::uint64_t best_verified_economy_identity = 0;
+        std::uint64_t best_verified_action_vocabulary_identity = 0;
+        std::uint64_t best_verified_caller_scope_identity = 0;
+        std::uint64_t best_verified_graph_prefix_identity = 0;
+        std::uint64_t best_verified_artifact_identity = 0;
+        std::uint64_t best_verified_source_generation = 0;
+        std::uint64_t verified_observations = 0;
+        std::uint64_t verified_replacements = 0;
+        bool monotonicity_violation = false;
+
+        void observe_verified(const BoundedPolicyIncumbent& candidate) {
+            if (!candidate.independently_certified ||
+                !candidate.independently_evaluated || !candidate.proper ||
+                !candidate.executable ||
+                !std::isfinite(candidate.evaluated_policy_cost) ||
+                candidate.evaluated_policy_cost < 0.0) {
+                return;
+            }
+            ++verified_observations;
+            const double upper = candidate.evaluated_policy_cost;
+            if (upper < best_verified_upper) {
+                if (std::isfinite(best_verified_upper)) {
+                    ++verified_replacements;
+                }
+                best_verified_upper = upper;
+                best_verified_identity = candidate.portfolio_identity;
+                best_verified_goal_identity = candidate.goal_identity;
+                best_verified_economy_identity = candidate.economy_identity;
+                best_verified_action_vocabulary_identity =
+                    candidate.action_vocabulary_identity;
+                best_verified_caller_scope_identity =
+                    candidate.caller_scope_identity;
+                best_verified_graph_prefix_identity =
+                    candidate.graph_prefix_identity;
+                best_verified_artifact_identity =
+                    candidate.artifact_identity;
+                best_verified_source_generation =
+                    candidate.source_generation;
+            }
+        }
+
+        double verified_executable_upper() const {
+            return std::min(
+                best_verified_upper, finalization_verified_upper);
+        }
+    } incumbent_portfolio;
+    std::optional<BoundedPolicyIncumbent>& output_incumbent =
+        incumbent_portfolio.output;
+    std::optional<UnverifiedSelectedPolicyCandidate>&
+        unverified_selected_policy_candidate =
+            incumbent_portfolio.pending_candidate;
+    std::vector<BoundedPolicyIncumbent>& certified_fallback_portfolio =
+        incumbent_portfolio.retained_candidates;
     bool target_gap_stop = false;
     SolveGapTarget target_gap_fired = SolveGapTarget::None;
     std::uint64_t focused_direct_upper_row =
@@ -1318,7 +1385,8 @@ struct SolveWork::Impl {
     std::uint32_t finalization_refinement_classes = 0;
     /* Best independently verified executable strategy observed while a
      * cooperative finalization child continues proving alternatives. */
-    double finalization_verified_upper_bound = kInfinity;
+    double& finalization_verified_upper_bound =
+        incumbent_portfolio.finalization_verified_upper;
     StrategyEvalProgress finalization_evaluation_progress;
     std::optional<solve_detail::CooperativeTask<SolveResult>>
         finalization_task;
@@ -1356,6 +1424,8 @@ struct SolveWork::Impl {
     std::uint64_t goal_identity() const;
 
     std::uint64_t economy_identity() const;
+
+    std::uint64_t caller_scope_identity() const;
 
     std::uint64_t action_vocabulary_prefix_identity(
         const std::size_t count) const;
@@ -1722,6 +1792,10 @@ struct SolveWork::Impl {
 
     void refresh_action_envelope_ledger_diagnostics(
         SolveDiagnostics& diagnostics) const;
+
+    void refresh_incumbent_portfolio_diagnostics(
+        SolveDiagnostics& diagnostics,
+        const SolveResult* published = nullptr) const;
 
     void finalize_upper_policy_provenance();
 

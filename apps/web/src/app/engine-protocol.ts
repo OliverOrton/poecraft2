@@ -734,8 +734,10 @@ export interface SolveProgress {
     sweeps: number;
     residual: number | null;
     /** Monotonically descending upper bound; 1e12 means iteration is pending. */
+    /** Current selected/coarse candidate estimate; not publication authority. */
     start_value_bound: number | null;
     lower_bound: number | null;
+    /** Monotone independently verified executable upper, when available. */
     upper_bound: number | null;
     absolute_optimality_gap: number | null;
     relative_optimality_gap: number | null;

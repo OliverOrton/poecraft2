@@ -1,8 +1,8 @@
 # Active Work
 
 **Status: implementation boundary active.** Oliver activated the solver
-anytime/proof realignment plan on 2026-08-25; Gates 0 and 1 passed and Gate 2
-is in progress.
+anytime/proof realignment plan on 2026-08-25; Gates 0 through 2 passed and
+Gate 3 is in progress.
 
 Parent: [Documentation map](../README.md)
 
@@ -28,7 +28,10 @@ Implementation began at Gate 0 because Gate −1 was already complete. The
 now pins the nine-case corpus, repeated policy identity, and attribution
 baseline. [Gate 1 evidence](2026-08-25-solver-anytime-proof-realignment/gate1-evidence.md)
 adds typed action-envelope lifecycle authority and eleven executable
-mechanic-family controls without changing solver work order.
+mechanic-family controls without changing solver work order. The
+[Gate 2 evidence](2026-08-25-solver-anytime-proof-realignment/gate2-evidence.md)
+consolidates incumbent ownership and separates coarse candidate progress from
+monotone verified executable authority.
 
 ## Current checkpoint
 

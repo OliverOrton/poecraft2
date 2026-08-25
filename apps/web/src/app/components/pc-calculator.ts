@@ -1830,6 +1830,9 @@ export class PcCalculator extends HTMLElement {
         const progressLower = progress
             ? solveBoundLabel(progress.lower_bound)
             : "Pending";
+        const progressCandidate = progress
+            ? solveBoundLabel(progress.start_value_bound)
+            : "Pending";
         const progressUpper = progress
             ? solveBoundLabel(progress.upper_bound)
             : "Pending";
@@ -1856,8 +1859,9 @@ export class PcCalculator extends HTMLElement {
                     <span>Refinement classes <b>${progress.refinement_classes.toLocaleString()}</b></span>
                     <span>Certification pairs <b>${progress.certification_discovered_pairs.toLocaleString()}</b></span>
                     <span>Solver-owned memory <b>${solveMemoryLabel(progress.live_owned_bytes)}</b></span>
+                    <span>Candidate estimate <b>${progressCandidate}</b></span>
                     <span>Lower <b>${progressLower}</b></span>
-                    <span>Upper <b>${progressUpper}</b></span>
+                    <span>Verified executable upper <b>${progressUpper}</b></span>
                     <span>Gap <b>${progressGap}</b></span>
                     <span>Factor <b>${progressFactor}</b></span>
                 </section>`

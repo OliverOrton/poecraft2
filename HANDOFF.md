@@ -4,13 +4,13 @@
 [Solver Anytime Planning, Proof Patterns, And Debt Retirement](docs/active/2026-08-25-solver-anytime-proof-realignment/plan.md)
 plan on 2026-08-25. The focused
 [documentation preflight](docs/active/2026-08-25-solver-anytime-proof-realignment/preflight-audit.md)
-is complete; Gates 0 and 1 passed and implementation is at Gate 2.
+is complete; Gates 0 through 2 passed and implementation is at Gate 3.
 
 ## Current checkpoint
 
 - Branch: `main`.
-- Latest completed implementation checkpoint: Gate 1 action-envelope and
-  mechanic-family authority (this handoff's commit).
+- Latest completed implementation checkpoint: Gate 2 monotone incumbent and
+  progress authority (this handoff's commit).
 - Current engine/product source checkpoint: `a1449fa` (`Record Imprint scope
   acceptance`).
 - Plan checkpoint: `0238753` (`Propose solver anytime proof realignment`).
@@ -83,11 +83,17 @@ passed, eleven focused mechanic controls proved all seven lifecycle stages,
 and the owner policy remained byte-identical. See the
 [Gate 1 evidence](docs/active/2026-08-25-solver-anytime-proof-realignment/gate1-evidence.md).
 
-Gate 2 is consolidating scattered executable candidates behind a monotone
-typed incumbent portfolio and separating candidate estimates, verified upper,
-independent global lower, restricted lower, and exact-closure progress
-authority. Archived milestone prose retains historical evidence authority
-only; the active plan owns current sequence.
+Gate 2 consolidated scattered executable candidates behind a monotone typed
+portfolio and separated candidate estimate, verified executable upper,
+independent global lower, restricted lower, and exact-closure authority. The
+owner and fixed-work strategies remain byte-identical. See the
+[Gate 2 evidence](docs/active/2026-08-25-solver-anytime-proof-realignment/gate2-evidence.md).
+
+Gate 3 is replacing frozen operator-major/high-impact scheduling control with
+cooperative fairness, executable-upper, high-progress, exact-closure, and
+proof-directed lanes while preserving every Gate 1 obligation. Archived
+milestone prose retains historical evidence authority only; the active plan
+owns current sequence.
 
 The complete milestone lineage and raw measurements are preserved in the
 [archive](docs/archive/README.md) and [evidence index](docs/evidence.md).

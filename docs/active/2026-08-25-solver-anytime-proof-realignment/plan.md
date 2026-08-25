@@ -1,7 +1,7 @@
 # Solver Anytime Planning, Proof Patterns, And Debt Retirement
 
 **Status: active on 2026-08-25 by Oliver's explicit instruction. Gates −1
-through 1 are complete and implementation is at Gate 2.**
+through 2 are complete and implementation is at Gate 3.**
 
 Parent: [Active work](../README.md)
 

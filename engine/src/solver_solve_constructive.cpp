@@ -27,6 +27,10 @@ const char* solve_detail::retained_fallback_invalid_reason(
                 current.action_vocabulary_identity) {
             return "action_vocabulary_changed";
         }
+        if (candidate.caller_scope_identity !=
+            current.caller_scope_identity) {
+            return "caller_scope_changed";
+        }
         if (candidate.artifact_identity != current.artifact_identity) {
             return "artifact_generation_changed";
         }
@@ -198,6 +202,20 @@ std::uint64_t SolveWork::Impl::economy_identity() const {
                 hash, std::bit_cast<std::uint64_t>(next->second));
             previous = next->first;
             have_previous = true;
+        }
+        return hash;
+    }
+
+std::uint64_t SolveWork::Impl::caller_scope_identity() const {
+        std::uint64_t hash = 1469598103934665603ULL;
+        identity_mix(hash, 1); /* caller-scope identity schema */
+        identity_mix(hash, calc.action_control().explicit_envelope);
+        identity_mix(hash, options.goal_progress_gated_reforges);
+        identity_mix(hash, options.consider_imprint_programs);
+        identity_mix(hash, options.allow_economic_restart);
+        identity_mix(hash, calc.candidates().size());
+        for (const std::uint32_t action : calc.candidates()) {
+            identity_mix(hash, action);
         }
         return hash;
     }
@@ -1096,6 +1114,8 @@ const char* SolveWork::Impl::retained_incumbent_invalid_reason(
             incumbent.action_vocabulary_identity;
         candidate.action_vocabulary_size =
             incumbent.action_vocabulary_size;
+        candidate.caller_scope_identity =
+            incumbent.caller_scope_identity;
         candidate.artifact_identity = incumbent.artifact_identity;
         candidate.source_generation = incumbent.source_generation;
         candidate.target_generation = incumbent.target_generation;
@@ -1114,6 +1134,7 @@ const char* SolveWork::Impl::retained_incumbent_invalid_reason(
         current.action_vocabulary_identity =
             action_vocabulary_prefix_identity(
                 incumbent.action_vocabulary_size);
+        current.caller_scope_identity = caller_scope_identity();
         current.artifact_identity = artifact_identity();
         current.source_generation = transition_cache->rows.size();
         current.target_generation = calc.state_count();
@@ -1381,6 +1402,7 @@ bool SolveWork::Impl::retain_certified_incumbent(
                 const BoundedPolicyIncumbent& right) {
                 return incumbent_precedes(left, right);
             });
+        incumbent_portfolio.observe_verified(incumbent);
         telemetry.fallback_portfolio_candidates =
             certified_fallback_portfolio.size();
         telemetry.fallback_portfolio_owned_bytes = 0;
@@ -1465,6 +1487,7 @@ bool SolveWork::Impl::commit_output_incumbent(
             return false;
         }
         output_incumbent = std::move(candidate);
+        incumbent_portfolio.observe_verified(*output_incumbent);
         result.diagnostics.incumbent_kind = output_incumbent->kind;
         result.diagnostics.incumbent_round = output_incumbent->round;
         result.diagnostics.incumbent_restart_state =
@@ -1654,6 +1677,7 @@ void SolveWork::Impl::install_output_incumbent(
         candidate.action_vocabulary_identity =
             action_vocabulary_identity();
         candidate.action_vocabulary_size = operators.size();
+        candidate.caller_scope_identity = caller_scope_identity();
         candidate.graph_identity = graph_identity();
         candidate.artifact_identity = artifact_identity();
         candidate.source_generation = transition_cache->rows.size();
@@ -1755,6 +1779,7 @@ void SolveWork::Impl::install_output_incumbent(
         identity_mix(identity, candidate.goal_identity);
         identity_mix(identity, candidate.economy_identity);
         identity_mix(identity, candidate.action_vocabulary_identity);
+        identity_mix(identity, candidate.caller_scope_identity);
         /* The artifact owner address is an invalidation dependency, not a
          * deterministic portfolio tie-break. Schema/base/item identities
          * are stable semantic inputs and are mixed separately below. */
@@ -1894,6 +1919,7 @@ void SolveWork::Impl::install_direct_output_incumbent(
         candidate.strict_state_provenance =
             result.behavioral_representative_by_state.empty();
         candidate.action_vocabulary_size = operators.size();
+        candidate.caller_scope_identity = caller_scope_identity();
         candidate.artifact_identity = artifact_identity();
         candidate.source_generation = transition_cache->rows.size();
         candidate.target_generation = calc.state_count();
