@@ -29,6 +29,16 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
+The proposed
+[Solver Anytime Planning, Proof Patterns, And Debt Retirement](active/2026-08-25-solver-anytime-proof-realignment/plan.md)
+successor is written from clean checkpoint `a1449fa` but is not yet active.
+It puts proper anytime upper construction before stronger proof patterns,
+requires current-semantic action-family coverage, preserves exact no-junk
+terminal behavior, treats Imprint as explicit opt-in, and closes with
+action-specific pruning, release-WASM responsiveness, solver ownership
+cleanup, and one final acceptance pipeline. Oliver must explicitly start the
+boundary before implementation resumes.
+
 The targeted
 [five-T1 Imprint-scope follow-up](active/2026-08-24-carrier-aware-proof-bounds/evidence/imprint-scope-follow-up/result.md)
 implements Oliver's ruling that Calculator and general benchmarks default

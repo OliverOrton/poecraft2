@@ -11,7 +11,10 @@ default automatic Imprint programs off, while dedicated correctness controls
 opt in. Measurement, implementation, and historical attribution are complete;
 focused acceptance passed with the retained WASM responsiveness qualification.
 Gate 3 was not repeated and Gate 4 was not reconstructed. Oliver must select
-the next implementation boundary before implementation resumes.
+the next implementation boundary before implementation resumes. The proposed
+[Solver Anytime Planning, Proof Patterns, And Debt Retirement](docs/active/2026-08-25-solver-anytime-proof-realignment/plan.md)
+successor is now written from clean checkpoint `a1449fa`, but it is not active
+until Oliver explicitly starts implementation.
 
 ## Current checkpoint
 

@@ -4,6 +4,17 @@
 
 Parent: [Documentation map](../README.md)
 
+The proposed
+[Solver Anytime Planning, Proof Patterns, And Debt Retirement](2026-08-25-solver-anytime-proof-realignment/plan.md)
+successor is written from clean checkpoint `a1449fa` but is not active until
+Oliver explicitly starts implementation. It sequences current-semantics
+benchmark authority, action-family coverage, a monotone verified-incumbent
+portfolio, cooperative scheduler lanes, an executable carrier/subgoal planner,
+typed proof-pattern databases, action-specific pruning/envelope consumers,
+WASM responsiveness, and targeted solver debt retirement. The 1.56M current-
+source five-T1 policy is a qualification target; the historical 87k policy is
+a research anchor rather than a false deterministic baseline.
+
 Oliver's 2026-08-25 targeted follow-up changes Calculator and general
 benchmark defaults to automatic Imprint off while preserving explicit
 dedicated controls. The
