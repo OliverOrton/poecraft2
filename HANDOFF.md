@@ -1,14 +1,18 @@
 # Handoff
 
-**Status: no implementation boundary is active.** The
-[Carrier-Aware Control Authority Repair](docs/active/2026-08-24-carrier-aware-control-authority/plan.md)
-stopped at Gate B on 2026-08-24. Its current exact-terminal controls remain
-pinned, but the ordering candidate failed the non-armour control and was
-restored. Oliver must select a new boundary before implementation resumes.
+**Status: an implementation boundary is active.** Oliver selected
+[Carrier-Aware Proof Bounds And Consumers](docs/active/2026-08-24-carrier-aware-proof-bounds/plan.md)
+on 2026-08-24. Gate 3 passed and Gate 4 is active from checkpoint `bd80522`.
+Failed Gate 2 ordering is neither retried nor required; legacy ordering stays
+unchanged.
 
 ## Current checkpoint
 
 - Branch: `main`.
+- Retained milestone checkpoint: `bd80522` (`Checkpoint carrier attribution
+  and control qualification`). This local commit contains the complete Gate 0,
+  Gate 1, current-control, and failed-ordering evidence tree. No push was
+  issued.
 - Activated checkpoint: `526ff6f` (`Propose carrier-aware bounds and priority
   plan`).
 - Proposal checkpoint: `04cab15` (`Record executable policy recovery
@@ -26,6 +30,42 @@ restored. Oliver must select a new boundary before implementation resumes.
   terminal change as the first Warlord divergence; no bisect or cap-
   instrumentation behavior remains in the main worktree.
 - Full repository pipeline and rendered UI review were deliberately not run.
+
+## Active carrier-aware proof bounds and consumers
+
+Gate 3 passed. The retained extension projects the existing clean MDP over
+rarity × exact satisfied-goal mask, grants free junk removal and perfect
+carrier/goal preservation, retains exact rarity legality, and uses the
+existing optimistic pool-probability authority. State-local terminal debt
+charges only the cheapest proved legal first step and then grants cleanup and
+replacement for free, so protected direct reforges do not acquire a fabricated
+Scour cost. Unpriced, free, identity-mismatched, and unsupported shapes fall
+back locally; the strict Eldritch guard remains.
+
+Focused proof coverage includes exact-goal zero, rare fractured progress,
+goal-plus-junk/metamod nonterminals, protected direct replacement, influence
+fallback, action-set monotonicity, and Bellman inequalities for all 342
+materialized rows in a complete 175-state fixture. The automatic Eldritch side
+suite passed 1,653 checks, including its three automatic rows and 10,000-run
+compiled control.
+
+On the same 1,000-expansion four-of-five case, the certified global lower rose
+from `0.01165` to `3.47245`. The exact-evaluated upper remains
+`59810.9537769745`, the graph remains 51 / 149, and transition/final-policy
+hashes remain `fb8dc170b29920df` / `1b98ca41e69ad1b1`. Solve wall is
+`41083.6708` ms versus `39310.6266` ms at the preservation control. The first
+uncached version's 172-second result is retained as optimization evidence; its
+repeated full-registry scans were replaced by price-scoped per-state caches.
+
+Gate 4 is now active because Gate 3 supplies a useful proved continuation
+lower. Descriptors remain lower-only and explicit until exact materialization
+or strict incumbent separation. A repeated cheap-bench/broad-reforge failure
+restores only Gate 4's experiment and continues Gate 5 with Gate 3 intact.
+
+Before activation, `git diff --check`, the native build, and a fresh
+1,000-expansion fixed-work run passed. The fresh report exactly retained lower
+`0.01165`, upper `59810.9537769745`, graph 51 / 149, transition hash
+`fb8dc170b29920df`, and final policy hash `1b98ca41e69ad1b1`.
 
 ## Stopped carrier-aware control authority repair
 

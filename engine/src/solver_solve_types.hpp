@@ -1184,6 +1184,17 @@ struct SolveWork::Impl {
     std::uint64_t owned_goal_survival_nested_bytes = 0;
     std::vector<double> goal_cover_cost;
     std::vector<double> clean_goal_cover_cost;
+    /* Carrier-aware extension of the clean goal-progress relaxation over
+     * rarity x satisfied-goal subset. It grants free junk removal and perfect
+     * goal/carrier preservation, but retains exact rarity legality and uses
+     * the same optimistic pool-probability authority as the clean MDP. */
+    std::vector<double> carrier_goal_progress_cost;
+    std::vector<std::uint32_t> carrier_unproved_first_step_actions;
+    std::vector<std::pair<std::uint32_t, double>>
+        carrier_priced_first_step_actions;
+    mutable std::vector<std::int8_t>
+        carrier_goal_progress_eligibility_cache;
+    mutable std::vector<double> carrier_terminal_debt_cache;
     /* Final one-step lower value of every non-refined action in the clean
      * goal-progress relaxation. The strict normal/magic pattern database
      * uses this as an optimistic escape while evaluating the productive
@@ -1483,6 +1494,15 @@ struct SolveWork::Impl {
 
     std::uint32_t clean_goal_cover_rejection_mask(
         const std::uint32_t state) const;
+
+    bool carrier_goal_progress_eligible(
+        std::uint32_t state) const;
+
+    double carrier_goal_progress_lower_value(
+        std::uint32_t state) const;
+
+    double carrier_terminal_debt_lower_value(
+        std::uint32_t state) const;
 
     double completion_proof_lower_value(
         const std::uint32_t state);

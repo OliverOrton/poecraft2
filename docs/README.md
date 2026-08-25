@@ -29,6 +29,15 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
+The selected
+[Carrier-Aware Proof Bounds And Consumers](active/2026-08-24-carrier-aware-proof-bounds/plan.md)
+has passed Gate 3 and is active at Gate 4 from local checkpoint `bd80522`. It explicitly bypasses
+failed Gate 2 while retaining legacy ordering, extends the existing clean
+carrier MDP with proof-bearing non-clean/rare carrier coverage, conditionally
+re-evaluates unresolved lower descriptors, and routes only fully covered
+authority into pruning and public gaps. The full repository pipeline is not
+part of its proportional final acceptance.
+
 The stopped
 [Carrier-Aware Control Authority Repair](active/2026-08-24-carrier-aware-control-authority/plan.md)
 pinned bounded Warlord, 10-second non-armour, and explicit tri-elemental Bow

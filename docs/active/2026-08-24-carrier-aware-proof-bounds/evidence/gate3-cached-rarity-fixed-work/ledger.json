@@ -1,0 +1,83 @@
+{
+  "all_completed": true,
+  "artifact": {
+    "identity": {
+      "artifact_schema_version": 4,
+      "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+      "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+      "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+    },
+    "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+    "manifest_sha256": "d8322eafcbbef484909b8c950ac9eabcc1cad1a2b2386cbcfa99468df5063db6",
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current"
+  },
+  "cases": {
+    "conquest-lamellar-allflame-partial-five-capped-diagnostic": {
+      "attempt_id": "1787637051307161800-22692",
+      "case_id": "conquest-lamellar-allflame-partial-five-capped-diagnostic",
+      "evaluation_role": null,
+      "exit_code": 0,
+      "failure_kind": null,
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-08-24-carrier-aware-proof-bounds\\evidence\\gate3-cached-rarity-fixed-work\\logs\\conquest-lamellar-allflame-partial-five-capped-diagnostic.log",
+      "native_expectations_met": true,
+      "partial_observation_available": true,
+      "partial_report_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-08-24-carrier-aware-proof-bounds\\evidence\\gate3-cached-rarity-fixed-work\\partials\\conquest-lamellar-allflame-partial-five-capped-diagnostic.1787637051307161800-22692.json",
+      "report_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-08-24-carrier-aware-proof-bounds\\evidence\\gate3-cached-rarity-fixed-work\\cases\\conquest-lamellar-allflame-partial-five-capped-diagnostic.json",
+      "reserved_memory_bytes": 1073741824,
+      "status": "completed",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "tier": null,
+      "timed_out": false,
+      "wall_ms": 42087.80339999794,
+      "watchdog_seconds": 180.0
+    }
+  },
+  "configuration": {
+    "evaluation_roles": [],
+    "evaluation_roles_manifest": null,
+    "exact_evaluation": true,
+    "goal_progress_gated_reforges": false,
+    "hard_case_default_concurrency": 1,
+    "max_workers": 1,
+    "memory_budget_bytes": null,
+    "run_verification": false
+  },
+  "corpus": {
+    "corpus_id": "five-t1-goal-band-recovery-capped-diagnostic-v1",
+    "generator_config_sha256": null,
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-08-22-five-t1-goal-band-recovery\\capped-diagnostic-manifest.json",
+    "schema_version": "solver_benchmark_corpus_v1",
+    "sha256": "63aaa0cd41b79a36c947e7dcdb83fdeb2cc5069061d8788fb0379a45a97ea908"
+  },
+  "executable": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_solver_benchmark.exe",
+    "sha256": "4ab8da8f656ef0936bf8eb189c086b03221febcb6a60a5ec683ff0bea562fd48"
+  },
+  "machine": {
+    "logical_cpu_count": 24,
+    "machine": "AMD64",
+    "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+    "processor_identifier": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+    "python": "3.14.2",
+    "release": "11",
+    "system": "Windows"
+  },
+  "runner_version": "anytime-solver-corpus-runner-v2",
+  "schema_version": "bounded_solver_run_ledger_v2",
+  "source": {
+    "commit": "bd805227f0661f9b42912a2bf9da8cc215e45030",
+    "dirty": true,
+    "dirty_paths": [
+      "M HANDOFF.md",
+      " M docs/README.md",
+      " M docs/active/README.md",
+      " M engine/src/solver_solve_bounds.cpp",
+      " M engine/src/solver_solve_telemetry.cpp",
+      " M engine/src/solver_solve_types.hpp",
+      " M engine/tests/test_solver_solve.cpp",
+      "?? docs/active/2026-08-24-carrier-aware-proof-bounds/"
+    ]
+  },
+  "survivors": []
+}

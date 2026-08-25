@@ -8272,7 +8272,233 @@ void run_automatic_imprint_cooperative_tests() {
             resumed_batch.phases.imprint_outcomes_merged));
 }
 
+void run_carrier_aware_completion_bound_tests() {
+    auto session = make_solve_session();
+    auto data = std::const_pointer_cast<DataImpl>(session->data);
+    data->metamod_prefixes_locked_code = 3;
+    session->metamod_type[4] =
+        data->metamod_prefixes_locked_code;
+    session->bench_mod_ids = {5};
+    ActionRegistry registry = build_action_registry(*session);
+
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    GoalSlot prefix;
+    prefix.family_id = 100;
+    prefix.min_tier = 1;
+    goal.slots.push_back(prefix);
+    GoalSlot suffix;
+    suffix.family_id = 104;
+    suffix.min_tier = 1;
+    goal.slots.push_back(suffix);
+
+    const std::uint32_t chaos = registry.index_by_id.at("chaos");
+    const std::uint32_t annul = registry.index_by_id.at("annul");
+    const std::uint32_t scour = registry.index_by_id.at("scour");
+    const std::uint32_t remove_crafted =
+        registry.index_by_id.at("remove_crafted_modifiers");
+    const std::uint32_t bench_suffix =
+        registry.index_by_id.at("bench:mod5");
+    const std::vector<std::uint32_t> candidates{
+        chaos, annul, scour, remove_crafted};
+    const std::unordered_map<std::string, double> prices{
+        {"chaos", 10.0}, {"annul", 20.0}, {"scour", 100.0}};
+    SolveOptions options;
+    options.max_states = 4096;
+    options.max_discovered_states = 4096;
+    options.max_expanded_states = 4096;
+    options.max_state_action_rows = 32768;
+    options.max_transitions = 262144;
+    options.max_solver_owned_bytes = 256ull * 1024ull * 1024ull;
+
+    pc_item_state fractured_partial;
+    pc_item_clear(&fractured_partial);
+    fractured_partial.rarity = PC_RARITY_RARE;
+    place(
+        &fractured_partial, PC_SIDE_PREFIX, 0,
+        session->primary_group[0]);
+    fractured_partial.prefixes[0].flags |= PC_MOD_SLOT_FRACTURED;
+    place(
+        &fractured_partial, PC_SIDE_SUFFIX, 7,
+        session->primary_group[7]);
+
+    CalcContext calc(
+        session, goal, registry, candidates,
+        false, true, false, std::nullopt, {}, false);
+    const std::uint32_t fractured_state =
+        calc.intern_item(fractured_partial);
+    SolveWorkTestAccess::Impl work(
+        calc, fractured_partial, prices, options);
+    const std::uint32_t fractured_mask =
+        work.satisfied_goal_mask_for_state(fractured_state);
+    PC_CHECK(std::popcount(fractured_mask) == 1);
+    PC_CHECK(
+        (work.clean_goal_cover_rejection_mask(fractured_state) &
+         SolveWorkTestAccess::Impl::CarrierBoundAttributionWork::
+             CleanCoverRejection::FracturedGoal) != 0);
+    const double universal =
+        work.optimistic_completion_cost(fractured_mask);
+    const double carrier_progress =
+        work.carrier_goal_progress_lower_value(fractured_state);
+    PC_CHECK(std::isfinite(universal));
+    PC_CHECK(std::isfinite(carrier_progress));
+    PC_CHECK(carrier_progress + 1e-12 >= universal);
+    PC_CHECK(
+        work.completion_proof_lower(fractured_state).value + 1e-12 >=
+        carrier_progress);
+
+    pc_item_state exact_goal;
+    pc_item_clear(&exact_goal);
+    exact_goal.rarity = PC_RARITY_RARE;
+    place(&exact_goal, PC_SIDE_PREFIX, 0, session->primary_group[0]);
+    place(&exact_goal, PC_SIDE_SUFFIX, 5, session->primary_group[5]);
+    const std::uint32_t exact_goal_state = calc.intern_item(exact_goal);
+    PC_CHECK(calc.is_goal_state(calc.state(exact_goal_state)));
+    PC_CHECK(work.completion_proof_lower(exact_goal_state).value == 0.0);
+
+    /* Prefix protection plus disposable suffix junk is a non-clean,
+     * nonterminal carrier. Chaos can replace that junk directly. The
+     * one-action debt relaxation therefore charges Chaos once and grants all
+     * later cleanup for free; it must not fabricate Scour-before-Chaos. */
+    pc_item_state protected_dirty = exact_goal;
+    place(
+        &protected_dirty, PC_SIDE_PREFIX, 4,
+        session->primary_group[4]);
+    protected_dirty.prefixes[1].flags |= PC_MOD_SLOT_CRAFTED;
+    place(
+        &protected_dirty, PC_SIDE_SUFFIX, 7,
+        session->primary_group[7]);
+    const std::uint32_t protected_state =
+        calc.intern_item(protected_dirty);
+    PC_CHECK(!calc.is_goal_state(calc.state(protected_state)));
+    PC_CHECK(
+        (work.clean_goal_cover_rejection_mask(protected_state) &
+         SolveWorkTestAccess::Impl::CarrierBoundAttributionWork::
+             CleanCoverRejection::ActiveProtection) != 0);
+    const double protected_debt =
+        work.carrier_terminal_debt_lower_value(protected_state);
+    const double protected_lower =
+        work.completion_proof_lower(protected_state).value;
+    PC_CHECK(near(protected_debt, 10.0, 1e-12));
+    PC_CHECK(near(protected_lower, 10.0, 1e-12));
+    PC_CHECK(protected_lower < prices.at("scour") + prices.at("chaos"));
+
+    const OutcomeDistribution& protected_chaos =
+        calc.outcomes(protected_state, chaos);
+    PC_CHECK(protected_chaos.supported);
+    PC_CHECK(protected_chaos.applicable);
+    double protected_backup = prices.at("chaos");
+    double protected_probability = 0.0;
+    for (const OutcomeEntry& exit : protected_chaos.entries) {
+        protected_probability += exit.probability;
+        protected_backup += exit.probability *
+            work.completion_proof_lower(exit.state).value;
+    }
+    PC_CHECK(near(protected_probability, 1.0, 1e-10));
+    PC_CHECK(protected_lower <= protected_backup + 1e-9);
+
+    pc_item_state influenced = fractured_partial;
+    influenced.generic_influence_bits = 1;
+    const std::uint32_t influenced_state = calc.intern_item(influenced);
+    PC_CHECK(!work.carrier_goal_progress_eligible(influenced_state));
+    const double influenced_lower =
+        work.completion_proof_lower(influenced_state).value;
+    PC_CHECK(std::isfinite(influenced_lower));
+    PC_CHECK(influenced_lower + 1e-12 >= universal);
+
+    /* Adding a cheap deterministic goal producer can only weaken the
+     * carrier relaxation. Its unproved transition shape uses p=1 and thus
+     * agrees exactly with the universal cover on the fractured carrier. */
+    CalcContext bench_calc(
+        session, goal, registry, {bench_suffix},
+        false, true, false, std::nullopt, {}, false);
+    const std::uint32_t bench_state =
+        bench_calc.intern_item(fractured_partial);
+    SolveWorkTestAccess::Impl bench_work(
+        bench_calc, fractured_partial,
+        {{"bench:mod5", 2.0}}, options);
+    const std::uint32_t bench_mask =
+        bench_work.satisfied_goal_mask_for_state(bench_state);
+    const double bench_universal =
+        bench_work.optimistic_completion_cost(bench_mask);
+    const double bench_carrier =
+        bench_work.carrier_goal_progress_lower_value(bench_state);
+    PC_CHECK(near(bench_universal, 2.0, 1e-12));
+    PC_CHECK(near(bench_carrier, bench_universal, 1e-12));
+    PC_CHECK(near(
+        bench_work.completion_proof_lower(bench_state).value,
+        bench_universal, 1e-12));
+
+    CalcContext expanded_calc(
+        session, goal, registry, {chaos, bench_suffix},
+        false, true, false, std::nullopt, {}, false);
+    const std::uint32_t expanded_state =
+        expanded_calc.intern_item(fractured_partial);
+    SolveWorkTestAccess::Impl expanded_work(
+        expanded_calc, fractured_partial,
+        {{"chaos", 10.0}, {"bench:mod5", 2.0}}, options);
+    const double expanded_lower =
+        expanded_work.completion_proof_lower(expanded_state).value;
+    const double original_lower =
+        work.completion_proof_lower(fractured_state).value;
+    PC_CHECK(expanded_lower <= original_lower + 1e-12);
+
+    /* Materialize the complete finite primitive closure for this synthetic
+     * vocabulary, then check the Bellman inequality against every exact row
+     * that the fixture produced. This proves the maximum of universal,
+     * clean, carrier-progress, and terminal-debt components rather than only
+     * sampling the start state. */
+    std::vector<std::pair<std::uint32_t, std::uint32_t>> rows;
+    for (std::uint32_t state = 0; state < calc.state_count(); ++state) {
+        PC_CHECK(calc.state_count() <= options.max_discovered_states);
+        if (calc.state_count() > options.max_discovered_states) break;
+        if (calc.is_goal_state(calc.state(state))) continue;
+        for (const std::uint32_t action : candidates) {
+            const ActionDescriptor& descriptor =
+                registry.actions.at(action);
+            if (!calc_supports(descriptor) ||
+                !action_legal(*session, descriptor, calc.state(state))) {
+                continue;
+            }
+            const OutcomeDistribution& exact = calc.outcomes(state, action);
+            if (!exact.supported || !exact.applicable ||
+                exact.entries.empty() || !exact.choice_groups.empty()) {
+                continue;
+            }
+            rows.push_back({state, action});
+        }
+    }
+    PC_CHECK(!rows.empty());
+    PC_CHECK(calc.state_count() <= options.max_discovered_states);
+    for (const auto [state, action] : rows) {
+        const OutcomeDistribution& exact = calc.outcomes(state, action);
+        const std::int32_t position =
+            work.priced_operator_position.at(action);
+        PC_CHECK(position >= 0);
+        if (position < 0) continue;
+        double backup = work.operators.at(
+            static_cast<std::size_t>(position)).cost;
+        double probability = 0.0;
+        for (const OutcomeEntry& exit : exact.entries) {
+            probability += exit.probability;
+            backup += exit.probability *
+                work.completion_proof_lower(exit.state).value;
+        }
+        const double lower = work.completion_proof_lower(state).value;
+        PC_CHECK(near(probability, 1.0, 1e-10));
+        PC_CHECK(
+            lower <= backup +
+                1e-9 * std::max(1.0, std::fabs(backup)));
+    }
+    std::printf(
+        "carrier-aware completion proof: states=%zu rows=%zu "
+        "universal=%.9g carrier=%.9g protected=%.9g\n",
+        calc.state_count(), rows.size(), universal,
+        carrier_progress, protected_lower);
+}
+
 void run_automatic_eldritch_side_tests() {
+    run_carrier_aware_completion_bound_tests();
     auto session = make_solve_session();
     session->eldritch_eligible = true;
     session->eldritch_searing_tier_mod_ids.resize(5);

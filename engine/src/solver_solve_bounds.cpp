@@ -619,11 +619,389 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
             include_action(ordinary_chaos);
             include_action(ordinary_exalt);
         }
+        carrier_unproved_first_step_actions.clear();
+        carrier_priced_first_step_actions.clear();
+        carrier_goal_progress_eligibility_cache.clear();
+        carrier_terminal_debt_cache.clear();
+        for (const std::uint32_t action_index : relaxation_actions) {
+            const ActionDescriptor& action =
+                calc.registry().actions[action_index];
+            if (action.synthetic && !options.allow_economic_restart) {
+                /* Recovery-only Restart is a constituent of the Fracture
+                 * option that owns it, not a standalone carrier choice. */
+                continue;
+            }
+            double cost = priced_action_cost(action);
+            if (action.cost_keys.empty()) {
+                /* Synthetic Restart is priced by its primitive planner
+                 * wrapper because replacement includes the base-item cost;
+                 * its registry descriptor intentionally has no currency
+                 * key. Reuse that proved immediate quantity without treating
+                 * arbitrary zero-resource descriptors as priced. */
+                cost = kInfinity;
+                for (const PricedOperator& priced : operators) {
+                    const PlannerOperator& planner =
+                        calc.operators().at(priced.index);
+                    if (planner.kind == PlannerOperatorKind::Primitive &&
+                        planner.primitive_action == action_index) {
+                        cost = std::min(cost, priced.cost);
+                    }
+                }
+            }
+            if (!std::isfinite(cost)) {
+                /* An unpriced primitive is not in the executable action
+                 * envelope. State-local automatic admission applies the same
+                 * complete-price check before it can create a row. */
+                continue;
+            }
+            if (cost <= 0.0) {
+                carrier_unproved_first_step_actions.push_back(action_index);
+            } else {
+                carrier_priced_first_step_actions.emplace_back(
+                    action_index, cost);
+            }
+        }
+        if (options.full_evidence &&
+            result.start_state < calc.state_count()) {
+            const AbstractState& start = calc.state(result.start_state);
+            for (const std::uint32_t action_index :
+                 carrier_unproved_first_step_actions) {
+                const ActionDescriptor& action =
+                    calc.registry().actions[action_index];
+                if (action_legal(session, action, start)) {
+                    retain_action_reason(
+                        "fallback:carrier_unproved_first_step:" +
+                        action.id);
+                }
+            }
+        }
         const auto is_eldritch_explicit_mutator = [](const ActionType type) {
             return type == ActionType::EldritchAnnul ||
                    type == ActionType::EldritchChaos ||
                    type == ActionType::EldritchExalt;
         };
+
+        /* Carrier-aware persistent-progress layer. This is the clean MDP
+         * projected onto rarity x satisfied-goal mask after granting free
+         * removal of every non-goal affix and perfect preservation of every
+         * satisfied goal and carrier feature. Rarity legality remains exact:
+         * a cheap Normal/Magic action is not an escape from a Rare carrier.
+         * This is the measured hole in the probability-free universal cover.
+         *
+         * A stochastic macro keeps the current goal mask on failure and
+         * grants every reachable missing goal on any useful hit. Its hit
+         * probability is a union upper bound over the most favorable legal
+         * blocker shape. Unknown productive transition families keep p=1,
+         * exactly matching the universal cover locally. Identity-changing
+         * shapes may grant terminal success after their immediate price.
+         * Every choice is therefore no stronger than the existing clean MDP
+         * assumptions, while rare/fractured/protected carriers no longer
+         * inherit actions that cannot execute at their rarity. */
+        constexpr std::uint32_t kCarrierRarityCount = 3;
+        const auto carrier_index = [&](const std::uint8_t rarity,
+                                       const std::uint32_t mask) {
+            return static_cast<std::size_t>(rarity) * mask_count + mask;
+        };
+        const auto carrier_output_rarity = [](
+            const ActionType type, const std::uint8_t input) {
+            switch (type) {
+            case ActionType::Transmute:
+            case ActionType::Alteration:
+                return static_cast<std::uint8_t>(PC_RARITY_MAGIC);
+            case ActionType::Alchemy:
+            case ActionType::Chaos:
+            case ActionType::Essence:
+            case ActionType::Fossil:
+            case ActionType::HarvestReforge:
+            case ActionType::Regal:
+                return static_cast<std::uint8_t>(PC_RARITY_RARE);
+            case ActionType::Scour:
+                return static_cast<std::uint8_t>(PC_RARITY_NORMAL);
+            default:
+                return input;
+            }
+        };
+        const std::uint32_t required =
+            calc.goal().required_satisfied_slots();
+        struct CarrierTransition {
+            double cost = 0.0;
+            double success_probability = 0.0;
+            std::size_t success = 0;
+            std::size_t failure = 0;
+            bool terminal = false;
+        };
+        const std::size_t carrier_state_count =
+            kCarrierRarityCount * mask_count;
+        std::vector<std::vector<CarrierTransition>> carrier_transitions(
+            carrier_state_count);
+        std::vector<std::uint8_t> carrier_goal(carrier_state_count, 0);
+        std::map<std::pair<std::uint32_t, std::uint32_t>, double>
+            carrier_progress_probability;
+        const auto carrier_probability_upper = [&] (
+            const std::uint32_t action,
+            const std::uint32_t mask,
+            const std::uint32_t available,
+            const ActionDescriptor& descriptor,
+            const std::uint8_t draws) {
+            const auto key = std::pair{action, mask};
+            const auto found = carrier_progress_probability.find(key);
+            if (found != carrier_progress_probability.end()) {
+                return found->second;
+            }
+            double probability = 0.0;
+            for (std::uint32_t slot = 0; slot < slot_count; ++slot) {
+                const std::uint32_t bit = 1u << slot;
+                if ((available & bit) == 0) continue;
+                double slot_probability = 0.0;
+                for (std::uint8_t prefix_blockers = 0;
+                     prefix_blockers <= 3; ++prefix_blockers) {
+                    for (std::uint8_t suffix_blockers = 0;
+                         suffix_blockers <= 3; ++suffix_blockers) {
+                        double draw = draw_upper(
+                            action, slot, mask, prefix_blockers,
+                            suffix_blockers, false);
+                        if (descriptor.params.type ==
+                                ActionType::HarvestReforge ||
+                            descriptor.params.type ==
+                                ActionType::HarvestAugment) {
+                            draw = std::max(
+                                draw,
+                                draw_upper(
+                                    action, slot, mask, prefix_blockers,
+                                    suffix_blockers, true));
+                        }
+                        slot_probability = std::max(
+                            slot_probability,
+                            std::min(
+                                1.0,
+                                static_cast<double>(draws) * draw));
+                    }
+                }
+                probability = std::min(
+                    1.0, probability + slot_probability);
+            }
+            carrier_progress_probability.emplace(key, probability);
+            return probability;
+        };
+        for (std::uint8_t rarity = 0;
+             rarity < kCarrierRarityCount; ++rarity) {
+            for (std::uint32_t mask = 0; mask < mask_count; ++mask) {
+                const std::size_t current = carrier_index(rarity, mask);
+                if (rarity == calc.goal().rarity &&
+                    std::popcount(mask) >= required) {
+                    carrier_goal[current] = 1;
+                    continue;
+                }
+                for (const std::uint32_t action : relaxation_actions) {
+                    const ActionDescriptor& descriptor =
+                        calc.registry().actions.at(action);
+                    if ((descriptor.legality.rarity_mask &
+                         (1u << rarity)) == 0 ||
+                        (descriptor.synthetic &&
+                         !options.allow_economic_restart) ||
+                        descriptor.cost_keys.empty()) {
+                        continue;
+                    }
+                    const double cost = priced_action_cost(descriptor);
+                    if (!std::isfinite(cost) || cost < 0.0) continue;
+                    const bool leaves_probability_identity =
+                        (descriptor.sets_flags & kFlagInfluenced) != 0 ||
+                        (descriptor.sets_flags & kProtectionFlags) != 0 ||
+                        descriptor.params.type == ActionType::Fracture;
+                    if (leaves_probability_identity) {
+                        carrier_transitions[current].push_back(
+                            CarrierTransition{
+                                cost, 1.0, current, current, true});
+                        continue;
+                    }
+                    const std::uint8_t next_rarity = descriptor.synthetic
+                        ? static_cast<std::uint8_t>(PC_RARITY_NORMAL)
+                        : carrier_output_rarity(
+                              descriptor.params.type, rarity);
+                    const std::uint32_t available =
+                        action_goal_reach_mask(action) & ~mask;
+                    const auto [draws, unused_one_total_draw] =
+                        probabilistic_shape(descriptor.params.type);
+                    (void)unused_one_total_draw;
+                    if (available == 0) {
+                        const std::size_t successor =
+                            carrier_index(next_rarity, mask);
+                        if (successor != current) {
+                            carrier_transitions[current].push_back(
+                                CarrierTransition{
+                                    cost, 0.0, successor, successor, false});
+                        }
+                        continue;
+                    }
+                    if (draws == 0) {
+                        const std::size_t successor = carrier_index(
+                            next_rarity, mask | available);
+                        carrier_transitions[current].push_back(
+                            CarrierTransition{
+                                cost, 1.0, successor, successor, false});
+                        continue;
+                    }
+
+                    const double probability = carrier_probability_upper(
+                        action, mask, available, descriptor, draws);
+                    if (!(probability > 0.0) ||
+                        !std::isfinite(probability)) {
+                        continue;
+                    }
+                    carrier_transitions[current].push_back(
+                        CarrierTransition{
+                            cost, probability,
+                            carrier_index(next_rarity, mask | available),
+                            carrier_index(next_rarity, mask), false});
+                }
+            }
+        }
+
+        /* Fossil and Harvest vocabularies can contribute thousands of
+         * actions with the same relaxed successors. For a fixed
+         * success/failure pair, higher success probability and no greater
+         * immediate cost dominates before Bellman iteration. Collapse that
+         * exact Pareto relation so proof work scales with distinct relaxed
+         * rows rather than product action count. */
+        for (auto& transitions : carrier_transitions) {
+            std::sort(
+                transitions.begin(), transitions.end(),
+                [](const CarrierTransition& left,
+                   const CarrierTransition& right) {
+                    return std::tuple{
+                               left.terminal, left.success, left.failure,
+                               -left.success_probability, left.cost} <
+                           std::tuple{
+                               right.terminal, right.success, right.failure,
+                               -right.success_probability, right.cost};
+                });
+            std::vector<CarrierTransition> reduced;
+            reduced.reserve(transitions.size());
+            std::size_t begin = 0;
+            while (begin < transitions.size()) {
+                std::size_t end = begin + 1;
+                while (end < transitions.size() &&
+                       transitions[end].terminal ==
+                           transitions[begin].terminal &&
+                       transitions[end].success ==
+                           transitions[begin].success &&
+                       transitions[end].failure ==
+                           transitions[begin].failure) {
+                    ++end;
+                }
+                double cheapest_at_higher_probability = kInfinity;
+                for (std::size_t i = begin; i < end; ++i) {
+                    if (transitions[i].cost + 1e-15 <
+                        cheapest_at_higher_probability) {
+                        reduced.push_back(transitions[i]);
+                        cheapest_at_higher_probability =
+                            transitions[i].cost;
+                    }
+                }
+                begin = end;
+            }
+            transitions = std::move(reduced);
+        }
+        /* Exclude nonproductive rarity cycles before value iteration. They
+         * otherwise increase forever from the zero lower seed and force the
+         * iteration cap despite having no path to the relaxed goal. */
+        std::vector<std::uint8_t> carrier_can_finish = carrier_goal;
+        for (std::size_t pass = 0; pass < carrier_state_count; ++pass) {
+            bool changed = false;
+            for (std::size_t state = 0;
+                 state < carrier_state_count; ++state) {
+                if (carrier_can_finish[state]) continue;
+                for (const CarrierTransition& transition :
+                     carrier_transitions[state]) {
+                    const bool success_finishes = transition.terminal ||
+                        carrier_can_finish[transition.success];
+                    const bool failure_finishes =
+                        transition.success_probability >= 1.0 ||
+                        transition.failure == state ||
+                        carrier_can_finish[transition.failure];
+                    if (success_finishes && failure_finishes) {
+                        carrier_can_finish[state] = 1;
+                        changed = true;
+                        break;
+                    }
+                }
+            }
+            if (!changed) break;
+        }
+        carrier_goal_progress_cost.assign(
+            carrier_state_count, 0.0);
+        std::vector<double> next_carrier_cost =
+            carrier_goal_progress_cost;
+        /* At most five goal acquisitions plus two rarity changes are useful
+         * on the current eight-slot vocabulary. Thirty-two monotone Bellman
+         * lifts leave ample room for cross-rarity setup while bounding work
+         * when the product envelope contains thousands of fixed loadouts.
+         * A capped iterate remains a valid subsolution. */
+        for (std::uint32_t iteration = 0; iteration < 32; ++iteration) {
+            double delta = 0.0;
+            next_carrier_cost = carrier_goal_progress_cost;
+            for (std::size_t current = 0;
+                 current < carrier_state_count; ++current) {
+                if (carrier_goal[current] ||
+                    !carrier_can_finish[current]) continue;
+                double best = kInfinity;
+                for (const CarrierTransition& transition :
+                     carrier_transitions[current]) {
+                    if (!transition.terminal &&
+                        (!carrier_can_finish[transition.success] ||
+                         (transition.success_probability < 1.0 &&
+                          transition.failure != current &&
+                          !carrier_can_finish[transition.failure]))) {
+                        continue;
+                    }
+                    double candidate = transition.cost;
+                    if (!transition.terminal) {
+                        if (transition.success_probability <= 0.0) {
+                            candidate += carrier_goal_progress_cost[
+                                transition.failure];
+                        } else if (transition.failure == current) {
+                            candidate =
+                                (transition.cost +
+                                 transition.success_probability *
+                                     carrier_goal_progress_cost[
+                                         transition.success]) /
+                                transition.success_probability;
+                        } else {
+                            candidate += transition.success_probability *
+                                carrier_goal_progress_cost[
+                                    transition.success] +
+                                (1.0 - transition.success_probability) *
+                                    carrier_goal_progress_cost[
+                                        transition.failure];
+                        }
+                    }
+                    best = std::min(best, candidate);
+                }
+                if (std::isfinite(best)) {
+                    next_carrier_cost[current] = std::max(
+                        carrier_goal_progress_cost[current], best);
+                }
+                delta = std::max(
+                    delta,
+                    std::abs(
+                        next_carrier_cost[current] -
+                        carrier_goal_progress_cost[current]));
+            }
+            carrier_goal_progress_cost.swap(next_carrier_cost);
+            if (delta <= 1e-12) break;
+        }
+        const AbstractState& start_carrier =
+            calc.state(result.start_state);
+        const std::size_t start_carrier_index = carrier_index(
+            start_carrier.rarity,
+            satisfied_goal_mask_for_state(result.start_state));
+        const double start_carrier_progress =
+            start_carrier_index < carrier_goal_progress_cost.size()
+                ? carrier_goal_progress_cost[start_carrier_index]
+                : kInfinity;
+        retain_action_reason(
+            "included:carrier_persistent_progress_relaxation:" +
+            finite_json(start_carrier_progress));
 
         /* Keep a probability-free cover as the universal proof used for
          * price-bound action pruning and for carriers whose preserved
@@ -715,8 +1093,6 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
             clean_goal_cover_cost.size(), kNoId);
         std::vector<std::uint32_t> clean_goal_policy(
             clean_goal_cover_cost.size(), kNoId);
-        const std::uint32_t required =
-            calc.goal().required_satisfied_slots();
         const auto is_abstract_goal = [&](const std::uint8_t rarity,
                                           const std::uint32_t mask,
                                           const std::uint8_t prefixes,
@@ -1799,6 +2175,111 @@ bool SolveWork::Impl::clean_goal_cover_eligible(
         return clean_goal_cover_rejection_mask(state) == 0;
     }
 
+bool SolveWork::Impl::carrier_goal_progress_eligible(
+        const std::uint32_t state) const {
+        if (state >= calc.state_count() ||
+            result.start_state >= calc.state_count()) {
+            return false;
+        }
+        if (carrier_goal_progress_eligibility_cache.size() <= state) {
+            carrier_goal_progress_eligibility_cache.resize(state + 1, -1);
+        }
+        if (carrier_goal_progress_eligibility_cache[state] >= 0) {
+            return carrier_goal_progress_eligibility_cache[state] != 0;
+        }
+        const AbstractState& carrier = calc.state(state);
+        const AbstractState& start = calc.state(result.start_state);
+        /* Generic influence bits select a different explicit-affix pool.
+         * The current probability anchor does not prove an upper probability
+         * for that identity, so retain the universal cover locally. Eldritch
+         * implicit tiers do not select the explicit pool; automatic side
+         * options are represented above by their cheaper final primitive
+         * with setup/dominance granted for free. */
+        if (carrier.influence_bits != start.influence_bits) {
+            carrier_goal_progress_eligibility_cache[state] = 0;
+            return false;
+        }
+        for (const std::uint32_t action_index :
+             carrier_unproved_first_step_actions) {
+            const ActionDescriptor& action =
+                calc.registry().actions[action_index];
+            if (action_legal(session, action, carrier)) {
+                /* A legal zero-resource or unpriced resolution can make
+                 * useful progress before a represented priced action. The
+                 * carrier table deliberately makes no claim for that local
+                 * shape. */
+                carrier_goal_progress_eligibility_cache[state] = 0;
+                return false;
+            }
+        }
+        carrier_goal_progress_eligibility_cache[state] = 1;
+        return true;
+    }
+
+double SolveWork::Impl::carrier_goal_progress_lower_value(
+        const std::uint32_t state) const {
+        if (!carrier_goal_progress_eligible(state)) return kInfinity;
+        constexpr std::size_t kCarrierRarityCount = 3;
+        const std::uint32_t satisfied =
+            satisfied_goal_mask_for_state(state);
+        if (carrier_goal_progress_cost.empty() ||
+            carrier_goal_progress_cost.size() % kCarrierRarityCount != 0) {
+            return kInfinity;
+        }
+        const std::size_t mask_count =
+            carrier_goal_progress_cost.size() / kCarrierRarityCount;
+        const AbstractState& carrier = calc.state(state);
+        const std::size_t index =
+            static_cast<std::size_t>(carrier.rarity) * mask_count +
+            satisfied;
+        return index < carrier_goal_progress_cost.size()
+            ? carrier_goal_progress_cost[index]
+            : kInfinity;
+}
+
+double SolveWork::Impl::carrier_terminal_debt_lower_value(
+        const std::uint32_t state) const {
+        if (state >= calc.state_count() ||
+            calc.is_goal_state(calc.state(state))) {
+            return 0.0;
+        }
+        if (carrier_terminal_debt_cache.size() <= state) {
+            carrier_terminal_debt_cache.resize(
+                state + 1, std::numeric_limits<double>::quiet_NaN());
+        }
+        if (!std::isnan(carrier_terminal_debt_cache[state])) {
+            return carrier_terminal_debt_cache[state];
+        }
+        const AbstractState& carrier = calc.state(state);
+        for (const std::uint32_t action_index :
+             carrier_unproved_first_step_actions) {
+            if (action_legal(
+                    session, calc.registry().actions[action_index], carrier)) {
+                carrier_terminal_debt_cache[state] = 0.0;
+                return 0.0;
+            }
+        }
+        double local_floor = kInfinity;
+        for (const auto& [action_index, cost] :
+             carrier_priced_first_step_actions) {
+            if (cost >= local_floor) continue;
+            if (action_legal(
+                    session, calc.registry().actions[action_index], carrier)) {
+                local_floor = cost;
+            }
+        }
+        /* Every executable row begins with a carrier-legal registry
+         * primitive. Its complete immediate resource cost is at least this
+         * cheapest priced first step; fixed programs and automatic Imprint
+         * add nonnegative resources. Charge that step once, then grant
+         * arbitrary cleanup/replacement plus terminal success. In particular,
+         * never charge cleanup before a protected reforge that can replace
+         * junk directly. Unknown/unpriced first steps retain zero locally. */
+        const double lower = std::isfinite(local_floor) ? local_floor : 0.0;
+        carrier_terminal_debt_cache[state] = lower;
+        return lower;
+    }
+
 double SolveWork::Impl::completion_proof_lower_value(
         const std::uint32_t state) {
         if (state >= calc.state_count()) return 0.0;
@@ -1813,6 +2294,13 @@ double SolveWork::Impl::completion_proof_lower_value(
             satisfied,
             clean_goal_cover_eligible(state), carrier.rarity,
             carrier.prefix_count, carrier.suffix_count));
+        const double carrier_progress =
+            carrier_goal_progress_lower_value(state);
+        if (std::isfinite(carrier_progress)) {
+            lower = std::max(lower, carrier_progress);
+        }
+        lower = std::max(
+            lower, carrier_terminal_debt_lower_value(state));
         /* The universal goal cover is independently admissible for every
          * carrier shape. A clean/strict specialization may strengthen it but
          * must never replace it with a weaker value; exact successor Bellman

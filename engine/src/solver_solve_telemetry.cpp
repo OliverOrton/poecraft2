@@ -242,9 +242,12 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
         std::uint32_t satisfied = 0;
         std::uint32_t rejection = 0;
         bool clean_eligible = false;
+        bool carrier_progress_available = false;
         bool strict_available = false;
         double universal = kInfinity;
         double clean = kInfinity;
+        double carrier_progress = kInfinity;
+        double terminal_debt = 0.0;
         double strict = kInfinity;
         double selected = 0.0;
     };
@@ -260,6 +263,12 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
                 out.satisfied, true, carrier.rarity,
                 carrier.prefix_count, carrier.suffix_count);
         }
+        out.carrier_progress =
+            carrier_goal_progress_lower_value(state);
+        out.carrier_progress_available =
+            std::isfinite(out.carrier_progress);
+        out.terminal_debt =
+            carrier_terminal_debt_lower_value(state);
         out.strict_available = !session.eldritch_eligible &&
             state < strict_clean_goal_cover_cost.size() &&
             std::isfinite(strict_clean_goal_cover_cost[state]);
@@ -278,6 +287,8 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
     enum ComponentOwner : std::size_t {
         UniversalOwner = 0,
         CleanOwner,
+        CarrierProgressOwner,
+        TerminalDebtOwner,
         StrictOwner,
         ZeroFallbackOwner,
         OwnerCount,
@@ -288,17 +299,25 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
             value.universal, value.selected);
         result[CleanOwner] = value.clean_eligible &&
             approximately_equal(value.clean, value.selected);
+        result[CarrierProgressOwner] =
+            value.carrier_progress_available &&
+            approximately_equal(value.carrier_progress, value.selected);
+        result[TerminalDebtOwner] = value.terminal_debt > 0.0 &&
+            approximately_equal(value.terminal_debt, value.selected);
         result[StrictOwner] = value.strict_available &&
             approximately_equal(value.strict, value.selected);
         result[ZeroFallbackOwner] = value.selected == 0.0 &&
             !result[UniversalOwner] && !result[CleanOwner] &&
-            !result[StrictOwner];
+            !result[CarrierProgressOwner] &&
+            !result[TerminalDebtOwner] && !result[StrictOwner];
         return result;
     };
     struct Population {
         std::uint64_t states = 0;
         std::uint64_t clean_eligible = 0;
         std::uint64_t clean_ineligible = 0;
+        std::uint64_t carrier_progress_available = 0;
+        std::uint64_t terminal_debt_positive = 0;
         std::array<std::uint64_t,
                    Work::kCleanCoverRejectionCount> rejection{};
         std::uint64_t satisfied_nonterminal = 0;
@@ -326,6 +345,12 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
         ++population.states;
         if (value.clean_eligible) ++population.clean_eligible;
         else ++population.clean_ineligible;
+        if (value.carrier_progress_available) {
+            ++population.carrier_progress_available;
+        }
+        if (value.terminal_debt > 0.0) {
+            ++population.terminal_debt_positive;
+        }
         for (std::size_t bit = 0;
              bit < Work::kCleanCoverRejectionCount; ++bit) {
             if ((value.rejection & (std::uint32_t{1} << bit)) != 0) {
@@ -417,7 +442,8 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
             "searing_identity", "eater_identity", "fractured_junk",
             "fractured_crafted_junk"}};
     static constexpr std::array<const char*, OwnerCount> kOwnerNames{{
-        "universal", "clean_mdp", "strict_clean", "zero_fallback"}};
+        "universal", "clean_mdp", "carrier_progress",
+        "terminal_debt", "strict_clean", "zero_fallback"}};
     const auto operator_family_name = [&](const std::size_t index) {
         std::string name;
         if (index < Work::kPrimitiveFamilyCount) {
@@ -483,6 +509,10 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
             std::to_string(value.rejection);
         json += ",\"universal\":" + finite_json(value.universal);
         json += ",\"clean_mdp\":" + finite_json(value.clean);
+        json += ",\"carrier_progress\":" +
+            finite_json(value.carrier_progress);
+        json += ",\"terminal_debt\":" +
+            finite_json(value.terminal_debt);
         json += ",\"strict_clean\":" + finite_json(value.strict);
         json += ",\"selected_maximum\":" +
             finite_json(value.selected);
@@ -497,6 +527,10 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
             std::to_string(population.clean_eligible);
         json += ",\"clean_ineligible\":" +
             std::to_string(population.clean_ineligible);
+        json += ",\"carrier_progress_available\":" +
+            std::to_string(population.carrier_progress_available);
+        json += ",\"terminal_debt_positive\":" +
+            std::to_string(population.terminal_debt_positive);
         json += ",\"clean_coverage_fraction\":" +
             finite_json(population.states == 0
                 ? 0.0
@@ -1432,6 +1466,14 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
         bytes += owned_goal_survival_nested_bytes;
         bytes += goal_cover_cost.capacity() * sizeof(double);
         bytes += clean_goal_cover_cost.capacity() * sizeof(double);
+        bytes += carrier_goal_progress_cost.capacity() * sizeof(double);
+        bytes += carrier_unproved_first_step_actions.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += carrier_priced_first_step_actions.capacity() *
+                 sizeof(std::pair<std::uint32_t, double>);
+        bytes += carrier_goal_progress_eligibility_cache.capacity() *
+                 sizeof(std::int8_t);
+        bytes += carrier_terminal_debt_cache.capacity() * sizeof(double);
         bytes += clean_goal_escape_cost.capacity() * sizeof(double);
         bytes += clean_goal_escape_action.capacity() *
                  sizeof(std::uint32_t);
@@ -1638,6 +1680,14 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
         }
         bytes += goal_cover_cost.capacity() * sizeof(double);
         bytes += clean_goal_cover_cost.capacity() * sizeof(double);
+        bytes += carrier_goal_progress_cost.capacity() * sizeof(double);
+        bytes += carrier_unproved_first_step_actions.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += carrier_priced_first_step_actions.capacity() *
+                 sizeof(std::pair<std::uint32_t, double>);
+        bytes += carrier_goal_progress_eligibility_cache.capacity() *
+                 sizeof(std::int8_t);
+        bytes += carrier_terminal_debt_cache.capacity() * sizeof(double);
         bytes += clean_goal_escape_cost.capacity() * sizeof(double);
         bytes += clean_goal_escape_action.capacity() *
                  sizeof(std::uint32_t);
