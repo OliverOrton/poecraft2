@@ -1,10 +1,11 @@
 # Carrier-Aware Proof Bounds And Consumers
 
-**Status: Gate 3 passed; Gate 4 active (2026-08-24).** Oliver selected this successor
-after checkpoint `bd80522`. It inherits Gate 0 attribution, Gate 1's proof /
-ordering ownership split, and the current-semantics control corpus. Failed
-Gate 2 ordering is not an entry condition and must not be retried; legacy
-focused and incremental ordering remains unchanged.
+**Status: Gate 3 passed; Gate 4 stopped and restored; Gate 5 active
+(2026-08-24).** Oliver selected this successor after checkpoint `bd80522`. It
+inherits Gate 0 attribution, Gate 1's proof / ordering ownership split, and the
+current-semantics control corpus. Failed Gate 2 ordering is not an entry
+condition and must not be retried; legacy focused and incremental ordering
+remains unchanged.
 
 Parent: [Active work](../README.md)
 
@@ -103,9 +104,13 @@ changes a displayed number.
 
 ## Gate 4 — Unresolved-action lower descriptors
 
-**Status: active.** Gate 3 supplies a useful proved continuation lower, so
-the archived mandatory-first-price descriptor architecture is being
-re-evaluated under the stop conditions below.
+**Result: stopped and restored.** Gate 3 supplied a useful continuation lower,
+but the observational descriptor prototype repeated the archived failure. On
+the four-of-five and clean five-T1 graphs, cheap alternatives pinned the
+minimum at `0.577` and `0.54205`; 16 and 192,660 obligations remained
+unresolved; and zero descriptors strictly separated. Some records were
+strengthened, but published lower/work did not improve. Only Gate 4's source
+experiment was removed. See the [Gate 4 result](evidence/gate4-result.md).
 
 Enter only if Gate 3 supplies useful continuation lowers. Re-evaluate the
 archived mandatory-setup-price prototype against today's graphs. For each
@@ -124,6 +129,9 @@ remove only Gate 4's experiment, record the precise failure, and continue
 Gate 5 with the valid Gate 3 bound.
 
 ## Gate 5 — Consumers and proportional acceptance
+
+**Status: active.** Gate 5 proceeds with the valid Gate 3 carrier-aware bound
+and no unresolved-descriptor production machinery.
 
 Route only matching proof authority into:
 

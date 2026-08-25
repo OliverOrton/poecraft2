@@ -2,9 +2,9 @@
 
 **Status: an implementation boundary is active.** Oliver selected
 [Carrier-Aware Proof Bounds And Consumers](docs/active/2026-08-24-carrier-aware-proof-bounds/plan.md)
-on 2026-08-24. Gate 3 passed and Gate 4 is active from checkpoint `bd80522`.
-Failed Gate 2 ordering is neither retried nor required; legacy ordering stays
-unchanged.
+on 2026-08-24. Gate 3 passed, Gate 4 stopped and was restored, and Gate 5 is
+active. Failed Gate 2 ordering is neither retried nor required; legacy
+ordering stays unchanged.
 
 ## Current checkpoint
 
@@ -13,6 +13,8 @@ unchanged.
   and control qualification`). This local commit contains the complete Gate 0,
   Gate 1, current-control, and failed-ordering evidence tree. No push was
   issued.
+- Gate 3 checkpoint: `49715d1` (`Implement carrier-aware admissible bounds`).
+  It has the required co-author trailer and was not pushed.
 - Activated checkpoint: `526ff6f` (`Propose carrier-aware bounds and priority
   plan`).
 - Proposal checkpoint: `04cab15` (`Record executable policy recovery
@@ -57,10 +59,13 @@ hashes remain `fb8dc170b29920df` / `1b98ca41e69ad1b1`. Solve wall is
 uncached version's 172-second result is retained as optimization evidence; its
 repeated full-registry scans were replaced by price-scoped per-state caches.
 
-Gate 4 is now active because Gate 3 supplies a useful proved continuation
-lower. Descriptors remain lower-only and explicit until exact materialization
-or strict incumbent separation. A repeated cheap-bench/broad-reforge failure
-restores only Gate 4's experiment and continues Gate 5 with Gate 3 intact.
+Gate 4 stopped and was restored. The observational prototype retained 22,729
+four-of-five and 202,735 five-T1 descriptor records, but cheap obligations
+pinned their minimum at `0.577` and `0.54205`. It separated zero descriptors;
+16 and 192,660 obligations remained unresolved. The prototype never had
+policy, upper, pruning, or closure authority, and all Gate 4 source was
+removed. Gate 5 is active with Gate 3 intact. See the
+[Gate 4 result](docs/active/2026-08-24-carrier-aware-proof-bounds/evidence/gate4-result.md).
 
 Before activation, `git diff --check`, the native build, and a fresh
 1,000-expansion fixed-work run passed. The fresh report exactly retained lower

@@ -1,6 +1,6 @@
 # Active Work
 
-**Status: Carrier-Aware Proof Bounds And Consumers is active at Gate 4.**
+**Status: Carrier-Aware Proof Bounds And Consumers is active at Gate 5.**
 
 Parent: [Documentation map](../README.md)
 
@@ -11,9 +11,10 @@ current-semantics controls from local checkpoint `bd80522`. Oliver explicitly
 selected independent Gates 3-5 without retrying or requiring failed Gate 2.
 Legacy carrier ordering remains unchanged. Gate 3 retained a proved rarity ×
 satisfied-mask carrier MDP and raised the checked global lower from `0.01165`
-to `3.47245` without changing the exact upper, graph, or hashes. Gate 4 now
-re-evaluates lower-only unresolved descriptors; it cannot create executable
-policy or closure authority.
+to `3.47245` without changing the exact upper, graph, or hashes. Gate 4's
+observational descriptor prototype was removed after cheap alternatives kept
+the minimum at `0.577` / `0.54205` and separated zero obligations. Gate 5 now
+routes and accepts only the retained Gate 3 proof authority.
 
 The stopped
 [Carrier-Aware Control Authority Repair](2026-08-24-carrier-aware-control-authority/plan.md)
