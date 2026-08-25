@@ -1,7 +1,8 @@
 # Carrier-Aware Proof Bounds And Consumers
 
-**Status: Gate 3 passed; Gate 4 stopped and restored; Gate 5 active
-(2026-08-24).** Oliver selected this successor after checkpoint `bd80522`. It
+**Status: complete (2026-08-24).** Gate 3 passed, Gate 4 stopped and was
+restored, and Gate 5 passed proportional acceptance. Oliver selected this
+successor after checkpoint `bd80522`. It
 inherits Gate 0 attribution, Gate 1's proof / ordering ownership split, and the
 current-semantics control corpus. Failed Gate 2 ordering is not an entry
 condition and must not be retried; legacy focused and incremental ordering
@@ -130,8 +131,13 @@ Gate 5 with the valid Gate 3 bound.
 
 ## Gate 5 — Consumers and proportional acceptance
 
-**Status: active.** Gate 5 proceeds with the valid Gate 3 carrier-aware bound
-and no unresolved-descriptor production machinery.
+**Result: passed.** Gate 5 retained the valid Gate 3 carrier-aware bound and
+no unresolved-descriptor production machinery. It publishes the independent
+floor for non-Eldritch sessions, strengthens covered operator/preservation
+comparisons, records provenance separately, and retains exact-evaluated proper
+policies across the required matrix. The non-armour Bow now publishes a
+globally certified `101.067` lower instead of uncertified zero with the same
+policy and upper. See the [Gate 5 result](evidence/gate5-result.md).
 
 Route only matching proof authority into:
 

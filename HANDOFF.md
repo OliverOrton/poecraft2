@@ -1,10 +1,12 @@
 # Handoff
 
-**Status: an implementation boundary is active.** Oliver selected
+**Status: no implementation boundary is active.** Oliver selected and
+completed
 [Carrier-Aware Proof Bounds And Consumers](docs/active/2026-08-24-carrier-aware-proof-bounds/plan.md)
-on 2026-08-24. Gate 3 passed, Gate 4 stopped and was restored, and Gate 5 is
-active. Failed Gate 2 ordering is neither retried nor required; legacy
-ordering stays unchanged.
+on 2026-08-24. Gate 3 passed, Gate 4 stopped and was restored, and Gate 5
+passed proportional acceptance. Failed Gate 2 ordering was neither retried
+nor required; legacy ordering stays unchanged. Oliver must select the next
+implementation boundary before implementation resumes.
 
 ## Current checkpoint
 
@@ -15,6 +17,10 @@ ordering stays unchanged.
   issued.
 - Gate 3 checkpoint: `49715d1` (`Implement carrier-aware admissible bounds`).
   It has the required co-author trailer and was not pushed.
+- Gate 4 stop checkpoint: `d874656` (`Record unresolved descriptor stop`). It
+  has the required co-author trailer and was not pushed.
+- Gate 5 implementation, evidence, release WASM, and acceptance are retained
+  in the current local checkpoint. No push was issued.
 - Activated checkpoint: `526ff6f` (`Propose carrier-aware bounds and priority
   plan`).
 - Proposal checkpoint: `04cab15` (`Record executable policy recovery
@@ -33,7 +39,7 @@ ordering stays unchanged.
   instrumentation behavior remains in the main worktree.
 - Full repository pipeline and rendered UI review were deliberately not run.
 
-## Active carrier-aware proof bounds and consumers
+## Completed carrier-aware proof bounds and consumers
 
 Gate 3 passed. The retained extension projects the existing clean MDP over
 rarity × exact satisfied-goal mask, grants free junk removal and perfect
@@ -64,8 +70,26 @@ four-of-five and 202,735 five-T1 descriptor records, but cheap obligations
 pinned their minimum at `0.577` and `0.54205`. It separated zero descriptors;
 16 and 192,660 obligations remained unresolved. The prototype never had
 policy, upper, pruning, or closure authority, and all Gate 4 source was
-removed. Gate 5 is active with Gate 3 intact. See the
+removed. Gate 5 completed with Gate 3 intact. See the
 [Gate 4 result](docs/active/2026-08-24-carrier-aware-proof-bounds/evidence/gate4-result.md).
+
+Gate 5 publishes the independent carrier/pattern floor for every covered
+session and keeps restricted search, absent descriptors, and exact closure as
+separate telemetry authorities. The non-armour partial-five Bow moves from
+uncertified zero to a globally certified `101.067` lower with the same
+`6026985788.49406` exact-evaluated upper and 154 / 387 graph. The final
+four-of-five policy remains `2698.87479601436`; automatic Eldritch and Imprint
+close exactly at `0.0295` and `705.394259999999`. All three final witnesses
+completed 10,000 / 10,000 simulations. Native build and affected suites,
+release WASM, the complete nonvisual web suite, TypeScript, and
+`git diff --check` pass. The native/release-WASM one-mod oracle also matches
+status, value, 6 / 7 graph, and the seeded 10,000-run outcome exactly. Its
+generic comparison still reports the pre-existing inactive-exact-evaluation
+shape mismatch and a `166.233` ms WASM slice against the 50 ms performance
+cap (the retained 2026-08-20 result was `215.59` ms); those deviations are
+recorded, not treated as functional parity differences. The full repository
+pipeline and rendered review were deliberately not run. See the
+[Gate 5 result](docs/active/2026-08-24-carrier-aware-proof-bounds/evidence/gate5-result.md).
 
 Before activation, `git diff --check`, the native build, and a fresh
 1,000-expansion fixed-work run passed. The fresh report exactly retained lower

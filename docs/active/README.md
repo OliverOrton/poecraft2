@@ -1,10 +1,10 @@
 # Active Work
 
-**Status: Carrier-Aware Proof Bounds And Consumers is active at Gate 5.**
+**Status: no implementation boundary is active.**
 
 Parent: [Documentation map](../README.md)
 
-The selected
+The completed
 [Carrier-Aware Proof Bounds And Consumers](2026-08-24-carrier-aware-proof-bounds/plan.md)
 inherits Gate 0 attribution, Gate 1's proof/ordering split, and the pinned
 current-semantics controls from local checkpoint `bd80522`. Oliver explicitly
@@ -14,7 +14,11 @@ satisfied-mask carrier MDP and raised the checked global lower from `0.01165`
 to `3.47245` without changing the exact upper, graph, or hashes. Gate 4's
 observational descriptor prototype was removed after cheap alternatives kept
 the minimum at `0.577` / `0.54205` and separated zero obligations. Gate 5 now
-routes and accepts only the retained Gate 3 proof authority.
+routes and accepts only the retained Gate 3 proof authority. The non-armour
+Bow now publishes a globally certified `101.067` independent lower with the
+same exact-evaluated policy and upper; exact/restricted/descriptor provenance
+remains separate. Native, release-WASM, nonvisual web, and 10,000-run controls
+pass; see the [Gate 5 result](2026-08-24-carrier-aware-proof-bounds/evidence/gate5-result.md).
 
 The stopped
 [Carrier-Aware Control Authority Repair](2026-08-24-carrier-aware-control-authority/plan.md)

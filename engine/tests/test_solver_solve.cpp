@@ -6259,6 +6259,16 @@ void run_incremental_action_generation_tests() {
         open_snapshot_telemetry.find(
             "\"restricted_action_envelope_lower_bound\":") !=
         std::string::npos);
+    PC_CHECK(
+        open_snapshot_telemetry.find(
+            "\"unresolved_descriptor\":{\"active\":false,"
+            "\"lower_bound\":null,\"global\":false}") !=
+        std::string::npos);
+    PC_CHECK(
+        open_snapshot_telemetry.find(
+            "\"exact_closure\":{\"proved\":false,"
+            "\"lower_bound\":null}") !=
+        std::string::npos);
     const SolveResult result = incremental_progress.done
         ? incremental_work.finish()
         : SolveResult{};
@@ -6308,8 +6318,13 @@ void run_incremental_action_generation_tests() {
         calc, &result, nullptr, std::nullopt, nullptr);
     PC_CHECK(valid_json_object(telemetry));
     PC_CHECK(
-        telemetry.find("\"incremental_action_envelope\":{"
-                       "\"enabled\":true,\"closed\":true") !=
+        telemetry.find(
+            "\"exact_closure\":{\"proved\":true,"
+            "\"lower_bound\":") != std::string::npos);
+    PC_CHECK(
+        telemetry.find(
+            "\"incremental_action_envelope\":{"
+            "\"enabled\":true,\"closed\":true") !=
         std::string::npos);
     PC_CHECK(
         telemetry.find("\"global_lower_bound_certified\":true,") !=
@@ -8443,6 +8458,40 @@ void run_carrier_aware_completion_bound_tests() {
         work.completion_proof_lower(fractured_state).value;
     PC_CHECK(expanded_lower <= original_lower + 1e-12);
 
+    /* Economic Restart must enter the carrier MDP as a priced transition to
+     * a fresh Normal carrier with mask zero. This vocabulary gives that fresh
+     * carrier a finite Alchemy route and makes Chaos prohibitively expensive,
+     * so replacement is the only useful relaxed escape from the Rare source. */
+    const std::uint32_t alchemy = registry.index_by_id.at("alchemy");
+    const std::uint32_t restart = registry.index_by_id.at("restart");
+    CalcContext restart_calc(
+        session, goal, registry, {alchemy, chaos, restart},
+        false, true, false, std::nullopt, {}, false);
+    const std::uint32_t restart_source =
+        restart_calc.intern_item(fractured_partial);
+    SolveWorkTestAccess::Impl restart_work(
+        restart_calc, fractured_partial,
+        {{"alchemy", 10.0}, {"chaos", 1.0e9}, {"base", 1.0}},
+        options);
+    (void)restart_work.completion_proof_lower(restart_source);
+    const OutcomeDistribution& restart_exact =
+        restart_calc.outcomes(restart_source, restart);
+    PC_CHECK(restart_exact.supported);
+    PC_CHECK(restart_exact.entries.size() == 1);
+    if (restart_exact.entries.size() == 1) {
+        const std::uint32_t fresh = restart_exact.entries.front().state;
+        const double source_progress =
+            restart_work.carrier_goal_progress_lower_value(restart_source);
+        const double fresh_progress =
+            restart_work.carrier_goal_progress_lower_value(fresh);
+        PC_CHECK(restart_work.satisfied_goal_mask_for_state(fresh) == 0);
+        PC_CHECK(std::isfinite(source_progress));
+        PC_CHECK(std::isfinite(fresh_progress));
+        PC_CHECK(source_progress > 1.0);
+        PC_CHECK(source_progress <= 1.0 + fresh_progress + 1e-9 *
+            std::max(1.0, std::fabs(fresh_progress)));
+    }
+
     /* Materialize the complete finite primitive closure for this synthetic
      * vocabulary, then check the Bellman inequality against every exact row
      * that the fixture produced. This proves the maximum of universal,
@@ -8485,11 +8534,25 @@ void run_carrier_aware_completion_bound_tests() {
                 work.completion_proof_lower(exit.state).value;
         }
         const double lower = work.completion_proof_lower(state).value;
+        const double carrier_action_lower =
+            work.carrier_action_bellman_lower_value(state);
+        const double operator_lower =
+            work.operator_proof_lower(state, action).value;
         PC_CHECK(near(probability, 1.0, 1e-10));
+        PC_CHECK(operator_lower + 1e-12 >= carrier_action_lower);
+        PC_CHECK(
+            operator_lower <= backup +
+                1e-9 * std::max(1.0, std::fabs(backup)));
         PC_CHECK(
             lower <= backup +
                 1e-9 * std::max(1.0, std::fabs(backup)));
     }
+    const double published_independent_lower =
+        work.completion_proof_lower(fractured_state).value;
+    work.begin_focused_lower_solve();
+    PC_CHECK(near(
+        work.result.diagnostics.independent_goal_cover_lower_bound,
+        published_independent_lower, 1e-12));
     std::printf(
         "carrier-aware completion proof: states=%zu rows=%zu "
         "universal=%.9g carrier=%.9g protected=%.9g\n",
@@ -8821,6 +8884,12 @@ void run_automatic_eldritch_side_tests() {
                 eligible_completion_lower <=
                 exact_lower_backup + 1e-9 *
                     std::max(1.0, std::fabs(exact_lower_backup)));
+            const double operator_lower =
+                automatic_lower_work.operator_proof_lower(
+                    automatic_lower_state, op).value;
+            PC_CHECK(
+                operator_lower <= exact_lower_backup + 1e-9 *
+                    std::max(1.0, std::fabs(exact_lower_backup)));
             ++checked_eldritch_bellman_rows;
         }
         if (automatic_lower_calc.registry().actions.at(
@@ -8926,14 +8995,21 @@ void run_automatic_eldritch_side_tests() {
         PC_CHECK(restart_distribution.supported);
         PC_CHECK(restart_distribution.entries.size() == 1);
         if (restart_distribution.entries.size() == 1) {
+            const std::uint32_t fresh_state =
+                restart_distribution.entries.front().state;
             const double fresh_shaped_relaxation =
                 restart_lower_work.completion_proof_lower(
-                    restart_distribution.entries.front().state).value;
+                    fresh_state).value;
             const double exact_successor_relaxation = restart_immediate +
                 std::max(
                     restart_lower_work.optimistic_completion_cost(0),
                     fresh_shaped_relaxation);
             PC_CHECK(near(restart_lower, exact_successor_relaxation));
+            PC_CHECK(
+                restart_lower_work.carrier_action_bellman_lower_value(
+                    restart_source_state) <=
+                exact_successor_relaxation + 1e-9 *
+                    std::max(1.0, std::fabs(exact_successor_relaxation)));
         }
         PC_CHECK(restart_lower > legacy_carried_progress_lower);
     }
@@ -10698,6 +10774,10 @@ void run_artifact_solve_tests(const char* artifact_dir) {
 }
 
 } // namespace
+
+void run_solver_carrier_bound_tests() {
+    run_automatic_eldritch_side_tests();
+}
 
 void run_solver_automatic_eldritch_tests() {
     run_resource_stop_reachable_policy_tests();

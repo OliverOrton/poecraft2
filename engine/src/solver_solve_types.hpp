@@ -1516,6 +1516,9 @@ struct SolveWork::Impl {
         const std::uint32_t state,
         const std::uint32_t operator_index);
 
+    double carrier_action_bellman_lower_value(
+        std::uint32_t state) const;
+
     solve_detail::ProofLowerValue operator_proof_lower(
         const std::uint32_t state,
         const std::uint32_t operator_index);

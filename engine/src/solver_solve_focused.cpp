@@ -20,11 +20,11 @@ void SolveWork::Impl::begin_focused_lower_solve() {
             result.values[state] =
                 completion_proof_lower(state).value;
         }
-        /* Populate the new publication authority only for the sessions this
-         * milestone newly covers. Existing non-Eldritch focused publication
-         * remains numerically unchanged. */
-        if (session.eldritch_eligible &&
-            result.start_state < result.values.size()) {
+        /* This independent carrier/pattern relaxation covers the complete
+         * requested action envelope. Publish it for every session; the
+         * restricted focused optimum remains separate and cannot replace
+         * this global floor while incremental action coverage is open. */
+        if (result.start_state < result.values.size()) {
             const double independent_lower =
                 result.values[result.start_state];
             if (std::isfinite(independent_lower) &&

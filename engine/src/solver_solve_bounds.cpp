@@ -619,6 +619,27 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
             include_action(ordinary_chaos);
             include_action(ordinary_exalt);
         }
+        const auto carrier_action_cost = [&](
+            const std::uint32_t action_index) {
+            const ActionDescriptor& action =
+                calc.registry().actions.at(action_index);
+            double cost = priced_action_cost(action);
+            if (!action.cost_keys.empty()) return cost;
+            /* A planner-only primitive shape can price resources on its
+             * wrapper even when its registry descriptor has no cost keys.
+             * Reuse that proved immediate quantity without treating
+             * arbitrary zero-resource descriptors as priced. */
+            cost = kInfinity;
+            for (const PricedOperator& priced : operators) {
+                const PlannerOperator& planner =
+                    calc.operators().at(priced.index);
+                if (planner.kind == PlannerOperatorKind::Primitive &&
+                    planner.primitive_action == action_index) {
+                    cost = std::min(cost, priced.cost);
+                }
+            }
+            return cost;
+        };
         carrier_unproved_first_step_actions.clear();
         carrier_priced_first_step_actions.clear();
         carrier_goal_progress_eligibility_cache.clear();
@@ -631,23 +652,7 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                  * option that owns it, not a standalone carrier choice. */
                 continue;
             }
-            double cost = priced_action_cost(action);
-            if (action.cost_keys.empty()) {
-                /* Synthetic Restart is priced by its primitive planner
-                 * wrapper because replacement includes the base-item cost;
-                 * its registry descriptor intentionally has no currency
-                 * key. Reuse that proved immediate quantity without treating
-                 * arbitrary zero-resource descriptors as priced. */
-                cost = kInfinity;
-                for (const PricedOperator& priced : operators) {
-                    const PlannerOperator& planner =
-                        calc.operators().at(priced.index);
-                    if (planner.kind == PlannerOperatorKind::Primitive &&
-                        planner.primitive_action == action_index) {
-                        cost = std::min(cost, priced.cost);
-                    }
-                }
-            }
+            const double cost = carrier_action_cost(action_index);
             if (!std::isfinite(cost)) {
                 /* An unpriced primitive is not in the executable action
                  * envelope. State-local automatic admission applies the same
@@ -798,12 +803,25 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                     if ((descriptor.legality.rarity_mask &
                          (1u << rarity)) == 0 ||
                         (descriptor.synthetic &&
-                         !options.allow_economic_restart) ||
-                        descriptor.cost_keys.empty()) {
+                         !options.allow_economic_restart)) {
                         continue;
                     }
-                    const double cost = priced_action_cost(descriptor);
+                    const double cost = carrier_action_cost(action);
                     if (!std::isfinite(cost) || cost < 0.0) continue;
+                    if (descriptor.synthetic) {
+                        /* Restart has one exact abstraction successor: a
+                         * fresh Normal carrier with no carried goal mask.
+                         * Keeping the source mask here would make replacement
+                         * spuriously preserve the item it discards; omitting
+                         * the priced row could instead overstate the carrier
+                         * lower whenever replacement is the cheapest route. */
+                        const std::size_t fresh = carrier_index(
+                            PC_RARITY_NORMAL, 0);
+                        carrier_transitions[current].push_back(
+                            CarrierTransition{
+                                cost, 0.0, fresh, fresh, false});
+                        continue;
+                    }
                     const bool leaves_probability_identity =
                         (descriptor.sets_flags & kFlagInfluenced) != 0 ||
                         (descriptor.sets_flags & kProtectionFlags) != 0 ||
@@ -814,10 +832,8 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                                 cost, 1.0, current, current, true});
                         continue;
                     }
-                    const std::uint8_t next_rarity = descriptor.synthetic
-                        ? static_cast<std::uint8_t>(PC_RARITY_NORMAL)
-                        : carrier_output_rarity(
-                              descriptor.params.type, rarity);
+                    const std::uint8_t next_rarity = carrier_output_rarity(
+                        descriptor.params.type, rarity);
                     const std::uint32_t available =
                         action_goal_reach_mask(action) & ~mask;
                     const auto [draws, unused_one_total_draw] =
@@ -3108,8 +3124,9 @@ double SolveWork::Impl::operator_proof_lower_value(
             /* Both relaxations are independently admissible. Their maximum
              * keeps the shape-aware refinement from accidentally weakening
              * the universal cover on a sparse action envelope. */
-            return immediate + std::max(
-                universal_fresh, shaped_fresh);
+            return std::max(
+                immediate + std::max(universal_fresh, shaped_fresh),
+                carrier_action_bellman_lower_value(state));
         }
         /* Carry only source slots with at least one identity-preserving
          * runtime path, then grant every slot any constituent could possibly
@@ -3121,7 +3138,22 @@ double SolveWork::Impl::operator_proof_lower_value(
             planner_goal_reach_mask(operator_index);
         const double continuation =
             optimistic_completion_cost(optimistic_satisfied);
-        return immediate + continuation;
+        return std::max(
+            immediate + continuation,
+            carrier_action_bellman_lower_value(state));
+    }
+
+double SolveWork::Impl::carrier_action_bellman_lower_value(
+        const std::uint32_t state) const {
+        /* Each component is an independently proved global completion lower.
+         * Their maximum is therefore a lower bound on every concrete Q value
+         * through V*(state) <= Q(action, state), not executable policy or
+         * closure authority. Unknown local shapes leave the progress
+         * component unavailable and the terminal-debt component at zero. */
+        double lower = carrier_terminal_debt_lower_value(state);
+        const double progress = carrier_goal_progress_lower_value(state);
+        if (std::isfinite(progress)) lower = std::max(lower, progress);
+        return lower;
     }
 
 solve_detail::ProofLowerValue SolveWork::Impl::operator_proof_lower(

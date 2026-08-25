@@ -4449,6 +4449,7 @@ std::string serialize_solver_telemetry(
         json += ",\"independent_goal_cover_lower_bound\":null";
         json += ",\"restricted_action_envelope_lower_bound\":null";
         json += ",\"lower_bound_scope\":null";
+        json += ",\"lower_authorities\":null";
         json += ",\"upper_bound\":null,\"partial_policy_upper_bound\":null";
         json += ",\"partial_policy_rounds\":null,\"optimality_gap\":null";
         json += ",\"restricted_action_envelope_optimality_gap\":null";
@@ -4480,6 +4481,35 @@ std::string serialize_solver_telemetry(
                     ? "independent_global_floor"
                     : "closed_action_envelope";
         json += "\"";
+        const bool exact_closure_proved =
+            result != nullptr &&
+            result->lower_bound_provenance ==
+                SolveLowerBoundProvenance::ExactPolicyClosure;
+        json += ",\"lower_authorities\":{";
+        json += "\"independent_pattern\":{\"active\":" +
+                std::string(bool_json(
+                    diagnostics->independent_goal_cover_lower_bound > 0.0));
+        json += ",\"lower_bound\":";
+        append_bound(diagnostics->independent_goal_cover_lower_bound);
+        json += ",\"global\":true}";
+        json += ",\"restricted_search\":{\"lower_bound\":";
+        append_bound(diagnostics->focused_lower_bound);
+        json += ",\"global\":" + std::string(bool_json(
+            !focused_restricted_envelope_open)) + "}";
+        /* Gate 4 left no production descriptor machinery. Keep its absence
+         * explicit so a future lower-only experiment cannot be confused with
+         * materialized action coverage or exact closure. */
+        json += ",\"unresolved_descriptor\":{\"active\":false,";
+        json += "\"lower_bound\":null,\"global\":false}";
+        json += ",\"exact_closure\":{\"proved\":" +
+                std::string(bool_json(exact_closure_proved));
+        json += ",\"lower_bound\":";
+        if (exact_closure_proved) {
+            append_bound(result->lower_bound);
+        } else {
+            json += "null";
+        }
+        json += "}}";
         json += ",\"upper_bound\":";
         append_bound(diagnostics->focused_upper_bound);
         json += ",\"partial_policy_upper_bound\":";

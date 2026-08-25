@@ -38,6 +38,7 @@ void run_solver_action_family_contract_tests(const char* artifact_dir);
 void run_solver_calc_tests(const char* artifact_dir);
 void run_solver_calc_gated_equivalence_tests();
 void run_solver_solve_tests(const char* artifact_dir);
+void run_solver_carrier_bound_tests();
 void run_solver_automatic_eldritch_tests();
 void run_solver_policy_refinement_tests();
 void run_solver_compile_tests(const char* artifact_dir);

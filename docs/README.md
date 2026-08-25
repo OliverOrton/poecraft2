@@ -29,14 +29,15 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The selected
+The completed
 [Carrier-Aware Proof Bounds And Consumers](active/2026-08-24-carrier-aware-proof-bounds/plan.md)
-has passed Gate 3 and is active at Gate 4 from local checkpoint `bd80522`. It explicitly bypasses
-failed Gate 2 while retaining legacy ordering, extends the existing clean
-carrier MDP with proof-bearing non-clean/rare carrier coverage, conditionally
-re-evaluates unresolved lower descriptors, and routes only fully covered
-authority into pruning and public gaps. The full repository pipeline is not
-part of its proportional final acceptance.
+passed Gate 3, restored its stopped Gate 4 descriptor experiment, and passed
+Gate 5 proportional acceptance. It bypassed failed Gate 2 and retained legacy
+ordering. The non-armour Bow now publishes a globally certified `101.067`
+independent lower with its exact-evaluated policy unchanged, while restricted,
+descriptor, and exact-closure provenance remain separate. See the
+[Gate 5 result](active/2026-08-24-carrier-aware-proof-bounds/evidence/gate5-result.md).
+No implementation boundary is active.
 
 The stopped
 [Carrier-Aware Control Authority Repair](active/2026-08-24-carrier-aware-control-authority/plan.md)

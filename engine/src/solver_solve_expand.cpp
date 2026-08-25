@@ -1211,7 +1211,9 @@ auto SolveWork::Impl::preservation_decision(
         }
         decision.destroyed_progress =
             row.preservation_effect.destroyed_properties & progressed;
-        decision.candidate_lower_bound = priced.cost;
+        decision.candidate_lower_bound = std::max(
+            priced.cost,
+            carrier_action_bellman_lower_value(row.owner_state));
 
         /* Exact state identity with the synthetic Restart successor is the
          * deliberately strict disposable-carrier certificate. No label,
@@ -1240,11 +1242,11 @@ auto SolveWork::Impl::preservation_decision(
         }
         decision.restart_upper_bound =
             restart_cost + result.values[restart_state];
-        /* Costs and continuation values are non-negative. Therefore the
-         * candidate's immediate cost is an admissible lower bound on its
-         * complete Q value, while Restart plus the current monotone value of
-         * its exact successor is a constructive upper bound. Strict
-         * inequality preserves price/action ties. */
+        /* Immediate cost and the carrier Bellman subsolution are independent
+         * lower bounds on this exact destructive row's complete Q value.
+         * Restart plus the current monotone value of its exact successor is
+         * a constructive upper bound. Strict inequality preserves
+         * price/action ties. */
         if (decision.candidate_lower_bound >
             decision.restart_upper_bound + options.epsilon) {
             decision.disposition =
