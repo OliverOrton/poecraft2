@@ -36,6 +36,11 @@ SolveWork::Impl::Impl(
           exact_start_item(start_item), options(solve_options), prices(prices),
           reported_unsupported(context.operators().size(), false) {
         const auto setup_started = std::chrono::steady_clock::now();
+        if (options.full_evidence) {
+            carrier_bound_attribution =
+                std::make_unique<CarrierBoundAttributionWork>();
+            carrier_bound_attribution->started_at = setup_started;
+        }
         options.max_expanded_states = std::min(
             options.max_expanded_states, options.max_states);
         calc.reset_solve_telemetry();

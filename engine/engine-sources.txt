@@ -28,7 +28,8 @@ src/solver_sparse_policy.cpp
 src/solver_solve_bellman.cpp
 src/solver_solve_focused.cpp
 src/solver_solve_constructive.cpp
-src/solver_solve_heuristics.cpp
+src/solver_solve_bounds.cpp
+src/solver_solve_priority.cpp
 src/solver_solve_quotient.cpp
 src/solver_quotient_proof.cpp
 src/solver_quotient_partition.cpp

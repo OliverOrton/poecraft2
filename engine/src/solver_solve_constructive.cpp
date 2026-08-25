@@ -1442,6 +1442,10 @@ auto SolveWork::Impl::best_current_certified_fallback()
 
 bool SolveWork::Impl::commit_output_incumbent(
         BoundedPolicyIncumbent candidate) {
+        record_upper_attribution_milestone(
+            candidate.certified_upper_bound,
+            candidate.independently_evaluated &&
+                candidate.independently_certified);
         const std::uint64_t candidate_owned =
             incumbent_owned_bytes(candidate);
         const std::uint64_t candidate_dynamic =
@@ -3233,13 +3237,17 @@ bool SolveWork::Impl::try_constructive_state_certificate(
         double strict_min_other_lower = kInfinity;
         for (const std::uint32_t other : expansion_operator_indices) {
             if (other == selected_operator) continue;
-            const double lower = optimistic_operator_lower(state, other);
+            const double lower =
+                operator_proof_lower(state, other).value;
             strict_min_other_lower =
                 std::min(strict_min_other_lower, lower);
             const double separation = options.epsilon *
                 std::max({1.0, std::abs(upper), std::abs(lower)});
-            if (!std::isfinite(lower) ||
-                !(lower > upper + separation)) {
+            const bool separated = std::isfinite(lower) &&
+                lower > upper + separation;
+            record_operator_lower_attribution(
+                other, lower, upper, false, separated);
+            if (!separated) {
                 return false;
             }
         }
@@ -5256,7 +5264,7 @@ void SolveWork::Impl::sync_constructive_discovered_states() {
                 continue;
             }
             result.values[state] =
-                optimistic_completion_cost_for_state(state);
+                completion_proof_lower(state).value;
         }
     }
 

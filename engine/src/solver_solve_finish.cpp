@@ -2105,6 +2105,10 @@ SolveWork::Impl::run_finalization() {
                 const std::string& stage,
                 const std::string& disposition,
                 const std::string& reason) {
+                record_upper_attribution_milestone(
+                    candidate.evaluated_policy_cost,
+                    candidate.independently_evaluated &&
+                        candidate.independently_certified);
                 PolicyRefinementTelemetry& telemetry =
                     result.diagnostics.policy_refinement;
                 retain_bounded_json_sample(
@@ -5177,6 +5181,13 @@ SolveWork::Impl::run_finalization() {
             owned_byte_reconciliations;
         result.diagnostics.solve_owned_byte_ledger_max_overestimate =
             owned_byte_ledger_max_overestimate;
+        if (result.policy_available &&
+            std::isfinite(result.evaluated_policy_cost) &&
+            result.evaluated_policy_cost >= 0.0) {
+            record_upper_attribution_milestone(
+                result.evaluated_policy_cost, true);
+        }
+        finalize_carrier_bound_attribution();
         std::uint64_t final_live_bytes = estimated_owned_bytes();
         peak_owned_bytes = std::max(peak_owned_bytes, final_live_bytes);
         bool publication_revoked_at_final_cap = false;

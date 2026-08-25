@@ -477,7 +477,7 @@ different evidence sources.
 | Solve shared types and entry | `engine/src/solver_solve_types.hpp`, `solver_solve.cpp` |
 | Action observation/refinement contract | `engine/src/solver_model.hpp`, `solver_refinement.hpp`, `solver_registry.cpp`, and the `solver_refinement*` owners |
 | Expansion and Bellman stepping | `engine/src/solver_solve_expand.cpp`, `solver_sparse_policy.cpp`, `solver_solve_bellman.cpp` |
-| Focused, constructive, and heuristic phases | `engine/src/solver_solve_focused.cpp`, `solver_solve_constructive.cpp`, `solver_solve_heuristics.cpp` |
+| Focused, constructive, bound, and carrier-priority phases | `engine/src/solver_solve_focused.cpp`, `solver_solve_constructive.cpp`, `solver_solve_bounds.cpp`, `solver_solve_priority.cpp` |
 | Quotient, finish, and telemetry phases | `engine/src/solver_solve_quotient.cpp`, `solver_solve_finish.cpp`, `solver_solve_telemetry.cpp` |
 | Policy compilation | `engine/src/solver_compile.cpp` |
 | Exact graph evaluation | `engine/src/solver_eval.cpp` |

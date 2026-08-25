@@ -739,6 +739,11 @@ struct SolveDiagnostics {
     /* Finalization-only aggregate for the run-local cap/renewal
      * investigation. Empty for ordinary product solves. */
     std::string upper_cap_zero_progress_audit_json;
+    /* Gate-0 full-evidence attribution. This is assembled only after the
+     * final policy/reachability result is frozen and is never consulted by
+     * scheduling, pruning, proof, or publication. Empty means the caller did
+     * not request full evidence or finalization did not complete. */
+    std::string carrier_bound_attribution_json;
     std::uint64_t bellman_work_units = 0;
     std::uint32_t max_bellman_unit_transitions = 0;
     std::uint64_t solve_setup_ns = 0;

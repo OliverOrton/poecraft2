@@ -4,6 +4,29 @@
 
 Parent: [Documentation map](../README.md)
 
+The stopped
+[Carrier-Aware Control Authority Repair](2026-08-24-carrier-aware-control-authority/plan.md)
+pinned clean current exact-terminal controls for bounded Warlord, the tracked
+10-second non-armour case, and a new explicit tri-elemental Bow. Gate B
+reproduced the prior `1562083.15196689` clean five-T1 ordering result exactly,
+but the candidate made the non-armour control expire without a policy after
+`127328.9181` ms. Ordering behavior was restored and fixed-work hashes again
+match Gate 1. See the [Gate B stop](2026-08-24-carrier-aware-control-authority/evidence/gate-b-result.md).
+Warlord exact closure remains separate debt and Gates 3-5 remain closed.
+
+The stopped
+[Carrier-Aware Bounds And Prioritization](2026-08-24-carrier-aware-bounds-and-prioritization/plan.md)
+boundary passed [Gate 0 attribution](2026-08-24-carrier-aware-bounds-and-prioritization/evidence/gate0/result.md).
+Gate 1 separated proof construction/types from shared carrier-priority
+ownership with bit-for-bit fixed-work parity. The Gate 2 candidate materially
+improved the five-T1 upper, but the control gate combined pre-exact-terminal
+artifacts with current exact semantics. The Warlord value/hash belongs to the
+old terminal contract, the non-armour results used different stop windows,
+and the tri-elemental request was never pinned. Ordering behavior was restored
+and Gates 3-5 were not entered; see the
+[Gate 2 stop result](2026-08-24-carrier-aware-bounds-and-prioritization/evidence/gate2/result.md)
+and [control reproduction audit](2026-08-24-carrier-aware-bounds-and-prioritization/evidence/control-reproduction/result.md).
+
 The selected
 [Exact-Goal Carrier Ladder](2026-08-22-exact-goal-carrier-ladder/plan.md)
 is [complete](2026-08-22-exact-goal-carrier-ladder/result.md). Solver success

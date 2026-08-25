@@ -1749,32 +1749,57 @@ double SolveWork::Impl::optimistic_completion_cost(
         return best;
     }
 
-bool SolveWork::Impl::clean_goal_cover_eligible(const std::uint32_t state) const {
+std::uint32_t SolveWork::Impl::clean_goal_cover_rejection_mask(
+        const std::uint32_t state) const {
+        using Rejection =
+            CarrierBoundAttributionWork::CleanCoverRejection;
         if (state >= calc.state_count() ||
             result.start_state >= calc.state_count()) {
-            return false;
+            return Rejection::InvalidState;
         }
         const AbstractState& carrier = calc.state(state);
         const AbstractState& start = calc.state(result.start_state);
-        if ((carrier.flags & kProtectionFlags) != 0 ||
-            carrier.fractured_goal_mask != 0 ||
-            carrier.fractured_metamod_flags != 0 ||
-            carrier.influence_bits != start.influence_bits ||
-            carrier.searing_exarch_tier != start.searing_exarch_tier ||
-            carrier.eater_of_worlds_tier != start.eater_of_worlds_tier) {
-            return false;
+        std::uint32_t rejection = 0;
+        if ((carrier.flags & kProtectionFlags) != 0) {
+            rejection |= Rejection::ActiveProtection;
+        }
+        if (carrier.fractured_goal_mask != 0) {
+            rejection |= Rejection::FracturedGoal;
+        }
+        if (carrier.fractured_metamod_flags != 0) {
+            rejection |= Rejection::FracturedMetamod;
+        }
+        if (carrier.influence_bits != start.influence_bits) {
+            rejection |= Rejection::InfluenceIdentity;
+        }
+        if (carrier.searing_exarch_tier != start.searing_exarch_tier) {
+            rejection |= Rejection::SearingIdentity;
+        }
+        if (carrier.eater_of_worlds_tier != start.eater_of_worlds_tier) {
+            rejection |= Rejection::EaterIdentity;
         }
         for (const std::uint8_t count : carrier.fractured_junk_counts) {
-            if (count != 0) return false;
+            if (count != 0) {
+                rejection |= Rejection::FracturedJunk;
+                break;
+            }
         }
         for (const std::uint8_t count :
              carrier.fractured_crafted_junk_counts) {
-            if (count != 0) return false;
+            if (count != 0) {
+                rejection |= Rejection::FracturedCraftedJunk;
+                break;
+            }
         }
-        return true;
+        return rejection;
     }
 
-double SolveWork::Impl::optimistic_completion_cost_for_state(
+bool SolveWork::Impl::clean_goal_cover_eligible(
+        const std::uint32_t state) const {
+        return clean_goal_cover_rejection_mask(state) == 0;
+    }
+
+double SolveWork::Impl::completion_proof_lower_value(
         const std::uint32_t state) {
         if (state >= calc.state_count()) return 0.0;
         const AbstractState& carrier = calc.state(state);
@@ -1813,6 +1838,11 @@ double SolveWork::Impl::optimistic_completion_cost_for_state(
             ? lower
             : 0.0;
     }
+
+solve_detail::ProofLowerValue SolveWork::Impl::completion_proof_lower(
+        const std::uint32_t state) {
+    return {completion_proof_lower_value(state)};
+}
 
 void SolveWork::Impl::prepare_strict_clean_goal_cover() {
         strict_clean_goal_cover_refresh_needed = false;
@@ -2512,7 +2542,7 @@ void SolveWork::Impl::prepare_strict_clean_goal_cover() {
         }
     }
 
-double SolveWork::Impl::optimistic_operator_lower(
+double SolveWork::Impl::operator_proof_lower_value(
         const std::uint32_t state,
         const std::uint32_t operator_index) {
         if (operator_index >= priced_operator_position.size()) {
@@ -2575,7 +2605,7 @@ double SolveWork::Impl::optimistic_operator_lower(
              * The clean pattern database is valid for that fresh carrier
              * only when its zero influence/implicit identity matches the
              * solve's clean-carrier identity. Otherwise retain the universal
-             * goal cover, exactly as optimistic_completion_cost_for_state()
+             * goal cover, exactly as completion_proof_lower_value()
              * would for the materialized fresh successor. */
             const AbstractState& start = calc.state(result.start_state);
             const bool fresh_clean_carrier =
@@ -2605,6 +2635,12 @@ double SolveWork::Impl::optimistic_operator_lower(
             optimistic_completion_cost(optimistic_satisfied);
         return immediate + continuation;
     }
+
+solve_detail::ProofLowerValue SolveWork::Impl::operator_proof_lower(
+        const std::uint32_t state,
+        const std::uint32_t operator_index) {
+    return {operator_proof_lower_value(state, operator_index)};
+}
 
 }
 }

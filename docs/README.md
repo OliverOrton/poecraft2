@@ -29,6 +29,29 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
+The stopped
+[Carrier-Aware Control Authority Repair](active/2026-08-24-carrier-aware-control-authority/plan.md)
+pinned bounded Warlord, 10-second non-armour, and explicit tri-elemental Bow
+inputs under current exact-terminal semantics. Its recovered ordering
+candidate reproduced the earlier five-T1 improvement, but failed Gate B when
+the non-armour control expired without a policy. The candidate was restored;
+see the [Gate B stop](active/2026-08-24-carrier-aware-control-authority/evidence/gate-b-result.md).
+Warlord exact closure is separate debt, and no implementation boundary is
+active.
+
+The stopped
+[Carrier-Aware Bounds And Prioritization](active/2026-08-24-carrier-aware-bounds-and-prioritization/plan.md)
+boundary confirmed both a five-T1 ordering bottleneck and broad loss of clean
+lower coverage, then separated proof and ordering ownership with fixed-work
+value/policy/hash parity. Its Gate 2 ordering candidate materially improved
+the five-T1 upper, but its control gate combined pre-exact-terminal artifacts
+with current exact semantics. The first Warlord divergence is the intentional
+exact-terminal checkpoint `2b8d5ac`, the non-armour 10-second and uncommitted
+40-second results were conflated, and the tri-elemental request was not
+tracked. The candidate was restored and no implementation boundary is active;
+see the [Gate 2 stop result](active/2026-08-24-carrier-aware-bounds-and-prioritization/evidence/gate2/result.md)
+and [control reproduction audit](active/2026-08-24-carrier-aware-bounds-and-prioritization/evidence/control-reproduction/result.md).
+
 The
 [Exact-Goal Carrier Ladder](active/2026-08-22-exact-goal-carrier-ladder/plan.md)
 boundary is [complete](active/2026-08-22-exact-goal-carrier-ladder/result.md).

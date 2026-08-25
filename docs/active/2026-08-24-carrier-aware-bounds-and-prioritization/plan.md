@@ -1,13 +1,19 @@
 # Carrier-Aware Bounds And Prioritization
 
-**Status: proposed, non-executable plan for Oliver's review.** This document
-does not activate an implementation boundary. If accepted, copy or move it to
-`docs/active/`, update the active index and `HANDOFF.md`, and re-baseline from
-the then-current checkpoint before editing source.
+**Status: stopped at Gate 2 on 2026-08-24.** Gate 0 attribution and Gate 1's
+authority/type/source refactor remain. The Gate 2 ordering candidate improved
+the five-T1 upper but was restored because the retained-control authority was
+invalid: the Warlord and earlier non-armour artifacts predate exact terminal
+semantics, the later non-armour result used an uncommitted stop-window
+override, and the tri-elemental input was not tracked. Gates 3-5 were not
+entered. See the [Gate 2 stop result](evidence/gate2/result.md) and
+[control reproduction audit](evidence/control-reproduction/result.md).
 
 Proposed from checkpoint: `04cab15`
 
-Parent: [Future work](README.md)
+Activated from checkpoint: `526ff6f`
+
+Parent: [Active work](../README.md)
 
 ## Objective
 

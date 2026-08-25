@@ -1,18 +1,120 @@
 # Handoff
 
-**Status: the Executable-Policy Default Recovery boundary is complete. No
-implementation boundary is active.** Oliver must select a successor before
-implementation resumes.
+**Status: no implementation boundary is active.** The
+[Carrier-Aware Control Authority Repair](docs/active/2026-08-24-carrier-aware-control-authority/plan.md)
+stopped at Gate B on 2026-08-24. Its current exact-terminal controls remain
+pinned, but the ordering candidate failed the non-armour control and was
+restored. Oliver must select a new boundary before implementation resumes.
 
 ## Current checkpoint
 
 - Branch: `main`.
-- Implementation checkpoint: `d128b12` (`Recover executable policies from
-  safe restart defaults`).
-- Local `origin/main` remains at `1f68497`; no push was issued.
-- The documentation checkpoint containing this handoff follows the
-  implementation commit locally.
+- Activated checkpoint: `526ff6f` (`Propose carrier-aware bounds and priority
+  plan`).
+- Proposal checkpoint: `04cab15` (`Record executable policy recovery
+  checkpoint`).
+- Local `origin/main` is `526ff6f`; no push was issued.
+- Gate 0 telemetry and evidence follow this checkpoint in the working tree.
+- Gate 1 fixed-work parity retained value, graph census, selected actions, and
+  policy/transition hashes bit-for-bit.
+- Gate 2's ordering-only candidate was restored after its retained-control
+  qualification became impossible from the selected clean checkpoint.
+- The corrected successor Gate B reproduced that candidate exactly, then
+  restored it again after the pinned non-armour control expired without a
+  policy. Post-restore fixed-work values and hashes match Gate 1 bit-for-bit.
+- A diagnostic commit-range rebuild identified `2b8d5ac`'s intentional exact-
+  terminal change as the first Warlord divergence; no bisect or cap-
+  instrumentation behavior remains in the main worktree.
 - Full repository pipeline and rendered UI review were deliberately not run.
+
+## Stopped carrier-aware control authority repair
+
+This successor replaced the stopped plan's invalid mixed-semantics gate with
+three committed inputs: bounded current-semantics Warlord, the tracked non-
+armour 10-second finish, and a new explicit tri-elemental Spine Bow control.
+Gate A regenerated clean restored-Gate-1 baselines. Gate B recovered and
+reapplied only the previous ordering candidate under the original 5% retained-
+control limit. It did not authorize exact-terminal, mechanics, cap, price,
+admission, proof, or frontend changes.
+
+Gate A passed. Warlord retains its 1 GiB named stop and publishes a proper
+independently evaluated `307.556312036793` upper. The non-armour 10-second case
+publishes `6026985788.49406`. The newly committed tri-elemental case publishes
+`79273.3250308337` in an 83-node / 239-edge product-safe-restart graph. All
+three exact evaluations have complete prices, success probability `1`, and
+zero off-policy mass.
+
+Gate B reproduced the earlier clean five-T1 candidate exactly at
+`1562083.15196689`, 12,848 expanded states, and 328 / 862 compiled graph. The
+four-of-five workhorse retained `2698.87479601436`. Warlord and tri-elemental
+also retained their proper exact-evaluated policies, but the non-armour
+control regressed from a proper `6026985788.49406` publication in
+`58808.6924` ms to `watchdog_expired` with no policy in `127328.9181` ms.
+That is a hard Gate B failure. The ordering candidate and both scheduling
+hooks were removed. The post-restore fixed-work run again has transition hash
+`fb8dc170b29920df` and final policy hash `1b98ca41e69ad1b1`; see the
+[Gate B stop](docs/active/2026-08-24-carrier-aware-control-authority/evidence/gate-b-result.md).
+
+Gates 3-5 were not entered. No simulation, release WASM rebuild, web suite,
+rendered review, or full repository pipeline was run. Warlord exact closure
+remains separate debt.
+
+## Stopped carrier-aware bounds and prioritization boundary
+
+Oliver selected
+[the carrier-aware plan](docs/active/2026-08-24-carrier-aware-bounds-and-prioritization/plan.md)
+on 2026-08-24. Gate 0 passed with full-evidence-only telemetry that:
+
+- decompose universal, clean-MDP, strict-clean, and selected maximum lower
+  components at the start and sampled states;
+- count clean-cover eligibility/rejections and satisfied-mask-but-nonterminal
+  zero returns across expanded and policy-reachable states;
+- attribute operator-lower evaluations, margins, and incumbent prunes by
+  action family;
+- census carrier and carrier/action admissions by goal subset and existing
+  carrier shape; and
+- record time/work to first finite and first independently verified upper.
+
+The four-of-five fast-workhorse median changed by `-1.05%`. A clean-HEAD
+fixed-work comparison retained values, selected actions, policy/transition
+hashes, and graph census bit-for-bit. The five-T1 baseline still discovered
+zero goal states; its ordering path admitted only `5.93%` four/five-goal
+carrier/action pairs, while its current incumbent operator-lower call site did
+not evaluate or prune any operators. Across the two witnesses, `80.22%` to
+`89.52%` of expanded states lost clean coverage and every non-clean satisfied-
+but-nonterminal state selected zero. Full details are in
+[Gate 0 result](docs/active/2026-08-24-carrier-aware-bounds-and-prioritization/evidence/gate0/result.md).
+
+Gate 1 moved proof construction to `solver_solve_bounds.cpp`, centralized the
+existing focused/incremental bucket order in `solver_solve_priority.cpp`, and
+gave proof lowers and ordering scores distinct native types. The 1,000-state
+fixed-work control retained upper `59810.9537769745`, state and graph census,
+selected actions, transition hash `fb8dc170b29920df`, and policy hash
+`1b98ca41e69ad1b1` bit-for-bit in the final post-restore reproduction.
+
+Gate 2's candidate reduced the clean five-T1 verified upper from
+`14454067.4260706` to `1562083.15196689`, but the gate could not retain its
+required controls. The follow-up audit proved that the accepted exact
+`224.123858897249` Warlord value and policy hash were generated at `c192311`
+under pre-exact goal-plus-junk terminal semantics. The first exact-terminal
+checkpoint, `2b8d5ac`, already hits the 1 GiB cap. Current `526ff6f` retains a
+proper independently exact-evaluated upper of `307.556312036793`, but not
+exact closure; a temporary 2 GiB run avoids the cap and expires the 60-second
+watchdog instead.
+
+The tracked 10-second non-armour fixture reproduces
+`6026985788.49406`; Gate 2 produces the identical upper. Its earlier
+`2042605033.16647` authority predates exact terminals, while the later
+`577532.360249086` current-semantics result used an uncommitted 40-second
+override. The tri-elemental Bow's accepted `79285.28516643059` summary has no
+tracked input case or report and cannot be regenerated as the same control.
+
+The ordering candidate was therefore restored; Gates 3-5 were not entered.
+The control-authority successor above has since pinned distinct current-
+semantics inputs and kept Warlord exact closure as separate debt. Its corrected
+qualification still rejected the candidate on the non-armour control. See the
+[Gate 2 stop result](docs/active/2026-08-24-carrier-aware-bounds-and-prioritization/evidence/gate2/result.md)
+and [control reproduction audit](docs/active/2026-08-24-carrier-aware-bounds-and-prioritization/evidence/control-reproduction/result.md).
 
 ## Completed executable-policy default recovery
 
@@ -250,13 +352,15 @@ but not exact. Candidate scope has zero missing prices: 10 currency, 13
 Fossil, four Harvest, and one Fracture candidates, plus 158 carrier-local
 automatic dependencies including Bench and Eldritch programs.
 
-Warlord remains exact at `224.123858897249`; Magic Imprint retry remains exact
-at `252.653520212745`; both pass 10,000 simulations. The four-T1 control retains
-its accepted bounded Imprint-work refusal at `3759.97631221018` and also passes
-10,000 simulations. A new non-armour partial-five Bow control publishes an
-honest exact-evaluated bounded fallback but shows that an attractive early
-partial-frontier row policy can remain structurally unmaterializable; that is
-separate cross-base quality debt.
+At this historical pre-exact-terminal checkpoint, Warlord was exact at
+`224.123858897249`; Magic Imprint retry was exact at `252.653520212745`; both
+passed 10,000 simulations. The four-T1 control retained its accepted bounded
+Imprint-work refusal at `3759.97631221018` and also passed 10,000 simulations.
+A new non-armour partial-five Bow control published an honest exact-evaluated
+bounded fallback but showed that an attractive early partial-frontier row
+policy can remain structurally unmaterializable; that was separate cross-base
+quality debt. The Warlord value is not current exact-terminal authority; see
+the control audit above.
 
 Release WASM keeps the 278,396,928-byte reported linear-memory high-water and
 has a 6.942-second largest worker slice on the primary. The headless Node RSS
@@ -344,12 +448,12 @@ evaluated `3759.9822404728984` policy in 146.378 seconds. The optional direct
 attempt reaches the 5,000-state refinement budget in 2.168 seconds and strict
 lift does not run.
 
-The current rerun keeps the Warlord control exact at `224.123858897249` and the
-dedicated Magic Imprint retry exact at `252.653520212745`; both complete 10,000
-simulations at 100% success and zero off-policy. The enabled primary retains
-its `3759.9763122101763` bounded upper and 10,000 / 10,000 successful trials;
-compiler compaction reduces its graph from 87 to 79 nodes without changing
-cost.
+That boundary's pre-exact-terminal rerun kept the Warlord control exact at
+`224.123858897249` and the dedicated Magic Imprint retry exact at
+`252.653520212745`; both completed 10,000 simulations at 100% success and zero
+off-policy. The enabled primary retained its `3759.9763122101763` bounded upper
+and 10,000 / 10,000 successful trials; compiler compaction reduced its graph
+from 87 to 79 nodes without changing cost.
 
 ## Acceptance
 

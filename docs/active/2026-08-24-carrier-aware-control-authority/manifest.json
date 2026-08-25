@@ -1,0 +1,34 @@
+{
+  "schema_version": "solver_benchmark_corpus_v1",
+  "corpus_id": "carrier-aware-current-semantics-controls-v1",
+  "artifact": {
+    "manifest_relative_path": "data/compiled/current/manifest.json",
+    "canonical_source": "data/sqlite/poecraft.db",
+    "engine_abi_version": 2,
+    "artifact_schema_version": 4,
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+    "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+  },
+  "comparison_profile": {
+    "id": "carrier-aware-current-semantics-native-v1",
+    "product_scope": "calculator_goal_relevant_current_exact_terminal_controls",
+    "exact_required": false,
+    "maximum_wall_seconds": 180,
+    "compiled_exact_evaluation_required": true,
+    "verification_runs": 0
+  },
+  "owner_decisions": [
+    "Every terminal contains only requested explicit affixes; empty slots and implicits remain allowed.",
+    "The Warlord case is bounded proper-policy authority here; recovering current-semantics exact closure is separate work.",
+    "The non-armour case owns only its tracked ten-second requested finish.",
+    "The tri-elemental case is a newly pinned current-semantics control, not a reconstruction claim for the missing historical request.",
+    "The tri-elemental case explicitly allows product economic Restart so safe compiled default recovery remains exercised."
+  ],
+  "cases": [
+    "warlord-bounded-current.json",
+    "spine-bow-partial-five-10s.json",
+    "spine-bow-tri-elemental-60s.json"
+  ]
+}

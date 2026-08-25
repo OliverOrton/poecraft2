@@ -18,7 +18,7 @@ void SolveWork::Impl::begin_focused_lower_solve() {
         for (std::uint32_t state = 0; state < state_count; ++state) {
             if (calc.is_goal_state(calc.state(state))) continue;
             result.values[state] =
-                optimistic_completion_cost_for_state(state);
+                completion_proof_lower(state).value;
         }
         /* Populate the new publication authority only for the sessions this
          * milestone newly covers. Existing non-Eldritch focused publication
@@ -490,40 +490,30 @@ void SolveWork::Impl::schedule_next_focused_expansion(
          * successors never need another expansion. Dirty carriers remain in
          * the same competition as clean ones; the structural schedule class
          * above distinguishes the engine-observed junk/protection shape. */
-        std::map<std::uint32_t, std::vector<std::uint32_t>> by_goal_subset;
+        std::vector<solve_detail::CarrierOrderingScore>
+            carrier_candidates;
+        carrier_candidates.reserve(fringe.size());
         for (const std::uint32_t state : fringe) {
             if (state >= selected.size() || selected[state] ||
                 queued.at(state) ||
                 (state == restart_state && !focused_fallback_policy)) {
                 continue;
             }
-            by_goal_subset[satisfied_goal_mask_for_state(state)]
-                .push_back(state);
+            carrier_candidates.push_back(
+                carrier_ordering_score(
+                    state, state_priority(state)));
             ++telemetry.carrier_ladder_candidates;
+            record_carrier_schedule_attribution(
+                CarrierBoundAttributionWork::ScheduleStage::
+                    FocusedCandidate,
+                state);
         }
-        telemetry.carrier_ladder_goal_subsets = by_goal_subset.size();
-        std::vector<std::uint32_t> subset_order;
-        subset_order.reserve(by_goal_subset.size());
-        for (const auto& [mask, unused] : by_goal_subset) {
-            (void)unused;
-            subset_order.push_back(mask);
-        }
-        std::stable_sort(
-            subset_order.begin(), subset_order.end(),
-            [&](const std::uint32_t left, const std::uint32_t right) {
-                const std::uint32_t left_progress = std::popcount(left);
-                const std::uint32_t right_progress = std::popcount(right);
-                if (left_progress != right_progress) {
-                    return left_progress > right_progress;
-                }
-                const double left_priority =
-                    state_priority(by_goal_subset.at(left).front());
-                const double right_priority =
-                    state_priority(by_goal_subset.at(right).front());
-                return left_priority != right_priority
-                    ? left_priority > right_priority
-                    : left < right;
-            });
+        solve_detail::CarrierPriorityBuckets carrier_buckets =
+            solve_detail::build_carrier_priority_buckets(
+                carrier_candidates,
+                solve_detail::CarrierOrderingMode::FocusedLegacy);
+        telemetry.carrier_ladder_goal_subsets =
+            carrier_buckets.by_goal_subset.size();
         std::map<std::uint32_t, std::size_t> subset_cursor;
         const std::size_t batch = std::max<std::uint32_t>(
             1, options.focused_expansion_batch_states);
@@ -533,11 +523,13 @@ void SolveWork::Impl::schedule_next_focused_expansion(
         while (telemetry.carrier_ladder_admissions < ladder_limit &&
                ladder_advanced) {
             ladder_advanced = false;
-            for (const std::uint32_t mask : subset_order) {
+            for (const std::uint32_t mask :
+                 carrier_buckets.subset_order) {
                 if (telemetry.carrier_ladder_admissions >= ladder_limit) {
                     break;
                 }
-                auto& bucket = by_goal_subset.at(mask);
+                auto& bucket =
+                    carrier_buckets.by_goal_subset.at(mask);
                 std::size_t& cursor = subset_cursor[mask];
                 while (cursor < bucket.size()) {
                     const std::uint32_t state = bucket[cursor++];
@@ -554,6 +546,10 @@ void SolveWork::Impl::schedule_next_focused_expansion(
                     selected[state] = 1;
                     ++selected_per_class[candidate];
                     selected_fringe.push_back(state);
+                    record_carrier_schedule_attribution(
+                        CarrierBoundAttributionWork::ScheduleStage::
+                            FocusedLadderAdmission,
+                        state);
                     ++telemetry.carrier_ladder_admissions;
                     ladder_advanced = true;
                     break;
@@ -582,6 +578,12 @@ void SolveWork::Impl::schedule_next_focused_expansion(
             selected_fringe.push_back(state);
         }
         fringe = std::move(selected_fringe);
+        for (const std::uint32_t state : fringe) {
+            record_carrier_schedule_attribution(
+                CarrierBoundAttributionWork::ScheduleStage::
+                    FocusedAdmission,
+                state);
+        }
         telemetry.schedule_admissions = fringe.size();
         result.diagnostics.focused_schedule_rounds.push_back(telemetry);
         for (const std::uint32_t state : fringe) enqueue(state);

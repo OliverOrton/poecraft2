@@ -1,5 +1,6 @@
 #include "solver_solve_types.hpp"
 
+#include "solver_action_family_contract.hpp"
 #include "solver_quotient_proof.hpp"
 
 namespace poecraft {
@@ -83,6 +84,648 @@ const char* primitive_telemetry_family_name(
     }
     return "none";
 }
+
+}
+
+std::size_t SolveWork::Impl::carrier_bound_operator_family(
+        const std::uint32_t operator_index) const {
+    using Work = CarrierBoundAttributionWork;
+    const std::size_t restart =
+        Work::kPrimitiveFamilyCount + Work::kAutomaticFamilyCount;
+    const std::size_t other = restart + 1;
+    if (operator_index == restart_operator_index) return restart;
+    if (operator_index >= calc.operators().size()) return other;
+    const PlannerOperator& planner = calc.operators()[operator_index];
+    if (planner.kind == PlannerOperatorKind::Primitive &&
+        planner.primitive_action < calc.registry().actions.size()) {
+        const PrimitiveTelemetryFamily family = primitive_family_for_action(
+            calc.registry().actions[planner.primitive_action].params.type);
+        const std::size_t index = static_cast<std::size_t>(family);
+        return index < Work::kPrimitiveFamilyCount ? index : other;
+    }
+    if (planner.automatic_kind != AutomaticCandidateKind::None) {
+        const AutomaticTelemetryKind kind =
+            automatic_telemetry_kind_for_candidate(
+                planner.automatic_kind);
+        const std::size_t index = static_cast<std::size_t>(kind);
+        if (index < Work::kAutomaticFamilyCount) {
+            return Work::kPrimitiveFamilyCount + index;
+        }
+    }
+    return other;
+}
+
+void SolveWork::Impl::record_operator_lower_attribution(
+        const std::uint32_t operator_index,
+        const double lower,
+        const double incumbent,
+        const bool state_incumbent_prune,
+        const bool constructive_prune) {
+    if (!carrier_bound_attribution) return;
+    auto& stats = carrier_bound_attribution->operator_lower.at(
+        carrier_bound_operator_family(operator_index));
+    ++stats.evaluations;
+    if (std::isfinite(lower)) {
+        ++stats.finite_values;
+        stats.minimum_value = std::min(stats.minimum_value, lower);
+        stats.maximum_value = std::max(stats.maximum_value, lower);
+        if (std::isfinite(incumbent)) {
+            const double margin = lower - incumbent;
+            ++stats.margin_evaluations;
+            stats.minimum_margin = std::min(
+                stats.minimum_margin, margin);
+            stats.maximum_margin = std::max(
+                stats.maximum_margin, margin);
+        }
+    }
+    if (state_incumbent_prune) ++stats.state_incumbent_prunes;
+    if (constructive_prune) ++stats.constructive_prunes;
+}
+
+void SolveWork::Impl::record_carrier_schedule_attribution(
+        const CarrierBoundAttributionWork::ScheduleStage stage,
+        const std::uint32_t state,
+        const std::uint32_t operator_index) {
+    if (!carrier_bound_attribution || state >= calc.state_count()) return;
+    using Work = CarrierBoundAttributionWork;
+    auto& histogram = carrier_bound_attribution->schedules.at(
+        static_cast<std::size_t>(stage));
+    const AbstractState& carrier = calc.state(state);
+    constexpr std::uint32_t kGoalMaskLimit =
+        (std::uint32_t{1} << kMaxGoalSlots) - 1;
+    const std::uint32_t satisfied =
+        satisfied_goal_mask_for_state(state) & kGoalMaskLimit;
+    const std::uint32_t blocked =
+        carrier.blocked_mask & kGoalMaskLimit;
+    const std::uint32_t free_prefixes =
+        carrier.prefix_count < 3 ? 3 - carrier.prefix_count : 0;
+    const std::uint32_t free_suffixes =
+        carrier.suffix_count < 3 ? 3 - carrier.suffix_count : 0;
+    const std::uint32_t protection =
+        ((carrier.flags & kFlagPrefixesLocked) != 0 ? 1u : 0u) |
+        ((carrier.flags & kFlagSuffixesLocked) != 0 ? 2u : 0u);
+    bool fractured_non_goal = carrier.fractured_metamod_flags != 0;
+    for (const std::uint8_t count : carrier.fractured_junk_counts) {
+        fractured_non_goal = fractured_non_goal || count != 0;
+    }
+    for (const std::uint8_t count :
+         carrier.fractured_crafted_junk_counts) {
+        fractured_non_goal = fractured_non_goal || count != 0;
+    }
+    const std::uint32_t fractured_goals = std::min<std::uint32_t>(
+        kMaxGoalSlots, std::popcount(carrier.fractured_goal_mask));
+    const std::uint32_t fracture_shape = fractured_goals * 4 +
+        (fractured_non_goal ? 1u : 0u) +
+        (carrier.fractured_metamod_flags != 0 ? 2u : 0u);
+    const std::uint32_t explicit_affixes =
+        carrier.prefix_count + carrier.suffix_count;
+    const std::uint32_t satisfied_count = std::popcount(satisfied);
+    const std::uint32_t unrelated = std::min<std::uint32_t>(
+        Work::kUnrelatedOccupancyCount - 1,
+        explicit_affixes > satisfied_count
+            ? explicit_affixes - satisfied_count
+            : 0);
+
+    ++histogram.total;
+    ++histogram.goal_subset[satisfied];
+    ++histogram.side_capacity[free_prefixes * 4 + free_suffixes];
+    ++histogram.blocked_mask[blocked];
+    ++histogram.protection[protection];
+    ++histogram.fracture[fracture_shape];
+    ++histogram.unrelated_occupancy[unrelated];
+    if (stage == Work::ScheduleStage::CarrierActionAdmission &&
+        operator_index != kNoId) {
+        ++carrier_bound_attribution
+              ->carrier_action_admissions_by_family.at(
+                  carrier_bound_operator_family(operator_index));
+    }
+}
+
+void SolveWork::Impl::record_upper_attribution_milestone(
+        const double value,
+        const bool independently_verified) {
+    if (!carrier_bound_attribution || !std::isfinite(value) || value < 0.0) {
+        return;
+    }
+    const auto capture = [&](CarrierBoundAttributionWork::UpperMilestone& out) {
+        if (out.present) return;
+        out.present = true;
+        out.value = value;
+        out.wall_ns = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() -
+                carrier_bound_attribution->started_at)
+                .count());
+        out.discovered_states = calc.state_count();
+        out.expanded_states = expanded_count;
+        if (transition_cache != nullptr) {
+            out.rows = transition_cache->rows.size();
+            out.transitions = transition_cache->successors.size();
+        }
+        out.reforge_work = result.diagnostics.reforge_logical_work_v1;
+    };
+    capture(carrier_bound_attribution->first_finite_upper);
+    if (independently_verified) {
+        capture(carrier_bound_attribution->first_verified_upper);
+    }
+}
+
+void SolveWork::Impl::finalize_carrier_bound_attribution() {
+    if (!carrier_bound_attribution ||
+        !result.diagnostics.carrier_bound_attribution_json.empty()) {
+        return;
+    }
+    using Work = CarrierBoundAttributionWork;
+    prepare_goal_cover_cost();
+
+    struct LowerComponents {
+        std::uint32_t satisfied = 0;
+        std::uint32_t rejection = 0;
+        bool clean_eligible = false;
+        bool strict_available = false;
+        double universal = kInfinity;
+        double clean = kInfinity;
+        double strict = kInfinity;
+        double selected = 0.0;
+    };
+    const auto components = [&](const std::uint32_t state) {
+        LowerComponents out;
+        out.satisfied = satisfied_goal_mask_for_state(state);
+        out.rejection = clean_goal_cover_rejection_mask(state);
+        out.clean_eligible = out.rejection == 0;
+        const AbstractState& carrier = calc.state(state);
+        out.universal = optimistic_completion_cost(out.satisfied);
+        if (out.clean_eligible) {
+            out.clean = optimistic_completion_cost(
+                out.satisfied, true, carrier.rarity,
+                carrier.prefix_count, carrier.suffix_count);
+        }
+        out.strict_available = !session.eldritch_eligible &&
+            state < strict_clean_goal_cover_cost.size() &&
+            std::isfinite(strict_clean_goal_cover_cost[state]);
+        if (out.strict_available) {
+            out.strict = strict_clean_goal_cover_cost[state];
+        }
+        out.selected = completion_proof_lower(state).value;
+        return out;
+    };
+    const auto approximately_equal = [](const double left,
+                                         const double right) {
+        if (!std::isfinite(left) || !std::isfinite(right)) return false;
+        return std::abs(left - right) <= 1e-12 *
+            std::max({1.0, std::abs(left), std::abs(right)});
+    };
+    enum ComponentOwner : std::size_t {
+        UniversalOwner = 0,
+        CleanOwner,
+        StrictOwner,
+        ZeroFallbackOwner,
+        OwnerCount,
+    };
+    const auto owners = [&](const LowerComponents& value) {
+        std::array<bool, OwnerCount> result{};
+        result[UniversalOwner] = approximately_equal(
+            value.universal, value.selected);
+        result[CleanOwner] = value.clean_eligible &&
+            approximately_equal(value.clean, value.selected);
+        result[StrictOwner] = value.strict_available &&
+            approximately_equal(value.strict, value.selected);
+        result[ZeroFallbackOwner] = value.selected == 0.0 &&
+            !result[UniversalOwner] && !result[CleanOwner] &&
+            !result[StrictOwner];
+        return result;
+    };
+    struct Population {
+        std::uint64_t states = 0;
+        std::uint64_t clean_eligible = 0;
+        std::uint64_t clean_ineligible = 0;
+        std::array<std::uint64_t,
+                   Work::kCleanCoverRejectionCount> rejection{};
+        std::uint64_t satisfied_nonterminal = 0;
+        std::uint64_t satisfied_nonterminal_nonclean = 0;
+        std::uint64_t satisfied_nonterminal_nonclean_branch_zero = 0;
+        std::uint64_t satisfied_nonterminal_selected_zero = 0;
+        std::uint64_t selected_zero = 0;
+        std::array<std::uint64_t, OwnerCount> owner{};
+    };
+    struct SubsetCounts {
+        std::uint64_t discovered = 0;
+        std::uint64_t expanded = 0;
+        std::uint64_t frontier = 0;
+        std::uint64_t goal = 0;
+        std::uint64_t policy_reachable = 0;
+    };
+    Population expanded_population;
+    Population policy_population;
+    std::array<SubsetCounts, Work::kGoalMaskCount> subset_counts{};
+    const std::uint32_t required =
+        calc.goal().required_satisfied_slots();
+    const auto add_population = [&](Population& population,
+                                    const std::uint32_t state,
+                                    const LowerComponents& value) {
+        ++population.states;
+        if (value.clean_eligible) ++population.clean_eligible;
+        else ++population.clean_ineligible;
+        for (std::size_t bit = 0;
+             bit < Work::kCleanCoverRejectionCount; ++bit) {
+            if ((value.rejection & (std::uint32_t{1} << bit)) != 0) {
+                ++population.rejection[bit];
+            }
+        }
+        const bool goal = calc.is_goal_state(calc.state(state));
+        const bool satisfied_nonterminal = !goal &&
+            std::popcount(value.satisfied) >= required;
+        if (satisfied_nonterminal) {
+            ++population.satisfied_nonterminal;
+            if (!value.clean_eligible) {
+                ++population.satisfied_nonterminal_nonclean;
+                if (value.universal == 0.0) {
+                    ++population
+                          .satisfied_nonterminal_nonclean_branch_zero;
+                }
+            }
+            if (value.selected == 0.0) {
+                ++population.satisfied_nonterminal_selected_zero;
+            }
+        }
+        if (value.selected == 0.0) ++population.selected_zero;
+        const auto state_owners = owners(value);
+        for (std::size_t owner = 0; owner < OwnerCount; ++owner) {
+            if (state_owners[owner]) ++population.owner[owner];
+        }
+    };
+
+    const std::uint32_t state_count = calc.state_count();
+    for (std::uint32_t state = 0; state < state_count; ++state) {
+        const LowerComponents value = components(state);
+        auto& subset = subset_counts.at(
+            value.satisfied & (Work::kGoalMaskCount - 1));
+        ++subset.discovered;
+        const bool is_expanded = state < result.expanded.size() &&
+            result.expanded[state] != 0;
+        const bool is_goal = calc.is_goal_state(calc.state(state));
+        const bool is_policy = state < result.policy_reachable.size() &&
+            result.policy_reachable[state] != 0;
+        if (is_expanded) ++subset.expanded;
+        else ++subset.frontier;
+        if (is_goal) ++subset.goal;
+        if (is_policy) ++subset.policy_reachable;
+        if (is_expanded) add_population(
+            expanded_population, state, value);
+        if (is_policy) add_population(
+            policy_population, state, value);
+    }
+
+    std::vector<std::uint32_t> samples;
+    samples.reserve(options.max_diagnostic_samples);
+    const auto add_sample = [&](const std::uint32_t state) {
+        if (state >= state_count ||
+            samples.size() >= options.max_diagnostic_samples ||
+            std::find(samples.begin(), samples.end(), state) !=
+                samples.end()) {
+            return;
+        }
+        samples.push_back(state);
+    };
+    add_sample(result.start_state);
+    for (std::uint32_t state = 0; state < state_count; ++state) {
+        if (state < result.policy_reachable.size() &&
+            result.policy_reachable[state]) {
+            add_sample(state);
+        }
+    }
+    for (std::uint32_t state = 0; state < state_count; ++state) {
+        if (state >= result.expanded.size() || !result.expanded[state]) {
+            continue;
+        }
+        const LowerComponents value = components(state);
+        if (std::popcount(value.satisfied) >= required &&
+            !calc.is_goal_state(calc.state(state))) {
+            add_sample(state);
+        }
+    }
+    for (std::uint32_t state = 0; state < state_count; ++state) {
+        if (state < result.expanded.size() && result.expanded[state]) {
+            add_sample(state);
+        }
+    }
+
+    static constexpr std::array<const char*,
+        Work::kCleanCoverRejectionCount> kRejectionNames{{
+            "invalid_state", "active_protection", "fractured_goal",
+            "fractured_metamod", "influence_identity",
+            "searing_identity", "eater_identity", "fractured_junk",
+            "fractured_crafted_junk"}};
+    static constexpr std::array<const char*, OwnerCount> kOwnerNames{{
+        "universal", "clean_mdp", "strict_clean", "zero_fallback"}};
+    const auto operator_family_name = [&](const std::size_t index) {
+        std::string name;
+        if (index < Work::kPrimitiveFamilyCount) {
+            name = primitive_telemetry_family_name(
+                static_cast<PrimitiveTelemetryFamily>(index));
+        } else if (index < Work::kPrimitiveFamilyCount +
+                               Work::kAutomaticFamilyCount) {
+            name = "automatic:";
+            name += automatic_telemetry_kind_name(
+                static_cast<AutomaticTelemetryKind>(
+                    index - Work::kPrimitiveFamilyCount));
+        } else if (index == Work::kPrimitiveFamilyCount +
+                                Work::kAutomaticFamilyCount) {
+            name = "restart";
+        } else {
+            name = "other";
+        }
+        return name;
+    };
+    const auto append_owners = [&](std::string& json,
+                                   const LowerComponents& value) {
+        json += '[';
+        bool first = true;
+        const auto state_owners = owners(value);
+        for (std::size_t owner = 0; owner < OwnerCount; ++owner) {
+            if (!state_owners[owner]) continue;
+            if (!first) json += ',';
+            first = false;
+            append_json_string(json, kOwnerNames[owner]);
+        }
+        json += ']';
+    };
+    const auto append_lower = [&](std::string& json,
+                                  const std::uint32_t state,
+                                  const LowerComponents& value) {
+        const AbstractState& carrier = calc.state(state);
+        json += "{\"state\":" + std::to_string(state);
+        json += ",\"expanded\":" + std::string(
+            state < result.expanded.size() && result.expanded[state]
+                ? "true" : "false");
+        json += ",\"policy_reachable\":" + std::string(
+            state < result.policy_reachable.size() &&
+                    result.policy_reachable[state]
+                ? "true" : "false");
+        json += ",\"goal\":" + std::string(
+            calc.is_goal_state(carrier) ? "true" : "false");
+        json += ",\"satisfied_goal_mask\":" +
+            std::to_string(value.satisfied);
+        json += ",\"rarity\":" + std::to_string(carrier.rarity);
+        json += ",\"prefixes\":" +
+            std::to_string(carrier.prefix_count);
+        json += ",\"suffixes\":" +
+            std::to_string(carrier.suffix_count);
+        json += ",\"blocked_mask\":" +
+            std::to_string(carrier.blocked_mask);
+        json += ",\"protection_flags\":" +
+            std::to_string(carrier.flags & kProtectionFlags);
+        json += ",\"fractured_goal_mask\":" +
+            std::to_string(carrier.fractured_goal_mask);
+        json += ",\"clean_eligible\":" +
+            std::string(value.clean_eligible ? "true" : "false");
+        json += ",\"clean_rejection_mask\":" +
+            std::to_string(value.rejection);
+        json += ",\"universal\":" + finite_json(value.universal);
+        json += ",\"clean_mdp\":" + finite_json(value.clean);
+        json += ",\"strict_clean\":" + finite_json(value.strict);
+        json += ",\"selected_maximum\":" +
+            finite_json(value.selected);
+        json += ",\"owners\":";
+        append_owners(json, value);
+        json += '}';
+    };
+    const auto append_population = [&](std::string& json,
+                                       const Population& population) {
+        json += "{\"states\":" + std::to_string(population.states);
+        json += ",\"clean_eligible\":" +
+            std::to_string(population.clean_eligible);
+        json += ",\"clean_ineligible\":" +
+            std::to_string(population.clean_ineligible);
+        json += ",\"clean_coverage_fraction\":" +
+            finite_json(population.states == 0
+                ? 0.0
+                : static_cast<double>(population.clean_eligible) /
+                      static_cast<double>(population.states));
+        json += ",\"clean_rejections\":{";
+        for (std::size_t bit = 0;
+             bit < Work::kCleanCoverRejectionCount; ++bit) {
+            if (bit != 0) json += ',';
+            append_json_string(json, kRejectionNames[bit]);
+            json += ':' + std::to_string(population.rejection[bit]);
+        }
+        json += "},\"satisfied_nonterminal\":{";
+        json += "\"states\":" +
+            std::to_string(population.satisfied_nonterminal);
+        json += ",\"nonclean\":" +
+            std::to_string(population.satisfied_nonterminal_nonclean);
+        json += ",\"nonclean_branch_zero\":" + std::to_string(
+            population.satisfied_nonterminal_nonclean_branch_zero);
+        json += ",\"selected_zero\":" + std::to_string(
+            population.satisfied_nonterminal_selected_zero) + '}';
+        json += ",\"selected_zero_states\":" +
+            std::to_string(population.selected_zero);
+        json += ",\"selected_component_owners\":{";
+        for (std::size_t owner = 0; owner < OwnerCount; ++owner) {
+            if (owner != 0) json += ',';
+            append_json_string(json, kOwnerNames[owner]);
+            json += ':' + std::to_string(population.owner[owner]);
+        }
+        json += "}}";
+    };
+    const auto append_shape_histogram = [&](
+        std::string& json,
+        const Work::CarrierShapeHistogram& histogram) {
+        json += "{\"total\":" + std::to_string(histogram.total);
+        json += ",\"goal_subset\":[";
+        bool first = true;
+        for (std::size_t mask = 0; mask < histogram.goal_subset.size();
+             ++mask) {
+            if (histogram.goal_subset[mask] == 0) continue;
+            if (!first) json += ',';
+            first = false;
+            json += "{\"mask\":" + std::to_string(mask) +
+                ",\"count\":" +
+                std::to_string(histogram.goal_subset[mask]) + '}';
+        }
+        json += "],\"side_capacity\":[";
+        first = true;
+        for (std::size_t index = 0; index < histogram.side_capacity.size();
+             ++index) {
+            if (histogram.side_capacity[index] == 0) continue;
+            if (!first) json += ',';
+            first = false;
+            json += "{\"free_prefixes\":" +
+                std::to_string(index / 4) +
+                ",\"free_suffixes\":" + std::to_string(index % 4) +
+                ",\"count\":" +
+                std::to_string(histogram.side_capacity[index]) + '}';
+        }
+        json += "],\"blocked_mask\":[";
+        first = true;
+        for (std::size_t mask = 0; mask < histogram.blocked_mask.size();
+             ++mask) {
+            if (histogram.blocked_mask[mask] == 0) continue;
+            if (!first) json += ',';
+            first = false;
+            json += "{\"mask\":" + std::to_string(mask) +
+                ",\"count\":" +
+                std::to_string(histogram.blocked_mask[mask]) + '}';
+        }
+        json += "],\"protection\":[";
+        first = true;
+        for (std::size_t mode = 0; mode < histogram.protection.size();
+             ++mode) {
+            if (histogram.protection[mode] == 0) continue;
+            if (!first) json += ',';
+            first = false;
+            json += "{\"prefixes_locked\":" +
+                std::string((mode & 1) != 0 ? "true" : "false") +
+                ",\"suffixes_locked\":" +
+                std::string((mode & 2) != 0 ? "true" : "false") +
+                ",\"count\":" +
+                std::to_string(histogram.protection[mode]) + '}';
+        }
+        json += "],\"fracture\":[";
+        first = true;
+        for (std::size_t shape = 0; shape < histogram.fracture.size();
+             ++shape) {
+            if (histogram.fracture[shape] == 0) continue;
+            if (!first) json += ',';
+            first = false;
+            json += "{\"preserved_goal_count\":" +
+                std::to_string(shape / 4) +
+                ",\"non_goal_or_junk\":" +
+                std::string((shape & 1) != 0 ? "true" : "false") +
+                ",\"metamod\":" +
+                std::string((shape & 2) != 0 ? "true" : "false") +
+                ",\"count\":" +
+                std::to_string(histogram.fracture[shape]) + '}';
+        }
+        json += "],\"unrelated_occupancy\":[";
+        first = true;
+        for (std::size_t count = 0;
+             count < histogram.unrelated_occupancy.size(); ++count) {
+            if (histogram.unrelated_occupancy[count] == 0) continue;
+            if (!first) json += ',';
+            first = false;
+            json += "{\"count\":" + std::to_string(count) +
+                ",\"admissions\":" + std::to_string(
+                    histogram.unrelated_occupancy[count]) + '}';
+        }
+        json += "]}";
+    };
+    const auto append_milestone = [&](
+        std::string& json,
+        const Work::UpperMilestone& milestone) {
+        if (!milestone.present) {
+            json += "null";
+            return;
+        }
+        json += "{\"value\":" + finite_json(milestone.value);
+        json += ",\"wall_ns\":" + std::to_string(milestone.wall_ns);
+        json += ",\"discovered_states\":" +
+            std::to_string(milestone.discovered_states);
+        json += ",\"expanded_states\":" +
+            std::to_string(milestone.expanded_states);
+        json += ",\"rows\":" + std::to_string(milestone.rows);
+        json += ",\"transitions\":" +
+            std::to_string(milestone.transitions);
+        json += ",\"reforge_work\":" +
+            std::to_string(milestone.reforge_work) + '}';
+    };
+
+    std::string json;
+    json.reserve(32768);
+    json += "{\"observational_only\":true";
+    json += ",\"full_evidence\":true";
+    json += ",\"strict_clean_enabled\":" +
+        std::string(session.eldritch_eligible ? "false" : "true");
+    json += ",\"start_lower\":";
+    append_lower(json, result.start_state, components(result.start_state));
+    json += ",\"populations\":{\"expanded\":";
+    append_population(json, expanded_population);
+    json += ",\"policy_reachable\":";
+    append_population(json, policy_population);
+    json += "},\"goal_subsets\":[";
+    bool first = true;
+    for (std::size_t mask = 0; mask < subset_counts.size(); ++mask) {
+        const SubsetCounts& counts = subset_counts[mask];
+        if (counts.discovered == 0) continue;
+        if (!first) json += ',';
+        first = false;
+        json += "{\"mask\":" + std::to_string(mask);
+        json += ",\"discovered\":" +
+            std::to_string(counts.discovered);
+        json += ",\"expanded\":" + std::to_string(counts.expanded);
+        json += ",\"frontier\":" + std::to_string(counts.frontier);
+        json += ",\"goal\":" + std::to_string(counts.goal);
+        json += ",\"policy_reachable\":" +
+            std::to_string(counts.policy_reachable) + '}';
+    }
+    json += "],\"lower_samples\":[";
+    for (std::size_t index = 0; index < samples.size(); ++index) {
+        if (index != 0) json += ',';
+        append_lower(json, samples[index], components(samples[index]));
+    }
+    json += "],\"lower_sample_counts\":{\"retained\":" +
+        std::to_string(samples.size());
+    json += ",\"limit\":" +
+        std::to_string(options.max_diagnostic_samples) + '}';
+    json += ",\"operator_lower\":{\"families\":[";
+    first = true;
+    for (std::size_t family = 0;
+         family < Work::kOperatorFamilyCount; ++family) {
+        const auto& stats = carrier_bound_attribution->operator_lower[family];
+        const std::uint64_t pair_admissions = carrier_bound_attribution
+            ->carrier_action_admissions_by_family[family];
+        if (stats.evaluations == 0 && pair_admissions == 0) continue;
+        if (!first) json += ',';
+        first = false;
+        json += "{\"family\":";
+        append_json_string(json, operator_family_name(family));
+        json += ",\"evaluations\":" +
+            std::to_string(stats.evaluations);
+        json += ",\"finite_values\":" +
+            std::to_string(stats.finite_values);
+        json += ",\"margin_evaluations\":" +
+            std::to_string(stats.margin_evaluations);
+        json += ",\"minimum_value\":" +
+            finite_json(stats.minimum_value);
+        json += ",\"maximum_value\":" +
+            finite_json(stats.maximum_value);
+        json += ",\"minimum_lower_minus_incumbent\":" +
+            finite_json(stats.minimum_margin);
+        json += ",\"maximum_lower_minus_incumbent\":" +
+            finite_json(stats.maximum_margin);
+        json += ",\"state_incumbent_operator_lower_prunes\":" +
+            std::to_string(stats.state_incumbent_prunes);
+        json += ",\"constructive_certificate_prunes\":" +
+            std::to_string(stats.constructive_prunes);
+        json += ",\"carrier_action_admissions\":" +
+            std::to_string(pair_admissions) + '}';
+    }
+    json += "]}";
+    static constexpr std::array<const char*, Work::kScheduleStageCount>
+        kScheduleNames{{
+            "focused_candidates", "focused_admissions",
+            "focused_ladder_admissions", "incremental_candidates",
+            "incremental_carrier_admissions",
+            "carrier_action_admissions"}};
+    json += ",\"scheduling\":{";
+    for (std::size_t stage = 0; stage < Work::kScheduleStageCount; ++stage) {
+        if (stage != 0) json += ',';
+        append_json_string(json, kScheduleNames[stage]);
+        json += ':';
+        append_shape_histogram(
+            json, carrier_bound_attribution->schedules[stage]);
+    }
+    json += "},\"upper_milestones\":{\"first_finite\":";
+    append_milestone(
+        json, carrier_bound_attribution->first_finite_upper);
+    json += ",\"first_independently_verified\":";
+    append_milestone(
+        json, carrier_bound_attribution->first_verified_upper);
+    json += "}}";
+    result.diagnostics.carrier_bound_attribution_json = std::move(json);
+}
+
+namespace solve_detail {
 
 std::uint64_t string_vector_owned_bytes(
     const std::vector<std::string>& values) {
@@ -200,7 +843,8 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
            diagnostics.incumbent_kind.capacity() + 1 +
            diagnostics.destructive_renewal_action_id.capacity() + 1 +
            diagnostics.progressive_fracture_roll_action_id.capacity() + 1 +
-           diagnostics.progressive_fracture_status.capacity() + 1;
+           diagnostics.progressive_fracture_status.capacity() + 1 +
+           diagnostics.carrier_bound_attribution_json.capacity() + 1;
     bytes += diagnostics.action_search_costs_owned_bytes;
     for (const auto& [id, unused] :
          diagnostics.lower_policy_action_states) {
@@ -727,6 +1371,9 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
                  sizeof(std::uint32_t);
         bytes += expansion_operator_indices.capacity() *
                  sizeof(std::uint32_t);
+        if (carrier_bound_attribution) {
+            bytes += sizeof(CarrierBoundAttributionWork);
+        }
         bytes += incremental_carriers.capacity() * sizeof(std::uint32_t);
         bytes += incremental_automatic_carrier_order.capacity() *
                  sizeof(std::uint32_t);
@@ -925,6 +1572,9 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
                  sizeof(std::uint32_t);
         bytes += expansion_operator_indices.capacity() *
                  sizeof(std::uint32_t);
+        if (carrier_bound_attribution) {
+            bytes += sizeof(CarrierBoundAttributionWork);
+        }
         bytes += incremental_carriers.capacity() * sizeof(std::uint32_t);
         bytes += incremental_automatic_carrier_order.capacity() *
                  sizeof(std::uint32_t);
@@ -3713,6 +4363,14 @@ std::string serialize_solver_telemetry(
         }
     }
     json += "}";
+
+    json += ",\"carrier_bound_attribution\":";
+    if (diagnostics == nullptr ||
+        diagnostics->carrier_bound_attribution_json.empty()) {
+        json += "null";
+    } else {
+        json += diagnostics->carrier_bound_attribution_json;
+    }
 
     const bool focused_restricted_envelope_open =
         diagnostics != nullptr &&

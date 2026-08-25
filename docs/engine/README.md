@@ -72,7 +72,7 @@ declaration.
 | C ABI facade | `engine/src/api.cpp` |
 | Strategy compiler and simulator | `engine/src/simulator.cpp` |
 | Solver registry and exact transitions | `engine/src/solver_registry.cpp`, `solver_calc.cpp`, `solver_reforge.cpp`, `solver_options.cpp` |
-| Solve lifecycle and optimization | `engine/src/solver_solve_types.hpp`, `solver_solve.cpp`, `solver_solve_expand.cpp`, `solver_solve_bellman.cpp`, `solver_solve_focused.cpp`, `solver_solve_constructive.cpp`, `solver_solve_heuristics.cpp`, `solver_solve_quotient.cpp`, `solver_solve_finish.cpp`, `solver_solve_telemetry.cpp` |
+| Solve lifecycle and optimization | `engine/src/solver_solve_types.hpp`, `solver_solve.cpp`, `solver_solve_expand.cpp`, `solver_solve_bellman.cpp`, `solver_solve_focused.cpp`, `solver_solve_constructive.cpp`, `solver_solve_bounds.cpp`, `solver_solve_priority.cpp`, `solver_solve_quotient.cpp`, `solver_solve_finish.cpp`, `solver_solve_telemetry.cpp` |
 | Policy compilation | `engine/src/solver_compile.cpp` |
 | Exact whole-graph evaluation | `engine/src/solver_eval.cpp` |
 | Solver C ABI | `engine/src/solver_api.cpp` |

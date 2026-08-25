@@ -1748,6 +1748,23 @@ void run_alt_spam_tests() {
         PC_CHECK(no_reuse.diagnostics.exact_kernel_payload_reuses == 0);
         PC_CHECK(quotient.diagnostics.solve_owned_byte_ledger_requests > 0);
         PC_CHECK(quotient.diagnostics.solve_owned_byte_reconciliations > 0);
+        PC_CHECK(
+            !quotient.diagnostics.carrier_bound_attribution_json.empty());
+        PC_CHECK(result.diagnostics.carrier_bound_attribution_json.empty());
+        const std::string attribution_telemetry =
+            serialize_solver_telemetry(
+                calc, &quotient, nullptr, std::nullopt, nullptr);
+        PC_CHECK(valid_json_object(attribution_telemetry));
+        PC_CHECK(attribution_telemetry.find(
+                     "\"carrier_bound_attribution\":{"
+                     "\"observational_only\":true,") !=
+                 std::string::npos);
+        PC_CHECK(attribution_telemetry.find(
+                     "\"start_lower\":{\"state\":") !=
+                 std::string::npos);
+        PC_CHECK(attribution_telemetry.find(
+                     "\"upper_milestones\":{\"first_finite\":") !=
+                 std::string::npos);
 
         SolveOptions shadow_options = evidence_options;
         shadow_options.max_states = 1;
@@ -8431,7 +8448,7 @@ void run_automatic_eldritch_side_tests() {
         SolveWorkTestAccess::Impl work(
             context, start, prices, automatic_lower_options);
         const double state_lower =
-            work.optimistic_completion_cost_for_state(state);
+            work.completion_proof_lower(state).value;
         PC_CHECK(std::isfinite(state_lower));
         PC_CHECK(state_lower > 0.0);
         std::uint32_t rows = 0;
@@ -8456,7 +8473,7 @@ void run_automatic_eldritch_side_tests() {
             for (const OutcomeEntry& exit : exact.exits) {
                 probability_sum += exit.probability;
                 backup += exit.probability *
-                    work.optimistic_completion_cost_for_state(exit.state);
+                    work.completion_proof_lower(exit.state).value;
             }
             PC_CHECK(std::fabs(probability_sum - 1.0) < 1e-10);
             if (!(state_lower <= backup +
@@ -8485,8 +8502,8 @@ void run_automatic_eldritch_side_tests() {
         automatic_lower_calc, repair_prefix, prices,
         automatic_lower_options);
     const double eligible_completion_lower =
-        automatic_lower_work.optimistic_completion_cost_for_state(
-            automatic_lower_state);
+        automatic_lower_work.completion_proof_lower(
+            automatic_lower_state).value;
     PC_CHECK(std::isfinite(eligible_completion_lower));
     PC_CHECK(eligible_completion_lower > 0.0);
     PC_CHECK(automatic_lower_work.strict_clean_goal_cover_cost.empty());
@@ -8507,8 +8524,8 @@ void run_automatic_eldritch_side_tests() {
         missing_price_calc, repair_prefix, missing_eldritch_prices,
         automatic_lower_options);
     const double missing_price_lower =
-        missing_price_work.optimistic_completion_cost_for_state(
-            missing_price_state);
+        missing_price_work.completion_proof_lower(
+            missing_price_state).value;
     PC_CHECK(std::isfinite(missing_price_lower));
 
     auto ineligible_session = make_solve_session();
@@ -8526,8 +8543,8 @@ void run_automatic_eldritch_side_tests() {
         ineligible_calc, repair_prefix, missing_eldritch_prices,
         automatic_lower_options);
     const double ineligible_lower =
-        ineligible_work.optimistic_completion_cost_for_state(
-            ineligible_state);
+        ineligible_work.completion_proof_lower(
+            ineligible_state).value;
     PC_CHECK(near(missing_price_lower, ineligible_lower));
     PC_CHECK(eligible_completion_lower <= missing_price_lower + 1e-12);
 
@@ -8540,8 +8557,8 @@ void run_automatic_eldritch_side_tests() {
         automatic_lower_options);
     PC_CHECK(near(
         eligible_completion_lower,
-        repeated_lower_work.optimistic_completion_cost_for_state(
-            repeated_lower_state)));
+        repeated_lower_work.completion_proof_lower(
+            repeated_lower_state).value));
     bool checked_eldritch_chaos_lower = false;
     std::uint32_t checked_eldritch_bellman_rows = 0;
     for (const StateLocalAutomaticCandidate& decision :
@@ -8571,7 +8588,7 @@ void run_automatic_eldritch_side_tests() {
                 probability_sum += exit.probability;
                 exact_lower_backup += exit.probability *
                     automatic_lower_work
-                        .optimistic_completion_cost_for_state(exit.state);
+                        .completion_proof_lower(exit.state).value;
             }
             PC_CHECK(std::fabs(probability_sum - 1.0) < 1e-10);
             PC_CHECK(
@@ -8593,8 +8610,8 @@ void run_automatic_eldritch_side_tests() {
             automatic_lower_work.operators.at(
                 static_cast<std::size_t>(position)).cost;
         const double lower =
-            automatic_lower_work.optimistic_operator_lower(
-                automatic_lower_state, op);
+            automatic_lower_work.operator_proof_lower(
+                automatic_lower_state, op).value;
         PC_CHECK(std::fabs(full_immediate - 4.0) < 1e-12);
         PC_CHECK(lower >= full_immediate);
         checked_eldritch_chaos_lower = true;
@@ -8673,8 +8690,8 @@ void run_automatic_eldritch_side_tests() {
             restart_immediate +
             restart_lower_work.optimistic_completion_cost(carried_mask);
         const double restart_lower =
-            restart_lower_work.optimistic_operator_lower(
-                restart_source_state, restart_operator);
+            restart_lower_work.operator_proof_lower(
+                restart_source_state, restart_operator).value;
         const OutcomeDistribution& restart_distribution =
             restart_lower_calc.outcomes(
                 restart_source_state,
@@ -8684,8 +8701,8 @@ void run_automatic_eldritch_side_tests() {
         PC_CHECK(restart_distribution.entries.size() == 1);
         if (restart_distribution.entries.size() == 1) {
             const double fresh_shaped_relaxation =
-                restart_lower_work.optimistic_completion_cost_for_state(
-                    restart_distribution.entries.front().state);
+                restart_lower_work.completion_proof_lower(
+                    restart_distribution.entries.front().state).value;
             const double exact_successor_relaxation = restart_immediate +
                 std::max(
                     restart_lower_work.optimistic_completion_cost(0),
@@ -8714,8 +8731,8 @@ void run_automatic_eldritch_side_tests() {
             const double immediate = restart_lower_work.operators.at(
                 static_cast<std::size_t>(position)).cost;
             const double lower =
-                restart_lower_work.optimistic_operator_lower(
-                    restart_source_state, action);
+                restart_lower_work.operator_proof_lower(
+                    restart_source_state, action).value;
             const OutcomeDistribution& exact =
                 restart_lower_calc.outcomes(
                     restart_source_state, action);
@@ -8726,7 +8743,7 @@ void run_automatic_eldritch_side_tests() {
                 probability_sum += outcome.probability;
                 exact_relaxed_backup += outcome.probability *
                     restart_lower_work
-                        .optimistic_completion_cost_for_state(outcome.state);
+                        .completion_proof_lower(outcome.state).value;
             }
             PC_CHECK(std::fabs(probability_sum - 1.0) < 1e-10);
             std::printf(

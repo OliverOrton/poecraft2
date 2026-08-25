@@ -648,6 +648,46 @@ bool certified_fallback_fits_memory(
     std::uint64_t candidate_owned_bytes,
     std::uint64_t maximum_owned_bytes);
 
+/* Proof lowers and ordering scores are intentionally non-interchangeable.
+ * Only ProofLowerValue may cross a pruning/publication boundary; carrier
+ * ordering remains a schedule-only authority. */
+struct ProofLowerValue {
+    double value = 0.0;
+};
+
+enum class CarrierOrderingMode : std::uint8_t {
+    FocusedLegacy,
+    IncrementalLegacy,
+};
+
+struct CarrierOrderingScore {
+    std::uint32_t state = kNoId;
+    std::uint32_t goal_subset = 0;
+    std::uint32_t satisfied_goals = 0;
+    std::uint32_t fractured_goals = 0;
+    std::uint32_t active_protection = 0;
+    std::uint32_t unrelated_occupancy = 0;
+    double focused_priority = 0.0;
+};
+
+static_assert(!std::is_convertible_v<CarrierOrderingScore, ProofLowerValue>);
+static_assert(!std::is_convertible_v<CarrierOrderingScore, double>);
+
+struct CarrierPriorityBuckets {
+    std::map<std::uint32_t, std::vector<std::uint32_t>> by_goal_subset;
+    std::vector<std::uint32_t> subset_order;
+};
+
+CarrierOrderingScore make_carrier_ordering_score(
+    const AbstractState& carrier,
+    std::uint32_t state,
+    std::uint32_t goal_subset,
+    double focused_priority = 0.0);
+
+CarrierPriorityBuckets build_carrier_priority_buckets(
+    const std::vector<CarrierOrderingScore>& candidates,
+    CarrierOrderingMode mode);
+
 struct CapturedBoundedPolicyRow {
     PolicyOperatorRef policy;
     double cost = kInfinity;
@@ -1159,6 +1199,91 @@ struct SolveWork::Impl {
     bool price_bound_state_pruning = false;
     std::vector<double> certified_state_upper;
     std::vector<std::uint64_t> certified_state_row;
+    struct CarrierBoundAttributionWork {
+        static constexpr std::size_t kGoalMaskCount =
+            std::size_t{1} << kMaxGoalSlots;
+        static constexpr std::size_t kSideCapacityCount = 16;
+        static constexpr std::size_t kProtectionModeCount = 4;
+        static constexpr std::size_t kFractureShapeCount =
+            (kMaxGoalSlots + 1) * 4;
+        static constexpr std::size_t kUnrelatedOccupancyCount = 7;
+        static constexpr std::size_t kPrimitiveFamilyCount =
+            static_cast<std::size_t>(PrimitiveTelemetryFamily::Count);
+        static constexpr std::size_t kAutomaticFamilyCount =
+            static_cast<std::size_t>(AutomaticTelemetryKind::Count);
+        static constexpr std::size_t kOperatorFamilyCount =
+            kPrimitiveFamilyCount + kAutomaticFamilyCount + 2;
+        enum CleanCoverRejection : std::uint32_t {
+            InvalidState = 1u << 0,
+            ActiveProtection = 1u << 1,
+            FracturedGoal = 1u << 2,
+            FracturedMetamod = 1u << 3,
+            InfluenceIdentity = 1u << 4,
+            SearingIdentity = 1u << 5,
+            EaterIdentity = 1u << 6,
+            FracturedJunk = 1u << 7,
+            FracturedCraftedJunk = 1u << 8,
+        };
+        static constexpr std::size_t kCleanCoverRejectionCount = 9;
+
+        struct CarrierShapeHistogram {
+            std::uint64_t total = 0;
+            std::array<std::uint64_t, kGoalMaskCount> goal_subset{};
+            std::array<std::uint64_t, kSideCapacityCount> side_capacity{};
+            std::array<std::uint64_t, kGoalMaskCount> blocked_mask{};
+            std::array<std::uint64_t, kProtectionModeCount> protection{};
+            std::array<std::uint64_t, kFractureShapeCount> fracture{};
+            std::array<std::uint64_t, kUnrelatedOccupancyCount>
+                unrelated_occupancy{};
+        };
+
+        struct OperatorLowerStats {
+            std::uint64_t evaluations = 0;
+            std::uint64_t finite_values = 0;
+            std::uint64_t margin_evaluations = 0;
+            std::uint64_t state_incumbent_prunes = 0;
+            std::uint64_t constructive_prunes = 0;
+            double minimum_value = kInfinity;
+            double maximum_value = -kInfinity;
+            /* Positive means the lower lies above the incumbent/constructive
+             * upper and can separate after the epsilon allowance. */
+            double minimum_margin = kInfinity;
+            double maximum_margin = -kInfinity;
+        };
+
+        struct UpperMilestone {
+            bool present = false;
+            double value = kInfinity;
+            std::uint64_t wall_ns = 0;
+            std::uint32_t discovered_states = 0;
+            std::uint32_t expanded_states = 0;
+            std::uint64_t rows = 0;
+            std::uint64_t transitions = 0;
+            std::uint64_t reforge_work = 0;
+        };
+
+        enum class ScheduleStage : std::uint8_t {
+            FocusedCandidate = 0,
+            FocusedAdmission,
+            FocusedLadderAdmission,
+            IncrementalCandidate,
+            IncrementalCarrierAdmission,
+            CarrierActionAdmission,
+            Count,
+        };
+        static constexpr std::size_t kScheduleStageCount =
+            static_cast<std::size_t>(ScheduleStage::Count);
+
+        std::chrono::steady_clock::time_point started_at =
+            std::chrono::steady_clock::now();
+        std::array<CarrierShapeHistogram, kScheduleStageCount> schedules{};
+        std::array<OperatorLowerStats, kOperatorFamilyCount> operator_lower{};
+        std::array<std::uint64_t, kOperatorFamilyCount>
+            carrier_action_admissions_by_family{};
+        UpperMilestone first_finite_upper;
+        UpperMilestone first_verified_upper;
+    };
+    std::unique_ptr<CarrierBoundAttributionWork> carrier_bound_attribution;
     std::uint64_t peak_owned_bytes = 0;
     SolvePhase phase = SolvePhase::Expanding;
     std::uint64_t finalization_work_items = 0;
@@ -1356,14 +1481,49 @@ struct SolveWork::Impl {
 
     bool clean_goal_cover_eligible(const std::uint32_t state) const;
 
-    double optimistic_completion_cost_for_state(
+    std::uint32_t clean_goal_cover_rejection_mask(
+        const std::uint32_t state) const;
+
+    double completion_proof_lower_value(
+        const std::uint32_t state);
+
+    solve_detail::ProofLowerValue completion_proof_lower(
         const std::uint32_t state);
 
     void prepare_strict_clean_goal_cover();
 
-    double optimistic_operator_lower(
+    double operator_proof_lower_value(
         const std::uint32_t state,
         const std::uint32_t operator_index);
+
+    solve_detail::ProofLowerValue operator_proof_lower(
+        const std::uint32_t state,
+        const std::uint32_t operator_index);
+
+    std::size_t carrier_bound_operator_family(
+        const std::uint32_t operator_index) const;
+
+    void record_operator_lower_attribution(
+        std::uint32_t operator_index,
+        double lower,
+        double incumbent,
+        bool state_incumbent_prune,
+        bool constructive_prune);
+
+    void record_carrier_schedule_attribution(
+        CarrierBoundAttributionWork::ScheduleStage stage,
+        std::uint32_t state,
+        std::uint32_t operator_index = kNoId);
+
+    void record_upper_attribution_milestone(
+        double value,
+        bool independently_verified);
+
+    void finalize_carrier_bound_attribution();
+
+    solve_detail::CarrierOrderingScore carrier_ordering_score(
+        std::uint32_t state,
+        double focused_priority = 0.0);
 
     std::optional<double> constructive_row_upper(
         const std::uint32_t state,

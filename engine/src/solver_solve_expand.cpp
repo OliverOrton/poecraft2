@@ -968,12 +968,15 @@ bool SolveWork::Impl::prepare_state_expansion(
                     expansion_operator_indices.end(),
                     [&](const std::uint32_t index) {
                         const double lower =
-                            optimistic_operator_lower(state, index);
+                            operator_proof_lower(state, index).value;
                         const double separation = options.epsilon *
                             std::max({1.0, std::abs(incumbent),
                                       std::abs(lower)});
-                        return std::isfinite(lower) &&
-                               lower > incumbent + separation;
+                        const bool prune = std::isfinite(lower) &&
+                            lower > incumbent + separation;
+                        record_operator_lower_attribution(
+                            index, lower, incumbent, prune, false);
+                        return prune;
                     }),
                 expansion_operator_indices.end());
             const std::size_t pruned =

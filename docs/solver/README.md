@@ -91,7 +91,8 @@ complete exact-carrier witness set; a rowless obligation cannot support an
 executable upper. Full action/program/choice, source, price, vocabulary,
 generation, lifecycle, priority, resumable-work, exactness-blocking, and
 memory-ledger identities are retained. This is private native proof
-infrastructure; production row scheduling remains unchanged until Gate 2.
+infrastructure. The Gate 2 behavior candidate was restored, so production row
+scheduling remains unchanged.
 
 Competitive-lazy Gate 2 splits production quotient discovery into current-row
 certification, cheap alternative descriptor enumeration, and one requested
@@ -1080,7 +1081,7 @@ Code authority: `engine/src/solver_solve_types.hpp` holds shared private solve
 types and declarations; `solver_solve.cpp` retains construction and the solve
 entry point; `solver_solve_expand.cpp`, `solver_solve_bellman.cpp`,
 `solver_solve_focused.cpp`, `solver_solve_constructive.cpp`,
-`solver_solve_heuristics.cpp`, `solver_solve_quotient.cpp`,
+`solver_solve_bounds.cpp`, `solver_solve_priority.cpp`, `solver_solve_quotient.cpp`,
 `solver_solve_finish.cpp`, and `solver_solve_telemetry.cpp` own their named
 phases.
 
