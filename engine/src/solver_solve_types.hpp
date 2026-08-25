@@ -1620,7 +1620,12 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     solve_detail::ProofLowerValue completion_proof_lower(
         const std::uint32_t state);
 
+    double refresh_envelope_bellman_pattern();
+
     void prepare_strict_clean_goal_cover();
+
+    double authored_fixed_program_cost_lower(
+        const PlannerOperator& planner) const;
 
     double operator_proof_lower_value(
         const std::uint32_t state,

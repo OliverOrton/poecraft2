@@ -6,13 +6,28 @@ namespace solver {
 using namespace solve_detail;
 
 void SolveWork::Impl::prepare_strict_clean_goal_cover() {
+        ProofPatternContract& strict_contract = contract(
+            ProofPatternKind::StrictClean);
+        strict_contract.minimizing_action.clear();
+        strict_contract.fallback_reason = "preparing";
+        strict_contract.start_contribution = kInfinity;
+        strict_contract.residual = kInfinity;
+        strict_contract.solution_sweeps = 0;
+        strict_contract.converged = false;
         strict_clean_goal_cover_refresh_needed = false;
         const std::uint32_t initial_state_count = calc.state_count();
         if (strict_clean_goal_cover_state_count == initial_state_count) return;
         strict_clean_goal_cover_state_count = 0;
         strict_clean_goal_cover_cost.clear();
-        if (session.eldritch_eligible) return;
-        if (!goal_cover_cost_ready || clean_goal_escape_cost.empty()) return;
+        if (session.eldritch_eligible) {
+            strict_contract.fallback_reason =
+                "eldritch_option_coverage_unavailable";
+            return;
+        }
+        if (!goal_cover_cost_ready || clean_goal_escape_cost.empty()) {
+            strict_contract.fallback_reason = "coarse_pattern_unavailable";
+            return;
+        }
 
         const auto refined_action = [&](const std::uint32_t action) {
             if (action >= calc.registry().actions.size()) return false;
@@ -42,7 +57,10 @@ void SolveWork::Impl::prepare_strict_clean_goal_cover() {
         for (const std::uint32_t action : calc.candidates()) {
             if (refined_action(action)) actions.push_back(action);
         }
-        if (actions.empty()) return;
+        if (actions.empty()) {
+            strict_contract.fallback_reason = "no_refined_actions";
+            return;
+        }
         const auto action_cost = [&](const std::uint32_t action) {
             double cost = 0.0;
             for (const std::string& key :
@@ -85,7 +103,6 @@ void SolveWork::Impl::prepare_strict_clean_goal_cover() {
                 clean_goal_cover_eligible(state), carrier.rarity,
                 carrier.prefix_count, carrier.suffix_count);
         };
-
         struct StrictRow {
             std::uint32_t action = kNoId;
             double immediate = 0.0;
@@ -164,6 +181,8 @@ void SolveWork::Impl::prepare_strict_clean_goal_cover() {
                 if (!distribution.supported ||
                     !distribution.choice_groups.empty() ||
                     !distribution.choice_options.empty()) {
+                    strict_contract.fallback_reason =
+                        "unsupported_strict_kernel:" + descriptor.id;
                     exact = false;
                     break;
                 }
@@ -268,6 +287,8 @@ void SolveWork::Impl::prepare_strict_clean_goal_cover() {
                 if (!distribution.supported ||
                     !distribution.choice_groups.empty() ||
                     !distribution.choice_options.empty()) {
+                    strict_contract.fallback_reason =
+                        "unsupported_rare_kernel:" + descriptor.id;
                     exact = false;
                     break;
                 }
@@ -339,6 +360,8 @@ void SolveWork::Impl::prepare_strict_clean_goal_cover() {
             if (!distribution.supported ||
                 !distribution.choice_groups.empty() ||
                 !distribution.choice_options.empty()) {
+                strict_contract.fallback_reason =
+                    "unsupported_rare_exalt_kernel";
                 exact = false;
                 break;
             }
@@ -626,8 +649,6 @@ void SolveWork::Impl::prepare_strict_clean_goal_cover() {
             }
             if (delta <= options.epsilon * 0.1) break;
         }
-        ProofPatternContract& strict_contract = contract(
-            ProofPatternKind::StrictClean);
         strict_contract.residual = delta;
         strict_contract.solution_sweeps = sweeps;
         strict_contract.converged = delta <= options.epsilon * 0.1;
@@ -650,6 +671,8 @@ void SolveWork::Impl::prepare_strict_clean_goal_cover() {
         const double anchor = restart_state < strict_clean_goal_cover_cost.size()
             ? strict_clean_goal_cover_cost[restart_state]
             : kInfinity;
+        strict_contract.start_contribution = anchor;
+        strict_contract.fallback_reason = "covered";
         std::map<std::uint32_t, std::uint32_t> policy_counts;
         std::map<std::uint32_t, std::uint32_t> rare_policy_counts;
         for (const std::uint32_t state : strict_states) {
@@ -682,6 +705,11 @@ void SolveWork::Impl::prepare_strict_clean_goal_cover() {
                        strict_policy[restart_state]).id
                  : std::string("none")) +
             ":policies=";
+        if (restart_state < strict_policy.size() &&
+            strict_policy[restart_state] != kNoId) {
+            strict_contract.minimizing_action = calc.registry().actions.at(
+                strict_policy[restart_state]).id;
+        }
         bool first_policy = true;
         for (const auto& [action, count] : policy_counts) {
             if (!first_policy) strict_reason += ',';
@@ -710,4 +738,3 @@ void SolveWork::Impl::prepare_strict_clean_goal_cover() {
 
 } // namespace solver
 } // namespace poecraft
-

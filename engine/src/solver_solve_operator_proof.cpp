@@ -5,6 +5,37 @@ namespace solver {
 
 using namespace solve_detail;
 
+double SolveWork::Impl::authored_fixed_program_cost_lower(
+        const PlannerOperator& planner) const {
+    const PlannerOperatorRuntimeSemantics runtime =
+        planner_operator_runtime_semantics(planner, calc.registry());
+    double immediate = kInfinity;
+    for (const auto& path : runtime.execution_paths) {
+        double path_cost = 0.0;
+        bool priced = true;
+        for (const PlannerOperatorRuntimeStep& step : path) {
+            if (step.action >= calc.registry().actions.size()) {
+                priced = false;
+                break;
+            }
+            for (const std::string& key :
+                 calc.registry().actions.at(step.action).cost_keys) {
+                const auto found = prices.find(key);
+                if (found == prices.end() ||
+                    !std::isfinite(found->second) ||
+                    found->second < 0.0) {
+                    priced = false;
+                    break;
+                }
+                path_cost += found->second;
+            }
+            if (!priced) break;
+        }
+        if (priced) immediate = std::min(immediate, path_cost);
+    }
+    return immediate;
+}
+
 double SolveWork::Impl::operator_proof_lower_value(
         const std::uint32_t state,
         const std::uint32_t operator_index) {
@@ -20,11 +51,9 @@ double SolveWork::Impl::operator_proof_lower_value(
             operators.at(static_cast<std::size_t>(position)).cost;
         if (planner.kind == PlannerOperatorKind::FixedOption &&
             planner.automatic_kind == AutomaticCandidateKind::None) {
-            /* Some fixed programs have conditional later primitives whose
-             * aggregate planner quantity is not an admissible immediate
-             * lower bound. Every legal program executes its first ordinary
-             * primitive at least once, so price only that guaranteed step.
-             * Granting all later reachability below remains optimistic. */
+            /* Gate 6 builds the complete optimistic program automaton, while
+             * Gate 7 owns activating it as a pruning consumer. Preserve the
+             * established guaranteed-first-step lower at this boundary. */
             if (planner.primitive_program.empty()) return -kInfinity;
             immediate = 0.0;
             for (const std::string& key :
@@ -132,4 +161,3 @@ solve_detail::ProofLowerValue SolveWork::Impl::operator_proof_lower(
 
 } // namespace solver
 } // namespace poecraft
-

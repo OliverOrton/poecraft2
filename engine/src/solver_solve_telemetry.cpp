@@ -263,11 +263,13 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
         bool clean_eligible = false;
         bool carrier_progress_available = false;
         bool strict_available = false;
+        bool envelope_available = false;
         double universal = kInfinity;
         double clean = kInfinity;
         double carrier_progress = kInfinity;
         double terminal_debt = 0.0;
         double strict = kInfinity;
+        double envelope = kInfinity;
         double selected = 0.0;
     };
     const auto components = [&](const std::uint32_t state) {
@@ -294,6 +296,11 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
         if (out.strict_available) {
             out.strict = strict_clean_goal_cover_cost[state];
         }
+        out.envelope_available = state == result.start_state &&
+            std::isfinite(envelope_bellman_lower);
+        if (out.envelope_available) {
+            out.envelope = envelope_bellman_lower;
+        }
         out.selected = completion_proof_lower(state).value;
         return out;
     };
@@ -309,6 +316,7 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
         CarrierProgressOwner,
         TerminalDebtOwner,
         StrictOwner,
+        EnvelopeOwner,
         ZeroFallbackOwner,
         OwnerCount,
     };
@@ -325,10 +333,13 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
             approximately_equal(value.terminal_debt, value.selected);
         result[StrictOwner] = value.strict_available &&
             approximately_equal(value.strict, value.selected);
+        result[EnvelopeOwner] = value.envelope_available &&
+            approximately_equal(value.envelope, value.selected);
         result[ZeroFallbackOwner] = value.selected == 0.0 &&
             !result[UniversalOwner] && !result[CleanOwner] &&
             !result[CarrierProgressOwner] &&
-            !result[TerminalDebtOwner] && !result[StrictOwner];
+            !result[TerminalDebtOwner] && !result[StrictOwner] &&
+            !result[EnvelopeOwner];
         return result;
     };
     struct Population {
@@ -462,7 +473,8 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
             "fractured_crafted_junk"}};
     static constexpr std::array<const char*, OwnerCount> kOwnerNames{{
         "universal", "clean_mdp", "carrier_progress",
-        "terminal_debt", "strict_clean", "zero_fallback"}};
+        "terminal_debt", "strict_clean", "envelope_bellman",
+        "zero_fallback"}};
     const auto operator_family_name = [&](const std::size_t index) {
         std::string name;
         if (index < Work::kPrimitiveFamilyCount) {
@@ -533,6 +545,8 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
         json += ",\"terminal_debt\":" +
             finite_json(value.terminal_debt);
         json += ",\"strict_clean\":" + finite_json(value.strict);
+        json += ",\"envelope_bellman\":" +
+            finite_json(value.envelope);
         json += ",\"selected_maximum\":" +
             finite_json(value.selected);
         json += ",\"owners\":";
@@ -688,7 +702,11 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
     json += "{\"observational_only\":true";
     json += ",\"full_evidence\":true";
     json += ",\"strict_clean_enabled\":" +
-        std::string(session.eldritch_eligible ? "false" : "true");
+        std::string(
+            !session.eldritch_eligible &&
+                contract(ProofPatternKind::StrictClean).converged
+                ? "true"
+                : "false");
     json += ",\"proof_pattern_manager\":{\"composition\":";
     append_json_string(json, "maximum_of_independently_admissible_patterns");
     json += ",\"patterns\":[";
@@ -732,6 +750,19 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
             std::string(pattern.converged ? "true" : "false");
         json += ",\"provenance\":";
         append_json_string(json, std::string(pattern.provenance));
+        json += ",\"minimizing_action\":";
+        if (pattern.minimizing_action.empty()) json += "null";
+        else append_json_string(json, pattern.minimizing_action);
+        json += ",\"fallback_reason\":";
+        append_json_string(json, pattern.fallback_reason);
+        json += ",\"refinement_trace\":";
+        if (pattern.refinement_trace.empty()) json += "null";
+        else append_json_string(json, pattern.refinement_trace);
+        json += ",\"optimistic_grants\":";
+        append_json_string(
+            json, std::string(pattern.optimistic_successor_authority));
+        json += ",\"start_contribution\":" +
+            finite_json(pattern.start_contribution);
         json += ",\"selected_owner_calls\":" +
             std::to_string(pattern.selected_owner_calls) + '}';
     }
@@ -1662,6 +1693,9 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
         bytes += goal_cover_cost.capacity() * sizeof(double);
         bytes += clean_goal_cover_cost.capacity() * sizeof(double);
         bytes += carrier_goal_progress_cost.capacity() * sizeof(double);
+        bytes += carrier_goal_action_floor.capacity() * sizeof(double);
+        bytes += bounded_gain_goal_progress_cost.capacity() * sizeof(double);
+        bytes += bounded_gain_action_floor.capacity() * sizeof(double);
         bytes += carrier_unproved_first_step_actions.capacity() *
                  sizeof(std::uint32_t);
         bytes += carrier_priced_first_step_actions.capacity() *
@@ -1676,6 +1710,12 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
                  sizeof(double);
         bytes += clean_goal_no_exalt_escape_action.capacity() *
                  sizeof(std::uint32_t);
+        bytes += clean_goal_start_action_floor.capacity() * sizeof(double);
+        for (const ProofPatternContract& pattern : contracts) {
+            bytes += pattern.minimizing_action.capacity() + 1;
+            bytes += pattern.fallback_reason.capacity() + 1;
+            bytes += pattern.refinement_trace.capacity() + 1;
+        }
         bytes += strict_clean_goal_cover_cost.capacity() * sizeof(double);
         if (focused_fallback_policy) {
             const FocusedFallbackPolicy& fallback =
@@ -1885,6 +1925,9 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
         bytes += goal_cover_cost.capacity() * sizeof(double);
         bytes += clean_goal_cover_cost.capacity() * sizeof(double);
         bytes += carrier_goal_progress_cost.capacity() * sizeof(double);
+        bytes += carrier_goal_action_floor.capacity() * sizeof(double);
+        bytes += bounded_gain_goal_progress_cost.capacity() * sizeof(double);
+        bytes += bounded_gain_action_floor.capacity() * sizeof(double);
         bytes += carrier_unproved_first_step_actions.capacity() *
                  sizeof(std::uint32_t);
         bytes += carrier_priced_first_step_actions.capacity() *
@@ -1899,6 +1942,12 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
                  sizeof(double);
         bytes += clean_goal_no_exalt_escape_action.capacity() *
                  sizeof(std::uint32_t);
+        bytes += clean_goal_start_action_floor.capacity() * sizeof(double);
+        for (const ProofPatternContract& pattern : contracts) {
+            bytes += pattern.minimizing_action.capacity() + 1;
+            bytes += pattern.fallback_reason.capacity() + 1;
+            bytes += pattern.refinement_trace.capacity() + 1;
+        }
         bytes += strict_clean_goal_cover_cost.capacity() * sizeof(double);
         if (focused_fallback_policy) {
             const FocusedFallbackPolicy& fallback =

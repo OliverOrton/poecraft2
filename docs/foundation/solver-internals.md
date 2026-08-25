@@ -98,7 +98,7 @@ core model edit is cheap.
 | Automatic/compound option admission or construction | the matching `solver_options_*.cpp` owner |
 | Reachable graph scheduling, delayed action envelopes, or row expansion | `solver_solve_expand.cpp`, `solver_solve_incremental.cpp`, `solver_solve_focused.cpp` |
 | Carrier-only ordering | `solver_solve_priority.cpp`; keep it separate from proof values |
-| Admissible carrier/operator bounds or public lower authority | `solver_solve_bounds.cpp`, then the consumer/publication boundary in `solver_solve_constructive.cpp` |
+| Admissible carrier/operator bounds or public lower authority | `solver_solve_bounds.cpp`, `solver_solve_carrier_pattern.cpp`, `solver_solve_operator_proof.cpp`, and `solver_solve_envelope_proof.cpp`, then the consumer/publication boundary in `solver_solve_constructive.cpp` or `solver_solve_finish.cpp` |
 | Bellman values, properness, verified incumbents, or policy finalization | the matching `solver_solve_bellman.cpp`, `solver_solve_audit.cpp`, `solver_solve_constructive.cpp`, or `solver_solve_finish.cpp` owner |
 | Exact carrier discovery or canonicalization | `solver_refinement_graph_discovery.hpp` |
 | Observation projection or partition proof | `solver_refinement_observation.cpp`, `solver_refinement_features.cpp`, `solver_refinement_partition.cpp` |
@@ -138,6 +138,12 @@ Oliver ruling and belong in the [mechanics library](../mechanics/README.md).
   scheduling evidence rather than a global lower. Public lower authority falls
   back to independently admissible proof patterns until the requested action
   envelope closes.
+- Proof patterns compose by maximum only unless a separate cost partition
+  proves disjoint immediate resources. A completed start-state Bellman
+  envelope may publish after certification only when every admitted ordinary
+  and automatic row is covered; missing coverage falls back locally. A
+  post-certification envelope is not search/pruning authority until an
+  explicit later consumer owns that change.
 - A finite public upper belongs to the independently evaluated emitted graph,
   not its coarse, selected, direct, strict, or fallback source estimate. Later
   candidates cannot replace a cheaper verified artifact without beating that

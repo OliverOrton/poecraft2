@@ -288,6 +288,55 @@ void run_proof_pattern_manager_tests() {
             }
         }
     }
+
+    const auto row_lower = [] (
+        const double immediate,
+        const std::vector<double>& probabilities,
+        const std::vector<double>& successors) {
+        double lower = immediate;
+        for (std::size_t i = 0; i < probabilities.size(); ++i) {
+            lower += probabilities[i] * successors[i];
+        }
+        return lower;
+    };
+    const double ordinary = row_lower(
+        2.0, {0.25, 0.75}, {0.0, 4.0});
+    const double automatic = row_lower(
+        3.0, {0.5, 0.5}, {1.0, 5.0});
+    PC_CHECK(ordinary == 5.0);
+    PC_CHECK(automatic == 6.0);
+    /* Raising a real fixed-action price cannot lower its Bellman row. */
+    PC_CHECK(
+        row_lower(2.5, {0.25, 0.75}, {0.0, 4.0}) >= ordinary);
+    /* Adding an action can only lower (or preserve) a minimization. */
+    const double two_action_minimum = std::min(ordinary, automatic);
+    const double three_action_minimum = std::min(
+        two_action_minimum,
+        row_lower(1.0, {1.0}, {2.0}));
+    PC_CHECK(three_action_minimum <= two_action_minimum);
+    PC_CHECK(ordinary >= 0.0);
+    PC_CHECK(automatic >= 0.0);
+
+    const solve_detail::ProofPatternSelection local_unknown =
+        manager.select_maximum({
+            ProofPatternContribution{
+                ProofPatternKind::UniversalCover, {2.0}, true},
+            ProofPatternContribution{
+                ProofPatternKind::IdentityCleanMdp,
+                {std::numeric_limits<double>::infinity()}, false},
+        }, 1e12);
+    PC_CHECK(local_unknown.lower.value == 2.0);
+    PC_CHECK(!local_unknown.used_zero_fallback);
+    const solve_detail::ProofPatternSelection invalid_claim =
+        manager.select_maximum({
+            ProofPatternContribution{
+                ProofPatternKind::UniversalCover, {2.0}, true},
+            ProofPatternContribution{
+                ProofPatternKind::EnvelopeBellman,
+                {std::numeric_limits<double>::infinity()}, true},
+        }, 1e12);
+    PC_CHECK(invalid_claim.lower.value == 0.0);
+    PC_CHECK(invalid_claim.used_zero_fallback);
 }
 
 void run_bounded_policy_row_capture_tests() {

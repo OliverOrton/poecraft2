@@ -4,13 +4,13 @@
 [Solver Anytime Planning, Proof Patterns, And Debt Retirement](docs/active/2026-08-25-solver-anytime-proof-realignment/plan.md)
 plan on 2026-08-25. The focused
 [documentation preflight](docs/active/2026-08-25-solver-anytime-proof-realignment/preflight-audit.md)
-is complete; Gates 0 through 5 are complete and implementation is at Gate 6.
+is complete; Gates 0 through 6 are complete and implementation is at Gate 7.
 
 ## Current checkpoint
 
 - Branch: `main`.
-- Latest completed implementation checkpoint: Gate 5 typed proof-pattern
-  ownership refactor (this handoff's commit).
+- Latest completed implementation checkpoint: Gate 6 stronger carrier/action
+  proof patterns (this handoff's commit).
 - Current engine/product source checkpoint: `a1449fa` (`Record Imprint scope
   acceptance`).
 - Plan checkpoint: `0238753` (`Propose solver anytime proof realignment`).
@@ -46,7 +46,7 @@ is complete; Gates 0 through 5 are complete and implementation is at Gate 6.
 
 The current clean five-T1 Conquest Lamellar run retains:
 
-- certified lower `36.4286171890906`;
+- certified lower `36.4885317287664`;
 - independently evaluated proper upper `14454067.4260706`;
 - 514 compiled nodes and 1,788 edges; and
 - 29 exact goal states in the recorded run.
@@ -111,10 +111,17 @@ explicit local fallback, residual/provenance telemetry, and bit-for-bit fixed-
 work policy/value/graph authority. See the
 [Gate 5 evidence](docs/active/2026-08-25-solver-anytime-proof-realignment/gate5-evidence.md).
 
-Gate 6 now owns stronger independent carrier/action proof patterns. It must
-qualify each retained value against the plan's Bellman, monotonicity, fallback,
-native/WASM, and unchanged-policy boundaries before any Gate 7 consumer can
-use the stronger lower.
+Gate 6 added fixed-identity occupancy, bounded per-draw debt, and complete
+post-certification operator-envelope patterns. The clean lower is
+`36.4885317287664`; the fractured owner lower is `36.4286171891044`. Native
+and WASM values agree, all admitted start rows are covered, the clean and owner
+policies/uppers/graphs are unchanged, and rejected Harvest/strict-Eldritch
+experiments were removed. See the
+[Gate 6 evidence](docs/active/2026-08-25-solver-anytime-proof-realignment/gate6-evidence.md).
+
+Gate 7 now owns proof consumers. Activate values only through proof-only APIs,
+measure strict pruning or work reduction against the same evaluated policy,
+and remove any descriptor prototype that produces no separation.
 
 Archived milestone prose retains historical evidence authority only; the
 active plan owns current sequence.

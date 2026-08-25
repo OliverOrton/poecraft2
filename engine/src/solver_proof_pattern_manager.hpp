@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <initializer_list>
 #include <limits>
+#include <string>
 #include <string_view>
 #include <type_traits>
 #include <utility>
@@ -25,9 +26,12 @@ struct ProofLowerValue {
 enum class ProofPatternKind : std::uint8_t {
     UniversalCover,
     CleanMdp,
+    IdentityCleanMdp,
     CarrierMdp,
+    BoundedGainMdp,
     TerminalDebt,
     StrictClean,
+    EnvelopeBellman,
     OperatorLower,
     Count,
 };
@@ -50,6 +54,10 @@ struct ProofPatternContract {
     ProofPatternSolution solution =
         ProofPatternSolution::MonotoneSubsolution;
     std::string_view provenance;
+    std::string minimizing_action;
+    std::string fallback_reason = "not_prepared";
+    std::string refinement_trace;
+    double start_contribution = std::numeric_limits<double>::infinity();
     double residual = std::numeric_limits<double>::infinity();
     std::uint64_t solution_sweeps = 0;
     std::uint64_t selected_owner_calls = 0;
@@ -138,6 +146,15 @@ class ProofPatternManager {
                "optimistic pool probability and clairvoyant observation",
                ProofPatternSolution::MonotoneSubsolution,
                "clean_goal_progress_relaxation"},
+              {ProofPatternKind::IdentityCleanMdp,
+               "identity_clean_mdp",
+               "fixed exact identity x rarity x goal mask x occupancy",
+               "priced primitive shapes that preserve source identity",
+               "carrier MDP when identity changes",
+               "descriptor or proved primitive wrapper price",
+               "free identity-preserving cleanup and perfect preservation",
+               ProofPatternSolution::MonotoneSubsolution,
+               "fixed_identity_clean_goal_progress_relaxation"},
               {ProofPatternKind::CarrierMdp,
                "carrier_mdp",
                "rarity x exact goal mask",
@@ -147,6 +164,15 @@ class ProofPatternManager {
                "perfect preservation/free cleanup progress envelope",
                ProofPatternSolution::MonotoneSubsolution,
                "carrier_persistent_progress_relaxation"},
+              {ProofPatternKind::BoundedGainMdp,
+               "bounded_gain_mdp",
+               "rarity x satisfied-goal count",
+               "priced carrier actions with bounded per-use goal gains",
+               "carrier MDP",
+               "descriptor or proved primitive wrapper price",
+               "perfect preservation plus at most one goal per draw",
+               ProofPatternSolution::MonotoneSubsolution,
+               "bounded_per_action_goal_gain_relaxation"},
               {ProofPatternKind::TerminalDebt,
                "terminal_debt",
                "exact carrier first-step legality",
@@ -165,6 +191,15 @@ class ProofPatternManager {
                "exact covered kernels plus optimistic escape",
                ProofPatternSolution::MonotoneSubsolution,
                "strict_clean_goal_progress_pattern"},
+              {ProofPatternKind::EnvelopeBellman,
+               "envelope_bellman",
+               "exact start carrier x complete priced operator envelope",
+               "materialized rows plus proved per-operator fallbacks",
+               "zero when any priced operator lacks a finite fallback",
+               "exact row price or guaranteed first-step price",
+               "exact row successors over independent pattern lowers",
+               ProofPatternSolution::ExactSuccessorComposition,
+               "complete_operator_minimum_of_row_and_fallback_lowers"},
               {ProofPatternKind::OperatorLower,
                "operator_lower",
                "exact source carrier x planner action shape",
@@ -180,6 +215,7 @@ class ProofPatternManager {
         operator_contract.residual = 0.0;
         operator_contract.solution_sweeps = 1;
         operator_contract.converged = true;
+        operator_contract.fallback_reason = "state_local_only";
     }
 
     ProofPatternContract& contract(const ProofPatternKind kind) {
@@ -244,6 +280,9 @@ class ProofPatternManager {
     std::vector<double> goal_cover_cost;
     std::vector<double> clean_goal_cover_cost;
     std::vector<double> carrier_goal_progress_cost;
+    std::vector<double> carrier_goal_action_floor;
+    std::vector<double> bounded_gain_goal_progress_cost;
+    std::vector<double> bounded_gain_action_floor;
     std::vector<std::uint32_t> carrier_unproved_first_step_actions;
     std::vector<std::pair<std::uint32_t, double>>
         carrier_priced_first_step_actions;
@@ -254,6 +293,8 @@ class ProofPatternManager {
     std::vector<std::uint32_t> clean_goal_escape_action;
     std::vector<double> clean_goal_no_exalt_escape_cost;
     std::vector<std::uint32_t> clean_goal_no_exalt_escape_action;
+    std::vector<double> clean_goal_start_action_floor;
+    double envelope_bellman_lower = std::numeric_limits<double>::infinity();
     std::vector<double> strict_clean_goal_cover_cost;
     std::uint32_t strict_clean_goal_cover_state_count = 0;
     bool strict_clean_goal_cover_refresh_needed = false;

@@ -716,6 +716,9 @@ class CalcContext {
         bool registry_contracts_validated = false);
 
     const SessionImpl& session() const { return *session_; }
+    const std::shared_ptr<const SessionImpl>& shared_session() const {
+        return session_;
+    }
     const AbstractLayout& layout() const { return layout_; }
     const ActionRegistry& registry() const { return registry_; }
     const std::vector<PlannerOperator>& operators() const {

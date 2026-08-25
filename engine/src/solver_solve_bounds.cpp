@@ -391,6 +391,8 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
             ProofPatternKind::CleanMdp);
         ProofPatternContract& carrier_contract = contract(
             ProofPatternKind::CarrierMdp);
+        ProofPatternContract& bounded_gain_contract = contract(
+            ProofPatternKind::BoundedGainMdp);
         ProofPatternContract& debt_contract = contract(
             ProofPatternKind::TerminalDebt);
         universal_contract.residual = 0.0;
@@ -748,6 +750,7 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
             std::size_t success = 0;
             std::size_t failure = 0;
             bool terminal = false;
+            std::uint32_t action = kNoId;
         };
         const std::size_t carrier_state_count =
             kCarrierRarityCount * mask_count;
@@ -833,7 +836,7 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                             PC_RARITY_NORMAL, 0);
                         carrier_transitions[current].push_back(
                             CarrierTransition{
-                                cost, 0.0, fresh, fresh, false});
+                                cost, 0.0, fresh, fresh, false, action});
                         continue;
                     }
                     const bool leaves_probability_identity =
@@ -843,7 +846,7 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                     if (leaves_probability_identity) {
                         carrier_transitions[current].push_back(
                             CarrierTransition{
-                                cost, 1.0, current, current, true});
+                                cost, 1.0, current, current, true, action});
                         continue;
                     }
                     const std::uint8_t next_rarity = carrier_output_rarity(
@@ -859,7 +862,8 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                         if (successor != current) {
                             carrier_transitions[current].push_back(
                                 CarrierTransition{
-                                    cost, 0.0, successor, successor, false});
+                                    cost, 0.0, successor, successor, false,
+                                    action});
                         }
                         continue;
                     }
@@ -868,7 +872,8 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                             next_rarity, mask | available);
                         carrier_transitions[current].push_back(
                             CarrierTransition{
-                                cost, 1.0, successor, successor, false});
+                                cost, 1.0, successor, successor, false,
+                                action});
                         continue;
                     }
 
@@ -882,10 +887,21 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                         CarrierTransition{
                             cost, probability,
                             carrier_index(next_rarity, mask | available),
-                            carrier_index(next_rarity, mask), false});
+                            carrier_index(next_rarity, mask), false, action});
                 }
             }
         }
+
+        const AbstractState& start_carrier =
+            calc.state(result.start_state);
+        const std::size_t start_carrier_index = carrier_index(
+            start_carrier.rarity,
+            satisfied_goal_mask_for_state(result.start_state));
+        /* The reduced transition table below owns the global MDP solve.
+         * Retain its small unreduced action partition transiently so the
+         * envelope pattern can later ask which action actually pins any
+         * projected carrier state. */
+        const auto carrier_action_transitions = carrier_transitions;
 
         /* Fossil and Harvest vocabularies can contribute thousands of
          * actions with the same relaxed successors. For a fixed
@@ -962,14 +978,14 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
             carrier_state_count, 0.0);
         std::vector<double> next_carrier_cost =
             carrier_goal_progress_cost;
-        /* At most five goal acquisitions plus two rarity changes are useful
-         * on the current eight-slot vocabulary. Thirty-two monotone Bellman
-         * lifts leave ample room for cross-rarity setup while bounding work
-         * when the product envelope contains thousands of fixed loadouts.
-         * A capped iterate remains a valid subsolution. */
+        /* Solve to the reported residual. If the defensive sweep ceiling is
+         * ever reached, the monotone iterate remains a safe subsolution but
+         * cannot report convergence. */
         double carrier_residual = kInfinity;
         std::uint32_t carrier_sweeps = 0;
-        for (std::uint32_t iteration = 0; iteration < 32; ++iteration) {
+        constexpr std::uint32_t kMaxCarrierProofSweeps = 4096;
+        for (std::uint32_t iteration = 0;
+             iteration < kMaxCarrierProofSweeps; ++iteration) {
             carrier_sweeps = iteration + 1;
             double delta = 0.0;
             next_carrier_cost = carrier_goal_progress_cost;
@@ -1027,18 +1043,414 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
         carrier_contract.residual = carrier_residual;
         carrier_contract.solution_sweeps = carrier_sweeps;
         carrier_contract.converged = carrier_residual <= 1e-12;
-        const AbstractState& start_carrier =
-            calc.state(result.start_state);
-        const std::size_t start_carrier_index = carrier_index(
-            start_carrier.rarity,
-            satisfied_goal_mask_for_state(result.start_state));
         const double start_carrier_progress =
             start_carrier_index < carrier_goal_progress_cost.size()
                 ? carrier_goal_progress_cost[start_carrier_index]
                 : kInfinity;
+        carrier_contract.start_contribution = start_carrier_progress;
+        carrier_contract.fallback_reason = carrier_contract.converged
+            ? "complete_carrier_projection"
+            : "interrupted_monotone_subsolution";
+        const std::size_t action_count = calc.registry().actions.size();
+        carrier_goal_action_floor.assign(
+            carrier_state_count * action_count, kInfinity);
+        for (std::size_t current = 0;
+             current < carrier_action_transitions.size(); ++current) {
+            for (const CarrierTransition& transition :
+                 carrier_action_transitions[current]) {
+                if (transition.action >= action_count) continue;
+                if (!transition.terminal &&
+                    (!carrier_can_finish[transition.success] ||
+                     (transition.success_probability < 1.0 &&
+                      transition.failure != current &&
+                      !carrier_can_finish[transition.failure]))) {
+                    continue;
+                }
+                double candidate = transition.cost;
+                if (!transition.terminal) {
+                    if (transition.success_probability <= 0.0) {
+                        candidate += carrier_goal_progress_cost[
+                            transition.failure];
+                    } else if (transition.failure == current) {
+                        candidate =
+                            (transition.cost +
+                             transition.success_probability *
+                                 carrier_goal_progress_cost[
+                                     transition.success]) /
+                            transition.success_probability;
+                    } else {
+                        candidate += transition.success_probability *
+                            carrier_goal_progress_cost[transition.success] +
+                            (1.0 - transition.success_probability) *
+                                carrier_goal_progress_cost[
+                                    transition.failure];
+                    }
+                }
+                const std::size_t index =
+                    current * action_count + transition.action;
+                carrier_goal_action_floor[index] = std::min(
+                    carrier_goal_action_floor[index], candidate);
+            }
+        }
+        double minimizing_carrier = kInfinity;
+        for (const std::uint32_t action : relaxation_actions) {
+            const std::size_t index =
+                start_carrier_index * action_count + action;
+            if (index >= carrier_goal_action_floor.size() ||
+                !action_legal(
+                    session, calc.registry().actions[action],
+                    start_carrier)) {
+                continue;
+            }
+            if (carrier_goal_action_floor[index] < minimizing_carrier) {
+                minimizing_carrier = carrier_goal_action_floor[index];
+                carrier_contract.minimizing_action =
+                    calc.registry().actions[action].id;
+            }
+        }
+        double start_debt = kInfinity;
+        std::uint32_t start_debt_action = kNoId;
+        for (const std::uint32_t action :
+             carrier_unproved_first_step_actions) {
+            if (action_legal(
+                    session, calc.registry().actions[action],
+                    start_carrier)) {
+                start_debt = 0.0;
+                start_debt_action = action;
+                break;
+            }
+        }
+        if (!std::isfinite(start_debt)) {
+            for (const auto& [action, cost] :
+                 carrier_priced_first_step_actions) {
+                if (cost < start_debt &&
+                    action_legal(
+                        session, calc.registry().actions[action],
+                        start_carrier)) {
+                    start_debt = cost;
+                    start_debt_action = action;
+                }
+            }
+        }
+        debt_contract.start_contribution =
+            std::isfinite(start_debt) ? start_debt : 0.0;
+        debt_contract.fallback_reason = std::isfinite(start_debt)
+            ? "cheapest_legal_first_step"
+            : "no_priced_local_step_zero_fallback";
+        if (start_debt_action < calc.registry().actions.size()) {
+            debt_contract.minimizing_action =
+                calc.registry().actions[start_debt_action].id;
+        }
         retain_action_reason(
             "included:carrier_persistent_progress_relaxation:" +
             finite_json(start_carrier_progress));
+
+        /* A second, independent carrier pattern keeps only goal cardinality
+         * but limits a successful action to at most one new goal per affix
+         * draw. This removes the exact counterexample in which Regal (one
+         * draw) was allowed to grant every missing goal at once. It still
+         * grants perfect preservation, the most favorable source mask, and
+         * an upper success probability, so it remains a relaxation. The
+         * pattern is consumed only by the final envelope during this gate. */
+        struct GainTransition {
+            double cost = 0.0;
+            double success_probability = 0.0;
+            std::size_t success = 0;
+            std::size_t failure = 0;
+            bool terminal = false;
+            std::uint32_t action = kNoId;
+        };
+        const std::size_t gain_count =
+            static_cast<std::size_t>(required) + 1;
+        const auto gain_index = [&] (
+            const std::uint8_t rarity,
+            const std::uint32_t progress) {
+            return static_cast<std::size_t>(rarity) * gain_count +
+                std::min<std::size_t>(progress, required);
+        };
+        const std::size_t gain_state_count =
+            kCarrierRarityCount * gain_count;
+        std::vector<std::vector<GainTransition>> gain_transitions(
+            gain_state_count);
+        std::vector<std::uint8_t> gain_goal(gain_state_count, 0);
+        for (std::uint8_t rarity = 0;
+             rarity < kCarrierRarityCount; ++rarity) {
+            for (std::uint32_t progress = 0;
+                 progress <= required; ++progress) {
+                const std::size_t current = gain_index(rarity, progress);
+                if (rarity == calc.goal().rarity && progress >= required) {
+                    gain_goal[current] = 1;
+                    continue;
+                }
+                for (const std::uint32_t action : relaxation_actions) {
+                    const ActionDescriptor& descriptor =
+                        calc.registry().actions.at(action);
+                    if ((descriptor.legality.rarity_mask &
+                         (1u << rarity)) == 0 ||
+                        (descriptor.synthetic &&
+                         !options.allow_economic_restart)) {
+                        continue;
+                    }
+                    const double cost = carrier_action_cost(action);
+                    if (!std::isfinite(cost) || cost < 0.0) continue;
+                    if (descriptor.synthetic) {
+                        const std::size_t fresh = gain_index(
+                            PC_RARITY_NORMAL, 0);
+                        gain_transitions[current].push_back(
+                            {cost, 0.0, fresh, fresh, false, action});
+                        continue;
+                    }
+                    const bool leaves_probability_identity =
+                        (descriptor.sets_flags & kFlagInfluenced) != 0 ||
+                        (descriptor.sets_flags & kProtectionFlags) != 0 ||
+                        descriptor.params.type == ActionType::Fracture;
+                    if (leaves_probability_identity) {
+                        gain_transitions[current].push_back(
+                            {cost, 1.0, current, current, true, action});
+                        continue;
+                    }
+                    const std::uint8_t next_rarity = carrier_output_rarity(
+                        descriptor.params.type, rarity);
+                    const auto [draws, unused_one_total_draw] =
+                        probabilistic_shape(descriptor.params.type);
+                    (void)unused_one_total_draw;
+                    for (std::uint32_t mask = 0;
+                         mask < mask_count; ++mask) {
+                        if (std::popcount(mask) != progress) continue;
+                        const std::uint32_t available =
+                            action_goal_reach_mask(action) & ~mask;
+                        if (available == 0) {
+                            const std::size_t successor = gain_index(
+                                next_rarity, progress);
+                            if (successor != current) {
+                                gain_transitions[current].push_back(
+                                    {cost, 0.0, successor, successor,
+                                     false, action});
+                            }
+                            continue;
+                        }
+                        const std::uint32_t remaining = required - progress;
+                        if (draws == 0) {
+                            const std::uint32_t gain = std::min(
+                                remaining,
+                                static_cast<std::uint32_t>(
+                                    std::popcount(available)));
+                            gain_transitions[current].push_back(
+                                {cost, 1.0,
+                                 gain_index(next_rarity, progress + gain),
+                                 gain_index(next_rarity, progress), false,
+                                 action});
+                            continue;
+                        }
+                        const std::uint32_t gain = std::min({
+                            remaining,
+                            static_cast<std::uint32_t>(draws),
+                            static_cast<std::uint32_t>(
+                                std::popcount(available))});
+                        if (gain == 0) continue;
+                        const double probability = carrier_probability_upper(
+                            action, mask, available, descriptor, draws);
+                        if (!(probability > 0.0) ||
+                            !std::isfinite(probability)) {
+                            continue;
+                        }
+                        gain_transitions[current].push_back(
+                            {cost, probability,
+                             gain_index(next_rarity, progress + gain),
+                             gain_index(next_rarity, progress), false,
+                             action});
+                    }
+                }
+            }
+        }
+        const auto gain_action_transitions = gain_transitions;
+        for (auto& transitions : gain_transitions) {
+            std::sort(
+                transitions.begin(), transitions.end(),
+                [](const GainTransition& left,
+                   const GainTransition& right) {
+                    return std::tuple{
+                               left.terminal, left.success, left.failure,
+                               -left.success_probability, left.cost} <
+                           std::tuple{
+                               right.terminal, right.success, right.failure,
+                               -right.success_probability, right.cost};
+                });
+            std::vector<GainTransition> reduced;
+            std::size_t begin = 0;
+            while (begin < transitions.size()) {
+                std::size_t end = begin + 1;
+                while (end < transitions.size() &&
+                       transitions[end].terminal ==
+                           transitions[begin].terminal &&
+                       transitions[end].success ==
+                           transitions[begin].success &&
+                       transitions[end].failure ==
+                           transitions[begin].failure) {
+                    ++end;
+                }
+                double cheapest_at_higher_probability = kInfinity;
+                for (std::size_t i = begin; i < end; ++i) {
+                    if (transitions[i].cost + 1e-15 <
+                        cheapest_at_higher_probability) {
+                        reduced.push_back(transitions[i]);
+                        cheapest_at_higher_probability = transitions[i].cost;
+                    }
+                }
+                begin = end;
+            }
+            transitions = std::move(reduced);
+        }
+        std::vector<std::uint8_t> gain_can_finish = gain_goal;
+        for (std::size_t pass = 0; pass < gain_state_count; ++pass) {
+            bool changed = false;
+            for (std::size_t state = 0;
+                 state < gain_state_count; ++state) {
+                if (gain_can_finish[state]) continue;
+                for (const GainTransition& transition :
+                     gain_transitions[state]) {
+                    const bool success_finishes = transition.terminal ||
+                        gain_can_finish[transition.success];
+                    const bool failure_finishes =
+                        transition.success_probability >= 1.0 ||
+                        transition.failure == state ||
+                        gain_can_finish[transition.failure];
+                    if (success_finishes && failure_finishes) {
+                        gain_can_finish[state] = 1;
+                        changed = true;
+                        break;
+                    }
+                }
+            }
+            if (!changed) break;
+        }
+        bounded_gain_goal_progress_cost.assign(gain_state_count, 0.0);
+        std::vector<double> next_gain_cost =
+            bounded_gain_goal_progress_cost;
+        double gain_residual = kInfinity;
+        std::uint32_t gain_sweeps = 0;
+        constexpr std::uint32_t kMaxMonotoneProofSweeps = 4096;
+        for (std::uint32_t iteration = 0;
+             iteration < kMaxMonotoneProofSweeps; ++iteration) {
+            gain_sweeps = iteration + 1;
+            double delta = 0.0;
+            next_gain_cost = bounded_gain_goal_progress_cost;
+            for (std::size_t current = 0;
+                 current < gain_state_count; ++current) {
+                if (gain_goal[current] || !gain_can_finish[current]) continue;
+                double best = kInfinity;
+                for (const GainTransition& transition :
+                     gain_transitions[current]) {
+                    if (!transition.terminal &&
+                        (!gain_can_finish[transition.success] ||
+                         (transition.success_probability < 1.0 &&
+                          transition.failure != current &&
+                          !gain_can_finish[transition.failure]))) {
+                        continue;
+                    }
+                    double candidate = transition.cost;
+                    if (!transition.terminal) {
+                        if (transition.success_probability <= 0.0) {
+                            candidate += bounded_gain_goal_progress_cost[
+                                transition.failure];
+                        } else if (transition.failure == current) {
+                            candidate =
+                                (transition.cost +
+                                 transition.success_probability *
+                                     bounded_gain_goal_progress_cost[
+                                         transition.success]) /
+                                transition.success_probability;
+                        } else {
+                            candidate += transition.success_probability *
+                                bounded_gain_goal_progress_cost[
+                                    transition.success] +
+                                (1.0 - transition.success_probability) *
+                                    bounded_gain_goal_progress_cost[
+                                        transition.failure];
+                        }
+                    }
+                    best = std::min(best, candidate);
+                }
+                if (std::isfinite(best)) {
+                    next_gain_cost[current] = std::max(
+                        bounded_gain_goal_progress_cost[current], best);
+                }
+                delta = std::max(
+                    delta,
+                    std::abs(
+                        next_gain_cost[current] -
+                        bounded_gain_goal_progress_cost[current]));
+            }
+            bounded_gain_goal_progress_cost.swap(next_gain_cost);
+            gain_residual = delta;
+            if (delta <= 1e-12) break;
+        }
+        bounded_gain_contract.residual = gain_residual;
+        bounded_gain_contract.solution_sweeps = gain_sweeps;
+        bounded_gain_contract.converged = gain_residual <= 1e-12;
+        bounded_gain_action_floor.assign(
+            gain_state_count * action_count, kInfinity);
+        for (std::size_t current = 0;
+             current < gain_action_transitions.size(); ++current) {
+            for (const GainTransition& transition :
+                 gain_action_transitions[current]) {
+                if (transition.action >= action_count) continue;
+                double candidate = transition.cost;
+                if (!transition.terminal) {
+                    if (transition.success_probability <= 0.0) {
+                        candidate += bounded_gain_goal_progress_cost[
+                            transition.failure];
+                    } else if (transition.failure == current) {
+                        candidate =
+                            (transition.cost +
+                             transition.success_probability *
+                                 bounded_gain_goal_progress_cost[
+                                     transition.success]) /
+                            transition.success_probability;
+                    } else {
+                        candidate += transition.success_probability *
+                            bounded_gain_goal_progress_cost[
+                                transition.success] +
+                            (1.0 - transition.success_probability) *
+                                bounded_gain_goal_progress_cost[
+                                    transition.failure];
+                    }
+                }
+                const std::size_t index =
+                    current * action_count + transition.action;
+                bounded_gain_action_floor[index] = std::min(
+                    bounded_gain_action_floor[index], candidate);
+            }
+        }
+        const std::uint32_t start_progress = std::min(
+            required,
+            static_cast<std::uint32_t>(
+                std::popcount(
+                    satisfied_goal_mask_for_state(result.start_state))));
+        const std::size_t start_gain_index = gain_index(
+            start_carrier.rarity, start_progress);
+        bounded_gain_contract.start_contribution =
+            bounded_gain_goal_progress_cost[start_gain_index];
+        bounded_gain_contract.fallback_reason =
+            bounded_gain_contract.converged
+                ? "complete_bounded_gain_projection"
+                : "interrupted_monotone_subsolution";
+        double minimizing_gain = kInfinity;
+        for (const std::uint32_t action : relaxation_actions) {
+            const std::size_t index =
+                start_gain_index * action_count + action;
+            if (index >= bounded_gain_action_floor.size() ||
+                !action_legal(
+                    session, calc.registry().actions[action],
+                    start_carrier)) {
+                continue;
+            }
+            if (bounded_gain_action_floor[index] < minimizing_gain) {
+                minimizing_gain = bounded_gain_action_floor[index];
+                bounded_gain_contract.minimizing_action =
+                    calc.registry().actions[action].id;
+            }
+        }
 
         /* Keep a probability-free cover as the universal proof used for
          * price-bound action pruning and for carriers whose preserved
@@ -1076,19 +1488,38 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                             cover[mask] + cost / probability;
                         if (candidate < cover[produced]) {
                             cover[produced] = candidate;
-                            if (probability_aware) {
-                                cover_predecessor[produced] = mask;
-                                cover_action[produced] = action;
-                                cover_subset[produced] = subset;
-                            }
+                            cover_predecessor[produced] = mask;
+                            cover_action[produced] = action;
+                            cover_subset[produced] = subset;
                         }
                     }
                 }
             }
         };
         relax_cover(goal_cover_cost, false);
+        const std::uint32_t start_satisfied =
+            satisfied_goal_mask_for_state(result.start_state);
+        double universal_start = kInfinity;
+        std::uint32_t universal_action = kNoId;
+        for (std::uint32_t produced = 0;
+             produced < goal_cover_cost.size(); ++produced) {
+            if (std::popcount(start_satisfied | produced) < required ||
+                goal_cover_cost[produced] >= universal_start) {
+                continue;
+            }
+            universal_start = goal_cover_cost[produced];
+            universal_action = cover_action[produced];
+        }
+        universal_contract.start_contribution = universal_start;
+        universal_contract.fallback_reason =
+            std::isfinite(universal_start)
+                ? "complete_probability_free_cover"
+                : "no_finite_goal_cover";
+        if (universal_action < calc.registry().actions.size()) {
+            universal_contract.minimizing_action =
+                calc.registry().actions[universal_action].id;
+        }
         (void)cover_predecessor;
-        (void)cover_action;
         (void)cover_subset;
         if (slot_count < 2) {
             clean_goal_cover_cost.clear();
@@ -1260,6 +1691,13 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
             exact_destructive_envelopes;
         const AbstractState& probability_anchor =
             calc.state(result.start_state);
+        const std::size_t start_clean_index = abstract_index(
+            probability_anchor.rarity,
+            satisfied_goal_mask_for_state(result.start_state),
+            probability_anchor.prefix_count,
+            probability_anchor.suffix_count);
+        clean_goal_start_action_floor.assign(
+            calc.registry().actions.size(), kInfinity);
         /*
          * Incremental generation deliberately establishes the Chaos support
          * before delayed destructive rows. Calling calc.outcomes here would
@@ -1352,6 +1790,12 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                              suffixes <= affix_cap; ++suffixes) {
                             const std::size_t current = abstract_index(
                                 rarity, mask, prefixes, suffixes);
+                            if (current == start_clean_index) {
+                                std::fill(
+                                    clean_goal_start_action_floor.begin(),
+                                    clean_goal_start_action_floor.end(),
+                                    kInfinity);
+                            }
                             const double previous_current =
                                 clean_goal_cover_cost[current];
                             if (is_abstract_goal(
@@ -1363,6 +1807,17 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                             std::uint32_t best_action = kNoId;
                             const auto consider = [&](const double candidate,
                                                       const std::uint32_t action) {
+                                if (current == start_clean_index &&
+                                    action <
+                                        clean_goal_start_action_floor.size() &&
+                                    std::isfinite(candidate) &&
+                                    candidate >= 0.0) {
+                                    clean_goal_start_action_floor[action] =
+                                        std::min(
+                                            clean_goal_start_action_floor[
+                                                action],
+                                            candidate);
+                                }
                                 if (candidate < best) {
                                     best = candidate;
                                     best_action = action;
@@ -2045,6 +2500,21 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
         const std::uint32_t start_policy = clean_goal_policy[abstract_index(
             start.rarity, satisfied_goal_mask_for_state(result.start_state),
             start.prefix_count, start.suffix_count)];
+        const bool clean_start_eligible =
+            clean_goal_cover_eligible(result.start_state);
+        clean_contract.start_contribution = clean_start_eligible
+            ? start_lower
+            : kInfinity;
+        clean_contract.fallback_reason = !clean_start_eligible
+            ? "start_identity_outside_clean_projection"
+            : (clean_contract.converged
+                ? "complete_clean_projection"
+                : "interrupted_monotone_subsolution");
+        if (clean_start_eligible &&
+            start_policy < calc.registry().actions.size()) {
+            clean_contract.minimizing_action =
+                calc.registry().actions[start_policy].id;
+        }
         retain_action_reason(
             "included:clean_goal_progress_mdp:" + finite_json(start_lower) +
             ":sweeps=" + std::to_string(relaxation_sweeps) + ":" +

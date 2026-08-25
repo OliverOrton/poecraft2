@@ -613,8 +613,12 @@ function boundedBestPolicyReport(
     const allowedStopCauses = contract.allowed_bounded_stop_causes;
     const namedStop = allowedTerminations === undefined &&
             allowedStopCauses === undefined
-        ? solve?.termination === "refused_resource_cap" &&
-            capStops.has(solve.stop_cause)
+        ? (solve?.termination === "refused_resource_cap" &&
+                capStops.has(solve.stop_cause)) ||
+            (solve?.termination === "numerical_stability" &&
+                solve.stop_cause === "numerical_stability") ||
+            (solve?.termination === "requested_bounded_finish" &&
+                solve.stop_cause === "requested_bounded_finish")
         : solve !== null &&
             solve !== undefined &&
             (allowedTerminations === undefined ||

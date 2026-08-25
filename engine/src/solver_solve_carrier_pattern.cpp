@@ -180,16 +180,18 @@ double SolveWork::Impl::completion_proof_lower_value(
          * carrier shape. A clean/strict specialization may strengthen it but
          * must never replace it with a weaker value; exact successor Bellman
          * checks rely on that common lower component. */
-        /* The strict clean pattern database evaluates registry primitives,
-         * not carrier-local automatic option rows. Keep it out of the
-         * Eldritch maximum until that stricter abstraction has the same
-         * option coverage as the coarse/clean goal cover above. */
+        /* The strict database evaluates registry primitives, not the
+         * carrier-local Eldritch automatic options. Retain the established
+         * guard until those rows have complete no-stronger coverage. */
         const bool strict_available = !session.eldritch_eligible &&
             state < strict_clean_goal_cover_cost.size() &&
             std::isfinite(strict_clean_goal_cover_cost[state]);
         const double strict = strict_available
             ? strict_clean_goal_cover_cost[state]
             : kInfinity;
+        const bool envelope_available =
+            state == result.start_state &&
+            std::isfinite(envelope_bellman_lower);
         const ProofPatternSelection selected = select_maximum({
             {ProofPatternKind::UniversalCover, {universal}, true},
             {ProofPatternKind::CleanMdp, {clean}, true},
@@ -197,6 +199,8 @@ double SolveWork::Impl::completion_proof_lower_value(
              std::isfinite(carrier_progress)},
             {ProofPatternKind::TerminalDebt, {terminal_debt}, true},
             {ProofPatternKind::StrictClean, {strict}, strict_available},
+            {ProofPatternKind::EnvelopeBellman,
+             {envelope_bellman_lower}, envelope_available},
         }, kValueCeiling);
         /*
          * An infinite abstract value means the finite relaxation omitted a

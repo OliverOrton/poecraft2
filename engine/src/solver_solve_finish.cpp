@@ -1878,6 +1878,23 @@ SolveWork::Impl::run_finalization() {
         if (!executable_policy_abstraction_supported) {
             result.converged = false;
         }
+        /* Gate 6 qualifies the completed start-carrier action pattern only
+         * after search and executable-policy certification. Publishing this
+         * independent maximum cannot change scheduling, pruning, selected
+         * rows, or the incumbent; Gate 7 owns any work consumer. */
+        const double envelope_bellman =
+            refresh_envelope_bellman_pattern();
+        if (std::isfinite(envelope_bellman) &&
+            envelope_bellman >= 0.0 &&
+            envelope_bellman < kValueCeiling) {
+            result.diagnostics.independent_goal_cover_lower_bound =
+                std::max(
+                    result.diagnostics.independent_goal_cover_lower_bound,
+                    envelope_bellman);
+            result.diagnostics.focused_lower_bound = std::max(
+                result.diagnostics.focused_lower_bound,
+                envelope_bellman);
+        }
         if (result.converged) {
             const double exact_value = result.values[result.start_state];
             result.policy_available = true;
