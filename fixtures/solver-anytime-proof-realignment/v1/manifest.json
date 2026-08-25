@@ -1,0 +1,78 @@
+{
+  "schema_version": "solver_benchmark_corpus_v1",
+  "corpus_id": "poecraft2-solver-anytime-proof-realignment-gate0-v1",
+  "artifact": {
+    "manifest_relative_path": "data/compiled/current/manifest.json",
+    "canonical_source": "data/sqlite/poecraft.db",
+    "engine_abi_version": 2,
+    "artifact_schema_version": 4,
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+    "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+  },
+  "source_checkpoint": {
+    "engine_product_commit": "a1449fa",
+    "plan_commit": "0238753",
+    "documentation_preflight_commit": "fe2c542",
+    "mechanics_authority": "unchanged_current_implemented_contract"
+  },
+  "benchmark_identity_contract": {
+    "id": "solver-anytime-proof-realignment-gate0-v1",
+    "trajectory_required": true,
+    "native_repetitions": 3,
+    "fixed_work_identity_required": true,
+    "compiled_exact_evaluation_required": true,
+    "general_product_scope": {
+      "action_mode": "goal_relevant",
+      "goal_progress_gated_reforges": true,
+      "allow_economic_restart": false,
+      "consider_imprint_programs": false
+    },
+    "explicit_imprint_scope": {
+      "consider_imprint_programs": true
+    },
+    "required_disclosures": [
+      "artifact",
+      "source_checkpoint",
+      "economy",
+      "action_scope",
+      "terminal_goal",
+      "consider_imprint_programs",
+      "allow_economic_restart",
+      "caps",
+      "watchdog_or_requested_finish",
+      "work_step",
+      "verification"
+    ]
+  },
+  "case_roles": {
+    "conquest-lamellar-allflame-exact-zero-to-five-imprint-off": "clean_zero_to_five",
+    "conquest-lamellar-allflame-partial-five-capped-diagnostic": "current_four_of_five_fixed_work",
+    "conquest-lamellar-allflame-partial-five-last-mile-current": "owner_fractured_suppression_four_to_five",
+    "vaal-regalia-allflame-dirty-three-to-five": "preserved_prefix_side_targeted_replacement",
+    "spine-bow-partial-five-current-10s": "non_armour_ten_second_watchdog",
+    "spine-bow-tri-elemental-current-60s": "tri_elemental_bow",
+    "warlord-bounded-current-exact-terminal": "bounded_current_semantics_warlord",
+    "oracle-real-one-mod": "ordinary_native_release_wasm_parity",
+    "vaal-regalia-allflame-imprint-retry": "explicit_imprint_product_control"
+  },
+  "owner_decisions": [
+    "Every Calculator-profile case uses exact terminal semantics, goal-progress-gated destructive reforges, no voluntary economic Restart unless explicitly stated by the case, and automatic Imprint programs off.",
+    "The tri-elemental Bow retains its already-disclosed economic Restart scope as a dedicated recovery control.",
+    "The Imprint case is outside the general profile and explicitly opts generated Imprint programs in.",
+    "Synthetic prices in existing forced-winner controls remain reachability evidence only and are not market evidence.",
+    "Gate 0 runs skip sampled verification; independent exact evaluation remains required where the case requests it. The final gate owns required 10,000-run verification."
+  ],
+  "cases": [
+    "../../../docs/archive/2026-08-24-carrier-aware-proof-bounds/evidence/imprint-scope-follow-up/five-t1-imprint-off.json",
+    "../../../docs/archive/2026-08-22-five-t1-goal-band-recovery/partial-five-capped-diagnostic.json",
+    "cases/conquest-lamellar-allflame-partial-five-last-mile-current.json",
+    "cases/conquest-lamellar-allflame-dirty-three-to-five.json",
+    "../../../docs/archive/2026-08-24-carrier-aware-control-authority/spine-bow-partial-five-10s.json",
+    "../../../docs/archive/2026-08-24-carrier-aware-control-authority/spine-bow-tri-elemental-60s.json",
+    "cases/warlord-bounded-current.json",
+    "../../solver-benchmarks/v1/cases/oracle-real-one-mod.json",
+    "../../solver-goal-realignment/v1/cases/vaal-regalia-allflame-imprint-retry.json"
+  ]
+}

@@ -142,6 +142,20 @@ void SolveWork::Impl::record_operator_lower_attribution(
     if (constructive_prune) ++stats.constructive_prunes;
 }
 
+void SolveWork::Impl::record_operator_lower_skip(
+        const std::uint32_t operator_index,
+        const CarrierBoundAttributionWork::OperatorLowerSkipReason reason) {
+    if (!carrier_bound_attribution) return;
+    const std::size_t reason_index = static_cast<std::size_t>(reason);
+    if (reason_index >=
+        CarrierBoundAttributionWork::kOperatorLowerSkipReasonCount) {
+        return;
+    }
+    ++carrier_bound_attribution->operator_lower_skips
+          .at(carrier_bound_operator_family(operator_index))
+          .at(reason_index);
+}
+
 void SolveWork::Impl::record_carrier_schedule_attribution(
         const CarrierBoundAttributionWork::ScheduleStage stage,
         const std::uint32_t state,
@@ -706,9 +720,16 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
     for (std::size_t family = 0;
          family < Work::kOperatorFamilyCount; ++family) {
         const auto& stats = carrier_bound_attribution->operator_lower[family];
+        const auto& skips =
+            carrier_bound_attribution->operator_lower_skips[family];
         const std::uint64_t pair_admissions = carrier_bound_attribution
             ->carrier_action_admissions_by_family[family];
-        if (stats.evaluations == 0 && pair_admissions == 0) continue;
+        const std::uint64_t skip_count = std::accumulate(
+            skips.begin(), skips.end(), std::uint64_t{0});
+        if (stats.evaluations == 0 && pair_admissions == 0 &&
+            skip_count == 0) {
+            continue;
+        }
         if (!first) json += ',';
         first = false;
         json += "{\"family\":";
@@ -731,6 +752,9 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
             std::to_string(stats.state_incumbent_prunes);
         json += ",\"constructive_certificate_prunes\":" +
             std::to_string(stats.constructive_prunes);
+        json += ",\"skipped\":{\"no_finite_incumbent\":" +
+            std::to_string(skips[static_cast<std::size_t>(
+                Work::OperatorLowerSkipReason::NoFiniteIncumbent)]) + '}';
         json += ",\"carrier_action_admissions\":" +
             std::to_string(pair_admissions) + '}';
     }

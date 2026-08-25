@@ -2,6 +2,7 @@
 param(
     [ValidateSet("all", "native", "wasm")]
     [string]$Runner = "all",
+    [string]$Corpus = "fixtures/solver-benchmarks/v1/manifest.json",
     [string]$Case = "",
     [ValidatePattern("^[A-Za-z0-9._-]+$")]
     [string]$Label = "s7.0-unoptimized",
@@ -22,7 +23,11 @@ param(
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
-$Corpus = Join-Path $Root "fixtures/solver-benchmarks/v1/manifest.json"
+$CorpusPath = if ([System.IO.Path]::IsPathRooted($Corpus)) {
+    $Corpus
+} else {
+    Join-Path $Root $Corpus
+}
 $Output = Join-Path $Root "build/performance"
 New-Item -ItemType Directory -Force -Path $Output | Out-Null
 $ReportSuffix = "$Label-v1"
@@ -36,8 +41,8 @@ $NativeReport = Join-Path $Output "native-solver-$ReportSuffix.json"
 $WasmReport = Join-Path $Output "wasm-worker-solver-$ReportSuffix.json"
 $ComparisonReport = Join-Path $Output "solver-$ReportSuffix-comparison.json"
 
-if (-not (Test-Path -LiteralPath $Corpus)) {
-    throw "Solver benchmark corpus not found: $Corpus"
+if (-not (Test-Path -LiteralPath $CorpusPath)) {
+    throw "Solver benchmark corpus not found: $CorpusPath"
 }
 
 if ($Runner -in @("all", "native")) {
@@ -55,7 +60,7 @@ if ($Runner -in @("all", "native")) {
     }
     $NativeArgs = @(
         "--artifact", "$Root/data/compiled/current",
-        "--corpus", $Corpus,
+        "--corpus", $CorpusPath,
         "--output", $NativeReport
     )
     if ($Case) { $NativeArgs += @("--case", $Case) }
@@ -103,7 +108,7 @@ if ($Runner -in @("all", "wasm")) {
     Push-Location "$Root/apps/web"
     try {
         $WasmArgs = @(
-            "--corpus", $Corpus,
+            "--corpus", $CorpusPath,
             "--output", $WasmReport
         )
         if ($Case) { $WasmArgs += @("--case", $Case) }

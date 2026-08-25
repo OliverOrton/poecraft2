@@ -1,11 +1,10 @@
 # Handoff
 
-**Status: no implementation boundary is active.** Oliver has not yet started
-the proposed
+**Status: implementation boundary active.** Oliver started the
 [Solver Anytime Planning, Proof Patterns, And Debt Retirement](docs/active/2026-08-25-solver-anytime-proof-realignment/plan.md)
-plan. The focused
+plan on 2026-08-25. The focused
 [documentation preflight](docs/active/2026-08-25-solver-anytime-proof-realignment/preflight-audit.md)
-is complete and does not activate solver implementation.
+is complete; Gate 0 passed and implementation is at Gate 1.
 
 ## Current checkpoint
 
@@ -69,11 +68,17 @@ functionally equivalent, but its maximum worker slice was `186.781` ms against
 the unchanged 50 ms qualification. The full repository pipeline and rendered
 review were deliberately not run for that focused follow-up.
 
-## Next action
+## Active boundary
 
-Oliver may explicitly start the proposed plan. Gate −1 is already complete;
-implementation would begin at Gate 0. Until then, archived milestone prose has
-historical evidence authority only and no solver source work is authorized.
+Gate 0 pinned and reproduced the nine-case current-semantics benchmark matrix.
+The owner four-to-five carrier reproduced byte-identical policy authority in
+three runs, and the native harness now rejects implicit active-plan benchmark
+identity. See the [Gate 0 evidence](docs/active/2026-08-25-solver-anytime-proof-realignment/gate0-evidence.md).
+
+Gate 1 is establishing one typed `ActionEnvelopeLedger` for carrier/operator
+obligations and current-semantics mechanic-family coverage. Archived milestone
+prose retains historical evidence authority only; the active plan owns current
+sequence.
 
 The complete milestone lineage and raw measurements are preserved in the
 [archive](docs/archive/README.md) and [evidence index](docs/evidence.md).

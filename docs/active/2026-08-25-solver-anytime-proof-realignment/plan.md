@@ -1,7 +1,7 @@
 # Solver Anytime Planning, Proof Patterns, And Debt Retirement
 
-**Status: proposed on 2026-08-25; not active until Oliver explicitly starts
-implementation.**
+**Status: active on 2026-08-25 by Oliver's explicit instruction. Gates −1 and
+0 are complete and implementation is at Gate 1.**
 
 Parent: [Active work](../README.md)
 
@@ -9,7 +9,8 @@ Proposed from clean local checkpoint: `a1449fa` (`Record Imprint scope
 acceptance`)
 
 Documentation preflight: [Gate −1 passed on 2026-08-25](preflight-audit.md).
-The plan remains proposed; the preflight did not activate implementation.
+Oliver activated implementation from the preflight-clean working tree; the
+first implementation boundary is Gate 0.
 
 Predecessors:
 
@@ -112,6 +113,8 @@ No new mechanic ruling was required. The audit confirms that Gate 0 remains
 the first implementation gate if Oliver activates this plan.
 
 ## Gate 0 — Current-semantics benchmark and attribution authority
+
+**Passed 2026-08-25.** See the [Gate 0 evidence](gate0-evidence.md).
 
 Pin one reproducible benchmark manifest before changing behavior. Every case
 must disclose artifact, source, economy, action-envelope, terminal, Imprint,

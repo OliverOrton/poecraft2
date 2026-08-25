@@ -30,12 +30,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. The proposed
+The
 [Solver Anytime Planning, Proof Patterns, And Debt Retirement](active/2026-08-25-solver-anytime-proof-realignment/plan.md)
-successor awaits Oliver's explicit start instruction. Its completed
+plan is active at Gate 1 by Oliver's explicit 2026-08-25 instruction. Its completed
 [documentation preflight](active/2026-08-25-solver-anytime-proof-realignment/preflight-audit.md)
-confirms the current contract and records the stable-reference cleanup; it
-does not activate the implementation plan.
+confirms the current contract and records the stable-reference cleanup; its
+[Gate 0 evidence](active/2026-08-25-solver-anytime-proof-realignment/gate0-evidence.md)
+pins the current-semantics benchmark and attribution authority.
 
 Current source behavior starts from `a1449fa` (`Record Imprint scope
 acceptance`). Calculator and general solver benchmarks default generated

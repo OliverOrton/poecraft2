@@ -6,6 +6,7 @@
   "benchmark_enabled": true,
   "description": "Clean Vaal Regalia alteration oracle for T1 flat Energy Shield.",
   "comparison_profile": "native-wasm-solver-v1",
+  "watchdog_seconds": 60,
   "session": {
     "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
     "base_name": "Vaal Regalia",
@@ -19,6 +20,7 @@
   "goal": {
     "version": "v1",
     "rarity": "magic",
+    "min_satisfied_slots": 1,
     "slots": [
       {
         "family_mod_key": "LocalIncreasedEnergyShield11",
@@ -57,13 +59,25 @@
     "max_compiled_edges": 100000,
     "max_strategy_json_bytes": 16777216,
     "worker_step_ms": 50,
-    "cancel_ack_ms": 250
+    "cancel_ack_ms": 250,
+    "goal_progress_gated_reforges": false,
+    "allow_economic_restart": true,
+    "high_impact_executable_uppers": true,
+    "consider_imprint_programs": false,
+    "full_evidence": true
   },
   "verification": {
     "runs": 10000,
     "seed": 2026071501,
     "max_actions_per_run": 100000,
     "mean_cost_absolute_tolerance": 0.5,
-    "minimum_success_rate": 0.995
+    "minimum_success_rate": 0.995,
+    "exact_evaluation": true,
+    "exact_max_states": 1000000,
+    "exact_max_pairs": 5000000,
+    "exact_max_transitions": 20000000,
+    "exact_max_owned_bytes": 1073741824,
+    "exact_cost_absolute_tolerance": 1e-7,
+    "exact_cost_relative_tolerance": 1e-9
   }
 }

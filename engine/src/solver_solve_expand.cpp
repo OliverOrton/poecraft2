@@ -987,6 +987,13 @@ bool SolveWork::Impl::prepare_state_expansion(
                     "pruned:state_incumbent_operator_lower:" +
                     std::to_string(pruned));
             }
+        } else {
+            for (const std::uint32_t index : expansion_operator_indices) {
+                record_operator_lower_skip(
+                    index,
+                    CarrierBoundAttributionWork::OperatorLowerSkipReason::
+                        NoFiniteIncumbent);
+            }
         }
         /* Constructive deterministic goal finishes and Restart are exact
          * upper-bound producers. Evaluate them before broad stochastic

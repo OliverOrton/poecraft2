@@ -1,18 +1,19 @@
 # Active Work
 
-**Status: no implementation boundary is active.** One successor plan is
-proposed and awaits Oliver's explicit start instruction.
+**Status: implementation boundary active.** Oliver activated the solver
+anytime/proof realignment plan on 2026-08-25; Gate 0 passed and Gate 1 is in
+progress.
 
 Parent: [Documentation map](../README.md)
 
-## Proposed successor
+## Active boundary
 
 [Solver Anytime Planning, Proof Patterns, And Debt Retirement](2026-08-25-solver-anytime-proof-realignment/plan.md)
-is proposed from clean local checkpoint `a1449fa`.
+is active from clean local checkpoint `a1449fa`.
 
 Its [Gate −1 documentation and authority preflight](2026-08-25-solver-anytime-proof-realignment/preflight-audit.md)
 is complete. That source audit corrected stable-reference drift and confirmed
-the plan's boundaries; it did not activate implementation.
+the plan's boundaries. Oliver subsequently activated implementation at Gate 0.
 
 It sequences current-semantics benchmark authority, mechanic-family coverage,
 a monotone verified-incumbent portfolio, cooperative scheduler lanes, an
@@ -22,8 +23,10 @@ debt retirement. The reproducible 1.56M five-T1 result is a qualification
 target. The historical 87k policy is a research anchor, not a current-source
 deterministic baseline.
 
-Solver implementation must not begin until Oliver explicitly activates the
-plan. If activated, work begins at Gate 0 because Gate −1 is already complete.
+Implementation began at Gate 0 because Gate −1 was already complete. The
+[Gate 0 current-semantics evidence](2026-08-25-solver-anytime-proof-realignment/gate0-evidence.md)
+now pins the nine-case corpus, repeated policy identity, and attribution
+baseline.
 
 ## Current checkpoint
 

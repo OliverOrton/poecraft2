@@ -2219,6 +2219,69 @@ void validate_case_shape(const Value& specification) {
 
 void validate_case_manifest_contract(
     const Value& manifest, const Value& specification) {
+    if (const Value* identity = optional(
+            manifest, "benchmark_identity_contract", Type::Object)) {
+        required_string(*identity, "id");
+        required(*identity, "trajectory_required", Type::Bool);
+        required(*identity, "fixed_work_identity_required", Type::Bool);
+        required(
+            *identity, "compiled_exact_evaluation_required", Type::Bool);
+        const double repetitions = required(
+            *identity, "native_repetitions", Type::Number).number;
+        if (!std::isfinite(repetitions) || repetitions < 1.0 ||
+            std::floor(repetitions) != repetitions) {
+            throw std::runtime_error(
+                "benchmark identity native_repetitions must be a positive "
+                "integer");
+        }
+        required(*identity, "general_product_scope", Type::Object);
+        required(*identity, "explicit_imprint_scope", Type::Object);
+        required(*identity, "required_disclosures", Type::Array);
+        required(manifest, "artifact", Type::Object);
+        required(manifest, "source_checkpoint", Type::Object);
+
+        const std::string case_id = required_string(specification, "id");
+        const Value& roles = required(manifest, "case_roles", Type::Object);
+        const Value* role = roles.find(case_id);
+        if (role == nullptr || role->type != Type::String ||
+            role->string.empty()) {
+            throw std::runtime_error(
+                case_id + " is missing its benchmark role identity");
+        }
+        const Value& economy = required(
+            specification, "economy", Type::Object);
+        required_string(economy, "id");
+        if (economy.find("snapshot_path") == nullptr &&
+            economy.find("prices") == nullptr) {
+            throw std::runtime_error(
+                case_id + " economy must pin a snapshot or frozen prices");
+        }
+        const Value& goal = required(specification, "goal", Type::Object);
+        required(goal, "slots", Type::Array);
+        required(goal, "min_satisfied_slots", Type::Number);
+        if (specification.find("product_action_envelope") == nullptr &&
+            goal.find("actions") == nullptr) {
+            throw std::runtime_error(
+                case_id + " must disclose product or explicit action scope");
+        }
+        required_string(specification, "comparison_profile");
+        required(specification, "watchdog_seconds", Type::Number);
+        const Value& caps = required(specification, "caps", Type::Object);
+        required(caps, "solve_step_work_items", Type::Number);
+        required(caps, "worker_step_ms", Type::Number);
+        required(caps, "goal_progress_gated_reforges", Type::Bool);
+        required(caps, "allow_economic_restart", Type::Bool);
+        required(caps, "high_impact_executable_uppers", Type::Bool);
+        required(caps, "consider_imprint_programs", Type::Bool);
+        required(caps, "full_evidence", Type::Bool);
+        const Value& verification = required(
+            specification, "verification", Type::Object);
+        if (!required(verification, "exact_evaluation", Type::Bool).boolean) {
+            throw std::runtime_error(
+                case_id + " benchmark identity requires exact evaluation");
+        }
+    }
+
     const Value* profile = optional(
         manifest, "comparison_profile", Type::Object);
     if (profile == nullptr) return;

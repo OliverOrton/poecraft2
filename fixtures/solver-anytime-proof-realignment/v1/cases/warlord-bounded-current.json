@@ -1,0 +1,114 @@
+{
+  "schema_version": "solver_benchmark_case_v1",
+  "id": "warlord-bounded-current-exact-terminal",
+  "category": "solver_anytime_current_semantics",
+  "approval_status": "active_plan_witness_2026_08_25",
+  "benchmark_enabled": true,
+  "description": "Current exact-terminal bounded control: empty rare Vaal Regalia requiring the Warlord-only T1 physical-damage-taken-as-fire family.",
+  "comparison_profile": "solver-anytime-proof-realignment-gate0-v1",
+  "watchdog_seconds": 60,
+  "session": {
+    "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+    "base_name": "Vaal Regalia",
+    "item_class_key": "Body Armour",
+    "item_level": 86,
+    "minimum_item_level": 86
+  },
+  "start": {
+    "rarity": "rare",
+    "with_implicits": false,
+    "mods": []
+  },
+  "goal": {
+    "version": "v1",
+    "rarity": "rare",
+    "action_mode": "goal_relevant",
+    "min_satisfied_slots": 1,
+    "slots": [
+      {"family_mod_key": "PhysTakenAsFireInfluence2", "min_tier": 1}
+    ]
+  },
+  "product_action_envelope": {
+    "mode": "calculator_goal_relevant_priced_v1",
+    "envelope_goal": {
+      "version": "v1",
+      "rarity": "rare",
+      "action_mode": "goal_relevant",
+      "fossil_mode": "goal_relevant",
+      "requested_fossil_actions": [],
+      "min_satisfied_slots": 1,
+      "slots": [
+        {"family_mod_key": "PhysTakenAsFireInfluence2", "min_tier": 1}
+      ]
+    },
+    "pricing_filter": "all_declared_cost_keys_present"
+  },
+  "allowed_mechanic_families": ["calculator_goal_relevant_product_envelope"],
+  "compiled_operation_contract": {
+    "type": "influence_exalt",
+    "required_string_parameters": {"influence": "warlord"}
+  },
+  "economy": {
+    "version": "v1",
+    "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+    "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+    "league_key": "allflame",
+    "league_name": "Allflame",
+    "manual_overrides": {"base": 1.0},
+    "fallback_price": null,
+    "missing_price_decisions": {"base": "control_fixture_input_1_chaos"}
+  },
+  "expected": {
+    "solve_status": "reliability_classified",
+    "optimality_status": "classified",
+    "compile_status": "compiled",
+    "verification_status": "not_required"
+  },
+  "bounded_best_policy_contract": {
+    "allow_exact": true,
+    "bounded_requires_named_stop": true,
+    "bounded_requires_strict_gap": true,
+    "bounded_requires_open_obligations": true,
+    "require_evaluated_upper": true,
+    "require_cheapest_independently_evaluated_incumbent": true
+  },
+  "caps": {
+    "max_states": 200000,
+    "max_sweeps": 100000,
+    "solve_step_work_items": 1024,
+    "max_discovered_states": 200000,
+    "max_expanded_states": 200000,
+    "max_state_action_rows": 1215000,
+    "max_transitions": 10000000,
+    "max_reforge_work": 50000000,
+    "max_solver_owned_bytes": 1073741824,
+    "max_diagnostic_samples": 64,
+    "max_telemetry_json_bytes": 2097152,
+    "max_policy_refinement_states": 5000,
+    "max_compiled_nodes": 100000,
+    "max_compiled_edges": 400000,
+    "max_strategy_json_bytes": 67108864,
+    "worker_step_ms": 20000,
+    "cancel_ack_ms": 250,
+    "goal_progress_gated_reforges": true,
+    "allow_economic_restart": false,
+    "high_impact_executable_uppers": true,
+    "consider_imprint_programs": false,
+    "full_evidence": true
+  },
+  "verification": {
+    "runs": 0,
+    "seed": 20260824,
+    "max_actions_per_run": 100000,
+    "max_graph_steps_per_run": 4000000,
+    "exact_evaluation": true,
+    "exact_max_states": 1000000,
+    "exact_max_pairs": 5000000,
+    "exact_max_transitions": 20000000,
+    "exact_max_owned_bytes": 1073741824,
+    "exact_cost_absolute_tolerance": 1e-7,
+    "exact_cost_relative_tolerance": 1e-9
+  }
+}

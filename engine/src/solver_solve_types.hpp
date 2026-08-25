@@ -1262,6 +1262,13 @@ struct SolveWork::Impl {
             double maximum_margin = -kInfinity;
         };
 
+        enum class OperatorLowerSkipReason : std::uint8_t {
+            NoFiniteIncumbent = 0,
+            Count,
+        };
+        static constexpr std::size_t kOperatorLowerSkipReasonCount =
+            static_cast<std::size_t>(OperatorLowerSkipReason::Count);
+
         struct UpperMilestone {
             bool present = false;
             double value = kInfinity;
@@ -1289,6 +1296,10 @@ struct SolveWork::Impl {
             std::chrono::steady_clock::now();
         std::array<CarrierShapeHistogram, kScheduleStageCount> schedules{};
         std::array<OperatorLowerStats, kOperatorFamilyCount> operator_lower{};
+        std::array<
+            std::array<std::uint64_t, kOperatorLowerSkipReasonCount>,
+            kOperatorFamilyCount>
+            operator_lower_skips{};
         std::array<std::uint64_t, kOperatorFamilyCount>
             carrier_action_admissions_by_family{};
         UpperMilestone first_finite_upper;
@@ -1532,6 +1543,10 @@ struct SolveWork::Impl {
         double incumbent,
         bool state_incumbent_prune,
         bool constructive_prune);
+
+    void record_operator_lower_skip(
+        std::uint32_t operator_index,
+        CarrierBoundAttributionWork::OperatorLowerSkipReason reason);
 
     void record_carrier_schedule_attribution(
         CarrierBoundAttributionWork::ScheduleStage stage,
