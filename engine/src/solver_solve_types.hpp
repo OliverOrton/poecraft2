@@ -2,6 +2,7 @@
 
 #include "solver_action_envelope_ledger.hpp"
 #include "solver_anytime_scheduler.hpp"
+#include "solver_executable_carrier_planner.hpp"
 #include "solver_solve_contracts.hpp"
 
 #include "poecraft/bitset.h"

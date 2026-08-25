@@ -154,6 +154,71 @@ void run_anytime_scheduler_tests() {
     PC_CHECK(strict.lanes()[2].yields == 1);
 }
 
+void run_executable_carrier_projection_tests() {
+    AbstractState carrier;
+    carrier.rarity = PC_RARITY_RARE;
+    carrier.prefix_count = 3;
+    carrier.suffix_count = 2;
+    carrier.blocked_mask = 0b10000;
+    carrier.crafted_goal_mask = 0b00001;
+    carrier.fractured_goal_mask = 0b00100;
+    carrier.fractured_metamod_flags = 0x20;
+    carrier.flags = kFlagPrefixesLocked | kFlagCraftedMod;
+    carrier.influence_bits = 3;
+    carrier.veiled_side = PC_SIDE_SUFFIX;
+    carrier.searing_exarch_tier = 1;
+    carrier.eater_of_worlds_tier = 2;
+    carrier.junk_counts.assign(2, 0);
+    carrier.crafted_junk_counts.assign(2, 0);
+    carrier.fractured_junk_counts.assign(2, 0);
+    carrier.fractured_crafted_junk_counts.assign(2, 0);
+    carrier.junk_counts[0] = 1;
+    carrier.crafted_junk_counts[0] = 1;
+
+    const solve_detail::ExecutableCarrierProjection projection =
+        solve_detail::make_executable_carrier_projection(
+            carrier, 7, 0b00111, 0b00111, 0b11000, 3, 5,
+            kProtectionFlags);
+    PC_CHECK(projection.state == 7);
+    PC_CHECK(projection.satisfied_goal_mask == 0b00111);
+    PC_CHECK(projection.missing_goal_mask == 0b11000);
+    PC_CHECK(projection.blocked_mask == 0b10000);
+    PC_CHECK(projection.crafted_goal_mask == 0b00001);
+    PC_CHECK(projection.fractured_goal_mask == 0b00100);
+    PC_CHECK(projection.fractured_metamod_flags == 0x20);
+    PC_CHECK(projection.protection_flags == kFlagPrefixesLocked);
+    PC_CHECK((projection.other_flags & kFlagCraftedMod) != 0);
+    PC_CHECK(projection.junk_count == 1);
+    PC_CHECK(projection.crafted_junk_count == 1);
+    PC_CHECK(projection.missing_prefix_goals == 0);
+    PC_CHECK(projection.missing_suffix_goals == 2);
+    PC_CHECK(projection.prefix_capacity == 0);
+    PC_CHECK(projection.suffix_capacity == 1);
+    PC_CHECK(
+        (projection.debt_flags &
+         solve_detail::kExecutableDebtBlockedGoal) != 0);
+    PC_CHECK(
+        (projection.debt_flags &
+         solve_detail::kExecutableDebtSuffixCapacity) != 0);
+    PC_CHECK(projection.influence_bits == 3);
+    PC_CHECK(projection.veiled_side == PC_SIDE_SUFFIX);
+    PC_CHECK(projection.eater_of_worlds_tier == 2);
+
+    solve_detail::ExecutableCarrierActionProjection action;
+    action.operator_index = 19;
+    action.preserved_goal_mask = 0b00111;
+    action.destroyed_goal_mask = 0;
+    action.created_goal_mask = 0b11000;
+    action.preserved_fractured_goal_mask = 0b00100;
+    action.preserved_protection = kFlagPrefixesLocked;
+    action.destroyed_properties = kCarrierJunkBlockers;
+    PC_CHECK(action.operator_index == 19);
+    PC_CHECK(action.created_goal_mask == 0b11000);
+    PC_CHECK(action.preserved_fractured_goal_mask == 0b00100);
+    PC_CHECK(action.preserved_protection == kFlagPrefixesLocked);
+    PC_CHECK(action.destroyed_properties == kCarrierJunkBlockers);
+}
+
 void run_bounded_policy_row_capture_tests() {
     auto session = make_solve_session();
     /* Preserve the policy-lift observer collision without relying on the old
@@ -10956,6 +11021,7 @@ void run_solver_solve_tests(const char* artifact_dir) {
         default_options.max_solver_owned_bytes ==
         1024ull * 1024ull * 1024ull);
     run_anytime_scheduler_tests();
+    run_executable_carrier_projection_tests();
     run_incumbent_portfolio_monotonicity_tests();
     run_bounded_policy_row_capture_tests();
     run_certified_fallback_contract_tests();
