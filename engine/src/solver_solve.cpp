@@ -412,16 +412,10 @@ SolveWork::Impl::Impl(
                 if (first_fossil != delayed_operator_indices.end()) {
                     ordered.push_back(*first_fossil);
                 }
-                const std::array<ActionType, 3> family_order =
-                    options.high_impact_executable_uppers
-                        ? std::array<ActionType, 3>{
-                              ActionType::HarvestReforge,
-                              ActionType::Essence,
-                              ActionType::Fossil}
-                        : std::array<ActionType, 3>{
-                              ActionType::HarvestReforge,
-                              ActionType::Essence,
-                              ActionType::Fossil};
+                const std::array<ActionType, 3> family_order{
+                    ActionType::HarvestReforge,
+                    ActionType::Essence,
+                    ActionType::Fossil};
                 for (const ActionType family : family_order) {
                     for (const std::uint32_t index :
                          delayed_operator_indices) {

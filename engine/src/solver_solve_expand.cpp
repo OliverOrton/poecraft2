@@ -617,6 +617,20 @@ bool SolveWork::Impl::prepare_state_expansion(
                     const std::uint32_t right) {
                     return priority(left) < priority(right);
                 });
+            if (options.high_impact_executable_uppers) {
+                AnytimeScheduler::Availability available{};
+                available[static_cast<std::size_t>(
+                    AnytimeSchedulerLane::LegacyFairness)] = true;
+                available[static_cast<std::size_t>(
+                    AnytimeSchedulerLane::HighProgress)] = true;
+                const AnytimeSchedulerLane lane =
+                    anytime_scheduler.select(available);
+                if (lane == AnytimeSchedulerLane::HighProgress &&
+                    cooperative_high_progress_ordering_enabled()) {
+                    prioritize_carrier_actions(
+                        state, expansion_operator_indices);
+                }
+            }
             result.diagnostics.expansion_prepare_ns +=
                 static_cast<std::uint64_t>(
                     std::chrono::duration_cast<std::chrono::nanoseconds>(

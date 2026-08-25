@@ -4,13 +4,13 @@
 [Solver Anytime Planning, Proof Patterns, And Debt Retirement](docs/active/2026-08-25-solver-anytime-proof-realignment/plan.md)
 plan on 2026-08-25. The focused
 [documentation preflight](docs/active/2026-08-25-solver-anytime-proof-realignment/preflight-audit.md)
-is complete; Gates 0 through 2 passed and implementation is at Gate 3.
+is complete; Gates 0 through 3 are complete and implementation is at Gate 4.
 
 ## Current checkpoint
 
 - Branch: `main`.
-- Latest completed implementation checkpoint: Gate 2 monotone incumbent and
-  progress authority (this handoff's commit).
+- Latest completed implementation checkpoint: Gate 3 cooperative-scheduler
+  qualification fallback (this handoff's commit).
 - Current engine/product source checkpoint: `a1449fa` (`Record Imprint scope
   acceptance`).
 - Plan checkpoint: `0238753` (`Propose solver anytime proof realignment`).
@@ -89,11 +89,19 @@ independent global lower, restricted lower, and exact-closure authority. The
 owner and fixed-work strategies remain byte-identical. See the
 [Gate 2 evidence](docs/active/2026-08-25-solver-anytime-proof-realignment/gate2-evidence.md).
 
-Gate 3 is replacing frozen operator-major/high-impact scheduling control with
-cooperative fairness, executable-upper, high-progress, exact-closure, and
-proof-directed lanes while preserving every Gate 1 obligation. Archived
-milestone prose retains historical evidence authority only; the active plan
-owns current sequence.
+Gate 3 introduced typed cooperative fairness, executable-upper,
+high-progress, exact-closure, and reserved proof-directed lanes with complete
+quota/wait/yield/starvation telemetry. No measured profile qualified both the
+clean target and retained controls, so the plan's explicit fallback is active:
+the behavior-changing scheduler profile is disabled, the typed ledger remains
+observational, and legacy scheduling authority reproduces Gate 0/Gate 2.
+See the [Gate 3 evidence](docs/active/2026-08-25-solver-anytime-proof-realignment/gate3-evidence.md).
+
+Gate 4 now owns the executable carrier/subgoal incumbent planner. It may
+improve upper discovery only through real admitted operations followed by
+compilation and independent exact evaluation; it has no lower-bound or pruning
+authority. Archived milestone prose retains historical evidence authority
+only; the active plan owns current sequence.
 
 The complete milestone lineage and raw measurements are preserved in the
 [archive](docs/archive/README.md) and [evidence index](docs/evidence.md).

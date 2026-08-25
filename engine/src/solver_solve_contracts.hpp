@@ -729,6 +729,7 @@ struct SolveDiagnostics {
      * serialized aggregate is observational and the scheduler-consumer flag
      * remains false until a later gate explicitly migrates work ordering. */
     std::string action_envelope_ledger_json;
+    std::string anytime_scheduler_json;
     struct IncumbentPortfolioSnapshot {
         struct Identity {
             std::uint64_t portfolio = 0;

@@ -99,6 +99,61 @@ void run_incumbent_portfolio_monotonicity_tests() {
     PC_CHECK(!portfolio.monotonicity_violation);
 }
 
+void run_anytime_scheduler_tests() {
+    using solve_detail::AnytimeScheduler;
+    using solve_detail::AnytimeSchedulerLane;
+    using solve_detail::AnytimeSchedulingProfile;
+
+    AnytimeSchedulingProfile profile;
+    profile.id = "test_scheduler_v1";
+    profile.lane_quota = {1, 2, 1, 0, 0};
+    profile.starvation_dispatches = 3;
+    AnytimeScheduler scheduler(profile);
+    AnytimeScheduler::Availability available{};
+    available[static_cast<std::size_t>(
+        AnytimeSchedulerLane::LegacyFairness)] = true;
+    available[static_cast<std::size_t>(
+        AnytimeSchedulerLane::ExecutableUpper)] = true;
+    available[static_cast<std::size_t>(
+        AnytimeSchedulerLane::HighProgress)] = true;
+    const std::array<AnytimeSchedulerLane, 8> expected{
+        AnytimeSchedulerLane::LegacyFairness,
+        AnytimeSchedulerLane::ExecutableUpper,
+        AnytimeSchedulerLane::ExecutableUpper,
+        AnytimeSchedulerLane::HighProgress,
+        AnytimeSchedulerLane::LegacyFairness,
+        AnytimeSchedulerLane::ExecutableUpper,
+        AnytimeSchedulerLane::ExecutableUpper,
+        AnytimeSchedulerLane::HighProgress,
+    };
+    for (const AnytimeSchedulerLane lane : expected) {
+        PC_CHECK(scheduler.select_ticket(available) == lane);
+    }
+    PC_CHECK(scheduler.dispatches() == expected.size());
+    const auto& lanes = scheduler.lanes();
+    PC_CHECK(lanes[0].services == 2);
+    PC_CHECK(lanes[1].services == 4);
+    PC_CHECK(lanes[2].services == 2);
+    PC_CHECK(lanes[0].maximum_wait == 3);
+    PC_CHECK(lanes[2].maximum_wait == 3);
+    PC_CHECK(lanes[0].starvation_events == 2);
+    PC_CHECK(lanes[2].starvation_events == 2);
+
+    AnytimeScheduler strict(profile);
+    AnytimeScheduler::Availability only_high{};
+    only_high[static_cast<std::size_t>(
+        AnytimeSchedulerLane::HighProgress)] = true;
+    PC_CHECK(strict.select_ticket(only_high) == AnytimeSchedulerLane::Count);
+    PC_CHECK(strict.dispatches() == 0);
+    PC_CHECK(strict.lanes()[0].yields == 1);
+    PC_CHECK(strict.select(only_high) == AnytimeSchedulerLane::HighProgress);
+    strict.record_improvement(AnytimeSchedulerLane::HighProgress);
+    strict.record_yield(AnytimeSchedulerLane::HighProgress);
+    PC_CHECK(strict.lanes()[2].services == 1);
+    PC_CHECK(strict.lanes()[2].improvements == 1);
+    PC_CHECK(strict.lanes()[2].yields == 1);
+}
+
 void run_bounded_policy_row_capture_tests() {
     auto session = make_solve_session();
     /* Preserve the policy-lift observer collision without relying on the old
@@ -10900,6 +10955,7 @@ void run_solver_solve_tests(const char* artifact_dir) {
     PC_CHECK(
         default_options.max_solver_owned_bytes ==
         1024ull * 1024ull * 1024ull);
+    run_anytime_scheduler_tests();
     run_incumbent_portfolio_monotonicity_tests();
     run_bounded_policy_row_capture_tests();
     run_certified_fallback_contract_tests();

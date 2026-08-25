@@ -508,52 +508,135 @@ void SolveWork::Impl::schedule_next_focused_expansion(
                     FocusedCandidate,
                 state);
         }
-        solve_detail::CarrierPriorityBuckets carrier_buckets =
-            solve_detail::build_carrier_priority_buckets(
-                carrier_candidates,
-                solve_detail::CarrierOrderingMode::FocusedLegacy);
-        telemetry.carrier_ladder_goal_subsets =
-            carrier_buckets.by_goal_subset.size();
-        std::map<std::uint32_t, std::size_t> subset_cursor;
         const std::size_t batch = std::max<std::uint32_t>(
             1, options.focused_expansion_batch_states);
         const std::size_t ladder_limit = std::min<std::size_t>(
             batch / 2, batch - selected_fringe.size());
-        bool ladder_advanced = true;
-        while (telemetry.carrier_ladder_admissions < ladder_limit &&
-               ladder_advanced) {
-            ladder_advanced = false;
-            for (const std::uint32_t mask :
-                 carrier_buckets.subset_order) {
-                if (telemetry.carrier_ladder_admissions >= ladder_limit) {
-                    break;
-                }
-                auto& bucket =
-                    carrier_buckets.by_goal_subset.at(mask);
-                std::size_t& cursor = subset_cursor[mask];
-                while (cursor < bucket.size()) {
-                    const std::uint32_t state = bucket[cursor++];
-                    const std::uint32_t candidate = coarse.at(state);
-                    if (selected[state] || queued.at(state) ||
-                        selected_per_class[candidate] >=
-                            members_per_class) {
-                        if (selected_per_class[candidate] >=
-                            members_per_class) {
-                            ++telemetry.per_class_cap_hits;
-                        }
-                        continue;
+        solve_detail::CarrierPriorityBuckets fairness_buckets =
+            solve_detail::build_carrier_priority_buckets(
+                carrier_candidates,
+                solve_detail::CarrierOrderingMode::FocusedLegacy);
+        telemetry.carrier_ladder_goal_subsets =
+            fairness_buckets.by_goal_subset.size();
+        if (!options.high_impact_executable_uppers ||
+            !cooperative_high_progress_ordering_enabled()) {
+            std::map<std::uint32_t, std::size_t> subset_cursor;
+            bool ladder_advanced = true;
+            while (telemetry.carrier_ladder_admissions < ladder_limit &&
+                   ladder_advanced) {
+                ladder_advanced = false;
+                for (const std::uint32_t mask :
+                     fairness_buckets.subset_order) {
+                    if (telemetry.carrier_ladder_admissions >= ladder_limit) {
+                        break;
                     }
-                    selected[state] = 1;
-                    ++selected_per_class[candidate];
-                    selected_fringe.push_back(state);
-                    record_carrier_schedule_attribution(
-                        CarrierBoundAttributionWork::ScheduleStage::
-                            FocusedLadderAdmission,
-                        state);
-                    ++telemetry.carrier_ladder_admissions;
-                    ladder_advanced = true;
+                    auto& bucket = fairness_buckets.by_goal_subset.at(mask);
+                    std::size_t& cursor = subset_cursor[mask];
+                    while (cursor < bucket.size()) {
+                        const std::uint32_t state = bucket[cursor++];
+                        const std::uint32_t candidate = coarse.at(state);
+                        if (selected[state] || queued.at(state) ||
+                            selected_per_class[candidate] >=
+                                members_per_class) {
+                            if (selected_per_class[candidate] >=
+                                members_per_class) {
+                                ++telemetry.per_class_cap_hits;
+                            }
+                            continue;
+                        }
+                        selected[state] = 1;
+                        ++selected_per_class[candidate];
+                        selected_fringe.push_back(state);
+                        record_carrier_schedule_attribution(
+                            CarrierBoundAttributionWork::ScheduleStage::
+                                FocusedLadderAdmission,
+                            state);
+                        ++telemetry.carrier_ladder_admissions;
+                        ladder_advanced = true;
+                        break;
+                    }
+                }
+            }
+        } else {
+            solve_detail::CarrierPriorityBuckets high_progress_buckets =
+                solve_detail::build_carrier_priority_buckets(
+                    carrier_candidates,
+                    cooperative_high_progress_ordering_enabled()
+                        ? solve_detail::CarrierOrderingMode::
+                              CooperativeHighProgress
+                        : solve_detail::CarrierOrderingMode::FocusedLegacy);
+            std::map<std::uint32_t, std::size_t> fairness_cursor;
+            std::map<std::uint32_t, std::size_t> high_progress_cursor;
+            std::size_t fairness_subset_cursor = 0;
+            std::size_t high_progress_subset_cursor = 0;
+            const auto admit_one = [&](
+                    solve_detail::CarrierPriorityBuckets& buckets,
+                    std::map<std::uint32_t, std::size_t>& cursors,
+                    std::size_t& subset_cursor) {
+                if (buckets.subset_order.empty()) return false;
+                for (std::size_t attempt = 0;
+                     attempt < buckets.subset_order.size(); ++attempt) {
+                    const std::uint32_t mask = buckets.subset_order[
+                        subset_cursor % buckets.subset_order.size()];
+                    subset_cursor =
+                        (subset_cursor + 1) % buckets.subset_order.size();
+                    auto& bucket = buckets.by_goal_subset.at(mask);
+                    std::size_t& cursor = cursors[mask];
+                    while (cursor < bucket.size()) {
+                        const std::uint32_t state = bucket[cursor++];
+                        const std::uint32_t candidate = coarse.at(state);
+                        if (selected[state] || queued.at(state) ||
+                            selected_per_class[candidate] >=
+                                members_per_class) {
+                            if (selected_per_class[candidate] >=
+                                members_per_class) {
+                                ++telemetry.per_class_cap_hits;
+                            }
+                            continue;
+                        }
+                        selected[state] = 1;
+                        ++selected_per_class[candidate];
+                        selected_fringe.push_back(state);
+                        record_carrier_schedule_attribution(
+                            CarrierBoundAttributionWork::ScheduleStage::
+                                FocusedLadderAdmission,
+                            state);
+                        ++telemetry.carrier_ladder_admissions;
+                        return true;
+                    }
+                }
+                return false;
+            };
+            bool fairness_available = true;
+            bool high_progress_available = true;
+            while (telemetry.carrier_ladder_admissions < ladder_limit &&
+                   (fairness_available || high_progress_available)) {
+                solve_detail::AnytimeScheduler::Availability available{};
+                available[static_cast<std::size_t>(
+                    solve_detail::AnytimeSchedulerLane::LegacyFairness)] =
+                    fairness_available;
+                available[static_cast<std::size_t>(
+                    solve_detail::AnytimeSchedulerLane::HighProgress)] =
+                    high_progress_available;
+                const solve_detail::AnytimeSchedulerLane lane =
+                    focused_anytime_scheduler.select(available);
+                bool admitted = false;
+                if (lane == solve_detail::AnytimeSchedulerLane::
+                                LegacyFairness) {
+                    admitted = admit_one(
+                        fairness_buckets, fairness_cursor,
+                        fairness_subset_cursor);
+                    fairness_available = admitted;
+                } else if (lane == solve_detail::AnytimeSchedulerLane::
+                                       HighProgress) {
+                    admitted = admit_one(
+                        high_progress_buckets, high_progress_cursor,
+                        high_progress_subset_cursor);
+                    high_progress_available = admitted;
+                } else {
                     break;
                 }
+                if (!admitted) focused_anytime_scheduler.record_yield(lane);
             }
         }
         for (const std::uint32_t state : fringe) {

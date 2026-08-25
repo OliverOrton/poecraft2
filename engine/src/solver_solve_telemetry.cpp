@@ -906,9 +906,10 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
            diagnostics.incumbent_kind.capacity() + 1 +
            diagnostics.destructive_renewal_action_id.capacity() + 1 +
            diagnostics.progressive_fracture_roll_action_id.capacity() + 1 +
-           diagnostics.progressive_fracture_status.capacity() + 1 +
-           diagnostics.action_envelope_ledger_json.capacity() + 1 +
-           diagnostics.incumbent_portfolio.candidate_source.capacity() + 1 +
+            diagnostics.progressive_fracture_status.capacity() + 1 +
+            diagnostics.action_envelope_ledger_json.capacity() + 1 +
+            diagnostics.anytime_scheduler_json.capacity() + 1 +
+            diagnostics.incumbent_portfolio.candidate_source.capacity() + 1 +
            diagnostics.incumbent_portfolio.candidate_stage.capacity() + 1 +
            diagnostics.carrier_bound_attribution_json.capacity() + 1;
     bytes += diagnostics.action_search_costs_owned_bytes;
@@ -1410,6 +1411,7 @@ SolveTelemetrySnapshot SolveWork::Impl::telemetry_snapshot(bool abandoned) const
         snapshot.diagnostics.incremental_refinement_uncertainty =
             incremental_refinement_uncertainty;
         refresh_action_envelope_ledger_diagnostics(snapshot.diagnostics);
+        refresh_anytime_scheduler_diagnostics(snapshot.diagnostics);
         refresh_incumbent_portfolio_diagnostics(
             snapshot.diagnostics,
             finalized_result.has_value() ? &*finalized_result : nullptr);
@@ -1549,6 +1551,17 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
         bytes += incremental_carriers.capacity() * sizeof(std::uint32_t);
         bytes += incremental_automatic_carrier_order.capacity() *
                  sizeof(std::uint32_t);
+        bytes += incremental_fairness_carrier_order.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += incremental_high_progress_carrier_order.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += incremental_high_progress_operator_order.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += incremental_priority_tasks.capacity() *
+                 sizeof(IncrementalPriorityTask);
+        bytes += incremental_completed_pairs.bucket_count() * sizeof(void*);
+        bytes += incremental_completed_pairs.size() *
+                 (sizeof(std::uint64_t) + 2 * sizeof(void*));
         bytes += incremental_anytime_missing_frontier_states.capacity() *
                  sizeof(std::uint32_t);
         bytes += incremental_certified_upper_values.capacity() *
@@ -1557,9 +1570,6 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
                  sizeof(std::uint32_t);
         bytes += incremental_alternative_rows.capacity() *
                  sizeof(IncrementalAlternativeRow);
-        bytes += incremental_completed_pairs.bucket_count() * sizeof(void*);
-        bytes += incremental_completed_pairs.size() *
-                 (sizeof(std::uint64_t) + 2 * sizeof(void*));
         bytes += incremental_chaos_support.capacity() *
                  sizeof(std::uint8_t);
         bytes += incremental_nonchaos_states_seen.capacity() *
@@ -1759,6 +1769,17 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
         bytes += incremental_carriers.capacity() * sizeof(std::uint32_t);
         bytes += incremental_automatic_carrier_order.capacity() *
                  sizeof(std::uint32_t);
+        bytes += incremental_fairness_carrier_order.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += incremental_high_progress_carrier_order.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += incremental_high_progress_operator_order.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += incremental_priority_tasks.capacity() *
+                 sizeof(IncrementalPriorityTask);
+        bytes += incremental_completed_pairs.bucket_count() * sizeof(void*);
+        bytes += incremental_completed_pairs.size() *
+                 (sizeof(std::uint64_t) + 2 * sizeof(void*));
         bytes += incremental_anytime_missing_frontier_states.capacity() *
                  sizeof(std::uint32_t);
         bytes += incremental_certified_upper_values.capacity() *
@@ -1767,9 +1788,6 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
                  sizeof(std::uint32_t);
         bytes += incremental_alternative_rows.capacity() *
                  sizeof(IncrementalAlternativeRow);
-        bytes += incremental_completed_pairs.bucket_count() * sizeof(void*);
-        bytes += incremental_completed_pairs.size() *
-                 (sizeof(std::uint64_t) + 2 * sizeof(void*));
         bytes += incremental_chaos_support.capacity() *
                  sizeof(std::uint8_t);
         bytes += incremental_nonchaos_states_seen.capacity() *
@@ -5409,6 +5427,12 @@ std::string serialize_solver_telemetry(
             json += "null";
         } else {
             json += diagnostics->action_envelope_ledger_json;
+        }
+        json += ",\"cooperative_scheduler\":";
+        if (diagnostics->anytime_scheduler_json.empty()) {
+            json += "null";
+        } else {
+            json += diagnostics->anytime_scheduler_json;
         }
         json += ",\"witnesses\":[";
         for (std::size_t i = 0;

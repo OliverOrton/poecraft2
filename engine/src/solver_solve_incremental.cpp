@@ -103,6 +103,10 @@ bool SolveWork::Impl::advance_incremental_dynamic_preparation() {
     }
     incremental_unevaluated_actions +=
         incremental_dynamic_operator_indices.size();
+    if (cooperative_high_progress_ordering_enabled()) {
+        prioritize_carrier_actions(
+            state, incremental_dynamic_operator_indices);
+    }
     expansion_operator_indices.clear();
     return true;
 }
@@ -160,10 +164,13 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
                         IncrementalCandidate,
                     state);
             }
+            const CarrierOrderingMode automatic_ordering_mode =
+                cooperative_high_progress_ordering_enabled()
+                    ? CarrierOrderingMode::CooperativeHighProgress
+                    : CarrierOrderingMode::IncrementalLegacy;
             solve_detail::CarrierPriorityBuckets carrier_buckets =
                 solve_detail::build_carrier_priority_buckets(
-                carrier_candidates,
-                    solve_detail::CarrierOrderingMode::IncrementalLegacy);
+                    carrier_candidates, automatic_ordering_mode);
             std::map<std::uint32_t, std::size_t> cursors;
             std::vector<std::uint32_t> ordered;
             ordered.reserve(end - begin);
@@ -215,16 +222,66 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
             incremental_automatic_carrier_order.clear();
             incremental_automatic_order_cursor = 0;
         }
+        const auto build_round_robin_order = [&] (
+                const std::size_t begin,
+                const std::size_t end,
+                const CarrierOrderingMode mode) {
+            std::vector<CarrierOrderingScore> candidates;
+            candidates.reserve(end - begin);
+            for (std::size_t index = begin; index < end; ++index) {
+                candidates.push_back(
+                    carrier_ordering_score(incremental_carriers[index]));
+            }
+            CarrierPriorityBuckets buckets =
+                build_carrier_priority_buckets(candidates, mode);
+            std::map<std::uint32_t, std::size_t> cursors;
+            std::vector<std::uint32_t> order;
+            order.reserve(end - begin);
+            bool advanced = true;
+            while (advanced) {
+                advanced = false;
+                for (const std::uint32_t mask : buckets.subset_order) {
+                    auto& carriers = buckets.by_goal_subset.at(mask);
+                    std::size_t& cursor = cursors[mask];
+                    if (cursor >= carriers.size()) continue;
+                    order.push_back(carriers[cursor++]);
+                    advanced = true;
+                }
+            }
+            return order;
+        };
+        if (incremental_fairness_carrier_cursor >=
+                incremental_fairness_carrier_order.size() &&
+            incremental_fairness_epoch_end < incremental_carriers.size()) {
+            const std::size_t begin = incremental_fairness_epoch_end;
+            incremental_fairness_epoch_end = incremental_carriers.size();
+            incremental_fairness_carrier_order = build_round_robin_order(
+                begin, incremental_fairness_epoch_end,
+                CarrierOrderingMode::IncrementalLegacy);
+            incremental_fairness_carrier_cursor = 0;
+            incremental_fairness_operator_cursor = 0;
+            incremental_closure_carrier_cursor = 0;
+            incremental_closure_operator_cursor = 0;
+        }
+        if (incremental_high_progress_carrier_cursor >=
+                incremental_high_progress_carrier_order.size() &&
+            incremental_high_progress_epoch_end <
+                incremental_carriers.size()) {
+            const std::size_t begin = incremental_high_progress_epoch_end;
+            incremental_high_progress_epoch_end =
+                incremental_carriers.size();
+            incremental_high_progress_carrier_order =
+                build_round_robin_order(
+                    begin, incremental_high_progress_epoch_end,
+                    cooperative_high_progress_ordering_enabled()
+                        ? CarrierOrderingMode::CooperativeHighProgress
+                        : CarrierOrderingMode::IncrementalLegacy);
+            incremental_high_progress_carrier_cursor = 0;
+            incremental_high_progress_operator_order.clear();
+            incremental_high_progress_operator_cursor = 0;
+        }
     }
     if (options.high_impact_executable_uppers) {
-        const std::size_t carrier_checkpoint =
-            std::min<std::size_t>(
-                options.max_expanded_states,
-                128);
-        if (!incremental_alternative_rows.empty() &&
-            incremental_carriers.size() < carrier_checkpoint) {
-            return false;
-        }
         const auto schedule_pair =
             [&](const std::uint32_t state,
                 const std::uint32_t operator_index,
@@ -255,6 +312,26 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
                     CarrierBoundAttributionWork::ScheduleStage::
                         CarrierActionAdmission,
                     state, operator_index);
+                switch (lane) {
+                case ActionEnvelopeLane::IncrementalAutomatic:
+                    incremental_last_scheduled_lane =
+                        AnytimeSchedulerLane::ExecutableUpper;
+                    break;
+                case ActionEnvelopeLane::IncrementalPriority:
+                    incremental_last_scheduled_lane =
+                        AnytimeSchedulerLane::HighProgress;
+                    break;
+                case ActionEnvelopeLane::IncrementalOperatorMajor:
+                    incremental_last_scheduled_lane =
+                        AnytimeSchedulerLane::LegacyFairness;
+                    break;
+                case ActionEnvelopeLane::IncrementalClosure:
+                    incremental_last_scheduled_lane =
+                        AnytimeSchedulerLane::ExactClosure;
+                    break;
+                default:
+                    break;
+                }
                 phase = SolvePhase::Expanding;
             };
         const auto pair_complete = [&](
@@ -267,12 +344,11 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
                       (static_cast<std::uint64_t>(state) << 32) |
                       operator_index);
         };
-        /* The high-impact path schedules delayed primitives operator-major,
-         * but automatic compounds remain carrier-local. Drain that distinct
-         * ledger first so an early executable-upper checkpoint cannot skip
-         * synthesis and later earn exact closure from delayed rows alone. */
-        while (incremental_automatic_order_cursor <
-               incremental_automatic_carrier_order.size()) {
+        /* Automatic compounds remain carrier-local, but one scheduler service
+         * owns at most one preparation or exact row before yielding. */
+        const auto service_automatic = [&]() {
+          while (incremental_automatic_order_cursor <
+                 incremental_automatic_carrier_order.size()) {
             const std::uint32_t state =
                 incremental_automatic_carrier_order[
                     incremental_automatic_order_cursor];
@@ -320,92 +396,233 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
                     incremental_automatic_epoch_end) {
                 return false;
             }
-        }
-        while (incremental_priority_task_cursor <
-               incremental_priority_tasks.size()) {
-            const IncrementalPriorityTask task =
-                incremental_priority_tasks[
-                    incremental_priority_task_cursor++];
-            if (pair_complete(task.state, task.operator_index)) {
-                continue;
+          }
+          return false;
+        };
+        const auto service_fairness = [&]() {
+            while (incremental_fairness_operator_cursor <
+                   delayed_operator_indices.size()) {
+                while (incremental_fairness_carrier_cursor <
+                       incremental_fairness_carrier_order.size()) {
+                    const std::uint32_t state =
+                        incremental_fairness_carrier_order[
+                            incremental_fairness_carrier_cursor++];
+                    const std::uint32_t operator_index =
+                        delayed_operator_indices[
+                            incremental_fairness_operator_cursor];
+                    if (pair_complete(state, operator_index)) continue;
+                    schedule_pair(
+                        state, operator_index,
+                        ActionEnvelopeLane::IncrementalOperatorMajor);
+                    return true;
+                }
+                incremental_fairness_carrier_cursor = 0;
+                ++incremental_fairness_operator_cursor;
             }
-            schedule_pair(
-                task.state, task.operator_index,
-                ActionEnvelopeLane::IncrementalPriority);
-            return true;
-        }
-        if (continue_current_epoch) return false;
-        if (!incremental_priority_tasks.empty()) {
-            incremental_priority_tasks.clear();
-            incremental_priority_task_cursor = 0;
-        }
-        /*
-         * Global operator-major state/action scheduling. The first delayed
-         * operator is evaluated at the root, then across every currently
-         * materialized carrier before the next operator is considered.
-         * This exposes multi-action continuation rows without exhausting the
-         * root envelope or expanding an unrelated broad fringe first.
-         */
-        while (incremental_operator_cursor <
-               delayed_operator_indices.size()) {
-            if (incremental_carrier_cursor >=
-                incremental_carriers.size()) {
-                if (continue_current_epoch) return false;
-                if (incremental_operator_cursor == 0 &&
-                    !incremental_high_impact_continuation_refined) {
-                    incremental_high_impact_continuation_refined = true;
-                    schedule_high_impact_continuation_refinement();
-                    if (incremental_carrier_cursor <
-                        incremental_carriers.size()) {
+            return false;
+        };
+        const auto service_high_progress = [&]() {
+            while (incremental_high_progress_operator_cursor <
+                   delayed_operator_indices.size()) {
+                while (incremental_high_progress_carrier_cursor <
+                       incremental_high_progress_carrier_order.size()) {
+                    const std::uint32_t state =
+                        incremental_high_progress_carrier_order[
+                            incremental_high_progress_carrier_cursor++];
+                    incremental_high_progress_operator_order =
+                        delayed_operator_indices;
+                    if (cooperative_high_progress_ordering_enabled()) {
+                        prioritize_carrier_actions(
+                            state,
+                            incremental_high_progress_operator_order);
+                    }
+                    if (incremental_high_progress_operator_cursor >=
+                        incremental_high_progress_operator_order.size()) {
                         continue;
                     }
-                }
-                if (incremental_operator_cursor == 0 &&
-                    incremental_high_impact_wave < 4 &&
-                    prepare_high_impact_policy_wave(
-                        incremental_high_impact_wave)) {
-                    ++incremental_high_impact_wave;
-                    const IncrementalPriorityTask task =
-                        incremental_priority_tasks[
-                            incremental_priority_task_cursor++];
+                    const std::uint32_t operator_index =
+                        incremental_high_progress_operator_order[
+                            incremental_high_progress_operator_cursor];
+                    if (pair_complete(state, operator_index)) continue;
                     schedule_pair(
-                        task.state, task.operator_index,
+                        state, operator_index,
                         ActionEnvelopeLane::IncrementalPriority);
                     return true;
                 }
-                incremental_carrier_cursor = 0;
-                ++incremental_operator_cursor;
-                continue;
+                incremental_high_progress_carrier_cursor = 0;
+                ++incremental_high_progress_operator_cursor;
             }
-            const std::uint32_t state =
-                incremental_carriers[incremental_carrier_cursor++];
-            const std::uint32_t operator_index =
-                delayed_operator_indices[incremental_operator_cursor];
-            if (pair_complete(state, operator_index)) {
-                continue;
-            }
-            schedule_pair(
-                state, operator_index,
-                ActionEnvelopeLane::IncrementalOperatorMajor);
-            return true;
-        }
-        /* Carrier discovery is monotonic and may continue after an operator
-         * sweep. Close the exact Cartesian ledger before reporting that no
-         * alternative remains; this scan is reached only after the fast
-         * operator-major cursors are exhausted. */
-        if (continue_current_epoch) return false;
-        for (const std::uint32_t operator_index :
-             delayed_operator_indices) {
-            for (const std::uint32_t state : incremental_carriers) {
-                if (pair_complete(state, operator_index)) {
-                    continue;
+            incremental_high_progress_operator_order.clear();
+            return false;
+        };
+        const auto service_closure = [&]() {
+            while (incremental_closure_operator_cursor <
+                   delayed_operator_indices.size()) {
+                while (incremental_closure_carrier_cursor <
+                       incremental_carriers.size()) {
+                    const std::uint32_t state = incremental_carriers[
+                        incremental_closure_carrier_cursor++];
+                    const std::uint32_t operator_index =
+                        delayed_operator_indices[
+                            incremental_closure_operator_cursor];
+                    if (pair_complete(state, operator_index)) continue;
+                    schedule_pair(
+                        state, operator_index,
+                        ActionEnvelopeLane::IncrementalClosure);
+                    return true;
                 }
+                incremental_closure_carrier_cursor = 0;
+                ++incremental_closure_operator_cursor;
+            }
+            return false;
+        };
+
+        /* The matched control corpus has no cooperative quota that preserves
+         * both clean acquisition and already-progressed last-mile coverage.
+         * Keep the proven warm-start producer as the plan's narrow fallback;
+         * the typed ledger remains the complete observational lifecycle while
+         * the legacy completed-pair view retains scheduling authority. */
+        if (!cooperative_high_progress_ordering_enabled()) {
+            const WarmStartCompatibilityProfile& profile =
+                kWarmStartCompatibilityProfile;
+            if (!incremental_alternative_rows.empty() &&
+                incremental_carriers.size() < std::min<std::size_t>(
+                    options.max_expanded_states,
+                    profile.carrier_checkpoint)) {
+                return false;
+            }
+            if (service_automatic()) return true;
+            if (continue_current_epoch &&
+                incremental_automatic_carrier_cursor >=
+                    incremental_automatic_epoch_end) {
+                return false;
+            }
+            while (incremental_priority_task_cursor <
+                   incremental_priority_tasks.size()) {
+                const IncrementalPriorityTask task =
+                    incremental_priority_tasks[
+                        incremental_priority_task_cursor++];
+                if (pair_complete(task.state, task.operator_index)) continue;
                 schedule_pair(
-                    state, operator_index,
-                    ActionEnvelopeLane::IncrementalClosure);
+                    task.state, task.operator_index,
+                    ActionEnvelopeLane::IncrementalPriority);
                 return true;
             }
+            if (continue_current_epoch) return false;
+            if (!incremental_priority_tasks.empty()) {
+                incremental_priority_tasks.clear();
+                incremental_priority_task_cursor = 0;
+            }
+            while (incremental_operator_cursor <
+                   delayed_operator_indices.size()) {
+                if (incremental_carrier_cursor >=
+                    incremental_carriers.size()) {
+                    if (incremental_operator_cursor == 0 &&
+                        !incremental_warm_start_continuation_refined) {
+                        incremental_warm_start_continuation_refined = true;
+                        schedule_warm_start_continuation_refinement();
+                        if (incremental_carrier_cursor <
+                            incremental_carriers.size()) {
+                            continue;
+                        }
+                    }
+                    if (incremental_operator_cursor == 0 &&
+                        incremental_warm_start_policy_wave <
+                            profile.policy_waves &&
+                        prepare_warm_start_policy_wave(
+                            incremental_warm_start_policy_wave)) {
+                        ++incremental_warm_start_policy_wave;
+                        const IncrementalPriorityTask task =
+                            incremental_priority_tasks[
+                                incremental_priority_task_cursor++];
+                        schedule_pair(
+                            task.state, task.operator_index,
+                            ActionEnvelopeLane::IncrementalPriority);
+                        return true;
+                    }
+                    incremental_carrier_cursor = 0;
+                    ++incremental_operator_cursor;
+                    continue;
+                }
+                const std::uint32_t state =
+                    incremental_carriers[incremental_carrier_cursor++];
+                const std::uint32_t operator_index =
+                    delayed_operator_indices[incremental_operator_cursor];
+                if (pair_complete(state, operator_index)) continue;
+                schedule_pair(
+                    state, operator_index,
+                    ActionEnvelopeLane::IncrementalOperatorMajor);
+                return true;
+            }
+            for (const std::uint32_t operator_index :
+                 delayed_operator_indices) {
+                for (const std::uint32_t state : incremental_carriers) {
+                    if (pair_complete(state, operator_index)) continue;
+                    schedule_pair(
+                        state, operator_index,
+                        ActionEnvelopeLane::IncrementalClosure);
+                    return true;
+                }
+            }
+            incremental_unevaluated_actions = 0;
+            return false;
         }
+
+        AnytimeScheduler::Availability available{};
+        available[static_cast<std::size_t>(
+            AnytimeSchedulerLane::LegacyFairness)] =
+            incremental_fairness_operator_cursor <
+                delayed_operator_indices.size() &&
+            incremental_fairness_carrier_cursor <
+                incremental_fairness_carrier_order.size();
+        available[static_cast<std::size_t>(
+            AnytimeSchedulerLane::ExecutableUpper)] =
+            incremental_automatic_order_cursor <
+                incremental_automatic_carrier_order.size();
+        available[static_cast<std::size_t>(
+            AnytimeSchedulerLane::HighProgress)] =
+            incremental_high_progress_operator_cursor <
+                delayed_operator_indices.size() &&
+            incremental_high_progress_carrier_cursor <
+                incremental_high_progress_carrier_order.size();
+        available[static_cast<std::size_t>(
+            AnytimeSchedulerLane::ExactClosure)] =
+            !continue_current_epoch &&
+            incremental_closure_operator_cursor <
+                delayed_operator_indices.size();
+        const bool lane_work_remains = std::any_of(
+            available.begin(), available.end(),
+            [](const bool value) { return value; });
+        AnytimeSchedulerLane lane =
+            anytime_scheduler.select_ticket(available);
+        if (lane == AnytimeSchedulerLane::Count && lane_work_remains) {
+            if (schedule_incremental_refinement(true)) return true;
+            lane = anytime_scheduler.select(available);
+        }
+        bool scheduled = false;
+        switch (lane) {
+        case AnytimeSchedulerLane::LegacyFairness:
+            scheduled = service_fairness();
+            break;
+        case AnytimeSchedulerLane::ExecutableUpper:
+            scheduled = service_automatic();
+            break;
+        case AnytimeSchedulerLane::HighProgress:
+            scheduled = service_high_progress();
+            break;
+        case AnytimeSchedulerLane::ExactClosure:
+            scheduled = service_closure();
+            break;
+        case AnytimeSchedulerLane::ProofDirected:
+        case AnytimeSchedulerLane::Count:
+            break;
+        }
+        if (scheduled) return true;
+        if (lane != AnytimeSchedulerLane::Count) {
+            anytime_scheduler.record_yield(lane);
+        }
+        if (continue_current_epoch) return false;
+        if (lane_work_remains) return false;
         incremental_unevaluated_actions = 0;
         return false;
     }
@@ -536,26 +753,23 @@ bool SolveWork::Impl::begin_incremental_upper_policy_pass() {
     return true;
 }
 
-bool SolveWork::Impl::schedule_high_impact_continuation_refinement() {
+bool SolveWork::Impl::schedule_warm_start_continuation_refinement() {
     if (!options.high_impact_executable_uppers ||
         incremental_refinement_active) {
         return false;
     }
+    const WarmStartCompatibilityProfile& profile =
+        kWarmStartCompatibilityProfile;
     const std::size_t state_count = calc.state_count();
     std::vector<double> priority(state_count, 0.0);
-    for (std::uint32_t owner = 0;
-         owner < expanded.size(); ++owner) {
-        if (!expanded[owner] ||
-            calc.is_goal_state(calc.state(owner))) {
+    for (std::uint32_t owner = 0; owner < expanded.size(); ++owner) {
+        if (!expanded[owner] || calc.is_goal_state(calc.state(owner))) {
             continue;
         }
         for (const std::uint64_t row_index :
              state_row_indices(*transition_cache, owner)) {
-            const SparseRow& row =
-                transition_cache->rows.at(row_index);
-            if (!row.admitted || row_index >= priced_rows.size()) {
-                continue;
-            }
+            const SparseRow& row = transition_cache->rows.at(row_index);
+            if (!row.admitted || row_index >= priced_rows.size()) continue;
             const std::uint32_t operator_index =
                 priced_rows[row_index].operator_index;
             if (operator_index >= calc.operators().size()) continue;
@@ -565,55 +779,47 @@ bool SolveWork::Impl::schedule_high_impact_continuation_refinement() {
                 AutomaticCandidateKind::Fracture;
             if (!fracture &&
                 planner.kind == PlannerOperatorKind::Primitive &&
-                planner.primitive_action <
-                    calc.registry().actions.size()) {
-                fracture =
-                    calc.registry()
-                        .actions[planner.primitive_action]
-                        .params.type == ActionType::Fracture;
+                planner.primitive_action < calc.registry().actions.size()) {
+                fracture = calc.registry()
+                    .actions[planner.primitive_action]
+                    .params.type == ActionType::Fracture;
             }
             if (!fracture) continue;
-            for (std::uint32_t i = 0;
-                 i < row.transition_count; ++i) {
-                const std::uint64_t offset =
-                    row.transition_offset + i;
+            for (std::uint32_t i = 0; i < row.transition_count; ++i) {
+                const std::uint64_t offset = row.transition_offset + i;
                 const std::uint32_t successor =
                     transition_cache->successors.at(offset);
                 if (successor >= state_count ||
                     calc.is_goal_state(calc.state(successor)) ||
-                    (successor < expanded.size() &&
-                     expanded[successor])) {
+                    (successor < expanded.size() && expanded[successor])) {
                     continue;
                 }
                 const AbstractState& state = calc.state(successor);
-                const std::uint32_t preserved =
+                const std::uint32_t fractures =
                     std::popcount(state.fractured_goal_mask);
-                const std::uint32_t satisfied =
-                    std::popcount(
-                        satisfied_goal_mask_for_state(successor));
-                const double influence =
-                    transition_cache->probabilities.at(offset);
-                priority[successor] += influence *
-                    (1.0 + 1024.0 * preserved +
-                     64.0 * satisfied);
+                const std::uint32_t satisfied = std::popcount(
+                    satisfied_goal_mask_for_state(successor));
+                priority[successor] +=
+                    transition_cache->probabilities.at(offset) *
+                    (1.0 +
+                     profile.continuation_fracture_weight * fractures +
+                     profile.continuation_goal_weight * satisfied);
             }
         }
     }
     std::vector<std::uint32_t> ranked;
-    for (std::uint32_t state = 0;
-         state < state_count; ++state) {
+    for (std::uint32_t state = 0; state < state_count; ++state) {
         if (priority[state] > 0.0) ranked.push_back(state);
     }
     std::stable_sort(
         ranked.begin(), ranked.end(),
-        [&](const std::uint32_t left,
-            const std::uint32_t right) {
+        [&](const std::uint32_t left, const std::uint32_t right) {
             return priority[left] != priority[right]
-                       ? priority[left] > priority[right]
-                       : left < right;
+                ? priority[left] > priority[right]
+                : left < right;
         });
     const std::size_t batch = std::min<std::size_t>(
-        ranked.size(), 16);
+        ranked.size(), profile.continuation_batch);
     if (batch == 0) return false;
     ranked.resize(batch);
     double selected_influence = 0.0;
@@ -629,8 +835,10 @@ bool SolveWork::Impl::schedule_high_impact_continuation_refinement() {
     return true;
 }
 
-bool SolveWork::Impl::prepare_high_impact_policy_wave(
+bool SolveWork::Impl::prepare_warm_start_policy_wave(
         const std::uint32_t wave) {
+    const WarmStartCompatibilityProfile& profile =
+        kWarmStartCompatibilityProfile;
     const bool fracture_wave = wave % 2 == 0;
     const std::uint32_t required_fractures = wave / 2 + 1;
     std::uint32_t target_operator = kNoId;
@@ -639,16 +847,13 @@ bool SolveWork::Impl::prepare_high_impact_policy_wave(
             const PlannerOperator& planner =
                 calc.operators().at(priced.index);
             if (planner.automatic_kind ==
-                AutomaticCandidateKind::Fracture) {
-                target_operator = priced.index;
-                break;
-            }
-            if (planner.kind == PlannerOperatorKind::Primitive &&
-                planner.primitive_action <
-                    calc.registry().actions.size() &&
-                calc.registry()
-                        .actions[planner.primitive_action]
-                        .params.type == ActionType::Fracture) {
+                    AutomaticCandidateKind::Fracture ||
+                (planner.kind == PlannerOperatorKind::Primitive &&
+                 planner.primitive_action <
+                     calc.registry().actions.size() &&
+                 calc.registry()
+                     .actions[planner.primitive_action]
+                     .params.type == ActionType::Fracture)) {
                 target_operator = priced.index;
                 break;
             }
@@ -668,26 +873,24 @@ bool SolveWork::Impl::prepare_high_impact_policy_wave(
         const AbstractState& owner = calc.state(source.state);
         const std::uint32_t owner_fractures =
             std::popcount(owner.fractured_goal_mask);
+        const PlannerOperator& source_planner =
+            calc.operators()[source.operator_index];
         const bool source_is_harvest =
-            calc.operators()[source.operator_index].kind ==
-                PlannerOperatorKind::Primitive &&
-            calc.operators()[source.operator_index].primitive_action <
+            source_planner.kind == PlannerOperatorKind::Primitive &&
+            source_planner.primitive_action <
                 calc.registry().actions.size() &&
             calc.registry()
-                    .actions[calc.operators()[source.operator_index]
-                                 .primitive_action]
-                    .params.type == ActionType::HarvestReforge;
+                .actions[source_planner.primitive_action]
+                .params.type == ActionType::HarvestReforge;
         const bool source_is_fracture =
-            calc.operators()[source.operator_index].automatic_kind ==
+            source_planner.automatic_kind ==
                 AutomaticCandidateKind::Fracture ||
-            (calc.operators()[source.operator_index].kind ==
-                 PlannerOperatorKind::Primitive &&
-             calc.operators()[source.operator_index].primitive_action <
+            (source_planner.kind == PlannerOperatorKind::Primitive &&
+             source_planner.primitive_action <
                  calc.registry().actions.size() &&
              calc.registry()
-                     .actions[calc.operators()[source.operator_index]
-                                  .primitive_action]
-                     .params.type == ActionType::Fracture);
+                 .actions[source_planner.primitive_action]
+                 .params.type == ActionType::Fracture);
         if ((fracture_wave &&
              (!source_is_harvest ||
               owner_fractures < required_fractures)) ||
@@ -698,10 +901,8 @@ bool SolveWork::Impl::prepare_high_impact_policy_wave(
         }
         const SparseRow& row =
             transition_cache->rows[source.row_index];
-        for (std::uint32_t i = 0;
-             i < row.transition_count; ++i) {
-            const std::uint64_t offset =
-                row.transition_offset + i;
+        for (std::uint32_t i = 0; i < row.transition_count; ++i) {
+            const std::uint64_t offset = row.transition_offset + i;
             const std::uint32_t successor =
                 transition_cache->successors.at(offset);
             if (successor >= priority.size() ||
@@ -711,9 +912,8 @@ bool SolveWork::Impl::prepare_high_impact_policy_wave(
             const AbstractState& state = calc.state(successor);
             const std::uint32_t fractures =
                 std::popcount(state.fractured_goal_mask);
-            const std::uint32_t satisfied =
-                std::popcount(
-                    satisfied_goal_mask_for_state(successor));
+            const std::uint32_t satisfied = std::popcount(
+                satisfied_goal_mask_for_state(successor));
             if (fracture_wave) {
                 if (fractures < required_fractures ||
                     satisfied <= fractures) {
@@ -721,14 +921,12 @@ bool SolveWork::Impl::prepare_high_impact_policy_wave(
                 }
                 const PlannerOperator& target =
                     calc.operators()[target_operator];
-                if (target.kind !=
-                        PlannerOperatorKind::Primitive ||
+                if (target.kind != PlannerOperatorKind::Primitive ||
                     target.primitive_action >=
                         calc.registry().actions.size() ||
                     !action_legal(
                         session,
-                        calc.registry()
-                            .actions[target.primitive_action],
+                        calc.registry().actions[target.primitive_action],
                         state)) {
                     continue;
                 }
@@ -737,30 +935,29 @@ bool SolveWork::Impl::prepare_high_impact_policy_wave(
             }
             priority[successor] +=
                 transition_cache->probabilities.at(offset) *
-                (1.0 + 4096.0 * fractures +
-                 256.0 * satisfied);
+                (1.0 + profile.wave_fracture_weight * fractures +
+                 profile.wave_goal_weight * satisfied);
         }
     }
     std::vector<std::uint32_t> ranked;
-    for (std::uint32_t state = 0;
-         state < priority.size(); ++state) {
+    for (std::uint32_t state = 0; state < priority.size(); ++state) {
         if (priority[state] > 0.0) ranked.push_back(state);
     }
     std::stable_sort(
         ranked.begin(), ranked.end(),
-        [&](const std::uint32_t left,
-            const std::uint32_t right) {
+        [&](const std::uint32_t left, const std::uint32_t right) {
             return priority[left] != priority[right]
-                       ? priority[left] > priority[right]
-                       : left < right;
+                ? priority[left] > priority[right]
+                : left < right;
         });
-    if (ranked.size() > 16) ranked.resize(16);
+    if (ranked.size() > profile.continuation_batch) {
+        ranked.resize(profile.continuation_batch);
+    }
     incremental_priority_tasks.clear();
     incremental_priority_task_cursor = 0;
     incremental_priority_tasks.reserve(ranked.size());
     for (const std::uint32_t state : ranked) {
-        incremental_priority_tasks.push_back(
-            {state, target_operator});
+        incremental_priority_tasks.push_back({state, target_operator});
         ++incremental_unevaluated_actions;
     }
     return !incremental_priority_tasks.empty();
@@ -805,11 +1002,21 @@ double SolveWork::Impl::sparse_row_q_for_values(
 }
 
 bool SolveWork::Impl::maybe_install_incremental_anytime_incumbent() {
+    const bool bounded_row_checkpoint =
+        incremental_alternative_rows.size() >=
+        incremental_anytime_next_row_checkpoint;
+    const bool material_upper_improvement =
+        cooperative_high_progress_ordering_enabled() &&
+        output_incumbent.has_value() &&
+        std::isfinite(incremental_anytime_checkpoint_upper) &&
+        output_incumbent->certified_upper_bound <
+            incremental_anytime_checkpoint_upper *
+                (1.0 - anytime_scheduler.profile()
+                    .material_upper_improvement_ratio);
     if (!options.high_impact_executable_uppers ||
         !incremental_action_generation || incremental_envelope_closed ||
         incremental_upper_policy_pass == false ||
-        incremental_alternative_rows.size() <
-            incremental_anytime_next_row_checkpoint) {
+        (!bounded_row_checkpoint && !material_upper_improvement)) {
         return false;
     }
 
@@ -829,6 +1036,9 @@ bool SolveWork::Impl::maybe_install_incremental_anytime_incumbent() {
     const double prior = output_incumbent.has_value()
         ? output_incumbent->certified_upper_bound
         : kInfinity;
+    if (cooperative_high_progress_ordering_enabled()) {
+        incremental_anytime_checkpoint_upper = prior;
+    }
     const bool installed = try_install_reachable_incumbent(false);
     if (installed && output_incumbent.has_value() &&
         output_incumbent->certified_upper_bound < prior) {
@@ -836,6 +1046,10 @@ bool SolveWork::Impl::maybe_install_incremental_anytime_incumbent() {
         incremental_anytime_policy_best_upper = std::min(
             incremental_anytime_policy_best_upper,
             output_incumbent->certified_upper_bound);
+        if (cooperative_high_progress_ordering_enabled()) {
+            anytime_scheduler.record_improvement(
+                incremental_last_scheduled_lane);
+        }
     }
     return installed;
 }
@@ -1424,7 +1638,7 @@ bool SolveWork::Impl::schedule_incremental_refinement(
             : 0;
     const std::uint32_t refinement_batch =
         options.high_impact_executable_uppers
-            ? 128
+            ? anytime_scheduler.profile().q_refinement_batch
             : std::max<std::uint32_t>(
                   1024, options.focused_expansion_batch_states);
     const std::size_t batch = std::min<std::size_t>(
@@ -2080,6 +2294,105 @@ void SolveWork::Impl::refresh_action_envelope_ledger_diagnostics(
     diagnostics.action_envelope_ledger_json = std::move(json);
 }
 
+void SolveWork::Impl::refresh_anytime_scheduler_diagnostics(
+        SolveDiagnostics& diagnostics) const {
+    const AnytimeSchedulingProfile& profile = anytime_scheduler.profile();
+    std::string json = "{\"schema\":\"solver_anytime_scheduler_v1\"";
+    json += ",\"enabled\":" + std::string(
+        cooperative_high_progress_ordering_enabled() ? "true" : "false");
+    json += ",\"fallback_reason\":\"matched_control_profile_unqualified\"";
+    json += ",\"profile_id\":";
+    append_json_string(json, std::string(profile.id));
+    json += ",\"dispatches\":" +
+            std::to_string(anytime_scheduler.dispatches());
+    json += ",\"profile\":{";
+    json += "\"q_refinement_batch\":" +
+            std::to_string(profile.q_refinement_batch);
+    json += ",\"first_incumbent_checkpoint_rows\":" +
+            std::to_string(profile.first_incumbent_checkpoint_rows);
+    json += ",\"starvation_dispatches\":" +
+            std::to_string(profile.starvation_dispatches);
+    json += ",\"material_upper_improvement_ratio\":" +
+            std::to_string(profile.material_upper_improvement_ratio) + "}";
+    const WarmStartCompatibilityProfile& warm =
+        kWarmStartCompatibilityProfile;
+    json += ",\"warm_start_compatibility\":{";
+    json += "\"enabled\":" + std::string(
+        options.high_impact_executable_uppers &&
+                !cooperative_high_progress_ordering_enabled()
+            ? "true"
+            : "false");
+    json += ",\"profile_id\":";
+    append_json_string(json, std::string(warm.id));
+    json += ",\"carrier_checkpoint\":" +
+            std::to_string(warm.carrier_checkpoint);
+    json += ",\"continuation_batch\":" +
+            std::to_string(warm.continuation_batch);
+    json += ",\"policy_waves\":" +
+            std::to_string(warm.policy_waves);
+    json += ",\"continuation_fracture_weight\":" +
+            std::to_string(warm.continuation_fracture_weight);
+    json += ",\"continuation_goal_weight\":" +
+            std::to_string(warm.continuation_goal_weight);
+    json += ",\"wave_fracture_weight\":" +
+            std::to_string(warm.wave_fracture_weight);
+    json += ",\"wave_goal_weight\":" +
+            std::to_string(warm.wave_goal_weight) + "}";
+    json += ",\"lanes\":{";
+    const auto& lanes = anytime_scheduler.lanes();
+    for (std::size_t index = 0; index < lanes.size(); ++index) {
+        if (index != 0) json.push_back(',');
+        append_json_string(
+            json,
+            std::string(anytime_scheduler_lane_name(
+                static_cast<AnytimeSchedulerLane>(index))));
+        const AnytimeLaneTelemetry& lane = lanes[index];
+        json += ":{\"quota\":" + std::to_string(lane.quota);
+        json += ",\"offers\":" + std::to_string(lane.offers);
+        json += ",\"service\":" + std::to_string(lane.services);
+        json += ",\"wait\":" + std::to_string(lane.waits);
+        json += ",\"yield\":" + std::to_string(lane.yields);
+        json += ",\"improvement\":" +
+                std::to_string(lane.improvements);
+        json += ",\"starvation\":" +
+                std::to_string(lane.starvation_events);
+        json += ",\"current_wait\":" +
+                std::to_string(lane.current_wait);
+        json += ",\"max_wait\":" +
+                std::to_string(lane.maximum_wait) + "}";
+    }
+    json += "}";
+    const AnytimeSchedulingProfile& focused_profile =
+        focused_anytime_scheduler.profile();
+    json += ",\"focused_context\":{\"profile_id\":";
+    append_json_string(json, std::string(focused_profile.id));
+    json += ",\"dispatches\":" +
+            std::to_string(focused_anytime_scheduler.dispatches());
+    json += ",\"lanes\":{";
+    const auto& focused_lanes = focused_anytime_scheduler.lanes();
+    for (std::size_t index = 0; index < focused_lanes.size(); ++index) {
+        if (index != 0) json.push_back(',');
+        append_json_string(
+            json,
+            std::string(anytime_scheduler_lane_name(
+                static_cast<AnytimeSchedulerLane>(index))));
+        const AnytimeLaneTelemetry& lane = focused_lanes[index];
+        json += ":{\"quota\":" + std::to_string(lane.quota);
+        json += ",\"offers\":" + std::to_string(lane.offers);
+        json += ",\"service\":" + std::to_string(lane.services);
+        json += ",\"wait\":" + std::to_string(lane.waits);
+        json += ",\"yield\":" + std::to_string(lane.yields);
+        json += ",\"improvement\":" +
+                std::to_string(lane.improvements);
+        json += ",\"starvation\":" +
+                std::to_string(lane.starvation_events);
+        json += ",\"max_wait\":" +
+                std::to_string(lane.maximum_wait) + "}";
+    }
+    json += "}}}";
+    diagnostics.anytime_scheduler_json = std::move(json);
+}
+
 void SolveWork::Impl::finalize_incremental_diagnostics() {
     if (!incremental_envelope_closed) {
         if (requested_bounded_finish) {
@@ -2219,6 +2532,7 @@ void SolveWork::Impl::finalize_incremental_diagnostics() {
             std::move(witness));
     }
     refresh_action_envelope_ledger_diagnostics(diagnostics);
+    refresh_anytime_scheduler_diagnostics(diagnostics);
 }
 
 void SolveWork::Impl::finalize_upper_policy_provenance() {

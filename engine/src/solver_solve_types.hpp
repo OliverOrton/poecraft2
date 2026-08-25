@@ -1,6 +1,7 @@
 #pragma once
 
 #include "solver_action_envelope_ledger.hpp"
+#include "solver_anytime_scheduler.hpp"
 #include "solver_solve_contracts.hpp"
 
 #include "poecraft/bitset.h"
@@ -661,20 +662,37 @@ struct ProofLowerValue {
 enum class CarrierOrderingMode : std::uint8_t {
     FocusedLegacy,
     IncrementalLegacy,
+    CooperativeHighProgress,
 };
 
 struct CarrierOrderingScore {
     std::uint32_t state = kNoId;
+    std::size_t stable_state_hash = 0;
     std::uint32_t goal_subset = 0;
     std::uint32_t satisfied_goals = 0;
     std::uint32_t fractured_goals = 0;
     std::uint32_t active_protection = 0;
+    std::uint32_t useful_protection = 0;
+    std::uint32_t capacity_obstructions = 0;
+    std::uint32_t blocked_missing_goals = 0;
     std::uint32_t unrelated_occupancy = 0;
     double focused_priority = 0.0;
 };
 
+struct CarrierActionOrderingScore {
+    std::uint32_t operator_index = kNoId;
+    std::string_view stable_operator_id;
+    std::uint32_t immediately_reachable_missing_goals = 0;
+    std::uint32_t obstruction_removal = 0;
+    std::uint32_t preserved_satisfied_goals = 0;
+    std::uint32_t preserved_useful_protection = 0;
+    std::uint32_t reachable_missing_goals = 0;
+};
+
 static_assert(!std::is_convertible_v<CarrierOrderingScore, ProofLowerValue>);
 static_assert(!std::is_convertible_v<CarrierOrderingScore, double>);
+static_assert(
+    !std::is_convertible_v<CarrierActionOrderingScore, ProofLowerValue>);
 
 struct CarrierPriorityBuckets {
     std::map<std::uint32_t, std::vector<std::uint32_t>> by_goal_subset;
@@ -685,11 +703,17 @@ CarrierOrderingScore make_carrier_ordering_score(
     const AbstractState& carrier,
     std::uint32_t state,
     std::uint32_t goal_subset,
+    std::uint32_t prefix_goal_mask,
+    std::uint32_t suffix_goal_mask,
     double focused_priority = 0.0);
 
 CarrierPriorityBuckets build_carrier_priority_buckets(
     const std::vector<CarrierOrderingScore>& candidates,
     CarrierOrderingMode mode);
+
+bool carrier_action_ordering_precedes(
+    const CarrierActionOrderingScore& left,
+    const CarrierActionOrderingScore& right);
 
 struct CapturedBoundedPolicyRow {
     PolicyOperatorRef policy;
@@ -749,14 +773,19 @@ struct SolveWork::Impl {
      * focused heuristic/lower values here. */
     std::vector<double> incremental_certified_upper_values;
     bool incremental_reclassify_all = false;
-    bool incremental_high_impact_continuation_refined = false;
+    solve_detail::AnytimeScheduler anytime_scheduler;
+    solve_detail::AnytimeScheduler focused_anytime_scheduler{
+        solve_detail::kFocusedAnytimeSchedulingProfile};
+    solve_detail::AnytimeSchedulerLane incremental_last_scheduled_lane =
+        solve_detail::AnytimeSchedulerLane::LegacyFairness;
+    bool incremental_warm_start_continuation_refined = false;
     struct IncrementalPriorityTask {
         std::uint32_t state = kNoId;
         std::uint32_t operator_index = kNoId;
     };
     std::vector<IncrementalPriorityTask> incremental_priority_tasks;
     std::size_t incremental_priority_task_cursor = 0;
-    std::uint32_t incremental_high_impact_wave = 0;
+    std::uint32_t incremental_warm_start_policy_wave = 0;
     bool incremental_upper_policy_dirty = true;
     bool incremental_upper_policy_pass = false;
     bool incremental_upper_fixed_policy_proved = false;
@@ -772,6 +801,17 @@ struct SolveWork::Impl {
     std::size_t incremental_automatic_epoch_end = 0;
     std::vector<std::uint32_t> incremental_automatic_carrier_order;
     std::size_t incremental_automatic_order_cursor = 0;
+    std::vector<std::uint32_t> incremental_fairness_carrier_order;
+    std::size_t incremental_fairness_epoch_end = 0;
+    std::size_t incremental_fairness_carrier_cursor = 0;
+    std::size_t incremental_fairness_operator_cursor = 0;
+    std::vector<std::uint32_t> incremental_high_progress_carrier_order;
+    std::size_t incremental_high_progress_epoch_end = 0;
+    std::size_t incremental_high_progress_carrier_cursor = 0;
+    std::vector<std::uint32_t> incremental_high_progress_operator_order;
+    std::size_t incremental_high_progress_operator_cursor = 0;
+    std::size_t incremental_closure_carrier_cursor = 0;
+    std::size_t incremental_closure_operator_cursor = 0;
     std::size_t incremental_operator_cursor = 0;
     bool incremental_dynamic_prepared = false;
     bool incremental_dynamic_prepare_active = false;
@@ -796,9 +836,9 @@ struct SolveWork::Impl {
         std::uint32_t states_added = 0;
     };
     std::vector<IncrementalAlternativeRow> incremental_alternative_rows;
-    /* Gate 1 keeps the legacy completed-pair set as scheduler authority.
-     * The typed ledger is observational until its scheduler view is enabled
-     * by a later gate, so instrumentation cannot change work order. */
+    /* The Gate 3 fallback keeps the proven completed-pair scheduler view.
+     * The typed ledger remains the complete observational lifecycle and can
+     * become authoritative only after a profile qualifies all controls. */
     std::unordered_set<std::uint64_t> incremental_completed_pairs;
     solve_detail::ActionEnvelopeLedger action_envelope_ledger;
     std::uint64_t incremental_unevaluated_actions = 0;
@@ -828,11 +868,14 @@ struct SolveWork::Impl {
      * policy together. Periodically synthesize that joint executable witness
      * at geometrically growing row checkpoints; this never admits the rows to
      * the lower problem or closes their exact envelope. */
-    std::size_t incremental_anytime_next_row_checkpoint = 64;
+    std::size_t incremental_anytime_next_row_checkpoint =
+        solve_detail::kAnytimeSchedulingProfile
+            .first_incumbent_checkpoint_rows;
     std::uint64_t incremental_anytime_policy_attempts = 0;
     std::uint64_t incremental_anytime_policy_successes = 0;
     std::uint64_t incremental_anytime_policy_last_completed_rows = 0;
     double incremental_anytime_policy_best_upper = kInfinity;
+    double incremental_anytime_checkpoint_upper = kInfinity;
     std::string incremental_anytime_policy_last_failure;
     /* A joint upper proof can expose a stochastic successor whose incumbent
      * continuation is not valid for that carrier shape. Feed that concrete
@@ -1253,6 +1296,9 @@ struct SolveWork::Impl {
     std::uint64_t owned_goal_survival_nested_bytes = 0;
     std::vector<double> goal_cover_cost;
     std::vector<double> clean_goal_cover_cost;
+    bool ordering_goal_masks_ready = false;
+    std::uint32_t ordering_prefix_goal_mask = 0;
+    std::uint32_t ordering_suffix_goal_mask = 0;
     /* Carrier-aware extension of the clean goal-progress relaxation over
      * rarity x satisfied-goal subset. It grants free junk removal and perfect
      * goal/carrier preservation, but retains exact rarity legality and uses
@@ -1635,6 +1681,23 @@ struct SolveWork::Impl {
         std::uint32_t state,
         double focused_priority = 0.0);
 
+    void prepare_ordering_goal_masks();
+
+    CarrierEffectSummary carrier_ordering_effect(
+        std::uint32_t state,
+        std::uint32_t operator_index);
+
+    solve_detail::CarrierActionOrderingScore
+    carrier_action_ordering_score(
+        std::uint32_t state,
+        std::uint32_t operator_index);
+
+    bool cooperative_high_progress_ordering_enabled() const;
+
+    void prioritize_carrier_actions(
+        std::uint32_t state,
+        std::vector<std::uint32_t>& operator_indices);
+
     std::optional<double> constructive_row_upper(
         const std::uint32_t state,
         const std::uint64_t row_index);
@@ -1774,9 +1837,9 @@ struct SolveWork::Impl {
 
     bool schedule_incremental_refinement(bool force = false);
 
-    bool schedule_high_impact_continuation_refinement();
+    bool schedule_warm_start_continuation_refinement();
 
-    bool prepare_high_impact_policy_wave(std::uint32_t wave);
+    bool prepare_warm_start_policy_wave(std::uint32_t wave);
 
     bool begin_incremental_upper_policy_pass();
 
@@ -1791,6 +1854,9 @@ struct SolveWork::Impl {
     void finalize_incremental_diagnostics();
 
     void refresh_action_envelope_ledger_diagnostics(
+        SolveDiagnostics& diagnostics) const;
+
+    void refresh_anytime_scheduler_diagnostics(
         SolveDiagnostics& diagnostics) const;
 
     void refresh_incumbent_portfolio_diagnostics(
