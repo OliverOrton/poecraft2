@@ -725,6 +725,10 @@ struct SolveDiagnostics {
     double incremental_refinement_uncertainty = 0.0;
     std::vector<std::string> incremental_action_witnesses;
     std::uint64_t incremental_action_witnesses_omitted = 0;
+    /* Gate-1 typed ownership view for carrier/operator obligations. The
+     * serialized aggregate is observational and the scheduler-consumer flag
+     * remains false until a later gate explicitly migrates work ordering. */
+    std::string action_envelope_ledger_json;
     /*
      * Finalization-only observational samples explaining the executable
      * upper inherited by high-impact successors of completed root

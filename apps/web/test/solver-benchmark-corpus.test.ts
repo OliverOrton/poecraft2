@@ -19,6 +19,10 @@ const RELIABILITY_MANIFEST = new URL(
     "../../../fixtures/solver-reliability/v1/manifest.json",
     import.meta.url,
 );
+const SOLVER_ANYTIME_MANIFEST = new URL(
+    "../../../fixtures/solver-anytime-proof-realignment/v1/manifest.json",
+    import.meta.url,
+);
 const GOAL_REALIGNMENT_MANIFESTS = [
     new URL(
         "../../../fixtures/solver-goal-realignment/v1/manifest.json",
@@ -73,6 +77,47 @@ test("general benchmarks default Imprint off and retain explicit opt-in", () => 
         ...ordinary,
         caps: { ...ordinary.caps, consider_imprint_programs: true },
     }), true);
+});
+
+test("Gate 1 solver-anytime controls disclose exact mechanic-family proofs", () => {
+    const corpus = loadSolverBenchmarkCorpus(
+        fileURLToPath(SOLVER_ANYTIME_MANIFEST),
+    );
+    assert.equal(
+        corpus.manifest.corpus_id,
+        "poecraft2-solver-anytime-proof-realignment-gate1-v1",
+    );
+    assert.equal(corpus.cases.length, 19);
+    const focused = corpus.cases.filter((entry) =>
+        entry.mechanic_family_control !== undefined
+    );
+    assert.deepEqual(
+        focused.map((entry) => entry.mechanic_family_control?.id).sort(),
+        [
+            "eldritch_annul_exalt_side_intent",
+            "eldritch_chaos_side_intent",
+            "essence",
+            "explicit_imprint_retry",
+            "fossil_added_mod",
+            "fossil_forced_mod",
+            "fossil_pure_reweight",
+            "fracture_miss_and_ordinary_primitives",
+            "harvest_augment_target_tag",
+            "harvest_reforge_target_tag",
+            "protection_metamod_and_temporary_bench",
+        ],
+    );
+    for (const entry of focused) {
+        const control = entry.mechanic_family_control;
+        assert.ok(control);
+        assert.ok(control.registered_action_ids.length > 0);
+        assert.ok(control.synthetic_price_keys.length > 0);
+        assert.match(control.synthetic_price_purpose, /not market evidence/);
+        assert.equal(entry.verification.exact_evaluation, true);
+        assert.equal(entry.expected?.compile_status, "compiled");
+        assert.ok(entry.compiled_operation_contract !== undefined ||
+            entry.compiled_operation_contracts !== undefined);
+    }
 });
 
 test("corpus artifact pins reject stale WASM/data combinations", () => {

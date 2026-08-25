@@ -55,6 +55,12 @@ export interface SolverBenchmarkCase {
         type: string;
         required_string_parameters: Record<string, string>;
     }>;
+    mechanic_family_control?: {
+        id: string;
+        registered_action_ids: string[];
+        synthetic_price_keys: string[];
+        synthetic_price_purpose: string;
+    };
     material_ratio_contract?: {
         numerator_price_key: string;
         denominator_price_key: string;
@@ -359,6 +365,51 @@ function validateCase(value: unknown, path: string): SolverBenchmarkCase {
             );
         }
     }
+    if (spec.mechanic_family_control !== undefined) {
+        const label = `${path}.mechanic_family_control`;
+        const contract = requireRecord(spec.mechanic_family_control, label);
+        requireString(contract, "id", label);
+        requireString(contract, "synthetic_price_purpose", label);
+        if (!(contract.synthetic_price_purpose as string).includes(
+            "not market evidence"
+        )) {
+            throw new Error(
+                `${label}.synthetic_price_purpose must disclose that the price is not market evidence`,
+            );
+        }
+        const requireUniqueStrings = (key: string): string[] => {
+            const value = contract[key];
+            if (!Array.isArray(value) || value.length === 0 ||
+                !value.every((entry) =>
+                    typeof entry === "string" && entry.length > 0
+                ) || new Set(value).size !== value.length) {
+                throw new Error(
+                    `${label}.${key} must contain unique non-empty strings`,
+                );
+            }
+            return value as string[];
+        };
+        requireUniqueStrings("registered_action_ids");
+        const priceKeys = requireUniqueStrings("synthetic_price_keys");
+        const economy = requireRecord(spec.economy, `${path}.economy`);
+        const prices = economy.prices === undefined
+            ? null
+            : requireRecord(economy.prices, `${path}.economy.prices`);
+        const overrides = economy.manual_overrides === undefined
+            ? null
+            : requireRecord(
+                economy.manual_overrides,
+                `${path}.economy.manual_overrides`,
+            );
+        for (const priceKey of priceKeys) {
+            const price = prices?.[priceKey] ?? overrides?.[priceKey];
+            if (!finitePrice(price, true)) {
+                throw new Error(
+                    `${label} synthetic price is missing or not positive: ${priceKey}`,
+                );
+            }
+        }
+    }
     if (spec.market_price_override_contracts !== undefined) {
         if (!Array.isArray(spec.market_price_override_contracts) ||
             spec.market_price_override_contracts.length === 0) {
@@ -473,11 +524,26 @@ function validateCase(value: unknown, path: string): SolverBenchmarkCase {
     }
     if (spec.compiled_operation_contract !== undefined ||
         spec.compiled_operation_contracts !== undefined ||
-        spec.material_ratio_contract !== undefined) {
+        spec.material_ratio_contract !== undefined ||
+        spec.mechanic_family_control !== undefined) {
         const expected = requireRecord(spec.expected, `${path}.expected`);
         if (expected.compile_status !== "compiled") {
             throw new Error(
                 `${path} compiled-policy contracts require compiled output`,
+            );
+        }
+    }
+    if (spec.mechanic_family_control !== undefined) {
+        if (spec.compiled_operation_contract === undefined &&
+            spec.compiled_operation_contracts === undefined) {
+            throw new Error(
+                `${path}.mechanic_family_control requires a compiled operation contract`,
+            );
+        }
+        const verification = spec.verification as Record<string, unknown>;
+        if (verification.exact_evaluation !== true) {
+            throw new Error(
+                `${path}.mechanic_family_control requires exact evaluation`,
             );
         }
     }
@@ -660,8 +726,7 @@ export function materializeSolverBenchmarkEconomy(
     const disclosedMarketOverrides =
         spec.market_price_override_contracts;
     if (disclosedMarketOverrides !== undefined) {
-        if ((forced === undefined && baseOverride !== undefined) ||
-            economy.override_purpose !==
+        if (economy.override_purpose !==
                 "synthetic_forced_winner_gate_not_market_quote" ||
             additionalMarketOverrides.length !==
                 disclosedMarketOverrides.length) {

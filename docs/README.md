@@ -32,11 +32,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 The
 [Solver Anytime Planning, Proof Patterns, And Debt Retirement](active/2026-08-25-solver-anytime-proof-realignment/plan.md)
-plan is active at Gate 1 by Oliver's explicit 2026-08-25 instruction. Its completed
+plan is active at Gate 2 by Oliver's explicit 2026-08-25 instruction. Its completed
 [documentation preflight](active/2026-08-25-solver-anytime-proof-realignment/preflight-audit.md)
 confirms the current contract and records the stable-reference cleanup; its
 [Gate 0 evidence](active/2026-08-25-solver-anytime-proof-realignment/gate0-evidence.md)
-pins the current-semantics benchmark and attribution authority.
+pins the current-semantics benchmark and attribution authority, and its
+[Gate 1 evidence](active/2026-08-25-solver-anytime-proof-realignment/gate1-evidence.md)
+establishes the typed action-envelope lifecycle and mechanic-family controls.
 
 Current source behavior starts from `a1449fa` (`Record Imprint scope
 acceptance`). Calculator and general solver benchmarks default generated

@@ -170,6 +170,21 @@ struct CaseResult {
     bool has_market_price_override_contracts = false;
     bool market_price_override_contracts_checked = false;
     std::uint64_t market_price_override_contract_count = 0;
+    bool has_mechanic_family_control = false;
+    std::string mechanic_family_control_id;
+    std::vector<std::string> mechanic_family_registered_action_ids;
+    std::vector<std::string> mechanic_family_synthetic_price_keys;
+    std::string mechanic_family_synthetic_price_purpose;
+    bool mechanic_family_registered = false;
+    bool mechanic_family_legal_carrier_admitted = false;
+    bool mechanic_family_scheduled = false;
+    bool mechanic_family_exact_row_materialized = false;
+    bool mechanic_family_selected_under_synthetic_price = false;
+    bool mechanic_family_compiled = false;
+    bool mechanic_family_independently_exact_evaluated = false;
+    bool mechanic_family_control_passed = false;
+    bool mechanic_family_synthetic_price_disclosed = false;
+    std::string mechanic_family_failure_stage;
     bool has_material_ratio_contract = false;
     std::string material_ratio_numerator_key;
     std::string material_ratio_denominator_key;
@@ -436,14 +451,24 @@ std::string load_case_economy_json(const Value& specification) {
         specification, "market_price_override_contracts", Type::Array);
     if (disclosed_market_overrides != nullptr &&
         forced_winner == nullptr) {
+        const Value* base_override = overrides.find("base");
+        const std::size_t base_override_count =
+            base_override == nullptr ? 0 : 1;
         if (required_string(economy, "override_purpose") !=
                 "synthetic_forced_winner_gate_not_market_quote" ||
             overrides.object.size() !=
-                disclosed_market_overrides->array.size() ||
-            overrides.find("base") != nullptr) {
+                disclosed_market_overrides->array.size() +
+                    base_override_count ||
+            (base_override != nullptr &&
+             (base_override->type != Type::Number ||
+              !std::isfinite(base_override->number) ||
+              base_override->number <= 0.0))) {
             throw std::runtime_error(
-                "disclosed market overrides must be the complete "
-                "non-Bestiary override set");
+                "disclosed market overrides plus an optional positive base "
+                "must be the complete override set");
+        }
+        if (base_override != nullptr) {
+            require_override_decision("missing_price_decisions", "base");
         }
         const auto same_price = [](const double lhs, const double rhs) {
             return std::fabs(lhs - rhs) <=
@@ -498,6 +523,9 @@ std::string load_case_economy_json(const Value& specification) {
                         "snapshot: " + replacement_key);
                 }
                 found->second = replacement_value;
+            }
+            if (base_override != nullptr) {
+                value.object.emplace_back("base", *base_override);
             }
             return json_of(snapshot);
         }
@@ -892,6 +920,62 @@ void initialize_market_price_override_contracts(
     if (contracts == nullptr) return;
     report.has_market_price_override_contracts = true;
     report.market_price_override_contract_count = contracts->array.size();
+}
+
+void initialize_mechanic_family_control(
+    const Value& specification, CaseResult& report) {
+    const Value* contract = optional(
+        specification, "mechanic_family_control", Type::Object);
+    if (contract == nullptr) return;
+    report.has_mechanic_family_control = true;
+    report.mechanic_family_control_id = required_string(*contract, "id");
+    report.mechanic_family_synthetic_price_purpose = required_string(
+        *contract, "synthetic_price_purpose");
+    const auto read_strings = [](const Value& values, const char* field) {
+        std::vector<std::string> result;
+        for (const Value& value : values.array) {
+            if (value.type != Type::String || value.string.empty()) {
+                throw std::runtime_error(
+                    std::string(field) + " must contain non-empty strings");
+            }
+            result.push_back(value.string);
+        }
+        if (result.empty()) {
+            throw std::runtime_error(
+                std::string(field) + " must be non-empty");
+        }
+        std::sort(result.begin(), result.end());
+        if (std::adjacent_find(result.begin(), result.end()) != result.end()) {
+            throw std::runtime_error(
+                std::string(field) + " must not contain duplicates");
+        }
+        return result;
+    };
+    report.mechanic_family_registered_action_ids = read_strings(
+        required(*contract, "registered_action_ids", Type::Array),
+        "mechanic family registered_action_ids");
+    report.mechanic_family_synthetic_price_keys = read_strings(
+        required(*contract, "synthetic_price_keys", Type::Array),
+        "mechanic family synthetic_price_keys");
+
+    const Value& economy = required(specification, "economy", Type::Object);
+    const Value* prices = optional(economy, "prices", Type::Object);
+    const Value* overrides = optional(
+        economy, "manual_overrides", Type::Object);
+    report.mechanic_family_synthetic_price_disclosed =
+        report.mechanic_family_synthetic_price_purpose.find(
+            "not market evidence") != std::string::npos;
+    for (const std::string& key :
+         report.mechanic_family_synthetic_price_keys) {
+        const Value* value = prices == nullptr ? nullptr : prices->find(key);
+        if (value == nullptr && overrides != nullptr) {
+            value = overrides->find(key);
+        }
+        if (value == nullptr || value->type != Type::Number ||
+            !std::isfinite(value->number) || value->number <= 0.0) {
+            report.mechanic_family_synthetic_price_disclosed = false;
+        }
+    }
 }
 
 std::uint64_t nonnegative_telemetry_count(const Value* value) {
@@ -1400,6 +1484,123 @@ const Value* nested_member(
     return current;
 }
 
+void finalize_mechanic_family_control(CaseResult& report) {
+    if (!report.has_mechanic_family_control) return;
+
+    try {
+        const Value telemetry = Parser(
+            report.telemetry_json.data(), report.telemetry_json.size()).parse();
+        const Value* ledger = nested_member(
+            telemetry,
+            {"incremental_action_envelope", "typed_ledger"});
+        const Value* authoritative = ledger == nullptr
+            ? nullptr
+            : ledger->find("authoritative_obligation_owner");
+        const Value* lifecycles = ledger == nullptr
+            ? nullptr
+            : ledger->find("action_lifecycles");
+        bool every_registered =
+            authoritative != nullptr && authoritative->type == Type::Bool &&
+            authoritative->boolean && lifecycles != nullptr &&
+            lifecycles->type == Type::Array;
+        bool every_scheduled = every_registered;
+        bool every_admitted = every_registered;
+        bool every_materialized = every_registered;
+        for (const std::string& action_id :
+             report.mechanic_family_registered_action_ids) {
+            bool registered = false;
+            bool scheduled = false;
+            bool admitted = false;
+            bool materialized = false;
+            if (lifecycles != nullptr && lifecycles->type == Type::Array) {
+                for (const Value& lifecycle : lifecycles->array) {
+                    if (lifecycle.type != Type::Object) continue;
+                    const Value* raw_action = lifecycle.find("action_id");
+                    if (raw_action == nullptr ||
+                        raw_action->type != Type::String ||
+                        raw_action->string != action_id) {
+                        continue;
+                    }
+                    const Value* raw_registered = lifecycle.find("registered");
+                    const Value* raw_scheduled = lifecycle.find("scheduled");
+                    const Value* raw_materialized = lifecycle.find(
+                        "exact_row_complete");
+                    const Value* legality = lifecycle.find(
+                        "exact_registry_legality");
+                    const Value* kernel = lifecycle.find(
+                        "exact_option_kernel");
+                    registered = raw_registered != nullptr &&
+                        raw_registered->type == Type::Bool &&
+                        raw_registered->boolean;
+                    scheduled = raw_scheduled != nullptr &&
+                        raw_scheduled->type == Type::Bool &&
+                        raw_scheduled->boolean;
+                    materialized = raw_materialized != nullptr &&
+                        raw_materialized->type == Type::Bool &&
+                        raw_materialized->boolean;
+                    admitted = legality != nullptr &&
+                        legality->type == Type::Bool && legality->boolean &&
+                        kernel != nullptr && kernel->type == Type::Bool &&
+                        kernel->boolean;
+                    break;
+                }
+            }
+            every_registered = every_registered && registered;
+            every_scheduled = every_scheduled && scheduled;
+            every_admitted = every_admitted && admitted;
+            every_materialized = every_materialized && materialized;
+        }
+        report.mechanic_family_registered = every_registered;
+        report.mechanic_family_scheduled = every_scheduled;
+        report.mechanic_family_legal_carrier_admitted = every_admitted;
+        report.mechanic_family_exact_row_materialized = every_materialized;
+    } catch (const std::exception&) {
+        report.mechanic_family_registered = false;
+        report.mechanic_family_scheduled = false;
+        report.mechanic_family_legal_carrier_admitted = false;
+        report.mechanic_family_exact_row_materialized = false;
+    }
+
+    const bool selected_operation_present =
+        !report.compiled_operation_contracts.empty() &&
+        std::all_of(
+            report.compiled_operation_contracts.begin(),
+            report.compiled_operation_contracts.end(),
+            [](const auto& contract) {
+                return contract.checked && contract.matching_nodes > 0;
+            });
+    report.mechanic_family_selected_under_synthetic_price =
+        report.mechanic_family_synthetic_price_disclosed &&
+        selected_operation_present;
+    report.mechanic_family_compiled =
+        report.compile_status == "compiled";
+    report.mechanic_family_independently_exact_evaluated =
+        report.exact_evaluation_status == "matched";
+    const std::pair<const char*, bool> stages[] = {
+        {"registered", report.mechanic_family_registered},
+        {"legal_carrier_admitted",
+         report.mechanic_family_legal_carrier_admitted},
+        {"scheduled", report.mechanic_family_scheduled},
+        {"exact_row_materialized",
+         report.mechanic_family_exact_row_materialized},
+        {"selected_under_disclosed_synthetic_price",
+         report.mechanic_family_selected_under_synthetic_price},
+        {"compiled", report.mechanic_family_compiled},
+        {"independently_exact_evaluated",
+         report.mechanic_family_independently_exact_evaluated},
+    };
+    report.mechanic_family_control_passed = true;
+    for (const auto& [name, passed] : stages) {
+        if (passed) continue;
+        report.mechanic_family_control_passed = false;
+        report.mechanic_family_failure_stage = name;
+        report.errors.push_back(
+            "mechanic family control " +
+            report.mechanic_family_control_id + " lost stage " + name);
+        break;
+    }
+}
+
 std::string solve_result_class(const pc_solve_summary& summary) {
     if (summary.cap_hit_mask != 0) {
         return summary.policy_available
@@ -1727,6 +1928,10 @@ bool evaluate_expectation(
         !report.market_price_override_contracts_checked) {
         return false;
     }
+    if (report.has_mechanic_family_control &&
+        !report.mechanic_family_control_passed) {
+        return false;
+    }
     if (report.has_material_ratio_contract &&
         (!report.material_ratio_exact_passed ||
          (!skip_verification &&
@@ -2046,6 +2251,75 @@ void validate_case_shape(const Value& specification) {
                 "bounded best-policy contract requires exact evaluation");
         }
     }
+    const Value* mechanic_family = optional(
+        specification, "mechanic_family_control", Type::Object);
+    if (mechanic_family != nullptr) {
+        required_string(*mechanic_family, "id");
+        const std::string purpose = required_string(
+            *mechanic_family, "synthetic_price_purpose");
+        if (purpose.find("not market evidence") == std::string::npos) {
+            throw std::runtime_error(
+                "mechanic family synthetic_price_purpose must disclose "
+                "that the price is not market evidence");
+        }
+        const auto validate_string_set = [](const Value& values,
+                                            const char* name) {
+            if (values.array.empty()) {
+                throw std::runtime_error(
+                    std::string(name) + " must be non-empty");
+            }
+            std::vector<std::string> seen;
+            for (const Value& value : values.array) {
+                if (value.type != Type::String || value.string.empty() ||
+                    std::find(seen.begin(), seen.end(), value.string) !=
+                        seen.end()) {
+                    throw std::runtime_error(
+                        std::string(name) +
+                        " must contain unique non-empty strings");
+                }
+                seen.push_back(value.string);
+            }
+        };
+        const Value& action_ids = required(
+            *mechanic_family, "registered_action_ids", Type::Array);
+        const Value& price_keys = required(
+            *mechanic_family, "synthetic_price_keys", Type::Array);
+        validate_string_set(
+            action_ids, "mechanic family registered_action_ids");
+        validate_string_set(
+            price_keys, "mechanic family synthetic_price_keys");
+        const Value& economy = required(
+            specification, "economy", Type::Object);
+        const Value* prices = optional(economy, "prices", Type::Object);
+        const Value* overrides = optional(
+            economy, "manual_overrides", Type::Object);
+        for (const Value& price_key : price_keys.array) {
+            const Value* price = prices == nullptr
+                ? nullptr
+                : prices->find(price_key.string);
+            if (price == nullptr && overrides != nullptr) {
+                price = overrides->find(price_key.string);
+            }
+            if (price == nullptr || price->type != Type::Number ||
+                !std::isfinite(price->number) || price->number <= 0.0) {
+                throw std::runtime_error(
+                    "mechanic family synthetic price is missing or not "
+                    "positive: " + price_key.string);
+            }
+        }
+        const Value& expected = required(
+            specification, "expected", Type::Object);
+        if (required_string(expected, "compile_status") != "compiled") {
+            throw std::runtime_error(
+                "mechanic family controls require compiled output");
+        }
+        const Value& verification = required(
+            specification, "verification", Type::Object);
+        if (!optional_bool(verification, "exact_evaluation", false)) {
+            throw std::runtime_error(
+                "mechanic family controls require exact evaluation");
+        }
+    }
     const auto validate_compiled_operation = [](const Value& contract) {
         required_string(contract, "type");
         const Value& parameters = required(
@@ -2078,6 +2352,12 @@ void validate_case_shape(const Value& specification) {
             }
             validate_compiled_operation(contract);
         }
+    }
+    if (mechanic_family != nullptr && compiled_operation == nullptr &&
+        compiled_operations == nullptr) {
+        throw std::runtime_error(
+            "mechanic family controls require a compiled operation "
+            "contract");
     }
     const Value* material_ratio = optional(
         specification, "material_ratio_contract", Type::Object);
@@ -2129,7 +2409,7 @@ void validate_case_shape(const Value& specification) {
         }
     }
     if (compiled_operation != nullptr || compiled_operations != nullptr ||
-        material_ratio != nullptr) {
+        material_ratio != nullptr || mechanic_family != nullptr) {
         const Value& expected = required(
             specification, "expected", Type::Object);
         if (required_string(expected, "compile_status") != "compiled") {
@@ -2142,7 +2422,8 @@ void validate_case_shape(const Value& specification) {
     if (backend == "native_unit_fixture") {
         if (forced_winner != nullptr || bounded_best != nullptr ||
             compiled_operation != nullptr || compiled_operations != nullptr ||
-            material_ratio != nullptr || market_overrides != nullptr) {
+            material_ratio != nullptr || market_overrides != nullptr ||
+            mechanic_family != nullptr) {
             throw std::runtime_error(
                 "compiled-policy acceptance contracts require the artifact "
                 "benchmark backend");
@@ -2427,6 +2708,7 @@ CaseResult run_case(
     initialize_compiled_operation_contract(specification, report);
     initialize_material_ratio_contract(specification, report);
     initialize_market_price_override_contracts(specification, report);
+    initialize_mechanic_family_control(specification, report);
     const auto total_begin = Clock::now();
     if (const Value* watchdog = optional(
             specification, "watchdog_seconds", Type::Number)) {
@@ -2462,6 +2744,13 @@ CaseResult run_case(
         create_case_objects(
             data, specification, handles, start_item,
             &report.product_action_ids);
+        if (report.has_mechanic_family_control) {
+            /* Validation pins every declared control action into goal.actions.
+             * Successful solver construction proves that the exact registry
+             * resolved that caller-selected scope; unknown action IDs fail
+             * construction before this point. */
+            report.mechanic_family_registered = true;
+        }
         report.forced_winner_price_override_checked =
             report.has_forced_winner_contract;
         report.market_price_override_contracts_checked =
@@ -3452,6 +3741,7 @@ CaseResult run_case(
     }
     finalize_material_ratio_contract(report, skip_verification);
     enforce_bounded_best_policy_contract(specification, report);
+    finalize_mechanic_family_control(report);
     evaluate_cap_checks(specification, report);
     report.expectation_met = evaluate_expectation(
         specification, report, skip_verification);
@@ -3581,7 +3871,7 @@ void append_case_report(
         << (result.verification_skipped ? "true" : "false") << ",\n";
     out << "  \"input\":{";
     bool first_input = true;
-    for (const char* key : {"comparison_profile", "watchdog_seconds", "requested_bounded_finish_seconds", "session", "start", "goal", "corpus", "feasibility", "generation", "product_action_envelope", "allowed_mechanic_families", "compiled_operation_contract", "compiled_operation_contracts", "material_ratio_contract", "market_price_override_contracts", "forced_winner_contract", "bounded_best_policy_contract", "economy", "caps", "verification"}) {
+    for (const char* key : {"comparison_profile", "watchdog_seconds", "requested_bounded_finish_seconds", "session", "start", "goal", "corpus", "feasibility", "generation", "product_action_envelope", "allowed_mechanic_families", "mechanic_family_control", "compiled_operation_contract", "compiled_operation_contracts", "material_ratio_contract", "market_price_override_contracts", "forced_winner_contract", "bounded_best_policy_contract", "economy", "caps", "verification"}) {
         const Value* value = specification.find(key);
         if (value == nullptr) continue;
         if (!first_input) out << ',';
@@ -3664,6 +3954,57 @@ void append_case_report(
         out << escape_json(result.product_action_ids[i]);
     }
     out << "],\n";
+    out << "  \"mechanic_family_control\":";
+    if (!result.has_mechanic_family_control) {
+        out << "null,\n";
+    } else {
+        out << "{\"id\":"
+            << escape_json(result.mechanic_family_control_id)
+            << ",\"registered_action_ids\":[";
+        for (std::size_t i = 0;
+             i < result.mechanic_family_registered_action_ids.size(); ++i) {
+            if (i != 0) out << ',';
+            out << escape_json(
+                result.mechanic_family_registered_action_ids[i]);
+        }
+        out << "],\"synthetic_price_keys\":[";
+        for (std::size_t i = 0;
+             i < result.mechanic_family_synthetic_price_keys.size(); ++i) {
+            if (i != 0) out << ',';
+            out << escape_json(
+                result.mechanic_family_synthetic_price_keys[i]);
+        }
+        out << "],\"synthetic_price_purpose\":"
+            << escape_json(
+                result.mechanic_family_synthetic_price_purpose)
+            << ",\"synthetic_price_disclosed\":"
+            << (result.mechanic_family_synthetic_price_disclosed
+                    ? "true" : "false")
+            << ",\"stages\":{\"registered\":"
+            << (result.mechanic_family_registered ? "true" : "false")
+            << ",\"legal_carrier_admitted\":"
+            << (result.mechanic_family_legal_carrier_admitted
+                    ? "true" : "false")
+            << ",\"scheduled\":"
+            << (result.mechanic_family_scheduled ? "true" : "false")
+            << ",\"exact_row_materialized\":"
+            << (result.mechanic_family_exact_row_materialized
+                    ? "true" : "false")
+            << ",\"selected_under_disclosed_synthetic_price\":"
+            << (result.mechanic_family_selected_under_synthetic_price
+                    ? "true" : "false")
+            << ",\"compiled\":"
+            << (result.mechanic_family_compiled ? "true" : "false")
+            << ",\"independently_exact_evaluated\":"
+            << (result.mechanic_family_independently_exact_evaluated
+                    ? "true" : "false")
+            << "},\"passed\":"
+            << (result.mechanic_family_control_passed ? "true" : "false")
+            << ",\"failure_stage\":";
+        if (result.mechanic_family_failure_stage.empty()) out << "null";
+        else out << escape_json(result.mechanic_family_failure_stage);
+        out << "},\n";
+    }
     out << "  \"compiled_operation_contract\":";
     if (!result.has_compiled_operation_contract) {
         out << "null,\n";

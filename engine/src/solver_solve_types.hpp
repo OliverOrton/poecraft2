@@ -1,5 +1,6 @@
 #pragma once
 
+#include "solver_action_envelope_ledger.hpp"
 #include "solver_solve_contracts.hpp"
 
 #include "poecraft/bitset.h"
@@ -793,10 +794,11 @@ struct SolveWork::Impl {
         std::uint32_t states_added = 0;
     };
     std::vector<IncrementalAlternativeRow> incremental_alternative_rows;
-    /* High-impact operator-major scheduling can discover carriers after an
-     * earlier operator sweep. Track exact completed pairs so those late
-     * carriers are revisited without replaying already materialized rows. */
+    /* Gate 1 keeps the legacy completed-pair set as scheduler authority.
+     * The typed ledger is observational until its scheduler view is enabled
+     * by a later gate, so instrumentation cannot change work order. */
     std::unordered_set<std::uint64_t> incremental_completed_pairs;
+    solve_detail::ActionEnvelopeLedger action_envelope_ledger;
     std::uint64_t incremental_unevaluated_actions = 0;
     std::uint64_t incremental_inapplicable_actions = 0;
     std::uint64_t incremental_resource_unresolved_actions = 0;
@@ -1717,6 +1719,9 @@ struct SolveWork::Impl {
     void restart_incremental_optimization();
 
     void finalize_incremental_diagnostics();
+
+    void refresh_action_envelope_ledger_diagnostics(
+        SolveDiagnostics& diagnostics) const;
 
     void finalize_upper_policy_provenance();
 

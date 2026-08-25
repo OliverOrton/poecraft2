@@ -26,6 +26,14 @@ void SolveWork::Impl::retain_incremental_carrier(
     }
     incremental_carriers.push_back(state);
     incremental_unevaluated_actions += delayed_operator_indices.size();
+    for (const std::uint32_t operator_index : delayed_operator_indices) {
+        action_envelope_ledger.queue(
+            state, operator_index,
+            ActionEnvelopeLane::IncrementalCarrierLocal,
+            EnvelopeEvidenceCarrierFacts |
+                EnvelopeEvidenceCarrierEffectSummary |
+                EnvelopeEvidenceActionRefinementContract);
+    }
     if (options.high_impact_executable_uppers) {
         /* Automatic preparation is itself an open envelope obligation. Its
          * materialized operators are counted only after synthesis completes. */
@@ -53,10 +61,17 @@ bool SolveWork::Impl::advance_incremental_dynamic_preparation() {
         incremental_resource_unresolved_actions;
     try {
         if (!prepare_state_expansion(state, true)) return false;
-    } catch (const SolverResourceLimit&) {
+    } catch (const SolverResourceLimit& limit) {
         if (incremental_resource_unresolved_actions == unresolved_before) {
             ++incremental_resource_unresolved_actions;
         }
+        action_envelope_ledger.rolled_back_after_cap(
+            state, kNoId, ActionEnvelopeLane::IncrementalAutomatic,
+            limit.cap_name(),
+            EnvelopeEvidenceCarrierFacts |
+                EnvelopeEvidenceCarrierEffectSummary |
+                EnvelopeEvidenceCarrierSuccessorEnvelope |
+                EnvelopeEvidenceActionRefinementContract);
         incremental_envelope_closed = false;
         throw;
     }
@@ -68,6 +83,16 @@ bool SolveWork::Impl::advance_incremental_dynamic_preparation() {
                 candidate) == static_operator_indices.end()) {
             incremental_dynamic_operator_indices.push_back(candidate);
         }
+    }
+    for (const std::uint32_t operator_index :
+         incremental_dynamic_operator_indices) {
+        action_envelope_ledger.queue(
+            state, operator_index,
+            ActionEnvelopeLane::IncrementalAutomatic,
+            EnvelopeEvidenceCarrierFacts |
+                EnvelopeEvidenceCarrierEffectSummary |
+                EnvelopeEvidenceCarrierSuccessorEnvelope |
+                EnvelopeEvidenceActionRefinementContract);
     }
     incremental_dynamic_prepared = true;
     incremental_dynamic_prepare_active = false;
@@ -192,12 +217,6 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
         }
     }
     if (options.high_impact_executable_uppers) {
-        const auto pair_key = [](
-            const std::uint32_t state,
-            const std::uint32_t operator_index) {
-            return (static_cast<std::uint64_t>(state) << 32) |
-                operator_index;
-        };
         const std::size_t carrier_checkpoint =
             std::min<std::size_t>(
                 options.max_expanded_states,
@@ -208,7 +227,13 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
         }
         const auto schedule_pair =
             [&](const std::uint32_t state,
-                const std::uint32_t operator_index) {
+                const std::uint32_t operator_index,
+                const ActionEnvelopeLane lane) {
+                action_envelope_ledger.queue(
+                    state, operator_index, lane,
+                    EnvelopeEvidenceCarrierFacts |
+                        EnvelopeEvidenceCarrierEffectSummary |
+                        EnvelopeEvidenceActionRefinementContract);
                 if (incremental_unevaluated_actions != 0) {
                     --incremental_unevaluated_actions;
                 }
@@ -232,6 +257,16 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
                     state, operator_index);
                 phase = SolvePhase::Expanding;
             };
+        const auto pair_complete = [&](
+                const std::uint32_t state,
+                const std::uint32_t operator_index) {
+            return action_envelope_ledger.scheduler_view_enabled
+                ? action_envelope_ledger.scheduling_complete(
+                      state, operator_index)
+                : incremental_completed_pairs.contains(
+                      (static_cast<std::uint64_t>(state) << 32) |
+                      operator_index);
+        };
         /* The high-impact path schedules delayed primitives operator-major,
          * but automatic compounds remain carrier-local. Drain that distinct
          * ledger first so an early executable-upper checkpoint cannot skip
@@ -257,14 +292,15 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
                 const std::uint32_t operator_index =
                     incremental_dynamic_operator_indices[
                         incremental_dynamic_operator_cursor++];
-                if (incremental_completed_pairs.contains(
-                        pair_key(state, operator_index))) {
+                if (pair_complete(state, operator_index)) {
                     if (incremental_unevaluated_actions != 0) {
                         --incremental_unevaluated_actions;
                     }
                     continue;
                 }
-                schedule_pair(state, operator_index);
+                schedule_pair(
+                    state, operator_index,
+                    ActionEnvelopeLane::IncrementalAutomatic);
                 return true;
             }
             ++incremental_automatic_carrier_cursor;
@@ -290,11 +326,12 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
             const IncrementalPriorityTask task =
                 incremental_priority_tasks[
                     incremental_priority_task_cursor++];
-            if (incremental_completed_pairs.contains(
-                    pair_key(task.state, task.operator_index))) {
+            if (pair_complete(task.state, task.operator_index)) {
                 continue;
             }
-            schedule_pair(task.state, task.operator_index);
+            schedule_pair(
+                task.state, task.operator_index,
+                ActionEnvelopeLane::IncrementalPriority);
             return true;
         }
         if (continue_current_epoch) return false;
@@ -332,7 +369,8 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
                         incremental_priority_tasks[
                             incremental_priority_task_cursor++];
                     schedule_pair(
-                        task.state, task.operator_index);
+                        task.state, task.operator_index,
+                        ActionEnvelopeLane::IncrementalPriority);
                     return true;
                 }
                 incremental_carrier_cursor = 0;
@@ -343,11 +381,12 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
                 incremental_carriers[incremental_carrier_cursor++];
             const std::uint32_t operator_index =
                 delayed_operator_indices[incremental_operator_cursor];
-            if (incremental_completed_pairs.contains(
-                    pair_key(state, operator_index))) {
+            if (pair_complete(state, operator_index)) {
                 continue;
             }
-            schedule_pair(state, operator_index);
+            schedule_pair(
+                state, operator_index,
+                ActionEnvelopeLane::IncrementalOperatorMajor);
             return true;
         }
         /* Carrier discovery is monotonic and may continue after an operator
@@ -358,11 +397,12 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
         for (const std::uint32_t operator_index :
              delayed_operator_indices) {
             for (const std::uint32_t state : incremental_carriers) {
-                if (incremental_completed_pairs.contains(
-                        pair_key(state, operator_index))) {
+                if (pair_complete(state, operator_index)) {
                     continue;
                 }
-                schedule_pair(state, operator_index);
+                schedule_pair(
+                    state, operator_index,
+                    ActionEnvelopeLane::IncrementalClosure);
                 return true;
             }
         }
@@ -373,6 +413,8 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
         const std::uint32_t state =
             incremental_carriers[incremental_carrier_cursor];
         std::uint32_t operator_index = kNoId;
+        ActionEnvelopeLane lane =
+            ActionEnvelopeLane::IncrementalCarrierLocal;
         if (!incremental_dynamic_prepared) {
             /*
              * State-local compound candidates are deliberately synthesized
@@ -395,6 +437,7 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
             incremental_dynamic_operator_indices.size()) {
             operator_index = incremental_dynamic_operator_indices[
                 incremental_dynamic_operator_cursor++];
+            lane = ActionEnvelopeLane::IncrementalAutomatic;
         } else if (incremental_operator_cursor <
                    delayed_operator_indices.size()) {
             operator_index =
@@ -408,6 +451,11 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
             incremental_dynamic_operator_indices.clear();
             continue;
         }
+        action_envelope_ledger.queue(
+            state, operator_index, lane,
+            EnvelopeEvidenceCarrierFacts |
+                EnvelopeEvidenceCarrierEffectSummary |
+                EnvelopeEvidenceActionRefinementContract);
         if (incremental_unevaluated_actions != 0) {
             --incremental_unevaluated_actions;
         }
@@ -1487,6 +1535,19 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
         candidate.status =
             IncrementalAlternativeRow::Status::PendingValues;
         ++incremental_rows_reconsidered;
+        const ActionEnvelopeEntry* ledger_entry =
+            action_envelope_ledger.find(
+                candidate.state, candidate.operator_index);
+        const ActionEnvelopeLane ledger_lane =
+            ledger_entry == nullptr
+                ? ActionEnvelopeLane::IncrementalCarrierLocal
+                : ledger_entry->lane;
+        const std::uint32_t ledger_evidence =
+            EnvelopeEvidenceCarrierFacts |
+            EnvelopeEvidenceCarrierEffectSummary |
+            EnvelopeEvidenceActionRefinementContract |
+            EnvelopeEvidenceExactRegistryLegality |
+            EnvelopeEvidenceExactOptionKernel;
         candidate.lower_q = sparse_row_q_for_values(
             candidate.row_index, certified_lower);
         const SparseRow& row =
@@ -1562,6 +1623,11 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
         if (pending_delta) {
             candidate.status =
                 IncrementalAlternativeRow::Status::Unresolved;
+            action_envelope_ledger.unresolved(
+                candidate.state, candidate.operator_index,
+                ActionEnvelopeStopOwner::SuccessorFrontier,
+                candidate.row_index,
+                "unexpanded_successor_frontier", ledger_evidence);
             continue;
         }
         const double current_upper =
@@ -1576,6 +1642,9 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
                 IncrementalAlternativeRow::Status::Admitted;
             candidate.improvement_margin =
                 current_upper - candidate.upper_q;
+            action_envelope_ledger.exact_row_complete(
+                candidate.state, candidate.operator_index,
+                ledger_lane, candidate.row_index, ledger_evidence);
             admitted = true;
             continue;
         }
@@ -1586,9 +1655,17 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
                 IncrementalAlternativeRow::Status::NonImproving;
             candidate.improvement_margin =
                 current_upper - candidate.lower_q;
+            action_envelope_ledger.incumbent_dominated(
+                candidate.state, candidate.operator_index,
+                candidate.row_index, ledger_evidence);
         } else {
             candidate.status =
                 IncrementalAlternativeRow::Status::Unresolved;
+            action_envelope_ledger.unresolved(
+                candidate.state, candidate.operator_index,
+                ActionEnvelopeStopOwner::MissingVerifiedUpper,
+                candidate.row_index,
+                "missing_verified_carrier_upper", ledger_evidence);
         }
     }
 
@@ -1702,7 +1779,323 @@ void SolveWork::Impl::restart_incremental_optimization() {
     }
 }
 
+namespace {
+
+const char* action_envelope_state_name(const ActionEnvelopeState state) {
+    switch (state) {
+    case ActionEnvelopeState::Queued: return "queued";
+    case ActionEnvelopeState::ExactRowComplete: return "exact_row_complete";
+    case ActionEnvelopeState::ExactInapplicabilityProved:
+        return "exact_inapplicability_proved";
+    case ActionEnvelopeState::IncumbentDominated:
+        return "incumbent_dominated";
+    case ActionEnvelopeState::RolledBackAfterCap:
+        return "rolled_back_after_named_cap";
+    case ActionEnvelopeState::OmittedCallerScope:
+        return "omitted_explicit_caller_scope";
+    case ActionEnvelopeState::UnresolvedNamedStop:
+        return "unresolved_named_stop";
+    case ActionEnvelopeState::Count: return "invalid";
+    }
+    return "invalid";
+}
+
+const char* action_envelope_lane_name(const ActionEnvelopeLane lane) {
+    switch (lane) {
+    case ActionEnvelopeLane::Unassigned: return "unassigned";
+    case ActionEnvelopeLane::RestrictedAnchor:
+        return "restricted_anchor";
+    case ActionEnvelopeLane::IncrementalCarrierLocal:
+        return "incremental_carrier_local";
+    case ActionEnvelopeLane::IncrementalAutomatic:
+        return "incremental_automatic";
+    case ActionEnvelopeLane::IncrementalPriority:
+        return "incremental_priority";
+    case ActionEnvelopeLane::IncrementalOperatorMajor:
+        return "incremental_operator_major";
+    case ActionEnvelopeLane::IncrementalClosure:
+        return "incremental_closure";
+    case ActionEnvelopeLane::ExplicitCallerScope:
+        return "explicit_caller_scope";
+    case ActionEnvelopeLane::Count: return "invalid";
+    }
+    return "invalid";
+}
+
+const char* action_envelope_authority_name(
+        const ActionEnvelopeProofAuthority authority) {
+    switch (authority) {
+    case ActionEnvelopeProofAuthority::None: return "none";
+    case ActionEnvelopeProofAuthority::ExactRowMaterialization:
+        return "exact_row_materialization";
+    case ActionEnvelopeProofAuthority::ExactRegistryLegality:
+        return "exact_registry_legality";
+    case ActionEnvelopeProofAuthority::IndependentGlobalLowerVsVerifiedUpper:
+        return "independent_global_lower_vs_verified_upper";
+    case ActionEnvelopeProofAuthority::ExplicitCallerScope:
+        return "explicit_caller_scope";
+    case ActionEnvelopeProofAuthority::TransactionalResourceCap:
+        return "transactional_resource_cap";
+    case ActionEnvelopeProofAuthority::NamedOpenObligation:
+        return "named_open_obligation";
+    case ActionEnvelopeProofAuthority::Count: return "invalid";
+    }
+    return "invalid";
+}
+
+const char* action_envelope_stop_name(
+        const ActionEnvelopeStopOwner owner) {
+    switch (owner) {
+    case ActionEnvelopeStopOwner::None: return "none";
+    case ActionEnvelopeStopOwner::ResourceCap: return "resource_cap";
+    case ActionEnvelopeStopOwner::SuccessorFrontier:
+        return "successor_frontier";
+    case ActionEnvelopeStopOwner::MissingVerifiedUpper:
+        return "missing_verified_upper";
+    case ActionEnvelopeStopOwner::RequestedBoundedFinish:
+        return "requested_bounded_finish";
+    case ActionEnvelopeStopOwner::Count: return "invalid";
+    }
+    return "invalid";
+}
+
+} // namespace
+
+void SolveWork::Impl::refresh_action_envelope_ledger_diagnostics(
+        SolveDiagnostics& diagnostics) const {
+    using Ledger = ActionEnvelopeLedger;
+    struct ActionLifecycleSummary {
+        bool registered = false;
+        bool scheduled = false;
+        bool exact_row_complete = false;
+        bool exact_registry_legality = false;
+        bool exact_option_kernel = false;
+    };
+    std::array<std::uint64_t, Ledger::kLaneCount> lane_counts{};
+    std::array<std::uint64_t, Ledger::kAuthorityCount> authority_counts{};
+    std::array<std::uint64_t, Ledger::kStopOwnerCount> stop_counts{};
+    std::array<std::uint64_t, 6> evidence_counts{};
+    std::vector<ActionLifecycleSummary> action_lifecycles(
+        calc.operators().size());
+    for (const auto& [unused_key, entry] :
+         action_envelope_ledger.entries()) {
+        (void)unused_key;
+        ++lane_counts.at(static_cast<std::size_t>(entry.lane));
+        ++authority_counts.at(static_cast<std::size_t>(entry.authority));
+        ++stop_counts.at(static_cast<std::size_t>(entry.stop_owner));
+        for (std::size_t bit = 0; bit < evidence_counts.size(); ++bit) {
+            if ((entry.evidence & (std::uint32_t{1} << bit)) != 0) {
+                ++evidence_counts[bit];
+            }
+        }
+        if (entry.operator_index < action_lifecycles.size()) {
+            ActionLifecycleSummary& lifecycle =
+                action_lifecycles[entry.operator_index];
+            lifecycle.registered = true;
+            lifecycle.scheduled = lifecycle.scheduled ||
+                (entry.lane != ActionEnvelopeLane::Unassigned &&
+                 entry.lane != ActionEnvelopeLane::ExplicitCallerScope);
+            lifecycle.exact_row_complete =
+                lifecycle.exact_row_complete ||
+                entry.lifecycle == ActionEnvelopeState::ExactRowComplete ||
+                entry.row_index !=
+                    std::numeric_limits<std::uint64_t>::max();
+            lifecycle.exact_registry_legality =
+                lifecycle.exact_registry_legality ||
+                (entry.evidence &
+                 EnvelopeEvidenceExactRegistryLegality) != 0;
+            lifecycle.exact_option_kernel =
+                lifecycle.exact_option_kernel ||
+                (entry.evidence & EnvelopeEvidenceExactOptionKernel) != 0;
+        }
+    }
+    const auto state_counts = action_envelope_ledger.state_counts();
+    const std::size_t sample_limit = options.max_diagnostic_samples;
+    std::vector<const ActionEnvelopeEntry*> samples;
+    samples.reserve(std::min<std::size_t>(
+        action_envelope_ledger.entries().size(), sample_limit));
+    const auto less_identity = [](
+            const ActionEnvelopeEntry* left,
+            const ActionEnvelopeEntry* right) {
+        return std::tie(left->state, left->operator_index) <
+               std::tie(right->state, right->operator_index);
+    };
+    for (const auto& [unused_key, entry] :
+         action_envelope_ledger.entries()) {
+        (void)unused_key;
+        if (sample_limit == 0) break;
+        const auto position = std::lower_bound(
+            samples.begin(), samples.end(), &entry, less_identity);
+        samples.insert(position, &entry);
+        if (samples.size() > sample_limit) samples.pop_back();
+    }
+
+    std::string json = "{\"schema\":\"action_envelope_ledger_v1\"";
+    json += ",\"authoritative_obligation_owner\":true";
+    json += ",\"scheduler_view_enabled\":" + std::string(
+        action_envelope_ledger.scheduler_view_enabled ? "true" : "false");
+    json += ",\"transitions\":" +
+            std::to_string(action_envelope_ledger.transition_count());
+    json += ",\"entries\":" +
+            std::to_string(action_envelope_ledger.entries().size());
+    json += ",\"observational_owned_bytes\":" +
+            std::to_string(
+                action_envelope_ledger.estimated_owned_bytes());
+    const auto append_named_counts = [&json](
+            const auto& counts, const auto name) {
+        json.push_back('{');
+        for (std::size_t index = 0; index < counts.size(); ++index) {
+            if (index != 0) json.push_back(',');
+            append_json_string(json, name(index));
+            json.push_back(':');
+            json += std::to_string(counts[index]);
+        }
+        json.push_back('}');
+    };
+    json += ",\"states\":";
+    append_named_counts(
+        state_counts,
+        [](const std::size_t value) {
+            return action_envelope_state_name(
+                static_cast<ActionEnvelopeState>(value));
+        });
+    json += ",\"lanes\":";
+    append_named_counts(
+        lane_counts,
+        [](const std::size_t value) {
+            return action_envelope_lane_name(
+                static_cast<ActionEnvelopeLane>(value));
+        });
+    json += ",\"proof_authorities\":";
+    append_named_counts(
+        authority_counts,
+        [](const std::size_t value) {
+            return action_envelope_authority_name(
+                static_cast<ActionEnvelopeProofAuthority>(value));
+        });
+    json += ",\"stop_owners\":";
+    append_named_counts(
+        stop_counts,
+        [](const std::size_t value) {
+            return action_envelope_stop_name(
+                static_cast<ActionEnvelopeStopOwner>(value));
+        });
+    constexpr std::array<const char*, 6> evidence_names = {
+        "carrier_facts", "carrier_effect_summary",
+        "carrier_successor_envelope", "action_refinement_contract",
+        "exact_registry_legality", "exact_option_kernel"};
+    json += ",\"evidence_coverage\":";
+    append_named_counts(
+        evidence_counts,
+        [&](const std::size_t value) { return evidence_names[value]; });
+    json += ",\"action_lifecycles\":[";
+    bool first_lifecycle = true;
+    for (std::size_t operator_index = 0;
+         operator_index < action_lifecycles.size(); ++operator_index) {
+        const ActionLifecycleSummary& lifecycle =
+            action_lifecycles[operator_index];
+        if (!lifecycle.registered) continue;
+        if (!first_lifecycle) json.push_back(',');
+        first_lifecycle = false;
+        json += "{\"action_id\":";
+        append_json_string(json, calc.operators()[operator_index].id);
+        json += ",\"registered\":true";
+        json += ",\"scheduled\":" + std::string(
+            lifecycle.scheduled ? "true" : "false");
+        json += ",\"exact_row_complete\":" + std::string(
+            lifecycle.exact_row_complete ? "true" : "false");
+        json += ",\"exact_registry_legality\":" + std::string(
+            lifecycle.exact_registry_legality ? "true" : "false");
+        json += ",\"exact_option_kernel\":" + std::string(
+            lifecycle.exact_option_kernel ? "true" : "false");
+        json.push_back('}');
+    }
+    json += "]";
+    json += ",\"samples\":[";
+    for (std::size_t index = 0; index < samples.size(); ++index) {
+        if (index != 0) json.push_back(',');
+        const ActionEnvelopeEntry& entry = *samples[index];
+        json += "{\"state\":";
+        if (entry.state == kNoId) {
+            json += "null";
+        } else {
+            json += std::to_string(entry.state);
+        }
+        json += ",\"operator_index\":";
+        if (entry.operator_index == kNoId) {
+            json += "null";
+        } else {
+            json += std::to_string(entry.operator_index);
+        }
+        json += ",\"action_id\":";
+        if (entry.operator_index < calc.operators().size()) {
+            append_json_string(
+                json, calc.operators()[entry.operator_index].id);
+        } else {
+            append_json_string(json, "automatic_preparation");
+        }
+        json += ",\"lifecycle\":";
+        append_json_string(
+            json, action_envelope_state_name(entry.lifecycle));
+        json += ",\"lane\":";
+        append_json_string(json, action_envelope_lane_name(entry.lane));
+        json += ",\"proof_authority\":";
+        append_json_string(
+            json, action_envelope_authority_name(entry.authority));
+        json += ",\"stop_owner\":";
+        append_json_string(
+            json, action_envelope_stop_name(entry.stop_owner));
+        json += ",\"row_index\":";
+        if (entry.row_index ==
+            std::numeric_limits<std::uint64_t>::max()) {
+            json += "null";
+        } else {
+            json += std::to_string(entry.row_index);
+        }
+        json += ",\"revision\":" + std::to_string(entry.revision);
+        json += ",\"detail\":";
+        if (entry.detail.empty()) {
+            json += "null";
+        } else {
+            append_json_string(json, entry.detail);
+        }
+        json += ",\"evidence\":{";
+        for (std::size_t bit = 0; bit < evidence_names.size(); ++bit) {
+            if (bit != 0) json.push_back(',');
+            append_json_string(json, evidence_names[bit]);
+            json.push_back(':');
+            json += (entry.evidence & (std::uint32_t{1} << bit)) != 0
+                        ? "true"
+                        : "false";
+        }
+        json += "}}";
+    }
+    json += "],\"sample_counts\":{\"retained\":" +
+            std::to_string(samples.size());
+    json += ",\"omitted\":" + std::to_string(
+        action_envelope_ledger.entries().size() - samples.size());
+    json += ",\"limit\":" + std::to_string(sample_limit) + "}}";
+    diagnostics.action_envelope_ledger_json = std::move(json);
+}
+
 void SolveWork::Impl::finalize_incremental_diagnostics() {
+    if (!incremental_envelope_closed) {
+        if (requested_bounded_finish) {
+            action_envelope_ledger.mark_queued_unresolved(
+                ActionEnvelopeStopOwner::RequestedBoundedFinish,
+                "requested_bounded_finish");
+        } else if (result.diagnostics.resource_cap_hit) {
+            const std::string cap = result.diagnostics.cap_hits.empty()
+                ? std::string("solver_resource_cap")
+                : result.diagnostics.cap_hits.back();
+            action_envelope_ledger.mark_queued_unresolved(
+                ActionEnvelopeStopOwner::ResourceCap, cap);
+        } else {
+            action_envelope_ledger.mark_queued_unresolved(
+                ActionEnvelopeStopOwner::MissingVerifiedUpper,
+                "solver_finished_with_open_action_envelope");
+        }
+    }
     SolveDiagnostics& diagnostics = result.diagnostics;
     diagnostics.incremental_action_generation =
         incremental_action_generation;
@@ -1823,6 +2216,7 @@ void SolveWork::Impl::finalize_incremental_diagnostics() {
         diagnostics.incremental_action_witnesses.push_back(
             std::move(witness));
     }
+    refresh_action_envelope_ledger_diagnostics(diagnostics);
 }
 
 void SolveWork::Impl::finalize_upper_policy_provenance() {

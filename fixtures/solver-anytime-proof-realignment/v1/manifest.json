@@ -1,6 +1,6 @@
 {
   "schema_version": "solver_benchmark_corpus_v1",
-  "corpus_id": "poecraft2-solver-anytime-proof-realignment-gate0-v1",
+  "corpus_id": "poecraft2-solver-anytime-proof-realignment-gate1-v1",
   "artifact": {
     "manifest_relative_path": "data/compiled/current/manifest.json",
     "canonical_source": "data/sqlite/poecraft.db",
@@ -18,7 +18,7 @@
     "mechanics_authority": "unchanged_current_implemented_contract"
   },
   "benchmark_identity_contract": {
-    "id": "solver-anytime-proof-realignment-gate0-v1",
+    "id": "solver-anytime-proof-realignment-gate1-v1",
     "trajectory_required": true,
     "native_repetitions": 3,
     "fixed_work_identity_required": true,
@@ -55,7 +55,44 @@
     "spine-bow-tri-elemental-current-60s": "tri_elemental_bow",
     "warlord-bounded-current-exact-terminal": "bounded_current_semantics_warlord",
     "oracle-real-one-mod": "ordinary_native_release_wasm_parity",
-    "vaal-regalia-allflame-imprint-retry": "explicit_imprint_product_control"
+    "vaal-regalia-allflame-imprint-retry": "explicit_imprint_product_control",
+    "essence-contempt-forced-winner": "focused_essence_forced_winner",
+    "fossil-dense-pure-reweight-forced-winner": "focused_pure_reweight_fossil_forced_winner",
+    "fossil-faceted-added-mod-forced-winner": "focused_added_mod_fossil_forced_winner",
+    "fossil-hollow-forced-mod-winner": "focused_forced_mod_fossil_winner",
+    "harvest-reforge-physical-forced-winner": "focused_harvest_reforge_target_tag_forced_winner",
+    "harvest-augment-physical-forced-winner": "focused_harvest_augment_target_tag_forced_winner",
+    "eldritch-chaos-side-intent-forced-winner": "focused_eldritch_chaos_side_intent_forced_winner",
+    "eldritch-annul-exalt-side-intent-forced-winner": "focused_eldritch_annul_exalt_side_intent_forced_winner",
+    "protected-reforge-bench-cleanup-forced-winner": "focused_protection_metamod_and_temporary_bench_forced_winner",
+    "fracture-miss-primitives-forced-winner": "focused_fracture_miss_and_ordinary_primitives_forced_winner"
+  },
+  "mechanic_family_coverage": {
+    "stage_contract": [
+      "registered",
+      "legal_carrier_admitted",
+      "scheduled",
+      "exact_row_materialized",
+      "selected_under_disclosed_synthetic_price",
+      "compiled",
+      "independently_exact_evaluated"
+    ],
+    "controls": {
+      "harvest_reforge_and_target_tag": "harvest-reforge-physical-forced-winner",
+      "harvest_augment_and_target_tag": "harvest-augment-physical-forced-winner",
+      "eldritch_chaos_side_intent": "eldritch-chaos-side-intent-forced-winner",
+      "eldritch_annul_exalt_side_intents": "eldritch-annul-exalt-side-intent-forced-winner",
+      "protection_and_metamod_followups": "protected-reforge-bench-cleanup-forced-winner",
+      "essence": "essence-contempt-forced-winner",
+      "fossil_pure_reweight": "fossil-dense-pure-reweight-forced-winner",
+      "fossil_added_mod": "fossil-faceted-added-mod-forced-winner",
+      "fossil_forced_mod": "fossil-hollow-forced-mod-winner",
+      "fracture_and_miss_recovery": "fracture-miss-primitives-forced-winner",
+      "annul_exalt_scour_and_rarity_primitives": "fracture-miss-primitives-forced-winner",
+      "temporary_bench_cleanup_and_blocker_routes": "protected-reforge-bench-cleanup-forced-winner",
+      "explicit_imprint_retry": "vaal-regalia-allflame-imprint-retry"
+    },
+    "synthetic_price_boundary": "selection_and_reachability_evidence_only_not_market_evidence"
   },
   "owner_decisions": [
     "Every Calculator-profile case uses exact terminal semantics, goal-progress-gated destructive reforges, no voluntary economic Restart unless explicitly stated by the case, and automatic Imprint programs off.",
@@ -73,6 +110,16 @@
     "../../../docs/archive/2026-08-24-carrier-aware-control-authority/spine-bow-tri-elemental-60s.json",
     "cases/warlord-bounded-current.json",
     "../../solver-benchmarks/v1/cases/oracle-real-one-mod.json",
-    "../../solver-goal-realignment/v1/cases/vaal-regalia-allflame-imprint-retry.json"
+    "../../solver-goal-realignment/v1/cases/vaal-regalia-allflame-imprint-retry.json",
+    "cases/essence-contempt-forced-winner.json",
+    "cases/fossil-dense-pure-reweight-forced-winner.json",
+    "cases/fossil-faceted-added-mod-forced-winner.json",
+    "cases/fossil-hollow-forced-mod-winner.json",
+    "cases/harvest-reforge-physical-forced-winner.json",
+    "cases/harvest-augment-physical-forced-winner.json",
+    "cases/eldritch-chaos-side-intent-forced-winner.json",
+    "cases/eldritch-annul-exalt-side-intent-forced-winner.json",
+    "cases/protected-reforge-bench-cleanup-forced-winner.json",
+    "cases/fracture-miss-primitives-forced-winner.json"
   ]
 }

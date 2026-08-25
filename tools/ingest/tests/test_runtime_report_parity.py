@@ -470,8 +470,12 @@ def test_authored_contracts_require_complete_derived_evidence(tmp_path: Path) ->
             {
                 "override_purpose": "synthetic_forced_winner_gate_not_market_quote",
                 "manual_overrides": {
+                    "base": 5.0,
                     "eldritch_chaos": 1000.0,
                     "eldritch_annul": 1000.0,
+                },
+                "missing_price_decisions": {
+                    "base": "synthetic carrier acquisition price",
                 },
                 "manual_override_decisions": {
                     "eldritch_chaos": "synthetic retry-route exclusion",

@@ -3053,6 +3053,9 @@ bool SolveWork::Impl::expand_one_unit() {
         const auto started = std::chrono::steady_clock::now();
         bool row_attempt_active = false;
         bool row_resource_limited = false;
+        std::string row_resource_cap_name;
+        std::uint64_t row_attempt_appended_row =
+            std::numeric_limits<std::uint64_t>::max();
         std::uint32_t row_attempt_operator = kNoId;
         std::uint32_t row_attempt_cursor = 0;
         std::uint64_t row_attempt_reforge_work = 0;
@@ -3090,6 +3093,15 @@ bool SolveWork::Impl::expand_one_unit() {
 
         try {
             if (!expansion_prepared) {
+                for (const std::uint32_t operator_index :
+                     static_operator_indices) {
+                    action_envelope_ledger.queue(
+                        state, operator_index,
+                        ActionEnvelopeLane::RestrictedAnchor,
+                        EnvelopeEvidenceCarrierFacts |
+                            EnvelopeEvidenceCarrierEffectSummary |
+                            EnvelopeEvidenceActionRefinementContract);
+                }
                 if (!prepare_state_expansion(
                         state, !incremental_action_generation)) {
                     result.diagnostics.expansion_ns +=
@@ -3101,6 +3113,41 @@ bool SolveWork::Impl::expand_one_unit() {
                     return false;
                 }
                 expansion_prepared = true;
+                for (const std::uint32_t operator_index :
+                     static_operator_indices) {
+                    if (std::find(
+                            expansion_operator_indices.begin(),
+                            expansion_operator_indices.end(),
+                            operator_index) !=
+                        expansion_operator_indices.end()) {
+                        continue;
+                    }
+                    action_envelope_ledger.exact_inapplicable(
+                        state, operator_index,
+                        ActionEnvelopeLane::RestrictedAnchor,
+                        EnvelopeEvidenceCarrierFacts |
+                            EnvelopeEvidenceCarrierEffectSummary |
+                            EnvelopeEvidenceActionRefinementContract |
+                            EnvelopeEvidenceExactRegistryLegality);
+                }
+                for (const std::uint32_t operator_index :
+                     expansion_operator_indices) {
+                    const PlannerOperator& planner =
+                        calc.operators().at(operator_index);
+                    std::uint32_t evidence =
+                        EnvelopeEvidenceCarrierFacts |
+                        EnvelopeEvidenceCarrierEffectSummary |
+                        EnvelopeEvidenceActionRefinementContract;
+                    if (planner.kind == PlannerOperatorKind::FixedOption ||
+                        planner.automatic_kind !=
+                            AutomaticCandidateKind::None) {
+                        evidence |=
+                            EnvelopeEvidenceCarrierSuccessorEnvelope;
+                    }
+                    action_envelope_ledger.queue(
+                        state, operator_index,
+                        ActionEnvelopeLane::RestrictedAnchor, evidence);
+                }
             }
             if (expansion_operator_cursor <
                 expansion_operator_indices.size()) {
@@ -3509,6 +3556,7 @@ bool SolveWork::Impl::expand_one_unit() {
                         }
                         const auto [collapsed, appended_row] =
                             append_sparse_row(state, std::move(pending));
+                        row_attempt_appended_row = appended_row;
                         if (state == result.start_state) {
                             const SparseRow& root_row =
                                 transition_cache->rows.at(appended_row);
@@ -3801,6 +3849,25 @@ bool SolveWork::Impl::expand_one_unit() {
                                 diagnostics_started)
                                 .count());
                 }
+                if (!expansion_is_incremental_alternative) {
+                    const std::uint32_t evidence =
+                        EnvelopeEvidenceCarrierFacts |
+                        EnvelopeEvidenceCarrierEffectSummary |
+                        EnvelopeEvidenceActionRefinementContract |
+                        EnvelopeEvidenceExactRegistryLegality |
+                        EnvelopeEvidenceExactOptionKernel;
+                    if (row_attempt_appended_row !=
+                        std::numeric_limits<std::uint64_t>::max()) {
+                        action_envelope_ledger.exact_row_complete(
+                            state, priced.index,
+                            ActionEnvelopeLane::RestrictedAnchor,
+                            row_attempt_appended_row, evidence);
+                    } else {
+                        action_envelope_ledger.exact_inapplicable(
+                            state, priced.index,
+                            ActionEnvelopeLane::RestrictedAnchor, evidence);
+                    }
+                }
                 if (expansion_is_incremental_alternative && !append) {
                     ++incremental_inapplicable_actions;
                 }
@@ -3821,6 +3888,7 @@ bool SolveWork::Impl::expand_one_unit() {
             }
         } catch (const SolverResourceLimit& limit) {
             row_resource_limited = true;
+            row_resource_cap_name = limit.cap_name();
             if (expansion_is_incremental_alternative) {
                 expansion_incremental_resource_limited = true;
             }
@@ -3915,6 +3983,18 @@ bool SolveWork::Impl::expand_one_unit() {
                     retain_automatic_candidate_record(std::move(record));
                 }
             }
+            if (!expansion_is_incremental_alternative &&
+                row_attempt_operator != kNoId) {
+                action_envelope_ledger.rolled_back_after_cap(
+                    state, row_attempt_operator,
+                    ActionEnvelopeLane::RestrictedAnchor,
+                    limit.cap_name(),
+                    EnvelopeEvidenceCarrierFacts |
+                        EnvelopeEvidenceCarrierEffectSummary |
+                        EnvelopeEvidenceActionRefinementContract |
+                        EnvelopeEvidenceExactRegistryLegality |
+                        EnvelopeEvidenceExactOptionKernel);
+            }
             record_cap(
                 limit.cap_name(),
                 limit.cap_name() == "max_discovered_states");
@@ -3929,18 +4009,43 @@ bool SolveWork::Impl::expand_one_unit() {
                     (static_cast<std::uint64_t>(state) << 32) |
                     expansion_operator_indices.front());
             }
+            const std::uint32_t operator_index =
+                expansion_operator_indices.empty()
+                    ? kNoId
+                    : expansion_operator_indices.front();
+            const ActionEnvelopeEntry* ledger_entry =
+                action_envelope_ledger.find(state, operator_index);
+            const ActionEnvelopeLane lane =
+                ledger_entry == nullptr
+                    ? ActionEnvelopeLane::IncrementalCarrierLocal
+                    : ledger_entry->lane;
+            const std::uint32_t evidence =
+                EnvelopeEvidenceActionRefinementContract |
+                EnvelopeEvidenceExactRegistryLegality |
+                EnvelopeEvidenceExactOptionKernel;
             if (expansion_appended_row !=
                 std::numeric_limits<std::uint64_t>::max()) {
+                action_envelope_ledger.exact_row_complete(
+                    state, operator_index, lane,
+                    expansion_appended_row, evidence);
                 IncrementalAlternativeRow candidate;
                 candidate.state = state;
-                candidate.operator_index =
-                    expansion_operator_indices.front();
+                candidate.operator_index = operator_index;
                 candidate.row_index = expansion_appended_row;
                 candidate.states_added =
                     expansion_states_outside_chaos_support;
                 incremental_alternative_rows.push_back(candidate);
             } else if (row_resource_limited) {
+                action_envelope_ledger.rolled_back_after_cap(
+                    state, operator_index, lane,
+                    row_resource_cap_name.empty()
+                        ? std::string("solver_resource_cap")
+                        : row_resource_cap_name,
+                    evidence);
                 ++incremental_resource_unresolved_actions;
+            } else {
+                action_envelope_ledger.exact_inapplicable(
+                    state, operator_index, lane, evidence);
             }
         }
         if (completed) expansion_active = false;

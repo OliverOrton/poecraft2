@@ -104,6 +104,7 @@ interface CaseReport {
     material_ratio_contract: Record<string, unknown> | null;
     forced_winner_contract: Record<string, unknown> | null;
     bounded_best_policy_contract: Record<string, unknown> | null;
+    mechanic_family_control: Record<string, unknown> | null;
     prepared_strategy: {
         sha256: string;
         json_bytes: number;
@@ -290,6 +291,7 @@ function disabledReport(spec: SolverBenchmarkCase, status?: string): CaseReport 
             forced_winner_contract: spec.forced_winner_contract ?? null,
             bounded_best_policy_contract:
                 spec.bounded_best_policy_contract ?? null,
+            mechanic_family_control: spec.mechanic_family_control ?? null,
             economy: spec.economy ?? null,
             caps: spec.caps ?? null,
             verification: spec.verification ?? null,
@@ -336,6 +338,7 @@ function disabledReport(spec: SolverBenchmarkCase, status?: string): CaseReport 
         material_ratio_contract: null,
         forced_winner_contract: null,
         bounded_best_policy_contract: null,
+        mechanic_family_control: null,
         prepared_strategy: null,
         exact_evaluation: null,
         value: { start: null },
@@ -715,6 +718,74 @@ function compiledOperationContracts(
     ];
 }
 
+function mechanicFamilyControlReport(
+    spec: SolverBenchmarkCase,
+    telemetry: SolverTelemetry | null,
+    operationContracts: Array<Record<string, unknown>>,
+    compileStatus: string,
+    exactEvaluationStatus: string,
+): Record<string, unknown> | null {
+    const contract = spec.mechanic_family_control;
+    if (contract === undefined) return null;
+    const ledger = nestedRecord(
+        telemetry,
+        "incremental_action_envelope",
+        "typed_ledger",
+    );
+    const lifecycles = Array.isArray(ledger?.action_lifecycles)
+        ? ledger.action_lifecycles
+        : [];
+    const authoritative = ledger?.authoritative_obligation_owner === true;
+    let registered = authoritative;
+    let scheduled = authoritative;
+    let admitted = authoritative;
+    let materialized = authoritative;
+    for (const actionId of contract.registered_action_ids) {
+        const lifecycle = lifecycles.map((value) => nestedRecord(value)).find(
+            (value) => value?.action_id === actionId,
+        ) ?? null;
+        registered = registered && lifecycle?.registered === true;
+        materialized = materialized &&
+            lifecycle?.exact_row_complete === true;
+        scheduled = scheduled && lifecycle?.scheduled === true;
+        admitted = admitted &&
+            lifecycle?.exact_registry_legality === true &&
+            lifecycle.exact_option_kernel === true;
+    }
+    const syntheticPriceDisclosed = contract.synthetic_price_purpose.includes(
+        "not market evidence",
+    ) && contract.synthetic_price_keys.every((key) => {
+        const price = spec.economy.prices?.[key] ??
+            spec.economy.manual_overrides?.[key];
+        return finiteNumber(price) && price > 0;
+    });
+    const selected = syntheticPriceDisclosed &&
+        operationContracts.length > 0 && operationContracts.every(
+            (operation) => operation.present === true,
+        );
+    const stages: Record<string, boolean> = {
+        registered,
+        legal_carrier_admitted: admitted,
+        scheduled,
+        exact_row_materialized: materialized,
+        selected_under_disclosed_synthetic_price: selected,
+        compiled: compileStatus === "compiled",
+        independently_exact_evaluated: exactEvaluationStatus === "matched",
+    };
+    const failureStage = Object.entries(stages).find(([, passed]) => !passed)
+        ?.[0] ?? null;
+    return {
+        id: contract.id,
+        registered_action_ids: [...contract.registered_action_ids].sort(),
+        synthetic_price_keys: [...contract.synthetic_price_keys].sort(),
+        synthetic_price_purpose: contract.synthetic_price_purpose,
+        synthetic_price_disclosed: syntheticPriceDisclosed,
+        stages,
+        passed: failureStage === null,
+        failure_stage: failureStage,
+    };
+}
+
 function materialRatioContractReport(
     spec: SolverBenchmarkCase,
     exactEvaluation: Record<string, unknown> | null,
@@ -864,6 +935,10 @@ function caseExpectationMet(
     if (!report.cap_checks.all_passed) return false;
     if (spec.bounded_best_policy_contract !== undefined &&
         report.bounded_best_policy_contract?.passed !== true) {
+        return false;
+    }
+    if (spec.mechanic_family_control !== undefined &&
+        report.mechanic_family_control?.passed !== true) {
         return false;
     }
     if (report.compiled_operation_contracts.some(
@@ -1527,6 +1602,19 @@ async function runCase(
             };
         },
     );
+    const mechanicFamilyControl = mechanicFamilyControlReport(
+        spec,
+        telemetry,
+        operationContractReports,
+        compileStatus,
+        exactEvaluationStatus,
+    );
+    if (mechanicFamilyControl !== null &&
+        mechanicFamilyControl.passed !== true) {
+        errors.push(
+            `mechanic family control ${String(mechanicFamilyControl.id)} lost stage ${String(mechanicFamilyControl.failure_stage)}`,
+        );
+    }
     const materialRatio = materialRatioContractReport(
         spec,
         exactEvaluation,
@@ -1583,6 +1671,7 @@ async function runCase(
             goal: spec.goal,
             product_action_envelope: spec.product_action_envelope ?? null,
             allowed_mechanic_families: spec.allowed_mechanic_families,
+            mechanic_family_control: spec.mechanic_family_control ?? null,
             compiled_operation_contract:
                 spec.compiled_operation_contract ?? null,
             compiled_operation_contracts:
@@ -1687,6 +1776,7 @@ async function runCase(
                 },
             },
         bounded_best_policy_contract: boundedContract,
+        mechanic_family_control: mechanicFamilyControl,
         prepared_strategy: preparedStrategy,
         exact_evaluation: exactEvaluation,
         value: {

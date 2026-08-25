@@ -902,6 +902,7 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
            diagnostics.destructive_renewal_action_id.capacity() + 1 +
            diagnostics.progressive_fracture_roll_action_id.capacity() + 1 +
            diagnostics.progressive_fracture_status.capacity() + 1 +
+           diagnostics.action_envelope_ledger_json.capacity() + 1 +
            diagnostics.carrier_bound_attribution_json.capacity() + 1;
     bytes += diagnostics.action_search_costs_owned_bytes;
     for (const auto& [id, unused] :
@@ -1300,6 +1301,7 @@ SolveTelemetrySnapshot SolveWork::Impl::telemetry_snapshot(bool abandoned) const
             incremental_anytime_policy_last_failure;
         snapshot.diagnostics.incremental_refinement_uncertainty =
             incremental_refinement_uncertainty;
+        refresh_action_envelope_ledger_diagnostics(snapshot.diagnostics);
         snapshot.diagnostics.solve_owned_byte_ledger_requests =
             owned_byte_ledger_requests;
         snapshot.diagnostics.solve_owned_byte_reconciliations =
@@ -5170,6 +5172,12 @@ std::string serialize_solver_telemetry(
                     diagnostics->incremental_actions_unevaluated +
                     diagnostics->incremental_actions_evaluating +
                     diagnostics->incremental_actions_unresolved);
+        json += ",\"typed_ledger\":";
+        if (diagnostics->action_envelope_ledger_json.empty()) {
+            json += "null";
+        } else {
+            json += diagnostics->action_envelope_ledger_json;
+        }
         json += ",\"witnesses\":[";
         for (std::size_t i = 0;
              i < diagnostics->incremental_action_witnesses.size(); ++i) {

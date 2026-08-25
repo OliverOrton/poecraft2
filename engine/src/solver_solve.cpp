@@ -100,6 +100,23 @@ SolveWork::Impl::Impl(
         result.diagnostics.candidate_actions = static_cast<std::uint32_t>(
             calc.candidates().size());
         const ActionControlSummary& control = calc.action_control();
+        if (control.explicit_envelope) {
+            for (std::uint32_t index = 0;
+                 index < calc.registry().actions.size(); ++index) {
+                const ActionDescriptor& action =
+                    calc.registry().actions[index];
+                if (action.product_role ==
+                        ProductActionRole::AutomaticDependency ||
+                    std::find(
+                        calc.candidates().begin(), calc.candidates().end(),
+                        index) != calc.candidates().end()) {
+                    continue;
+                }
+                action_envelope_ledger.omitted_by_caller_scope(
+                    index,
+                    EnvelopeEvidenceActionRefinementContract);
+            }
+        }
         result.diagnostics.relevance_reduced_actions =
             control.pruned_outside_goal_relevance +
             control.pruned_outside_envelope;

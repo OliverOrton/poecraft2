@@ -4,11 +4,13 @@
 [Solver Anytime Planning, Proof Patterns, And Debt Retirement](docs/active/2026-08-25-solver-anytime-proof-realignment/plan.md)
 plan on 2026-08-25. The focused
 [documentation preflight](docs/active/2026-08-25-solver-anytime-proof-realignment/preflight-audit.md)
-is complete; Gate 0 passed and implementation is at Gate 1.
+is complete; Gates 0 and 1 passed and implementation is at Gate 2.
 
 ## Current checkpoint
 
 - Branch: `main`.
+- Latest completed implementation checkpoint: Gate 1 action-envelope and
+  mechanic-family authority (this handoff's commit).
 - Current engine/product source checkpoint: `a1449fa` (`Record Imprint scope
   acceptance`).
 - Plan checkpoint: `0238753` (`Propose solver anytime proof realignment`).
@@ -75,10 +77,17 @@ The owner four-to-five carrier reproduced byte-identical policy authority in
 three runs, and the native harness now rejects implicit active-plan benchmark
 identity. See the [Gate 0 evidence](docs/active/2026-08-25-solver-anytime-proof-realignment/gate0-evidence.md).
 
-Gate 1 is establishing one typed `ActionEnvelopeLedger` for carrier/operator
-obligations and current-semantics mechanic-family coverage. Archived milestone
-prose retains historical evidence authority only; the active plan owns current
-sequence.
+Gate 1 established one typed `ActionEnvelopeLedger` for carrier/operator
+obligations while leaving its scheduler view disabled. All 19 active cases
+passed, eleven focused mechanic controls proved all seven lifecycle stages,
+and the owner policy remained byte-identical. See the
+[Gate 1 evidence](docs/active/2026-08-25-solver-anytime-proof-realignment/gate1-evidence.md).
+
+Gate 2 is consolidating scattered executable candidates behind a monotone
+typed incumbent portfolio and separating candidate estimates, verified upper,
+independent global lower, restricted lower, and exact-closure progress
+authority. Archived milestone prose retains historical evidence authority
+only; the active plan owns current sequence.
 
 The complete milestone lineage and raw measurements are preserved in the
 [archive](docs/archive/README.md) and [evidence index](docs/evidence.md).

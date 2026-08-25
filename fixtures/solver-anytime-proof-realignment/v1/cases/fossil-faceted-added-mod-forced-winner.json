@@ -1,0 +1,109 @@
+{
+  "schema_version": "solver_benchmark_case_v1",
+  "id": "fossil-faceted-added-mod-forced-winner",
+  "category": "solver_anytime_gate1_mechanic_control",
+  "approval_status": "active_plan_control_2026_08_25",
+  "benchmark_enabled": true,
+  "description": "Focused exact added-mod Fossil control with five preserved fractured goal affixes and one open suffix target. Synthetic component prices prove reachability and selection only; they are not market evidence.",
+  "comparison_profile": "solver-anytime-proof-realignment-gate1-v1",
+  "watchdog_seconds": 60,
+  "session": {
+    "base_metadata_path": "Metadata/Items/Weapons/TwoHandWeapons/Bows/Bow20",
+    "base_name": "Spine Bow",
+    "item_class_key": "Bow",
+    "item_level": 86,
+    "minimum_item_level": 86
+  },
+  "start": {
+    "rarity": "rare",
+    "with_implicits": false,
+    "mods": [
+      {"key": "LocalIncreaseSocketedGemLevel1", "flags": ["fractured"]},
+      {"key": "LocalAddedPhysicalDamageTwoHand9", "flags": ["fractured"]},
+      {"key": "LocalAddedColdDamageTwoHand10", "flags": ["fractured"]},
+      {"key": "ManaGainedFromEnemyDeath6", "flags": ["fractured"]},
+      {"key": "Dexterity9", "flags": ["fractured"]}
+    ]
+  },
+  "goal": {
+    "version": "v1",
+    "rarity": "rare",
+    "min_satisfied_slots": 6,
+    "slots": [
+      {"family_mod_key": "LocalIncreaseSocketedGemLevel1", "min_tier": 0},
+      {"family_mod_key": "LocalAddedPhysicalDamageTwoHand9", "min_tier": 0},
+      {"family_mod_key": "LocalAddedColdDamageTwoHand10", "min_tier": 0},
+      {"family_mod_key": "ManaGainedFromEnemyDeath6", "min_tier": 0},
+      {"family_mod_key": "Dexterity9", "min_tier": 0},
+      {"family_mod_key": "DelveDexterityGemLevel1", "min_tier": 0}
+    ],
+    "actions": [
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingGemLevel"
+    ]
+  },
+  "allowed_mechanic_families": ["fossil_added_mod"],
+  "mechanic_family_control": {
+    "id": "fossil_added_mod",
+    "registered_action_ids": [
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingGemLevel"
+    ],
+    "synthetic_price_keys": [
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+      "resonator:1"
+    ],
+    "synthetic_price_purpose": "forced-winner reachability and selection only; not market evidence"
+  },
+  "compiled_operation_contract": {
+    "type": "fossil",
+    "required_string_parameters": {}
+  },
+  "economy": {
+    "version": "v1",
+    "id": "synthetic:solver-anytime-gate1:fossil-faceted",
+    "prices": {
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingGemLevel": 0.001,
+      "resonator:1": 0.001
+    }
+  },
+  "expected": {
+    "solve_status": "converged",
+    "optimality_status": "exact",
+    "compile_status": "compiled",
+    "verification_status": "not_required"
+  },
+  "caps": {
+    "max_states": 10000,
+    "max_sweeps": 100000,
+    "solve_step_work_items": 256,
+    "max_discovered_states": 10000,
+    "max_expanded_states": 10000,
+    "max_state_action_rows": 100000,
+    "max_transitions": 1000000,
+    "max_reforge_work": 10000000,
+    "max_solver_owned_bytes": 268435456,
+    "max_diagnostic_samples": 64,
+    "max_telemetry_json_bytes": 8388608,
+    "max_compiled_nodes": 25000,
+    "max_compiled_edges": 100000,
+    "max_strategy_json_bytes": 16777216,
+    "worker_step_ms": 50,
+    "cancel_ack_ms": 250,
+    "goal_progress_gated_reforges": false,
+    "allow_economic_restart": false,
+    "high_impact_executable_uppers": true,
+    "consider_imprint_programs": false,
+    "full_evidence": true
+  },
+  "verification": {
+    "runs": 0,
+    "seed": 2026082503,
+    "max_actions_per_run": 100000,
+    "exact_evaluation": true,
+    "exact_max_states": 1000000,
+    "exact_max_pairs": 5000000,
+    "exact_max_transitions": 20000000,
+    "exact_max_owned_bytes": 1073741824,
+    "exact_cost_absolute_tolerance": 1e-7,
+    "exact_cost_relative_tolerance": 1e-9
+  }
+}

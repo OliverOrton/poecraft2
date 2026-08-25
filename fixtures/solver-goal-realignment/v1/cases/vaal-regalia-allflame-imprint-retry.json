@@ -85,6 +85,17 @@
   "allowed_mechanic_families": [
     "calculator_goal_relevant_product_envelope"
   ],
+  "mechanic_family_control": {
+    "id": "explicit_imprint_retry",
+    "registered_action_ids": [
+      "option:imprint_retry:augment+regal:until:1:1"
+    ],
+    "synthetic_price_keys": [
+      "eldritch_chaos",
+      "eldritch_annul"
+    ],
+    "synthetic_price_purpose": "forced-winner competing-route exclusion only; not market evidence"
+  },
   "compiled_operation_contracts": [
     {
       "type": "bestiary:imprint",

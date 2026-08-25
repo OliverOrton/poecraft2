@@ -295,6 +295,7 @@ def _case_scope(case: Mapping[str, Any], label: str) -> dict[str, Any]:
         "compiled_operation_contracts",
         "market_price_override_contracts",
         "material_ratio_contract",
+        "mechanic_family_control",
         "corpus",
         "feasibility",
         "generation",
@@ -353,6 +354,81 @@ def _compiled_operation_contract_list(value: Any, label: str) -> list[dict[str, 
         _compiled_operation_contract(entry, f"{label}[{index}]")
         for index, entry in enumerate(raw)
     ]
+
+
+def _mechanic_family_control(value: Any, label: str) -> dict[str, Any]:
+    contract = _require_mapping(value, label)
+    action_ids = _string_list(
+        _field(contract, "registered_action_ids", label),
+        f"{label}.registered_action_ids",
+    )
+    price_keys = _string_list(
+        _field(contract, "synthetic_price_keys", label),
+        f"{label}.synthetic_price_keys",
+    )
+    if not action_ids or len(set(action_ids)) != len(action_ids):
+        raise RuntimeReportContractError(
+            f"{label}.registered_action_ids must contain unique non-empty strings"
+        )
+    if not price_keys or len(set(price_keys)) != len(price_keys):
+        raise RuntimeReportContractError(
+            f"{label}.synthetic_price_keys must contain unique non-empty strings"
+        )
+    purpose = _nonempty_string(
+        _field(contract, "synthetic_price_purpose", label),
+        f"{label}.synthetic_price_purpose",
+    )
+    if "not market evidence" not in purpose:
+        raise RuntimeReportContractError(
+            f"{label}.synthetic_price_purpose must disclose the synthetic boundary"
+        )
+    return {
+        "id": _nonempty_string(_field(contract, "id", label), f"{label}.id"),
+        "registered_action_ids": sorted(action_ids),
+        "synthetic_price_keys": sorted(price_keys),
+        "synthetic_price_purpose": purpose,
+    }
+
+
+def _mechanic_family_evidence(value: Any, label: str) -> dict[str, Any]:
+    evidence = _require_mapping(value, label)
+    identity = _mechanic_family_control(evidence, label)
+    stages = _mapping_field(evidence, "stages", label)
+    stage_names = (
+        "registered",
+        "legal_carrier_admitted",
+        "scheduled",
+        "exact_row_materialized",
+        "selected_under_disclosed_synthetic_price",
+        "compiled",
+        "independently_exact_evaluated",
+    )
+    parsed_stages = {
+        name: _boolean(_field(stages, name, f"{label}.stages"),
+                       f"{label}.stages.{name}")
+        for name in stage_names
+    }
+    result = {
+        **identity,
+        "synthetic_price_disclosed": _boolean(
+            _field(evidence, "synthetic_price_disclosed", label),
+            f"{label}.synthetic_price_disclosed",
+        ),
+        "stages": parsed_stages,
+        "passed": _boolean(_field(evidence, "passed", label), f"{label}.passed"),
+        "failure_stage": _string(
+            _field(evidence, "failure_stage", label),
+            f"{label}.failure_stage",
+            nullable=True,
+        ),
+    }
+    if (not result["synthetic_price_disclosed"] or
+            not all(parsed_stages.values()) or not result["passed"] or
+            result["failure_stage"] is not None):
+        raise RuntimeReportContractError(
+            f"{label} does not prove every mechanic-family stage"
+        )
+    return result
 
 
 def _market_price_override_contracts(
@@ -743,13 +819,31 @@ def _validate_market_price_override_scope(
     overrides = _mapping_field(
         economy, "manual_overrides", f"{label}.economy"
     )
-    decisions = _mapping_field(
+    manual_decisions = _mapping_field(
         economy, "manual_override_decisions", f"{label}.economy"
     )
     expected_keys = {str(contract["price_key"]) for contract in contracts}
-    if set(overrides) != expected_keys:
+    allowed_keys = expected_keys | ({"base"} if "base" in overrides else set())
+    if set(overrides) != allowed_keys:
         raise RuntimeReportContractError(
-            f"{label}.economy.manual_overrides must exactly match the disclosed market overrides"
+            f"{label}.economy.manual_overrides must exactly match the disclosed market overrides plus optional base"
+        )
+    if "base" in overrides:
+        base = _number(overrides["base"], f"{label}.economy.manual_overrides.base")
+        if base is None or base <= 0:
+            raise RuntimeReportContractError(
+                f"{label}.economy.manual_overrides.base must be positive"
+            )
+        missing_decisions = _mapping_field(
+            economy, "missing_price_decisions", f"{label}.economy"
+        )
+        _nonempty_string(
+            _field(
+                missing_decisions,
+                "base",
+                f"{label}.economy.missing_price_decisions",
+            ),
+            f"{label}.economy.missing_price_decisions.base",
         )
     for contract in contracts:
         price_key = str(contract["price_key"])
@@ -762,7 +856,11 @@ def _validate_market_price_override_scope(
                 f"{label}.economy.manual_overrides.{price_key} disagrees with the disclosed forced value"
             )
         _nonempty_string(
-            _field(decisions, price_key, f"{label}.economy.manual_override_decisions"),
+            _field(
+                manual_decisions,
+                price_key,
+                f"{label}.economy.manual_override_decisions",
+            ),
             f"{label}.economy.manual_override_decisions.{price_key}",
         )
 
@@ -865,6 +963,42 @@ def _derived_contract_projection(
                 f"missing semantic field {label}.{name} for its input contract"
             )
         projection[name] = parser(evidence, f"{label}.{name}")
+
+    mechanic_source = (
+        None
+        if scope["mechanic_family_control"] is None
+        else _mechanic_family_control(
+            scope["mechanic_family_control"],
+            f"{label}.input.mechanic_family_control",
+        )
+    )
+    mechanic_evidence_raw = _optional_path(case, ("mechanic_family_control",))
+    if mechanic_source is None:
+        if (mechanic_evidence_raw is not _MISSING and
+                mechanic_evidence_raw is not None):
+            raise RuntimeReportContractError(
+                f"{label}.mechanic_family_control must be absent/null without its input contract"
+            )
+        projection["mechanic_family_control"] = None
+    else:
+        if mechanic_evidence_raw is _MISSING or mechanic_evidence_raw is None:
+            raise RuntimeReportContractError(
+                f"missing semantic field {label}.mechanic_family_control for its input contract"
+            )
+        mechanic_evidence = _mechanic_family_evidence(
+            mechanic_evidence_raw, f"{label}.mechanic_family_control"
+        )
+        for key in (
+            "id",
+            "registered_action_ids",
+            "synthetic_price_keys",
+            "synthetic_price_purpose",
+        ):
+            if mechanic_evidence[key] != mechanic_source[key]:
+                raise RuntimeReportContractError(
+                    f"{label}.mechanic_family_control.{key} disagrees with its input contract"
+                )
+        projection["mechanic_family_control"] = mechanic_evidence
 
     market_source = (
         None
