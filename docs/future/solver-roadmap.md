@@ -6,15 +6,35 @@ S8 sequence as current momentum.
 
 Parent: [Future work](README.md)
 
-> **2026-08-13 supersession note:** The completed
-> [Solver Goal Realignment milestone](../archive/2026-08-09-solver-goal-realignment/README.md)
-> is the authority for current one-item solver coverage and acceptance. Its
-> Gate 8 evidence supersedes older pending-Imprint and waived-verification
-> statements below. The audited hardening follow-up is now complete and
-> preserved in the
-> [Solver Decision Provenance And Result-Truth archive](../archive/2026-08-13-solver-decision-provenance/README.md).
+> **2026-08-25 supersession note:** No roadmap item is selected. The proposed
+> [Solver Anytime Planning, Proof Patterns, And Debt Retirement](../active/2026-08-25-solver-anytime-proof-realignment/plan.md)
+> plan, its [documentation preflight](../active/2026-08-25-solver-anytime-proof-realignment/preflight-audit.md),
+> [HANDOFF](../../HANDOFF.md), and current stable solver references supersede
+> any “next” wording below. Historical negative results remain valid changed-
+> premise constraints, but they do not establish current sequencing.
 
-## Current Boundary Record
+## Current Deferred Boundary
+
+The current source checkpoint is `a1449fa`. Product/general benchmark solves
+default generated Imprint programs off, exact terminal success rejects junk
+explicit affixes, Calculator disables voluntary economic Restart by default,
+and independently evaluated emitted strategy graphs own finite publication
+uppers. While the delayed incremental action envelope is open, the restricted
+search value is not a global public lower.
+
+The proposed plan absorbs the still-relevant one-item work into named gates:
+current-semantic action-family authority, monotone verified incumbents,
+cooperative scheduling, executable carrier/subgoal planning, typed proof
+patterns, measured proof consumers, WASM responsiveness, and solver ownership
+cleanup. It remains proposed until Oliver explicitly starts it. Items outside
+that plan remain deferred and unordered here.
+
+## Historical Closed-Premise Record
+
+The following record preserves why earlier scaling, lower-bound, quotient,
+frontier-sharing, and publication approaches were accepted, rejected, or
+deferred at their measured checkpoints. It is evidence for “do not retry
+without a changed premise,” not a current boundary description.
 
 The 2026-07-20 [Exact Solver State Scaling archive](../archive/2026-07-20-solver-state-scaling/README.md)
 supersedes the former normal-cap failure. Two accepted complete product cases
@@ -260,7 +280,7 @@ removed redundant full-graph clones, and made product Solve handles scoped.
 Later solves and repricing rebuild; a retained-cache mode remains unselected
 and would require an enforced live-memory budget.
 
-## Unfinished S8 Delivery
+## Unselected Product Delivery From S8
 
 If Oliver selects another one-item solver chunk, the surviving product work is:
 

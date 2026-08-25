@@ -5,7 +5,9 @@ describes the implemented system. It does not select future work.
 
 Parent: [Documentation](../README.md)
 
-Verified against code through Solver Goal Realignment acceptance: 2026-08-13.
+Verified against current architecture and solver ownership: 2026-08-25 @
+`a1449fa`. No build or behavioral suite was run for this documentation-only
+audit.
 
 ## Purpose
 

@@ -4,6 +4,11 @@
 
 Parent: [Product](README.md)
 
+Current-scope audit: verified against source on 2026-08-25 @ `a1449fa` for
+goal-progress gating, economic Restart, automatic Imprint defaults, result
+scope disclosure, and the native finalization phases. No web suite or rendered
+review was run for this documentation-only audit.
+
 Verified against code, complete non-visual R4 acceptance, the final Solver Goal
 Realignment native/release-WASM acceptance, selected-policy cooperative
 finalization acceptance, and recovery-scoped Restart native/release-WASM/web

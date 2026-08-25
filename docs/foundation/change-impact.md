@@ -12,6 +12,11 @@ native CMake targets, public headers, Python/WASM bindings, web protocol and
 package scripts, data/economy schemas and tooling, checked workflows, and
 documentation lifecycle rules. No build or test suite was run.
 
+Solver-plan preflight addendum: rechecked 2026-08-25 @ `a1449fa` for the
+current native solve source inventory, WASM rebuild boundary, worker protocol,
+and documentation lifecycle. The broader ingest, economy, packaging, and
+deployment rows retain the earlier verification stamp.
+
 ## Purpose
 
 poecraft2 has several deliberate derivation and binding boundaries. A local

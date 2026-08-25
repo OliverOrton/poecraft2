@@ -5,7 +5,10 @@ runtime contracts. It does not own mechanic rulings or future sequencing.
 
 Parent: [Documentation](../README.md)
 
-Verified against code and the mechanical solve split: 2026-07-22 @ `042a281`
+Verified against current engine/solver source ownership: 2026-08-25 @
+`a1449fa`. Scope: public boundaries, current native source inventory, solve
+lifecycle, exact evaluation split, and WASM ownership. No build or behavioral
+suite was run for this documentation-only audit.
 
 ## Scope
 
@@ -71,10 +74,10 @@ declaration.
 | Bestiary | `engine/src/actions_bestiary.cpp`, `bestiary_api.cpp` |
 | C ABI facade | `engine/src/api.cpp` |
 | Strategy compiler and simulator | `engine/src/simulator.cpp` |
-| Solver registry and exact transitions | `engine/src/solver_registry.cpp`, `solver_calc.cpp`, `solver_reforge.cpp`, `solver_options.cpp` |
-| Solve lifecycle and optimization | `engine/src/solver_solve_types.hpp`, `solver_solve.cpp`, `solver_solve_expand.cpp`, `solver_solve_bellman.cpp`, `solver_solve_focused.cpp`, `solver_solve_constructive.cpp`, `solver_solve_bounds.cpp`, `solver_solve_priority.cpp`, `solver_solve_quotient.cpp`, `solver_solve_finish.cpp`, `solver_solve_telemetry.cpp` |
+| Solver registry and exact transitions | `engine/src/solver_action_family_contract.hpp`, `solver_registry.cpp`, `solver_calc.cpp`, `solver_reforge.cpp`, and the `solver_options*.cpp` family |
+| Solve lifecycle and optimization | `engine/src/solver_solve_types.hpp`, `solver_solve.cpp`, `solver_solve_expand.cpp`, `solver_solve_incremental.cpp`, `solver_solve_focused.cpp`, `solver_solve_bellman.cpp`, `solver_sparse_policy.cpp`, `solver_solve_bounds.cpp`, `solver_solve_priority.cpp`, `solver_solve_constructive.cpp`, `solver_solve_audit.cpp`, `solver_solve_quotient.cpp`, `solver_solve_finish.cpp`, `solver_solve_telemetry.cpp` |
 | Policy compilation | `engine/src/solver_compile.cpp` |
-| Exact whole-graph evaluation | `engine/src/solver_eval.cpp` |
+| Exact whole-graph evaluation | `engine/src/solver_eval.cpp`, `solver_eval_resolve.cpp`, `solver_eval_report.cpp` |
 | Solver C ABI | `engine/src/solver_api.cpp` |
 | WASM JSON facade | `bindings/wasm/wasm_api.cpp` |
 

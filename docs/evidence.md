@@ -32,8 +32,8 @@ while every unrelated family continues; the checked enabled primary publishes
 its verified 3,759.976-Chaos policy in 14.204 solve seconds and completes
 10,000 successful simulations in 74.072 seconds total. With Imprint explicitly
 disabled, all 119,838 remaining alternatives close, the certified lower rises
-to 2,889.769, and bounded publication completes in 146.378 seconds. The
-That result used Calculator's former 5,000-state optional-refinement budget.
+to 2,889.769, and bounded publication completes in 146.378 seconds. That
+result used Calculator's former 5,000-state optional-refinement budget.
 The later [compact-policy certification result](archive/2026-08-22-compact-policy-certification/result.md)
 reduces the direct graph from 3,208 to 570 nodes, measures closure at 162,829
 raw exact pairs, and publishes its independently evaluated
@@ -54,7 +54,7 @@ bounded policy. Disabled performs zero Imprint program work, retains the same
 incremental executable-upper reoptimization without publishing a policy. The
 raw reports and enabled compiled strategy live beside the result.
 
-## Active Five-T1 Certification Boundary
+## Historical Five-T1 Certification Boundary
 
 The 2026-08-16
 [Gate 1 result and Gate 4 stop record](archive/2026-08-16-five-t1-restart-monotone-recovery/evidence/gate1-gate4-stop.md)

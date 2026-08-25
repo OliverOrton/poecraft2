@@ -8,6 +8,9 @@ Parent: [Active work](../README.md)
 Proposed from clean local checkpoint: `a1449fa` (`Record Imprint scope
 acceptance`)
 
+Documentation preflight: [Gate −1 passed on 2026-08-25](preflight-audit.md).
+The plan remains proposed; the preflight did not activate implementation.
+
 Predecessors:
 
 - [Carrier-Aware Bounds And Prioritization](../../archive/2026-08-24-carrier-aware-bounds-and-prioritization/plan.md)
@@ -97,6 +100,16 @@ source baseline and not permission to restore an obsolete publication path.
 - Intermediate gates run focused diagnostics only when needed. Run the
   appropriate complete native/release-WASM/nonvisual acceptance once at the
   end of the full plan. Rendered review remains Oliver's.
+
+## Gate −1 — Documentation and authority preflight — complete
+
+The [preflight audit](preflight-audit.md) checked the current exact-terminal,
+product action-scope, open-envelope lower, verified-publication, phase, and
+source-ownership contracts against `a1449fa`. It corrected stable-reference
+and lifecycle drift without changing solver code or historical evidence.
+
+No new mechanic ruling was required. The audit confirms that Gate 0 remains
+the first implementation gate if Oliver activates this plan.
 
 ## Gate 0 — Current-semantics benchmark and attribution authority
 
@@ -555,18 +568,19 @@ Test/development debt:
 - make benchmark profiles reject implicit scope, stop-window, or verification
   changes.
 
-Documentation debt after behavior stabilizes:
+Gate −1 already archived completed/stopped active boundaries, distilled the
+top-level documentation map, shortened HANDOFF, and labelled the roadmap's
+retained negative results as historical changed-premise evidence. After
+behavior stabilizes:
 
-- archive completed/stopped `docs/active` directories under the lifecycle
-  policy;
-- distill `docs/README.md` execution history into current authority plus area
-  indexes;
+- keep those lifecycle boundaries concise rather than rebuilding execution
+  history in current indexes;
 - update `docs/foundation/solver-internals.md`, `docs/solver/flow.md`, and the
-  solver reference to the new ownership model;
-- shorten `HANDOFF.md` to the actual current boundary and retained checkpoint;
-  and
-- preserve rejected designs in one concise evidence-backed “do not retry
-  without changed premises” index.
+  solver reference from the Gate −1 source map to the new ownership model;
+- update HANDOFF to the actual retained implementation checkpoint and
+  unresolved qualification; and
+- distill any newly rejected design into the existing evidence-backed “do not
+  retry without changed premises” record.
 
 ## Explicitly closed or deferred approaches
 

@@ -6,12 +6,13 @@ work or define crafting mechanics.
 
 Parent: [Solver](README.md)
 
-Verified against code and complete non-visual cross-layer tests: 2026-07-28 @
-gated root renewal incumbent closure. Scope: Calculator orchestration,
-workspace strategy handoff, `EngineClient`, worker protocol, WASM facade,
-solver C ABI, native solve lifecycle, policy compilation, exact graph
-evaluation, and sampled verification. No rendered review or mechanic ruling
-was performed.
+Current-contract audit: verified against source on 2026-08-25 @ `a1449fa`.
+Scope: Calculator request defaults, worker/WASM/C ABI lifecycle, native solve
+phases, public lower and verified-upper authority, policy compilation, exact
+graph evaluation, and sampled verification. No build, cross-layer suite,
+rendered review, or mechanic ruling was performed for this documentation-only
+audit. The last complete nonvisual cross-layer qualification remains in the
+point-in-time milestone evidence linked below.
 
 Qualification addendum: source inspection and focused native tests on
 2026-07-31 verified the shared publication steps through observation
@@ -215,6 +216,11 @@ The native stages are:
 9. publish the best certified retained artifact, preserving the core and
    direct-stage identities and reasons in telemetry even when strict repair
    wins or no candidate can be published.
+
+Terminal goal recognition is exact-item recognition: the requested rarity and
+slot threshold must hold, and the number of explicit affixes must equal the
+number of satisfied requested slots. Junk remains legal during planning but is
+not accepted at success.
 
 Steps 5-9 remain inside repeated native solve steps. Progress names retained
 `refining`, `compiling`, and `certifying` work before `Done`; the subsequent
@@ -479,11 +485,11 @@ different evidence sources.
 | Native API/lifetime | `engine/src/solver_api.cpp` |
 | Solve shared types and entry | `engine/src/solver_solve_types.hpp`, `solver_solve.cpp` |
 | Action observation/refinement contract | `engine/src/solver_model.hpp`, `solver_refinement.hpp`, `solver_registry.cpp`, and the `solver_refinement*` owners |
-| Expansion and Bellman stepping | `engine/src/solver_solve_expand.cpp`, `solver_sparse_policy.cpp`, `solver_solve_bellman.cpp` |
-| Focused, constructive, bound, and carrier-priority phases | `engine/src/solver_solve_focused.cpp`, `solver_solve_constructive.cpp`, `solver_solve_bounds.cpp`, `solver_solve_priority.cpp` |
+| Expansion, delayed-envelope, and Bellman stepping | `engine/src/solver_solve_expand.cpp`, `solver_solve_incremental.cpp`, `solver_sparse_policy.cpp`, `solver_solve_bellman.cpp` |
+| Focused, constructive, bound, carrier-priority, and audit phases | `engine/src/solver_solve_focused.cpp`, `solver_solve_constructive.cpp`, `solver_solve_bounds.cpp`, `solver_solve_priority.cpp`, `solver_solve_audit.cpp` |
 | Quotient, finish, and telemetry phases | `engine/src/solver_solve_quotient.cpp`, `solver_solve_finish.cpp`, `solver_solve_telemetry.cpp` |
 | Policy compilation | `engine/src/solver_compile.cpp` |
-| Exact graph evaluation | `engine/src/solver_eval.cpp` |
+| Exact graph evaluation | `engine/src/solver_eval.cpp`, `solver_eval_resolve.cpp`, `solver_eval_report.cpp` |
 | Focused web checks | `apps/web/test/solve-workspace.test.ts`, `strategy-calculator-mode.test.ts`, `engine-smoke.test.ts` |
 | Native checks | `engine/tests/test_solver_api.cpp`, `test_solver_solve.cpp`, `test_solver_compile.cpp`, `test_solver_eval.cpp` |
 

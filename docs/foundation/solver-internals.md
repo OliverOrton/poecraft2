@@ -6,7 +6,10 @@ future work or define crafting mechanics.
 
 Parent: [Foundation](README.md)
 
-Verified against code through Solver Goal Realignment acceptance: 2026-08-13.
+Verified against current source: 2026-08-25 @ `a1449fa`. Scope: private solve
+phase ownership, current proof/publication boundaries, action-family contract,
+and the native source inventory. No build or behavioral suite was run for this
+documentation-only audit.
 
 ## Execution Flow
 
@@ -43,15 +46,15 @@ not interchangeable:
 
 | Phase | Representation passed onward | Primary owners |
 | --- | --- | --- |
-| Goal, registry, and layout | `GoalSpec`, `ResolvedGoal`, `ActionDescriptor`, `PlannerOperator`, `AbstractLayout`, `AbstractState` | `solver_model.hpp`, `solver_registry.cpp`, `solver_abstract.cpp` |
+| Goal, registry, action-family contract, and layout | `GoalSpec`, `ResolvedGoal`, `ActionDescriptor`, `PlannerOperator`, `AbstractLayout`, `AbstractState` | `solver_model.hpp`, `solver_action_family_contract.hpp`, `solver_registry.cpp`, `solver_abstract.cpp` |
 | Option construction and admission | `PlannerOperator`, runtime semantics, `OptionKernel` | `solver_options_build.cpp`, `solver_options_automatic.cpp`, `solver_options_temporary.cpp`, `solver_options_import.cpp`, `solver_options_semantics.cpp`, `solver_options.cpp` |
 | Exact transition calculation | interned abstract states and action/option outcome rows in `CalcContext` | `solver_calc_types.hpp`, `solver_calc.cpp`, `solver_reforge.cpp`, `solver_options.cpp` |
-| Reachability and policy solving | sparse graph rows, values, selected actions, `SolveResult` | `solver_solve_types.hpp`, `solver_solve_expand.cpp`, `solver_solve_incremental.cpp`, `solver_solve_bellman.cpp`, `solver_solve_constructive.cpp`, `solver_solve_finish.cpp`, and the other `solver_solve_*.cpp` owners |
+| Reachability, action-envelope scheduling, proof values, and policy solving | sparse graph rows, values, selected actions, proof-only lowers, carrier ordering scores, `SolveResult` | `solver_solve_types.hpp`, `solver_solve_expand.cpp`, `solver_solve_incremental.cpp`, `solver_solve_focused.cpp`, `solver_solve_bellman.cpp`, `solver_solve_bounds.cpp`, `solver_solve_priority.cpp`, `solver_solve_constructive.cpp`, `solver_solve_audit.cpp`, `solver_solve_finish.cpp`, and the other `solver_solve_*.cpp` owners |
 | Shared exact refinement | `Graph`, observation requirements, collision-checked features, closed probabilistic partition, counterexamples | `solver_refinement.hpp`, `solver_refinement_graph_core.hpp`, `solver_refinement_graph_discovery.hpp`, `solver_refinement_observation.cpp`, `solver_refinement_features.cpp`, `solver_refinement_partition.cpp`, `solver_refinement_eval.cpp`, `solver_refinement.cpp` |
 | Production policy adaptation | strict carrier mappings/kernels, exact runs, repaired or improved policy, compile routing | `solver_policy_refinement.hpp`, `solver_policy_refinement.cpp`, `solver_policy_oracle_*.inc`, `solver_policy_assertion.cpp` |
 | Policy compilation | ordinary strategy JSON and `PolicyCompilationTelemetry` | `solver_compile_contracts.hpp`, `solver_compile_conditions.hpp`, `solver_compile_serialization.hpp`, `solver_compile.cpp` |
 | Exact graph evaluation | `StrategyEvalResult`, occupancy/influence and action/material accounting | `solver_eval_types.hpp`, `solver_eval_helpers.hpp`, `solver_eval.cpp`, `solver_eval_resolve.cpp`, `solver_eval_report.cpp` |
-| API, accounting, and telemetry | C ABI results, JSON, progress, owned-byte and work counters | `solver_api.cpp`, `solver_solve_telemetry.cpp`, `solver_compile.cpp`, `solver_eval_report.cpp` |
+| API, accounting, and telemetry | C ABI results, typed progress snapshots, JSON, owned-byte and work counters | `solver_api.cpp`, `solver_solve_telemetry.cpp`, `solver_compile.cpp`, `solver_eval_report.cpp` |
 | Sampled execution | mutable item plus RNG-driven strategy traversal | `simulator.cpp` and native action owners |
 
 `solver_policy_refinement.cpp` deliberately remains one translation unit for
@@ -93,8 +96,10 @@ core model edit is cheap.
 | Registered action facts or observation contracts | `solver_registry.cpp` |
 | Primitive outcome probabilities or exact carrier materialization | `solver_calc.cpp`, `solver_reforge.cpp` |
 | Automatic/compound option admission or construction | the matching `solver_options_*.cpp` owner |
-| Reachable graph scheduling or row expansion | `solver_solve_expand.cpp`, `solver_solve_incremental.cpp` |
-| Bellman values, properness, incumbent, or policy finalization | the matching `solver_solve_bellman.cpp`, `solver_solve_audit.cpp`, `solver_solve_constructive.cpp`, or `solver_solve_finish.cpp` owner |
+| Reachable graph scheduling, delayed action envelopes, or row expansion | `solver_solve_expand.cpp`, `solver_solve_incremental.cpp`, `solver_solve_focused.cpp` |
+| Carrier-only ordering | `solver_solve_priority.cpp`; keep it separate from proof values |
+| Admissible carrier/operator bounds or public lower authority | `solver_solve_bounds.cpp`, then the consumer/publication boundary in `solver_solve_constructive.cpp` |
+| Bellman values, properness, verified incumbents, or policy finalization | the matching `solver_solve_bellman.cpp`, `solver_solve_audit.cpp`, `solver_solve_constructive.cpp`, or `solver_solve_finish.cpp` owner |
 | Exact carrier discovery or canonicalization | `solver_refinement_graph_discovery.hpp` |
 | Observation projection or partition proof | `solver_refinement_observation.cpp`, `solver_refinement_features.cpp`, `solver_refinement_partition.cpp` |
 | Production exact-policy repair or improvement | the matching `solver_policy_oracle_*.inc` owner |
@@ -129,6 +134,14 @@ Oliver ruling and belong in the [mechanics library](../mechanics/README.md).
   resource dominance, or a conservative positive-price certificate against a
   proper carrier-local upper. An arbitrary depth limit cannot close the action
   envelope or support global exactness.
+- While incremental action generation remains open, its restricted optimum is
+  scheduling evidence rather than a global lower. Public lower authority falls
+  back to independently admissible proof patterns until the requested action
+  envelope closes.
+- A finite public upper belongs to the independently evaluated emitted graph,
+  not its coarse, selected, direct, strict, or fallback source estimate. Later
+  candidates cannot replace a cheaper verified artifact without beating that
+  exact evaluated cost.
 - Crafting legality and probabilities stay in the native engine. Compilation,
   evaluation, WASM, and TypeScript consume native results; they do not recreate
   mechanics.

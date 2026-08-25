@@ -5,6 +5,12 @@ and acceptance narratives are archived and do not control current sequencing.
 
 Parent: [Documentation index](../README.md)
 
+Current-contract audit: verified against source on 2026-08-25 @ `a1449fa`.
+The goal/terminal, product action-scope, delayed-envelope lower authority,
+verified publication, solve-result, and current source-ownership sections were
+checked. Older dated measurements and qualification addenda remain historical
+evidence and were not rerun by this documentation-only audit.
+
 Verified against code, the bounded-policy B6 acceptance, the mechanical solve
 split, focused-round performance acceptance, WASM progress-accounting,
 bounded-incumbent graph stability, the goal-progress-gated native/WASM
@@ -195,6 +201,12 @@ group or modifier-family key and a minimum tier (`0` means any tier). The goal
 also names the finished rarity and may set `min_satisfied_slots`; omission
 means every slot. Goal parsing rejects unknown, overlapping, empty, or
 out-of-range definitions.
+
+A terminal goal state is stricter than reaching the slot threshold: finished
+rarity must match, enough requested slots must be satisfied, and every explicit
+affix must be one of those satisfied goal members. Empty slots and implicits
+remain allowed. Junk, temporary crafts, and metamods remain valid intermediate
+state when a later executable action can use or remove them.
 
 Path of Exile tier numbers descend in quality: T1 is best. Therefore
 `min_tier: N` accepts tiers 1 through N, while `min_tier: 0` accepts any tier;
@@ -1082,9 +1094,11 @@ would require an enforced live-memory budget; it is not current behavior.
 
 Code authority: `engine/src/solver_solve_types.hpp` holds shared private solve
 types and declarations; `solver_solve.cpp` retains construction and the solve
-entry point; `solver_solve_expand.cpp`, `solver_solve_bellman.cpp`,
-`solver_solve_focused.cpp`, `solver_solve_constructive.cpp`,
-`solver_solve_bounds.cpp`, `solver_solve_priority.cpp`, `solver_solve_quotient.cpp`,
+entry point; `solver_solve_expand.cpp`, `solver_solve_incremental.cpp`,
+`solver_solve_focused.cpp`, `solver_solve_bellman.cpp`,
+`solver_sparse_policy.cpp`, `solver_solve_bounds.cpp`,
+`solver_solve_priority.cpp`, `solver_solve_constructive.cpp`,
+`solver_solve_audit.cpp`, `solver_solve_quotient.cpp`,
 `solver_solve_finish.cpp`, and `solver_solve_telemetry.cpp` own their named
 phases.
 

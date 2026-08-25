@@ -164,7 +164,7 @@ without approximate compaction or stale repricing. Equality, unknown
 reachability, missing proof inputs, or an unsafe lower bound retains the
 candidate.
 
-## 2026-07-22 â€” Bounded Executable Policies Remain Separate From Exactness
+## 2026-07-22 — Bounded Executable Policies Remain Separate From Exactness
 
 **Decision:** A solve may return a complete executable incumbent at an exact
 close, a post-round product gap target, or a resource-cap stop. Policy quality
@@ -264,7 +264,7 @@ post-incumbent engineering improvement, not progress on the four hard 11M
 pre-bound failures. Reopening broad-kernel work requires a new
 Oliver-selected boundary and materially different evidence.
 
-## 2026-07-27 â€” Existing Root Certificate Is Not A Product Result
+## 2026-07-27 — Existing Root Certificate Is Not A Product Result
 
 **Decision:** Do not add a public certified-next-action result or early stop
 by merely promoting the existing constructive state certificate. The hard

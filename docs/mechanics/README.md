@@ -4,12 +4,18 @@
 
 Parent: [Documentation](../README.md)
 
-Verified against code: 2026-07-19 @ d5e38e3
+Vocabulary/index audit: verified against current source on 2026-08-25 @
+`a1449fa`. The 26-value primitive enum, native enum parity, WASM/simulator
+names, synthetic Restart/Bestiary/router vocabulary, fixed-option names, and
+open-ruling index were checked. Family transition-law pages retain their own
+verification stamps; this documentation-only audit did not infer or change a
+Path of Exile mechanic.
 
-Verification scope: native action enums and mutation paths, C ABI request
-parsing, exact single-action calculation, solver registry/options/compiler,
-WASM facade, worker protocol, and the Emulator, Calculator, and Strategy
-Builder source surfaces. No external mechanic research was used.
+The original full-matrix verification covered native mutation paths, C ABI
+request parsing, exact single-action calculation, solver
+registry/options/compiler, WASM facade, worker protocol, and the Emulator,
+Calculator, and Strategy Builder source surfaces. No external mechanic
+research was used.
 
 ## Scope
 
