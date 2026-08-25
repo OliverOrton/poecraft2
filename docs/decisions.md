@@ -546,7 +546,7 @@ explicitly enabled. The low-level engine's historical omission default stays
 enabled for backward compatibility.
 
 **Context:** The
-[targeted five-T1 comparison](active/2026-08-24-carrier-aware-proof-bounds/evidence/imprint-scope-follow-up/result.md)
+[targeted five-T1 comparison](archive/2026-08-24-carrier-aware-proof-bounds/evidence/imprint-scope-follow-up/result.md)
 holds the current Conquest Lamellar request fixed and changes only
 `consider_imprint_programs` from `true` to `false`. It removes 256 program
 evaluations but produces the same bound, upper trajectory, exact-goal census,

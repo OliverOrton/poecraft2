@@ -1,8 +1,9 @@
 # Five-T1 Restart-Monotone Strategy Recovery
 
-**Status: latest compiler-stabilization follow-up is complete; no implementation boundary is active.**
+**Status: historical index.** The original boundary stopped; its later
+compiler-stabilization and product-Fracture follow-ups completed.
 
-Parent: [Active work](../README.md)
+Parent: [Documentation archive](../README.md)
 
 This milestone makes Oliver's real priced-base five-natural-T1 Calculator
 request retain a useful Restart-free incumbent, restores prioritized

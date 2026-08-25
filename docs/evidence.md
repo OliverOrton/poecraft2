@@ -9,7 +9,7 @@ Parent: [Documentation map](README.md)
 ## Current Five-T1 Imprint Scope And Historical Attribution
 
 The 2026-08-25
-[targeted follow-up](active/2026-08-24-carrier-aware-proof-bounds/evidence/imprint-scope-follow-up/result.md)
+[targeted follow-up](archive/2026-08-24-carrier-aware-proof-bounds/evidence/imprint-scope-follow-up/result.md)
 changes only the current clean five-T1 Conquest Lamellar's automatic Imprint
 scope. Imprint-off performs zero program work but retains the same certified
 `36.4286171890906` lower, identical upper trajectory, 29 exact goal states,
@@ -25,7 +25,7 @@ than hidden or used to weaken the 50 ms cap.
 ## Bounded Executable-Upper Completion
 
 The 2026-08-22
-[completion result](active/2026-08-22-bounded-executable-upper-completion/result.md)
+[completion result](archive/2026-08-22-bounded-executable-upper-completion/result.md)
 closes the Imprint-enabled/disabled continuation boundary. A requested
 Imprint grammar that reaches its 256-program cap now stays explicitly open
 while every unrelated family continues; the checked enabled primary publishes
@@ -34,7 +34,7 @@ its verified 3,759.976-Chaos policy in 14.204 solve seconds and completes
 disabled, all 119,838 remaining alternatives close, the certified lower rises
 to 2,889.769, and bounded publication completes in 146.378 seconds. The
 That result used Calculator's former 5,000-state optional-refinement budget.
-The later [compact-policy certification result](active/2026-08-22-compact-policy-certification/result.md)
+The later [compact-policy certification result](archive/2026-08-22-compact-policy-certification/result.md)
 reduces the direct graph from 3,208 to 570 nodes, measures closure at 162,829
 raw exact pairs, and publishes its independently evaluated
 2,823.051-Chaos policy bounded under the measured 200,000-pair product
@@ -45,7 +45,7 @@ retained as explicit performance debt.
 ## Imprint Solve-Scope Comparison
 
 The 2026-08-22
-[controlled comparison](active/2026-08-22-imprint-solve-scope/result.md)
+[controlled comparison](archive/2026-08-22-imprint-solve-scope/result.md)
 pins the same Allflame four-natural-T1 Conquest Lamellar solve with automatic
 Imprint programs enabled and disabled. Enabled stops at the 256-program cap in
 44.823 seconds and publishes the unchanged verified `3759.9763122101763`
@@ -57,7 +57,7 @@ raw reports and enabled compiled strategy live beside the result.
 ## Active Five-T1 Certification Boundary
 
 The 2026-08-16
-[Gate 1 result and Gate 4 stop record](active/2026-08-16-five-t1-restart-monotone-recovery/evidence/gate1-gate4-stop.md)
+[Gate 1 result and Gate 4 stop record](archive/2026-08-16-five-t1-restart-monotone-recovery/evidence/gate1-gate4-stop.md)
 records the checked Restart-free/priced-base witnesses, fail-closed bounded
 certification, structurally paired safe product graph, observation payload and
 owned-byte evidence, and the next exact boundary. Witness A remains

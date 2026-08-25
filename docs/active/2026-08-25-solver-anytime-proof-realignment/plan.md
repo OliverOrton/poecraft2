@@ -10,10 +10,10 @@ acceptance`)
 
 Predecessors:
 
-- [Carrier-Aware Bounds And Prioritization](../2026-08-24-carrier-aware-bounds-and-prioritization/plan.md)
-- [Carrier-Aware Control Authority Repair](../2026-08-24-carrier-aware-control-authority/plan.md)
-- [Carrier-Aware Proof Bounds And Consumers](../2026-08-24-carrier-aware-proof-bounds/plan.md)
-- [Exact-Goal Carrier Ladder](../2026-08-22-exact-goal-carrier-ladder/plan.md)
+- [Carrier-Aware Bounds And Prioritization](../../archive/2026-08-24-carrier-aware-bounds-and-prioritization/plan.md)
+- [Carrier-Aware Control Authority Repair](../../archive/2026-08-24-carrier-aware-control-authority/plan.md)
+- [Carrier-Aware Proof Bounds And Consumers](../../archive/2026-08-24-carrier-aware-proof-bounds/plan.md)
+- [Exact-Goal Carrier Ladder](../../archive/2026-08-22-exact-goal-carrier-ladder/plan.md)
 
 ## Objective
 

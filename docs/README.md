@@ -40,7 +40,7 @@ cleanup, and one final acceptance pipeline. Oliver must explicitly start the
 boundary before implementation resumes.
 
 The targeted
-[five-T1 Imprint-scope follow-up](active/2026-08-24-carrier-aware-proof-bounds/evidence/imprint-scope-follow-up/result.md)
+[five-T1 Imprint-scope follow-up](archive/2026-08-24-carrier-aware-proof-bounds/evidence/imprint-scope-follow-up/result.md)
 implements Oliver's ruling that Calculator and general benchmarks default
 automatic Imprint programs off while dedicated controls opt in. The current
 on/off comparison retains the same `36.4286171890906` lower, upper trajectory,
@@ -54,27 +54,27 @@ TypeScript pass. The existing WASM worker-slice cap remains qualified at
 boundary is active until Oliver selects a successor.
 
 The completed
-[Carrier-Aware Proof Bounds And Consumers](active/2026-08-24-carrier-aware-proof-bounds/plan.md)
+[Carrier-Aware Proof Bounds And Consumers](archive/2026-08-24-carrier-aware-proof-bounds/plan.md)
 passed Gate 3, restored its stopped Gate 4 descriptor experiment, and passed
 Gate 5 proportional acceptance. It bypassed failed Gate 2 and retained legacy
 ordering. The non-armour Bow now publishes a globally certified `101.067`
 independent lower with its exact-evaluated policy unchanged, while restricted,
 descriptor, and exact-closure provenance remain separate. See the
-[Gate 5 result](active/2026-08-24-carrier-aware-proof-bounds/evidence/gate5-result.md).
+[Gate 5 result](archive/2026-08-24-carrier-aware-proof-bounds/evidence/gate5-result.md).
 No implementation boundary is active.
 
 The stopped
-[Carrier-Aware Control Authority Repair](active/2026-08-24-carrier-aware-control-authority/plan.md)
+[Carrier-Aware Control Authority Repair](archive/2026-08-24-carrier-aware-control-authority/plan.md)
 pinned bounded Warlord, 10-second non-armour, and explicit tri-elemental Bow
 inputs under current exact-terminal semantics. Its recovered ordering
 candidate reproduced the earlier five-T1 improvement, but failed Gate B when
 the non-armour control expired without a policy. The candidate was restored;
-see the [Gate B stop](active/2026-08-24-carrier-aware-control-authority/evidence/gate-b-result.md).
+see the [Gate B stop](archive/2026-08-24-carrier-aware-control-authority/evidence/gate-b-result.md).
 Warlord exact closure is separate debt, and no implementation boundary is
 active.
 
 The stopped
-[Carrier-Aware Bounds And Prioritization](active/2026-08-24-carrier-aware-bounds-and-prioritization/plan.md)
+[Carrier-Aware Bounds And Prioritization](archive/2026-08-24-carrier-aware-bounds-and-prioritization/plan.md)
 boundary confirmed both a five-T1 ordering bottleneck and broad loss of clean
 lower coverage, then separated proof and ordering ownership with fixed-work
 value/policy/hash parity. Its Gate 2 ordering candidate materially improved
@@ -83,12 +83,12 @@ with current exact semantics. The first Warlord divergence is the intentional
 exact-terminal checkpoint `2b8d5ac`, the non-armour 10-second and uncommitted
 40-second results were conflated, and the tri-elemental request was not
 tracked. The candidate was restored and no implementation boundary is active;
-see the [Gate 2 stop result](active/2026-08-24-carrier-aware-bounds-and-prioritization/evidence/gate2/result.md)
-and [control reproduction audit](active/2026-08-24-carrier-aware-bounds-and-prioritization/evidence/control-reproduction/result.md).
+see the [Gate 2 stop result](archive/2026-08-24-carrier-aware-bounds-and-prioritization/evidence/gate2/result.md)
+and [control reproduction audit](archive/2026-08-24-carrier-aware-bounds-and-prioritization/evidence/control-reproduction/result.md).
 
 The
-[Exact-Goal Carrier Ladder](active/2026-08-22-exact-goal-carrier-ladder/plan.md)
-boundary is [complete](active/2026-08-22-exact-goal-carrier-ladder/result.md).
+[Exact-Goal Carrier Ladder](archive/2026-08-22-exact-goal-carrier-ladder/plan.md)
+boundary is [complete](archive/2026-08-22-exact-goal-carrier-ladder/result.md).
 Every solver terminal now contains only requested explicit affixes, while
 junk and temporary crafts remain legal intermediate state. Carrier-subset
 scheduling plus joint proper-policy improvement reduces the checked clean
@@ -101,8 +101,8 @@ The global lower remains only `36.4286171890906`, so quality proof and search
 efficiency remain open.
 
 The
-[five-T1 goal-band recovery](active/2026-08-22-five-t1-goal-band-recovery/plan.md)
-boundary is [complete](active/2026-08-22-five-t1-goal-band-recovery/result.md).
+[five-T1 goal-band recovery](archive/2026-08-22-five-t1-goal-band-recovery/plan.md)
+boundary is [complete](archive/2026-08-22-five-t1-goal-band-recovery/result.md).
 Completed alternative rows now receive periodic joint proper-policy capture,
 and stepped Solve has an honest host-requested bounded-finalization lifecycle.
 The owner-supplied four-of-five Conquest Lamellar publishes the same verified
@@ -114,8 +114,8 @@ bounded publication rather than exact closure. No implementation boundary is
 active until Oliver selects a successor.
 
 The
-[compact better-policy certification](active/2026-08-22-compact-policy-certification/plan.md)
-boundary is [complete](active/2026-08-22-compact-policy-certification/result.md).
+[compact better-policy certification](archive/2026-08-22-compact-policy-certification/plan.md)
+boundary is [complete](archive/2026-08-22-compact-policy-certification/result.md).
 Exact emitted-behavior sharing reduces the checked Imprint-disabled four-T1
 direct graph from 3,208 to 570 nodes, and its independently evaluated
 `2823.050846721888`-Chaos policy now publishes bounded instead of the
@@ -125,8 +125,8 @@ release-WASM Solve reaches the same result in 267.181 seconds, while its
 implementation boundary is active until Oliver selects a successor.
 
 The prior
-[bounded executable-upper completion and Imprint applicability](active/2026-08-22-bounded-executable-upper-completion/plan.md)
-boundary is [complete](active/2026-08-22-bounded-executable-upper-completion/result.md).
+[bounded executable-upper completion and Imprint applicability](archive/2026-08-22-bounded-executable-upper-completion/plan.md)
+boundary is [complete](archive/2026-08-22-bounded-executable-upper-completion/result.md).
 Incremental upper passes now stop after one exact proper fixed-policy proof,
 natural carrier/frontier epochs replace per-row reoptimization, and Calculator
 bounds optional post-solve policy refinement at 5,000 states without limiting
@@ -140,19 +140,19 @@ seconds. Dedicated Imprint and Warlord controls remain exact. Its former
 certification result above.
 
 The completed
-[Imprint solve scope and controlled comparison](active/2026-08-22-imprint-solve-scope/plan.md)
+[Imprint solve scope and controlled comparison](archive/2026-08-22-imprint-solve-scope/plan.md)
 originally added a checked-by-default Calculator control that can exclude only generated
 Imprint checkpoint/retry programs while retaining every other automatic
 family. The reduced scope is disclosed through native telemetry, result copy,
 and compiled-strategy provenance. Its
-[result](active/2026-08-22-imprint-solve-scope/result.md) shows Imprint was the
+[result](archive/2026-08-22-imprint-solve-scope/result.md) shows Imprint was the
 first four-T1 blocker, but not the only one: disabled avoids the 45-second cap
 and then expires at five minutes in repeated incremental upper-policy passes
 without packaging a policy. The 2026-08-25 follow-up above supersedes only
 that caller default; the historical measurement remains intact.
 
 The stopped
-[finite Imprint-program closure](active/2026-08-22-finite-imprint-program-closure/plan.md)
+[finite Imprint-program closure](archive/2026-08-22-finite-imprint-program-closure/plan.md)
 boundary measured and removed two sound pre-evaluation renewal-dominance
 proofs. Both retained the same 256-program refusal and shifted work into much
 larger novel kernels. No implementation boundary is active until Oliver
@@ -160,7 +160,7 @@ selects either honest bounded continuation past a local Imprint deferral or a
 first-class exact kernel/label search.
 
 The completed
-[recovery-scoped Restart and successor-aware bounds](active/2026-08-22-recovery-scoped-restart-successor-bounds/plan.md)
+[recovery-scoped Restart and successor-aware bounds](archive/2026-08-22-recovery-scoped-restart-successor-bounds/plan.md)
 boundary separates optional economic abandonment from mechanic-owned
 replacement recovery. Calculator defaults voluntary Restart off but retains
 the exact product-local Fracture miss route; explicit engine callers remain
@@ -169,24 +169,24 @@ only when no admitted successor path can preserve it. The checked primary has
 zero ordinary Restart rows and one dedicated Fracture replacement operation;
 its 3,759.98-Chaos executable policy remains bounded by the existing Imprint-
 program work cap. The Warlord control closes exactly without Restart. The
-[result](active/2026-08-22-recovery-scoped-restart-successor-bounds/result.md)
+[result](archive/2026-08-22-recovery-scoped-restart-successor-bounds/result.md)
 qualifies native/release-WASM behavior. No implementation boundary is active
 until Oliver selects a successor.
 
 The completed
-[Eldritch goal-cover coverage](active/2026-08-22-eldritch-goal-cover-coverage/plan.md)
+[Eldritch goal-cover coverage](archive/2026-08-22-eldritch-goal-cover-coverage/plan.md)
 boundary replaces the session-wide zero optimistic completion cost on eligible
 armour with a proved no-more-expensive, no-less-capable projection of automatic
 Eldritch Annul, Chaos, and Exalt programs. The checked primary publishes a
 certified positive `21.772459401332767` lower but retains its accepted
 `3745.7295960574743` upper and five-minute exact-refinement stop. The
-[result](active/2026-08-22-eldritch-goal-cover-coverage/result.md) records the
+[result](archive/2026-08-22-eldritch-goal-cover-coverage/result.md) records the
 native, release-WASM, web, Bellman, and 10,000-run controls. No implementation
 boundary is active until Oliver selects a successor.
 
 The focused
-[temporary blocker tier canonicalization](active/2026-08-22-temporary-blocker-tier-canonicalization/plan.md)
-boundary is [complete](active/2026-08-22-temporary-blocker-tier-canonicalization/result.md).
+[temporary blocker tier canonicalization](archive/2026-08-22-temporary-blocker-tier-canonicalization/plan.md)
+boundary is [complete](archive/2026-08-22-temporary-blocker-tier-canonicalization/result.md).
 At active solve prices, one exact carrier-local blocker effect now carries only
 its cheapest legal bench tier into fixed-option and operator construction;
 unpriced callers retain every resource variant. Focused native acceptance and
@@ -196,9 +196,9 @@ goal-slot-equivalence audit is preserved as a possible successor, and no
 implementation boundary is active.
 
 The
-[persistent quotient session and in-place frontier growth](active/2026-08-21-persistent-quotient-session/plan.md)
+[persistent quotient session and in-place frontier growth](archive/2026-08-21-persistent-quotient-session/plan.md)
 milestone is complete after an explicit
-[owner-adjusted 512 MiB memory criterion](active/2026-08-21-persistent-quotient-session/result.md),
+[owner-adjusted 512 MiB memory criterion](archive/2026-08-21-persistent-quotient-session/result.md),
 and release qualification.
 Production now keeps one live strict oracle, stable split-only partition,
 Bellman graph, proof store, alternative scheduler, and verified incumbent
@@ -213,8 +213,8 @@ web/WASM, and the full repository pipeline pass. No implementation boundary is
 active until Oliver selects the next chunk.
 
 The predecessor
-[persistent strict-frontier growth](active/2026-08-21-persistent-strict-frontier-growth/plan.md)
-boundary is [stopped precisely](active/2026-08-21-persistent-strict-frontier-growth/result.md).
+[persistent strict-frontier growth](archive/2026-08-21-persistent-strict-frontier-growth/plan.md)
+boundary is [stopped precisely](archive/2026-08-21-persistent-strict-frontier-growth/result.md).
 Exact carrier/action-row replay preserved proof boundaries but did not reduce
 the checked final-work stop, regressed time to the first strict upper, and
 increased estimated peak ownership nearly sevenfold, so it was removed. The
@@ -223,8 +223,8 @@ oracle/partition/Bellman/proof generation; another cross-pass row cache is not
 justified. Oliver selected that owner in the plan above.
 
 The focused
-[verified interim upper publication](active/2026-08-21-verified-interim-upper-publication/plan.md)
-repair is [complete](active/2026-08-21-verified-interim-upper-publication/result.md).
+[verified interim upper publication](archive/2026-08-21-verified-interim-upper-publication/plan.md)
+repair is [complete](archive/2026-08-21-verified-interim-upper-publication/result.md).
 A compiled, independently evaluated, proper executable strict strategy now
 tightens the existing live progress upper while exact alternative refinement
 continues. The checked four-T1 upper falls to `3745.7295960574743` at 38.94
@@ -233,8 +233,8 @@ expires with lower zero, so persistent strict frontier growth remains the next
 possible owner and no implementation boundary is active.
 
 The
-[automatic action relevance and proof reuse](active/2026-08-21-automatic-action-relevance-and-proof-reuse/plan.md)
-boundary is [stopped precisely](active/2026-08-21-automatic-action-relevance-and-proof-reuse/result.md).
+[automatic action relevance and proof reuse](archive/2026-08-21-automatic-action-relevance-and-proof-reuse/plan.md)
+boundary is [stopped precisely](archive/2026-08-21-automatic-action-relevance-and-proof-reuse/result.md).
 It retained exact Eldritch cost/kernel rejection and more complete automatic-
 option lower bounds, and corrected the proposed Imprint rewrite after finding
 that exact support-kernel Pareto search already exists. The checked primary
@@ -243,12 +243,12 @@ frontier rebuilds. Persistent strict frontier growth is the next precise
 possible owner; the bounded state-928 Imprint grammar remains separate.
 
 The stopped
-[four-T1 automatic-envelope replacement qualification](active/2026-08-21-four-t1-automatic-envelope-qualification/plan.md)
+[four-T1 automatic-envelope replacement qualification](archive/2026-08-21-four-t1-automatic-envelope-qualification/plan.md)
 made strict finalization cooperative, repaired refined-parent paired-default
 proof, and safely reuses byte-identical paired assertion evaluations. Its
 checked native primary still stops at 300 seconds in repeated strict automatic-
 alternative carrier discovery and local reoptimization, so no replacement
-exact value was accepted. The [result](active/2026-08-21-four-t1-automatic-envelope-qualification/result.md)
+exact value was accepted. The [result](archive/2026-08-21-four-t1-automatic-envelope-qualification/result.md)
 also records an owner-authorized diagnostic that changed only the watchdog to
 600 seconds and still stopped after 78.7 million advancing solve steps with a
 fixed strict graph and open action envelope. It names semantic automatic-
@@ -256,18 +256,18 @@ alternative proof reuse as the next possible owner.
 No implementation boundary is active until Oliver selects one.
 
 The completed
-[high-impact automatic-admission closure repair](active/2026-08-21-high-impact-automatic-admission/plan.md)
+[high-impact automatic-admission closure repair](archive/2026-08-21-high-impact-automatic-admission/plan.md)
 makes the Calculator's high-impact incremental scheduler process the existing
 carrier-local automatic action envelope and prevents exact closure while that
 work is pending. It deliberately preserves all current action-family filters
 and is limited to scheduling, proof accounting, focused native tests, and
-release-WASM parity. Its [accepted result](active/2026-08-21-high-impact-automatic-admission/result.md)
+release-WASM parity. Its [accepted result](archive/2026-08-21-high-impact-automatic-admission/result.md)
 records nonzero automatic preparation on the real four- and five-goal capped
 probes. Oliver has selected the replacement qualification above as the next
 chunk.
 
 The completed
-[product-local Fracture execution consolidation](active/2026-08-16-five-t1-restart-monotone-recovery/evidence/product-fracture-execution-consolidation-result.md)
+[product-local Fracture execution consolidation](archive/2026-08-16-five-t1-restart-monotone-recovery/evidence/product-fracture-execution-consolidation-result.md)
 preserves all exact four-T1 solver hashes, rows, value, accounting, and the
 priced-Restart miss model while reducing its compiled graph from 292 nodes /
 815 edges / 4,670,987 bytes to 174 / 515 / 546,057. Native and release WASM
@@ -275,7 +275,7 @@ exact evaluation, 10,000-run verification, focused checks, and the full
 repository pipeline pass.
 
 The bounded
-[route/operation-graph compaction result](active/2026-08-16-five-t1-restart-monotone-recovery/evidence/gated-route-compaction-result.md)
+[route/operation-graph compaction result](archive/2026-08-16-five-t1-restart-monotone-recovery/evidence/gated-route-compaction-result.md)
 materializes the priced five-T1 candidate as a 92-node executable policy at
 16,226,566.773294946 Chaos with success one and zero off-policy mass. It
 remains a bounded upper: its stored solver cost does not reconcile, strict
@@ -283,7 +283,7 @@ lifting has a coarse-mapping failure, and the lower bound is zero. The 250 ms
 work-item contract also remains open at a measured 1.254-second atomic exact-
 reforge leaf. Oliver instead requested a compiler-quality stabilization scope.
 The completed
-[condition-efficient strategy compilation plan](active/2026-08-16-five-t1-restart-monotone-recovery/condition-efficient-strategy-compilation-plan.md)
+[condition-efficient strategy compilation plan](archive/2026-08-16-five-t1-restart-monotone-recovery/condition-efficient-strategy-compilation-plan.md)
 removes every measured same-target group with exact native/WASM parity. The
 subsequent product-local Fracture consolidation removes the remaining seven
 equivalent Fracture regions and 41 Fracture-only refined-parent routers.

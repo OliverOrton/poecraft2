@@ -2,7 +2,7 @@
 
 **Status: no implementation boundary is active.** Oliver selected and
 completed
-[Carrier-Aware Proof Bounds And Consumers](docs/active/2026-08-24-carrier-aware-proof-bounds/plan.md)
+[Carrier-Aware Proof Bounds And Consumers](docs/archive/2026-08-24-carrier-aware-proof-bounds/plan.md)
 on 2026-08-24. Gate 3 passed, Gate 4 stopped and was restored, and Gate 5
 passed proportional acceptance. Failed Gate 2 ordering was neither retried
 nor required; legacy ordering stays unchanged. On 2026-08-25 Oliver selected
@@ -78,7 +78,7 @@ Calculator control and explicit benchmark fields opt in. Dedicated native
 Imprint controls now say `true` explicitly. The low-level engine omission
 default remains enabled for compatibility, and telemetry/strategy provenance
 continues to disclose the caller-selected scope. See the
-[follow-up result](docs/active/2026-08-24-carrier-aware-proof-bounds/evidence/imprint-scope-follow-up/result.md).
+[follow-up result](docs/archive/2026-08-24-carrier-aware-proof-bounds/evidence/imprint-scope-follow-up/result.md).
 
 Focused acceptance passes: native build; Solver Solve 103,221 / 0; compiler
 583 / 0; dedicated Imprint 60 / 0; release WASM rebuild; complete nonvisual
@@ -123,7 +123,7 @@ pinned their minimum at `0.577` and `0.54205`. It separated zero descriptors;
 16 and 192,660 obligations remained unresolved. The prototype never had
 policy, upper, pruning, or closure authority, and all Gate 4 source was
 removed. Gate 5 completed with Gate 3 intact. See the
-[Gate 4 result](docs/active/2026-08-24-carrier-aware-proof-bounds/evidence/gate4-result.md).
+[Gate 4 result](docs/archive/2026-08-24-carrier-aware-proof-bounds/evidence/gate4-result.md).
 
 Gate 5 publishes the independent carrier/pattern floor for every covered
 session and keeps restricted search, absent descriptors, and exact closure as
@@ -141,7 +141,7 @@ shape mismatch and a `166.233` ms WASM slice against the 50 ms performance
 cap (the retained 2026-08-20 result was `215.59` ms); those deviations are
 recorded, not treated as functional parity differences. The full repository
 pipeline and rendered review were deliberately not run. See the
-[Gate 5 result](docs/active/2026-08-24-carrier-aware-proof-bounds/evidence/gate5-result.md).
+[Gate 5 result](docs/archive/2026-08-24-carrier-aware-proof-bounds/evidence/gate5-result.md).
 
 Before activation, `git diff --check`, the native build, and a fresh
 1,000-expansion fixed-work run passed. The fresh report exactly retained lower
@@ -174,7 +174,7 @@ control regressed from a proper `6026985788.49406` publication in
 That is a hard Gate B failure. The ordering candidate and both scheduling
 hooks were removed. The post-restore fixed-work run again has transition hash
 `fb8dc170b29920df` and final policy hash `1b98ca41e69ad1b1`; see the
-[Gate B stop](docs/active/2026-08-24-carrier-aware-control-authority/evidence/gate-b-result.md).
+[Gate B stop](docs/archive/2026-08-24-carrier-aware-control-authority/evidence/gate-b-result.md).
 
 Gates 3-5 were not entered. No simulation, release WASM rebuild, web suite,
 rendered review, or full repository pipeline was run. Warlord exact closure
@@ -183,7 +183,7 @@ remains separate debt.
 ## Stopped carrier-aware bounds and prioritization boundary
 
 Oliver selected
-[the carrier-aware plan](docs/active/2026-08-24-carrier-aware-bounds-and-prioritization/plan.md)
+[the carrier-aware plan](docs/archive/2026-08-24-carrier-aware-bounds-and-prioritization/plan.md)
 on 2026-08-24. Gate 0 passed with full-evidence-only telemetry that:
 
 - decompose universal, clean-MDP, strict-clean, and selected maximum lower
@@ -204,7 +204,7 @@ carrier/action pairs, while its current incumbent operator-lower call site did
 not evaluate or prune any operators. Across the two witnesses, `80.22%` to
 `89.52%` of expanded states lost clean coverage and every non-clean satisfied-
 but-nonterminal state selected zero. Full details are in
-[Gate 0 result](docs/active/2026-08-24-carrier-aware-bounds-and-prioritization/evidence/gate0/result.md).
+[Gate 0 result](docs/archive/2026-08-24-carrier-aware-bounds-and-prioritization/evidence/gate0/result.md).
 
 Gate 1 moved proof construction to `solver_solve_bounds.cpp`, centralized the
 existing focused/incremental bucket order in `solver_solve_priority.cpp`, and
@@ -234,8 +234,8 @@ The ordering candidate was therefore restored; Gates 3-5 were not entered.
 The control-authority successor above has since pinned distinct current-
 semantics inputs and kept Warlord exact closure as separate debt. Its corrected
 qualification still rejected the candidate on the non-armour control. See the
-[Gate 2 stop result](docs/active/2026-08-24-carrier-aware-bounds-and-prioritization/evidence/gate2/result.md)
-and [control reproduction audit](docs/active/2026-08-24-carrier-aware-bounds-and-prioritization/evidence/control-reproduction/result.md).
+[Gate 2 stop result](docs/archive/2026-08-24-carrier-aware-bounds-and-prioritization/evidence/gate2/result.md)
+and [control reproduction audit](docs/archive/2026-08-24-carrier-aware-bounds-and-prioritization/evidence/control-reproduction/result.md).
 
 ## Completed executable-policy default recovery
 
@@ -672,7 +672,7 @@ replay cache.
 The retained implementation spans the local checkpoints `18e4640` through
 `bb29378`, with release qualification through `9d447f5`. The prior accepted
 persistent-quotient result remains at
-[docs/active/2026-08-21-persistent-quotient-session/result.md](docs/active/2026-08-21-persistent-quotient-session/result.md).
+[docs/archive/2026-08-21-persistent-quotient-session/result.md](docs/archive/2026-08-21-persistent-quotient-session/result.md).
 
 Exact-goal quality proof, broader compiler/router work, mechanics, prices, and
 action admission remain separate unless Oliver explicitly selects them.

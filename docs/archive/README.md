@@ -9,7 +9,79 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-08-24
+
+- [Carrier-Aware Proof Bounds And Consumers](2026-08-24-carrier-aware-proof-bounds/README.md) —
+  retained a proved rarity × goal-mask carrier lower and truthful proof
+  consumers, removed an unresolved-descriptor prototype after zero strict
+  separations, and completed focused native/release-WASM acceptance. Its later
+  Imprint-scope follow-up defaults product/general benchmarks off without
+  changing the checked five-T1 policy.
+- [Carrier-Aware Control Authority Repair](2026-08-24-carrier-aware-control-authority/README.md) —
+  pinned current exact-terminal controls and reproduced the 1.56M five-T1
+  ordering candidate, then restored it when the non-armour control expired
+  without a policy.
+- [Carrier-Aware Bounds And Prioritization](2026-08-24-carrier-aware-bounds-and-prioritization/README.md) —
+  separated proof and ordering ownership and measured the five-T1 scheduling
+  opportunity; its first ordering qualification stopped because predecessor
+  controls mixed terminal semantics and stop windows.
+
+## 2026-08-22
+
+- [Exact-Goal Carrier Ladder](2026-08-22-exact-goal-carrier-ladder/README.md) —
+  made success junk-free, retained subset-aware carrier scheduling, and
+  published the independently evaluated historical 87k five-T1 policy.
+- [Five-T1 Goal-Band Recovery](2026-08-22-five-t1-goal-band-recovery/README.md) —
+  retained joint proper policies at bounded checkpoints and recovered useful
+  four-of-five publication with open alternatives disclosed.
+- [Bounded Executable-Upper Completion](2026-08-22-bounded-executable-upper-completion/README.md) —
+  recovered bounded executable publication and attributed remaining automatic
+  and Imprint limits without false closure.
+- [Compact Better-Policy Certification](2026-08-22-compact-policy-certification/README.md) —
+  added direct compact-policy certification before strict lift and preserved
+  truthful cost-mismatch provenance.
+- [Eldritch Goal-Cover Coverage](2026-08-22-eldritch-goal-cover-coverage/README.md) —
+  restored admissible goal-cover publication for Eldritch sessions while
+  retaining the stricter pattern guard.
+- [Recovery-Scoped Restart And Successor-Aware Bounds](2026-08-22-recovery-scoped-restart-successor-bounds/README.md) —
+  scoped Restart to recovery by default and gave it the exact fresh-carrier
+  successor instead of discarded progress.
+- [Temporary Blocker Tier Canonicalization](2026-08-22-temporary-blocker-tier-canonicalization/README.md) —
+  removed redundant blocker tiers by proved effect/economy equivalence.
+- [Imprint Solve Scope And Controlled Comparison](2026-08-22-imprint-solve-scope/README.md) —
+  introduced explicit automatic-Imprint solve scope and retained the original
+  controlled comparison; the later caller-default decision supersedes only
+  its historical product default.
+- [Finite Imprint-Program Closure](2026-08-22-finite-imprint-program-closure/README.md) —
+  stopped and restored after exact renewal proofs transferred work into larger
+  kernels without closing the 256-program refusal.
+
+## 2026-08-21
+
+- [Persistent Quotient Session And In-Place Frontier Growth](2026-08-21-persistent-quotient-session/README.md) —
+  retained persistent session state, cooperative progress, and accounting.
+- [Verified Interim Upper Publication](2026-08-21-verified-interim-upper-publication/README.md) —
+  retained independently verified proper interim uppers without promoting an
+  open proof envelope.
+- [High-Impact Automatic Admission Closure](2026-08-21-high-impact-automatic-admission/README.md) —
+  made the high-impact scheduler drain its existing carrier-local automatic
+  envelope before exact closure.
+- [Four-T1 Automatic-Envelope Replacement Qualification](2026-08-21-four-t1-automatic-envelope-qualification/README.md) —
+  stopped after cooperative and extended runs retained an open automatic
+  alternative boundary.
+- [Automatic Action Relevance And Proof Reuse](2026-08-21-automatic-action-relevance-and-proof-reuse/README.md) —
+  stopped at the declared native primary when incomplete automatic proof work
+  remained.
+- [Persistent Strict Frontier Growth](2026-08-21-persistent-strict-frontier-growth/README.md) —
+  stopped after carrier-row replay did not recover the required strict
+  frontier behavior.
+
 ## 2026-08-16
+
+- [Five-T1 Restart-Monotone Strategy Recovery](2026-08-16-five-t1-restart-monotone-recovery/README.md) —
+  preserves the stopped original recovery boundary and its completed
+  condition-routing, exact-evaluator, and product-Fracture consolidation
+  follow-ups, including full evidence and strategies.
 
 - [Calculator WASM Scheduling And Selected-Policy Refinement](2026-08-14-calculator-wasm-scheduling-progress/README.md) —
   retains numerically stable selected policies without granting coarse proof
