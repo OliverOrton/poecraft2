@@ -1,16 +1,22 @@
 # Handoff
 
-**Status: no implementation boundary is active.** Oliver selected and
-completed
+**Status: targeted Imprint-scope follow-up acceptance is active.** Oliver
+selected and completed
 [Carrier-Aware Proof Bounds And Consumers](docs/active/2026-08-24-carrier-aware-proof-bounds/plan.md)
 on 2026-08-24. Gate 3 passed, Gate 4 stopped and was restored, and Gate 5
 passed proportional acceptance. Failed Gate 2 ordering was neither retried
-nor required; legacy ordering stays unchanged. Oliver must select the next
-implementation boundary before implementation resumes.
+nor required; legacy ordering stays unchanged. On 2026-08-25 Oliver selected
+a targeted caller-default follow-up: Calculator and general benchmarks
+default automatic Imprint programs off, while dedicated correctness controls
+opt in. Measurement, implementation, and historical attribution are complete;
+focused acceptance is in progress. Gate 3 was not repeated and Gate 4 was not
+reconstructed.
 
 ## Current checkpoint
 
 - Branch: `main`.
+- Follow-up base: `b5c9a80` (`Complete carrier-aware proof consumers`). The
+  tree was clean before the controlled report and implementation edits.
 - Retained milestone checkpoint: `bd80522` (`Checkpoint carrier attribution
   and control qualification`). This local commit contains the complete Gate 0,
   Gate 1, current-control, and failed-ordering evidence tree. No push was
@@ -20,12 +26,13 @@ implementation boundary before implementation resumes.
 - Gate 4 stop checkpoint: `d874656` (`Record unresolved descriptor stop`). It
   has the required co-author trailer and was not pushed.
 - Gate 5 implementation, evidence, release WASM, and acceptance are retained
-  in the current local checkpoint. No push was issued.
+  in `b5c9a80`. No push was issued.
 - Activated checkpoint: `526ff6f` (`Propose carrier-aware bounds and priority
   plan`).
 - Proposal checkpoint: `04cab15` (`Record executable policy recovery
   checkpoint`).
-- Local `origin/main` is `526ff6f`; no push was issued.
+- Local `origin/main` was `b5c9a80` when the follow-up began; no push was
+  issued.
 - Gate 0 telemetry and evidence follow this checkpoint in the working tree.
 - Gate 1 fixed-work parity retained value, graph census, selected actions, and
   policy/transition hashes bit-for-bit.
@@ -38,6 +45,33 @@ implementation boundary before implementation resumes.
   terminal change as the first Warlord divergence; no bisect or cap-
   instrumentation behavior remains in the main worktree.
 - Full repository pipeline and rendered UI review were deliberately not run.
+
+## Targeted Imprint-scope follow-up
+
+The identical current clean five-T1 request was rerun with only
+`consider_imprint_programs: false`. It retains the certified
+`36.4286171890906` lower, the complete upper trajectory, 58 / 27 mask-31
+discovered / expanded carriers with 29 exact goal states, and the proper
+514-node / 1,788-edge `14454067.4260706` policy. Imprint program evaluation
+falls from 256 to zero. The released work window admits more ordinary
+carriers and actions, so rows rise from 76,275 to 77,373, transitions from
+334,539 to 343,180, and remaining obligations from 223,421 to 224,424.
+
+The historical 87k and current 14.45M reports use the same request and neither
+compiled policy selects Imprint. A detached build pins the divergence to
+`b6fb861` (`Recover multi-epoch exact carrier strategies`): complete frozen
+epochs, urgent missing-frontier scheduling, pending-value refinement, and
+proper materialized publication change how the bounded window is allocated.
+The historical 87k graph remains independently verified evidence, not a
+current-source deterministic quality baseline. The detached worktree was
+removed cleanly and no audit source entered main.
+
+Calculator and general benchmark defaults are now Imprint-off; the existing
+Calculator control and explicit benchmark fields opt in. Dedicated native
+Imprint controls now say `true` explicitly. The low-level engine omission
+default remains enabled for compatibility, and telemetry/strategy provenance
+continues to disclose the caller-selected scope. See the
+[follow-up result](docs/active/2026-08-24-carrier-aware-proof-bounds/evidence/imprint-scope-follow-up/result.md).
 
 ## Completed carrier-aware proof bounds and consumers
 

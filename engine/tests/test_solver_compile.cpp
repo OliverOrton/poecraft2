@@ -2520,6 +2520,7 @@ void run_imprint_gate(const char* artifact_dir) {
      * compiler fixture below. */
     CalcContext depth_limited_calc(session, goal, registry);
     SolveOptions depth_limited_options;
+    depth_limited_options.consider_imprint_programs = true;
     depth_limited_options.max_imprint_program_depth = 1;
     depth_limited_options.max_imprint_program_work = 16;
     const SolveResult depth_limited = solve(
@@ -2535,6 +2536,7 @@ void run_imprint_gate(const char* artifact_dir) {
 
     CalcContext calc(session, goal, registry);
     SolveOptions solve_options;
+    solve_options.consider_imprint_programs = true;
     solve_options.max_imprint_program_depth = 3;
     solve_options.max_imprint_program_work = 16;
     const SolveResult solved = solve(calc, magic, prices, solve_options);
@@ -2581,6 +2583,7 @@ void run_imprint_gate(const char* artifact_dir) {
     PC_CHECK(quantity("beast:rare") == 3.0);
     CalcContext work_limited_calc(session, goal, registry);
     SolveOptions work_limited_options;
+    work_limited_options.consider_imprint_programs = true;
     work_limited_options.max_imprint_program_depth = 3;
     work_limited_options.max_imprint_program_work = 1;
     const SolveResult work_limited = solve(

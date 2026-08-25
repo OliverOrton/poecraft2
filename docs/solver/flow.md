@@ -230,12 +230,15 @@ action envelope. A completed result is labelled exact only within that
 zero-progress-reroll restriction. Omitting the option preserves the
 unrestricted globally optimal solve contract.
 
-Automatic Imprint discovery has an independent, default-on caller scope.
-`consider_imprint_programs: false` bypasses only generated Imprint
-checkpoint/retry programs, keeps the remaining automatic admission pipeline
-active, invalidates incompatible retained transition/admission caches, and
-records the exclusion in telemetry and compiled-strategy provenance. Any
-exact result is exact only within that reduced action scope.
+Automatic Imprint discovery has an independent caller scope. Calculator and
+general benchmark callers default it off; dedicated correctness controls and
+other explicit callers opt in with `consider_imprint_programs: true`. The
+low-level engine option retains its historical default for compatibility.
+Disabling the scope bypasses only generated Imprint checkpoint/retry programs,
+keeps the remaining automatic admission pipeline active, invalidates
+incompatible retained transition/admission caches, and records the exclusion
+in telemetry and compiled-strategy provenance. Any exact result is exact only
+within that reduced action scope.
 
 If requested Imprint discovery reaches its depth/work boundary, its staged
 carrier transaction rolls back and the Imprint family remains open. Solve

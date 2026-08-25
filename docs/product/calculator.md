@@ -99,7 +99,7 @@ The Solve surface is distinct from one-action odds:
 5. Open a fresh scoped solve handle with
    `goal_progress_gated_reforges: true`,
    `allow_economic_restart: false`, and the user-selected
-   `consider_imprint_programs` scope (default checked), plus a 200,000-state
+   `consider_imprint_programs` scope (default unchecked), plus a 200,000-state
    `max_policy_refinement_states` allowance, then run the stateful native
    begin/step/finish API in the worker with progress and cancellation.
    Calculator therefore does not abandon an ordinary carrier merely because a
@@ -107,10 +107,10 @@ The Solve surface is distinct from one-action odds:
    a fresh base” control explicitly restores that economic action. The native
    engine default remains unrestricted for backward compatibility.
    “Consider automatic Imprint checkpoint/retry programs” is a separate,
-   checked-by-default control. Clearing it excludes only generated Imprint
-   programs; other automatic families remain eligible. Results and compiled
-   strategies disclose that reduced action scope and make no optimality claim
-   over the excluded family.
+   unchecked-by-default control. Selecting it explicitly adds generated
+   Imprint programs; other automatic families remain eligible in either
+   scope. Results and compiled strategies disclose the selected action scope
+   and make no optimality claim over an excluded family.
    The refinement allowance affects only optional attempts to certify a
    cheaper broad/strict policy after an executable fallback is already
    independently verified. A proper, zero-off-policy, completely priced

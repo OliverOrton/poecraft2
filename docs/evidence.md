@@ -6,6 +6,19 @@ routes to them rather than duplicating complete reports.
 
 Parent: [Documentation map](README.md)
 
+## Current Five-T1 Imprint Scope And Historical Attribution
+
+The 2026-08-25
+[targeted follow-up](active/2026-08-24-carrier-aware-proof-bounds/evidence/imprint-scope-follow-up/result.md)
+changes only the current clean five-T1 Conquest Lamellar's automatic Imprint
+scope. Imprint-off performs zero program work but retains the same certified
+`36.4286171890906` lower, identical upper trajectory, 29 exact goal states,
+514 / 1,788 graph, and independently evaluated `14454067.4260706` upper.
+The released window is consumed by more ordinary carrier/action admissions,
+so total rows and memory do not fall. A detached historical-source build pins
+the 87k / 14.45M divergence to commit `b6fb861`'s multi-epoch scheduling and
+proper-publication changes; neither compiled policy selects Imprint.
+
 ## Bounded Executable-Upper Completion
 
 The 2026-08-22

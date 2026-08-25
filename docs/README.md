@@ -29,6 +29,17 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
+The targeted
+[five-T1 Imprint-scope follow-up](active/2026-08-24-carrier-aware-proof-bounds/evidence/imprint-scope-follow-up/result.md)
+implements Oliver's ruling that Calculator and general benchmarks default
+automatic Imprint programs off while dedicated controls opt in. The current
+on/off comparison retains the same `36.4286171890906` lower, upper trajectory,
+29 exact goal states, 514 / 1,788 graph, and independently evaluated
+`14454067.4260706` policy. The historical `87361.1690420501` policy remains
+valid evidence but diverges at commit `b6fb861`'s carrier scheduling and proper
+publication boundary, not because either compiled policy uses Imprint.
+Focused acceptance is in progress; Gate 3 and Gate 4 remain closed.
+
 The completed
 [Carrier-Aware Proof Bounds And Consumers](active/2026-08-24-carrier-aware-proof-bounds/plan.md)
 passed Gate 3, restored its stopped Gate 4 descriptor experiment, and passed
@@ -69,11 +80,12 @@ Every solver terminal now contains only requested explicit affixes, while
 junk and temporary crafts remain legal intermediate state. Carrier-subset
 scheduling plus joint proper-policy improvement reduces the checked clean
 five-T1 Conquest Lamellar from a roughly 470.5-million-Chaos renewal fallback
-to an independently exact-evaluated `87361.1690420501`-Chaos, 607-node policy.
-It passes 10,000 simulations with 100% success and zero off-policy failures.
+to an independently exact-evaluated `87361.1690420501`-Chaos, 607-node
+historical policy. It passes 10,000 simulations with 100% success and zero
+off-policy failures; the current source instead publishes the proper
+`14454067.4260706`-Chaos, 514-node direct core under the same requested finish.
 The global lower remains only `36.4286171890906`, so quality proof and search
-efficiency remain open. No implementation boundary is active until Oliver
-selects a successor.
+efficiency remain open.
 
 The
 [five-T1 goal-band recovery](active/2026-08-22-five-t1-goal-band-recovery/plan.md)
@@ -116,14 +128,15 @@ certification result above.
 
 The completed
 [Imprint solve scope and controlled comparison](active/2026-08-22-imprint-solve-scope/plan.md)
-adds a checked-by-default Calculator control that can exclude only generated
+originally added a checked-by-default Calculator control that can exclude only generated
 Imprint checkpoint/retry programs while retaining every other automatic
 family. The reduced scope is disclosed through native telemetry, result copy,
 and compiled-strategy provenance. Its
 [result](active/2026-08-22-imprint-solve-scope/result.md) shows Imprint was the
 first four-T1 blocker, but not the only one: disabled avoids the 45-second cap
 and then expires at five minutes in repeated incremental upper-policy passes
-without packaging a policy. No implementation boundary is active.
+without packaging a policy. The 2026-08-25 follow-up above supersedes only
+that caller default; the historical measurement remains intact.
 
 The stopped
 [finite Imprint-program closure](active/2026-08-22-finite-imprint-program-closure/plan.md)

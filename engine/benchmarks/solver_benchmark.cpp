@@ -2471,7 +2471,10 @@ CaseResult run_case(
             solve_options.solver_flags |=
                 PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART;
         }
-        if (!optional_bool(caps, "consider_imprint_programs", true)) {
+        /* General benchmark cases exclude generated Imprint programs unless
+         * the corpus explicitly opts in. Dedicated Imprint correctness
+         * controls continue to request the family directly. */
+        if (!optional_bool(caps, "consider_imprint_programs", false)) {
             solve_options.solver_flags |=
                 PC_SOLVER_FLAG_DISABLE_IMPRINT_PROGRAMS;
         }

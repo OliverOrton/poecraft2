@@ -269,7 +269,7 @@ export function calculatorSolveOptions(
     absoluteGap: number,
     relativeGapPercent: number,
     allowEconomicRestart = false,
-    considerImprintPrograms = true,
+    considerImprintPrograms = false,
 ): SolveOptions {
     const options: SolveOptions = {
         goal_progress_gated_reforges: true,

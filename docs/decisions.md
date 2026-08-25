@@ -536,3 +536,27 @@ before it receives an independent proof attempt, and an unverified snapshot
 cannot leak into public bounds. WASM progress and cancellation cover proof
 finalization itself. No mechanic, price, action scope, goal, objective, cap,
 tolerance, or Simulator horizon changes under this decision.
+
+## 2026-08-25 — Product And General Benchmark Imprint Scope Defaults Off
+
+**Decision:** Calculator solves and general solver benchmark cases exclude
+generated automatic Imprint checkpoint/retry programs unless the caller or
+fixture explicitly opts in. Dedicated Imprint correctness controls remain
+explicitly enabled. The low-level engine's historical omission default stays
+enabled for backward compatibility.
+
+**Context:** The
+[targeted five-T1 comparison](active/2026-08-24-carrier-aware-proof-bounds/evidence/imprint-scope-follow-up/result.md)
+holds the current Conquest Lamellar request fixed and changes only
+`consider_imprint_programs` from `true` to `false`. It removes 256 program
+evaluations but produces the same bound, upper trajectory, exact-goal census,
+514 / 1,788 compiled graph, and independently evaluated
+`14454067.4260706`-Chaos policy. The historical `87361.1690420501` policy
+diverges because of later carrier scheduling and certified-publication source
+changes, not because either policy uses Imprint.
+
+**Consequences:** Ordinary product and performance results do not spend their
+default envelope on automatic Imprint grammar search. Results must disclose
+the scope, and an exact result is exact only within that caller-selected
+envelope. Enabling Imprint remains a supported, tested opt-in rather than a
+hidden global removal.

@@ -235,7 +235,7 @@ export class PcCalculator extends HTMLElement {
     private solveAbsoluteGapTarget = 0;
     private solveRelativeGapPercentTarget = 0;
     private solveAllowEconomicRestart = false;
-    private solveConsiderImprintPrograms = true;
+    private solveConsiderImprintPrograms = false;
     private solveRunning = false;
     private solveProgress: SolveProgress | null = null;
     private solveElapsedMs = 0;

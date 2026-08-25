@@ -9,6 +9,7 @@ Do not overwrite predecessor reports.
 - [Gate 3 result](gate3-result.md)
 - [Gate 4 stopped descriptor result](gate4-result.md)
 - [Gate 5 accepted consumer result](gate5-result.md)
+- [Targeted Imprint-scope follow-up](imprint-scope-follow-up/result.md)
 - `gate3-qualified-fixed-work-2/` is the retained qualifying native report.
 - `gate4-prototype-four-of-five/` and `gate4-prototype-five-t1/` retain the
   observational descriptor reports and compiled exact-evaluation witnesses.
@@ -16,6 +17,9 @@ Do not overwrite predecessor reports.
   current real-fixture matrix. `gate5-four-of-five-final/`,
   `gate5-eldritch-final/`, and `gate5-imprint-final/` retain exact evaluation
   and 10,000-run final verification evidence.
+- `imprint-scope-follow-up/` retains the identical current five-T1 request
+  with automatic Imprint disabled, its exact-evaluated report and compiled
+  strategy, and the historical/current scheduling attribution.
 - The earlier `gate3-*.json` reports and `gate3-cached-*` directories retain
   the rejected mask-only, uncached, fallback, and harness-failure evidence;
   they are diagnostic history rather than acceptance authority.

@@ -1,8 +1,17 @@
 # Active Work
 
-**Status: no implementation boundary is active.**
+**Status: targeted Imprint-scope follow-up acceptance is active.**
 
 Parent: [Documentation map](../README.md)
+
+Oliver's 2026-08-25 targeted follow-up changes Calculator and general
+benchmark defaults to automatic Imprint off while preserving explicit
+dedicated controls. The
+[controlled current comparison and historical audit](2026-08-24-carrier-aware-proof-bounds/evidence/imprint-scope-follow-up/result.md)
+are complete: on/off retains the same lower, upper trajectory, goal census,
+and 514 / 1,788 policy, while commit `b6fb861` rather than Imprint explains
+the historical 87k / current 14.45M split. Focused acceptance is in progress;
+Gate 3 and Gate 4 remain closed.
 
 The completed
 [Carrier-Aware Proof Bounds And Consumers](2026-08-24-carrier-aware-proof-bounds/plan.md)
@@ -69,14 +78,15 @@ selected.
 
 The completed
 [Imprint Solve Scope And Controlled Comparison](2026-08-22-imprint-solve-scope/plan.md)
-adds an explicit, historically-on Calculator control for automatic Imprint
+added an explicit, historically-on Calculator control for automatic Imprint
 programs and measures the checked four-T1 solve with that family excluded. A
 reduced-scope result must disclose the exclusion. Carrier-equivalent economic
 recovery dominance is recorded as the sound deeper successor, not approximated
 by a primitive-price shortcut in this boundary. The
 [result](2026-08-22-imprint-solve-scope/result.md) shows that disabling Imprint
 removes the 45-second Imprint cap but exposes a 300-second incremental upper-
-policy reoptimization stop with no packaged policy. No successor is selected.
+policy reoptimization stop with no packaged policy. The 2026-08-25 follow-up
+above supersedes its default-on caller setting, not its retained evidence.
 
 The stopped
 [Finite Imprint-Program Closure](2026-08-22-finite-imprint-program-closure/plan.md)

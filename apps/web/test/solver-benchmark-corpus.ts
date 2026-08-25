@@ -183,6 +183,13 @@ export interface SolverBenchmarkManifest {
     cases: string[];
 }
 
+/** General benchmark scope excludes generated Imprint programs by default. */
+export function benchmarkConsiderImprintPrograms(
+    spec: SolverBenchmarkCase,
+): boolean {
+    return spec.caps.consider_imprint_programs ?? false;
+}
+
 export interface LoadedSolverBenchmarkCorpus {
     path: string;
     manifest: SolverBenchmarkManifest;

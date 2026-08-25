@@ -576,8 +576,11 @@ state includes an optional saved checkpoint. Automatic Imprint retry is still
 an exact solver operator assembled from those native Bestiary transitions.
 Solve callers may set `consider_imprint_programs: false` to omit generated
 checkpoint/retry programs while retaining every other automatic family. The
-historical default is `true`. This is a caller-selected action restriction,
-not a dominance proof; telemetry and compiled strategy provenance disclose
+low-level engine's historical omission default remains `true` for backward
+compatibility, but Calculator solves and general solver benchmarks now default
+the option to `false`. Dedicated Imprint correctness controls opt in
+explicitly. This is a caller-selected action restriction, not a dominance
+proof; telemetry, benchmark results, and compiled-strategy provenance disclose
 the choice.
 
 An Imprint depth/work refusal is family-local scheduling evidence. Its

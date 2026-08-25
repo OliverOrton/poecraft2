@@ -8,6 +8,15 @@ current-semantics control corpus. Failed Gate 2 ordering is not an entry
 condition and must not be retried; legacy focused and incremental ordering
 remains unchanged.
 
+**2026-08-25 follow-up:** Oliver selected a targeted caller-scope change:
+Calculator and general benchmarks default automatic Imprint programs off,
+while dedicated correctness controls opt in. The controlled current five-T1
+comparison and the 87k / 14.45M source-history audit are complete; focused
+acceptance is in progress. See the
+[follow-up result](evidence/imprint-scope-follow-up/result.md). Gate 3 was not
+repeated and Gate 4 was not reconstructed because the no-Imprint run retains
+the same lower and descriptor failure mechanism.
+
 Parent: [Active work](../README.md)
 
 Predecessors:

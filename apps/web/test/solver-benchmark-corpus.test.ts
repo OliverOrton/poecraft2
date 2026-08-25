@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { readFileSync } from "node:fs";
 
 import {
+    benchmarkConsiderImprintPrograms,
     loadSolverBenchmarkCorpus,
     materializeSolverBenchmarkEconomy,
     materializeSolverBenchmarkGoal,
@@ -59,6 +60,19 @@ test("owner-approved real crafts are benchmark-enabled", () => {
     );
     assert.ok(proposedRealCrafts.length >= 3);
     assert.ok(proposedRealCrafts.every((entry) => entry.benchmark_enabled));
+});
+
+test("general benchmarks default Imprint off and retain explicit opt-in", () => {
+    const corpus = loadSolverBenchmarkCorpus(fileURLToPath(MANIFEST));
+    const ordinary = corpus.cases.find((entry) =>
+        entry.id === "oracle-real-one-mod");
+    assert.ok(ordinary);
+    assert.equal(ordinary.caps.consider_imprint_programs, undefined);
+    assert.equal(benchmarkConsiderImprintPrograms(ordinary), false);
+    assert.equal(benchmarkConsiderImprintPrograms({
+        ...ordinary,
+        caps: { ...ordinary.caps, consider_imprint_programs: true },
+    }), true);
 });
 
 test("corpus artifact pins reject stale WASM/data combinations", () => {

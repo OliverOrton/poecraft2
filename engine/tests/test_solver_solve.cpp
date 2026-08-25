@@ -7168,6 +7168,7 @@ void run_automatic_imprint_cooperative_tests() {
         {"beast:craicic-croaker", 10.0},
         {"beast:rare", 0.01}};
     AutomaticAdmissionLimits limits;
+    limits.consider_imprint_programs = true;
     limits.max_solver_owned_bytes = 256ull * 1024ull * 1024ull;
     limits.max_imprint_program_depth = 3;
     limits.max_imprint_program_work = 16;
@@ -7744,6 +7745,7 @@ void run_automatic_imprint_cooperative_tests() {
      * honest refusal rather than using the injected zero to price-prune the
      * Imprint grammar closed. */
     SolveOptions focused_lower_options;
+    focused_lower_options.consider_imprint_programs = true;
     focused_lower_options.max_imprint_program_depth = 1;
     focused_lower_options.max_imprint_program_work = 64;
     focused_lower_options.max_solver_owned_bytes =
@@ -7852,6 +7854,7 @@ void run_automatic_imprint_cooperative_tests() {
          scheduled_augment, scheduled_regal,
          scheduled_restart, scheduled_delayed});
     SolveOptions scheduled_options;
+    scheduled_options.consider_imprint_programs = true;
     scheduled_options.goal_progress_gated_reforges = true;
     scheduled_options.state_certificate_control = false;
     scheduled_options.focused_expansion_queue_threshold = 1000000;
@@ -8151,6 +8154,7 @@ void run_automatic_imprint_cooperative_tests() {
         session, goal, registry, candidates,
         false, true, false, std::nullopt, {}, false);
     SolveOptions sampled_depth_options;
+    sampled_depth_options.consider_imprint_programs = true;
     sampled_depth_options.max_imprint_program_depth = 1;
     sampled_depth_options.max_imprint_program_work = 16;
     sampled_depth_options.max_diagnostic_samples = 1;
@@ -8243,6 +8247,7 @@ void run_automatic_imprint_cooperative_tests() {
         session, goal, registry, candidates,
         false, true, false, std::nullopt, {}, false);
     SolveOptions deferred_solve_options;
+    deferred_solve_options.consider_imprint_programs = true;
     deferred_solve_options.goal_progress_gated_reforges = true;
     deferred_solve_options.allow_economic_restart = false;
     deferred_solve_options.high_impact_executable_uppers = true;

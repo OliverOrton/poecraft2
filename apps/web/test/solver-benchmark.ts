@@ -15,6 +15,7 @@ import {
 import { prepareSolverStrategy } from "../src/app/solve-workspace";
 import { isStrategyDocument } from "../src/app/strategy-model";
 import {
+    benchmarkConsiderImprintPrograms,
     loadSolverBenchmarkCorpus,
     materializeSolverBenchmarkEconomy,
     materializeSolverBenchmarkGoal,
@@ -1177,7 +1178,7 @@ async function runCase(
                         high_impact_executable_uppers:
                             spec.caps.high_impact_executable_uppers,
                         consider_imprint_programs:
-                            spec.caps.consider_imprint_programs,
+                            benchmarkConsiderImprintPrograms(spec),
                     },
                     {
                         chunkSize: spec.caps.solve_step_work_items,
@@ -1230,7 +1231,7 @@ async function runCase(
                         high_impact_executable_uppers:
                             spec.caps.high_impact_executable_uppers,
                         consider_imprint_programs:
-                            spec.caps.consider_imprint_programs,
+                            benchmarkConsiderImprintPrograms(spec),
                     },
                     {
                         chunkSize: spec.caps.solve_step_work_items,
