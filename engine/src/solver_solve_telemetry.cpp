@@ -689,6 +689,53 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
     json += ",\"full_evidence\":true";
     json += ",\"strict_clean_enabled\":" +
         std::string(session.eldritch_eligible ? "false" : "true");
+    json += ",\"proof_pattern_manager\":{\"composition\":";
+    append_json_string(json, "maximum_of_independently_admissible_patterns");
+    json += ",\"patterns\":[";
+    for (std::size_t index = 0; index < contracts.size(); ++index) {
+        if (index != 0) json += ',';
+        const ProofPatternContract& pattern = contracts[index];
+        json += "{\"id\":";
+        append_json_string(json, std::string(pattern.id));
+        json += ",\"finite_projection\":";
+        append_json_string(json, std::string(pattern.finite_projection));
+        json += ",\"covered_action_shapes\":";
+        append_json_string(
+            json, std::string(pattern.covered_action_shapes));
+        json += ",\"local_fallback\":";
+        append_json_string(json, std::string(pattern.local_fallback));
+        json += ",\"immediate_price_authority\":";
+        append_json_string(
+            json, std::string(pattern.immediate_price_authority));
+        json += ",\"optimistic_successor_authority\":";
+        append_json_string(
+            json, std::string(pattern.optimistic_successor_authority));
+        json += ",\"solution\":";
+        switch (pattern.solution) {
+        case ProofPatternSolution::AcyclicDynamicProgram:
+            append_json_string(json, "acyclic_dynamic_program");
+            break;
+        case ProofPatternSolution::MonotoneSubsolution:
+            append_json_string(json, "monotone_subsolution");
+            break;
+        case ProofPatternSolution::OneStepFloor:
+            append_json_string(json, "one_step_floor");
+            break;
+        case ProofPatternSolution::ExactSuccessorComposition:
+            append_json_string(json, "exact_successor_composition");
+            break;
+        }
+        json += ",\"residual\":" + finite_json(pattern.residual);
+        json += ",\"solution_sweeps\":" +
+            std::to_string(pattern.solution_sweeps);
+        json += ",\"converged\":" +
+            std::string(pattern.converged ? "true" : "false");
+        json += ",\"provenance\":";
+        append_json_string(json, std::string(pattern.provenance));
+        json += ",\"selected_owner_calls\":" +
+            std::to_string(pattern.selected_owner_calls) + '}';
+    }
+    json += "]}";
     json += ",\"start_lower\":";
     append_lower(json, result.start_state, components(result.start_state));
     json += ",\"populations\":{\"expanded\":";

@@ -76,6 +76,14 @@ int main(int argc, char** argv) {
         return pctest::g_failures == 0 ? 0 : 1;
     }
     if (argc > 1 &&
+        std::string(argv[1]) == "--solver-proof-pattern-only") {
+        run_solver_proof_pattern_tests();
+        std::printf(
+            "solver proof-pattern tests: %d checks, %d failures\n",
+            pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
+    if (argc > 1 &&
         std::string(argv[1]) == "--solver-automatic-eldritch-only") {
         run_solver_automatic_eldritch_tests();
         std::printf(

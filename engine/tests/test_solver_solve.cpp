@@ -219,6 +219,77 @@ void run_executable_carrier_projection_tests() {
     PC_CHECK(action.destroyed_properties == kCarrierJunkBlockers);
 }
 
+void run_proof_pattern_manager_tests() {
+    using solve_detail::ProofPatternContribution;
+    using solve_detail::ProofPatternFixtureRow;
+    using solve_detail::ProofPatternFixtureTransition;
+    using solve_detail::ProofPatternKind;
+    using solve_detail::ProofPatternManager;
+
+    ProofPatternManager manager;
+    for (const solve_detail::ProofPatternContract& pattern :
+         manager.contracts) {
+        PC_CHECK(!pattern.id.empty());
+        PC_CHECK(!pattern.finite_projection.empty());
+        PC_CHECK(!pattern.covered_action_shapes.empty());
+        PC_CHECK(!pattern.local_fallback.empty());
+        PC_CHECK(!pattern.immediate_price_authority.empty());
+        PC_CHECK(!pattern.optimistic_successor_authority.empty());
+        PC_CHECK(!pattern.provenance.empty());
+    }
+    const solve_detail::ProofPatternSelection selected =
+        manager.select_maximum({
+            ProofPatternContribution{
+                ProofPatternKind::UniversalCover, {2.0}, true},
+            ProofPatternContribution{
+                ProofPatternKind::CleanMdp, {3.0}, true},
+            ProofPatternContribution{
+                ProofPatternKind::CarrierMdp, {3.0}, true},
+            ProofPatternContribution{
+                ProofPatternKind::StrictClean,
+                {std::numeric_limits<double>::infinity()}, false},
+        }, 1e12);
+    PC_CHECK(selected.lower.value == 3.0);
+    PC_CHECK(
+        (selected.owner_mask &
+         (1u << static_cast<std::uint32_t>(
+             ProofPatternKind::CleanMdp))) != 0);
+    PC_CHECK(
+        (selected.owner_mask &
+         (1u << static_cast<std::uint32_t>(
+             ProofPatternKind::CarrierMdp))) != 0);
+    PC_CHECK(!selected.used_zero_fallback);
+
+    const std::vector<std::uint8_t> goals{1, 0, 0};
+    const std::vector<ProofPatternFixtureRow> rows{
+        {1, 1.0, {{0, 0.5}, {2, 0.5}}},
+        {2, 2.0, {{0, 1.0}}},
+    };
+    /* Exhaust every integer value assignment on this finite fixture. The
+     * independent inequality below is deliberately not implemented by the
+     * manager helper, so the grid catches either side drifting. Repeat for
+     * every registered owner to keep new pattern kinds on this contract. */
+    for (const solve_detail::ProofPatternContract& pattern :
+         manager.contracts) {
+        (void)pattern;
+        for (std::uint32_t first = 0; first <= 4; ++first) {
+            for (std::uint32_t second = 0; second <= 4; ++second) {
+                const std::vector<double> values{
+                    0.0, static_cast<double>(first),
+                    static_cast<double>(second)};
+                const bool expected =
+                    static_cast<double>(first) <=
+                        1.0 + 0.5 * static_cast<double>(second) &&
+                    second <= 2;
+                PC_CHECK(
+                    solve_detail::
+                        validate_proof_pattern_subsolution_fixture(
+                            values, goals, rows) == expected);
+            }
+        }
+    }
+}
+
 void run_bounded_policy_row_capture_tests() {
     auto session = make_solve_session();
     /* Preserve the policy-lift observer collision without relying on the old
@@ -10995,6 +11066,10 @@ void run_solver_carrier_bound_tests() {
     run_automatic_eldritch_side_tests();
 }
 
+void run_solver_proof_pattern_tests() {
+    run_proof_pattern_manager_tests();
+}
+
 void run_solver_automatic_eldritch_tests() {
     run_resource_stop_reachable_policy_tests();
     run_automatic_imprint_cooperative_tests();
@@ -11022,6 +11097,7 @@ void run_solver_solve_tests(const char* artifact_dir) {
         1024ull * 1024ull * 1024ull);
     run_anytime_scheduler_tests();
     run_executable_carrier_projection_tests();
+    run_proof_pattern_manager_tests();
     run_incumbent_portfolio_monotonicity_tests();
     run_bounded_policy_row_capture_tests();
     run_certified_fallback_contract_tests();

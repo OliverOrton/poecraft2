@@ -3,6 +3,7 @@
 #include "solver_action_envelope_ledger.hpp"
 #include "solver_anytime_scheduler.hpp"
 #include "solver_executable_carrier_planner.hpp"
+#include "solver_proof_pattern_manager.hpp"
 #include "solver_solve_contracts.hpp"
 
 #include "poecraft/bitset.h"
@@ -656,10 +657,6 @@ bool certified_fallback_fits_memory(
 /* Proof lowers and ordering scores are intentionally non-interchangeable.
  * Only ProofLowerValue may cross a pruning/publication boundary; carrier
  * ordering remains a schedule-only authority. */
-struct ProofLowerValue {
-    double value = 0.0;
-};
-
 enum class CarrierOrderingMode : std::uint8_t {
     FocusedLegacy,
     IncrementalLegacy,
@@ -739,7 +736,7 @@ std::uint64_t solve_result_owned_bytes(const SolveResult& result);
 
 } // namespace
 
-struct SolveWork::Impl {
+struct SolveWork::Impl : solve_detail::ProofPatternManager {
     CalcContext& calc;
     const SessionImpl& session;
     /* Preserve the exact solve input for policy-guided publication
@@ -1295,8 +1292,6 @@ struct SolveWork::Impl {
         operator_goal_survival_paths;
     std::vector<std::uint8_t> operator_goal_survival_computed;
     std::uint64_t owned_goal_survival_nested_bytes = 0;
-    std::vector<double> goal_cover_cost;
-    std::vector<double> clean_goal_cover_cost;
     bool ordering_goal_masks_ready = false;
     std::uint32_t ordering_prefix_goal_mask = 0;
     std::uint32_t ordering_suffix_goal_mask = 0;
@@ -1304,25 +1299,10 @@ struct SolveWork::Impl {
      * rarity x satisfied-goal subset. It grants free junk removal and perfect
      * goal/carrier preservation, but retains exact rarity legality and uses
      * the same optimistic pool-probability authority as the clean MDP. */
-    std::vector<double> carrier_goal_progress_cost;
-    std::vector<std::uint32_t> carrier_unproved_first_step_actions;
-    std::vector<std::pair<std::uint32_t, double>>
-        carrier_priced_first_step_actions;
-    mutable std::vector<std::int8_t>
-        carrier_goal_progress_eligibility_cache;
-    mutable std::vector<double> carrier_terminal_debt_cache;
     /* Final one-step lower value of every non-refined action in the clean
      * goal-progress relaxation. The strict normal/magic pattern database
      * uses this as an optimistic escape while evaluating the productive
      * currency actions against their exact blocker identities. */
-    std::vector<double> clean_goal_escape_cost;
-    std::vector<std::uint32_t> clean_goal_escape_action;
-    std::vector<double> clean_goal_no_exalt_escape_cost;
-    std::vector<std::uint32_t> clean_goal_no_exalt_escape_action;
-    std::vector<double> strict_clean_goal_cover_cost;
-    std::uint32_t strict_clean_goal_cover_state_count = 0;
-    bool strict_clean_goal_cover_refresh_needed = false;
-    bool goal_cover_cost_ready = false;
     bool price_bound_state_pruning = false;
     std::vector<double> certified_state_upper;
     std::vector<std::uint64_t> certified_state_row;

@@ -4,13 +4,13 @@
 [Solver Anytime Planning, Proof Patterns, And Debt Retirement](docs/active/2026-08-25-solver-anytime-proof-realignment/plan.md)
 plan on 2026-08-25. The focused
 [documentation preflight](docs/active/2026-08-25-solver-anytime-proof-realignment/preflight-audit.md)
-is complete; Gates 0 through 4 are complete and implementation is at Gate 5.
+is complete; Gates 0 through 5 are complete and implementation is at Gate 6.
 
 ## Current checkpoint
 
 - Branch: `main`.
-- Latest completed implementation checkpoint: Gate 4 executable-carrier
-  planner qualification fallback (this handoff's commit).
+- Latest completed implementation checkpoint: Gate 5 typed proof-pattern
+  ownership refactor (this handoff's commit).
 - Current engine/product source checkpoint: `a1449fa` (`Record Imprint scope
   acceptance`).
 - Plan checkpoint: `0238753` (`Propose solver anytime proof realignment`).
@@ -104,10 +104,17 @@ under the plan's explicit fallback. Only typed, non-convertible carrier and
 action-effect projections remain; fixed-work and owner controls reproduce Gate
 3. See the [Gate 4 evidence](docs/active/2026-08-25-solver-anytime-proof-realignment/gate4-evidence.md).
 
-Gate 5 now owns the typed proof-pattern manager refactor. Existing universal
-cover, clean/carrier MDP, strict-clean pattern, terminal-debt, and operator
-lower values must retain their current independent admissibility and public
-maximum-composition boundary while ownership is extracted.
+Gate 5 extracted universal cover, clean/carrier MDP, strict-clean pattern,
+terminal-debt, and operator lower ownership behind one typed
+`ProofPatternManager`. The split proof owners retain maximum-only composition,
+explicit local fallback, residual/provenance telemetry, and bit-for-bit fixed-
+work policy/value/graph authority. See the
+[Gate 5 evidence](docs/active/2026-08-25-solver-anytime-proof-realignment/gate5-evidence.md).
+
+Gate 6 now owns stronger independent carrier/action proof patterns. It must
+qualify each retained value against the plan's Bellman, monotonicity, fallback,
+native/WASM, and unchanged-policy boundaries before any Gate 7 consumer can
+use the stronger lower.
 
 Archived milestone prose retains historical evidence authority only; the
 active plan owns current sequence.
