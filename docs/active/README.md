@@ -1,6 +1,6 @@
 # Active Work
 
-**Status: targeted Imprint-scope follow-up acceptance is active.**
+**Status: no implementation boundary is active.**
 
 Parent: [Documentation map](../README.md)
 
@@ -10,8 +10,10 @@ dedicated controls. The
 [controlled current comparison and historical audit](2026-08-24-carrier-aware-proof-bounds/evidence/imprint-scope-follow-up/result.md)
 are complete: on/off retains the same lower, upper trajectory, goal census,
 and 514 / 1,788 policy, while commit `b6fb861` rather than Imprint explains
-the historical 87k / current 14.45M split. Focused acceptance is in progress;
-Gate 3 and Gate 4 remain closed.
+the historical 87k / current 14.45M split. Focused native, release-WASM
+functional parity, nonvisual web, and TypeScript acceptance pass; the existing
+WASM worker-slice cap remains explicitly qualified. Gate 3 and Gate 4 remain
+closed, and no successor is selected.
 
 The completed
 [Carrier-Aware Proof Bounds And Consumers](2026-08-24-carrier-aware-proof-bounds/plan.md)

@@ -1,7 +1,7 @@
 # Handoff
 
-**Status: targeted Imprint-scope follow-up acceptance is active.** Oliver
-selected and completed
+**Status: no implementation boundary is active.** Oliver selected and
+completed
 [Carrier-Aware Proof Bounds And Consumers](docs/active/2026-08-24-carrier-aware-proof-bounds/plan.md)
 on 2026-08-24. Gate 3 passed, Gate 4 stopped and was restored, and Gate 5
 passed proportional acceptance. Failed Gate 2 ordering was neither retried
@@ -9,14 +9,18 @@ nor required; legacy ordering stays unchanged. On 2026-08-25 Oliver selected
 a targeted caller-default follow-up: Calculator and general benchmarks
 default automatic Imprint programs off, while dedicated correctness controls
 opt in. Measurement, implementation, and historical attribution are complete;
-focused acceptance is in progress. Gate 3 was not repeated and Gate 4 was not
-reconstructed.
+focused acceptance passed with the retained WASM responsiveness qualification.
+Gate 3 was not repeated and Gate 4 was not reconstructed. Oliver must select
+the next implementation boundary before implementation resumes.
 
 ## Current checkpoint
 
 - Branch: `main`.
 - Follow-up base: `b5c9a80` (`Complete carrier-aware proof consumers`). The
   tree was clean before the controlled report and implementation edits.
+- Follow-up implementation/evidence checkpoint: `480cefb` (`Default automatic
+  Imprint scope off`). It has the required co-author trailer and was not
+  pushed. Final acceptance documentation follows in the current local HEAD.
 - Retained milestone checkpoint: `bd80522` (`Checkpoint carrier attribution
   and control qualification`). This local commit contains the complete Gate 0,
   Gate 1, current-control, and failed-ordering evidence tree. No push was
@@ -72,6 +76,17 @@ Imprint controls now say `true` explicitly. The low-level engine omission
 default remains enabled for compatibility, and telemetry/strategy provenance
 continues to disclose the caller-selected scope. See the
 [follow-up result](docs/active/2026-08-24-carrier-aware-proof-bounds/evidence/imprint-scope-follow-up/result.md).
+
+Focused acceptance passes: native build; Solver Solve 103,221 / 0; compiler
+583 / 0; dedicated Imprint 60 / 0; release WASM rebuild; complete nonvisual
+web; TypeScript; and `git diff --check`. Native and WASM both disclose
+Imprint-off on the ordinary one-mod benchmark, converge at
+`23.7899999999997`, compile 6 / 7, and produce the identical seeded 10,000-run
+result. The generic comparator remains nonzero only for the pre-existing
+inactive exact-evaluation object / `null` representation and WASM's
+`186.781` ms maximum worker slice against the retained 50 ms cap (Gate 5:
+`166.233` ms). The cap was not weakened. The full repository pipeline and
+rendered review were deliberately not run.
 
 ## Completed carrier-aware proof bounds and consumers
 

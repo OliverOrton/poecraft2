@@ -17,7 +17,10 @@ scope. Imprint-off performs zero program work but retains the same certified
 The released window is consumed by more ordinary carrier/action admissions,
 so total rows and memory do not fall. A detached historical-source build pins
 the 87k / 14.45M divergence to commit `b6fb861`'s multi-epoch scheduling and
-proper-publication changes; neither compiled policy selects Imprint.
+proper-publication changes; neither compiled policy selects Imprint. Focused
+native, release-WASM functional parity, complete nonvisual web, and TypeScript
+acceptance pass. The unchanged WASM responsiveness debt is retained rather
+than hidden or used to weaken the 50 ms cap.
 
 ## Bounded Executable-Upper Completion
 

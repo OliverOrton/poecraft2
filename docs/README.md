@@ -38,7 +38,10 @@ on/off comparison retains the same `36.4286171890906` lower, upper trajectory,
 `14454067.4260706` policy. The historical `87361.1690420501` policy remains
 valid evidence but diverges at commit `b6fb861`'s carrier scheduling and proper
 publication boundary, not because either compiled policy uses Imprint.
-Focused acceptance is in progress; Gate 3 and Gate 4 remain closed.
+Native, release-WASM functional parity, the complete nonvisual web suite, and
+TypeScript pass. The existing WASM worker-slice cap remains qualified at
+`186.781` ms against 50 ms; Gate 3 and Gate 4 remain closed. No implementation
+boundary is active until Oliver selects a successor.
 
 The completed
 [Carrier-Aware Proof Bounds And Consumers](active/2026-08-24-carrier-aware-proof-bounds/plan.md)

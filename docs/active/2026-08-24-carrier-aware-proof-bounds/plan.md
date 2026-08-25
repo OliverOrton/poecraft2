@@ -12,7 +12,7 @@ remains unchanged.
 Calculator and general benchmarks default automatic Imprint programs off,
 while dedicated correctness controls opt in. The controlled current five-T1
 comparison and the 87k / 14.45M source-history audit are complete; focused
-acceptance is in progress. See the
+acceptance passed with the retained WASM worker-slice qualification. See the
 [follow-up result](evidence/imprint-scope-follow-up/result.md). Gate 3 was not
 repeated and Gate 4 was not reconstructed because the no-Imprint run retains
 the same lower and descriptor failure mechanism.

@@ -1,7 +1,7 @@
 # Targeted Imprint-Scope Follow-Up
 
-**Status: measurement and implementation complete; focused acceptance
-pending (2026-08-25).**
+**Status: complete; focused acceptance passed with retained WASM performance
+qualification (2026-08-25).**
 
 Parent: [Carrier-Aware Proof Bounds And Consumers](../../plan.md)
 
@@ -125,7 +125,33 @@ was not reconstructed.
 
 ## Acceptance
 
-Focused native, release-WASM/parity, nonvisual web, TypeScript, and
-`git diff --check` results will be recorded here after the implementation
-checkpoint. The full repository pipeline and rendered review are outside this
-follow-up.
+- Native build: pass.
+- Solver Solve: 103,221 checks, zero failures.
+- Solver compiler: 583 checks, zero failures, including its 10,000-run
+  compiled controls.
+- Dedicated Solver Imprint: 60 checks, zero failures. Its fixture opts in
+  explicitly and retains balanced create/restore execution.
+- Release WASM rebuild: pass. The rebuilt module is byte-for-byte unchanged,
+  as expected for a caller-default change with no engine ABI/source change.
+- Native/release-WASM `oracle-real-one-mod`: both disclose
+  `imprint_programs_considered: false`, converge exactly at
+  `23.7899999999997`, compile 6 nodes / 7 edges, and produce the identical
+  seeded 10,000-run result: 10,000 successes, zero failures or off-policy
+  runs, mean cost `24.0086099999999`. A separate native exact evaluation
+  matched the same cost with success probability 1 and zero off-policy mass.
+- The generic comparison remains nonzero for the pre-existing inactive exact-
+  evaluation representation difference (native object versus WASM `null`)
+  and the release-WASM maximum worker slice of `186.781` ms against the 50 ms
+  corpus cap. Gate 5 measured `166.233` ms on the same case. The cap was not
+  weakened; all functional policy, value, structural, telemetry, and seeded-
+  simulation comparisons pass.
+- Complete nonvisual web suite: pass, including 28 / 28 release-WASM smoke
+  checks and the new general-benchmark default/explicit-opt-in control.
+- `npx tsc --noEmit`: pass.
+- `git diff --check`: pass.
+- Full repository pipeline: deliberately not run.
+- Rendered/visual review: deliberately not run; it remains Oliver's.
+
+The follow-up is complete. It changes only caller defaults and explicit test
+scope; Gate 3 proof work and the stopped Gate 4 descriptor experiment remain
+untouched.
