@@ -316,6 +316,7 @@ struct StrategyEvalWork::Impl {
     bool goal_leaf_matches_target(
             const CompiledCondition& condition,
             const GoalSlot& target) const {
+        if (condition.required_flags != 0) return false;
         if (condition.min_value != static_cast<int>(target.min_tier)) {
             return false;
         }
@@ -328,6 +329,64 @@ struct StrategyEvalWork::Impl {
                    condition.group_id == target.group_id;
         }
         return false;
+    }
+
+    bool condition_is_positive_goal_progress(
+            const CompiledCondition& condition) const {
+        if (model.targets.empty()) return false;
+        if (condition.kind == ConditionKind::HasModFamily ||
+            condition.kind == ConditionKind::HasModGroup) {
+            return std::any_of(
+                model.targets.begin(), model.targets.end(),
+                [&](const GoalSlot& target) {
+                    return goal_leaf_matches_target(condition, target);
+                });
+        }
+        if (condition.kind != ConditionKind::All &&
+            condition.kind != ConditionKind::Any &&
+            condition.kind != ConditionKind::AtLeast) {
+            return false;
+        }
+        if (condition.children.empty() ||
+            (condition.kind == ConditionKind::AtLeast &&
+             condition.min_value <= 0)) {
+            return false;
+        }
+        return std::all_of(
+            condition.children.begin(), condition.children.end(),
+            [&](const CompiledCondition& child) {
+                return condition_is_positive_goal_progress(child);
+            });
+    }
+
+    bool operation_has_proved_goal_progress_repeat(
+            const std::uint32_t operation) const {
+        if (operation >= strategy->nodes.size()) return false;
+        const StrategyNode& node = strategy->nodes[operation];
+        if (node.kind != StrategyNodeKind::Operation ||
+            model.targets.empty()) {
+            return false;
+        }
+        bool default_retries = false;
+        bool exact_zero_progress_retries = false;
+        for (const StrategyEdge& edge : node.edges) {
+            if (edge.is_default) {
+                if (edge.target == operation) default_retries = true;
+                continue;
+            }
+            if (edge.target == operation &&
+                condition_is_exact_zero_goal_progress(edge.condition)) {
+                exact_zero_progress_retries = true;
+                continue;
+            }
+            /* Every other authored predicate must be positive goal progress:
+             * it is therefore false for every physical outcome collapsed
+             * into the gated kernel's zero-progress retry state. */
+            if (!condition_is_positive_goal_progress(edge.condition)) {
+                return false;
+            }
+        }
+        return default_retries || exact_zero_progress_retries;
     }
 
     bool condition_is_exact_zero_goal_progress(
@@ -2813,6 +2872,9 @@ struct StrategyEvalWork::Impl {
                         [&](const StrategyEdge& edge) {
                             return edge.target == node_index;
                         });
+                    const bool proved_goal_progress_repeat =
+                        operation_has_proved_goal_progress_repeat(
+                            node_index);
                     census_direct_repeat = may_repeat_directly;
                     /* A compiled shared gated-renewal region deliberately
                      * observes only whether this action made goal progress:
@@ -2822,7 +2884,7 @@ struct StrategyEvalWork::Impl {
                      * gated routers remain structural telemetry: the real
                      * five-goal control proved that substituting the compact
                      * normalization there does not preserve exact cost bits. */
-                    if (may_repeat_directly) {
+                    if (proved_goal_progress_repeat) {
                         const OutcomeDistribution& gated_candidate =
                             exact_outcomes(
                                 state_id, action_index, true);
@@ -5877,9 +5939,19 @@ struct StrategyEvalWork::Impl {
                     8.0 * std::numeric_limits<double>::epsilon()) *
                 scale;
             if (!std::isfinite(residual) || residual > tolerance) {
-                throw std::runtime_error(
-                    "strategy evaluation shared-row exact attribution "
-                    "disaggregation residual exceeded epsilon");
+                std::ostringstream detail;
+                detail << std::setprecision(17)
+                       << "strategy evaluation shared-row exact attribution "
+                          "disaggregation residual exceeded epsilon: row="
+                       << row_id << ", residual=" << residual
+                       << ", tolerance=" << tolerance
+                       << ", reconstructed="
+                       << checked_row_mass[row_id].value()
+                       << ", solved=" << row_visits[row_id].value()
+                       << ", start_pair=" << attribution_start_pair
+                       << ", start_row="
+                       << attribution_pairs[attribution_start_pair].row;
+                throw std::runtime_error(detail.str());
             }
         }
         std::uint64_t retained_scratch = capped_product(

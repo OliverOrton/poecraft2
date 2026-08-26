@@ -866,6 +866,39 @@ void run_closed_form_tests() {
     PC_CHECK(loop_simulator.options.seed == 20260718);
     check_reference_parity(*loop_strategy, exact, options);
 
+    /* A direct retry is not by itself authority for the goal-progress gated
+     * kernel. This graph observes an affix count and has no goal slots, so
+     * collapsing every roll into the zero-progress retry state would turn a
+     * terminating strategy into a closed self-loop. Keep the full exact
+     * distribution unless the authored predicates prove the goal-progress
+     * partition. */
+    const auto count_loop_strategy = compile(
+        session,
+        shell(
+            "prefix-count chaos loop", "rare",
+            R"JSON({"id":"start","kind":"start"},
+{"id":"chaos","kind":"operation","operation":{"type":"chaos","params":{}}},
+{"id":"success","kind":"terminal","terminal":"success"})JSON",
+            R"JSON({"id":"begin","from":"start","to":"chaos","priority":0,"condition":{"type":"always"}},
+{"id":"hit","from":"chaos","to":"success","priority":0,"condition":{"type":"prefix_count_range","min":3,"max":3}},
+{"id":"repeat","from":"chaos","to":"chaos","priority":999,"is_default":true})JSON"));
+    StrategyEvalOptions count_loop_options = options;
+    count_loop_options.review_projection_json.clear();
+    const StrategyEvalResult count_loop = evaluate_strategy(
+        *count_loop_strategy, count_loop_options);
+    PC_CHECK(count_loop.converged);
+    PC_CHECK(count_loop.targets.empty());
+    PC_CHECK(near(count_loop.success_probability, 1.0, 1e-12));
+    PC_CHECK(count_loop.expected_actions > 1.0);
+    PC_CHECK(
+        count_loop.operation_row_census.goal_progress_gated_rows == 0);
+    PC_CHECK(count_loop.operation_row_census.direct_repeat_rows > 0);
+    PC_CHECK(count_loop.operation_row_census.full_physical_rows > 0);
+    PC_CHECK(near(edge_value(count_loop, "hit"), 1.0, 1e-12));
+    PC_CHECK(edge_value(count_loop, "repeat") > 0.0);
+    check_reference_parity(
+        *count_loop_strategy, count_loop, count_loop_options);
+
     /* The general compiler uses this local router when the canonical
      * zero-progress retry basin selects a different policy region. Record the
      * exact structural candidate and the full physical row it continues to
