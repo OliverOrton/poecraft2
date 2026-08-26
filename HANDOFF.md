@@ -1,14 +1,15 @@
 # Handoff
 
-**Status: active implementation boundary.** Gate 2 of
+**Status: active implementation boundary.** Gate 3 of
 [Solver Quality Measurement, Refinement, And Debt Retirement](docs/active/2026-08-26-solver-quality-debt-retirement/plan.md)
 is active.
 
-The active boundary begins from clean checkpoint `ec3fbd3`. Gates -1 through 1
+The active boundary begins from clean checkpoint `ec3fbd3`. Gates -1 through 2
 are complete. The versioned Calculator-profile clean/partial 1-to-5 ladder is
 recorded, a diagnostic-owned-byte abort is repaired, and the strict-lift owner
-is attributed. Gate 2 now owns bounded on-demand repair of an improper
-selected-only proof envelope before any action-scope or lower-bound work.
+is attributed. Gate 2 repaired the selected-first proof lifecycle and prevents
+optional strict work from delaying an already finite product policy. Gate 3
+now owns the measured bounded action-scope and intermediate-utility audit.
 
 The completed
 [Solver Anytime Planning, Proof Patterns, And Debt Retirement](docs/archive/2026-08-25-solver-anytime-proof-realignment/README.md)
@@ -18,10 +19,25 @@ milestone is archived with its gate records and final acceptance evidence.
 
 - Branch: `main`.
 - Plan checkpoint: `b5f3cfb` (`Select solver quality debt boundary`).
-- Gate 0/1 checkpoint: the local commit containing this handoff and the
-  linked Gate 0/1 evidence.
+- Gate 0/1 checkpoint: `22c7881`.
+- Gate 2 checkpoint: the local commit containing this handoff and
+  [Gate 2 evidence](docs/active/2026-08-26-solver-quality-debt-retirement/gate2-evidence.md).
 - The milestone commits are local-only; nothing was pushed.
-- Gate 2 may leave an active implementation worktree; do not discard it.
+- Gate 3 may leave an active implementation worktree; do not discard it.
+
+## Current Gate 2 result
+
+- Fractured four-to-five again publishes the proper, independently exact
+  `2698.87479601436` policy in 30.6 seconds. The worse 12,197-chaos selected
+  snapshot is truthfully deferred to direct certification under the product
+  refinement allowance.
+- Clean five-T1 retains exact evaluated upper `14454067.4260706` over global
+  lower `36.4885317287664` and completes in 66.2 seconds instead of expiring
+  in optional selected-policy strict repair.
+- Forced continuation proved the next repair owner: after two local repairs,
+  the third one-state protected-Scour frontier recursively materialized 37,761
+  exact carriers / 31,257 kernels without an executable upper at 120 seconds.
+  This pre-partition closure path is rejected for product use.
 
 ## Current Gate 0/1 result
 

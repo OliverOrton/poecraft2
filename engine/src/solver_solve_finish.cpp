@@ -3120,6 +3120,23 @@ SolveWork::Impl::run_publication_pipeline() {
                                  * restored fallback—to strict quotient lift. */
                                 std::string{}.swap(assertion.strategy_json);
                                 assertion.evaluation = {};
+                                const bool defer_to_current_direct_candidate =
+                                    options.max_policy_refinement_states != 0 &&
+                                    result.policy_available;
+                                if (defer_to_current_direct_candidate) {
+                                    telemetry.selected_candidate_status =
+                                        "strict_deferred_to_current_"
+                                        "direct_candidate";
+                                    telemetry
+                                        .selected_candidate_failure_reason =
+                                        "selected policy exact lift was "
+                                        "deferred under the bounded product "
+                                        "refinement allowance because a "
+                                        "current policy is available for "
+                                        "direct certification";
+                                    unverified_selected_policy_candidate
+                                        .reset();
+                                } else {
                                 const std::optional<SolveOptions>
                                     strict_options =
                                         publication_options_for_live(
@@ -3442,6 +3459,7 @@ SolveWork::Impl::run_publication_pipeline() {
                                             "candidate did not fit the "
                                             "retained portfolio";
                                     }
+                                }
                                 }
                             }
                             finish_candidate_timing();

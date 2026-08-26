@@ -579,6 +579,7 @@
     std::uint64_t coarse_retained_bytes_at_entry_ = 0;
     std::shared_ptr<const SessionImpl> borrowed_session_;
     bool enable_local_reoptimization_ = false;
+    bool enable_quotient_bootstrap_ = false;
     std::set<std::uint32_t> reoptimization_parents_;
     std::uint64_t caller_seed_retained_bytes_ = 0;
     bool force_semantic_strict_identity_ = false;
@@ -603,6 +604,7 @@
     std::map<KernelKey, ExactActionKernel> kernels_;
     std::map<KernelKey, ExactChoiceRecipe> choice_recipes_;
     std::map<StableKey, ExactChoiceRecipe> quotient_streamed_recipes_;
+    std::set<std::uint32_t> quotient_frontier_seed_locators_;
     std::set<StableKey> stable_kernel_reuse_keys_;
     std::map<StableKey, SelectedAction> exact_policy_;
     std::set<StableKey> repair_carriers_;

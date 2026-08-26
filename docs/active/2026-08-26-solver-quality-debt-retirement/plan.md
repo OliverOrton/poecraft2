@@ -1,6 +1,6 @@
 # Solver Quality Measurement, Refinement, And Debt Retirement
 
-**Status: active. Gates -1 through 1 are complete; Gate 2 is the
+**Status: active. Gates -1 through 2 are complete; Gate 3 is the
 implementation boundary.**
 
 Parent: [Active work](../README.md)
@@ -114,7 +114,7 @@ selected actions, caps, or termination.
 
 ## Gate 2 — On-demand semantic refinement repair
 
-**Status: active.**
+**Status: complete.** See [Gate 2 evidence](gate2-evidence.md).
 
 Repair the proven Gate 1 cause locally. The preferred shape is grow-in-place or
 CEGAR-style refinement of only the selected/reachable proof envelope. Do not

@@ -965,7 +965,7 @@ struct PersistentQuotientSession {
           seed(quotient_reoptimization_seed(solved)),
           oracle(
               coarse, solved, exact_start, prices, options, limits,
-              telemetry, seed.empty() ? nullptr : &seed, false, true),
+              telemetry, nullptr, false, true, true),
           bellman(limits.max_estimated_memory_bytes) {}
 };
 
@@ -2204,7 +2204,7 @@ lift_policy_quotient_pass_task(
 
         const std::uint32_t root_class = partition.class_by_node.at(0);
         const std::uint32_t root_cell = final_cell_id.at(root_class);
-        const quotient::QuotientBellmanResult solved_quotient =
+        quotient::QuotientBellmanResult solved_quotient =
             retained_global_lower_authority
                 ? bellman.project_unique_certified_policy({root_cell})
                 : bellman.solve(
@@ -2213,32 +2213,31 @@ lift_policy_quotient_pass_task(
         ++progress.work_items;
         co_await solve_detail::CooperativeCheckpoint{
             ledger.snapshot().total_bytes};
-        /* selected_rows_by_state is meaningful only after the quotient solve
-         * has produced a complete executable upper. Checking that contract
-         * after walking the selected closure masked the actual Bellman status
-         * as "proof envelope lost its selected quotient state" whenever the
-         * result vector was empty. Keep the publication fallback unchanged,
-         * but preserve the first truthful failure for attribution. */
-        if (solved_quotient.status !=
-                quotient::QuotientBellmanStatus::Complete ||
-            (!retained_global_lower_authority &&
-             (!solved_quotient.executable_upper ||
-              !solved_quotient.proper))) {
+        const auto throw_failed_quotient = [&] (
+                const quotient::QuotientBellmanResult& failed) {
             std::string detail =
                 std::string{"selected-first quotient solve failed ("} +
                 quotient::quotient_bellman_status_name(
-                    solved_quotient.status) +
-                "): " + solved_quotient.failure_reason;
-            if (!solved_quotient.failure_path_cell_ids.empty()) {
+                    failed.status) +
+                "): " + failed.failure_reason;
+            if (!failed.failure_path_cell_ids.empty()) {
                 detail += "; named_dead_path=";
                 for (std::size_t i = 0;
-                     i < solved_quotient.failure_path_cell_ids.size(); ++i) {
+                     i < failed.failure_path_cell_ids.size(); ++i) {
                     if (i != 0) detail += ">";
                     detail += std::to_string(
-                        solved_quotient.failure_path_cell_ids[i]);
-                    detail += "[";
+                        failed.failure_path_cell_ids[i]);
+                    detail += "[n=";
+                    const auto path_class = final_class_by_cell.find(
+                        failed.failure_path_cell_ids[i]);
+                    detail += path_class == final_class_by_cell.end()
+                        ? std::string{"unknown"}
+                        : std::to_string(
+                              cell_for_class(path_class->second)
+                                  .coverage.exact_source_count);
+                    detail += ",";
                     const std::uint32_t operator_index =
-                        solved_quotient.failure_path_operator_indices.at(i);
+                        failed.failure_path_operator_indices.at(i);
                     detail += operator_index == kNoId
                         ? std::string{"no-certified-row"}
                         : oracle.quotient_operator_id(operator_index);
@@ -2246,16 +2245,16 @@ lift_policy_quotient_pass_task(
                 }
             }
             throw AdapterFailure(
-                solved_quotient.status ==
+                failed.status ==
                         quotient::QuotientBellmanStatus::ResourceCap
                     ? PolicyExactLiftStatus::ResourceCap
                     : PolicyExactLiftStatus::RefinementFailure,
                 detail,
-                solved_quotient.status ==
+                failed.status ==
                         quotient::QuotientBellmanStatus::ResourceCap
                     ? "max_estimated_memory_bytes"
                     : std::string{});
-        }
+        };
         const auto account_selected_closure =
                 [&](std::vector<std::uint32_t> seeds,
                     const quotient::QuotientBellmanResult& upper)
@@ -2325,8 +2324,88 @@ lift_policy_quotient_pass_task(
             }
             co_return grew;
         };
+        quotient::QuotientBellmanResult selected_projection;
+        if (solved_quotient.status ==
+                quotient::QuotientBellmanStatus::Complete &&
+            solved_quotient.executable_upper && solved_quotient.proper) {
+            selected_projection = solved_quotient;
+        } else {
+            /* Once bootstrap alternatives exist, the proof graph correctly
+             * contains more than one certified row. The inherited-selected
+             * closure remains identified by selected_payload_id; reconstruct
+             * that structural view instead of asking the whole proof graph to
+             * be unique. */
+            selected_projection.status =
+                quotient::QuotientBellmanStatus::Complete;
+            std::uint32_t state_count = 0;
+            for (const quotient::QuotientCell& cell : final_cells) {
+                const std::optional<std::uint32_t> state =
+                    bellman.state_index_for_cell(cell.cell_id);
+                if (state.has_value()) {
+                    state_count = std::max(state_count, *state + 1);
+                }
+            }
+            selected_projection.selected_rows_by_state.assign(
+                state_count, std::numeric_limits<std::uint64_t>::max());
+            std::vector<std::uint32_t> selected_payload_by_state(
+                state_count, kNoId);
+            for (const PublishedRow& row : published_rows) {
+                if (!row.selected_payload_id.has_value() ||
+                    !bellman.proof_store()->has_use_site(row.sparse_row)) {
+                    continue;
+                }
+                const quotient::RowProofUseSite& use =
+                    bellman.proof_store()->use_site(row.sparse_row);
+                if (!use.valid ||
+                    use.source_generation != row.source_generation) {
+                    continue;
+                }
+                const std::optional<std::uint32_t> state =
+                    bellman.state_index_for_cell(row.source_cell_id);
+                if (!state.has_value()) continue;
+                std::uint64_t& selected =
+                    selected_projection.selected_rows_by_state.at(*state);
+                if (selected !=
+                        std::numeric_limits<std::uint64_t>::max() &&
+                    selected != row.sparse_row) {
+                    const SparseRow& prior_sparse =
+                        bellman.transition_cache().rows.at(selected);
+                    const SparseRow& next_sparse =
+                        bellman.transition_cache().rows.at(row.sparse_row);
+                    const solve_detail::PricedSparseRow& prior_priced =
+                        bellman.priced_rows().at(selected);
+                    const solve_detail::PricedSparseRow& next_priced =
+                        bellman.priced_rows().at(row.sparse_row);
+                    selected_projection.status =
+                        quotient::QuotientBellmanStatus::InvalidRow;
+                    selected_projection.failure_reason =
+                        "inherited selected closure has multiple rows at "
+                        "cell " + std::to_string(row.source_cell_id) +
+                        " (payloads " + std::to_string(
+                            selected_payload_by_state.at(*state)) +
+                        "/" + std::to_string(*row.selected_payload_id) +
+                        ", operators " + std::to_string(
+                            prior_priced.operator_index) +
+                        "/" + std::to_string(next_priced.operator_index) +
+                        ", costs " + std::to_string(prior_priced.cost) +
+                        "/" + std::to_string(next_priced.cost) +
+                        ", transitions " + std::to_string(
+                            prior_sparse.transition_count) +
+                        "/" + std::to_string(
+                            next_sparse.transition_count) + ")";
+                    break;
+                }
+                selected = row.sparse_row;
+                selected_payload_by_state.at(*state) =
+                    *row.selected_payload_id;
+            }
+        }
+        if (selected_projection.status !=
+                quotient::QuotientBellmanStatus::Complete) {
+            throw_failed_quotient(selected_projection);
+        }
         auto initial_accounting =
-            account_selected_closure({root_cell}, solved_quotient);
+            account_selected_closure({root_cell}, selected_projection);
         while (!initial_accounting.resume()) {
             ++progress.work_items;
             co_await solve_detail::CooperativeCheckpoint{
@@ -2349,6 +2428,268 @@ lift_policy_quotient_pass_task(
             throw AdapterFailure(
                 PolicyExactLiftStatus::RefinementFailure,
                 "selected-first quotient lost admitted-action accounting");
+        }
+
+        /* An inherited broad policy can become improper only after strict
+         * carrier semantics are restored. The normal alternative scheduler
+         * used to be unreachable in that case because it required a proper
+         * selected-only upper before certifying any alternative. Repair the
+         * bootstrap ordering on the smallest proved envelope: singleton
+         * cells on the current dead path. A multi-carrier cell still requires
+         * the carrier-wide scheduler below and is never guessed from its
+         * representative. */
+        struct BootstrapAlternativeResult {
+            bool certified = false;
+            std::vector<AbstractState> frontier;
+        };
+        std::set<std::pair<std::uint32_t, std::uint32_t>>
+            bootstrap_attempted;
+        const auto certify_singleton_bootstrap_alternative =
+                [&](const std::uint32_t source_cell_id)
+                    -> solve_detail::CooperativeTask<
+                        BootstrapAlternativeResult> {
+            BootstrapAlternativeResult result;
+            const auto source_class = scheduler_class_by_cell.find(
+                source_cell_id);
+            if (source_class == scheduler_class_by_cell.end()) {
+                co_return result;
+            }
+            const quotient::QuotientCell& cell =
+                cell_for_class(source_class->second);
+            if (cell.terminal || cell.coverage.exact_source_count != 1 ||
+                cell.coverage.ranges.size() != 1 ||
+                cell.coverage.ranges.front().count != 1) {
+                co_return result;
+            }
+            const std::uint32_t ordinal = static_cast<std::uint32_t>(
+                cell.coverage.ranges.front().begin);
+            if (ordinal >= locators.size() ||
+                rows_by_ordinal.at(ordinal).empty()) {
+                co_return result;
+            }
+            const std::uint32_t inherited_action =
+                raw_rows.at(rows_by_ordinal.at(ordinal).front())
+                    .selected.action_id;
+            const auto& alternatives =
+                *alternatives_by_ordinal.at(ordinal);
+            for (const std::uint32_t operator_index : alternatives) {
+                if (operator_index == inherited_action ||
+                    !bootstrap_attempted.insert(
+                        {source_cell_id, operator_index}).second) {
+                    continue;
+                }
+                const QuotientAlternativeDescriptor& descriptor =
+                    oracle.quotient_alternative_descriptor(operator_index);
+                std::optional<std::uint32_t> proof_obligation_id;
+                for (std::uint32_t obligation_id = 0;
+                     obligation_id < bellman.proof_store()
+                         ->alternative_obligation_count();
+                     ++obligation_id) {
+                    const quotient::UnresolvedAlternativeObligation&
+                        obligation = bellman.proof_store()
+                            ->alternative_obligation(obligation_id);
+                    if (obligation.identity.source_cell_id !=
+                            cell.cell_id ||
+                        obligation.identity.action != descriptor.action ||
+                        (obligation.status !=
+                             quotient::AlternativeObligationStatus::
+                                 LowerOnly &&
+                         obligation.status !=
+                             quotient::AlternativeObligationStatus::
+                                 Scheduled)) {
+                        continue;
+                    }
+                    proof_obligation_id = obligation_id;
+                    break;
+                }
+                if (!proof_obligation_id.has_value()) continue;
+                ++progress.work_items;
+                co_await solve_detail::CooperativeCheckpoint{
+                    oracle.estimated_owned_bytes()};
+                ExactState source =
+                    oracle.quotient_materialize_locator(
+                        locators.at(ordinal));
+                std::optional<QuotientOracleCompactRow> candidate;
+                try {
+                    candidate =
+                        oracle.quotient_certify_alternative_descriptor(
+                            source, descriptor);
+                } catch (...) {
+                    oracle.quotient_release_carrier(source.stable_key);
+                    throw;
+                }
+                oracle.quotient_release_carrier(source.stable_key);
+                if (!candidate.has_value()) continue;
+                for (QuotientOracleCompactTransition& transition :
+                     candidate->transitions) {
+                    transition.strict_state =
+                        oracle.quotient_canonical_locator(
+                            transition.strict_state);
+                }
+                QuotientOracleCompactRow row =
+                    canonical_raw_row(std::move(*candidate));
+                const ObservationRequirement merged_requirement =
+                    canonical_observation_requirement(
+                        merge_observation_requirements(
+                            cell.observation_requirement,
+                            descriptor.routing_observes));
+                if (merged_requirement !=
+                    canonical_observation_requirement(
+                        cell.observation_requirement)) {
+                    continue;
+                }
+
+                std::map<std::uint32_t, solve_detail::WideFloat>
+                    projected;
+                for (const QuotientOracleCompactTransition& transition :
+                     row.transitions) {
+                    if (transition.strict_state >=
+                            ordinal_by_strict_state.size() ||
+                        ordinal_by_strict_state[
+                            transition.strict_state] == kNoId) {
+                        result.frontier.push_back(
+                            oracle.quotient_export_locator(
+                                transition.strict_state));
+                        continue;
+                    }
+                    const std::uint32_t target_ordinal =
+                        ordinal_by_strict_state[transition.strict_state];
+                    projected[final_cell_id[
+                        partition.class_by_node[target_ordinal]]] +=
+                        solve_detail::WideFloat{
+                            transition.probability};
+                }
+                if (!result.frontier.empty()) {
+                    oracle.quotient_release_transient_kernel_caches();
+                    co_return result;
+                }
+
+                quotient::QuotientBellmanRowInput input;
+                input.source_cell_id = cell.cell_id;
+                input.operator_index = row.selected.action_id;
+                input.cost = row.action_cost;
+                input.certified = true;
+                std::vector<quotient::ProofProjectedArc> arcs;
+                solve_detail::WideFloat total{0.0};
+                for (const auto& [target, probability] : projected) {
+                    input.transitions.push_back(
+                        {{}, target, probability.value()});
+                    arcs.push_back({
+                        {},
+                        bellman.shared_semantic_identity_for_cell(target),
+                        probability.value()});
+                    total += probability;
+                }
+                quotient::CoverageDescriptor row_coverage =
+                    cell.coverage;
+                for (quotient::CoverageRange& range :
+                     row_coverage.ranges) {
+                    range.total_probability =
+                        static_cast<double>(range.count) /
+                        static_cast<double>(
+                            row_coverage.exact_source_count) *
+                        total.value();
+                }
+                row_coverage.exact_total_probability = total.value();
+                input.proof_identity = oracle.quotient_proof_identity(
+                    source, row.selected,
+                    quotient::canonical_coverage_descriptor(
+                        std::move(row_coverage)),
+                    std::move(arcs), total.value());
+                const std::uint64_t sparse_row =
+                    bellman.append_row(std::move(input));
+                oracle.quotient_install_streamed_recipe(
+                    row.selected, row.choice_recipe);
+                published_rows.push_back({
+                    sparse_row, cell.cell_id, cell.generation,
+                    std::nullopt, row.selected});
+                refresh_external_row_kernel_bytes();
+
+                const quotient::UnresolvedAlternativeObligation& obligation =
+                    bellman.proof_store()->alternative_obligation(
+                        *proof_obligation_id);
+                if (obligation.status ==
+                        quotient::AlternativeObligationStatus::LowerOnly) {
+                    bellman.proof_store()
+                        ->transition_alternative_obligation(
+                            *proof_obligation_id,
+                            quotient::AlternativeObligationStatus::Scheduled);
+                    saturating_add(
+                        telemetry.alternative_obligations_scheduled, 1);
+                }
+                bellman.proof_store()
+                    ->transition_alternative_obligation(
+                        *proof_obligation_id,
+                        quotient::AlternativeObligationStatus::Certified,
+                        0, sparse_row);
+                for (quotient::AccountedAlternativeAction& entry :
+                     completed_action_accounting) {
+                    if (entry.obligation_id == *proof_obligation_id) {
+                        entry.kind = quotient::
+                            AlternativeActionAccountingKind::OtherCertified;
+                        entry.certified_row_id = sparse_row;
+                        entry.obligation_id.reset();
+                        break;
+                    }
+                }
+                saturating_add(
+                    telemetry.alternative_obligations_certified, 1);
+                oracle.quotient_release_transient_kernel_caches();
+                result.certified = true;
+                co_return result;
+            }
+            co_return result;
+        };
+
+        if (!retained_global_lower_authority &&
+            solved_quotient.status ==
+                quotient::QuotientBellmanStatus::ImproperPolicy) {
+            bool bootstrap_progress = true;
+            while (solved_quotient.status ==
+                       quotient::QuotientBellmanStatus::ImproperPolicy &&
+                   bootstrap_progress) {
+                bootstrap_progress = false;
+                const std::vector<std::uint32_t> dead_cells =
+                    solved_quotient.failure_path_cell_ids;
+                /* The first state after the reachable predecessor is the
+                 * earliest selected-policy divergence. Repairing the deepest
+                 * member of a dead cycle first can materialize a broad
+                 * renewal kernel that the repaired predecessor would never
+                 * reach. */
+                auto cell_it = dead_cells.begin();
+                if (cell_it != dead_cells.end()) ++cell_it;
+                for (; cell_it != dead_cells.end(); ++cell_it) {
+                    auto bootstrap =
+                        certify_singleton_bootstrap_alternative(*cell_it);
+                    while (!bootstrap.resume()) {
+                        ++progress.work_items;
+                        co_await solve_detail::CooperativeCheckpoint{
+                            bootstrap.retained_bytes()};
+                    }
+                    BootstrapAlternativeResult result =
+                        bootstrap.take_result();
+                    if (!result.frontier.empty()) {
+                        oracle.quotient_sync_resource_telemetry();
+                        telemetry.strict_states_discovered =
+                            static_cast<std::uint32_t>(locators.size());
+                        telemetry.strict_carriers_materialized =
+                            static_cast<std::uint32_t>(locators.size());
+                        co_return QuotientPassResult{
+                            std::nullopt, std::move(result.frontier)};
+                    }
+                    if (!result.certified) continue;
+                    bootstrap_progress = true;
+                    solved_quotient = bellman.solve(
+                        {root_cell}, limits.max_refinement_rounds,
+                        std::max<std::uint32_t>(
+                            1, options.max_sweeps));
+                    if (solved_quotient.status !=
+                            quotient::QuotientBellmanStatus::
+                                ImproperPolicy) {
+                        break;
+                    }
+                }
+            }
         }
         const quotient::QuotientBellmanTelemetry& bellman_telemetry =
             bellman.telemetry();
@@ -2393,16 +2734,7 @@ lift_policy_quotient_pass_task(
             (!retained_global_lower_authority &&
              (!solved_quotient.executable_upper ||
               !solved_quotient.proper))) {
-            throw AdapterFailure(
-                solved_quotient.status ==
-                        quotient::QuotientBellmanStatus::ResourceCap
-                    ? PolicyExactLiftStatus::ResourceCap
-                    : PolicyExactLiftStatus::RefinementFailure,
-                solved_quotient.failure_reason,
-                solved_quotient.status ==
-                        quotient::QuotientBellmanStatus::ResourceCap
-                    ? "max_estimated_memory_bytes"
-                    : std::string{});
+            throw_failed_quotient(solved_quotient);
         }
         const auto publish_current_upper =
                 [&](const quotient::QuotientBellmanResult& solved_upper,

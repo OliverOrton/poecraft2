@@ -9,7 +9,8 @@
         PolicyLiftAdapterTelemetry& telemetry,
         const ReoptimizationSeed* reoptimization_seed,
         const bool force_semantic_strict_identity = false,
-        const bool defer_initialization = false)
+        const bool defer_initialization = false,
+        const bool enable_quotient_bootstrap = false)
         : coarse_(coarse),
           solved_(solved),
           exact_start_(exact_start),
@@ -22,6 +23,7 @@
           borrowed_session_(borrow_session(coarse_)),
           enable_local_reoptimization_(
               reoptimization_seed != nullptr),
+          enable_quotient_bootstrap_(enable_quotient_bootstrap),
           reoptimization_parents_(
               reoptimization_seed == nullptr
                   ? std::set<std::uint32_t>{}
@@ -65,7 +67,8 @@
                 require_local_memory(
                     0, "filtered planner vocabulary construction");
             };
-        if (enable_local_reoptimization_) {
+        if (enable_local_reoptimization_ ||
+            enable_quotient_bootstrap_) {
             for (const std::uint32_t parent :
                  reoptimization_parents_) {
                 if (parent >= coarse_.state_count()) {
@@ -293,7 +296,17 @@
     }
 
     std::uint32_t quotient_seed_locator(const AbstractState& state) {
-        return quotient_canonical_locator(strict_->intern_state(state));
+        const std::uint32_t locator =
+            quotient_canonical_locator(strict_->intern_state(state));
+        quotient_frontier_seed_locators_.insert(locator);
+        return locator;
+    }
+
+    bool quotient_requires_bootstrap(const ExactState& state) const {
+        const auto known = known_.find(state.stable_key);
+        return known != known_.end() &&
+               quotient_frontier_seed_locators_.contains(
+                   known->second.strict_state);
     }
 
     AbstractState quotient_export_locator(
@@ -404,6 +417,59 @@
         return true;
     }
 
+    std::tuple<bool, bool, bool, bool, double, std::uint32_t>
+    quotient_bootstrap_operator_rank(
+            const ExactState& state,
+            const std::uint32_t operator_index) const {
+        const auto known = known_.find(state.stable_key);
+        if (known == known_.end()) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::InvalidSolveState,
+                "bootstrap rank lost its exact carrier");
+        }
+        const AbstractState& carrier =
+            strict_->state(known->second.strict_state);
+        std::uint32_t satisfied_goal_mask = 0;
+        for (std::uint32_t slot = 0;
+             slot < strict_->layout().slots.size(); ++slot) {
+            if (carrier.slot_status[slot] ==
+                static_cast<std::uint8_t>(
+                    GoalSlotStatus::Satisfied)) {
+                satisfied_goal_mask |= std::uint32_t{1} << slot;
+            }
+        }
+        const std::uint32_t missing_goal_mask =
+            ((std::uint32_t{1} << strict_->layout().slots.size()) - 1u) &
+            ~satisfied_goal_mask;
+        const PlannerOperator& planner =
+            strict_->operators().at(operator_index);
+        bool may_destroy_satisfied_progress = false;
+        bool destructive_renewal = false;
+        const PlannerOperatorRuntimeSemantics runtime =
+            operator_runtime_semantics(planner);
+        for (const std::uint32_t action_index :
+             runtime.action_dependencies) {
+            const ActionPreservationMetadata& preservation =
+                strict_->registry().actions.at(action_index)
+                    .preservation;
+            may_destroy_satisfied_progress =
+                may_destroy_satisfied_progress ||
+                (preservation.can_destroy &
+                 (kCarrierGoalFamilies |
+                  kCarrierSatisfiedGoalSubset)) != 0;
+            destructive_renewal =
+                destructive_renewal ||
+                preservation.destructive_renewal;
+        }
+        return {
+            (planner.relevant_goal_mask & missing_goal_mask) == 0,
+            planner.automatic_kind == AutomaticCandidateKind::None,
+            may_destroy_satisfied_progress,
+            destructive_renewal,
+            quotient_operator_immediate_cost_lower(operator_index),
+            operator_index};
+    }
+
     std::vector<std::uint32_t> quotient_alternative_operator_ids(
             const ExactState& state) {
         if (state.terminal) return {};
@@ -423,7 +489,12 @@
             }
         }
         std::sort(
-            operator_ids.begin(), operator_ids.end());
+            operator_ids.begin(), operator_ids.end(),
+            [&](const std::uint32_t left,
+                const std::uint32_t right) {
+                return quotient_bootstrap_operator_rank(state, left) <
+                       quotient_bootstrap_operator_rank(state, right);
+            });
         operator_ids.erase(
             std::unique(operator_ids.begin(), operator_ids.end()),
             operator_ids.end());
@@ -808,16 +879,18 @@
             const std::uint64_t work_before =
                 strict_->telemetry().reforge_frontier_work;
             std::optional<SelectedAction> current;
-            try {
-                current = selected_action(state);
-            } catch (...) {
-                const std::uint64_t after =
-                    strict_->telemetry().reforge_frontier_work;
-                saturating_add(
-                    telemetry_.selected_reforge_work,
-                    after >= work_before ? after - work_before : 0);
-                telemetry_.strict_reforge_work = after;
-                throw;
+            if (!quotient_requires_bootstrap(state)) {
+                try {
+                    current = selected_action(state);
+                } catch (...) {
+                    const std::uint64_t after =
+                        strict_->telemetry().reforge_frontier_work;
+                    saturating_add(
+                        telemetry_.selected_reforge_work,
+                        after >= work_before ? after - work_before : 0);
+                    telemetry_.strict_reforge_work = after;
+                    throw;
+                }
             }
             const std::uint64_t after =
                 strict_->telemetry().reforge_frontier_work;
@@ -852,6 +925,7 @@
     std::optional<StableKey> quotient_selected_compact_row_identity(
             const ExactState& state) {
         if (state.terminal) return std::nullopt;
+        if (quotient_requires_bootstrap(state)) return std::nullopt;
         std::optional<SelectedAction> selected;
         try {
             selected = selected_action(state);
@@ -904,10 +978,14 @@
             rows.push_back({std::move(selected), std::move(kernel)});
         };
         bool current_complete = false;
+        bool bootstrap_seeded = false;
         try {
             ScopedReforgeRowProvenance provenance(
                 *strict_, ReforgeRowOwner::StrictSelected);
-            std::optional<SelectedAction> current = selected_action(state);
+            std::optional<SelectedAction> current;
+            if (!quotient_requires_bootstrap(state)) {
+                current = selected_action(state);
+            }
             if (current.has_value()) {
                 ExactActionKernel kernel = exact_kernel(state, *current);
                 append(std::move(*current), std::move(kernel));
@@ -917,10 +995,57 @@
         } catch (const AdapterFailure& error) {
             if (error.status == PolicyExactLiftStatus::ResourceCap) throw;
         }
+        /* A strict successor can map to a coarse state that the broad anytime
+         * solve discovered without publishing an action. Local repair still
+         * needs exactly one selected seed before Bellman can establish a
+         * proper upper. Pick the first carrier-ranked admitted operator and
+         * leave every other operator to the lazy alternative-obligation
+         * scheduler. Materializing all of them here would falsely publish
+         * multiple selected rows. */
+        if (!current_complete &&
+            (enable_local_reoptimization_ ||
+             enable_quotient_bootstrap_)) {
+            std::vector<std::uint32_t> bootstrap_operators =
+                admitted_operators_;
+            std::sort(
+                bootstrap_operators.begin(),
+                bootstrap_operators.end(),
+                [&](const std::uint32_t left,
+                    const std::uint32_t right) {
+                    return quotient_bootstrap_operator_rank(state, left) <
+                           quotient_bootstrap_operator_rank(state, right);
+                });
+            for (const std::uint32_t operator_index :
+                 bootstrap_operators) {
+                ScopedReforgeRowProvenance provenance(
+                    *strict_, ReforgeRowOwner::StrictSelected);
+                saturating_add(
+                    telemetry_.local_state_action_rows_scheduled, 1);
+                std::optional<SelectedAction> candidate =
+                    candidate_selection(
+                        state.stable_key, operator_index, 0);
+                if (!candidate.has_value() ||
+                    semantic_rows.contains(candidate->semantic_key)) {
+                    continue;
+                }
+                const ExactActionKernel* kernel =
+                    candidate_kernel(state.stable_key, *candidate);
+                if (kernel == nullptr) continue;
+                saturating_add(
+                    telemetry_.local_state_action_rows_evaluated, 1);
+                ExactActionKernel copied = *kernel;
+                release_published_kernel_storage(state, *candidate);
+                append(std::move(*candidate), std::move(copied));
+                provenance.publish();
+                current_complete = true;
+                bootstrap_seeded = true;
+                break;
+            }
+        }
         const bool affected =
             enable_local_reoptimization_ &&
             reoptimization_parents_.contains(state.coarse_state);
-        if (affected || !current_complete) {
+        if ((affected && !bootstrap_seeded) || !current_complete) {
             for (const std::uint32_t operator_index : admitted_operators_) {
                 ScopedReforgeRowProvenance provenance(
                     *strict_, ReforgeRowOwner::StrictAlternative);

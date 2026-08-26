@@ -95,10 +95,13 @@
         CoarsePolicyNode node;
         if (!coarse_.is_goal_state(coarse_.state(state))) {
             if (solved_.policy[state].index == kNoId) {
-                if (!enable_local_reoptimization_) {
+                if (!enable_local_reoptimization_ &&
+                    !enable_quotient_bootstrap_) {
                     (void)coarse_operator(state);
                 }
-                reoptimization_parents_.insert(state);
+                if (enable_local_reoptimization_) {
+                    reoptimization_parents_.insert(state);
+                }
             } else {
                 const PlannerOperator& planner =
                     coarse_operator(state);
@@ -309,7 +312,7 @@
         }
         if (!exact.terminal) {
             if (!policy->second.selected.has_value() &&
-                !witness_parent) {
+                !witness_parent && !enable_quotient_bootstrap_) {
                 throw AdapterFailure(
                     PolicyExactLiftStatus::InvalidSolveState,
                     "non-terminal strict carrier has no coarse policy "
