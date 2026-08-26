@@ -1,7 +1,13 @@
 # Handoff
 
-**Status: no implementation boundary active.** Oliver must choose the next
-chunk before implementation resumes.
+**Status: active implementation boundary.** Gate 0 of
+[Solver Quality Measurement, Refinement, And Debt Retirement](docs/active/2026-08-26-solver-quality-debt-retirement/plan.md)
+is active.
+
+The active boundary begins from clean checkpoint `ec3fbd3`. Gate -1 inspected
+current source, final acceptance, and historical negative results. Gate 0 now
+owns a versioned Calculator-profile clean/partial 1-to-5 ladder; no solver
+behavior has changed yet.
 
 The completed
 [Solver Anytime Planning, Proof Patterns, And Debt Retirement](docs/archive/2026-08-25-solver-anytime-proof-realignment/README.md)

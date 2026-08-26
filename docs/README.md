@@ -30,10 +30,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. Oliver must choose the next chunk
-before implementation resumes. The completed
+The active
+[Solver Quality Measurement, Refinement, And Debt Retirement](active/2026-08-26-solver-quality-debt-retirement/plan.md)
+boundary begins from clean checkpoint `ec3fbd3`. Gate -1 is complete and Gate
+0 is establishing a current Calculator-profile clean and partial 1-to-5
+benchmark ladder before behavior changes. The completed
 [Solver Anytime Planning, Proof Patterns, And Debt Retirement](archive/2026-08-25-solver-anytime-proof-realignment/README.md)
-milestone retains current-semantics benchmark authority, typed action-envelope
+milestone remains its predecessor and retains current-semantics benchmark authority, typed action-envelope
 and incumbent ownership, the qualified scheduler fallback, admissible proof
 patterns and measured consumers, cooperative publication/evaluation, release-
 WASM responsiveness, and the passing final acceptance record.
