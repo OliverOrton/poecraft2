@@ -117,6 +117,57 @@ double SolveWork::Impl::carrier_goal_progress_lower_value(
             : kInfinity;
 }
 
+bool SolveWork::Impl::identity_clean_goal_progress_eligible(
+        const std::uint32_t state) const {
+        /* Gate 6 proved that the occupancy table remains admissible while
+         * these exact identity coordinates are fixed. Generic-clean states
+         * already have their own owner; any identity change falls back
+         * locally instead of broadening this projection. */
+        if (state >= calc.state_count() ||
+            result.start_state >= calc.state_count() ||
+            clean_goal_cover_eligible(state)) {
+            return false;
+        }
+        const AbstractState& carrier = calc.state(state);
+        const AbstractState& start = calc.state(result.start_state);
+        return (carrier.flags & kProtectionFlags) ==
+                   (start.flags & kProtectionFlags) &&
+               carrier.fractured_goal_mask == start.fractured_goal_mask &&
+               carrier.fractured_metamod_flags ==
+                   start.fractured_metamod_flags &&
+               carrier.fractured_junk_counts ==
+                   start.fractured_junk_counts &&
+               carrier.fractured_crafted_junk_counts ==
+                   start.fractured_crafted_junk_counts &&
+               carrier.influence_bits == start.influence_bits &&
+               carrier.searing_exarch_tier ==
+                   start.searing_exarch_tier &&
+               carrier.eater_of_worlds_tier ==
+                   start.eater_of_worlds_tier;
+}
+
+double SolveWork::Impl::identity_clean_goal_progress_lower_value(
+        const std::uint32_t state) const {
+        if (!identity_clean_goal_progress_eligible(state)) return kInfinity;
+        constexpr std::size_t kAffixCountStates = 4;
+        const AbstractState& carrier = calc.state(state);
+        if (carrier.rarity > PC_RARITY_RARE ||
+            carrier.prefix_count >= kAffixCountStates ||
+            carrier.suffix_count >= kAffixCountStates ||
+            goal_cover_cost.empty()) {
+            return kInfinity;
+        }
+        const std::size_t mask_count = goal_cover_cost.size();
+        const std::size_t index =
+            (((static_cast<std::size_t>(carrier.rarity) * mask_count +
+               satisfied_goal_mask_for_state(state)) *
+              kAffixCountStates + carrier.prefix_count) *
+             kAffixCountStates + carrier.suffix_count);
+        return index < clean_goal_cover_cost.size()
+            ? clean_goal_cover_cost[index]
+            : kInfinity;
+}
+
 double SolveWork::Impl::carrier_terminal_debt_lower_value(
         const std::uint32_t state) const {
         if (state >= calc.state_count() ||
@@ -174,6 +225,8 @@ double SolveWork::Impl::completion_proof_lower_value(
             carrier.prefix_count, carrier.suffix_count);
         const double carrier_progress =
             carrier_goal_progress_lower_value(state);
+        const double identity_clean =
+            identity_clean_goal_progress_lower_value(state);
         const double terminal_debt =
             carrier_terminal_debt_lower_value(state);
         /* The universal goal cover is independently admissible for every
@@ -197,6 +250,8 @@ double SolveWork::Impl::completion_proof_lower_value(
             {ProofPatternKind::CleanMdp, {clean}, true},
             {ProofPatternKind::CarrierMdp, {carrier_progress},
              std::isfinite(carrier_progress)},
+            {ProofPatternKind::IdentityCleanMdp, {identity_clean},
+             std::isfinite(identity_clean)},
             {ProofPatternKind::TerminalDebt, {terminal_debt}, true},
             {ProofPatternKind::StrictClean, {strict}, strict_available},
             {ProofPatternKind::EnvelopeBellman,

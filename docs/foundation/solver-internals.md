@@ -142,8 +142,14 @@ Oliver ruling and belong in the [mechanics library](../mechanics/README.md).
   proves disjoint immediate resources. A completed start-state Bellman
   envelope may publish after certification only when every admitted ordinary
   and automatic row is covered; missing coverage falls back locally. A
-  post-certification envelope is not search/pruning authority until an
-  explicit later consumer owns that change.
+  fixed-identity pattern may enter focused fringe gaps only while the exact
+  protection, Fracture, junk, influence, and Eldritch identity remains fixed.
+- An unmaterialized action obligation can close as incumbent-dominated only
+  when a complete immediate-price authority plus that action's proved
+  successor pattern strictly exceeds an exactly optimized proper
+  carrier-local upper. The ledger retains that named proof without inventing
+  a row or treating proof closure as materialized closure. Authored conditional
+  programs remain excluded while their lower charges only the first step.
 - A finite public upper belongs to the independently evaluated emitted graph,
   not its coarse, selected, direct, strict, or fallback source estimate. Later
   candidates cannot replace a cheaper verified artifact without beating that

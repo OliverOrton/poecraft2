@@ -283,6 +283,16 @@ Support-delta states are queued and expanded before the action can be
 classified. The envelope is applied at every reached compatible carrier, and
 an open or resource-limited envelope blocks an exact result.
 
+Before materializing a queued primitive or automatic row, Solve may retire
+that exact carrier/operator obligation as incumbent-dominated. This requires
+an exactly optimized proper restricted-policy upper for the carrier and a
+strictly larger lower composed from the action's complete immediate price and
+proved survivor/reach successor pattern. The proof is recorded in the typed
+action-envelope ledger and mirrored into the compatibility scheduler's
+completed-pair view. It neither creates an executable row nor closes any other
+unknown obligation. Authored conditional programs do not use this path while
+their retained operator lower prices only the guaranteed first step.
+
 The worker starts from the requested/default work count, adapts each step to a
 roughly 12 ms slice, and clamps Solve to one through four native work items.
 It rebases to one item at phase changes, emits progress at phase boundaries or

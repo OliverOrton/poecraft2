@@ -294,6 +294,10 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
                 if (incremental_unevaluated_actions != 0) {
                     --incremental_unevaluated_actions;
                 }
+                if (retire_unmaterialized_by_operator_proof(
+                        state, operator_index)) {
+                    return;
+                }
                 expansion_state = state;
                 expansion_operator_indices.assign(1, operator_index);
                 expansion_operator_cursor = 0;
@@ -675,6 +679,10 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
                 EnvelopeEvidenceActionRefinementContract);
         if (incremental_unevaluated_actions != 0) {
             --incremental_unevaluated_actions;
+        }
+        if (retire_unmaterialized_by_operator_proof(
+                state, operator_index)) {
+            return true;
         }
         expansion_state = state;
         expansion_operator_indices.assign(1, operator_index);
@@ -1727,6 +1735,7 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
                     result.values.size());
             }
             incremental_certified_upper_values = result.values;
+            retire_certified_unmaterialized_obligations();
         }
     } else if (output_incumbent.has_value()) {
         upper_values = &output_incumbent->values;
@@ -2204,6 +2213,13 @@ void SolveWork::Impl::refresh_action_envelope_ledger_diagnostics(
     append_named_counts(
         evidence_counts,
         [&](const std::size_t value) { return evidence_names[value]; });
+    json += ",\"descriptor_proof\":{\"observational_only\":false";
+    json += ",\"authority\":\"complete_immediate_plus_action_successor_pattern_vs_certified_state_upper\"";
+    json += ",\"pre_materialization_only\":true";
+    json += ",\"evaluations\":" +
+            std::to_string(descriptor_proof_evaluations);
+    json += ",\"strict_separations\":" +
+            std::to_string(descriptor_proof_separations) + "}";
     json += ",\"action_lifecycles\":[";
     bool first_lifecycle = true;
     for (std::size_t operator_index = 0;

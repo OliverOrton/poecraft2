@@ -159,5 +159,78 @@ solve_detail::ProofLowerValue SolveWork::Impl::operator_proof_lower(
     return lower;
 }
 
+bool SolveWork::Impl::retire_unmaterialized_by_operator_proof(
+        const std::uint32_t state,
+        const std::uint32_t operator_index) {
+    if (state >= incremental_certified_upper_values.size() ||
+        operator_index >= calc.operators().size()) {
+        return false;
+    }
+    const double upper = incremental_certified_upper_values[state];
+    if (!std::isfinite(upper) || upper < 0.0 || upper >= kValueCeiling) {
+        return false;
+    }
+    const PlannerOperator& planner = calc.operators()[operator_index];
+    if (planner.kind == PlannerOperatorKind::FixedOption &&
+        planner.automatic_kind == AutomaticCandidateKind::None) {
+        /* The retained authored-program lower charges only its guaranteed
+         * first step. It is admissible, but Gate 7 requires a complete
+         * immediate program authority before descriptor retirement. */
+        return false;
+    }
+    ++descriptor_proof_evaluations;
+    const double lower = operator_proof_lower_value(state, operator_index);
+    if (!std::isfinite(lower) || lower < 0.0) return false;
+    const double separation = options.epsilon *
+        std::max({1.0, std::abs(upper), std::abs(lower)});
+    if (lower <= upper + separation) return false;
+
+    const std::uint32_t evidence =
+        EnvelopeEvidenceCarrierFacts |
+        EnvelopeEvidenceCarrierEffectSummary |
+        EnvelopeEvidenceCarrierSuccessorEnvelope |
+        EnvelopeEvidenceActionRefinementContract;
+    action_envelope_ledger.incumbent_dominated(
+        state, operator_index,
+        std::numeric_limits<std::uint64_t>::max(), evidence);
+    incremental_completed_pairs.insert(
+        ActionEnvelopeLedger::key(state, operator_index));
+    ++descriptor_proof_separations;
+    record_operator_lower_attribution(
+        operator_index, lower, upper, true, false);
+    return true;
+}
+
+void SolveWork::Impl::retire_certified_unmaterialized_obligations() {
+    struct Candidate {
+        std::uint32_t state = kNoId;
+        std::uint32_t operator_index = kNoId;
+        ActionEnvelopeState lifecycle = ActionEnvelopeState::Queued;
+    };
+    std::vector<Candidate> candidates;
+    candidates.reserve(action_envelope_ledger.entries().size());
+    for (const auto& [unused_key, entry] :
+         action_envelope_ledger.entries()) {
+        (void)unused_key;
+        if ((entry.lifecycle != ActionEnvelopeState::Queued &&
+             entry.lifecycle != ActionEnvelopeState::UnresolvedNamedStop) ||
+            entry.row_index != std::numeric_limits<std::uint64_t>::max()) {
+            continue;
+        }
+        candidates.push_back({
+            entry.state, entry.operator_index, entry.lifecycle});
+    }
+    for (const Candidate& candidate : candidates) {
+        if (!retire_unmaterialized_by_operator_proof(
+                candidate.state, candidate.operator_index)) {
+            continue;
+        }
+        if (candidate.lifecycle == ActionEnvelopeState::Queued &&
+            incremental_unevaluated_actions != 0) {
+            --incremental_unevaluated_actions;
+        }
+    }
+}
+
 } // namespace solver
 } // namespace poecraft

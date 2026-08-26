@@ -844,6 +844,8 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     std::uint64_t incremental_resource_unresolved_actions = 0;
     std::uint64_t incremental_unique_kernel_evaluations = 0;
     std::uint64_t incremental_carrier_kernel_reuses = 0;
+    std::uint64_t descriptor_proof_evaluations = 0;
+    std::uint64_t descriptor_proof_separations = 0;
     std::uint64_t incremental_carrier_ladder_epochs = 0;
     std::uint64_t incremental_carrier_ladder_candidates = 0;
     std::uint64_t incremental_carrier_ladder_goal_subsets = 0;
@@ -1611,6 +1613,12 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     double carrier_goal_progress_lower_value(
         std::uint32_t state) const;
 
+    bool identity_clean_goal_progress_eligible(
+        std::uint32_t state) const;
+
+    double identity_clean_goal_progress_lower_value(
+        std::uint32_t state) const;
+
     double carrier_terminal_debt_lower_value(
         std::uint32_t state) const;
 
@@ -1834,6 +1842,12 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     void capture_initial_incremental_selected_policy();
 
     bool continue_open_incremental_envelope();
+
+    bool retire_unmaterialized_by_operator_proof(
+        std::uint32_t state,
+        std::uint32_t operator_index);
+
+    void retire_certified_unmaterialized_obligations();
 
     void restart_incremental_optimization();
 

@@ -4,13 +4,13 @@
 [Solver Anytime Planning, Proof Patterns, And Debt Retirement](docs/active/2026-08-25-solver-anytime-proof-realignment/plan.md)
 plan on 2026-08-25. The focused
 [documentation preflight](docs/active/2026-08-25-solver-anytime-proof-realignment/preflight-audit.md)
-is complete; Gates 0 through 6 are complete and implementation is at Gate 7.
+is complete; Gates 0 through 7 are complete and implementation is at Gate 8.
 
 ## Current checkpoint
 
 - Branch: `main`.
-- Latest completed implementation checkpoint: Gate 6 stronger carrier/action
-  proof patterns (this handoff's commit).
+- Latest completed implementation checkpoint: Gate 7 proof consumers and
+  action-envelope reduction (this handoff's commit).
 - Current engine/product source checkpoint: `a1449fa` (`Record Imprint scope
   acceptance`).
 - Plan checkpoint: `0238753` (`Propose solver anytime proof realignment`).
@@ -119,9 +119,19 @@ policies/uppers/graphs are unchanged, and rejected Harvest/strict-Eldritch
 experiments were removed. See the
 [Gate 6 evidence](docs/active/2026-08-25-solver-anytime-proof-realignment/gate6-evidence.md).
 
-Gate 7 now owns proof consumers. Activate values only through proof-only APIs,
-measure strict pruning or work reduction against the same evaluated policy,
-and remove any descriptor prototype that produces no separation.
+Gate 7 routes fixed-identity values into focused/public completion proof and
+retires exact carrier/operator obligations only when a complete action-
+specific lower strictly exceeds a certified proper carrier upper. On the owner
+case, 79,799 unmaterialized obligations gained named incumbent-dominated proof
+and the remaining requested envelope fell from 109,100 to 29,339 with the
+same exact-evaluated upper, graph, and policy hash. Fixed-work, oracle, and all
+nine forced-winner controls pass. See the
+[Gate 7 evidence](docs/active/2026-08-25-solver-anytime-proof-realignment/gate7-evidence.md).
+
+Gate 8 now owns profile-driven performance and cooperative responsiveness,
+the remaining ownership/debt refactor, final documentation, and the one full
+acceptance run. The ordinary release-WASM one-mod 50 ms slice remains the
+explicit responsiveness qualification to close.
 
 Archived milestone prose retains historical evidence authority only; the
 active plan owns current sequence.

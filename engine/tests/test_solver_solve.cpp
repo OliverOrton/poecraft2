@@ -8794,6 +8794,42 @@ void run_carrier_aware_completion_bound_tests() {
         work.completion_proof_lower(fractured_state).value;
     PC_CHECK(expanded_lower <= original_lower + 1e-12);
 
+    /* A complete primitive immediate plus its action-specific survivor/reach
+     * lower may retire an unmaterialized obligation only against an exact
+     * proper restricted-policy upper for the same carrier. The deterministic
+     * bench finish supplies that upper; the dearer Chaos row is never
+     * materialized, but remains a named ledger proof rather than disappearing
+     * from action scope. */
+    expanded_work.incremental_certified_upper_values.assign(
+        expanded_calc.state_count(), kInfinity);
+    expanded_work.incremental_certified_upper_values[expanded_state] =
+        expanded_work.operator_proof_lower(
+            expanded_state, bench_suffix).value;
+    expanded_work.action_envelope_ledger.queue(
+        expanded_state, chaos,
+        ActionEnvelopeLane::IncrementalCarrierLocal,
+        EnvelopeEvidenceCarrierFacts |
+            EnvelopeEvidenceCarrierEffectSummary |
+            EnvelopeEvidenceActionRefinementContract);
+    PC_CHECK(expanded_work.retire_unmaterialized_by_operator_proof(
+        expanded_state, chaos));
+    const ActionEnvelopeEntry* retired =
+        expanded_work.action_envelope_ledger.find(expanded_state, chaos);
+    PC_CHECK(retired != nullptr);
+    if (retired != nullptr) {
+        PC_CHECK(
+            retired->lifecycle == ActionEnvelopeState::IncumbentDominated);
+        PC_CHECK(
+            retired->authority == ActionEnvelopeProofAuthority::
+                IndependentGlobalLowerVsVerifiedUpper);
+        PC_CHECK(retired->row_index ==
+            std::numeric_limits<std::uint64_t>::max());
+    }
+    PC_CHECK(expanded_work.action_envelope_ledger.scheduling_complete(
+        expanded_state, chaos));
+    PC_CHECK(expanded_work.descriptor_proof_evaluations == 1);
+    PC_CHECK(expanded_work.descriptor_proof_separations == 1);
+
     /* Economic Restart must enter the carrier MDP as a priced transition to
      * a fresh Normal carrier with mask zero. This vocabulary gives that fresh
      * carrier a finite Alchemy route and makes Chaos prohibitively expensive,
