@@ -3563,6 +3563,13 @@ SolveWork::Impl::run_finalization() {
                             scoped_assertion_options.max_discovered_states,
                             options.max_policy_refinement_states);
                 }
+                /* Extraction and direct certification are separately
+                 * bounded owners. Expose their phase boundary before the
+                 * assertion allocates, parses, and prepares its evaluator so
+                 * a release-WASM solve step cannot fold both stages into one
+                 * cancellation slice. */
+                phase = SolvePhase::Compiling;
+                co_await solve_detail::CooperativeCheckpoint{};
                 refinement::CompiledPolicyAssertionWork assertion_work(
                     calc, result, prices, scoped_assertion_options,
                     "selected core policy");

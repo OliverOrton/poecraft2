@@ -1088,7 +1088,35 @@ EvalModel derive_model(
     std::optional<std::uint32_t> state_cap,
     const bool use_exact_exchangeable_family_compression) {
     const auto session = strategy.session;
-    ActionRegistry registry = build_action_registry(*session);
+    ActionRegistryBuildOptions registry_options;
+    registry_options.exhaustive_fossils = false;
+    for (const StrategyNode& node : strategy.nodes) {
+        if (node.kind != StrategyNodeKind::Operation ||
+            node.action_type != static_cast<int>(ActionType::Fossil)) {
+            continue;
+        }
+        std::vector<std::string> fossil_keys;
+        bool valid = !node.action.fossil_indices.empty();
+        for (const std::uint32_t fossil : node.action.fossil_indices) {
+            if (fossil >= session->data->fossil_key_sids.size()) {
+                valid = false;
+                break;
+            }
+            fossil_keys.push_back(session->data->string_at(
+                session->data->fossil_key_sids[fossil]));
+        }
+        if (!valid) continue;
+        std::sort(fossil_keys.begin(), fossil_keys.end());
+        std::string action_id = "fossil:";
+        for (std::size_t i = 0; i < fossil_keys.size(); ++i) {
+            if (i != 0) action_id += "+";
+            action_id += fossil_keys[i];
+        }
+        registry_options.requested_fossil_action_ids.push_back(
+            std::move(action_id));
+    }
+    ActionRegistry registry =
+        build_action_registry(*session, registry_options);
     std::vector<std::string> gaps;
     std::vector<ResolvedStrategyOperation> operation_by_node(
         strategy.nodes.size());
@@ -1314,7 +1342,13 @@ EvalModel derive_model(
             false, /* reforge attribution is reported by the evaluator */
             false, /* do not alter physical frontier enumeration */
             false, /* retain canonical bucket order */
-            true); /* factor unobserved terminal mass in gated renewals */
+            true,  /* factor unobserved terminal mass in gated renewals */
+            nullptr,
+            /* build_action_registry() canonicalizes and validates every
+             * refinement contract before returning. Exact evaluation owns
+             * that freshly built registry, so repeating the full registry
+             * proof in CalcContext only delays the first cooperative step. */
+            true);
     } catch (const std::exception& ex) {
         std::string origin;
         for (const TargetEntry& target : target_entries) {
