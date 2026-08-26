@@ -1,15 +1,18 @@
 # Handoff
 
-**Status: active implementation boundary.** Gate 3 of
+**Status: active implementation boundary.** Gate 6 of
 [Solver Quality Measurement, Refinement, And Debt Retirement](docs/active/2026-08-26-solver-quality-debt-retirement/plan.md)
 is active.
 
-The active boundary begins from clean checkpoint `ec3fbd3`. Gates -1 through 2
+The active boundary begins from clean checkpoint `ec3fbd3`. Gates -1 through 5
 are complete. The versioned Calculator-profile clean/partial 1-to-5 ladder is
 recorded, a diagnostic-owned-byte abort is repaired, and the strict-lift owner
 is attributed. Gate 2 repaired the selected-first proof lifecycle and prevents
-optional strict work from delaying an already finite product policy. Gate 3
-now owns the measured bounded action-scope and intermediate-utility audit.
+optional strict work from delaying an already finite product policy. The
+action-scope audit found admitted but delayed work rather than missing mechanic
+families, no executable-upper consumer qualified, and retained proof patterns
+already cover the safe Gate 5 consumers. Gate 6 now owns one versioned native
+Calculator solve-profile authority across the C ABI, WASM, benchmarks, and app.
 
 The completed
 [Solver Anytime Planning, Proof Patterns, And Debt Retirement](docs/archive/2026-08-25-solver-anytime-proof-realignment/README.md)
@@ -23,7 +26,20 @@ milestone is archived with its gate records and final acceptance evidence.
 - Gate 2 checkpoint: the local commit containing this handoff and
   [Gate 2 evidence](docs/active/2026-08-26-solver-quality-debt-retirement/gate2-evidence.md).
 - The milestone commits are local-only; nothing was pushed.
-- Gate 3 may leave an active implementation worktree; do not discard it.
+- Gates 3-5 checkpoint: the local commit containing the gate evidence.
+- Gate 6 may leave an active implementation worktree; do not discard it.
+
+## Current Gates 3-5 result
+
+- Harvest, Eldritch, Bench, Fracture, and bounded Fossil work is admitted or
+  evaluated on clean five-T1; the solve stops with delayed obligations rather
+  than silently excluding those mechanic families.
+- The bounded early compatibility-continuation experiment completed no wave,
+  retained the identical 14.45M upper, added open work, and was removed.
+- No current strong proper candidate qualified a new incumbent consumer.
+- Existing typed proof patterns already reach operator/envelope consumers and
+  retire 79,799 owner-case obligations. Rejected rare/Eldritch or probability-
+  only lower experiments were not repeated.
 
 ## Current Gate 2 result
 

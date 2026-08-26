@@ -1,6 +1,6 @@
 # Solver Quality Measurement, Refinement, And Debt Retirement
 
-**Status: active. Gates -1 through 2 are complete; Gate 3 is the
+**Status: active. Gates -1 through 5 are complete; Gate 6 is the
 implementation boundary.**
 
 Parent: [Active work](../README.md)
@@ -136,6 +136,8 @@ that as Gate 4 input rather than broadening refinement authority.
 
 ## Gate 3 — Bounded action-scope and intermediate-utility audit
 
+**Status: complete.** See [Gate 3 evidence](gate3-evidence.md).
+
 Audit only cases where Gate 0/2 show that a useful family is absent or delayed.
 For Fossils, record the bounded beam's admitted and omitted loadouts, prices,
 goal reach, side/blocker effects, and whether an omitted candidate improves an
@@ -156,6 +158,8 @@ explicitly scoped to the resulting requested envelope.
 
 ## Gate 4 — Executable-upper consumption
 
+**Status: complete by stop condition.** See [Gate 4 evidence](gate4-evidence.md).
+
 Enter only if Gates 0-3 find a strong proper candidate that the ordinary solve
 does not retain or exploit. Add the narrowest consumer necessary to place that
 candidate in `IncumbentPortfolio` and use it for comparison/pruning.
@@ -166,6 +170,9 @@ a finite quota, deterministic-work telemetry, monotone incumbent authority,
 and clean five-T1 plus partial/Bow/control qualification.
 
 ## Gate 5 — Lower-bound coverage after an early upper
+
+**Status: complete by retained prior art.** See
+[Gate 5 evidence](gate5-evidence.md).
 
 Only after the target cases possess a useful verified upper, measure which
 lower gaps prevent operator pruning or gap-directed scheduling. In order:
