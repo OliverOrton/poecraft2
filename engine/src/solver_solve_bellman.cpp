@@ -1899,7 +1899,14 @@ void SolveWork::Impl::run_bellman_unit() {
 
 void SolveWork::Impl::step(std::uint32_t max_work_items) {
     try {
-        std::uint32_t remaining = std::max<std::uint32_t>(1, max_work_items);
+        /* max_work_items is a caller ceiling, not permission to monopolize
+         * the host for an arbitrarily large native/WASM batch. Individual
+         * rows and retained continuations remain the logical work units; this
+         * engine-owned ceiling only exposes cancellation and telemetry often
+         * enough for product callers. */
+        constexpr std::uint32_t kMaxCooperativeUnitsPerStep = 32;
+        std::uint32_t remaining = std::max<std::uint32_t>(
+            1, std::min(max_work_items, kMaxCooperativeUnitsPerStep));
         while (remaining > 0 && phase != SolvePhase::Done) {
             if (requested_bounded_finish &&
                 incremental_upper_policy_pass) {
@@ -1910,24 +1917,49 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                  phase == SolvePhase::Iterating) &&
                 can_prepare_requested_bounded_finish()) {
                 prepare_requested_bounded_finish();
-                begin_finalization();
+                begin_publication_pipeline();
                 continue;
             }
             if (phase == SolvePhase::Refining ||
                 phase == SolvePhase::Compiling ||
                 phase == SolvePhase::Certifying) {
-                advance_finalization();
+                advance_publication_pipeline();
                 /* Finalization continuations define the UI/cancellation
                  * boundary. Never fold multiple proof resumes into one
                  * public solve step, even for a 1,024-item caller batch. */
                 break;
             }
             if (phase == SolvePhase::Expanding) {
+                if (incremental_post_upper_scheduling_active) {
+                    advance_incremental_post_upper_scheduling();
+                    --remaining;
+                    /* Missing proof-only state values and the subsequent
+                     * delayed-row classification are an explicit phase
+                     * transition. Expose every retained proof resume to the
+                     * host before scheduling another exact pair. */
+                    break;
+                }
+                if (focused_lower_preparation_stage !=
+                    FocusedLowerPreparationStage::Idle) {
+                    advance_focused_lower_preparation();
+                    --remaining;
+                    /* Proof-pattern lower values are retained one state at a
+                     * time. Their cursor is the cancellation boundary; do
+                     * not fold the whole focused initialization into one
+                     * public step. */
+                    break;
+                }
                 if (incremental_dynamic_prepare_active) {
                     const bool preparation_complete =
                         advance_incremental_dynamic_preparation();
                     --remaining;
-                    if (!preparation_complete) continue;
+                    if (!preparation_complete) {
+                        /* Dynamic automatic preparation owns a retained
+                         * checkpoint. Return it to the host immediately so a
+                         * large public batch cannot fold every coroutine
+                         * resume into one uncancellable solve step. */
+                        break;
+                    }
                     if (requested_bounded_finish) {
                         phase = SolvePhase::Done;
                         break;
@@ -1979,7 +2011,12 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                 if (focus_optimizing) {
                     run_focused_lower_unit();
                     --remaining;
-                    continue;
+                    /* Focused policy evaluation owns retained SCC and
+                     * selection cursors. One resume is the cooperative host
+                     * boundary; batching dozens of those logical units made
+                     * a bounded continuation externally uncancellable for
+                     * several seconds on owner-scale graphs. */
+                    break;
                 }
                 if (!expansion_active && queue.empty() && focused_mode &&
                     !focused_closure_proved &&
@@ -2006,6 +2043,14 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                     result.diagnostics.cap_hits.size();
                 const bool completed_state = expand_one_unit();
                 --remaining;
+                if (!completed_state && expansion_active &&
+                    !expansion_prepared) {
+                    /* State-local automatic admission suspended before row
+                     * materialization. Its continuation is the cooperative
+                     * unit; expose that boundary even when the caller asked
+                     * for hundreds of ordinary expansion rows. */
+                    break;
+                }
                 if (completed_state && alternative_unit) {
                     if (expansion_incremental_resource_limited ||
                         result.diagnostics.cap_hits.size() >
@@ -2240,7 +2285,7 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
             if (requested_bounded_finish) {
                 prepare_requested_bounded_finish();
             }
-            begin_finalization();
+            begin_publication_pipeline();
         }
     }
 
@@ -2268,6 +2313,11 @@ void SolveWork::Impl::prepare_requested_bounded_finish() {
         incremental_dynamic_prepared = false;
         incremental_dynamic_operator_cursor = 0;
         incremental_dynamic_operator_indices.clear();
+        incremental_post_upper_scheduling_active = false;
+        incremental_post_upper_proof_cursor = 0;
+        incremental_classification_active = false;
+        incremental_classification_cursor = 0;
+        incremental_classification_certified_lower.clear();
 
         /* A high-impact upper pass temporarily admits completed alternatives
          * to its private minimization problem. The independently retained
@@ -2294,6 +2344,11 @@ void SolveWork::Impl::prepare_requested_bounded_finish() {
         constructive_policy_active = false;
         constructive_fallback_pending = false;
         constructive_progress_fallback.reset();
+        focused_lower_preparation_stage =
+            FocusedLowerPreparationStage::Idle;
+        focused_lower_preparation_cursor = 0;
+        focused_lower_previous_values.clear();
+        focused_lower_retained_minimum.clear();
         primitive_destructive_renewal_work = {};
         backup_active = false;
         reset_policy_iteration_units();

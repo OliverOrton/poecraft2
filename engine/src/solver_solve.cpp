@@ -521,6 +521,13 @@ SolveWork::Impl::Impl(
             }
             enqueue(result.start_state);
         }
+        /* Universal/clean proof tables depend only on the immutable solve
+         * goal, economy, and registered action vocabulary. Compile them as
+         * measured model setup, before the first public work boundary;
+         * charging this one-time table construction to a lazy focused proof
+         * lookup made an otherwise retained one-state continuation block for
+         * several seconds. */
+        prepare_goal_cover_cost();
         result.diagnostics.solve_setup_ns = static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - setup_started)

@@ -196,6 +196,9 @@ struct AutomaticKindTelemetry {
 
 struct AutomaticAdmissionPhaseTelemetry {
     std::uint64_t carriers = 0;
+    std::uint64_t continuation_resumes = 0;
+    std::uint64_t continuation_suspensions = 0;
+    std::uint64_t max_continuation_slice_ns = 0;
     /* Cumulative transient Calculator work performed while discovering and
      * validating carrier-local automatic options. These counters are
      * observational: retained sparse-graph row/transition limits are enforced

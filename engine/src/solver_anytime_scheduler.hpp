@@ -90,12 +90,12 @@ struct AnytimeLaneTelemetry {
     std::uint64_t maximum_wait = 0;
 };
 
-class AnytimeScheduler {
+class SolveScheduler {
 public:
     using Availability =
         std::array<bool, kAnytimeSchedulerLaneCount>;
 
-    explicit AnytimeScheduler(
+    explicit SolveScheduler(
             const AnytimeSchedulingProfile& profile =
                 kAnytimeSchedulingProfile)
         : profile_(profile) {

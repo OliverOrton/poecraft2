@@ -345,7 +345,7 @@ void SolveWork::Impl::count_policy_actions(
     }
 
 solve_detail::CooperativeTask<SolveResult>
-SolveWork::Impl::run_finalization() {
+SolveWork::Impl::run_publication_pipeline() {
         if (phase != SolvePhase::Refining &&
             phase != SolvePhase::Compiling &&
             phase != SolvePhase::Certifying) {
@@ -5288,7 +5288,7 @@ SolveWork::Impl::run_finalization() {
         co_return std::move(result);
     }
 
-void SolveWork::Impl::begin_finalization() {
+void SolveWork::Impl::begin_publication_pipeline() {
         if (finalization_task.has_value() ||
             finalized_result.has_value()) {
             return;
@@ -5328,10 +5328,10 @@ void SolveWork::Impl::begin_finalization() {
             }
         }
         phase = SolvePhase::Refining;
-        finalization_task.emplace(run_finalization());
+        finalization_task.emplace(run_publication_pipeline());
     }
 
-void SolveWork::Impl::advance_finalization() {
+void SolveWork::Impl::advance_publication_pipeline() {
         if (!finalization_task.has_value()) {
             throw std::logic_error(
                 "solver finalization continuation is missing");

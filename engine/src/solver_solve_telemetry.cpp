@@ -1668,6 +1668,12 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
         bytes += focused_behavioral_representative.capacity() *
                  sizeof(std::uint32_t);
         bytes += focused_previous_upper_values.capacity() * sizeof(double);
+        bytes += focused_lower_previous_values.capacity() * sizeof(double);
+        bytes += focused_lower_retained_minimum.capacity() * sizeof(double);
+        bytes += focused_lower_completion_proof_values.capacity() *
+                 sizeof(double);
+        bytes += incremental_classification_certified_lower.capacity() *
+                 sizeof(double);
         bytes += focused_previous_upper_policy_rows.capacity() *
                  sizeof(std::uint64_t);
         bytes += focused_frontier_upper_operator.capacity() *
@@ -1894,6 +1900,12 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
         bytes += focused_behavioral_representative.capacity() *
                  sizeof(std::uint32_t);
         bytes += focused_previous_upper_values.capacity() * sizeof(double);
+        bytes += focused_lower_previous_values.capacity() * sizeof(double);
+        bytes += focused_lower_retained_minimum.capacity() * sizeof(double);
+        bytes += focused_lower_completion_proof_values.capacity() *
+                 sizeof(double);
+        bytes += incremental_classification_certified_lower.capacity() *
+                 sizeof(double);
         bytes += focused_previous_upper_policy_rows.capacity() *
                  sizeof(std::uint64_t);
         bytes += focused_frontier_upper_operator.capacity() *
@@ -4287,6 +4299,12 @@ std::string serialize_solver_telemetry(
             diagnostics->automatic_admission_phases;
         json += ",\"admission_phases\":{\"carriers\":" +
                 std::to_string(phases.carriers);
+        json += ",\"continuation\":{\"resumes\":" +
+                std::to_string(phases.continuation_resumes);
+        json += ",\"suspensions\":" +
+                std::to_string(phases.continuation_suspensions);
+        json += ",\"max_slice_ns\":" +
+                std::to_string(phases.max_continuation_slice_ns) + "}";
         json += ",\"work\":{\"discovered_states\":" +
                 std::to_string(phases.discovered_states);
         json += ",\"state_action_rows\":" +

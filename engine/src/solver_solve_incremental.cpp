@@ -174,6 +174,8 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
             std::map<std::uint32_t, std::size_t> cursors;
             std::vector<std::uint32_t> ordered;
             ordered.reserve(end - begin);
+            std::unordered_set<std::uint32_t> ordered_members;
+            ordered_members.reserve(end - begin);
             /* A failed joint-policy proof names the exact carrier whose
              * continuation is missing. Expansion alone does not complete its
              * carrier-local automatic rows, so preserve that witness through
@@ -185,8 +187,7 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
                     incremental_carriers.begin() + begin,
                     incremental_carriers.begin() + end, urgent);
                 if (found != incremental_carriers.begin() + end &&
-                    std::find(ordered.begin(), ordered.end(), urgent) ==
-                        ordered.end()) {
+                    ordered_members.insert(urgent).second) {
                     ordered.push_back(urgent);
                 }
             }
@@ -200,9 +201,7 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
                     std::size_t& cursor = cursors[mask];
                     while (cursor < carriers.size()) {
                         const std::uint32_t carrier = carriers[cursor++];
-                        if (std::find(
-                                ordered.begin(), ordered.end(), carrier) !=
-                            ordered.end()) {
+                        if (!ordered_members.insert(carrier).second) {
                             continue;
                         }
                         ordered.push_back(carrier);
@@ -572,7 +571,7 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
             return false;
         }
 
-        AnytimeScheduler::Availability available{};
+        SolveScheduler::Availability available{};
         available[static_cast<std::size_t>(
             AnytimeSchedulerLane::LegacyFairness)] =
             incremental_fairness_operator_cursor <
@@ -1065,6 +1064,8 @@ bool SolveWork::Impl::maybe_install_incremental_anytime_incumbent() {
 std::vector<double>
 SolveWork::Impl::certified_incremental_lower_values() {
     std::vector<double> lower(calc.state_count(), 0.0);
+    const bool has_focused_proof_snapshot =
+        focused_lower_completion_proof_values.size() == lower.size();
     const bool full_action_envelope =
         !incremental_action_generation || incremental_envelope_closed;
     for (std::uint32_t state = 0; state < lower.size(); ++state) {
@@ -1089,7 +1090,12 @@ SolveWork::Impl::certified_incremental_lower_values() {
             result.values[state] < kValueCeiling) {
             lower[state] = result.values[state];
         } else {
-            lower[state] = completion_proof_lower(state).value;
+            const double retained = has_focused_proof_snapshot
+                ? focused_lower_completion_proof_values[state]
+                : std::numeric_limits<double>::quiet_NaN();
+            lower[state] = std::isfinite(retained)
+                ? retained
+                : completion_proof_lower(state).value;
         }
     }
     return lower;
@@ -1428,6 +1434,75 @@ bool SolveWork::Impl::continue_open_incremental_envelope() {
     return schedule_incremental_refinement(true);
 }
 
+void SolveWork::Impl::begin_incremental_post_upper_scheduling() {
+    incremental_post_upper_scheduling_active = true;
+    incremental_post_upper_proof_cursor =
+        focused_lower_completion_proof_values.size();
+    focused_lower_completion_proof_values.resize(
+        calc.state_count(), std::numeric_limits<double>::quiet_NaN());
+    phase = SolvePhase::Expanding;
+}
+
+bool SolveWork::Impl::advance_incremental_post_upper_scheduling() {
+    if (!incremental_post_upper_scheduling_active) return true;
+    if (focused_lower_completion_proof_values.size() <
+        calc.state_count()) {
+        focused_lower_completion_proof_values.resize(
+            calc.state_count(), std::numeric_limits<double>::quiet_NaN());
+    }
+    if (incremental_post_upper_proof_cursor <
+        focused_lower_completion_proof_values.size()) {
+        const std::uint32_t state = static_cast<std::uint32_t>(
+            incremental_post_upper_proof_cursor++);
+        /* Support interned after the completed focused snapshot receives its
+         * proof value one state per host continuation. The shared goal-cover
+         * model is already owned by measured solve setup, so this preserves
+         * proof strength without reintroducing its former multi-second lazy
+         * construction at this scheduling transition. */
+        focused_lower_completion_proof_values[state] =
+            completion_proof_lower(state).value;
+        return false;
+    }
+
+    if (!incremental_classification_active) {
+        begin_incremental_classification();
+    }
+    const bool classification_complete =
+        advance_incremental_classification();
+    if (!classification_complete) return false;
+    incremental_post_upper_scheduling_active = false;
+    incremental_post_upper_proof_cursor = 0;
+    if (incremental_classification_admitted) {
+        restart_incremental_optimization();
+        return true;
+    }
+    const bool missing_frontier_refinement =
+        !incremental_anytime_missing_frontier_states.empty() &&
+        schedule_incremental_refinement();
+    if (missing_frontier_refinement) {
+        return true;
+    }
+    if (options.high_impact_executable_uppers &&
+        schedule_next_incremental_alternative()) {
+        return true;
+    }
+    if (schedule_incremental_refinement()) {
+        return true;
+    }
+    if (schedule_next_incremental_alternative()) {
+        return true;
+    }
+    if (schedule_incremental_refinement(true)) {
+        return true;
+    }
+    if (incremental_envelope_closed) {
+        finish_focused_lower_solve();
+    } else {
+        phase = SolvePhase::Done;
+    }
+    return true;
+}
+
 bool SolveWork::Impl::schedule_incremental_refinement(
         const bool force) {
     if (!incremental_action_generation ||
@@ -1692,26 +1767,29 @@ bool SolveWork::Impl::schedule_incremental_refinement(
     return true;
 }
 
-bool SolveWork::Impl::classify_incremental_alternatives() {
-    const std::vector<double>* upper_values = nullptr;
-    const std::vector<double> certified_lower =
+void SolveWork::Impl::begin_incremental_classification() {
+    if (incremental_classification_active) {
+        throw std::logic_error("incremental classification already active");
+    }
+    incremental_classification_certified_lower =
         certified_incremental_lower_values();
-    bool restricted_graph_closed = true;
+    incremental_classification_restricted_graph_closed = true;
     for (std::uint32_t state = 0; state < calc.state_count(); ++state) {
         if (!calc.is_goal_state(calc.state(state)) &&
             (state >= expanded.size() || !expanded[state])) {
-            restricted_graph_closed = false;
+            incremental_classification_restricted_graph_closed = false;
             break;
         }
     }
     const bool exact_restricted_values =
-        (restricted_graph_closed &&
+        (incremental_classification_restricted_graph_closed &&
          incremental_restricted_values_ready &&
          optimization_converged()) ||
         (optimization_converged() &&
          (focused_bound_proved || !focused_mode));
     if (exact_restricted_values) {
-        upper_values = &result.values;
+        incremental_classification_upper =
+            IncrementalClassificationUpper::ResultValues;
         /* Only a stable, exactly evaluated proper selected policy owns a
          * carrier upper for later automatic grammar pruning. A residual-only
          * Bellman fallback or an improper policy must not populate this
@@ -1738,24 +1816,47 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
             retire_certified_unmaterialized_obligations();
         }
     } else if (output_incumbent.has_value()) {
-        upper_values = &output_incumbent->values;
+        incremental_classification_upper =
+            IncrementalClassificationUpper::OutputIncumbent;
+    } else {
+        incremental_classification_upper =
+            IncrementalClassificationUpper::None;
     }
 
-    const bool reclassify_all =
+    incremental_classification_reclassify_all =
         !options.high_impact_executable_uppers ||
         incremental_reclassify_all;
     incremental_reclassify_all = false;
-    bool admitted = false;
-    for (IncrementalAlternativeRow& candidate :
-         incremental_alternative_rows) {
+    incremental_classification_admitted = false;
+    incremental_classification_cursor = 0;
+    incremental_classification_active = true;
+}
+
+bool SolveWork::Impl::advance_incremental_classification() {
+    if (!incremental_classification_active) return true;
+    const std::vector<double>* upper_values = nullptr;
+    if (incremental_classification_upper ==
+        IncrementalClassificationUpper::ResultValues) {
+        upper_values = &result.values;
+    } else if (incremental_classification_upper ==
+                   IncrementalClassificationUpper::OutputIncumbent &&
+               output_incumbent.has_value()) {
+        upper_values = &output_incumbent->values;
+    }
+
+    if (incremental_classification_cursor <
+        incremental_alternative_rows.size()) {
+        IncrementalAlternativeRow& candidate =
+            incremental_alternative_rows[
+                incremental_classification_cursor++];
         if (candidate.status ==
             IncrementalAlternativeRow::Status::Admitted) {
-            continue;
+            return false;
         }
-        if (!reclassify_all &&
+        if (!incremental_classification_reclassify_all &&
             candidate.status ==
                 IncrementalAlternativeRow::Status::Unresolved) {
-            continue;
+            return false;
         }
         candidate.status =
             IncrementalAlternativeRow::Status::PendingValues;
@@ -1774,7 +1875,8 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
             EnvelopeEvidenceExactRegistryLegality |
             EnvelopeEvidenceExactOptionKernel;
         candidate.lower_q = sparse_row_q_for_values(
-            candidate.row_index, certified_lower);
+            candidate.row_index,
+            incremental_classification_certified_lower);
         const SparseRow& row =
             transition_cache->rows.at(candidate.row_index);
         bool has_terminal_exit = false;
@@ -1853,7 +1955,7 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
                 ActionEnvelopeStopOwner::SuccessorFrontier,
                 candidate.row_index,
                 "unexpanded_successor_frontier", ledger_evidence);
-            continue;
+            return false;
         }
         const double current_upper =
             upper_values != nullptr &&
@@ -1870,8 +1972,8 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
             action_envelope_ledger.exact_row_complete(
                 candidate.state, candidate.operator_index,
                 ledger_lane, candidate.row_index, ledger_evidence);
-            admitted = true;
-            continue;
+            incremental_classification_admitted = true;
+            return false;
         }
         if (std::isfinite(current_upper) &&
             current_upper < kValueCeiling &&
@@ -1892,12 +1994,18 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
                 candidate.row_index,
                 "missing_verified_carrier_upper", ledger_evidence);
         }
+        return false;
     }
 
     /* Rows proved improving against the same incumbent are independent
      * admissions, not prescribed policy choices. Expose the whole batch and
      * let one exact Bellman re-optimization choose among them. */
-    if (admitted) return true;
+    if (incremental_classification_admitted) {
+        incremental_classification_active = false;
+        incremental_classification_cursor = 0;
+        incremental_classification_certified_lower.clear();
+        return true;
+    }
 
     if (incremental_unevaluated_actions == 0) {
         if (incremental_resource_unresolved_actions != 0) {
@@ -1910,7 +2018,10 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
                     ? "automatic_action_envelope"
                     : incremental_deferred_resource_cap);
             incremental_envelope_closed = false;
-            return false;
+            incremental_classification_active = false;
+            incremental_classification_cursor = 0;
+            incremental_classification_certified_lower.clear();
+            return true;
         }
         const bool automatic_preparation_closed =
             !options.high_impact_executable_uppers ||
@@ -1940,7 +2051,7 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
          * not the removed broad-graph overlap fallback.
          */
         if (unadmitted != incremental_alternative_rows.end() &&
-            restricted_graph_closed &&
+            incremental_classification_restricted_graph_closed &&
             incremental_restricted_values_ready &&
             automatic_preparation_closed &&
             !result.diagnostics.resource_cap_hit) {
@@ -1963,6 +2074,10 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
              * and the solver could publish ExactClosed without ever running
              * Howard selection over this final joint row set. */
             incremental_envelope_closed = true;
+            incremental_classification_admitted = true;
+            incremental_classification_active = false;
+            incremental_classification_cursor = 0;
+            incremental_classification_certified_lower.clear();
             return true;
         }
         if (unadmitted == incremental_alternative_rows.end() &&
@@ -1971,7 +2086,17 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
             incremental_envelope_closed = true;
         }
     }
-    return false;
+    incremental_classification_active = false;
+    incremental_classification_cursor = 0;
+    incremental_classification_certified_lower.clear();
+    return true;
+}
+
+bool SolveWork::Impl::classify_incremental_alternatives() {
+    begin_incremental_classification();
+    while (!advance_incremental_classification()) {
+    }
+    return incremental_classification_admitted;
 }
 
 void SolveWork::Impl::restart_incremental_optimization() {

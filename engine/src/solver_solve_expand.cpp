@@ -618,7 +618,7 @@ bool SolveWork::Impl::prepare_state_expansion(
                     return priority(left) < priority(right);
                 });
             if (options.high_impact_executable_uppers) {
-                AnytimeScheduler::Availability available{};
+                SolveScheduler::Availability available{};
                 available[static_cast<std::size_t>(
                     AnytimeSchedulerLane::LegacyFairness)] = true;
                 available[static_cast<std::size_t>(
@@ -799,6 +799,12 @@ bool SolveWork::Impl::prepare_state_expansion(
             return false;
         }
         phases.carriers += batch.phases.carriers;
+        phases.continuation_resumes += batch.continuation_resumes;
+        phases.continuation_suspensions +=
+            batch.continuation_suspensions;
+        phases.max_continuation_slice_ns = std::max(
+            phases.max_continuation_slice_ns,
+            batch.max_continuation_slice_ns);
         phases.synthesis_ns += batch.phases.synthesis_ns;
         phases.local_context_ns += batch.phases.local_context_ns;
         phases.local_planner_build_ns +=

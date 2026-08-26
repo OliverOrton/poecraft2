@@ -100,7 +100,7 @@ void run_incumbent_portfolio_monotonicity_tests() {
 }
 
 void run_anytime_scheduler_tests() {
-    using solve_detail::AnytimeScheduler;
+    using solve_detail::SolveScheduler;
     using solve_detail::AnytimeSchedulerLane;
     using solve_detail::AnytimeSchedulingProfile;
 
@@ -108,8 +108,8 @@ void run_anytime_scheduler_tests() {
     profile.id = "test_scheduler_v1";
     profile.lane_quota = {1, 2, 1, 0, 0};
     profile.starvation_dispatches = 3;
-    AnytimeScheduler scheduler(profile);
-    AnytimeScheduler::Availability available{};
+    SolveScheduler scheduler(profile);
+    SolveScheduler::Availability available{};
     available[static_cast<std::size_t>(
         AnytimeSchedulerLane::LegacyFairness)] = true;
     available[static_cast<std::size_t>(
@@ -139,8 +139,8 @@ void run_anytime_scheduler_tests() {
     PC_CHECK(lanes[0].starvation_events == 2);
     PC_CHECK(lanes[2].starvation_events == 2);
 
-    AnytimeScheduler strict(profile);
-    AnytimeScheduler::Availability only_high{};
+    SolveScheduler strict(profile);
+    SolveScheduler::Availability only_high{};
     only_high[static_cast<std::size_t>(
         AnytimeSchedulerLane::HighProgress)] = true;
     PC_CHECK(strict.select_ticket(only_high) == AnytimeSchedulerLane::Count);

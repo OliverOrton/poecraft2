@@ -771,8 +771,8 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
      * focused heuristic/lower values here. */
     std::vector<double> incremental_certified_upper_values;
     bool incremental_reclassify_all = false;
-    solve_detail::AnytimeScheduler anytime_scheduler;
-    solve_detail::AnytimeScheduler focused_anytime_scheduler{
+    solve_detail::SolveScheduler anytime_scheduler;
+    solve_detail::SolveScheduler focused_anytime_scheduler{
         solve_detail::kFocusedAnytimeSchedulingProfile};
     solve_detail::AnytimeSchedulerLane incremental_last_scheduled_lane =
         solve_detail::AnytimeSchedulerLane::LegacyFairness;
@@ -787,6 +787,8 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     bool incremental_upper_policy_dirty = true;
     bool incremental_upper_policy_pass = false;
     bool incremental_upper_fixed_policy_proved = false;
+    bool incremental_post_upper_scheduling_active = false;
+    std::size_t incremental_post_upper_proof_cursor = 0;
     double incremental_upper_policy_prior_bound = kInfinity;
     std::vector<std::uint64_t> incremental_upper_temporary_rows;
     bool incremental_epoch_added_states = false;
@@ -834,6 +836,19 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         std::uint32_t states_added = 0;
     };
     std::vector<IncrementalAlternativeRow> incremental_alternative_rows;
+    enum class IncrementalClassificationUpper : std::uint8_t {
+        None,
+        ResultValues,
+        OutputIncumbent,
+    };
+    bool incremental_classification_active = false;
+    bool incremental_classification_admitted = false;
+    bool incremental_classification_reclassify_all = false;
+    bool incremental_classification_restricted_graph_closed = false;
+    std::size_t incremental_classification_cursor = 0;
+    IncrementalClassificationUpper incremental_classification_upper =
+        IncrementalClassificationUpper::None;
+    std::vector<double> incremental_classification_certified_lower;
     /* The Gate 3 fallback keeps the proven completed-pair scheduler view.
      * The typed ledger remains the complete observational lifecycle and can
      * become authoritative only after a profile qualifies all controls. */
@@ -1019,6 +1034,25 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     bool focused_closure_proved = false;
     bool focused_bound_proved = false;
     bool full_closure_after_focused_fallback = false;
+    enum class FocusedLowerPreparationStage : std::uint8_t {
+        Idle,
+        ProofValues,
+        RetainDirect,
+        RetainClassMinimum,
+        ApplyClassMinimum,
+        GoalStates,
+        Finalize,
+    };
+    FocusedLowerPreparationStage focused_lower_preparation_stage =
+        FocusedLowerPreparationStage::Idle;
+    std::uint32_t focused_lower_preparation_cursor = 0;
+    std::vector<double> focused_lower_previous_values;
+    std::vector<double> focused_lower_retained_minimum;
+    /* Proof-only snapshot produced by the cooperative focused initializer.
+     * Unlike result.values, this never absorbs retained restricted-policy
+     * values and is therefore safe for open-envelope row classification. */
+    std::vector<double> focused_lower_completion_proof_values;
+    bool focused_lower_completion_proof_snapshot_initialized = false;
     struct FocusedFallbackPolicy {
         struct PrimitiveRenewalMode {
             double value = kInfinity;
@@ -1406,21 +1440,48 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     std::unique_ptr<CarrierBoundAttributionWork> carrier_bound_attribution;
     std::uint64_t peak_owned_bytes = 0;
     SolvePhase phase = SolvePhase::Expanding;
-    std::uint64_t finalization_work_items = 0;
-    std::uint32_t finalization_refinement_states = 0;
-    std::uint32_t finalization_refinement_kernels = 0;
-    std::uint64_t finalization_refinement_transitions = 0;
-    std::uint32_t finalization_refinement_rounds = 0;
-    std::uint32_t finalization_refinement_classes = 0;
+    /*
+     * One owner for direct assertion, strict repair, publication
+     * classification, packaging, and the continuation that makes those
+     * stages observable. Compatibility references keep the established
+     * coroutine body behavior-neutral while its state is no longer scattered
+     * across SolveWork::Impl.
+     */
+    struct PublicationPipeline {
+        std::uint64_t work_items = 0;
+        std::uint32_t refinement_states = 0;
+        std::uint32_t refinement_kernels = 0;
+        std::uint64_t refinement_transitions = 0;
+        std::uint32_t refinement_rounds = 0;
+        std::uint32_t refinement_classes = 0;
+        StrategyEvalProgress evaluation_progress;
+        std::optional<solve_detail::CooperativeTask<SolveResult>> task;
+        std::optional<SolveResult> result;
+        bool consumed = false;
+    } publication_pipeline;
+    std::uint64_t& finalization_work_items =
+        publication_pipeline.work_items;
+    std::uint32_t& finalization_refinement_states =
+        publication_pipeline.refinement_states;
+    std::uint32_t& finalization_refinement_kernels =
+        publication_pipeline.refinement_kernels;
+    std::uint64_t& finalization_refinement_transitions =
+        publication_pipeline.refinement_transitions;
+    std::uint32_t& finalization_refinement_rounds =
+        publication_pipeline.refinement_rounds;
+    std::uint32_t& finalization_refinement_classes =
+        publication_pipeline.refinement_classes;
     /* Best independently verified executable strategy observed while a
      * cooperative finalization child continues proving alternatives. */
     double& finalization_verified_upper_bound =
         incumbent_portfolio.finalization_verified_upper;
-    StrategyEvalProgress finalization_evaluation_progress;
-    std::optional<solve_detail::CooperativeTask<SolveResult>>
-        finalization_task;
-    std::optional<SolveResult> finalized_result;
-    bool consumed = false;
+    StrategyEvalProgress& finalization_evaluation_progress =
+        publication_pipeline.evaluation_progress;
+    std::optional<solve_detail::CooperativeTask<SolveResult>>&
+        finalization_task = publication_pipeline.task;
+    std::optional<SolveResult>& finalized_result =
+        publication_pipeline.result;
+    bool& consumed = publication_pipeline.consumed;
 
     static std::uint64_t priced_operator_nested_bytes(
         const PricedOperator& priced);
@@ -1436,13 +1497,14 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         const SolveOptions& solve_options);
     ~Impl();
 
-    solve_detail::CooperativeTask<SolveResult> run_finalization();
+    solve_detail::CooperativeTask<SolveResult>
+    run_publication_pipeline();
     bool can_prepare_requested_bounded_finish() const;
     void prepare_requested_bounded_finish();
 
-    void begin_finalization();
+    void begin_publication_pipeline();
 
-    void advance_finalization();
+    void advance_publication_pipeline();
 
     static void identity_mix(
         std::uint64_t& hash, const std::uint64_t value);
@@ -1823,6 +1885,10 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
 
     bool classify_incremental_alternatives();
 
+    void begin_incremental_classification();
+
+    bool advance_incremental_classification();
+
     double sparse_row_q_for_values(
         std::size_t row_index,
         const std::vector<double>& values) const;
@@ -1836,6 +1902,10 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     bool prepare_warm_start_policy_wave(std::uint32_t wave);
 
     bool begin_incremental_upper_policy_pass();
+
+    void begin_incremental_post_upper_scheduling();
+
+    bool advance_incremental_post_upper_scheduling();
 
     void refresh_incremental_upper_incumbent();
 
@@ -2079,6 +2149,8 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     bool run_policy_iteration_unit();
 
     void begin_focused_lower_solve();
+
+    bool advance_focused_lower_preparation();
 
     bool collect_focused_fringe(
         std::vector<std::uint32_t>& fringe,

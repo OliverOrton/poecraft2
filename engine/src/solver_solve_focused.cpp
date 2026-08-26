@@ -7,19 +7,58 @@ namespace solver {
 using namespace solve_detail;
 
 void SolveWork::Impl::begin_focused_lower_solve() {
+        if (focused_lower_preparation_stage !=
+            FocusedLowerPreparationStage::Idle) {
+            throw std::logic_error(
+                "focused lower preparation already active");
+        }
         focused_mode = true;
         focus_optimizing = true;
         focused_lower_mode = true;
         result.diagnostics.focused_expansion = true;
         const std::uint32_t state_count = calc.state_count();
         transition_cache->state_rows.resize(state_count);
-        std::vector<double> previous_values = std::move(result.values);
-        result.values.assign(state_count, 0.0);
-        for (std::uint32_t state = 0; state < state_count; ++state) {
-            if (calc.is_goal_state(calc.state(state))) continue;
-            result.values[state] =
-                completion_proof_lower(state).value;
+        focused_lower_previous_values = std::move(result.values);
+        focused_lower_retained_minimum.clear();
+        if (focused_lower_completion_proof_snapshot_initialized) {
+            focused_lower_completion_proof_values.resize(
+                state_count, std::numeric_limits<double>::quiet_NaN());
+        } else {
+            focused_lower_completion_proof_values.assign(
+                state_count, std::numeric_limits<double>::quiet_NaN());
         }
+        result.values.assign(state_count, 0.0);
+        focused_lower_preparation_cursor = 0;
+        focused_lower_preparation_stage =
+            FocusedLowerPreparationStage::ProofValues;
+    }
+
+bool SolveWork::Impl::advance_focused_lower_preparation() {
+        const std::uint32_t state_count = calc.state_count();
+        switch (focused_lower_preparation_stage) {
+        case FocusedLowerPreparationStage::Idle:
+            return true;
+        case FocusedLowerPreparationStage::ProofValues:
+            if (focused_lower_preparation_cursor < state_count) {
+                const std::uint32_t state =
+                    focused_lower_preparation_cursor++;
+                if (!calc.is_goal_state(calc.state(state))) {
+                    /* Retain completed values and produce proof for newly
+                     * interned support one state per host continuation. The
+                     * shared goal-cover model was prepared during measured
+                     * solve setup, so this lookup cannot hide that one-time
+                     * construction inside a state-local slice. */
+                    double proof =
+                        focused_lower_completion_proof_values[state];
+                    if (!std::isfinite(proof)) {
+                        proof = completion_proof_lower(state).value;
+                    }
+                    result.values[state] = proof;
+                    focused_lower_completion_proof_values[state] = proof;
+                }
+                return false;
+            }
+            focused_lower_completion_proof_snapshot_initialized = true;
         /* This independent carrier/pattern relaxation covers the complete
          * requested action envelope. Publish it for every session; the
          * restricted focused optimum remains separate and cannot replace
@@ -37,57 +76,107 @@ void SolveWork::Impl::begin_focused_lower_solve() {
                         independent_lower);
                 result.diagnostics.focused_lower_bound = std::max(
                     result.diagnostics.focused_lower_bound,
-                    independent_lower);
+                        independent_lower);
             }
         }
+            focused_lower_preparation_cursor = 0;
+            if (focused_behavioral_representative.empty()) {
+                focused_lower_preparation_stage =
+                    FocusedLowerPreparationStage::RetainDirect;
+            } else {
+                focused_lower_retained_minimum.assign(
+                    state_count, kInfinity);
+                focused_lower_preparation_stage =
+                    FocusedLowerPreparationStage::RetainClassMinimum;
+            }
+            return false;
+        case FocusedLowerPreparationStage::RetainDirect: {
         /* Expanding a previously zero-valued frontier can only raise the
          * focused lower bound. Preserve the last round's admissible values
          * for already-known states instead of restarting every exact policy
          * evaluation from zero. */
         const std::size_t retained = std::min<std::size_t>(
-            previous_values.size(), result.values.size());
-        if (focused_behavioral_representative.empty()) {
-            for (std::size_t state = 0; state < retained; ++state) {
-                if (std::isfinite(previous_values[state]) &&
-                    previous_values[state] >= 0.0 &&
-                    previous_values[state] < kValueCeiling) {
-                    result.values[state] = std::max(
-                        result.values[state], previous_values[state]);
+            focused_lower_previous_values.size(), result.values.size());
+            if (focused_lower_preparation_cursor < retained) {
+                const std::size_t state =
+                    focused_lower_preparation_cursor++;
+                const double previous =
+                    focused_lower_previous_values[state];
+                if (std::isfinite(previous) && previous >= 0.0 &&
+                    previous < kValueCeiling) {
+                    result.values[state] =
+                        std::max(result.values[state], previous);
                 }
+                return false;
             }
-        } else {
+            focused_lower_previous_values.clear();
+            focused_lower_preparation_cursor = 0;
+            focused_lower_preparation_stage =
+                FocusedLowerPreparationStage::GoalStates;
+            return false;
+        }
+        case FocusedLowerPreparationStage::RetainClassMinimum: {
             /* Exact class members have the same value in the current lower
              * problem. Retaining their minimum prior lower bound preserves
              * admissibility even if an earlier solve stopped at tolerance. */
-            std::vector<double> retained_min(state_count, kInfinity);
-            for (std::size_t state = 0; state < retained; ++state) {
-                const double value = previous_values[state];
+            const std::size_t retained = std::min<std::size_t>(
+                focused_lower_previous_values.size(), result.values.size());
+            if (focused_lower_preparation_cursor < retained) {
+                const std::size_t state =
+                    focused_lower_preparation_cursor++;
+                const double value = focused_lower_previous_values[state];
                 if (!std::isfinite(value) || value < 0.0 ||
                     value >= kValueCeiling) {
-                    continue;
+                    return false;
                 }
                 const std::uint32_t representative =
                     focused_behavioral_representative.at(state);
-                retained_min[representative] = std::min(
-                    retained_min[representative], value);
+                focused_lower_retained_minimum[representative] = std::min(
+                    focused_lower_retained_minimum[representative], value);
+                return false;
             }
-            for (std::uint32_t representative = 0;
-                 representative < state_count; ++representative) {
-                if (std::isfinite(retained_min[representative])) {
+            focused_lower_previous_values.clear();
+            focused_lower_preparation_cursor = 0;
+            focused_lower_preparation_stage =
+                FocusedLowerPreparationStage::ApplyClassMinimum;
+            return false;
+        }
+        case FocusedLowerPreparationStage::ApplyClassMinimum:
+            if (focused_lower_preparation_cursor < state_count) {
+                const std::uint32_t representative =
+                    focused_lower_preparation_cursor++;
+                if (std::isfinite(
+                        focused_lower_retained_minimum[representative])) {
                     result.values[representative] = std::max(
                         result.values[representative],
-                        retained_min[representative]);
+                        focused_lower_retained_minimum[representative]);
                 }
+                return false;
             }
-        }
+            focused_lower_retained_minimum.clear();
+            focused_lower_preparation_cursor = 0;
+            focused_lower_preparation_stage =
+                FocusedLowerPreparationStage::GoalStates;
+            return false;
+        case FocusedLowerPreparationStage::GoalStates:
+            if (focused_lower_preparation_cursor == 0) {
         result.expanded = expanded;
         result.expanded.resize(state_count, 0);
         result.goal_states.assign(state_count, 0);
-        for (std::uint32_t state = 0; state < state_count; ++state) {
-            if (calc.is_goal_state(calc.state(state))) {
-                result.goal_states[state] = 1;
             }
-        }
+            if (focused_lower_preparation_cursor < state_count) {
+                const std::uint32_t state =
+                    focused_lower_preparation_cursor++;
+                if (calc.is_goal_state(calc.state(state))) {
+                    result.goal_states[state] = 1;
+                }
+                return false;
+            }
+            focused_lower_preparation_cursor = 0;
+            focused_lower_preparation_stage =
+                FocusedLowerPreparationStage::Finalize;
+            return false;
+        case FocusedLowerPreparationStage::Finalize:
         prepare_focused_exact_quotient();
         prepare_priced_rows();
         policy_rows.clear();
@@ -141,6 +230,12 @@ void SolveWork::Impl::begin_focused_lower_solve() {
                 finish_focused_lower_solve();
             }
         }
+            focused_lower_preparation_stage =
+                FocusedLowerPreparationStage::Idle;
+            focused_lower_preparation_cursor = 0;
+            return true;
+        }
+        throw std::logic_error("invalid focused lower preparation stage");
     }
 
 bool SolveWork::Impl::collect_focused_fringe(
@@ -611,7 +706,7 @@ void SolveWork::Impl::schedule_next_focused_expansion(
             bool high_progress_available = true;
             while (telemetry.carrier_ladder_admissions < ladder_limit &&
                    (fairness_available || high_progress_available)) {
-                solve_detail::AnytimeScheduler::Availability available{};
+                solve_detail::SolveScheduler::Availability available{};
                 available[static_cast<std::size_t>(
                     solve_detail::AnytimeSchedulerLane::LegacyFairness)] =
                     fairness_available;
@@ -1245,6 +1340,7 @@ void SolveWork::Impl::finish_focused_upper_solve(const bool succeeded) {
                             incremental_upper_policy_prior_bound);
             std::unordered_set<std::uint64_t> selected_temporary;
             if (improved) {
+                selected_temporary.reserve(policy_rows.size());
                 for (const std::uint64_t row : policy_rows) {
                     if (row !=
                         std::numeric_limits<std::uint64_t>::max()) {
@@ -1252,23 +1348,34 @@ void SolveWork::Impl::finish_focused_upper_solve(const bool succeeded) {
                     }
                 }
             }
+            std::unordered_set<std::uint64_t> promoted_temporary;
+            if (improved) {
+                promoted_temporary.reserve(
+                    incremental_upper_temporary_rows.size());
+            }
             for (const std::uint64_t row :
                  incremental_upper_temporary_rows) {
                 const bool promote =
                     improved && selected_temporary.contains(row);
                 transition_cache->rows.at(row).admitted = promote;
-                if (!promote) continue;
-                for (IncrementalAlternativeRow& candidate :
-                     incremental_alternative_rows) {
-                    if (candidate.row_index != row) continue;
-                    candidate.status =
-                        IncrementalAlternativeRow::Status::Admitted;
-                    candidate.improvement_margin =
-                        incremental_upper_policy_prior_bound -
-                        output_incumbent->certified_upper_bound;
-                    ++incremental_upper_policy_updates;
-                    break;
+                if (promote) promoted_temporary.insert(row);
+            }
+            /* Row identity is unique in the action envelope. Restore every
+             * temporary row first, then match promotions in one stable pass;
+             * the former per-row linear search was quadratic at upper-pass
+             * publication boundaries. Erasing preserves the old first-match
+             * behavior if malformed duplicate records ever appear. */
+            for (IncrementalAlternativeRow& candidate :
+                 incremental_alternative_rows) {
+                if (promoted_temporary.erase(candidate.row_index) == 0) {
+                    continue;
                 }
+                candidate.status =
+                    IncrementalAlternativeRow::Status::Admitted;
+                candidate.improvement_margin =
+                    incremental_upper_policy_prior_bound -
+                    output_incumbent->certified_upper_bound;
+                ++incremental_upper_policy_updates;
             }
             incremental_upper_temporary_rows.clear();
             incremental_reclassify_all = true;
@@ -1307,25 +1414,7 @@ void SolveWork::Impl::finish_focused_upper_solve(const bool succeeded) {
                 phase = SolvePhase::Done;
                 return;
             }
-            if (classify_incremental_alternatives()) {
-                restart_incremental_optimization();
-            } else if (!incremental_anytime_missing_frontier_states.empty() &&
-                       schedule_incremental_refinement()) {
-                return;
-            } else if (options.high_impact_executable_uppers &&
-                       schedule_next_incremental_alternative()) {
-                return;
-            } else if (schedule_incremental_refinement()) {
-                return;
-            } else if (!schedule_next_incremental_alternative()) {
-                if (!schedule_incremental_refinement(true)) {
-                    if (incremental_envelope_closed) {
-                        finish_focused_lower_solve();
-                    } else {
-                        phase = SolvePhase::Done;
-                    }
-                }
-            }
+            begin_incremental_post_upper_scheduling();
             return;
         }
         finish_focused_lower_solve(false);
