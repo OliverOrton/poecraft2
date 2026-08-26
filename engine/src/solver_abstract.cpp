@@ -633,6 +633,24 @@ AbstractLayout build_abstract_layout(
                 member_class.status =
                     static_cast<GoalSlotStatus>(std::get<0>(key));
                 member_class.gen_type = std::get<1>(key);
+                member_class.strict_observation_metadata_complete = true;
+                member_class.exclusion_effect_observation_complete =
+                    std::all_of(
+                        members.begin(), members.end(),
+                        [&](const std::uint32_t mod) {
+                            return observes_exclusion_by_mod[mod] != 0;
+                        });
+                member_class.required_level_observation_complete =
+                    std::all_of(
+                        members.begin(), members.end(),
+                        [&](const std::uint32_t mod) {
+                            return observes_required_level_by_mod[mod] != 0;
+                        });
+                member_class.classification_tag_bits = std::get<2>(key);
+                member_class.veiled_template = std::get<3>(key) != 0;
+                member_class.metamod_role = std::get<4>(key);
+                member_class.observed_required_level =
+                    std::get<5>(key).value_or(kNoId);
                 member_class.exclusion_effect_mask = std::get<6>(key);
                 member_class.count_observation_bits = std::get<7>(key);
                 member_class.member_mask = empty_mask(session);
@@ -820,6 +838,25 @@ AbstractLayout build_abstract_layout(
         junk.gen_type = std::get<0>(key);
         junk.tag_bits = std::get<1>(key);
         junk.goal_block_mask = std::get<2>(key);
+        junk.strict_observation_metadata_complete =
+            distinguish_junk_exclusion_effects ||
+            distinguish_modifier_identity;
+        junk.exclusion_effect_observation_complete =
+            std::all_of(
+                members.begin(), members.end(),
+                [&](const std::uint32_t mod) {
+                    return observes_exclusion_by_mod[mod] != 0;
+                });
+        junk.required_level_observation_complete =
+            std::all_of(
+                members.begin(), members.end(),
+                [&](const std::uint32_t mod) {
+                    return observes_required_level_by_mod[mod] != 0;
+                });
+        junk.veiled_template = std::get<3>(key) != 0;
+        junk.metamod_role = std::get<4>(key).value_or(-1);
+        junk.observed_required_level =
+            std::get<5>(key).value_or(kNoId);
         junk.exclusion_effect_mask = std::get<6>(key);
         junk.count_observation_bits = std::get<7>(key);
         junk.member_mask = empty_mask(session);

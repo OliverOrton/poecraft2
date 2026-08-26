@@ -249,10 +249,11 @@ void SolveWork::Impl::record_upper_attribution_milestone(
     }
 }
 
-void SolveWork::Impl::finalize_carrier_bound_attribution() {
+solve_detail::CooperativeTask<bool>
+SolveWork::Impl::finalize_carrier_bound_attribution() {
     if (!carrier_bound_attribution ||
         !result.diagnostics.carrier_bound_attribution_json.empty()) {
-        return;
+        co_return false;
     }
     using Work = CarrierBoundAttributionWork;
     prepare_goal_cover_cost();
@@ -429,6 +430,7 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
             expanded_population, state, value);
         if (is_policy) add_population(
             policy_population, state, value);
+        co_await solve_detail::CooperativeCheckpoint{};
     }
 
     std::vector<std::uint32_t> samples;
@@ -448,9 +450,15 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
             result.policy_reachable[state]) {
             add_sample(state);
         }
+        if ((state + 1) % 1024 == 0) {
+            co_await solve_detail::CooperativeCheckpoint{
+                samples.capacity() * sizeof(std::uint32_t)};
+        }
     }
     for (std::uint32_t state = 0; state < state_count; ++state) {
         if (state >= result.expanded.size() || !result.expanded[state]) {
+            co_await solve_detail::CooperativeCheckpoint{
+                samples.capacity() * sizeof(std::uint32_t)};
             continue;
         }
         const LowerComponents value = components(state);
@@ -458,10 +466,16 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
             !calc.is_goal_state(calc.state(state))) {
             add_sample(state);
         }
+        co_await solve_detail::CooperativeCheckpoint{
+            samples.capacity() * sizeof(std::uint32_t)};
     }
     for (std::uint32_t state = 0; state < state_count; ++state) {
         if (state < result.expanded.size() && result.expanded[state]) {
             add_sample(state);
+        }
+        if ((state + 1) % 1024 == 0) {
+            co_await solve_detail::CooperativeCheckpoint{
+                samples.capacity() * sizeof(std::uint32_t)};
         }
     }
 
@@ -864,6 +878,7 @@ void SolveWork::Impl::finalize_carrier_bound_attribution() {
         json, carrier_bound_attribution->first_verified_upper);
     json += "}}";
     result.diagnostics.carrier_bound_attribution_json = std::move(json);
+    co_return true;
 }
 
 namespace solve_detail {
@@ -2081,6 +2096,17 @@ std::uint64_t estimated_retained_solver_bytes(
     std::uint64_t bytes = calc.estimated_owned_bytes();
     if (calc.solve_transition_cache() != nullptr) {
         bytes += calc.solve_transition_cache()->estimated_owned_bytes();
+    }
+    if (result != nullptr) bytes += solve_result_owned_bytes(*result);
+    return bytes;
+}
+
+std::uint64_t fast_estimated_retained_solver_bytes(
+    const CalcContext& calc,
+    const SolveResult* result) {
+    std::uint64_t bytes = calc.fast_estimated_owned_bytes();
+    if (calc.solve_transition_cache() != nullptr) {
+        bytes += calc.solve_transition_cache()->fast_estimated_owned_bytes();
     }
     if (result != nullptr) bytes += solve_result_owned_bytes(*result);
     return bytes;

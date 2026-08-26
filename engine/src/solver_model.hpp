@@ -948,6 +948,16 @@ enum class GoalSlotStatus : std::uint8_t {
 struct GoalMemberClass {
     GoalSlotStatus status = GoalSlotStatus::Absent;
     std::int8_t gen_type = 0; /* 0 prefix, 1 suffix */
+    /* Strict layouts already proved these observer values uniform while
+     * partitioning modifier members. Exact evaluation may consume that proof
+     * directly instead of rescanning the same member mask for every state. */
+    bool strict_observation_metadata_complete = false;
+    bool exclusion_effect_observation_complete = false;
+    bool required_level_observation_complete = false;
+    bool veiled_template = false;
+    std::int32_t metamod_role = -1;
+    std::uint32_t observed_required_level = kNoId;
+    std::uint64_t classification_tag_bits = 0;
     std::vector<std::uint64_t> exclusion_effect_mask;
     std::vector<std::uint64_t> count_observation_bits;
     std::vector<std::uint64_t> member_mask;
@@ -981,6 +991,12 @@ struct JunkClass {
     std::int8_t gen_type = 0;           /* 0 prefix, 1 suffix */
     std::uint64_t tag_bits = 0;         /* over discriminating_tag_ids order */
     std::uint32_t goal_block_mask = 0;  /* bit per goal slot index */
+    bool strict_observation_metadata_complete = false;
+    bool exclusion_effect_observation_complete = false;
+    bool required_level_observation_complete = false;
+    bool veiled_template = false;
+    std::int32_t metamod_role = -1;
+    std::uint32_t observed_required_level = kNoId;
     /* Exact-evaluation layouts additionally partition junk by the complete
      * session-mod mask excluded by its group memberships. Empty for the
      * solver's legacy compact abstraction. */

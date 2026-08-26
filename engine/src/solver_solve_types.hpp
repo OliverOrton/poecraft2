@@ -1736,7 +1736,8 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         double value,
         bool independently_verified);
 
-    void finalize_carrier_bound_attribution();
+    solve_detail::CooperativeTask<bool>
+    finalize_carrier_bound_attribution();
 
     solve_detail::CarrierOrderingScore carrier_ordering_score(
         std::uint32_t state,

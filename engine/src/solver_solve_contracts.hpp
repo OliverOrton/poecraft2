@@ -1200,6 +1200,10 @@ std::uint64_t estimated_retained_solver_bytes(
     const CalcContext& calc,
     const SolveResult* result);
 
+std::uint64_t fast_estimated_retained_solver_bytes(
+    const CalcContext& calc,
+    const SolveResult* result);
+
 
 } // namespace solver
 } // namespace poecraft

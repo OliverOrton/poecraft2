@@ -303,6 +303,7 @@ async function solveSolver(
     let emittedProgress = false;
     let lastProgressAt = -Infinity;
     let yieldCount = 0;
+    let lastTimerYieldAt = -Infinity;
     let unyieldedStepMs = 0;
     const boundedFinishAfterMs =
         typeof params.boundedFinishAfterMs === "number" &&
@@ -311,7 +312,11 @@ async function solveSolver(
             ? params.boundedFinishAfterMs
             : null;
     let boundedFinishRequested = false;
-    let solveStartedAt = 0;
+    /* Match the native benchmark contract: the bounded wall window owns
+     * synchronous solve-model setup as well as stepped search. Starting this
+     * after beginSolverSolve silently granted release WASM an additional full
+     * search window and changed the graph selected by the same fixture. */
+    const solveStartedAt = performance.now();
     const worker: SolverWorkerMetrics = {
         step_count: 0,
         yield_count: 0,
@@ -385,7 +390,6 @@ async function solveSolver(
             params.options as SolveOptions | undefined,
         );
         begun = true;
-        solveStartedAt = performance.now();
 
         do {
             if (cancelled.has(id)) {
@@ -454,10 +458,15 @@ async function solveSolver(
                 ++yieldCount;
                 worker.yield_count = yieldCount;
                 unyieldedStepMs = 0;
-                // Give an external AbortSignal a timer-task turn immediately.
-                await (yieldCount % 2 === 1
-                    ? yieldToTimerTask()
-                    : yieldToEventLoop());
+                const timerYieldDue =
+                    lastTimerYieldAt === -Infinity ||
+                    performance.now() - lastTimerYieldAt >= 100;
+                if (timerYieldDue) {
+                    await yieldToTimerTask();
+                    lastTimerYieldAt = performance.now();
+                } else {
+                    await yieldToEventLoop();
+                }
             }
         } while (!progress.done);
 
@@ -531,6 +540,7 @@ async function evaluateStrategy(
     let workItems = Math.max(1, (params.chunkSize as number) || 16);
     let yieldCount = 0;
     let lastProgressAt = -Infinity;
+    let lastTimerYieldAt = -Infinity;
     let emittedProgress = false;
     let observedPhase: StrategyEvalProgress["phase"] = "discovery";
     let pendingDiscovery: number | undefined;
@@ -603,12 +613,19 @@ async function evaluateStrategy(
             }
             if (!progress.done) {
                 ++yieldCount;
-                // Exact evaluations can finish in only a few chunks. Give
-                // external abort messages a timer-task turn immediately, then
-                // alternate with the lower-latency MessageChannel yield.
-                await (yieldCount % 2 === 1
-                    ? yieldToTimerTask()
-                    : yieldToEventLoop());
+                // MessageChannel keeps fine-grained evaluator stepping cheap,
+                // while a timer task at least every 100 ms guarantees incoming
+                // abort messages a turn even in runtimes that favor the private
+                // channel queue. The first continuation always uses the timer.
+                const timerYieldDue =
+                    lastTimerYieldAt === -Infinity ||
+                    performance.now() - lastTimerYieldAt >= 100;
+                if (timerYieldDue) {
+                    await yieldToTimerTask();
+                    lastTimerYieldAt = performance.now();
+                } else {
+                    await yieldToEventLoop();
+                }
             }
         } while (!progress.done);
         if (cancelled.has(id)) {

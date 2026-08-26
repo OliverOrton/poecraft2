@@ -523,6 +523,41 @@ AbstractFeatureExtraction extract_strict_abstract_features(
 
     const std::vector<std::uint32_t> relevant_tags =
         relevant_observation_tags(requirement);
+    const bool strict_metadata_covers_tags = std::all_of(
+        relevant_tags.begin(), relevant_tags.end(),
+        [&](const std::uint32_t tag) {
+            return std::binary_search(
+                layout.discriminating_tag_ids.begin(),
+                layout.discriminating_tag_ids.end(), tag);
+        });
+    struct StrictCarrierMetadata {
+        bool complete = false;
+        bool veiled_template = false;
+        std::int32_t metamod_role = -1;
+        std::uint32_t observed_required_level = kNoId;
+        std::uint64_t classification_tag_bits = 0;
+        const StableKey* exclusion_effect = nullptr;
+    };
+    const auto metadata_relevant_tags =
+        [&](const std::uint64_t tag_bits) {
+            std::vector<std::uint32_t> tags;
+            for (const std::uint32_t tag : relevant_tags) {
+                const auto found = std::lower_bound(
+                    layout.discriminating_tag_ids.begin(),
+                    layout.discriminating_tag_ids.end(), tag);
+                if (found == layout.discriminating_tag_ids.end() ||
+                    *found != tag) {
+                    continue;
+                }
+                const std::size_t index = static_cast<std::size_t>(
+                    found - layout.discriminating_tag_ids.begin());
+                if (index < 64 &&
+                    (tag_bits & (std::uint64_t{1} << index)) != 0) {
+                    tags.push_back(tag);
+                }
+            }
+            return tags;
+        };
     const std::uint8_t item_traits =
         refinement_item_traits(state);
     std::uint32_t next_subject = 0;
@@ -537,18 +572,22 @@ AbstractFeatureExtraction extract_strict_abstract_features(
             const std::optional<StableKey>& count_membership,
             const bool crafted,
             const bool fractured,
-            const std::uint32_t count) {
+            const std::uint32_t count,
+            const StrictCarrierMetadata* metadata) {
             if (count == 0) return;
-            if (members.empty()) {
+            const bool use_metadata =
+                metadata != nullptr && metadata->complete;
+            if (members.empty() && !use_metadata) {
                 result.unavailable_features |=
                     requested_affix_features;
                 return;
             }
-            const auto side_value =
-                uniform_member_value<std::int8_t>(
-                    members, [&](const std::uint32_t mod) {
-                        return session.gen_type.at(mod);
-                    });
+            const auto side_value = use_metadata
+                ? std::optional<std::int8_t>{side_hint}
+                : uniform_member_value<std::int8_t>(
+                      members, [&](const std::uint32_t mod) {
+                          return session.gen_type.at(mod);
+                      });
             const std::int8_t side =
                 side_hint == PC_SIDE_PREFIX ||
                         side_hint == PC_SIDE_SUFFIX
@@ -566,17 +605,21 @@ AbstractFeatureExtraction extract_strict_abstract_features(
             } else {
                 represented_suffixes += count;
             }
-            const auto veiled_value =
-                uniform_member_value<bool>(
-                    members, [&](const std::uint32_t mod) {
-                        return modifier_is_veiled_template(session, mod);
-                    });
-            const auto tags_value =
-                uniform_member_value<std::vector<std::uint32_t>>(
-                    members, [&](const std::uint32_t mod) {
-                        return mod_relevant_tags(
-                            session, mod, relevant_tags);
-                    });
+            const auto veiled_value = use_metadata
+                ? std::optional<bool>{metadata->veiled_template}
+                : uniform_member_value<bool>(
+                      members, [&](const std::uint32_t mod) {
+                          return modifier_is_veiled_template(session, mod);
+                      });
+            const auto tags_value = use_metadata
+                ? std::optional<std::vector<std::uint32_t>>{
+                      metadata_relevant_tags(
+                          metadata->classification_tag_bits)}
+                : uniform_member_value<std::vector<std::uint32_t>>(
+                      members, [&](const std::uint32_t mod) {
+                          return mod_relevant_tags(
+                              session, mod, relevant_tags);
+                      });
             if (!veiled_value.has_value() ||
                 !tags_value.has_value()) {
                 result.unavailable_features |=
@@ -602,12 +645,14 @@ AbstractFeatureExtraction extract_strict_abstract_features(
                  refinement_feature(
                      RefinementFeature::
                          ModifierExclusionSignature)) != 0) {
-                exclusion =
-                    uniform_member_value<StableKey>(
-                        members, [&](const std::uint32_t mod) {
-                            return modifier_exclusion_effect_signature(
-                                session, mod);
-                        });
+                exclusion = use_metadata
+                    ? std::optional<StableKey>{
+                          *metadata->exclusion_effect}
+                    : uniform_member_value<StableKey>(
+                          members, [&](const std::uint32_t mod) {
+                              return modifier_exclusion_effect_signature(
+                                  session, mod);
+                          });
                 if (!exclusion.has_value()) {
                     result.unavailable_features |=
                         refinement_feature(
@@ -619,11 +664,13 @@ AbstractFeatureExtraction extract_strict_abstract_features(
             if ((observed_here &
                  refinement_feature(
                      RefinementFeature::ModifierRequiredLevel)) != 0) {
-                required_level =
-                    uniform_member_value<std::uint32_t>(
-                        members, [&](const std::uint32_t mod) {
-                            return session.required_level.at(mod);
-                        });
+                required_level = use_metadata
+                    ? std::optional<std::uint32_t>{
+                          metadata->observed_required_level}
+                    : uniform_member_value<std::uint32_t>(
+                          members, [&](const std::uint32_t mod) {
+                              return session.required_level.at(mod);
+                          });
                 if (!required_level.has_value()) {
                     result.unavailable_features |=
                         refinement_feature(
@@ -636,14 +683,16 @@ AbstractFeatureExtraction extract_strict_abstract_features(
                  refinement_feature(
                      RefinementFeature::
                          ModifierMetamodRole)) != 0) {
-                metamod_role =
-                    uniform_member_value<std::int32_t>(
-                        members, [&](const std::uint32_t mod) {
-                            return mod <
-                                           session.metamod_type.size()
-                                       ? session.metamod_type[mod]
-                                       : -1;
-                        });
+                metamod_role = use_metadata
+                    ? std::optional<std::int32_t>{
+                          metadata->metamod_role}
+                    : uniform_member_value<std::int32_t>(
+                          members, [&](const std::uint32_t mod) {
+                              return mod <
+                                             session.metamod_type.size()
+                                         ? session.metamod_type[mod]
+                                         : -1;
+                          });
                 if (!metamod_role.has_value()) {
                     result.unavailable_features |=
                         refinement_feature(
@@ -749,20 +798,49 @@ AbstractFeatureExtraction extract_strict_abstract_features(
         std::vector<std::uint32_t> members;
         std::int8_t side = -1;
         std::optional<StableKey> count_membership;
+        StrictCarrierMetadata strict_metadata;
+        const StrictCarrierMetadata* metadata = nullptr;
         const std::uint32_t token =
             state.goal_member_class_tokens[slot_index];
         if (token != 0 && token <= slot.member_classes.size()) {
             const GoalMemberClass& member_class =
                 slot.member_classes[token - 1];
-            members = mask_members(
-                session, member_class.member_mask);
             side = member_class.gen_type;
-            count_membership =
-                uniform_member_value<StableKey>(
-                    members, [&](const std::uint32_t mod) {
-                        return mod_count_observation_bits(
-                            layout, mod);
-                    });
+            strict_metadata.complete =
+                member_class.strict_observation_metadata_complete &&
+                strict_metadata_covers_tags &&
+                ((requested_affix_features &
+                  refinement_feature(
+                      RefinementFeature::ModifierExclusionSignature)) == 0 ||
+                 member_class.exclusion_effect_observation_complete) &&
+                ((requested_affix_features &
+                  refinement_feature(
+                      RefinementFeature::ModifierRequiredLevel)) == 0 ||
+                 (member_class.required_level_observation_complete &&
+                  member_class.observed_required_level != kNoId));
+            strict_metadata.veiled_template =
+                member_class.veiled_template;
+            strict_metadata.metamod_role = member_class.metamod_role;
+            strict_metadata.observed_required_level =
+                member_class.observed_required_level;
+            strict_metadata.classification_tag_bits =
+                member_class.classification_tag_bits;
+            strict_metadata.exclusion_effect =
+                &member_class.exclusion_effect_mask;
+            if (strict_metadata.complete) {
+                count_membership =
+                    member_class.count_observation_bits;
+                metadata = &strict_metadata;
+            } else {
+                members = mask_members(
+                    session, member_class.member_mask);
+                count_membership =
+                    uniform_member_value<StableKey>(
+                        members, [&](const std::uint32_t mod) {
+                            return mod_count_observation_bits(
+                                layout, mod);
+                        });
+            }
         } else {
             for (const std::uint32_t mod :
                  mask_members(session, slot.member_mask)) {
@@ -784,7 +862,7 @@ AbstractFeatureExtraction extract_strict_abstract_features(
             members, side, slot_index, status, count_membership,
             (state.crafted_goal_mask & (1u << slot_index)) != 0,
             (state.fractured_goal_mask & (1u << slot_index)) != 0,
-            1);
+            1, metadata);
     }
 
     const std::size_t junk_count = std::min({
@@ -808,29 +886,57 @@ AbstractFeatureExtraction extract_strict_abstract_features(
                 requested_affix_features;
             continue;
         }
-        const std::vector<std::uint32_t> members =
-            mask_members(session, junk.member_mask);
-        const std::optional<StableKey> count_membership =
-            uniform_member_value<StableKey>(
-                members, [&](const std::uint32_t mod) {
-                    return mod_count_observation_bits(layout, mod);
-                });
+        std::vector<std::uint32_t> members;
+        std::optional<StableKey> count_membership;
+        StrictCarrierMetadata strict_metadata;
+        const StrictCarrierMetadata* metadata = nullptr;
+        strict_metadata.complete =
+            junk.strict_observation_metadata_complete &&
+            strict_metadata_covers_tags &&
+            ((requested_affix_features &
+              refinement_feature(
+                  RefinementFeature::ModifierExclusionSignature)) == 0 ||
+             junk.exclusion_effect_observation_complete) &&
+            ((requested_affix_features &
+              refinement_feature(
+                  RefinementFeature::ModifierRequiredLevel)) == 0 ||
+             (junk.required_level_observation_complete &&
+              junk.observed_required_level != kNoId));
+        strict_metadata.veiled_template = junk.veiled_template;
+        strict_metadata.metamod_role = junk.metamod_role;
+        strict_metadata.observed_required_level =
+            junk.observed_required_level;
+        strict_metadata.classification_tag_bits = junk.tag_bits;
+        strict_metadata.exclusion_effect =
+            &junk.exclusion_effect_mask;
+        if (strict_metadata.complete) {
+            count_membership = junk.count_observation_bits;
+            metadata = &strict_metadata;
+        } else {
+            members = mask_members(session, junk.member_mask);
+            count_membership =
+                uniform_member_value<StableKey>(
+                    members, [&](const std::uint32_t mod) {
+                        return mod_count_observation_bits(layout, mod);
+                    });
+        }
         emit_carriers(
             members, junk.gen_type, kNoId, GoalSlotStatus::Absent,
             count_membership,
-            false, false, total - fractured - crafted + both);
+            false, false, total - fractured - crafted + both,
+            metadata);
         emit_carriers(
             members, junk.gen_type, kNoId, GoalSlotStatus::Absent,
             count_membership,
-            true, false, crafted - both);
+            true, false, crafted - both, metadata);
         emit_carriers(
             members, junk.gen_type, kNoId, GoalSlotStatus::Absent,
             count_membership,
-            false, true, fractured - both);
+            false, true, fractured - both, metadata);
         emit_carriers(
             members, junk.gen_type, kNoId, GoalSlotStatus::Absent,
             count_membership,
-            true, true, both);
+            true, true, both, metadata);
     }
     if (junk_count != layout.junk_classes.size()) {
         result.unavailable_features |= requested_affix_features;
