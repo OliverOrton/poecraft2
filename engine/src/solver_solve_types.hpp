@@ -544,6 +544,8 @@ struct SolveTransitionCache {
 
     void retain_automatic_sample(AutomaticCandidateRecord record);
 
+    void reconcile_automatic_sample_owned_bytes();
+
     std::uint64_t shallow_estimated_owned_bytes() const;
 
     std::uint64_t fast_estimated_owned_bytes() const;

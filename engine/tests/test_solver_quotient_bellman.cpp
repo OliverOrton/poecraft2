@@ -254,6 +254,12 @@ void run_improper_and_determinism_tests() {
     PC_CHECK(improper.status == QuotientBellmanStatus::ImproperPolicy);
     PC_CHECK(!improper.executable_upper);
     PC_CHECK(!improper.publication_audit.complete());
+    PC_CHECK(
+        improper.failure_path_cell_ids ==
+        std::vector<std::uint32_t>({10, 11}));
+    PC_CHECK(
+        improper.failure_path_operator_indices ==
+        std::vector<std::uint32_t>({20, 21}));
 
     QuotientBellmanGraph reversed;
     reversed.install_cells({cell(11), cell(10)});

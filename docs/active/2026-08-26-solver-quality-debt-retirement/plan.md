@@ -1,7 +1,7 @@
 # Solver Quality Measurement, Refinement, And Debt Retirement
 
-**Status: active. Gate -1 is complete; Gate 0 is the implementation
-boundary.**
+**Status: active. Gates -1 through 1 are complete; Gate 2 is the
+implementation boundary.**
 
 Parent: [Active work](../README.md)
 
@@ -62,6 +62,8 @@ Current evidence instead selects two first owners:
 
 ## Gate 0 — Current Calculator-profile nested ladder
 
+**Status: complete.** See [Gate 0 evidence](gate0-evidence.md).
+
 Create a versioned diagnostic corpus that uses one native-owned Calculator
 product profile and generated Imprint programs off. It must include:
 
@@ -88,6 +90,8 @@ resource stop.
 
 ## Gate 1 — Broad-to-exact refinement attribution
 
+**Status: complete.** See [Gate 1 evidence](gate1-evidence.md).
+
 Use the shortest ladder witness that reproduces one of:
 
 - direct exact cost mismatch;
@@ -109,6 +113,8 @@ not merely a later exception string. Telemetry must not change values, hashes,
 selected actions, caps, or termination.
 
 ## Gate 2 — On-demand semantic refinement repair
+
+**Status: active.**
 
 Repair the proven Gate 1 cause locally. The preferred shape is grow-in-place or
 CEGAR-style refinement of only the selected/reachable proof envelope. Do not
@@ -228,4 +234,3 @@ archive the completed boundary, and leave a clean local-only checkpoint with
 the required Codex co-author line.
 
 Oliver retains rendered and visual review authority; this plan claims none.
-

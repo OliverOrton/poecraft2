@@ -406,6 +406,31 @@ void run_bounded_policy_row_capture_tests() {
     PC_CHECK(stale_row_rejected);
 }
 
+void run_automatic_sample_copy_ledger_tests() {
+    SolveTransitionCache source;
+    SolveTransitionCache::AutomaticCandidateRecord record;
+    record.candidate_id = "automatic-candidate";
+    record.evidence.legality_result = "legal";
+    source.retain_automatic_sample(std::move(record));
+    PC_CHECK(
+        source.fast_estimated_owned_bytes() ==
+        source.audited_estimated_owned_bytes());
+
+    SolveTransitionCache copied;
+    copied.automatic_candidate_samples =
+        source.automatic_candidate_samples;
+    copied.owned_automatic_sample_nested_bytes =
+        source.owned_automatic_sample_nested_bytes;
+    copied.automatic_candidate_samples[0].candidate_id.reserve(128);
+    PC_CHECK(
+        copied.fast_estimated_owned_bytes() <
+        copied.audited_estimated_owned_bytes());
+    copied.reconcile_automatic_sample_owned_bytes();
+    PC_CHECK(
+        copied.fast_estimated_owned_bytes() ==
+        copied.audited_estimated_owned_bytes());
+}
+
 void run_certified_fallback_contract_tests() {
     using solve_detail::CertifiedFallbackContract;
     using solve_detail::CertifiedFallbackCurrentContext;
@@ -11187,6 +11212,7 @@ void run_solver_solve_tests(const char* artifact_dir) {
     run_proof_pattern_manager_tests();
     run_incumbent_portfolio_monotonicity_tests();
     run_bounded_policy_row_capture_tests();
+    run_automatic_sample_copy_ledger_tests();
     run_certified_fallback_contract_tests();
     run_direct_certification_contract_tests();
     run_alt_spam_tests();

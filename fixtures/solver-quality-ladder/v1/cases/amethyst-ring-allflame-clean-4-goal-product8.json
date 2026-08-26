@@ -1,0 +1,155 @@
+{
+  "schema_version": "solver_benchmark_case_v1",
+  "id": "amethyst-ring-allflame-clean-4-goal-product8",
+  "category": "solver_quality_ladder",
+  "approval_status": "active_gate0_2026_08_26",
+  "benchmark_enabled": true,
+  "description": "amethyst_ring_clean_zero_to_4",
+  "comparison_profile": "calculator-product-quality-ladder-v1",
+  "watchdog_seconds": 90,
+  "requested_bounded_finish_seconds": 60,
+  "session": {
+    "base_metadata_path": "Metadata/Items/Rings/Ring10",
+    "base_name": "Amethyst Ring",
+    "item_class_key": "Ring",
+    "item_level": 86,
+    "minimum_item_level": 86
+  },
+  "start": {
+    "rarity": "rare",
+    "with_implicits": false,
+    "mods": []
+  },
+  "goal": {
+    "version": "v1",
+    "rarity": "rare",
+    "action_mode": "goal_relevant",
+    "min_satisfied_slots": 4,
+    "slots": [
+      {
+        "family_mod_key": "IncreasedEvasionRating7",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "FireResist8",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "AddedColdDamage9",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "AllAttributes4",
+        "min_tier": 1
+      }
+    ]
+  },
+  "product_action_envelope": {
+    "mode": "calculator_goal_relevant_priced_v1",
+    "envelope_goal": {
+      "version": "v1",
+      "rarity": "rare",
+      "action_mode": "goal_relevant",
+      "min_satisfied_slots": 4,
+      "slots": [
+        {
+          "family_mod_key": "IncreasedEvasionRating7",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "FireResist8",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "AddedColdDamage9",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "AllAttributes4",
+          "min_tier": 1
+        }
+      ],
+      "fossil_mode": "goal_relevant",
+      "requested_fossil_actions": []
+    },
+    "pricing_filter": "all_declared_cost_keys_present",
+    "bench_goal_slots_forbidden": true
+  },
+  "allowed_mechanic_families": [
+    "calculator_goal_relevant_product_envelope"
+  ],
+  "economy": {
+    "version": "v1",
+    "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+    "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+    "league_key": "allflame",
+    "league_name": "Allflame",
+    "manual_overrides": {
+      "base": 1.0
+    },
+    "fallback_price": null,
+    "missing_price_decisions": {
+      "base": "quality_ladder_fixture_input_1_chaos"
+    }
+  },
+  "expected": {
+    "solve_status": "reliability_classified",
+    "optimality_status": "classified",
+    "compile_status": "compiled",
+    "verification_status": "not_required"
+  },
+  "bounded_best_policy_contract": {
+    "allow_exact": true,
+    "bounded_requires_named_stop": true,
+    "bounded_requires_strict_gap": true,
+    "bounded_requires_open_obligations": true,
+    "require_evaluated_upper": true,
+    "require_cheapest_independently_evaluated_incumbent": true
+  },
+  "caps": {
+    "max_states": 200000,
+    "max_sweeps": 100000,
+    "solve_step_work_items": 8,
+    "max_discovered_states": 200000,
+    "max_expanded_states": 200000,
+    "max_state_action_rows": 1215000,
+    "max_transitions": 10000000,
+    "max_reforge_work": 50000000,
+    "max_solver_owned_bytes": 1073741824,
+    "max_diagnostic_samples": 64,
+    "max_telemetry_json_bytes": 2097152,
+    "max_policy_refinement_states": 200000,
+    "max_compiled_nodes": 100000,
+    "max_compiled_edges": 400000,
+    "max_strategy_json_bytes": 67108864,
+    "worker_step_ms": 250,
+    "cancel_ack_ms": 250,
+    "goal_progress_gated_reforges": true,
+    "allow_economic_restart": false,
+    "high_impact_executable_uppers": true,
+    "consider_imprint_programs": false,
+    "full_evidence": true
+  },
+  "verification": {
+    "runs": 0,
+    "seed": 20260826,
+    "max_actions_per_run": 100000,
+    "max_graph_steps_per_run": 4000000,
+    "exact_evaluation": true,
+    "exact_max_states": 1000000,
+    "exact_max_pairs": 5000000,
+    "exact_max_transitions": 20000000,
+    "exact_max_owned_bytes": 1073741824,
+    "exact_cost_absolute_tolerance": 1e-07,
+    "exact_cost_relative_tolerance": 1e-09
+  },
+  "corpus": {
+    "tier": "diversity-clean-four",
+    "stratum": "amethyst_ring_clean_zero_to_4",
+    "goal_modifier_count": 4,
+    "start_goal_modifier_count": 0,
+    "product_worker_profile": "calculator_default_adaptive_max_8"
+  }
+}

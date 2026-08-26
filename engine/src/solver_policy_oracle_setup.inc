@@ -485,6 +485,11 @@
         return *cached;
     }
 
+    const std::string& quotient_operator_id(
+            const std::uint32_t operator_index) const {
+        return strict_->operators().at(operator_index).id;
+    }
+
     std::vector<QuotientAlternativeDescriptor>
     quotient_alternative_descriptors(const ExactState& state) {
         std::vector<QuotientAlternativeDescriptor> descriptors;

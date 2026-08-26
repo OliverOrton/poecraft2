@@ -820,14 +820,113 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
         }
         std::sort(entries.begin(), entries.end());
         entries.erase(std::unique(entries.begin(), entries.end()), entries.end());
-        if (std::any_of(
-                entries.begin(), entries.end(),
-                [&](const std::uint32_t entry) {
-                    return !terminal_attractor[entry];
-                })) {
+        const auto failed_entry = std::find_if(
+            entries.begin(), entries.end(),
+            [&](const std::uint32_t entry) {
+                return !terminal_attractor[entry];
+            });
+        if (failed_entry != entries.end()) {
+            const std::uint32_t entry = *failed_entry;
+            std::uint64_t admitted_rows = 0;
+            std::uint64_t current_certified_rows = 0;
+            std::uint64_t terminal_supported_rows = 0;
+            std::uint32_t sample_operator = kNoId;
+            std::uint32_t sample_target_state = kNoId;
+            for (const std::uint64_t row :
+                 state_row_indices(transition_cache_, entry)) {
+                if (!transition_cache_.rows[row].admitted) continue;
+                ++admitted_rows;
+                if (!current_certified_row[row]) continue;
+                ++current_certified_rows;
+                if (row_stays_in_terminal_attractor(row)) {
+                    ++terminal_supported_rows;
+                    continue;
+                }
+                if (sample_operator != kNoId) continue;
+                sample_operator =
+                    priced_rows_.at(row).operator_index;
+                const SparseRow& sparse = transition_cache_.rows[row];
+                for (std::uint32_t i = 0;
+                     i < sparse.transition_count; ++i) {
+                    const std::uint32_t target =
+                        transition_cache_.successors[
+                            sparse.transition_offset + i];
+                    if (!terminal_attractor[target]) {
+                        sample_target_state = target;
+                        break;
+                    }
+                }
+            }
+            std::string dead_path;
+            std::set<std::uint32_t> path_states;
+            std::uint32_t path_state = entry;
+            for (std::uint32_t depth = 0; depth < 16; ++depth) {
+                if (!path_states.insert(path_state).second) {
+                    dead_path += "cycle:" +
+                        std::to_string(cell_by_state_.at(path_state));
+                    break;
+                }
+                std::uint64_t path_admitted = 0;
+                std::uint64_t path_current = 0;
+                std::uint32_t path_operator = kNoId;
+                std::uint32_t next_dead_state = kNoId;
+                for (const std::uint64_t row :
+                     state_row_indices(transition_cache_, path_state)) {
+                    if (!transition_cache_.rows[row].admitted) continue;
+                    ++path_admitted;
+                    if (!current_certified_row[row]) continue;
+                    ++path_current;
+                    if (path_operator != kNoId) continue;
+                    path_operator = priced_rows_.at(row).operator_index;
+                    const SparseRow& sparse = transition_cache_.rows[row];
+                    for (std::uint32_t i = 0;
+                         i < sparse.transition_count; ++i) {
+                        const std::uint32_t target =
+                            transition_cache_.successors[
+                                sparse.transition_offset + i];
+                        if (!terminal_attractor[target]) {
+                            next_dead_state = target;
+                            break;
+                        }
+                    }
+                }
+                if (!dead_path.empty()) dead_path += ">";
+                out.failure_path_cell_ids.push_back(
+                    cell_by_state_.at(path_state));
+                out.failure_path_operator_indices.push_back(path_operator);
+                dead_path += std::to_string(
+                    cell_by_state_.at(path_state));
+                dead_path += "[a=" + std::to_string(path_admitted) +
+                    ",c=" + std::to_string(path_current) +
+                    ",op=" +
+                    (path_operator == kNoId
+                         ? std::string{"none"}
+                         : std::to_string(path_operator)) +
+                    "]";
+                if (next_dead_state == kNoId) break;
+                path_state = next_dead_state;
+            }
             out.status = QuotientBellmanStatus::ImproperPolicy;
             out.failure_reason =
-                "quotient Bellman entry has no certified path to a terminal";
+                "quotient Bellman entry has no certified path to a terminal"
+                "; entry_cell=" +
+                std::to_string(cell_by_state_.at(entry)) +
+                "; entry_state=" + std::to_string(entry) +
+                "; admitted_rows=" + std::to_string(admitted_rows) +
+                "; current_certified_rows=" +
+                std::to_string(current_certified_rows) +
+                "; terminal_supported_rows=" +
+                std::to_string(terminal_supported_rows) +
+                "; sample_operator=" +
+                (sample_operator == kNoId
+                     ? std::string{"none"}
+                     : std::to_string(sample_operator)) +
+                "; sample_dead_target_cell=" +
+                (sample_target_state == kNoId
+                     ? std::string{"none"}
+                     : std::to_string(
+                           cell_by_state_.at(sample_target_state))) +
+                "; dead_path=" + dead_path;
             return out;
         }
 

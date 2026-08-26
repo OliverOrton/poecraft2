@@ -1,13 +1,14 @@
 # Handoff
 
-**Status: active implementation boundary.** Gate 0 of
+**Status: active implementation boundary.** Gate 2 of
 [Solver Quality Measurement, Refinement, And Debt Retirement](docs/active/2026-08-26-solver-quality-debt-retirement/plan.md)
 is active.
 
-The active boundary begins from clean checkpoint `ec3fbd3`. Gate -1 inspected
-current source, final acceptance, and historical negative results. Gate 0 now
-owns a versioned Calculator-profile clean/partial 1-to-5 ladder; no solver
-behavior has changed yet.
+The active boundary begins from clean checkpoint `ec3fbd3`. Gates -1 through 1
+are complete. The versioned Calculator-profile clean/partial 1-to-5 ladder is
+recorded, a diagnostic-owned-byte abort is repaired, and the strict-lift owner
+is attributed. Gate 2 now owns bounded on-demand repair of an improper
+selected-only proof envelope before any action-scope or lower-bound work.
 
 The completed
 [Solver Anytime Planning, Proof Patterns, And Debt Retirement](docs/archive/2026-08-25-solver-anytime-proof-realignment/README.md)
@@ -16,10 +17,33 @@ milestone is archived with its gate records and final acceptance evidence.
 ## Current checkpoint
 
 - Branch: `main`.
-- Final implementation checkpoint: `cb26c29` (`Prove evaluator gated retry
-  authority`).
+- Plan checkpoint: `b5f3cfb` (`Select solver quality debt boundary`).
+- Gate 0/1 checkpoint: the local commit containing this handoff and the
+  linked Gate 0/1 evidence.
 - The milestone commits are local-only; nothing was pushed.
-- The worktree is expected to be clean after the archival checkpoint.
+- Gate 2 may leave an active implementation worktree; do not discard it.
+
+## Current Gate 0/1 result
+
+- Product-profile clean five-T1 Conquest remains a proper independently
+  evaluated `14454067.4260706` upper over a `36.4885317287664` global lower.
+- Product-eight and qualification-1024 finalized cases have identical values,
+  exact costs, and stop classifications. Slice size is not the observed
+  five-goal quality owner.
+- Ring two/three produce no incumbent before `max_owned_bytes`; Bow four/five
+  reach the 200,000-state cap. These are truthful product boundaries, not
+  harness aborts.
+- The shortest refinement witness retains exact upper `2698.87479601436` and
+  core policy hash `9c020a941326a237`. Its strict selected-only path is
+  `Eldritch suffix Exalt -> Scour -> Regal -> Scour`, an improper renewal
+  cycle.
+- Root cause: selected-first refinement requires a proper inherited quotient
+  before it creates/certifies the alternatives that can repair an improper
+  inherited policy. The old `proof envelope lost its selected quotient state`
+  message was a downstream masking exception.
+
+See [Gate 0 evidence](docs/active/2026-08-26-solver-quality-debt-retirement/gate0-evidence.md)
+and [Gate 1 evidence](docs/active/2026-08-26-solver-quality-debt-retirement/gate1-evidence.md).
 
 ## Retained product and proof contract
 

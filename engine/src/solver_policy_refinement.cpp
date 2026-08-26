@@ -2213,6 +2213,49 @@ lift_policy_quotient_pass_task(
         ++progress.work_items;
         co_await solve_detail::CooperativeCheckpoint{
             ledger.snapshot().total_bytes};
+        /* selected_rows_by_state is meaningful only after the quotient solve
+         * has produced a complete executable upper. Checking that contract
+         * after walking the selected closure masked the actual Bellman status
+         * as "proof envelope lost its selected quotient state" whenever the
+         * result vector was empty. Keep the publication fallback unchanged,
+         * but preserve the first truthful failure for attribution. */
+        if (solved_quotient.status !=
+                quotient::QuotientBellmanStatus::Complete ||
+            (!retained_global_lower_authority &&
+             (!solved_quotient.executable_upper ||
+              !solved_quotient.proper))) {
+            std::string detail =
+                std::string{"selected-first quotient solve failed ("} +
+                quotient::quotient_bellman_status_name(
+                    solved_quotient.status) +
+                "): " + solved_quotient.failure_reason;
+            if (!solved_quotient.failure_path_cell_ids.empty()) {
+                detail += "; named_dead_path=";
+                for (std::size_t i = 0;
+                     i < solved_quotient.failure_path_cell_ids.size(); ++i) {
+                    if (i != 0) detail += ">";
+                    detail += std::to_string(
+                        solved_quotient.failure_path_cell_ids[i]);
+                    detail += "[";
+                    const std::uint32_t operator_index =
+                        solved_quotient.failure_path_operator_indices.at(i);
+                    detail += operator_index == kNoId
+                        ? std::string{"no-certified-row"}
+                        : oracle.quotient_operator_id(operator_index);
+                    detail += "]";
+                }
+            }
+            throw AdapterFailure(
+                solved_quotient.status ==
+                        quotient::QuotientBellmanStatus::ResourceCap
+                    ? PolicyExactLiftStatus::ResourceCap
+                    : PolicyExactLiftStatus::RefinementFailure,
+                detail,
+                solved_quotient.status ==
+                        quotient::QuotientBellmanStatus::ResourceCap
+                    ? "max_estimated_memory_bytes"
+                    : std::string{});
+        }
         const auto account_selected_closure =
                 [&](std::vector<std::uint32_t> seeds,
                     const quotient::QuotientBellmanResult& upper)

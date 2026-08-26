@@ -444,9 +444,21 @@ bool SolveTransitionCache::compatible(
     }
 
 void SolveTransitionCache::retain_automatic_sample(AutomaticCandidateRecord record) {
-        owned_automatic_sample_nested_bytes +=
-            automatic_sample_nested_bytes(record);
         automatic_candidate_samples.push_back(std::move(record));
+        /* Diagnostic retention is capped at max_diagnostic_samples (64 in
+         * product). Reconcile after the move because std::string capacity is
+         * the selected-allocation authority and is not guaranteed to survive
+         * a container move/copy with the source capacity. */
+        reconcile_automatic_sample_owned_bytes();
+    }
+
+void SolveTransitionCache::reconcile_automatic_sample_owned_bytes() {
+        owned_automatic_sample_nested_bytes = 0;
+        for (const AutomaticCandidateRecord& record :
+             automatic_candidate_samples) {
+            owned_automatic_sample_nested_bytes +=
+                automatic_sample_nested_bytes(record);
+        }
     }
 
 void SolveWork::Impl::retain_action_reason(std::string reason) {
@@ -1860,23 +1872,9 @@ void SolveWork::Impl::retain_automatic_candidate_record(
                         return !sample.deferred;
                     });
                 if (replacement != samples.rend()) {
-                    const std::uint64_t removed =
-                        SolveTransitionCache::automatic_sample_nested_bytes(
-                            *replacement);
-                    const std::uint64_t added =
-                        SolveTransitionCache::automatic_sample_nested_bytes(
-                            record);
-                    if (transition_cache
-                            ->owned_automatic_sample_nested_bytes < removed) {
-                        throw std::logic_error(
-                            "automatic diagnostic sample byte ledger "
-                            "underflow");
-                    }
-                    transition_cache->owned_automatic_sample_nested_bytes =
-                        transition_cache
-                            ->owned_automatic_sample_nested_bytes -
-                        removed + added;
                     *replacement = std::move(record);
+                    transition_cache
+                        ->reconcile_automatic_sample_owned_bytes();
                 }
             }
         }

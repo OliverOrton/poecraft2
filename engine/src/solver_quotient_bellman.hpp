@@ -104,6 +104,11 @@ struct QuotientBellmanResult {
     std::vector<double> values_by_state;
     std::vector<std::uint64_t> selected_rows_by_state;
     std::vector<double> lower_relaxation_by_state;
+    /* Bounded diagnostic witness for the first certified row chain that
+     * failed to enter the terminal attractor. The adapter names the
+     * context-local operator indices before publication. */
+    std::vector<std::uint32_t> failure_path_cell_ids;
+    std::vector<std::uint32_t> failure_path_operator_indices;
     QuotientPublicationAudit publication_audit;
 };
 

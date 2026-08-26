@@ -755,8 +755,10 @@ void SolveWork::Impl::build_quotient_graph(
             strict->automatic_admission_phases;
         quotient->automatic_candidate_samples =
             strict->automatic_candidate_samples;
-        quotient->owned_automatic_sample_nested_bytes =
-            strict->owned_automatic_sample_nested_bytes;
+        /* Copying std::string payloads does not preserve their capacities.
+         * Recompute the destination ledger instead of copying the strict
+         * cache's capacity-derived subtotal. */
+        quotient->reconcile_automatic_sample_owned_bytes();
         quotient->focused_partial = strict->focused_partial;
         std::map<
             std::pair<std::uint64_t, std::uint32_t>,
