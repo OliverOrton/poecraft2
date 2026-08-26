@@ -1258,7 +1258,9 @@ async function runCase(
                         high_impact_executable_uppers:
                             spec.caps.high_impact_executable_uppers,
                         consider_imprint_programs:
-                            benchmarkConsiderImprintPrograms(spec),
+                            spec.caps.solve_profile === undefined
+                                ? benchmarkConsiderImprintPrograms(spec)
+                                : spec.caps.consider_imprint_programs,
                     },
                     {
                         chunkSize: spec.caps.solve_step_work_items,
@@ -1312,7 +1314,9 @@ async function runCase(
                         high_impact_executable_uppers:
                             spec.caps.high_impact_executable_uppers,
                         consider_imprint_programs:
-                            benchmarkConsiderImprintPrograms(spec),
+                            spec.caps.solve_profile === undefined
+                                ? benchmarkConsiderImprintPrograms(spec)
+                                : spec.caps.consider_imprint_programs,
                     },
                     {
                         chunkSize: spec.caps.solve_step_work_items,
