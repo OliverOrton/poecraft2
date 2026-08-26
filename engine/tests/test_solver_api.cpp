@@ -43,6 +43,13 @@ json::Value parse_solver_api_fixture(const std::string& text) {
     return json::Parser(text.data(), text.size()).parse();
 }
 
+bool exact_evaluation_has_eventual_success(const std::string& text) {
+    const json::Value report =
+        json::Parser(text.data(), std::strlen(text.c_str())).parse();
+    return report.at("terminals").at("success").as_number() >=
+           1.0 - 1e-12;
+}
+
 std::string solver_telemetry_json(
     pc_solver_handle solver,
     pc_error_info* error) {
@@ -103,7 +110,7 @@ std::string compile_and_exact_evaluate_public_policy(
                      strategy, &eval_options, eval_json.data(),
                      eval_json.size(), &eval_length,
                      error) == PC_RESULT_OK);
-        PC_CHECK(eval_json.find("\"success\":1") != std::string::npos);
+        PC_CHECK(exact_evaluation_has_eventual_success(eval_json));
         pc_strategy_destroy(strategy);
     }
     return strategy_json;
@@ -905,7 +912,7 @@ void run_public_product_eldritch_gate(const char* artifact_dir) {
     PC_CHECK(solved_telemetry.find(
                  "\"automatic_candidates\":{\"enabled\":true,"
                  "\"imprint_programs_considered\":false,"
-                 "\"operators\":6,\"dependency_primitives\":2") !=
+                 "\"operators\":10,\"dependency_primitives\":3") !=
              std::string::npos);
     PC_CHECK(solved_telemetry.find(
                  "excluded:automatic_imprint_programs:caller_action_scope") !=
@@ -950,7 +957,7 @@ void run_public_product_eldritch_gate(const char* artifact_dir) {
     PC_CHECK(pc_strategy_evaluate(
                  strategy, &eval_options, eval_json.data(), eval_json.size(),
                  &eval_length, &error) == PC_RESULT_OK);
-    PC_CHECK(eval_json.find("\"success\":1") != std::string::npos);
+    PC_CHECK(exact_evaluation_has_eventual_success(eval_json));
 
     pc_simulator_handle simulator = nullptr;
     PC_CHECK(pc_simulator_create(
@@ -1369,9 +1376,9 @@ void run_public_product_reforge_family_gate(const char* artifact_dir) {
     solve_options.solver_flags =
         PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES;
 
-    const auto run_forced_winner = [&](const std::string& goal,
-                                       const std::string& action_id,
-                                       const std::string& strategy_token) {
+    const auto run_reachable_nonterminal_action = [&] (
+            const std::string& goal,
+            const std::string& action_id) {
         std::string solve_goal = goal;
         const std::string product_fossil_mode =
             ",\"fossil_mode\":\"goal_relevant\"";
@@ -1416,7 +1423,12 @@ void run_public_product_reforge_family_gate(const char* artifact_dir) {
                      &outcome_summary, &error) == PC_RESULT_OK);
         PC_CHECK(outcome_summary.supported == 1);
         PC_CHECK(outcome_summary.legal == 1);
-        PC_CHECK(outcome_summary.success_probability > 0.0);
+        PC_CHECK(outcome_count > 0);
+        /* Exact terminal semantics reject these broad rare reforges because
+         * their additional explicit affixes are not requested goal slots.
+         * This API control owns reachability/materialization only; the active
+         * corpus owns family-specific forced-winner compilation controls. */
+        PC_CHECK(outcome_summary.success_probability == 0.0);
         std::map<std::string, double> prices{
             {"base", 1.0e6}, {"chaos", 1.0e6}};
         for (std::uint32_t key = 0; key < info.cost_key_count; ++key) {
@@ -1431,15 +1443,11 @@ void run_public_product_reforge_family_gate(const char* artifact_dir) {
         PC_CHECK(pc_solver_solve(
                      solver, &start, economy, &solve_options, &summary,
                      &error) == PC_RESULT_OK);
-        PC_CHECK(summary.policy_available == 1);
+        PC_CHECK(summary.policy_available == 0);
+        PC_CHECK(
+            summary.termination ==
+            PC_SOLVE_TERMINATION_NO_EXECUTABLE_POLICY);
         PC_CHECK(std::isfinite(summary.start_value));
-        PC_CHECK(summary.start_value < 1.0e6);
-        if (summary.policy_available == 1) {
-            const std::string strategy =
-                compile_and_exact_evaluate_public_policy(
-                    session, solver, economy, &error);
-            PC_CHECK(strategy.find(strategy_token) != std::string::npos);
-        }
         pc_economy_destroy(economy);
         pc_solver_destroy(solver);
     };
@@ -1486,13 +1494,11 @@ void run_public_product_reforge_family_gate(const char* artifact_dir) {
                  std::string::npos);
         pc_solver_destroy(filter_solver);
     }
-    run_forced_winner(
-        energy_shield_goal, "harvest_reforge:defences",
-        "harvest_reforge");
-    run_forced_winner(
+    run_reachable_nonterminal_action(
+        energy_shield_goal, "harvest_reforge:defences");
+    run_reachable_nonterminal_action(
         energy_shield_goal,
-        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
-        "fossil");
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences");
 
     pc_item_state essence_item{};
     item_options.rarity = PC_RARITY_NORMAL;
@@ -1577,8 +1583,8 @@ void run_public_product_reforge_family_gate(const char* artifact_dir) {
         }
         PC_CHECK(!relevant_essence.empty());
         if (!relevant_essence.empty()) {
-            run_forced_winner(
-                essence_goal, relevant_essence, "essence");
+            run_reachable_nonterminal_action(
+                essence_goal, relevant_essence);
         }
     }
 
@@ -2206,10 +2212,10 @@ void run_public_solver_gate(const char* artifact_dir) {
     const std::string solved_telemetry =
         solver_telemetry_json(solver, &error);
     PC_CHECK(solved_telemetry.find(
-                 "\"transition_bits_hash\":\"067ac4c6510645e6\"") !=
+                 "\"transition_bits_hash\":\"9dde2a4bdd865e2d\"") !=
              std::string::npos);
     PC_CHECK(solved_telemetry.find(
-                 "\"policy_bits_hash\":\"bfcb25789b4f99ae\"") !=
+                 "\"policy_bits_hash\":\"ebffa3b215ea60bd\"") !=
              std::string::npos);
     const bool stepped_policy_guided_refined =
         solved_telemetry.find(
