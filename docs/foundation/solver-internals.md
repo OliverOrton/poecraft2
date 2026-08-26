@@ -6,10 +6,11 @@ future work or define crafting mechanics.
 
 Parent: [Foundation](README.md)
 
-Verified against current source: 2026-08-25 @ `a1449fa`. Scope: private solve
-phase ownership, current proof/publication boundaries, action-family contract,
-and the native source inventory. No build or behavioral suite was run for this
-documentation-only audit.
+Verified against current source: 2026-08-25 @ `aa34a7b`. Scope: private solve
+phase ownership, cooperative continuation boundaries, current
+proof/publication boundaries, action-family contract, and the native source
+inventory. Native owner and release-WASM responsiveness qualifications ran;
+the milestone's final acceptance is recorded separately.
 
 ## Execution Flow
 
@@ -49,13 +50,38 @@ not interchangeable:
 | Goal, registry, action-family contract, and layout | `GoalSpec`, `ResolvedGoal`, `ActionDescriptor`, `PlannerOperator`, `AbstractLayout`, `AbstractState` | `solver_model.hpp`, `solver_action_family_contract.hpp`, `solver_registry.cpp`, `solver_abstract.cpp` |
 | Option construction and admission | `PlannerOperator`, runtime semantics, `OptionKernel` | `solver_options_build.cpp`, `solver_options_automatic.cpp`, `solver_options_temporary.cpp`, `solver_options_import.cpp`, `solver_options_semantics.cpp`, `solver_options.cpp` |
 | Exact transition calculation | interned abstract states and action/option outcome rows in `CalcContext` | `solver_calc_types.hpp`, `solver_calc.cpp`, `solver_reforge.cpp`, `solver_options.cpp` |
-| Reachability, action-envelope scheduling, proof values, and policy solving | sparse graph rows, values, selected actions, proof-only lowers, carrier ordering scores, `SolveResult` | `solver_solve_types.hpp`, `solver_solve_expand.cpp`, `solver_solve_incremental.cpp`, `solver_solve_focused.cpp`, `solver_solve_bellman.cpp`, `solver_solve_bounds.cpp`, `solver_solve_priority.cpp`, `solver_solve_constructive.cpp`, `solver_solve_audit.cpp`, `solver_solve_finish.cpp`, and the other `solver_solve_*.cpp` owners |
+| Reachability, action-envelope scheduling, proof values, and policy solving | sparse graph rows, values, selected actions, proof-only lowers, carrier ordering scores, `SolveResult` | `solver_action_envelope_ledger.hpp`, `solver_anytime_scheduler.hpp`, `solver_proof_pattern_manager.hpp`, `solver_solve_types.hpp`, `solver_solve_expand.cpp`, `solver_solve_incremental.cpp`, `solver_solve_focused.cpp`, `solver_solve_bellman.cpp`, `solver_solve_bounds.cpp`, `solver_solve_priority.cpp`, `solver_solve_constructive.cpp`, `solver_solve_audit.cpp`, and the other `solver_solve_*.cpp` owners |
 | Shared exact refinement | `Graph`, observation requirements, collision-checked features, closed probabilistic partition, counterexamples | `solver_refinement.hpp`, `solver_refinement_graph_core.hpp`, `solver_refinement_graph_discovery.hpp`, `solver_refinement_observation.cpp`, `solver_refinement_features.cpp`, `solver_refinement_partition.cpp`, `solver_refinement_eval.cpp`, `solver_refinement.cpp` |
 | Production policy adaptation | strict carrier mappings/kernels, exact runs, repaired or improved policy, compile routing | `solver_policy_refinement.hpp`, `solver_policy_refinement.cpp`, `solver_policy_oracle_*.inc`, `solver_policy_assertion.cpp` |
 | Policy compilation | ordinary strategy JSON and `PolicyCompilationTelemetry` | `solver_compile_contracts.hpp`, `solver_compile_conditions.hpp`, `solver_compile_serialization.hpp`, `solver_compile.cpp` |
 | Exact graph evaluation | `StrategyEvalResult`, occupancy/influence and action/material accounting | `solver_eval_types.hpp`, `solver_eval_helpers.hpp`, `solver_eval.cpp`, `solver_eval_resolve.cpp`, `solver_eval_report.cpp` |
 | API, accounting, and telemetry | C ABI results, typed progress snapshots, JSON, owned-byte and work counters | `solver_api.cpp`, `solver_solve_telemetry.cpp`, `solver_compile.cpp`, `solver_eval_report.cpp` |
 | Sampled execution | mutable item plus RNG-driven strategy traversal | `simulator.cpp` and native action owners |
+
+The stateful Solve path has six named private authorities:
+
+- `ActionEnvelopeLedger` owns every carrier/operator obligation from discovery
+  through exact-row completion, proof retirement, or named refusal.
+- `SolveScheduler` owns lane quotas, fairness, waits, yields, and starvation
+  telemetry. The retained production fallback still uses the qualified legacy
+  work order when no behavior-changing scheduler profile passes its controls.
+- `IncumbentPortfolio` owns coarse estimates separately from independently
+  evaluated executable candidates and preserves the cheapest verified upper.
+- `ProofPatternManager` owns typed admissible patterns and maximum-only
+  composition; ordering scores remain non-convertible.
+- `PublicationPipeline` owns direct assertion, strict repair,
+  classification, packaging, and their retained cooperative task.
+- `SolveTelemetrySnapshot` freezes typed progress and measurement before C ABI
+  and JSON serialization.
+
+These types establish lifetime and authority boundaries. They do not broaden
+mechanics, action scope, exactness, or the public ABI.
+
+Strict exact-evaluation layouts also retain feature-specific uniformity facts
+on goal-member and junk classes. Observation extraction may reuse only a fact
+whose layout partition recorded it complete; otherwise it rescans the exact
+member mask. The optimization therefore removes repeated derivation without
+turning a compact/coarse class into observation authority.
 
 `solver_policy_refinement.cpp` deliberately remains one translation unit for
 the anonymous `ProductionPolicyOracle`. Its named `.inc` files separate setup,
@@ -134,6 +160,14 @@ Oliver ruling and belong in the [mechanics library](../mechanics/README.md).
   resource dominance, or a conservative positive-price certificate against a
   proper carrier-local upper. An arbitrary depth limit cannot close the action
   envelope or support global exactness.
+- High-impact anytime mode constructs the one-time universal/clean proof model
+  during measured solve setup; default solves retain lazy construction so a
+  pre-proof root-row cap keeps its established attribution. Focused proof
+  snapshots, support growth, post-upper
+  classification, dynamic automatic preparation, policy work, and publication
+  retain explicit cursors or tasks and return them through public step
+  boundaries. The native step also applies an internal 32-logical-unit ceiling
+  even when a caller requests a larger batch.
 - While incremental action generation remains open, its restricted optimum is
   scheduling evidence rather than a global lower. Public lower authority falls
   back to independently admissible proof patterns until the requested action

@@ -5,11 +5,11 @@ and acceptance narratives are archived and do not control current sequencing.
 
 Parent: [Documentation index](../README.md)
 
-Current-contract audit: verified against source on 2026-08-25 @ `a1449fa`.
+Current-contract audit: verified against source on 2026-08-25 @ `aa34a7b`.
 The goal/terminal, product action-scope, delayed-envelope lower authority,
-verified publication, solve-result, and current source-ownership sections were
-checked. Older dated measurements and qualification addenda remain historical
-evidence and were not rerun by this documentation-only audit.
+typed solve ownership, cooperative continuation, verified publication,
+solve-result, and current source-ownership sections were checked. Older dated
+measurements and qualification addenda remain historical evidence.
 
 Verified against code, the bounded-policy B6 acceptance, the mechanical solve
 split, focused-round performance acceptance, WASM progress-accounting,
@@ -884,6 +884,26 @@ A solve performs these implemented stages:
 7. Extract deterministic policy choices, observation-owned Unveil choices,
    values, reachability, diagnostics, hashes, and optional solve-log records.
 
+The implementation keeps six authorities distinct throughout those stages:
+
+- `ActionEnvelopeLedger` owns carrier/operator obligation lifecycle;
+- `SolveScheduler` owns fairness lanes and service telemetry;
+- `IncumbentPortfolio` owns verified executable candidates and the monotone
+  upper;
+- `ProofPatternManager` owns admissible lower values and provenance;
+- `PublicationPipeline` owns direct assertion, strict repair, classification,
+  packaging, and their retained continuation; and
+- `SolveTelemetrySnapshot` owns typed measurement before serialization.
+
+The public step count is a ceiling. Native Solve performs no more than 32
+logical units per call and returns after one retained automatic-admission,
+focused-proof, post-upper classification, focused-policy, or publication
+resume. High-impact anytime mode measures universal/clean proof-table
+construction as solve setup instead of hiding it in a later state-local step;
+default mode retains lazy construction and its established pre-proof cap
+attribution. These ownership and scheduling boundaries change neither action
+scope nor proof authority.
+
 ### Policy-Guided Exact Publication Refinement
 
 Broad discovery may use the qualified coarse product parent, but publication
@@ -1236,6 +1256,12 @@ contracted for the value solve, while exact member and absorption attribution
 is retained separately so node/edge flow, terminal input states, and
 occupancy are not assigned to a representative carrier. Dense, rank-one, or
 matrix-free preconditioned component solves are used as appropriate. It
+reuses a strict class's Veiled/metamod role, observed required level,
+classification-tag bits, exclusion signature, and count-membership values
+only when layout construction recorded that feature uniform and complete.
+Incomplete, coarse, or hand-built classes retain the exact member-mask scan;
+the retained metadata is an optimization of the same observation signature,
+not a second observer authority. It
 reports terminal probability,
 action-not-applied/no-edge/unresolved attribution, expected actions and
 materials, node/edge flow, incoming state classes, and S8.4 accounting and
@@ -1341,6 +1367,11 @@ reforge work, cache requests/hits, wall time, and retained selected-allocation
 growth to action IDs. It also compares lower- and executable-upper-policy
 selected abstract-state counts. These are profiling observations only:
 benchmark action non-use is explicitly never a pruning certificate.
+
+Automatic-admission phase telemetry additionally records retained continuation
+resumes, suspensions, and the maximum continuation slice. The counters are
+captured by `SolveTelemetrySnapshot` before JSON serialization; they are
+observational and do not change the reforge-work or owned-memory cap basis.
 
 The versioned telemetry object `policy_refinement` is the bounded publication
 refinement ledger. `status` names the completed or failed publication stage;

@@ -32,7 +32,7 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 The
 [Solver Anytime Planning, Proof Patterns, And Debt Retirement](active/2026-08-25-solver-anytime-proof-realignment/plan.md)
-plan is active at Gate 3 by Oliver's explicit 2026-08-25 instruction. Its completed
+plan is active at Gate 8 by Oliver's explicit 2026-08-25 instruction. Its completed
 [documentation preflight](active/2026-08-25-solver-anytime-proof-realignment/preflight-audit.md)
 confirms the current contract and records the stable-reference cleanup; its
 [Gate 0 evidence](active/2026-08-25-solver-anytime-proof-realignment/gate0-evidence.md)
@@ -40,7 +40,12 @@ pins the current-semantics benchmark and attribution authority, and its
 [Gate 1 evidence](active/2026-08-25-solver-anytime-proof-realignment/gate1-evidence.md)
 establishes the typed action-envelope lifecycle and mechanic-family controls.
 The [Gate 2 evidence](active/2026-08-25-solver-anytime-proof-realignment/gate2-evidence.md)
-establishes monotone verified-incumbent and progress authority.
+establishes monotone verified-incumbent and progress authority. Gates 3–7
+retain the qualified scheduler fallback, typed proof owners, stronger proof
+patterns, and measured action-envelope consumers. The
+[Gate 8 record](active/2026-08-25-solver-anytime-proof-realignment/gate8-evidence.md)
+closes the release-WASM responsiveness qualification; the single final
+acceptance run remains before archival.
 
 Current source behavior starts from `a1449fa` (`Record Imprint scope
 acceptance`). Calculator and general solver benchmarks default generated
@@ -57,8 +62,8 @@ is not a deterministic current-source baseline. The proposed plan uses the
 reproducible current-source `1562083.15196689` recovered-ordering result as
 its first quality qualification and treats 87k as a research anchor.
 
-The current retained acceptance and the unresolved release-WASM 50 ms worker-
-slice qualification are summarized in [HANDOFF](../HANDOFF.md). Detailed
+The current retained acceptance and the closed release-WASM 50 ms worker-slice
+qualification are summarized in [HANDOFF](../HANDOFF.md). Detailed
 milestone results, stopped experiments, strategies, and raw evidence live in
 the [archive](archive/README.md) and [evidence index](evidence.md); they have no
 current sequencing authority.

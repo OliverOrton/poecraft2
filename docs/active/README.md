@@ -1,8 +1,9 @@
 # Active Work
 
 **Status: implementation boundary active.** Oliver activated the solver
-anytime/proof realignment plan on 2026-08-25; Gates 0 through 2 passed and
-Gate 3 is in progress.
+anytime/proof realignment plan on 2026-08-25; Gates 0 through 7 and Gate 8's
+implementation/responsiveness qualification passed. Final acceptance and
+archive remain.
 
 Parent: [Documentation map](../README.md)
 
@@ -31,15 +32,19 @@ adds typed action-envelope lifecycle authority and eleven executable
 mechanic-family controls without changing solver work order. The
 [Gate 2 evidence](2026-08-25-solver-anytime-proof-realignment/gate2-evidence.md)
 consolidates incumbent ownership and separates coarse candidate progress from
-monotone verified executable authority.
+monotone verified executable authority. The later gate records retain the
+qualified scheduling fallback, typed proof patterns, and measured proof
+consumers. [Gate 8 evidence](2026-08-25-solver-anytime-proof-realignment/gate8-evidence.md)
+records the cooperative ownership refactor and the passing 21.983 ms ordinary
+release-WASM worker qualification.
 
 ## Current checkpoint
 
-The completed 2026-08-25 caller-scope follow-up is recorded in
-[HANDOFF](../../HANDOFF.md). Calculator and general solver benchmarks default
-automatic Imprint programs off; dedicated controls opt in. Focused native,
-release-WASM, nonvisual web, TypeScript, and 10,000-run parity acceptance
-passed. The existing 50 ms WASM worker-slice qualification remains open.
+The current implementation boundary is recorded in [HANDOFF](../../HANDOFF.md).
+Calculator and general solver benchmarks default automatic Imprint programs
+off; dedicated controls opt in. The 50 ms ordinary WASM worker qualification
+now passes. The active plan remains in place only through its one final
+acceptance run and documentation archive.
 
 The plan and active/archive indexes were added in local documentation commits
 `0238753` and `f2bee5b` after the unchanged `a1449fa` engine/product source

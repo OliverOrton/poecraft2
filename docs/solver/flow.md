@@ -6,13 +6,13 @@ work or define crafting mechanics.
 
 Parent: [Solver](README.md)
 
-Current-contract audit: verified against source on 2026-08-25 @ `a1449fa`.
+Current-contract audit: verified against source on 2026-08-25 @ `aa34a7b`.
 Scope: Calculator request defaults, worker/WASM/C ABI lifecycle, native solve
-phases, public lower and verified-upper authority, policy compilation, exact
-graph evaluation, and sampled verification. No build, cross-layer suite,
-rendered review, or mechanic ruling was performed for this documentation-only
-audit. The last complete nonvisual cross-layer qualification remains in the
-point-in-time milestone evidence linked below.
+authorities and cooperative phases, public lower and verified-upper authority,
+policy compilation, exact graph evaluation, and sampled verification. Native
+owner and release-WASM responsiveness qualifications ran; final nonvisual
+cross-layer acceptance is recorded in the active milestone evidence. No
+rendered review or mechanic ruling was performed.
 
 Qualification addendum: source inspection and focused native tests on
 2026-07-31 verified the shared publication steps through observation
@@ -222,10 +222,13 @@ slot threshold must hold, and the number of explicit affixes must equal the
 number of satisfied requested slots. Junk remains legal during planning but is
 not accepted at success.
 
-Steps 5-9 remain inside repeated native solve steps. Progress names retained
-`refining`, `compiling`, and `certifying` work before `Done`; the subsequent
-finish call is packaging-only. Cancellation abandons the retained work without
-promoting a partial or unverified candidate.
+Steps 5-9 are owned by the retained `PublicationPipeline` and remain inside
+repeated native solve steps. Progress names retained `refining`, `compiling`,
+and `certifying` work before `Done`; the subsequent finish call is result
+transfer only. Cancellation abandons the retained work without promoting a
+partial or unverified candidate. The pipeline competes candidates through the
+`IncumbentPortfolio`; only independently evaluated executable artifacts can
+lower its verified upper.
 
 Callers may opt into `goal_progress_gated_reforges`. In that scope, primitive
 reforge rows fold goal outcomes to one terminal exit and zero-goal-progress
@@ -288,16 +291,30 @@ that exact carrier/operator obligation as incumbent-dominated. This requires
 an exactly optimized proper restricted-policy upper for the carrier and a
 strictly larger lower composed from the action's complete immediate price and
 proved survivor/reach successor pattern. The proof is recorded in the typed
-action-envelope ledger and mirrored into the compatibility scheduler's
-completed-pair view. It neither creates an executable row nor closes any other
-unknown obligation. Authored conditional programs do not use this path while
-their retained operator lower prices only the guaranteed first step.
+`ActionEnvelopeLedger` and mirrored into the compatibility scheduler's
+completed-pair view. Admissible values belong to `ProofPatternManager`, while
+lane service belongs to `SolveScheduler`; neither an ordering score nor a
+scheduler verdict can become proof. Retirement creates no executable row and
+closes no other unknown obligation. Authored conditional programs do not use
+this path while their retained operator lower prices only the guaranteed first
+step.
 
 The worker starts from the requested/default work count, adapts each step to a
 roughly 12 ms slice, and clamps Solve to one through four native work items.
-It rebases to one item at phase changes, emits progress at phase boundaries or
-roughly every 100 ms, and yields after bounded accumulated work so incoming
-messages can run.
+Native Solve independently treats the request as a ceiling and processes at
+most 32 logical units. Dynamic automatic preparation, state-local automatic
+admission, focused proof initialization, post-upper proof/classification,
+focused policy work, and each publication resume return at their retained
+continuation boundary instead of folding a large caller batch into one step.
+High-impact anytime mode charges the shared universal/clean proof model to
+solve setup before the first public step. Default mode retains lazy proof
+construction so a root-row cap reached before proof work keeps its established
+attribution. The worker rebases to one item at phase changes, emits
+progress at phase boundaries or roughly every 100 ms, and yields after bounded
+accumulated work so incoming messages can run. The first yield and at least one
+yield per 100 ms of native work use a timer task to prevent incoming-message
+starvation; intervening continuations use the lower-latency MessageChannel
+queue.
 
 Cancellation is cooperative, not preemptive. `EngineClient` posts a cancel
 message with the same request ID. The worker can observe it only after the
