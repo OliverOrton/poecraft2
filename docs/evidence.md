@@ -6,6 +6,33 @@ routes to them rather than duplicating complete reports.
 
 Parent: [Documentation map](README.md)
 
+## Solver Anytime Planning And Proof Ownership
+
+The 2026-08-25
+[completion record](archive/2026-08-25-solver-anytime-proof-realignment/README.md)
+establishes typed action-envelope, scheduler, incumbent, proof-pattern,
+publication, and telemetry ownership while retaining the qualified legacy
+work-order fallback. Fixed-identity and operator-envelope proof retire 79,799
+owner-case obligations without changing its independently evaluated policy.
+The ordinary release-WASM one-mod control closes the unchanged 50 ms worker-
+slice qualification at 1.828 ms on final source `cb26c29`.
+
+All 19 final-source native and release-WASM cases meet their authored status,
+compiled-graph, and exact-reconciliation expectations; Oracle one-mod and the
+explicit Imprint retry each pass exactly 10,000 simulator runs in both
+runners. The final repository pipeline passes 3,467,931 native checks plus
+ingest, economy, canonical data/artifact, binding, benchmark, release-WASM,
+and nonvisual web acceptance. The final evaluator proof correction keeps
+affix-count retry routing on the full exact distribution instead of granting
+goal-progress-gated authority from self-loop shape alone. Oliver-owned
+rendered review remains unclaimed.
+
+The clean five-T1 run retains the explicit Gate 3 legacy-order fallback at
+`14,454,067.4260706`, above the proposed 1.56M scheduler qualification target.
+Final exact replay keeps the historical 607-node / 1,460-edge strategy proper,
+zero-off-policy, completely priced, and exactly reconciled at
+`87,361.1690420501`; it remains observational evidence only.
+
 ## Current Five-T1 Imprint Scope And Historical Attribution
 
 The 2026-08-25

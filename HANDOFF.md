@@ -1,140 +1,69 @@
 # Handoff
 
-**Status: implementation boundary active.** Oliver started the
-[Solver Anytime Planning, Proof Patterns, And Debt Retirement](docs/active/2026-08-25-solver-anytime-proof-realignment/plan.md)
-plan on 2026-08-25. The focused
-[documentation preflight](docs/active/2026-08-25-solver-anytime-proof-realignment/preflight-audit.md)
-is complete; Gates 0 through 7 are complete and implementation is at Gate 8.
+**Status: no implementation boundary active.** Oliver must choose the next
+chunk before implementation resumes.
+
+The completed
+[Solver Anytime Planning, Proof Patterns, And Debt Retirement](docs/archive/2026-08-25-solver-anytime-proof-realignment/README.md)
+milestone is archived with its gate records and final acceptance evidence.
 
 ## Current checkpoint
 
 - Branch: `main`.
-- Latest completed implementation checkpoint: Gate 7 proof consumers and
-  action-envelope reduction (this handoff's commit).
-- Current engine/product source checkpoint: `a1449fa` (`Record Imprint scope
-  acceptance`).
-- Plan checkpoint: `0238753` (`Propose solver anytime proof realignment`).
-- Documentation archive checkpoint: `f2bee5b` (`Archive completed solver
-  work`).
-- The worktree was clean before the documentation-only preflight.
-- Commits are local-only unless Oliver explicitly asks to push.
+- Final implementation checkpoint: `cb26c29` (`Prove evaluator gated retry
+  authority`).
+- The milestone commits are local-only; nothing was pushed.
+- The worktree is expected to be clean after the archival checkpoint.
 
-## Current product and proof contract
+## Retained product and proof contract
 
-- Calculator and general solver benchmarks default generated automatic Imprint
-  programs off. Dedicated Imprint controls opt in. The low-level engine retains
-  its historical enabled default for compatibility, and results disclose the
-  caller-selected scope.
-- Calculator uses goal-progress-gated destructive reforges, disables voluntary
-  economic Restart unless the user enables abandonment, and retains the exact
-  mechanic-owned fresh-base branch for a failed product Fracture attempt.
-- Exact terminal success requires the requested rarity and goal threshold and
-  requires every explicit affix to satisfy a requested goal slot. Junk,
-  temporary crafts, and metamods remain legal intermediate state.
-- Final finite upper authority belongs to a compiled graph that independently
-  exact-evaluates as proper, completely priced, zero-off-policy, and finite.
-  Selected/coarse estimates are not publication authority.
-- While the incremental action envelope is open, the restricted search value
-  is scheduling evidence only. The public certified lower comes from an
-  independently global relaxation. Exactness additionally requires the
-  requested alternative envelope to close.
-- `ProofLowerValue` and carrier ordering scores are intentionally
-  non-convertible. Ordering and executable carrier planning cannot prune or
-  strengthen a public lower without a separate admissibility proof.
+- Calculator and general solver benchmarks default generated automatic
+  Imprint programs off; dedicated controls opt in. The low-level compatibility
+  default remains enabled.
+- Calculator keeps junk-free exact terminal success, goal-progress-gated
+  destructive reforges only under an authored routing proof, no voluntary
+  economic Restart by default, and the exact fresh-base branch after failed
+  product Fracture.
+- `ActionEnvelopeLedger` owns carrier/operator obligation lifecycle;
+  `SolveScheduler` owns typed lanes and fairness; `IncumbentPortfolio` owns
+  verified executable candidates; `ProofPatternManager` owns admissible lower
+  values; `PublicationPipeline` owns cooperative assertion/refinement/
+  packaging; and `SolveTelemetrySnapshot` owns typed measurement.
+- The behavior-changing scheduler profile did not qualify. Production retains
+  the measured legacy work order behind an explicit typed fallback.
+- Candidate estimates, restricted values, verified executable uppers,
+  independently global lowers, and exact closure remain non-convertible
+  authorities. Open requested alternatives remain honestly bounded.
+- Fixed-identity and complete operator-envelope proof retire 79,799
+  unmaterialized owner-case obligations, reducing its remaining requested
+  envelope from 109,100 to 29,339 without changing the independently evaluated
+  upper, graph, or policy.
+- The evaluator never grants goal-progress-gated kernel authority from a
+  self-loop alone. Affix-count or otherwise unproved retry routing keeps the
+  full exact physical distribution.
 
-## Retained result and open boundary
+## Final retained results
 
-The current clean five-T1 Conquest Lamellar run retains:
+- Clean five-T1 Conquest Lamellar: certified lower `36.4885317287664`, proper
+  independently evaluated upper `14454067.4260706`, graph 514 / 1,788.
+- The behavior-changing scheduler did not meet its 1.56M qualification while
+  preserving controls, so the plan's explicit legacy-order fallback remains.
+  Final exact replay confirms the historical `87361.1690420501` strategy is
+  still proper observational evidence, not current publication authority.
+- Fractured four-to-five owner: certified lower `36.4286171891044`, proper
+  independently evaluated upper `2698.87479601436`, graph 215 / 563.
+- Ordinary release-WASM one-mod control: exact `23.79`, 1.828 ms maximum
+  worker slice on final source, below the unchanged 50 ms qualification.
+- Final native and release-WASM 19-case matrices: all authored expectations,
+  compiled strategies, and exact reconciliation pass; the two required
+  verification cases each pass exactly 10,000 simulations in both runners;
+  zero WASM watchdog expiries.
+- Final `powershell -File scripts/test.ps1`: pass, including 3,467,931 native
+  checks with zero failures. Complete nonvisual web tests and
+  `npx tsc --noEmit` also pass.
 
-- certified lower `36.4885317287664`;
-- independently evaluated proper upper `14454067.4260706`;
-- 514 compiled nodes and 1,788 edges; and
-- 29 exact goal states in the recorded run.
+Oliver-owned rendered Calculator review remains explicitly unclaimed. No
+browser screenshots or rendered visual smoke were performed.
 
-The Imprint-off comparison removes 256 Imprint program evaluations but leaves
-that value, upper trajectory, exact-goal census, and policy unchanged. The
-historical independently evaluated `87361.1690420501` policy diverges at
-`b6fb861`'s carrier scheduling/publication changes; neither graph selects
-Imprint. It remains a research anchor, not a current-source quality baseline.
-
-The reproducible restored carrier-ordering candidate reaches an independently
-evaluated `1562083.15196689` current-source policy. It is not installed because
-its former control gate failed. The proposed plan first builds current-semantic
-benchmark and action-family authority, then reintroduces such ordering only
-inside a cooperative fairness-preserving scheduler.
-
-The latest focused native, dedicated Imprint, compiler, release-WASM
-functional-parity, complete nonvisual web, TypeScript, and required 10,000-run
-checks passed at `a1449fa`. The release-WASM ordinary one-mod result remained
-functionally equivalent, but its maximum worker slice was `186.781` ms against
-the unchanged 50 ms qualification. The full repository pipeline and rendered
-review were deliberately not run for that focused follow-up.
-
-## Active boundary
-
-Gate 0 pinned and reproduced the nine-case current-semantics benchmark matrix.
-The owner four-to-five carrier reproduced byte-identical policy authority in
-three runs, and the native harness now rejects implicit active-plan benchmark
-identity. See the [Gate 0 evidence](docs/active/2026-08-25-solver-anytime-proof-realignment/gate0-evidence.md).
-
-Gate 1 established one typed `ActionEnvelopeLedger` for carrier/operator
-obligations while leaving its scheduler view disabled. All 19 active cases
-passed, eleven focused mechanic controls proved all seven lifecycle stages,
-and the owner policy remained byte-identical. See the
-[Gate 1 evidence](docs/active/2026-08-25-solver-anytime-proof-realignment/gate1-evidence.md).
-
-Gate 2 consolidated scattered executable candidates behind a monotone typed
-portfolio and separated candidate estimate, verified executable upper,
-independent global lower, restricted lower, and exact-closure authority. The
-owner and fixed-work strategies remain byte-identical. See the
-[Gate 2 evidence](docs/active/2026-08-25-solver-anytime-proof-realignment/gate2-evidence.md).
-
-Gate 3 introduced typed cooperative fairness, executable-upper,
-high-progress, exact-closure, and reserved proof-directed lanes with complete
-quota/wait/yield/starvation telemetry. No measured profile qualified both the
-clean target and retained controls, so the plan's explicit fallback is active:
-the behavior-changing scheduler profile is disabled, the typed ledger remains
-observational, and legacy scheduling authority reproduces Gate 0/Gate 2.
-See the [Gate 3 evidence](docs/active/2026-08-25-solver-anytime-proof-realignment/gate3-evidence.md).
-
-Gate 4 attempted an executable carrier/subgoal incumbent planner over real
-completed rows. Its cheaper coarse candidates failed independent compiled
-evaluation, so no planner incumbent qualified and the product path was removed
-under the plan's explicit fallback. Only typed, non-convertible carrier and
-action-effect projections remain; fixed-work and owner controls reproduce Gate
-3. See the [Gate 4 evidence](docs/active/2026-08-25-solver-anytime-proof-realignment/gate4-evidence.md).
-
-Gate 5 extracted universal cover, clean/carrier MDP, strict-clean pattern,
-terminal-debt, and operator lower ownership behind one typed
-`ProofPatternManager`. The split proof owners retain maximum-only composition,
-explicit local fallback, residual/provenance telemetry, and bit-for-bit fixed-
-work policy/value/graph authority. See the
-[Gate 5 evidence](docs/active/2026-08-25-solver-anytime-proof-realignment/gate5-evidence.md).
-
-Gate 6 added fixed-identity occupancy, bounded per-draw debt, and complete
-post-certification operator-envelope patterns. The clean lower is
-`36.4885317287664`; the fractured owner lower is `36.4286171891044`. Native
-and WASM values agree, all admitted start rows are covered, the clean and owner
-policies/uppers/graphs are unchanged, and rejected Harvest/strict-Eldritch
-experiments were removed. See the
-[Gate 6 evidence](docs/active/2026-08-25-solver-anytime-proof-realignment/gate6-evidence.md).
-
-Gate 7 routes fixed-identity values into focused/public completion proof and
-retires exact carrier/operator obligations only when a complete action-
-specific lower strictly exceeds a certified proper carrier upper. On the owner
-case, 79,799 unmaterialized obligations gained named incumbent-dominated proof
-and the remaining requested envelope fell from 109,100 to 29,339 with the
-same exact-evaluated upper, graph, and policy hash. Fixed-work, oracle, and all
-nine forced-winner controls pass. See the
-[Gate 7 evidence](docs/active/2026-08-25-solver-anytime-proof-realignment/gate7-evidence.md).
-
-Gate 8 now owns profile-driven performance and cooperative responsiveness,
-the remaining ownership/debt refactor, final documentation, and the one full
-acceptance run. The ordinary release-WASM one-mod 50 ms slice remains the
-explicit responsiveness qualification to close.
-
-Archived milestone prose retains historical evidence authority only; the
-active plan owns current sequence.
-
-The complete milestone lineage and raw measurements are preserved in the
-[archive](docs/archive/README.md) and [evidence index](docs/evidence.md).
+See the [Gate 8 completion record](docs/archive/2026-08-25-solver-anytime-proof-realignment/gate8-evidence.md)
+for final report paths and detailed measurements.

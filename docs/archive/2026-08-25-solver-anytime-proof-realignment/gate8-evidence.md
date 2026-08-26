@@ -1,8 +1,10 @@
 # Gate 8 — Cooperative Ownership, Responsiveness, And Acceptance
 
-**Status:** implementation and responsiveness qualification passed on
-2026-08-25 at `aa34a7b`; final acceptance is pending the plan's single final
-run. No mechanic, action scope, proof boundary, cap, or public ABI changed.
+**Status:** complete on 2026-08-25. Implementation and responsiveness passed
+at `aa34a7b`; the final evaluator proof correction and release module are at
+`cb26c29`. All agent-owned final acceptance passed. No mechanic, action scope,
+cap, public ABI, or intended exactness boundary changed; the final correction
+restores the authored proof boundary for gated evaluator kernels.
 
 ## Measured owners
 
@@ -127,7 +129,63 @@ observation signature, quotient, or publication proof.
 
 ## Final acceptance
 
-Pending. The complete native, release-WASM, nonvisual web, TypeScript,
-10,000-run verification, and one full repository pipeline will be recorded
-here after the plan's final acceptance gate. Oliver-owned rendered Calculator
-review will remain explicitly unclaimed.
+The first final repository-pipeline attempt exposed a pre-existing evaluator
+proof defect in the Python prefix-count retry control: direct self-loop shape
+alone admitted the goal-progress-gated reforge kernel even when the authored
+router observed affix count and the evaluator had no goal slots. Compact exact
+attribution correctly rejected the resulting closed shared-row loop. The
+retained correction at `cb26c29` requires authored goal-progress authority:
+either an exact zero-goal-progress retry predicate or exclusively positive
+goal predicates. The prefix-count graph now retains its full physical exact
+distribution. A native regression test preserves both the proof refusal and
+the existing direct-repeat census, and the release WASM module was rebuilt.
+
+After that correction, the focused evaluator, refinement, and quotient tests
+passed, all 17 Python binding tests passed, and complete nonvisual web tests
+and `npx tsc --noEmit` passed. The final successful
+`powershell -File scripts/test.ps1` run then passed:
+
+- 18 ingest tests and 12 economy tests;
+- canonical SQLite validation, six fixture-parity cases, and compiled-artifact
+  validation;
+- all 17 Python binding tests;
+- 3,467,931 native engine checks with zero failures;
+- all 12 solver benchmark specifications; and
+- the complete release-WASM/nonvisual web suite.
+
+The final-source native and release-WASM reports are:
+
+- `build/performance/native-solver-final-acceptance-cb26c29-v1.json`;
+- `build/performance/wasm-worker-solver-final-acceptance-cb26c29-v1.json`;
+  and
+- `build/performance/solver-final-acceptance-cb26c29-v1-comparison.json`.
+
+All 19 cases in both runners met their authored expectations, compiled a
+strategy, and independently reconciled exact evaluation. Oracle one-mod and
+the explicit Imprint retry each completed exactly 10,000 successful simulator
+runs in both runners; no other case silently inherited a verification count.
+All release-WASM watchdogs remained clear. The native/WASM comparison passed
+180 checks with zero mismatches across its two matched exact controls.
+
+The clean five-T1 final-source run retained the qualified legacy-order
+fallback at lower `36.4885317287664`, upper `14,454,067.4260706`, and graph
+514 / 1,788. It therefore did not meet the proposed 1.56M scheduler quality
+target. This is the truthful final Gate 3 fallback, not a manufactured pass:
+no behavior-changing profile qualified both that target and the retained
+controls. The historical 607-node / 1,460-edge 87k strategy was replayed
+observationally through the final exact evaluator in 5,750.131 ms. It remains
+proper, completely priced, zero-off-policy, and exactly reconciled at
+`87,361.1690420501`, but it is not current publication authority and does not
+alter the retained product result.
+
+On final source, the ordinary one-mod release-WASM control completed in
+671.571 ms with a 1.828 ms maximum worker slice, below the unchanged 50 ms
+qualification. The non-armour partial-five Bow completed in 25,075.288 ms,
+including a 19,566.930 ms solve, with a 1,235.654 ms maximum hard-case slice,
+no watchdog expiry, and an independently reconciled
+`13,143,533,994.4086` upper. The hard-case qualification remains cooperative:
+no multi-second uncancellable native solve step was reintroduced.
+
+`git diff --check` passed before archival. Oliver-owned rendered Calculator
+review remains explicitly unclaimed; no browser or rendered visual review was
+performed by the agent.

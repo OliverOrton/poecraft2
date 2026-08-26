@@ -1,9 +1,10 @@
 # Solver Anytime Planning, Proof Patterns, And Debt Retirement
 
-**Status: active on 2026-08-25 by Oliver's explicit instruction. Gates −1
-through 2 are complete and implementation is at Gate 3.**
+**Status: archived complete on 2026-08-25 with the explicit Gate 3 scheduler
+and Gate 4 planner fallbacks applied. Gates −1 through 8 and all agent-owned
+final acceptance passed; Oliver's rendered review remains unclaimed.**
 
-Parent: [Active work](../README.md)
+Parent: [Documentation archive](../README.md)
 
 Proposed from clean local checkpoint: `a1449fa` (`Record Imprint scope
 acceptance`)

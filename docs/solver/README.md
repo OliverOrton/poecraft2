@@ -5,7 +5,7 @@ and acceptance narratives are archived and do not control current sequencing.
 
 Parent: [Documentation index](../README.md)
 
-Current-contract audit: verified against source on 2026-08-25 @ `aa34a7b`.
+Current-contract audit: verified against source on 2026-08-25 @ `cb26c29`.
 The goal/terminal, product action-scope, delayed-envelope lower authority,
 typed solve ownership, cooperative continuation, verified publication,
 solve-result, and current source-ownership sections were checked. Older dated

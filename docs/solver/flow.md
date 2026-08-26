@@ -6,13 +6,13 @@ work or define crafting mechanics.
 
 Parent: [Solver](README.md)
 
-Current-contract audit: verified against source on 2026-08-25 @ `aa34a7b`.
+Current-contract audit: verified against source on 2026-08-25 @ `cb26c29`.
 Scope: Calculator request defaults, worker/WASM/C ABI lifecycle, native solve
 authorities and cooperative phases, public lower and verified-upper authority,
 policy compilation, exact graph evaluation, and sampled verification. Native
-owner and release-WASM responsiveness qualifications ran; final nonvisual
-cross-layer acceptance is recorded in the active milestone evidence. No
-rendered review or mechanic ruling was performed.
+owner, release-WASM responsiveness, final native/WASM corpus, and nonvisual
+cross-layer acceptance passed and are recorded in the archived milestone
+evidence. No rendered review or mechanic ruling was performed.
 
 Qualification addendum: source inspection and focused native tests on
 2026-07-31 verified the shared publication steps through observation

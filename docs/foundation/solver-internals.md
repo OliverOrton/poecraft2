@@ -6,11 +6,11 @@ future work or define crafting mechanics.
 
 Parent: [Foundation](README.md)
 
-Verified against current source: 2026-08-25 @ `aa34a7b`. Scope: private solve
+Verified against current source: 2026-08-25 @ `cb26c29`. Scope: private solve
 phase ownership, cooperative continuation boundaries, current
-proof/publication boundaries, action-family contract, and the native source
-inventory. Native owner and release-WASM responsiveness qualifications ran;
-the milestone's final acceptance is recorded separately.
+proof/publication boundaries, action-family contract, exact evaluator gated-
+kernel authority, and the native source inventory. Native owner, release-WASM
+responsiveness, final corpus, and repository acceptance passed.
 
 ## Execution Flow
 

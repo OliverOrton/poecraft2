@@ -6,28 +6,28 @@ S8 sequence as current momentum.
 
 Parent: [Future work](README.md)
 
-> **2026-08-25 supersession note:** No roadmap item is selected. The proposed
-> [Solver Anytime Planning, Proof Patterns, And Debt Retirement](../active/2026-08-25-solver-anytime-proof-realignment/plan.md)
-> plan, its [documentation preflight](../active/2026-08-25-solver-anytime-proof-realignment/preflight-audit.md),
+> **2026-08-25 supersession note:** No roadmap item is selected. The completed
+> [Solver Anytime Planning, Proof Patterns, And Debt Retirement](../archive/2026-08-25-solver-anytime-proof-realignment/README.md)
+> milestone, its [documentation preflight](../archive/2026-08-25-solver-anytime-proof-realignment/preflight-audit.md),
 > [HANDOFF](../../HANDOFF.md), and current stable solver references supersede
 > any “next” wording below. Historical negative results remain valid changed-
 > premise constraints, but they do not establish current sequencing.
 
 ## Current Deferred Boundary
 
-The current source checkpoint is `a1449fa`. Product/general benchmark solves
+The current source checkpoint is `cb26c29`. Product/general benchmark solves
 default generated Imprint programs off, exact terminal success rejects junk
 explicit affixes, Calculator disables voluntary economic Restart by default,
 and independently evaluated emitted strategy graphs own finite publication
 uppers. While the delayed incremental action envelope is open, the restricted
 search value is not a global public lower.
 
-The proposed plan absorbs the still-relevant one-item work into named gates:
+The completed milestone absorbed the relevant one-item work into named gates:
 current-semantic action-family authority, monotone verified incumbents,
 cooperative scheduling, executable carrier/subgoal planning, typed proof
 patterns, measured proof consumers, WASM responsiveness, and solver ownership
-cleanup. It remains proposed until Oliver explicitly starts it. Items outside
-that plan remain deferred and unordered here.
+cleanup. Items outside that completed boundary remain deferred and unordered
+here.
 
 ## Historical Closed-Premise Record
 

@@ -30,25 +30,17 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The
-[Solver Anytime Planning, Proof Patterns, And Debt Retirement](active/2026-08-25-solver-anytime-proof-realignment/plan.md)
-plan is active at Gate 8 by Oliver's explicit 2026-08-25 instruction. Its completed
-[documentation preflight](active/2026-08-25-solver-anytime-proof-realignment/preflight-audit.md)
-confirms the current contract and records the stable-reference cleanup; its
-[Gate 0 evidence](active/2026-08-25-solver-anytime-proof-realignment/gate0-evidence.md)
-pins the current-semantics benchmark and attribution authority, and its
-[Gate 1 evidence](active/2026-08-25-solver-anytime-proof-realignment/gate1-evidence.md)
-establishes the typed action-envelope lifecycle and mechanic-family controls.
-The [Gate 2 evidence](active/2026-08-25-solver-anytime-proof-realignment/gate2-evidence.md)
-establishes monotone verified-incumbent and progress authority. Gates 3–7
-retain the qualified scheduler fallback, typed proof owners, stronger proof
-patterns, and measured action-envelope consumers. The
-[Gate 8 record](active/2026-08-25-solver-anytime-proof-realignment/gate8-evidence.md)
-closes the release-WASM responsiveness qualification; the single final
-acceptance run remains before archival.
+No implementation boundary is active. Oliver must choose the next chunk
+before implementation resumes. The completed
+[Solver Anytime Planning, Proof Patterns, And Debt Retirement](archive/2026-08-25-solver-anytime-proof-realignment/README.md)
+milestone retains current-semantics benchmark authority, typed action-envelope
+and incumbent ownership, the qualified scheduler fallback, admissible proof
+patterns and measured consumers, cooperative publication/evaluation, release-
+WASM responsiveness, and the passing final acceptance record.
 
-Current source behavior starts from `a1449fa` (`Record Imprint scope
-acceptance`). Calculator and general solver benchmarks default generated
+The completed boundary began at `a1449fa` (`Record Imprint scope acceptance`)
+and its final source checkpoint is `cb26c29`. Calculator and general solver
+benchmarks default generated
 automatic Imprint programs off, while dedicated controls opt in; the low-level
 engine retains its compatibility default. Exact terminal success permits only
 requested explicit affixes, ordinary Calculator solves disable voluntary
@@ -56,11 +48,13 @@ economic Restart, and an open incremental action envelope publishes only an
 independently global proof lower—not its restricted-search value.
 
 The current five-T1 product result is an independently evaluated proper
-`14454067.4260706`-Chaos policy with a certified `36.4286171890906` lower.
+`14454067.4260706`-Chaos policy with a certified `36.4885317287664` lower.
 The historical `87361.1690420501` policy remains valid measured evidence but
-is not a deterministic current-source baseline. The proposed plan uses the
-reproducible current-source `1562083.15196689` recovered-ordering result as
-its first quality qualification and treats 87k as a research anchor.
+is not a deterministic current-source baseline. The completed milestone's
+behavior-changing scheduler did not qualify its retained controls, so the
+explicit legacy-order fallback remains. Final exact replay confirms the 87k
+artifact is still valid observational evidence, not current publication
+authority.
 
 The current retained acceptance and the closed release-WASM 50 ms worker-slice
 qualification are summarized in [HANDOFF](../HANDOFF.md). Detailed

@@ -9,6 +9,14 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-08-25
+
+- [Solver Anytime Planning, Proof Patterns, And Debt Retirement](2026-08-25-solver-anytime-proof-realignment/README.md) —
+  established typed scheduler/incumbent/proof/publication ownership, retained
+  the qualified legacy work-order fallback, used admissible proof to retire
+  measured action-envelope debt, restored release-WASM responsiveness, and
+  passed the final 19-case native/WASM matrix and full repository pipeline.
+
 ## 2026-08-24
 
 - [Carrier-Aware Proof Bounds And Consumers](2026-08-24-carrier-aware-proof-bounds/README.md) —
