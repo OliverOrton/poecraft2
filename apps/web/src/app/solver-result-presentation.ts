@@ -272,15 +272,14 @@ export function calculatorSolveOptions(
     considerImprintPrograms = false,
 ): SolveOptions {
     const options: SolveOptions = {
-        goal_progress_gated_reforges: true,
-        high_impact_executable_uppers: true,
-        allow_economic_restart: allowEconomicRestart,
-        consider_imprint_programs: considerImprintPrograms,
-        // The four-T1 direct graph closes at about 163k exact carrier pairs.
-        // This separate allowance lets that cheaper policy be independently
-        // evaluated without widening the main solve or requiring strict lift.
-        max_policy_refinement_states: 200_000,
+        solve_profile: "calculator_product_v1",
     };
+    if (allowEconomicRestart) {
+        options.allow_economic_restart = true;
+    }
+    if (considerImprintPrograms) {
+        options.consider_imprint_programs = true;
+    }
     if (Number.isFinite(absoluteGap) && absoluteGap > 0) {
         options.max_absolute_optimality_gap = absoluteGap;
     }

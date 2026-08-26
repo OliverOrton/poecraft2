@@ -7,11 +7,11 @@ namespace poecraft {
 namespace solver {
 
 /*
- * Native opt-ins occupy the high end of pc_solve_options' solver_flags word
- * and remain absent from the public C header. The historical high-impact bit
- * also carries the audited exact operator-major scheduler selected by normal
- * Calculator release-WASM requests; the name stays stable for fixtures and
- * benchmark evidence.
+ * Native-only experiments occupy the high end of pc_solve_options'
+ * solver_flags word and remain absent from the public C header. The
+ * historical high-impact bit remains accepted as a compatibility alias; new
+ * product callers select that durable capability through the public
+ * Calculator profile or PC_SOLVER_FLAG_HIGH_IMPACT_EXECUTABLE_UPPERS.
  */
 inline constexpr std::uint32_t kHighImpactExecutableUppersDiagnosticFlag =
     1u << 31;

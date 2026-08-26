@@ -2502,7 +2502,8 @@ void validate_case_manifest_contract(
     const Value& manifest, const Value& specification) {
     if (const Value* identity = optional(
             manifest, "benchmark_identity_contract", Type::Object)) {
-        required_string(*identity, "id");
+        const std::string benchmark_identity =
+            required_string(*identity, "id");
         required(*identity, "trajectory_required", Type::Bool);
         required(*identity, "fixed_work_identity_required", Type::Bool);
         required(
@@ -2548,12 +2549,12 @@ void validate_case_manifest_contract(
         required_string(specification, "comparison_profile");
         required(specification, "watchdog_seconds", Type::Number);
         const Value& caps = required(specification, "caps", Type::Object);
+        if (benchmark_identity.starts_with(
+                "calculator-product-quality-ladder-")) {
+            required(caps, "solve_profile", Type::String);
+        }
         required(caps, "solve_step_work_items", Type::Number);
         required(caps, "worker_step_ms", Type::Number);
-        required(caps, "goal_progress_gated_reforges", Type::Bool);
-        required(caps, "allow_economic_restart", Type::Bool);
-        required(caps, "high_impact_executable_uppers", Type::Bool);
-        required(caps, "consider_imprint_programs", Type::Bool);
         required(caps, "full_evidence", Type::Bool);
         const Value& verification = required(
             specification, "verification", Type::Object);
@@ -2768,6 +2769,14 @@ CaseResult run_case(
         pc_solve_options solve_options{};
         solve_options.struct_size = sizeof(solve_options);
         solve_options.abi_version = PC_ABI_VERSION;
+        const std::string solve_profile = optional_string(
+            caps, "solve_profile", "default");
+        if (solve_profile == "calculator_product_v1") {
+            solve_options.solve_profile =
+                PC_SOLVE_PROFILE_CALCULATOR_PRODUCT_V1;
+        } else if (solve_profile != "default") {
+            throw std::runtime_error("unknown solve_profile: " + solve_profile);
+        }
         solve_options.max_states = optional_u32(caps, "max_states", 200000);
         solve_options.max_sweeps = optional_u32(caps, "max_sweeps", 100000);
         solve_options.max_discovered_states = optional_u32(
@@ -2800,6 +2809,10 @@ CaseResult run_case(
             caps, "max_telemetry_json_bytes", 1048576);
         solve_options.max_policy_refinement_states = optional_u32(
             caps, "max_policy_refinement_states", 0);
+        if (caps.find("max_policy_refinement_states") != nullptr) {
+            solve_options.solve_profile_override_mask |=
+                PC_SOLVE_PROFILE_OVERRIDE_POLICY_REFINEMENT_STATES;
+        }
         solve_options.max_absolute_optimality_gap = optional_nonnegative_double(
             caps, "max_absolute_optimality_gap", 0.0);
         solve_options.max_relative_optimality_gap = optional_nonnegative_double(
@@ -2814,31 +2827,51 @@ CaseResult run_case(
             solve_options.solver_flags |=
                 PC_SOLVER_FLAG_DISABLE_KERNEL_REUSE;
         }
-        if (optional_bool(
-                caps, "goal_progress_gated_reforges", false)) {
-            solve_options.solver_flags |=
-                PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES;
+        if (caps.find("goal_progress_gated_reforges") != nullptr) {
+            solve_options.solve_profile_override_mask |=
+                PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES;
+            if (optional_bool(
+                    caps, "goal_progress_gated_reforges", false)) {
+                solve_options.solver_flags |=
+                    PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES;
+            }
         }
-        if (!optional_bool(caps, "allow_economic_restart", true)) {
-            solve_options.solver_flags |=
-                PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART;
+        if (caps.find("allow_economic_restart") != nullptr) {
+            solve_options.solve_profile_override_mask |=
+                PC_SOLVE_PROFILE_OVERRIDE_ECONOMIC_RESTART;
+            if (!optional_bool(caps, "allow_economic_restart", true)) {
+                solve_options.solver_flags |=
+                    PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART;
+            }
         }
         /* General benchmark cases exclude generated Imprint programs unless
          * the corpus explicitly opts in. Dedicated Imprint correctness
          * controls continue to request the family directly. */
-        if (!optional_bool(caps, "consider_imprint_programs", false)) {
+        if (caps.find("consider_imprint_programs") != nullptr) {
+            solve_options.solve_profile_override_mask |=
+                PC_SOLVE_PROFILE_OVERRIDE_IMPRINT_PROGRAMS;
+            if (!optional_bool(caps, "consider_imprint_programs", false)) {
+                solve_options.solver_flags |=
+                    PC_SOLVER_FLAG_DISABLE_IMPRINT_PROGRAMS;
+            }
+        } else if (solve_options.solve_profile == PC_SOLVE_PROFILE_DEFAULT) {
             solve_options.solver_flags |=
                 PC_SOLVER_FLAG_DISABLE_IMPRINT_PROGRAMS;
         }
         if (goal_progress_gated_reforges) {
+            solve_options.solve_profile_override_mask |=
+                PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES;
             solve_options.solver_flags |=
                 PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES;
         }
-        if (optional_bool(
-                caps, "high_impact_executable_uppers", false)) {
-            solve_options.solver_flags |=
-                poecraft::solver::
-                    kHighImpactExecutableUppersDiagnosticFlag;
+        if (caps.find("high_impact_executable_uppers") != nullptr) {
+            solve_options.solve_profile_override_mask |=
+                PC_SOLVE_PROFILE_OVERRIDE_HIGH_IMPACT_EXECUTABLE_UPPERS;
+            if (optional_bool(
+                    caps, "high_impact_executable_uppers", false)) {
+                solve_options.solver_flags |=
+                    PC_SOLVER_FLAG_HIGH_IMPACT_EXECUTABLE_UPPERS;
+            }
         }
         if (optional_bool(
                 caps, "projected_reforge_frontier_diagnostic", false)) {

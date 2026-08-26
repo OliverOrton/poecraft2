@@ -56,6 +56,10 @@ SolveWork::Impl::Impl(
             options.max_absolute_optimality_gap;
         result.requested_relative_optimality_gap =
             options.max_relative_optimality_gap;
+        result.diagnostics.solve_profile_id =
+            solve_profile_name(options.solve_profile);
+        result.diagnostics.solve_profile_override_mask =
+            options.solve_profile_override_mask;
         result.diagnostics.consider_imprint_programs =
             options.consider_imprint_programs;
         result.diagnostics.diagnostic_sample_limit =

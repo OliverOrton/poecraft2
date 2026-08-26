@@ -895,10 +895,13 @@ void run_public_product_eldritch_gate(const char* artifact_dir) {
     solve_options.max_solver_owned_bytes = 512ull * 1024ull * 1024ull;
     solve_options.max_diagnostic_samples = 64;
     solve_options.max_telemetry_json_bytes = 64ull * 1024ull * 1024ull;
-    solve_options.solver_flags =
-        PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES |
-        PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART |
-        PC_SOLVER_FLAG_DISABLE_IMPRINT_PROGRAMS;
+    solve_options.solve_profile =
+        PC_SOLVE_PROFILE_CALCULATOR_PRODUCT_V1;
+    solve_options.solve_profile_override_mask =
+        PC_SOLVE_PROFILE_OVERRIDE_IMPRINT_PROGRAMS |
+        PC_SOLVE_PROFILE_OVERRIDE_HIGH_IMPACT_EXECUTABLE_UPPERS |
+        PC_SOLVE_PROFILE_OVERRIDE_POLICY_REFINEMENT_STATES;
+    solve_options.solver_flags = PC_SOLVER_FLAG_DISABLE_IMPRINT_PROGRAMS;
     pc_solve_summary summary{};
     PC_CHECK(pc_solver_solve(
                  solver, &start, economy, &solve_options, &summary,
@@ -906,6 +909,10 @@ void run_public_product_eldritch_gate(const char* artifact_dir) {
     PC_CHECK(summary.policy_available == 1);
     const std::string solved_telemetry =
         solver_telemetry_json(solver, &error);
+    PC_CHECK(solved_telemetry.find(
+                 "\"solve_profile\":{\"id\":"
+                 "\"calculator_product_v1\",\"override_mask\":28}") !=
+             std::string::npos);
     PC_CHECK(solved_telemetry.find(
                  "\"candidate_kind\":\"eldritch_side\"") !=
              std::string::npos);

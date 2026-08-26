@@ -465,6 +465,10 @@ std::string compile_policy_strategy_json(
             "\"solver_imprint_programs_considered\":" +
             std::string(
                 result.options.consider_imprint_programs ? "true" : "false") +
+            ",\"solver_profile_id\":\"" +
+            solve_profile_name(result.options.solve_profile) +
+            "\",\"solver_profile_override_mask\":" +
+            std::to_string(result.options.solve_profile_override_mask) +
             ","
             "\"base_state\":{\"base_key\":\"" +
             json_escape(
@@ -2704,6 +2708,10 @@ std::string compile_policy_strategy_json(
     }
     json += "\",\"solver_imprint_programs_considered\":";
     json += result.options.consider_imprint_programs ? "true" : "false";
+    json += ",\"solver_profile_id\":\"";
+    json += solve_profile_name(result.options.solve_profile);
+    json += "\",\"solver_profile_override_mask\":";
+    json += std::to_string(result.options.solve_profile_override_mask);
     json += ",\"base_state\":{\"base_key\":\"";
     json += json_escape(
         data.string_at(data.base_metadata_path_sid[session.base_index]));

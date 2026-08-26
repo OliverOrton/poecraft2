@@ -680,6 +680,8 @@ export interface SolveSummary {
 }
 
 export interface SolveOptions {
+    /** Versioned native-owned defaults used by normal Calculator solves. */
+    solve_profile?: "calculator_product_v1";
     epsilon?: number;
     max_states?: number;
     max_sweeps?: number;

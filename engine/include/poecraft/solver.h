@@ -375,7 +375,25 @@ typedef struct pc_solve_options {
      * max_discovered_states. A verified executable fallback is retained when
      * this optional improvement budget is exhausted. */
     uint32_t max_policy_refinement_states;
+    /* Versioned native-owned option bundle. Default/zero preserves the
+     * historical field-by-field C ABI behavior. Profile-owned fields may be
+     * overridden only when the corresponding override bit is present. */
+    uint32_t solve_profile;
+    uint32_t solve_profile_override_mask;
 } pc_solve_options;
+
+typedef enum pc_solve_profile {
+    PC_SOLVE_PROFILE_DEFAULT = 0,
+    PC_SOLVE_PROFILE_CALCULATOR_PRODUCT_V1 = 1
+} pc_solve_profile;
+
+typedef enum pc_solve_profile_override {
+    PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES = 1u << 0,
+    PC_SOLVE_PROFILE_OVERRIDE_ECONOMIC_RESTART = 1u << 1,
+    PC_SOLVE_PROFILE_OVERRIDE_IMPRINT_PROGRAMS = 1u << 2,
+    PC_SOLVE_PROFILE_OVERRIDE_HIGH_IMPACT_EXECUTABLE_UPPERS = 1u << 3,
+    PC_SOLVE_PROFILE_OVERRIDE_POLICY_REFINEMENT_STATES = 1u << 4
+} pc_solve_profile_override;
 
 typedef enum pc_solver_flag {
     PC_SOLVER_FLAG_FULL_EVIDENCE = 1u << 0,
@@ -392,7 +410,10 @@ typedef enum pc_solver_flag {
     /* Exclude generated Imprint checkpoint/retry programs from the requested
      * solve action scope. Omitted/default behavior continues to consider
      * them. Other automatic families are unaffected. */
-    PC_SOLVER_FLAG_DISABLE_IMPRINT_PROGRAMS = 1u << 5
+    PC_SOLVER_FLAG_DISABLE_IMPRINT_PROGRAMS = 1u << 5,
+    /* Public value for the exact operator-major delayed-action scheduler.
+     * The former high diagnostic bit remains accepted for compatibility. */
+    PC_SOLVER_FLAG_HIGH_IMPACT_EXECUTABLE_UPPERS = 1u << 6
 } pc_solver_flag;
 
 typedef enum pc_solve_policy_status {

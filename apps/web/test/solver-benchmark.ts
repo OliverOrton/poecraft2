@@ -1228,6 +1228,7 @@ async function runCase(
                     item,
                     economy,
                     {
+                        solve_profile: spec.caps.solve_profile,
                         max_states: spec.caps.max_states,
                         max_sweeps: spec.caps.max_sweeps,
                         max_absolute_optimality_gap:
@@ -1281,6 +1282,7 @@ async function runCase(
                     item,
                     economy,
                     {
+                        solve_profile: spec.caps.solve_profile,
                         max_states: spec.caps.max_states,
                         max_sweeps: spec.caps.max_sweeps,
                         max_absolute_optimality_gap:

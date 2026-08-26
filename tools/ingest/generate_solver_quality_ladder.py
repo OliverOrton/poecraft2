@@ -29,6 +29,7 @@ ECONOMY = {
 }
 
 COMMON_CAPS = {
+    "solve_profile": "calculator_product_v1",
     "max_states": 200000,
     "max_sweeps": 100000,
     # The Calculator does not supply chunkSize. The worker therefore starts at
@@ -42,16 +43,11 @@ COMMON_CAPS = {
     "max_solver_owned_bytes": 1073741824,
     "max_diagnostic_samples": 64,
     "max_telemetry_json_bytes": 2097152,
-    "max_policy_refinement_states": 200000,
     "max_compiled_nodes": 100000,
     "max_compiled_edges": 400000,
     "max_strategy_json_bytes": 67108864,
     "worker_step_ms": 250,
     "cancel_ack_ms": 250,
-    "goal_progress_gated_reforges": True,
-    "allow_economic_restart": False,
-    "high_impact_executable_uppers": True,
-    "consider_imprint_programs": False,
     "full_evidence": True,
 }
 

@@ -106,6 +106,7 @@ export interface SolverBenchmarkCase {
         verification_status: string;
     };
     caps: {
+        solve_profile?: "calculator_product_v1";
         max_states: number;
         max_sweeps: number;
         max_absolute_optimality_gap?: number;
@@ -132,7 +133,7 @@ export interface SolverBenchmarkCase {
         consider_imprint_programs?: boolean;
         worker_step_ms: number;
         cancel_ack_ms: number;
-        [key: string]: number | boolean | undefined;
+        [key: string]: number | boolean | string | undefined;
     };
     verification: {
         runs: number;
@@ -476,6 +477,12 @@ function validateCase(value: unknown, path: string): SolverBenchmarkCase {
         throw new Error(`${path}.goal.slots must be a non-empty array`);
     }
     const caps = spec.caps as Record<string, unknown>;
+    if (
+        caps.solve_profile !== undefined &&
+        caps.solve_profile !== "calculator_product_v1"
+    ) {
+        throw new Error(`${path}.caps.solve_profile is unknown`);
+    }
     for (const key of [
         "max_states", "max_sweeps", "solve_step_work_items",
         "max_discovered_states", "max_expanded_states",

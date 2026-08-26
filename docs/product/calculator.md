@@ -101,12 +101,14 @@ The Solve surface is distinct from one-action odds:
 4. Keep only candidates whose complete price vectors resolve. If priced
    Fracture is relevant, require an explicit `base` price because miss recovery
    owns an exact fresh-base replacement branch.
-5. Open a fresh scoped solve handle with
-   `goal_progress_gated_reforges: true`,
-   `allow_economic_restart: false`, and the user-selected
-   `consider_imprint_programs` scope (default unchecked), plus a 200,000-state
-   `max_policy_refinement_states` allowance, then run the stateful native
+5. Open a fresh scoped solve handle with the versioned native
+   `calculator_product_v1` solve profile, then run the stateful native
    begin/step/finish API in the worker with progress and cancellation.
+   The profile owns goal-progress-gated reforges, high-impact executable-upper
+   work, voluntary economic Restart off, generated Imprint programs off, zero
+   gap targets, and a 200,000-state policy-refinement allowance. The web app
+   sends only positive gap targets and explicit user overrides; it does not
+   recreate those defaults field by field.
    Calculator therefore does not abandon an ordinary carrier merely because a
    fresh start is cheaper. An unchecked “Allow abandoning this item and buying
    a fresh base” control explicitly restores that economic action. The native
@@ -114,8 +116,9 @@ The Solve surface is distinct from one-action odds:
    “Consider automatic Imprint checkpoint/retry programs” is a separate,
    unchecked-by-default control. Selecting it explicitly adds generated
    Imprint programs; other automatic families remain eligible in either
-   scope. Results and compiled strategies disclose the selected action scope
-   and make no optimality claim over an excluded family.
+   scope. Results, telemetry, and compiled strategies disclose the profile,
+   named overrides, and selected action scope and make no optimality claim
+   over an excluded family.
    The refinement allowance affects only optional attempts to certify a
    cheaper broad/strict policy after an executable fallback is already
    independently verified. A proper, zero-off-policy, completely priced

@@ -1,6 +1,6 @@
 # Solver Quality Measurement, Refinement, And Debt Retirement
 
-**Status: active. Gates -1 through 5 are complete; Gate 6 is the
+**Status: active. Gates -1 through 7 are complete; Gate 8 is the
 implementation boundary.**
 
 Parent: [Active work](../README.md)
@@ -193,6 +193,8 @@ consumer evidence.
 
 ## Gate 6 — One product-profile authority
 
+**Status: complete.** See [Gate 6 evidence](gate6-evidence.md).
+
 Define a versioned native Calculator solve profile owning Imprint, Restart,
 goal-progress gating, high-impact upper work, gap defaults, and relevant caps.
 The Calculator, native benchmark, release-WASM benchmark, and diagnostic corpus
@@ -205,6 +207,8 @@ WASM facade, worker protocol, benchmark parser, fixtures, and stable docs as
 required by the change-impact map. Rebuild release WASM before final web tests.
 
 ## Gate 7 — Measured debt retirement and ownership refactor
+
+**Status: complete.** See [Gate 7 evidence](gate7-evidence.md).
 
 Retire only debt touched by preceding gates:
 

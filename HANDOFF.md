@@ -1,6 +1,6 @@
 # Handoff
 
-**Status: active implementation boundary.** Gate 6 of
+**Status: active implementation boundary.** Gate 8 of
 [Solver Quality Measurement, Refinement, And Debt Retirement](docs/active/2026-08-26-solver-quality-debt-retirement/plan.md)
 is active.
 
@@ -11,8 +11,9 @@ is attributed. Gate 2 repaired the selected-first proof lifecycle and prevents
 optional strict work from delaying an already finite product policy. The
 action-scope audit found admitted but delayed work rather than missing mechanic
 families, no executable-upper consumer qualified, and retained proof patterns
-already cover the safe Gate 5 consumers. Gate 6 now owns one versioned native
-Calculator solve-profile authority across the C ABI, WASM, benchmarks, and app.
+already cover the safe Gate 5 consumers. Gates 6-7 replaced duplicated
+Calculator defaults with one versioned native profile and retired the touched
+cross-layer ownership debt. Gate 8 owns the one final acceptance pass.
 
 The completed
 [Solver Anytime Planning, Proof Patterns, And Debt Retirement](docs/archive/2026-08-25-solver-anytime-proof-realignment/README.md)
@@ -27,7 +28,22 @@ milestone is archived with its gate records and final acceptance evidence.
   [Gate 2 evidence](docs/active/2026-08-26-solver-quality-debt-retirement/gate2-evidence.md).
 - The milestone commits are local-only; nothing was pushed.
 - Gates 3-5 checkpoint: the local commit containing the gate evidence.
-- Gate 6 may leave an active implementation worktree; do not discard it.
+- Gates 6-7 are implemented in the current worktree and await their checkpoint
+  commit after source review.
+- Gate 8 may leave an active acceptance worktree; do not discard it.
+
+## Current Gates 6-7 result
+
+- `calculator_product_v1` owns gated reforges, Restart off, Imprints off,
+  high-impact upper work, zero gap defaults, and the 200k optional refinement
+  allowance in native code.
+- C ABI, WASM, Calculator, native benchmark, release-WASM benchmark, quality
+  fixtures, telemetry, compiled provenance, tests, and stable docs select or
+  report that identity. Explicit fields become named overrides.
+- The old explicit-field and new profile one-goal controls have identical
+  values, transition/policy hashes, and compiled graph sizes.
+- The private high-impact bit remains a compatibility alias; new product code
+  uses the public profile/capability contract.
 
 ## Current Gates 3-5 result
 

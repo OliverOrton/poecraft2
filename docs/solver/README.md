@@ -595,6 +595,15 @@ explicitly. This is a caller-selected action restriction, not a dominance
 proof; telemetry, benchmark results, and compiled-strategy provenance disclose
 the choice.
 
+Normal Calculator and versioned quality-ladder calls select the native
+`calculator_product_v1` profile rather than duplicating inverse low-level
+flags. The profile owns Imprint off, economic Restart off, goal-progress
+gating on, high-impact executable-upper work on, disabled gap targets, and
+`max_policy_refinement_states = 200000`. Its identity and explicit override
+mask are serialized in solver telemetry and compiled-strategy provenance.
+Omitted `solve_profile` preserves the historical native defaults; append-only
+C ABI callers may select the profile and override only named profile fields.
+
 An Imprint depth/work refusal is family-local scheduling evidence. Its
 transaction is rolled back, the family stays unresolved and blocks exact
 closure, and Solve may replay the carrier without Imprint to finish unrelated

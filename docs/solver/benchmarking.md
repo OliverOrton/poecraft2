@@ -114,6 +114,11 @@ The v2 run ledger pins:
 - every selected case’s session, start, goal, caps, economy, action envelope,
   generation metadata, corpus features, and resolved product action IDs.
 
+Calculator-quality corpora pin `solve_profile: calculator_product_v1` as part
+of the case identity. They omit the profile-owned low-level booleans and
+policy-refinement allowance unless a dedicated control is intentionally
+overriding one; telemetry records the resulting override mask.
+
 Resume refuses an existing output directory when its executable, corpus,
 artifact, machine, or benchmark configuration differs. A full observation
 identity includes the executable hash. In an intentional baseline/candidate

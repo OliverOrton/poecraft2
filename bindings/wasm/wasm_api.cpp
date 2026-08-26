@@ -577,6 +577,20 @@ bool parse_solve_options(
         error = "options must be an object";
         return false;
     }
+    const Value* solve_profile = spec.find("solve_profile");
+    if (solve_profile != nullptr) {
+        if (solve_profile->type != Type::String) {
+            error = "solve_profile must be a string";
+            return false;
+        }
+        if (solve_profile->string == "calculator_product_v1") {
+            options.solve_profile =
+                PC_SOLVE_PROFILE_CALCULATOR_PRODUCT_V1;
+        } else if (solve_profile->string != "default") {
+            error = "unknown solve_profile";
+            return false;
+        }
+    }
     options.epsilon = obj_double(spec, "epsilon");
     options.max_states = obj_u32(spec, "max_states");
     options.max_sweeps = obj_u32(spec, "max_sweeps");
@@ -600,6 +614,10 @@ bool parse_solve_options(
         spec, "max_relative_optimality_gap");
     options.max_policy_refinement_states = obj_u32(
         spec, "max_policy_refinement_states");
+    if (spec.find("max_policy_refinement_states") != nullptr) {
+        options.solve_profile_override_mask |=
+            PC_SOLVE_PROFILE_OVERRIDE_POLICY_REFINEMENT_STATES;
+    }
     const Value* full_evidence = spec.find("full_evidence");
     if (full_evidence != nullptr && full_evidence->type == Type::Bool &&
         full_evidence->boolean) {
@@ -618,34 +636,46 @@ bool parse_solve_options(
     const Value* goal_progress_gated =
         spec.find("goal_progress_gated_reforges");
     if (goal_progress_gated != nullptr &&
-        goal_progress_gated->type == Type::Bool &&
-        goal_progress_gated->boolean) {
-        options.solver_flags |=
-            PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES;
+        goal_progress_gated->type == Type::Bool) {
+        options.solve_profile_override_mask |=
+            PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES;
+        if (goal_progress_gated->boolean) {
+            options.solver_flags |=
+                PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES;
+        }
     }
     const Value* allow_economic_restart =
         spec.find("allow_economic_restart");
     if (allow_economic_restart != nullptr &&
-        allow_economic_restart->type == Type::Bool &&
-        !allow_economic_restart->boolean) {
-        options.solver_flags |=
-            PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART;
+        allow_economic_restart->type == Type::Bool) {
+        options.solve_profile_override_mask |=
+            PC_SOLVE_PROFILE_OVERRIDE_ECONOMIC_RESTART;
+        if (!allow_economic_restart->boolean) {
+            options.solver_flags |=
+                PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART;
+        }
     }
     const Value* consider_imprint_programs =
         spec.find("consider_imprint_programs");
     if (consider_imprint_programs != nullptr &&
-        consider_imprint_programs->type == Type::Bool &&
-        !consider_imprint_programs->boolean) {
-        options.solver_flags |=
-            PC_SOLVER_FLAG_DISABLE_IMPRINT_PROGRAMS;
+        consider_imprint_programs->type == Type::Bool) {
+        options.solve_profile_override_mask |=
+            PC_SOLVE_PROFILE_OVERRIDE_IMPRINT_PROGRAMS;
+        if (!consider_imprint_programs->boolean) {
+            options.solver_flags |=
+                PC_SOLVER_FLAG_DISABLE_IMPRINT_PROGRAMS;
+        }
     }
     const Value* high_impact_uppers =
         spec.find("high_impact_executable_uppers");
     if (high_impact_uppers != nullptr &&
-        high_impact_uppers->type == Type::Bool &&
-        high_impact_uppers->boolean) {
-        options.solver_flags |= poecraft::solver::
-            kHighImpactExecutableUppersDiagnosticFlag;
+        high_impact_uppers->type == Type::Bool) {
+        options.solve_profile_override_mask |=
+            PC_SOLVE_PROFILE_OVERRIDE_HIGH_IMPACT_EXECUTABLE_UPPERS;
+        if (high_impact_uppers->boolean) {
+            options.solver_flags |=
+                PC_SOLVER_FLAG_HIGH_IMPACT_EXECUTABLE_UPPERS;
+        }
     }
     return true;
 }

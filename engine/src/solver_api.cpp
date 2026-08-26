@@ -579,6 +579,39 @@ solver::SolveOptions solve_options(const pc_solve_options* options) {
 #define PC_SOLVE_OPTION_HAS(field)                                      \
     (options->struct_size >=                                            \
      offsetof(pc_solve_options, field) + sizeof(options->field))
+    if (PC_SOLVE_OPTION_HAS(solve_profile)) {
+        switch (options->solve_profile) {
+        case PC_SOLVE_PROFILE_DEFAULT:
+            break;
+        case PC_SOLVE_PROFILE_CALCULATOR_PRODUCT_V1:
+            solver::apply_solve_profile_defaults(
+                value, solver::SolveProfile::CalculatorProductV1);
+            break;
+        default:
+            throw std::invalid_argument("unknown solve profile");
+        }
+    }
+    if (PC_SOLVE_OPTION_HAS(solve_profile_override_mask)) {
+        value.solve_profile_override_mask =
+            options->solve_profile_override_mask;
+    }
+    const bool profiled =
+        value.solve_profile != solver::SolveProfile::Default;
+    constexpr std::uint32_t kKnownProfileOverrides =
+        PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES |
+        PC_SOLVE_PROFILE_OVERRIDE_ECONOMIC_RESTART |
+        PC_SOLVE_PROFILE_OVERRIDE_IMPRINT_PROGRAMS |
+        PC_SOLVE_PROFILE_OVERRIDE_HIGH_IMPACT_EXECUTABLE_UPPERS |
+        PC_SOLVE_PROFILE_OVERRIDE_POLICY_REFINEMENT_STATES;
+    if (profiled &&
+        (value.solve_profile_override_mask & ~kKnownProfileOverrides) != 0) {
+        throw std::invalid_argument("unknown solve profile override");
+    }
+    if (!profiled) value.solve_profile_override_mask = 0;
+    const auto profile_overrides = [&](const std::uint32_t bit) {
+        return !profiled ||
+               (value.solve_profile_override_mask & bit) != 0;
+    };
     if (options->epsilon > 0.0) value.epsilon = options->epsilon;
     if (options->max_states != 0) value.max_states = options->max_states;
     if (options->max_sweeps != 0) value.max_sweeps = options->max_sweeps;
@@ -638,18 +671,31 @@ solver::SolveOptions solve_options(const pc_solve_options* options) {
         value.kernel_reuse =
             (options->solver_flags &
              PC_SOLVER_FLAG_DISABLE_KERNEL_REUSE) == 0;
-        value.goal_progress_gated_reforges =
-            (options->solver_flags &
-             PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES) != 0;
-        value.allow_economic_restart =
-            (options->solver_flags &
-             PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART) == 0;
-        value.consider_imprint_programs =
-            (options->solver_flags &
-             PC_SOLVER_FLAG_DISABLE_IMPRINT_PROGRAMS) == 0;
-        value.high_impact_executable_uppers =
-            (options->solver_flags &
-             solver::kHighImpactExecutableUppersDiagnosticFlag) != 0;
+        if (profile_overrides(
+                PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES)) {
+            value.goal_progress_gated_reforges =
+                (options->solver_flags &
+                 PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES) != 0;
+        }
+        if (profile_overrides(
+                PC_SOLVE_PROFILE_OVERRIDE_ECONOMIC_RESTART)) {
+            value.allow_economic_restart =
+                (options->solver_flags &
+                 PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART) == 0;
+        }
+        if (profile_overrides(
+                PC_SOLVE_PROFILE_OVERRIDE_IMPRINT_PROGRAMS)) {
+            value.consider_imprint_programs =
+                (options->solver_flags &
+                 PC_SOLVER_FLAG_DISABLE_IMPRINT_PROGRAMS) == 0;
+        }
+        if (profile_overrides(
+                PC_SOLVE_PROFILE_OVERRIDE_HIGH_IMPACT_EXECUTABLE_UPPERS)) {
+            value.high_impact_executable_uppers =
+                (options->solver_flags &
+                 (PC_SOLVER_FLAG_HIGH_IMPACT_EXECUTABLE_UPPERS |
+                  solver::kHighImpactExecutableUppersDiagnosticFlag)) != 0;
+        }
         value.projected_reforge_frontier_diagnostic =
             (options->solver_flags &
              solver::kProjectedReforgeFrontierDiagnosticFlag) != 0;
@@ -674,7 +720,9 @@ solver::SolveOptions solve_options(const pc_solve_options* options) {
             options->max_relative_optimality_gap;
     }
     if (PC_SOLVE_OPTION_HAS(max_policy_refinement_states) &&
-        options->max_policy_refinement_states != 0) {
+        profile_overrides(
+            PC_SOLVE_PROFILE_OVERRIDE_POLICY_REFINEMENT_STATES) &&
+        (profiled || options->max_policy_refinement_states != 0)) {
         value.max_policy_refinement_states =
             options->max_policy_refinement_states;
     }

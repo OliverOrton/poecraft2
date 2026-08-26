@@ -2034,6 +2034,7 @@ test("product Eldritch dependency wins through release WASM", async () => {
     };
     const economy = await client.loadEconomy(economySpec);
     const solve = await client.solverSolve(solver, item, economy, {
+        solve_profile: "calculator_product_v1",
         max_discovered_states: 200000,
         max_expanded_states: 25000,
         max_state_action_rows: 300000,
@@ -2041,9 +2042,6 @@ test("product Eldritch dependency wins through release WASM", async () => {
         max_reforge_work: 100000000,
         max_solver_owned_bytes: 512 * 1024 * 1024,
         max_telemetry_json_bytes: 64 * 1024 * 1024,
-        goal_progress_gated_reforges: true,
-        high_impact_executable_uppers: true,
-        allow_economic_restart: false,
     });
     assert.equal(solve.cancelled, false);
     assert.equal(solve.policy_available, true, JSON.stringify(solve));
@@ -2057,6 +2055,11 @@ test("product Eldritch dependency wins through release WASM", async () => {
         JSON.stringify(solve),
     );
     const telemetry = await client.solverTelemetry(solver);
+    const execution = telemetry.execution as Record<string, unknown>;
+    assert.deepEqual(execution.solve_profile, {
+        id: "calculator_product_v1",
+        override_mask: 0,
+    });
     const admission = (
         telemetry.action_control as Record<string, unknown>
     ).product_admission as Record<string, unknown>;

@@ -7,6 +7,20 @@ namespace solver {
 
 // --- DP solver core (S4) --------------------------------------------------------
 
+enum class SolveProfile : std::uint32_t {
+    Default = 0,
+    CalculatorProductV1 = 1,
+};
+
+inline const char* solve_profile_name(const SolveProfile profile) {
+    switch (profile) {
+    case SolveProfile::Default: return "default";
+    case SolveProfile::CalculatorProductV1:
+        return "calculator_product_v1";
+    }
+    return "unknown";
+}
+
 struct SolveOptions {
     double epsilon = 1e-9;          /* max Bellman residual, cost units */
     std::uint32_t max_states = 200000;
@@ -74,7 +88,23 @@ struct SolveOptions {
     bool raw_strict_reforge_oracle_diagnostic = false;
     double max_absolute_optimality_gap = 0.0;
     double max_relative_optimality_gap = 0.0;
+    SolveProfile solve_profile = SolveProfile::Default;
+    std::uint32_t solve_profile_override_mask = 0;
 };
+
+inline void apply_solve_profile_defaults(
+    SolveOptions& options,
+    const SolveProfile profile) {
+    options.solve_profile = profile;
+    if (profile != SolveProfile::CalculatorProductV1) return;
+    options.goal_progress_gated_reforges = true;
+    options.allow_economic_restart = false;
+    options.consider_imprint_programs = false;
+    options.high_impact_executable_uppers = true;
+    options.max_absolute_optimality_gap = 0.0;
+    options.max_relative_optimality_gap = 0.0;
+    options.max_policy_refinement_states = 200000;
+}
 
 enum class SolvePolicyStatus : std::uint8_t {
     None,
@@ -624,6 +654,8 @@ struct SolveDiagnostics {
     std::uint64_t transition_bits_hash = 0;
     std::uint64_t policy_bits_hash = 0;
     std::string solution_scope = "globally_optimal_unrestricted";
+    std::string solve_profile_id = "default";
+    std::uint32_t solve_profile_override_mask = 0;
     bool consider_imprint_programs = true;
     std::uint64_t algebraic_self_loops = 0;
     bool transition_cache_reused = false;

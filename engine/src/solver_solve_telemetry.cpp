@@ -2484,6 +2484,19 @@ std::string serialize_solver_telemetry(
         append_telemetry_json_string(
             json, diagnostics->solution_scope);
     }
+    json += ",\"solve_profile\":{";
+    json += "\"id\":";
+    if (diagnostics == nullptr) {
+        json += "null";
+    } else {
+        append_telemetry_json_string(json, diagnostics->solve_profile_id);
+    }
+    json += ",\"override_mask\":";
+    json += diagnostics == nullptr
+                ? "null"
+                : std::to_string(
+                      diagnostics->solve_profile_override_mask);
+    json += "}";
     json += "}";
 
     const std::uint64_t registry_actions =
