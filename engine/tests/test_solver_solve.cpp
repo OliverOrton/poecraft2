@@ -8922,6 +8922,8 @@ void run_carrier_aware_completion_bound_tests() {
     const double published_independent_lower =
         work.completion_proof_lower(fractured_state).value;
     work.begin_focused_lower_solve();
+    while (!work.advance_focused_lower_preparation()) {
+    }
     PC_CHECK(near(
         work.result.diagnostics.independent_goal_cover_lower_bound,
         published_independent_lower, 1e-12));
