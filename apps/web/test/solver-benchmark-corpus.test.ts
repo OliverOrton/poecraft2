@@ -66,12 +66,12 @@ test("owner-approved real crafts are benchmark-enabled", () => {
     assert.ok(proposedRealCrafts.every((entry) => entry.benchmark_enabled));
 });
 
-test("general benchmarks default Imprint off and retain explicit opt-in", () => {
+test("general benchmarks disclose Imprint off and retain explicit opt-in", () => {
     const corpus = loadSolverBenchmarkCorpus(fileURLToPath(MANIFEST));
     const ordinary = corpus.cases.find((entry) =>
         entry.id === "oracle-real-one-mod");
     assert.ok(ordinary);
-    assert.equal(ordinary.caps.consider_imprint_programs, undefined);
+    assert.equal(ordinary.caps.consider_imprint_programs, false);
     assert.equal(benchmarkConsiderImprintPrograms(ordinary), false);
     assert.equal(benchmarkConsiderImprintPrograms({
         ...ordinary,
