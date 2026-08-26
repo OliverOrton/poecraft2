@@ -1,10 +1,11 @@
 # Handoff
 
-**Status: active implementation boundary.** Gate 8 of
-[Solver Quality Measurement, Refinement, And Debt Retirement](docs/active/2026-08-26-solver-quality-debt-retirement/plan.md)
-is active.
+**Status: no active implementation boundary.** The completed
+[Solver Quality Measurement, Refinement, And Debt Retirement](docs/archive/2026-08-26-solver-quality-debt-retirement/README.md)
+milestone is archived. Oliver must select the next chunk before implementation
+resumes.
 
-The active boundary begins from clean checkpoint `ec3fbd3`. Gates -1 through 5
+The completed boundary began from clean checkpoint `ec3fbd3`. Gates -1 through 8
 are complete. The versioned Calculator-profile clean/partial 1-to-5 ladder is
 recorded, a diagnostic-owned-byte abort is repaired, and the strict-lift owner
 is attributed. Gate 2 repaired the selected-first proof lifecycle and prevents
@@ -13,7 +14,8 @@ action-scope audit found admitted but delayed work rather than missing mechanic
 families, no executable-upper consumer qualified, and retained proof patterns
 already cover the safe Gate 5 consumers. Gates 6-7 replaced duplicated
 Calculator defaults with one versioned native profile and retired the touched
-cross-layer ownership debt. Gate 8 owns the one final acceptance pass.
+cross-layer ownership debt. Gate 8 completed final native/release-WASM
+acceptance and recorded the inherited full-suite fixture failure.
 
 The completed
 [Solver Anytime Planning, Proof Patterns, And Debt Retirement](docs/archive/2026-08-25-solver-anytime-proof-realignment/README.md)
@@ -24,13 +26,28 @@ milestone is archived with its gate records and final acceptance evidence.
 - Branch: `main`.
 - Plan checkpoint: `b5f3cfb` (`Select solver quality debt boundary`).
 - Gate 0/1 checkpoint: `22c7881`.
-- Gate 2 checkpoint: the local commit containing this handoff and
-  [Gate 2 evidence](docs/active/2026-08-26-solver-quality-debt-retirement/gate2-evidence.md).
-- The milestone commits are local-only; nothing was pushed.
-- Gates 3-5 checkpoint: the local commit containing the gate evidence.
-- Gates 6-7 are implemented in the current worktree and await their checkpoint
-  commit after source review.
-- Gate 8 may leave an active acceptance worktree; do not discard it.
+- Gate 2 checkpoint: `3eef23b`; see
+  [Gate 2 evidence](docs/archive/2026-08-26-solver-quality-debt-retirement/gate2-evidence.md).
+- Gates 3-5 checkpoint: `241249e`.
+- Gates 6-7 checkpoint: `ae61304`.
+- Final profile-owned benchmark-default fix: `f883a6a`.
+- Gate 8 archive/checkpoint: the local commit containing this handoff.
+- All milestone commits are local-only; nothing was pushed.
+
+## Final Gate 8 result
+
+- Complete product and qualification ladders retain the Gate 0 values; every
+  completed finite policy passes independent exact evaluation.
+- Native and release-WASM 19-case matrices pass all expectations; each runner
+  completes two selected 10,000-run verification cases, and the comparison
+  passes 180/180 checks.
+- The explicit Calculator-profile identity case has identical values, hashes,
+  graph, profile ID, and zero override mask in native and release WASM.
+- Native build, release-WASM build, 6,253 focused native checks, complete
+  nonvisual web tests, TypeScript, and diff checks pass.
+- The full repository pipeline reaches the known pre-existing 13 stale broad-
+  solve expectations and empty-JSON parse failure after all earlier layers
+  pass. This is retained as a separate cleanup boundary.
 
 ## Current Gates 6-7 result
 
@@ -90,8 +107,8 @@ milestone is archived with its gate records and final acceptance evidence.
   inherited policy. The old `proof envelope lost its selected quotient state`
   message was a downstream masking exception.
 
-See [Gate 0 evidence](docs/active/2026-08-26-solver-quality-debt-retirement/gate0-evidence.md)
-and [Gate 1 evidence](docs/active/2026-08-26-solver-quality-debt-retirement/gate1-evidence.md).
+See [Gate 0 evidence](docs/archive/2026-08-26-solver-quality-debt-retirement/gate0-evidence.md)
+and [Gate 1 evidence](docs/archive/2026-08-26-solver-quality-debt-retirement/gate1-evidence.md).
 
 ## Retained product and proof contract
 

@@ -1,13 +1,12 @@
 # Solver Quality Measurement, Refinement, And Debt Retirement
 
-**Status: active. Gates -1 through 7 are complete; Gate 8 is the
-implementation boundary.**
+**Status: complete and archived. Gates -1 through 8 completed on 2026-08-26.**
 
-Parent: [Active work](../README.md)
+Parent: [Documentation archive](../README.md)
 
 Selected from clean local checkpoint `ec3fbd3` on 2026-08-26.
 
-Predecessor: [Solver Anytime Planning, Proof Patterns, And Debt Retirement](../../archive/2026-08-25-solver-anytime-proof-realignment/README.md)
+Predecessor: [Solver Anytime Planning, Proof Patterns, And Debt Retirement](../2026-08-25-solver-anytime-proof-realignment/README.md)
 
 ## Objective
 
@@ -226,6 +225,8 @@ cohesive ownership and preserve behavior unless an earlier gate explicitly
 qualified a change.
 
 ## Gate 8 — Acceptance and handoff
+
+**Status: complete.** See [Gate 8 evidence](gate8-evidence.md).
 
 Run acceptance once after the completed implementation:
 

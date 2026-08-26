@@ -30,13 +30,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active
-[Solver Quality Measurement, Refinement, And Debt Retirement](active/2026-08-26-solver-quality-debt-retirement/plan.md)
-boundary begins from clean checkpoint `ec3fbd3`. Gates -1 through 7 are
-complete and Gate 8 is running final native/release-WASM acceptance. The
+The completed
+[Solver Quality Measurement, Refinement, And Debt Retirement](archive/2026-08-26-solver-quality-debt-retirement/README.md)
+boundary began from clean checkpoint `ec3fbd3` and completed Gates -1 through
+8 on 2026-08-26. No implementation boundary is active. The
 Calculator, benchmark runners, and diagnostic ladder now select the versioned
 native `calculator_product_v1` behavior bundle instead of copying low-level
-defaults across layers. The completed
+defaults across layers. Its completed
 [Solver Anytime Planning, Proof Patterns, And Debt Retirement](archive/2026-08-25-solver-anytime-proof-realignment/README.md)
 milestone remains its predecessor and retains current-semantics benchmark authority, typed action-envelope
 and incumbent ownership, the qualified scheduler fallback, admissible proof

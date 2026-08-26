@@ -9,6 +9,14 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-08-26
+
+- [Solver Quality Measurement, Refinement, And Debt Retirement](2026-08-26-solver-quality-debt-retirement/README.md) —
+  repaired selected-policy refinement, audited action and lower coverage,
+  retained truthful five-goal quality fallbacks, centralized native Calculator
+  profile authority across C ABI/WASM/web/benchmarks, and passed focused plus
+  native/release-WASM acceptance.
+
 ## 2026-08-25
 
 - [Solver Anytime Planning, Proof Patterns, And Debt Retirement](2026-08-25-solver-anytime-proof-realignment/README.md) —
