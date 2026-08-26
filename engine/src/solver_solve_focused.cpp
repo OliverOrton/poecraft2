@@ -177,6 +177,13 @@ bool SolveWork::Impl::advance_focused_lower_preparation() {
                 FocusedLowerPreparationStage::Finalize;
             return false;
         case FocusedLowerPreparationStage::Finalize:
+        /* Finalization may immediately schedule the next focused round.
+         * Release this preparation owner before calling into that lifecycle;
+         * clearing it afterwards would either reject or erase the newly
+         * scheduled continuation. */
+        focused_lower_preparation_stage =
+            FocusedLowerPreparationStage::Idle;
+        focused_lower_preparation_cursor = 0;
         prepare_focused_exact_quotient();
         prepare_priced_rows();
         policy_rows.clear();
@@ -230,9 +237,6 @@ bool SolveWork::Impl::advance_focused_lower_preparation() {
                 finish_focused_lower_solve();
             }
         }
-            focused_lower_preparation_stage =
-                FocusedLowerPreparationStage::Idle;
-            focused_lower_preparation_cursor = 0;
             return true;
         }
         throw std::logic_error("invalid focused lower preparation stage");

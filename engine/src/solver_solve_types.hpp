@@ -1440,6 +1440,11 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     std::unique_ptr<CarrierBoundAttributionWork> carrier_bound_attribution;
     std::uint64_t peak_owned_bytes = 0;
     SolvePhase phase = SolvePhase::Expanding;
+    /* Proof-model setup is measured before the first public work boundary.
+     * A configured CalcContext cap reached there must still cross the same
+     * ordinary step catch/publication path as a cap reached by expansion. */
+    std::optional<std::pair<std::string, std::uint64_t>>
+        setup_resource_limit;
     /*
      * One owner for direct assertion, strict repair, publication
      * classification, packaging, and the continuation that makes those

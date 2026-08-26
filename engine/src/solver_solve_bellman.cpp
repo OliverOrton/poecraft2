@@ -1899,6 +1899,12 @@ void SolveWork::Impl::run_bellman_unit() {
 
 void SolveWork::Impl::step(std::uint32_t max_work_items) {
     try {
+        if (setup_resource_limit.has_value()) {
+            const auto [cap_name, limit] =
+                std::move(*setup_resource_limit);
+            setup_resource_limit.reset();
+            throw SolverResourceLimit(cap_name, limit);
+        }
         /* max_work_items is a caller ceiling, not permission to monopolize
          * the host for an arbitrarily large native/WASM batch. Individual
          * rows and retained continuations remain the logical work units; this
