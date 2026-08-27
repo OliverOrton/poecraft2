@@ -25,8 +25,17 @@ const GENERIC_DISPLAY_ORDER = [
     "elder",
     "crusader",
     "adjudicator",
-    "basilisk",
     "eyrie",
+    "basilisk",
+];
+
+const GENERIC_DISPLAY_LABEL_ORDER = [
+    "Shaper",
+    "Elder",
+    "Crusader",
+    "Warlord",
+    "Redeemer",
+    "Hunter",
 ];
 
 const INFLUENCE_EXALT_DISPLAY_ORDER = [
@@ -44,6 +53,12 @@ function titleCase(value: string): string {
 
 export function genericInfluenceDisplayName(value: string): string {
     return PRESENTATION_BY_INTERNAL[value.toLowerCase()]?.name ?? titleCase(value);
+}
+
+/** Shared rank for every modifier-picker and pool surface. */
+export function genericInfluenceDisplayRank(label: string): number {
+    const index = GENERIC_DISPLAY_LABEL_ORDER.indexOf(label);
+    return index < 0 ? GENERIC_DISPLAY_LABEL_ORDER.length : index;
 }
 
 export function canonicalInfluenceExaltKey(value: string): string {

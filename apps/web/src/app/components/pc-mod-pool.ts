@@ -16,7 +16,10 @@
 
 import { ModInfo, PoolDebug } from "../engine-protocol";
 import { visibleModTags } from "../item-display";
-import { genericInfluenceDisplayName } from "../influence-presentation";
+import {
+    genericInfluenceDisplayName,
+    genericInfluenceDisplayRank,
+} from "../influence-presentation";
 
 type Tab = "prefix" | "suffix" | "implicit";
 type Section = "base" | "influenced" | "crafted" | "essence" | "fossil";
@@ -607,9 +610,7 @@ export class PcModPool extends HTMLElement {
 }
 
 function influenceOrder(label: string): number {
-    const order = ["Shaper", "Elder", "Crusader", "Warlord", "Redeemer", "Hunter"];
-    const index = order.indexOf(label);
-    return index < 0 ? order.length : index;
+    return genericInfluenceDisplayRank(label);
 }
 
 function categoryFor(reachKind: number): Section | null {

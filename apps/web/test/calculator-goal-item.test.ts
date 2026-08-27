@@ -198,5 +198,10 @@ assert.deepEqual(
     ]),
     "generic influence pools keep Elder/Shaper and use canonical public labels",
 );
+assert.deepEqual(
+    influenceOptions.map((option) => option.sourceLabel),
+    ["Shaper", "Elder", "Warlord", "Redeemer", "Hunter"],
+    "all modifier pickers use the shared generic-influence order",
+);
 
 console.log("  ok - Calculator v1 goals adapt to the shared target item model");

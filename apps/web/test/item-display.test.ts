@@ -108,6 +108,11 @@ const derivedGenericInfluences = buildGenericInfluenceCatalog({
     shaper: 16,
 });
 assert.deepEqual(
+    derivedGenericInfluences.map((entry) => entry.name),
+    ["Shaper", "Elder", "Crusader", "Warlord", "Redeemer", "Hunter"],
+    "generic influence catalog order matches modifier pickers and pools",
+);
+assert.deepEqual(
     buildInfluenceExaltCatalog(derivedGenericInfluences).map((entry) => [
         entry.key,
         entry.code,

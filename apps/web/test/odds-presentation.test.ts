@@ -7,6 +7,7 @@ import {
     formatExpectedAttempts,
     formatProbabilityExact,
     formatRawProbability,
+    presentSampledSuccess,
     priceSourceLabel,
     presentExpectedConsumption,
 } from "../src/app/odds-presentation";
@@ -22,6 +23,8 @@ assert.equal(
 );
 
 assert.equal(formatProbabilityExact(0.000018), "0.0018%");
+assert.equal(formatProbabilityExact(1e-12), "1e-10%");
+assert.equal(formatRawProbability(1e-12), "1e-12");
 assert.equal(formatProbabilityExact(1), "100%");
 assert.equal(formatExpectedAttempts(0), "∞");
 assert.equal(formatChaosValue(Number.POSITIVE_INFINITY), "∞");
@@ -39,5 +42,13 @@ assert.ok(Math.abs(priced.total - 15.94028856) < 1e-9);
 assert.match(priced.rowsHtml, /79\.7014 × alteration/);
 assert.match(priced.rowsHtml, /Missing price/);
 assert.equal(priceSourceLabel("owner_default"), "Owner default");
+
+const zeroHitSample = presentSampledSuccess(0, 1000)!;
+assert.equal(zeroHitSample.rate, "0%");
+assert.notEqual(zeroHitSample.interval95, "0%–0%");
+assert.match(zeroHitSample.interval95, /^0%–0\.38/);
+const rareHitSample = presentSampledSuccess(1, 10000)!;
+assert.equal(rareHitSample.rate, "0.01%");
+assert.match(rareHitSample.interval95, /–/);
 
 console.log("  ok - odds precision and per-success cost stay explicit");

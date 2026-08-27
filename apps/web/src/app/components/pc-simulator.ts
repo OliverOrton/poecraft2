@@ -1,4 +1,5 @@
 import { StrategyResult } from "../engine-protocol";
+import { presentSampledSuccess } from "../odds-presentation";
 
 export interface SimulatorView {
     running: boolean;
@@ -77,10 +78,9 @@ export class PcSimulator extends HTMLElement {
         const { running, disabled, progress, result } = this.view;
         const summary = result?.summary;
         const completed = summary?.completed_runs ?? 0;
-        const successRate =
-            completed > 0
-                ? ((summary!.success_count / completed) * 100).toFixed(2)
-                : "—";
+        const sampledSuccess = summary
+            ? presentSampledSuccess(summary.success_count, completed)
+            : null;
         const avgActions =
             completed > 0 ? (summary!.total_actions / completed).toFixed(2) : "—";
         const avgCost =
@@ -119,7 +119,8 @@ export class PcSimulator extends HTMLElement {
             <div class="pc-sim-summary">
                 ${metric("Runs", completed.toLocaleString())}
                 ${metric("Success", summary ? summary.success_count.toLocaleString() : "—")}
-                ${metric("Success rate", `${successRate}${successRate === "—" ? "" : "%"}`)}
+                ${metric("Sample success rate", sampledSuccess?.rate ?? "—")}
+                ${metric("95% sample interval", sampledSuccess?.interval95 ?? "—")}
                 ${metric("Total actions", summary ? summary.total_actions.toLocaleString() : "—")}
                 ${metric("Avg actions", avgActions)}
                 ${metric("Actions / sec", actionsPerSecond)}

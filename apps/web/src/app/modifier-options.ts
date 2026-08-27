@@ -7,7 +7,10 @@
 
 import { Catalog, ModInfo } from "./engine-protocol";
 import { visibleModTags } from "./item-display";
-import { genericInfluenceDisplayName } from "./influence-presentation";
+import {
+    genericInfluenceDisplayName,
+    genericInfluenceDisplayRank,
+} from "./influence-presentation";
 
 export interface ModifierTierOption {
     tier: number;
@@ -159,7 +162,5 @@ function sourceOrder(option: ModifierFamilyOption): number {
 
 function influenceOptionOrder(option: ModifierFamilyOption): number {
     if (option.sourceKind !== "influence") return 0;
-    const order = ["Shaper", "Elder", "Crusader", "Warlord", "Redeemer", "Hunter"];
-    const index = order.indexOf(option.sourceLabel);
-    return index < 0 ? order.length : index;
+    return genericInfluenceDisplayRank(option.sourceLabel);
 }
