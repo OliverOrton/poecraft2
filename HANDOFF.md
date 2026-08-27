@@ -1,7 +1,8 @@
 # Handoff
 
-**Status: no active implementation boundary.** Oliver must select the next
-chunk before implementation resumes. The maintained
+**Status: active implementation boundary.** Oliver selected the
+[Solver Exactness, Iteration, And Debt Closure](docs/active/2026-08-27-solver-exactness-iteration-debt-closure/plan.md)
+program on 2026-08-27. The maintained
 [ranked project worklist](docs/future/priority-worklist.md) owns the remaining
 P0–P3 candidates.
 
@@ -12,6 +13,8 @@ P0–P3 candidates.
   controls`).
 - The documentation/archive checkpoint containing this handoff follows that
   commit.
+- Gate 0 source reading is in progress; no implementation checkpoint for the
+  new boundary exists yet.
 - Calculator product scope remains `calculator_product_v1`: generated
   automatic Imprint programs off, voluntary economic Restart off,
   goal-progress-gated reforges on, junk-free exact terminal success, and no

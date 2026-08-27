@@ -30,13 +30,19 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. The completed
+The active
+[Solver Exactness, Iteration, And Debt Closure](active/2026-08-27-solver-exactness-iteration-debt-closure/plan.md)
+boundary owns the remaining exactness, iteration, state-debt, telemetry,
+documentation, and product-audit backlog. Cooperative resumable broad rows
+precede checkpoint/replay and the measured PDR proof repair.
+
+The completed
 [Solver Stabilization And Action-Family Controls](archive/2026-08-27-solver-stabilization-action-family-controls/README.md)
 milestone adds native-owned restricted family controls through Calculator and
 release WASM and restores a green full acceptance record. Its temporary-Bench
 PDR ablation moved the proof stop earlier into strict-carrier memory growth,
 so cooperative resumable broad destructive rows remain the recommended next
-boundary; checkpoint/replay follows once those row cursors are stable.
+boundary; the active successor now owns those row cursors and replay.
 
 The completed
 [Exact Same-Side Closure](archive/2026-08-26-exact-same-side-closure/README.md)

@@ -1,14 +1,17 @@
 # Active Work
 
-**Status: no active implementation boundary.**
+**Status: one active implementation boundary.**
 
 Parent: [Documentation map](../README.md)
 
 ## Current boundary
 
-No boundary is active. Oliver must select the next chunk before implementation
-resumes. [HANDOFF](../../HANDOFF.md) recommends cooperative resumable broad
-destructive rows as the next exactness/iteration owner.
+[Solver Exactness, Iteration, And Debt Closure](2026-08-27-solver-exactness-iteration-debt-closure/plan.md)
+is active. It sequences resumable broad rows, development checkpoint/replay,
+measured strict-proof repair, solver-state reduction, telemetry/source
+modularity, current documentation, and the two outstanding product audits.
+
+See [HANDOFF](../../HANDOFF.md) for the exact checkpoint.
 
 ## Historical work
 
