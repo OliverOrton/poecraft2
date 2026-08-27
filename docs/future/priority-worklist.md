@@ -7,7 +7,7 @@ selects an item or coherent group before an active plan is created.
 Parent: [Future work](README.md)
 
 Verified against current documentation, source ownership, and local PDR
-resource evidence: 2026-08-27 @ `102ea11`.
+resource evidence: 2026-08-27 @ `3e28150`.
 
 ## Ranking Rules
 
@@ -25,29 +25,29 @@ correctness issue may preempt every performance item.
 
 ## Recommended Sequence
 
-1. Resolve the two possible P0 product/correctness reports below.
-2. Restore a green repository-wide acceptance baseline.
-3. Add engine-owned action-family controls for diagnostic ablations.
-4. Make broad destructive-row evaluation genuinely cooperative and resumable.
-5. Add a development-only deterministic checkpoint/replay harness at the now
-   stable phase boundary.
-6. Use those tools to identify and repair the PDR strict-proof amplification.
-7. Consolidate telemetry and current solver documentation around the owners
-   established by that work.
-8. Perform measured state-dimension and source-module simplification.
+1. Design and implement the versioned development-only checkpoint/replay
+   format in P1.3; do not substitute request/result JSON caching.
+2. Attribute and reduce the retained strict/proof memory owner reached after
+   the first successful PDR frontier insertion in P1.4.
+3. Qualify successor-complete rare/Eldritch proof coverage only if it reaches
+   a measured lower-bound consumer.
+4. Finish the remaining source gravity-well splits after those owners settle.
+5. Return to product and strategy-review work from P3 without reopening
+   completed solver cleanup by default.
 
-This sequence deliberately does not prescribe another cap increase. The local
-100M/2 GiB PDR diagnostic doubled logical reforge work, added only 132
-completed alternative rows, and produced zero additional certified or
-noncompetitive obligations, zero policy improvements, and no additional
-frontier insertion.
+This sequence deliberately does not prescribe another cap increase. The
+frontier-yield repair reached one real strict frontier while completing only
+two alternative rows, then stopped on 846,846,750 retained proof/quotient bytes
+and a 1,179,431,999-byte native owned peak. Memory ownership, not another
+generic allowance increase, is now the measured PDR boundary.
 
 ## P0 — Trust And Stable Baseline
 
 ### P0.1 — Reproduce the influenced-modifier report
 
-**State:** waiting for a concrete item/base, modifier examples, and a
-description or screenshot of what “jumbled” means.
+**State:** narrow presentation audit completed 2026-08-27. Goal choices and
+pool display now share the native influence order. Reopen only for a concrete
+family, tier, source, or reachability mismatch; none was established here.
 
 First distinguish four different possible owners:
 
@@ -62,8 +62,10 @@ product cleanup. Do not infer a Path of Exile mechanic change from the UI.
 
 ### P0.2 — Reproduce “Calculator accuracy when probability is low”
 
-**State:** waiting for one exact request and the expected versus observed
-quantity.
+**State:** narrow numerical/presentation audit completed 2026-08-27. Exact
+nonzero values no longer round to displayed zero, Simulator sampling is
+separate from exact authority, and Wilson 95% endpoints preserve exact zero
+and one boundaries. Reopen for a concrete engine-arithmetic mismatch.
 
 Separate these cases before changing anything:
 
@@ -137,6 +139,11 @@ corpus.
 
 ### P1.2 — Cooperative, resumable broad destructive rows
 
+**State:** completed 2026-08-27. Exact V3 broad rows now use deterministic
+retained continuations, bounded cooperative slices, and publish only after
+full completion. Resumed/uninterrupted, cancellation, cap, memory, and
+telemetry controls pass.
+
 **Why now:** the 100M PDR run contained a 102.40-second native solve step.
 Raising caps increases that stall and does not materially advance proof.
 
@@ -158,6 +165,12 @@ This is useful even if total work does not fall: it restores cancellation,
 progress visibility, fair scheduling, and a stable checkpoint boundary.
 
 ### P1.3 — Development-only deterministic checkpoint/replay
+
+**State:** highest-priority dedicated follow-up. A representation audit
+rejected fake request/result or sparse-row caching. Honest replay must capture
+the joint calculator/admission state at the coarse boundary and the oracle,
+partition, proof/dependency, kernel/cursor, and incumbent state at the strict
+boundary.
 
 **Why after P1.2:** the repository intentionally deferred disk replay until
 the proof-carrying quotient representation stabilized. Same-side exact closure
@@ -186,6 +199,12 @@ separate qualification. A clean replay must reproduce deterministic values,
 rows, transitions, hashes, and exact-evaluation output.
 
 ### P1.4 — Attribute and repair PDR strict-proof amplification
+
+**State:** narrow first repair completed; retained-memory continuation open.
+Returning immediately after an alternative exposes a strict frontier reduced
+about 14,000 completed alternatives to 2, inserted one real frontier state,
+and reduced logical/V3 strict reforge work to 3,507,568 / 1,380,787. The next
+measured owner is retained proof/quotient memory, not repeated stale rows.
 
 Use P1.1 and P1.3 to answer before designing the repair:
 
@@ -222,6 +241,11 @@ the PDR amplification. Otherwise it remains behind the broader row owner.
 
 ### P2.1 — Consolidate telemetry ownership and output levels
 
+**State:** core split completed 2026-08-27. Collection/accounting and JSON
+serialization have separate translation units, compact/full intent is typed,
+and frontier-yield state is carried end to end. Further phase-local cleanup
+belongs under P2.3 and must not reopen this item wholesale.
+
 `solver_solve_telemetry.cpp` is currently 6,319 lines, while telemetry writes
 are spread through most major solver phases. Preserve phase-owned counters but
 move snapshot collection and serialization behind typed, phase-specific
@@ -239,6 +263,10 @@ soundness failures. Telemetry refactoring is behavior-neutral and should be
 checked with canonical serialized fixtures or semantic JSON comparison.
 
 ### P2.2 — Rebuild solver documentation for navigation
+
+**State:** completed 2026-08-27. `docs/solver/README.md` is now an index over
+ten narrow current-authority pages; the former monolith remains historical
+architecture evidence.
 
 The current `docs/solver/README.md` is 1,563 lines and mixes present contracts
 with accumulated historical explanation. Replace it with a concise index and
@@ -263,6 +291,11 @@ boundary, not speculatively before it.
 
 ### P2.3 — Split remaining source gravity wells by authority
 
+**State:** partially complete. Telemetry collection and serialization were
+split. Exact evaluation, finish/publication, constructive authority, and
+strict-refinement gravity wells remain candidates after P1.3/P1.4 establish
+stable ownership boundaries.
+
 Current large owners include `solver_eval.cpp` (7,803 lines),
 `solver_solve_finish.cpp` (5,508), `solver_solve_constructive.cpp` (5,307),
 and `solver_policy_refinement.cpp` (5,043 plus `.inc` files). Split only along
@@ -280,6 +313,11 @@ new proof rule.
 
 ### P2.4 — Audit solver state dimensions before deleting any
 
+**State:** completed for the owner-approved product scope. Calculator Solve
+rejects Mirrored/Synthesised carriers and excludes the irrelevant
+mirror-producing Fossil, while engine simulation retains the mechanics. No
+other dimension was removed without an observation/terminal proof.
+
 Measure reachable states, transitions, kernels, obligations, and selected
 policy mass attributable to:
 
@@ -289,12 +327,10 @@ policy mass attributable to:
 - retry-basin state; and
 - any feature retained only for compiler/evaluator observation.
 
-Do not remove Mirrored or Synthesised from the engine item model. Mirrored is
-currently reachable through Fossil special effects, and Synthesised changes
-Fracture and Imprint applicability. The narrower candidate is product-solver
-projection or early dead-state handling when a dimension is provably
-unreachable, unobservable, or incapable of nonterminal success under the
-selected action envelope.
+Do not remove Mirrored or Synthesised from the engine item model. The accepted
+change is the narrower product-solver projection; simulation still observes
+those mechanics and Synthesised still changes Fracture and Imprint
+applicability outside that solver scope.
 
 Oliver must rule whether corrupted/mirrored/synthesised outputs are acceptable
 terminal items for Calculator goals before terminal semantics change. Any
@@ -320,6 +356,11 @@ families. Preserve a reset-to-recommended profile and show that restrictions
 change the solved action envelope and optimality claim.
 
 ### P3.2 — Low-probability verification presentation
+
+**State:** completed for the reported presentation scope 2026-08-27. Exact
+values and sampled rates are distinct, rare nonzero probabilities remain
+visible, and sampled output carries a Wilson 95% interval. Richer distribution
+work remains P3.3.
 
 If P0.2 proves the engine exact value correct and the concern is sampling,
 show exact evaluated cost/probability alongside sampled estimates, completed
@@ -352,10 +393,6 @@ remain useful product work after exactness and replay tooling stabilize.
 
 ## Inputs Needed From Oliver
 
-- One influenced-mod example showing the jumbled result and what ordering or
-  family/source relationship was expected.
-- One low-probability Calculator request with the displayed value, expected
-  value, and whether the concern is Solver, exact evaluation, or Simulator.
-- A ruling, before P2.4 changes terminal semantics, on whether
-  corrupted/mirrored/synthesised items may satisfy an otherwise exact
-  Calculator goal.
+No input is currently required. A new concrete influenced-mod reachability or
+low-probability arithmetic mismatch should reopen P0 with its exact request;
+the completed work covered presentation, ordering, and sampled uncertainty.

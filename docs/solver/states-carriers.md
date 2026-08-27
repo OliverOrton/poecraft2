@@ -45,4 +45,3 @@ identity collision fail closed. Inspect `states`, `state_classes`, strict
 carrier/cell counts, feature histograms, and proof-memory carrier ownership.
 Do not infer savings from deleting a field unless reachable state, row,
 transition, kernel, or obligation measurements fall.
-

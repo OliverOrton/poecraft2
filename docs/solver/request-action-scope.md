@@ -45,4 +45,3 @@ Inspect telemetry under `actions`, `action_control`,
 `incremental_action_envelope`, `action_search_cost`, and the named cap or stop
 owner. Stable request tests live in `test_solver_api.cpp`,
 `test_solver_s8_3.cpp`, and the web Calculator tests.
-

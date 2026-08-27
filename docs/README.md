@@ -30,11 +30,12 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active
-[Solver Exactness, Iteration, And Debt Closure](active/2026-08-27-solver-exactness-iteration-debt-closure/plan.md)
-boundary owns the remaining exactness, iteration, state-debt, telemetry,
-documentation, and product-audit backlog. Cooperative resumable broad rows
-precede checkpoint/replay and the measured PDR proof repair.
+No implementation boundary is active. The completed
+[Solver Exactness, Iteration, And Debt Closure](archive/2026-08-27-solver-exactness-iteration-debt-closure/README.md)
+milestone delivered eight of its nine debt items, passed full acceptance, and
+left honest cross-process checkpoint/replay as a dedicated future format
+milestone. Its PDR repair reached a real strict frontier and moved the measured
+boundary from stale alternative-row work to retained proof/quotient memory.
 
 The completed
 [Solver Stabilization And Action-Family Controls](archive/2026-08-27-solver-stabilization-action-family-controls/README.md)
@@ -83,8 +84,8 @@ explicit legacy-order fallback remains. Final exact replay confirms the 87k
 artifact is still valid observational evidence, not current publication
 authority.
 
-The current retained acceptance and the closed release-WASM 50 ms worker-slice
-qualification are summarized in [HANDOFF](../HANDOFF.md). Detailed
+The current retained acceptance and recommended next boundary are summarized
+in [HANDOFF](../HANDOFF.md). Detailed
 milestone results, stopped experiments, strategies, and raw evidence live in
 the [archive](archive/README.md) and [evidence index](evidence.md); they have no
 current sequencing authority.

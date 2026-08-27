@@ -42,4 +42,3 @@ certificates, and gap targets. Telemetry should show which pattern supplied a
 bound and whether `state_incumbent_operator_lower` actually pruned rows. A
 larger displayed number without a measured proof consumer is not accepted as
 an improvement.
-

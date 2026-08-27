@@ -43,4 +43,3 @@ not resumable engine state. Any future format must version and validate source,
 compiler/FP contract, canonical and compiled artifact, goal/start carrier,
 prices, action vocabulary, options/caps, layouts, stable identities, payload
 checksums, and completeness before mutation.
-

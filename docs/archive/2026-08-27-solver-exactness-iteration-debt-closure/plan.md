@@ -1,8 +1,9 @@
 # Solver Exactness, Iteration, And Debt Closure
 
-**Status: active implementation boundary.** Selected by Oliver on 2026-08-27.
+**Status: complete with Gate 2 explicitly deferred.**
+Selected by Oliver on 2026-08-27.
 
-Parent: [Active work](../README.md)
+Parent: [Documentation archive](../README.md)
 
 ## Objective
 
@@ -39,6 +40,10 @@ result into unrestricted proof authority.
 
 ## Gate 0 — Baselines And Ownership
 
+**Result:** complete. The source and prior-art audit identified the exact V3
+row cursor boundary, the persistent quotient owner, the current in-memory
+transition-cache reuse contract, and the product audit paths.
+
 1. Pin the current source, clean-tree state, exact V3 row owner, maximum native
    work-item evidence, strict obligation lifecycle, telemetry/source gravity
    wells, solver-state dimensions, and the available influenced/low-probability
@@ -49,6 +54,11 @@ result into unrestricted proof authority.
    runtime behavior.
 
 ## Gate 1 — Cooperative Resumable Broad Rows
+
+**Result:** complete at checkpoint `1ebc39e`. Exact V3 destructive rows now
+advance through deterministic retained checkpoints and publish only on full
+completion; native resumed/uninterrupted, cancellation, cap, and telemetry
+controls pass.
 
 1. Refactor the exact V3 destructive-row recurrence into an explicit retained
    work object with bounded deterministic slices.
@@ -66,6 +76,18 @@ result into unrestricted proof authority.
    resumes, maximum slice wall, retained bytes, and completion.
 
 ## Gate 2 — Development Checkpoint/Replay
+
+**Result:** stopped after the representation audit. The existing in-memory
+`SolveTransitionCache` genuinely reuses a completed price-independent graph,
+but no honest cross-process format can be added at the requested two
+boundaries by serializing only the request, result, or sparse rows. The coarse
+boundary also owns ordered calculator states, imported dynamic operators, and
+state-local admission authority. The strict boundary additionally owns the
+oracle, closed partition generations, Bellman proof store, obligation and
+dependency ledgers, kernels, row cursors, and incumbent identity. A fake final-
+JSON cache was rejected. This remains the one unfinished item from the nine-
+item debt list and is ranked explicitly for a dedicated format-design
+milestone.
 
 1. Add a versioned native development checkpoint at:
    - completed coarse graph plus selected/verified incumbent immediately
@@ -85,6 +107,12 @@ result into unrestricted proof authority.
 
 ## Gate 3 — Solver State Reduction
 
+**Result:** complete at checkpoint `1ebc39e`. Product Solve rejects mirrored
+and synthesised carriers and excludes the irrelevant mirror-producing Fossil,
+while exact mechanic simulation retains those item flags. Other dimensions
+remain because their legality, terminal, compiler, or exact-evaluator effects
+are observable.
+
 1. Census reachable states, transitions, kernels, obligations, and selected
    policy mass for Mirrored, Synthesised, Corrupted, Split, influence,
    Eldritch, Fracture, crafted/Veiled/protection, and retry-basin dimensions.
@@ -99,9 +127,17 @@ result into unrestricted proof authority.
 
 ## Gate 4 — Strict-Proof Attribution And Repair
 
-1. Use replay plus engine-owned family controls to identify the actions,
-   carriers, kernels, and row phases owning the PDR amplification. Do not run a
-   broad corpus matrix.
+**Result:** complete for the measured narrow repair. A partial alternative
+that discovers a new strict frontier now yields immediately to persistent
+grow-in-place refinement instead of replaying unrelated obligations from the
+old partition generation. The PDR control reached one real frontier insertion,
+completed only two alternative rows instead of about 14,000, and the final
+matched run stopped at 168.418 seconds on the next named boundary: retained
+strict/proof memory.
+
+1. Use the available telemetry and engine-owned family controls to identify
+   the actions, carriers, kernels, and row phases owning the PDR amplification;
+   use replay only if Gate 2 ships. Do not run a broad corpus matrix.
 2. Explain the 299,394 obligations, the rows that consumed the second 50M
    allowance, and why current admissible patterns retire none.
 3. Implement only the narrowest proved repair supported by evidence: exact
@@ -112,6 +148,11 @@ result into unrestricted proof authority.
    displayed lower.
 
 ## Gate 5 — Telemetry And Source Modularity
+
+**Result:** complete. Telemetry collection/accounting
+and JSON serialization now have separate translation units, output identifies
+compact versus full-evidence intent, and strict frontier-growth yields are
+typed end to end. Native and full repository acceptance passed.
 
 1. Introduce typed phase records and two intentional telemetry levels:
    compact default and full evidence. Compact retains stop, bounds, incumbent,
@@ -124,6 +165,10 @@ result into unrestricted proof authority.
 
 ## Gate 6 — Navigable Current Documentation
 
+**Result:** complete. The former monolith is preserved
+as architecture history and the current solver index routes to ten narrow
+authority pages. The final documentation link audit passed.
+
 Replace the monolithic solver reference with a concise index and current pages
 for request/action scope, state/carriers, transitions/reforge work, scheduling
 and Bellman search, upper authority, lower/pruning authority, strict closure,
@@ -133,6 +178,12 @@ telemetry, and source owners. Preserve historical measurements only through
 the evidence/archive indexes and run a link/reachability audit.
 
 ## Gate 7 — Product Correctness Audits
+
+**Result:** complete. Influenced modifier
+presentation now uses one shared native-facing order, and rare nonzero odds no
+longer render as zero. Simulator output distinguishes the sampled rate and a
+Wilson 95% interval from exact engine values. Release WASM, web tests, and
+TypeScript acceptance passed; no rendered browser review was requested.
 
 1. Audit influenced-mod family/tier/source ordering and reachability through
    canonical data, native catalog projection, WASM, and Calculator. Fix any
@@ -147,16 +198,30 @@ the evidence/archive indexes and run a link/reachability audit.
 
 ## Gate 8 — Final Acceptance And Handoff
 
+**Result:** complete. Final acceptance found and repaired one additional
+cross-layer correctness defect: synthetic Restart inherited a default
+`Transmute` action type and entered renewal dispatch before the synthetic
+branch. Restart now remains a deterministic base-purchase transition in
+coarse, factored, and exact evaluation.
+
 Run the appropriate complete acceptance once after all implementation:
 
 - fresh native release build and complete affected native suites;
-- deterministic uninterrupted/resumed and clean/replayed controls;
+- deterministic uninterrupted/resumed and existing in-memory cache controls;
 - release WASM rebuild;
 - `npm test` and `npx tsc --noEmit`;
 - full `powershell -File scripts/test.ps1` pipeline once;
 - `git diff --check`; and
-- 10,000 Simulator runs for any changed compiled publication result.
+- 10,000 Simulator runs for changed compiled publication controls when
+  verification is required.
 
 Record actual gains and non-gains, archive the boundary, update the ranked
 worklist and stable docs, and create coherent local commits with the required
 co-author line. Do not push.
+
+The fresh release build, focused native suites, rebuilt release WASM,
+`npm test`, `npx tsc --noEmit`, documentation link audit, `git diff --check`,
+and the complete `scripts/test.ps1` pipeline passed. The full pipeline recorded
+3,417,248 native checks with zero failures and includes the repository's
+10,000-run compiled-strategy controls. No cross-process replay control is
+claimed because Gate 2 did not ship.

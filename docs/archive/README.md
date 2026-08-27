@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-08-27
 
+- [Solver Exactness, Iteration, And Debt Closure](2026-08-27-solver-exactness-iteration-debt-closure/README.md) —
+  delivered cooperative exact reforge continuations, product-solver state
+  reduction, a measured strict frontier-yield repair, modular telemetry/docs,
+  and product audits; full acceptance passed, while honest cross-process
+  checkpoint/replay remains explicitly deferred.
 - [Solver Stabilization And Action-Family Controls](2026-08-27-solver-stabilization-action-family-controls/README.md) —
   added engine-owned restricted family controls through C ABI, release WASM,
   and Calculator, restored full acceptance, and showed that disabling

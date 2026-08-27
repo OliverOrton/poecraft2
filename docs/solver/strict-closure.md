@@ -47,4 +47,3 @@ splits, obligation lifecycle, selected versus alternative work, row
 attribution, proof-memory categories, policy improvements, and exact-envelope
 closure. A large partially-evaluated count with no frontier insertion signals
 a partition/action-uniformity boundary rather than successful proof work.
-

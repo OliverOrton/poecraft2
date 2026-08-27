@@ -45,4 +45,3 @@ Unsupported and inapplicable are distinct. A resource-interrupted row remains
 absent. Probability, canonical-state, cap, or retained-byte violations fail
 the row before publication. Exact reforge caches may be reused only through
 their complete collision-checked observation identity.
-

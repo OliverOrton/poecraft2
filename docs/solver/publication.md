@@ -39,4 +39,3 @@ improperness, nonzero off-policy mass, incomplete accounting, or cost mismatch
 reject exact promotion. Inspect compiler nodes/edges/condition density,
 evaluation phases, pair counts and memory, success/off-policy probability,
 exact cost, and reconciliation deltas.
-

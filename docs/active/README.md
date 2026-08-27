@@ -1,17 +1,16 @@
 # Active Work
 
-**Status: one active implementation boundary.**
+**Status: no active implementation boundary.**
 
 Parent: [Documentation map](../README.md)
 
 ## Current boundary
 
-[Solver Exactness, Iteration, And Debt Closure](2026-08-27-solver-exactness-iteration-debt-closure/plan.md)
-is active. It sequences resumable broad rows, development checkpoint/replay,
-measured strict-proof repair, solver-state reduction, telemetry/source
-modularity, current documentation, and the two outstanding product audits.
-
-See [HANDOFF](../../HANDOFF.md) for the exact checkpoint.
+None. The latest solver debt-closure milestone is archived, and its one
+deliberately deferred item—honest cross-process checkpoint/replay—is ranked in
+the [future worklist](../future/priority-worklist.md). Oliver must select the
+next chunk before implementation resumes. See [HANDOFF](../../HANDOFF.md) for
+the exact checkpoint.
 
 ## Historical work
 

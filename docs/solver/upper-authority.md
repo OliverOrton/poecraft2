@@ -40,4 +40,3 @@ Compilation, missing prices, improperness, off-policy probability, incomplete
 cost accounting, graph/evaluator cap, or cost mismatch rejects promotion.
 Inspect `incumbent_portfolio`, upper milestones, candidate kind/stage,
 publication stage, exact evaluation, and retained rollback-upper telemetry.
-

@@ -41,4 +41,3 @@ may stop for a requested bounded finish, gap target, named cap, numerical
 failure, absent executable policy, or exact closure. Inspect focused rounds,
 lane work, state/row/transition counts, Bellman sweeps and residuals,
 policy-reachable counts, and action-family search cost.
-

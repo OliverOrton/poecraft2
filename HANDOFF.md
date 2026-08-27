@@ -1,20 +1,20 @@
 # Handoff
 
-**Status: active implementation boundary.** Oliver selected the
-[Solver Exactness, Iteration, And Debt Closure](docs/active/2026-08-27-solver-exactness-iteration-debt-closure/plan.md)
-program on 2026-08-27. The maintained
-[ranked project worklist](docs/future/priority-worklist.md) owns the remaining
-P0–P3 candidates.
+**Status: no active implementation boundary.** The completed
+[Solver Exactness, Iteration, And Debt Closure](docs/archive/2026-08-27-solver-exactness-iteration-debt-closure/README.md)
+milestone is archived. Oliver must select the next chunk before implementation
+resumes. The maintained [ranked project worklist](docs/future/priority-worklist.md)
+owns the remaining P0–P3 candidates.
 
 ## Checkpoint
 
 - Branch: `main`, local-only; nothing was pushed.
-- Engine/WASM/web behavior checkpoint: `102ea11` (`Add solver action-family
-  controls`).
-- The documentation/archive checkpoint containing this handoff follows that
-  commit.
-- Gate 0 source reading is in progress; no implementation checkpoint for the
-  new boundary exists yet.
+- Final engine correctness checkpoint: `ba6680f` (`Keep synthetic Restart out
+  of reforge dispatch`).
+- Rebuilt release-WASM/web checkpoint: `3e28150` (`Rebuild WASM after solver
+  stabilization`).
+- The documentation/archive checkpoint containing this handoff follows those
+  commits.
 - Calculator product scope remains `calculator_product_v1`: generated
   automatic Imprint programs off, voluntary economic Restart off,
   goal-progress-gated reforges on, junk-free exact terminal success, and no
@@ -22,71 +22,78 @@ P0–P3 candidates.
 
 ## Completed Result
 
-The engine now accepts a stable `disabled_action_families` request vocabulary
-covering ordinary primitive mechanics plus temporary Bench, metamod, Imprint,
-and Restart program scope. Filtering is dependency-aware: direct actions and
-fixed/carrier-local automatic programs cannot reintroduce a disabled family.
-Unknown names fail precisely. C ABI/WASM action descriptions expose native
-family metadata, and result telemetry discloses the restricted envelope.
+Eight of the nine selected stabilization items shipped:
 
-Calculator exposes advanced diagnostic family controls, all enabled by
-default. It sends restrictions only to product-envelope/scoped Solve goals,
-uses native family metadata for action readiness, and states that bounds and
-exactness apply only within the selected envelope. The existing ordinary
-Imprint and economic-Restart controls remain separate.
+- exact V3 broad destructive rows are cooperatively resumable and cannot
+  publish partial work;
+- Calculator Solve rejects Mirrored/Synthesised carriers and excludes the
+  owner-ruled irrelevant mirror-producing Fossil, while simulator mechanics
+  remain intact;
+- strict refinement yields immediately when an alternative exposes a new
+  carrier frontier, avoiding stale obligation work from the old generation;
+- telemetry collection and JSON serialization are separate source owners and
+  compact/full-evidence intent is explicit;
+- the current solver documentation is a navigable index plus ten narrow
+  authority pages;
+- influenced-modifier presentation uses one native-facing order; and
+- rare nonzero probabilities remain visible, with exact values separated from
+  Simulator samples and Wilson 95% intervals.
 
-The historical 13 native-solve failures did not reproduce: current starting
-source was already green at 100,169 solve checks. A warm-machine race in the
-pre-existing exact-evaluation cancellation smoke was made deterministic with
-a genuinely multi-step proper graph.
+Final acceptance also found a correctness defect outside the planned list:
+synthetic Restart inherited the default `Transmute` type and entered renewal
+dispatch before its synthetic branch. Coarse, factored, and exact evaluation
+now keep Restart as the deterministic base-purchase transition.
 
-## PDR Attribution
+The ninth item, cross-process development checkpoint/replay, did not ship. An
+honest checkpoint must serialize joint calculator states/operators/admission
+authority at the coarse boundary and the persistent oracle, partition
+generations, proof obligations/dependencies, kernels, resumable cursors, and
+incumbent at the strict boundary. Saving request/result JSON or sparse rows
+would still rebuild the expensive owners and is explicitly rejected as fake
+replay.
 
-One matched four-mod PDR ablation disabled `temporary_bench` under the 50M
-logical-work / 1 GiB product diagnostic boundary. It retained a fully
-exact-evaluated executable policy at `7862.857725228987`, with success
-probability one, zero off-policy mass, complete prices, lower
-`21.772459401271156`, and truthful `bounded_feasible / refused_resource_cap`
-publication.
+## PDR Proof Boundary
 
-The ablation is not a product improvement. It reached 43,535 exact states and
-the 1 GiB peak-memory boundary after 6,240,606 logical / 2,415,465 V3 reforge
-work, before creating any alternative obligations. The retained control had
-13,991 exact states, created 299,394 obligations, completed 14,054 alternative
-rows using 49,999,992 logical / 43,404,344 V3 work, and stopped on the 300 s
-watchdog with zero policy improvements. Temporary Bench therefore does not own
-the obligation count; disabling it moves the bottleneck earlier and may remove
-a compact inherited policy/partition.
+The final matched four-mod PDR run stopped after 168.418 seconds at the named
+1 GiB solver-owned memory boundary. It inserted one strict frontier state,
+completed 2 alternative rows instead of about 14,000, and used 3,507,568
+logical / 1,380,787 V3 strict reforge work. It retained 846,846,750 bytes in
+the proof store plus quotient and reached a 1,179,431,999-byte native owned
+peak.
 
-Detailed evidence is in the
-[archived result](docs/archive/2026-08-27-solver-stabilization-action-family-controls/result.md).
+The independently exact-evaluated bounded policy remains
+`7866.432124027084` Chaos with certified lower `21.772459401271156`. The
+coarse exact value `8084.680082389483` does not reconcile with that compiled
+value, so strict refinement remains required. The frontier-yield repair is a
+real reduction in wasted proof work, but it does not close the PDR case.
 
 ## Recommended Next Boundary
 
-Select P1.2: make broad destructive-row recurrence cooperative and genuinely
-resumable with deterministic bounded slices and retained cursors. The control
-still has a native work item above 100 seconds; a partial row must never gain
-proof authority, while completed resumed output must be bit-identical to an
-uninterrupted row.
+Select P1.3 as its own milestone: design the versioned development-only
+checkpoint/replay format at the completed coarse graph and first closed strict
+partition boundaries. It should be an iteration tool only and refuse every
+identity or completeness mismatch.
 
-After that representation is stable, select P1.3: a development-only
-deterministic checkpoint/replay harness at the coarse-to-strict boundary and
-closed strict partition. Then use both tools for P1.4 family/row attribution
-and the narrow measured proof repair. Do not start five-goal tuning, broad cap
-increases, state-dimension deletion, or mechanic changes by implication.
-
-Two possible P0 reports still require Oliver's concrete inputs: one influenced
-modifier ordering/source example and one low-probability Calculator request
-with expected versus observed quantity.
+After replay is real, continue P1.4 against the now-measured retained
+proof/quotient memory owner. Do not start with another generic cap increase or
+re-run a broad benchmark matrix. Success means less retained memory, fewer
+obligations/kernels, another frontier advance, or exact closure—not merely a
+larger displayed lower.
 
 ## Acceptance
 
 - fresh native release build passed;
-- focused API/S8.3/solve suites passed 2,643 / 541 / 100,169 checks;
+- focused solve/API/policy-refinement suites passed 7,902 / 2,644 / 2,083
+  checks with zero failures;
 - release WASM rebuilt;
-- final full repository pipeline passed ingest, canonical-data/artifact,
-  3,467,980 native checks, benchmark-spec validation, bindings, release-WASM,
-  and nonvisual web tests;
-- `npm test`, `npx tsc --noEmit`, and `git diff --check` passed.
+- `npm test` and `npx tsc --noEmit` passed;
+- the complete repository pipeline passed ingest, canonical-data/artifact,
+  3,417,248 native checks, benchmark specifications, bindings, release-WASM,
+  nonvisual web tests, and the repository's 10,000-run compiled-strategy
+  controls;
+- documentation link audit and `git diff --check` passed.
 
-No rendered browser review or broad benchmark matrix was run or claimed.
+The fresh PDR diagnostic intentionally skipped sampled verification because
+its compiled policy was independently exact-evaluated and published only as
+bounded. No rendered browser review or broad benchmark matrix was run or
+claimed.
