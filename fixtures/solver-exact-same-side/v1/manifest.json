@@ -1,0 +1,70 @@
+{
+  "schema_version": "solver_benchmark_corpus_v1",
+  "corpus_id": "poecraft2-solver-exact-same-side-v1",
+  "artifact": {
+    "manifest_relative_path": "data/compiled/current/manifest.json",
+    "canonical_source": "data/sqlite/poecraft.db",
+    "engine_abi_version": 2,
+    "artifact_schema_version": 4,
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+    "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+  },
+  "source_checkpoint": {
+    "engine_product_commit": "7ed9f17",
+    "plan_commit": "1c78c46",
+    "mechanics_authority": "unchanged_current_implemented_contract"
+  },
+  "benchmark_identity_contract": {
+    "id": "calculator-product-exact-same-side-v1",
+    "trajectory_required": true,
+    "native_repetitions": 2,
+    "fixed_work_identity_required": false,
+    "compiled_exact_evaluation_required": true,
+    "general_product_scope": {
+      "action_mode": "goal_relevant",
+      "solve_step_work_items": 8,
+      "goal_progress_gated_reforges": true,
+      "allow_economic_restart": false,
+      "consider_imprint_programs": false
+    },
+    "explicit_imprint_scope": {
+      "consider_imprint_programs": false,
+      "disposition": "disabled_by_calculator_product_v1"
+    },
+    "required_disclosures": [
+      "artifact",
+      "source_checkpoint",
+      "economy",
+      "action_scope",
+      "terminal_goal",
+      "start_carrier",
+      "work_step",
+      "requested_finish",
+      "verification"
+    ]
+  },
+  "case_roles": {
+    "conquest-lamellar-allflame-clean-3-prefix-extended-product8": "clean_exact_three_prefix_control",
+    "conquest-lamellar-allflame-clean-3-suffix-product8": "clean_exact_three_suffix_control"
+  },
+  "comparison_profile": {
+    "id": "calculator-product-quality-ladder-v1",
+    "product_scope": "calculator_goal_relevant_exact_terminal_imprint_off_restart_off_product8",
+    "exact_required": true,
+    "maximum_wall_seconds": 120,
+    "compiled_exact_evaluation_required": true,
+    "verification_runs": 0
+  },
+  "owner_decisions": [
+    "Exact terminal success requires precisely the three requested explicit affixes and no junk explicit affixes.",
+    "The prefix witness is the current quality-ladder Conquest control; its historical August 14 result is not current-contract acceptance authority.",
+    "The suffix witness uses T1 fire, cold, and lightning resistance: three distinct natural suffix groups with positive Conquest Lamellar spawn weight in the canonical artifact.",
+    "Generated Imprint programs and voluntary economic Restart remain disabled by calculator_product_v1."
+  ],
+  "cases": [
+    "cases/conquest-lamellar-allflame-clean-3-prefix-extended-product8.json",
+    "cases/conquest-lamellar-allflame-clean-3-suffix-product8.json"
+  ]
+}

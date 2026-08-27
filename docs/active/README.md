@@ -1,16 +1,15 @@
 # Active Work
 
-**Status: one active implementation boundary.**
+**Status: no active implementation boundary.**
 
 Parent: [Documentation map](../README.md)
 
 ## Current boundary
 
-[Exact Same-Side Closure](2026-08-26-exact-same-side-closure/README.md) is
-active from checkpoint `9ae5a1d`. It first repairs the stale transition-row
-frontier crash, then makes current-contract clean three-prefix and three-suffix
-goals exact before probing the four-mod boundary. See
-[HANDOFF](../../HANDOFF.md) for the live checkpoint.
+None. Oliver must select the next chunk before implementation resumes. The
+completed Exact Same-Side Closure boundary and its next-owner diagnosis are in
+the [archive](../archive/2026-08-26-exact-same-side-closure/README.md). See
+[HANDOFF](../../HANDOFF.md) for the exact checkpoint.
 
 ## Historical work
 

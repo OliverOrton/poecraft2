@@ -11,6 +11,21 @@ typed solve ownership, cooperative continuation, verified publication,
 solve-result, and current source-ownership sections were checked. Older dated
 measurements and qualification addenda remain historical evidence.
 
+Exact same-side closure addendum: on 2026-08-27 @ `7ed9f17`, clean
+three-prefix and three-suffix Calculator goals close `exact / exact_closed`
+under the junk-free exact terminal contract. Reachable-incumbent lift treats
+an unmaterialized sparse row as frontier instead of indexing past the row
+cache. Strict closure can use an independently evaluated policy as
+rollback-upper authority while alternative accounting proceeds, but final
+exact publication still compiles and independently evaluates the selected
+strict policy. Persistent policy-collapse identity includes downstream
+observation features, preventing legitimate frontier carriers from being
+misclassified as identity collisions. Two deterministic native repetitions,
+exact graph evaluation, 10,000-run controls, release WASM, and focused
+native/web acceptance pass. The
+[completion result](../archive/2026-08-26-exact-same-side-closure/result.md)
+owns the measurements and the next four-mod boundary.
+
 Verified against code, the bounded-policy B6 acceptance, the mechanical solve
 split, focused-round performance acceptance, WASM progress-accounting,
 bounded-incumbent graph stability, the goal-progress-gated native/WASM

@@ -1617,6 +1617,9 @@ void run_alt_spam_tests() {
         refinement.status = "complete";
         refinement.core_policy_candidate_present = true;
         refinement.core_policy_status = "exact";
+        refinement.pre_extraction_non_goal_closed = false;
+        refinement.coarse_action_envelope_closed = false;
+        refinement.coarse_discovery_closed = false;
         refinement.core_policy_lower_bound = 29.0;
         refinement.core_policy_upper_bound = 30.0;
         refinement.core_policy_evaluated_cost = 30.0;
@@ -1849,7 +1852,11 @@ void run_alt_spam_tests() {
                  std::string::npos);
         PC_CHECK(refinement_telemetry.find(
                      "\"core_policy\":{\"candidate_present\":true,"
-                     "\"status\":\"exact\",\"lower_bound\":29,"
+                     "\"status\":\"exact\","
+                     "\"pre_extraction_non_goal_closed\":false,"
+                     "\"coarse_action_envelope_closed\":false,"
+                     "\"coarse_discovery_closed\":false,"
+                     "\"lower_bound\":29,"
                      "\"upper_bound\":30,\"evaluated_cost\":30,"
                      "\"transition_bits_hash\":\"000000000000001f\","
                      "\"policy_bits_hash\":\"0000000000000020\"") !=

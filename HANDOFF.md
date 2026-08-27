@@ -1,187 +1,82 @@
 # Handoff
 
-**Status: active implementation boundary.** Oliver selected
-[Exact Same-Side Closure](docs/active/2026-08-26-exact-same-side-closure/README.md)
-on 2026-08-26 from clean checkpoint `9ae5a1d`. The active objective is genuine
-current-contract exact closure for a clean three-prefix and a clean
-three-suffix item, after repairing the reproduced stale transition-row
-frontier crash. Focused native witnesses come before broad benchmark work.
+**Status: no active implementation boundary.** The
+[Exact Same-Side Closure](docs/archive/2026-08-26-exact-same-side-closure/README.md)
+milestone completed on 2026-08-27. Oliver must select the next chunk before
+implementation resumes.
 
-The active [plan](docs/active/2026-08-26-exact-same-side-closure/plan.md) is the
-only sequencing authority. The August 14 three-prefix exact result is retained
-as prior art but predates the junk-free exact-explicit-affix terminal contract;
-it is not current acceptance evidence.
+## Checkpoint
 
-## Active checkpoint
+- Branch: `main`, local-only; nothing was pushed.
+- Engine behavior checkpoint: `7ed9f17` (`Reuse verified rollback during
+  strict exact closure`).
+- The final acceptance/documentation commit containing this handoff follows
+  that checkpoint.
+- Calculator product scope remains `calculator_product_v1`: generated
+  automatic Imprint programs off, voluntary economic Restart off,
+  goal-progress-gated reforges on, and junk-free exact terminal success.
 
-- Branch: `main`, local-only.
-- Source checkpoint: `9ae5a1d` (`Complete solver quality debt milestone`).
-- Gate 0 root cause is reproduced and source-confirmed: reachable-incumbent
-  construction can request a newly discovered frontier state beyond
-  `transition_cache.state_rows`, throwing `vector::_M_range_check` before the
-  existing certified-boundary/grow-in-place path can handle the missing row.
-- No active-boundary source change has landed yet.
+## Completed Result
 
-## Previous completed boundary
+- Clean three-prefix Conquest Lamellar closes `exact / exact_closed` at
+  `1618.2138946963837`; compiled graph 154 nodes / 432 edges.
+- Clean three-suffix Conquest Lamellar closes `exact / exact_closed` at
+  `1101.15648683309`; compiled graph 78 nodes / 219 edges.
+- Final-source repetitions have identical values, policy hashes, graph hashes,
+  node counts, and edge counts.
+- Independent exact graph evaluation matches each solver value, proves success
+  probability one, zero off-policy mass, and complete pricing.
+- Each final strategy completed exactly 10,000 Simulator runs with 10,000
+  successes, zero failures, and zero off-policy events.
 
-The completed
-[Solver Quality Measurement, Refinement, And Debt Retirement](docs/archive/2026-08-26-solver-quality-debt-retirement/README.md)
-milestone is archived.
+The milestone repaired three distinct owners:
 
-The completed boundary began from clean checkpoint `ec3fbd3`. Gates -1 through 8
-are complete. The versioned Calculator-profile clean/partial 1-to-5 ladder is
-recorded, a diagnostic-owned-byte abort is repaired, and the strict-lift owner
-is attributed. Gate 2 repaired the selected-first proof lifecycle and prevents
-optional strict work from delaying an already finite product policy. The
-action-scope audit found admitted but delayed work rather than missing mechanic
-families, no executable-upper consumer qualified, and retained proof patterns
-already cover the safe Gate 5 consumers. Gates 6-7 replaced duplicated
-Calculator defaults with one versioned native profile and retired the touched
-cross-layer ownership debt. Gate 8 completed final native/release-WASM
-acceptance and recorded the inherited full-suite fixture failure.
+1. reachable-incumbent lift no longer indexes an unmaterialized frontier row;
+2. fully finite coarse policies can reach strict exact closure without a
+   redundant speculative upper assertion; and
+3. persistent strict collapse identity includes policy-observed carrier
+   features, so legitimate frontier growth does not throw a false identity
+   collision.
 
-The completed
-[Solver Anytime Planning, Proof Patterns, And Debt Retirement](docs/archive/2026-08-25-solver-anytime-proof-realignment/README.md)
-milestone is archived with its gate records and final acceptance evidence.
+An independently evaluated fallback may seed strict rollback-upper authority.
+It is never lower-bound, reconciliation, or exact-publication authority. Exact
+publication still compiles and independently evaluates the final selected
+strict strategy.
 
-## Current checkpoint
+## Next Exactness Owner
 
-- Branch: `main`.
-- Plan checkpoint: `b5f3cfb` (`Select solver quality debt boundary`).
-- Gate 0/1 checkpoint: `22c7881`.
-- Gate 2 checkpoint: `3eef23b`; see
-  [Gate 2 evidence](docs/archive/2026-08-26-solver-quality-debt-retirement/gate2-evidence.md).
-- Gates 3-5 checkpoint: `241249e`.
-- Gates 6-7 checkpoint: `ae61304`.
-- Final profile-owned benchmark-default fix: `f883a6a`.
-- Gate 8 archive/checkpoint: the local commit containing this handoff.
-- All milestone commits are local-only; nothing was pushed.
+The PDR four-mod probe no longer throws either structural failure. It reaches
+13,933 strict quotient classes, discovers another 4,907 frontier carriers, and
+then consumes the 50,000,000 logical reforge-work allowance certifying broad
+alternative rows. Its retained direct graph independently evaluates at
+`7866.432124027084`, but the 300-second diagnostic watchdog expires before
+publication.
 
-## Final Gate 8 result
+Do not repeat the discarded coarse-operator-lower transfer: it seeded all
+299,394 strict obligations, produced zero noncompetitive retirements, and was
+removed. A successor should choose between:
 
-- Complete product and qualification ladders retain the Gate 0 values; every
-  completed finite policy passes independent exact evaluation.
-- Native and release-WASM 19-case matrices pass all expectations; each runner
-  completes two selected 10,000-run verification cases, and the comparison
-  passes 180/180 checks.
-- The explicit Calculator-profile identity case has identical values, hashes,
-  graph, profile ID, and zero override mask in native and release WASM.
-- Native build, release-WASM build, 6,253 focused native checks, complete
-  nonvisual web tests, TypeScript, and diff checks pass.
-- The full repository pipeline reaches the known pre-existing 13 stale broad-
-  solve expectations and empty-JSON parse failure after all earlier layers
-  pass. This is retained as a separate cleanup boundary.
+- a materially stronger successor-aware carrier/action lower, with an
+  explicit admissibility proof; or
+- cheaper, genuinely resumable broad destructive-row certification that can
+  stop before one row monopolizes the remaining work allowance.
 
-## Current Gates 6-7 result
+This is a new selected boundary, not unfinished work from the completed
+three-mod milestone. Do not start five-goal tuning by implication.
 
-- `calculator_product_v1` owns gated reforges, Restart off, Imprints off,
-  high-impact upper work, zero gap defaults, and the 200k optional refinement
-  allowance in native code.
-- C ABI, WASM, Calculator, native benchmark, release-WASM benchmark, quality
-  fixtures, telemetry, compiled provenance, tests, and stable docs select or
-  report that identity. Explicit fields become named overrides.
-- The old explicit-field and new profile one-goal controls have identical
-  values, transition/policy hashes, and compiled graph sizes.
-- The private high-impact bit remains a compatibility alias; new product code
-  uses the public profile/capability contract.
+## Acceptance
 
-## Current Gates 3-5 result
+- fresh native build and release WASM rebuild pass;
+- policy-refinement: 2,083 checks, zero failures;
+- solver solve: 100,169 checks, zero failures;
+- solver eval: 18,086 checks, zero failures;
+- solver API: 2,629 checks, zero failures;
+- solver calc: 436,640 checks, zero failures;
+- solver compile: 583 checks, zero failures;
+- nonvisual web/WASM tests and `npx tsc --noEmit` pass;
+- `git diff --check` passes.
 
-- Harvest, Eldritch, Bench, Fracture, and bounded Fossil work is admitted or
-  evaluated on clean five-T1; the solve stops with delayed obligations rather
-  than silently excluding those mechanic families.
-- The bounded early compatibility-continuation experiment completed no wave,
-  retained the identical 14.45M upper, added open work, and was removed.
-- No current strong proper candidate qualified a new incumbent consumer.
-- Existing typed proof patterns already reach operator/envelope consumers and
-  retire 79,799 owner-case obligations. Rejected rare/Eldritch or probability-
-  only lower experiments were not repeated.
-
-## Current Gate 2 result
-
-- Fractured four-to-five again publishes the proper, independently exact
-  `2698.87479601436` policy in 30.6 seconds. The worse 12,197-chaos selected
-  snapshot is truthfully deferred to direct certification under the product
-  refinement allowance.
-- Clean five-T1 retains exact evaluated upper `14454067.4260706` over global
-  lower `36.4885317287664` and completes in 66.2 seconds instead of expiring
-  in optional selected-policy strict repair.
-- Forced continuation proved the next repair owner: after two local repairs,
-  the third one-state protected-Scour frontier recursively materialized 37,761
-  exact carriers / 31,257 kernels without an executable upper at 120 seconds.
-  This pre-partition closure path is rejected for product use.
-
-## Current Gate 0/1 result
-
-- Product-profile clean five-T1 Conquest remains a proper independently
-  evaluated `14454067.4260706` upper over a `36.4885317287664` global lower.
-- Product-eight and qualification-1024 finalized cases have identical values,
-  exact costs, and stop classifications. Slice size is not the observed
-  five-goal quality owner.
-- Ring two/three produce no incumbent before `max_owned_bytes`; Bow four/five
-  reach the 200,000-state cap. These are truthful product boundaries, not
-  harness aborts.
-- The shortest refinement witness retains exact upper `2698.87479601436` and
-  core policy hash `9c020a941326a237`. Its strict selected-only path is
-  `Eldritch suffix Exalt -> Scour -> Regal -> Scour`, an improper renewal
-  cycle.
-- Root cause: selected-first refinement requires a proper inherited quotient
-  before it creates/certifies the alternatives that can repair an improper
-  inherited policy. The old `proof envelope lost its selected quotient state`
-  message was a downstream masking exception.
-
-See [Gate 0 evidence](docs/archive/2026-08-26-solver-quality-debt-retirement/gate0-evidence.md)
-and [Gate 1 evidence](docs/archive/2026-08-26-solver-quality-debt-retirement/gate1-evidence.md).
-
-## Retained product and proof contract
-
-- Calculator and general solver benchmarks default generated automatic
-  Imprint programs off; dedicated controls opt in. The low-level compatibility
-  default remains enabled.
-- Calculator keeps junk-free exact terminal success, goal-progress-gated
-  destructive reforges only under an authored routing proof, no voluntary
-  economic Restart by default, and the exact fresh-base branch after failed
-  product Fracture.
-- `ActionEnvelopeLedger` owns carrier/operator obligation lifecycle;
-  `SolveScheduler` owns typed lanes and fairness; `IncumbentPortfolio` owns
-  verified executable candidates; `ProofPatternManager` owns admissible lower
-  values; `PublicationPipeline` owns cooperative assertion/refinement/
-  packaging; and `SolveTelemetrySnapshot` owns typed measurement.
-- The behavior-changing scheduler profile did not qualify. Production retains
-  the measured legacy work order behind an explicit typed fallback.
-- Candidate estimates, restricted values, verified executable uppers,
-  independently global lowers, and exact closure remain non-convertible
-  authorities. Open requested alternatives remain honestly bounded.
-- Fixed-identity and complete operator-envelope proof retire 79,799
-  unmaterialized owner-case obligations, reducing its remaining requested
-  envelope from 109,100 to 29,339 without changing the independently evaluated
-  upper, graph, or policy.
-- The evaluator never grants goal-progress-gated kernel authority from a
-  self-loop alone. Affix-count or otherwise unproved retry routing keeps the
-  full exact physical distribution.
-
-## Final retained results
-
-- Clean five-T1 Conquest Lamellar: certified lower `36.4885317287664`, proper
-  independently evaluated upper `14454067.4260706`, graph 514 / 1,788.
-- The behavior-changing scheduler did not meet its 1.56M qualification while
-  preserving controls, so the plan's explicit legacy-order fallback remains.
-  Final exact replay confirms the historical `87361.1690420501` strategy is
-  still proper observational evidence, not current publication authority.
-- Fractured four-to-five owner: certified lower `36.4286171891044`, proper
-  independently evaluated upper `2698.87479601436`, graph 215 / 563.
-- Ordinary release-WASM one-mod control: exact `23.79`, 1.828 ms maximum
-  worker slice on final source, below the unchanged 50 ms qualification.
-- Final native and release-WASM 19-case matrices: all authored expectations,
-  compiled strategies, and exact reconciliation pass; the two required
-  verification cases each pass exactly 10,000 simulations in both runners;
-  zero WASM watchdog expiries.
-- Final `powershell -File scripts/test.ps1`: pass, including 3,467,931 native
-  checks with zero failures. Complete nonvisual web tests and
-  `npx tsc --noEmit` also pass.
-
-Oliver-owned rendered Calculator review remains explicitly unclaimed. No
-browser screenshots or rendered visual smoke were performed.
-
-See the [Gate 8 completion record](docs/archive/2026-08-25-solver-anytime-proof-realignment/gate8-evidence.md)
-for final report paths and detailed measurements.
+The active plan explicitly excluded the full repository pipeline, broad
+benchmark matrices, five-goal qualification, and rendered browser review;
+none was run or claimed. Detailed results and local report names are in the
+[archived result](docs/archive/2026-08-26-exact-same-side-closure/result.md).

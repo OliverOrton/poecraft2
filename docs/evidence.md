@@ -6,6 +6,25 @@ routes to them rather than duplicating complete reports.
 
 Parent: [Documentation map](README.md)
 
+## Exact Same-Side Closure
+
+The 2026-08-27
+[completion result](archive/2026-08-26-exact-same-side-closure/result.md)
+establishes genuine current-contract exact closure for clean three-prefix and
+three-suffix Calculator goals. Final-source repetitions preserve exact values,
+policy and graph hashes, and graph sizes. The prefix closes at
+`1618.2138946963837` with a 154-node / 432-edge graph; the suffix closes at
+`1101.15648683309` with a 78-node / 219-edge graph. Independent exact graph
+evaluation matches both values, and each final strategy completes exactly
+10,000 Simulator runs with zero failures or off-policy events.
+
+The four-mod PDR probe clears both prior structural failures, reaches a second
+strict frontier, and then exhausts the 50,000,000 logical reforge-work budget
+on broad alternative certification. A measured transfer of the existing
+coarse operator lower seeded every strict obligation but retired none and was
+removed. The archived result owns the successor boundary and raw local report
+names.
+
 ## Solver Anytime Planning And Proof Ownership
 
 The 2026-08-25

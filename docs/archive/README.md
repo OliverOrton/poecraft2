@@ -11,6 +11,10 @@ selected active work.
 
 ## 2026-08-26
 
+- [Exact Same-Side Closure](2026-08-26-exact-same-side-closure/README.md) —
+  repaired stale frontier-row and persistent strict-identity failures, made
+  clean three-prefix and three-suffix Calculator goals exact, and attributed
+  the next four-mod boundary to strict broad-alternative proof work.
 - [Solver Quality Measurement, Refinement, And Debt Retirement](2026-08-26-solver-quality-debt-retirement/README.md) —
   repaired selected-policy refinement, audited action and lower coverage,
   retained truthful five-goal quality fallbacks, centralized native Calculator

@@ -1,7 +1,7 @@
 # Exact Same-Side Closure Plan
 
-**Status: active.** Selected by Oliver on 2026-08-26. Source checkpoint:
-`9ae5a1d` (`Complete solver quality debt milestone`).
+**Status: complete.** Selected by Oliver on 2026-08-26 from source checkpoint
+`9ae5a1d` and completed on 2026-08-27. See the [result](result.md).
 
 Parent: [Exact Same-Side Closure](README.md)
 
@@ -143,4 +143,3 @@ Do not run the full repository acceptance pipeline unless a cross-layer change
 outside the stable solver/WASM contract makes it necessary. Archive this plan,
 update the stable solver/evidence documentation that changed, and leave
 `HANDOFF.md` with measured results and the next exactness owner.
-

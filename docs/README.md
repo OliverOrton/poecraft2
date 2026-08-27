@@ -30,14 +30,14 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active
-[Exact Same-Side Closure](active/2026-08-26-exact-same-side-closure/README.md)
-boundary begins from clean checkpoint `9ae5a1d`. Its first stabilization target
-is the reproduced stale transition-row crash during reachable-incumbent
-construction. Its primary product target is genuine `exact_closed` publication
-for one clean exact three-prefix and one clean exact three-suffix goal under the
-current junk-free terminal contract. Focused native witnesses precede any
-broad benchmark work.
+No implementation boundary is active. The completed
+[Exact Same-Side Closure](archive/2026-08-26-exact-same-side-closure/README.md)
+milestone makes current-contract clean three-prefix and three-suffix Calculator
+goals genuinely exact, with deterministic compiled graphs and 10,000-run
+Simulator controls. Its four-mod probe attributes the next boundary to strict
+broad-alternative proof work rather than the repaired frontier or existing
+goal-cover plumbing. Oliver must select the next chunk before implementation
+resumes.
 
 The completed
 [Solver Quality Measurement, Refinement, And Debt Retirement](archive/2026-08-26-solver-quality-debt-retirement/README.md)
