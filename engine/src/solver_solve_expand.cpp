@@ -417,30 +417,41 @@ bool SolveTransitionCache::compatible(
         const std::uint32_t requested_start,
         const std::vector<PricedOperator>& priced,
         const SolveOptions& options) const {
-        if (start_state != requested_start ||
-            max_states != options.max_states ||
-            max_discovered_states != options.max_discovered_states ||
-            max_expanded_states != options.max_expanded_states ||
-            max_state_action_rows != options.max_state_action_rows ||
-            max_transitions != options.max_transitions ||
-            max_reforge_work != options.max_reforge_work ||
-            max_solver_owned_bytes != options.max_solver_owned_bytes ||
-            max_diagnostic_samples != options.max_diagnostic_samples ||
-            full_evidence != options.full_evidence ||
-            kernel_reuse != options.kernel_reuse ||
-            goal_progress_gated_reforges !=
-                options.goal_progress_gated_reforges ||
-            consider_imprint_programs !=
-                options.consider_imprint_programs ||
-            allow_economic_restart != options.allow_economic_restart ||
-            exact_quotient == options.strict_states ||
-            operator_indices.size() != priced.size()) {
-            return false;
+        return compatibility_mismatch(
+            requested_start, priced, options).empty();
+    }
+
+std::string SolveTransitionCache::compatibility_mismatch(
+        const std::uint32_t requested_start,
+        const std::vector<PricedOperator>& priced,
+        const SolveOptions& options) const {
+#define PC_CACHE_MISMATCH(field) \
+    if (field != options.field) return #field
+        if (start_state != requested_start) return "start_state";
+        PC_CACHE_MISMATCH(max_states);
+        PC_CACHE_MISMATCH(max_discovered_states);
+        PC_CACHE_MISMATCH(max_expanded_states);
+        PC_CACHE_MISMATCH(max_state_action_rows);
+        PC_CACHE_MISMATCH(max_transitions);
+        PC_CACHE_MISMATCH(max_reforge_work);
+        PC_CACHE_MISMATCH(max_solver_owned_bytes);
+        PC_CACHE_MISMATCH(max_diagnostic_samples);
+        PC_CACHE_MISMATCH(full_evidence);
+        PC_CACHE_MISMATCH(kernel_reuse);
+        PC_CACHE_MISMATCH(goal_progress_gated_reforges);
+        PC_CACHE_MISMATCH(consider_imprint_programs);
+        PC_CACHE_MISMATCH(allow_economic_restart);
+#undef PC_CACHE_MISMATCH
+        if (exact_quotient == options.strict_states) return "strict_states";
+        if (operator_indices.size() != priced.size()) {
+            return "operator_count";
         }
         for (std::size_t i = 0; i < priced.size(); ++i) {
-            if (operator_indices[i] != priced[i].index) return false;
+            if (operator_indices[i] != priced[i].index) {
+                return "operator_order:" + std::to_string(i);
+            }
         }
-        return true;
+        return {};
     }
 
 void SolveTransitionCache::retain_automatic_sample(AutomaticCandidateRecord record) {

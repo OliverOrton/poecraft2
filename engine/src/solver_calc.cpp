@@ -567,6 +567,7 @@ CalcContext::CalcContext(
          operator_index < operators_.size(); ++operator_index) {
         candidate_operators_.push_back(operator_index);
     }
+    initial_operator_count_ = operators_.size();
     static_candidate_operator_count_ = candidate_operators_.size();
     const bool exact_group_effects =
         distinguish_junk_exclusion_effects ||
@@ -1893,11 +1894,15 @@ void CalcContext::reset_solve_telemetry() {
     /* State-local automatic admission is price-scoped. Retained operator and
      * kernel templates remain exact reusable structure, but the per-state
      * decision and any graph built from it must be recomputed for each solve. */
-    state_local_automatic_operators_.clear();
-    state_local_automatic_operators_.rehash(0);
-    owned_state_local_operator_bytes_ = 0;
-    if (goal_.automatic_candidates) {
-        solve_transition_cache_.reset();
+    const bool replaying_checkpoint =
+        std::exchange(development_checkpoint_replay_pending_, false);
+    if (!replaying_checkpoint) {
+        state_local_automatic_operators_.clear();
+        state_local_automatic_operators_.rehash(0);
+        owned_state_local_operator_bytes_ = 0;
+        if (goal_.automatic_candidates) {
+            solve_transition_cache_.reset();
+        }
     }
     if (automatic_comparison_context_ != nullptr) {
         automatic_comparison_context_->reset_solve_telemetry();

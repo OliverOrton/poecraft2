@@ -20,6 +20,7 @@ src/solver_options_build.cpp
 src/solver_options_import.cpp
 src/solver_options_semantics.cpp
 src/solver_options_temporary.cpp
+src/solver_development_checkpoint.cpp
 src/solver_solve.cpp
 src/solver_solve_expand.cpp
 src/solver_solve_incremental.cpp

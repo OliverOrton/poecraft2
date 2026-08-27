@@ -2672,6 +2672,191 @@ void run_natural_t1_feasibility_gate(const char* artifact_dir) {
     pc_data_destroy(data);
 }
 
+void run_development_checkpoint_replay_gate(const char* artifact_dir) {
+    namespace fs = std::filesystem;
+    pc_error_info error;
+    pc_error_info_init(&error);
+    pc_data_handle data = nullptr;
+    const std::string manifest =
+        std::string(artifact_dir) + "/manifest.json";
+    PC_CHECK(pc_data_load_file(
+                 manifest.c_str(), &data, &error) == PC_RESULT_OK);
+    if (data == nullptr) return;
+
+    pc_session_options session_options{};
+    session_options.struct_size = sizeof(session_options);
+    session_options.abi_version = PC_ABI_VERSION;
+    session_options.base_metadata_path =
+        "Metadata/Items/Armours/BodyArmours/BodyInt17";
+    session_options.item_level = 86;
+    pc_session_handle session = nullptr;
+    PC_CHECK(pc_session_create(
+                 data, &session_options, &session, &error) == PC_RESULT_OK);
+    if (session == nullptr) {
+        pc_data_destroy(data);
+        return;
+    }
+
+    const std::string goal =
+        R"({"version":"v1","rarity":"magic","min_satisfied_slots":1,"slots":[{"family_mod_key":"LocalIncreasedEnergyShield11","min_tier":1}],"actions":["transmute","alteration","restart"]})";
+    const std::string economy_json =
+        R"({"version":"v1","id":"development-checkpoint-test","prices":{"transmute":0.05,"alteration":0.1,"base":5.0}})";
+    pc_economy_handle economy = nullptr;
+    PC_CHECK(pc_economy_load_json(
+                 economy_json.c_str(), economy_json.size(), &economy,
+                 &error) == PC_RESULT_OK);
+    pc_item_state start{};
+    pc_item_init_options item_options{};
+    item_options.struct_size = sizeof(item_options);
+    item_options.abi_version = PC_ABI_VERSION;
+    item_options.rarity = PC_RARITY_NORMAL;
+    item_options.with_implicits = 0;
+    PC_CHECK(pc_item_init(
+                 session, &item_options, &start, &error) == PC_RESULT_OK);
+    pc_solve_options solve_options{};
+    solve_options.struct_size = sizeof(solve_options);
+    solve_options.abi_version = PC_ABI_VERSION;
+    solve_options.max_states = 10000;
+    solve_options.max_discovered_states = 10000;
+    solve_options.max_expanded_states = 10000;
+    solve_options.max_state_action_rows = 100000;
+    solve_options.max_transitions = 1000000;
+    solve_options.max_reforge_work = 1000000;
+    solve_options.max_solver_owned_bytes = 256ull * 1024ull * 1024ull;
+    solve_options.max_diagnostic_samples = 32;
+    solve_options.solver_flags =
+        PC_SOLVER_FLAG_FULL_EVIDENCE |
+        PC_SOLVER_FLAG_DISABLE_IMPRINT_PROGRAMS;
+
+    const fs::path checkpoint =
+        fs::temp_directory_path() /
+        "poecraft-solver-development-checkpoint-test.pcsg";
+    const fs::path corrupt =
+        fs::temp_directory_path() /
+        "poecraft-solver-development-checkpoint-test-corrupt.pcsg";
+    const fs::path truncated =
+        fs::temp_directory_path() /
+        "poecraft-solver-development-checkpoint-test-truncated.pcsg";
+    std::error_code remove_error;
+    fs::remove(checkpoint, remove_error);
+    fs::remove(corrupt, remove_error);
+    fs::remove(truncated, remove_error);
+    const char* identity =
+        "development-checkpoint-test-identity-v1";
+
+    pc_solver_handle original = nullptr;
+    PC_CHECK(pc_solver_create(
+                 session, goal.c_str(), goal.size(), &original,
+                 &error) == PC_RESULT_OK);
+    pc_solve_summary original_summary{};
+    PC_CHECK(pc_solver_development_checkpoint_save(
+                 original, checkpoint.string().c_str(), identity,
+                 &error) == PC_RESULT_INTERNAL_ERROR);
+    PC_CHECK(pc_solver_solve(
+                 original, &start, economy, &solve_options,
+                 &original_summary, &error) == PC_RESULT_OK);
+    PC_CHECK(pc_solver_development_checkpoint_save(
+                 original, checkpoint.string().c_str(), identity,
+                 &error) == PC_RESULT_OK);
+    const std::string original_strategy =
+        compile_and_exact_evaluate_public_policy(
+            session, original, economy, &error);
+
+    pc_solver_handle replay = nullptr;
+    PC_CHECK(pc_solver_create(
+                 session, goal.c_str(), goal.size(), &replay,
+                 &error) == PC_RESULT_OK);
+    PC_CHECK(pc_solver_development_checkpoint_load(
+                 replay, checkpoint.string().c_str(), identity,
+                 &error) == PC_RESULT_OK);
+    pc_solve_summary replay_summary{};
+    PC_CHECK(pc_solver_solve(
+                 replay, &start, economy, &solve_options,
+                 &replay_summary, &error) == PC_RESULT_OK);
+    const std::string replay_strategy =
+        compile_and_exact_evaluate_public_policy(
+            session, replay, economy, &error);
+    PC_CHECK(replay_summary.start_value == original_summary.start_value);
+    PC_CHECK(replay_summary.lower_bound == original_summary.lower_bound);
+    PC_CHECK(replay_summary.upper_bound == original_summary.upper_bound);
+    PC_CHECK(replay_summary.evaluated_policy_cost ==
+             original_summary.evaluated_policy_cost);
+    PC_CHECK(replay_strategy == original_strategy);
+    PC_CHECK(solver_telemetry_json(replay, &error).find(
+                 "\"transition_graph\":{\"reused\":true}") !=
+             std::string::npos);
+
+    pc_solver_handle mismatch = nullptr;
+    PC_CHECK(pc_solver_create(
+                 session, goal.c_str(), goal.size(), &mismatch,
+                 &error) == PC_RESULT_OK);
+    PC_CHECK(pc_solver_development_checkpoint_load(
+                 mismatch, checkpoint.string().c_str(),
+                 "wrong-development-checkpoint-identity", &error) ==
+             PC_RESULT_INTERNAL_ERROR);
+
+    pc_solver_handle incompatible = nullptr;
+    PC_CHECK(pc_solver_create(
+                 session, goal.c_str(), goal.size(), &incompatible,
+                 &error) == PC_RESULT_OK);
+    PC_CHECK(pc_solver_development_checkpoint_load(
+                 incompatible, checkpoint.string().c_str(), identity,
+                 &error) == PC_RESULT_OK);
+    pc_solve_options incompatible_options = solve_options;
+    ++incompatible_options.max_transitions;
+    pc_solve_summary incompatible_summary{};
+    PC_CHECK(pc_solver_solve(
+                 incompatible, &start, economy, &incompatible_options,
+                 &incompatible_summary, &error) == PC_RESULT_INTERNAL_ERROR);
+    PC_CHECK(std::string(error.message).find("max_transitions") !=
+             std::string::npos);
+
+    fs::copy_file(
+        checkpoint, corrupt, fs::copy_options::overwrite_existing);
+    {
+        std::fstream stream(
+            corrupt, std::ios::binary | std::ios::in | std::ios::out);
+        PC_CHECK(static_cast<bool>(stream));
+        stream.seekg(-1, std::ios::end);
+        char byte = 0;
+        stream.read(&byte, 1);
+        byte ^= 0x5a;
+        stream.seekp(-1, std::ios::end);
+        stream.write(&byte, 1);
+    }
+    pc_solver_handle corrupted = nullptr;
+    PC_CHECK(pc_solver_create(
+                 session, goal.c_str(), goal.size(), &corrupted,
+                 &error) == PC_RESULT_OK);
+    PC_CHECK(pc_solver_development_checkpoint_load(
+                 corrupted, corrupt.string().c_str(), identity,
+                 &error) == PC_RESULT_INTERNAL_ERROR);
+
+    fs::copy_file(
+        checkpoint, truncated, fs::copy_options::overwrite_existing);
+    fs::resize_file(truncated, fs::file_size(truncated) - 1);
+    pc_solver_handle incomplete = nullptr;
+    PC_CHECK(pc_solver_create(
+                 session, goal.c_str(), goal.size(), &incomplete,
+                 &error) == PC_RESULT_OK);
+    PC_CHECK(pc_solver_development_checkpoint_load(
+                 incomplete, truncated.string().c_str(), identity,
+                 &error) == PC_RESULT_INTERNAL_ERROR);
+
+    pc_solver_destroy(incomplete);
+    pc_solver_destroy(corrupted);
+    pc_solver_destroy(incompatible);
+    pc_solver_destroy(mismatch);
+    pc_solver_destroy(replay);
+    pc_solver_destroy(original);
+    fs::remove(checkpoint, remove_error);
+    fs::remove(corrupt, remove_error);
+    fs::remove(truncated, remove_error);
+    pc_economy_destroy(economy);
+    pc_session_destroy(session);
+    pc_data_destroy(data);
+}
+
 } // namespace
 
 void run_solver_api_tests(const char* artifact_dir) {
@@ -2683,6 +2868,7 @@ void run_solver_api_tests(const char* artifact_dir) {
     run_public_product_imprint_current_gate(artifact_dir);
     run_public_product_eldritch_gate(artifact_dir);
     run_public_product_reforge_family_gate(artifact_dir);
+    run_development_checkpoint_replay_gate(artifact_dir);
     run_natural_t1_feasibility_gate(artifact_dir);
 }
 

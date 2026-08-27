@@ -1067,6 +1067,64 @@ void pc_solver_destroy(pc_solver_handle solver) {
     delete solver;
 }
 
+pc_result pc_solver_development_checkpoint_save(
+    pc_solver_handle solver,
+    const char* path,
+    const char* caller_identity,
+    pc_error_info* out_error) {
+    if (solver == nullptr || path == nullptr || caller_identity == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (solver->solve_work != nullptr) {
+        set_error(
+            out_error, PC_RESULT_INVALID_ARGUMENT,
+            "development checkpoint save requires no active stepped solve");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    try {
+        solver->calc->save_development_solve_checkpoint(
+            path, caller_identity);
+        clear_error(out_error);
+        return PC_RESULT_OK;
+    } catch (const std::invalid_argument& ex) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, ex.what());
+        return PC_RESULT_INVALID_ARGUMENT;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INTERNAL_ERROR, ex.what());
+        return PC_RESULT_INTERNAL_ERROR;
+    }
+}
+
+pc_result pc_solver_development_checkpoint_load(
+    pc_solver_handle solver,
+    const char* path,
+    const char* caller_identity,
+    pc_error_info* out_error) {
+    if (solver == nullptr || path == nullptr || caller_identity == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (solver->solve_work != nullptr || solver->solved.has_value()) {
+        set_error(
+            out_error, PC_RESULT_INVALID_ARGUMENT,
+            "development checkpoint load requires a fresh solver handle");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    try {
+        solver->calc->load_development_solve_checkpoint(
+            path, caller_identity);
+        clear_error(out_error);
+        return PC_RESULT_OK;
+    } catch (const std::invalid_argument& ex) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, ex.what());
+        return PC_RESULT_INVALID_ARGUMENT;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INTERNAL_ERROR, ex.what());
+        return PC_RESULT_INTERNAL_ERROR;
+    }
+}
+
 pc_result pc_solver_action_count(
     pc_solver_handle solver,
     uint32_t* out_count,

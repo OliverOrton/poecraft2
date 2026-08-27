@@ -958,6 +958,22 @@ class CalcContext {
         std::shared_ptr<SolveTransitionCache> cache) {
         solve_transition_cache_ = std::move(cache);
     }
+    /* Native-development iteration aid. The caller identity must bind the
+     * exact artifact, goal, start item, prices, and SolveOptions. The format
+     * intentionally restores only a completed coarse transition closure;
+     * Bellman/refinement/compilation still run normally after load. */
+    void save_development_solve_checkpoint(
+        const std::string& path,
+        std::string_view caller_identity) const;
+    void load_development_solve_checkpoint(
+        const std::string& path,
+        std::string_view expected_caller_identity);
+    bool development_checkpoint_replay_required() const {
+        return development_checkpoint_replay_required_;
+    }
+    void complete_development_checkpoint_replay() {
+        development_checkpoint_replay_required_ = false;
+    }
 
   private:
     std::shared_ptr<const SessionImpl> session_;
@@ -967,6 +983,7 @@ class CalcContext {
     std::vector<std::uint32_t> candidates_;
     std::vector<PlannerOperator> operators_;
     std::vector<std::uint32_t> candidate_operators_;
+    std::size_t initial_operator_count_ = 0;
     std::size_t static_candidate_operator_count_ = 0;
     /* Presence is a completeness certificate. Resource-deferred batches are
      * deliberately never inserted, so a later solve can safely retry the
@@ -1078,6 +1095,12 @@ class CalcContext {
     ActionControlSummary action_control_;
     std::unordered_map<std::uint64_t, std::uint8_t> telemetry_rows_;
     std::shared_ptr<SolveTransitionCache> solve_transition_cache_;
+    /* load_development_solve_checkpoint is called before SolveWork. Preserve
+     * its price-bound admission map/cache through exactly that work object's
+     * initial telemetry reset; every ordinary later solve keeps the existing
+     * price-scoped invalidation rule. */
+    bool development_checkpoint_replay_pending_ = false;
+    bool development_checkpoint_replay_required_ = false;
     std::unique_ptr<CalcContext> automatic_comparison_context_;
     struct AutomaticAdmissionContext {
         std::unique_ptr<CalcContext> context;

@@ -48,6 +48,8 @@ struct Arguments {
     fs::path output;
     fs::path partial_output;
     fs::path strategy_output;
+    fs::path development_checkpoint_save;
+    fs::path development_checkpoint_load;
     std::string case_id;
     bool validate_only = false;
     bool skip_verification = false;
@@ -2699,6 +2701,9 @@ CaseResult run_case(
     const std::uint32_t max_discovered_states_override,
     const bool exact_strategy_evaluation,
     const double exact_strategy_evaluation_time_limit_seconds,
+    const fs::path& development_checkpoint_save,
+    const fs::path& development_checkpoint_load,
+    const std::string& development_checkpoint_identity_prefix,
     const std::function<void(const CaseResult&)>& checkpoint) {
     CaseResult report;
     report.verification_skipped = skip_verification;
@@ -2899,10 +2904,31 @@ CaseResult run_case(
                 poecraft::solver::
                     kRawStrictReforgeOracleDiagnosticFlag;
         }
+        const std::string development_checkpoint_identity =
+            development_checkpoint_identity_prefix +
+            "\ncase=" + json_of(specification) +
+            "\nresolved_economy=" + load_case_economy_json(specification) +
+            "\ngoal_progress_gated_reforges_override=" +
+            (goal_progress_gated_reforges ? "1" : "0") +
+            "\nmax_discovered_states_override=" +
+            std::to_string(max_discovered_states_override);
         const std::uint32_t work_items =
             optional_u32(caps, "solve_step_work_items", 1);
         pc_error_info error;
         pc_error_info_init(&error);
+        if (!development_checkpoint_load.empty()) {
+            const std::string checkpoint_path =
+                fs::absolute(development_checkpoint_load).string();
+            const pc_result load_result =
+                pc_solver_development_checkpoint_load(
+                    handles.solver, checkpoint_path.c_str(),
+                    development_checkpoint_identity.c_str(), &error);
+            if (load_result != PC_RESULT_OK) {
+                throw std::runtime_error(api_error(
+                    "pc_solver_development_checkpoint_load", load_result,
+                    error));
+            }
+        }
         const auto solve_begin = Clock::now();
         pc_result result = pc_solver_solve_begin(
             handles.solver, &start_item, handles.economy, &solve_options,
@@ -3171,6 +3197,18 @@ CaseResult run_case(
                                                    error));
             }
             report.has_solve_summary = true;
+            if (!development_checkpoint_save.empty()) {
+                const std::string checkpoint_path =
+                    fs::absolute(development_checkpoint_save).string();
+                result = pc_solver_development_checkpoint_save(
+                    handles.solver, checkpoint_path.c_str(),
+                    development_checkpoint_identity.c_str(), &error);
+                if (result != PC_RESULT_OK) {
+                    throw std::runtime_error(api_error(
+                        "pc_solver_development_checkpoint_save", result,
+                        error));
+                }
+            }
             report.solve_result_class =
                 solve_result_class(report.solve_summary);
             report.telemetry_json =
@@ -4766,6 +4804,14 @@ Arguments parse_arguments(int argc, char** argv) {
         else if (argument == "--strategy-output") {
             args.strategy_output = value("--strategy-output");
         }
+        else if (argument == "--save-development-checkpoint") {
+            args.development_checkpoint_save =
+                value("--save-development-checkpoint");
+        }
+        else if (argument == "--load-development-checkpoint") {
+            args.development_checkpoint_load =
+                value("--load-development-checkpoint");
+        }
         else if (argument == "--case") args.case_id = value("--case");
         else if (argument == "--validate-only") args.validate_only = true;
         else if (argument == "--progress") args.emit_progress = true;
@@ -4828,6 +4874,17 @@ Arguments parse_arguments(int argc, char** argv) {
     if (!args.partial_output.empty() && args.case_id.empty()) {
         throw std::runtime_error(
             "--partial-output requires exactly one selected --case");
+    }
+    if ((!args.development_checkpoint_save.empty() ||
+         !args.development_checkpoint_load.empty()) &&
+        args.case_id.empty()) {
+        throw std::runtime_error(
+            "development checkpoint save/load requires exactly one selected --case");
+    }
+    if (!args.development_checkpoint_save.empty() &&
+        !args.development_checkpoint_load.empty()) {
+        throw std::runtime_error(
+            "development checkpoint save and load are mutually exclusive");
     }
     return args;
 }
@@ -4912,6 +4969,11 @@ int main(int argc, char** argv) {
             throw std::runtime_error(api_error("pc_data_load_file", load_result,
                                                error));
         }
+        const std::string development_checkpoint_identity_prefix =
+            "solver_development_graph_v1\nabi=" +
+            std::to_string(pc_abi_version()) +
+            "\ncompiler=" + compiler_name() +
+            "\nartifact=" + json_of(artifact_json);
 
         std::vector<Value> specifications;
         specifications.reserve(case_paths.array.size());
@@ -5059,6 +5121,9 @@ int main(int argc, char** argv) {
                     args.max_discovered_states_override,
                     args.exact_strategy_evaluation,
                     args.exact_strategy_evaluation_time_limit_seconds,
+                    args.development_checkpoint_save,
+                    args.development_checkpoint_load,
+                    development_checkpoint_identity_prefix,
                     checkpoint);
                 if (!first) output << ",\n";
                 first = false;

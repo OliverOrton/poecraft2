@@ -2,6 +2,7 @@
 
 #include "solver_model.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <limits>
@@ -141,6 +142,16 @@ public:
         return false;
     }
 
+    void discard_row_references_outside(
+            const std::uint64_t retained_row_count) {
+        for (auto& [unused_key, entry] : entries_) {
+            (void)unused_key;
+            if (entry.row_index >= retained_row_count) {
+                entry.row_index = std::numeric_limits<std::uint64_t>::max();
+            }
+        }
+    }
+
     void queue(
             const std::uint32_t state,
             const std::uint32_t operator_index,
@@ -247,6 +258,31 @@ public:
 
     const Map& entries() const { return entries_; }
     std::uint64_t transition_count() const { return transition_count_; }
+
+    void restore_checkpoint(
+            const bool restored_scheduler_view_enabled,
+            const std::uint64_t restored_transition_count,
+            Map restored_entries) {
+        std::uint64_t max_revision = 0;
+        for (const auto& [stored_key, entry] : restored_entries) {
+            if (stored_key != key(entry.state, entry.operator_index) ||
+                entry.lifecycle == ActionEnvelopeState::Count ||
+                entry.lane == ActionEnvelopeLane::Count ||
+                entry.authority == ActionEnvelopeProofAuthority::Count ||
+                entry.stop_owner == ActionEnvelopeStopOwner::Count) {
+                throw std::invalid_argument(
+                    "invalid checkpoint action-envelope entry");
+            }
+            max_revision = std::max(max_revision, entry.revision);
+        }
+        if (restored_transition_count < max_revision) {
+            throw std::invalid_argument(
+                "checkpoint action-envelope revision exceeds transition count");
+        }
+        scheduler_view_enabled = restored_scheduler_view_enabled;
+        transition_count_ = restored_transition_count;
+        entries_ = std::move(restored_entries);
+    }
 
     std::array<std::uint64_t, kStateCount> state_counts() const {
         std::array<std::uint64_t, kStateCount> counts{};

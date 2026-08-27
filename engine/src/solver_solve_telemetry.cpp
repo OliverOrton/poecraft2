@@ -1094,6 +1094,7 @@ std::uint64_t SolveTransitionCache::shallow_estimated_owned_bytes() const {
                  sizeof(AutomaticCandidateRecord);
         bytes += product_fracture_rows.capacity() *
                  sizeof(ProductFractureRowWitness);
+        bytes += action_envelope_ledger.estimated_owned_bytes();
         return bytes;
     }
 

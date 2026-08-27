@@ -82,6 +82,24 @@ pc_result pc_solver_create(
 
 void pc_solver_destroy(pc_solver_handle solver);
 
+/* Native-development graph checkpoint/replay. These functions are not
+ * exported by the release WASM module and checkpoints have no publication or
+ * exactness authority. `caller_identity` must exactly bind the artifact,
+ * goal, start item, economy, and solve options used by the harness. Save is
+ * available only after a complete reusable coarse closure exists; load must
+ * occur before beginning the replacement solve. */
+pc_result pc_solver_development_checkpoint_save(
+    pc_solver_handle solver,
+    const char* path,
+    const char* caller_identity,
+    pc_error_info* out_error);
+
+pc_result pc_solver_development_checkpoint_load(
+    pc_solver_handle solver,
+    const char* path,
+    const char* caller_identity,
+    pc_error_info* out_error);
+
 /* --- action registry introspection ------------------------------------------ */
 
 pc_result pc_solver_action_count(

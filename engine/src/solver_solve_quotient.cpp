@@ -713,6 +713,12 @@ void SolveWork::Impl::build_quotient_graph(
         quotient->max_diagnostic_samples = strict->max_diagnostic_samples;
         quotient->full_evidence = strict->full_evidence;
         quotient->kernel_reuse = strict->kernel_reuse;
+        quotient->goal_progress_gated_reforges =
+            strict->goal_progress_gated_reforges;
+        quotient->consider_imprint_programs =
+            strict->consider_imprint_programs;
+        quotient->allow_economic_restart =
+            strict->allow_economic_restart;
         quotient->discovered_states = strict_count;
         quotient->strict_discovered_states = strict_count;
         quotient->quotient_states = class_count;

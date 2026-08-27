@@ -282,7 +282,10 @@ void SolveWork::Impl::prepare_iteration() {
                 queue.empty() && !focused_bound_proved &&
                 !price_bound_state_pruning) {
                 transition_cache->focused_partial = focused_mode;
+                transition_cache->action_envelope_ledger =
+                    action_envelope_ledger;
                 calc.retain_solve_transition_cache(transition_cache);
+                transition_cache_reusable = true;
             }
             kernel_rows_by_hash.clear();
             kernel_rows_by_hash.rehash(0);

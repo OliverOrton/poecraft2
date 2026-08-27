@@ -492,8 +492,12 @@ SolveWork::Impl::Impl(
                 static_cast<std::int32_t>(i);
         }
         const auto& cached = calc.solve_transition_cache();
-        if (cached != nullptr &&
-            cached->compatible(result.start_state, operators, options)) {
+        const std::string cache_mismatch =
+            cached == nullptr
+                ? "missing_cache"
+                : cached->compatibility_mismatch(
+                      result.start_state, operators, options);
+        if (cached != nullptr && cache_mismatch.empty()) {
             transition_cache = cached;
             expanded_count = transition_cache->expanded_states;
             expanded = transition_cache->expanded;
@@ -501,8 +505,17 @@ SolveWork::Impl::Impl(
                 transition_cache->behavioral_representative_by_state;
             focused_mode = transition_cache->focused_partial;
             cache_pending = !focused_mode;
+            transition_cache_reusable = true;
+            action_envelope_ledger =
+                transition_cache->action_envelope_ledger;
             result.diagnostics.transition_cache_reused = true;
+            calc.complete_development_checkpoint_replay();
         } else {
+            if (calc.development_checkpoint_replay_required()) {
+                throw std::runtime_error(
+                    "loaded development checkpoint was not reusable: " +
+                    cache_mismatch);
+            }
             transition_cache = std::make_shared<SolveTransitionCache>();
             transition_cache->exact_quotient = !options.strict_states;
             transition_cache->start_state = result.start_state;
