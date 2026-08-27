@@ -1692,13 +1692,14 @@ const OutcomeDistribution& CalcContext::outcomes(
     std::uint32_t state_id,
     std::uint32_t action_index,
     bool goal_progress_gated) {
+    const ActionDescriptor& action =
+        registry_.actions.at(action_index);
+    const bool ordinary_renewal =
+        !action.synthetic &&
+        action_transition_facts(action.params.type).renewal;
     goal_progress_gated =
-        goal_progress_gated &&
-        action_transition_facts(
-            registry_.actions.at(action_index).params.type).renewal;
-    if (use_factored_terminal_reforge_ &&
-        action_transition_facts(
-            registry_.actions.at(action_index).params.type).renewal) {
+        goal_progress_gated && ordinary_renewal;
+    if (use_factored_terminal_reforge_ && ordinary_renewal) {
         std::shared_ptr<const OutcomeDistribution> completed;
         while (!advance_outcomes(
             state_id, action_index, goal_progress_gated, completed,
@@ -1784,8 +1785,9 @@ bool CalcContext::advance_outcomes(
     const ActionDescriptor& action = registry_.actions.at(action_index);
     const ActionTransitionFacts facts =
         action_transition_facts(action.params.type);
-    goal_progress_gated = goal_progress_gated && facts.renewal;
-    if (!facts.renewal || !use_factored_terminal_reforge_) {
+    const bool ordinary_renewal = !action.synthetic && facts.renewal;
+    goal_progress_gated = goal_progress_gated && ordinary_renewal;
+    if (!ordinary_renewal || !use_factored_terminal_reforge_) {
         const OutcomeDistribution& value =
             outcomes(state_id, action_index, goal_progress_gated);
         const std::uint64_t key = distribution_cache_key(
@@ -2207,10 +2209,11 @@ void CalcContext::release_outcome(
     const std::uint32_t state_id,
     const std::uint32_t action_index,
     bool goal_progress_gated) {
+    const ActionDescriptor& action =
+        registry_.actions.at(action_index);
     goal_progress_gated =
-        goal_progress_gated &&
-        action_transition_facts(
-            registry_.actions.at(action_index).params.type).renewal;
+        goal_progress_gated && !action.synthetic &&
+        action_transition_facts(action.params.type).renewal;
     const std::uint64_t key = distribution_cache_key(
         state_id, action_index, goal_progress_gated);
     account_distribution_cache_erase(key);
@@ -2222,10 +2225,11 @@ void CalcContext::release_published_outcome_storage(
     const std::uint32_t action_index,
     bool goal_progress_gated,
     const bool retain_stable_shared_kernel) {
+    const ActionDescriptor& action =
+        registry_.actions.at(action_index);
     goal_progress_gated =
-        goal_progress_gated &&
-        action_transition_facts(
-            registry_.actions.at(action_index).params.type).renewal;
+        goal_progress_gated && !action.synthetic &&
+        action_transition_facts(action.params.type).renewal;
     const std::uint64_t key = distribution_cache_key(
         state_id, action_index, goal_progress_gated);
     const auto cached = distribution_cache_.find(key);

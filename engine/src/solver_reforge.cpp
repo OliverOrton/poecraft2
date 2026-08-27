@@ -676,7 +676,10 @@ bool CalcContext::exact_reforge_kernel_signature(
     out_signature.clear();
     if (action_index >= registry_.actions.size()) return false;
     const ActionDescriptor& action = registry_.actions[action_index];
-    if (!action_transition_facts(action.params.type).renewal) return false;
+    if (action.synthetic ||
+        !action_transition_facts(action.params.type).renewal) {
+        return false;
+    }
     pc_item_state item;
     if (!materialize(state_id, item)) return false;
     out_signature = reforge_base_observation(

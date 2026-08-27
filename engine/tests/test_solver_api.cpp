@@ -837,8 +837,8 @@ void run_public_product_eldritch_gate(const char* artifact_dir) {
     PC_CHECK(create_telemetry.find("\"layout_primitives\":19") !=
              std::string::npos);
     PC_CHECK(create_telemetry.find(
-                 "\"fossil_loadouts\":{\"possible\":15275,"
-                 "\"generated\":0,\"deferred\":15275") !=
+                 "\"fossil_loadouts\":{\"possible\":12950,"
+                 "\"generated\":0,\"deferred\":12950") !=
              std::string::npos);
     PC_CHECK(create_telemetry.find(
                  "\"filtered_corruption_only_essence\":4") !=
@@ -1494,8 +1494,8 @@ void run_public_product_reforge_family_gate(const char* artifact_dir) {
         PC_CHECK(telemetry.find("\"layout_primitives\":17") !=
                  std::string::npos);
         PC_CHECK(telemetry.find(
-                     "\"fossil_loadouts\":{\"possible\":15275,"
-                     "\"generated\":4,\"deferred\":15271") !=
+                     "\"fossil_loadouts\":{\"possible\":12950,"
+                     "\"generated\":4,\"deferred\":12946") !=
                  std::string::npos);
         PC_CHECK(telemetry.find("filtered_corruption_only_essence") !=
                  std::string::npos);
