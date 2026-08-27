@@ -2788,7 +2788,20 @@ SolveWork::Impl::run_publication_pipeline() {
         };
         bool skip_strict_lift = false;
         bool direct_certification_requires_strict_lift = false;
-        if (unverified_selected_policy_candidate.has_value()) {
+        const bool defer_selected_snapshot_for_closed_exact_path =
+            unverified_selected_policy_candidate.has_value() &&
+            closed_coarse_exact_path_defers_selected_snapshot(
+                coarse_discovery_closed, result.policy_available);
+        if (defer_selected_snapshot_for_closed_exact_path) {
+            PolicyRefinementTelemetry& telemetry =
+                result.diagnostics.policy_refinement;
+            telemetry.selected_candidate_status =
+                "deferred_to_closed_coarse_exact_path";
+            telemetry.selected_candidate_failure_reason =
+                "pre-extraction selected policy was not certified before "
+                "the current direct policy and strict global closure";
+            unverified_selected_policy_candidate.reset();
+        } else if (unverified_selected_policy_candidate.has_value()) {
             PolicyRefinementTelemetry& telemetry =
                 result.diagnostics.policy_refinement;
             UnverifiedSelectedPolicyCandidate& selected =
@@ -4252,10 +4265,12 @@ SolveWork::Impl::run_publication_pipeline() {
              * WASM step never owns both proof stages' completion work. */
             phase = SolvePhase::Refining;
             co_await solve_detail::CooperativeCheckpoint{};
-            /* Final-graph verification of already retained fallbacks happens
-             * before optional strict work so a later lift cannot consume the
-             * remaining allowance and erase an executable candidate. */
-            {
+            /* A strict lift needs one independently evaluated executable
+             * fallback, not eager verification of every retained estimate.
+             * Preserve the old safeguard only when no verified fallback is
+             * available; otherwise start exact proof work immediately. */
+            if (strict_lift_requires_eager_fallback_verification(
+                    best_current_certified_fallback() != nullptr)) {
                 auto verification = verify_retained_portfolio();
                 while (!verification.resume()) {
                     co_await solve_detail::CooperativeCheckpoint{
@@ -5048,7 +5063,8 @@ SolveWork::Impl::run_publication_pipeline() {
                         certificate.global_lower_bound_closed &&
                         certificate.compiled.cost_reconciled &&
                         std::isfinite(exact_policy_cost);
-                    {
+                    if (strict_result_requires_fallback_cost_comparison(
+                            globally_exact)) {
                         auto verification = verify_retained_portfolio();
                         while (!verification.resume()) {
                             co_await solve_detail::CooperativeCheckpoint{

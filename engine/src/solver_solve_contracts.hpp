@@ -148,6 +148,35 @@ inline bool closed_coarse_candidate_requires_strict_lift(
            !publication_already_final;
 }
 
+inline bool strict_lift_requires_eager_fallback_verification(
+        const bool verified_executable_fallback_available) {
+    /* Strict work can fail or exhaust its allowance without publishing a
+     * partial proof. It therefore needs one independently evaluated executable
+     * fallback, not eager evaluation of every retained estimate. When that
+     * authority already exists, starting the lift cannot erase it. */
+    return !verified_executable_fallback_available;
+}
+
+inline bool strict_result_requires_fallback_cost_comparison(
+        const bool globally_exact) {
+    /* A globally closed strict Bellman envelope proves that no requested
+     * executable policy is cheaper. Unverified retained estimates cannot
+     * displace that authority and need no final-graph evaluation. Bounded
+     * strict results still compare independently evaluated uppers. */
+    return !globally_exact;
+}
+
+inline bool closed_coarse_exact_path_defers_selected_snapshot(
+        const bool coarse_discovery_closed,
+        const bool current_policy_available) {
+    /* A pre-extraction snapshot is an executable-upper opportunity only. Once
+     * the coarse state/action envelope is fully closed, the current extracted
+     * policy is the source for direct assertion and (when needed) strict
+     * global closure. Certifying an older snapshot first cannot close the
+     * lower and can consume most of the exact-proof wall budget. */
+    return coarse_discovery_closed && current_policy_available;
+}
+
 /*
  * Bounded refinement preserves the coarse solve's genuine stopping cause. A
  * globally exact strict envelope is a new closure proof and supersedes that

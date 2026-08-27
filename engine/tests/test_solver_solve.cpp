@@ -435,6 +435,27 @@ void run_certified_fallback_contract_tests() {
     using solve_detail::CertifiedFallbackContract;
     using solve_detail::CertifiedFallbackCurrentContext;
 
+    PC_CHECK(
+        strict_lift_requires_eager_fallback_verification(
+            false));
+    PC_CHECK(
+        !strict_lift_requires_eager_fallback_verification(
+            true));
+    PC_CHECK(
+        strict_result_requires_fallback_cost_comparison(
+            false));
+    PC_CHECK(
+        !strict_result_requires_fallback_cost_comparison(
+            true));
+    PC_CHECK(!closed_coarse_exact_path_defers_selected_snapshot(
+        false, false));
+    PC_CHECK(!closed_coarse_exact_path_defers_selected_snapshot(
+        false, true));
+    PC_CHECK(!closed_coarse_exact_path_defers_selected_snapshot(
+        true, false));
+    PC_CHECK(closed_coarse_exact_path_defers_selected_snapshot(
+        true, true));
+
     CertifiedFallbackCurrentContext current;
     current.goal_identity = 11;
     current.economy_identity = 12;
