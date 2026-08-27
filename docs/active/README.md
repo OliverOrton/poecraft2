@@ -1,15 +1,16 @@
 # Active Work
 
-**Status: no active implementation boundary.**
+**Status: one active implementation boundary.**
 
 Parent: [Documentation map](../README.md)
 
 ## Current boundary
 
-No boundary is active. Oliver must select the next chunk before implementation
-resumes. The latest completed boundary is
-[Solver Quality Measurement, Refinement, And Debt Retirement](../archive/2026-08-26-solver-quality-debt-retirement/README.md).
-See [HANDOFF](../../HANDOFF.md) for its retained result.
+[Exact Same-Side Closure](2026-08-26-exact-same-side-closure/README.md) is
+active from checkpoint `9ae5a1d`. It first repairs the stale transition-row
+frontier crash, then makes current-contract clean three-prefix and three-suffix
+goals exact before probing the four-mod boundary. See
+[HANDOFF](../../HANDOFF.md) for the live checkpoint.
 
 ## Historical work
 

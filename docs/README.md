@@ -30,10 +30,19 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
+The active
+[Exact Same-Side Closure](active/2026-08-26-exact-same-side-closure/README.md)
+boundary begins from clean checkpoint `9ae5a1d`. Its first stabilization target
+is the reproduced stale transition-row crash during reachable-incumbent
+construction. Its primary product target is genuine `exact_closed` publication
+for one clean exact three-prefix and one clean exact three-suffix goal under the
+current junk-free terminal contract. Focused native witnesses precede any
+broad benchmark work.
+
 The completed
 [Solver Quality Measurement, Refinement, And Debt Retirement](archive/2026-08-26-solver-quality-debt-retirement/README.md)
 boundary began from clean checkpoint `ec3fbd3` and completed Gates -1 through
-8 on 2026-08-26. No implementation boundary is active. The
+8 on 2026-08-26. The
 Calculator, benchmark runners, and diagnostic ladder now select the versioned
 native `calculator_product_v1` behavior bundle instead of copying low-level
 defaults across layers. Its completed

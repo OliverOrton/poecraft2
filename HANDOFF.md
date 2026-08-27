@@ -1,9 +1,32 @@
 # Handoff
 
-**Status: no active implementation boundary.** The completed
+**Status: active implementation boundary.** Oliver selected
+[Exact Same-Side Closure](docs/active/2026-08-26-exact-same-side-closure/README.md)
+on 2026-08-26 from clean checkpoint `9ae5a1d`. The active objective is genuine
+current-contract exact closure for a clean three-prefix and a clean
+three-suffix item, after repairing the reproduced stale transition-row
+frontier crash. Focused native witnesses come before broad benchmark work.
+
+The active [plan](docs/active/2026-08-26-exact-same-side-closure/plan.md) is the
+only sequencing authority. The August 14 three-prefix exact result is retained
+as prior art but predates the junk-free exact-explicit-affix terminal contract;
+it is not current acceptance evidence.
+
+## Active checkpoint
+
+- Branch: `main`, local-only.
+- Source checkpoint: `9ae5a1d` (`Complete solver quality debt milestone`).
+- Gate 0 root cause is reproduced and source-confirmed: reachable-incumbent
+  construction can request a newly discovered frontier state beyond
+  `transition_cache.state_rows`, throwing `vector::_M_range_check` before the
+  existing certified-boundary/grow-in-place path can handle the missing row.
+- No active-boundary source change has landed yet.
+
+## Previous completed boundary
+
+The completed
 [Solver Quality Measurement, Refinement, And Debt Retirement](docs/archive/2026-08-26-solver-quality-debt-retirement/README.md)
-milestone is archived. Oliver must select the next chunk before implementation
-resumes.
+milestone is archived.
 
 The completed boundary began from clean checkpoint `ec3fbd3`. Gates -1 through 8
 are complete. The versioned Calculator-profile clean/partial 1-to-5 ladder is
