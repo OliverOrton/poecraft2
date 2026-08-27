@@ -685,7 +685,9 @@ bool CalcContext::exact_reforge_kernel_signature(
     return true;
 }
 
-std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
+solve_detail::CooperativeTask<
+    std::shared_ptr<const OutcomeDistribution>>
+CalcContext::evaluate_reforge_cooperatively(
     std::uint32_t state_id,
     std::uint32_t action_index,
     const bool goal_progress_gated) {
@@ -709,7 +711,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     if (!materialize(state_id, item)) {
         ++telemetry_.reforge_misses;
         telemetry_timer.miss = true;
-        return std::make_shared<OutcomeDistribution>(std::move(result));
+        co_return std::make_shared<OutcomeDistribution>(std::move(result));
     }
 
     /* --- preserved base: fractured slots and locked sides ----------------- */
@@ -773,7 +775,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                             telemetry_.reforge_row_samples_omitted, 1);
                     }
                 }
-                return candidate.distribution;
+                co_return candidate.distribution;
             }
         }
     }
@@ -886,6 +888,21 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     std::uint64_t stationary_reforge_scratch_bytes = 0;
     std::uint64_t active_frontier_scratch_bytes = 0;
     std::uint64_t availability_scratch_bytes = 0;
+    std::uint64_t cooperative_reforge_units = 0;
+    const auto retained_reforge_scratch_bytes = [&]() {
+        std::uint64_t retained = stationary_reforge_scratch_bytes;
+        retained = saturated_add(retained, active_frontier_scratch_bytes);
+        retained = saturated_add(retained, availability_scratch_bytes);
+        retained = saturated_add(
+            retained, terminal_attribution_scratch_bytes);
+        retained = saturated_add(retained, factored_terminal_scratch_bytes);
+        retained = saturated_add(
+            retained,
+            unordered_storage_bytes(
+                outcome_preflight_entries,
+                sizeof(decltype(outcome_acc)::value_type)));
+        return retained;
+    };
     const auto accumulate_outcome =
         [&](const std::uint32_t state,
             const double probability) -> bool {
@@ -1149,14 +1166,14 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 session.essence_guaranteed_mod_ids.size() ||
             session.essence_guaranteed_mod_ids[action.params.essence_index] ==
                 kNoId) {
-            return unapplied();
+            co_return unapplied();
         }
         directs.push_back(
             session.essence_guaranteed_mod_ids[action.params.essence_index]);
     } else if (action.params.type == ActionType::Fossil) {
         for (std::uint32_t fossil : action.params.fossil_indices) {
             if (fossil >= session.fossil_forced_mod_ids.size()) {
-                return unapplied();
+                co_return unapplied();
             }
             directs.insert(directs.end(),
                            session.fossil_forced_mod_ids[fossil].begin(),
@@ -1169,7 +1186,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     attribution.forced_modifier_count = directs.size();
     for (std::uint32_t direct : directs) {
         if (!direct_add(session, base, direct)) {
-            return unapplied();
+            co_return unapplied();
         }
     }
 
@@ -2997,7 +3014,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
              b < static_cast<std::uint16_t>(buckets.size()); ++b) {
             total += guaranteed_remaining(b);
         }
-        if (total <= 0.0) return unapplied();
+        if (total <= 0.0) co_return unapplied();
         const auto add_guaranteed_branch =
             [&](const std::uint16_t b) {
                 const double remaining = guaranteed_remaining(b);
@@ -3030,6 +3047,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         }
     }
     for (int depth = first_depth; depth <= max_target; ++depth) {
+        co_await solve_detail::CooperativeCheckpoint{
+            retained_reforge_scratch_bytes()};
         const auto exact = targets.find(depth);
         const double stop_here =
             exact != targets.end() ? exact->second : 0.0;
@@ -3175,6 +3194,10 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                         "reforge factored terminal preflight identity "
                         "collision");
                 }
+                if ((++cooperative_reforge_units & 0xffu) == 0) {
+                    co_await solve_detail::CooperativeCheckpoint{
+                        retained_reforge_scratch_bytes()};
+                }
             }
             telemetry_.reforge_factored_work = saturated_add(
                 telemetry_.reforge_factored_work,
@@ -3192,6 +3215,10 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         }
         std::uint32_t predecessor_sequence = 0;
         for (const auto& [roll, probability] : ordered_frontier) {
+            if ((++cooperative_reforge_units & 0x3fu) == 0) {
+                co_await solve_detail::CooperativeCheckpoint{
+                    retained_reforge_scratch_bytes()};
+            }
             credit_effort(effort.frontier_nodes);
             const std::uint32_t current_predecessor_sequence =
                 predecessor_sequence++;
@@ -3622,6 +3649,10 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             }
             for (const FactoredTerminalCandidate& candidate :
                  factored_terminal_candidates) {
+                if ((++cooperative_reforge_units & 0x3fu) == 0) {
+                    co_await solve_detail::CooperativeCheckpoint{
+                        retained_reforge_scratch_bytes()};
+                }
                 long double probability_mass = 0.0L;
                 std::uint64_t recurrence_terms = 0;
                 for (std::uint8_t pick = 0;
@@ -3726,6 +3757,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         }
         frontier_preflight_entries =
             next_preflight_entries;
+        co_await solve_detail::CooperativeCheckpoint{
+            retained_reforge_scratch_bytes()};
     }
     attribution.frontier_build_ns = elapsed_ns(frontier_started);
 
@@ -3733,7 +3766,17 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
      * retains the distribution object. Unretained exact distributions fall
      * back to the collision-checked content hash in SolveWork; advertising a
      * temporary object's address would leave a dangling identity key. */
-    return finalize(true);
+    co_return finalize(true);
+}
+
+std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
+    const std::uint32_t state_id,
+    const std::uint32_t action_index,
+    const bool goal_progress_gated) {
+    auto task = evaluate_reforge_cooperatively(
+        state_id, action_index, goal_progress_gated);
+    while (!task.resume()) {}
+    return task.take_result();
 }
 
 } // namespace solver

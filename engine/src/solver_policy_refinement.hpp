@@ -46,6 +46,12 @@ struct PolicyLiftAdapterTelemetry {
     std::uint64_t strict_reforge_evaluator_work_v1 = 0;
     std::uint64_t strict_reforge_evaluator_work_v2 = 0;
     std::uint64_t strict_reforge_evaluator_work_v3 = 0;
+    std::uint64_t strict_reforge_continuation_resumes = 0;
+    std::uint64_t strict_reforge_continuation_suspensions = 0;
+    std::uint64_t strict_reforge_continuation_completions = 0;
+    std::uint64_t strict_reforge_continuation_cancellations = 0;
+    std::uint64_t strict_reforge_continuation_max_slice_ns = 0;
+    std::uint64_t strict_reforge_continuation_max_retained_bytes = 0;
     ReforgeEffortBreakdown strict_reforge_effort;
     std::vector<ReforgeRowTelemetry> strict_reforge_row_samples;
     std::uint64_t strict_reforge_row_samples_omitted = 0;

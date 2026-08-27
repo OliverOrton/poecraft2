@@ -3290,6 +3290,26 @@ std::string serialize_solver_telemetry(
             refinement.strict_reforge_effort,
             refinement.strict_reforge_row_samples,
             refinement.strict_reforge_row_samples_omitted);
+        json += ",\"row_continuation\":{\"resumes\":" +
+                std::to_string(
+                    refinement.strict_reforge_continuation_resumes);
+        json += ",\"suspensions\":" +
+                std::to_string(
+                    refinement.strict_reforge_continuation_suspensions);
+        json += ",\"completions\":" +
+                std::to_string(
+                    refinement.strict_reforge_continuation_completions);
+        json += ",\"cancellations\":" +
+                std::to_string(
+                    refinement.strict_reforge_continuation_cancellations);
+        json += ",\"max_slice_ns\":" +
+                std::to_string(
+                    refinement.strict_reforge_continuation_max_slice_ns);
+        json += ",\"max_retained_bytes\":" +
+                std::to_string(
+                    refinement
+                        .strict_reforge_continuation_max_retained_bytes) +
+                "}";
         json += ",\"work_to_first_partition\":";
         if (refinement.work_to_first_partition.has_value()) {
             json += std::to_string(*refinement.work_to_first_partition);

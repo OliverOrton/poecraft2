@@ -965,6 +965,24 @@ void merge_adapter_telemetry(
     saturating_add(
         total.strict_reforge_evaluator_work_v3,
         pass.strict_reforge_evaluator_work_v3);
+    saturating_add(
+        total.strict_reforge_continuation_resumes,
+        pass.strict_reforge_continuation_resumes);
+    saturating_add(
+        total.strict_reforge_continuation_suspensions,
+        pass.strict_reforge_continuation_suspensions);
+    saturating_add(
+        total.strict_reforge_continuation_completions,
+        pass.strict_reforge_continuation_completions);
+    saturating_add(
+        total.strict_reforge_continuation_cancellations,
+        pass.strict_reforge_continuation_cancellations);
+    total.strict_reforge_continuation_max_slice_ns = std::max(
+        total.strict_reforge_continuation_max_slice_ns,
+        pass.strict_reforge_continuation_max_slice_ns);
+    total.strict_reforge_continuation_max_retained_bytes = std::max(
+        total.strict_reforge_continuation_max_retained_bytes,
+        pass.strict_reforge_continuation_max_retained_bytes);
     merge_reforge_effort(
         total.strict_reforge_effort,
         pass.strict_reforge_effort);

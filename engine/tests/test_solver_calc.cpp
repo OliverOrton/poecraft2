@@ -241,6 +241,64 @@ bool item_contains_mod(
     return false;
 }
 
+void run_product_dead_feature_reduction_tests() {
+    auto session = make_calc_session();
+    auto data = std::const_pointer_cast<DataImpl>(session->data);
+    data->strings = {
+        "ordinary_test", "Ordinary Test Fossil",
+        "mirror_test", "Mirror Test Fossil"};
+    data->fossil_count = 2;
+    data->fossil_key_sids = {0, 2};
+    data->fossil_name_sids = {1, 3};
+    data->fossil_rolls_lucky = {0, 0};
+    data->fossil_mirrors = {0, 1};
+    data->fossil_weight_offsets = {0, 0, 0};
+    session->fossil_added_mod_ids = {{}, {}};
+    session->fossil_forced_mod_ids = {{}, {}};
+    session->fossil_sell_price_mod_ids = {{}, {}};
+
+    const ActionRegistry registry = build_action_registry(*session);
+    PC_CHECK(registry.index_by_id.contains("fossil:ordinary_test"));
+    PC_CHECK(!registry.index_by_id.contains("fossil:mirror_test"));
+    PC_CHECK(!registry.index_by_id.contains(
+        "fossil:mirror_test+ordinary_test"));
+
+    const GoalSpec goal = family_goal_100();
+    const std::vector<std::uint32_t> actions{
+        registry.index_by_id.at("transmute"),
+        registry.index_by_id.at("alteration"),
+        registry.index_by_id.at("restart")};
+    CalcContext product(
+        session, goal, registry, actions,
+        false, false, false, std::nullopt, {}, true);
+    CalcContext exact(
+        session, goal, registry, actions,
+        false, false, false, std::nullopt, {}, false);
+    pc_item_state clean;
+    pc_item_clear(&clean);
+    pc_item_state mirrored = clean;
+    mirrored.item_flags = PC_ITEM_MIRRORED;
+    pc_item_state synthesised = clean;
+    synthesised.item_flags = PC_ITEM_SYNTHESISED;
+    const std::uint32_t clean_product = product.intern_item(clean);
+    PC_CHECK(product.intern_item(mirrored) == clean_product);
+    PC_CHECK(product.intern_item(synthesised) == clean_product);
+    PC_CHECK(exact.intern_item(mirrored) != exact.intern_item(clean));
+    PC_CHECK(exact.intern_item(synthesised) != exact.intern_item(clean));
+
+    const std::unordered_map<std::string, double> prices{
+        {"transmute", 1.0}, {"alteration", 1.0}, {"base", 1.0}};
+    for (const pc_item_state* rejected : {&mirrored, &synthesised}) {
+        bool rejected_start = false;
+        try {
+            (void)solve(product, *rejected, prices);
+        } catch (const std::invalid_argument&) {
+            rejected_start = true;
+        }
+        PC_CHECK(rejected_start);
+    }
+}
+
 void run_semantic_exclusion_equivalence_tests() {
     auto session = make_calc_session();
     /*
@@ -1138,6 +1196,64 @@ void run_projected_reforge_frontier_equivalence_tests() {
             PC_CHECK(near(probability, reversed->second, 1e-12));
         }
     }
+
+    CalcContext resumed_factored(
+        session, family_goal_100(), registry, actions,
+        false, false, true, std::nullopt, {}, false, {}, false,
+        true, true, false, true);
+    const std::uint32_t resumed_start = resumed_factored.intern_item(rare);
+    std::shared_ptr<const OutcomeDistribution> resumed_distribution;
+    std::uint64_t resume_calls = 0;
+    while (!resumed_factored.advance_outcomes(
+        resumed_start, 0, true, resumed_distribution, 1)) {
+        ++resume_calls;
+        PC_CHECK(resumed_factored.outcome_cursor_bytes() > 0);
+    }
+    ++resume_calls;
+    PC_CHECK(resumed_distribution != nullptr);
+    PC_CHECK(resumed_factored.outcome_cursor_bytes() == 0);
+    PC_CHECK(
+        resumed_factored.telemetry().reforge_continuation_resumes ==
+        resume_calls);
+    PC_CHECK(
+        resumed_factored.telemetry().reforge_continuation_suspensions + 1 ==
+        resume_calls);
+    PC_CHECK(
+        resumed_factored.telemetry().reforge_continuation_completions == 1);
+    const auto resumed_mass = project_distribution(
+        resumed_factored, raw, *resumed_distribution);
+    PC_CHECK(resumed_mass.size() == gated_factored_mass.size());
+    for (const auto& [state, probability] : gated_factored_mass) {
+        const auto found = resumed_mass.find(state);
+        PC_CHECK(found != resumed_mass.end());
+        if (found != resumed_mass.end()) {
+            PC_CHECK(
+                std::bit_cast<std::uint64_t>(probability) ==
+                std::bit_cast<std::uint64_t>(found->second));
+        }
+    }
+
+    CalcContext cancelled_factored(
+        session, family_goal_100(), registry, actions,
+        false, false, true, std::nullopt, {}, false, {}, false,
+        true, true, false, true);
+    const std::uint32_t cancelled_start =
+        cancelled_factored.intern_item(rare);
+    std::shared_ptr<const OutcomeDistribution> cancelled_distribution;
+    PC_CHECK(!cancelled_factored.advance_outcomes(
+        cancelled_start, 0, true, cancelled_distribution, 1));
+    PC_CHECK(cancelled_distribution == nullptr);
+    PC_CHECK(cancelled_factored.outcome_cursor_bytes() > 0);
+    cancelled_factored.cancel_outcomes();
+    PC_CHECK(cancelled_factored.outcome_cursor_bytes() == 0);
+    PC_CHECK(
+        cancelled_factored.telemetry().reforge_continuation_cancellations ==
+        1);
+    while (!cancelled_factored.advance_outcomes(
+        cancelled_start, 0, true, cancelled_distribution, 1)) {}
+    PC_CHECK(cancelled_distribution != nullptr);
+    PC_CHECK(
+        cancelled_factored.telemetry().reforge_continuation_completions == 1);
 
     /* Focused Gate 5 V1/V3 contract: compare the exact gated target map for
      * every destructive reforge family with two goal slots. Zero-progress
@@ -3559,6 +3675,7 @@ void run_solver_action_family_contract_tests(const char* artifact_dir) {
 }
 
 void run_solver_calc_tests(const char* artifact_dir) {
+    run_product_dead_feature_reduction_tests();
     run_exact_goal_member_materialization_test();
     run_goal_threshold_tests();
     run_exact_distribution_tests();

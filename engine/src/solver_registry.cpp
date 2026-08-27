@@ -1847,9 +1847,17 @@ void add_fossils(
      * currency, and must not become plannable actions. */
     std::vector<std::uint32_t> fossils;
     for (std::uint32_t i = 0; i < data.fossil_count; ++i) {
-        if (!data.string_at(data.fossil_name_sids[i]).empty()) {
-            fossils.push_back(i);
+        if (data.string_at(data.fossil_name_sids[i]).empty()) continue;
+        /* Mirror-producing Fossils are simulator mechanics, not product
+         * planning actions. A mirrored result admits no useful continuation
+         * in the supported one-item solver and otherwise forces Mirrored to
+         * remain a permanent state dimension. Exclude the primitive before
+         * the fossil beam/powerset is built; native action execution remains
+         * unchanged. */
+        if (i < data.fossil_mirrors.size() && data.fossil_mirrors[i] != 0) {
+            continue;
         }
+        fossils.push_back(i);
     }
 
     const auto choose = [](std::size_t n, std::size_t k) {

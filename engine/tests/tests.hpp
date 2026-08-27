@@ -13,6 +13,7 @@ inline void check(bool condition, const char* file, int line, const char* expr) 
     if (!condition) {
         ++g_failures;
         std::printf("FAIL %s:%d: %s\n", file, line, expr);
+        std::fflush(stdout);
     }
 }
 

@@ -791,6 +791,61 @@
         return row;
     }
 
+    solve_detail::CooperativeTask<bool>
+    quotient_prepare_primitive_row(
+            const ExactState& state,
+            const std::uint32_t operator_index) {
+        const auto known = known_.find(state.stable_key);
+        if (known == known_.end() ||
+            operator_index >= strict_->operators().size()) {
+            co_return false;
+        }
+        const PlannerOperator& planner =
+            strict_->operators().at(operator_index);
+        if (planner.kind != PlannerOperatorKind::Primitive) {
+            co_return true;
+        }
+        const std::uint32_t action = planner.primitive_action;
+        if (!action_transition_facts(
+                strict_->registry().actions.at(action).params.type)
+                 .renewal) {
+            co_return true;
+        }
+        struct CursorGuard {
+            CalcContext* calc = nullptr;
+            bool complete = false;
+            ~CursorGuard() {
+                if (calc != nullptr && !complete) calc->cancel_outcomes();
+            }
+        } guard{strict_.get(), false};
+        std::shared_ptr<const OutcomeDistribution> completed;
+        while (!strict_->advance_outcomes(
+            known->second.strict_state, action,
+            options_.goal_progress_gated_reforges, completed, 1)) {
+            std::uint64_t retained = estimated_owned_bytes();
+            saturating_add(retained, strict_->outcome_cursor_bytes());
+            co_await solve_detail::CooperativeCheckpoint{retained};
+        }
+        guard.complete = true;
+        co_return completed != nullptr;
+    }
+
+    solve_detail::CooperativeTask<
+        std::optional<QuotientOracleCompactRow>>
+    quotient_certify_alternative_descriptor_cooperatively(
+            const ExactState& state,
+            const QuotientAlternativeDescriptor& descriptor) {
+        auto preparation = quotient_prepare_primitive_row(
+            state, descriptor.operator_index);
+        while (!preparation.resume()) {
+            co_await solve_detail::CooperativeCheckpoint{
+                preparation.retained_bytes()};
+        }
+        (void)preparation.take_result();
+        co_return quotient_certify_alternative_descriptor(
+            state, descriptor);
+    }
+
     std::optional<QuotientOracleCompactRow>
     quotient_certify_alternative_descriptor(
             const ExactState& state,
@@ -922,6 +977,25 @@
             "proof-carrying quotient carrier has no certified admitted row");
     }
 
+    solve_detail::CooperativeTask<QuotientOracleCompactRow>
+    quotient_selected_compact_row_cooperatively(
+            const ExactState& state) {
+        if (!state.terminal && !quotient_requires_bootstrap(state)) {
+            const std::optional<SelectedAction> current =
+                selected_action(state);
+            if (current.has_value()) {
+                auto preparation = quotient_prepare_primitive_row(
+                    state, current->action_id);
+                while (!preparation.resume()) {
+                    co_await solve_detail::CooperativeCheckpoint{
+                        preparation.retained_bytes()};
+                }
+                (void)preparation.take_result();
+            }
+        }
+        co_return quotient_selected_compact_row(state);
+    }
+
     std::optional<StableKey> quotient_selected_compact_row_identity(
             const ExactState& state) {
         if (state.terminal) return std::nullopt;
@@ -952,6 +1026,30 @@
             identity->end(), runtime.begin(), runtime.end());
         release_published_kernel_storage(state, *selected);
         return identity;
+    }
+
+    solve_detail::CooperativeTask<std::optional<StableKey>>
+    quotient_selected_compact_row_identity_cooperatively(
+            const ExactState& state) {
+        if (state.terminal || quotient_requires_bootstrap(state)) {
+            co_return std::nullopt;
+        }
+        std::optional<SelectedAction> selected;
+        try {
+            selected = selected_action(state);
+        } catch (const AdapterFailure& error) {
+            if (error.status == PolicyExactLiftStatus::ResourceCap) throw;
+            co_return std::nullopt;
+        }
+        if (!selected.has_value()) co_return std::nullopt;
+        auto preparation = quotient_prepare_primitive_row(
+            state, selected->action_id);
+        while (!preparation.resume()) {
+            co_await solve_detail::CooperativeCheckpoint{
+                preparation.retained_bytes()};
+        }
+        (void)preparation.take_result();
+        co_return quotient_selected_compact_row_identity(state);
     }
 
     void quotient_install_streamed_recipe(

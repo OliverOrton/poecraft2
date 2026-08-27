@@ -52,6 +52,13 @@ std::uint64_t distribution_cache_key(
     return (static_cast<std::uint64_t>(state_id) << 32) | keyed_action;
 }
 
+std::uint64_t steady_now_ns() {
+    return static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now().time_since_epoch())
+            .count());
+}
+
 std::uint64_t selected_string_bytes(const std::string& value) {
     return static_cast<std::uint64_t>(value.capacity() + 1);
 }
@@ -1374,7 +1381,11 @@ std::uint32_t CalcContext::state_count() const {
 }
 
 std::uint32_t CalcContext::intern_item(const pc_item_state& item) {
-    return intern_state(project_item(*session_, layout_, item));
+    AbstractState projected = project_item(*session_, layout_, item);
+    if (product_solver_parent_) {
+        projected.flags &= ~(kFlagMirrored | kFlagSynthesised);
+    }
+    return intern_state(projected);
 }
 
 bool CalcContext::materialize(
@@ -1685,6 +1696,15 @@ const OutcomeDistribution& CalcContext::outcomes(
         goal_progress_gated &&
         action_transition_facts(
             registry_.actions.at(action_index).params.type).renewal;
+    if (use_factored_terminal_reforge_ &&
+        action_transition_facts(
+            registry_.actions.at(action_index).params.type).renewal) {
+        std::shared_ptr<const OutcomeDistribution> completed;
+        while (!advance_outcomes(
+            state_id, action_index, goal_progress_gated, completed,
+            std::numeric_limits<std::uint32_t>::max())) {}
+        return *completed;
+    }
     const std::uint64_t key = distribution_cache_key(
         state_id, action_index, goal_progress_gated);
     ++telemetry_.distribution_requests;
@@ -1715,37 +1735,154 @@ const OutcomeDistribution& CalcContext::outcomes(
                      .first->second.get();
     }
 
-    if (telemetry_rows_.emplace(key, 1).second) {
-        ++telemetry_.state_action_rows;
-        ++family.rows;
-        telemetry_.outcome_entries += result->entries.size();
-        family.raw_outcomes += result->entries.size();
-        telemetry_.choice_groups += result->choice_groups.size();
-        std::uint64_t choice_successors = 0;
-        for (const OutcomeChoiceGroup& group : result->choice_groups) {
-            choice_successors += group.states.size();
-        }
-        telemetry_.choice_successor_entries += choice_successors;
-        telemetry_.transition_entries +=
-            result->choice_groups.empty()
-                ? result->entries.size()
-                : choice_successors;
-        family.transitions += result->choice_groups.empty()
-                                  ? result->entries.size()
-                                  : choice_successors;
-        std::uint64_t selected_bytes = sizeof(OutcomeDistribution);
-        selected_bytes += result->entries.capacity() * sizeof(OutcomeEntry);
-        selected_bytes += result->choice_groups.capacity() *
-                          sizeof(OutcomeChoiceGroup);
-        for (const OutcomeChoiceGroup& group : result->choice_groups) {
-            selected_bytes +=
-                group.states.capacity() * sizeof(std::uint32_t);
-        }
-        selected_bytes += result->choice_options.capacity() *
-                          sizeof(OutcomeChoiceOption);
-        family.selected_bytes += selected_bytes;
-    }
+    record_distribution_row(key, family, *result);
     return *result;
+}
+
+void CalcContext::record_distribution_row(
+    const std::uint64_t key,
+    PrimitiveFamilyTelemetry& family,
+    const OutcomeDistribution& result) {
+    if (!telemetry_rows_.emplace(key, 1).second) return;
+    ++telemetry_.state_action_rows;
+    ++family.rows;
+    telemetry_.outcome_entries += result.entries.size();
+    family.raw_outcomes += result.entries.size();
+    telemetry_.choice_groups += result.choice_groups.size();
+    std::uint64_t choice_successors = 0;
+    for (const OutcomeChoiceGroup& group : result.choice_groups) {
+        choice_successors += group.states.size();
+    }
+    telemetry_.choice_successor_entries += choice_successors;
+    telemetry_.transition_entries +=
+        result.choice_groups.empty()
+            ? result.entries.size()
+            : choice_successors;
+    family.transitions += result.choice_groups.empty()
+                              ? result.entries.size()
+                              : choice_successors;
+    std::uint64_t selected_bytes = sizeof(OutcomeDistribution);
+    selected_bytes += result.entries.capacity() * sizeof(OutcomeEntry);
+    selected_bytes += result.choice_groups.capacity() *
+                      sizeof(OutcomeChoiceGroup);
+    for (const OutcomeChoiceGroup& group : result.choice_groups) {
+        selected_bytes +=
+            group.states.capacity() * sizeof(std::uint32_t);
+    }
+    selected_bytes += result.choice_options.capacity() *
+                      sizeof(OutcomeChoiceOption);
+    family.selected_bytes += selected_bytes;
+}
+
+bool CalcContext::advance_outcomes(
+    const std::uint32_t state_id,
+    const std::uint32_t action_index,
+    bool goal_progress_gated,
+    std::shared_ptr<const OutcomeDistribution>& completed,
+    const std::uint32_t max_checkpoints) {
+    completed.reset();
+    const ActionDescriptor& action = registry_.actions.at(action_index);
+    const ActionTransitionFacts facts =
+        action_transition_facts(action.params.type);
+    goal_progress_gated = goal_progress_gated && facts.renewal;
+    if (!facts.renewal || !use_factored_terminal_reforge_) {
+        const OutcomeDistribution& value =
+            outcomes(state_id, action_index, goal_progress_gated);
+        const std::uint64_t key = distribution_cache_key(
+            state_id, action_index, goal_progress_gated);
+        completed = distribution_cache_.at(key);
+        (void)value;
+        return true;
+    }
+
+    const std::uint64_t key = distribution_cache_key(
+        state_id, action_index, goal_progress_gated);
+    PrimitiveFamilyTelemetry& family =
+        telemetry_.primitive_families.at(static_cast<std::size_t>(
+            primitive_family_for_action(action.params.type)));
+    if (!reforge_evaluation_cursor_.has_value()) {
+        ++telemetry_.distribution_requests;
+        ++family.requests;
+        const auto cached = distribution_cache_.find(key);
+        if (cached != distribution_cache_.end()) {
+            ++telemetry_.distribution_hits;
+            ++family.cache_hits;
+            completed = cached->second;
+            record_distribution_row(key, family, *completed);
+            return true;
+        }
+        ++telemetry_.distribution_misses;
+        ReforgeEvaluationCursor cursor;
+        cursor.state_id = state_id;
+        cursor.action_index = action_index;
+        cursor.goal_progress_gated = goal_progress_gated;
+        cursor.distribution_key = key;
+        cursor.task = evaluate_reforge_cooperatively(
+            state_id, action_index, goal_progress_gated);
+        reforge_evaluation_cursor_.emplace(std::move(cursor));
+    } else {
+        const ReforgeEvaluationCursor& cursor =
+            *reforge_evaluation_cursor_;
+        if (cursor.state_id != state_id ||
+            cursor.action_index != action_index ||
+            cursor.goal_progress_gated != goal_progress_gated ||
+            cursor.distribution_key != key) {
+            throw std::logic_error(
+                "CalcContext already owns a different unfinished reforge row");
+        }
+    }
+
+    const std::uint32_t slice_limit = std::max<std::uint32_t>(
+        1, max_checkpoints);
+    for (std::uint32_t slice = 0; slice < slice_limit; ++slice) {
+        const std::uint64_t slice_started = steady_now_ns();
+        ++telemetry_.reforge_continuation_resumes;
+        const bool done = reforge_evaluation_cursor_->task.resume();
+        const std::uint64_t slice_ns = steady_now_ns() - slice_started;
+        reforge_evaluation_cursor_->active_build_ns = saturated_counter_add(
+            reforge_evaluation_cursor_->active_build_ns, slice_ns);
+        telemetry_.reforge_continuation_max_slice_ns = std::max(
+            telemetry_.reforge_continuation_max_slice_ns, slice_ns);
+        telemetry_.reforge_continuation_max_retained_bytes = std::max(
+            telemetry_.reforge_continuation_max_retained_bytes,
+            static_cast<std::uint64_t>(
+                reforge_evaluation_cursor_->task.retained_bytes()));
+        if (!done) {
+            ++telemetry_.reforge_continuation_suspensions;
+            continue;
+        }
+        completed = reforge_evaluation_cursor_->task.take_result();
+        const std::uint64_t build_ns =
+            reforge_evaluation_cursor_->active_build_ns;
+        telemetry_.distribution_build_ns += build_ns;
+        family.build_ns += build_ns;
+        account_distribution_cache_insert(key, completed);
+        const auto [stored, inserted] = distribution_cache_.emplace(
+            key, completed);
+        if (!inserted) {
+            throw std::logic_error(
+                "completed cooperative reforge row collided with cache");
+        }
+        completed = stored->second;
+        record_distribution_row(key, family, *completed);
+        ++telemetry_.reforge_continuation_completions;
+        reforge_evaluation_cursor_.reset();
+        return true;
+    }
+    return false;
+}
+
+void CalcContext::cancel_outcomes() {
+    if (!reforge_evaluation_cursor_.has_value()) return;
+    reforge_evaluation_cursor_.reset();
+    ++telemetry_.reforge_continuation_cancellations;
+}
+
+std::uint64_t CalcContext::outcome_cursor_bytes() const {
+    return reforge_evaluation_cursor_.has_value()
+        ? static_cast<std::uint64_t>(
+              reforge_evaluation_cursor_->task.retained_bytes())
+        : 0;
 }
 
 void CalcContext::reset_solve_telemetry() {
@@ -1931,6 +2068,40 @@ void CalcContext::merge_nested_reforge_telemetry(
         counter_delta(
             child.reforge_factored_work,
             before == nullptr ? 0 : before->reforge_factored_work));
+    telemetry_.reforge_continuation_resumes = saturated_counter_add(
+        telemetry_.reforge_continuation_resumes,
+        counter_delta(
+            child.reforge_continuation_resumes,
+            before == nullptr
+                ? 0
+                : before->reforge_continuation_resumes));
+    telemetry_.reforge_continuation_suspensions = saturated_counter_add(
+        telemetry_.reforge_continuation_suspensions,
+        counter_delta(
+            child.reforge_continuation_suspensions,
+            before == nullptr
+                ? 0
+                : before->reforge_continuation_suspensions));
+    telemetry_.reforge_continuation_completions = saturated_counter_add(
+        telemetry_.reforge_continuation_completions,
+        counter_delta(
+            child.reforge_continuation_completions,
+            before == nullptr
+                ? 0
+                : before->reforge_continuation_completions));
+    telemetry_.reforge_continuation_cancellations = saturated_counter_add(
+        telemetry_.reforge_continuation_cancellations,
+        counter_delta(
+            child.reforge_continuation_cancellations,
+            before == nullptr
+                ? 0
+                : before->reforge_continuation_cancellations));
+    telemetry_.reforge_continuation_max_slice_ns = std::max(
+        telemetry_.reforge_continuation_max_slice_ns,
+        child.reforge_continuation_max_slice_ns);
+    telemetry_.reforge_continuation_max_retained_bytes = std::max(
+        telemetry_.reforge_continuation_max_retained_bytes,
+        child.reforge_continuation_max_retained_bytes);
 
     const std::uint64_t child_sequence_before =
         before == nullptr ? 0 : before->reforge_row_sequence;

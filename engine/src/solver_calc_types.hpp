@@ -507,6 +507,15 @@ struct CalcTelemetry {
     std::uint64_t reforge_raw_equivalent_work = 0;
     std::uint64_t reforge_projected_work = 0;
     std::uint64_t reforge_factored_work = 0;
+    /* Exact V3 rows are cooperatively resumed by strict proof scheduling.
+     * These counters describe execution slices only; they never participate
+     * in row admission, cap enforcement, or proof authority. */
+    std::uint64_t reforge_continuation_resumes = 0;
+    std::uint64_t reforge_continuation_suspensions = 0;
+    std::uint64_t reforge_continuation_completions = 0;
+    std::uint64_t reforge_continuation_cancellations = 0;
+    std::uint64_t reforge_continuation_max_slice_ns = 0;
+    std::uint64_t reforge_continuation_max_retained_bytes = 0;
     ReforgeEffortBreakdown reforge_effort;
     std::vector<ReforgeRowTelemetry> reforge_row_samples;
     std::uint64_t reforge_row_samples_omitted = 0;
@@ -823,6 +832,19 @@ class CalcContext {
         std::uint32_t action_index,
         bool goal_progress_gated = false);
 
+    /* Advance one exact destructive row to its next deterministic checkpoint.
+     * The context owns at most one unfinished row. `completed` is assigned
+     * only after the complete immutable distribution has been installed in
+     * the ordinary cache; a suspended or cancelled row has no authority. */
+    bool advance_outcomes(
+        std::uint32_t state_id,
+        std::uint32_t action_index,
+        bool goal_progress_gated,
+        std::shared_ptr<const OutcomeDistribution>& completed,
+        std::uint32_t max_checkpoints = 1);
+    void cancel_outcomes();
+    std::uint64_t outcome_cursor_bytes() const;
+
     /* Complete collision-checked identity used by the exact reforge memo.
      * The action id is included because two actions with the same preserved
      * carrier can still have different direct mods, weights, or guarantees.
@@ -1013,6 +1035,16 @@ class CalcContext {
     std::unordered_map<
         std::uint64_t,
         std::shared_ptr<const OutcomeDistribution>> distribution_cache_;
+    struct ReforgeEvaluationCursor {
+        std::uint32_t state_id = kNoId;
+        std::uint32_t action_index = kNoId;
+        bool goal_progress_gated = false;
+        std::uint64_t distribution_key = 0;
+        std::uint64_t active_build_ns = 0;
+        solve_detail::CooperativeTask<
+            std::shared_ptr<const OutcomeDistribution>> task;
+    };
+    std::optional<ReforgeEvaluationCursor> reforge_evaluation_cursor_;
     std::unordered_map<
         std::uint64_t,
         std::shared_ptr<const OptionKernel>> option_kernel_cache_;
@@ -1145,6 +1177,16 @@ class CalcContext {
         std::uint32_t state_id,
         std::uint32_t action_index,
         bool goal_progress_gated);
+    solve_detail::CooperativeTask<
+        std::shared_ptr<const OutcomeDistribution>>
+    evaluate_reforge_cooperatively(
+        std::uint32_t state_id,
+        std::uint32_t action_index,
+        bool goal_progress_gated);
+    void record_distribution_row(
+        std::uint64_t key,
+        PrimitiveFamilyTelemetry& family,
+        const OutcomeDistribution& result);
     std::shared_ptr<const OutcomeDistribution> evaluate_unveil(
         std::uint32_t state_id);
     bool evaluate_pool_add(

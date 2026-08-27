@@ -1149,8 +1149,17 @@ lift_policy_quotient_pass_task(
                     "streamed quotient lost its canonical locator authority");
             }
             if (!state.terminal) {
+                auto reuse_identity_task =
+                    oracle
+                        .quotient_selected_compact_row_identity_cooperatively(
+                            state);
+                while (!reuse_identity_task.resume()) {
+                    ++progress.work_items;
+                    co_await solve_detail::CooperativeCheckpoint{
+                        reuse_identity_task.retained_bytes()};
+                }
                 const std::optional<StableKey> reuse_identity =
-                    oracle.quotient_selected_compact_row_identity(state);
+                    reuse_identity_task.take_result();
                 AlternativeOperatorIds descriptors =
                     oracle.quotient_alternative_operator_ids(state);
                 const auto shared_descriptors = std::find_if(
@@ -1188,8 +1197,16 @@ lift_policy_quotient_pass_task(
                     rows_by_ordinal[cursor].push_back(reused->second);
                     oracle.note_exact_kernel_reuse();
                 } else {
+                    auto selected_task =
+                        oracle.quotient_selected_compact_row_cooperatively(
+                            state);
+                    while (!selected_task.resume()) {
+                        ++progress.work_items;
+                        co_await solve_detail::CooperativeCheckpoint{
+                            selected_task.retained_bytes()};
+                    }
                     QuotientOracleCompactRow selected =
-                        oracle.quotient_selected_compact_row(state);
+                        selected_task.take_result();
                     std::uint64_t discovery_live =
                         exact_state_bytes(state);
                     saturating_add(
@@ -2523,9 +2540,15 @@ lift_policy_quotient_pass_task(
                         locators.at(ordinal));
                 std::optional<QuotientOracleCompactRow> candidate;
                 try {
-                    candidate =
-                        oracle.quotient_certify_alternative_descriptor(
+                    auto candidate_task = oracle
+                        .quotient_certify_alternative_descriptor_cooperatively(
                             source, descriptor);
+                    while (!candidate_task.resume()) {
+                        ++progress.work_items;
+                        co_await solve_detail::CooperativeCheckpoint{
+                            candidate_task.retained_bytes()};
+                    }
+                    candidate = candidate_task.take_result();
                 } catch (...) {
                     oracle.quotient_release_carrier(source.stable_key);
                     throw;
@@ -3664,9 +3687,15 @@ lift_policy_quotient_pass_task(
                             std::optional<QuotientOracleCompactRow>
                                 candidate;
                             try {
-                                candidate = oracle
-                                    .quotient_certify_alternative_descriptor(
+                                auto candidate_task = oracle
+                                    .quotient_certify_alternative_descriptor_cooperatively(
                                         source, descriptor);
+                                while (!candidate_task.resume()) {
+                                    ++progress.work_items;
+                                    co_await solve_detail::CooperativeCheckpoint{
+                                        candidate_task.retained_bytes()};
+                                }
+                                candidate = candidate_task.take_result();
                             } catch (...) {
                                 oracle.quotient_release_carrier(
                                     source.stable_key);

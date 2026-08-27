@@ -496,7 +496,10 @@ void SolveWork::Impl::finalize_upper_cap_zero_progress_audit() {
     std::uint64_t crafted_states = 0;
     std::uint64_t metamod_or_protection_states = 0;
     std::uint64_t influenced_states = 0;
-    std::uint64_t corrupted_or_mirrored_states = 0;
+    std::uint64_t corrupted_states = 0;
+    std::uint64_t mirrored_states = 0;
+    std::uint64_t split_states = 0;
+    std::uint64_t synthesised_states = 0;
     std::uint64_t eldritch_states = 0;
     std::uint64_t veiled_states = 0;
     std::uint64_t persistent_setup_states = 0;
@@ -545,10 +548,10 @@ void SolveWork::Impl::finalize_upper_cap_zero_progress_audit() {
             (state.flags & kFlagInfluenced) != 0) {
             ++influenced_states;
         }
-        if ((state.flags &
-             (kFlagCorrupted | kFlagMirrored)) != 0) {
-            ++corrupted_or_mirrored_states;
-        }
+        if ((state.flags & kFlagCorrupted) != 0) ++corrupted_states;
+        if ((state.flags & kFlagMirrored) != 0) ++mirrored_states;
+        if ((state.flags & kFlagSplit) != 0) ++split_states;
+        if ((state.flags & kFlagSynthesised) != 0) ++synthesised_states;
         if (state.searing_exarch_tier != 0 ||
             state.eater_of_worlds_tier != 0) {
             ++eldritch_states;
@@ -1999,8 +2002,11 @@ void SolveWork::Impl::finalize_upper_cap_zero_progress_audit() {
     json += ",\"metamod_or_protection\":" +
             std::to_string(metamod_or_protection_states);
     json += ",\"influenced\":" + std::to_string(influenced_states);
-    json += ",\"corrupted_or_mirrored\":" +
-            std::to_string(corrupted_or_mirrored_states);
+    json += ",\"corrupted\":" + std::to_string(corrupted_states);
+    json += ",\"mirrored\":" + std::to_string(mirrored_states);
+    json += ",\"split\":" + std::to_string(split_states);
+    json += ",\"synthesised\":" +
+            std::to_string(synthesised_states);
     json += ",\"eldritch\":" + std::to_string(eldritch_states);
     json += ",\"veiled\":" + std::to_string(veiled_states);
     json += ",\"persistent_setup\":" +

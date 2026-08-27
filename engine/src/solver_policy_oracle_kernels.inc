@@ -320,6 +320,18 @@
             strict.reforge_projected_work;
         telemetry_.strict_reforge_evaluator_work_v3 =
             strict.reforge_factored_work;
+        telemetry_.strict_reforge_continuation_resumes =
+            strict.reforge_continuation_resumes;
+        telemetry_.strict_reforge_continuation_suspensions =
+            strict.reforge_continuation_suspensions;
+        telemetry_.strict_reforge_continuation_completions =
+            strict.reforge_continuation_completions;
+        telemetry_.strict_reforge_continuation_cancellations =
+            strict.reforge_continuation_cancellations;
+        telemetry_.strict_reforge_continuation_max_slice_ns =
+            strict.reforge_continuation_max_slice_ns;
+        telemetry_.strict_reforge_continuation_max_retained_bytes =
+            strict.reforge_continuation_max_retained_bytes;
         telemetry_.strict_reforge_effort = strict.reforge_effort;
         for (ReforgeRowTelemetry& retained :
              telemetry_.strict_reforge_row_samples) {

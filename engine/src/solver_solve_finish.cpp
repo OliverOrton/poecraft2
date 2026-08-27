@@ -137,6 +137,18 @@ void record_live_policy_lift_telemetry(
         adapter.strict_reforge_evaluator_work_v2;
     telemetry.strict_reforge_evaluator_work_v3 =
         adapter.strict_reforge_evaluator_work_v3;
+    telemetry.strict_reforge_continuation_resumes =
+        adapter.strict_reforge_continuation_resumes;
+    telemetry.strict_reforge_continuation_suspensions =
+        adapter.strict_reforge_continuation_suspensions;
+    telemetry.strict_reforge_continuation_completions =
+        adapter.strict_reforge_continuation_completions;
+    telemetry.strict_reforge_continuation_cancellations =
+        adapter.strict_reforge_continuation_cancellations;
+    telemetry.strict_reforge_continuation_max_slice_ns =
+        adapter.strict_reforge_continuation_max_slice_ns;
+    telemetry.strict_reforge_continuation_max_retained_bytes =
+        adapter.strict_reforge_continuation_max_retained_bytes;
     telemetry.work_to_first_partition = adapter.work_to_first_partition;
     telemetry.work_to_first_executable_upper =
         adapter.work_to_first_executable_upper;
@@ -4569,6 +4581,19 @@ SolveWork::Impl::run_publication_pipeline() {
                 certificate.adapter.strict_reforge_evaluator_work_v2;
             telemetry.strict_reforge_evaluator_work_v3 =
                 certificate.adapter.strict_reforge_evaluator_work_v3;
+            telemetry.strict_reforge_continuation_resumes =
+                certificate.adapter.strict_reforge_continuation_resumes;
+            telemetry.strict_reforge_continuation_suspensions =
+                certificate.adapter.strict_reforge_continuation_suspensions;
+            telemetry.strict_reforge_continuation_completions =
+                certificate.adapter.strict_reforge_continuation_completions;
+            telemetry.strict_reforge_continuation_cancellations =
+                certificate.adapter.strict_reforge_continuation_cancellations;
+            telemetry.strict_reforge_continuation_max_slice_ns =
+                certificate.adapter.strict_reforge_continuation_max_slice_ns;
+            telemetry.strict_reforge_continuation_max_retained_bytes =
+                certificate.adapter
+                    .strict_reforge_continuation_max_retained_bytes;
             telemetry.strict_reforge_effort =
                 certificate.adapter.strict_reforge_effort;
             telemetry.strict_reforge_row_samples =

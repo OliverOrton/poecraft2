@@ -36,6 +36,12 @@ SolveWork::Impl::Impl(
           exact_start_item(start_item), options(solve_options), prices(prices),
           reported_unsupported(context.operators().size(), false) {
         const auto setup_started = std::chrono::steady_clock::now();
+        if ((start_item.item_flags &
+             (PC_ITEM_MIRRORED | PC_ITEM_SYNTHESISED)) != 0) {
+            throw std::invalid_argument(
+                "product solver does not plan mirrored or synthesised "
+                "carriers");
+        }
         if (options.full_evidence) {
             carrier_bound_attribution =
                 std::make_unique<CarrierBoundAttributionWork>();
@@ -552,6 +558,7 @@ SolveWork::Impl::~Impl() {
      * CalcContext. Abandonment destroys the continuation synchronously and
      * rolls that append-only range back before the context can be reused. */
     calc.cancel_state_local_automatic_candidates();
+    calc.cancel_outcomes();
 }
 
 double SolveWork::Impl::exact_gap_proof_tolerance() const {
