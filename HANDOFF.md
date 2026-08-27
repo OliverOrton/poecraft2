@@ -52,6 +52,25 @@ alternative rows. Its retained direct graph independently evaluates at
 `7866.432124027084`, but the 300-second diagnostic watchdog expires before
 publication.
 
+A resource-scaling diagnostic at `2518484` repeated that witness with
+`max_reforge_work=100,000,000`, `max_solver_owned_bytes=2,147,483,648`, and a
+900-second watchdog. It completed after 500.62 seconds, consumed `99,999,986`
+logical / `88,574,495` V3 reforge work, stopped on `max_reforge_work`, and
+published the same independently exact-evaluated bounded policy at
+`7866.432124027084` with lower `21.772459401271156`. Compared with the 50M
+probe, the extra 49,999,994 logical work produced only 132 more completed
+alternative rows, 131 more partial obligations, one more exact state, zero
+additional certified or noncompetitive obligations, zero policy improvements,
+and no additional frontier insertion. The longest native step grew to 102.40
+seconds. Selected native peak was about 1.31 GB; the 2 GiB cap did not fire.
+The local report is
+`build/performance/native-solver-pdr-100m-2g-case-conquest-lamellar-allflame-clean-4-pdr-product8-100m-2g-v1.json`.
+
+This rejects a default-cap increase as the next exactness repair: doubling
+work substantially lengthens broad-row certification without advancing the
+proof envelope. A larger allowance may remain an explicit high-effort mode,
+but it does not replace cheaper resumable rows or stronger admissible pruning.
+
 Do not repeat the discarded coarse-operator-lower transfer: it seeded all
 299,394 strict obligations, produced zero noncompetitive retirements, and was
 removed. A successor should choose between:
