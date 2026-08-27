@@ -379,6 +379,24 @@ protected metamod and Cannot Roll routes, cleanup compositions, Multimod
 finishes, and automatic Imprint attempt/restore programs. Imprint programs are
 not user-authored in product mode.
 
+Goals may additionally name `disabled_action_families`. The stable native
+vocabulary is `currency`, `essence`, `fossil`, `harvest`, `bench`, `eldritch`,
+`influence`, `fracture`, `veiled`, `cleanup`, `temporary_bench`, `metamod`,
+`imprint`, and `restart`. The native action contract owns primitive membership;
+automatic-candidate kind plus the complete named primitive program owns
+compound membership. Disabling a family therefore removes selectable
+primitives and every fixed or generated operator that depends on one of its
+members. Unknown names are request errors. An empty or omitted list preserves
+the ordinary envelope.
+
+This is an explicit restricted-envelope contract, not a dominance rule.
+Bounds, policy quality, and exactness apply only to the requested envelope when
+any family is disabled. `action_control.disabled_action_families`,
+`family_restricted`, and `pruned_disabled_family` disclose the request;
+automatic by-kind telemetry discloses generated families that produced no
+candidates or rows. Action introspection exposes the same engine-owned
+primitive `family` label through C ABI and WASM.
+
 At fixed solve prices, temporary blocker synthesis groups actions only after
 proving the same carrier-local blocked eligible pool, blocker side, follow-up,
 pool-tag behavior, and goal-slot semantics. It then carries only the cheapest

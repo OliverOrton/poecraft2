@@ -9,6 +9,14 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-08-27
+
+- [Solver Stabilization And Action-Family Controls](2026-08-27-solver-stabilization-action-family-controls/README.md) —
+  added engine-owned restricted family controls through C ABI, release WASM,
+  and Calculator, restored full acceptance, and showed that disabling
+  temporary Bench moves PDR proof failure earlier into strict-carrier memory
+  growth rather than owning the broad alternative obligations.
+
 ## 2026-08-26
 
 - [Exact Same-Side Closure](2026-08-26-exact-same-side-closure/README.md) —

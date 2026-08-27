@@ -31,13 +31,20 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 ## Execution State
 
 No implementation boundary is active. The completed
+[Solver Stabilization And Action-Family Controls](archive/2026-08-27-solver-stabilization-action-family-controls/README.md)
+milestone adds native-owned restricted family controls through Calculator and
+release WASM and restores a green full acceptance record. Its temporary-Bench
+PDR ablation moved the proof stop earlier into strict-carrier memory growth,
+so cooperative resumable broad destructive rows remain the recommended next
+boundary; checkpoint/replay follows once those row cursors are stable.
+
+The completed
 [Exact Same-Side Closure](archive/2026-08-26-exact-same-side-closure/README.md)
 milestone makes current-contract clean three-prefix and three-suffix Calculator
 goals genuinely exact, with deterministic compiled graphs and 10,000-run
 Simulator controls. Its four-mod probe attributes the next boundary to strict
 broad-alternative proof work rather than the repaired frontier or existing
-goal-cover plumbing. Oliver must select the next chunk before implementation
-resumes.
+goal-cover plumbing.
 
 The completed
 [Solver Quality Measurement, Refinement, And Debt Retirement](archive/2026-08-26-solver-quality-debt-retirement/README.md)

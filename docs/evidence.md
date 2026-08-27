@@ -6,6 +6,20 @@ routes to them rather than duplicating complete reports.
 
 Parent: [Documentation map](README.md)
 
+## Action-Family PDR Attribution
+
+The 2026-08-27
+[action-family result](archive/2026-08-27-solver-stabilization-action-family-controls/result.md)
+compares the retained 50M / 1 GiB four-mod PDR control with one
+`temporary_bench`-disabled run. The control reaches 299,394 alternative
+obligations and 49,999,992 logical reforge work; the ablation reaches no
+alternative obligations, grows to 43,535 exact selected-policy states, and
+hits the 1 GiB memory boundary after 6,240,606 logical work. Its executable
+policy is independently exact-evaluated at `7862.857725228987`, but the solve
+is correctly bounded/resource-refused. The result rejects temporary Bench as
+the owner of the broad obligation count and preserves resumable broad rows as
+the next exactness/iteration boundary.
+
 ## Exact Same-Side Closure
 
 The 2026-08-27

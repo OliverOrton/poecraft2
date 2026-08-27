@@ -119,6 +119,14 @@ The Solve surface is distinct from one-action odds:
    scope. Results, telemetry, and compiled strategies disclose the profile,
    named overrides, and selected action scope and make no optimality claim
    over an excluded family.
+   An advanced diagnostic panel can also disable native action families for a
+   single solve. All families are enabled by default. The Calculator presents
+   engine-provided primitive family metadata for pricing/readiness and sends a
+   typed disabled-family list to both product-envelope and scoped Solve goals;
+   exact Odds inspection is unaffected. The result repeats the disabled names
+   and states that bounds and exactness apply only within the restricted
+   envelope. The existing Imprint and economic-Restart controls remain the
+   ordinary focused controls rather than duplicate family checkboxes.
    The refinement allowance affects only optional attempts to certify a
    cheaper broad/strict policy after an executable fallback is already
    independently verified. A proper, zero-off-policy, completely priced

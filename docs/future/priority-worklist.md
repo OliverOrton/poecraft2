@@ -7,7 +7,7 @@ selects an item or coherent group before an active plan is created.
 Parent: [Future work](README.md)
 
 Verified against current documentation, source ownership, and local PDR
-resource evidence: 2026-08-27 @ `16a193e`.
+resource evidence: 2026-08-27 @ `102ea11`.
 
 ## Ranking Rules
 
@@ -79,21 +79,25 @@ presentation are more useful than silently increasing samples.
 
 ### P0.3 — Restore the full acceptance baseline
 
-**State:** reproduced pre-existing debt.
+**State:** completed 2026-08-27. The alleged 13 failures and empty-JSON
+cascade were stale handoff text: current source passed the complete native
+solve target before this boundary's behavior changes, and the final full
+pipeline is the maintained acceptance authority.
 
-The full pipeline reaches 13 stale goal-progress-gated native-solve
-expectations and then an empty-JSON parse exception. These failures reproduce
-on historical source and were not caused by the recent product-profile or
-same-side work, but leaving them in place weakens every large refactor.
-
-Update the fixtures/harness to current truthful result contracts, make parse
-failure diagnostic rather than cascading, and restore a green full pipeline
-before broad structural cleanup. Do not weaken exactness or rewrite expected
-values merely to make the suite pass.
+No fixture weakening or parser repair was required. The stale failure count
+must not be used as current sequencing evidence again; acceptance results in
+the current handoff and completed boundary supersede it.
 
 ## P1 — Exactness And Faster Iteration
 
 ### P1.1 — Engine-owned action-family controls and ablation mode
+
+**State:** completed 2026-08-27. The native/WASM/Calculator contract covers
+direct primitives and generated dependencies, defaults to unrestricted, and
+discloses restricted exactness. The first PDR ablation found temporary Bench
+was not the owner of the 299,394 alternative obligations: disabling it moved
+the stop earlier to a 1 GiB strict-carrier construction cap after 43,535 exact
+states, before alternative obligation construction.
 
 **Why now:** action IDs can already scope primitive candidates, but the public
 action description does not expose one stable engine-owned family label and
