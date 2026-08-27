@@ -6,11 +6,12 @@ future work or define crafting mechanics.
 
 Parent: [Foundation](README.md)
 
-Verified against current source: 2026-08-25 @ `cb26c29`. Scope: private solve
+Verified against current source: 2026-08-27. Scope: private solve
 phase ownership, cooperative continuation boundaries, current
 proof/publication boundaries, action-family contract, exact evaluator gated-
-kernel authority, and the native source inventory. Native owner, release-WASM
-responsiveness, final corpus, and repository acceptance passed.
+kernel authority, exact reforge row continuation, telemetry serialization
+ownership, and the native source inventory. Final acceptance for the active
+boundary is recorded in its result rather than implied by this source audit.
 
 ## Execution Flow
 
@@ -55,7 +56,7 @@ not interchangeable:
 | Production policy adaptation | strict carrier mappings/kernels, exact runs, repaired or improved policy, compile routing | `solver_policy_refinement.hpp`, `solver_policy_refinement.cpp`, `solver_policy_oracle_*.inc`, `solver_policy_assertion.cpp` |
 | Policy compilation | ordinary strategy JSON and `PolicyCompilationTelemetry` | `solver_compile_contracts.hpp`, `solver_compile_conditions.hpp`, `solver_compile_serialization.hpp`, `solver_compile.cpp` |
 | Exact graph evaluation | `StrategyEvalResult`, occupancy/influence and action/material accounting | `solver_eval_types.hpp`, `solver_eval_helpers.hpp`, `solver_eval.cpp`, `solver_eval_resolve.cpp`, `solver_eval_report.cpp` |
-| API, accounting, and telemetry | C ABI results, typed progress snapshots, JSON, owned-byte and work counters | `solver_api.cpp`, `solver_solve_telemetry.cpp`, `solver_compile.cpp`, `solver_eval_report.cpp` |
+| API, accounting, and telemetry | C ABI results, typed progress snapshots, JSON, owned-byte and work counters | `solver_api.cpp`, `solver_solve_telemetry.cpp` (collection/accounting), `solver_solve_telemetry_json.cpp` (serialization), `solver_compile.cpp`, `solver_eval_report.cpp` |
 | Sampled execution | mutable item plus RNG-driven strategy traversal | `simulator.cpp` and native action owners |
 
 The stateful Solve path has six named private authorities:
@@ -131,7 +132,7 @@ core model edit is cheap.
 | Production exact-policy repair or improvement | the matching `solver_policy_oracle_*.inc` owner |
 | Strategy condition routing or JSON emission | `solver_compile_conditions.hpp`, `solver_compile_serialization.hpp`, `solver_compile.cpp` |
 | Exact strategy operation resolution or accounting report | `solver_eval_resolve.cpp`, `solver_eval.cpp`, `solver_eval_report.cpp` |
-| Solver progress, memory, or work telemetry | `solver_solve_telemetry.cpp` and the owning phase's counters |
+| Solver progress, memory, or work telemetry | the owning phase's typed counters, `solver_solve_telemetry.cpp` for collection/accounting, and `solver_solve_telemetry_json.cpp` for serialization |
 
 Before changing a contract that crosses these rows, follow the
 [Change Impact Map](change-impact.md). Mechanics questions still require an
@@ -168,6 +169,13 @@ Oliver ruling and belong in the [mechanics library](../mechanics/README.md).
   retain explicit cursors or tasks and return them through public step
   boundaries. The native step also applies an internal 32-logical-unit ceiling
   even when a caller requests a larger batch.
+- Exact V3 destructive rows retain a deterministic cursor and publish only
+  after completion. Strict policy refinement drives those rows cooperatively;
+  synchronous calculator callers use the completion wrapper. A partial or
+  cancelled row cannot populate the ordinary cache or a proof obligation.
+- A strict alternative that discovers a successor outside the current closed
+  partition returns that frontier to the persistent grow-in-place owner before
+  replaying unrelated old-generation obligations.
 - While incremental action generation remains open, its restricted optimum is
   scheduling evidence rather than a global lower. Public lower authority falls
   back to independently admissible proof patterns until the requested action
