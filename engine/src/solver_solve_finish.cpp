@@ -4316,9 +4316,22 @@ SolveWork::Impl::run_publication_pipeline() {
                         options.max_policy_refinement_states);
                 }
                 co_await solve_detail::CooperativeCheckpoint{};
+                const BoundedPolicyIncumbent* verified_rollback =
+                    best_current_certified_fallback();
+                std::optional<
+                    refinement::PolicyExactLiftRollbackUpper>
+                    rollback_upper;
+                if (verified_rollback != nullptr) {
+                    rollback_upper.emplace();
+                    rollback_upper->exact_cost =
+                        verified_rollback->evaluated_policy_cost;
+                }
                 refinement::PolicyExactLiftWork lift_work(
                     calc, result, exact_start_item, prices,
-                    scoped_lift_options, "solved policy");
+                    scoped_lift_options, "solved policy", nullptr,
+                    rollback_upper.has_value()
+                        ? &*rollback_upper
+                        : nullptr);
                 co_await solve_detail::CooperativeCheckpoint{
                     lift_work.retained_bytes()};
                 while (!lift_work.progress().done) {

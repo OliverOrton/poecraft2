@@ -735,7 +735,7 @@
                 kernel_signature);
         }
         StableKey key{
-            0x70637270636f6c31ull, /* "pcrpcol1" */
+            0x70637270636f6c32ull, /* "pcrpcol2" */
             coarse_key.size()};
         key.insert(key.end(), coarse_key.begin(), coarse_key.end());
         key.push_back(operation_signature->size());
@@ -745,7 +745,27 @@
         key.push_back(kernel_signature.size());
         key.insert(
             key.end(), kernel_signature.begin(), kernel_signature.end());
-        (void)features;
+        /* The operation signature proves that the selected mechanic routes
+         * these carriers identically. It does not subsume observations needed
+         * by downstream policy routing. Those features were already compared
+         * as a collision guard by intern_strict_state; make them part of the
+         * identity so persistent frontier growth separates, rather than
+         * rejects, carriers that legitimately differ there. */
+        key.push_back(features.size());
+        for (const FeatureAtom& atom : features) {
+            key.push_back(static_cast<std::uint64_t>(atom.feature));
+            key.push_back(atom.subject);
+            key.push_back(atom.affix_traits);
+            key.push_back(atom.item_traits);
+            key.push_back(atom.modifier_tag_ids.size());
+            key.insert(
+                key.end(),
+                atom.modifier_tag_ids.begin(),
+                atom.modifier_tag_ids.end());
+            key.push_back(atom.value.size());
+            key.insert(
+                key.end(), atom.value.begin(), atom.value.end());
+        }
         return key;
     }
 

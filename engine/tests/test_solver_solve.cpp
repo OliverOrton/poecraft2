@@ -3152,6 +3152,34 @@ void run_policy_guided_exact_lift_tests() {
             lifted.adapter.strict_transitions_built);
     }
 
+    refinement::PolicyExactLiftRollbackUpper rollback_upper;
+    rollback_upper.exact_cost = lifted.compiled.exact_cost;
+    refinement::PolicyExactLiftWork rollback_seeded_work(
+        calc, solved, start, prices, options,
+        "focused policy-guided exact lift", nullptr,
+        &rollback_upper);
+    PC_CHECK(near(
+        rollback_seeded_work.progress().verified_executable_upper_bound,
+        rollback_upper.exact_cost, 1e-12));
+    while (!rollback_seeded_work.progress().done) {
+        rollback_seeded_work.step(8);
+    }
+    const refinement::PolicyExactLiftCertificate rollback_seeded =
+        rollback_seeded_work.take_result();
+    PC_CHECK(rollback_seeded.adapter.external_verified_upper_seeded);
+    PC_CHECK(rollback_seeded.adapter.interim_compiled_assertion_deferred);
+    PC_CHECK(rollback_seeded.status == lifted.status);
+    PC_CHECK(rollback_seeded.executable);
+    PC_CHECK(rollback_seeded.global_lower_bound_closed ==
+             lifted.global_lower_bound_closed);
+    PC_CHECK(rollback_seeded.compiled.executable);
+    PC_CHECK(rollback_seeded.compiled.cost_reconciled);
+    PC_CHECK(near(
+        rollback_seeded.compiled.exact_cost,
+        lifted.compiled.exact_cost, 1e-12));
+    PC_CHECK(rollback_seeded.compiled.strategy_json ==
+             lifted.compiled.strategy_json);
+
     const auto check_strict_evaluator = [](
             const refinement::PolicyExactLiftCertificate& certificate,
             const ReforgeEvaluatorVersion expected) {

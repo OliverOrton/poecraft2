@@ -980,7 +980,8 @@ lift_policy_quotient_pass_task(
         PersistentQuotientSession& session,
         std::vector<AbstractState> frontier_seeds,
         PolicyExactLiftProgress& progress,
-        std::optional<CompiledPolicyAssertion>* reusable_assertion) {
+        std::optional<CompiledPolicyAssertion>* reusable_assertion,
+        const double verified_rollback_upper_bound) {
     PolicyExactLiftCertificate certificate;
     certificate.solver_cost = solved.evaluated_policy_cost;
     const RefinementLimits& limits = session.limits;
@@ -994,6 +995,17 @@ lift_policy_quotient_pass_task(
     };
     try {
         progress = {};
+        progress.verified_executable_upper_bound =
+            verified_rollback_upper_bound;
+        if (std::isfinite(verified_rollback_upper_bound) &&
+            verified_rollback_upper_bound >= 0.0) {
+            telemetry.external_verified_upper_seeded = true;
+            if (!telemetry.work_to_first_executable_upper.has_value()) {
+                telemetry.work_to_first_executable_upper = 0;
+                telemetry.wall_ns_to_first_executable_upper = 0;
+                telemetry.alternatives_materialized_before_first_upper = 0;
+            }
+        }
         progress.phase = PolicyExactLiftPhase::CarrierDiscovery;
         co_await solve_detail::CooperativeCheckpoint{};
         ProductionPolicyOracle& oracle = session.oracle;
@@ -2738,7 +2750,8 @@ lift_policy_quotient_pass_task(
         }
         const auto publish_current_upper =
                 [&](const quotient::QuotientBellmanResult& solved_upper,
-                    const bool allow_reusable_assertion = true)
+                    const bool allow_reusable_assertion = true,
+                    const bool materialize_compiled_assertion = true)
                     -> solve_detail::CooperativeTask<bool> {
         std::optional<CompiledPolicyAssertion> previous_assertion;
         bool previous_assertion_already_debited = false;
@@ -3158,6 +3171,23 @@ lift_policy_quotient_pass_task(
         certificate.policy_changed =
             bellman_telemetry.policy_improvements != 0;
 
+        certificate.lumpable = true;
+        if (telemetry.reference_adapter_invocations != 0) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::RefinementFailure,
+                "production quotient invoked reference adapter");
+        }
+        if (!materialize_compiled_assertion) {
+            /* A caller-owned, independently verified executable policy keeps
+             * rollback publication safe while this quotient accounts for
+             * alternatives. The class evaluation above is proof state only;
+             * exact closure still compiles and evaluates the final selected
+             * quotient policy below. */
+            certificate.status = PolicyExactLiftStatus::Complete;
+            certificate.executable = false;
+            co_return true;
+        }
+
         progress.phase = PolicyExactLiftPhase::Compiling;
         ProductionPolicyOracle::PreparedLiftedPolicyAssertion prepared =
             oracle.prepare_lifted_policy_assertion(
@@ -3216,12 +3246,6 @@ lift_policy_quotient_pass_task(
                     assertion_work.take_result(),
                     certificate.refinement,
                     certificate.class_evaluation);
-        }
-        certificate.lumpable = true;
-        if (telemetry.reference_adapter_invocations != 0) {
-            throw AdapterFailure(
-                PolicyExactLiftStatus::RefinementFailure,
-                "production quotient invoked reference adapter");
         }
         if (certificate.compiled.status !=
                 CompiledPolicyAssertionStatus::Complete ||
@@ -3336,16 +3360,25 @@ lift_policy_quotient_pass_task(
         bool compiled_publication_built_this_pass = false;
         {
             if (!reuse_compiled_incumbent(solved_quotient)) {
-                auto publication_task =
-                    publish_current_upper(solved_quotient);
+                const bool verified_external_rollback_available =
+                    std::isfinite(verified_rollback_upper_bound) &&
+                    verified_rollback_upper_bound >= 0.0;
+                auto publication_task = publish_current_upper(
+                    solved_quotient,
+                    !verified_external_rollback_available,
+                    !verified_external_rollback_available);
                 while (!publication_task.resume()) {
                     ++progress.work_items;
                     co_await solve_detail::CooperativeCheckpoint{
                         oracle.estimated_owned_bytes()};
                 }
                 (void)publication_task.take_result();
-                compiled_publication_built_this_pass = true;
-                retain_compiled_incumbent();
+                if (verified_external_rollback_available) {
+                    telemetry.interim_compiled_assertion_deferred = true;
+                } else {
+                    compiled_publication_built_this_pass = true;
+                    retain_compiled_incumbent();
+                }
             }
         }
         progress.phase = PolicyExactLiftPhase::LocalReoptimization;
@@ -4083,10 +4116,18 @@ lift_policy_quotient_pass_task(
         const bool envelope_ready_for_exact_publication =
             final_action_audit.exact_alternative_envelope_closed &&
             !publication_blocked_after_improvement;
-        if (envelope_ready_for_exact_publication &&
+        const bool retained_assertion_reconciles_current_q =
             reusable_assertion != nullptr &&
             reusable_assertion->has_value() &&
-            !assertion_reconciles_current_q(**reusable_assertion)) {
+            assertion_reconciles_current_q(**reusable_assertion);
+        const bool current_assertion_reconciles_current_q =
+            assertion_reconciles_current_q(certificate.compiled);
+        const bool final_assertion_required =
+            (certificate.global_lower_bound_closed ||
+             envelope_ready_for_exact_publication) &&
+            !retained_assertion_reconciles_current_q &&
+            !current_assertion_reconciles_current_q;
+        if (final_assertion_required) {
             /* A retained incumbent is sufficient during lazy proof work.
              * Exact closure additionally needs the final selected quotient
              * policy to compile and independently evaluate once. */
@@ -4247,7 +4288,7 @@ lift_policy_quotient_pass_task(
         telemetry.strict_carriers_materialized =
             static_cast<std::uint32_t>(locators.size());
         certificate.status = PolicyExactLiftStatus::Complete;
-        certificate.executable = true;
+        certificate.executable = certificate.compiled.executable;
     } catch (const AdapterFailure& error) {
         certificate.status = error.status;
         certificate.failure_reason = error.what();
@@ -4301,7 +4342,8 @@ struct PolicyExactLiftWork::Impl {
             const std::unordered_map<std::string, double>& prices_value,
             const SolveOptions& options_value,
             std::string strategy_name_value,
-            const RefinementLimits* limits_override)
+            const RefinementLimits* limits_override,
+            const PolicyExactLiftRollbackUpper* rollback_upper)
         : coarse(coarse_value),
           solved(solved_value),
           exact_start(exact_start_value),
@@ -4314,6 +4356,12 @@ struct PolicyExactLiftWork::Impl {
                   : *limits_override),
           session(std::make_unique<PersistentQuotientSession>(
               coarse, solved, exact_start, prices, options, limits)) {
+        if (rollback_upper != nullptr &&
+            std::isfinite(rollback_upper->exact_cost) &&
+            rollback_upper->exact_cost >= 0.0) {
+            best_verified_executable_upper_bound =
+                rollback_upper->exact_cost;
+        }
         begin_pass();
     }
 
@@ -4353,7 +4401,8 @@ struct PolicyExactLiftWork::Impl {
             coarse, solved, exact_start, prices,
             active_pass_options,
             strategy_name, *session, std::move(frontier_seeds),
-            progress, &reusable_assertion);
+            progress, &reusable_assertion,
+            best_verified_executable_upper_bound);
         progress.verified_executable_upper_bound =
             best_verified_executable_upper_bound;
     }
@@ -4562,10 +4611,11 @@ PolicyExactLiftWork::PolicyExactLiftWork(
         const std::unordered_map<std::string, double>& prices,
         const SolveOptions& options,
         std::string strategy_name,
-        const RefinementLimits* limits_override)
+        const RefinementLimits* limits_override,
+        const PolicyExactLiftRollbackUpper* rollback_upper)
     : impl_(std::make_unique<Impl>(
           coarse, solved, exact_start, prices, options,
-          std::move(strategy_name), limits_override)) {}
+          std::move(strategy_name), limits_override, rollback_upper)) {}
 
 PolicyExactLiftWork::~PolicyExactLiftWork() = default;
 PolicyExactLiftWork::PolicyExactLiftWork(

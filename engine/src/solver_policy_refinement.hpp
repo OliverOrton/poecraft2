@@ -69,6 +69,8 @@ struct PolicyLiftAdapterTelemetry {
     std::optional<std::uint64_t> wall_ns_to_first_partition;
     std::optional<std::uint64_t> wall_ns_to_first_executable_upper;
     std::uint64_t alternatives_materialized_before_first_upper = 0;
+    bool external_verified_upper_seeded = false;
+    bool interim_compiled_assertion_deferred = false;
     std::uint64_t alternative_obligations_created = 0;
     std::uint64_t unresolved_alternative_obligations = 0;
     std::uint64_t alternative_rows_avoided = 0;
@@ -380,6 +382,14 @@ struct PolicyExactLiftProgress {
     StrategyEvalProgress evaluation;
 };
 
+/* An independently parsed/evaluated executable policy in the caller's exact
+ * goal, action-vocabulary, and economy scope. This is rollback-upper
+ * authority only: it neither identifies the quotient-selected policy nor
+ * supplies lower-bound, reconciliation, or exact-publication authority. */
+struct PolicyExactLiftRollbackUpper {
+    double exact_cost = std::numeric_limits<double>::infinity();
+};
+
 class PolicyExactLiftWork {
   public:
     PolicyExactLiftWork(
@@ -389,7 +399,8 @@ class PolicyExactLiftWork {
         const std::unordered_map<std::string, double>& prices,
         const SolveOptions& options,
         std::string strategy_name,
-        const RefinementLimits* limits_override = nullptr);
+        const RefinementLimits* limits_override = nullptr,
+        const PolicyExactLiftRollbackUpper* rollback_upper = nullptr);
     ~PolicyExactLiftWork();
     PolicyExactLiftWork(PolicyExactLiftWork&&) noexcept;
     PolicyExactLiftWork& operator=(PolicyExactLiftWork&&) noexcept;
