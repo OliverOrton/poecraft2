@@ -3,7 +3,9 @@
 **Status: no active implementation boundary.** The
 [Exact Same-Side Closure](docs/archive/2026-08-26-exact-same-side-closure/README.md)
 milestone completed on 2026-08-27. Oliver must select the next chunk before
-implementation resumes.
+implementation resumes. The maintained
+[ranked project worklist](docs/future/priority-worklist.md) preserves the
+current P0–P3 candidates and their dependency order.
 
 ## Checkpoint
 
