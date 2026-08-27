@@ -1808,6 +1808,8 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(create_telemetry.find(
                  "\"version\":\"solver_telemetry_v1\"") !=
              std::string::npos);
+    PC_CHECK(create_telemetry.find("\"level\":\"compact\"") !=
+             std::string::npos);
     PC_CHECK(create_telemetry.find(
                  "\"candidate\":10,\"evaluator_supported\":null") !=
              std::string::npos);

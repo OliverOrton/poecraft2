@@ -646,7 +646,9 @@
             const SelectedAction& selected,
             const bool alternative,
             const std::size_t sample_begin,
-            const std::uint64_t raw_transitions) {
+            const std::uint64_t raw_transitions,
+            const std::size_t sample_end =
+                std::numeric_limits<std::size_t>::max()) {
         const auto known = known_.find(state.stable_key);
         if (known == known_.end() ||
             selected.action_id >= strict_->operators().size()) {
@@ -676,8 +678,10 @@
         program.erase(
             std::unique(program.begin(), program.end()),
             program.end());
+        const std::size_t bounded_end = std::min(
+            samples.size(), sample_end);
         for (std::size_t index = sample_begin;
-             index < samples.size(); ++index) {
+             index < bounded_end; ++index) {
             constexpr std::size_t kSampleLimit = 16;
             if (telemetry_.broad_row_attribution.size() >=
                 kSampleLimit) {
@@ -791,25 +795,26 @@
         return row;
     }
 
-    solve_detail::CooperativeTask<bool>
+    solve_detail::CooperativeTask<
+        std::shared_ptr<const OutcomeDistribution>>
     quotient_prepare_primitive_row(
             const ExactState& state,
             const std::uint32_t operator_index) {
         const auto known = known_.find(state.stable_key);
         if (known == known_.end() ||
             operator_index >= strict_->operators().size()) {
-            co_return false;
+            co_return nullptr;
         }
         const PlannerOperator& planner =
             strict_->operators().at(operator_index);
         if (planner.kind != PlannerOperatorKind::Primitive) {
-            co_return true;
+            co_return nullptr;
         }
         const std::uint32_t action = planner.primitive_action;
         if (!action_transition_facts(
                 strict_->registry().actions.at(action).params.type)
                  .renewal) {
-            co_return true;
+            co_return nullptr;
         }
         struct CursorGuard {
             CalcContext* calc = nullptr;
@@ -827,7 +832,7 @@
             co_await solve_detail::CooperativeCheckpoint{retained};
         }
         guard.complete = true;
-        co_return completed != nullptr;
+        co_return completed;
     }
 
     solve_detail::CooperativeTask<
@@ -835,15 +840,42 @@
     quotient_certify_alternative_descriptor_cooperatively(
             const ExactState& state,
             const QuotientAlternativeDescriptor& descriptor) {
+        ScopedReforgeRowProvenance provenance(
+            *strict_, ReforgeRowOwner::StrictAlternative);
+        const std::size_t attribution_sample_begin =
+            strict_->telemetry()
+                .reforge_build_attribution_samples.size();
+        const std::uint64_t work_before =
+            strict_->telemetry().reforge_frontier_work;
         auto preparation = quotient_prepare_primitive_row(
             state, descriptor.operator_index);
         while (!preparation.resume()) {
             co_await solve_detail::CooperativeCheckpoint{
                 preparation.retained_bytes()};
         }
-        (void)preparation.take_result();
-        co_return quotient_certify_alternative_descriptor(
-            state, descriptor);
+        const std::shared_ptr<const OutcomeDistribution> prepared =
+            preparation.take_result();
+        const std::size_t attribution_sample_end =
+            strict_->telemetry()
+                .reforge_build_attribution_samples.size();
+        const std::uint64_t work_after =
+            strict_->telemetry().reforge_frontier_work;
+        saturating_add(
+            telemetry_.alternative_reforge_work,
+            work_after >= work_before ? work_after - work_before : 0);
+        telemetry_.strict_reforge_work = work_after;
+        std::optional<QuotientOracleCompactRow> row =
+            quotient_certify_alternative_descriptor(state, descriptor);
+        if (row.has_value()) {
+            record_broad_row_attribution(
+                state, row->selected, true,
+                attribution_sample_begin,
+                prepared == nullptr ? row->transitions.size()
+                                    : prepared->entries.size(),
+                attribution_sample_end);
+            provenance.publish();
+        }
+        co_return row;
     }
 
     std::optional<QuotientOracleCompactRow>
@@ -984,13 +1016,42 @@
             const std::optional<SelectedAction> current =
                 selected_action(state);
             if (current.has_value()) {
+                ScopedReforgeRowProvenance provenance(
+                    *strict_, ReforgeRowOwner::StrictSelected);
+                const std::size_t attribution_sample_begin =
+                    strict_->telemetry()
+                        .reforge_build_attribution_samples.size();
+                const std::uint64_t work_before =
+                    strict_->telemetry().reforge_frontier_work;
                 auto preparation = quotient_prepare_primitive_row(
                     state, current->action_id);
                 while (!preparation.resume()) {
                     co_await solve_detail::CooperativeCheckpoint{
                         preparation.retained_bytes()};
                 }
-                (void)preparation.take_result();
+                const std::shared_ptr<const OutcomeDistribution> prepared =
+                    preparation.take_result();
+                const std::size_t attribution_sample_end =
+                    strict_->telemetry()
+                        .reforge_build_attribution_samples.size();
+                const std::uint64_t work_after =
+                    strict_->telemetry().reforge_frontier_work;
+                saturating_add(
+                    telemetry_.selected_reforge_work,
+                    work_after >= work_before
+                        ? work_after - work_before
+                        : 0);
+                telemetry_.strict_reforge_work = work_after;
+                QuotientOracleCompactRow row =
+                    quotient_selected_compact_row(state);
+                record_broad_row_attribution(
+                    state, row.selected, false,
+                    attribution_sample_begin,
+                    prepared == nullptr ? row.transitions.size()
+                                        : prepared->entries.size(),
+                    attribution_sample_end);
+                provenance.publish();
+                co_return row;
             }
         }
         co_return quotient_selected_compact_row(state);
@@ -1042,14 +1103,41 @@
             co_return std::nullopt;
         }
         if (!selected.has_value()) co_return std::nullopt;
+        ScopedReforgeRowProvenance provenance(
+            *strict_, ReforgeRowOwner::StrictSelected);
+        const std::size_t attribution_sample_begin =
+            strict_->telemetry()
+                .reforge_build_attribution_samples.size();
+        const std::uint64_t work_before =
+            strict_->telemetry().reforge_frontier_work;
         auto preparation = quotient_prepare_primitive_row(
             state, selected->action_id);
         while (!preparation.resume()) {
             co_await solve_detail::CooperativeCheckpoint{
                 preparation.retained_bytes()};
         }
-        (void)preparation.take_result();
-        co_return quotient_selected_compact_row_identity(state);
+        const std::shared_ptr<const OutcomeDistribution> prepared =
+            preparation.take_result();
+        const std::size_t attribution_sample_end =
+            strict_->telemetry()
+                .reforge_build_attribution_samples.size();
+        const std::uint64_t work_after =
+            strict_->telemetry().reforge_frontier_work;
+        saturating_add(
+            telemetry_.selected_reforge_work,
+            work_after >= work_before ? work_after - work_before : 0);
+        telemetry_.strict_reforge_work = work_after;
+        const std::optional<StableKey> identity =
+            quotient_selected_compact_row_identity(state);
+        if (identity.has_value()) {
+            record_broad_row_attribution(
+                state, *selected, false,
+                attribution_sample_begin,
+                prepared == nullptr ? 0 : prepared->entries.size(),
+                attribution_sample_end);
+            provenance.publish();
+        }
+        co_return identity;
     }
 
     void quotient_install_streamed_recipe(

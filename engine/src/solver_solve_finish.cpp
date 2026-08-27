@@ -173,6 +173,8 @@ void record_live_policy_lift_telemetry(
         adapter.alternative_obligations_certified;
     telemetry.alternative_obligations_partially_evaluated =
         adapter.alternative_obligations_partially_evaluated;
+    telemetry.alternative_frontier_growth_yields =
+        adapter.alternative_frontier_growth_yields;
     telemetry.alternative_obligations_noncompetitive =
         adapter.alternative_obligations_noncompetitive;
     telemetry.alternative_obligations_stale =
@@ -4634,6 +4636,8 @@ SolveWork::Impl::run_publication_pipeline() {
             telemetry.alternative_obligations_partially_evaluated =
                 certificate.adapter
                     .alternative_obligations_partially_evaluated;
+            telemetry.alternative_frontier_growth_yields =
+                certificate.adapter.alternative_frontier_growth_yields;
             telemetry.alternative_obligations_noncompetitive =
                 certificate.adapter
                     .alternative_obligations_noncompetitive;

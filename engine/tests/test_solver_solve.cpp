@@ -2137,6 +2137,9 @@ void run_alt_spam_tests() {
                 calc, &quotient, nullptr, std::nullopt, nullptr);
         PC_CHECK(valid_json_object(attribution_telemetry));
         PC_CHECK(attribution_telemetry.find(
+                     "\"level\":\"full_evidence\"") !=
+                 std::string::npos);
+        PC_CHECK(attribution_telemetry.find(
                      "\"carrier_bound_attribution\":{"
                      "\"observational_only\":true,") !=
                  std::string::npos);

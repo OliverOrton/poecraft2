@@ -1066,6 +1066,9 @@ void merge_adapter_telemetry(
         total.alternative_obligations_partially_evaluated,
         pass.alternative_obligations_partially_evaluated);
     saturating_add(
+        total.alternative_frontier_growth_yields,
+        pass.alternative_frontier_growth_yields);
+    saturating_add(
         total.alternative_obligations_noncompetitive,
         pass.alternative_obligations_noncompetitive);
     saturating_add(

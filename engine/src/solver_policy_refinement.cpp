@@ -3838,6 +3838,20 @@ lift_policy_quotient_pass_task(
                             1);
                         attempted_obligations.insert(obligation_id);
                         oracle.quotient_release_transient_kernel_caches();
+                        if (!frontier_states.empty()) {
+                            /* Frontier discovery invalidates the premise of
+                             * the remaining cell-local obligations. Return it
+                             * immediately so the persistent session can grow,
+                             * repartition, and invalidate through its existing
+                             * generation ledger. Before broad rows became
+                             * resumable this loop could replay thousands of
+                             * already-doomed obligations and never reach the
+                             * grow-in-place boundary before the watchdog. */
+                            saturating_add(
+                                telemetry.alternative_frontier_growth_yields,
+                                1);
+                            break;
+                        }
                         continue;
                     }
 

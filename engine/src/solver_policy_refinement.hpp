@@ -85,6 +85,7 @@ struct PolicyLiftAdapterTelemetry {
     std::uint64_t alternative_obligations_scheduled = 0;
     std::uint64_t alternative_obligations_certified = 0;
     std::uint64_t alternative_obligations_partially_evaluated = 0;
+    std::uint64_t alternative_frontier_growth_yields = 0;
     std::uint64_t alternative_obligations_noncompetitive = 0;
     std::uint64_t alternative_obligations_stale = 0;
     std::uint64_t alternative_verdict_revocations = 0;

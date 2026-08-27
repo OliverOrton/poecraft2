@@ -480,6 +480,10 @@ struct PolicyRefinementTelemetry {
     std::uint64_t alternative_obligations_scheduled = 0;
     std::uint64_t alternative_obligations_certified = 0;
     std::uint64_t alternative_obligations_partially_evaluated = 0;
+    /* A partial alternative row that exposes a strict successor outside the
+     * current closed partition must return that frontier to the persistent
+     * grow-in-place owner before unrelated obligations are replayed. */
+    std::uint64_t alternative_frontier_growth_yields = 0;
     std::uint64_t alternative_obligations_noncompetitive = 0;
     std::uint64_t alternative_obligations_stale = 0;
     std::uint64_t alternative_verdict_revocations = 0;
@@ -707,6 +711,9 @@ struct SolveDiagnostics {
     std::string solution_scope = "globally_optimal_unrestricted";
     std::string solve_profile_id = "default";
     std::uint32_t solve_profile_override_mask = 0;
+    /* Compact is the stable default aggregate document. Full evidence adds
+     * bounded carrier/action/proof samples without changing calculations. */
+    bool full_evidence = false;
     bool consider_imprint_programs = true;
     std::uint64_t algebraic_self_loops = 0;
     bool transition_cache_reused = false;
