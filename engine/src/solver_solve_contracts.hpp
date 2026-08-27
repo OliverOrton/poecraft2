@@ -135,6 +135,19 @@ inline bool advance_unreconciled_stable_policy_latch(
     return consecutive_rounds >= 2;
 }
 
+inline bool closed_coarse_candidate_requires_strict_lift(
+        const bool coarse_discovery_closed,
+        const std::uint64_t compatibility_triggers,
+        const bool publication_already_final) {
+    /* With no compatibility witness, direct compilation used to look like a
+     * reason to skip strict work. A closed coarse envelope plus a failed
+     * direct exact publication is instead precisely the small finite boundary
+     * at which strict action-accounting can reconcile the quotient and earn a
+     * global lower. Open/capped discovery retains the anytime bounded path. */
+    return coarse_discovery_closed && compatibility_triggers == 0 &&
+           !publication_already_final;
+}
+
 /*
  * Bounded refinement preserves the coarse solve's genuine stopping cause. A
  * globally exact strict envelope is a new closure proof and supersedes that
@@ -254,6 +267,9 @@ struct PolicyRefinementTelemetry {
      * refinement refusal cannot erase the selected core-policy evidence. */
     bool core_policy_candidate_present = false;
     std::string core_policy_status = "not_run";
+    bool pre_extraction_non_goal_closed = false;
+    bool coarse_action_envelope_closed = false;
+    bool coarse_discovery_closed = false;
     double core_policy_lower_bound =
         std::numeric_limits<double>::infinity();
     double core_policy_upper_bound =

@@ -476,12 +476,14 @@ SolveWork::Impl::run_publication_pipeline() {
              (focused_closure_proved &&
               result.diagnostics.focused_optimality_gap <=
                   exact_gap_proof_tolerance()));
-        const bool coarse_discovery_closed =
+        const bool coarse_action_envelope_closed =
             !requested_bounded_finish &&
             (!incremental_action_generation ||
              incremental_envelope_closed) &&
             !result.diagnostics.state_cap_hit &&
-            !result.diagnostics.resource_cap_hit &&
+            !result.diagnostics.resource_cap_hit;
+        const bool coarse_discovery_closed =
+            coarse_action_envelope_closed &&
             (!result.diagnostics.focused_expansion ||
              focused_bound_proved ||
              full_closure_after_focused_fallback ||
@@ -497,6 +499,12 @@ SolveWork::Impl::run_publication_pipeline() {
                 std::chrono::steady_clock::now();
             PolicyRefinementTelemetry& telemetry =
                 result.diagnostics.policy_refinement;
+            telemetry.pre_extraction_non_goal_closed =
+                pre_extraction_full_non_goal_closure;
+            telemetry.coarse_action_envelope_closed =
+                coarse_action_envelope_closed;
+            telemetry.coarse_discovery_closed =
+                coarse_discovery_closed;
             const std::uint64_t no_row =
                 std::numeric_limits<std::uint64_t>::max();
             telemetry.pre_restore_policy_present =
@@ -4035,9 +4043,11 @@ SolveWork::Impl::run_publication_pipeline() {
                     if (retain_certified_incumbent(
                             candidate, candidate_dynamic_bytes)) {
                         telemetry.direct_candidate_retained = true;
-                        skip_strict_lift =
-                            publish_certified_fallback(
-                                core_solve_termination);
+                        if (!coarse_discovery_closed) {
+                            skip_strict_lift =
+                                publish_certified_fallback(
+                                    core_solve_termination);
+                        }
                     } else {
                         record_candidate_sample(
                             candidate, "publication",
@@ -4096,19 +4106,16 @@ SolveWork::Impl::run_publication_pipeline() {
                                incumbent_owned_bytes(candidate) -
                                    sizeof(BoundedPolicyIncumbent))) {
                     telemetry.direct_candidate_retained = true;
-                    /* A nonzero refinement allowance is the product's
-                     * bounded optional-proof budget. Once direct compilation
-                     * has independently established a proper, zero-offpolicy,
-                     * completely priced executable that improves the retained
-                     * portfolio, publish that exact evaluated cost as the
-                     * bounded upper. A solver/exact cost mismatch still
-                     * blocks exactness, but it must not trigger a second
-                     * strict-lift traversal that delays the better strategy
-                     * past the product boundary. Native callers that leave
-                     * the allowance at zero retain the historical exhaustive
-                     * strict-lift behavior. */
+                    /* A nonzero refinement allowance is the product's bounded
+                     * optional-proof budget. While discovery remains open, a
+                     * proper, zero-offpolicy, completely priced direct graph
+                     * publishes immediately instead of repeating the same
+                     * allowance in strict lift. A fully closed coarse envelope
+                     * is different: strict action accounting is then allowed
+                     * to spend the remaining allowance and earn exactness. */
                     if (options.max_policy_refinement_states != 0 &&
-                        direct_precedes_verified) {
+                        direct_precedes_verified &&
+                        !coarse_discovery_closed) {
                         skip_strict_lift =
                             publish_certified_fallback(
                                 core_solve_termination);
@@ -4194,6 +4201,10 @@ SolveWork::Impl::run_publication_pipeline() {
                     skip_strict_lift = true;
                     }
                 }
+                direct_certification_requires_strict_lift =
+                    closed_coarse_candidate_requires_strict_lift(
+                        coarse_discovery_closed, telemetry.triggers,
+                        skip_strict_lift);
             } else {
                 const std::string reason =
                     "policy_direct_certification_" +

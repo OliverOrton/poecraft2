@@ -2812,6 +2812,15 @@ std::string serialize_solver_telemetry(
         json += ",\"status\":";
         append_telemetry_json_string(
             json, refinement.core_policy_status);
+        json += ",\"pre_extraction_non_goal_closed\":" +
+                std::string(bool_json(
+                    refinement.pre_extraction_non_goal_closed));
+        json += ",\"coarse_action_envelope_closed\":" +
+                std::string(bool_json(
+                    refinement.coarse_action_envelope_closed));
+        json += ",\"coarse_discovery_closed\":" +
+                std::string(bool_json(
+                    refinement.coarse_discovery_closed));
         json += ",\"lower_bound\":" +
                 telemetry_finite_json(
                     refinement.core_policy_lower_bound);

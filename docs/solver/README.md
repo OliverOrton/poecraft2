@@ -622,9 +622,12 @@ fallback verification. Calculator supplies 200,000 states after the compact
 four-T1 direct graph was measured to close at 162,829 raw pairs and 43,833
 refined behavioral pairs. When that direct graph is proper, zero-off-policy,
 completely priced, and cheaper than the retained portfolio, its independently
-evaluated cost publishes as a bounded upper without launching strict lift. A
-solver/exact cost mismatch still blocks exactness. Exhausting the allowance
-still retains the previously verified result.
+evaluated cost publishes as a bounded upper without launching strict lift
+while coarse discovery remains open. Once the coarse state/action envelope is
+fully closed, an unreconciled direct candidate continues into strict lift
+under the same allowance so a small closed problem can still earn global exact
+closure. A solver/exact cost mismatch always blocks exactness. Exhausting the
+allowance still retains the previously verified result.
 
 There is no Monte Carlo fallback in the calculation engine. Sampling is used
 as test or simulator evidence, not to produce `pc_calc_action_outcomes` or

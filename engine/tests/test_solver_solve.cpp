@@ -2523,6 +2523,14 @@ void run_policy_guided_exact_lift_tests() {
         successful_refined_publication_termination(
             SolveTermination::NoExecutablePolicy, false, false, true) ==
         SolveTermination::ExactClosed);
+    PC_CHECK(closed_coarse_candidate_requires_strict_lift(
+        true, 0, false));
+    PC_CHECK(!closed_coarse_candidate_requires_strict_lift(
+        false, 0, false));
+    PC_CHECK(!closed_coarse_candidate_requires_strict_lift(
+        true, 1, false));
+    PC_CHECK(!closed_coarse_candidate_requires_strict_lift(
+        true, 0, true));
     bool rejected_unclosed_synthesis = false;
     try {
         (void)successful_refined_publication_termination(
@@ -7001,6 +7009,9 @@ void run_incremental_action_generation_tests() {
     PC_CHECK(delta.converged);
     PC_CHECK(
         delta.diagnostics.incremental_action_envelope_closed);
+    PC_CHECK(
+        delta.diagnostics.action_envelope_ledger_json.find(
+            "\"unresolved_named_stop\":0") != std::string::npos);
     PC_CHECK(
         delta.diagnostics
             .incremental_states_outside_chaos_support > 0);

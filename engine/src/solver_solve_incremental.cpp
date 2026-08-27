@@ -2066,6 +2066,30 @@ bool SolveWork::Impl::advance_incremental_classification() {
                 candidate.status =
                     IncrementalAlternativeRow::Status::Admitted;
                 candidate.improvement_margin = 0.0;
+                const ActionEnvelopeEntry* ledger_entry =
+                    action_envelope_ledger.find(
+                        candidate.state, candidate.operator_index);
+                const ActionEnvelopeLane ledger_lane =
+                    ledger_entry == nullptr
+                        ? ActionEnvelopeLane::IncrementalCarrierLocal
+                        : ledger_entry->lane;
+                const std::uint32_t ledger_evidence =
+                    (ledger_entry == nullptr
+                         ? EnvelopeEvidenceNone
+                         : ledger_entry->evidence) |
+                    EnvelopeEvidenceCarrierFacts |
+                    EnvelopeEvidenceCarrierEffectSummary |
+                    EnvelopeEvidenceActionRefinementContract |
+                    EnvelopeEvidenceExactRegistryLegality |
+                    EnvelopeEvidenceExactOptionKernel;
+                /* Joint final admission closes the exact materialized row,
+                 * not merely its scheduler status. Keep the typed lifecycle
+                 * synchronized so a closed envelope cannot retain a stale
+                 * MissingVerifiedUpper obligation in diagnostics or in a
+                 * later proof consumer. */
+                action_envelope_ledger.exact_row_complete(
+                    candidate.state, candidate.operator_index,
+                    ledger_lane, candidate.row_index, ledger_evidence);
             }
             /* The next restart must be the ordinary closed-envelope lower
              * optimization, not another one-proof upper-witness pass. If
