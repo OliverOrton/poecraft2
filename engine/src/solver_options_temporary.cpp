@@ -34,7 +34,8 @@ void CalcContext::initialize_temporary_bench_effect_classes() {
     temporary_bench_effect_classes_.clear();
     temporary_bench_precompiled_bytes_ = 0;
     if (!goal_.automatic_candidates ||
-        !registry_.index_by_id.contains("remove_crafted_modifiers")) {
+        solver_action_family_disabled(
+            goal_, SolverActionFamily::Bench)) {
         temporary_bench_precompile_ns_ = static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - started)
@@ -42,6 +43,10 @@ void CalcContext::initialize_temporary_bench_effect_classes() {
         return;
     }
 
+    const bool temporary_bench_enabled =
+        !solver_action_family_disabled(
+            goal_, SolverActionFamily::TemporaryBench) &&
+        registry_.index_by_id.contains("remove_crafted_modifiers");
     std::vector<std::uint32_t> temporary_bench;
     for (std::uint32_t index = 0; index < registry_.actions.size(); ++index) {
         const ActionDescriptor& action = registry_.actions[index];
@@ -56,9 +61,17 @@ void CalcContext::initialize_temporary_bench_effect_classes() {
         if (metamod < 0 &&
             goal_mask_for_mod(*session_, goal_, action.params.mod_id) != 0) {
             automatic_goal_bench_actions_.push_back(index);
-        } else if (metamod < 0 || cannot_roll) {
+        } else if (temporary_bench_enabled &&
+                   (metamod < 0 || cannot_roll)) {
             temporary_bench.push_back(index);
         }
+    }
+    if (!temporary_bench_enabled) {
+        temporary_bench_precompile_ns_ = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - started)
+                .count());
+        return;
     }
 
     std::vector<std::vector<std::uint64_t>> target_masks(

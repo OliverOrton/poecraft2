@@ -129,6 +129,39 @@ enum class PrimitiveTelemetryFamily : std::uint8_t {
 inline constexpr std::size_t kPrimitiveTelemetryFamilyCount =
     static_cast<std::size_t>(PrimitiveTelemetryFamily::Count);
 
+/* User-visible solve-envelope families. This vocabulary deliberately groups
+ * primitive mechanics and carrier-local automatic programs at the level a
+ * caller can safely disable. PrimitiveTelemetryFamily remains the finer
+ * performance-accounting taxonomy; AutomaticCandidateKind remains the exact
+ * generated-program taxonomy. */
+enum class SolverActionFamily : std::uint8_t {
+    Currency = 0,
+    Essence = 1,
+    Fossil = 2,
+    Harvest = 3,
+    Bench = 4,
+    Eldritch = 5,
+    Influence = 6,
+    Fracture = 7,
+    Veiled = 8,
+    Cleanup = 9,
+    TemporaryBench = 10,
+    Metamod = 11,
+    Imprint = 12,
+    Restart = 13,
+    Count = 14,
+};
+
+inline constexpr std::size_t kSolverActionFamilyCount =
+    static_cast<std::size_t>(SolverActionFamily::Count);
+using SolverActionFamilyMask = std::uint32_t;
+
+inline constexpr SolverActionFamilyMask solver_action_family_bit(
+    const SolverActionFamily family) {
+    return SolverActionFamilyMask{1}
+           << static_cast<std::uint8_t>(family);
+}
+
 /* Product goal filtering classifies every native primitive into exactly one
  * of these roles. Candidate and dependency rows remain in the registry;
  * filtered rows are retained only as compact admission evidence. */
@@ -302,6 +335,10 @@ struct GoalSpec {
     /* Product goal-relevant solves enable native S8.3 candidate synthesis.
      * Explicit historical/manual goal documents remain unchanged. */
     bool automatic_candidates = false;
+    /* A solve with any bit set is exact only within this explicitly
+     * restricted action envelope. The engine owns family membership for both
+     * ordinary primitives and generated carrier-local programs. */
+    SolverActionFamilyMask disabled_action_families = 0;
     std::vector<FixedOptionSpec> fixed_options;
 
     std::size_t required_satisfied_slots() const {

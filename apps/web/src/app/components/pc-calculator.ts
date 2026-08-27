@@ -37,6 +37,7 @@ import {
     SolveProgress,
     SolveSummary,
     SolverActionInfo,
+    SolverActionFamily,
     SolverGoal,
 } from "../engine-protocol";
 import {
@@ -108,6 +109,24 @@ const MAX_GOAL_SLOTS = 8;
 const MAX_FOSSILS = 4;
 const MAX_OUTCOME_ROWS = 40;
 const REACH_KIND_CRAFTED = 2;
+
+const DIAGNOSTIC_SOLVER_FAMILIES: ReadonlyArray<{
+    family: SolverActionFamily;
+    label: string;
+}> = [
+    { family: "temporary_bench", label: "Temporary bench blockers" },
+    { family: "metamod", label: "Protected metamod programs" },
+    { family: "harvest", label: "Harvest" },
+    { family: "fossil", label: "Fossils" },
+    { family: "essence", label: "Essences" },
+    { family: "bench", label: "Bench crafts and finishes" },
+    { family: "eldritch", label: "Eldritch currency" },
+    { family: "fracture", label: "Fracture" },
+    { family: "veiled", label: "Veiled currency and Unveil" },
+    { family: "influence", label: "Influence Exalts" },
+    { family: "cleanup", label: "Crafted-mod cleanup" },
+    { family: "currency", label: "Ordinary currency" },
+];
 
 /** Same craft panels as the Emulator; buttons select instead of apply. */
 const BASIC_ACTIONS = [
@@ -236,6 +255,7 @@ export class PcCalculator extends HTMLElement {
     private solveRelativeGapPercentTarget = 0;
     private solveAllowEconomicRestart = false;
     private solveConsiderImprintPrograms = false;
+    private solveDisabledActionFamilies = new Set<SolverActionFamily>();
     private solveRunning = false;
     private solveProgress: SolveProgress | null = null;
     private solveElapsedMs = 0;
@@ -459,6 +479,9 @@ export class PcCalculator extends HTMLElement {
             mode,
             this.actionId,
             actions,
+            mode === "odds"
+                ? []
+                : Array.from(this.solveDisabledActionFamilies).sort(),
         );
     }
 
@@ -693,19 +716,31 @@ export class PcCalculator extends HTMLElement {
         return entry?.cost_keys ?? [];
     }
 
+    private enabledSolvePickerActions(): SolverActionInfo[] {
+        return this.pickerActions.filter(
+            (action) =>
+                !this.solveDisabledActionFamilies.has(action.family),
+        );
+    }
+
     private async startSolve(): Promise<void> {
         const imprintCostKeys = this.bestiaryOption
             ? this.imprintCreationCostKeys()
             : [];
         const pinned = pinEconomy(
             [
-                ...this.pickerActions.flatMap((action) => action.cost_keys),
+                ...this.enabledSolvePickerActions().flatMap(
+                    (action) => action.cost_keys,
+                ),
                 ...imprintCostKeys,
             ],
         );
         const pinnedPrice = (key: string): number | undefined =>
             pinned.snapshot.prices[key];
-        const readiness = solvePriceReadiness(this.pickerActions, pinnedPrice);
+        const readiness = solvePriceReadiness(
+            this.enabledSolvePickerActions(),
+            pinnedPrice,
+        );
         if (!this.solver || !this.item || this.slots.length === 0) {
             this.solveError = {
                 heading: "Solve is not ready.",
@@ -1797,7 +1832,7 @@ export class PcCalculator extends HTMLElement {
         const host = this.querySelector<HTMLElement>(".pc-calc-solve-panel");
         if (!host) return;
         const readiness = solvePriceReadiness(
-            this.pickerActions,
+            this.enabledSolvePickerActions(),
             getActionPrice,
         );
         const solveCostCounts = new Map<string, number>();
@@ -1827,6 +1862,14 @@ export class PcCalculator extends HTMLElement {
             !readiness.missingFractureBasePrice &&
             !this.busy;
         const progress = this.solveProgress;
+        const disabledFamilyMarkup = DIAGNOSTIC_SOLVER_FAMILIES.map(
+            ({ family, label }) => `<label>
+                <input type="checkbox" data-solve-disabled-family="${family}"
+                    ${this.solveDisabledActionFamilies.has(family) ? "checked" : ""}
+                    ${this.solveRunning ? "disabled" : ""}>
+                <span>${escapeHtml(label)}</span>
+            </label>`,
+        ).join("");
         const progressLower = progress
             ? solveBoundLabel(progress.lower_bound)
             : "Pending";
@@ -1945,6 +1988,11 @@ export class PcCalculator extends HTMLElement {
                         ${this.solveConsiderImprintPrograms ? "checked" : ""}>
                     <span>Consider automatic Imprint checkpoint/retry programs</span>
                 </label>
+                <details class="pc-calc-solve-family-controls">
+                    <summary>Diagnostic action-family controls</summary>
+                    <div>${disabledFamilyMarkup}</div>
+                    <p>Checked families are excluded by the native engine. The result is exact only within that restricted action envelope.</p>
+                </details>
                 <p>Either positive target may stop the solve after a complete lower/upper round. Targets do not change Bellman comparisons or exact results.</p>
             </div>
             ${
@@ -2013,6 +2061,21 @@ export class PcCalculator extends HTMLElement {
                 this.solveConsiderImprintPrograms =
                     (event.currentTarget as HTMLInputElement).checked;
             });
+        host.querySelectorAll<HTMLInputElement>(
+            "[data-solve-disabled-family]",
+        ).forEach((input) => {
+            input.addEventListener("change", () => {
+                const family = input.dataset
+                    .solveDisabledFamily as SolverActionFamily;
+                if (input.checked) {
+                    this.solveDisabledActionFamilies.add(family);
+                } else {
+                    this.solveDisabledActionFamilies.delete(family);
+                }
+                this.clearSolveResult();
+                this.renderSolvePanel();
+            });
+        });
         host.querySelectorAll<HTMLButtonElement>("[data-solve-cmd]").forEach(
             (button) => {
                 button.addEventListener("click", () => {

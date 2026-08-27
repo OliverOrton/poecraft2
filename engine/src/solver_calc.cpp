@@ -480,6 +480,13 @@ CalcContext::CalcContext(
             }
         }
     }
+    const std::size_t candidates_before_family_filter = candidates_.size();
+    std::erase_if(
+        candidates_,
+        [&](const std::uint32_t index) {
+            return index >= registry_.actions.size() ||
+                solver_action_disabled(goal_, registry_.actions[index]);
+        });
     const auto planner_started = std::chrono::steady_clock::now();
     operators_ = build_planner_operators(
         *session_, goal_, registry_, candidates_);
@@ -492,6 +499,9 @@ CalcContext::CalcContext(
         registry_.actions.size());
     action_control_.included_primitives = static_cast<std::uint32_t>(
         candidates_.size());
+    action_control_.pruned_disabled_family =
+        static_cast<std::uint32_t>(
+            candidates_before_family_filter - candidates_.size());
     action_control_.automatic_options = static_cast<std::uint32_t>(
         std::count_if(
             candidates_.begin(), candidates_.end(),

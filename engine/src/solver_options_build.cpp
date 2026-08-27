@@ -3,6 +3,77 @@
 namespace poecraft {
 namespace solver {
 
+namespace {
+
+bool named_action_disabled(
+    const GoalSpec& goal,
+    const ActionRegistry& registry,
+    const std::string& id) {
+    if (id.empty()) return false;
+    const auto found = registry.index_by_id.find(id);
+    return found != registry.index_by_id.end() &&
+        solver_action_disabled(goal, registry.actions.at(found->second));
+}
+
+bool fixed_option_disabled(
+    const GoalSpec& goal,
+    const ActionRegistry& registry,
+    const FixedOptionSpec& spec) {
+    if (solver_automatic_candidate_disabled(goal, spec.automatic_kind)) {
+        return true;
+    }
+    const auto disabled = [&](const SolverActionFamily family) {
+        return solver_action_family_disabled(goal, family);
+    };
+    switch (spec.kind) {
+    case FixedOptionKind::ScourAlchemy:
+        if (disabled(SolverActionFamily::Currency)) return true;
+        break;
+    case FixedOptionKind::EldritchSideIntent:
+        if (disabled(SolverActionFamily::Eldritch)) return true;
+        break;
+    case FixedOptionKind::ProtectedSide:
+    case FixedOptionKind::ProtectedRepeat:
+    case FixedOptionKind::MultimodFinish:
+        if (disabled(SolverActionFamily::Metamod) ||
+            disabled(SolverActionFamily::Bench)) {
+            return true;
+        }
+        break;
+    case FixedOptionKind::FracturePrepare:
+        if (disabled(SolverActionFamily::Fracture)) return true;
+        break;
+    case FixedOptionKind::ImprintRetry:
+        if (disabled(SolverActionFamily::Imprint)) return true;
+        break;
+    case FixedOptionKind::TemporaryBenchRepeat:
+        if (disabled(SolverActionFamily::TemporaryBench) ||
+            disabled(SolverActionFamily::Bench)) {
+            return true;
+        }
+        break;
+    case FixedOptionKind::Renewal:
+        break;
+    }
+    if (named_action_disabled(goal, registry, spec.action_id) ||
+        named_action_disabled(
+            goal, registry, spec.constructive_finish_action_id)) {
+        return true;
+    }
+    const auto any_disabled = [&](const std::vector<std::string>& ids) {
+        return std::any_of(
+            ids.begin(), ids.end(),
+            [&](const std::string& id) {
+                return named_action_disabled(goal, registry, id);
+            });
+    };
+    return any_disabled(spec.setup_action_ids) ||
+        any_disabled(spec.bench_craft_ids) ||
+        any_disabled(spec.program_action_ids);
+}
+
+} // namespace
+
 std::vector<PlannerOperator> build_planner_operators(
     const SessionImpl& session,
     const GoalSpec& goal,
@@ -23,7 +94,8 @@ std::vector<PlannerOperator> build_planner_operators(
             aggregate_resources(registry, primitive.primitive_program);
         bind_planner_primitive_action_ids(registry, primitive);
         bind_planner_bestiary_action_ids(session, primitive);
-        if (goal.automatic_candidates) {
+        if (goal.automatic_candidates &&
+            !solver_action_disabled(goal, action)) {
             if (action.params.type == ActionType::Fracture) {
                 primitive.relevant_goal_mask =
                     goal.slots.size() == 32
@@ -97,6 +169,12 @@ std::vector<PlannerOperator> build_planner_operators(
             }
         }
     }
+
+    std::erase_if(
+        option_specs,
+        [&](const FixedOptionSpec& spec) {
+            return fixed_option_disabled(goal, registry, spec);
+        });
 
     std::set<std::string> option_ids;
     for (const FixedOptionSpec& spec : option_specs) {

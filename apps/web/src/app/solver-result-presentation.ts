@@ -543,6 +543,21 @@ function automaticFamilyPresentation(
     };
 }
 
+function disabledActionFamilyText(telemetry: unknown): string | null {
+    const actionControl = objectRecord(objectRecord(telemetry)?.action_control);
+    const disabled = actionControl?.disabled_action_families;
+    if (!Array.isArray(disabled)) return null;
+    const families = disabled
+        .filter((family): family is string =>
+            typeof family === "string" && family.length > 0
+        )
+        .map(readableAutomaticKind)
+        .sort((left, right) => left.localeCompare(right));
+    return families.length > 0
+        ? `Restricted action envelope: ${families.join(" / ")} disabled. Exactness, bounds, and policy authority apply only within this requested envelope.`
+        : null;
+}
+
 function readableAutomaticKind(kind: string): string {
     return kind
         .split("_")
@@ -642,6 +657,7 @@ export function solveResultMarkup(options: SolveResultMarkupOptions): string {
     } = options;
     const obligations = actionObligationPresentation(telemetry);
     const automatic = automaticFamilyPresentation(telemetry);
+    const disabledFamilyScope = disabledActionFamilyText(telemetry);
     const exactExecutablePolicy = hasExactExecutablePolicy(
         summary,
         obligations,
@@ -722,6 +738,7 @@ export function solveResultMarkup(options: SolveResultMarkupOptions): string {
             <strong>${scopeLabel}</strong>
             <span>${gatingLabel}</span>
             <span class="${considerImprintPrograms ? "" : "is-warning"}">${imprintScopeLabel}</span>
+            ${disabledFamilyScope ? `<span class="is-warning" data-solve-result="disabled-action-families">${escapeHtml(disabledFamilyScope)}</span>` : ""}
             <span>Admitted priced primitive families: ${escapeHtml(admittedFamilies)}.</span>
             <span>${escapeHtml(automaticFamilyText(automatic))}</span>
             ${compiledOperations ? `<span>Compiled policy operations: ${escapeHtml(compiledOperations)}.</span>` : ""}

@@ -426,7 +426,9 @@ AutomaticOptionSynthesis synthesize_automatic_options(
      * an observed set has no goal offer, the cheapest exact cleanup/retry
      * continuation among the legal non-goal offers.
      */
-    if (state.rarity == PC_RARITY_RARE &&
+    if (!solver_action_family_disabled(
+            goal, SolverActionFamily::Veiled) &&
+        state.rarity == PC_RARITY_RARE &&
         (state.flags & kFlagVeiledMod) == 0 &&
         mask_has_any(session.unveiled_generic_mask)) {
         std::vector<std::uint32_t> veiled_goal_slots;
@@ -492,7 +494,9 @@ AutomaticOptionSynthesis synthesize_automatic_options(
      * sequence of real currency operations; no hidden dominance flag enters
      * the state or evaluator.
      */
-    if (session.eldritch_eligible &&
+    if (!solver_action_family_disabled(
+            goal, SolverActionFamily::Eldritch) &&
+        session.eldritch_eligible &&
         state.rarity == PC_RARITY_RARE) {
         const auto action_cost =
             [&](const std::uint32_t action) {
@@ -720,7 +724,11 @@ AutomaticOptionSynthesis synthesize_automatic_options(
             : goal_mask_for_mod(
                   session, goal,
                   registry.actions.at(multimod_entry->second).params.mod_id);
-    if (multimod_entry != registry.index_by_id.end() &&
+    if (!solver_action_family_disabled(
+            goal, SolverActionFamily::Metamod) &&
+        !solver_action_family_disabled(
+            goal, SolverActionFamily::Bench) &&
+        multimod_entry != registry.index_by_id.end() &&
         (multimod_goal_mask & ~satisfied) != 0 &&
         action_legal(
             session, registry.actions.at(multimod_entry->second), state)) {
@@ -755,7 +763,11 @@ AutomaticOptionSynthesis synthesize_automatic_options(
     const bool cleanup_before_setup =
         state_has_unfractured_crafted(state) &&
         state.crafted_goal_mask == 0;
-    if (cleanup != registry.index_by_id.end() &&
+    if (!solver_action_family_disabled(
+            goal, SolverActionFamily::TemporaryBench) &&
+        !solver_action_family_disabled(
+            goal, SolverActionFamily::Bench) &&
+        cleanup != registry.index_by_id.end() &&
         action_has_prices(cleanup->second) &&
         (!state_has_unfractured_crafted(state) || cleanup_before_setup)) {
         pc_item_state temporary_carrier = carrier;
@@ -798,6 +810,9 @@ AutomaticOptionSynthesis synthesize_automatic_options(
         };
         for (const TemporaryBenchEffectClass& effect : precompiled) {
             if (!target_slot_missing(state, effect.goal_slot) ||
+                solver_action_disabled(
+                    goal,
+                    registry.actions.at(effect.followup_action)) ||
                 !action_has_prices(effect.followup_action) ||
                 !action_legal(
                     session, registry.actions.at(effect.followup_action),
@@ -966,6 +981,10 @@ AutomaticOptionSynthesis synthesize_automatic_options(
             reachable_by_followup.at(followup),
             calc.layout().slots.at(slot).satisfying_mask);
     };
+    if (!solver_action_family_disabled(
+            goal, SolverActionFamily::Metamod) &&
+        !solver_action_family_disabled(
+            goal, SolverActionFamily::Bench))
     for (const std::int8_t side : {static_cast<std::int8_t>(PC_SIDE_PREFIX),
                                    static_cast<std::int8_t>(PC_SIDE_SUFFIX)}) {
         const int lock_code =
@@ -1007,7 +1026,8 @@ AutomaticOptionSynthesis synthesize_automatic_options(
                 (side == PC_SIDE_PREFIX
                      ? followup.preservation.respects_prefix_lock
                      : followup.preservation.respects_suffix_lock);
-            if (!respects || !calc_supports(followup) ||
+            if (solver_action_disabled(goal, followup) ||
+                !respects || !calc_supports(followup) ||
                 (followup.params.type != ActionType::Scour &&
                  !approved_renewal_roll(followup))) {
                 continue;
@@ -1857,7 +1877,11 @@ discover_automatic_imprint_options_cooperatively(
     const std::uint32_t state_id,
     AutomaticAdmissionLimits limits) {
     ImprintDiscoveryResult result;
-    if (!limits.consider_imprint_programs) co_return result;
+    if (!limits.consider_imprint_programs ||
+        solver_action_family_disabled(
+            calc.goal(), SolverActionFamily::Imprint)) {
+        co_return result;
+    }
     result.depth_limit = limits.max_imprint_program_depth == 0
                              ? kDefaultImprintProgramDepth
                              : limits.max_imprint_program_depth;

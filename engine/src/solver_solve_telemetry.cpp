@@ -4171,6 +4171,22 @@ std::string serialize_solver_telemetry(
         calc.action_control().layout_primitives);
     json += ",\"goal_relevant_pruned\":" + std::to_string(
         calc.action_control().pruned_outside_goal_relevance);
+    json += ",\"disabled_action_families\":[";
+    bool first_disabled_family = true;
+    for (std::size_t family = 0;
+         family < kSolverActionFamilyCount; ++family) {
+        const auto value = static_cast<SolverActionFamily>(family);
+        if (!solver_action_family_disabled(calc.goal(), value)) continue;
+        if (!first_disabled_family) json.push_back(',');
+        first_disabled_family = false;
+        append_telemetry_json_string(
+            json, solver_action_family_name(value));
+    }
+    json += "]";
+    json += ",\"family_restricted\":" + std::string(bool_json(
+        calc.goal().disabled_action_families != 0));
+    json += ",\"pruned_disabled_family\":" + std::to_string(
+        calc.action_control().pruned_disabled_family);
     json += ",\"product_admission\":{\"goal_filtering\":" +
             std::string(bool_json(calc.registry().product_goal_filtering));
     json += ",\"roles\":{";

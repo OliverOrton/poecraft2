@@ -1,4 +1,8 @@
-import type { SolverActionInfo, SolverGoal } from "./engine-protocol";
+import type {
+    SolverActionFamily,
+    SolverActionInfo,
+    SolverGoal,
+} from "./engine-protocol";
 import {
     isStrategyDocument,
     validateStrategy,
@@ -31,6 +35,7 @@ export function buildCalculatorSolverGoal(
     mode: CalculatorSolverGoalMode,
     inspectedActionId: string,
     actions?: readonly string[],
+    disabledActionFamilies?: readonly SolverActionFamily[],
 ): SolverGoal {
     const scopedActions =
         mode === "scoped_solve" ? [...(actions ?? [])] : null;
@@ -40,6 +45,9 @@ export function buildCalculatorSolverGoal(
         ...(mode !== "odds" ? { action_mode: "goal_relevant" as const } : {}),
         min_satisfied_slots: fields.minSatisfiedSlots,
         slots: fields.slots,
+        ...(mode !== "odds" && disabledActionFamilies?.length
+            ? { disabled_action_families: [...disabledActionFamilies] }
+            : {}),
         ...(scopedActions
             ? { actions: scopedActions }
             : {

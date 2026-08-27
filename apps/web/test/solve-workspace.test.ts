@@ -78,6 +78,27 @@ import { createDefaultStrategy } from "../src/app/strategy-model";
         [selectedFossil],
         "the exact odds handle still materializes a selected Fossil",
     );
+    assert.deepEqual(
+        buildCalculatorSolverGoal(
+            fields,
+            "product_envelope",
+            "chaos",
+            undefined,
+            ["temporary_bench", "harvest"],
+        ).disabled_action_families,
+        ["temporary_bench", "harvest"],
+    );
+    assert.equal(
+        buildCalculatorSolverGoal(
+            fields,
+            "odds",
+            "chaos",
+            undefined,
+            ["temporary_bench"],
+        ).disabled_action_families,
+        undefined,
+        "Solve diagnostics must not narrow exact single-action odds",
+    );
     console.log(
         "  ok - Calculator odds selection is isolated from the product Solve envelope",
     );
@@ -200,6 +221,13 @@ function action(id: string, costKeys: string[]): SolverActionInfo {
         index: 0,
         id,
         display_name: id,
+        family: id === "restart"
+            ? "restart"
+            : id.startsWith("fossil:")
+              ? "fossil"
+              : id === "fracture"
+                ? "fracture"
+                : "currency",
         transition_kind: 0,
         synthetic: false,
         cost_keys: costKeys,

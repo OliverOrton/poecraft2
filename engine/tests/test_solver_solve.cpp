@@ -7735,6 +7735,30 @@ void run_automatic_imprint_cooperative_tests() {
         admitted_imprint_programs(
             no_imprint_calc, no_imprint_batch).empty());
 
+    GoalSpec family_disabled_goal = goal;
+    family_disabled_goal.disabled_action_families =
+        solver_action_family_bit(SolverActionFamily::Imprint);
+    CalcContext family_disabled_calc(
+        session, family_disabled_goal, registry, candidates,
+        false, true, false, std::nullopt, {}, false);
+    const std::uint32_t family_disabled_state =
+        family_disabled_calc.intern_item(magic);
+    const StateLocalAutomaticBatch family_disabled_batch =
+        family_disabled_calc.admit_state_local_automatic_candidates(
+            family_disabled_state, limits);
+    PC_CHECK(
+        family_disabled_batch.status ==
+        StateLocalAutomaticBatchStatus::Complete);
+    PC_CHECK(
+        family_disabled_batch.phases.imprint_programs_evaluated == 0);
+    PC_CHECK(
+        family_disabled_batch.phases.imprint_action_state_evaluations == 0);
+    PC_CHECK(
+        family_disabled_batch.phases.imprint_outcomes_merged == 0);
+    PC_CHECK(
+        admitted_imprint_programs(
+            family_disabled_calc, family_disabled_batch).empty());
+
     /* Use the strict parent as the deterministic complete-envelope reference.
      * The retained local admission context always distinguishes exclusion
      * effects independently of its parent's product setting. */

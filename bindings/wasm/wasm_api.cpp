@@ -2553,6 +2553,8 @@ const char* pcw_solver_actions(uint32_t solver_id) {
         append_escaped(out, info.id);
         out += ",\"display_name\":";
         append_escaped(out, info.display_name);
+        out += ",\"family\":";
+        append_escaped(out, info.family);
         out += ",\"transition_kind\":" +
                std::to_string(info.transition_kind);
         out += ",\"synthetic\":";

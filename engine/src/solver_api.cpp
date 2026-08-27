@@ -17,6 +17,7 @@
 
 #include "handles_internal.hpp"
 #include "json.hpp"
+#include "solver_action_family_contract.hpp"
 #include "solver_internal.hpp"
 #include "solver_diagnostic_options.hpp"
 
@@ -49,6 +50,31 @@ std::string string_member(const Value& value, const char* key) {
     const Value* found = value.find(key);
     return found != nullptr && found->type == Type::String ? found->string
                                                            : std::string();
+}
+
+solver::SolverActionFamilyMask disabled_action_families(
+    const Value& root) {
+    const Value* disabled = root.find("disabled_action_families");
+    if (disabled == nullptr) return 0;
+    if (disabled->type != Type::Array) {
+        throw std::runtime_error(
+            "goal: disabled_action_families must be an array");
+    }
+    solver::SolverActionFamilyMask mask = 0;
+    for (const Value& entry : disabled->array) {
+        if (entry.type != Type::String) {
+            throw std::runtime_error(
+                "goal: disabled action families must be strings");
+        }
+        solver::SolverActionFamily family =
+            solver::SolverActionFamily::Count;
+        if (!solver::parse_solver_action_family(entry.string, family)) {
+            throw std::runtime_error(
+                "goal: unknown disabled action family: " + entry.string);
+        }
+        mask |= solver::solver_action_family_bit(family);
+    }
+    return mask;
 }
 
 solver::ActionRegistryBuildOptions registry_build_options(
@@ -268,6 +294,7 @@ solver::GoalSpec parse_goal(
     }
 
     solver::GoalSpec goal;
+    goal.disabled_action_families = disabled_action_families(root);
     const Value* automatic_candidates = root.find("automatic_candidates");
     if (automatic_candidates != nullptr &&
         automatic_candidates->type != Type::Bool) {
@@ -1101,6 +1128,8 @@ pc_result pc_solver_get_action_info(
         action.preservation.respects_cannot_roll_attack ? 1 : 0;
     out_info->respects_cannot_roll_caster =
         action.preservation.respects_cannot_roll_caster ? 1 : 0;
+    out_info->family = solver::solver_action_family_name(
+        solver::solver_action_family_for_action(action)).data();
     clear_error(out_error);
     return PC_RESULT_OK;
 }

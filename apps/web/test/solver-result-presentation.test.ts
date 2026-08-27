@@ -71,6 +71,7 @@ import {
                 },
             },
             action_control: {
+                disabled_action_families: ["temporary_bench", "fossil"],
                 automatic_candidates: {
                     enabled: true,
                     by_kind: {
@@ -125,6 +126,8 @@ import {
     assert.doesNotMatch(markup, /upper bound[^<]*optimum/i);
     assert.doesNotMatch(markup, /Did not converge/);
     assert.match(markup, /Automatic Imprint checkpoint\/retry programs are excluded by caller scope/);
+    assert.match(markup, /Restricted action envelope: Fossil \/ Temporary Bench disabled/);
+    assert.match(markup, /apply only within this requested envelope/);
     assert.match(markup, /data-consider-imprint-programs="false"/);
     console.log("  ok - bounded target results use the approved certificate DOM");
 }

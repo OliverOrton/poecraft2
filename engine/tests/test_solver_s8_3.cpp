@@ -696,6 +696,33 @@ void run_temporary_blocker_price_flip() {
         add_mod(start, *session, mod);
     }
     const std::uint32_t state = calc.intern_item(start);
+
+    GoalSpec disabled_goal = goal;
+    disabled_goal.disabled_action_families = solver_action_family_bit(
+        SolverActionFamily::TemporaryBench);
+    CalcContext disabled_calc(
+        session, disabled_goal, registry, {exalt, restart, direct_bench},
+        false, true, true);
+    const std::uint32_t disabled_state = disabled_calc.intern_item(start);
+    const StateLocalAutomaticBatch disabled_batch = admit_automatic(
+        disabled_calc, disabled_state,
+        {{"exalt", 10.0},
+         {"base", 100.0},
+         {"scour", 1.0},
+         {"bench:s83_mod_8", 2.0}});
+    PC_CHECK(disabled_batch.temporary_precompiled_classes == 0);
+    PC_CHECK(disabled_batch.temporary_candidate_variants == 0);
+    PC_CHECK(disabled_batch.temporary_effect_classes == 0);
+    PC_CHECK(std::none_of(
+        disabled_batch.admitted_operators.begin(),
+        disabled_batch.admitted_operators.end(),
+        [&](const std::uint32_t index) {
+            return disabled_calc.operators().at(index).automatic_kind ==
+                AutomaticCandidateKind::TemporaryBenchBlocker;
+        }));
+    PC_CHECK(operator_by_fragment(
+                 disabled_calc, "option:temporary_bench_repeat:") == kNoId);
+
     PC_CHECK(calc.is_candidate_operator_admitted_for_state(state, exalt));
     PC_CHECK(calc.is_candidate_operator_admitted_for_state(state, restart));
     PC_CHECK(!calc.is_candidate_operator_admitted_for_state(

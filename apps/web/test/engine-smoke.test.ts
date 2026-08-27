@@ -230,6 +230,64 @@ function alterationLoopStrategy(familyKey: string): Record<string, unknown> {
     };
 }
 
+function alterationCycleStrategy(
+    familyKey: string,
+    operationCount = 32,
+): Record<string, unknown> {
+    const operationIds = Array.from(
+        { length: operationCount },
+        (_, index) => `alteration-${index}`,
+    );
+    return {
+        version: "v1",
+        name: "Exact multi-node Alteration cycle",
+        start_node_id: "start",
+        base_state: {
+            base_key: BASE,
+            item_level: ITEM_LEVEL,
+            rarity: "magic",
+        },
+        nodes: [
+            { id: "start", kind: "start" },
+            ...operationIds.map((id) => ({
+                id,
+                kind: "operation",
+                operation: { type: "alteration", params: {} },
+            })),
+            { id: "success", kind: "terminal", terminal: "success" },
+        ],
+        edges: [
+            {
+                id: "begin",
+                from: "start",
+                to: operationIds[0],
+                priority: 0,
+                condition: { type: "always" },
+            },
+            ...operationIds.flatMap((id, index) => [
+                {
+                    id: `hit-${index}`,
+                    from: id,
+                    to: "success",
+                    priority: 0,
+                    condition: {
+                        type: "has_mod_family",
+                        family_mod_key: familyKey,
+                        min_tier: 1,
+                    },
+                },
+                {
+                    id: `repeat-${index}`,
+                    from: id,
+                    to: operationIds[(index + 1) % operationIds.length],
+                    priority: 999,
+                    is_default: true,
+                },
+            ]),
+        ],
+    };
+}
+
 function fallbackPhaseStrategy(
     familyKey: string,
     carrier: ModInfo,
@@ -1018,7 +1076,11 @@ test("stepped exact evaluation reports ordered progress", async () => {
 
 test("exact evaluation cancellation is prompt and leaks no handles", async () => {
     const family = await lowWeightAlterationFamily();
-    const graph = alterationLoopStrategy(family);
+    // One native discovery work item can now finish the three-node fixture on
+    // a warm machine. Keep a multi-node proper cycle here so the first
+    // progress callback is a guaranteed cancellable boundary rather than a
+    // race with the final `done` notification.
+    const graph = alterationCycleStrategy(family);
     const baseline = await client.memoryStats();
     assert.ok(baseline.wasm_memory_bytes > 0);
     assert.ok(baseline.native_live_owned_bytes > 0);

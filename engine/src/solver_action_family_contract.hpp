@@ -506,6 +506,138 @@ inline PrimitiveTelemetryFamily primitive_family_for_action(
     return action_family_contract(type).telemetry_family;
 }
 
+inline constexpr std::array<std::string_view, kSolverActionFamilyCount>
+    kSolverActionFamilyNames{{
+        "currency",
+        "essence",
+        "fossil",
+        "harvest",
+        "bench",
+        "eldritch",
+        "influence",
+        "fracture",
+        "veiled",
+        "cleanup",
+        "temporary_bench",
+        "metamod",
+        "imprint",
+        "restart",
+    }};
+
+static_assert(
+    kSolverActionFamilyNames.size() == kSolverActionFamilyCount);
+
+inline std::string_view solver_action_family_name(
+    const SolverActionFamily family) {
+    const std::size_t index = static_cast<std::size_t>(family);
+    if (index >= kSolverActionFamilyNames.size()) {
+        throw std::logic_error(
+            "solver action family is outside the public vocabulary");
+    }
+    return kSolverActionFamilyNames[index];
+}
+
+inline bool parse_solver_action_family(
+    const std::string_view name,
+    SolverActionFamily& out) {
+    for (std::size_t index = 0;
+         index < kSolverActionFamilyNames.size(); ++index) {
+        if (kSolverActionFamilyNames[index] != name) continue;
+        out = static_cast<SolverActionFamily>(index);
+        return true;
+    }
+    return false;
+}
+
+inline bool solver_action_family_disabled(
+    const GoalSpec& goal,
+    const SolverActionFamily family) {
+    return (goal.disabled_action_families &
+            solver_action_family_bit(family)) != 0;
+}
+
+inline SolverActionFamily solver_action_family_for_action(
+    const ActionDescriptor& action) {
+    if (action.synthetic && action.id == "restart") {
+        return SolverActionFamily::Restart;
+    }
+    if (action.params.type == ActionType::Bench &&
+        (action.sets_flags &
+         (kFlagMultimod | kFlagNoAttack | kFlagNoCaster |
+          kFlagPrefixesLocked | kFlagSuffixesLocked)) != 0) {
+        return SolverActionFamily::Metamod;
+    }
+    switch (action_family_contract(action.params.type).product_reason_group) {
+    case ProductReasonGroup::Currency:
+        return SolverActionFamily::Currency;
+    case ProductReasonGroup::Essence:
+        return SolverActionFamily::Essence;
+    case ProductReasonGroup::Fossil:
+        return SolverActionFamily::Fossil;
+    case ProductReasonGroup::Bench:
+        return SolverActionFamily::Bench;
+    case ProductReasonGroup::Veiled:
+        return SolverActionFamily::Veiled;
+    case ProductReasonGroup::Harvest:
+        return SolverActionFamily::Harvest;
+    case ProductReasonGroup::Eldritch:
+        return SolverActionFamily::Eldritch;
+    case ProductReasonGroup::Influence:
+        return SolverActionFamily::Influence;
+    case ProductReasonGroup::Fracture:
+        return SolverActionFamily::Fracture;
+    case ProductReasonGroup::Cleanup:
+        return SolverActionFamily::Cleanup;
+    }
+    throw std::logic_error(
+        "product action reason group is outside the solver family vocabulary");
+}
+
+inline bool solver_action_disabled(
+    const GoalSpec& goal,
+    const ActionDescriptor& action) {
+    if (goal.disabled_action_families == 0) return false;
+    return solver_action_family_disabled(
+        goal, solver_action_family_for_action(action));
+}
+
+inline SolverActionFamily solver_action_family_for_automatic_candidate(
+    const AutomaticCandidateKind kind) {
+    switch (kind) {
+    case AutomaticCandidateKind::Fracture:
+        return SolverActionFamily::Fracture;
+    case AutomaticCandidateKind::PermanentBench:
+        return SolverActionFamily::Bench;
+    case AutomaticCandidateKind::TemporaryBenchBlocker:
+    case AutomaticCandidateKind::CannotRoll:
+        return SolverActionFamily::TemporaryBench;
+    case AutomaticCandidateKind::ProtectedMetamod:
+    case AutomaticCandidateKind::MultimodFinish:
+        return SolverActionFamily::Metamod;
+    case AutomaticCandidateKind::Imprint:
+        return SolverActionFamily::Imprint;
+    case AutomaticCandidateKind::EldritchSide:
+        return SolverActionFamily::Eldritch;
+    case AutomaticCandidateKind::Veiled:
+        return SolverActionFamily::Veiled;
+    case AutomaticCandidateKind::ConstructiveRenewal:
+    case AutomaticCandidateKind::None:
+        /* These are composites whose named dependencies own their family
+         * restrictions. */
+        return SolverActionFamily::Count;
+    }
+    return SolverActionFamily::Count;
+}
+
+inline bool solver_automatic_candidate_disabled(
+    const GoalSpec& goal,
+    const AutomaticCandidateKind kind) {
+    const SolverActionFamily family =
+        solver_action_family_for_automatic_candidate(kind);
+    return family != SolverActionFamily::Count &&
+        solver_action_family_disabled(goal, family);
+}
+
 inline bool parameterized_identity_matches(
     const std::string_view id,
     const std::string_view operation_id) {

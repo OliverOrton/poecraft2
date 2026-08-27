@@ -519,6 +519,8 @@ export interface SolverGoal {
     automatic_candidates?: boolean;
     /** Additional hand-selected loadouts to materialize without scoping actions. */
     requested_fossil_actions?: string[];
+    /** Engine-owned restricted solve envelope. Omitted/empty keeps defaults. */
+    disabled_action_families?: SolverActionFamily[];
     /** Explicit, price-independent fixed planner programs. */
     options?: SolverFixedOption[];
 }
@@ -569,6 +571,8 @@ export interface SolverActionInfo {
     index: number;
     id: string;
     display_name: string;
+    /** Engine-owned solve-envelope family; never inferred from the id. */
+    family: SolverActionFamily;
     /** 0 deterministic, 1 single-slot, 2 reforge, 3 special. */
     transition_kind: number;
     synthetic: boolean;
@@ -588,6 +592,22 @@ export interface SolverActionInfo {
         };
     };
 }
+
+export type SolverActionFamily =
+    | "currency"
+    | "essence"
+    | "fossil"
+    | "harvest"
+    | "bench"
+    | "eldritch"
+    | "influence"
+    | "fracture"
+    | "veiled"
+    | "cleanup"
+    | "temporary_bench"
+    | "metamod"
+    | "imprint"
+    | "restart";
 
 export type CarrierProperty =
     | "goal_families"

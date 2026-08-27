@@ -35,6 +35,9 @@ extern "C" {
  *     "requested_fossil_actions": [    // optional extra materialized ids
  *       "fossil:<key>+<key>"
  *     ],
+ *     "disabled_action_families": [    // optional restricted envelope
+ *       "temporary_bench", "imprint"
+ *     ],
  *     "actions": ["chaos", "exalt", "restart"],  // optional primitives
  *     "options": [                  // optional fixed solver programs
  *       {"type":"scour_alchemy"},
@@ -113,6 +116,9 @@ typedef struct pc_solver_action_info {
     int32_t respects_suffix_lock;
     int32_t respects_cannot_roll_attack;
     int32_t respects_cannot_roll_caster;
+    /* Stable native solve-envelope family name. Membership is engine-owned;
+     * callers may present it but must not infer it from id prefixes. */
+    const char* family;
 } pc_solver_action_info;
 
 pc_result pc_solver_get_action_info(

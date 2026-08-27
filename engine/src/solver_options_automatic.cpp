@@ -1011,7 +1011,11 @@ CalcContext::build_state_local_automatic_candidates(
         local_option_indices.push_back(index);
     }
     std::array<std::uint64_t, kAutomaticTelemetryKindCount> shared_weights{};
-    if (limits.consider_imprint_programs) {
+    const bool imprint_family_enabled =
+        limits.consider_imprint_programs &&
+        !solver_action_family_disabled(
+            goal_, SolverActionFamily::Imprint);
+    if (imprint_family_enabled) {
         ++shared_weights[
             static_cast<std::size_t>(AutomaticTelemetryKind::Imprint)];
     }
@@ -1548,7 +1552,10 @@ CalcContext::build_state_local_automatic_candidates(
     };
 
     try {
-        const auto imprint_started = std::chrono::steady_clock::now();
+        const auto imprint_started =
+            imprint_family_enabled
+                ? std::chrono::steady_clock::now()
+                : std::chrono::steady_clock::time_point{};
         auto imprint_task =
             discover_automatic_imprint_options_cooperatively(
                 local, local_state, limits);
@@ -1591,10 +1598,12 @@ CalcContext::build_state_local_automatic_candidates(
         co_await solve_detail::CooperativeCheckpoint{
             retained_imprint_cursor_bytes()};
         const std::uint64_t imprint_discovery_ns =
-            static_cast<std::uint64_t>(
-                std::chrono::duration_cast<std::chrono::nanoseconds>(
-                    std::chrono::steady_clock::now() - imprint_started)
-                    .count());
+            imprint_family_enabled
+                ? static_cast<std::uint64_t>(
+                      std::chrono::duration_cast<std::chrono::nanoseconds>(
+                          std::chrono::steady_clock::now() - imprint_started)
+                          .count())
+                : 0;
         bool imprint_time_attributed = false;
         if (imprint.missing_price) {
             StateLocalAutomaticCandidate missing;

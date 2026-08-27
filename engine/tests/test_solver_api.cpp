@@ -1673,6 +1673,56 @@ void run_public_solver_gate(const char* artifact_dir) {
                               &error) == PC_RESULT_INVALID_ARGUMENT);
     PC_CHECK(invalid_solver == nullptr);
 
+    const std::string unknown_family_goal_json =
+        std::string("{\"version\":\"v1\",\"slots\":["
+                    "{\"family_mod_key\":\"") +
+        mod_info.key +
+        "\"}],\"disabled_action_families\":[\"not_a_family\"]}";
+    PC_CHECK(pc_solver_create(
+                 session, unknown_family_goal_json.c_str(),
+                 unknown_family_goal_json.size(), &invalid_solver,
+                 &error) == PC_RESULT_INVALID_ARGUMENT);
+    PC_CHECK(invalid_solver == nullptr);
+
+    const std::string family_restricted_goal_json =
+        std::string("{\"version\":\"v1\",\"rarity\":\"rare\",\"slots\":["
+                    "{\"family_mod_key\":\"") +
+        mod_info.key +
+        "\",\"min_tier\":0}],\"actions\":[\"chaos\",\"exalt\","
+        "\"restart\"],\"disabled_action_families\":[\"currency\"]}";
+    pc_solver_handle family_restricted_solver = nullptr;
+    PC_CHECK(pc_solver_create(
+                 session, family_restricted_goal_json.c_str(),
+                 family_restricted_goal_json.size(),
+                 &family_restricted_solver, &error) == PC_RESULT_OK);
+    if (family_restricted_solver != nullptr) {
+        std::uint32_t restricted_count = 0;
+        PC_CHECK(pc_solver_candidates(
+                     family_restricted_solver, nullptr, 0,
+                     &restricted_count, &error) == PC_RESULT_OK);
+        PC_CHECK(restricted_count == 1);
+        std::uint32_t restricted_index = UINT32_MAX;
+        PC_CHECK(pc_solver_candidates(
+                     family_restricted_solver, &restricted_index, 1,
+                     &restricted_count, &error) == PC_RESULT_OK);
+        pc_solver_action_info restricted_info{};
+        PC_CHECK(pc_solver_get_action_info(
+                     family_restricted_solver, restricted_index,
+                     &restricted_info, &error) == PC_RESULT_OK);
+        PC_CHECK(std::string(restricted_info.id) == "restart");
+        PC_CHECK(std::string(restricted_info.family) == "restart");
+        const std::string restricted_telemetry =
+            solver_telemetry_json(family_restricted_solver, &error);
+        PC_CHECK(restricted_telemetry.find(
+                     "\"disabled_action_families\":[\"currency\"]") !=
+                 std::string::npos);
+        PC_CHECK(restricted_telemetry.find(
+                     "\"family_restricted\":true,"
+                     "\"pruned_disabled_family\":2") !=
+                 std::string::npos);
+        pc_solver_destroy(family_restricted_solver);
+    }
+
     const std::string options_only_goal_json =
         std::string("{\"version\":\"v1\",\"rarity\":\"rare\",\"slots\":["
                     "{\"family_mod_key\":\"") +
@@ -1773,6 +1823,7 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(pc_solver_get_action_info(solver, exalt_index, &action_info,
                                        &error) == PC_RESULT_OK);
     PC_CHECK(std::string(action_info.id) == "exalt");
+    PC_CHECK(std::string(action_info.family) == "currency");
     PC_CHECK(action_info.cost_key_count == 1);
     PC_CHECK(std::string(action_info.cost_keys[0]) == "exalt");
     PC_CHECK(action_info.synthetic == 0);

@@ -568,6 +568,7 @@ struct ActionControlSummary {
     std::uint32_t layout_primitives = 0;
     std::uint32_t pruned_outside_goal_relevance = 0;
     std::uint32_t pruned_outside_envelope = 0;
+    std::uint32_t pruned_disabled_family = 0;
     std::uint32_t deferred_fossil_loadouts = 0;
     std::uint32_t automatic_options = 0;
     std::uint32_t automatic_dependency_primitives = 0;
