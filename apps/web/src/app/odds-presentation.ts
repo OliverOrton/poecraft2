@@ -69,8 +69,12 @@ export function presentSampledSuccess(
     const radius =
         (z / denominator) *
         Math.sqrt((p * (1 - p)) / n + z2 / (4 * n * n));
-    const lower = Math.max(0, center - radius);
-    const upper = Math.min(1, center + radius);
+    // The closed-form endpoints are exact at the sample extremes, but the
+    // subtraction can leave a tiny positive IEEE-754 residue for zero hits
+    // (and the mirrored residue below one for all hits). Preserve the
+    // statistical boundary instead of presenting that noise as evidence.
+    const lower = hit === 0 ? 0 : Math.max(0, center - radius);
+    const upper = hit === n ? 1 : Math.min(1, center + radius);
     return {
         rate: formatProbabilityExact(p),
         interval95: `${formatProbabilityExact(lower)}–${formatProbabilityExact(upper)}`,

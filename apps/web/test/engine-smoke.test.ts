@@ -631,8 +631,8 @@ test("catalog exposes mod groups, essences, and fossils as usable keys", async (
             ["elder", "Elder"],
             ["crusader", "Crusader"],
             ["adjudicator", "Warlord"],
-            ["basilisk", "Hunter"],
             ["eyrie", "Redeemer"],
+            ["basilisk", "Hunter"],
         ],
     );
     assert.ok(catalog.essences.every((entry) => entry.key && entry.name));
