@@ -2287,6 +2287,15 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
             const auto select_initial_row =
                 [&](const std::uint32_t state) {
                     std::uint64_t best = no_row;
+                    /* CalcContext may discover strict/frontier carriers after
+                     * the current sparse transition epoch was materialized.
+                     * Such a state has no row span yet. It is an ordinary
+                     * missing-frontier condition owned by the certified
+                     * boundary/grow-in-place path below, not a cache error and
+                     * not evidence for a free terminal continuation. */
+                    if (state >= transition_cache->state_rows.size()) {
+                        return best;
+                    }
                     std::tuple<int, double, double, double, std::uint64_t>
                         best_key{
                         std::numeric_limits<int>::max(), kInfinity,

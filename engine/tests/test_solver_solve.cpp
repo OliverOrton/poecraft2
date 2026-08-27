@@ -7333,6 +7333,65 @@ void run_resource_stop_reachable_policy_tests() {
              candidate_cap_work.result.diagnostics.cap_hits.end());
 }
 
+void run_frontier_incumbent_epoch_skew_tests() {
+    /* Reachable-incumbent publication can run after CalcContext has interned
+     * new strict/frontier carriers but before the sparse cache has grown row
+     * spans for them. Reproduce that epoch skew by retaining the completed
+     * root rows and dropping successor spans. The missing successor must be
+     * reported to grow-in-place; indexing the absent span used to throw
+     * vector::_M_range_check here. */
+    auto session = make_solve_session({"anytime_frontier_skew"});
+    session->essence_guaranteed_mod_ids = {3};
+    ActionRegistry registry = build_action_registry(*session);
+    const std::uint32_t transmute =
+        registry.index_by_id.at("transmute");
+    const std::uint32_t alchemy = registry.index_by_id.at("alchemy");
+    const std::uint32_t restart = registry.index_by_id.at("restart");
+    const std::uint32_t delayed =
+        registry.index_by_id.at("essence:anytime_frontier_skew");
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_MAGIC;
+    GoalSlot slot;
+    slot.family_id = 100;
+    slot.min_tier = 1;
+    goal.slots.push_back(slot);
+    pc_item_state start;
+    pc_item_clear(&start);
+    CalcContext calc(
+        session, goal, registry,
+        {transmute, alchemy, restart, delayed});
+    SolveOptions options;
+    options.goal_progress_gated_reforges = true;
+    options.state_certificate_control = false;
+    options.focused_expansion_queue_threshold = 1000000;
+    options.max_expanded_states = 4;
+    options.max_sweeps = 4096;
+    const std::unordered_map<std::string, double> prices{
+        {"transmute", 10.0},
+        {"alchemy", 1000.0},
+        {"base", 1.0},
+        {"essence:anytime_frontier_skew", 1000.0}};
+    SolveWorkTestAccess::Impl work(calc, start, prices, options);
+    while (!work.progress().done) work.step(4096);
+    PC_CHECK(work.transition_cache != nullptr);
+    PC_CHECK(work.transition_cache->state_rows.size() > 1);
+    work.output_incumbent.reset();
+    work.incremental_anytime_policy_last_failure.clear();
+    work.incremental_anytime_missing_frontier_states.clear();
+    work.transition_cache->state_rows.resize(1);
+    PC_CHECK(!work.try_install_reachable_incumbent(false));
+    PC_CHECK(!work.output_incumbent.has_value());
+    PC_CHECK(
+        work.incremental_anytime_policy_last_failure.find(
+            "missing_completed_row_and_certified_frontier:state=") == 0);
+    PC_CHECK(std::any_of(
+        work.incremental_anytime_missing_frontier_states.begin(),
+        work.incremental_anytime_missing_frontier_states.end(),
+        [&](const std::uint32_t state) {
+            return state >= work.transition_cache->state_rows.size();
+        }));
+}
+
 void run_mixed_side_rare_cap_reporting_regression() {
     auto session = make_solve_session();
     ActionRegistry registry = build_action_registry(*session);
@@ -11189,6 +11248,7 @@ void run_solver_automatic_eldritch_tests() {
 }
 
 void run_solver_policy_refinement_tests() {
+    run_frontier_incumbent_epoch_skew_tests();
     run_shared_sparse_policy_kernel_tests();
     run_policy_guided_exact_lift_tests();
     run_policy_guided_exalt_lift_tests();
