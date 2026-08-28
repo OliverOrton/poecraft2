@@ -531,9 +531,9 @@ struct SolveTransitionCache {
     /* Full fixed-width provenance: one record for every retained product-local
      * Fracture candidate row, independent of the diagnostic sample cap. */
     std::vector<ProductFractureRowWitness> product_fracture_rows;
-    solve_detail::ActionEnvelopeLedger action_envelope_ledger;
     std::uint64_t algebraic_self_loops = 0;
     bool focused_partial = false;
+    bool reusable_closure = false;
 
     bool compatible(
         const std::uint32_t requested_start,
@@ -958,12 +958,6 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     std::vector<std::pair<double, std::uint32_t>> prioritized_states;
     bool backup_active = false;
     bool cache_pending = false;
-    /* The outer SolveWork earned or consumed a complete reusable coarse
-     * closure. Nested certification solves share CalcContext and may retain
-     * their own graph later; finish restores this outer cache so the public
-     * price-only reuse contract and development checkpoint see the requested
-     * solve rather than an internal verifier. */
-    bool transition_cache_reusable = false;
     std::vector<std::uint64_t> policy_rows;
     bool policy_initialized = false;
     bool policy_stable = false;

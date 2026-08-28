@@ -1094,7 +1094,6 @@ std::uint64_t SolveTransitionCache::shallow_estimated_owned_bytes() const {
                  sizeof(AutomaticCandidateRecord);
         bytes += product_fracture_rows.capacity() *
                  sizeof(ProductFractureRowWitness);
-        bytes += action_envelope_ledger.estimated_owned_bytes();
         return bytes;
     }
 
@@ -2098,6 +2097,11 @@ std::uint64_t estimated_retained_solver_bytes(
     if (calc.solve_transition_cache() != nullptr) {
         bytes += calc.solve_transition_cache()->estimated_owned_bytes();
     }
+    if (calc.solve_transition_cache_action_envelope_ledger() != nullptr) {
+        bytes += sizeof(solve_detail::ActionEnvelopeLedger) +
+            calc.solve_transition_cache_action_envelope_ledger()
+                ->estimated_owned_bytes();
+    }
     if (result != nullptr) bytes += solve_result_owned_bytes(*result);
     return bytes;
 }
@@ -2108,6 +2112,11 @@ std::uint64_t fast_estimated_retained_solver_bytes(
     std::uint64_t bytes = calc.fast_estimated_owned_bytes();
     if (calc.solve_transition_cache() != nullptr) {
         bytes += calc.solve_transition_cache()->fast_estimated_owned_bytes();
+    }
+    if (calc.solve_transition_cache_action_envelope_ledger() != nullptr) {
+        bytes += sizeof(solve_detail::ActionEnvelopeLedger) +
+            calc.solve_transition_cache_action_envelope_ledger()
+                ->estimated_owned_bytes();
     }
     if (result != nullptr) bytes += solve_result_owned_bytes(*result);
     return bytes;

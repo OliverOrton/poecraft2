@@ -6,6 +6,10 @@
 namespace poecraft {
 namespace solver {
 
+namespace solve_detail {
+class ActionEnvelopeLedger;
+}
+
 // --- calculation engine (S2): exact transition provider ------------------------
 
 struct OutcomeEntry {
@@ -954,9 +958,15 @@ class CalcContext {
         const {
         return solve_transition_cache_;
     }
+    const std::shared_ptr<solve_detail::ActionEnvelopeLedger>&
+    solve_transition_cache_action_envelope_ledger() const {
+        return solve_transition_cache_action_envelope_ledger_;
+    }
     void retain_solve_transition_cache(
-        std::shared_ptr<SolveTransitionCache> cache) {
+        std::shared_ptr<SolveTransitionCache> cache,
+        std::shared_ptr<solve_detail::ActionEnvelopeLedger> ledger = nullptr) {
         solve_transition_cache_ = std::move(cache);
+        solve_transition_cache_action_envelope_ledger_ = std::move(ledger);
     }
     /* Native-development iteration aid. The caller identity must bind the
      * exact artifact, goal, start item, prices, and SolveOptions. The format
@@ -1095,6 +1105,8 @@ class CalcContext {
     ActionControlSummary action_control_;
     std::unordered_map<std::uint64_t, std::uint8_t> telemetry_rows_;
     std::shared_ptr<SolveTransitionCache> solve_transition_cache_;
+    std::shared_ptr<solve_detail::ActionEnvelopeLedger>
+        solve_transition_cache_action_envelope_ledger_;
     /* load_development_solve_checkpoint is called before SolveWork. Preserve
      * its price-bound admission map/cache through exactly that work object's
      * initial telemetry reset; every ordinary later solve keeps the existing

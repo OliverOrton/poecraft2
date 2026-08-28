@@ -468,7 +468,10 @@ solve_detail::ActionEnvelopeLedger read_action_envelope_ledger(
     return ledger;
 }
 
-void write_cache(PayloadWriter& out, const SolveTransitionCache& value) {
+void write_cache(
+        PayloadWriter& out,
+        const SolveTransitionCache& value,
+        const solve_detail::ActionEnvelopeLedger& action_envelope_ledger) {
 #define PC_WRITE_CACHE_FIELD(field) out.pod(value.field)
     PC_WRITE_CACHE_FIELD(start_state);
     out.pod_vector(value.operator_indices);
@@ -516,13 +519,15 @@ void write_cache(PayloadWriter& out, const SolveTransitionCache& value) {
         write_automatic_record(out, record);
     }
     out.pod_vector(value.product_fracture_rows);
-    write_action_envelope_ledger(out, value.action_envelope_ledger);
+    write_action_envelope_ledger(out, action_envelope_ledger);
     PC_WRITE_CACHE_FIELD(algebraic_self_loops);
     PC_WRITE_CACHE_FIELD(focused_partial);
 #undef PC_WRITE_CACHE_FIELD
 }
 
-std::shared_ptr<SolveTransitionCache> read_cache(PayloadReader& in) {
+std::shared_ptr<SolveTransitionCache> read_cache(
+        PayloadReader& in,
+        solve_detail::ActionEnvelopeLedger& action_envelope_ledger) {
     auto value = std::make_shared<SolveTransitionCache>();
 #define PC_READ_CACHE_FIELD(type, field) value->field = in.pod<type>()
     PC_READ_CACHE_FIELD(std::uint32_t, start_state);
@@ -585,7 +590,7 @@ std::shared_ptr<SolveTransitionCache> read_cache(PayloadReader& in) {
     value->reconcile_automatic_sample_owned_bytes();
     value->product_fracture_rows =
         in.pod_vector<SolveTransitionCache::ProductFractureRowWitness>();
-    value->action_envelope_ledger = read_action_envelope_ledger(in);
+    action_envelope_ledger = read_action_envelope_ledger(in);
     PC_READ_CACHE_FIELD(std::uint64_t, algebraic_self_loops);
     PC_READ_CACHE_FIELD(bool, focused_partial);
 #undef PC_READ_CACHE_FIELD
@@ -596,7 +601,8 @@ void validate_cache(
         const CalcContext& calc,
         const std::vector<AbstractState>& states,
         const std::size_t operator_count,
-        const SolveTransitionCache& cache) {
+        const SolveTransitionCache& cache,
+        const solve_detail::ActionEnvelopeLedger& action_envelope_ledger) {
     const auto fail = [](const char* reason) {
         throw std::runtime_error(
             std::string("invalid solver development checkpoint graph: ") +
@@ -703,7 +709,7 @@ void validate_cache(
         }
     }
     for (const auto& [unused_key, entry] :
-         cache.action_envelope_ledger.entries()) {
+         action_envelope_ledger.entries()) {
         (void)unused_key;
         if ((entry.state != kNoId && entry.state >= states.size()) ||
             entry.operator_index >= operator_count ||
@@ -758,8 +764,14 @@ void CalcContext::save_development_solve_checkpoint(
         throw std::runtime_error(
             "development checkpoint requires a completed reusable coarse graph");
     }
+    const solve_detail::ActionEnvelopeLedger empty_ledger;
+    const solve_detail::ActionEnvelopeLedger& action_envelope_ledger =
+        solve_transition_cache_action_envelope_ledger_ == nullptr
+            ? empty_ledger
+            : *solve_transition_cache_action_envelope_ledger_;
     validate_cache(
-        *this, states_, operators_.size(), *solve_transition_cache_);
+        *this, states_, operators_.size(), *solve_transition_cache_,
+        action_envelope_ledger);
 
     const fs::path destination(path);
     const fs::path temporary = destination.string() + ".tmp";
@@ -812,7 +824,8 @@ void CalcContext::save_development_solve_checkpoint(
         out.pod_vector(state_local_automatic_operators_.at(state));
     }
     out.pod_vector(states_);
-    write_cache(out, *solve_transition_cache_);
+    write_cache(
+        out, *solve_transition_cache_, action_envelope_ledger);
 
     stream.flush();
     if (!stream) {
@@ -934,7 +947,9 @@ void CalcContext::load_development_solve_checkpoint(
             state, std::move(operators));
     }
     std::vector<AbstractState> states = in.pod_vector<AbstractState>();
-    std::shared_ptr<SolveTransitionCache> cache = read_cache(in);
+    solve_detail::ActionEnvelopeLedger action_envelope_ledger;
+    std::shared_ptr<SolveTransitionCache> cache =
+        read_cache(in, action_envelope_ledger);
     if (in.remaining() != 0 || in.checksum() != expected_checksum) {
         throw std::runtime_error(
             "solver development checkpoint checksum mismatch");
@@ -959,7 +974,10 @@ void CalcContext::load_development_solve_checkpoint(
                 "solver development checkpoint carrier admission mismatch");
         }
     }
-    validate_cache(*this, states, saved_operator_count, *cache);
+    validate_cache(
+        *this, states, saved_operator_count, *cache,
+        action_envelope_ledger);
+    cache->reusable_closure = true;
 
     std::unordered_set<std::uint32_t> saved_state_local(
         state_local_indices.begin(), state_local_indices.end());
@@ -1013,6 +1031,9 @@ void CalcContext::load_development_solve_checkpoint(
         }
     }
     solve_transition_cache_ = std::move(cache);
+    solve_transition_cache_action_envelope_ledger_ =
+        std::make_shared<solve_detail::ActionEnvelopeLedger>(
+            std::move(action_envelope_ledger));
     development_checkpoint_replay_pending_ = true;
     development_checkpoint_replay_required_ = true;
 }

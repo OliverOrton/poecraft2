@@ -505,9 +505,12 @@ SolveWork::Impl::Impl(
                 transition_cache->behavioral_representative_by_state;
             focused_mode = transition_cache->focused_partial;
             cache_pending = !focused_mode;
-            transition_cache_reusable = true;
-            action_envelope_ledger =
-                transition_cache->action_envelope_ledger;
+            transition_cache->reusable_closure = true;
+            if (calc.solve_transition_cache_action_envelope_ledger() !=
+                nullptr) {
+                action_envelope_ledger =
+                    *calc.solve_transition_cache_action_envelope_ledger();
+            }
             result.diagnostics.transition_cache_reused = true;
             calc.complete_development_checkpoint_replay();
         } else {
@@ -639,7 +642,21 @@ SolveTelemetrySnapshot SolveWork::telemetry_snapshot(bool abandoned) const {
 }
 
 SolveResult SolveWork::finish() {
-    return impl_->finish();
+    SolveResult finished = impl_->finish();
+    if (impl_->transition_cache->reusable_closure) {
+        auto ledger =
+            std::make_shared<solve_detail::ActionEnvelopeLedger>(
+                impl_->action_envelope_ledger);
+        /* Final exact refinement may publish lifecycle evidence against
+         * transient quotient rows that are not part of the retained coarse
+         * graph. Keep the evidence, but never retain a dangling diagnostic
+         * row id as graph-replay authority. */
+        ledger->discard_row_references_outside(
+            impl_->transition_cache->rows.size());
+        impl_->calc.retain_solve_transition_cache(
+            impl_->transition_cache, std::move(ledger));
+    }
+    return finished;
 }
 
 std::uint64_t SolveWork::live_owned_bytes() const {

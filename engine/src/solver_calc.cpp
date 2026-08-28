@@ -1902,6 +1902,7 @@ void CalcContext::reset_solve_telemetry() {
         owned_state_local_operator_bytes_ = 0;
         if (goal_.automatic_candidates) {
             solve_transition_cache_.reset();
+            solve_transition_cache_action_envelope_ledger_.reset();
         }
     }
     if (automatic_comparison_context_ != nullptr) {

@@ -5528,18 +5528,6 @@ SolveResult SolveWork::Impl::finish() {
             !finalized_result.has_value()) {
             throw std::logic_error("solver work is not finished");
         }
-        if (transition_cache_reusable) {
-            transition_cache->action_envelope_ledger =
-                action_envelope_ledger;
-            /* Final exact refinement may publish lifecycle evidence against
-             * transient quotient rows that are not part of the retained
-             * coarse graph. Keep the evidence, but never retain a dangling
-             * diagnostic row id as graph-replay authority. */
-            transition_cache->action_envelope_ledger
-                .discard_row_references_outside(
-                    transition_cache->rows.size());
-            calc.retain_solve_transition_cache(transition_cache);
-        }
         SolveResult finished = std::move(*finalized_result);
         finalized_result.reset();
         return finished;
