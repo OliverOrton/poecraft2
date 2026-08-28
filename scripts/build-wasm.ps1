@@ -88,12 +88,34 @@ if ($Diagnostics) {
         "-sSTACK_OVERFLOW_CHECK=2"
     )
 }
-$FinishCompileArgs = @("-std=c++20", "-O3") + $SharedCompileArgs
+$FinishCompileArgs = @(
+    "-std=c++20", "-O1",
+    "-msimd128", "-ffp-contract=off", "-fwasm-exceptions",
+    "-Iengine/include", "-Iengine/src", "-Ibuild/wasm/generated"
+)
+if ($Diagnostics) {
+    $FinishCompileArgs += @(
+        "-sASSERTIONS=2",
+        "-sSAFE_HEAP=1",
+        "-sSTACK_OVERFLOW_CHECK=2"
+    )
+}
 
 Write-Host "Compiling cooperative finalization WASM object..."
 $ErrorActionPreference = "Continue"
-& $Emcc.Source @FinishCompileArgs "-c" $FinishSource "-o" $FinishObject
-$FinishExit = $LASTEXITCODE
+Push-Location $Root
+try {
+    # LLVM 23's O2/O3 correlated-propagation pass crashes nondeterministically
+    # on this coroutine after lowering. This orchestration-only TU was already
+    # isolated from LTO for the same compiler family; O1 is the stable narrow
+    # fallback while hot engine kernels remain O3/LTO.
+    & $Emcc.Source @FinishCompileArgs "-c" `
+        "engine/src/solver_solve_finish.cpp" `
+        "-o" "build/wasm/objects/solver_solve_finish.o"
+    $FinishExit = $LASTEXITCODE
+} finally {
+    Pop-Location
+}
 $ErrorActionPreference = $PreviousPreference
 if ($FinishExit -ne 0) {
     throw "cooperative finalization WASM compile failed with exit code $FinishExit."
