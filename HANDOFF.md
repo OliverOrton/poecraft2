@@ -14,6 +14,7 @@ implementation resumes.
 - Profile-to-worker binding checkpoint: `14ebf42`.
 - Gate 6 semantic qualification checkpoint: `5255998`.
 - Stable operator docs and stdio MCP integration: `41a316a`.
+- Completion result and archive checkpoint: `ea9e0f5`.
 - Active-boundary selection commit: `25737c3` (`Activate PDR strict proof
   memory boundary`).
 - Native checkpoint/replay implementation: `f15f590` (`Add native solver
