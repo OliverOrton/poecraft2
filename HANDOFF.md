@@ -1,9 +1,10 @@
 # Handoff
 
-**Status: no active implementation boundary.** The
+**Status: active implementation boundary.** Oliver selected
+[PDR Strict-Proof Memory Attribution And Repair](docs/active/2026-08-27-pdr-strict-proof-memory/plan.md)
+on 2026-08-27. The completed
 [Solver Development Checkpoint/Replay](docs/archive/2026-08-27-solver-development-checkpoint-replay/README.md)
-milestone is complete. Oliver must choose the next chunk before implementation
-resumes.
+is the iteration tool for this boundary.
 
 ## Checkpoint
 
@@ -71,12 +72,10 @@ it does not reduce strict proof memory or make the case exact.
 
 ## Recommended Next Boundary
 
-Select P1.4 from the
-[ranked worklist](docs/future/priority-worklist.md): attribute and reduce the
-retained strict proof/quotient memory owner after the first frontier insertion.
-Use coarse replay for downstream experiments where it actually removes setup
-cost. Do not begin with another generic cap increase or a broad benchmark
-matrix.
+P1.4 is active. First run the single matched PDR checkpoint save/replay pair,
+then attribute retained proof/quotient bytes at the first frontier and second
+carrier generation. Choose a repair only from the measured owner. Do not begin
+with another generic cap increase or a broad benchmark matrix.
 
 A first-closed-strict-partition checkpoint is a conditional later extension,
 not missing data in the shipped coarse format. Build it only if measurement
