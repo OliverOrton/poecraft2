@@ -1,13 +1,18 @@
 # Active Work
 
-**Status: no selected implementation boundary.** Oliver must choose the next
-chunk before implementation resumes.
+**Status: one selected implementation boundary.** Oliver selected
+[Verified Executable Graph-Fragment Core v1](2026-08-28-verified-executable-graph-fragment-core-v1/plan.md)
+on 2026-08-28. Implementation must begin in a fresh Codex task with the
+configured Solver Lab MCP tools loaded.
 
 Parent: [Documentation map](../README.md)
 
 ## Active boundary
 
-None.
+- [Verified Executable Graph-Fragment Core v1](2026-08-28-verified-executable-graph-fragment-core-v1/plan.md)
+  — build a probability-free leaf control-flow IR, exact engine-backed product
+  verifier, complete exit/properness/resource diagnostics, and single-fragment
+  ordinary-JSON evaluation behind a strictly isolated shadow boundary.
 
 ## Historical work
 

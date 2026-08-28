@@ -1,14 +1,26 @@
 # Handoff
 
-**Status: no implementation boundary is active.** The Native Solver Lab
-Unattended Execution and Identity Hardening boundary is complete with an
-explicit owner-approved qualification exception: Oliver waived the six-hour
-soak, and the result does not claim overnight qualification. The configured
-MCP registration uses the combined version `0.2.0` launcher.
+**Status: Verified Executable Graph-Fragment Core v1 is selected; implementation
+has not begun.** It must start in a fresh Codex task from the clean planning
+commit whose parent is
+`031d528709b6fb3bc8563c16231042382a945c07`. The configured Solver Lab MCP
+registration uses the combined version `0.2.0` launcher and must be the
+operator surface in that task.
+
+The preceding unattended-hardening boundary's six-hour soak was
+**owner-waived, not passed**. It is not overnight qualification and must not be
+cited as such.
 
 ## Checkpoint
 
 - Branch: `main`, local-only; nothing was pushed.
+- Verified fragment-core stable starting boundary:
+  `031d528709b6fb3bc8563c16231042382a945c07` (`Archive solver lab unattended
+  hardening`).
+- Fragment-core planning activation: the current `HEAD` is the single
+  documentation-only commit titled
+  `Activate verified executable graph fragment core v1`. The fresh task must
+  record its full hash and verify its parent/paths before editing.
 - Gates 0–3 unattended-hardening checkpoint: local commit
   `9fb0e083ebdbce6d0cf1cf720df550f7a6810cca` (`Harden solver lab unattended
   execution identity`), with 72 focused tests passing.
@@ -48,6 +60,73 @@ MCP registration uses the combined version `0.2.0` launcher.
   automatic Imprint programs off, voluntary economic Restart off,
   goal-progress-gated reforges on, junk-free exact terminal success, and no
   disabled action families unless a diagnostic control is selected.
+
+## Selected Verified Executable Graph-Fragment Core v1
+
+This boundary implements only the exact leaf foundation proposed by the
+archived executable-options audit. An `ExecutableFragmentProposalV1` may carry
+a heuristic estimate; `ExecutableFragmentIRV1` contains versioned finite
+control flow but no probabilities; only a private exact verifier may produce a
+`VerifiedLeafFragmentV1` from engine-owned primitive transitions. Verified
+leaf evidence still has no proof, lower, scheduler, action-ledger, incumbent,
+or publication authority.
+
+The verifier certifies exactly one exact entry product state, preserves exact
+item/controller state, rejects missing, renormalized, duplicate, or carrier-
+projection-merged probability mass, proves absorption through SCC analysis,
+and reports finite expected resource vectors. V1 permits no nontrivial
+lumpability or behavioral quotient: product states merge only on complete
+exact product-state-key equality and exits only on complete exact exit identity
+equality. One real one-goal Transmute/Scour renewal fragment must exercise a
+genuine positive-probability engine-backed cycle. It routes only an exact
+terminal-predicate success to `FinalSuccess`; every other magic outcome,
+including goal plus junk, Scours back to clean. For exact terminal probability
+`p`, verifier, flattened evaluator, and forward reference must agree on
+`E[Transmute] = 1/p` and `E[Scour] = (1-p)/p`. Gate 4 can pass only a verified
+leaf whose entire positive exit mass is `FinalSuccess` after internal recovery;
+subgoal/recoverable/non-final exit fixtures must flatten fail-closed.
+
+The lane remains a benchmark/Lab shadow diagnostic. The ordinary solve result,
+compiled strategy, exact evaluation, termination, and telemetry must finalize
+immutably before separately capped shadow work begins, preferably in a second
+isolated native process. Full control/shadow request identities must differ;
+their `core_solve_identity_v1` projections and every enumerated core input must
+match. Core graph, scheduler, action-ledger, proof/lower, incumbent, compiled
+solver strategy, status, termination, and resource classification remain bit-
+identical. Version 1 does not call `IncumbentPortfolio`, change product
+defaults, add meta search, or claim an option-derived upper.
+
+The fresh task must verify the clean planning boundary, confirm all 31 typed
+MCP tools, and use MCP—without opening the GUI—for case discovery, submission,
+live monitoring, cancellation, comparison, and bundle export. Repository tools
+remain responsible for source editing, builds, tests, and Git. Never force-
+clear dispatcher ownership or replace an MCP operation with SQL/catalog file
+edits. Use a known long-running frozen case such as the retained PDR witness
+under a small safe diagnostic profile for live cancellation; run the small
+cyclic control/shadow cases separately to natural completion and never add
+artificial delay.
+
+The first coherent checkpoint is Gates 0–2 together: current-source/historical
+failure freeze, authority firewall and versioned leaf IR, then exact product/
+mass/properness/resource verification with focused tests. Commit that
+checkpoint before continuing to the real cyclic fragment and flattening so
+useful soundness work survives an early stop.
+
+Explicit exclusions are multi-option meta search, broad option-library
+generation, RCASSP, learned guidance, PDR memory work, Imprint, incumbent
+promotion, product-default enablement, new mechanic/strategy vocabulary, C
+ABI, nontrivial lumpability, symbolic/multi-entry certification, and WASM API/
+behavior. Gate 0 must decide native-only versus common engine source placement;
+changed common source requires the ordinary release-WASM build/parity, which is
+not itself scope expansion. If an excluded change becomes necessary, stop and
+ask Oliver rather than broadening the plan.
+
+The authoritative gate order, focused tests, hard stops, retained-state rules,
+fresh-session startup, MCP workflow, and final complete-pipeline acceptance are
+in the [plan](docs/active/2026-08-28-verified-executable-graph-fragment-core-v1/plan.md).
+The fresh task must keep the
+[execution log](docs/active/2026-08-28-verified-executable-graph-fragment-core-v1/execution-log.md)
+current at every checkpoint.
 
 ## Completed Native Solver Lab Unattended Hardening
 
