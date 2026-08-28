@@ -5,14 +5,30 @@ from __future__ import annotations
 from dataclasses import dataclass
 from collections import Counter
 import json
+import os
 from pathlib import Path
+import subprocess
+import tempfile
 import uuid
 from typing import Any, Mapping
 
-from poecraft_ingest.solver_corpus_runner import load_case_tasks
+from poecraft_ingest.solver_corpus_runner import CaseTask, load_case_tasks
+from poecraft_ingest.solver_lab_cases import (
+    build_local_manifest,
+    case_summary,
+    normalize_case_id,
+    normalize_case_name,
+    normalize_imported_case,
+    parse_case_json,
+    slugify_case_id,
+    validate_case_document_shape,
+    validate_local_profile_binding,
+)
 from poecraft_ingest.solver_lab_catalog import SolverLabCatalog, utc_now
 from poecraft_ingest.solver_lab_contracts import (
     EXPERIMENT_SCHEMA_VERSION,
+    CASE_DRAFT_SCHEMA_VERSION,
+    CASE_REVISION_SCHEMA_VERSION,
     JOB_SCHEMA_VERSION,
     OPERATION_RESULT_SCHEMA_VERSION,
     LabProfile,
@@ -61,6 +77,16 @@ class NativeWorkerOptions:
     goal_progress_gated_reforges: bool
 
 
+@dataclass(frozen=True)
+class ResolvedLabCase:
+    document: dict[str, Any]
+    case_path: Path
+    corpus_path: Path
+    task: CaseTask
+    source_kind: str
+    revision_id: str | None = None
+
+
 def operation_result(
     operation: str,
     result: Any,
@@ -82,6 +108,10 @@ class SolverLabService:
         self.paths = paths
         self.paths.attempts.mkdir(parents=True, exist_ok=True)
         self.catalog = SolverLabCatalog(paths.catalog)
+        self.case_store = paths.catalog.parent / "cases"
+        self.validation_store = paths.catalog.parent / "validation"
+        self.case_store.mkdir(parents=True, exist_ok=True)
+        self.validation_store.mkdir(parents=True, exist_ok=True)
         self.corpus_document = read_json(paths.corpus)
         self.profile = LabProfile.load(paths.profile)
         self._tasks = {
@@ -97,6 +127,9 @@ class SolverLabService:
             )
             self._cases[str(case["id"])] = case
             self._case_paths[str(case["id"])] = case_path
+        self._authoring_template = self._cases[
+            "conquest-lamellar-allflame-clean-3-prefix-extended-product8"
+        ]
 
     def native_worker_options(self) -> NativeWorkerOptions:
         native = self.profile.document["native_bindings"]
@@ -154,22 +187,14 @@ class SolverLabService:
         result = []
         for case_id in sorted(self._cases):
             case = self._cases[case_id]
-            task = self._tasks[case_id]
-            goal = case.get("goal", {})
-            start = case.get("start", {})
-            result.append(
-                {
-                    "case_id": case_id,
-                    "role": roles.get(case_id),
-                    "description": case.get("description"),
-                    "case_path": str(self._case_paths[case_id]),
-                    "watchdog_seconds": task.watchdog_seconds,
-                    "reserved_memory_bytes": task.reserved_memory_bytes,
-                    "goal_slots": len(goal.get("slots", [])),
-                    "min_satisfied_slots": goal.get("min_satisfied_slots"),
-                    "start_mod_count": len(start.get("mods", [])),
-                }
-            )
+            result.append({
+                **case_summary(
+                    case,
+                    source_kind="frozen",
+                    role=roles.get(case_id),
+                ),
+                "case_path": str(self._case_paths[case_id]),
+            })
         return operation_result("list_cases", result)
 
     def get_case(self, case_id: str) -> dict[str, Any]:
@@ -181,6 +206,361 @@ class SolverLabService:
                 "case_path": str(self._case_paths[case_id]),
                 "case_content_sha256": canonical_sha256(case),
                 "profile": self.profile.identity(),
+            },
+        )
+
+    def list_case_drafts(self, *, limit: int = 200) -> dict[str, Any]:
+        return operation_result(
+            "list_case_drafts", self.catalog.list_case_drafts(limit=limit)
+        )
+
+    def get_case_draft(self, draft_id: str) -> dict[str, Any]:
+        draft = self.catalog.get_case_draft(draft_id)
+        if draft is None:
+            raise KeyError(draft_id)
+        return operation_result("get_case_draft", draft)
+
+    def list_case_revisions(
+        self, *, case_id: str | None = None, limit: int = 200
+    ) -> dict[str, Any]:
+        revisions = self.catalog.list_case_revisions(
+            case_id=case_id, limit=limit
+        )
+        return operation_result(
+            "list_case_revisions",
+            [
+                {
+                    **case_summary(
+                        revision["document"],
+                        source_kind="local_revision",
+                        revision_id=revision["revision_id"],
+                        role="local_case_revision",
+                    ),
+                    "revision_ordinal": revision["revision_ordinal"],
+                    "name": revision["name"],
+                    "content_sha256": revision["content_sha256"],
+                    "created_at": revision["created_at"],
+                }
+                for revision in revisions
+            ],
+        )
+
+    def get_case_revision(self, revision_id: str) -> dict[str, Any]:
+        revision = self.catalog.get_case_revision(revision_id)
+        if revision is None:
+            raise KeyError(revision_id)
+        return operation_result("get_case_revision", revision)
+
+    def create_case_draft(
+        self,
+        *,
+        name: str,
+        idempotency_key: str,
+        source_case_id: str | None = None,
+        source_revision_id: str | None = None,
+        document: Mapping[str, Any] | None = None,
+        import_json: str | None = None,
+        dry_run: bool = False,
+    ) -> dict[str, Any]:
+        if not idempotency_key:
+            raise ValueError("create_case_draft requires an idempotency key")
+        existing = self.catalog.command_by_idempotency_key(idempotency_key)
+        if existing is not None:
+            if existing["operation"] != "create_case_draft":
+                raise ValueError("idempotency key was used by another operation")
+            return existing["result"]
+        sources = sum(
+            value is not None
+            for value in (source_case_id, source_revision_id, document, import_json)
+        )
+        if sources > 1:
+            raise ValueError("provide at most one draft source")
+        normalized_name = normalize_case_name(name)
+        source_kind = "template"
+        base_revision_id: str | None = None
+        if source_case_id is not None:
+            source = self._require_case(source_case_id)
+            case = json.loads(json.dumps(source))
+            case["id"] = self._unique_local_case_id(f"{source_case_id}-local")
+            source_kind = "frozen_clone"
+        elif source_revision_id is not None:
+            revision = self.catalog.get_case_revision(source_revision_id)
+            if revision is None:
+                raise KeyError(source_revision_id)
+            case = json.loads(json.dumps(revision["document"]))
+            base_revision_id = source_revision_id
+            source_kind = "revision_clone"
+        elif document is not None:
+            case = normalize_imported_case(document, self._authoring_template)
+            source_kind = "document_import"
+        elif import_json is not None:
+            payload = parse_case_json(import_json)
+            case = normalize_imported_case(payload, self._authoring_template)
+            source_kind = (
+                "calculator_import"
+                if payload.get("schema_version")
+                == "solver_lab_calculator_export_v1"
+                else "json_import"
+            )
+        else:
+            case = json.loads(json.dumps(self._authoring_template))
+            case["id"] = self._unique_local_case_id(
+                slugify_case_id(normalized_name)
+            )
+        case = self._localize_editable_case(case)
+        if case["id"] in self._cases:
+            case["id"] = self._unique_local_case_id(f"{case['id']}-local")
+        case = validate_case_document_shape(case)
+        now = utc_now()
+        draft = {
+            "schema_version": CASE_DRAFT_SCHEMA_VERSION,
+            "draft_id": f"draft-{uuid.uuid4()}",
+            "name": normalized_name,
+            "case_id": case["id"],
+            "source_kind": source_kind,
+            "base_revision_id": base_revision_id,
+            "document": case,
+            "validated_content_sha256": None,
+            "validation": None,
+            "created_at": now,
+            "updated_at": now,
+        }
+        result = operation_result(
+            "create_case_draft", draft, dry_run=dry_run
+        )
+        if dry_run:
+            return result
+        return self.catalog.create_case_draft(
+            draft=draft,
+            command_id=f"cmd-{uuid.uuid4()}",
+            idempotency_key=idempotency_key,
+            operation_request={
+                "name": normalized_name,
+                "source_case_id": source_case_id,
+                "source_revision_id": source_revision_id,
+                "has_document": document is not None,
+                "has_import_json": import_json is not None,
+            },
+            operation_result=result,
+        )
+
+    def update_case_draft(
+        self,
+        *,
+        draft_id: str,
+        name: str,
+        document: Mapping[str, Any] | str,
+        idempotency_key: str,
+        dry_run: bool = False,
+    ) -> dict[str, Any]:
+        if not idempotency_key:
+            raise ValueError("update_case_draft requires an idempotency key")
+        existing = self.catalog.command_by_idempotency_key(idempotency_key)
+        if existing is not None:
+            if existing["operation"] != "update_case_draft":
+                raise ValueError("idempotency key was used by another operation")
+            return existing["result"]
+        current = self.catalog.get_case_draft(draft_id)
+        if current is None:
+            raise KeyError(draft_id)
+        payload = parse_case_json(document) if isinstance(document, str) else dict(document)
+        case = validate_case_document_shape(
+            self._localize_editable_case(payload)
+        )
+        if case["id"] in self._cases:
+            raise ValueError("a local draft cannot reuse a frozen case id")
+        updated = {
+            **current,
+            "name": normalize_case_name(name),
+            "case_id": normalize_case_id(str(case["id"])),
+            "base_revision_id": (
+                current.get("base_revision_id")
+                if str(case["id"]) == current["case_id"]
+                else None
+            ),
+            "document": case,
+            "validated_content_sha256": None,
+            "validation": None,
+            "updated_at": utc_now(),
+        }
+        result = operation_result(
+            "update_case_draft", updated, dry_run=dry_run
+        )
+        if dry_run:
+            return result
+        return self.catalog.update_case_draft(
+            draft=updated,
+            command_id=f"cmd-{uuid.uuid4()}",
+            idempotency_key=idempotency_key,
+            operation_request={
+                "draft_id": draft_id,
+                "name": updated["name"],
+                "content_sha256": canonical_sha256(case),
+            },
+            operation_result=result,
+        )
+
+    def discard_case_draft(
+        self,
+        *,
+        draft_id: str,
+        idempotency_key: str,
+        dry_run: bool = False,
+    ) -> dict[str, Any]:
+        if not idempotency_key:
+            raise ValueError("discard_case_draft requires an idempotency key")
+        existing = self.catalog.command_by_idempotency_key(idempotency_key)
+        if existing is not None:
+            if existing["operation"] != "discard_case_draft":
+                raise ValueError("idempotency key was used by another operation")
+            return existing["result"]
+        draft = self.catalog.get_case_draft(draft_id)
+        if draft is None:
+            raise KeyError(draft_id)
+        result = operation_result(
+            "discard_case_draft",
+            {
+                "draft_id": draft_id,
+                "case_id": draft["case_id"],
+                "saved_revisions_retained": True,
+            },
+            dry_run=dry_run,
+        )
+        if dry_run:
+            return result
+        return self.catalog.discard_case_draft(
+            draft_id=draft_id,
+            command_id=f"cmd-{uuid.uuid4()}",
+            idempotency_key=idempotency_key,
+            operation_result=result,
+        )
+
+    def validate_case_draft(self, draft_id: str) -> dict[str, Any]:
+        draft = self.catalog.get_case_draft(draft_id)
+        if draft is None:
+            raise KeyError(draft_id)
+        validation = self._validate_case_document(draft["document"])
+        self.catalog.record_case_validation(
+            draft_id=draft_id,
+            content_sha256=validation["content_sha256"],
+            validation=validation,
+        )
+        return operation_result("validate_case_draft", validation)
+
+    def save_case_revision(
+        self,
+        *,
+        draft_id: str,
+        idempotency_key: str,
+        dry_run: bool = False,
+    ) -> dict[str, Any]:
+        if not idempotency_key:
+            raise ValueError("save_case_revision requires an idempotency key")
+        existing = self.catalog.command_by_idempotency_key(idempotency_key)
+        if existing is not None:
+            if existing["operation"] != "save_case_revision":
+                raise ValueError("idempotency key was used by another operation")
+            return existing["result"]
+        draft = self.catalog.get_case_draft(draft_id)
+        if draft is None:
+            raise KeyError(draft_id)
+        validation = self._validate_case_document(draft["document"])
+        if not validation["native_valid"]:
+            raise ValueError(
+                "native case validation failed: " + validation["detail"]
+            )
+        duplicate = next(
+            (
+                revision
+                for revision in self.catalog.list_case_revisions(
+                    case_id=draft["case_id"], limit=1000
+                )
+                if revision["content_sha256"] == validation["content_sha256"]
+            ),
+            None,
+        )
+        revision_id = (
+            duplicate["revision_id"]
+            if duplicate is not None
+            else f"case-rev-{validation['content_sha256'][:32]}"
+        )
+        directory = self.case_store / revision_id
+        case_path = (
+            Path(duplicate["case_path"])
+            if duplicate is not None
+            else directory / "case.json"
+        )
+        corpus_path = (
+            Path(duplicate["corpus_path"])
+            if duplicate is not None
+            else directory / "manifest.json"
+        )
+        revision = {
+            "schema_version": CASE_REVISION_SCHEMA_VERSION,
+            "revision_id": revision_id,
+            "case_id": draft["case_id"],
+            "name": draft["name"],
+            "source_kind": draft["source_kind"],
+            "parent_revision_id": draft.get("base_revision_id"),
+            "content_sha256": validation["content_sha256"],
+            "document": draft["document"],
+            "case_path": str(case_path.resolve()),
+            "corpus_path": str(corpus_path.resolve()),
+            "created_at": utc_now(),
+        }
+        preview = operation_result(
+            "save_case_revision", revision, dry_run=dry_run
+        )
+        if dry_run:
+            return preview
+        if duplicate is None:
+            directory.mkdir(parents=True, exist_ok=True)
+            manifest = build_local_manifest(
+                self.corpus_document,
+                case_id=draft["case_id"],
+                corpus_id=f"poecraft2-native-solver-lab-local-v1:{revision_id}",
+            )
+            if case_path.is_file():
+                if canonical_sha256(read_json(case_path)) != validation[
+                    "content_sha256"
+                ]:
+                    raise ValueError(
+                        "content-addressed local case snapshot was changed"
+                    )
+            else:
+                self._write_json_atomic(case_path, draft["document"])
+            if corpus_path.is_file():
+                if canonical_sha256(read_json(corpus_path)) != canonical_sha256(
+                    manifest
+                ):
+                    raise ValueError(
+                        "content-addressed local manifest snapshot was changed"
+                    )
+            else:
+                self._write_json_atomic(corpus_path, manifest)
+        return self.catalog.save_case_revision(
+            revision=revision,
+            draft_id=draft_id,
+            command_id=f"cmd-{uuid.uuid4()}",
+            idempotency_key=idempotency_key,
+            operation_request={
+                "draft_id": draft_id,
+                "content_sha256": validation["content_sha256"],
+            },
+            operation_result=operation_result("save_case_revision", None),
+        )
+
+    def export_case_revision(self, revision_id: str) -> dict[str, Any]:
+        revision = self.catalog.get_case_revision(revision_id)
+        if revision is None:
+            raise KeyError(revision_id)
+        return operation_result(
+            "export_case_revision",
+            {
+                "schema_version": "solver_lab_case_import_v1",
+                "revision_id": revision_id,
+                "content_sha256": revision["content_sha256"],
+                "case": revision["document"],
             },
         )
 
@@ -206,8 +586,9 @@ class SolverLabService:
     def submit_job(
         self,
         *,
-        case_id: str,
+        case_id: str | None,
         idempotency_key: str,
+        revision_id: str | None = None,
         priority: int = 0,
         watchdog_seconds: float | None = None,
         experiment_id: str | None = None,
@@ -223,8 +604,12 @@ class SolverLabService:
             return existing["result"]
         if experiment_id and self.catalog.get_experiment(experiment_id) is None:
             raise KeyError(experiment_id)
-        case = self._require_case(case_id)
-        task = self._tasks[case_id]
+        resolved = self._resolve_case_reference(
+            case_id=case_id, revision_id=revision_id
+        )
+        case = resolved.document
+        task = resolved.task
+        case_id = task.case_id
         watchdog = float(
             task.watchdog_seconds if watchdog_seconds is None else watchdog_seconds
         )
@@ -233,12 +618,18 @@ class SolverLabService:
         request = self._resolved_job_request(
             case_id=case_id,
             case=case,
+            case_path=resolved.case_path,
+            corpus_path=resolved.corpus_path,
+            source_kind=resolved.source_kind,
+            revision_id=resolved.revision_id,
             watchdog_seconds=watchdog,
             replicate=replicate,
         )
         identity_sha256 = canonical_sha256(request)
         preview = {
             "case_id": case_id,
+            "case_source_kind": resolved.source_kind,
+            "case_revision_id": resolved.revision_id,
             "profile_id": self.profile.profile_id,
             "priority": int(priority),
             "watchdog_seconds": watchdog,
@@ -256,7 +647,7 @@ class SolverLabService:
             "job_id": job_id,
             "experiment_id": experiment_id,
             "case_id": case_id,
-            "case_path": str(self._case_paths[case_id]),
+            "case_path": str(resolved.case_path),
             "profile_id": self.profile.profile_id,
             "priority": int(priority),
             "status": "queued",
@@ -274,6 +665,7 @@ class SolverLabService:
             idempotency_key=idempotency_key,
             operation_request={
                 "case_id": case_id,
+                "revision_id": resolved.revision_id,
                 "priority": priority,
                 "watchdog_seconds": watchdog_seconds,
                 "experiment_id": experiment_id,
@@ -1029,6 +1421,10 @@ class SolverLabService:
         *,
         case_id: str,
         case: Mapping[str, Any],
+        case_path: Path,
+        corpus_path: Path,
+        source_kind: str,
+        revision_id: str | None,
         watchdog_seconds: float,
         replicate: int,
     ) -> dict[str, Any]:
@@ -1038,7 +1434,7 @@ class SolverLabService:
             root=self.paths.root,
             executable=self.paths.executable,
             artifact=self.paths.artifact,
-            corpus=self.paths.corpus,
+            corpus=corpus_path,
         )
         return {
             "source": dict(provenance.source),
@@ -1047,8 +1443,11 @@ class SolverLabService:
             "corpus": dict(provenance.corpus),
             "case": {
                 "id": case_id,
-                "path": str(self._case_paths[case_id]),
-                "file_sha256": sha256_file(self._case_paths[case_id]),
+                "source_kind": source_kind,
+                "revision_id": revision_id,
+                "path": str(case_path),
+                "corpus_path": str(corpus_path),
+                "file_sha256": sha256_file(case_path),
                 "content_sha256": canonical_sha256(case),
             },
             "economy": case.get("economy"),
@@ -1161,3 +1560,234 @@ class SolverLabService:
         if case is None:
             raise KeyError(case_id)
         return case
+
+    def _unique_local_case_id(self, suggested: str) -> str:
+        base = slugify_case_id(suggested)
+        used = set(self._cases)
+        used.update(
+            revision["case_id"]
+            for revision in self.catalog.list_case_revisions(limit=1000)
+        )
+        used.update(
+            draft["case_id"]
+            for draft in self.catalog.list_case_drafts(limit=1000)
+        )
+        if base not in used:
+            return base
+        suffix = 2
+        while f"{base[:120]}-{suffix}" in used:
+            suffix += 1
+        return f"{base[:120]}-{suffix}"
+
+    def _localize_editable_case(
+        self, document: Mapping[str, Any]
+    ) -> dict[str, Any]:
+        case = json.loads(json.dumps(document))
+        case["schema_version"] = "solver_benchmark_case_v1"
+        case["id"] = normalize_case_id(str(case["id"]))
+        case["category"] = "solver_lab_local"
+        case["approval_status"] = "local_unapproved"
+        case["benchmark_enabled"] = True
+        case["comparison_profile"] = "solver-lab-local-calculator-product-v1"
+        case["expected"] = {
+            "solve_status": "reliability_classified",
+            "optimality_status": "classified",
+            "compile_status": "compiled_if_policy_available",
+            "verification_status": "not_required",
+        }
+        for key in (
+            "forced_winner_contract",
+            "compiled_operation_contract",
+            "compiled_operation_contracts",
+            "material_ratio_contract",
+            "market_price_override_contracts",
+            "mechanic_family_control",
+            "generation",
+            "feasibility",
+            "resolved_natural_t1_goals",
+            "bounded_best_policy_contract",
+        ):
+            case.pop(key, None)
+        goal = json.loads(json.dumps(case.get("goal", {})))
+        goal.setdefault("version", "v1")
+        goal["action_mode"] = "goal_relevant"
+        goal.pop("actions", None)
+        case["goal"] = goal
+        case["product_action_envelope"] = {
+            "mode": "calculator_goal_relevant_priced_v1",
+            "envelope_goal": json.loads(json.dumps(goal)),
+            "pricing_filter": "all_declared_cost_keys_present",
+            "bench_goal_slots_forbidden": True,
+        }
+        case["allowed_mechanic_families"] = [
+            "calculator_goal_relevant_product_envelope"
+        ]
+        caps = dict(case.get("caps", {}))
+        bindings = self.profile.document["native_bindings"]
+        scope = bindings["manifest_general_product_scope"]
+        caps["solve_profile"] = bindings["solve_profile"]
+        caps["solve_step_work_items"] = scope["solve_step_work_items"]
+        for key in (
+            "goal_progress_gated_reforges",
+            "allow_economic_restart",
+            "consider_imprint_programs",
+        ):
+            caps[key] = scope[key]
+        case["caps"] = caps
+        verification = dict(case.get("verification", {}))
+        verification["runs"] = 0
+        verification["exact_evaluation"] = True
+        case["verification"] = verification
+        case["corpus"] = {
+            "tier": "solver-lab-local",
+            "stratum": "local_revision",
+            "goal_modifier_count": len(goal.get("slots", [])),
+            "start_goal_modifier_count": len(
+                case.get("start", {}).get("mods", [])
+            ),
+            "product_worker_profile": "calculator_default_adaptive_max_8",
+        }
+        return case
+
+    def _resolve_case_reference(
+        self,
+        *,
+        case_id: str | None,
+        revision_id: str | None,
+    ) -> ResolvedLabCase:
+        if revision_id is None:
+            if not case_id:
+                raise ValueError("provide a frozen case id or local revision id")
+            case = self._require_case(case_id)
+            return ResolvedLabCase(
+                document=case,
+                case_path=self._case_paths[case_id],
+                corpus_path=self.paths.corpus,
+                task=self._tasks[case_id],
+                source_kind="frozen",
+            )
+        revision = self.catalog.get_case_revision(revision_id)
+        if revision is None:
+            raise KeyError(revision_id)
+        if case_id is not None and case_id != revision["case_id"]:
+            raise ValueError("case id does not match the selected revision")
+        document = revision["document"]
+        case_path = Path(revision["case_path"]).resolve()
+        corpus_path = Path(revision["corpus_path"]).resolve()
+        if not case_path.is_file() or not corpus_path.is_file():
+            raise FileNotFoundError("local case revision snapshot is missing")
+        if canonical_sha256(document) != revision["content_sha256"]:
+            raise ValueError("local case revision catalog content changed")
+        disk_document = read_json(case_path)
+        if canonical_sha256(disk_document) != revision["content_sha256"]:
+            raise ValueError("local case revision file is not canonical identity")
+        validate_case_document_shape(document)
+        validate_local_profile_binding(
+            self.profile, self.corpus_document, document
+        )
+        caps = document.get("caps", {})
+        task = CaseTask(
+            case_id=revision["case_id"],
+            case_path=case_path,
+            watchdog_seconds=float(document["watchdog_seconds"]),
+            reserved_memory_bytes=int(caps.get("max_solver_owned_bytes", 0)),
+            tier="solver-lab-local",
+            evaluation_role="development",
+        )
+        return ResolvedLabCase(
+            document=document,
+            case_path=case_path,
+            corpus_path=corpus_path,
+            task=task,
+            source_kind="local_revision",
+            revision_id=revision_id,
+        )
+
+    def _validate_case_document(
+        self, document: Mapping[str, Any]
+    ) -> dict[str, Any]:
+        case = validate_case_document_shape(document)
+        validate_local_profile_binding(
+            self.profile, self.corpus_document, case
+        )
+        content_sha256 = canonical_sha256(case)
+        self.validation_store.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(
+            prefix="case-", dir=self.validation_store
+        ) as temporary:
+            directory = Path(temporary)
+            case_path = directory / "case.json"
+            corpus_path = directory / "manifest.json"
+            self._write_json_atomic(case_path, case)
+            self._write_json_atomic(
+                corpus_path,
+                build_local_manifest(
+                    self.corpus_document,
+                    case_id=str(case["id"]),
+                    corpus_id="poecraft2-native-solver-lab-validation-v1",
+                ),
+            )
+            command = [
+                str(self.paths.executable),
+                "--artifact",
+                str(self.paths.artifact),
+                "--corpus",
+                str(corpus_path),
+                "--case",
+                str(case["id"]),
+                "--validate-only",
+            ]
+            creationflags = (
+                subprocess.CREATE_NO_WINDOW
+                if os.name == "nt" and hasattr(subprocess, "CREATE_NO_WINDOW")
+                else 0
+            )
+            try:
+                completed = subprocess.run(
+                    command,
+                    cwd=self.paths.root,
+                    text=True,
+                    capture_output=True,
+                    timeout=60.0,
+                    check=False,
+                    creationflags=creationflags,
+                )
+                output = (completed.stdout + completed.stderr)[-16384:]
+                native_valid = completed.returncode == 0
+                detail = output.strip() or (
+                    "native validation passed"
+                    if native_valid
+                    else f"native validator exited {completed.returncode}"
+                )
+                return {
+                    "case_id": case["id"],
+                    "content_sha256": content_sha256,
+                    "structural_valid": True,
+                    "profile_valid": True,
+                    "native_valid": native_valid,
+                    "native_exit_code": completed.returncode,
+                    "detail": detail,
+                    "command": command,
+                }
+            except subprocess.TimeoutExpired:
+                return {
+                    "case_id": case["id"],
+                    "content_sha256": content_sha256,
+                    "structural_valid": True,
+                    "profile_valid": True,
+                    "native_valid": False,
+                    "native_exit_code": None,
+                    "detail": "native validation exceeded 60 seconds",
+                    "command": command,
+                }
+
+    @staticmethod
+    def _write_json_atomic(path: Path, value: Mapping[str, Any]) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_suffix(path.suffix + ".tmp")
+        temporary.write_text(
+            json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False)
+            + "\n",
+            encoding="utf-8",
+        )
+        os.replace(temporary, path)

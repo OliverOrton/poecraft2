@@ -33,12 +33,49 @@ def build_parser() -> argparse.ArgumentParser:
     case = subparsers.add_parser("case")
     case.add_argument("case_id")
 
+    drafts = subparsers.add_parser("case-drafts")
+    drafts.add_argument("--limit", type=int, default=200)
+    draft = subparsers.add_parser("case-draft")
+    draft.add_argument("draft_id")
+    create_draft = subparsers.add_parser("create-case-draft")
+    create_draft.add_argument("--name", required=True)
+    create_source = create_draft.add_mutually_exclusive_group()
+    create_source.add_argument("--source-case-id")
+    create_source.add_argument("--source-revision-id")
+    create_source.add_argument("--import-file", type=Path)
+    create_draft.add_argument("--idempotency-key", required=True)
+    create_draft.add_argument("--dry-run", action="store_true")
+    update_draft = subparsers.add_parser("update-case-draft")
+    update_draft.add_argument("draft_id")
+    update_draft.add_argument("--name", required=True)
+    update_draft.add_argument("--file", type=Path, required=True)
+    update_draft.add_argument("--idempotency-key", required=True)
+    update_draft.add_argument("--dry-run", action="store_true")
+    validate_draft = subparsers.add_parser("validate-case-draft")
+    validate_draft.add_argument("draft_id")
+    discard_draft = subparsers.add_parser("discard-case-draft")
+    discard_draft.add_argument("draft_id")
+    discard_draft.add_argument("--idempotency-key", required=True)
+    discard_draft.add_argument("--dry-run", action="store_true")
+    save_revision = subparsers.add_parser("save-case-revision")
+    save_revision.add_argument("draft_id")
+    save_revision.add_argument("--idempotency-key", required=True)
+    save_revision.add_argument("--dry-run", action="store_true")
+    revisions = subparsers.add_parser("case-revisions")
+    revisions.add_argument("--case-id")
+    revisions.add_argument("--limit", type=int, default=200)
+    revision = subparsers.add_parser("case-revision")
+    revision.add_argument("revision_id")
+    export_revision = subparsers.add_parser("export-case-revision")
+    export_revision.add_argument("revision_id")
+
     experiment = subparsers.add_parser("create-experiment")
     experiment.add_argument("--name", required=True)
     experiment.add_argument("--description", default="")
 
     submit = subparsers.add_parser("submit")
-    submit.add_argument("case_id")
+    submit.add_argument("case_id", nargs="?")
+    submit.add_argument("--revision-id")
     submit.add_argument("--idempotency-key", required=True)
     submit.add_argument("--priority", type=int, default=0)
     submit.add_argument("--watchdog-seconds", type=float)
@@ -148,6 +185,54 @@ def main(argv: list[str] | None = None) -> int:
             result = service.list_cases()
         elif args.operation == "case":
             result = service.get_case(args.case_id)
+        elif args.operation == "case-drafts":
+            result = service.list_case_drafts(limit=args.limit)
+        elif args.operation == "case-draft":
+            result = service.get_case_draft(args.draft_id)
+        elif args.operation == "create-case-draft":
+            import_json = (
+                args.import_file.read_text(encoding="utf-8")
+                if args.import_file
+                else None
+            )
+            result = service.create_case_draft(
+                name=args.name,
+                source_case_id=args.source_case_id,
+                source_revision_id=args.source_revision_id,
+                import_json=import_json,
+                idempotency_key=args.idempotency_key,
+                dry_run=args.dry_run,
+            )
+        elif args.operation == "update-case-draft":
+            result = service.update_case_draft(
+                draft_id=args.draft_id,
+                name=args.name,
+                document=args.file.read_text(encoding="utf-8"),
+                idempotency_key=args.idempotency_key,
+                dry_run=args.dry_run,
+            )
+        elif args.operation == "validate-case-draft":
+            result = service.validate_case_draft(args.draft_id)
+        elif args.operation == "discard-case-draft":
+            result = service.discard_case_draft(
+                draft_id=args.draft_id,
+                idempotency_key=args.idempotency_key,
+                dry_run=args.dry_run,
+            )
+        elif args.operation == "save-case-revision":
+            result = service.save_case_revision(
+                draft_id=args.draft_id,
+                idempotency_key=args.idempotency_key,
+                dry_run=args.dry_run,
+            )
+        elif args.operation == "case-revisions":
+            result = service.list_case_revisions(
+                case_id=args.case_id, limit=args.limit
+            )
+        elif args.operation == "case-revision":
+            result = service.get_case_revision(args.revision_id)
+        elif args.operation == "export-case-revision":
+            result = service.export_case_revision(args.revision_id)
         elif args.operation == "create-experiment":
             result = service.create_experiment(
                 name=args.name, description=args.description
@@ -155,6 +240,7 @@ def main(argv: list[str] | None = None) -> int:
         elif args.operation == "submit":
             result = service.submit_job(
                 case_id=args.case_id,
+                revision_id=args.revision_id,
                 idempotency_key=args.idempotency_key,
                 priority=args.priority,
                 watchdog_seconds=args.watchdog_seconds,

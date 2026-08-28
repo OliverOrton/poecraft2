@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from poecraft_ingest.solver_lab_catalog import SolverLabCatalog
+from poecraft_ingest.solver_lab_contracts import canonical_sha256
 from poecraft_ingest.solver_lab_service import SolverLabService
 from poecraft_ingest.solver_lab_supervisor import SolverLabSupervisor
 
@@ -71,6 +72,70 @@ def test_cancel_queued_job_is_durable_and_idempotent(tmp_path: Path) -> None:
 
     assert first == second
     assert reopened.get_job(job_id)["result"]["job"]["status"] == "canceled"
+
+
+def test_local_case_draft_validation_revision_and_submit_are_durable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    service = _service(tmp_path)
+    frozen = service.list_cases()["result"][0]["case_id"]
+    draft = service.create_case_draft(
+        name="Editable three-prefix clone",
+        source_case_id=frozen,
+        idempotency_key="create-local-case",
+    )["result"]
+    document = draft["document"]
+    document["watchdog_seconds"] = 321
+    updated = service.update_case_draft(
+        draft_id=draft["draft_id"],
+        name="Edited local case",
+        document=document,
+        idempotency_key="update-local-case",
+    )["result"]
+
+    def valid(case):
+        return {
+            "case_id": case["id"],
+            "content_sha256": canonical_sha256(case),
+            "structural_valid": True,
+            "profile_valid": True,
+            "native_valid": True,
+            "native_exit_code": 0,
+            "detail": "fixture native validation passed",
+            "command": ["fixture", "--validate-only"],
+        }
+
+    monkeypatch.setattr(service, "_validate_case_document", valid)
+    validation = service.validate_case_draft(draft["draft_id"])["result"]
+    first = service.save_case_revision(
+        draft_id=draft["draft_id"],
+        idempotency_key="save-local-revision",
+    )["result"]
+    duplicate = service.save_case_revision(
+        draft_id=draft["draft_id"],
+        idempotency_key="save-local-revision-duplicate",
+    )["result"]
+    preview = service.submit_job(
+        case_id=first["case_id"],
+        revision_id=first["revision_id"],
+        idempotency_key="submit-local-revision",
+        dry_run=True,
+    )["result"]
+
+    assert updated["name"] == "Edited local case"
+    assert updated["validated_content_sha256"] is None
+    assert validation["native_valid"] is True
+    assert first["revision_ordinal"] == 1
+    assert duplicate["revision_id"] == first["revision_id"]
+    assert Path(first["case_path"]).is_file()
+    assert Path(first["corpus_path"]).is_file()
+    assert preview["request"]["case"]["revision_id"] == first["revision_id"]
+    assert preview["request"]["case"]["source_kind"] == "local_revision"
+
+    reopened = _service(tmp_path)
+    revision = reopened.get_case_revision(first["revision_id"])["result"]
+    assert revision["document"]["watchdog_seconds"] == 321
+    assert revision["content_sha256"] == validation["content_sha256"]
 
 
 def test_single_worker_records_immutable_attempt_and_native_summary(
@@ -174,13 +239,18 @@ def test_qt_queue_and_detail_widgets_use_persisted_service(tmp_path: Path) -> No
     assert window.model.rowCount() == 1
     assert window.proxy_model.rowCount() == 1
     assert window.case_picker.count() == 5
-    assert window.tabs.count() == 4
+    assert window.tabs.count() == 5
+    assert window.case_list.count() == 5
     assert window.selected_job()["case_id"] == case_id
     assert "queued" in window.detail.values["status"].text()
     window.job_filter.setText("does-not-exist")
     assert window.proxy_model.rowCount() == 0
     window.job_filter.clear()
     assert window.proxy_model.rowCount() == 1
+    window.create_case_from_template()
+    assert window.case_list.count() == 6
+    assert window._case_selection["source_kind"] == "draft"
+    assert window.case_editor.isReadOnly() is False
 
     for row in range(1, window.matrix_cases.count()):
         window.matrix_cases.item(row).setCheckState(Qt.CheckState.Unchecked)

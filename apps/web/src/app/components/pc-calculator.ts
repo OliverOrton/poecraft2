@@ -96,6 +96,7 @@ import {
     solveResultMarkup,
     solveTerminationDetail,
 } from "../solver-result-presentation";
+import { buildSolverLabCalculatorExport } from "../solver-lab-export";
 import { cloneStrategy, type StrategyDocument } from "../strategy-model";
 import { PcBasePicker, BasePickerSelection } from "./pc-base-picker";
 import { PcModList, SlotMod } from "./pc-mod-list";
@@ -250,6 +251,7 @@ export class PcCalculator extends HTMLElement {
     private solveAdmittedActionIds: string[] = [];
     private solveMissingPriceKeys: string[] = [];
     private solveStopDetail = "";
+    private solverLabExportNotice = "";
     private solveTelemetry: unknown = null;
     private solveAbsoluteGapTarget = 0;
     private solveRelativeGapPercentTarget = 0;
@@ -933,6 +935,52 @@ export class PcCalculator extends HTMLElement {
             this.solveRunning = false;
             this.renderSolvePanel();
         }
+    }
+
+    private async copySolverLabCase(): Promise<void> {
+        if (!this.solver || !this.item || this.slots.length === 0) {
+            throw new Error(
+                "Choose an input item and define at least one goal modifier before exporting.",
+            );
+        }
+        if (this.solveAllowEconomicRestart || this.solveConsiderImprintPrograms) {
+            throw new Error(
+                "The current Native Solver Lab profile disables voluntary Restart and automatic Imprint programs. Turn both options off before exporting.",
+            );
+        }
+        const base = this.bases.find((entry) => entry.path === this.base);
+        if (!base) throw new Error("The selected base is not available.");
+        const pinned = pinEconomy(
+            this.enabledSolvePickerActions().flatMap(
+                (action) => action.cost_keys,
+            ),
+        );
+        const state = await this.client.exportItem(this.item);
+        const info = await this.client.itemInfo(this.item, this.session);
+        const goal = this.solverGoal("product_envelope");
+        const payload = buildSolverLabCalculatorExport({
+            name: `${base.name} ${goal.slots.length}-goal Calculator case`,
+            description: `${base.name} Calculator start carrier and product goal`,
+            base,
+            itemLevel: this.itemLevel,
+            itemRarity: this.itemRarity,
+            itemState: state,
+            checkpointPresent: Boolean(info.checkpoint_present),
+            goal,
+            economy: pinned,
+            options: calculatorSolveOptions(
+                this.solveAbsoluteGapTarget,
+                this.solveRelativeGapPercentTarget,
+                false,
+                false,
+            ),
+            modKeyForId: (modId) => this.modCache[modId]?.key,
+        });
+        await navigator.clipboard.writeText(
+            JSON.stringify(payload, null, 2),
+        );
+        this.solverLabExportNotice =
+            "Native Solver Lab case copied. In the Lab, open Cases and choose Import clipboard.";
     }
 
     private cancelSolve(): void {
@@ -1861,6 +1909,9 @@ export class PcCalculator extends HTMLElement {
             readiness.pricedActions > 0 &&
             !readiness.missingFractureBasePrice &&
             !this.busy;
+        const canExport =
+            Boolean(this.solver && this.item && this.slots.length) &&
+            !this.busy;
         const progress = this.solveProgress;
         const disabledFamilyMarkup = DIAGNOSTIC_SOLVER_FAMILIES.map(
             ({ family, label }) => `<label>
@@ -1942,6 +1993,9 @@ export class PcCalculator extends HTMLElement {
                 <pre>${escapeHtml(this.solveError.detail)}</pre>
             </div>`
             : "";
+        const labExportMarkup = this.solverLabExportNotice
+            ? `<p class="pc-calc-solve-warning">${escapeHtml(this.solverLabExportNotice)}</p>`
+            : "";
         const idleMessage = !this.slots.length
             ? "Define a goal to enable Solve."
             : readiness.missingFractureBasePrice
@@ -1964,7 +2018,10 @@ export class PcCalculator extends HTMLElement {
                 ${
                     this.solveRunning
                         ? '<button class="pc-calc-solve-cancel" data-solve-cmd="cancel">Cancel</button>'
-                        : `<button class="pc-calc-solve-start" data-solve-cmd="start" ${canStart ? "" : "disabled"}>Start solve</button>`
+                        : `<span>
+                            <button data-solve-cmd="copy-lab" ${canExport ? "" : "disabled"}>Copy Lab case</button>
+                            <button class="pc-calc-solve-start" data-solve-cmd="start" ${canStart ? "" : "disabled"}>Start solve</button>
+                           </span>`
                 }
             </header>
             <div class="pc-calc-solve-targets">
@@ -2017,6 +2074,7 @@ export class PcCalculator extends HTMLElement {
                     : ""
             }
             ${resultMarkup}
+            ${labExportMarkup}
             ${errorMarkup}`;
 
         host.querySelectorAll<HTMLInputElement>("[data-price-key]").forEach(
@@ -2086,6 +2144,9 @@ export class PcCalculator extends HTMLElement {
                     }
                     void this.guard(async () => {
                         if (command === "start") await this.startSolve();
+                        if (command === "copy-lab") {
+                            await this.copySolverLabCase();
+                        }
                         if (command === "open") await this.openSolvedStrategy();
                         if (command === "verify") {
                             await this.verifySolvedStrategy();

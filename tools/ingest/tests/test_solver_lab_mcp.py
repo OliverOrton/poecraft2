@@ -263,6 +263,16 @@ def test_mcp_surface_is_closed_finite_and_mutations_are_typed(tmp_path: Path) ->
         "list_profiles",
         "list_cases",
         "get_case",
+        "list_case_drafts",
+        "get_case_draft",
+        "create_case_draft",
+        "update_case_draft",
+        "validate_case_draft",
+        "discard_case_draft",
+        "save_case_revision",
+        "list_case_revisions",
+        "get_case_revision",
+        "export_case_revision",
         "submit_job",
         "submit_matrix",
         "list_jobs",
@@ -293,6 +303,10 @@ def test_mcp_surface_is_closed_finite_and_mutations_are_typed(tmp_path: Path) ->
         "clone_job",
         "change_priority",
         "export_investigation_bundle",
+        "create_case_draft",
+        "update_case_draft",
+        "discard_case_draft",
+        "save_case_revision",
     }:
         schema = by_name[name].input_schema
         assert "idempotency_key" in schema["properties"]
@@ -333,7 +347,7 @@ def test_mcp_stdio_server_initializes_and_serves_bounded_cases(tmp_path: Path) -
                 result = await session.call_tool("list_cases", {})
 
         assert initialized.server_info.name == "poecraft2-native-solver-lab"
-        assert len(tools.tools) == 21
+        assert len(tools.tools) == 31
         assert result.is_error is False
         assert result.structured_content is not None
         assert len(result.structured_content["result"]) == 5

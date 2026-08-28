@@ -407,4 +407,4 @@ def test_catalog_v1_columns_migrate_in_place(tmp_path: Path) -> None:
 
     assert {"blocked_reason", "cancel_requested"} <= job_columns
     assert {"lease_id", "process_id", "process_identity_token"} <= attempt_columns
-    assert version == 2
+    assert version == 3

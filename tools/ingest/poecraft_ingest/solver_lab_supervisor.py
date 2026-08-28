@@ -286,22 +286,6 @@ class SolverLabSupervisor:
         attempt_id = attempt["attempt_id"]
         attempt_directory = Path(attempt["directory"])
         paths = AttemptPaths.immutable(attempt_directory, attempt_id)
-        task = self.service._tasks[job["case_id"]]
-        worker_options = self.service.native_worker_options()
-        command = build_solver_case_command(
-            executable=self.service.paths.executable,
-            artifact=self.service.paths.artifact,
-            corpus=self.service.paths.corpus,
-            case_id=task.case_id,
-            paths=paths,
-            root=self.service.paths.root,
-            exact_evaluation=worker_options.exact_evaluation,
-            run_verification=worker_options.run_verification,
-            goal_progress_gated_reforges=(
-                worker_options.goal_progress_gated_reforges
-            ),
-        ).canonical_document()
-        self.service.catalog.set_attempt_command(attempt_id, command)
 
         def on_started(pid: int, token: str | None) -> None:
             self.service.catalog.set_attempt_process(
@@ -311,11 +295,36 @@ class SolverLabSupervisor:
             )
 
         try:
+            request_case = job.get("request", {}).get("case", {})
+            resolved_case = self.service._resolve_case_reference(
+                case_id=job["case_id"],
+                revision_id=request_case.get("revision_id"),
+            )
+            task = resolved_case.task
+            if request_case.get("content_sha256") != canonical_sha256(
+                resolved_case.document
+            ):
+                raise ValueError("queued case request identity changed")
+            worker_options = self.service.native_worker_options()
+            command = build_solver_case_command(
+                executable=self.service.paths.executable,
+                artifact=self.service.paths.artifact,
+                corpus=resolved_case.corpus_path,
+                case_id=task.case_id,
+                paths=paths,
+                root=self.service.paths.root,
+                exact_evaluation=worker_options.exact_evaluation,
+                run_verification=worker_options.run_verification,
+                goal_progress_gated_reforges=(
+                    worker_options.goal_progress_gated_reforges
+                ),
+            ).canonical_document()
+            self.service.catalog.set_attempt_command(attempt_id, command)
             result = _run_case(
                 task,
                 executable=self.service.paths.executable,
                 artifact=self.service.paths.artifact,
-                corpus=self.service.paths.corpus,
+                corpus=resolved_case.corpus_path,
                 output_directory=attempt_directory,
                 root=self.service.paths.root,
                 exact_evaluation=worker_options.exact_evaluation,

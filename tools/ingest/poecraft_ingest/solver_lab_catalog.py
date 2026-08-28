@@ -13,13 +13,15 @@ from poecraft_ingest.solver_lab_contracts import (
     ARTIFACT_SCHEMA_VERSION,
     ATTEMPT_SCHEMA_VERSION,
     COMMAND_SCHEMA_VERSION,
+    CASE_DRAFT_SCHEMA_VERSION,
+    CASE_REVISION_SCHEMA_VERSION,
     EVENT_SCHEMA_VERSION,
     EXPERIMENT_SCHEMA_VERSION,
     JOB_SCHEMA_VERSION,
 )
 
 
-CATALOG_SCHEMA_VERSION = 2
+CATALOG_SCHEMA_VERSION = 3
 
 
 def utc_now() -> str:
@@ -36,6 +38,16 @@ def _decode(value: str | None, default: Any) -> Any:
     return json.loads(value)
 
 
+class _ClosingConnection(sqlite3.Connection):
+    """Make ``with catalog._connect()`` close, not merely commit, SQLite."""
+
+    def __exit__(self, exc_type: Any, exc: Any, traceback: Any) -> bool:
+        try:
+            return bool(super().__exit__(exc_type, exc, traceback))
+        finally:
+            self.close()
+
+
 class SolverLabCatalog:
     """Small transactional repository; callers never issue ad hoc SQL."""
 
@@ -45,7 +57,9 @@ class SolverLabCatalog:
         self.initialize()
 
     def _connect(self) -> sqlite3.Connection:
-        connection = sqlite3.connect(self.path, timeout=30.0)
+        connection = sqlite3.connect(
+            self.path, timeout=30.0, factory=_ClosingConnection
+        )
         connection.row_factory = sqlite3.Row
         connection.execute("PRAGMA foreign_keys = ON")
         connection.execute("PRAGMA busy_timeout = 30000")
@@ -192,6 +206,41 @@ class SolverLabCatalog:
                 );
                 CREATE INDEX IF NOT EXISTS leases_status
                     ON leases(status, heartbeat_at);
+
+                CREATE TABLE IF NOT EXISTS case_drafts (
+                    draft_id TEXT PRIMARY KEY,
+                    schema_version TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    case_id TEXT NOT NULL,
+                    source_kind TEXT NOT NULL,
+                    base_revision_id TEXT,
+                    document_json TEXT NOT NULL,
+                    validated_content_sha256 TEXT,
+                    validation_json TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS case_drafts_updated
+                    ON case_drafts(updated_at DESC, draft_id ASC);
+
+                CREATE TABLE IF NOT EXISTS case_revisions (
+                    revision_id TEXT PRIMARY KEY,
+                    schema_version TEXT NOT NULL,
+                    case_id TEXT NOT NULL,
+                    revision_ordinal INTEGER NOT NULL,
+                    name TEXT NOT NULL,
+                    source_kind TEXT NOT NULL,
+                    parent_revision_id TEXT,
+                    content_sha256 TEXT NOT NULL,
+                    document_json TEXT NOT NULL,
+                    case_path TEXT NOT NULL UNIQUE,
+                    corpus_path TEXT NOT NULL UNIQUE,
+                    created_at TEXT NOT NULL,
+                    UNIQUE(case_id, revision_ordinal),
+                    UNIQUE(case_id, content_sha256)
+                );
+                CREATE INDEX IF NOT EXISTS case_revisions_created
+                    ON case_revisions(created_at DESC, revision_id ASC);
                 """
             )
             self._ensure_column(connection, "jobs", "blocked_reason", "TEXT")
@@ -268,6 +317,323 @@ class SolverLabCatalog:
                 (experiment_id,),
             ).fetchone()
         return _decode(row[0], {}) if row else None
+
+    def create_case_draft(
+        self,
+        *,
+        draft: Mapping[str, Any],
+        command_id: str,
+        idempotency_key: str,
+        operation_request: Mapping[str, Any],
+        operation_result: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        with self.transaction(immediate=True) as connection:
+            existing = connection.execute(
+                "SELECT * FROM commands WHERE idempotency_key=?",
+                (idempotency_key,),
+            ).fetchone()
+            if existing:
+                return _decode(existing["result_json"], {})
+            connection.execute(
+                """
+                INSERT INTO case_drafts(
+                    draft_id, schema_version, name, case_id, source_kind,
+                    base_revision_id, document_json,
+                    validated_content_sha256, validation_json,
+                    created_at, updated_at
+                ) VALUES(?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?)
+                """,
+                (
+                    draft["draft_id"],
+                    CASE_DRAFT_SCHEMA_VERSION,
+                    draft["name"],
+                    draft["case_id"],
+                    draft["source_kind"],
+                    draft.get("base_revision_id"),
+                    _json(draft["document"]),
+                    draft["created_at"],
+                    draft["updated_at"],
+                ),
+            )
+            self._insert_command(
+                connection,
+                command_id=command_id,
+                idempotency_key=idempotency_key,
+                operation="create_case_draft",
+                target_id=str(draft["draft_id"]),
+                dry_run=False,
+                request=operation_request,
+                result=operation_result,
+            )
+            self._insert_event(
+                connection,
+                "case_draft_created",
+                "case_draft",
+                str(draft["draft_id"]),
+                {
+                    "case_id": draft["case_id"],
+                    "source_kind": draft["source_kind"],
+                },
+            )
+        return dict(operation_result)
+
+    def update_case_draft(
+        self,
+        *,
+        draft: Mapping[str, Any],
+        command_id: str,
+        idempotency_key: str,
+        operation_request: Mapping[str, Any],
+        operation_result: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        with self.transaction(immediate=True) as connection:
+            existing = connection.execute(
+                "SELECT * FROM commands WHERE idempotency_key=?",
+                (idempotency_key,),
+            ).fetchone()
+            if existing:
+                return _decode(existing["result_json"], {})
+            cursor = connection.execute(
+                """
+                UPDATE case_drafts
+                SET name=?, case_id=?, base_revision_id=?, document_json=?,
+                    validated_content_sha256=NULL, validation_json=NULL,
+                    updated_at=?
+                WHERE draft_id=?
+                """,
+                (
+                    draft["name"],
+                    draft["case_id"],
+                    draft.get("base_revision_id"),
+                    _json(draft["document"]),
+                    draft["updated_at"],
+                    draft["draft_id"],
+                ),
+            )
+            if cursor.rowcount != 1:
+                raise KeyError(draft["draft_id"])
+            self._insert_command(
+                connection,
+                command_id=command_id,
+                idempotency_key=idempotency_key,
+                operation="update_case_draft",
+                target_id=str(draft["draft_id"]),
+                dry_run=False,
+                request=operation_request,
+                result=operation_result,
+            )
+            self._insert_event(
+                connection,
+                "case_draft_updated",
+                "case_draft",
+                str(draft["draft_id"]),
+                {"case_id": draft["case_id"]},
+            )
+        return dict(operation_result)
+
+    def discard_case_draft(
+        self,
+        *,
+        draft_id: str,
+        command_id: str,
+        idempotency_key: str,
+        operation_result: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        with self.transaction(immediate=True) as connection:
+            existing = connection.execute(
+                "SELECT * FROM commands WHERE idempotency_key=?",
+                (idempotency_key,),
+            ).fetchone()
+            if existing:
+                return _decode(existing["result_json"], {})
+            row = connection.execute(
+                "SELECT case_id FROM case_drafts WHERE draft_id=?",
+                (draft_id,),
+            ).fetchone()
+            if row is None:
+                raise KeyError(draft_id)
+            connection.execute(
+                "DELETE FROM case_drafts WHERE draft_id=?", (draft_id,)
+            )
+            self._insert_command(
+                connection,
+                command_id=command_id,
+                idempotency_key=idempotency_key,
+                operation="discard_case_draft",
+                target_id=draft_id,
+                dry_run=False,
+                request={"draft_id": draft_id},
+                result=operation_result,
+            )
+            self._insert_event(
+                connection,
+                "case_draft_discarded",
+                "case_draft",
+                draft_id,
+                {"case_id": row["case_id"]},
+            )
+        return dict(operation_result)
+
+    def list_case_drafts(self, *, limit: int = 200) -> list[dict[str, Any]]:
+        limit = max(1, min(int(limit), 1000))
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT * FROM case_drafts "
+                "ORDER BY updated_at DESC, draft_id ASC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [self._case_draft_row(row) for row in rows]
+
+    def get_case_draft(self, draft_id: str) -> dict[str, Any] | None:
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM case_drafts WHERE draft_id=?", (draft_id,)
+            ).fetchone()
+        return self._case_draft_row(row) if row else None
+
+    def record_case_validation(
+        self,
+        *,
+        draft_id: str,
+        content_sha256: str,
+        validation: Mapping[str, Any],
+    ) -> None:
+        with self.transaction(immediate=True) as connection:
+            cursor = connection.execute(
+                "UPDATE case_drafts SET validated_content_sha256=?, "
+                "validation_json=?, updated_at=? WHERE draft_id=?",
+                (content_sha256, _json(validation), utc_now(), draft_id),
+            )
+            if cursor.rowcount != 1:
+                raise KeyError(draft_id)
+            self._insert_event(
+                connection,
+                "case_draft_validated",
+                "case_draft",
+                draft_id,
+                {
+                    "content_sha256": content_sha256,
+                    "native_valid": bool(validation.get("native_valid")),
+                },
+            )
+
+    def save_case_revision(
+        self,
+        *,
+        revision: Mapping[str, Any],
+        draft_id: str,
+        command_id: str,
+        idempotency_key: str,
+        operation_request: Mapping[str, Any],
+        operation_result: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        with self.transaction(immediate=True) as connection:
+            existing = connection.execute(
+                "SELECT * FROM commands WHERE idempotency_key=?",
+                (idempotency_key,),
+            ).fetchone()
+            if existing:
+                return _decode(existing["result_json"], {})
+            draft = connection.execute(
+                "SELECT * FROM case_drafts WHERE draft_id=?", (draft_id,)
+            ).fetchone()
+            if draft is None:
+                raise KeyError(draft_id)
+            duplicate = connection.execute(
+                "SELECT * FROM case_revisions WHERE case_id=? AND content_sha256=?",
+                (revision["case_id"], revision["content_sha256"]),
+            ).fetchone()
+            if duplicate is not None:
+                stored = self._case_revision_row(duplicate)
+            else:
+                ordinal = int(
+                    connection.execute(
+                        "SELECT COALESCE(MAX(revision_ordinal), 0) + 1 "
+                        "FROM case_revisions WHERE case_id=?",
+                        (revision["case_id"],),
+                    ).fetchone()[0]
+                )
+                stored = {**dict(revision), "revision_ordinal": ordinal}
+                connection.execute(
+                    """
+                    INSERT INTO case_revisions(
+                        revision_id, schema_version, case_id,
+                        revision_ordinal, name, source_kind,
+                        parent_revision_id, content_sha256, document_json,
+                        case_path, corpus_path, created_at
+                    ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        stored["revision_id"],
+                        CASE_REVISION_SCHEMA_VERSION,
+                        stored["case_id"],
+                        ordinal,
+                        stored["name"],
+                        stored["source_kind"],
+                        stored.get("parent_revision_id"),
+                        stored["content_sha256"],
+                        _json(stored["document"]),
+                        stored["case_path"],
+                        stored["corpus_path"],
+                        stored["created_at"],
+                    ),
+                )
+                self._insert_event(
+                    connection,
+                    "case_revision_saved",
+                    "case_revision",
+                    str(stored["revision_id"]),
+                    {
+                        "case_id": stored["case_id"],
+                        "revision_ordinal": ordinal,
+                        "content_sha256": stored["content_sha256"],
+                    },
+                )
+            connection.execute(
+                "UPDATE case_drafts SET base_revision_id=?, updated_at=? "
+                "WHERE draft_id=?",
+                (stored["revision_id"], utc_now(), draft_id),
+            )
+            result = dict(operation_result)
+            result["result"] = stored
+            self._insert_command(
+                connection,
+                command_id=command_id,
+                idempotency_key=idempotency_key,
+                operation="save_case_revision",
+                target_id=str(stored["revision_id"]),
+                dry_run=False,
+                request=operation_request,
+                result=result,
+            )
+        return result
+
+    def list_case_revisions(
+        self, *, case_id: str | None = None, limit: int = 200
+    ) -> list[dict[str, Any]]:
+        limit = max(1, min(int(limit), 1000))
+        with self._connect() as connection:
+            if case_id is None:
+                rows = connection.execute(
+                    "SELECT * FROM case_revisions "
+                    "ORDER BY created_at DESC, revision_id ASC LIMIT ?",
+                    (limit,),
+                ).fetchall()
+            else:
+                rows = connection.execute(
+                    "SELECT * FROM case_revisions WHERE case_id=? "
+                    "ORDER BY revision_ordinal DESC LIMIT ?",
+                    (case_id, limit),
+                ).fetchall()
+        return [self._case_revision_row(row) for row in rows]
+
+    def get_case_revision(self, revision_id: str) -> dict[str, Any] | None:
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM case_revisions WHERE revision_id=?",
+                (revision_id,),
+            ).fetchone()
+        return self._case_revision_row(row) if row else None
 
     def command_by_idempotency_key(self, key: str) -> dict[str, Any] | None:
         with self._connect() as connection:
@@ -1210,6 +1576,39 @@ class SolverLabCatalog:
             "request": _decode(row["request_json"], {}),
             "created_at": row["created_at"],
             "updated_at": row["updated_at"],
+        }
+
+    @staticmethod
+    def _case_draft_row(row: sqlite3.Row) -> dict[str, Any]:
+        return {
+            "schema_version": row["schema_version"],
+            "draft_id": row["draft_id"],
+            "name": row["name"],
+            "case_id": row["case_id"],
+            "source_kind": row["source_kind"],
+            "base_revision_id": row["base_revision_id"],
+            "document": _decode(row["document_json"], {}),
+            "validated_content_sha256": row["validated_content_sha256"],
+            "validation": _decode(row["validation_json"], None),
+            "created_at": row["created_at"],
+            "updated_at": row["updated_at"],
+        }
+
+    @staticmethod
+    def _case_revision_row(row: sqlite3.Row) -> dict[str, Any]:
+        return {
+            "schema_version": row["schema_version"],
+            "revision_id": row["revision_id"],
+            "case_id": row["case_id"],
+            "revision_ordinal": row["revision_ordinal"],
+            "name": row["name"],
+            "source_kind": row["source_kind"],
+            "parent_revision_id": row["parent_revision_id"],
+            "content_sha256": row["content_sha256"],
+            "document": _decode(row["document_json"], {}),
+            "case_path": row["case_path"],
+            "corpus_path": row["corpus_path"],
+            "created_at": row["created_at"],
         }
 
     @staticmethod

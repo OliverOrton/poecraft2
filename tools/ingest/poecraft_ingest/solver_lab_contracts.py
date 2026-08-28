@@ -23,6 +23,9 @@ COMMAND_SCHEMA_VERSION = "solver_lab_command_v1"
 EVENT_SCHEMA_VERSION = "solver_lab_event_v1"
 ARTIFACT_SCHEMA_VERSION = "solver_lab_artifact_v1"
 OPERATION_RESULT_SCHEMA_VERSION = "solver_lab_operation_result_v1"
+CASE_DRAFT_SCHEMA_VERSION = "solver_lab_case_draft_v1"
+CASE_REVISION_SCHEMA_VERSION = "solver_lab_case_revision_v1"
+CALCULATOR_EXPORT_SCHEMA_VERSION = "solver_lab_calculator_export_v1"
 
 SCHEMA_VERSIONS = {
     "profile": PROFILE_SCHEMA_VERSION,
@@ -33,6 +36,9 @@ SCHEMA_VERSIONS = {
     "event": EVENT_SCHEMA_VERSION,
     "artifact": ARTIFACT_SCHEMA_VERSION,
     "operation_result": OPERATION_RESULT_SCHEMA_VERSION,
+    "case_draft": CASE_DRAFT_SCHEMA_VERSION,
+    "case_revision": CASE_REVISION_SCHEMA_VERSION,
+    "calculator_export": CALCULATOR_EXPORT_SCHEMA_VERSION,
 }
 
 

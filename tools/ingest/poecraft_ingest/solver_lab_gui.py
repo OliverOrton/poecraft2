@@ -19,6 +19,7 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
+    QDoubleSpinBox,
     QFormLayout,
     QHBoxLayout,
     QLabel,
@@ -26,6 +27,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QMainWindow,
+    QMessageBox,
     QPlainTextEdit,
     QPushButton,
     QSplitter,
@@ -220,11 +222,14 @@ class SolverLabWindow(QMainWindow):
         self.tabs = QTabWidget()
         self.setCentralWidget(self.tabs)
         self._matrix_idempotency_key: str | None = None
+        self._case_selection: dict[str, Any] | None = None
 
+        self._build_cases_tab()
         self._build_queue_tab()
         self._build_compare_tab()
         self._build_strategy_tab()
         self._build_matrix_tab()
+        self._reload_case_surfaces()
 
         self.timer = QTimer(self)
         self.timer.setInterval(poll_interval_ms)
@@ -238,10 +243,6 @@ class SolverLabWindow(QMainWindow):
         queue_tab = QWidget()
 
         self.case_picker = QComboBox()
-        for item in self.service.list_cases()["result"]:
-            self.case_picker.addItem(
-                f"{item['role']} — {item['case_id']}", item["case_id"]
-            )
         self.submit_button = QPushButton("Submit")
         self.cancel_button = QPushButton("Cancel")
         self.retry_button = QPushButton("Retry")
@@ -306,6 +307,549 @@ class SolverLabWindow(QMainWindow):
             self.proxy_model.setFilterFixedString
         )
         self.table.selectionModel().selectionChanged.connect(self.refresh_detail)
+
+    def _build_cases_tab(self) -> None:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        disclosure = self._profile_action_disclosure()
+        disclosure.setWordWrap(True)
+        layout.addWidget(disclosure)
+
+        self.case_filter = QLineEdit()
+        self.case_filter.setPlaceholderText(
+            "Filter frozen cases, editable drafts, or immutable revisions"
+        )
+        self.case_list = QListWidget()
+        left = QWidget()
+        left_layout = QVBoxLayout(left)
+        left_layout.addWidget(self.case_filter)
+        left_layout.addWidget(self.case_list, 1)
+
+        self.case_name = QLineEdit()
+        self.case_name.setPlaceholderText("Local case name")
+        self.case_watchdog = QDoubleSpinBox()
+        self.case_watchdog.setRange(1.0, 86400.0)
+        self.case_watchdog.setDecimals(1)
+        self.case_bounded_finish = QDoubleSpinBox()
+        self.case_bounded_finish.setRange(0.0, 86399.0)
+        self.case_bounded_finish.setDecimals(1)
+        self.case_bounded_finish.setSpecialValueText("Disabled")
+        self.case_memory_gib = QDoubleSpinBox()
+        self.case_memory_gib.setRange(0.125, 64.0)
+        self.case_memory_gib.setDecimals(3)
+        self.case_memory_gib.setSingleStep(0.125)
+        controls = QFormLayout()
+        controls.addRow("Name", self.case_name)
+        controls.addRow("Watchdog seconds", self.case_watchdog)
+        controls.addRow("Bounded finish seconds", self.case_bounded_finish)
+        controls.addRow("Solver memory GiB", self.case_memory_gib)
+
+        self.case_editor = QPlainTextEdit()
+        self.case_editor.setPlaceholderText(
+            "A versioned solver benchmark case appears here. Frozen cases and saved revisions are read-only; clone one to edit it."
+        )
+        self.case_status = QPlainTextEdit()
+        self.case_status.setReadOnly(True)
+        self.case_status.setMaximumHeight(125)
+
+        first_buttons = QHBoxLayout()
+        self.case_new_button = QPushButton("New from template")
+        self.case_clone_button = QPushButton("Clone selected")
+        self.case_import_button = QPushButton("Import clipboard")
+        self.case_update_button = QPushButton("Save draft edits")
+        self.case_validate_button = QPushButton("Validate")
+        for button in (
+            self.case_new_button,
+            self.case_clone_button,
+            self.case_import_button,
+            self.case_update_button,
+            self.case_validate_button,
+        ):
+            first_buttons.addWidget(button)
+        second_buttons = QHBoxLayout()
+        self.case_save_revision_button = QPushButton("Save immutable revision")
+        self.case_submit_button = QPushButton("Submit revision")
+        self.case_copy_button = QPushButton("Copy export")
+        self.case_discard_button = QPushButton("Discard draft")
+        for button in (
+            self.case_save_revision_button,
+            self.case_submit_button,
+            self.case_copy_button,
+            self.case_discard_button,
+        ):
+            second_buttons.addWidget(button)
+        second_buttons.addStretch(1)
+
+        right = QWidget()
+        right_layout = QVBoxLayout(right)
+        right_layout.addLayout(controls)
+        right_layout.addLayout(first_buttons)
+        right_layout.addLayout(second_buttons)
+        right_layout.addWidget(self.case_editor, 1)
+        right_layout.addWidget(self.case_status)
+
+        splitter = QSplitter()
+        splitter.addWidget(left)
+        splitter.addWidget(right)
+        splitter.setSizes([380, 900])
+        layout.addWidget(splitter, 1)
+        self.tabs.addTab(tab, "Cases")
+
+        self.case_filter.textChanged.connect(self._filter_cases)
+        self.case_list.currentItemChanged.connect(self._load_selected_case)
+        self.case_new_button.clicked.connect(self.create_case_from_template)
+        self.case_clone_button.clicked.connect(self.clone_selected_case)
+        self.case_import_button.clicked.connect(self.import_case_clipboard)
+        self.case_update_button.clicked.connect(self.save_current_case_draft)
+        self.case_validate_button.clicked.connect(self.validate_current_case)
+        self.case_save_revision_button.clicked.connect(self.save_current_revision)
+        self.case_submit_button.clicked.connect(self.submit_current_revision)
+        self.case_copy_button.clicked.connect(self.copy_current_case)
+        self.case_discard_button.clicked.connect(self.discard_current_case_draft)
+
+    @staticmethod
+    def _case_selection_key(selection: dict[str, Any] | None) -> str | None:
+        if not selection:
+            return None
+        return ":".join(
+            (
+                str(selection.get("source_kind", "")),
+                str(selection.get("draft_id") or selection.get("revision_id") or selection.get("case_id") or ""),
+            )
+        )
+
+    def _reload_case_surfaces(
+        self, *, select: dict[str, Any] | None = None
+    ) -> None:
+        wanted = self._case_selection_key(select or self._case_selection)
+        entries: list[tuple[str, dict[str, Any]]] = []
+        for case in self.service.list_cases()["result"]:
+            selection = {
+                "source_kind": "frozen",
+                "case_id": case["case_id"],
+            }
+            entries.append(
+                (
+                    f"Frozen · {case.get('role') or 'case'} · {case['case_id']}",
+                    selection,
+                )
+            )
+        for draft in self.service.list_case_drafts()["result"]:
+            selection = {
+                "source_kind": "draft",
+                "draft_id": draft["draft_id"],
+                "case_id": draft["case_id"],
+            }
+            marker = "validated" if draft.get("validated_content_sha256") else "unvalidated"
+            entries.append(
+                (
+                    f"Draft · {draft['name']} · {draft['case_id']} · {marker}",
+                    selection,
+                )
+            )
+        for revision in self.service.list_case_revisions()["result"]:
+            selection = {
+                "source_kind": "local_revision",
+                "revision_id": revision["revision_id"],
+                "case_id": revision["case_id"],
+            }
+            entries.append(
+                (
+                    f"Revision {revision['revision_ordinal']} · {revision['name']} · {revision['case_id']}",
+                    selection,
+                )
+            )
+
+        self.case_list.blockSignals(True)
+        self.case_list.clear()
+        selected_row = -1
+        for row, (label, selection) in enumerate(entries):
+            item = QListWidgetItem(label)
+            item.setData(Qt.ItemDataRole.UserRole, selection)
+            self.case_list.addItem(item)
+            if self._case_selection_key(selection) == wanted:
+                selected_row = row
+        self.case_list.blockSignals(False)
+
+        self.case_picker.blockSignals(True)
+        selected_queue = self.case_picker.currentData()
+        selected_queue_key = self._case_selection_key(
+            selected_queue if isinstance(selected_queue, dict) else None
+        )
+        self.case_picker.clear()
+        selected_queue_row = -1
+        for _, selection in entries:
+            if selection["source_kind"] == "draft":
+                continue
+            case_id = selection["case_id"]
+            if selection["source_kind"] == "frozen":
+                label = f"Frozen · {case_id}"
+            else:
+                label = f"Local revision · {case_id} · {selection['revision_id']}"
+            self.case_picker.addItem(label, selection)
+            if self._case_selection_key(selection) == selected_queue_key:
+                selected_queue_row = self.case_picker.count() - 1
+        if selected_queue_row >= 0:
+            self.case_picker.setCurrentIndex(selected_queue_row)
+        self.case_picker.blockSignals(False)
+
+        self._filter_cases(self.case_filter.text())
+        if selected_row < 0 and self.case_list.count():
+            selected_row = 0
+        if selected_row >= 0:
+            self.case_list.setCurrentRow(selected_row)
+            self._load_selected_case(self.case_list.item(selected_row), None)
+        else:
+            self._case_selection = None
+            self.case_editor.clear()
+            self.case_status.setPlainText("No cases are available.")
+
+    def _filter_cases(self, text: str) -> None:
+        needle = text.casefold().strip()
+        for row in range(self.case_list.count()):
+            item = self.case_list.item(row)
+            item.setHidden(bool(needle) and needle not in item.text().casefold())
+
+    def _load_selected_case(
+        self,
+        current: QListWidgetItem | None,
+        previous: QListWidgetItem | None = None,
+    ) -> None:
+        del previous
+        if current is None:
+            return
+        selection = current.data(Qt.ItemDataRole.UserRole)
+        if not isinstance(selection, dict):
+            return
+        try:
+            source_kind = selection["source_kind"]
+            if source_kind == "frozen":
+                result = self.service.get_case(selection["case_id"])["result"]
+                document = result["case"]
+                name = document.get("description") or selection["case_id"]
+                metadata = {
+                    "source_kind": source_kind,
+                    "case_path": result.get("case_path"),
+                    "case_content_sha256": result.get("case_content_sha256"),
+                    "editable": False,
+                }
+            elif source_kind == "draft":
+                result = self.service.get_case_draft(selection["draft_id"])["result"]
+                document = result["document"]
+                name = result["name"]
+                metadata = {
+                    key: result.get(key)
+                    for key in (
+                        "source_kind",
+                        "draft_id",
+                        "case_id",
+                        "base_revision_id",
+                        "validated_content_sha256",
+                        "validation",
+                        "created_at",
+                        "updated_at",
+                    )
+                }
+                metadata["editable"] = True
+            else:
+                result = self.service.get_case_revision(selection["revision_id"])["result"]
+                document = result["document"]
+                name = result["name"]
+                metadata = {
+                    key: result.get(key)
+                    for key in (
+                        "source_kind",
+                        "revision_id",
+                        "case_id",
+                        "revision_ordinal",
+                        "parent_revision_id",
+                        "content_sha256",
+                        "case_path",
+                        "corpus_path",
+                        "created_at",
+                    )
+                }
+                metadata["editable"] = False
+            self._case_selection = dict(selection)
+            self._set_case_document(document, name=str(name), metadata=metadata)
+        except Exception as exc:
+            self.case_status.setPlainText(
+                f"Case load failed: {type(exc).__name__}: {exc}"
+            )
+
+    def _set_case_document(
+        self,
+        document: dict[str, Any],
+        *,
+        name: str,
+        metadata: dict[str, Any],
+    ) -> None:
+        editable = bool(metadata.get("editable"))
+        self.case_name.setText(name)
+        self.case_editor.setPlainText(
+            json.dumps(document, indent=2, ensure_ascii=False)
+        )
+        watchdog = float(document.get("watchdog_seconds", 300.0))
+        bounded = float(document.get("requested_bounded_finish_seconds") or 0.0)
+        caps = document.get("caps", {})
+        memory = float(caps.get("max_solver_owned_bytes", 0) or 0) / (1024 ** 3)
+        self.case_watchdog.setValue(max(1.0, watchdog))
+        self.case_bounded_finish.setValue(max(0.0, bounded))
+        self.case_memory_gib.setValue(max(0.125, memory or 2.0))
+        self.case_name.setReadOnly(not editable)
+        self.case_editor.setReadOnly(not editable)
+        for control in (
+            self.case_watchdog,
+            self.case_bounded_finish,
+            self.case_memory_gib,
+        ):
+            control.setEnabled(editable)
+        self.case_update_button.setEnabled(editable)
+        self.case_validate_button.setEnabled(editable)
+        self.case_save_revision_button.setEnabled(editable)
+        self.case_discard_button.setEnabled(editable)
+        self.case_submit_button.setEnabled(
+            self._case_selection is not None
+            and self._case_selection.get("source_kind") != "draft"
+        )
+        self.case_copy_button.setEnabled(True)
+        self.case_status.setPlainText(
+            json.dumps(metadata, indent=2, ensure_ascii=False)
+        )
+
+    def _editor_document(self) -> dict[str, Any]:
+        document = json.loads(self.case_editor.toPlainText())
+        if not isinstance(document, dict):
+            raise ValueError("case document must be a JSON object")
+        document["watchdog_seconds"] = self.case_watchdog.value()
+        if self.case_bounded_finish.value() > 0:
+            document["requested_bounded_finish_seconds"] = (
+                self.case_bounded_finish.value()
+            )
+        else:
+            document.pop("requested_bounded_finish_seconds", None)
+        caps = document.get("caps")
+        if not isinstance(caps, dict):
+            raise ValueError("case caps must be a JSON object")
+        caps["max_solver_owned_bytes"] = round(
+            self.case_memory_gib.value() * (1024 ** 3)
+        )
+        document["caps"] = caps
+        return document
+
+    def _persist_current_draft(self) -> dict[str, Any]:
+        selection = self._case_selection or {}
+        if selection.get("source_kind") != "draft":
+            raise ValueError("clone the selected case before editing it")
+        result = self.service.update_case_draft(
+            draft_id=selection["draft_id"],
+            name=self.case_name.text(),
+            document=self._editor_document(),
+            idempotency_key=f"gui-case-update-{uuid.uuid4()}",
+        )["result"]
+        self._case_selection = {
+            "source_kind": "draft",
+            "draft_id": result["draft_id"],
+            "case_id": result["case_id"],
+        }
+        return result
+
+    def create_case_from_template(self) -> None:
+        try:
+            result = self.service.create_case_draft(
+                name="New local solver case",
+                idempotency_key=f"gui-case-create-{uuid.uuid4()}",
+            )["result"]
+            selection = {
+                "source_kind": "draft",
+                "draft_id": result["draft_id"],
+                "case_id": result["case_id"],
+            }
+            self._reload_case_surfaces(select=selection)
+        except Exception as exc:
+            self.case_status.setPlainText(
+                f"Create failed: {type(exc).__name__}: {exc}"
+            )
+
+    def clone_selected_case(self) -> None:
+        selection = self._case_selection or {}
+        try:
+            kwargs: dict[str, Any] = {}
+            if selection.get("source_kind") == "frozen":
+                kwargs["source_case_id"] = selection["case_id"]
+            elif selection.get("source_kind") == "local_revision":
+                kwargs["source_revision_id"] = selection["revision_id"]
+            elif selection.get("source_kind") == "draft":
+                kwargs["document"] = self._editor_document()
+            else:
+                raise ValueError("select a case to clone")
+            result = self.service.create_case_draft(
+                name=f"{self.case_name.text()} copy",
+                idempotency_key=f"gui-case-clone-{uuid.uuid4()}",
+                **kwargs,
+            )["result"]
+            self._reload_case_surfaces(
+                select={
+                    "source_kind": "draft",
+                    "draft_id": result["draft_id"],
+                    "case_id": result["case_id"],
+                }
+            )
+        except Exception as exc:
+            self.case_status.setPlainText(
+                f"Clone failed: {type(exc).__name__}: {exc}"
+            )
+
+    def import_case_clipboard(self) -> None:
+        try:
+            text = QApplication.clipboard().text()
+            payload = json.loads(text)
+            if not isinstance(payload, dict):
+                raise ValueError("clipboard must contain a JSON object")
+            name = str(payload.get("name") or "Imported Calculator case")
+            result = self.service.create_case_draft(
+                name=name,
+                import_json=text,
+                idempotency_key=f"gui-case-import-{uuid.uuid4()}",
+            )["result"]
+            self._reload_case_surfaces(
+                select={
+                    "source_kind": "draft",
+                    "draft_id": result["draft_id"],
+                    "case_id": result["case_id"],
+                }
+            )
+        except Exception as exc:
+            self.case_status.setPlainText(
+                f"Import failed: {type(exc).__name__}: {exc}"
+            )
+
+    def save_current_case_draft(self) -> None:
+        try:
+            result = self._persist_current_draft()
+            self._reload_case_surfaces(select=self._case_selection)
+            self.case_status.setPlainText(
+                "Draft saved. Native validation has not been rerun.\n"
+                + json.dumps(
+                    {
+                        "draft_id": result["draft_id"],
+                        "case_id": result["case_id"],
+                    },
+                    indent=2,
+                )
+            )
+        except Exception as exc:
+            self.case_status.setPlainText(
+                f"Save failed: {type(exc).__name__}: {exc}"
+            )
+
+    def validate_current_case(self) -> None:
+        try:
+            draft = self._persist_current_draft()
+            validation = self.service.validate_case_draft(
+                draft["draft_id"]
+            )["result"]
+            self._reload_case_surfaces(select=self._case_selection)
+            self.case_status.setPlainText(
+                json.dumps(validation, indent=2, ensure_ascii=False)
+            )
+        except Exception as exc:
+            self.case_status.setPlainText(
+                f"Validation failed: {type(exc).__name__}: {exc}"
+            )
+
+    def save_current_revision(self) -> None:
+        try:
+            draft = self._persist_current_draft()
+            revision = self.service.save_case_revision(
+                draft_id=draft["draft_id"],
+                idempotency_key=f"gui-case-revision-{uuid.uuid4()}",
+            )["result"]
+            self._reload_case_surfaces(
+                select={
+                    "source_kind": "local_revision",
+                    "revision_id": revision["revision_id"],
+                    "case_id": revision["case_id"],
+                }
+            )
+        except Exception as exc:
+            self.case_status.setPlainText(
+                f"Revision save failed: {type(exc).__name__}: {exc}"
+            )
+
+    def submit_current_revision(self) -> None:
+        selection = self._case_selection or {}
+        try:
+            if selection.get("source_kind") == "frozen":
+                case_id = selection["case_id"]
+                revision_id = None
+            elif selection.get("source_kind") == "local_revision":
+                case_id = selection["case_id"]
+                revision_id = selection["revision_id"]
+            else:
+                raise ValueError(
+                    "save an immutable revision before submitting a draft"
+                )
+            result = self.service.submit_job(
+                case_id=case_id,
+                revision_id=revision_id,
+                idempotency_key=f"gui-case-submit-{uuid.uuid4()}",
+            )["result"]
+            self.case_status.setPlainText(
+                f"Queued {result['job_id']}. Open Queue & Run to monitor it."
+            )
+            self.supervisor.wake()
+            self.refresh()
+        except Exception as exc:
+            self.case_status.setPlainText(
+                f"Submit failed: {type(exc).__name__}: {exc}"
+            )
+
+    def copy_current_case(self) -> None:
+        try:
+            selection = self._case_selection or {}
+            if selection.get("source_kind") == "local_revision":
+                payload = self.service.export_case_revision(
+                    selection["revision_id"]
+                )["result"]
+            else:
+                payload = {
+                    "schema_version": "solver_lab_case_import_v1",
+                    "case": self._editor_document()
+                    if selection.get("source_kind") == "draft"
+                    else json.loads(self.case_editor.toPlainText()),
+                }
+            QApplication.clipboard().setText(
+                json.dumps(payload, indent=2, ensure_ascii=False)
+            )
+            self.case_status.setPlainText("Case export copied to clipboard.")
+        except Exception as exc:
+            self.case_status.setPlainText(
+                f"Copy failed: {type(exc).__name__}: {exc}"
+            )
+
+    def discard_current_case_draft(self) -> None:
+        selection = self._case_selection or {}
+        if selection.get("source_kind") != "draft":
+            return
+        answer = QMessageBox.question(
+            self,
+            "Discard local draft",
+            "Discard this editable draft? Saved immutable revisions are retained.",
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            self.service.discard_case_draft(
+                draft_id=selection["draft_id"],
+                idempotency_key=f"gui-case-discard-{uuid.uuid4()}",
+            )
+            self._case_selection = None
+            self._reload_case_surfaces()
+        except Exception as exc:
+            self.case_status.setPlainText(
+                f"Discard failed: {type(exc).__name__}: {exc}"
+            )
 
     def _build_compare_tab(self) -> None:
         tab = QWidget()
@@ -424,12 +968,13 @@ class SolverLabWindow(QMainWindow):
         return self.model.job_at(source.row())
 
     def submit_selected(self) -> None:
-        case_id = self.case_picker.currentData()
-        if not case_id:
+        reference = self.case_picker.currentData()
+        if not isinstance(reference, dict):
             return
         try:
             result = self.service.submit_job(
-                case_id=str(case_id),
+                case_id=reference.get("case_id"),
+                revision_id=reference.get("revision_id"),
                 idempotency_key=f"gui-submit-{uuid.uuid4()}",
             )
             self.health.setText(f"queued {result['result']['job_id']}")

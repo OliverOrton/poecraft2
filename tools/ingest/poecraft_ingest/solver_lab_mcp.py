@@ -39,9 +39,104 @@ def build_server(service: SolverLabService) -> MCPServer:
         return service.get_case(case_id)
 
     @server.tool()
-    def submit_job(
-        case_id: str,
+    def list_case_drafts(limit: int = 200) -> dict[str, Any]:
+        """List bounded editable local case drafts."""
+        return service.list_case_drafts(limit=limit)
+
+    @server.tool()
+    def get_case_draft(draft_id: str) -> dict[str, Any]:
+        """Read one local draft and its last native validation result."""
+        return service.get_case_draft(draft_id)
+
+    @server.tool()
+    def create_case_draft(
+        name: str,
         idempotency_key: str,
+        source_case_id: str | None = None,
+        source_revision_id: str | None = None,
+        document: dict[str, Any] | None = None,
+        dry_run: bool = False,
+    ) -> dict[str, Any]:
+        """Create a bounded draft from a template, clone, or inline import."""
+        return service.create_case_draft(
+            name=name,
+            idempotency_key=idempotency_key,
+            source_case_id=source_case_id,
+            source_revision_id=source_revision_id,
+            document=document,
+            dry_run=dry_run,
+        )
+
+    @server.tool()
+    def update_case_draft(
+        draft_id: str,
+        name: str,
+        document: dict[str, Any],
+        idempotency_key: str,
+        dry_run: bool = False,
+    ) -> dict[str, Any]:
+        """Replace one draft document; saved revisions remain immutable."""
+        return service.update_case_draft(
+            draft_id=draft_id,
+            name=name,
+            document=document,
+            idempotency_key=idempotency_key,
+            dry_run=dry_run,
+        )
+
+    @server.tool()
+    def validate_case_draft(draft_id: str) -> dict[str, Any]:
+        """Run structural, profile, and native validate-only checks."""
+        return service.validate_case_draft(draft_id)
+
+    @server.tool()
+    def discard_case_draft(
+        draft_id: str,
+        idempotency_key: str,
+        dry_run: bool = False,
+    ) -> dict[str, Any]:
+        """Discard editable draft state while retaining every saved revision."""
+        return service.discard_case_draft(
+            draft_id=draft_id,
+            idempotency_key=idempotency_key,
+            dry_run=dry_run,
+        )
+
+    @server.tool()
+    def save_case_revision(
+        draft_id: str,
+        idempotency_key: str,
+        dry_run: bool = False,
+    ) -> dict[str, Any]:
+        """Validate and save an immutable local case revision."""
+        return service.save_case_revision(
+            draft_id=draft_id,
+            idempotency_key=idempotency_key,
+            dry_run=dry_run,
+        )
+
+    @server.tool()
+    def list_case_revisions(
+        case_id: str | None = None, limit: int = 200
+    ) -> dict[str, Any]:
+        """List bounded immutable local case revisions."""
+        return service.list_case_revisions(case_id=case_id, limit=limit)
+
+    @server.tool()
+    def get_case_revision(revision_id: str) -> dict[str, Any]:
+        """Read one immutable local case revision."""
+        return service.get_case_revision(revision_id)
+
+    @server.tool()
+    def export_case_revision(revision_id: str) -> dict[str, Any]:
+        """Return one revision in the bounded Lab import envelope."""
+        return service.export_case_revision(revision_id)
+
+    @server.tool()
+    def submit_job(
+        idempotency_key: str,
+        case_id: str | None = None,
+        revision_id: str | None = None,
         priority: int = 0,
         watchdog_seconds: float | None = None,
         experiment_id: str | None = None,
@@ -51,6 +146,7 @@ def build_server(service: SolverLabService) -> MCPServer:
         """Submit one native solve or preview its canonical identity."""
         return service.submit_job(
             case_id=case_id,
+            revision_id=revision_id,
             idempotency_key=idempotency_key,
             priority=priority,
             watchdog_seconds=watchdog_seconds,
