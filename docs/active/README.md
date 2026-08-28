@@ -1,7 +1,8 @@
 # Active Work
 
-**Status: no active implementation boundary.** Oliver must select the next
-chunk before implementation resumes.
+**Status: active implementation boundary.** Oliver selected
+[Native Solver Lab Case Authoring](2026-08-28-native-solver-lab-case-authoring/README.md)
+on 2026-08-28.
 
 Parent: [Documentation map](../README.md)
 

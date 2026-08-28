@@ -1,9 +1,11 @@
 # Handoff
 
-**Status: no active implementation boundary.**
-[Native Solver Lab v0](docs/archive/2026-08-27-native-solver-lab-v0/README.md)
-completed all Gates 0-7 on 2026-08-28. Oliver must select the next chunk before
-implementation resumes.
+**Status: active implementation boundary.** Oliver selected
+[Native Solver Lab Case Authoring](docs/active/2026-08-28-native-solver-lab-case-authoring/README.md)
+on 2026-08-28 after exercising Native Solver Lab v0. The active plan adds
+revision-safe local cases, a Calculator export bridge, GUI/CLI/MCP lifecycle
+parity, and a project-scoped Codex MCP connection. It does not start the
+four-mod PDR exactness successor.
 
 ## Checkpoint
 
