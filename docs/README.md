@@ -30,11 +30,12 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active yet. The proposed
-[Native Solver Lab v0](active/2026-08-27-native-solver-lab-v0/plan.md) plan is
-ready for Oliver's approval. It uses the existing native runner and benchmark
-to deliver persistent experiments, an early practical GUI, JSON CLI, and typed
-local LLM controls while leaving mechanics and solver behavior native-owned.
+The active
+[Native Solver Lab v0](active/2026-08-27-native-solver-lab-v0/plan.md)
+boundary started from clean checkpoint `bd86b46`. It uses the existing native
+runner and benchmark to deliver persistent experiments, an early practical
+GUI, JSON CLI, and typed local LLM controls while leaving mechanics and solver
+behavior native-owned.
 
 The stopped
 [PDR Strict-Proof Memory Attribution And Repair](archive/2026-08-27-pdr-strict-proof-memory/README.md)

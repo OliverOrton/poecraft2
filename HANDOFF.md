@@ -1,10 +1,8 @@
 # Handoff
 
-**Status: proposed implementation boundary awaiting Oliver's approval.** The
+**Status: active implementation boundary.** Oliver approved
 [Native Solver Lab v0](docs/active/2026-08-27-native-solver-lab-v0/plan.md)
-plan delivers a persistent native experiment catalog and supervisor, an early
-PySide6 Queue/Run Detail GUI, JSON CLI, and typed local MCP controls. No Lab
-implementation has started.
+from clean checkpoint `bd86b46` on 2026-08-27. Gate 0 is in progress.
 
 ## Checkpoint
 
