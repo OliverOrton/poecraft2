@@ -10,6 +10,7 @@ Parent: [Documentation archive](../README.md)
 - [Gate 4 descriptor stop](evidence/gate4-result.md)
 - [Gate 5 consumers and acceptance](evidence/gate5-result.md)
 - [2026-08-25 Imprint-scope follow-up](evidence/imprint-scope-follow-up/result.md)
+- [Evidence index](evidence/README.md)
 
 The retained carrier lower strengthens certified global bounds without
 changing executable policies. Generic unresolved descriptors separated zero

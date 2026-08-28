@@ -1,6 +1,6 @@
 # Native Solver Lab v0 Execution Log
 
-**Status: active; Gates 0-6 complete, Gate 7 next.**
+**Status: complete; Gates 0-7 passed.**
 
 Parent: [Plan](plan.md)
 
@@ -10,7 +10,7 @@ Parent: [Plan](plan.md)
   boundary`) and activated from clean checkpoint `bd86b46` (`Plan native
   solver lab v0`).
 - Working tree was clean at activation.
-- Current gate: Gate 7 — final acceptance and handoff.
+- Current gate: none; the boundary is complete.
 - Gate 0 added only versioned contracts, the frozen profile/corpus, and
   optional dependencies. No catalog, supervisor, GUI, CLI, or MCP service
   implementation exists yet.
@@ -27,10 +27,8 @@ Parent: [Plan](plan.md)
 
 ## Next executable step
 
-Run the one selected final acceptance pass, write the operator documentation
-and result, archive the completed boundary, and leave the repository at a clean
-local checkpoint. No native files changed in Gates 0-6, so Gate 7 does not
-require a behavior-driven native rebuild.
+Oliver must select the next implementation boundary. The completed Lab is
+available for the successor research tracks recorded in the result.
 
 ## Gate 0 result — 2026-08-27
 
@@ -254,3 +252,30 @@ require a behavior-driven native rebuild.
   `build/solver-lab/gate6-{direct,lab,qualification}-14ebf42*`.
 - No full acceptance pipeline or 10,000-run Simulator control was run in this
   gate.
+
+## Gate 7 result — 2026-08-28
+
+- Added stable installation, launch, GUI, CLI, MCP, profile, status, resource,
+  recovery, shutdown, artifact, parity, and limitation documentation under
+  `docs/foundation/solver-lab.md`.
+- Added a real stdio MCP integration test. A spawned local server initialized,
+  advertised the pinned 21-tool vocabulary, and served the bounded five-case
+  list through a client session.
+- A runner-level verification probe completed both exact solves but selected
+  zero Simulator runs because the frozen cases declare `runs: 0`. It is not
+  counted as acceptance. Fresh native invocations then pinned
+  `--verification-runs 10000`: prefix and suffix each completed 10,000/10,000
+  successes with zero failures, stops, limit events, inapplicable actions,
+  missing edges/prices, or off-policy events.
+- Complete Lab/runner suite: 39 passed in 8.29 seconds. TypeScript
+  `npx tsc --noEmit` passed.
+- The one selected full `scripts/test.ps1` acceptance passed: ingest and
+  canonical artifact checks; 3,417,290 native checks with zero failures; all
+  12 benchmark specifications; Python bindings; 28/28 release-WASM worker
+  checks; and all remaining nonvisual web suites.
+- No native source changed during the boundary, so a separate behavior-driven
+  engine or release-WASM rebuild was unnecessary. The repository pipeline
+  still regenerated/validated its derived data and exercised current native
+  and release-WASM artifacts.
+- Final documentation relative-link/root-reachability audit and
+  `git diff --check` passed after archival.

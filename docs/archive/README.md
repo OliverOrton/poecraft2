@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-08-27
 
+- [Native Solver Lab v0](2026-08-27-native-solver-lab-v0/README.md) —
+  delivered a persistent local native experiment workbench with PySide6 GUI,
+  resource-aware immutable supervision, JSON CLI, closed typed MCP controls,
+  investigation bundles, canonical matrices, and five-case behavior-neutral
+  qualification without changing native solver or mechanics behavior.
 - [Solver Research Architecture Audits](2026-08-27-solver-research-audits/README.md) —
   preserves five read-only audits, their integrated synthesis, and focused
   implementation notes at `769c3de`; they motivate the proposed Native Solver

@@ -1,9 +1,9 @@
 # Handoff
 
-**Status: active implementation boundary.** Oliver approved
-[Native Solver Lab v0](docs/active/2026-08-27-native-solver-lab-v0/plan.md)
-from clean checkpoint `bd86b46` on 2026-08-27. Gates 0-6 are complete; Gate 7
-is next.
+**Status: no active implementation boundary.**
+[Native Solver Lab v0](docs/archive/2026-08-27-native-solver-lab-v0/README.md)
+completed all Gates 0-7 on 2026-08-28. Oliver must select the next chunk before
+implementation resumes.
 
 ## Checkpoint
 
@@ -12,6 +12,8 @@ is next.
   `d893db9`, `b047f02`, `91d44dd`, `7bf0f9d`, `cde2ccb`, and `1d5350a`.
 - Gate 5 practical GUI checkpoint: `a601a3a`.
 - Profile-to-worker binding checkpoint: `14ebf42`.
+- Gate 6 semantic qualification checkpoint: `5255998`.
+- Stable operator docs and stdio MCP integration: `41a316a`.
 - Active-boundary selection commit: `25737c3` (`Activate PDR strict proof
   memory boundary`).
 - Native checkpoint/replay implementation: `f15f590` (`Add native solver
@@ -25,7 +27,7 @@ is next.
   goal-progress-gated reforges on, junk-free exact terminal success, and no
   disabled action families unless a diagnostic control is selected.
 
-## Proposed Next Boundary
+## Completed Native Solver Lab
 
 Native Solver Lab v0 extends the existing `solver_corpus_runner.py` and
 `poecraft_solver_benchmark`; it does not create another solver backend. GUI,
@@ -33,7 +35,7 @@ CLI, and MCP share one typed application service. One isolated OS process owns
 each solve, attempts and artifacts are immutable, the catalog is persistent,
 and partial/crash/watchdog/resource outcomes remain distinct.
 
-Gates 0-5 now provide persistent immutable attempts, resource-aware native
+Gates 0-7 provide persistent immutable attempts, resource-aware native
 supervision, JSON and a closed 21-tool MCP adapter, investigation bundles, and
 Queue & Run / Compare / Strategy / Matrix GUI surfaces. Matrix expansion is
 canonical and idempotent unless the explicit new-batch action is used. Oliver
@@ -57,10 +59,18 @@ difference while all protected endpoints and stable work counters matched.
 This is retained as non-fixed-work observation evidence; the corpus explicitly
 sets `fixed_work_identity_required: false`, and direct repeats varied more.
 
-The next boundary is Gate 7 only: run final acceptance once, including the
-required 10,000-run Simulator control, finish operator/MCP/recovery docs,
-archive the plan/result, and update this handoff. No native source changed in
-the Lab boundary, so no native rebuild is required solely for Gates 0-6.
+Both exact same-side strategies completed explicit 10,000-run Simulator
+controls with 10,000/10,000 success and no failure, stop, limit, inapplicable-
+action, missing-edge/price, or off-policy event. The final Lab/runner suite
+passed 39 tests, stdio MCP integration passed, TypeScript type-check passed,
+and the one selected full repository pipeline passed 3,417,290 native checks,
+all 12 benchmark specifications, 28/28 release-WASM worker checks, and all
+remaining layers.
+
+Stable usage, recovery, shutdown, profile, GUI, CLI, MCP, artifact, and parity
+documentation is in
+[Native Solver Lab](docs/foundation/solver-lab.md). No native solver,
+mechanics, ABI, WASM, or product behavior changed in this boundary.
 
 The locked research profile is `native_allflame_no_imprint_v1`: fixed resolved
 Allflame economy, Calculator product profile, automatic Imprints off,
@@ -72,6 +82,20 @@ behavior, RCASSP, learned guidance, solver ordering changes, release-WASM
 redesign, and remote/cloud execution. The supporting read-only reports are
 archived under
 [Solver Research Architecture Audits](docs/archive/2026-08-27-solver-research-audits/README.md).
+
+## Candidate Successors — Not Selected
+
+The completed research audits and Lab result preserve four independent tracks:
+
+1. verified executable option/subgoal fragments as shadow incumbent generators;
+2. fresh-run PDR proof-memory attribution, adding scheduler-aware replay only
+   if identical-prefix continuation proves materially useful;
+3. small action-specific retention/capacity proof patterns with measured
+   lower-bound consumers; and
+4. deterministic scheduling baselines and feature logging before learned
+   guidance.
+
+These are choices for Oliver, not an active sequence.
 
 ## Stopped PDR Replay Result
 

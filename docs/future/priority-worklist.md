@@ -26,7 +26,7 @@ correctness issue may preempt every performance item.
 ## Recommended Sequence
 
 1. Qualify the proposed
-   [Native Solver Lab v0](../active/2026-08-27-native-solver-lab-v0/plan.md) as
+   [Native Solver Lab v0](../archive/2026-08-27-native-solver-lab-v0/plan.md) as
    a usable persistent GUI/CLI/LLM experiment surface over the existing native
    runner.
 2. Reopen subgoal planning only as independently verified executable graph

@@ -6,6 +6,23 @@ routes to them rather than duplicating complete reports.
 
 Parent: [Documentation map](README.md)
 
+## Native Solver Lab Qualification
+
+The 2026-08-28
+[Native Solver Lab result](archive/2026-08-27-native-solver-lab-v0/result.md)
+qualifies five direct-runner and persistent-Lab cases from clean `14ebf42`.
+Immutable request identity, runner classification, final solver semantics,
+strategy hashes, exact-evaluation evidence, and distinct bound milestones all
+match. Direct wall was 439.722325 seconds and Lab wall was 440.980810 seconds,
+a single observed 1.258485-second / 0.2862% delta that carries no solver
+authority.
+
+The same acceptance retains exact three-prefix cost `1618.2138946963837`,
+exact three-suffix cost `1101.15648683309`, and the PDR resource boundary at
+lower `21.772459401271156` / evaluated upper `7866.432124027084`. Both exact
+strategies completed explicit 10,000-run Simulator controls with 10,000
+successes, zero failures, and no off-policy or route/applicability event.
+
 ## Native Development Coarse-Graph Replay
 
 The 2026-08-27

@@ -31,12 +31,12 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active
-[Native Solver Lab v0](active/2026-08-27-native-solver-lab-v0/plan.md)
-boundary started from clean checkpoint `bd86b46`. It uses the existing native
-runner and benchmark to deliver persistent experiments, an early practical
-GUI, JSON CLI, and typed local LLM controls while leaving mechanics and solver
-behavior native-owned.
+The completed
+[Native Solver Lab v0](archive/2026-08-27-native-solver-lab-v0/README.md)
+boundary provides persistent native experiments, a practical PySide6 GUI,
+resource-aware supervision, JSON CLI, closed typed local MCP controls,
+investigation bundles, canonical matrices, and direct-versus-Lab semantic
+qualification while leaving mechanics and solver behavior native-owned.
 
 The stopped
 [PDR Strict-Proof Memory Attribution And Repair](archive/2026-08-27-pdr-strict-proof-memory/README.md)

@@ -35,6 +35,12 @@ existing memory and responsiveness limits.
 - [Gate 1 result and Gate 4 stop evidence](evidence/gate1-gate4-stop.md)
 - [Pair-discovery follow-up audit](evidence/pair-discovery-follow-up-audit.md)
 - [Successor Gate 0 result](evidence/successor-gate0.md)
+- [Successor Gate 1 result](evidence/successor-gate1.md)
+- [Successor Gate 2 result](evidence/successor-gate2.md)
+- [Transition-carrier plan](transition-carrier-plan.md)
+- [Transition-carrier Gate 0](evidence/transition-carrier-gate0.md)
+- [Transition-carrier Gate 1](evidence/transition-carrier-gate1.md)
+- [Transition-carrier Gate 2 stop](evidence/transition-carrier-gate2-stop.md)
 - [Current handoff](../../../HANDOFF.md)
 
 The final product-Fracture result supersedes earlier historical statements

@@ -7,6 +7,7 @@ Parent: [Documentation archive](../README.md)
 
 - [Plan and boundary record](plan.md)
 - [Gate 0 attribution](evidence/gate0/result.md)
+- [Gate 1 retained result](evidence/gate1-result.md)
 - [Gate 2 stop](evidence/gate2/result.md)
 - [Control reproduction audit](evidence/control-reproduction/result.md)
 

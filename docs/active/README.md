@@ -1,14 +1,14 @@
 # Active Work
 
-**Status: one active implementation boundary.** Oliver activated
-[Native Solver Lab v0](2026-08-27-native-solver-lab-v0/plan.md) from clean
-checkpoint `bd86b46` on 2026-08-27. Gate 0 is in progress.
+**Status: no active implementation boundary.** Oliver must select the next
+chunk before implementation resumes.
 
 Parent: [Documentation map](../README.md)
 
 ## Historical work
 
-All completed and stopped solver boundaries through 2026-08-27—including the
+All completed and stopped solver boundaries through 2026-08-28—including the
+completed Native Solver Lab v0,
 stopped PDR strict-proof replay probe, the completed native-development coarse
 graph checkpoint/replay milestone, and the read-only research audits that
 informed the proposed Lab—are

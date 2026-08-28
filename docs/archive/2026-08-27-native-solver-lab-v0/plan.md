@@ -1,10 +1,10 @@
 # Native Solver Lab v0
 
-**Status: active 2026-08-27.** Oliver approved implementation from clean
+**Status: complete 2026-08-28.** Oliver approved implementation from clean
 checkpoint `bd86b46`. The boundary requires a usable GUI at the start of the
 Lab program and typed LLM controls.
 
-Parent: [Active work](../README.md)
+Parent: [Documentation archive](../README.md)
 
 Research basis: [Solver Research Architecture Audits](../../archive/2026-08-27-solver-research-audits/README.md)
 
