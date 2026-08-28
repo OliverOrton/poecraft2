@@ -278,6 +278,11 @@ class SolverLabService:
             {
                 "job": job,
                 "latest_attempt": attempt,
+                "artifacts": (
+                    self.catalog.list_artifacts(attempt["attempt_id"])
+                    if attempt
+                    else []
+                ),
                 "events": self.catalog.list_events(
                     entity_type="job", entity_id=job_id
                 ),
@@ -302,23 +307,179 @@ class SolverLabService:
         job = self.catalog.get_job(job_id)
         if job is None:
             raise KeyError(job_id)
+        to_status = (
+            "canceled"
+            if job["status"] in {"queued", "blocked"}
+            else "canceling"
+        )
         result = operation_result(
             "cancel_job",
             {
                 "job_id": job_id,
                 "from_status": job["status"],
-                "to_status": "canceled",
-                "gate2_scope": "queued_only",
+                "to_status": to_status,
+                "running_pause_supported": False,
             },
             dry_run=dry_run,
         )
         if dry_run:
             return result
-        return self.catalog.cancel_queued_job(
+        return self.catalog.request_cancel_job(
             job_id=job_id,
             command_id=f"cmd-{uuid.uuid4()}",
             idempotency_key=idempotency_key,
             operation_request={"job_id": job_id},
+            operation_result=result,
+        )
+
+    def retry_job(
+        self,
+        *,
+        job_id: str,
+        idempotency_key: str,
+        dry_run: bool = False,
+    ) -> dict[str, Any]:
+        if not idempotency_key:
+            raise ValueError("retry_job requires an idempotency key")
+        existing = self.catalog.command_by_idempotency_key(idempotency_key)
+        if existing:
+            if existing["operation"] != "retry_job":
+                raise ValueError("idempotency key was used by another operation")
+            return existing["result"]
+        job = self.catalog.get_job(job_id)
+        if job is None:
+            raise KeyError(job_id)
+        result = operation_result(
+            "retry_job",
+            {
+                "job_id": job_id,
+                "from_status": job["status"],
+                "to_status": "queued",
+                "next_attempt_ordinal": (
+                    (self.catalog.latest_attempt(job_id) or {}).get("ordinal", 0) + 1
+                ),
+            },
+            dry_run=dry_run,
+        )
+        if dry_run:
+            return result
+        return self.catalog.retry_job(
+            job_id=job_id,
+            command_id=f"cmd-{uuid.uuid4()}",
+            idempotency_key=idempotency_key,
+            operation_result=result,
+        )
+
+    def clone_job(
+        self,
+        *,
+        job_id: str,
+        idempotency_key: str,
+        priority: int | None = None,
+        dry_run: bool = False,
+    ) -> dict[str, Any]:
+        if not idempotency_key:
+            raise ValueError("clone_job requires an idempotency key")
+        existing = self.catalog.command_by_idempotency_key(idempotency_key)
+        if existing:
+            if existing["operation"] != "clone_job":
+                raise ValueError("idempotency key was used by another operation")
+            return existing["result"]
+        source = self.catalog.get_job(job_id)
+        if source is None:
+            raise KeyError(job_id)
+        clone_id = f"job-{uuid.uuid4()}"
+        now = utc_now()
+        clone = {
+            **source,
+            "job_id": clone_id,
+            "priority": source["priority"] if priority is None else int(priority),
+            "status": "queued",
+            "blocked_reason": None,
+            "cancel_requested": False,
+            "created_at": now,
+            "updated_at": now,
+        }
+        result = operation_result(
+            "clone_job",
+            {"source_job_id": job_id, "job": clone},
+            dry_run=dry_run,
+        )
+        if dry_run:
+            return result
+        return self.catalog.clone_job(
+            source_job_id=job_id,
+            job=clone,
+            command_id=f"cmd-{uuid.uuid4()}",
+            idempotency_key=idempotency_key,
+            operation_result=result,
+        )
+
+    def change_priority(
+        self,
+        *,
+        job_id: str,
+        priority: int,
+        idempotency_key: str,
+        dry_run: bool = False,
+    ) -> dict[str, Any]:
+        if not idempotency_key:
+            raise ValueError("change_priority requires an idempotency key")
+        existing = self.catalog.command_by_idempotency_key(idempotency_key)
+        if existing:
+            if existing["operation"] != "change_priority":
+                raise ValueError("idempotency key was used by another operation")
+            return existing["result"]
+        job = self.catalog.get_job(job_id)
+        if job is None:
+            raise KeyError(job_id)
+        result = operation_result(
+            "change_priority",
+            {"job_id": job_id, "from": job["priority"], "to": int(priority)},
+            dry_run=dry_run,
+        )
+        if dry_run:
+            return result
+        return self.catalog.change_priority(
+            job_id=job_id,
+            priority=int(priority),
+            command_id=f"cmd-{uuid.uuid4()}",
+            idempotency_key=idempotency_key,
+            operation_result=result,
+        )
+
+    def pause_queue(
+        self, *, idempotency_key: str, dry_run: bool = False
+    ) -> dict[str, Any]:
+        return self._set_queue_paused(True, idempotency_key, dry_run)
+
+    def resume_queue(
+        self, *, idempotency_key: str, dry_run: bool = False
+    ) -> dict[str, Any]:
+        return self._set_queue_paused(False, idempotency_key, dry_run)
+
+    def _set_queue_paused(
+        self, paused: bool, idempotency_key: str, dry_run: bool
+    ) -> dict[str, Any]:
+        operation = "pause_queue" if paused else "resume_queue"
+        if not idempotency_key:
+            raise ValueError(f"{operation} requires an idempotency key")
+        existing = self.catalog.command_by_idempotency_key(idempotency_key)
+        if existing:
+            if existing["operation"] != operation:
+                raise ValueError("idempotency key was used by another operation")
+            return existing["result"]
+        result = operation_result(
+            operation,
+            {"queue_paused": paused, "running_attempts_affected": False},
+            dry_run=dry_run,
+        )
+        if dry_run:
+            return result
+        return self.catalog.set_queue_paused_command(
+            paused=paused,
+            command_id=f"cmd-{uuid.uuid4()}",
+            idempotency_key=idempotency_key,
             operation_result=result,
         )
 

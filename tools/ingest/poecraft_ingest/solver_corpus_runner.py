@@ -11,6 +11,7 @@ import time
 from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
 from dataclasses import dataclass
 from typing import Any, Iterable
+from collections.abc import Callable
 
 from poecraft_ingest.solver_worker import (
     AttemptPaths,
@@ -154,6 +155,8 @@ def _run_case(
     run_verification: bool = False,
     goal_progress_gated_reforges: bool = False,
     attempt_paths: AttemptPaths | None = None,
+    cancel_requested: Callable[[], bool] | None = None,
+    on_process_started: Callable[[int, str | None], None] | None = None,
 ) -> dict[str, Any]:
     if attempt_paths is None:
         attempt_id = f"{time.time_ns()}-{os.getpid()}"
@@ -175,6 +178,8 @@ def _run_case(
         resolved.command.as_list(),
         watchdog_seconds=resolved.watchdog_seconds,
         cwd=resolved.command.cwd,
+        cancel_requested=cancel_requested,
+        on_started=on_process_started,
     )
     resolved.paths.log_path.write_text(
         result.pop("output"), encoding="utf-8"

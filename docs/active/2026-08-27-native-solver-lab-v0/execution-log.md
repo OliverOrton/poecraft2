@@ -1,6 +1,6 @@
 # Native Solver Lab v0 Execution Log
 
-**Status: active; Gates 0-2 complete, Gate 3 next.**
+**Status: active; Gates 0-3 complete, Gate 4 next.**
 
 Parent: [Plan](plan.md)
 
@@ -10,7 +10,7 @@ Parent: [Plan](plan.md)
   boundary`) and activated from clean checkpoint `bd86b46` (`Plan native
   solver lab v0`).
 - Working tree was clean at activation.
-- Current gate: Gate 3 — supervisor durability and resource control.
+- Current gate: Gate 4 — LLM controls and investigation bundles.
 - Gate 0 added only versioned contracts, the frozen profile/corpus, and
   optional dependencies. No catalog, supervisor, GUI, CLI, or MCP service
   implementation exists yet.
@@ -27,9 +27,9 @@ Parent: [Plan](plan.md)
 
 ## Next executable step
 
-Add bounded multi-process dispatch, deterministic priority/memory admission,
-live cancellation, leases/recovery, retry/clone/priority operations, and
-attempt artifact hashing to the working Gate 2 vertical slice.
+Complete the stable JSON vocabulary, add the closed local stdio MCP adapter,
+and export bounded investigation bundles without exposing arbitrary shell,
+SQL, path writes, mechanics overrides, or raw multi-megabyte telemetry.
 
 ## Gate 0 result — 2026-08-27
 
@@ -104,3 +104,38 @@ attempt artifact hashing to the working Gate 2 vertical slice.
 - Nonvisual Qt, service, catalog, supervisor, contract, and legacy runner
   tests: 23 passed in 1.93 seconds. No broad matrix or full acceptance pipeline
   was run.
+
+## Gate 3 result — 2026-08-27
+
+- Catalog schema v2 migrates Gate 2 catalogs in place and adds supervisor
+  sessions, active leases, queue controls, blocked/cancel state, native process
+  identity, and release/recovery records.
+- Dispatch order is deterministic by priority, enqueue timestamp, and job ID.
+  The supervisor supports bounded native concurrency, explicit host-memory
+  reservations, a conservative live-memory safety reserve, blocked admission,
+  and exclusive drain/run behavior for a job larger than the concurrency
+  budget. Host reservation remains orchestration metadata, never solver proof.
+- Native processes now carry PID plus creation-time identity tokens. Live
+  cancellation first requests the available process-group signal, then
+  escalates to verified tree termination and records acknowledgment time/mode.
+  Running pause/resume remains honestly unavailable.
+- Startup reconciliation detects stale supervisor/lease heartbeats, checks
+  process identity before termination, retains a valid partial observation,
+  and records an orphaned attempt without relabeling it complete.
+- Retry requeues the same immutable job identity but creates the next attempt
+  ordinal and a fresh directory. Clone creates a new job. Priority changes are
+  pre-dispatch only. Queue pause stops new dispatch and does not affect running
+  work. All mutations are idempotent and support dry-run through the service.
+- Final/partial reports, worker logs, and compiled strategies are indexed by
+  attempt with content hash and byte size after completion. Prior attempt
+  files are never overwritten.
+- The Queue GUI gained live cancel, retry, clone, priority, pause/resume, and
+  supervisor concurrency/reserved-memory status. The JSON CLI exposes the
+  same controls plus bounded supervisor configuration.
+- Synthetic coverage includes actual child-process crash and cancellation,
+  the existing real watchdog/no-survivor test, distinct OS-like OOM,
+  insufficient host memory, exclusive oversize drain, two-worker dispatch,
+  live cancel, stale lease/supervisor restart, retry artifact preservation,
+  priority/clone/pause controls, and v1-to-v2 catalog migration.
+- Focused Gate 0-3 tests: 32 passed in 4.83 seconds. No native matrix or full
+  acceptance pipeline was run.

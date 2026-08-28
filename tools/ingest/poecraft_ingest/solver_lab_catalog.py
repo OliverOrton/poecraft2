@@ -19,7 +19,7 @@ from poecraft_ingest.solver_lab_contracts import (
 )
 
 
-CATALOG_SCHEMA_VERSION = 1
+CATALOG_SCHEMA_VERSION = 2
 
 
 def utc_now() -> str:
@@ -93,6 +93,8 @@ class SolverLabCatalog:
                     profile_id TEXT NOT NULL,
                     priority INTEGER NOT NULL,
                     status TEXT NOT NULL,
+                    blocked_reason TEXT,
+                    cancel_requested INTEGER NOT NULL DEFAULT 0,
                     watchdog_seconds REAL NOT NULL,
                     reserved_memory_bytes INTEGER NOT NULL,
                     identity_sha256 TEXT NOT NULL,
@@ -111,6 +113,9 @@ class SolverLabCatalog:
                     status TEXT NOT NULL,
                     directory TEXT NOT NULL UNIQUE,
                     supervisor_id TEXT,
+                    lease_id TEXT,
+                    process_id INTEGER,
+                    process_identity_token TEXT,
                     command_json TEXT,
                     command_identity_sha256 TEXT,
                     result_json TEXT,
@@ -163,7 +168,43 @@ class SolverLabCatalog:
                     value_json TEXT NOT NULL,
                     updated_at TEXT NOT NULL
                 );
+
+                CREATE TABLE IF NOT EXISTS supervisor_sessions (
+                    supervisor_id TEXT PRIMARY KEY,
+                    process_identity_token TEXT,
+                    status TEXT NOT NULL,
+                    started_at TEXT NOT NULL,
+                    heartbeat_at TEXT NOT NULL,
+                    stopped_at TEXT,
+                    configuration_json TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS leases (
+                    lease_id TEXT PRIMARY KEY,
+                    attempt_id TEXT NOT NULL REFERENCES attempts(attempt_id),
+                    job_id TEXT NOT NULL REFERENCES jobs(job_id),
+                    supervisor_id TEXT NOT NULL REFERENCES supervisor_sessions(supervisor_id),
+                    process_identity_token TEXT,
+                    status TEXT NOT NULL,
+                    acquired_at TEXT NOT NULL,
+                    heartbeat_at TEXT NOT NULL,
+                    released_at TEXT
+                );
+                CREATE INDEX IF NOT EXISTS leases_status
+                    ON leases(status, heartbeat_at);
                 """
+            )
+            self._ensure_column(connection, "jobs", "blocked_reason", "TEXT")
+            self._ensure_column(
+                connection,
+                "jobs",
+                "cancel_requested",
+                "INTEGER NOT NULL DEFAULT 0",
+            )
+            self._ensure_column(connection, "attempts", "lease_id", "TEXT")
+            self._ensure_column(connection, "attempts", "process_id", "INTEGER")
+            self._ensure_column(
+                connection, "attempts", "process_identity_token", "TEXT"
             )
             connection.execute(
                 "INSERT INTO catalog_metadata(key, value) VALUES('schema_version', ?) "
@@ -171,6 +212,21 @@ class SolverLabCatalog:
                 (str(CATALOG_SCHEMA_VERSION),),
             )
             connection.execute(f"PRAGMA user_version = {CATALOG_SCHEMA_VERSION}")
+
+    @staticmethod
+    def _ensure_column(
+        connection: sqlite3.Connection,
+        table: str,
+        column: str,
+        declaration: str,
+    ) -> None:
+        columns = {
+            row[1] for row in connection.execute(f"PRAGMA table_info({table})")
+        }
+        if column not in columns:
+            connection.execute(
+                f"ALTER TABLE {table} ADD COLUMN {column} {declaration}"
+            )
 
     def create_experiment(self, document: Mapping[str, Any]) -> dict[str, Any]:
         now = document.get("created_at") or utc_now()
@@ -318,18 +374,30 @@ class SolverLabCatalog:
             ).fetchone()
         return self._attempt_row(row) if row else None
 
-    def claim_next_job(
+    def list_dispatch_candidates(self, *, limit: int = 200) -> list[dict[str, Any]]:
+        limit = max(1, min(int(limit), 1000))
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT * FROM jobs WHERE status IN ('queued', 'blocked') "
+                "ORDER BY priority DESC, created_at ASC, job_id ASC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [self._job_row(row) for row in rows]
+
+    def claim_job(
         self,
         *,
+        job_id: str,
         supervisor_id: str,
         attempt_id: str,
         attempt_directory: Path,
+        lease_id: str | None = None,
     ) -> tuple[dict[str, Any], dict[str, Any]] | None:
         now = utc_now()
         with self.transaction(immediate=True) as connection:
             row = connection.execute(
-                "SELECT * FROM jobs WHERE status='queued' "
-                "ORDER BY priority DESC, created_at ASC, job_id ASC LIMIT 1"
+                "SELECT * FROM jobs WHERE job_id=? AND status IN ('queued', 'blocked')",
+                (job_id,),
             ).fetchone()
             if row is None:
                 return None
@@ -337,43 +405,78 @@ class SolverLabCatalog:
             ordinal = int(
                 connection.execute(
                     "SELECT COALESCE(MAX(ordinal), 0) + 1 FROM attempts WHERE job_id=?",
-                    (job["job_id"],),
+                    (job_id,),
                 ).fetchone()[0]
             )
-            connection.execute(
-                "UPDATE jobs SET status='running', updated_at=? "
-                "WHERE job_id=? AND status='queued'",
-                (now, job["job_id"]),
+            updated = connection.execute(
+                "UPDATE jobs SET status='running', blocked_reason=NULL, "
+                "cancel_requested=0, updated_at=? "
+                "WHERE job_id=? AND status IN ('queued', 'blocked')",
+                (now, job_id),
             )
+            if updated.rowcount != 1:
+                return None
             connection.execute(
                 """
                 INSERT INTO attempts(
                     attempt_id, schema_version, job_id, ordinal, status,
-                    directory, supervisor_id, created_at, started_at
-                ) VALUES(?, ?, ?, ?, 'running', ?, ?, ?, ?)
+                    directory, supervisor_id, lease_id, created_at, started_at
+                ) VALUES(?, ?, ?, ?, 'running', ?, ?, ?, ?, ?)
                 """,
                 (
                     attempt_id,
                     ATTEMPT_SCHEMA_VERSION,
-                    job["job_id"],
+                    job_id,
                     ordinal,
                     str(attempt_directory.resolve()),
                     supervisor_id,
+                    lease_id,
                     now,
                     now,
                 ),
             )
+            if lease_id is not None:
+                connection.execute(
+                    """
+                    INSERT INTO leases(
+                        lease_id, attempt_id, job_id, supervisor_id,
+                        process_identity_token, status, acquired_at,
+                        heartbeat_at, released_at
+                    ) VALUES(?, ?, ?, ?, NULL, 'active', ?, ?, NULL)
+                    """,
+                    (lease_id, attempt_id, job_id, supervisor_id, now, now),
+                )
             self._insert_event(
                 connection,
                 "attempt_started",
                 "attempt",
                 attempt_id,
-                {"job_id": job["job_id"], "ordinal": ordinal},
+                {"job_id": job_id, "ordinal": ordinal, "lease_id": lease_id},
             )
         job["status"] = "running"
+        job["blocked_reason"] = None
         attempt = self.get_attempt(attempt_id)
         assert attempt is not None
         return job, attempt
+
+    def claim_next_job(
+        self,
+        *,
+        supervisor_id: str,
+        attempt_id: str,
+        attempt_directory: Path,
+        lease_id: str | None = None,
+    ) -> tuple[dict[str, Any], dict[str, Any]] | None:
+        candidates = self.list_dispatch_candidates(limit=1)
+        if not candidates:
+            return None
+        return self.claim_job(
+            job_id=candidates[0]["job_id"],
+            supervisor_id=supervisor_id,
+            attempt_id=attempt_id,
+            attempt_directory=attempt_directory,
+            lease_id=lease_id,
+        )
 
     def set_attempt_command(
         self,
@@ -394,6 +497,184 @@ class SolverLabCatalog:
                 {"identity_sha256": command["identity_sha256"]},
             )
 
+    def set_attempt_process(
+        self,
+        *,
+        attempt_id: str,
+        process_id: int,
+        process_identity_token: str | None,
+    ) -> None:
+        now = utc_now()
+        with self.transaction(immediate=True) as connection:
+            row = connection.execute(
+                "SELECT lease_id FROM attempts WHERE attempt_id=?", (attempt_id,)
+            ).fetchone()
+            if row is None:
+                raise KeyError(attempt_id)
+            connection.execute(
+                "UPDATE attempts SET process_id=?, process_identity_token=? "
+                "WHERE attempt_id=?",
+                (process_id, process_identity_token, attempt_id),
+            )
+            if row["lease_id"]:
+                connection.execute(
+                    "UPDATE leases SET process_identity_token=?, heartbeat_at=? "
+                    "WHERE lease_id=?",
+                    (process_identity_token, now, row["lease_id"]),
+                )
+            self._insert_event(
+                connection,
+                "attempt_process_started",
+                "attempt",
+                attempt_id,
+                {
+                    "process_id": process_id,
+                    "process_identity_token": process_identity_token,
+                },
+            )
+
+    def start_supervisor_session(
+        self,
+        *,
+        supervisor_id: str,
+        process_identity_token: str | None,
+        configuration: Mapping[str, Any],
+    ) -> None:
+        now = utc_now()
+        with self.transaction(immediate=True) as connection:
+            connection.execute(
+                """
+                INSERT INTO supervisor_sessions(
+                    supervisor_id, process_identity_token, status, started_at,
+                    heartbeat_at, stopped_at, configuration_json
+                ) VALUES(?, ?, 'active', ?, ?, NULL, ?)
+                ON CONFLICT(supervisor_id) DO UPDATE SET
+                    process_identity_token=excluded.process_identity_token,
+                    status='active', heartbeat_at=excluded.heartbeat_at,
+                    stopped_at=NULL, configuration_json=excluded.configuration_json
+                """,
+                (
+                    supervisor_id,
+                    process_identity_token,
+                    now,
+                    now,
+                    _json(configuration),
+                ),
+            )
+
+    def heartbeat_supervisor(self, supervisor_id: str) -> None:
+        now = utc_now()
+        with self.transaction(immediate=True) as connection:
+            connection.execute(
+                "UPDATE supervisor_sessions SET heartbeat_at=? "
+                "WHERE supervisor_id=? AND status='active'",
+                (now, supervisor_id),
+            )
+            connection.execute(
+                "UPDATE leases SET heartbeat_at=? WHERE supervisor_id=? AND status='active'",
+                (now, supervisor_id),
+            )
+
+    def stop_supervisor_session(self, supervisor_id: str) -> None:
+        now = utc_now()
+        with self.transaction(immediate=True) as connection:
+            connection.execute(
+                "UPDATE supervisor_sessions SET status='stopped', "
+                "heartbeat_at=?, stopped_at=? WHERE supervisor_id=?",
+                (now, now, supervisor_id),
+            )
+
+    def stale_attempts(self, *, heartbeat_before: str) -> list[dict[str, Any]]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT a.* FROM attempts a
+                LEFT JOIN leases l ON l.lease_id = a.lease_id
+                LEFT JOIN supervisor_sessions s ON s.supervisor_id = a.supervisor_id
+                WHERE a.status IN ('running', 'canceling')
+                  AND (
+                    a.lease_id IS NULL OR l.status != 'active'
+                    OR l.heartbeat_at < ? OR s.status != 'active'
+                    OR s.heartbeat_at < ?
+                  )
+                ORDER BY a.created_at, a.attempt_id
+                """,
+                (heartbeat_before, heartbeat_before),
+            ).fetchall()
+        return [self._attempt_row(row) for row in rows]
+
+    def mark_attempt_orphaned(
+        self,
+        *,
+        attempt_id: str,
+        job_status: str,
+        recovery: Mapping[str, Any],
+    ) -> None:
+        now = utc_now()
+        with self.transaction(immediate=True) as connection:
+            row = connection.execute(
+                "SELECT job_id, lease_id FROM attempts WHERE attempt_id=?",
+                (attempt_id,),
+            ).fetchone()
+            if row is None:
+                raise KeyError(attempt_id)
+            connection.execute(
+                "UPDATE attempts SET status='orphaned', result_json=?, finished_at=? "
+                "WHERE attempt_id=?",
+                (_json(recovery), now, attempt_id),
+            )
+            connection.execute(
+                "UPDATE jobs SET status=?, cancel_requested=0, updated_at=? "
+                "WHERE job_id=?",
+                (job_status, now, row["job_id"]),
+            )
+            if row["lease_id"]:
+                connection.execute(
+                    "UPDATE leases SET status='recovered_orphan', released_at=? "
+                    "WHERE lease_id=?",
+                    (now, row["lease_id"]),
+                )
+            self._insert_event(
+                connection,
+                "attempt_recovered_orphan",
+                "attempt",
+                attempt_id,
+                dict(recovery),
+            )
+
+    def mark_job_blocked(self, job_id: str, reason: str) -> None:
+        now = utc_now()
+        with self.transaction(immediate=True) as connection:
+            connection.execute(
+                "UPDATE jobs SET status='blocked', blocked_reason=?, updated_at=? "
+                "WHERE job_id=? AND status IN ('queued', 'blocked')",
+                (reason, now, job_id),
+            )
+
+    def queue_paused(self) -> bool:
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT value_json FROM settings WHERE key='queue_paused'"
+            ).fetchone()
+        return bool(_decode(row[0], False)) if row else False
+
+    def set_queue_paused(self, paused: bool) -> None:
+        now = utc_now()
+        with self.transaction(immediate=True) as connection:
+            connection.execute(
+                "INSERT INTO settings(key, value_json, updated_at) VALUES('queue_paused', ?, ?) "
+                "ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json, "
+                "updated_at=excluded.updated_at",
+                (_json(bool(paused)), now),
+            )
+
+    def is_cancel_requested(self, job_id: str) -> bool:
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT cancel_requested FROM jobs WHERE job_id=?", (job_id,)
+            ).fetchone()
+        return bool(row and row[0])
+
     def finish_attempt(
         self,
         *,
@@ -405,7 +686,7 @@ class SolverLabCatalog:
         now = utc_now()
         with self.transaction(immediate=True) as connection:
             row = connection.execute(
-                "SELECT job_id FROM attempts WHERE attempt_id=?", (attempt_id,)
+                "SELECT job_id, lease_id FROM attempts WHERE attempt_id=?", (attempt_id,)
             ).fetchone()
             if row is None:
                 raise KeyError(attempt_id)
@@ -416,9 +697,16 @@ class SolverLabCatalog:
                 (attempt_status, _json(result), now, attempt_id),
             )
             connection.execute(
-                "UPDATE jobs SET status=?, updated_at=? WHERE job_id=?",
+                "UPDATE jobs SET status=?, cancel_requested=0, blocked_reason=NULL, "
+                "updated_at=? WHERE job_id=?",
                 (job_status, now, job_id),
             )
+            if row["lease_id"]:
+                connection.execute(
+                    "UPDATE leases SET status='released', heartbeat_at=?, released_at=? "
+                    "WHERE lease_id=?",
+                    (now, now, row["lease_id"]),
+                )
             self._insert_event(
                 connection,
                 "attempt_finished",
@@ -479,6 +767,260 @@ class SolverLabCatalog:
             )
         return dict(operation_result)
 
+    def request_cancel_job(
+        self,
+        *,
+        job_id: str,
+        command_id: str,
+        idempotency_key: str,
+        operation_request: Mapping[str, Any],
+        operation_result: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        now = utc_now()
+        with self.transaction(immediate=True) as connection:
+            existing = connection.execute(
+                "SELECT * FROM commands WHERE idempotency_key=?",
+                (idempotency_key,),
+            ).fetchone()
+            if existing:
+                return _decode(existing["result_json"], {})
+            row = connection.execute(
+                "SELECT status FROM jobs WHERE job_id=?", (job_id,)
+            ).fetchone()
+            if row is None:
+                raise KeyError(job_id)
+            current = str(row["status"])
+            if current in {"queued", "blocked"}:
+                target = "canceled"
+                requested = 0
+            elif current in {"running", "canceling"}:
+                target = "canceling"
+                requested = 1
+            else:
+                raise ValueError(f"cannot cancel terminal job in status={current}")
+            connection.execute(
+                "UPDATE jobs SET status=?, cancel_requested=?, updated_at=? WHERE job_id=?",
+                (target, requested, now, job_id),
+            )
+            if target == "canceling":
+                connection.execute(
+                    "UPDATE attempts SET status='canceling' "
+                    "WHERE job_id=? AND status='running'",
+                    (job_id,),
+                )
+            self._insert_command(
+                connection,
+                command_id=command_id,
+                idempotency_key=idempotency_key,
+                operation="cancel_job",
+                target_id=job_id,
+                dry_run=False,
+                request=operation_request,
+                result=operation_result,
+            )
+            self._insert_event(
+                connection,
+                "job_cancel_requested" if requested else "job_canceled",
+                "job",
+                job_id,
+                {"from": current, "to": target},
+            )
+        return dict(operation_result)
+
+    def retry_job(
+        self,
+        *,
+        job_id: str,
+        command_id: str,
+        idempotency_key: str,
+        operation_result: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        now = utc_now()
+        with self.transaction(immediate=True) as connection:
+            existing = connection.execute(
+                "SELECT * FROM commands WHERE idempotency_key=?",
+                (idempotency_key,),
+            ).fetchone()
+            if existing:
+                return _decode(existing["result_json"], {})
+            row = connection.execute(
+                "SELECT status FROM jobs WHERE job_id=?", (job_id,)
+            ).fetchone()
+            if row is None:
+                raise KeyError(job_id)
+            if row["status"] in {"queued", "blocked", "running", "canceling"}:
+                raise ValueError(f"cannot retry active job in status={row['status']}")
+            connection.execute(
+                "UPDATE jobs SET status='queued', blocked_reason=NULL, "
+                "cancel_requested=0, updated_at=? WHERE job_id=?",
+                (now, job_id),
+            )
+            self._insert_command(
+                connection,
+                command_id=command_id,
+                idempotency_key=idempotency_key,
+                operation="retry_job",
+                target_id=job_id,
+                dry_run=False,
+                request={"job_id": job_id},
+                result=operation_result,
+            )
+            self._insert_event(
+                connection,
+                "job_retried",
+                "job",
+                job_id,
+                {"from": row["status"], "to": "queued"},
+            )
+        return dict(operation_result)
+
+    def clone_job(
+        self,
+        *,
+        source_job_id: str,
+        job: Mapping[str, Any],
+        command_id: str,
+        idempotency_key: str,
+        operation_result: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        now = str(job["created_at"])
+        with self.transaction(immediate=True) as connection:
+            existing = connection.execute(
+                "SELECT * FROM commands WHERE idempotency_key=?",
+                (idempotency_key,),
+            ).fetchone()
+            if existing:
+                return _decode(existing["result_json"], {})
+            if connection.execute(
+                "SELECT 1 FROM jobs WHERE job_id=?", (source_job_id,)
+            ).fetchone() is None:
+                raise KeyError(source_job_id)
+            connection.execute(
+                """
+                INSERT INTO jobs(
+                    job_id, schema_version, experiment_id, case_id, case_path,
+                    profile_id, priority, status, watchdog_seconds,
+                    reserved_memory_bytes, identity_sha256, request_json,
+                    created_at, updated_at
+                ) VALUES(?, ?, ?, ?, ?, ?, ?, 'queued', ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    job["job_id"],
+                    JOB_SCHEMA_VERSION,
+                    job.get("experiment_id"),
+                    job["case_id"],
+                    job["case_path"],
+                    job["profile_id"],
+                    job["priority"],
+                    job["watchdog_seconds"],
+                    job["reserved_memory_bytes"],
+                    job["identity_sha256"],
+                    _json(job["request"]),
+                    now,
+                    now,
+                ),
+            )
+            self._insert_command(
+                connection,
+                command_id=command_id,
+                idempotency_key=idempotency_key,
+                operation="clone_job",
+                target_id=str(job["job_id"]),
+                dry_run=False,
+                request={"source_job_id": source_job_id},
+                result=operation_result,
+            )
+            self._insert_event(
+                connection,
+                "job_cloned",
+                "job",
+                str(job["job_id"]),
+                {"source_job_id": source_job_id},
+            )
+        return dict(operation_result)
+
+    def change_priority(
+        self,
+        *,
+        job_id: str,
+        priority: int,
+        command_id: str,
+        idempotency_key: str,
+        operation_result: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        now = utc_now()
+        with self.transaction(immediate=True) as connection:
+            existing = connection.execute(
+                "SELECT * FROM commands WHERE idempotency_key=?",
+                (idempotency_key,),
+            ).fetchone()
+            if existing:
+                return _decode(existing["result_json"], {})
+            row = connection.execute(
+                "SELECT priority, status FROM jobs WHERE job_id=?", (job_id,)
+            ).fetchone()
+            if row is None:
+                raise KeyError(job_id)
+            if row["status"] not in {"queued", "blocked"}:
+                raise ValueError("priority may change only before dispatch")
+            connection.execute(
+                "UPDATE jobs SET priority=?, updated_at=? WHERE job_id=?",
+                (priority, now, job_id),
+            )
+            self._insert_command(
+                connection,
+                command_id=command_id,
+                idempotency_key=idempotency_key,
+                operation="change_priority",
+                target_id=job_id,
+                dry_run=False,
+                request={"job_id": job_id, "priority": priority},
+                result=operation_result,
+            )
+            self._insert_event(
+                connection,
+                "job_priority_changed",
+                "job",
+                job_id,
+                {"from": row["priority"], "to": priority},
+            )
+        return dict(operation_result)
+
+    def set_queue_paused_command(
+        self,
+        *,
+        paused: bool,
+        command_id: str,
+        idempotency_key: str,
+        operation_result: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        now = utc_now()
+        operation = "pause_queue" if paused else "resume_queue"
+        with self.transaction(immediate=True) as connection:
+            existing = connection.execute(
+                "SELECT * FROM commands WHERE idempotency_key=?",
+                (idempotency_key,),
+            ).fetchone()
+            if existing:
+                return _decode(existing["result_json"], {})
+            connection.execute(
+                "INSERT INTO settings(key, value_json, updated_at) VALUES('queue_paused', ?, ?) "
+                "ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json, "
+                "updated_at=excluded.updated_at",
+                (_json(paused), now),
+            )
+            self._insert_command(
+                connection,
+                command_id=command_id,
+                idempotency_key=idempotency_key,
+                operation=operation,
+                target_id=None,
+                dry_run=False,
+                request={"paused": paused},
+                result=operation_result,
+            )
+        return dict(operation_result)
+
     def list_events(
         self,
         *,
@@ -510,6 +1052,26 @@ class SolverLabCatalog:
                     artifact.get("created_at", utc_now()),
                 ),
             )
+
+    def list_artifacts(self, attempt_id: str) -> list[dict[str, Any]]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT * FROM artifacts WHERE attempt_id=? ORDER BY kind, path",
+                (attempt_id,),
+            ).fetchall()
+        return [
+            {
+                "schema_version": row["schema_version"],
+                "artifact_id": row["artifact_id"],
+                "attempt_id": row["attempt_id"],
+                "kind": row["kind"],
+                "path": row["path"],
+                "content_sha256": row["content_sha256"],
+                "size_bytes": row["size_bytes"],
+                "created_at": row["created_at"],
+            }
+            for row in rows
+        ]
 
     def _insert_command(
         self,
@@ -570,6 +1132,8 @@ class SolverLabCatalog:
             "profile_id": row["profile_id"],
             "priority": row["priority"],
             "status": row["status"],
+            "blocked_reason": row["blocked_reason"],
+            "cancel_requested": bool(row["cancel_requested"]),
             "watchdog_seconds": row["watchdog_seconds"],
             "reserved_memory_bytes": row["reserved_memory_bytes"],
             "identity_sha256": row["identity_sha256"],
@@ -588,6 +1152,9 @@ class SolverLabCatalog:
             "status": row["status"],
             "directory": row["directory"],
             "supervisor_id": row["supervisor_id"],
+            "lease_id": row["lease_id"],
+            "process_id": row["process_id"],
+            "process_identity_token": row["process_identity_token"],
             "command": _decode(row["command_json"], None),
             "command_identity_sha256": row["command_identity_sha256"],
             "result": _decode(row["result_json"], None),

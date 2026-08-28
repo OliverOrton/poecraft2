@@ -56,14 +56,39 @@ def build_parser() -> argparse.ArgumentParser:
     cancel.add_argument("--idempotency-key", required=True)
     cancel.add_argument("--dry-run", action="store_true")
 
+    retry = subparsers.add_parser("retry")
+    retry.add_argument("job_id")
+    retry.add_argument("--idempotency-key", required=True)
+    retry.add_argument("--dry-run", action="store_true")
+    clone = subparsers.add_parser("clone")
+    clone.add_argument("job_id")
+    clone.add_argument("--idempotency-key", required=True)
+    clone.add_argument("--priority", type=int)
+    clone.add_argument("--dry-run", action="store_true")
+    priority = subparsers.add_parser("priority")
+    priority.add_argument("job_id")
+    priority.add_argument("priority", type=int)
+    priority.add_argument("--idempotency-key", required=True)
+    priority.add_argument("--dry-run", action="store_true")
+    pause = subparsers.add_parser("pause-queue")
+    pause.add_argument("--idempotency-key", required=True)
+    pause.add_argument("--dry-run", action="store_true")
+    resume = subparsers.add_parser("resume-queue")
+    resume.add_argument("--idempotency-key", required=True)
+    resume.add_argument("--dry-run", action="store_true")
+
     summary = subparsers.add_parser("run-summary")
     identity = summary.add_mutually_exclusive_group(required=True)
     identity.add_argument("--job-id")
     identity.add_argument("--attempt-id")
 
-    subparsers.add_parser("run-until-idle")
+    idle = subparsers.add_parser("run-until-idle")
+    idle.add_argument("--max-workers", type=int, default=1)
+    idle.add_argument("--memory-budget-bytes", type=int, default=0)
     supervise = subparsers.add_parser("supervise")
     supervise.add_argument("--poll-seconds", type=float, default=0.25)
+    supervise.add_argument("--max-workers", type=int, default=1)
+    supervise.add_argument("--memory-budget-bytes", type=int, default=0)
     subparsers.add_parser("gui")
     return parser
 
@@ -114,12 +139,44 @@ def main(argv: list[str] | None = None) -> int:
                 idempotency_key=args.idempotency_key,
                 dry_run=args.dry_run,
             )
+        elif args.operation == "retry":
+            result = service.retry_job(
+                job_id=args.job_id,
+                idempotency_key=args.idempotency_key,
+                dry_run=args.dry_run,
+            )
+        elif args.operation == "clone":
+            result = service.clone_job(
+                job_id=args.job_id,
+                idempotency_key=args.idempotency_key,
+                priority=args.priority,
+                dry_run=args.dry_run,
+            )
+        elif args.operation == "priority":
+            result = service.change_priority(
+                job_id=args.job_id,
+                priority=args.priority,
+                idempotency_key=args.idempotency_key,
+                dry_run=args.dry_run,
+            )
+        elif args.operation == "pause-queue":
+            result = service.pause_queue(
+                idempotency_key=args.idempotency_key, dry_run=args.dry_run
+            )
+        elif args.operation == "resume-queue":
+            result = service.resume_queue(
+                idempotency_key=args.idempotency_key, dry_run=args.dry_run
+            )
         elif args.operation == "run-summary":
             result = service.get_run_summary(
                 job_id=args.job_id, attempt_id=args.attempt_id
             )
         elif args.operation == "run-until-idle":
-            supervisor = SolverLabSupervisor(service)
+            supervisor = SolverLabSupervisor(
+                service,
+                max_workers=args.max_workers,
+                memory_budget_bytes=args.memory_budget_bytes,
+            )
             idle = supervisor.run_until_idle()
             result = {
                 "operation": "run_until_idle",
@@ -129,7 +186,10 @@ def main(argv: list[str] | None = None) -> int:
             }
         elif args.operation == "supervise":
             supervisor = SolverLabSupervisor(
-                service, poll_interval_seconds=args.poll_seconds
+                service,
+                poll_interval_seconds=args.poll_seconds,
+                max_workers=args.max_workers,
+                memory_budget_bytes=args.memory_budget_bytes,
             )
             supervisor.start()
             try:

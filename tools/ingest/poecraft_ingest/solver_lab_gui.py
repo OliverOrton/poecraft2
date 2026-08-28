@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QPlainTextEdit,
     QPushButton,
     QSplitter,
+    QSpinBox,
     QTableView,
     QVBoxLayout,
     QWidget,
@@ -212,7 +213,13 @@ class SolverLabWindow(QMainWindow):
                 f"{item['role']} — {item['case_id']}", item["case_id"]
             )
         self.submit_button = QPushButton("Submit")
-        self.cancel_button = QPushButton("Cancel queued")
+        self.cancel_button = QPushButton("Cancel")
+        self.retry_button = QPushButton("Retry")
+        self.clone_button = QPushButton("Clone")
+        self.pause_button = QPushButton("Pause queue")
+        self.priority = QSpinBox()
+        self.priority.setRange(-1_000_000, 1_000_000)
+        self.priority_button = QPushButton("Set priority")
         self.refresh_button = QPushButton("Refresh")
         self.health = QLabel()
         controls = QHBoxLayout()
@@ -220,6 +227,11 @@ class SolverLabWindow(QMainWindow):
         controls.addWidget(self.case_picker, 1)
         controls.addWidget(self.submit_button)
         controls.addWidget(self.cancel_button)
+        controls.addWidget(self.retry_button)
+        controls.addWidget(self.clone_button)
+        controls.addWidget(self.pause_button)
+        controls.addWidget(self.priority)
+        controls.addWidget(self.priority_button)
         controls.addWidget(self.refresh_button)
         controls.addWidget(self.health)
 
@@ -244,6 +256,10 @@ class SolverLabWindow(QMainWindow):
 
         self.submit_button.clicked.connect(self.submit_selected)
         self.cancel_button.clicked.connect(self.cancel_selected)
+        self.retry_button.clicked.connect(self.retry_selected)
+        self.clone_button.clicked.connect(self.clone_selected)
+        self.pause_button.clicked.connect(self.toggle_queue_pause)
+        self.priority_button.clicked.connect(self.change_selected_priority)
         self.refresh_button.clicked.connect(self.refresh)
         self.table.selectionModel().selectionChanged.connect(self.refresh_detail)
         self.timer = QTimer(self)
@@ -286,6 +302,63 @@ class SolverLabWindow(QMainWindow):
         except Exception as exc:
             self.health.setText(f"cancel unavailable: {type(exc).__name__}: {exc}")
 
+    def retry_selected(self) -> None:
+        job = self.selected_job()
+        if job is None:
+            return
+        try:
+            self.service.retry_job(
+                job_id=job["job_id"],
+                idempotency_key=f"gui-retry-{uuid.uuid4()}",
+            )
+            self.supervisor.wake()
+            self.refresh()
+        except Exception as exc:
+            self.health.setText(f"retry unavailable: {type(exc).__name__}: {exc}")
+
+    def clone_selected(self) -> None:
+        job = self.selected_job()
+        if job is None:
+            return
+        try:
+            self.service.clone_job(
+                job_id=job["job_id"],
+                idempotency_key=f"gui-clone-{uuid.uuid4()}",
+            )
+            self.supervisor.wake()
+            self.refresh()
+        except Exception as exc:
+            self.health.setText(f"clone failed: {type(exc).__name__}: {exc}")
+
+    def change_selected_priority(self) -> None:
+        job = self.selected_job()
+        if job is None:
+            return
+        try:
+            self.service.change_priority(
+                job_id=job["job_id"],
+                priority=self.priority.value(),
+                idempotency_key=f"gui-priority-{uuid.uuid4()}",
+            )
+            self.refresh()
+        except Exception as exc:
+            self.health.setText(f"priority unavailable: {type(exc).__name__}: {exc}")
+
+    def toggle_queue_pause(self) -> None:
+        try:
+            if self.service.catalog.queue_paused():
+                self.service.resume_queue(
+                    idempotency_key=f"gui-resume-{uuid.uuid4()}"
+                )
+            else:
+                self.service.pause_queue(
+                    idempotency_key=f"gui-pause-{uuid.uuid4()}"
+                )
+            self.supervisor.wake()
+            self.refresh()
+        except Exception as exc:
+            self.health.setText(f"queue control failed: {type(exc).__name__}: {exc}")
+
     def refresh(self) -> None:
         selected = self.selected_job()
         selected_id = selected.get("job_id") if selected else None
@@ -308,9 +381,13 @@ class SolverLabWindow(QMainWindow):
             elif jobs:
                 self.table.selectRow(0)
             state = self.supervisor.status()
+            self.pause_button.setText(
+                "Resume queue" if state["queue_paused"] else "Pause queue"
+            )
             self.health.setText(
                 f"supervisor {'online' if state['alive'] else 'stopped'}"
-                + (f" · {state['running_job_id']}" if state["running_job_id"] else "")
+                + f" · {state['running_attempts']}/{state['max_workers']} running"
+                + f" · {state['reserved_host_memory_bytes'] / (1024 ** 2):.0f} MiB reserved"
             )
             self.refresh_detail()
         except Exception as exc:
@@ -323,6 +400,7 @@ class SolverLabWindow(QMainWindow):
             return
         try:
             self.detail.set_detail(self.service.get_job(job["job_id"])["result"])
+            self.priority.setValue(int(job.get("priority", 0)))
         except Exception as exc:
             self.detail.clear()
             self.health.setText(f"detail failed: {type(exc).__name__}: {exc}")

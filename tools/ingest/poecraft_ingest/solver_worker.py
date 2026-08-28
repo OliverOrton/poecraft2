@@ -11,7 +11,7 @@ import platform
 import signal
 import subprocess
 import time
-from typing import Any, Mapping, Protocol
+from typing import Any, Callable, Mapping, Protocol
 
 from poecraft_ingest.solver_lab_contracts import canonical_sha256
 
@@ -357,11 +357,81 @@ def terminate_process_tree(process: subprocess.Popen[str]) -> None:
         process.wait(timeout=5.0)
 
 
+def process_identity_token(pid: int) -> str | None:
+    """Return a PID-reuse-safe process token on supported local platforms."""
+
+    if os.name == "nt":
+        try:
+            import ctypes
+            from ctypes import wintypes
+
+            process_query_limited_information = 0x1000
+            handle = ctypes.windll.kernel32.OpenProcess(
+                process_query_limited_information, False, pid
+            )
+            if not handle:
+                return None
+            creation = wintypes.FILETIME()
+            exit_time = wintypes.FILETIME()
+            kernel = wintypes.FILETIME()
+            user = wintypes.FILETIME()
+            try:
+                ok = ctypes.windll.kernel32.GetProcessTimes(
+                    handle,
+                    ctypes.byref(creation),
+                    ctypes.byref(exit_time),
+                    ctypes.byref(kernel),
+                    ctypes.byref(user),
+                )
+                if not ok:
+                    return None
+                marker = (creation.dwHighDateTime << 32) | creation.dwLowDateTime
+                return f"{pid}:{marker}"
+            finally:
+                ctypes.windll.kernel32.CloseHandle(handle)
+        except (AttributeError, OSError, ValueError):
+            return None
+    stat = Path(f"/proc/{pid}/stat")
+    try:
+        fields = stat.read_text(encoding="ascii").split()
+        return f"{pid}:{fields[21]}"
+    except (OSError, IndexError, ValueError):
+        return None
+
+
+def terminate_verified_process_identity(pid: int, token: str) -> bool:
+    """Terminate only when PID and creation marker still match."""
+
+    if process_identity_token(pid) != token:
+        return False
+    if os.name == "nt":
+        subprocess.run(
+            ["taskkill", "/PID", str(pid), "/T", "/F"],
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    else:
+        try:
+            os.killpg(pid, signal.SIGKILL)
+        except ProcessLookupError:
+            return True
+    deadline = time.monotonic() + 5.0
+    while time.monotonic() < deadline:
+        if process_identity_token(pid) != token:
+            return True
+        time.sleep(0.05)
+    return process_identity_token(pid) != token
+
+
 def run_isolated_process(
     command: list[str],
     *,
     watchdog_seconds: float,
     cwd: Path,
+    cancel_requested: Callable[[], bool] | None = None,
+    on_started: Callable[[int, str | None], None] | None = None,
+    graceful_cancel_seconds: float = 0.25,
 ) -> dict[str, Any]:
     """Run one process group and prove the parent is gone before returning."""
 
@@ -383,13 +453,54 @@ def run_isolated_process(
         creationflags=creationflags,
         **popen_options,
     )
+    identity_token = process_identity_token(process.pid)
+    if on_started is not None:
+        on_started(process.pid, identity_token)
     timed_out = False
-    try:
-        output, _ = process.communicate(timeout=watchdog_seconds)
-    except subprocess.TimeoutExpired:
-        timed_out = True
-        terminate_process_tree(process)
-        output, _ = process.communicate()
+    canceled = False
+    cancellation_mode: str | None = None
+    cancellation_started: float | None = None
+    output = ""
+    deadline = started + watchdog_seconds
+    while True:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            timed_out = True
+            terminate_process_tree(process)
+            output, _ = process.communicate()
+            break
+        if cancel_requested is not None and cancel_requested():
+            canceled = True
+            cancellation_started = time.monotonic()
+            graceful_sent = False
+            try:
+                if os.name == "nt":
+                    process.send_signal(signal.CTRL_BREAK_EVENT)
+                else:
+                    os.killpg(process.pid, signal.SIGTERM)
+                graceful_sent = True
+            except (OSError, ProcessLookupError, ValueError):
+                graceful_sent = False
+            if graceful_sent:
+                try:
+                    output, _ = process.communicate(timeout=graceful_cancel_seconds)
+                    cancellation_mode = "graceful_process_group_signal"
+                    break
+                except subprocess.TimeoutExpired:
+                    pass
+            terminate_process_tree(process)
+            output, _ = process.communicate()
+            cancellation_mode = (
+                "graceful_then_process_tree_termination"
+                if graceful_sent
+                else "process_tree_termination_graceful_unavailable"
+            )
+            break
+        try:
+            output, _ = process.communicate(timeout=min(0.25, remaining))
+            break
+        except subprocess.TimeoutExpired:
+            continue
     survivor = process.poll() is None
     if survivor:
         terminate_process_tree(process)
@@ -397,6 +508,15 @@ def run_isolated_process(
     return {
         "exit_code": process.returncode,
         "timed_out": timed_out,
+        "canceled": canceled,
+        "cancellation_mode": cancellation_mode,
+        "cancellation_ack_ms": (
+            (time.monotonic() - cancellation_started) * 1000.0
+            if cancellation_started is not None
+            else None
+        ),
+        "process_id": process.pid,
+        "process_identity_token": identity_token,
         "survivor": survivor,
         "survivor_check": "process_group_kill_then_parent_poll",
         "wall_ms": (time.monotonic() - started) * 1000.0,
@@ -449,6 +569,13 @@ def classify_process_result(
             failure_kind=None,
             completed=True,
             native_expectations_met=exit_code == 0,
+        )
+    if result.get("canceled"):
+        return ProcessClassification(
+            status="canceled",
+            failure_kind=None,
+            completed=False,
+            native_expectations_met=None,
         )
     if result.get("timed_out"):
         return ProcessClassification(
