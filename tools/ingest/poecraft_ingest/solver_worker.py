@@ -49,7 +49,17 @@ def git_provenance(root: Path) -> dict[str, Any]:
         return completed.stdout.strip()
 
     try:
-        dirty = [line for line in git("status", "--short").splitlines() if line]
+        dirty = sorted(
+            (
+                {
+                    "status": line[:2],
+                    "path": line[3:],
+                }
+                for line in git("status", "--short").splitlines()
+                if line
+            ),
+            key=lambda item: (item["path"], item["status"]),
+        )
         return {
             "commit": git("rev-parse", "HEAD"),
             "dirty": bool(dirty),
@@ -86,10 +96,35 @@ def artifact_provenance(path: Path) -> dict[str, Any]:
         }
     value = read_json_object(manifest_path)
     files = value.get("files")
+    verified_files: list[dict[str, Any]] = []
+    if isinstance(files, dict):
+        for relative, raw_identity in sorted(files.items()):
+            if not isinstance(relative, str) or not isinstance(raw_identity, dict):
+                raise ValueError("compiled artifact manifest files must be an object")
+            declared_sha256 = raw_identity.get("sha256")
+            declared_size = raw_identity.get("byte_size")
+            file_path = (manifest_path.parent / relative).resolve()
+            if not file_path.is_file():
+                raise ValueError(f"compiled artifact file is missing: {relative}")
+            actual_size = file_path.stat().st_size
+            actual_sha256 = sha256_file(file_path)
+            if declared_size != actual_size or declared_sha256 != actual_sha256:
+                raise ValueError(
+                    f"compiled artifact file identity mismatch: {relative}"
+                )
+            verified_files.append(
+                {
+                    "path": relative,
+                    "size_bytes": actual_size,
+                    "sha256": actual_sha256,
+                }
+            )
     return {
         "path": str(path),
         "manifest_path": str(manifest_path.resolve()),
         "manifest_sha256": sha256_file(manifest_path),
+        "declared_files_verified": True,
+        "files": verified_files,
         "identity": {
             "artifact_schema_version": value.get("artifact_schema_version"),
             "source_data_hash": (
@@ -164,13 +199,21 @@ def capture_execution_provenance(
 class MemoryReservation:
     """Host scheduling reservation; never solver proof or live-memory state."""
 
-    reserved_bytes: int
-    source: str = "case_caps.max_solver_owned_bytes"
+    solver_owned_cap_bytes: int
+    worker_headroom_bytes: int = 0
+    policy_version: str = "solver_lab_host_reservation_v2"
+
+    @property
+    def reserved_bytes(self) -> int:
+        return self.solver_owned_cap_bytes + self.worker_headroom_bytes
 
     def as_dict(self) -> dict[str, Any]:
         return {
             "reserved_memory_bytes": self.reserved_bytes,
-            "reservation_source": self.source,
+            "solver_owned_cap_bytes": self.solver_owned_cap_bytes,
+            "worker_headroom_bytes": self.worker_headroom_bytes,
+            "reservation_policy_version": self.policy_version,
+            "reservation_source": "solver_cap_plus_explicit_worker_headroom",
             "authority": "host_scheduler_only",
         }
 
@@ -249,10 +292,17 @@ class SolverCaseCommand:
     def as_list(self) -> list[str]:
         return list(self.argv)
 
-    def canonical_document(self) -> dict[str, Any]:
+    def canonical_document(
+        self,
+        *,
+        host_watchdog_seconds: float | None = None,
+        reservation: Mapping[str, Any] | None = None,
+    ) -> dict[str, Any]:
         value = {
             "argv": list(self.argv),
             "cwd": str(self.cwd.resolve()),
+            "host_watchdog_seconds": host_watchdog_seconds,
+            "host_reservation": dict(reservation or {}),
         }
         return {**value, "identity_sha256": canonical_sha256(value)}
 
@@ -313,6 +363,8 @@ def resolve_case_execution(
     exact_evaluation: bool,
     run_verification: bool,
     goal_progress_gated_reforges: bool,
+    watchdog_seconds: float | None = None,
+    worker_headroom_bytes: int = 0,
 ) -> ResolvedCaseExecution:
     paths.prepare()
     command = build_solver_case_command(
@@ -330,8 +382,15 @@ def resolve_case_execution(
         case_id=task.case_id,
         command=command,
         paths=paths,
-        watchdog_seconds=task.watchdog_seconds,
-        reservation=MemoryReservation(task.reserved_memory_bytes),
+        watchdog_seconds=(
+            task.watchdog_seconds
+            if watchdog_seconds is None
+            else float(watchdog_seconds)
+        ),
+        reservation=MemoryReservation(
+            task.reserved_memory_bytes,
+            int(worker_headroom_bytes),
+        ),
     )
 
 
@@ -397,6 +456,29 @@ def process_identity_token(pid: int) -> str | None:
         return f"{pid}:{fields[21]}"
     except (OSError, IndexError, ValueError):
         return None
+
+
+def observe_process_identity(pid: int | None, token: str | None) -> str:
+    """Conservatively classify the original process without using age alone."""
+
+    if not isinstance(pid, int) or not isinstance(token, str) or not token:
+        return "unknown"
+    current = process_identity_token(pid)
+    if current == token:
+        return "verified_live"
+    if current is not None:
+        return "proved_absent"
+    if os.name == "nt":
+        try:
+            import ctypes
+
+            error = int(ctypes.windll.kernel32.GetLastError())
+            if error == 87:  # ERROR_INVALID_PARAMETER: no such process.
+                return "proved_absent"
+        except (AttributeError, OSError, ValueError):
+            pass
+        return "unknown"
+    return "proved_absent" if not Path(f"/proc/{pid}").exists() else "unknown"
 
 
 def terminate_verified_process_identity(pid: int, token: str) -> bool:

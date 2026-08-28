@@ -154,6 +154,8 @@ def _run_case(
     exact_evaluation: bool,
     run_verification: bool = False,
     goal_progress_gated_reforges: bool = False,
+    watchdog_seconds: float | None = None,
+    worker_headroom_bytes: int = 0,
     attempt_paths: AttemptPaths | None = None,
     cancel_requested: Callable[[], bool] | None = None,
     on_process_started: Callable[[int, str | None], None] | None = None,
@@ -173,6 +175,8 @@ def _run_case(
         exact_evaluation=exact_evaluation,
         run_verification=run_verification,
         goal_progress_gated_reforges=goal_progress_gated_reforges,
+        watchdog_seconds=watchdog_seconds,
+        worker_headroom_bytes=worker_headroom_bytes,
     )
     result = run_isolated_process(
         resolved.command.as_list(),
@@ -198,8 +202,8 @@ def _run_case(
         "status": classification.status,
         "failure_kind": classification.failure_kind,
         "evaluation_role": task.evaluation_role,
-        "watchdog_seconds": task.watchdog_seconds,
-        "reserved_memory_bytes": task.reserved_memory_bytes,
+        "watchdog_seconds": resolved.watchdog_seconds,
+        **resolved.reservation.as_dict(),
         "native_expectations_met": classification.native_expectations_met,
         "report_path": str(resolved.paths.report_path.resolve()),
         "partial_report_path": str(resolved.paths.partial_report_path.resolve()),

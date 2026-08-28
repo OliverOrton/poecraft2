@@ -9,7 +9,11 @@ import sys
 import time
 from typing import Any
 
-from poecraft_ingest.solver_lab_service import SolverLabService
+from poecraft_ingest.solver_lab_service import (
+    DEFAULT_GLOBAL_SAFETY_RESERVE_BYTES,
+    DEFAULT_WORKER_HEADROOM_BYTES,
+    SolverLabService,
+)
 from poecraft_ingest.solver_lab_supervisor import SolverLabSupervisor
 
 
@@ -26,6 +30,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--artifact", type=Path)
     parser.add_argument("--corpus", type=Path)
     parser.add_argument("--profile", type=Path)
+    parser.add_argument(
+        "--worker-headroom-bytes",
+        type=int,
+        default=DEFAULT_WORKER_HEADROOM_BYTES,
+    )
+    parser.add_argument(
+        "--global-safety-reserve-bytes",
+        type=int,
+        default=DEFAULT_GLOBAL_SAFETY_RESERVE_BYTES,
+    )
     subparsers = parser.add_subparsers(dest="operation", required=True)
 
     subparsers.add_parser("profiles")
@@ -172,6 +186,8 @@ def _service(args: argparse.Namespace) -> SolverLabService:
         artifact=args.artifact,
         corpus=args.corpus,
         profile=args.profile,
+        worker_headroom_bytes=args.worker_headroom_bytes,
+        global_safety_reserve_bytes=args.global_safety_reserve_bytes,
     )
 
 
@@ -374,6 +390,7 @@ def main(argv: list[str] | None = None) -> int:
                 "dry_run": bool(getattr(args, "dry_run", False)),
                 "ok": False,
                 "error": {
+                    "code": getattr(exc, "code", None),
                     "type": type(exc).__name__,
                     "message": str(exc),
                 },

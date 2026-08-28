@@ -5,11 +5,16 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 import sys
-from typing import Any
+from typing import Any, Callable
 
 from mcp.server.mcpserver import MCPServer
+from mcp.server.mcpserver.exceptions import ToolError
 
-from poecraft_ingest.solver_lab_service import SolverLabService
+from poecraft_ingest.solver_lab_service import (
+    DEFAULT_GLOBAL_SAFETY_RESERVE_BYTES,
+    DEFAULT_WORKER_HEADROOM_BYTES,
+    SolverLabService,
+)
 
 
 def build_server(service: SolverLabService) -> MCPServer:
@@ -22,6 +27,14 @@ def build_server(service: SolverLabService) -> MCPServer:
         ),
         version="0.1.0",
     )
+
+    def mutation(
+        operation: Callable[..., dict[str, Any]], **arguments: Any
+    ) -> dict[str, Any]:
+        try:
+            return operation(**arguments)
+        except ValueError as exc:
+            raise ToolError(str(exc)) from exc
 
     @server.tool()
     def list_profiles() -> dict[str, Any]:
@@ -58,7 +71,8 @@ def build_server(service: SolverLabService) -> MCPServer:
         dry_run: bool = False,
     ) -> dict[str, Any]:
         """Create a bounded draft from a template, clone, or inline import."""
-        return service.create_case_draft(
+        return mutation(
+            service.create_case_draft,
             name=name,
             idempotency_key=idempotency_key,
             source_case_id=source_case_id,
@@ -76,7 +90,8 @@ def build_server(service: SolverLabService) -> MCPServer:
         dry_run: bool = False,
     ) -> dict[str, Any]:
         """Replace one draft document; saved revisions remain immutable."""
-        return service.update_case_draft(
+        return mutation(
+            service.update_case_draft,
             draft_id=draft_id,
             name=name,
             document=document,
@@ -96,7 +111,8 @@ def build_server(service: SolverLabService) -> MCPServer:
         dry_run: bool = False,
     ) -> dict[str, Any]:
         """Discard editable draft state while retaining every saved revision."""
-        return service.discard_case_draft(
+        return mutation(
+            service.discard_case_draft,
             draft_id=draft_id,
             idempotency_key=idempotency_key,
             dry_run=dry_run,
@@ -109,7 +125,8 @@ def build_server(service: SolverLabService) -> MCPServer:
         dry_run: bool = False,
     ) -> dict[str, Any]:
         """Validate and save an immutable local case revision."""
-        return service.save_case_revision(
+        return mutation(
+            service.save_case_revision,
             draft_id=draft_id,
             idempotency_key=idempotency_key,
             dry_run=dry_run,
@@ -144,7 +161,8 @@ def build_server(service: SolverLabService) -> MCPServer:
         dry_run: bool = False,
     ) -> dict[str, Any]:
         """Submit one native solve or preview its canonical identity."""
-        return service.submit_job(
+        return mutation(
+            service.submit_job,
             case_id=case_id,
             revision_id=revision_id,
             idempotency_key=idempotency_key,
@@ -166,7 +184,8 @@ def build_server(service: SolverLabService) -> MCPServer:
         dry_run: bool = False,
     ) -> dict[str, Any]:
         """Submit a bounded case-by-replicate matrix under one experiment."""
-        return service.submit_matrix(
+        return mutation(
+            service.submit_matrix,
             case_ids=case_ids,
             include_roles=include_roles,
             exclude_case_ids=exclude_case_ids,
@@ -196,14 +215,16 @@ def build_server(service: SolverLabService) -> MCPServer:
     @server.tool()
     def pause_queue(idempotency_key: str, dry_run: bool = False) -> dict[str, Any]:
         """Stop new dispatch without pausing running native processes."""
-        return service.pause_queue(
+        return mutation(
+            service.pause_queue,
             idempotency_key=idempotency_key, dry_run=dry_run
         )
 
     @server.tool()
     def resume_queue(idempotency_key: str, dry_run: bool = False) -> dict[str, Any]:
         """Resume dispatch of queued native jobs."""
-        return service.resume_queue(
+        return mutation(
+            service.resume_queue,
             idempotency_key=idempotency_key, dry_run=dry_run
         )
 
@@ -212,7 +233,8 @@ def build_server(service: SolverLabService) -> MCPServer:
         job_id: str, idempotency_key: str, dry_run: bool = False
     ) -> dict[str, Any]:
         """Cancel queued work or request verified termination of a running job."""
-        return service.cancel_job(
+        return mutation(
+            service.cancel_job,
             job_id=job_id,
             idempotency_key=idempotency_key,
             dry_run=dry_run,
@@ -223,7 +245,8 @@ def build_server(service: SolverLabService) -> MCPServer:
         job_id: str, idempotency_key: str, dry_run: bool = False
     ) -> dict[str, Any]:
         """Requeue a terminal job to create a new immutable attempt."""
-        return service.retry_job(
+        return mutation(
+            service.retry_job,
             job_id=job_id,
             idempotency_key=idempotency_key,
             dry_run=dry_run,
@@ -237,7 +260,8 @@ def build_server(service: SolverLabService) -> MCPServer:
         dry_run: bool = False,
     ) -> dict[str, Any]:
         """Clone one resolved job into a new durable job."""
-        return service.clone_job(
+        return mutation(
+            service.clone_job,
             job_id=job_id,
             idempotency_key=idempotency_key,
             priority=priority,
@@ -252,7 +276,8 @@ def build_server(service: SolverLabService) -> MCPServer:
         dry_run: bool = False,
     ) -> dict[str, Any]:
         """Change pre-dispatch priority without changing solve identity."""
-        return service.change_priority(
+        return mutation(
+            service.change_priority,
             job_id=job_id,
             priority=priority,
             idempotency_key=idempotency_key,
@@ -309,7 +334,8 @@ def build_server(service: SolverLabService) -> MCPServer:
         dry_run: bool = False,
     ) -> dict[str, Any]:
         """Export one bounded, content-addressed local investigation bundle."""
-        return service.export_investigation_bundle(
+        return mutation(
+            service.export_investigation_bundle,
             idempotency_key=idempotency_key,
             job_id=job_id,
             attempt_id=attempt_id,
@@ -333,6 +359,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--artifact", type=Path)
     parser.add_argument("--corpus", type=Path)
     parser.add_argument("--profile", type=Path)
+    parser.add_argument(
+        "--worker-headroom-bytes",
+        type=int,
+        default=DEFAULT_WORKER_HEADROOM_BYTES,
+    )
+    parser.add_argument(
+        "--global-safety-reserve-bytes",
+        type=int,
+        default=DEFAULT_GLOBAL_SAFETY_RESERVE_BYTES,
+    )
     return parser
 
 
@@ -346,6 +382,8 @@ def main(argv: list[str] | None = None) -> int:
         artifact=args.artifact,
         corpus=args.corpus,
         profile=args.profile,
+        worker_headroom_bytes=args.worker_headroom_bytes,
+        global_safety_reserve_bytes=args.global_safety_reserve_bytes,
     )
     build_server(service).run(transport="stdio")
     return 0

@@ -12,7 +12,10 @@ import time
 
 import pytest
 
-from poecraft_ingest.solver_lab_service import SolverLabService
+from poecraft_ingest.solver_lab_service import (
+    ArtifactIntegrityError,
+    SolverLabService,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -24,6 +27,8 @@ def _service(tmp_path: Path) -> SolverLabService:
         catalog=tmp_path / "catalog.sqlite3",
         attempts=tmp_path / "attempts",
         executable=Path(sys.executable),
+        worker_headroom_bytes=0,
+        global_safety_reserve_bytes=0,
     )
 
 
@@ -177,7 +182,7 @@ def test_partial_report_with_explicit_null_sections_has_bounded_summary(
         }
     )
 
-    assert summary["source_kind"] == "partial"
+    assert summary["source_kind"] == "unindexed_live_observation"
     assert summary["phase"] is None
     assert summary["lower_bound"] is None
     assert summary["upper_bound"] is None
@@ -190,32 +195,23 @@ def test_partial_report_with_explicit_null_sections_has_bounded_summary(
     assert summary["exact_strategy_evaluation"] == {}
 
 
-def test_terminal_summary_is_not_reopened_after_it_is_cached(
-    tmp_path: Path,
+def test_terminal_summary_rechecks_integrity_instead_of_using_stale_cache(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    attempt_directory = tmp_path / "attempt-terminal"
-    attempt_directory.mkdir()
-    partial_path = attempt_directory / "partial.json"
-    partial_path.write_text(
-        json.dumps({"cases": [{"solve_summary": {"lower_bound": 3.0}}]}),
-        encoding="utf-8",
+    service = _service(tmp_path)
+    _, attempt_id = _complete_strategy_job(
+        service, monkeypatch, key="terminal-recheck"
     )
-    service = object.__new__(SolverLabService)
-    service._run_summary_cache = {}
-    service._run_summary_cache_lock = threading.RLock()
-    attempt = {
-        "attempt_id": "attempt-terminal",
-        "job_id": "job-terminal",
-        "status": "canceled",
-        "directory": str(attempt_directory),
-    }
-
+    attempt = service.catalog.get_attempt(attempt_id)
     first = service._run_summary(attempt)
-    partial_path.unlink()
-    second = service._run_summary(attempt)
+    report_path = Path(attempt["directory"]) / "report.json"
+    report_path.write_text(
+        report_path.read_text(encoding="utf-8") + " ", encoding="utf-8"
+    )
 
-    assert first["lower_bound"] == 3.0
-    assert second == first
+    assert first["lower_bound"] == 5.0
+    with pytest.raises(ArtifactIntegrityError, match="artifact_integrity_failure"):
+        service._run_summary(attempt)
 
 
 @pytest.mark.parametrize(
@@ -260,7 +256,7 @@ def test_report_case_and_nested_telemetry_boundaries_are_shape_safe(
         }
     )
 
-    assert summary["source_kind"] == "partial"
+    assert summary["source_kind"] == "unindexed_live_observation"
     assert summary["lower_bound"] is None
     assert isinstance(summary["native_work"], dict)
     assert isinstance(summary["native_owned_memory"], dict)
@@ -394,12 +390,21 @@ def test_large_hundred_job_refresh_is_background_cached_and_selection_stable(
     assert window.cancel_button.isEnabled()
     window.close()
     app.processEvents()
-    service.catalog.finish_attempt(
+    cleanup_result = {"status": "canceled", "survivor": False}
+    service.catalog.begin_finalizing(
+        attempt_id=attempt["attempt_id"], result=cleanup_result
+    )
+    cleanup_artifacts = supervisor._prepare_attempt_artifacts(
+        attempt["attempt_id"], attempt_directory, case_id, cleanup_result
+    )
+    service.catalog.publish_attempt_terminal(
         attempt_id=attempt["attempt_id"],
         attempt_status="canceled",
         job_status="canceled",
-        result={"status": "canceled", "survivor": False},
+        result=cleanup_result,
+        artifacts=cleanup_artifacts,
     )
+    supervisor.stop()
 
 
 def test_queue_compare_strategy_and_matrix_buttons_have_single_shot_contracts(

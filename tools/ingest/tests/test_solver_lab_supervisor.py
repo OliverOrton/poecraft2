@@ -23,11 +23,18 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 GIB = 1024 * 1024 * 1024
 
 
-def _service(tmp_path: Path) -> SolverLabService:
+def _service(
+    tmp_path: Path,
+    *,
+    worker_headroom_bytes: int = 512 * 1024 * 1024,
+    global_safety_reserve_bytes: int = 512 * 1024 * 1024,
+) -> SolverLabService:
     return SolverLabService.from_root(
         REPO_ROOT,
         catalog=tmp_path / "catalog.sqlite3",
         attempts=tmp_path / "attempts",
+        worker_headroom_bytes=worker_headroom_bytes,
+        global_safety_reserve_bytes=global_safety_reserve_bytes,
     )
 
 
@@ -44,7 +51,9 @@ def _wait_for(predicate, timeout: float = 5.0) -> None:
     raise AssertionError("condition did not become true")
 
 
-def _fake_completed_run(counter: dict[str, int] | None = None):
+def _fake_completed_run(
+    counter: dict[str, int] | None = None, *, duration_seconds: float = 0.08
+):
     lock = threading.Lock()
 
     def run(task, **kwargs):
@@ -55,7 +64,7 @@ def _fake_completed_run(counter: dict[str, int] | None = None):
                 counter["active"] += 1
                 counter["peak"] = max(counter["peak"], counter["active"])
         try:
-            time.sleep(0.08)
+            time.sleep(duration_seconds)
             paths.report_path.write_text(
                 json.dumps(
                     {
@@ -138,7 +147,9 @@ def test_actual_crash_and_synthetic_os_oom_remain_distinct(tmp_path: Path) -> No
     assert oom_class.failure_kind == "operating_system_out_of_memory"
 
 
-def test_stale_lease_recovery_preserves_partial_and_history(tmp_path: Path) -> None:
+def test_stale_lease_recovery_preserves_partial_and_history(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     service = _service(tmp_path)
     job_id = service.submit_job(
         case_id=_case_id(service), idempotency_key="stale-submit"
@@ -181,6 +192,10 @@ def test_stale_lease_recovery_preserves_partial_and_history(tmp_path: Path) -> N
             "WHERE lease_id='stale-lease'"
         )
 
+    monkeypatch.setattr(
+        "poecraft_ingest.solver_lab_supervisor.observe_process_identity",
+        lambda *_: "proved_absent",
+    )
     successor = SolverLabSupervisor(service, stale_lease_seconds=0)
     successor._ensure_session()
     recovered = successor.recover_stale_attempts()
@@ -188,14 +203,19 @@ def test_stale_lease_recovery_preserves_partial_and_history(tmp_path: Path) -> N
     assert len(recovered) == 1
     assert recovered[0]["partial_observation_available"] is True
     assert service.get_job(job_id)["result"]["job"]["status"] == "partial"
-    assert service.catalog.get_attempt("stale-attempt")["status"] == "orphaned"
+    assert service.catalog.get_attempt("stale-attempt")["status"] == "partial"
+    assert service.catalog.get_lease("stale-lease")["status"] == "released"
     successor.stop()
 
 
 def test_insufficient_host_memory_blocks_without_launch(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    service = _service(tmp_path)
+    service = _service(
+        tmp_path,
+        worker_headroom_bytes=0,
+        global_safety_reserve_bytes=GIB,
+    )
     job_id = service.submit_job(
         case_id=_case_id(service), idempotency_key="memory-submit"
     )["result"]["job_id"]
@@ -228,7 +248,11 @@ def test_insufficient_host_memory_blocks_without_launch(
 def test_oversize_jobs_drain_exclusively(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    service = _service(tmp_path)
+    service = _service(
+        tmp_path,
+        worker_headroom_bytes=0,
+        global_safety_reserve_bytes=0,
+    )
     for index in range(2):
         service.submit_job(
             case_id=_case_id(service), idempotency_key=f"oversize-{index}"
@@ -261,7 +285,11 @@ def test_oversize_jobs_drain_exclusively(
 def test_bounded_dispatch_runs_two_ordinary_jobs_concurrently(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    service = _service(tmp_path)
+    service = _service(
+        tmp_path,
+        worker_headroom_bytes=0,
+        global_safety_reserve_bytes=0,
+    )
     for index in range(2):
         service.submit_job(
             case_id=_case_id(service), idempotency_key=f"parallel-{index}"
@@ -269,7 +297,7 @@ def test_bounded_dispatch_runs_two_ordinary_jobs_concurrently(
     counter = {"active": 0, "peak": 0}
     monkeypatch.setattr(
         "poecraft_ingest.solver_lab_supervisor._run_case",
-        _fake_completed_run(counter),
+        _fake_completed_run(counter, duration_seconds=0.5),
     )
     supervisor = SolverLabSupervisor(
         service,
@@ -407,4 +435,4 @@ def test_catalog_v1_columns_migrate_in_place(tmp_path: Path) -> None:
 
     assert {"blocked_reason", "cancel_requested"} <= job_columns
     assert {"lease_id", "process_id", "process_identity_token"} <= attempt_columns
-    assert version == 3
+    assert version == 4

@@ -17,12 +17,14 @@ from typing import Any, Mapping
 
 PROFILE_SCHEMA_VERSION = "solver_lab_profile_v1"
 EXPERIMENT_SCHEMA_VERSION = "solver_lab_experiment_v1"
-JOB_SCHEMA_VERSION = "solver_lab_job_v1"
-ATTEMPT_SCHEMA_VERSION = "solver_lab_attempt_v1"
-COMMAND_SCHEMA_VERSION = "solver_lab_command_v1"
+JOB_SCHEMA_VERSION = "solver_lab_job_v2"
+ATTEMPT_SCHEMA_VERSION = "solver_lab_attempt_v2"
+COMMAND_SCHEMA_VERSION = "solver_lab_command_v2"
 EVENT_SCHEMA_VERSION = "solver_lab_event_v1"
 ARTIFACT_SCHEMA_VERSION = "solver_lab_artifact_v1"
 OPERATION_RESULT_SCHEMA_VERSION = "solver_lab_operation_result_v1"
+OPERATION_REQUEST_SCHEMA_VERSION = "solver_lab_operation_request_v2"
+EXECUTION_REQUEST_SCHEMA_VERSION = "solver_lab_execution_request_v2"
 CASE_DRAFT_SCHEMA_VERSION = "solver_lab_case_draft_v1"
 CASE_REVISION_SCHEMA_VERSION = "solver_lab_case_revision_v1"
 CALCULATOR_EXPORT_SCHEMA_VERSION = "solver_lab_calculator_export_v1"
@@ -36,6 +38,8 @@ SCHEMA_VERSIONS = {
     "event": EVENT_SCHEMA_VERSION,
     "artifact": ARTIFACT_SCHEMA_VERSION,
     "operation_result": OPERATION_RESULT_SCHEMA_VERSION,
+    "operation_request": OPERATION_REQUEST_SCHEMA_VERSION,
+    "execution_request": EXECUTION_REQUEST_SCHEMA_VERSION,
     "case_draft": CASE_DRAFT_SCHEMA_VERSION,
     "case_revision": CASE_REVISION_SCHEMA_VERSION,
     "calculator_export": CALCULATOR_EXPORT_SCHEMA_VERSION,
@@ -47,6 +51,8 @@ class JobStatus(StrEnum):
     BLOCKED = "blocked"
     RUNNING = "running"
     CANCELING = "canceling"
+    DISPATCH_REFUSED = "dispatch_refused"
+    ORPHAN_QUARANTINED = "orphan_quarantined"
     CANCELED = "canceled"
     FAILED = "failed"
     PARTIAL = "partial"
@@ -54,6 +60,8 @@ class JobStatus(StrEnum):
 
 
 class AttemptOutcome(StrEnum):
+    FINALIZING = "finalizing"
+    ORPHAN_QUARANTINED = "orphan_quarantined"
     COMPLETED = "completed"
     PARTIAL = "partial"
     CANCELED = "canceled"
@@ -78,6 +86,41 @@ def canonical_json_bytes(value: Any) -> bytes:
 
 def canonical_sha256(value: Any) -> str:
     return hashlib.sha256(canonical_json_bytes(value)).hexdigest()
+
+
+def canonical_operation_request(
+    operation: str, payload: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Bind an idempotency key to the complete resolved mutation payload."""
+
+    return {
+        "schema_version": OPERATION_REQUEST_SCHEMA_VERSION,
+        "operation": operation,
+        "payload": dict(payload),
+    }
+
+
+def identity_component_diff(
+    expected: Mapping[str, Any], actual: Mapping[str, Any]
+) -> list[dict[str, Any]]:
+    """Return bounded top-level identity differences without leaking payloads."""
+
+    differences: list[dict[str, Any]] = []
+    for component in sorted(set(expected) | set(actual)):
+        left = expected.get(component)
+        right = actual.get(component)
+        if left == right:
+            continue
+        differences.append(
+            {
+                "component": component,
+                "expected_sha256": canonical_sha256(left),
+                "actual_sha256": canonical_sha256(right),
+                "expected_present": component in expected,
+                "actual_present": component in actual,
+            }
+        )
+    return differences
 
 
 def read_json(path: Path) -> dict[str, Any]:

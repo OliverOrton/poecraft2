@@ -37,8 +37,11 @@ from poecraft_ingest.solver_lab_contracts import (
     CASE_REVISION_SCHEMA_VERSION,
     JOB_SCHEMA_VERSION,
     OPERATION_RESULT_SCHEMA_VERSION,
+    EXECUTION_REQUEST_SCHEMA_VERSION,
     LabProfile,
     canonical_sha256,
+    canonical_operation_request,
+    identity_component_diff,
     read_json,
     validate_profile_case_binding,
 )
@@ -49,6 +52,17 @@ from poecraft_ingest.solver_worker import (
 
 
 DEFAULT_PROFILE_ID = "native_allflame_no_imprint_v1"
+DEFAULT_WORKER_HEADROOM_BYTES = 512 * 1024 * 1024
+DEFAULT_GLOBAL_SAFETY_RESERVE_BYTES = 512 * 1024 * 1024
+RESERVATION_POLICY_VERSION = "solver_lab_host_reservation_v2"
+
+
+class ArtifactIntegrityError(ValueError):
+    """An indexed terminal artifact no longer matches immutable catalog data."""
+
+    def __init__(self, detail: str):
+        super().__init__(f"artifact_integrity_failure: {detail}")
+        self.code = "artifact_integrity_failure"
 
 
 @dataclass(frozen=True)
@@ -117,8 +131,21 @@ def operation_result(
 
 
 class SolverLabService:
-    def __init__(self, paths: SolverLabPaths):
+    def __init__(
+        self,
+        paths: SolverLabPaths,
+        *,
+        worker_headroom_bytes: int = DEFAULT_WORKER_HEADROOM_BYTES,
+        global_safety_reserve_bytes: int = DEFAULT_GLOBAL_SAFETY_RESERVE_BYTES,
+    ):
+        if not (0 <= int(worker_headroom_bytes) <= 64 * 1024**3):
+            raise ValueError("worker_headroom_bytes must be in 0..64 GiB")
+        if not (0 <= int(global_safety_reserve_bytes) <= 64 * 1024**3):
+            raise ValueError("global_safety_reserve_bytes must be in 0..64 GiB")
         self.paths = paths
+        self.worker_headroom_bytes = int(worker_headroom_bytes)
+        self.global_safety_reserve_bytes = int(global_safety_reserve_bytes)
+        self.reservation_policy_version = RESERVATION_POLICY_VERSION
         self.paths.attempts.mkdir(parents=True, exist_ok=True)
         self.catalog = SolverLabCatalog(paths.catalog)
         self.case_store = paths.catalog.parent / "cases"
@@ -158,6 +185,27 @@ class SolverLabService:
             ),
         )
 
+    def _mutation_request(
+        self, operation: str, payload: Mapping[str, Any]
+    ) -> dict[str, Any]:
+        return canonical_operation_request(operation, payload)
+
+    def _mutation_replay(
+        self,
+        *,
+        operation: str,
+        idempotency_key: str,
+        request: Mapping[str, Any],
+        dry_run: bool,
+    ) -> dict[str, Any] | None:
+        if dry_run:
+            return None
+        return self.catalog.replay_operation(
+            idempotency_key=idempotency_key,
+            operation=operation,
+            operation_request=request,
+        )
+
     @classmethod
     def from_root(
         cls,
@@ -169,6 +217,8 @@ class SolverLabService:
         artifact: Path | None = None,
         corpus: Path | None = None,
         profile: Path | None = None,
+        worker_headroom_bytes: int = DEFAULT_WORKER_HEADROOM_BYTES,
+        global_safety_reserve_bytes: int = DEFAULT_GLOBAL_SAFETY_RESERVE_BYTES,
     ) -> "SolverLabService":
         defaults = SolverLabPaths.defaults(root)
         return cls(
@@ -180,7 +230,9 @@ class SolverLabService:
                 artifact=(artifact or defaults.artifact).resolve(),
                 corpus=(corpus or defaults.corpus).resolve(),
                 profile=(profile or defaults.profile).resolve(),
-            )
+            ),
+            worker_headroom_bytes=worker_headroom_bytes,
+            global_safety_reserve_bytes=global_safety_reserve_bytes,
         )
 
     def list_profiles(self) -> dict[str, Any]:
@@ -279,11 +331,6 @@ class SolverLabService:
     ) -> dict[str, Any]:
         if not idempotency_key:
             raise ValueError("create_case_draft requires an idempotency key")
-        existing = self.catalog.command_by_idempotency_key(idempotency_key)
-        if existing is not None:
-            if existing["operation"] != "create_case_draft":
-                raise ValueError("idempotency key was used by another operation")
-            return existing["result"]
         sources = sum(
             value is not None
             for value in (source_case_id, source_revision_id, document, import_json)
@@ -291,6 +338,50 @@ class SolverLabService:
         if sources > 1:
             raise ValueError("provide at most one draft source")
         normalized_name = normalize_case_name(name)
+        if source_case_id is not None:
+            source_identity = {
+                "kind": "frozen_case",
+                "id": source_case_id,
+                "content_sha256": canonical_sha256(
+                    self._require_case(source_case_id)
+                ),
+            }
+        elif source_revision_id is not None:
+            source_revision = self.catalog.get_case_revision(source_revision_id)
+            if source_revision is None:
+                raise KeyError(source_revision_id)
+            source_identity = {
+                "kind": "case_revision",
+                "id": source_revision_id,
+                "content_sha256": source_revision["content_sha256"],
+            }
+        elif document is not None:
+            source_identity = {
+                "kind": "document",
+                "content_sha256": canonical_sha256(document),
+            }
+        elif import_json is not None:
+            source_identity = {
+                "kind": "import_json",
+                "content_sha256": canonical_sha256(parse_case_json(import_json)),
+            }
+        else:
+            source_identity = {
+                "kind": "template",
+                "content_sha256": canonical_sha256(self._authoring_template),
+            }
+        mutation_request = self._mutation_request(
+            "create_case_draft",
+            {"name": normalized_name, "source": source_identity},
+        )
+        existing = self._mutation_replay(
+            operation="create_case_draft",
+            idempotency_key=idempotency_key,
+            request=mutation_request,
+            dry_run=dry_run,
+        )
+        if existing is not None:
+            return existing
         source_kind = "template"
         base_revision_id: str | None = None
         if source_case_id is not None:
@@ -349,13 +440,7 @@ class SolverLabService:
             draft=draft,
             command_id=f"cmd-{uuid.uuid4()}",
             idempotency_key=idempotency_key,
-            operation_request={
-                "name": normalized_name,
-                "source_case_id": source_case_id,
-                "source_revision_id": source_revision_id,
-                "has_document": document is not None,
-                "has_import_json": import_json is not None,
-            },
+            operation_request=mutation_request,
             operation_result=result,
         )
 
@@ -370,23 +455,35 @@ class SolverLabService:
     ) -> dict[str, Any]:
         if not idempotency_key:
             raise ValueError("update_case_draft requires an idempotency key")
-        existing = self.catalog.command_by_idempotency_key(idempotency_key)
-        if existing is not None:
-            if existing["operation"] != "update_case_draft":
-                raise ValueError("idempotency key was used by another operation")
-            return existing["result"]
-        current = self.catalog.get_case_draft(draft_id)
-        if current is None:
-            raise KeyError(draft_id)
         payload = parse_case_json(document) if isinstance(document, str) else dict(document)
         case = validate_case_document_shape(
             self._localize_editable_case(payload)
         )
         if case["id"] in self._cases:
             raise ValueError("a local draft cannot reuse a frozen case id")
+        normalized_name = normalize_case_name(name)
+        mutation_request = self._mutation_request(
+            "update_case_draft",
+            {
+                "draft_id": draft_id,
+                "name": normalized_name,
+                "document_sha256": canonical_sha256(case),
+            },
+        )
+        existing = self._mutation_replay(
+            operation="update_case_draft",
+            idempotency_key=idempotency_key,
+            request=mutation_request,
+            dry_run=dry_run,
+        )
+        if existing is not None:
+            return existing
+        current = self.catalog.get_case_draft(draft_id)
+        if current is None:
+            raise KeyError(draft_id)
         updated = {
             **current,
-            "name": normalize_case_name(name),
+            "name": normalized_name,
             "case_id": normalize_case_id(str(case["id"])),
             "base_revision_id": (
                 current.get("base_revision_id")
@@ -407,11 +504,7 @@ class SolverLabService:
             draft=updated,
             command_id=f"cmd-{uuid.uuid4()}",
             idempotency_key=idempotency_key,
-            operation_request={
-                "draft_id": draft_id,
-                "name": updated["name"],
-                "content_sha256": canonical_sha256(case),
-            },
+            operation_request=mutation_request,
             operation_result=result,
         )
 
@@ -424,11 +517,17 @@ class SolverLabService:
     ) -> dict[str, Any]:
         if not idempotency_key:
             raise ValueError("discard_case_draft requires an idempotency key")
-        existing = self.catalog.command_by_idempotency_key(idempotency_key)
+        mutation_request = self._mutation_request(
+            "discard_case_draft", {"draft_id": draft_id}
+        )
+        existing = self._mutation_replay(
+            operation="discard_case_draft",
+            idempotency_key=idempotency_key,
+            request=mutation_request,
+            dry_run=dry_run,
+        )
         if existing is not None:
-            if existing["operation"] != "discard_case_draft":
-                raise ValueError("idempotency key was used by another operation")
-            return existing["result"]
+            return existing
         draft = self.catalog.get_case_draft(draft_id)
         if draft is None:
             raise KeyError(draft_id)
@@ -447,6 +546,7 @@ class SolverLabService:
             draft_id=draft_id,
             command_id=f"cmd-{uuid.uuid4()}",
             idempotency_key=idempotency_key,
+            operation_request=mutation_request,
             operation_result=result,
         )
 
@@ -471,11 +571,6 @@ class SolverLabService:
     ) -> dict[str, Any]:
         if not idempotency_key:
             raise ValueError("save_case_revision requires an idempotency key")
-        existing = self.catalog.command_by_idempotency_key(idempotency_key)
-        if existing is not None:
-            if existing["operation"] != "save_case_revision":
-                raise ValueError("idempotency key was used by another operation")
-            return existing["result"]
         draft = self.catalog.get_case_draft(draft_id)
         if draft is None:
             raise KeyError(draft_id)
@@ -484,6 +579,22 @@ class SolverLabService:
             raise ValueError(
                 "native case validation failed: " + validation["detail"]
             )
+        mutation_request = self._mutation_request(
+            "save_case_revision",
+            {
+                "draft_id": draft_id,
+                "case_id": draft["case_id"],
+                "content_sha256": validation["content_sha256"],
+            },
+        )
+        existing = self._mutation_replay(
+            operation="save_case_revision",
+            idempotency_key=idempotency_key,
+            request=mutation_request,
+            dry_run=dry_run,
+        )
+        if existing is not None:
+            return existing
         duplicate = next(
             (
                 revision
@@ -558,10 +669,7 @@ class SolverLabService:
             draft_id=draft_id,
             command_id=f"cmd-{uuid.uuid4()}",
             idempotency_key=idempotency_key,
-            operation_request={
-                "draft_id": draft_id,
-                "content_sha256": validation["content_sha256"],
-            },
+            operation_request=mutation_request,
             operation_result=operation_result("save_case_revision", None),
         )
 
@@ -612,11 +720,6 @@ class SolverLabService:
     ) -> dict[str, Any]:
         if not idempotency_key:
             raise ValueError("submit_job requires an idempotency key")
-        existing = self.catalog.command_by_idempotency_key(idempotency_key)
-        if existing is not None:
-            if existing["operation"] != "submit_job":
-                raise ValueError("idempotency key was used by another operation")
-            return existing["result"]
         if experiment_id and self.catalog.get_experiment(experiment_id) is None:
             raise KeyError(experiment_id)
         resolved = self._resolve_case_reference(
@@ -641,6 +744,25 @@ class SolverLabService:
             replicate=replicate,
         )
         identity_sha256 = canonical_sha256(request)
+        mutation_request = self._mutation_request(
+            "submit_job",
+            {
+                "execution_request": request,
+                "priority": int(priority),
+                "experiment_id": experiment_id,
+                "desired_status": "queued",
+            },
+        )
+        existing = self._mutation_replay(
+            operation="submit_job",
+            idempotency_key=idempotency_key,
+            request=mutation_request,
+            dry_run=dry_run,
+        )
+        if existing is not None:
+            return existing
+        solver_cap = int(task.reserved_memory_bytes)
+        reservation = solver_cap + self.worker_headroom_bytes
         preview = {
             "case_id": case_id,
             "case_source_kind": resolved.source_kind,
@@ -648,7 +770,11 @@ class SolverLabService:
             "profile_id": self.profile.profile_id,
             "priority": int(priority),
             "watchdog_seconds": watchdog,
-            "reserved_memory_bytes": task.reserved_memory_bytes,
+            "solver_owned_cap_bytes": solver_cap,
+            "worker_headroom_bytes": self.worker_headroom_bytes,
+            "reserved_memory_bytes": reservation,
+            "global_safety_reserve_bytes": self.global_safety_reserve_bytes,
+            "reservation_policy_version": self.reservation_policy_version,
             "identity_sha256": identity_sha256,
             "request": request,
         }
@@ -667,7 +793,11 @@ class SolverLabService:
             "priority": int(priority),
             "status": "queued",
             "watchdog_seconds": watchdog,
-            "reserved_memory_bytes": task.reserved_memory_bytes,
+            "solver_owned_cap_bytes": solver_cap,
+            "worker_headroom_bytes": self.worker_headroom_bytes,
+            "reserved_memory_bytes": reservation,
+            "global_safety_reserve_bytes": self.global_safety_reserve_bytes,
+            "reservation_policy_version": self.reservation_policy_version,
             "identity_sha256": identity_sha256,
             "request": request,
             "created_at": now,
@@ -678,14 +808,7 @@ class SolverLabService:
             job=job,
             command_id=f"cmd-{uuid.uuid4()}",
             idempotency_key=idempotency_key,
-            operation_request={
-                "case_id": case_id,
-                "revision_id": resolved.revision_id,
-                "priority": priority,
-                "watchdog_seconds": watchdog_seconds,
-                "experiment_id": experiment_id,
-                "replicate": replicate,
-            },
+            operation_request=mutation_request,
             operation_result=result,
         )
 
@@ -789,14 +912,25 @@ class SolverLabService:
     ) -> dict[str, Any]:
         if not idempotency_key:
             raise ValueError("cancel_job requires an idempotency key")
-        existing = self.catalog.command_by_idempotency_key(idempotency_key)
-        if existing is not None:
-            if existing["operation"] != "cancel_job":
-                raise ValueError("idempotency key was used by another operation")
-            return existing["result"]
         job = self.catalog.get_job(job_id)
         if job is None:
             raise KeyError(job_id)
+        mutation_request = self._mutation_request(
+            "cancel_job",
+            {
+                "job_id": job_id,
+                "job_identity_sha256": job["identity_sha256"],
+                "desired_cancel_requested": True,
+            },
+        )
+        existing = self._mutation_replay(
+            operation="cancel_job",
+            idempotency_key=idempotency_key,
+            request=mutation_request,
+            dry_run=dry_run,
+        )
+        if existing is not None:
+            return existing
         to_status = (
             "canceled"
             if job["status"] in {"queued", "blocked"}
@@ -818,7 +952,7 @@ class SolverLabService:
             job_id=job_id,
             command_id=f"cmd-{uuid.uuid4()}",
             idempotency_key=idempotency_key,
-            operation_request={"job_id": job_id},
+            operation_request=mutation_request,
             operation_result=result,
         )
 
@@ -831,14 +965,25 @@ class SolverLabService:
     ) -> dict[str, Any]:
         if not idempotency_key:
             raise ValueError("retry_job requires an idempotency key")
-        existing = self.catalog.command_by_idempotency_key(idempotency_key)
-        if existing:
-            if existing["operation"] != "retry_job":
-                raise ValueError("idempotency key was used by another operation")
-            return existing["result"]
         job = self.catalog.get_job(job_id)
         if job is None:
             raise KeyError(job_id)
+        mutation_request = self._mutation_request(
+            "retry_job",
+            {
+                "job_id": job_id,
+                "job_identity_sha256": job["identity_sha256"],
+                "desired_status": "queued",
+            },
+        )
+        existing = self._mutation_replay(
+            operation="retry_job",
+            idempotency_key=idempotency_key,
+            request=mutation_request,
+            dry_run=dry_run,
+        )
+        if existing is not None:
+            return existing
         result = operation_result(
             "retry_job",
             {
@@ -857,6 +1002,7 @@ class SolverLabService:
             job_id=job_id,
             command_id=f"cmd-{uuid.uuid4()}",
             idempotency_key=idempotency_key,
+            operation_request=mutation_request,
             operation_result=result,
         )
 
@@ -870,20 +1016,33 @@ class SolverLabService:
     ) -> dict[str, Any]:
         if not idempotency_key:
             raise ValueError("clone_job requires an idempotency key")
-        existing = self.catalog.command_by_idempotency_key(idempotency_key)
-        if existing:
-            if existing["operation"] != "clone_job":
-                raise ValueError("idempotency key was used by another operation")
-            return existing["result"]
         source = self.catalog.get_job(job_id)
         if source is None:
             raise KeyError(job_id)
+        resolved_priority = source["priority"] if priority is None else int(priority)
+        mutation_request = self._mutation_request(
+            "clone_job",
+            {
+                "source_job_id": job_id,
+                "source_job_identity_sha256": source["identity_sha256"],
+                "priority": resolved_priority,
+                "desired_status": "queued",
+            },
+        )
+        existing = self._mutation_replay(
+            operation="clone_job",
+            idempotency_key=idempotency_key,
+            request=mutation_request,
+            dry_run=dry_run,
+        )
+        if existing is not None:
+            return existing
         clone_id = f"job-{uuid.uuid4()}"
         now = utc_now()
         clone = {
             **source,
             "job_id": clone_id,
-            "priority": source["priority"] if priority is None else int(priority),
+            "priority": resolved_priority,
             "status": "queued",
             "blocked_reason": None,
             "cancel_requested": False,
@@ -902,6 +1061,7 @@ class SolverLabService:
             job=clone,
             command_id=f"cmd-{uuid.uuid4()}",
             idempotency_key=idempotency_key,
+            operation_request=mutation_request,
             operation_result=result,
         )
 
@@ -915,14 +1075,25 @@ class SolverLabService:
     ) -> dict[str, Any]:
         if not idempotency_key:
             raise ValueError("change_priority requires an idempotency key")
-        existing = self.catalog.command_by_idempotency_key(idempotency_key)
-        if existing:
-            if existing["operation"] != "change_priority":
-                raise ValueError("idempotency key was used by another operation")
-            return existing["result"]
         job = self.catalog.get_job(job_id)
         if job is None:
             raise KeyError(job_id)
+        mutation_request = self._mutation_request(
+            "change_priority",
+            {
+                "job_id": job_id,
+                "job_identity_sha256": job["identity_sha256"],
+                "priority": int(priority),
+            },
+        )
+        existing = self._mutation_replay(
+            operation="change_priority",
+            idempotency_key=idempotency_key,
+            request=mutation_request,
+            dry_run=dry_run,
+        )
+        if existing is not None:
+            return existing
         result = operation_result(
             "change_priority",
             {"job_id": job_id, "from": job["priority"], "to": int(priority)},
@@ -935,6 +1106,7 @@ class SolverLabService:
             priority=int(priority),
             command_id=f"cmd-{uuid.uuid4()}",
             idempotency_key=idempotency_key,
+            operation_request=mutation_request,
             operation_result=result,
         )
 
@@ -954,11 +1126,17 @@ class SolverLabService:
         operation = "pause_queue" if paused else "resume_queue"
         if not idempotency_key:
             raise ValueError(f"{operation} requires an idempotency key")
-        existing = self.catalog.command_by_idempotency_key(idempotency_key)
-        if existing:
-            if existing["operation"] != operation:
-                raise ValueError("idempotency key was used by another operation")
-            return existing["result"]
+        mutation_request = self._mutation_request(
+            operation, {"queue_paused": paused}
+        )
+        existing = self._mutation_replay(
+            operation=operation,
+            idempotency_key=idempotency_key,
+            request=mutation_request,
+            dry_run=dry_run,
+        )
+        if existing is not None:
+            return existing
         result = operation_result(
             operation,
             {"queue_paused": paused, "running_attempts_affected": False},
@@ -970,6 +1148,7 @@ class SolverLabService:
             paused=paused,
             command_id=f"cmd-{uuid.uuid4()}",
             idempotency_key=idempotency_key,
+            operation_request=mutation_request,
             operation_result=result,
         )
 
@@ -1025,11 +1204,53 @@ class SolverLabService:
         resolved_case_ids = sorted(selected)
         if not resolved_case_ids or len(resolved_case_ids) > 100:
             raise ValueError("submit_matrix must resolve to 1..100 cases")
-        existing = self.catalog.command_by_idempotency_key(idempotency_key)
-        if existing:
-            if existing["operation"] != "submit_matrix":
-                raise ValueError("idempotency key was used by another operation")
-            return existing["result"]
+        expanded_requests = []
+        for expanded_case_id in resolved_case_ids:
+            resolved_case = self._resolve_case_reference(
+                case_id=expanded_case_id, revision_id=None
+            )
+            for replicate in range(replicates):
+                execution_request = self._resolved_job_request(
+                    case_id=expanded_case_id,
+                    case=resolved_case.document,
+                    case_path=resolved_case.case_path,
+                    corpus_path=resolved_case.corpus_path,
+                    source_kind=resolved_case.source_kind,
+                    revision_id=None,
+                    watchdog_seconds=resolved_case.task.watchdog_seconds,
+                    replicate=replicate,
+                )
+                expanded_requests.append(
+                    {
+                        "case_id": expanded_case_id,
+                        "replicate": replicate,
+                        "execution_identity_sha256": canonical_sha256(
+                            execution_request
+                        ),
+                    }
+                )
+        mutation_request = self._mutation_request(
+            "submit_matrix",
+            {
+                "selection": {
+                    "include_case_ids": requested_case_ids,
+                    "include_roles": requested_roles,
+                    "exclude_case_ids": excluded_case_ids,
+                    "resolved_case_ids": resolved_case_ids,
+                },
+                "expanded_requests": expanded_requests,
+                "replicates": replicates,
+                "priority": int(priority),
+            },
+        )
+        existing = self._mutation_replay(
+            operation="submit_matrix",
+            idempotency_key=idempotency_key,
+            request=mutation_request,
+            dry_run=dry_run,
+        )
+        if existing is not None:
+            return existing
         experiment_id = "exp-matrix-" + canonical_sha256(
             {"idempotency_key": idempotency_key}
         )[:24]
@@ -1081,12 +1302,7 @@ class SolverLabService:
             idempotency_key=idempotency_key,
             operation="submit_matrix",
             target_id=experiment_id,
-            request={
-                "case_ids": resolved_case_ids,
-                "selection_rules": preview["selection_rules"],
-                "replicates": replicates,
-                "priority": priority,
-            },
+            request=mutation_request,
             result=result,
         )
 
@@ -1131,8 +1347,12 @@ class SolverLabService:
         attempt_id: str | None = None,
     ) -> dict[str, Any]:
         attempt = self._resolve_attempt(job_id=job_id, attempt_id=attempt_id)
-        directory = Path(attempt["directory"])
-        strategy_paths = sorted((directory / "strategies").glob("*.json"))
+        strategy_paths = [
+            path
+            for _, path in self._verified_artifacts(attempt, kind="strategy")
+        ]
+        if not self._attempt_is_terminal(attempt):
+            strategy_paths = []
         if not strategy_paths:
             return operation_result(
                 "get_strategy_summary",
@@ -1142,7 +1362,7 @@ class SolverLabService:
                     "reason": "no_compiled_strategy_artifact",
                 },
             )
-        strategy_path = strategy_paths[0]
+        strategy_path = sorted(strategy_paths)[0]
         strategy = as_mapping(
             json.loads(strategy_path.read_text(encoding="utf-8"))
         )
@@ -1331,14 +1551,30 @@ class SolverLabService:
     ) -> dict[str, Any]:
         if not idempotency_key:
             raise ValueError("export_investigation_bundle requires an idempotency key")
-        existing = self.catalog.command_by_idempotency_key(idempotency_key)
-        if existing:
-            if existing["operation"] != "export_investigation_bundle":
-                raise ValueError("idempotency key was used by another operation")
-            return existing["result"]
         attempt = self._resolve_attempt(job_id=job_id, attempt_id=attempt_id)
         job = self.catalog.get_job(attempt["job_id"])
         assert job is not None
+        mutation_request = self._mutation_request(
+            "export_investigation_bundle",
+            {
+                "requested_job_id": job_id,
+                "requested_attempt_id": attempt_id,
+                "resolved_job_id": job["job_id"],
+                "resolved_attempt_id": attempt["attempt_id"],
+                "job_identity_sha256": job["identity_sha256"],
+                "attempt_command_identity_sha256": attempt.get(
+                    "command_identity_sha256"
+                ),
+            },
+        )
+        existing = self._mutation_replay(
+            operation="export_investigation_bundle",
+            idempotency_key=idempotency_key,
+            request=mutation_request,
+            dry_run=dry_run,
+        )
+        if existing is not None:
+            return existing
         bundle_id = "bundle-" + canonical_sha256(
             {"idempotency_key": idempotency_key}
         )[:24]
@@ -1363,9 +1599,11 @@ class SolverLabService:
         strategy_summary = self.get_strategy_summary(
             attempt_id=attempt["attempt_id"]
         )["result"]
-        log_path = Path(attempt["directory"]) / "worker.log"
+        verified_artifacts = self.verify_terminal_artifacts(attempt)
         log_tail = None
-        if log_path.is_file():
+        logs = self._verified_artifacts(attempt, kind="worker_log")
+        if logs:
+            log_path = logs[0][1]
             text = log_path.read_text(encoding="utf-8", errors="replace")
             log_tail = "\n".join(text.splitlines()[-200:])[-20_000:]
         bundle = {
@@ -1381,7 +1619,7 @@ class SolverLabService:
             "terminal_status_and_bounds": run_summary,
             "bound_milestones": bound_trace,
             "strategy_summary": strategy_summary,
-            "artifacts": self.catalog.list_artifacts(attempt["attempt_id"]),
+            "artifacts": verified_artifacts,
             "job_events": self.catalog.list_events(
                 entity_type="job", entity_id=job["job_id"], limit=200
             ),
@@ -1411,7 +1649,7 @@ class SolverLabService:
             idempotency_key=idempotency_key,
             operation="export_investigation_bundle",
             target_id=attempt["attempt_id"],
-            request={"job_id": job_id, "attempt_id": attempt_id},
+            request=mutation_request,
             result=result,
         )
 
@@ -1424,6 +1662,12 @@ class SolverLabService:
                 "queue_paused": self.catalog.queue_paused(),
                 "job_status_counts": dict(sorted(counts.items())),
                 "recent_sessions": self.catalog.list_supervisor_sessions(limit=10),
+                "host_resource_policy": {
+                    "policy_version": self.reservation_policy_version,
+                    "per_worker_headroom_bytes": self.worker_headroom_bytes,
+                    "global_safety_reserve_bytes": self.global_safety_reserve_bytes,
+                    "reservation_formula": "solver_owned_cap_plus_worker_headroom",
+                },
                 "running_pause_supported": False,
             },
         )
@@ -1445,20 +1689,94 @@ class SolverLabService:
             raise KeyError(job_id or attempt_id)
         return attempt
 
+    @staticmethod
+    def _attempt_is_terminal(attempt: Mapping[str, Any]) -> bool:
+        return str(attempt.get("status")) in {
+            "completed", "partial", "failed", "canceled", "watchdog",
+            "native_resource_stop", "os_oom", "crash", "orphaned",
+        }
+
+    def _verified_artifacts(
+        self,
+        attempt: Mapping[str, Any],
+        *,
+        kind: str | None = None,
+    ) -> list[tuple[dict[str, Any], Path]]:
+        directory = Path(str(attempt["directory"])).resolve()
+        rows = self.catalog.list_artifacts(str(attempt["attempt_id"]))
+        if kind is not None:
+            rows = [row for row in rows if row["kind"] == kind]
+        verified: list[tuple[dict[str, Any], Path]] = []
+        for row in rows:
+            path = Path(str(row["path"])).resolve()
+            try:
+                path.relative_to(directory)
+            except ValueError as exc:
+                raise ArtifactIntegrityError(
+                    f"artifact path escapes attempt directory: {row['artifact_id']}"
+                ) from exc
+            if not path.is_file():
+                raise ArtifactIntegrityError(
+                    f"artifact is missing: {row['artifact_id']}"
+                )
+            size = path.stat().st_size
+            if size != int(row["size_bytes"]):
+                raise ArtifactIntegrityError(
+                    f"artifact size changed: {row['artifact_id']}"
+                )
+            digest = sha256_file(path)
+            if digest != row["content_sha256"]:
+                raise ArtifactIntegrityError(
+                    f"artifact hash changed: {row['artifact_id']}"
+                )
+            verified.append((row, path))
+        return verified
+
+    def verify_terminal_artifacts(
+        self, attempt: Mapping[str, Any]
+    ) -> list[dict[str, Any]]:
+        if not self._attempt_is_terminal(attempt):
+            return []
+        rows = self._verified_artifacts(attempt)
+        if not rows:
+            return [
+                {
+                    "status": "legacy_unindexed_terminal",
+                    "attempt_id": attempt["attempt_id"],
+                }
+            ]
+        return [
+            {
+                **row,
+                "integrity_status": "verified",
+            }
+            for row, _ in rows
+        ]
+
     def _load_attempt_case(
         self, attempt: Mapping[str, Any]
     ) -> tuple[dict[str, Any], str, str | None, str | None]:
-        directory = Path(str(attempt["directory"]))
-        final_path = directory / "report.json"
-        partial_path = directory / "partial.json"
+        directory = Path(str(attempt["directory"])).resolve()
         source_path: Path | None = None
         source_kind = "none"
-        if final_path.is_file():
-            source_path = final_path
-            source_kind = "final"
-        elif partial_path.is_file():
-            source_path = partial_path
-            source_kind = "partial"
+        if self._attempt_is_terminal(attempt):
+            reports = self._verified_artifacts(attempt, kind="report")
+            partials = self._verified_artifacts(attempt, kind="partial_report")
+            if reports:
+                source_path = reports[0][1]
+                source_kind = "verified_final"
+            elif partials:
+                source_path = partials[0][1]
+                source_kind = "verified_partial"
+            elif not self.catalog.list_artifacts(str(attempt["attempt_id"])):
+                return {}, "legacy_unindexed_terminal", None, (
+                    "legacy terminal has no indexed hashes; content was not parsed"
+                )
+        elif str(attempt.get("status")) in {"running", "canceling"}:
+            partial_path = directory / "partial.json"
+            if partial_path.is_file():
+                source_path = partial_path
+                source_kind = "unindexed_live_observation"
         if source_path is None:
             return {}, source_kind, None, None
         try:
@@ -1486,13 +1804,45 @@ class SolverLabService:
     ) -> dict[str, Any]:
         if not self.paths.executable.is_file():
             raise FileNotFoundError(self.paths.executable)
+        case_path = case_path.resolve()
+        corpus_path = corpus_path.resolve()
+        disk_case = read_json(case_path)
+        if canonical_sha256(disk_case) != canonical_sha256(case):
+            raise ValueError("case catalog/document identity differs from disk")
+        corpus_document = read_json(corpus_path)
+        profile = LabProfile.load(self.paths.profile)
+        if source_kind == "frozen":
+            validate_profile_case_binding(profile, corpus_document, disk_case)
+        else:
+            validate_local_profile_binding(
+                profile, self.corpus_document, disk_case
+            )
         provenance = capture_execution_provenance(
             root=self.paths.root,
             executable=self.paths.executable,
             artifact=self.paths.artifact,
             corpus=corpus_path,
         )
+        economy = as_mapping(disk_case.get("economy"))
+        benchmark_identity = as_mapping(
+            corpus_document.get("benchmark_identity_contract")
+        )
+        solver_caps = as_mapping(disk_case.get("caps"))
+        scheduler = {
+            "policy_version": self.reservation_policy_version,
+            "solver_owned_cap_bytes": int(
+                solver_caps.get("max_solver_owned_bytes", 0)
+            ),
+            "worker_headroom_bytes": self.worker_headroom_bytes,
+            "reservation_bytes": int(
+                solver_caps.get("max_solver_owned_bytes", 0)
+            )
+            + self.worker_headroom_bytes,
+            "global_safety_reserve_bytes": self.global_safety_reserve_bytes,
+            "authority": "host_scheduler_only",
+        }
         return {
+            "schema_version": EXECUTION_REQUEST_SCHEMA_VERSION,
             "source": dict(provenance.source),
             "executable": dict(provenance.executable),
             "compiled_artifact": dict(provenance.artifact),
@@ -1501,26 +1851,128 @@ class SolverLabService:
                 "id": case_id,
                 "source_kind": source_kind,
                 "revision_id": revision_id,
-                "path": str(case_path),
-                "corpus_path": str(corpus_path),
+                "path": str(case_path.resolve()),
+                "corpus_path": str(corpus_path.resolve()),
                 "file_sha256": sha256_file(case_path),
-                "content_sha256": canonical_sha256(case),
+                "content_sha256": canonical_sha256(disk_case),
             },
-            "economy": case.get("economy"),
+            "economy": {
+                "identity": economy,
+                "canonical_payload_sha256": canonical_sha256(economy),
+            },
             "profile": {
-                **self.profile.identity(),
-                "native_bindings": self.profile.document["native_bindings"],
+                **profile.identity(),
+                "path": str(profile.source_path),
+                "canonical_document_sha256": canonical_sha256(profile.document),
+                "native_bindings": profile.document["native_bindings"],
             },
-            "action_scope": self.corpus_document[
-                "benchmark_identity_contract"
-            ]["general_product_scope"],
-            "solver_caps": case.get("caps"),
+            "action_scope": {
+                "general": as_mapping(
+                    benchmark_identity.get("general_product_scope")
+                ),
+                "explicit": as_mapping(
+                    benchmark_identity.get("explicit_imprint_scope")
+                ),
+            },
+            "solver_caps": solver_caps,
             "watchdog_seconds": watchdog_seconds,
             "measurement": {
-                "exact_strategy_evaluation": True,
-                "simulator_verification": False,
+                "exact_strategy_evaluation": bool(
+                    profile.document["native_bindings"][
+                        "exact_strategy_evaluation"
+                    ]
+                ),
+                "simulator_verification": (
+                    profile.document["native_bindings"][
+                        "simulator_verification"
+                    ]["default"]
+                    != "disabled"
+                ),
                 "replicate": int(replicate),
             },
+            "scheduler": scheduler,
+        }
+
+    def dispatch_preflight(self, job: Mapping[str, Any]) -> dict[str, Any]:
+        expected = as_mapping(job.get("request"))
+        if expected.get("schema_version") != EXECUTION_REQUEST_SCHEMA_VERSION:
+            return {
+                "ok": False,
+                "reason": "legacy_identity_incomplete",
+                "fresh_identity": None,
+                "fresh_identity_sha256": None,
+                "differences": [
+                    {
+                        "component": "schema_version",
+                        "expected_sha256": canonical_sha256(
+                            expected.get("schema_version")
+                        ),
+                        "actual_sha256": canonical_sha256(
+                            EXECUTION_REQUEST_SCHEMA_VERSION
+                        ),
+                    }
+                ],
+            }
+        request_case = as_mapping(expected.get("case"))
+        measurement = as_mapping(expected.get("measurement"))
+        try:
+            resolved = self._resolve_case_reference(
+                case_id=str(request_case.get("id") or job["case_id"]),
+                revision_id=(
+                    str(request_case["revision_id"])
+                    if request_case.get("revision_id")
+                    else None
+                ),
+            )
+            fresh = self._resolved_job_request(
+                case_id=resolved.task.case_id,
+                case=resolved.document,
+                case_path=resolved.case_path,
+                corpus_path=resolved.corpus_path,
+                source_kind=resolved.source_kind,
+                revision_id=resolved.revision_id,
+                watchdog_seconds=float(expected["watchdog_seconds"]),
+                replicate=int(measurement.get("replicate", 0)),
+            )
+        except Exception as exc:
+            detail = str(exc)
+            lowered = detail.lower()
+            component = "capture_error"
+            for marker, owner in (
+                ("compiled artifact", "compiled_artifact"),
+                ("executable", "executable"),
+                ("corpus", "corpus"),
+                ("profile", "profile"),
+                ("economy", "economy"),
+                ("action", "action_scope"),
+                ("product scope", "action_scope"),
+                ("imprint scope", "action_scope"),
+                ("revision", "case"),
+                ("case", "case"),
+            ):
+                if marker in lowered:
+                    component = owner
+                    break
+            return {
+                "ok": False,
+                "reason": "dispatch_identity_capture_failed",
+                "fresh_identity": None,
+                "fresh_identity_sha256": None,
+                "differences": [
+                    {
+                        "component": component,
+                        "error_type": type(exc).__name__,
+                        "detail": detail[:1000],
+                    }
+                ],
+            }
+        differences = identity_component_diff(expected, fresh)
+        return {
+            "ok": not differences,
+            "reason": None if not differences else "dispatch_identity_mismatch",
+            "fresh_identity": fresh,
+            "fresh_identity_sha256": canonical_sha256(fresh),
+            "differences": differences,
         }
 
     def _run_summary(self, attempt: Mapping[str, Any]) -> dict[str, Any]:
@@ -1533,13 +1985,7 @@ class SolverLabService:
         )
         attempt_id = str(normalized_attempt.get("attempt_id") or "")
         attempt_status = str(normalized_attempt.get("status") or "")
-        terminal = attempt_status in {
-            "completed",
-            "partial",
-            "failed",
-            "canceled",
-            "orphaned",
-        }
+        terminal = self._attempt_is_terminal(normalized_attempt)
         summary_cache = getattr(self, "_run_summary_cache", None)
         summary_cache_lock = getattr(self, "_run_summary_cache_lock", None)
         cache_available = bool(
@@ -1547,22 +1993,11 @@ class SolverLabService:
             and summary_cache is not None
             and summary_cache_lock is not None
         )
-        if cache_available:
-            with summary_cache_lock:
-                cached = summary_cache.get(attempt_id)
-                if cached is not None and cached.terminal:
-                    return dict(cached.summary)
-        directory = Path(str(normalized_attempt["directory"]))
-        final_path = directory / "report.json"
-        partial_path = directory / "partial.json"
-        source_path: Path | None = None
-        source_kind = "none"
-        if final_path.is_file():
-            source_path = final_path
-            source_kind = "final"
-        elif partial_path.is_file():
-            source_path = partial_path
-            source_kind = "partial"
+        directory = Path(str(normalized_attempt["directory"])).resolve()
+        case, source_kind, source_path_value, warning = self._load_attempt_case(
+            normalized_attempt
+        )
+        source_path = Path(source_path_value) if source_path_value else None
         signature = ("", 0, 0, attempt_status)
         if source_path is not None:
             stat = source_path.stat()
@@ -1575,23 +2010,8 @@ class SolverLabService:
         if cache_available:
             with summary_cache_lock:
                 cached = summary_cache.get(attempt_id)
-                if cached is not None and (
-                    cached.terminal or cached.signature == signature
-                ):
+                if cached is not None and not terminal and cached.signature == signature:
                     return dict(cached.summary)
-
-        case: dict[str, Any] = {}
-        warning: str | None = None
-        if source_path:
-            try:
-                report = as_mapping(
-                    json.loads(source_path.read_text(encoding="utf-8"))
-                )
-                case = first_mapping(report.get("cases"))
-                if not case:
-                    warning = "report has no case payload"
-            except (OSError, ValueError, json.JSONDecodeError) as exc:
-                warning = f"{type(exc).__name__}: {exc}"
         solve = as_mapping(case.get("solve_summary"))
         telemetry = as_mapping(case.get("solver_telemetry"))
         policy = as_mapping(telemetry.get("policy_result"))
@@ -1651,12 +2071,18 @@ class SolverLabService:
             ),
             "errors": as_list(case.get("errors")),
             "bound_sample_count": len(samples),
-            "artifacts": {
-                "report": str(final_path) if final_path.is_file() else None,
-                "partial": str(partial_path) if partial_path.is_file() else None,
-                "log": str(directory / "worker.log") if (directory / "worker.log").is_file() else None,
-                "strategy_directory": str(directory / "strategies") if (directory / "strategies").is_dir() else None,
-            },
+            "artifacts": (
+                self.verify_terminal_artifacts(normalized_attempt)
+                if terminal
+                else {
+                    "partial": (
+                        str(directory / "partial.json")
+                        if source_kind == "unindexed_live_observation"
+                        else None
+                    ),
+                    "integrity_status": "unindexed_live_observation",
+                }
+            ),
         }
         if cache_available:
             with summary_cache_lock:

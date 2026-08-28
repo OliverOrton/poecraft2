@@ -1,14 +1,17 @@
 # Handoff
 
-**Status: selected implementation boundary; no implementation begun.** Oliver
-selected
-[Native Solver Lab Unattended Execution and Identity Hardening](docs/active/2026-08-28-native-solver-lab-unattended-hardening/plan.md)
-on 2026-08-28. Begin only in a newly opened/restarted Codex task so the
-configured `poecraft2-native-solver-lab` MCP server is loaded.
+**Status: Gates 0–3 of the selected Native Solver Lab Unattended Execution and
+Identity Hardening boundary passed as one coherent checkpoint; Gate 4 is
+next.** The mandatory implementation-task startup gate was completed from clean
+`6400f045a97a0389ce2d48e430ae6e55c9465f01`, including the required MCP-only
+operator inventory.
 
 ## Checkpoint
 
 - Branch: `main`, local-only; nothing was pushed.
+- Gates 0–3 unattended-hardening checkpoint: local commit
+  `Harden solver lab unattended execution identity` (the commit containing
+  this handoff), with 72 focused tests passing.
 - Unattended-hardening stable source base:
   `978b200e8d7993a49ee7991f303cc0823f60914b`.
 - Unattended-hardening planning activation: the current HEAD is the single
@@ -42,11 +45,27 @@ configured `poecraft2-native-solver-lab` MCP server is loaded.
 
 ## Selected Native Solver Lab Unattended Hardening
 
-The fresh implementation task must first verify clean-tree/source ancestry,
-confirm the configured Solver Lab MCP tools, and use MCP to inventory profiles,
-cases, revisions, supervisor state, jobs, and attempts. MCP is the operator
-acceptance surface; normal repository tools remain the only source-editing and
-test surface.
+Gates 0–3 now add complete canonical mutation-request binding, full immutable
+dispatch identity revalidation, exact submitted-watchdog enforcement, separate
+solver cap/per-worker headroom/global reserve accounting, crash-atomic hashed
+terminal publication, integrity-checked terminal reads, valid-final recovery,
+and possible-live orphan quarantine. Catalog schema v4 is additive and does not
+rewrite legacy rows. The focused contract/service/supervisor/CLI/MCP/nonvisual
+GUI/runner/parity suite passed 72 tests; `git diff --check` passed. No native,
+mechanic, ABI, generated-data, strategy-vocabulary, WASM, browser, or rendered
+GUI change was made.
+
+The next exact action is Gate 4 only: add catalog-scoped singleton dispatcher
+ownership and one combined MCP/supervisor launch path, test dual-server and
+forced-restart behavior, update and verify the user-local MCP registration,
+then stop and open/restart a fresh Codex task for Gate 5. Do not run Gate 5 in
+the task that installs the combined launcher.
+
+The fresh implementation task verified clean-tree/source ancestry, confirmed
+the configured Solver Lab MCP tools, and used MCP to inventory profiles, cases,
+revisions, supervisor state, jobs, and attempts before editing. MCP remains the
+operator acceptance surface; normal repository tools remain the only
+source-editing and test surface.
 
 The selected scope is limited to complete dispatch-time identity revalidation,
 actual immutable-watchdog enforcement, canonical-payload idempotency, explicit
@@ -57,11 +76,11 @@ overnight recovery qualification. Solver mechanics, search order, proof
 bounds, verified options, RCASSP, learned guidance, Imprint, native caps, and
 WASM behavior remain out of scope.
 
-Gates 0–3 form the first coherent retained checkpoint. Do not leave only part
-of canonical idempotency, dispatch/watchdog/headroom, atomic publication,
-integrity, recovery, and quarantine active. The exact startup, tests, hard
-stops, and retained-state rules are in the [plan](docs/active/2026-08-28-native-solver-lab-unattended-hardening/plan.md),
-and all evidence belongs in its [execution log](docs/active/2026-08-28-native-solver-lab-unattended-hardening/execution-log.md).
+Gates 0–3 are retained together as the first coherent checkpoint. The exact
+startup, tests, state decisions, and continuation are in the
+[execution log](docs/active/2026-08-28-native-solver-lab-unattended-hardening/execution-log.md);
+the remaining hard stops and retained-state rules remain authoritative in the
+[plan](docs/active/2026-08-28-native-solver-lab-unattended-hardening/plan.md).
 
 ## Completed Native Solver Lab GUI Stabilization
 

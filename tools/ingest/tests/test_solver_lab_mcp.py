@@ -353,3 +353,70 @@ def test_mcp_stdio_server_initializes_and_serves_bounded_cases(tmp_path: Path) -
         assert len(result.structured_content["result"]) == 5
 
     asyncio.run(exercise())
+
+
+def test_mcp_stdio_binds_idempotency_to_complete_payload(tmp_path: Path) -> None:
+    pytest.importorskip("mcp")
+    from mcp import ClientSession
+    from mcp.client.stdio import StdioServerParameters, stdio_client
+
+    async def exercise() -> None:
+        environment = dict(os.environ)
+        environment["PYTHONPATH"] = os.pathsep.join(
+            [
+                str(REPO_ROOT / "tools" / "ingest"),
+                str(REPO_ROOT / "bindings" / "python"),
+            ]
+        )
+        parameters = StdioServerParameters(
+            command=sys.executable,
+            args=[
+                "-m",
+                "poecraft_ingest.solver_lab_mcp",
+                "--root",
+                str(REPO_ROOT),
+                "--catalog",
+                str(tmp_path / "catalog.sqlite3"),
+                "--attempts",
+                str(tmp_path / "attempts"),
+            ],
+            env=environment,
+        )
+        async with stdio_client(parameters) as (read_stream, write_stream):
+            async with ClientSession(read_stream, write_stream) as session:
+                await session.initialize()
+                cases = await session.call_tool("list_cases", {})
+                case_id = cases.structured_content["result"][0]["case_id"]
+                first = await session.call_tool(
+                    "submit_job",
+                    {
+                        "case_id": case_id,
+                        "idempotency_key": "mcp-complete-request",
+                        "priority": 1,
+                    },
+                )
+                equal = await session.call_tool(
+                    "submit_job",
+                    {
+                        "case_id": case_id,
+                        "idempotency_key": "mcp-complete-request",
+                        "priority": 1,
+                    },
+                )
+                changed = await session.call_tool(
+                    "submit_job",
+                    {
+                        "case_id": case_id,
+                        "idempotency_key": "mcp-complete-request",
+                        "priority": 2,
+                    },
+                )
+        assert first.is_error is False
+        assert equal.is_error is False
+        assert first.structured_content == equal.structured_content
+        assert changed.is_error is True
+        assert "request_sha256_mismatch" in " ".join(
+            getattr(item, "text", "") for item in changed.content
+        )
+
+    asyncio.run(exercise())

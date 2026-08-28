@@ -18,11 +18,12 @@ from poecraft_ingest.solver_lab_contracts import (
     EVENT_SCHEMA_VERSION,
     EXPERIMENT_SCHEMA_VERSION,
     JOB_SCHEMA_VERSION,
+    canonical_sha256,
 )
 from poecraft_ingest.solver_lab_normalize import as_mapping
 
 
-CATALOG_SCHEMA_VERSION = 3
+CATALOG_SCHEMA_VERSION = 4
 
 
 def utc_now() -> str:
@@ -114,6 +115,12 @@ class SolverLabCatalog:
                     reserved_memory_bytes INTEGER NOT NULL,
                     identity_sha256 TEXT NOT NULL,
                     request_json TEXT NOT NULL,
+                    dispatch_identity_json TEXT,
+                    dispatch_identity_sha256 TEXT,
+                    dispatch_diff_json TEXT,
+                    solver_owned_cap_bytes INTEGER,
+                    worker_headroom_bytes INTEGER,
+                    reservation_policy_version TEXT,
                     created_at TEXT NOT NULL,
                     updated_at TEXT NOT NULL
                 );
@@ -133,6 +140,8 @@ class SolverLabCatalog:
                     process_identity_token TEXT,
                     command_json TEXT,
                     command_identity_sha256 TEXT,
+                    validated_request_sha256 TEXT,
+                    host_watchdog_seconds REAL,
                     result_json TEXT,
                     started_at TEXT,
                     finished_at TEXT,
@@ -150,6 +159,7 @@ class SolverLabCatalog:
                     target_id TEXT,
                     dry_run INTEGER NOT NULL,
                     request_json TEXT NOT NULL,
+                    request_sha256 TEXT,
                     result_json TEXT NOT NULL,
                     created_at TEXT NOT NULL
                 );
@@ -203,6 +213,7 @@ class SolverLabCatalog:
                     status TEXT NOT NULL,
                     acquired_at TEXT NOT NULL,
                     heartbeat_at TEXT NOT NULL,
+                    reserved_memory_bytes INTEGER,
                     released_at TEXT
                 );
                 CREATE INDEX IF NOT EXISTS leases_status
@@ -255,6 +266,32 @@ class SolverLabCatalog:
             self._ensure_column(connection, "attempts", "process_id", "INTEGER")
             self._ensure_column(
                 connection, "attempts", "process_identity_token", "TEXT"
+            )
+            self._ensure_column(connection, "commands", "request_sha256", "TEXT")
+            self._ensure_column(
+                connection, "jobs", "dispatch_identity_json", "TEXT"
+            )
+            self._ensure_column(
+                connection, "jobs", "dispatch_identity_sha256", "TEXT"
+            )
+            self._ensure_column(connection, "jobs", "dispatch_diff_json", "TEXT")
+            self._ensure_column(
+                connection, "jobs", "solver_owned_cap_bytes", "INTEGER"
+            )
+            self._ensure_column(
+                connection, "jobs", "worker_headroom_bytes", "INTEGER"
+            )
+            self._ensure_column(
+                connection, "jobs", "reservation_policy_version", "TEXT"
+            )
+            self._ensure_column(
+                connection, "attempts", "validated_request_sha256", "TEXT"
+            )
+            self._ensure_column(
+                connection, "attempts", "host_watchdog_seconds", "REAL"
+            )
+            self._ensure_column(
+                connection, "leases", "reserved_memory_bytes", "INTEGER"
             )
             connection.execute(
                 "INSERT INTO catalog_metadata(key, value) VALUES('schema_version', ?) "
@@ -329,12 +366,14 @@ class SolverLabCatalog:
         operation_result: Mapping[str, Any],
     ) -> dict[str, Any]:
         with self.transaction(immediate=True) as connection:
-            existing = connection.execute(
-                "SELECT * FROM commands WHERE idempotency_key=?",
-                (idempotency_key,),
-            ).fetchone()
-            if existing:
-                return _decode(existing["result_json"], {})
+            existing = self._replay_command(
+                connection,
+                idempotency_key=idempotency_key,
+                operation="create_case_draft",
+                request_sha256=canonical_sha256(operation_request),
+            )
+            if existing is not None:
+                return existing
             connection.execute(
                 """
                 INSERT INTO case_drafts(
@@ -388,12 +427,14 @@ class SolverLabCatalog:
         operation_result: Mapping[str, Any],
     ) -> dict[str, Any]:
         with self.transaction(immediate=True) as connection:
-            existing = connection.execute(
-                "SELECT * FROM commands WHERE idempotency_key=?",
-                (idempotency_key,),
-            ).fetchone()
-            if existing:
-                return _decode(existing["result_json"], {})
+            existing = self._replay_command(
+                connection,
+                idempotency_key=idempotency_key,
+                operation="update_case_draft",
+                request_sha256=canonical_sha256(operation_request),
+            )
+            if existing is not None:
+                return existing
             cursor = connection.execute(
                 """
                 UPDATE case_drafts
@@ -438,15 +479,18 @@ class SolverLabCatalog:
         draft_id: str,
         command_id: str,
         idempotency_key: str,
+        operation_request: Mapping[str, Any],
         operation_result: Mapping[str, Any],
     ) -> dict[str, Any]:
         with self.transaction(immediate=True) as connection:
-            existing = connection.execute(
-                "SELECT * FROM commands WHERE idempotency_key=?",
-                (idempotency_key,),
-            ).fetchone()
-            if existing:
-                return _decode(existing["result_json"], {})
+            existing = self._replay_command(
+                connection,
+                idempotency_key=idempotency_key,
+                operation="discard_case_draft",
+                request_sha256=canonical_sha256(operation_request),
+            )
+            if existing is not None:
+                return existing
             row = connection.execute(
                 "SELECT case_id FROM case_drafts WHERE draft_id=?",
                 (draft_id,),
@@ -463,7 +507,7 @@ class SolverLabCatalog:
                 operation="discard_case_draft",
                 target_id=draft_id,
                 dry_run=False,
-                request={"draft_id": draft_id},
+                request=operation_request,
                 result=operation_result,
             )
             self._insert_event(
@@ -529,12 +573,14 @@ class SolverLabCatalog:
         operation_result: Mapping[str, Any],
     ) -> dict[str, Any]:
         with self.transaction(immediate=True) as connection:
-            existing = connection.execute(
-                "SELECT * FROM commands WHERE idempotency_key=?",
-                (idempotency_key,),
-            ).fetchone()
-            if existing:
-                return _decode(existing["result_json"], {})
+            existing = self._replay_command(
+                connection,
+                idempotency_key=idempotency_key,
+                operation="save_case_revision",
+                request_sha256=canonical_sha256(operation_request),
+            )
+            if existing is not None:
+                return existing
             draft = connection.execute(
                 "SELECT * FROM case_drafts WHERE draft_id=?", (draft_id,)
             ).fetchone()
@@ -643,6 +689,45 @@ class SolverLabCatalog:
             ).fetchone()
         return self._command_row(row) if row else None
 
+    def replay_operation(
+        self,
+        *,
+        idempotency_key: str,
+        operation: str,
+        operation_request: Mapping[str, Any],
+    ) -> dict[str, Any] | None:
+        """Return only an exactly bound replay; reject legacy/changed payloads."""
+
+        with self._connect() as connection:
+            return self._replay_command(
+                connection,
+                idempotency_key=idempotency_key,
+                operation=operation,
+                request_sha256=canonical_sha256(operation_request),
+            )
+
+    @staticmethod
+    def _replay_command(
+        connection: sqlite3.Connection,
+        *,
+        idempotency_key: str,
+        operation: str,
+        request_sha256: str,
+    ) -> dict[str, Any] | None:
+        row = connection.execute(
+            "SELECT * FROM commands WHERE idempotency_key=?",
+            (idempotency_key,),
+        ).fetchone()
+        if row is None:
+            return None
+        if row["operation"] != operation:
+            raise ValueError("idempotency_conflict: operation_mismatch")
+        if row["request_sha256"] is None:
+            raise ValueError("legacy_unbound_idempotency_key")
+        if row["request_sha256"] != request_sha256:
+            raise ValueError("idempotency_conflict: request_sha256_mismatch")
+        return as_mapping(_decode(row["result_json"], {}))
+
     def record_operation(
         self,
         *,
@@ -654,12 +739,14 @@ class SolverLabCatalog:
         result: Mapping[str, Any],
     ) -> dict[str, Any]:
         with self.transaction(immediate=True) as connection:
-            existing = connection.execute(
-                "SELECT * FROM commands WHERE idempotency_key=?",
-                (idempotency_key,),
-            ).fetchone()
-            if existing:
-                return _decode(existing["result_json"], {})
+            existing = self._replay_command(
+                connection,
+                idempotency_key=idempotency_key,
+                operation=operation,
+                request_sha256=canonical_sha256(request),
+            )
+            if existing is not None:
+                return existing
             self._insert_command(
                 connection,
                 command_id=command_id,
@@ -683,20 +770,24 @@ class SolverLabCatalog:
     ) -> dict[str, Any]:
         now = str(job["created_at"])
         with self.transaction(immediate=True) as connection:
-            existing = connection.execute(
-                "SELECT * FROM commands WHERE idempotency_key=?",
-                (idempotency_key,),
-            ).fetchone()
-            if existing:
-                return _decode(existing["result_json"], {})
+            existing = self._replay_command(
+                connection,
+                idempotency_key=idempotency_key,
+                operation="submit_job",
+                request_sha256=canonical_sha256(operation_request),
+            )
+            if existing is not None:
+                return existing
             connection.execute(
                 """
                 INSERT INTO jobs(
                     job_id, schema_version, experiment_id, case_id, case_path,
                     profile_id, priority, status, watchdog_seconds,
                     reserved_memory_bytes, identity_sha256, request_json,
+                    solver_owned_cap_bytes, worker_headroom_bytes,
+                    reservation_policy_version,
                     created_at, updated_at
-                ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     job["job_id"],
@@ -711,6 +802,9 @@ class SolverLabCatalog:
                     job["reserved_memory_bytes"],
                     job["identity_sha256"],
                     _json(job["request"]),
+                    job.get("solver_owned_cap_bytes"),
+                    job.get("worker_headroom_bytes"),
+                    job.get("reservation_policy_version"),
                     now,
                     now,
                 ),
@@ -801,6 +895,69 @@ class SolverLabCatalog:
             ).fetchall()
         return [self._job_row(row) for row in rows]
 
+    def record_dispatch_validation(
+        self,
+        *,
+        job_id: str,
+        identity: Mapping[str, Any],
+        identity_sha256: str,
+    ) -> None:
+        now = utc_now()
+        with self.transaction(immediate=True) as connection:
+            updated = connection.execute(
+                "UPDATE jobs SET dispatch_identity_json=?, "
+                "dispatch_identity_sha256=?, dispatch_diff_json='[]', updated_at=? "
+                "WHERE job_id=? AND status IN ('queued', 'blocked')",
+                (_json(identity), identity_sha256, now, job_id),
+            )
+            if updated.rowcount != 1:
+                raise ValueError("dispatch validation precondition changed")
+            self._insert_event(
+                connection,
+                "dispatch_identity_validated",
+                "job",
+                job_id,
+                {"identity_sha256": identity_sha256},
+            )
+
+    def refuse_dispatch(
+        self,
+        *,
+        job_id: str,
+        reason: str,
+        fresh_identity: Mapping[str, Any] | None,
+        differences: list[Mapping[str, Any]],
+    ) -> None:
+        now = utc_now()
+        with self.transaction(immediate=True) as connection:
+            updated = connection.execute(
+                "UPDATE jobs SET status='dispatch_refused', blocked_reason=?, "
+                "dispatch_identity_json=?, dispatch_identity_sha256=?, "
+                "dispatch_diff_json=?, updated_at=? "
+                "WHERE job_id=? AND status IN ('queued', 'blocked')",
+                (
+                    reason,
+                    _json(fresh_identity) if fresh_identity is not None else None,
+                    (
+                        canonical_sha256(fresh_identity)
+                        if fresh_identity is not None
+                        else None
+                    ),
+                    _json(differences),
+                    now,
+                    job_id,
+                ),
+            )
+            if updated.rowcount != 1:
+                return
+            self._insert_event(
+                connection,
+                "dispatch_refused",
+                "job",
+                job_id,
+                {"reason": reason, "differences": differences[:32]},
+            )
+
     def claim_job(
         self,
         *,
@@ -809,6 +966,7 @@ class SolverLabCatalog:
         attempt_id: str,
         attempt_directory: Path,
         lease_id: str | None = None,
+        validated_request_sha256: str | None = None,
     ) -> tuple[dict[str, Any], dict[str, Any]] | None:
         now = utc_now()
         with self.transaction(immediate=True) as connection:
@@ -837,8 +995,10 @@ class SolverLabCatalog:
                 """
                 INSERT INTO attempts(
                     attempt_id, schema_version, job_id, ordinal, status,
-                    directory, supervisor_id, lease_id, created_at, started_at
-                ) VALUES(?, ?, ?, ?, 'running', ?, ?, ?, ?, ?)
+                    directory, supervisor_id, lease_id,
+                    validated_request_sha256, host_watchdog_seconds,
+                    created_at, started_at
+                ) VALUES(?, ?, ?, ?, 'running', ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     attempt_id,
@@ -848,6 +1008,8 @@ class SolverLabCatalog:
                     str(attempt_directory.resolve()),
                     supervisor_id,
                     lease_id,
+                    validated_request_sha256,
+                    job["watchdog_seconds"],
                     now,
                     now,
                 ),
@@ -858,10 +1020,13 @@ class SolverLabCatalog:
                     INSERT INTO leases(
                         lease_id, attempt_id, job_id, supervisor_id,
                         process_identity_token, status, acquired_at,
-                        heartbeat_at, released_at
-                    ) VALUES(?, ?, ?, ?, NULL, 'active', ?, ?, NULL)
+                        heartbeat_at, reserved_memory_bytes, released_at
+                    ) VALUES(?, ?, ?, ?, NULL, 'active', ?, ?, ?, NULL)
                     """,
-                    (lease_id, attempt_id, job_id, supervisor_id, now, now),
+                    (
+                        lease_id, attempt_id, job_id, supervisor_id, now, now,
+                        job["reserved_memory_bytes"],
+                    ),
                 )
             self._insert_event(
                 connection,
@@ -893,6 +1058,7 @@ class SolverLabCatalog:
             attempt_id=attempt_id,
             attempt_directory=attempt_directory,
             lease_id=lease_id,
+            validated_request_sha256=validated_request_sha256,
         )
 
     def set_attempt_command(
@@ -1030,12 +1196,15 @@ class SolverLabCatalog:
                 SELECT a.* FROM attempts a
                 LEFT JOIN leases l ON l.lease_id = a.lease_id
                 LEFT JOIN supervisor_sessions s ON s.supervisor_id = a.supervisor_id
-                WHERE a.status IN ('running', 'canceling')
-                  AND (
-                    a.lease_id IS NULL OR l.status != 'active'
-                    OR l.heartbeat_at < ? OR s.status != 'active'
-                    OR s.heartbeat_at < ?
-                  )
+                WHERE a.status = 'orphan_quarantined'
+                   OR (
+                    a.status IN ('running', 'canceling', 'finalizing')
+                    AND (
+                      a.lease_id IS NULL OR l.status NOT IN ('active', 'quarantined')
+                      OR l.heartbeat_at < ? OR s.status != 'active'
+                      OR s.heartbeat_at < ?
+                    )
+                   )
                 ORDER BY a.created_at, a.attempt_id
                 """,
                 (heartbeat_before, heartbeat_before),
@@ -1049,36 +1218,93 @@ class SolverLabCatalog:
         job_status: str,
         recovery: Mapping[str, Any],
     ) -> None:
+        raise ValueError(
+            "unsafe legacy orphan publication is disabled; quarantine or publish hashed evidence"
+        )
+
+    def quarantine_attempt(
+        self,
+        *,
+        attempt_id: str,
+        recovery: Mapping[str, Any],
+    ) -> None:
         now = utc_now()
         with self.transaction(immediate=True) as connection:
             row = connection.execute(
-                "SELECT job_id, lease_id FROM attempts WHERE attempt_id=?",
+                "SELECT job_id, lease_id, status FROM attempts WHERE attempt_id=?",
                 (attempt_id,),
             ).fetchone()
             if row is None:
                 raise KeyError(attempt_id)
+            if row["status"] not in {
+                "running", "canceling", "finalizing", "orphan_quarantined"
+            }:
+                return
+            if row["status"] == "orphan_quarantined":
+                connection.execute(
+                    "UPDATE attempts SET result_json=? WHERE attempt_id=?",
+                    (_json(recovery), attempt_id),
+                )
+                return
             connection.execute(
-                "UPDATE attempts SET status='orphaned', result_json=?, finished_at=? "
+                "UPDATE attempts SET status='orphan_quarantined', result_json=? "
                 "WHERE attempt_id=?",
-                (_json(recovery), now, attempt_id),
+                (_json(recovery), attempt_id),
             )
             connection.execute(
-                "UPDATE jobs SET status=?, cancel_requested=0, updated_at=? "
-                "WHERE job_id=?",
-                (job_status, now, row["job_id"]),
+                "UPDATE jobs SET status='orphan_quarantined', blocked_reason=?, "
+                "updated_at=? WHERE job_id=?",
+                (str(recovery.get("reason", "possible_live_orphan")), now, row["job_id"]),
             )
             if row["lease_id"]:
                 connection.execute(
-                    "UPDATE leases SET status='recovered_orphan', released_at=? "
-                    "WHERE lease_id=?",
+                    "UPDATE leases SET status='quarantined', heartbeat_at=?, "
+                    "released_at=NULL WHERE lease_id=? AND status IN ('active', 'quarantined')",
                     (now, row["lease_id"]),
                 )
             self._insert_event(
                 connection,
-                "attempt_recovered_orphan",
+                "attempt_orphan_quarantined",
                 "attempt",
                 attempt_id,
                 dict(recovery),
+            )
+
+    def begin_finalizing(
+        self,
+        *,
+        attempt_id: str,
+        result: Mapping[str, Any],
+    ) -> None:
+        with self.transaction(immediate=True) as connection:
+            row = connection.execute(
+                "SELECT status FROM attempts WHERE attempt_id=?", (attempt_id,)
+            ).fetchone()
+            if row is None:
+                raise KeyError(attempt_id)
+            if row["status"] == "finalizing":
+                connection.execute(
+                    "UPDATE attempts SET result_json=? WHERE attempt_id=?",
+                    (_json(result), attempt_id),
+                )
+                return
+            if row["status"] not in {
+                "running", "canceling", "orphan_quarantined"
+            }:
+                raise ValueError(
+                    f"cannot begin finalizing from attempt status={row['status']}"
+                )
+            connection.execute(
+                "UPDATE attempts SET status='finalizing', result_json=? "
+                "WHERE attempt_id=?",
+                (_json(result), attempt_id),
+            )
+            self._insert_event(
+                connection,
+                "attempt_finalizing",
+                "attempt",
+                attempt_id,
+                {"worker_status": result.get("status")},
             )
 
     def mark_job_blocked(self, job_id: str, reason: str) -> None:
@@ -1132,6 +1358,7 @@ class SolverLabCatalog:
             "process_identity_token": row["process_identity_token"],
             "acquired_at": row["acquired_at"],
             "heartbeat_at": row["heartbeat_at"],
+            "reserved_memory_bytes": row["reserved_memory_bytes"],
             "released_at": row["released_at"],
         }
 
@@ -1143,17 +1370,82 @@ class SolverLabCatalog:
         job_status: str,
         result: Mapping[str, Any],
     ) -> None:
+        raise ValueError(
+            "terminal publication requires a prepared hashed artifact set"
+        )
+
+    def publish_attempt_terminal(
+        self,
+        *,
+        attempt_id: str,
+        attempt_status: str,
+        job_status: str,
+        result: Mapping[str, Any],
+        artifacts: list[Mapping[str, Any]],
+    ) -> None:
+        kinds = {str(artifact["kind"]) for artifact in artifacts}
+        if attempt_status == "completed":
+            if "report" not in kinds or not (
+                {"worker_log", "supervisor_error"} & kinds
+            ):
+                raise ValueError(
+                    "completed terminal publication requires report and log/recovery hashes"
+                )
+        elif not ({"partial_report", "worker_log", "supervisor_error"} & kinds):
+            raise ValueError(
+                "terminal publication requires truthful hashed evidence"
+            )
         now = utc_now()
         with self.transaction(immediate=True) as connection:
             row = connection.execute(
-                "SELECT job_id, lease_id FROM attempts WHERE attempt_id=?", (attempt_id,)
+                "SELECT job_id, lease_id, status FROM attempts WHERE attempt_id=?",
+                (attempt_id,),
             ).fetchone()
             if row is None:
                 raise KeyError(attempt_id)
+            if row["status"] == attempt_status:
+                existing = connection.execute(
+                    "SELECT kind, path, content_sha256, size_bytes FROM artifacts "
+                    "WHERE attempt_id=? ORDER BY kind, path",
+                    (attempt_id,),
+                ).fetchall()
+                expected = sorted(
+                    (
+                        str(item["kind"]), str(item["path"]),
+                        str(item["content_sha256"]), int(item["size_bytes"]),
+                    )
+                    for item in artifacts
+                )
+                actual = [
+                    (item["kind"], item["path"], item["content_sha256"], item["size_bytes"])
+                    for item in existing
+                ]
+                if actual != expected:
+                    raise ValueError("terminal publication replay artifact mismatch")
+                return
+            if row["status"] != "finalizing":
+                raise ValueError(
+                    f"terminal publication requires finalizing; status={row['status']}"
+                )
             job_id = str(row["job_id"])
+            for artifact in artifacts:
+                connection.execute(
+                    """
+                    INSERT INTO artifacts(
+                        artifact_id, schema_version, attempt_id, kind, path,
+                        content_sha256, size_bytes, created_at
+                    ) VALUES(?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        artifact["artifact_id"], ARTIFACT_SCHEMA_VERSION,
+                        attempt_id, artifact["kind"], artifact["path"],
+                        artifact["content_sha256"], artifact["size_bytes"],
+                        artifact.get("created_at", now),
+                    ),
+                )
             connection.execute(
                 "UPDATE attempts SET status=?, result_json=?, finished_at=? "
-                "WHERE attempt_id=?",
+                "WHERE attempt_id=? AND status='finalizing'",
                 (attempt_status, _json(result), now, attempt_id),
             )
             connection.execute(
@@ -1164,15 +1456,19 @@ class SolverLabCatalog:
             if row["lease_id"]:
                 connection.execute(
                     "UPDATE leases SET status='released', heartbeat_at=?, released_at=? "
-                    "WHERE lease_id=?",
+                    "WHERE lease_id=? AND status IN ('active', 'quarantined')",
                     (now, now, row["lease_id"]),
                 )
             self._insert_event(
                 connection,
-                "attempt_finished",
+                "attempt_terminal_published",
                 "attempt",
                 attempt_id,
-                {"job_id": job_id, "status": attempt_status},
+                {
+                    "job_id": job_id,
+                    "status": attempt_status,
+                    "artifact_count": len(artifacts),
+                },
             )
             self._insert_event(
                 connection,
@@ -1193,12 +1489,14 @@ class SolverLabCatalog:
     ) -> dict[str, Any]:
         now = utc_now()
         with self.transaction(immediate=True) as connection:
-            existing = connection.execute(
-                "SELECT * FROM commands WHERE idempotency_key=?",
-                (idempotency_key,),
-            ).fetchone()
-            if existing:
-                return _decode(existing["result_json"], {})
+            existing = self._replay_command(
+                connection,
+                idempotency_key=idempotency_key,
+                operation="cancel_job",
+                request_sha256=canonical_sha256(operation_request),
+            )
+            if existing is not None:
+                return existing
             row = connection.execute(
                 "SELECT status FROM jobs WHERE job_id=?", (job_id,)
             ).fetchone()
@@ -1238,12 +1536,14 @@ class SolverLabCatalog:
     ) -> dict[str, Any]:
         now = utc_now()
         with self.transaction(immediate=True) as connection:
-            existing = connection.execute(
-                "SELECT * FROM commands WHERE idempotency_key=?",
-                (idempotency_key,),
-            ).fetchone()
-            if existing:
-                return _decode(existing["result_json"], {})
+            existing = self._replay_command(
+                connection,
+                idempotency_key=idempotency_key,
+                operation="cancel_job",
+                request_sha256=canonical_sha256(operation_request),
+            )
+            if existing is not None:
+                return existing
             row = connection.execute(
                 "SELECT status FROM jobs WHERE job_id=?", (job_id,)
             ).fetchone()
@@ -1293,22 +1593,28 @@ class SolverLabCatalog:
         job_id: str,
         command_id: str,
         idempotency_key: str,
+        operation_request: Mapping[str, Any],
         operation_result: Mapping[str, Any],
     ) -> dict[str, Any]:
         now = utc_now()
         with self.transaction(immediate=True) as connection:
-            existing = connection.execute(
-                "SELECT * FROM commands WHERE idempotency_key=?",
-                (idempotency_key,),
-            ).fetchone()
-            if existing:
-                return _decode(existing["result_json"], {})
+            existing = self._replay_command(
+                connection,
+                idempotency_key=idempotency_key,
+                operation="retry_job",
+                request_sha256=canonical_sha256(operation_request),
+            )
+            if existing is not None:
+                return existing
             row = connection.execute(
                 "SELECT status FROM jobs WHERE job_id=?", (job_id,)
             ).fetchone()
             if row is None:
                 raise KeyError(job_id)
-            if row["status"] in {"queued", "blocked", "running", "canceling"}:
+            if row["status"] in {
+                "queued", "blocked", "running", "canceling", "finalizing",
+                "orphan_quarantined",
+            }:
                 raise ValueError(f"cannot retry active job in status={row['status']}")
             connection.execute(
                 "UPDATE jobs SET status='queued', blocked_reason=NULL, "
@@ -1322,7 +1628,7 @@ class SolverLabCatalog:
                 operation="retry_job",
                 target_id=job_id,
                 dry_run=False,
-                request={"job_id": job_id},
+                request=operation_request,
                 result=operation_result,
             )
             self._insert_event(
@@ -1341,28 +1647,36 @@ class SolverLabCatalog:
         job: Mapping[str, Any],
         command_id: str,
         idempotency_key: str,
+        operation_request: Mapping[str, Any],
         operation_result: Mapping[str, Any],
     ) -> dict[str, Any]:
         now = str(job["created_at"])
         with self.transaction(immediate=True) as connection:
-            existing = connection.execute(
-                "SELECT * FROM commands WHERE idempotency_key=?",
-                (idempotency_key,),
+            existing = self._replay_command(
+                connection,
+                idempotency_key=idempotency_key,
+                operation="clone_job",
+                request_sha256=canonical_sha256(operation_request),
+            )
+            if existing is not None:
+                return existing
+            source = connection.execute(
+                "SELECT status FROM jobs WHERE job_id=?", (source_job_id,)
             ).fetchone()
-            if existing:
-                return _decode(existing["result_json"], {})
-            if connection.execute(
-                "SELECT 1 FROM jobs WHERE job_id=?", (source_job_id,)
-            ).fetchone() is None:
+            if source is None:
                 raise KeyError(source_job_id)
+            if source["status"] == "orphan_quarantined":
+                raise ValueError("cannot clone an orphan-quarantined job")
             connection.execute(
                 """
                 INSERT INTO jobs(
                     job_id, schema_version, experiment_id, case_id, case_path,
                     profile_id, priority, status, watchdog_seconds,
                     reserved_memory_bytes, identity_sha256, request_json,
+                    solver_owned_cap_bytes, worker_headroom_bytes,
+                    reservation_policy_version,
                     created_at, updated_at
-                ) VALUES(?, ?, ?, ?, ?, ?, ?, 'queued', ?, ?, ?, ?, ?, ?)
+                ) VALUES(?, ?, ?, ?, ?, ?, ?, 'queued', ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     job["job_id"],
@@ -1376,6 +1690,9 @@ class SolverLabCatalog:
                     job["reserved_memory_bytes"],
                     job["identity_sha256"],
                     _json(job["request"]),
+                    job.get("solver_owned_cap_bytes"),
+                    job.get("worker_headroom_bytes"),
+                    job.get("reservation_policy_version"),
                     now,
                     now,
                 ),
@@ -1387,7 +1704,7 @@ class SolverLabCatalog:
                 operation="clone_job",
                 target_id=str(job["job_id"]),
                 dry_run=False,
-                request={"source_job_id": source_job_id},
+                request=operation_request,
                 result=operation_result,
             )
             self._insert_event(
@@ -1406,16 +1723,19 @@ class SolverLabCatalog:
         priority: int,
         command_id: str,
         idempotency_key: str,
+        operation_request: Mapping[str, Any],
         operation_result: Mapping[str, Any],
     ) -> dict[str, Any]:
         now = utc_now()
         with self.transaction(immediate=True) as connection:
-            existing = connection.execute(
-                "SELECT * FROM commands WHERE idempotency_key=?",
-                (idempotency_key,),
-            ).fetchone()
-            if existing:
-                return _decode(existing["result_json"], {})
+            existing = self._replay_command(
+                connection,
+                idempotency_key=idempotency_key,
+                operation="change_priority",
+                request_sha256=canonical_sha256(operation_request),
+            )
+            if existing is not None:
+                return existing
             row = connection.execute(
                 "SELECT priority, status FROM jobs WHERE job_id=?", (job_id,)
             ).fetchone()
@@ -1434,7 +1754,7 @@ class SolverLabCatalog:
                 operation="change_priority",
                 target_id=job_id,
                 dry_run=False,
-                request={"job_id": job_id, "priority": priority},
+                request=operation_request,
                 result=operation_result,
             )
             self._insert_event(
@@ -1452,17 +1772,20 @@ class SolverLabCatalog:
         paused: bool,
         command_id: str,
         idempotency_key: str,
+        operation_request: Mapping[str, Any],
         operation_result: Mapping[str, Any],
     ) -> dict[str, Any]:
         now = utc_now()
         operation = "pause_queue" if paused else "resume_queue"
         with self.transaction(immediate=True) as connection:
-            existing = connection.execute(
-                "SELECT * FROM commands WHERE idempotency_key=?",
-                (idempotency_key,),
-            ).fetchone()
-            if existing:
-                return _decode(existing["result_json"], {})
+            existing = self._replay_command(
+                connection,
+                idempotency_key=idempotency_key,
+                operation=operation,
+                request_sha256=canonical_sha256(operation_request),
+            )
+            if existing is not None:
+                return existing
             connection.execute(
                 "INSERT INTO settings(key, value_json, updated_at) VALUES('queue_paused', ?, ?) "
                 "ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json, "
@@ -1476,7 +1799,7 @@ class SolverLabCatalog:
                 operation=operation,
                 target_id=None,
                 dry_run=False,
-                request={"paused": paused},
+                request=operation_request,
                 result=operation_result,
             )
         return dict(operation_result)
@@ -1498,20 +1821,9 @@ class SolverLabCatalog:
         return [self._event_row(row) for row in reversed(rows)]
 
     def add_artifact(self, artifact: Mapping[str, Any]) -> None:
-        with self.transaction(immediate=True) as connection:
-            connection.execute(
-                "INSERT OR IGNORE INTO artifacts VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
-                (
-                    artifact["artifact_id"],
-                    ARTIFACT_SCHEMA_VERSION,
-                    artifact["attempt_id"],
-                    artifact["kind"],
-                    artifact["path"],
-                    artifact["content_sha256"],
-                    artifact["size_bytes"],
-                    artifact.get("created_at", utc_now()),
-                ),
-            )
+        raise ValueError(
+            "per-file artifact indexing is disabled; publish the terminal set atomically"
+        )
 
     def list_artifacts(self, attempt_id: str) -> list[dict[str, Any]]:
         with self._connect() as connection:
@@ -1546,7 +1858,13 @@ class SolverLabCatalog:
         result: Mapping[str, Any],
     ) -> None:
         connection.execute(
-            "INSERT INTO commands VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            """
+            INSERT INTO commands(
+                command_id, schema_version, idempotency_key, operation,
+                target_id, dry_run, request_json, request_sha256,
+                result_json, created_at
+            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
             (
                 command_id,
                 COMMAND_SCHEMA_VERSION,
@@ -1555,6 +1873,7 @@ class SolverLabCatalog:
                 target_id,
                 int(dry_run),
                 _json(request),
+                canonical_sha256(request),
                 _json(result),
                 utc_now(),
             ),
@@ -1598,6 +1917,17 @@ class SolverLabCatalog:
             "reserved_memory_bytes": row["reserved_memory_bytes"],
             "identity_sha256": row["identity_sha256"],
             "request": as_mapping(_decode(row["request_json"], {})),
+            "dispatch_identity": as_mapping(
+                _decode(row["dispatch_identity_json"], {})
+            ),
+            "dispatch_identity_sha256": row["dispatch_identity_sha256"],
+            "dispatch_diff": _decode(row["dispatch_diff_json"], []),
+            "solver_owned_cap_bytes": row["solver_owned_cap_bytes"],
+            "worker_headroom_bytes": row["worker_headroom_bytes"],
+            "global_safety_reserve_bytes": as_mapping(
+                as_mapping(_decode(row["request_json"], {})).get("scheduler")
+            ).get("global_safety_reserve_bytes"),
+            "reservation_policy_version": row["reservation_policy_version"],
             "created_at": row["created_at"],
             "updated_at": row["updated_at"],
         }
@@ -1650,6 +1980,8 @@ class SolverLabCatalog:
             "process_identity_token": row["process_identity_token"],
             "command": as_mapping(_decode(row["command_json"], {})),
             "command_identity_sha256": row["command_identity_sha256"],
+            "validated_request_sha256": row["validated_request_sha256"],
+            "host_watchdog_seconds": row["host_watchdog_seconds"],
             "result": as_mapping(_decode(row["result_json"], {})),
             "created_at": row["created_at"],
             "started_at": row["started_at"],
@@ -1666,6 +1998,7 @@ class SolverLabCatalog:
             "target_id": row["target_id"],
             "dry_run": bool(row["dry_run"]),
             "request": as_mapping(_decode(row["request_json"], {})),
+            "request_sha256": row["request_sha256"],
             "result": as_mapping(_decode(row["result_json"], {})),
             "created_at": row["created_at"],
         }

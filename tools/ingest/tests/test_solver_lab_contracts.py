@@ -33,6 +33,8 @@ def test_lab_contract_vocabulary_is_complete() -> None:
         "event",
         "artifact",
         "operation_result",
+        "operation_request",
+        "execution_request",
         "case_draft",
         "case_revision",
         "calculator_export",

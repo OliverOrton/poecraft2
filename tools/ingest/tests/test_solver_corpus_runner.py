@@ -383,7 +383,10 @@ def test_process_classification_preserves_native_expectation_miss() -> None:
 def test_memory_reservation_discloses_host_only_authority() -> None:
     assert MemoryReservation(1024).as_dict() == {
         "reserved_memory_bytes": 1024,
-        "reservation_source": "case_caps.max_solver_owned_bytes",
+        "solver_owned_cap_bytes": 1024,
+        "worker_headroom_bytes": 0,
+        "reservation_policy_version": "solver_lab_host_reservation_v2",
+        "reservation_source": "solver_cap_plus_explicit_worker_headroom",
         "authority": "host_scheduler_only",
     }
 

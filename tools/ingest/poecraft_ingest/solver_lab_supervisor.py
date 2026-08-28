@@ -5,6 +5,7 @@ from __future__ import annotations
 from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+import json
 import os
 from pathlib import Path
 import threading
@@ -20,9 +21,9 @@ from poecraft_ingest.solver_worker import (
     AttemptPaths,
     build_solver_case_command,
     partial_observation_available,
+    observe_process_identity,
     process_identity_token,
     sha256_file,
-    terminate_verified_process_identity,
 )
 
 
@@ -74,12 +75,24 @@ class SolverLabSupervisor:
         poll_interval_seconds: float = 0.25,
         max_workers: int = 1,
         memory_budget_bytes: int = 0,
-        memory_safety_reserve_bytes: int = 512 * 1024 * 1024,
+        worker_headroom_bytes: int | None = None,
+        memory_safety_reserve_bytes: int | None = None,
         stale_lease_seconds: float = 15.0,
         available_memory_provider: Callable[[], int | None] = available_physical_memory_bytes,
     ):
         if max_workers <= 0:
             raise ValueError("max_workers must be positive")
+        if (
+            worker_headroom_bytes is not None
+            and int(worker_headroom_bytes) != service.worker_headroom_bytes
+        ):
+            raise ValueError("supervisor worker headroom must match service identity")
+        if (
+            memory_safety_reserve_bytes is not None
+            and int(memory_safety_reserve_bytes)
+            != service.global_safety_reserve_bytes
+        ):
+            raise ValueError("supervisor safety reserve must match service identity")
         self.service = service
         self.poll_interval_seconds = poll_interval_seconds
         self.max_workers = max_workers
@@ -93,7 +106,16 @@ class SolverLabSupervisor:
                 int(available * 0.75) if available else 2 * 1024 * 1024 * 1024,
             )
         )
-        self.memory_safety_reserve_bytes = max(0, memory_safety_reserve_bytes)
+        self.worker_headroom_bytes = (
+            service.worker_headroom_bytes
+            if worker_headroom_bytes is None
+            else int(worker_headroom_bytes)
+        )
+        self.memory_safety_reserve_bytes = (
+            service.global_safety_reserve_bytes
+            if memory_safety_reserve_bytes is None
+            else max(0, int(memory_safety_reserve_bytes))
+        )
         self.stale_lease_seconds = stale_lease_seconds
         self.supervisor_id = f"supervisor-{uuid.uuid4()}"
         self._stop = threading.Event()
@@ -151,9 +173,15 @@ class SolverLabSupervisor:
             "running_job_id": running[0].job_id if len(running) == 1 else None,
             "running_attempts": len(running),
             "reserved_host_memory_bytes": reserved,
+            "solver_owned_cap_bytes": sum(
+                max(0, item.reserved_memory_bytes - self.worker_headroom_bytes)
+                for item in running
+            ),
+            "per_worker_headroom_bytes": self.worker_headroom_bytes,
             "memory_budget_bytes": self.memory_budget_bytes,
             "available_host_memory_bytes": self.available_memory_provider(),
             "memory_safety_reserve_bytes": self.memory_safety_reserve_bytes,
+            "reservation_policy_version": self.service.reservation_policy_version,
             "queue_paused": self.service.catalog.queue_paused(),
             "last_error": last_error,
             "running_pause_supported": False,
@@ -173,7 +201,8 @@ class SolverLabSupervisor:
             return False
         claimed = self._claim(candidates[0], exclusive_oversize=False)
         if claimed is None:
-            return False
+            current = self.service.catalog.get_job(candidates[0]["job_id"])
+            return bool(current and current["status"] == "dispatch_refused")
         job, attempt, running = claimed
         self._execute_claimed(job, attempt, running)
         return True
@@ -207,33 +236,82 @@ class SolverLabSupervisor:
         ).isoformat(timespec="milliseconds")
         recovered: list[dict[str, Any]] = []
         for attempt in self.service.catalog.stale_attempts(heartbeat_before=cutoff):
-            pid = attempt.get("process_id")
-            token = attempt.get("process_identity_token")
-            terminated = False
-            identity_verified = False
-            if isinstance(pid, int) and isinstance(token, str):
-                identity_verified = process_identity_token(pid) == token
-                if identity_verified:
-                    terminated = terminate_verified_process_identity(pid, token)
+            process_state = observe_process_identity(
+                attempt.get("process_id"), attempt.get("process_identity_token")
+            )
             job = self.service.catalog.get_job(attempt["job_id"])
-            case_id = job["case_id"] if job else ""
+            if job is None:
+                continue
+            if process_state != "proved_absent":
+                recovery = {
+                    "status": "orphan_quarantined",
+                    "reason": "verified_live_worker" if process_state == "verified_live" else "possible_live_worker",
+                    "process_identity_state": process_state,
+                    "reservation_retained": True,
+                    "recovered_by": self.supervisor_id,
+                }
+                self.service.catalog.quarantine_attempt(
+                    attempt_id=attempt["attempt_id"], recovery=recovery
+                )
+                recovered.append(recovery)
+                continue
+            directory = Path(attempt["directory"])
+            final_valid = self._valid_final_report(
+                directory / "report.json", job["case_id"]
+            )
             partial = partial_observation_available(
-                Path(attempt["directory"]) / "partial.json", case_id
+                directory / "partial.json", job["case_id"]
             )
-            recovery = {
-                "status": "orphaned",
-                "failure_kind": "stale_supervisor_lease",
-                "process_identity_verified": identity_verified,
-                "verified_process_tree_terminated": terminated,
-                "partial_observation_available": partial,
-                "recovered_by": self.supervisor_id,
-            }
-            self.service.catalog.mark_attempt_orphaned(
+            if final_valid:
+                result = {
+                    **as_mapping(attempt.get("result")),
+                    "status": "completed",
+                    "case_id": job["case_id"],
+                    "attempt_id": attempt["attempt_id"],
+                    "recovered_final_report": True,
+                    "process_identity_state": process_state,
+                    "recovered_by": self.supervisor_id,
+                    "survivor": False,
+                }
+                attempt_status, job_status = "completed", "completed"
+            elif partial:
+                result = {
+                    **as_mapping(attempt.get("result")),
+                    "status": "recovered_partial",
+                    "case_id": job["case_id"],
+                    "attempt_id": attempt["attempt_id"],
+                    "partial_observation_available": True,
+                    "process_identity_state": process_state,
+                    "recovered_by": self.supervisor_id,
+                    "survivor": False,
+                }
+                attempt_status, job_status = "partial", "partial"
+            else:
+                result = {
+                    **as_mapping(attempt.get("result")),
+                    "status": "failed",
+                    "failure_kind": "stale_supervisor_process_absent",
+                    "case_id": job["case_id"],
+                    "attempt_id": attempt["attempt_id"],
+                    "process_identity_state": process_state,
+                    "recovered_by": self.supervisor_id,
+                    "survivor": False,
+                }
+                attempt_status, job_status = "failed", "failed"
+            self.service.catalog.begin_finalizing(
+                attempt_id=attempt["attempt_id"], result=result
+            )
+            artifacts = self._prepare_attempt_artifacts(
+                attempt["attempt_id"], directory, job["case_id"], result
+            )
+            self.service.catalog.publish_attempt_terminal(
                 attempt_id=attempt["attempt_id"],
-                job_status="partial" if partial else "failed",
-                recovery=recovery,
+                attempt_status=attempt_status,
+                job_status=job_status,
+                result=result,
+                artifacts=artifacts,
             )
-            recovered.append(recovery)
+            recovered.append(result)
         return recovered
 
     def _ensure_session(self) -> None:
@@ -245,7 +323,9 @@ class SolverLabSupervisor:
             configuration={
                 "max_workers": self.max_workers,
                 "memory_budget_bytes": self.memory_budget_bytes,
+                "worker_headroom_bytes": self.worker_headroom_bytes,
                 "memory_safety_reserve_bytes": self.memory_safety_reserve_bytes,
+                "reservation_policy_version": self.service.reservation_policy_version,
                 "poll_interval_seconds": self.poll_interval_seconds,
             },
         )
@@ -257,6 +337,20 @@ class SolverLabSupervisor:
         *,
         exclusive_oversize: bool,
     ) -> tuple[dict[str, Any], dict[str, Any], RunningAttempt] | None:
+        preflight = self.service.dispatch_preflight(job)
+        if not preflight["ok"]:
+            self.service.catalog.refuse_dispatch(
+                job_id=job["job_id"],
+                reason=str(preflight["reason"]),
+                fresh_identity=preflight.get("fresh_identity"),
+                differences=list(preflight["differences"]),
+            )
+            return None
+        self.service.catalog.record_dispatch_validation(
+            job_id=job["job_id"],
+            identity=preflight["fresh_identity"],
+            identity_sha256=preflight["fresh_identity_sha256"],
+        )
         attempt_id = f"attempt-{uuid.uuid4()}"
         lease_id = f"lease-{uuid.uuid4()}"
         attempt_directory = self.service.paths.attempts / attempt_id
@@ -266,6 +360,7 @@ class SolverLabSupervisor:
             attempt_id=attempt_id,
             attempt_directory=attempt_directory,
             lease_id=lease_id,
+            validated_request_sha256=preflight["fresh_identity_sha256"],
         )
         if claimed is None:
             return None
@@ -296,6 +391,35 @@ class SolverLabSupervisor:
             )
 
         try:
+            second_preflight = self.service.dispatch_preflight(job)
+            if (
+                not second_preflight["ok"]
+                or second_preflight["fresh_identity_sha256"]
+                != attempt.get("validated_request_sha256")
+            ):
+                result = {
+                    "case_id": job["case_id"],
+                    "attempt_id": attempt_id,
+                    "status": "dispatch_refused",
+                    "failure_kind": "post_claim_identity_mismatch",
+                    "identity_differences": second_preflight["differences"],
+                    "survivor": False,
+                }
+                attempt_status, job_status = "failed", "dispatch_refused"
+                self.service.catalog.begin_finalizing(
+                    attempt_id=attempt_id, result=result
+                )
+                artifacts = self._prepare_attempt_artifacts(
+                    attempt_id, attempt_directory, job["case_id"], result
+                )
+                self.service.catalog.publish_attempt_terminal(
+                    attempt_id=attempt_id,
+                    attempt_status=attempt_status,
+                    job_status=job_status,
+                    result=result,
+                    artifacts=artifacts,
+                )
+                return
             request = as_mapping(job.get("request"))
             request_case = as_mapping(request.get("case"))
             resolved_case = self.service._resolve_case_reference(
@@ -320,7 +444,10 @@ class SolverLabSupervisor:
                 goal_progress_gated_reforges=(
                     worker_options.goal_progress_gated_reforges
                 ),
-            ).canonical_document()
+            ).canonical_document(
+                host_watchdog_seconds=float(job["watchdog_seconds"]),
+                reservation=as_mapping(request.get("scheduler")),
+            )
             self.service.catalog.set_attempt_command(attempt_id, command)
             result = as_mapping(
                 _run_case(
@@ -335,6 +462,8 @@ class SolverLabSupervisor:
                     goal_progress_gated_reforges=(
                         worker_options.goal_progress_gated_reforges
                     ),
+                    watchdog_seconds=float(job["watchdog_seconds"]),
+                    worker_headroom_bytes=self.worker_headroom_bytes,
                     attempt_paths=paths,
                     cancel_requested=lambda: self.service.catalog.is_cancel_requested(
                         job["job_id"]
@@ -345,6 +474,24 @@ class SolverLabSupervisor:
             attempt_status, job_status = self._terminal_statuses(result)
         except Exception as exc:
             attempt_directory.mkdir(parents=True, exist_ok=True)
+            current = self.service.catalog.get_attempt(attempt_id) or attempt
+            process_state = observe_process_identity(
+                current.get("process_id"), current.get("process_identity_token")
+            )
+            if current.get("process_id") is not None and process_state != "proved_absent":
+                quarantine = {
+                    "status": "orphan_quarantined",
+                    "reason": "supervisor_exception_possible_live_worker",
+                    "process_identity_state": process_state,
+                    "error": f"{type(exc).__name__}: {exc}",
+                    "reservation_retained": True,
+                }
+                self.service.catalog.quarantine_attempt(
+                    attempt_id=attempt_id, recovery=quarantine
+                )
+                with self._state_lock:
+                    self._last_error = quarantine["error"]
+                return
             result = {
                 "case_id": job["case_id"],
                 "attempt_id": attempt_id,
@@ -356,19 +503,77 @@ class SolverLabSupervisor:
             attempt_status, job_status = "failed", "failed"
             with self._state_lock:
                 self._last_error = result["error"]
-        self.service.catalog.finish_attempt(
+        self.service.catalog.begin_finalizing(
+            attempt_id=attempt_id,
+            result=result,
+        )
+        artifacts = self._prepare_attempt_artifacts(
+            attempt_id, attempt_directory, job["case_id"], result
+        )
+        self.service.catalog.publish_attempt_terminal(
             attempt_id=attempt_id,
             attempt_status=attempt_status,
             job_status=job_status,
             result=result,
+            artifacts=artifacts,
         )
-        self._index_attempt_artifacts(attempt_id, attempt_directory)
 
-    def _index_attempt_artifacts(self, attempt_id: str, directory: Path) -> None:
+    @staticmethod
+    def _valid_final_report(path: Path, case_id: str) -> bool:
+        if not path.is_file():
+            return False
+        try:
+            report = json.loads(path.read_text(encoding="utf-8"))
+            cases = report.get("cases") if isinstance(report, dict) else None
+            return bool(
+                isinstance(cases, list)
+                and len(cases) == 1
+                and isinstance(cases[0], dict)
+                and cases[0].get("id") == case_id
+            )
+        except (OSError, ValueError, json.JSONDecodeError):
+            return False
+
+    @staticmethod
+    def _write_json_atomic(path: Path, value: dict[str, Any]) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_suffix(path.suffix + ".tmp")
+        temporary.write_text(
+            json.dumps(value, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        os.replace(temporary, path)
+
+    def _prepare_attempt_artifacts(
+        self,
+        attempt_id: str,
+        directory: Path,
+        case_id: str,
+        result: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        directory = directory.resolve()
+        report_path = directory / "report.json"
+        completed = result.get("status") == "completed"
+        report_valid = self._valid_final_report(report_path, case_id)
+        if completed and not report_valid:
+            raise ValueError("completed worker result has no valid final report")
+        error_path = directory / "supervisor-error.json"
+        worker_log = directory / "worker.log"
+        if (not completed) or (completed and not worker_log.is_file()):
+            self._write_json_atomic(
+                error_path,
+                {
+                    "schema_version": "solver_lab_supervisor_error_v2",
+                    "attempt_id": attempt_id,
+                    "case_id": case_id,
+                    "result": result,
+                },
+            )
         candidates: list[tuple[str, Path]] = [
-            ("report", directory / "report.json"),
+            ("report", report_path),
             ("partial_report", directory / "partial.json"),
-            ("worker_log", directory / "worker.log"),
+            ("worker_log", worker_log),
+            ("supervisor_error", error_path),
         ]
         strategy_directory = directory / "strategies"
         if strategy_directory.is_dir():
@@ -377,9 +582,17 @@ class SolverLabSupervisor:
                 for path in sorted(strategy_directory.glob("*.json"))
                 if path.is_file()
             )
+        artifacts: list[dict[str, Any]] = []
         for kind, path in candidates:
             if not path.is_file():
                 continue
+            if kind == "report" and not report_valid:
+                continue
+            if path.suffix == ".json":
+                try:
+                    json.loads(path.read_text(encoding="utf-8"))
+                except (OSError, ValueError, json.JSONDecodeError) as exc:
+                    raise ValueError(f"invalid JSON artifact before publication: {path}") from exc
             content_sha256 = sha256_file(path)
             artifact_id = "artifact-" + canonical_sha256(
                 {
@@ -389,7 +602,7 @@ class SolverLabSupervisor:
                     "content_sha256": content_sha256,
                 }
             )[:32]
-            self.service.catalog.add_artifact(
+            artifacts.append(
                 {
                     "artifact_id": artifact_id,
                     "attempt_id": attempt_id,
@@ -399,11 +612,17 @@ class SolverLabSupervisor:
                     "size_bytes": path.stat().st_size,
                 }
             )
+        return artifacts
 
     def _loop(self) -> None:
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             while not self._stop.is_set() or self._running:
                 self.service.catalog.heartbeat_supervisor(self.supervisor_id)
+                try:
+                    self.recover_stale_attempts()
+                except Exception as exc:
+                    with self._state_lock:
+                        self._last_error = f"{type(exc).__name__}: {exc}"
                 self._reap_completed()
                 if not self._stop.is_set() and not self.service.catalog.queue_paused():
                     self._dispatch(executor)

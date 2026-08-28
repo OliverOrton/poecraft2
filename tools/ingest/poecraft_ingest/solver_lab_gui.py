@@ -399,7 +399,9 @@ class SolverLabWindow(QMainWindow):
         del args
         job = self.selected_job() if hasattr(self, "table") else None
         status = str(job.get("status") or "") if job else ""
-        active = {"queued", "blocked", "running", "canceling"}
+        active = {
+            "queued", "blocked", "running", "canceling", "orphan_quarantined"
+        }
         cancelable = {"queued", "blocked", "running", "canceling"}
         if hasattr(self, "cancel_button"):
             queue_busy = "queue_mutation" in self._busy_operations
@@ -417,7 +419,7 @@ class SolverLabWindow(QMainWindow):
                 and not queue_busy
             )
             self.clone_button.setEnabled(
-                bool(job) and not queue_busy
+                bool(job) and status != "orphan_quarantined" and not queue_busy
             )
             self.priority_button.setEnabled(
                 status in {"queued", "blocked"}
@@ -1617,7 +1619,9 @@ class SolverLabWindow(QMainWindow):
             return
         job = dict(job)
         previous = str(job.get("status") or "")
-        if previous in {"queued", "blocked", "running", "canceling"}:
+        if previous in {
+            "queued", "blocked", "running", "canceling", "orphan_quarantined"
+        }:
             self._reject("retry_job", f"Job {job['job_id']} is still {previous}.")
             return
         idempotency_key = f"gui-retry-{uuid.uuid4()}"
@@ -1656,6 +1660,12 @@ class SolverLabWindow(QMainWindow):
         if job is None:
             return
         job = dict(job)
+        if job.get("status") == "orphan_quarantined":
+            self._reject(
+                "clone_job",
+                f"Job {job['job_id']} retains a possible-live worker reservation.",
+            )
+            return
         idempotency_key = f"gui-clone-{uuid.uuid4()}"
 
         def call() -> dict[str, Any]:
@@ -1840,8 +1850,12 @@ class SolverLabWindow(QMainWindow):
         for summary in summaries.values():
             normalized_summary = as_mapping(summary)
             attempt = as_mapping(normalized_summary.get("attempt"))
-            artifacts = as_mapping(normalized_summary.get("artifacts"))
-            if attempt.get("attempt_id") and artifacts.get("strategy_directory"):
+            artifacts = normalized_summary.get("artifacts")
+            strategy_available = any(
+                as_mapping(artifact).get("kind") == "strategy"
+                for artifact in as_list(artifacts)
+            ) or bool(as_mapping(artifacts).get("strategy_directory"))
+            if attempt.get("attempt_id") and strategy_available:
                 available.add(str(attempt["attempt_id"]))
         material_digest = canonical_sha256(
             {"attempts": normalized_attempts, "strategy_available": sorted(available)}
