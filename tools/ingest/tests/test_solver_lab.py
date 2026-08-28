@@ -83,6 +83,9 @@ def test_single_worker_records_immutable_attempt_and_native_summary(
     )["result"]["job_id"]
 
     def fake_run(task, **kwargs):
+        assert kwargs["exact_evaluation"] is True
+        assert kwargs["run_verification"] is False
+        assert kwargs["goal_progress_gated_reforges"] is True
         paths = kwargs["attempt_paths"]
         paths.prepare()
         paths.report_path.write_text(

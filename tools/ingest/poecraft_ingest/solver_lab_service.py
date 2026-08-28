@@ -54,6 +54,13 @@ class SolverLabPaths:
         )
 
 
+@dataclass(frozen=True)
+class NativeWorkerOptions:
+    exact_evaluation: bool
+    run_verification: bool
+    goal_progress_gated_reforges: bool
+
+
 def operation_result(
     operation: str,
     result: Any,
@@ -90,6 +97,18 @@ class SolverLabService:
             )
             self._cases[str(case["id"])] = case
             self._case_paths[str(case["id"])] = case_path
+
+    def native_worker_options(self) -> NativeWorkerOptions:
+        native = self.profile.document["native_bindings"]
+        scope = native["manifest_general_product_scope"]
+        verification = native["simulator_verification"]
+        return NativeWorkerOptions(
+            exact_evaluation=bool(native["exact_strategy_evaluation"]),
+            run_verification=verification["default"] != "disabled",
+            goal_progress_gated_reforges=bool(
+                scope["goal_progress_gated_reforges"]
+            ),
+        )
 
     @classmethod
     def from_root(
