@@ -1,0 +1,29 @@
+{
+  "schema_version": "solver_lab_profile_v1",
+  "id": "native_allflame_no_imprint_v1",
+  "description": "Native Calculator-product research profile with fixed Allflame pricing, automatic Imprint programs off, and voluntary economic Restart off.",
+  "economy": {
+    "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "league_key": "allflame",
+    "refresh_policy": "frozen_per_attempt"
+  },
+  "native_bindings": {
+    "solve_profile": "calculator_product_v1",
+    "manifest_general_product_scope": {
+      "action_mode": "goal_relevant",
+      "solve_step_work_items": 8,
+      "goal_progress_gated_reforges": true,
+      "allow_economic_restart": false,
+      "consider_imprint_programs": false
+    },
+    "terminal_goal_authority": "native_exact_junk_free",
+    "action_family_scope": "native_calculator_goal_relevant_priced_v1",
+    "fracture_miss_replacement": "native_mechanic_owned_paid_replacement_retained",
+    "exact_strategy_evaluation": true,
+    "simulator_verification": {
+      "default": "disabled",
+      "required_run_count": 10000
+    }
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://poecraft2.local/schemas/solver-lab-v1.json",
+  "title": "poecraft2 Native Solver Lab v1 contracts",
+  "$defs": {
+    "profile": {
+      "type": "object",
+      "required": ["schema_version", "id", "economy", "native_bindings"],
+      "properties": {
+        "schema_version": {"const": "solver_lab_profile_v1"},
+        "id": {"type": "string", "minLength": 1},
+        "economy": {"type": "object"},
+        "native_bindings": {"type": "object"}
+      }
+    },
+    "experiment": {
+      "type": "object",
+      "required": ["schema_version", "experiment_id", "name", "created_at"],
+      "properties": {
+        "schema_version": {"const": "solver_lab_experiment_v1"},
+        "experiment_id": {"type": "string"},
+        "name": {"type": "string"},
+        "created_at": {"type": "string"}
+      }
+    },
+    "job": {
+      "type": "object",
+      "required": ["schema_version", "job_id", "case_id", "profile_id", "status", "priority"],
+      "properties": {
+        "schema_version": {"const": "solver_lab_job_v1"},
+        "job_id": {"type": "string"},
+        "case_id": {"type": "string"},
+        "profile_id": {"type": "string"},
+        "status": {"enum": ["queued", "blocked", "running", "canceling", "canceled", "failed", "partial", "completed"]},
+        "priority": {"type": "integer"}
+      }
+    },
+    "attempt": {
+      "type": "object",
+      "required": ["schema_version", "attempt_id", "job_id", "ordinal", "status", "directory"],
+      "properties": {
+        "schema_version": {"const": "solver_lab_attempt_v1"},
+        "attempt_id": {"type": "string"},
+        "job_id": {"type": "string"},
+        "ordinal": {"type": "integer", "minimum": 1},
+        "status": {"type": "string"},
+        "directory": {"type": "string"}
+      }
+    },
+    "command": {
+      "type": "object",
+      "required": ["schema_version", "attempt_id", "argv", "cwd", "identity_sha256"],
+      "properties": {
+        "schema_version": {"const": "solver_lab_command_v1"},
+        "attempt_id": {"type": "string"},
+        "argv": {"type": "array", "items": {"type": "string"}},
+        "cwd": {"type": "string"},
+        "identity_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "event": {
+      "type": "object",
+      "required": ["schema_version", "event_id", "timestamp", "kind", "entity_id", "payload"],
+      "properties": {
+        "schema_version": {"const": "solver_lab_event_v1"},
+        "event_id": {"type": "integer"},
+        "timestamp": {"type": "string"},
+        "kind": {"type": "string"},
+        "entity_id": {"type": "string"},
+        "payload": {"type": "object"}
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["schema_version", "artifact_id", "attempt_id", "kind", "path", "content_sha256", "size_bytes"],
+      "properties": {
+        "schema_version": {"const": "solver_lab_artifact_v1"},
+        "artifact_id": {"type": "string"},
+        "attempt_id": {"type": "string"},
+        "kind": {"type": "string"},
+        "path": {"type": "string"},
+        "content_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "size_bytes": {"type": "integer", "minimum": 0}
+      }
+    },
+    "operation_result": {
+      "type": "object",
+      "required": ["schema_version", "operation", "dry_run", "ok", "result"],
+      "properties": {
+        "schema_version": {"const": "solver_lab_operation_result_v1"},
+        "operation": {"type": "string"},
+        "dry_run": {"type": "boolean"},
+        "ok": {"type": "boolean"},
+        "result": {}
+      }
+    }
+  }
+}

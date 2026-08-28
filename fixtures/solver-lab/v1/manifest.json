@@ -1,0 +1,58 @@
+{
+  "schema_version": "solver_benchmark_corpus_v1",
+  "corpus_id": "poecraft2-native-solver-lab-v0",
+  "artifact": {
+    "manifest_relative_path": "data/compiled/current/manifest.json",
+    "canonical_source": "data/sqlite/poecraft.db",
+    "engine_abi_version": 2,
+    "artifact_schema_version": 4,
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+    "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+  },
+  "source_checkpoint": {
+    "lab_plan_commit": "bd86b46",
+    "mechanics_authority": "unchanged_current_implemented_contract"
+  },
+  "benchmark_identity_contract": {
+    "id": "native_allflame_no_imprint_v1",
+    "trajectory_required": true,
+    "native_repetitions": 1,
+    "fixed_work_identity_required": false,
+    "compiled_exact_evaluation_required": true,
+    "general_product_scope": {
+      "action_mode": "goal_relevant",
+      "solve_step_work_items": 8,
+      "goal_progress_gated_reforges": true,
+      "allow_economic_restart": false,
+      "consider_imprint_programs": false
+    },
+    "required_disclosures": [
+      "artifact",
+      "source_checkpoint",
+      "economy",
+      "action_scope",
+      "terminal_goal",
+      "start_carrier",
+      "work_step",
+      "requested_finish",
+      "verification"
+    ]
+  },
+  "case_roles": {
+    "conquest-lamellar-allflame-clean-3-prefix-extended-product8": "fast_exact_three_prefix",
+    "conquest-lamellar-allflame-clean-3-suffix-product8": "fast_exact_three_suffix",
+    "conquest-lamellar-allflame-clean-4-pdr-product8": "bounded_four_mod_pdr",
+    "spine-bow-allflame-clean-4-goal-product8": "non_armour_four_goal_control",
+    "conquest-lamellar-allflame-partial-4-to-5-product8": "dirty_partial_carrier_control"
+  },
+  "lab_profile": "profiles/native_allflame_no_imprint_v1.json",
+  "cases": [
+    "../../solver-exact-same-side/v1/cases/conquest-lamellar-allflame-clean-3-prefix-extended-product8.json",
+    "../../solver-exact-same-side/v1/cases/conquest-lamellar-allflame-clean-3-suffix-product8.json",
+    "../../solver-exact-same-side/v1/cases/conquest-lamellar-allflame-clean-4-pdr-product8.json",
+    "../../solver-quality-ladder/v1/cases/spine-bow-allflame-clean-4-goal-product8.json",
+    "../../solver-quality-ladder/v1/qualification-1024/cases/conquest-lamellar-allflame-partial-4-to-5-product8.json"
+  ]
+}

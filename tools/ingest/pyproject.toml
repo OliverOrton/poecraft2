@@ -9,12 +9,20 @@ description = "Canonical RePoE to SQLite ingest for poecraft2"
 requires-python = ">=3.11"
 dependencies = []
 
+[project.optional-dependencies]
+solver-lab = [
+  "PySide6>=6.11,<7",
+  "mcp>=2.1,<3",
+]
+
 [project.scripts]
 poecraft-ingest = "poecraft_ingest.cli:main"
 poecraft-compile-data = "poecraft_ingest.compiled_data:main"
 poecraft-validate-fixtures = "poecraft_ingest.spec_fixtures:main"
 poecraft-generate-review = "poecraft_ingest.solver_review:main"
 poecraft-compare-runtime-reports = "poecraft_ingest.runtime_report_parity:main"
+poecraft-solver-lab = "poecraft_ingest.solver_lab:main"
+poecraft-solver-lab-mcp = "poecraft_ingest.solver_lab_mcp:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
