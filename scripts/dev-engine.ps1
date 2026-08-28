@@ -8,7 +8,7 @@ param(
         "abstract", "automatic-eldritch", "calc", "calc-gated", "compile",
         "eval", "api",
         "feasibility", "imprint", "policy-refinement", "quotient-proof",
-        "refinement", "s8-3", "solve")]
+        "refinement", "fragment", "s8-3", "solve")]
     [string]$Suite = "refinement",
     [int]$Jobs = 0
 )
@@ -98,6 +98,7 @@ function Get-SuiteArguments {
         "policy-refinement" { return @("--solver-policy-refinement-only") }
         "quotient-proof" { return @("--solver-quotient-proof-only") }
         "refinement" { return @("--solver-refinement-only") }
+        "fragment" { return @("--solver-fragment-only") }
         "s8-3" { return @("--solver-s8-3-only") }
         "solve" { return @("--solver-solve-only", $Artifact) }
     }

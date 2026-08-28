@@ -1,11 +1,10 @@
 # Handoff
 
-**Status: Verified Executable Graph-Fragment Core v1 is selected; implementation
-has not begun.** It must start in a fresh Codex task from the clean planning
-commit whose parent is
-`031d528709b6fb3bc8563c16231042382a945c07`. The configured Solver Lab MCP
-registration uses the combined version `0.2.0` launcher and must be the
-operator surface in that task.
+**Status: Verified Executable Graph-Fragment Core v1 Gates 0–2 are complete.**
+The first coherent checkpoint adds the private probability-free leaf IR,
+authority firewall, and exact single-entry product verifier. Gate 3's real
+engine-backed Transmute/Scour renewal leaf is the exact next boundary; no
+flattening or shadow integration has begun.
 
 The preceding unattended-hardening boundary's six-hour soak was
 **owner-waived, not passed**. It is not overnight qualification and must not be
@@ -14,6 +13,17 @@ cited as such.
 ## Checkpoint
 
 - Branch: `main`, local-only; nothing was pushed.
+- Gates 0–2 checkpoint: local commit `Add exact executable fragment leaf
+  verifier`; 119 focused fragment checks, 362 refinement checks, and 15,761
+  evaluator checks pass. The evaluator control hashes remain
+  `9a12bd4cc7d2f472` compressed and `eee79a5659d79e68` raw.
+- Native-only placement: the new contract/verifier lives under
+  `engine/benchmarks`, is linked explicitly only into the benchmark and native
+  focused test targets, and is absent from `engine/engine-sources.txt`; Gates
+  0–2 therefore do not trigger the conditional release-WASM gate.
+- The checkpoint certifies only exact leaf mass/properness/resources for one
+  exact entry. It is not ordinary strategy JSON, an executable/public upper,
+  an incumbent, product behavior, or option-quality evidence.
 - Verified fragment-core stable starting boundary:
   `031d528709b6fb3bc8563c16231042382a945c07` (`Archive solver lab unattended
   hardening`).

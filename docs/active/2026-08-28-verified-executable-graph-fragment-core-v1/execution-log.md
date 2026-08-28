@@ -1,6 +1,7 @@
 # Verified Executable Graph-Fragment Core v1 Log
 
-**Status: selected; implementation has not begun.**
+**Status: Gates 0–2 passed; the exact verified-leaf checkpoint is ready for
+its local commit. Gate 3 is the next implementation boundary.**
 
 Parent: [Plan](plan.md)
 
@@ -31,24 +32,56 @@ Parent: [Plan](plan.md)
 The fresh implementation task must fill every field before editing:
 
 ```text
-fresh task:
-branch:
-planning HEAD:
-HEAD parent:
-HEAD subject:
-HEAD changed paths:
-git status --short:
-AGENTS/docs/direction/HANDOFF/plan/log read:
-change-impact/source-owner audit:
-MCP version/tool count:
-MCP profile count/identities:
-MCP frozen case count/identities:
-MCP revision count/identities:
+fresh task: 2026-08-28 fresh Codex implementation task; gate restarted after
+  Oliver explicitly instructed Codex to abort an unfinished incoming merge
+branch: main
+planning HEAD: 72abfaf44b73a7335048bd6e227e4584f745480b
+HEAD parent: 031d528709b6fb3bc8563c16231042382a945c07
+HEAD subject: Activate verified executable graph fragment core v1
+HEAD changed paths: HANDOFF.md; docs/README.md; docs/active/README.md;
+  docs/active/2026-08-28-verified-executable-graph-fragment-core-v1/plan.md;
+  docs/active/2026-08-28-verified-executable-graph-fragment-core-v1/execution-log.md
+git status --short: empty after the authorized merge abort and again before
+  this first edit; conflict-marker scan empty
+AGENTS/docs/direction/HANDOFF/plan/log read: yes, in mandated order after the
+  authorized merge abort; the resolved plan was read in full
+change-impact/source-owner audit: pass at 72abfaf; change-impact read in full;
+  stated carrier/fixed-option/transition/compiler/parser/evaluator/assertion/
+  incumbent and benchmark/Lab owners match current source; selected placement
+  is benchmark/test-private and outside engine/engine-sources.txt
+MCP version/tool count: configured poecraft2-native-solver-lab entry point
+  resolves to this checkout's solver_lab_mcp.py; server version 0.2.0; exactly
+  31 bounded typed tools
+MCP profile count/identities: 1;
+  native_allflame_no_imprint_v1@876824a29d51ef8e87013639a86120315ca13235833261980b3eb28917b6bb56
+MCP frozen case count/identities: 5;
+  conquest-lamellar-allflame-clean-3-prefix-extended-product8;
+  conquest-lamellar-allflame-clean-3-suffix-product8;
+  conquest-lamellar-allflame-clean-4-pdr-product8;
+  conquest-lamellar-allflame-partial-4-to-5-product8;
+  spine-bow-allflame-clean-4-goal-product8
+MCP revision count/identities: 3;
+  case-rev-dc1e9c206c4402dbeededea1819074db;
+  case-rev-15ce203781cd7935c4e0326fc1a65ca0;
+  case-rev-5e1df8024975909ab780c335b9769ba6
 MCP supervisor/dispatcher owner and mode:
-MCP bounded job/attempt counts:
+  verified-live supervisor-7a5fd080-1103-4240-9ffa-a790569e3178,
+  process token 50836:134324226021189767, active; this MCP runtime is
+  control_only with reason verified_live_dispatcher; queue not paused
+MCP bounded job/attempt counts: 18 jobs (13 completed, 4 partial, 1 canceled);
+  19 immutable attempts
 GUI opened: no
-startup decision: proceed/stop
+startup decision: proceed
 ```
+
+The first startup attempt stopped without editing when it found an unfinished
+merge of `f89b67a839ca8199605422947195c72b9175b600` into the required local
+planning commit. Oliver then explicitly instructed Codex to deal with the
+conflicts and continue. Codex aborted the untouched merge; the incoming commit
+remains reachable through `origin/main`. The same untouched merge reappeared
+once during read-only baseline work and was aborted under that same explicit
+instruction. No merge commit, conflict resolution, remote update, source edit,
+or catalog mutation was used to manufacture the startup result.
 
 Expected conditions:
 
@@ -68,10 +101,10 @@ Stop without editing or cleaning if any source/tree/MCP condition differs.
 
 | Gate | Status | Required retained evidence |
 | --- | --- | --- |
-| 0 — source/failure freeze | not started | current owners, option-disabled controls, historical `0.80` missing-mass witness |
-| 1 — authority firewall/IR | not started | non-convertible types, canonical v1 identity, probability-free finite leaf IR |
-| 2 — exact leaf verifier | not started | exact product rows, exit mass, SCC absorption, resources, historical regressions |
-| 0–2 checkpoint | not started | first coherent clean local commit and exact HANDOFF continuation |
+| 0 — source/failure freeze | passed | current owners, option-disabled controls, historical `0.80` missing-mass witness |
+| 1 — authority firewall/IR | passed | non-convertible types, canonical v1 identity, probability-free finite leaf IR |
+| 2 — exact leaf verifier | passed | exact product rows, exit mass, SCC absorption, resources, historical regressions |
+| 0–2 checkpoint | passed | first coherent clean local commit and exact HANDOFF continuation |
 | 3 — real cyclic leaf | not started | exact-terminal Transmute/Scour renewal certificate, analytical oracle, deterministic control |
 | 4 — flatten/evaluate | not started | FinalSuccess-only positive exit mass, ordinary JSON, independent exact evaluator, resource/cost reconciliation |
 | 5 — shadow/MCP | not started | immutable ordinary finalization, isolated private caps/process, full/core identity comparison, MCP operator evidence |
@@ -80,19 +113,48 @@ Stop without editing or cleaning if any source/tree/MCP condition differs.
 ## Gate 0 Record
 
 ```text
-revalidated source owners:
-engine source/test integration:
-benchmark/Lab diagnostic schema owner:
-native-only/common-source placement:
-release-WASM participation and conditional acceptance:
-option-disabled refinement control:
-option-disabled evaluator control:
-option-disabled compiler control:
-option-disabled solve control:
-historical fixture identity:
-missing-mass result:
-archived estimate metadata:
-decision:
+revalidated source owners: solver_executable_carrier_planner.hpp is projection
+  vocabulary only; FixedOptionSpec is in solver_model.hpp; OptionKernel is in
+  solver_calc_types.hpp with builders in solver_options*.cpp/reforge/calc;
+  exact-state/refinement/evaluation owners, solver_compile.cpp, simulator.cpp,
+  solver_eval*.cpp, solver_policy_assertion*.cpp, BoundedPolicyIncumbent, and
+  IncumbentPortfolio match the plan
+engine source/test integration: fragment contracts/verifier are
+  engine/benchmarks/solver_executable_fragment.{hpp,cpp}; focused coverage is
+  engine/tests/test_solver_fragment.cpp and the --solver-fragment-only suite
+  selector in the monolithic native test executable
+benchmark/Lab diagnostic schema owner: engine/benchmarks/solver_benchmark.cpp
+  owns native case validation/reporting; solver_lab_cases.py owns bounded Lab
+  import validation; solver_corpus_runner.py and solver_lab_service.py bind
+  immutable cases/revisions to the native benchmark
+native-only/common-source placement: native benchmark/test-private; no new
+  translation unit in engine/engine-sources.txt and no include from a common
+  engine translation unit
+release-WASM participation and conditional acceptance: none for Gates 0–2
+  under the selected placement; changing that decision later requires the
+  plan's conditional release-WASM build/parity gate
+option-disabled refinement control: PASS, 362 checks / 0 failures
+option-disabled evaluator control: PASS, 15,761 checks / 0 failures;
+  exchangeable-family hashes compressed=9a12bd4cc7d2f472 and
+  raw=eee79a5659d79e68
+option-disabled compiler control: PASS, 583 checks / 0 failures
+option-disabled solve control: PASS, 86,220 checks / 0 failures
+baseline native-test executable identity: sha256
+  c0c5f27647526946ad72d4d85448ee9eb486dabfe382ddb07a8d4abac3e4b012
+historical fixture identity: historical-coarse-row-missing-mass-v1; exact
+  authoritative physical signature 0.50 progress / 0.30 recoverable miss /
+  0.20 blocker-wrong-carrier; the latter two use the same diagnostic carrier
+  projection but distinct exact keys and distinct typed continuations
+missing-mass result: PASS; the physical row retained only progress and
+  recoverable miss, so the verifier refused authoritative_outcome_missing at
+  0.80 before graph value/resource work; the 0.625/0.375 rewrite and duplicate
+  1.20 physical mass also refused
+archived estimate metadata: 12365.392875058 and 12197.277488393, retained only
+  as finite rejected-classification constants in the test fixture; never used
+  as probability, value, resource, candidate, or incumbent input
+decision: PASS; owners and placement are frozen, all four pre-change controls
+  passed, the historical failure class reproduces, and no production/common
+  engine behavior changed
 ```
 
 Do not treat archived estimates as current values or executable authority.
@@ -100,22 +162,64 @@ Do not treat archived estimates as current values or executable authority.
 ## Gates 1–2 First Coherent Checkpoint
 
 ```text
-authority type names:
-non-convertibility checks:
-IR schema/identity:
-single exact entry identity/refusal evidence:
-malformed-IR refusal matrix:
-exact product owner:
-mass/renormalization/duplicate regressions:
-carrier-projection merge regression:
-distinct exact-state/nontrivial-lumpability refusal:
-improper/proper SCC results:
-expected resource/residual results:
-cap/cancel/refusal results:
-focused test command/result:
-checkpoint commit:
-git status:
-decision:
+authority type names: ExecutableFragmentProposalV1 -> ExecutableFragmentIRV1
+  -> ExactLeafFragmentVerifierV1/VerifiedLeafFragmentV1 -> private-token
+  FlattenedFragmentCandidateV1; the last type is constructible only by the
+  future SingleFragmentFlattenerV1 and is not yet an executable strategy
+non-convertibility checks: compile-time assertions cover proposal/IR/verified/
+  flattened cross-stage construction and conversion, scalar conversion, and
+  CompiledPolicyAssertion conversion; VerifiedLeafFragmentV1 and
+  FlattenedFragmentCandidateV1 have no public/default/deserializer constructor
+IR schema/identity: schema 1, stable action/scope/family/goal/artifact and all
+  named semantics versions, finite controller-memory schema, typed ordered
+  fail-closed control, no probability field; canonical bytes are retained
+  alongside FNV digest and equality checks both; exact-entry identity encodes
+  its full canonical bytes after the digest; display labels/order are excluded
+single exact entry identity/refusal evidence: two exact entries produce
+  different separately verified certificate identities; symbolic: and domain:
+  entries refuse symbolic_entry_domain_not_supported
+malformed-IR refusal matrix: unsupported schema, duplicate node/edge/priority,
+  missing entry/exit/target, nested fragment, Restart, Imprint, unstable action
+  identity, missing/non-fail-closed default, invalid observed-choice ordering,
+  unknown condition, and oracle-unknown action all refuse deterministically
+exact product owner: benchmark/test-private ExactLeafFragmentVerifierV1 with a
+  const ExactPrimitiveOracleV1; complete key is exact item key + hard execution
+  state + controller node + finite controller memory; contract/source include
+  audit found no solver solve/scheduler/action-ledger/proof/lower/incumbent owner
+mass/renormalization/duplicate regressions: PASS for missing 0.20 outcome,
+  stored-bit mismatch on 0.625/0.375, duplicate physical 1.20 mass, and
+  authoritative/physical identity mismatch; zero-mass outcomes remain in the
+  authoritative signature but create no reachable graph state; each physical
+  record binds its own stored bits, exact successor/hard state, next memory,
+  selected edge, and canonical resource quantities into certificate bytes
+carrier-projection merge regression: same diagnostic projection with distinct
+  exact exit keys remains two typed exits; diagnostic projection is absent
+  from product keys, exit keys, routing, SCC membership, and certificate bytes
+distinct exact-state/nontrivial-lumpability refusal: two distinct exact keys
+  with identical future behavior remain three product rows rather than merge;
+  there is no quotient/lumpability input or API
+improper/proper SCC results: canonical reachable closed non-exit SCC refuses
+  with no certificate; positive-probability cyclic retry verifies one cyclic
+  SCC, absorption/exit mass 1, and deterministic repeated certificate identity
+expected resource/residual results: at p=0.4, expected stable action count and
+  transmute quantity are 2.5, priced diagnostic is 5.0 at price 2.0, per-exit
+  joint resource mass reconciles to 2.5, and all mass/linear/resource residuals
+  are below their fixed versioned tolerances; tolerance overrides refuse;
+  unknown resource keys refuse against the copied immutable context vocabulary;
+  missing/nonfinite prices omit only the optional price diagnostic
+cap/cancel/refusal results: zero/binding state, transition, estimated-byte,
+  graph/linear-work, already-expired deadline, and cancellation controls all
+  return refusal with no VerifiedLeafFragmentV1 or stochastic exit mass
+focused test command/result: powershell -File scripts/dev-engine.ps1 -Task
+  Test -Suite fragment => PASS, 119 checks / 0 failures; required post-change
+  controls: refinement PASS 362/0; evaluator PASS 15,761/0 with unchanged
+  compressed/raw hashes 9a12bd4cc7d2f472 / eee79a5659d79e68
+checkpoint commit: local commit titled `Add exact executable fragment leaf
+  verifier` (this checkpoint; Co-authored-by: Codex <codex@openai.com>)
+git status: clean after the local checkpoint commit; branch remains unpushed
+decision: PASS; retain Gates 0–2 and continue only with Gate 3's real
+  engine-backed cyclic leaf. No executable strategy, upper improvement,
+  incumbent authority, product behavior, or overnight qualification is claimed
 ```
 
 The first checkpoint may claim an exact verified leaf core only. It may not

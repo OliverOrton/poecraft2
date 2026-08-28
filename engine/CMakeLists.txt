@@ -185,6 +185,7 @@ endif()
 # only calls the public engine API; json.hpp is reused solely for tooling-side
 # spec/report parsing.
 add_executable(poecraft_solver_benchmark
+    benchmarks/solver_executable_fragment.cpp
     benchmarks/solver_benchmark.cpp)
 target_include_directories(poecraft_solver_benchmark
     PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
@@ -223,6 +224,8 @@ if(BUILD_TESTING)
         tests/test_solver_eval.cpp
         tests/test_solver_api.cpp
         tests/test_solver_refinement.cpp
+        benchmarks/solver_executable_fragment.cpp
+        tests/test_solver_fragment.cpp
         tests/test_solver_quotient_proof.cpp
         tests/test_solver_quotient_partition.cpp
         tests/test_solver_quotient_bellman.cpp
@@ -272,6 +275,8 @@ if(BUILD_TESTING)
         COMMAND poecraft_engine_tests --solver-s8-3-only)
     add_test(NAME poecraft_solver_refinement
         COMMAND poecraft_engine_tests --solver-refinement-only)
+    add_test(NAME poecraft_solver_fragment
+        COMMAND poecraft_engine_tests --solver-fragment-only)
     add_test(NAME poecraft_solver_quotient_proof
         COMMAND poecraft_engine_tests --solver-quotient-proof-only)
 
@@ -287,6 +292,7 @@ if(BUILD_TESTING)
         poecraft_solver_api
         poecraft_solver_s8_3
         poecraft_solver_refinement
+        poecraft_solver_fragment
         poecraft_solver_quotient_proof
         PROPERTIES LABELS "native")
     set_tests_properties(
@@ -299,10 +305,13 @@ if(BUILD_TESTING)
         poecraft_solver_api
         poecraft_solver_s8_3
         poecraft_solver_refinement
+        poecraft_solver_fragment
         poecraft_solver_quotient_proof
         PROPERTIES LABELS "native;solver")
     set_tests_properties(poecraft_solver_refinement PROPERTIES
         LABELS "native;solver;solver-refinement")
+    set_tests_properties(poecraft_solver_fragment PROPERTIES
+        LABELS "native;solver;solver-fragment")
     set_tests_properties(poecraft_solver_quotient_proof PROPERTIES
         LABELS "native;solver;solver-quotient-proof")
     set_tests_properties(poecraft_solver_solve PROPERTIES

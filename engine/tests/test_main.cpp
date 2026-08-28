@@ -135,6 +135,12 @@ int main(int argc, char** argv) {
                     pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 && std::string(argv[1]) == "--solver-fragment-only") {
+        run_solver_fragment_tests();
+        std::printf("solver fragment tests: %d checks, %d failures\n",
+                    pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 &&
         std::string(argv[1]) == "--solver-quotient-proof-only") {
         run_solver_quotient_proof_tests();
@@ -190,6 +196,7 @@ int main(int argc, char** argv) {
     run_solver_api_tests(artifact_dir);
     run_solver_s8_3_tests();
     run_solver_refinement_tests();
+    run_solver_fragment_tests();
     run_solver_quotient_proof_tests();
     run_solver_quotient_partition_tests();
     run_solver_quotient_bellman_tests();

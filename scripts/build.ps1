@@ -120,6 +120,8 @@ toolchain is installed.
             "$Root/engine/tests/test_solver_eval.cpp",
             "$Root/engine/tests/test_solver_api.cpp",
             "$Root/engine/tests/test_solver_refinement.cpp",
+            "$Root/engine/benchmarks/solver_executable_fragment.cpp",
+            "$Root/engine/tests/test_solver_fragment.cpp",
             "$Root/engine/tests/test_solver_quotient_proof.cpp",
             "$Root/engine/tests/test_solver_quotient_partition.cpp"
         )
@@ -166,6 +168,7 @@ toolchain is installed.
             "-I$Root/engine/src" `
             "-I$HarvestGeneratedDirectory" `
             @EngineSources `
+            "$Root/engine/benchmarks/solver_executable_fragment.cpp" `
             "$Root/engine/benchmarks/solver_benchmark.cpp" `
             @BenchmarkSystemLibraries `
             -o "$BuildDirectory/poecraft_solver_benchmark.exe"
