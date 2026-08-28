@@ -2,7 +2,7 @@
 
 **Status: active implementation boundary.** Oliver approved
 [Native Solver Lab v0](docs/active/2026-08-27-native-solver-lab-v0/plan.md)
-from clean checkpoint `bd86b46` on 2026-08-27. Gates 0-5 are complete; Gate 6
+from clean checkpoint `bd86b46` on 2026-08-27. Gates 0-6 are complete; Gate 7
 is next.
 
 ## Checkpoint
@@ -10,6 +10,8 @@ is next.
 - Branch: `main`, local-only; nothing was pushed.
 - Native Solver Lab checkpoints through typed LLM controls:
   `d893db9`, `b047f02`, `91d44dd`, `7bf0f9d`, `cde2ccb`, and `1d5350a`.
+- Gate 5 practical GUI checkpoint: `a601a3a`.
+- Profile-to-worker binding checkpoint: `14ebf42`.
 - Active-boundary selection commit: `25737c3` (`Activate PDR strict proof
   memory boundary`).
 - Native checkpoint/replay implementation: `f15f590` (`Add native solver
@@ -37,10 +39,28 @@ Queue & Run / Compare / Strategy / Matrix GUI surfaces. Matrix expansion is
 canonical and idempotent unless the explicit new-batch action is used. Oliver
 still owns rendered visual/usability review.
 
-The next boundary is Gate 6 behavior-neutral qualification: run the frozen
-five-case v0 corpus through the direct runner and Lab under the same locked
-profile, compare semantic projections, and report orchestration overhead. Do
-not run the full acceptance pipeline until Gate 7.
+Gate 6 behavior-neutral qualification passed all five frozen cases from clean
+`14ebf42`. Direct and Lab requests, runner classifications, endpoint semantics,
+strategy hashes, exact-evaluation results, and distinct bound milestones all
+matched. Direct wall was 439.722325 seconds; Lab wall was 440.980810 seconds,
+a single observed delta of 1.258485 seconds / 0.2862%.
+
+Qualification fixed one provenance defect first: the supervisor had hardcoded
+the explicit goal-progress-gating worker override false despite the profile
+declaring true. The native Calculator profile default had still resolved the
+prior solve option true, so prior native behavior was not changed. The Lab now
+derives exact evaluation, Simulator verification, and gating from the typed
+profile and records an explicit matching command.
+
+The partial wall-time-stopped case disclosed a 0.0051% `outcome_entries`
+difference while all protected endpoints and stable work counters matched.
+This is retained as non-fixed-work observation evidence; the corpus explicitly
+sets `fixed_work_identity_required: false`, and direct repeats varied more.
+
+The next boundary is Gate 7 only: run final acceptance once, including the
+required 10,000-run Simulator control, finish operator/MCP/recovery docs,
+archive the plan/result, and update this handoff. No native source changed in
+the Lab boundary, so no native rebuild is required solely for Gates 0-6.
 
 The locked research profile is `native_allflame_no_imprint_v1`: fixed resolved
 Allflame economy, Calculator product profile, automatic Imprints off,

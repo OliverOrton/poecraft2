@@ -1,6 +1,6 @@
 # Native Solver Lab v0 Execution Log
 
-**Status: active; Gates 0-5 complete, Gate 6 next.**
+**Status: active; Gates 0-6 complete, Gate 7 next.**
 
 Parent: [Plan](plan.md)
 
@@ -10,7 +10,7 @@ Parent: [Plan](plan.md)
   boundary`) and activated from clean checkpoint `bd86b46` (`Plan native
   solver lab v0`).
 - Working tree was clean at activation.
-- Current gate: Gate 6 — baseline freeze and behavior-neutral qualification.
+- Current gate: Gate 7 — final acceptance and handoff.
 - Gate 0 added only versioned contracts, the frozen profile/corpus, and
   optional dependencies. No catalog, supervisor, GUI, CLI, or MCP service
   implementation exists yet.
@@ -27,9 +27,10 @@ Parent: [Plan](plan.md)
 
 ## Next executable step
 
-Run the frozen v0 cases through the direct runner and the Lab under the same
-profile, then compare canonical semantic projections and characterize measured
-orchestration overhead without treating wall time or OS state as semantics.
+Run the one selected final acceptance pass, write the operator documentation
+and result, archive the completed boundary, and leave the repository at a clean
+local checkpoint. No native files changed in Gates 0-6, so Gate 7 does not
+require a behavior-driven native rebuild.
 
 ## Gate 0 result — 2026-08-27
 
@@ -202,3 +203,54 @@ orchestration overhead without treating wall time or OS state as semantics.
   Service coverage exercises role/include/exclude expansion. Focused Gate 0-5
   tests: 35 passed in 7.09 seconds. No native matrix, rendered visual review,
   or full acceptance pipeline was run.
+
+## Gate 6 result — 2026-08-28
+
+- Qualification first found that the declared profile enabled goal-progress-
+  gated reforges while the Lab supervisor passed the shared worker adapter's
+  explicit override as false. The native `calculator_product_v1` default had
+  still resolved the option true in the prior Gate 2 report, so this was a
+  command/provenance binding defect rather than a changed native result. The
+  supervisor now derives exact evaluation, sampled verification, and the
+  gating override from one typed profile binding. Regression coverage checks
+  all three values.
+- The binding fix was checkpointed at `14ebf42`. A pre-fix direct matrix at
+  `a601a3a` remains retained as diagnostic evidence; both authoritative
+  qualification paths were freshly run from clean `14ebf42` so source identity
+  is equal.
+- Direct runner: five cases, one worker, no survivors, 439.722325 seconds.
+  Lab: canonical five-job matrix, one worker, five immutable completed
+  attempts, no survivors or retries, 440.980810 seconds. The single observed
+  Lab-minus-direct delta was 1.258485 seconds / 0.2862%; this is timing
+  evidence, not solver semantics.
+- All five requests matched exactly on source, executable, artifact, corpus,
+  case, economy, profile, action scope, caps, watchdog, measurement, and the
+  explicit gating override. Runner classifications also matched exactly.
+- All five final semantic projections matched: status/termination, bounds,
+  exact evaluated cost, proof provenance, state/row/transition and stable work
+  counters, policy and transition hashes, compiled graph and strategy hash,
+  exact success/properness/pricing/reconciliation/off-policy evidence, cap
+  classification, and the sequence of distinct lower/upper/incumbent
+  milestones.
+- Results were exact at `1618.2138946963837` for three prefixes and
+  `1101.15648683309` for three suffixes. PDR reproduced the named solver-owned
+  resource stop at lower `21.772459401271156` / evaluated upper
+  `7866.432124027084`. The partial 4-to-5 control stopped at its requested
+  bounded finish with lower `36.48853172876641` / evaluated upper
+  `7896721.254200992`. The Bow control reproduced its state-cap result at lower
+  `212.38564294509226` / evaluated upper `223349.0000393144`.
+- Native diagnostic trace sampling is clock-positioned: direct/Lab sample
+  counts can differ while distinct bound milestones match. The partial
+  wall-time-stopped case also differed by 17,405 cumulative `outcome_entries`
+  (0.0051%) while every protected endpoint and stable work counter matched.
+  The corpus explicitly sets `fixed_work_identity_required: false`; an
+  independent direct repeat varied rows, transitions, hashes, and outcomes by
+  more while reaching the same terminal result. The qualification report
+  retains this observed difference instead of hiding or promoting it to
+  solver semantics.
+- Added a reusable qualification command and tests that separate immutable
+  request identity, strict semantic endpoints, sampled observations, and
+  runner classification. Qualification evidence is under ignored
+  `build/solver-lab/gate6-{direct,lab,qualification}-14ebf42*`.
+- No full acceptance pipeline or 10,000-run Simulator control was run in this
+  gate.
