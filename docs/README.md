@@ -31,6 +31,18 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
+The selected
+[Verified Executable Graph-Fragment Core v1](active/2026-08-28-verified-executable-graph-fragment-core-v1/plan.md)
+boundary creates a non-convertible proposal/fragment/incumbent authority
+firewall, a versioned probability-free leaf IR, exact engine-built product
+verification, complete exit mass, SCC absorption, expected resource vectors,
+and one ordinary-strategy flatten/evaluate vertical slice. It remains
+shadow-only: no meta search, broad option library, proof/lower/scheduler/action-
+ledger/incumbent behavior, Imprint, product default, ABI, or WASM change is in
+scope. The fresh implementation task must use configured Solver Lab MCP tools
+for case discovery and operator evidence while repository tools own source and
+tests.
+
 The completed
 [Native Solver Lab Unattended Execution and Identity Hardening](archive/2026-08-28-native-solver-lab-unattended-hardening/README.md)
 boundary started from the completed GUI stabilization and hardened immutable
@@ -38,7 +50,8 @@ dispatch identity, watchdog enforcement, atomic hashed terminal publication,
 orphan quarantine/recovery, evidence integrity, host headroom, and one
 MCP-plus-supervisor unattended path. Gates 0–5 and every non-soak acceptance
 check passed. Oliver explicitly waived its six-plus-hour soak; the result
-retains that limitation and does not claim overnight qualification.
+retains that limitation and does not claim overnight qualification. The new
+fragment-core boundary must preserve that wording.
 
 The completed
 [Native Solver Lab GUI Stabilization](archive/2026-08-28-native-solver-lab-gui-stabilization/README.md)
