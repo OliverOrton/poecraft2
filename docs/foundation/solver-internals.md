@@ -6,7 +6,7 @@ future work or define crafting mechanics.
 
 Parent: [Foundation](README.md)
 
-Verified against current source: 2026-08-27. Scope: private solve
+Verified against current source: 2026-08-27 @ `952524b`. Scope: private solve
 phase ownership, cooperative continuation boundaries, current
 proof/publication boundaries, action-family contract, exact evaluator gated-
 kernel authority, exact reforge row continuation, telemetry serialization
@@ -56,7 +56,7 @@ not interchangeable:
 | Production policy adaptation | strict carrier mappings/kernels, exact runs, repaired or improved policy, compile routing | `solver_policy_refinement.hpp`, `solver_policy_refinement.cpp`, `solver_policy_oracle_*.inc`, `solver_policy_assertion.cpp` |
 | Policy compilation | ordinary strategy JSON and `PolicyCompilationTelemetry` | `solver_compile_contracts.hpp`, `solver_compile_conditions.hpp`, `solver_compile_serialization.hpp`, `solver_compile.cpp` |
 | Exact graph evaluation | `StrategyEvalResult`, occupancy/influence and action/material accounting | `solver_eval_types.hpp`, `solver_eval_helpers.hpp`, `solver_eval.cpp`, `solver_eval_resolve.cpp`, `solver_eval_report.cpp` |
-| API, accounting, and telemetry | C ABI results, typed progress snapshots, JSON, owned-byte and work counters | `solver_api.cpp`, `solver_solve_telemetry.cpp` (collection/accounting), `solver_solve_telemetry_json.cpp` (serialization), `solver_compile.cpp`, `solver_eval_report.cpp` |
+| API, accounting, telemetry, and native-development coarse replay | C ABI results, typed progress snapshots, JSON, owned-byte and work counters, versioned completed coarse graph | `solver_api.cpp`, `solver_development_checkpoint.cpp`, `solver_solve_telemetry.cpp` (collection/accounting), `solver_solve_telemetry_json.cpp` (serialization), `solver_compile.cpp`, `solver_eval_report.cpp` |
 | Sampled execution | mutable item plus RNG-driven strategy traversal | `simulator.cpp` and native action owners |
 
 The stateful Solve path has six named private authorities:
@@ -133,6 +133,7 @@ core model edit is cheap.
 | Strategy condition routing or JSON emission | `solver_compile_conditions.hpp`, `solver_compile_serialization.hpp`, `solver_compile.cpp` |
 | Exact strategy operation resolution or accounting report | `solver_eval_resolve.cpp`, `solver_eval.cpp`, `solver_eval_report.cpp` |
 | Solver progress, memory, or work telemetry | the owning phase's typed counters, `solver_solve_telemetry.cpp` for collection/accounting, and `solver_solve_telemetry_json.cpp` for serialization |
+| Native cross-process coarse graph checkpoint/replay | `solver_development_checkpoint.cpp`, the cache compatibility contract in `solver_solve_expand.cpp`, and the native C ABI adapter in `solver_api.cpp` |
 
 Before changing a contract that crosses these rows, follow the
 [Change Impact Map](change-impact.md). Mechanics questions still require an
@@ -204,7 +205,11 @@ Oliver ruling and belong in the [mechanics library](../mechanics/README.md).
 - Public C ABI types and exports live under `engine/include/poecraft/`; the
   private headers on this page are not ABI.
 
-Replay/checkpoint remains intentionally deferred until the proof-carrying
-quotient representation is stable. A future development-only format must
-validate artifact, configuration, compiler, and source identity and must never
-become product proof authority.
+The native-development coarse checkpoint serializes a completed reusable
+`SolveTransitionCache` together with the calculator state/operator/admission
+namespace that gives its numeric IDs meaning. It requires exact caller and
+graph-option compatibility and then reruns Bellman, strict refinement,
+compilation, and evaluation. It is not a product or proof authority and is not
+exported by release WASM. Checkpointing an in-progress strict partition remains
+deferred until that larger proof-carrying representation has a stable joint
+ownership boundary.

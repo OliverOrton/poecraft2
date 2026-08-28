@@ -1,6 +1,7 @@
 # Resources, Resume, And Replay
 
-Parent: [Solver](README.md) | Verified against current source: 2026-08-27.
+Parent: [Solver](README.md) | Verified against current source: 2026-08-27 @
+`952524b`.
 
 ## Resource Dimensions
 
@@ -29,17 +30,38 @@ reachable closure inside one compatible `CalcContext`. Compatibility binds the
 start state, operator order, graph-affecting limits/options, and action scope;
 prices are intentionally excluded and rows are repriced on reuse.
 
-Cross-process disk replay is not yet a truthful stable contract. A real coarse
-checkpoint must serialize both the calculator's ordered state/operator and
-state-local admission authority and the sparse transition cache. A strict
-checkpoint must additionally serialize the persistent oracle/session,
-selected closure, partition generations, Bellman proof store, obligations,
-dependencies, row kernels, resumable cursors, and verified incumbent. Saving
-only the request or final JSON would not avoid graph construction and must not
-be called replay.
+Native development now supports cross-process replay of that completed coarse
+closure. `solver_development_checkpoint.cpp` serializes the calculator's
+ordered abstract states, generated planner operators, candidate and dependency
+ordering, state-local automatic admission, action-envelope evidence, and every
+behavior-bearing `SolveTransitionCache` arena. A load reconstructs those
+namespaces and must enter the ordinary compatible-cache path; it may not fall
+back to rebuilding the graph.
 
-Until that representation is implemented, benchmark artifacts are evidence,
-not resumable engine state. Any future format must version and validate source,
-compiler/FP contract, canonical and compiled artifact, goal/start carrier,
-prices, action vocabulary, options/caps, layouts, stable identities, payload
-checksums, and completeness before mutation.
+The benchmark harness exposes the intended interface for one selected case:
+
+```text
+poecraft_solver_benchmark ... --case CASE \
+  --save-development-checkpoint PATH
+poecraft_solver_benchmark ... --case CASE \
+  --load-development-checkpoint PATH
+```
+
+Its caller identity binds the ABI/compiler, compiled artifact manifest,
+canonical case JSON, resolved economy, and CLI graph overrides. The binary
+also carries format/layout guards, payload length, and checksum. Save refuses
+an incomplete or focused graph, an active calculator row/admission cursor, or
+a proof-carrying quotient graph. Load requires a fresh solver and exact
+identity/options/operator compatibility.
+
+Replay skips coarse state/transition construction only. Bellman optimization,
+strict refinement and repair, compilation, and evaluation run normally. The
+checkpoint is disposable native-development state: it is not exported by
+release WASM and has no correctness, exactness, publication, or evidence
+authority.
+
+A strict-partition checkpoint is still unimplemented. It would additionally
+need the persistent oracle/session, selected closure, partition generations,
+Bellman proof store, obligations and dependencies, row kernels, resumable
+cursors, and verified incumbent. Request/result JSON is not a substitute for
+either checkpoint.

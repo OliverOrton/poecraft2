@@ -6,6 +6,25 @@ routes to them rather than duplicating complete reports.
 
 Parent: [Documentation map](README.md)
 
+## Native Development Coarse-Graph Replay
+
+The 2026-08-27
+[checkpoint/replay result](archive/2026-08-27-solver-development-checkpoint-replay/result.md)
+qualifies a versioned native-development checkpoint at the completed coarse
+graph seam. A separate-process Eldritch automatic-action control preserves the
+exact `0.0103` value/bounds/evaluation, transition hash
+`0f4bbf35042d2517`, policy hash `cd2bdb9db48843ae`, 6-node / 7-edge graph,
+byte-identical compiled JSON, exact success, zero off-policy mass, and all
+mechanic lifecycle stages. Replay reports transition-graph reuse and reduces
+measured expansion from 44.69 ms to 0.07 ms on the control; its total wall is
+not faster because the tiny graph is dominated by loading/setup and downstream
+certification.
+
+Identity, graph-option, incomplete-boundary, truncation, checksum, and binary-
+layout mismatch refuse replay. The disposable checkpoint is iteration state,
+not committed evidence or product/proof authority. Strict-partition replay is
+not claimed.
+
 ## Action-Family PDR Attribution
 
 The 2026-08-27

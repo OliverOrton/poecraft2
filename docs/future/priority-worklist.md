@@ -7,7 +7,7 @@ selects an item or coherent group before an active plan is created.
 Parent: [Future work](README.md)
 
 Verified against current documentation, source ownership, and local PDR
-resource evidence: 2026-08-27 @ `3e28150`.
+resource evidence: 2026-08-27 @ `952524b`.
 
 ## Ranking Rules
 
@@ -25,12 +25,12 @@ correctness issue may preempt every performance item.
 
 ## Recommended Sequence
 
-1. Design and implement the versioned development-only checkpoint/replay
-   format in P1.3; do not substitute request/result JSON caching.
-2. Attribute and reduce the retained strict/proof memory owner reached after
+1. Attribute and reduce the retained strict/proof memory owner reached after
    the first successful PDR frontier insertion in P1.4.
-3. Qualify successor-complete rare/Eldritch proof coverage only if it reaches
+2. Qualify successor-complete rare/Eldritch proof coverage only if it reaches
    a measured lower-bound consumer.
+3. Extend development replay to the first closed strict partition only if
+   coarse replay leaves strict-iteration cost materially dominant.
 4. Finish the remaining source gravity-well splits after those owners settle.
 5. Return to product and strategy-review work from P3 without reopening
    completed solver cleanup by default.
@@ -166,37 +166,42 @@ progress visibility, fair scheduling, and a stable checkpoint boundary.
 
 ### P1.3 — Development-only deterministic checkpoint/replay
 
-**State:** highest-priority dedicated follow-up. A representation audit
-rejected fake request/result or sparse-row caching. Honest replay must capture
-the joint calculator/admission state at the coarse boundary and the oracle,
-partition, proof/dependency, kernel/cursor, and incumbent state at the strict
-boundary.
+**State:** completed at the coarse graph boundary 2026-08-27. Native
+cross-process replay now captures the joint calculator/admission state and all
+behavior-bearing sparse graph arenas, requires ordinary cache compatibility,
+and reruns Bellman/refinement/compilation/evaluation. The strict-partition
+extension remains conditional future work rather than part of this format.
 
 **Why after P1.2:** the repository intentionally deferred disk replay until
 the proof-carrying quotient representation stabilized. Same-side exact closure
 is now deterministic, but broad-row resumability should land first so the
 checkpoint does not freeze another monolithic work representation.
 
-Support at least two development checkpoints:
+The original design considered two development checkpoints:
 
-1. the completed coarse graph, selected policy, verified incumbent, and exact
-   carrier inputs immediately before strict refinement; and
+1. the completed coarse graph plus its exact calculator state, operator, and
+   admission namespace before downstream Bellman/refinement work; and
 2. the first closed strict partition plus its obligation ledger, row kernels,
    and resumable row cursors.
 
-Every checkpoint must bind and validate:
+The shipped coarse checkpoint binds and validates:
 
-- source/format version;
+- checkpoint-format version and binary layout;
 - compiled artifact and canonical data identities;
 - goal, start item, economy/prices, candidate action IDs, generated options,
   and solve profile/overrides;
 - stable state/action/layout identities and floating-point contract; and
 - completeness checksums for every serialized table.
 
-Mismatch must refuse replay. Checkpoints are development acceleration only:
+Mismatch refuses replay. Checkpoints are development acceleration only:
 they cannot become product proof, publication, or cache authority without a
 separate qualification. A clean replay must reproduce deterministic values,
 rows, transitions, hashes, and exact-evaluation output.
+
+The second boundary is deliberately not implied by the first. Add it only
+after measuring that replayed coarse construction is no longer enough for the
+next iteration loop; it must serialize the joint strict owners listed above
+rather than reusing the coarse format name.
 
 ### P1.4 — Attribute and repair PDR strict-proof amplification
 

@@ -30,7 +30,18 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. The completed
+No implementation boundary is active. Oliver must select the next chunk
+before implementation resumes.
+
+The completed
+[Solver Development Checkpoint/Replay](archive/2026-08-27-solver-development-checkpoint-replay/README.md)
+milestone implements native-development cross-process reuse of a completed
+coarse transition graph. Replay reconstructs the exact calculator
+state/operator/admission namespace, requires ordinary graph compatibility,
+and reruns Bellman, refinement, compilation, and evaluation. It is not a
+request/result cache, product proof authority, or release-WASM feature.
+
+The completed
 [Solver Exactness, Iteration, And Debt Closure](archive/2026-08-27-solver-exactness-iteration-debt-closure/README.md)
 milestone delivered eight of its nine debt items, passed full acceptance, and
 left honest cross-process checkpoint/replay as a dedicated future format

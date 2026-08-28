@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-08-27
 
+- [Solver Development Checkpoint/Replay](2026-08-27-solver-development-checkpoint-replay/README.md) —
+  added honest native cross-process reuse of the completed coarse solver graph
+  with exact calculator/admission reconstruction, hard mismatch refusal, and
+  byte-identical dynamic-action parity; strict-partition replay remains a
+  separate conditional extension.
 - [Solver Exactness, Iteration, And Debt Closure](2026-08-27-solver-exactness-iteration-debt-closure/README.md) —
   delivered cooperative exact reforge continuations, product-solver state
   reduction, a measured strict frontier-yield repair, modular telemetry/docs,
