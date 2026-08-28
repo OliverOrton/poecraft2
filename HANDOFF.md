@@ -1,106 +1,71 @@
 # Handoff
 
-**Status: active implementation boundary.** Oliver selected
-[PDR Strict-Proof Memory Attribution And Repair](docs/active/2026-08-27-pdr-strict-proof-memory/plan.md)
-on 2026-08-27. The completed
-[Solver Development Checkpoint/Replay](docs/archive/2026-08-27-solver-development-checkpoint-replay/README.md)
-is the iteration tool for this boundary.
+**Status: no active implementation boundary.** Oliver must select the next
+chunk before implementation resumes. The stopped
+[PDR Strict-Proof Memory Attribution And Repair](docs/archive/2026-08-27-pdr-strict-proof-memory/README.md)
+probe is the latest boundary.
 
 ## Checkpoint
 
 - Branch: `main`, local-only; nothing was pushed.
+- Active-boundary selection commit: `25737c3` (`Activate PDR strict proof
+  memory boundary`).
 - Native checkpoint/replay implementation: `f15f590` (`Add native solver
   graph checkpoint replay`).
 - Final cache ownership: `952524b` (`Keep replay evidence outside coroutine
   state`).
 - Release-WASM compiler workaround/rebuild: `5f49b4e` (`Stabilize and rebuild
   release WASM`).
-- The documentation/archive commit containing this handoff follows that source
-  checkpoint.
 - Calculator product scope remains `calculator_product_v1`: generated
   automatic Imprint programs off, voluntary economic Restart off,
   goal-progress-gated reforges on, junk-free exact terminal success, and no
   disabled action families unless a diagnostic control is selected.
 
-## Completed Result
+## Stopped PDR Replay Result
 
-All nine selected stabilization/debt items are now complete. The final item is
-an honest native-development checkpoint of a completed coarse transition
-graph, not request/result caching. It persists the ordered abstract states,
-dynamic operators, state-local automatic admission, action-envelope evidence,
-and sparse graph arenas required to give numeric IDs their exact meaning.
+The current coarse-graph checkpoint cannot faithfully resume
+`conquest-lamellar-allflame-clean-4-pdr-product8`. The last prepared Bellman
+graph contained `1207` states, while delayed incremental generation had grown
+the calculator to `7242` carrier states and `61476` rows. That additional
+scheduler state is behavior-bearing and is not part of the coarse checkpoint
+contract.
 
-Replay enters the ordinary transition-cache compatibility path and reruns
-Bellman optimization, strict refinement/repair, compilation, and exact
-evaluation. Identity, graph-option, incomplete-boundary, corruption,
-truncation, and binary-layout mismatches refuse. A loaded checkpoint may not
-silently rebuild. The native C ABI and benchmark harness expose this only for
-development; release WASM has no checkpoint API and solver mechanics,
-publication authority, and product defaults are unchanged.
+A stable-prefix replay with the complete dynamic vocabulary priced all `310`
+scanned actions, but published upper `9844.962286897467` and stopped on
+`numerical_stability` with `18451` unresolved obligations. The matched
+ordinary diagnostic published upper `7866.432124027084` and stopped on memory.
+A broader calculator-closure replay also solved a different graph. The
+mismatch fired Gate 1's explicit stop condition before memory attribution.
 
-Implementation also repaired two cache-fidelity defects found by the replay
-control: nested certification can no longer replace the requested solve's
-retained graph, and exact outer quotients carry the complete product action
-scope used by cache compatibility.
+All experimental source edits were removed. No solver behavior, ABI, fixture,
+or release-WASM change was retained. The authoritative 1 GiB PDR boundary is
+unchanged: bounded upper `7866.432124027084`, certified lower
+`21.772459401271156`, `3507568` strict reforge work, `846846750` retained
+proof/quotient bytes, and `max_solver_owned_bytes` at a native peak of
+`1179431999` bytes.
 
-## Measured Replay
+## Required Successor
 
-Separate native processes saved and loaded the dynamic Eldritch Annul/Exalt
-forced-winner control. Both produced exact `0.0103` value, lower, upper, and
-evaluated cost; transition hash `0f4bbf35042d2517`; policy hash
-`cd2bdb9db48843ae`; a 6-node / 7-edge compiled graph; byte-identical strategy
-SHA-256 `E494EA2F...E874A33`; exact success; zero off-policy mass; and complete
-automatic-action lifecycle evidence.
+Do not use the existing coarse replay for PDR memory attribution. A selected
+successor must first implement either:
 
-Replay reports graph reuse and reduced measured expansion from 44.69 ms to
-0.07 ms. Total case wall was 719.12 ms ordinarily and 1315.29 ms on replay,
-so this small control does not establish a total speedup: file loading/setup
-and downstream certification dominate it. The intended win is avoiding much
-larger coarse graph construction while iterating on downstream refinement,
-repair, compiler, and evaluation code.
+1. a scheduler-aware checkpoint that atomically preserves incremental carrier
+   order/generations/cursors, delayed rows and status, focused/support
+   frontiers, restricted values/incumbent/properness, complete action-ledger
+   scheduling counters, and graph generations; or
+2. a first-strict-partition checkpoint that additionally preserves the
+   persistent oracle, partition/dependency generations, obligations, kernels,
+   cursors, and incumbent.
 
-## PDR Exactness Boundary
+Its first acceptance gate is an ordinary/save/replay triplet on the fixed 1
+GiB PDR witness with identical request/action scope, upper/evaluation, lower,
+strict frontier/work, open obligations, and resource stop. Only after that
+parity may retained proof/quotient memory be attributed or repaired.
 
-The prior four-mod PDR boundary is unchanged. The last matched run reached one
-strict frontier, reduced about 14,000 stale alternative rows to two, and then
-hit the 1 GiB solver-owned memory boundary with 846,846,750 bytes retained by
-the proof store plus quotient. Its independently exact-evaluated bounded upper
-is `7866.432124027084` and certified lower is `21.772459401271156`.
+## Stable Baseline
 
-The coarse checkpoint makes that case cheaper to iterate after graph closure;
-it does not reduce strict proof memory or make the case exact.
-
-## Recommended Next Boundary
-
-P1.4 is active. First run the single matched PDR checkpoint save/replay pair,
-then attribute retained proof/quotient bytes at the first frontier and second
-carrier generation. Choose a repair only from the measured owner. Do not begin
-with another generic cap increase or a broad benchmark matrix.
-
-A first-closed-strict-partition checkpoint is a conditional later extension,
-not missing data in the shipped coarse format. Build it only if measurement
-shows strict replay itself is now the iteration bottleneck; it must jointly
-serialize the persistent oracle, partition/dependency generations,
-obligations, kernels, cursors, and incumbent.
-
-## Acceptance
-
-Passed:
-
-- fresh native release build passed;
-- solver API checkpoint/refusal tests passed 2,686 checks;
-- solve, quotient-proof, and policy-refinement suites passed 86,220 / 616 /
-  2,083 checks;
-- separate-process dynamic-action parity with byte-identical compiled JSON;
-- release WASM rebuilt; its 28/28 smoke suite passed and the checkpoint symbols
-  remain absent from the export list;
-- the complete repository pipeline passed ingest, economy, canonical data and
-  artifact, bindings, 3,417,290 native checks, benchmark specifications,
-  release WASM, and nonvisual web tests;
-- `npx tsc --noEmit` passed;
-- 1,759 local Markdown targets had zero missing, and all 62 current documents
-  were reachable from the main map; and
-- `git diff --check` passed.
-
-No rendered browser review or broad hard-case benchmark matrix was run or
-claimed.
+The completed native checkpoint milestone remains valid for completed coarse
+graphs and its dynamic Eldritch control. It passed the full repository pipeline
+and release-WASM acceptance before this stopped probe. The probe did not rerun
+the full pipeline, broad benchmarks, or browser review because it retained no
+source change.

@@ -30,11 +30,16 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active
-[PDR Strict-Proof Memory Attribution And Repair](active/2026-08-27-pdr-strict-proof-memory/plan.md)
-boundary measures the existing four-mod PDR witness through coarse graph
-save/replay, attributes retained strict proof/quotient memory, and permits only
-the narrowest proved repair supported by that evidence.
+No implementation boundary is active. Oliver must select the next chunk before
+implementation resumes.
+
+The stopped
+[PDR Strict-Proof Memory Attribution And Repair](archive/2026-08-27-pdr-strict-proof-memory/README.md)
+probe established that the current coarse checkpoint cannot faithfully resume
+the four-mod PDR witness's open incremental scheduler. A scheduler-aware or
+first-strict-partition checkpoint must prove ordinary/replay parity before
+replay can support strict-proof memory attribution; no solver change from the
+probe was retained.
 
 The completed
 [Solver Development Checkpoint/Replay](archive/2026-08-27-solver-development-checkpoint-replay/README.md)

@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-08-27
 
+- [PDR Strict-Proof Memory Attribution And Repair](2026-08-27-pdr-strict-proof-memory/README.md) —
+  stopped at Gate 1 after stable-prefix and broader-closure experiments proved
+  that the coarse checkpoint omits behavior-bearing incremental scheduler
+  state; no solver change was retained, and a scheduler-aware or first-strict-
+  partition checkpoint is required before replay-based memory attribution.
 - [Solver Development Checkpoint/Replay](2026-08-27-solver-development-checkpoint-replay/README.md) —
   added honest native cross-process reuse of the completed coarse solver graph
   with exact calculator/admission reconstruction, hard mismatch refusal, and

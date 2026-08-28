@@ -1,11 +1,10 @@
 # PDR Strict-Proof Memory Attribution And Repair
 
-**Status: active.** Oliver selected P1.4 on 2026-08-27. This boundary uses the
-new native coarse-graph checkpoint on the existing four-mod PDR witness, then
-attributes and reduces the retained strict proof/quotient memory owner after
-the first real frontier insertion.
+**Status: stopped at Gate 1 on 2026-08-27.** The existing coarse checkpoint
+proved insufficient for the open incremental scheduler. See the
+[result](result.md).
 
-Parent: [Active work](../README.md)
+Parent: [Documentation archive](../README.md)
 
 ## Fixed Witness
 
@@ -61,14 +60,8 @@ evaluated bounded upper is `7866.432124027084`; the certified lower is
   review, or repeated cap-only continuations.
 - Do not claim exactness from the bounded incumbent or restricted coarse value.
 
-## Acceptance Evidence
+## Outcome
 
-- ordinary versus replayed PDR phase wall time and graph-reuse evidence;
-- retained-memory ledger at the two strict generations;
-- before/after named resource, work, frontier, row, obligation, value, bound,
-  and exact-evaluation fields;
-- focused solver/refinement/API tests selected from the actual change impact;
-- WASM rebuild only if an engine ABI or release engine source change requires
-  it; and
-- current `HANDOFF.md`, stable solver resource documentation, an archived
-  result, coherent local commits, and `git diff --check`.
+Gate 1 demonstrated that the named witness requires scheduler state outside
+the shipped coarse format. The first stop condition fired. Gates 2 through 5
+were not entered and no source repair was accepted.
