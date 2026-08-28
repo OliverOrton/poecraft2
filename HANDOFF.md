@@ -1,15 +1,15 @@
 # Handoff
 
-**Status: active implementation boundary.** Oliver selected
-[Native Solver Lab Case Authoring](docs/active/2026-08-28-native-solver-lab-case-authoring/README.md)
-on 2026-08-28 after exercising Native Solver Lab v0. The active plan adds
-revision-safe local cases, a Calculator export bridge, GUI/CLI/MCP lifecycle
-parity, and a project-scoped Codex MCP connection. It does not start the
-four-mod PDR exactness successor.
+**Status: no active implementation boundary.** The completed
+[Native Solver Lab Case Authoring](docs/archive/2026-08-28-native-solver-lab-case-authoring/README.md)
+boundary was selected and completed on 2026-08-28. Oliver must choose the next
+chunk before implementation resumes.
 
 ## Checkpoint
 
 - Branch: `main`, local-only; nothing was pushed.
+- Case-authoring selection: `c1dd9d7`.
+- Case-authoring implementation: `88d65a9`.
 - Native Solver Lab checkpoints through typed LLM controls:
   `d893db9`, `b047f02`, `91d44dd`, `7bf0f9d`, `cde2ccb`, and `1d5350a`.
 - Gate 5 practical GUI checkpoint: `a601a3a`.
@@ -30,7 +30,43 @@ four-mod PDR exactness successor.
   goal-progress-gated reforges on, junk-free exact terminal success, and no
   disabled action families unless a diagnostic control is selected.
 
-## Completed Native Solver Lab
+## Completed Native Solver Lab Case Authoring
+
+The Lab now supports editable local drafts, native `--validate-only`, and
+content-addressed immutable revisions. Submitted jobs record the revision ID,
+canonical case digest, immutable case/corpus paths, profile identity, and
+effective native command, so later draft edits cannot alter queued or completed
+work. Frozen fixtures remain read-only, and deleting a draft retains saved
+revisions.
+
+The PySide6 GUI now has a fifth **Cases** surface. Calculator owns graphical
+item/goal authoring and can **Copy Lab case**; the Lab imports that envelope,
+allows JSON plus common watchdog/bounded-finish/memory edits, validates, saves,
+exports, and submits revisions. The bridge preserves concrete affixes,
+crafted/fractured/veiled flags, influence/Eldritch state, the product goal,
+diagnostic family exclusions, and pinned Allflame prices. It refuses active
+Imprint checkpoints and special item flags that the native benchmark start
+format cannot preserve.
+
+CLI and MCP expose the same lifecycle. The closed adapter now has 31 typed
+tools and still has no arbitrary shell, SQL, path-write, mechanic override, or
+native argument-bag authority. The installed server is registered in the
+user-local Codex configuration as `poecraft2-native-solver-lab`, rooted at this
+checkout; a newly started task or Codex restart is required to load it.
+
+Acceptance passed 26 focused Lab tests, the complete web suite and TypeScript,
+a real native case validation/revision/submit probe, and the installed MCP
+stdio handshake. The final full repository pipeline passed 3,417,290 native
+checks, all 12 solver benchmark specifications, 28/28 release-WASM worker
+checks, and all remaining layers. The first full-pipeline attempt hit a
+timing-only existing WASM finalization-cancel assertion; that exact test and
+the complete pipeline both passed on rerun. No solver, mechanic, ABI, strategy
+vocabulary, compiled data, or WASM module changed.
+
+Stable usage is in [Native Solver Lab](docs/foundation/solver-lab.md), and the
+exact outcome is in the archived [result](docs/archive/2026-08-28-native-solver-lab-case-authoring/result.md).
+
+## Completed Native Solver Lab v0
 
 Native Solver Lab v0 extends the existing `solver_corpus_runner.py` and
 `poecraft_solver_benchmark`; it does not create another solver backend. GUI,
@@ -38,8 +74,9 @@ CLI, and MCP share one typed application service. One isolated OS process owns
 each solve, attempts and artifacts are immutable, the catalog is persistent,
 and partial/crash/watchdog/resource outcomes remain distinct.
 
-Gates 0-7 provide persistent immutable attempts, resource-aware native
-supervision, JSON and a closed 21-tool MCP adapter, investigation bundles, and
+The original v0 Gates 0-7 provided persistent immutable attempts,
+resource-aware native supervision, JSON and a closed 21-tool MCP adapter,
+investigation bundles, and
 Queue & Run / Compare / Strategy / Matrix GUI surfaces. Matrix expansion is
 canonical and idempotent unless the explicit new-batch action is used. Oliver
 still owns rendered visual/usability review.

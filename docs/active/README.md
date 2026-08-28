@@ -1,15 +1,14 @@
 # Active Work
 
-**Status: active implementation boundary.** Oliver selected
-[Native Solver Lab Case Authoring](2026-08-28-native-solver-lab-case-authoring/README.md)
-on 2026-08-28.
+**Status: no active implementation boundary.** Oliver must select the next
+chunk before implementation resumes.
 
 Parent: [Documentation map](../README.md)
 
 ## Historical work
 
 All completed and stopped solver boundaries through 2026-08-28—including the
-completed Native Solver Lab v0,
+completed Native Solver Lab v0 and case-authoring successor,
 stopped PDR strict-proof replay probe, the completed native-development coarse
 graph checkpoint/replay milestone, and the read-only research audits that
 informed the proposed Lab—are

@@ -1,6 +1,7 @@
 # Native Solver Lab Case Authoring Plan
 
-**Status: active.** Selected by Oliver on 2026-08-28.
+**Status: completed.** Selected and completed on 2026-08-28. See
+[result](result.md).
 
 ## Objective
 
@@ -110,4 +111,3 @@ state, and HANDOFF; create coherent local checkpoint commits with
   identity after editing.
 - Stop before MCP activation if the server exposes arbitrary filesystem,
   shell, SQL, or low-level benchmark argument authority.
-

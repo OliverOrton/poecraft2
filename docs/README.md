@@ -32,6 +32,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 ## Execution State
 
 The completed
+[Native Solver Lab Case Authoring](archive/2026-08-28-native-solver-lab-case-authoring/README.md)
+boundary adds revision-safe local drafts, native validation, immutable
+content-addressed case revisions, a fifth GUI Cases surface, a Calculator
+clipboard handoff, CLI/MCP lifecycle parity, and a verified user-local Codex
+MCP registration. It changes no solver, mechanic, ABI, or WASM behavior.
+
+The completed
 [Native Solver Lab v0](archive/2026-08-27-native-solver-lab-v0/README.md)
 boundary provides persistent native experiments, a practical PySide6 GUI,
 resource-aware supervision, JSON CLI, closed typed local MCP controls,

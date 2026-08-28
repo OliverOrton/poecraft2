@@ -225,6 +225,24 @@ The complete Calculator-to-worker-to-native sequence, including handle
 ownership, cooperative cancellation, compilation, repricing, and verification,
 is documented in [End-To-End Solver Flow](../solver/flow.md).
 
+### Native Solver Lab handoff
+
+**Copy Lab case** reuses the current Calculator product-goal construction and
+copies a versioned `solver_lab_calculator_export_v1` envelope. It includes the
+concrete start carrier, canonical explicit-modifier keys and supported slot
+flags, influence/Eldritch state, native product goal, diagnostic family
+exclusions, supported gap targets, and the pinned effective Allflame price
+snapshot. It does not serialize the currently inspected Odds action into Solve
+scope.
+
+The current Lab profile fixes goal-progress gating on and both voluntary
+economic Restart and automatic Imprint programs off. Calculator requires those
+two UI controls to be off before export. It also refuses an active Bestiary
+checkpoint or special item flags that the benchmark's start-item contract
+cannot reproduce. These refusals prevent a case from silently changing before
+native validation. Import, editing, validation, immutable revision save, and
+submission are owned by the [Native Solver Lab](../foundation/solver-lab.md).
+
 The browser worker starts ordinary product solves conservatively and adapts
 toward a responsive slice. The explicit 1,024-work-item qualification request
 retains that complete native batch from its first and subsequent calls because
@@ -238,6 +256,7 @@ deferred in the
 
 Code authority:
 `apps/web/src/app/solve-workspace.ts`,
+`apps/web/src/app/solver-lab-export.ts`,
 `apps/web/src/app/components/pc-calculator.ts`,
 `apps/web/src/app/engine-worker.ts`, and the [Solver](../solver/README.md).
 

@@ -6,7 +6,7 @@ proof authority, or strategy evaluation.
 
 Parent: [Foundation](README.md)
 
-Verified against the implemented Lab surface: 2026-08-28 @ `5255998`.
+Verified against the implemented Lab surface: 2026-08-28 @ `88d65a9`.
 
 ## Purpose And Authority
 
@@ -75,19 +75,50 @@ Simulator verification is opt-in. Whenever it is required, the repository
 acceptance count is 10,000 runs. The profile resolves worker flags through the
 typed service; UI, CLI, and MCP do not reproduce those controls.
 
+## Case Authoring And Revision Identity
+
+Frozen repository cases remain read-only. Local authoring has three explicit
+states:
+
+1. an editable draft stored in the Lab catalog;
+2. a native-validated, content-addressed immutable revision under
+   `build/solver-lab/cases/`; and
+3. a queued job whose request identity records the revision ID, canonical case
+   digest, snapshot paths, corpus digest, profile, and effective native
+   command.
+
+Editing a draft after a save cannot change the saved revision or any existing
+job. Saving unchanged content reuses its existing revision; changed content
+creates the next ordinal. Draft deletion retains saved revisions. Before a
+revision can be saved, the service checks the bounded document shape, locks it
+to the selected Lab profile, and invokes the native benchmark's genuine
+`--validate-only` path. The Lab never infers mechanic validity itself.
+
+The browser Calculator owns graphical item and goal authoring. Its **Copy Lab
+case** action exports the current concrete affixes, crafted/fractured/veiled
+slot flags, influence and Eldritch state, product goal, diagnostic family
+exclusions, pinned Allflame prices, and supported solve targets. The exporter
+refuses active Imprint checkpoints and special item flags that the benchmark
+start format cannot preserve. It fixes automatic Imprints and voluntary
+Restart off to match the current Lab profile.
+
 ## GUI Workflow
 
-The GUI has four persistent surfaces:
+The GUI has five persistent surfaces:
 
-1. **Queue & Run** submits a frozen case and shows priority, attempt, host
+1. **Cases** browses frozen cases, editable drafts, and immutable revisions.
+   It can create from the local template, clone, import the Calculator
+   clipboard envelope, edit JSON plus the common watchdog/bounded-finish/
+   memory controls, validate, save a revision, copy an export, and submit.
+2. **Queue & Run** submits a frozen case or local revision and shows priority, attempt, host
    reservation, phase, bounds, stop reason, artifacts, events, work, and
    memory. It can cancel, retry, clone, reprioritize, and pause/resume new
    dispatch.
-2. **Compare** filters immutable attempts and compares two to twenty request
+3. **Compare** filters immutable attempts and compares two to twenty request
    identities, outcomes, deterministic work, memory, and strategy summaries.
-3. **Strategy** shows bounded graph/action/evaluation evidence and exports a
+4. **Strategy** shows bounded graph/action/evaluation evidence and exports a
    controlled investigation bundle.
-4. **Matrix** previews and submits a canonical case-by-replicate product.
+5. **Matrix** previews and submits a canonical frozen-case-by-replicate product.
    Re-submitting the displayed batch is idempotent; **Submit new replicate
    batch** deliberately assigns a new batch identity.
 
@@ -104,6 +135,10 @@ operation name. Examples:
 ```powershell
 poecraft-solver-lab --root . profiles
 poecraft-solver-lab --root . cases
+poecraft-solver-lab --root . create-case-draft --name local-three-prefix --source-case-id CASE_ID --idempotency-key create-local-three
+poecraft-solver-lab --root . validate-case-draft DRAFT_ID
+poecraft-solver-lab --root . save-case-revision DRAFT_ID --idempotency-key save-local-three-v1
+poecraft-solver-lab --root . submit LOCAL_CASE_ID --revision-id REVISION_ID --idempotency-key run-local-three-v1
 poecraft-solver-lab --root . submit CASE_ID --idempotency-key study-a-case-1
 poecraft-solver-lab --root . submit-matrix --include-role fast_exact_three_prefix --replicates 2 --idempotency-key study-a
 poecraft-solver-lab --root . run-until-idle --max-workers 1
@@ -133,22 +168,19 @@ poecraft-solver-lab-parity `
 ## Local MCP
 
 `poecraft-solver-lab-mcp` runs a local stdio MCP server over the same service.
-Configure an MCP client to run this command from the repository root after the
-optional install:
+Codex can register the installed bounded stdio server in its user-local
+configuration while rooting the service at this checkout:
 
-```json
-{
-  "mcpServers": {
-    "poecraft2-native-solver-lab": {
-      "command": "poecraft-solver-lab-mcp",
-      "args": ["--root", "."]
-    }
-  }
-}
+```powershell
+$labMcp = py -3 -c "import sysconfig; print(sysconfig.get_path('scripts') + r'\poecraft-solver-lab-mcp.exe')"
+codex mcp add poecraft2-native-solver-lab -- $labMcp --root (Get-Location).Path
+codex mcp get poecraft2-native-solver-lab
 ```
 
 This is a user-local client setting; do not commit client-specific paths or
-secrets. The adapter exposes 21 finite typed tools. It has no arbitrary shell,
+secrets. A task already open while the entry is added cannot acquire the new
+tools; start a new task or restart Codex. The adapter exposes 31 finite typed
+tools, including the complete draft/validation/revision lifecycle. It has no arbitrary shell,
 SQL, write path, benchmark argument bag, mechanics override, or remote worker
 authority. Mutation tools use the same dry-run and idempotency rules as the
 CLI.
@@ -190,7 +222,7 @@ with SHA-256 and size after termination. Investigation bundles contain bounded
 summaries, hashes, events, reproduction argv, and a bounded log tail; they do
 not copy arbitrary files or full telemetry.
 
-v0 does not provide live solve checkpoint/resume, running pause, remote or
+The Lab does not provide a second graphical modifier editor, live solve checkpoint/resume, running pause, remote or
 multi-machine workers, authentication, cloud execution, learned guidance,
 full strategy-graph rendering, automatic cap tuning, or another evaluator
 backend. It also does not make the PDR control exact: that case remains a

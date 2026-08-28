@@ -9,6 +9,14 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-08-28
+
+- [Native Solver Lab Case Authoring](2026-08-28-native-solver-lab-case-authoring/README.md) —
+  adds editable local drafts, native validation, immutable content-addressed
+  revisions, Calculator clipboard export, a GUI Cases surface, CLI/MCP parity,
+  and a verified user-local Codex MCP registration without changing native
+  solver or mechanic behavior.
+
 ## 2026-08-27
 
 - [Native Solver Lab v0](2026-08-27-native-solver-lab-v0/README.md) —
