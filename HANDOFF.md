@@ -1,9 +1,11 @@
 # Handoff
 
 **Status: Gates 0–5 of the selected Native Solver Lab Unattended Execution and
-Identity Hardening boundary passed; the Gate 6 harness and accelerated suite
-passed, and the required six-plus-hour soak is next.** The configured MCP
-registration uses the combined version `0.2.0` launcher.
+Identity Hardening boundary passed. The Gate 6 harness, accelerated suite, and
+real-native rehearsal passed, and every non-soak Gate 7 acceptance check is
+green. Oliver explicitly deferred the required six-plus-hour soak, so Gate 6
+and final archival remain open.** The configured MCP registration uses the
+combined version `0.2.0` launcher.
 
 ## Checkpoint
 
@@ -11,15 +13,18 @@ registration uses the combined version `0.2.0` launcher.
 - Gates 0–3 unattended-hardening checkpoint: local commit
   `9fb0e083ebdbce6d0cf1cf720df550f7a6810cca` (`Harden solver lab unattended
   execution identity`), with 72 focused tests passing.
-- Gate 4 combined-launch checkpoint: local commit
-  `Run solver lab MCP with singleton dispatcher` (the commit containing this
-  handoff), with 81 focused tests passing.
+- Gate 4 combined-launch checkpoint:
+  `9a5a0f72190ac66e025fd90228dcf207b58e9c29` (`Run solver lab MCP with
+  singleton dispatcher`), with 81 focused tests passing.
+- Gate 6 harness source and clean acceptance checkpoint:
+  `4886594eab7e499669dabdbeb674fcefd7fa84b0` (`Add solver lab unattended
+  qualification harness`), with 82 focused tests and the complete repository
+  pipeline passing afterward.
 - Unattended-hardening stable source base:
   `978b200e8d7993a49ee7991f303cc0823f60914b`.
-- Unattended-hardening planning activation: the current HEAD is the single
-  documentation-only commit whose parent is the source base and whose subject
-  is `Activate solver lab unattended hardening`. The fresh task must record its
-  full hash before editing.
+- Unattended-hardening planning activation:
+  `6400f045a97a0389ce2d48e430ae6e55c9465f01` (`Activate solver lab unattended
+  hardening`).
 - GUI-stabilization selection base: `ee18cc2`.
 - GUI-stabilization plan activation: `b7b383e`.
 - GUI-stabilization implementation: `60bd13f`.
@@ -65,13 +70,9 @@ simultaneous ownership race, normal release, and queued/running/finalizing
 forced-death recovery passed. The user-local registration now includes
 `--with-supervisor --max-workers 1`; no user-specific path is committed.
 
-The existing GUI is still intentionally open with verified-live supervisor
-`supervisor-0f222afe-f8f1-46dd-915a-48b22b8d37c0` (PID `46580`). The exact
-registered-command probe migrated it as the catalog owner and correctly stayed
-control-only. Oliver should normally close that GUI before Gate 5 so its
-supervisor drains and releases ownership. If it remains open, the fresh MCP
-server must remain control-only and report it; do not bypass or force-clear the
-owner.
+The former GUI supervisor drained and released ownership before Gate 5. The
+fresh configured MCP server then owned the catalog dispatcher; no GUI was
+opened during operator qualification and no ownership record was force-cleared.
 
 The fresh Gate 5 task passed the MCP-only revision → submit → live partial →
 cancel → verified termination/release → retry ordinal 2 → compare → bundle
@@ -80,11 +81,36 @@ workflow without opening the GUI. The accepted job is
 request, comparison, and bundle identities are retained in the execution log.
 
 Gate 6 now has a deterministic qualification module, 22 passing accelerated
-fault cases, and a passing 56.3-second real-native rehearsal. The next exact
-action is to start its immutable ignored six-hour soak from the clean harness
-checkpoint, using 600-second audits and the retained accelerated result. Do not
-edit source during the soak because periodic provenance revalidation must stay
-exact.
+fault cases, and a passing 56.3-second real-native rehearsal. A real six-hour
+soak was started at `2026-08-28T13:53:58.133-07:00` and explicitly stopped at
+Oliver's request after two healthy audits, the last at `654.9708106999751`
+seconds. Its immutable ledger remains `passed: false`; the latest audit found
+zero survivors, active/quarantined leases, held reservation bytes, integrity
+failures, identity mismatches, duplicate active attempts, or unhashed
+terminals. This is retained partial evidence, not overnight qualification.
+
+The complete focused Lab suite passed 82 tests in 60.84 seconds from clean
+source checkpoint `4886594`, and the one permitted full
+`powershell -File scripts/test.ps1` run passed. The documentation target and
+root-reachability audit and `git diff --check` also passed. No native, ABI,
+compiled-data, strategy-vocabulary, WASM, browser, or mechanic source changed.
+
+The next exact action, when Oliver wants the overnight gate, is:
+
+```powershell
+$env:PYTHONPATH = "tools/ingest;bindings/python"
+py -3 -m poecraft_ingest.solver_lab_unattended_qualification `
+  --root . `
+  --output-root build/solver-lab/unattended-hardening `
+  --soak `
+  --duration-seconds 21600 `
+  --interval-seconds 600 `
+  --accelerated-evidence build/solver-lab/unattended-hardening/accelerated-20260828T205046.815181Z-50384/result.json
+```
+
+Do not edit source during that soak because periodic provenance revalidation
+must stay exact. Only after its ledger passes may the active boundary receive
+a final result and move to the archive.
 
 The fresh implementation task verified clean-tree/source ancestry, confirmed
 the configured Solver Lab MCP tools, and used MCP to inventory profiles, cases,

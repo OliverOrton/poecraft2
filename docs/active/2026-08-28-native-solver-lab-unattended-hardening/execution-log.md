@@ -1,7 +1,9 @@
 # Native Solver Lab Unattended Execution and Identity Hardening Log
 
-**Status: Gates 0–5 passed; the Gate 6 unattended qualification harness is
-implemented and its six-plus-hour soak is next.**
+**Status: Gates 0–5 passed. The Gate 6 harness, accelerated suite, and
+real-native rehearsal passed; every non-soak Gate 7 check passed. Oliver
+explicitly deferred the required six-plus-hour soak, so Gate 6 and final
+archival remain open.**
 
 Parent: [Plan](plan.md)
 
@@ -106,8 +108,8 @@ source inspection, editing, testing, and Git surface.
 | 0–3 checkpoint | passed | 72 focused tests, clean diff check, local checkpoint commit, and exact HANDOFF continuation |
 | 4 — combined MCP/supervisor | passed | one-command real-stdio dispatch, singleton/race/legacy ownership, normal release, and queued/running/finalizing forced-restart tests |
 | 5 — fresh-task MCP E2E | passed | revision → submit → partial → cancel → retry → compare → export transcript below |
-| 6 — overnight qualification | in progress | harness/accelerated suite/real-native rehearsal passed; six-plus-hour soak next |
-| 7 — final acceptance | not started | full Lab suite, stdio, full pipeline, docs/link/diff checks |
+| 6 — overnight qualification | deferred by Oliver | harness/accelerated suite/real-native rehearsal passed; interrupted soak retained as non-qualifying evidence |
+| 7 — final acceptance | non-soak checks passed; final closure pending Gate 6 | 82-test Lab suite, stdio, full pipeline, docs/link/diff checks passed |
 
 ## Source-confirmed pre-implementation owners
 
@@ -443,20 +445,33 @@ configured MCP surface exclusively.
 
 ## Gate 6 overnight record
 
+The required real soak was started, then explicitly stopped at Oliver's
+request rather than being relabeled or shortened into acceptance evidence:
+
 ```text
-soak artifact root:
-start/end/duration:
-restart count and phases:
-queued/running/finalizing recovery results:
-cancellation/retry results:
-idempotency conflict count:
-quarantine/reconciliation results:
-provenance revalidation results:
-terminal artifact count/integrity results:
-process survivors:
-active/quarantined/released reservations:
-unexplained failures:
+soak artifact root: build/solver-lab/unattended-hardening/soak-20260828T205358.133116Z-12860
+ledger SHA-256/bytes: 68c6d82f768eaea774d0059d11409b915219de1a246e0a5c4226434355772882 / 39997
+start/end/duration: 2026-08-28T13:53:58.133-07:00 / null / null
+required duration: 21600 seconds
+ledger result: passed=false
+periodic audits: 2, at 54.69381530000828s and 654.9708106999751s
+dispatcher restarts/releases: 2/2, with zero running attempts at release
+queued/running/finalizing recovery results: synthetic scenarios completed before the wait loop; no failure recorded
+cancellation/retry results: synthetic cancel/retry/compare/bundle scenario completed before the wait loop
+idempotency results: equal replay and changed-payload conflict scenario completed before the wait loop
+quarantine/reconciliation results: unknown worker quarantined, then proved absent and released before the wait loop
+provenance revalidation results: every request/fresh hash matched in both audits
+terminal artifact count/integrity results: 18 artifacts across five catalogs; all verified in both audits
+real native control: completed, four verified artifacts, released 1107296256-byte reservation, no survivor
+process survivors: 0 in both audits; qualification launcher PIDs 30604/12860 explicitly terminated after the request and verified absent
+active/quarantined/released leases at last audit: 0/0/6
+currently reserved bytes at last audit: 0
+identity/integrity/duplicate/unhashed-terminal failures at last audit: 0
+unexplained failures: none observed before interruption; no final invariant block exists because the run was stopped
 ```
+
+This ledger is useful partial integration evidence only. It has no end time or
+duration, correctly remains `passed: false`, and does not satisfy Gate 6.
 
 Gate 6 harness checkpoint:
 
@@ -480,27 +495,37 @@ Gate 6 harness checkpoint:
   fast three-suffix solve, 18 verified terminal artifacts across five isolated
   catalogs, zero survivors, zero held leases/reservations, one dispatcher
   restart/release, and exact periodic request/fresh-provenance equality.
-- The rehearsal is integration evidence only, not the required six-hour soak.
-  The next exact action after the clean harness checkpoint is the same command
-  with `--duration-seconds 21600 --interval-seconds 600` and the accelerated
-  result as `--accelerated-evidence`.
+- The rehearsal and interrupted soak are integration evidence only, not the
+  required six-hour qualification. The next exact action after clean checkpoint
+  `4886594eab7e499669dabdbeb674fcefd7fa84b0` is a new immutable invocation with
+  `--duration-seconds 21600 --interval-seconds 600` and the accelerated result
+  as `--accelerated-evidence`.
 
 ## Final acceptance record
 
+The checks independent of the deferred soak were completed from the clean
+source checkpoint:
+
 ```text
-focused Lab suite:
-stdio MCP integration:
-fresh-task MCP E2E:
-overnight evidence audit:
-shared corpus-worker/parity tests:
-full scripts/test.ps1:
-git diff --check:
-documentation link/reachability audit:
-native/WASM changes: none expected
-10,000-run strategy verification: not required unless scope changes
-final source checkpoint:
-archive/result checkpoint:
+focused Lab suite: 82 passed in 60.84s
+stdio MCP integration: passed inside the focused suite, including initialize/tool schema/combined dispatch/control-only/release
+fresh-task MCP E2E: Gate 5 passed exclusively through the configured MCP surface
+overnight evidence audit: deferred; interrupted ledger passed two audits but is explicitly non-qualifying
+shared corpus-worker/parity tests: passed inside the 82-test focused suite
+full scripts/test.ps1: passed once
+git diff --check: passed
+documentation link/reachability audit: passed; 435 Markdown files, 1797 local targets, zero missing after line-suffix/directory normalization, 431 reachable plus four policy exemptions
+native/WASM changes: none
+10,000-run strategy verification: no new verification required; existing pipeline controls passed
+final source checkpoint: 4886594eab7e499669dabdbeb674fcefd7fa84b0
+archive/result checkpoint: deferred until Gate 6 passes
 ```
+
+The full pipeline included canonical ingest/validation and artifact
+regeneration, `3,417,290` native checks with zero failures, all 12 solver
+benchmark specifications, existing 10,000-run compiled-strategy controls,
+28/28 release-WASM worker checks, and all web suites. These checks do not turn
+the interrupted soak into Gate 6 acceptance.
 
 ## Stop/handoff record
 

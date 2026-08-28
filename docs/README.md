@@ -36,8 +36,10 @@ The selected
 boundary starts from the completed GUI stabilization and hardens immutable
 dispatch identity, watchdog enforcement, atomic hashed terminal publication,
 orphan quarantine/recovery, evidence integrity, host headroom, and one
-MCP-plus-supervisor unattended path. Implementation must begin in a fresh
-Codex task with the configured Lab MCP server loaded.
+MCP-plus-supervisor unattended path. Gates 0–5 and every non-soak regression,
+pipeline, and documentation check are complete. Its six-plus-hour unattended
+qualification is explicitly deferred, so the boundary remains active rather
+than archived.
 
 The completed
 [Native Solver Lab GUI Stabilization](archive/2026-08-28-native-solver-lab-gui-stabilization/README.md)

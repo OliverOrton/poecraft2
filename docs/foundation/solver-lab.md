@@ -6,7 +6,11 @@ proof authority, or strategy evaluation.
 
 Parent: [Foundation](README.md)
 
-Verified against the implemented Lab surface: 2026-08-28 @ `60bd13f`.
+Verified against the implemented Lab surface: 2026-08-28 @ `4886594`.
+Checked owners include `solver_lab_catalog.py`, `solver_lab_service.py`,
+`solver_lab_supervisor.py`, `solver_lab_mcp.py`, and
+`solver_lab_unattended_qualification.py` plus their focused contract,
+stdio-MCP, supervisor, nonvisual-GUI, corpus-runner, and parity tests.
 
 ## Purpose And Authority
 
@@ -258,18 +262,55 @@ acknowledgment and released reservation, then close the client. For maintenance,
 copy the catalog and its `-wal`/`-shm` siblings together only after dispatcher
 ownership reports released.
 
+## Unattended Qualification
+
+The repository-owned qualification harness writes each run to a new immutable,
+ignored directory below `build/solver-lab/unattended-hardening/`. The
+accelerated mode covers the deterministic crash, idempotency, dispatch,
+watchdog, terminal-publication, integrity, quarantine, cancel/retry,
+dispatcher-death, dual-owner, and combined-stdio matrix in ordinary test time:
+
+```powershell
+$env:PYTHONPATH = "tools/ingest;bindings/python"
+py -3 -m poecraft_ingest.solver_lab_unattended_qualification `
+  --root . `
+  --output-root build/solver-lab/unattended-hardening `
+  --accelerated
+```
+
+The low-duty soak links that accelerated result, exercises the isolated
+catalog lifecycle plus one real native control, reacquires and releases a
+no-work dispatcher at every audit interval, and rechecks provenance, artifact
+hashes, process survivors, duplicate attempts, and lease/reservation state:
+
+```powershell
+py -3 -m poecraft_ingest.solver_lab_unattended_qualification `
+  --root . `
+  --output-root build/solver-lab/unattended-hardening `
+  --soak `
+  --duration-seconds 21600 `
+  --interval-seconds 600 `
+  --accelerated-evidence <accelerated-result.json>
+```
+
+The soak enforces at least 21,600 seconds of wall time. An interrupted or
+short rehearsal ledger remains useful integration evidence but cannot set
+`passed: true` and is not overnight qualification. Bulky catalogs, attempt
+artifacts, logs, and bundles remain ignored; only the harness, bounded tests,
+and summarized execution evidence are committed.
+
 ## Artifacts And Limitations
 
 Each attempt directory may contain `report.json`, `partial.json`,
-`worker.log`, and a `strategies/` directory. The controlled Lab root also owns
-`supervisor-error.json`, `worker.log`, and a `strategies/` directory. The
-controlled Lab root also owns `gui-activity.log`. The supervisor validates and
-hashes the required evidence before one catalog transaction indexes artifacts,
-terminalizes attempt/job, emits events, and releases the lease. Every terminal
-consumer rechecks owned path, size, and SHA-256 before parsing or export;
-legacy unindexed terminals are disclosed but not trusted. Investigation bundles
-contain bounded summaries, hashes, events, reproduction argv, and a bounded
-log tail; they do not copy arbitrary files or full telemetry.
+`worker.log`, `supervisor-error.json`, and a `strategies/` directory, depending
+on its outcome. The controlled Lab root also owns `gui-activity.log`. The
+supervisor validates and hashes the required evidence before one catalog
+transaction indexes artifacts, terminalizes attempt/job, emits events, and
+releases the lease. Every terminal consumer rechecks owned path, size, and
+SHA-256 before parsing or export; legacy unindexed terminals are disclosed but
+not trusted. Investigation bundles contain bounded summaries, hashes, events,
+reproduction argv, and a bounded log tail; they do not copy arbitrary files or
+full telemetry.
 
 The Lab does not provide a second graphical modifier editor, live solve checkpoint/resume, running pause, remote or
 multi-machine workers, authentication, cloud execution, learned guidance,
