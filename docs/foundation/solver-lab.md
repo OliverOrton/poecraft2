@@ -38,18 +38,23 @@ Install the optional Lab dependencies into the active Python environment:
 py -3 -m pip install -e "tools/ingest[solver-lab]"
 ```
 
-Launch the GUI from the repository root:
-
-```powershell
-poecraft-solver-lab --root . gui
-```
-
-The equivalent module command is useful before installing console scripts:
+The reliable repository-local launch does not depend on Python's Scripts
+directory being on `PATH`:
 
 ```powershell
 $env:PYTHONPATH = "tools/ingest;bindings/python"
 py -3 -m poecraft_ingest.solver_lab --root . gui
 ```
+
+If the Python Scripts directory is on `PATH`, the shorter installed-console
+command is equivalent:
+
+```powershell
+poecraft-solver-lab --root . gui
+```
+
+Installing the package creates that executable but does not necessarily add
+its Scripts directory to PowerShell's `PATH`.
 
 By default the catalog is `build/solver-lab/catalog.sqlite3`, attempts are
 under `build/solver-lab/attempts/`, and investigation bundles are under
