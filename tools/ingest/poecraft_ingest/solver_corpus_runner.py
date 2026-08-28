@@ -3,37 +3,34 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 from pathlib import Path
-import platform
-import signal
-import subprocess
 import sys
 import time
 from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
 from dataclasses import dataclass
 from typing import Any, Iterable
 
+from poecraft_ingest.solver_worker import (
+    AttemptPaths,
+    capture_execution_provenance,
+    classify_process_result,
+    partial_observation_available,
+    read_json_object,
+    resolve_case_execution,
+    run_isolated_process,
+    sha256_file,
+    terminate_process_tree,
+)
+
 
 RUNNER_VERSION = "anytime-solver-corpus-runner-v2"
 DEFAULT_WATCHDOG_SECONDS = 900.0
 
 
-def _read_json(path: Path) -> dict[str, Any]:
-    value = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(value, dict):
-        raise ValueError(f"{path} must contain a JSON object")
-    return value
-
-
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+_read_json = read_json_object
+_sha256 = sha256_file
 
 
 def _atomic_json(path: Path, value: dict[str, Any]) -> None:
@@ -44,28 +41,6 @@ def _atomic_json(path: Path, value: dict[str, Any]) -> None:
         encoding="utf-8",
     )
     os.replace(temporary, path)
-
-
-def _git_provenance(root: Path) -> dict[str, Any]:
-    def git(*arguments: str) -> str:
-        completed = subprocess.run(
-            ["git", *arguments],
-            cwd=root,
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        return completed.stdout.strip()
-
-    try:
-        dirty = [line for line in git("status", "--short").splitlines() if line]
-        return {
-            "commit": git("rev-parse", "HEAD"),
-            "dirty": bool(dirty),
-            "dirty_paths": dirty,
-        }
-    except (OSError, subprocess.CalledProcessError):
-        return {"commit": None, "dirty": None, "dirty_paths": []}
 
 
 @dataclass(frozen=True)
@@ -164,72 +139,7 @@ def load_case_tasks(
     return sorted(tasks, key=lambda task: task.case_id)
 
 
-def _terminate_process_tree(process: subprocess.Popen[str]) -> None:
-    if process.poll() is not None:
-        return
-    if os.name == "nt":
-        subprocess.run(
-            ["taskkill", "/PID", str(process.pid), "/T", "/F"],
-            check=False,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-    else:
-        try:
-            os.killpg(process.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
-    try:
-        process.wait(timeout=5.0)
-    except subprocess.TimeoutExpired:
-        process.kill()
-        process.wait(timeout=5.0)
-
-
-def run_isolated_process(
-    command: list[str],
-    *,
-    watchdog_seconds: float,
-    cwd: Path,
-) -> dict[str, Any]:
-    """Run one process group and prove the parent is gone before returning."""
-    creationflags = 0
-    popen_options: dict[str, Any] = {}
-    if os.name == "nt":
-        creationflags = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
-    else:
-        popen_options["start_new_session"] = True
-    started = time.monotonic()
-    process = subprocess.Popen(
-        command,
-        cwd=cwd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        creationflags=creationflags,
-        **popen_options,
-    )
-    timed_out = False
-    try:
-        output, _ = process.communicate(timeout=watchdog_seconds)
-    except subprocess.TimeoutExpired:
-        timed_out = True
-        _terminate_process_tree(process)
-        output, _ = process.communicate()
-    survivor = process.poll() is None
-    if survivor:
-        _terminate_process_tree(process)
-        survivor = process.poll() is None
-    return {
-        "exit_code": process.returncode,
-        "timed_out": timed_out,
-        "survivor": survivor,
-        "survivor_check": "process_group_kill_then_parent_poll",
-        "wall_ms": (time.monotonic() - started) * 1000.0,
-        "output": output,
-    }
+_terminate_process_tree = terminate_process_tree
 
 
 def _run_case(
@@ -243,185 +153,54 @@ def _run_case(
     exact_evaluation: bool,
     run_verification: bool = False,
     goal_progress_gated_reforges: bool = False,
+    attempt_paths: AttemptPaths | None = None,
 ) -> dict[str, Any]:
-    reports = output_directory / "cases"
-    strategies = output_directory / "strategies"
-    logs = output_directory / "logs"
-    partials = output_directory / "partials"
-    reports.mkdir(parents=True, exist_ok=True)
-    strategies.mkdir(parents=True, exist_ok=True)
-    logs.mkdir(parents=True, exist_ok=True)
-    partials.mkdir(parents=True, exist_ok=True)
-    report_path = reports / f"{task.case_id}.json"
-    attempt_id = f"{time.time_ns()}-{os.getpid()}"
-    partial_path = partials / f"{task.case_id}.{attempt_id}.json"
-    log_path = logs / f"{task.case_id}.log"
-    command = [
-        str(executable),
-        "--artifact",
-        str(artifact),
-        "--corpus",
-        str(corpus),
-        "--output",
-        str(report_path),
-        "--partial-output",
-        str(partial_path),
-        "--strategy-output",
-        str(strategies),
-        "--case",
-        task.case_id,
-    ]
-    if not run_verification:
-        command.append("--skip-verification")
-    if exact_evaluation:
-        command.append("--exact-strategy-evaluation")
-    if goal_progress_gated_reforges:
-        command.append("--goal-progress-gated-reforges")
+    if attempt_paths is None:
+        attempt_id = f"{time.time_ns()}-{os.getpid()}"
+        attempt_paths = AttemptPaths.legacy(
+            output_directory, task.case_id, attempt_id
+        )
+    resolved = resolve_case_execution(
+        task,
+        executable=executable,
+        artifact=artifact,
+        corpus=corpus,
+        root=root,
+        paths=attempt_paths,
+        exact_evaluation=exact_evaluation,
+        run_verification=run_verification,
+        goal_progress_gated_reforges=goal_progress_gated_reforges,
+    )
     result = run_isolated_process(
-        command,
-        watchdog_seconds=task.watchdog_seconds,
-        cwd=root,
+        resolved.command.as_list(),
+        watchdog_seconds=resolved.watchdog_seconds,
+        cwd=resolved.command.cwd,
     )
-    log_path.write_text(result.pop("output"), encoding="utf-8")
-    completed = (
-        result["exit_code"] in {0, 2}
-        and not result["timed_out"]
-        and not result["survivor"]
-        and report_path.is_file()
+    resolved.paths.log_path.write_text(
+        result.pop("output"), encoding="utf-8"
     )
-    partial_available = False
-    if partial_path.is_file():
-        try:
-            partial = _read_json(partial_path)
-            partial_cases = partial.get("cases")
-            partial_available = (
-                isinstance(partial_cases, list)
-                and len(partial_cases) == 1
-                and isinstance(partial_cases[0], dict)
-                and partial_cases[0].get("id") == task.case_id
-                and isinstance(
-                    (
-                        partial_cases[0].get("bound_trace")
-                        if isinstance(
-                            partial_cases[0].get("bound_trace"), dict
-                        )
-                        else {}
-                    ).get("samples"),
-                    list,
-                )
-                and bool(partial_cases[0]["bound_trace"]["samples"])
-            )
-        except (OSError, ValueError, json.JSONDecodeError):
-            partial_available = False
-    if completed:
-        status = "completed"
-        failure_kind = None
-    elif result["timed_out"]:
-        status = "watchdog_expired"
-        failure_kind = None
-    else:
-        exit_code = result["exit_code"]
-        failure_kind = None
-        if exit_code in {0xC0000017, 0xC000009A}:
-            status = "oom"
-            failure_kind = "operating_system_out_of_memory"
-        elif isinstance(exit_code, int) and (
-            exit_code < 0 or exit_code >= 0xC0000000
-        ):
-            status = "crash"
-            failure_kind = "abnormal_process_termination"
-        else:
-            status = "failed"
-        if result["survivor"]:
-            failure_kind = "surviving_process"
-        elif failure_kind is None and exit_code not in {0, 2, None}:
-            failure_kind = "process_crash_or_native_error"
-        elif failure_kind is None and not report_path.is_file():
-            failure_kind = "missing_final_report"
-        elif failure_kind is None:
-            failure_kind = "unknown_process_failure"
+    classification = classify_process_result(
+        result,
+        final_report_exists=resolved.paths.report_path.is_file(),
+    )
+    partial_available = partial_observation_available(
+        resolved.paths.partial_report_path, task.case_id
+    )
     return {
         "case_id": task.case_id,
-        "attempt_id": attempt_id,
+        "attempt_id": resolved.paths.attempt_id,
         "tier": task.tier,
-        "status": status,
-        "failure_kind": failure_kind,
+        "status": classification.status,
+        "failure_kind": classification.failure_kind,
         "evaluation_role": task.evaluation_role,
         "watchdog_seconds": task.watchdog_seconds,
         "reserved_memory_bytes": task.reserved_memory_bytes,
-        "native_expectations_met": result["exit_code"] == 0 if completed else None,
-        "report_path": str(report_path.resolve()),
-        "partial_report_path": str(partial_path.resolve()),
+        "native_expectations_met": classification.native_expectations_met,
+        "report_path": str(resolved.paths.report_path.resolve()),
+        "partial_report_path": str(resolved.paths.partial_report_path.resolve()),
         "partial_observation_available": partial_available,
-        "log_path": str(log_path.resolve()),
+        "log_path": str(resolved.paths.log_path.resolve()),
         **result,
-    }
-
-
-def _corpus_provenance(path: Path) -> dict[str, Any]:
-    value = _read_json(path)
-    configuration = value.get("configuration")
-    return {
-        "path": str(path),
-        "sha256": _sha256(path),
-        "corpus_id": value.get("corpus_id"),
-        "schema_version": value.get("schema_version"),
-        "generator_config_sha256": (
-            configuration.get("config_sha256")
-            if isinstance(configuration, dict)
-            else None
-        ),
-    }
-
-
-def _artifact_provenance(path: Path) -> dict[str, Any]:
-    manifest_path = path / "manifest.json" if path.is_dir() else path
-    if not manifest_path.is_file():
-        return {
-            "path": str(path),
-            "manifest_path": None,
-            "manifest_sha256": None,
-            "identity": None,
-        }
-    value = _read_json(manifest_path)
-    files = value.get("files")
-    return {
-        "path": str(path),
-        "manifest_path": str(manifest_path.resolve()),
-        "manifest_sha256": _sha256(manifest_path),
-        "identity": {
-            "artifact_schema_version": value.get("artifact_schema_version"),
-            "source_data_hash": (
-                value.get("source_data_hash")
-                or (
-                    value.get("source", {}).get("data_hash")
-                    if isinstance(value.get("source"), dict)
-                    else None
-                )
-            ),
-            "game_data_sha256": (
-                files.get("game-data.json", {}).get("sha256")
-                if isinstance(files, dict)
-                else None
-            ),
-            "strings_sha256": (
-                files.get("strings.json", {}).get("sha256")
-                if isinstance(files, dict)
-                else None
-            ),
-        },
-    }
-
-
-def _machine_provenance() -> dict[str, Any]:
-    return {
-        "system": platform.system(),
-        "release": platform.release(),
-        "machine": platform.machine(),
-        "processor": platform.processor(),
-        "processor_identifier": os.environ.get("PROCESSOR_IDENTIFIER"),
-        "logical_cpu_count": os.cpu_count(),
-        "python": platform.python_version(),
     }
 
 
@@ -455,13 +234,12 @@ def run_corpus(
     previous_cases = previous.get("cases", {})
     if not isinstance(previous_cases, dict):
         previous_cases = {}
-    corpus_provenance = _corpus_provenance(corpus)
-    artifact_provenance = _artifact_provenance(artifact)
-    executable_provenance = {
-        "path": str(executable),
-        "sha256": _sha256(executable),
-    }
-    machine_provenance = _machine_provenance()
+    provenance = capture_execution_provenance(
+        root=root,
+        executable=executable,
+        artifact=artifact,
+        corpus=corpus,
+    )
     role_provenance = None
     if evaluation_roles_path is not None:
         role_path = evaluation_roles_path.resolve()
@@ -479,13 +257,7 @@ def run_corpus(
         "evaluation_roles": sorted(selected_evaluation_roles or []),
         "evaluation_roles_manifest": role_provenance,
     }
-    current_resume_identity = {
-        "corpus": corpus_provenance,
-        "artifact": artifact_provenance,
-        "executable": executable_provenance,
-        "machine": machine_provenance,
-        "configuration": configuration,
-    }
+    current_resume_identity = provenance.resume_identity(configuration)
     previous_resume_identity = {
         key: previous.get(key)
         for key in current_resume_identity
@@ -498,11 +270,11 @@ def run_corpus(
     ledger: dict[str, Any] = {
         "schema_version": "bounded_solver_run_ledger_v2",
         "runner_version": RUNNER_VERSION,
-        "corpus": corpus_provenance,
-        "artifact": artifact_provenance,
-        "executable": executable_provenance,
-        "machine": machine_provenance,
-        "source": _git_provenance(root),
+        "corpus": dict(provenance.corpus),
+        "artifact": dict(provenance.artifact),
+        "executable": dict(provenance.executable),
+        "machine": dict(provenance.machine),
+        "source": dict(provenance.source),
         "configuration": configuration,
         "cases": dict(previous_cases),
     }

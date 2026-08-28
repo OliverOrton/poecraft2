@@ -2,8 +2,8 @@
 
 **Status: active implementation boundary.** Oliver approved
 [Native Solver Lab v0](docs/active/2026-08-27-native-solver-lab-v0/plan.md)
-from clean checkpoint `bd86b46` on 2026-08-27. Gate 0 is complete; Gate 1 is
-next.
+from clean checkpoint `bd86b46` on 2026-08-27. Gates 0-1 are complete; Gate 2
+is next.
 
 ## Checkpoint
 

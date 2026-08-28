@@ -1,6 +1,6 @@
 # Native Solver Lab v0 Execution Log
 
-**Status: active; Gate 0 complete, Gate 1 next.**
+**Status: active; Gates 0-1 complete, Gate 2 next.**
 
 Parent: [Plan](plan.md)
 
@@ -10,7 +10,7 @@ Parent: [Plan](plan.md)
   boundary`) and activated from clean checkpoint `bd86b46` (`Plan native
   solver lab v0`).
 - Working tree was clean at activation.
-- Current gate: Gate 1 — preserve and factor the existing worker substrate.
+- Current gate: Gate 2 — first usable persistent GUI vertical slice.
 - Gate 0 added only versioned contracts, the frozen profile/corpus, and
   optional dependencies. No catalog, supervisor, GUI, CLI, or MCP service
   implementation exists yet.
@@ -27,9 +27,9 @@ Parent: [Plan](plan.md)
 
 ## Next executable step
 
-Factor command construction, attempt paths, process execution, classification,
-provenance, and memory metadata out of `solver_corpus_runner.py` without
-changing the existing CLI or ledger behavior.
+Add the SQLite catalog, typed application service, single-worker supervisor,
+JSON CLI, and the first practical PySide6 Queue / Run Detail GUI on the
+factored worker adapter.
 
 ## Gate 0 result — 2026-08-27
 
@@ -57,3 +57,19 @@ changing the existing CLI or ledger behavior.
   command, event, artifact, and operation-result schemas landed.
 - Focused post-change tests: 13 passed. No broad matrix or full acceptance
   pipeline was run.
+
+## Gate 1 result — 2026-08-27
+
+- Added one shared typed native-worker adapter for command construction,
+  attempt paths, process-group execution, final/partial classification,
+  provenance capture, and host-only memory reservation disclosure.
+- The existing corpus runner still owns the same CLI, v2 ledger, watchdog,
+  exit-code behavior, memory admission, completion resume rule, and legacy
+  output layout.
+- Retries in the Lab can now use immutable attempt-local report, partial,
+  strategy, and log paths without creating another subprocess implementation.
+- Canonical fixtures pin exact benchmark argv, command identity, provenance
+  resume shape, native expectation-miss classification, attempt isolation,
+  and memory authority.
+- Focused Gate 1 + Gate 0 tests: 18 passed in 0.89 seconds. No native matrix or
+  full acceptance pipeline was run.

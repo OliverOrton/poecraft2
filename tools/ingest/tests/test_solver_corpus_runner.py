@@ -12,6 +12,13 @@ from poecraft_ingest.solver_corpus_runner import (
     run_corpus,
     run_isolated_process,
 )
+from poecraft_ingest.solver_worker import (
+    AttemptPaths,
+    MemoryReservation,
+    build_solver_case_command,
+    capture_execution_provenance,
+    classify_process_result,
+)
 
 
 def _write_json(path: Path, value: object) -> None:
@@ -311,3 +318,107 @@ def test_memory_budget_refuses_oversized_case_without_launch(tmp_path: Path) -> 
     assert ledger["all_completed"] is False
     assert ledger["survivors"] == []
     assert ledger["cases"]["large"]["status"] == "memory_budget_refused"
+
+
+def test_factored_command_matches_legacy_argument_contract(tmp_path: Path) -> None:
+    paths = AttemptPaths.legacy(tmp_path / "run", "case-a", "attempt-1")
+    command = build_solver_case_command(
+        executable=tmp_path / "solver.exe",
+        artifact=tmp_path / "artifact",
+        corpus=tmp_path / "manifest.json",
+        case_id="case-a",
+        paths=paths,
+        root=tmp_path,
+        exact_evaluation=True,
+        run_verification=False,
+        goal_progress_gated_reforges=True,
+    )
+
+    assert command.as_list() == [
+        str(tmp_path / "solver.exe"),
+        "--artifact",
+        str(tmp_path / "artifact"),
+        "--corpus",
+        str(tmp_path / "manifest.json"),
+        "--output",
+        str(tmp_path / "run" / "cases" / "case-a.json"),
+        "--partial-output",
+        str(tmp_path / "run" / "partials" / "case-a.attempt-1.json"),
+        "--strategy-output",
+        str(tmp_path / "run" / "strategies"),
+        "--case",
+        "case-a",
+        "--skip-verification",
+        "--exact-strategy-evaluation",
+        "--goal-progress-gated-reforges",
+    ]
+    assert len(command.canonical_document()["identity_sha256"]) == 64
+
+
+def test_immutable_attempt_paths_do_not_share_retry_outputs(tmp_path: Path) -> None:
+    first = AttemptPaths.immutable(tmp_path / "attempts" / "a1", "a1")
+    second = AttemptPaths.immutable(tmp_path / "attempts" / "a2", "a2")
+
+    first.prepare()
+    second.prepare()
+
+    assert first.report_path != second.report_path
+    assert first.partial_report_path != second.partial_report_path
+    assert first.log_path != second.log_path
+    assert first.strategy_output_path.is_dir()
+    assert second.strategy_output_path.is_dir()
+
+
+def test_process_classification_preserves_native_expectation_miss() -> None:
+    result = classify_process_result(
+        {"exit_code": 2, "timed_out": False, "survivor": False},
+        final_report_exists=True,
+    )
+
+    assert result.status == "completed"
+    assert result.completed is True
+    assert result.native_expectations_met is False
+
+
+def test_memory_reservation_discloses_host_only_authority() -> None:
+    assert MemoryReservation(1024).as_dict() == {
+        "reserved_memory_bytes": 1024,
+        "reservation_source": "case_caps.max_solver_owned_bytes",
+        "authority": "host_scheduler_only",
+    }
+
+
+def test_factored_provenance_preserves_resume_shape(tmp_path: Path) -> None:
+    executable = tmp_path / "solver.exe"
+    executable.write_bytes(b"solver")
+    artifact = tmp_path / "artifact"
+    artifact.mkdir()
+    manifest = tmp_path / "corpus.json"
+    _write_json(
+        manifest,
+        {
+            "schema_version": "solver_benchmark_corpus_v1",
+            "corpus_id": "fixture",
+            "cases": [],
+            "configuration": {"config_sha256": "abc"},
+        },
+    )
+
+    provenance = capture_execution_provenance(
+        root=Path.cwd(),
+        executable=executable,
+        artifact=artifact,
+        corpus=manifest,
+    )
+    identity = provenance.resume_identity({"max_workers": 1})
+
+    assert set(identity) == {
+        "corpus",
+        "artifact",
+        "executable",
+        "machine",
+        "configuration",
+    }
+    assert identity["corpus"]["generator_config_sha256"] == "abc"
+    assert identity["artifact"]["identity"] is None
+    assert len(identity["executable"]["sha256"]) == 64
