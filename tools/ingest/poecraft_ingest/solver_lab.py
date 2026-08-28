@@ -1,0 +1,170 @@
+"""JSON CLI and GUI launcher for the local Native Solver Lab."""
+
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+import sys
+import time
+from typing import Any
+
+from poecraft_ingest.solver_lab_service import SolverLabService
+from poecraft_ingest.solver_lab_supervisor import SolverLabSupervisor
+
+
+def _emit(value: Any) -> None:
+    print(json.dumps(value, indent=2, ensure_ascii=False, sort_keys=True))
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--catalog", type=Path)
+    parser.add_argument("--attempts", type=Path)
+    parser.add_argument("--executable", type=Path)
+    parser.add_argument("--artifact", type=Path)
+    parser.add_argument("--corpus", type=Path)
+    parser.add_argument("--profile", type=Path)
+    subparsers = parser.add_subparsers(dest="operation", required=True)
+
+    subparsers.add_parser("profiles")
+    subparsers.add_parser("cases")
+    case = subparsers.add_parser("case")
+    case.add_argument("case_id")
+
+    experiment = subparsers.add_parser("create-experiment")
+    experiment.add_argument("--name", required=True)
+    experiment.add_argument("--description", default="")
+
+    submit = subparsers.add_parser("submit")
+    submit.add_argument("case_id")
+    submit.add_argument("--idempotency-key", required=True)
+    submit.add_argument("--priority", type=int, default=0)
+    submit.add_argument("--watchdog-seconds", type=float)
+    submit.add_argument("--experiment-id")
+    submit.add_argument("--replicate", type=int, default=0)
+    submit.add_argument("--dry-run", action="store_true")
+
+    jobs = subparsers.add_parser("jobs")
+    jobs.add_argument("--limit", type=int, default=200)
+    job = subparsers.add_parser("job")
+    job.add_argument("job_id")
+
+    cancel = subparsers.add_parser("cancel")
+    cancel.add_argument("job_id")
+    cancel.add_argument("--idempotency-key", required=True)
+    cancel.add_argument("--dry-run", action="store_true")
+
+    summary = subparsers.add_parser("run-summary")
+    identity = summary.add_mutually_exclusive_group(required=True)
+    identity.add_argument("--job-id")
+    identity.add_argument("--attempt-id")
+
+    subparsers.add_parser("run-until-idle")
+    supervise = subparsers.add_parser("supervise")
+    supervise.add_argument("--poll-seconds", type=float, default=0.25)
+    subparsers.add_parser("gui")
+    return parser
+
+
+def _service(args: argparse.Namespace) -> SolverLabService:
+    return SolverLabService.from_root(
+        args.root,
+        catalog=args.catalog,
+        attempts=args.attempts,
+        executable=args.executable,
+        artifact=args.artifact,
+        corpus=args.corpus,
+        profile=args.profile,
+    )
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    try:
+        service = _service(args)
+        if args.operation == "profiles":
+            result = service.list_profiles()
+        elif args.operation == "cases":
+            result = service.list_cases()
+        elif args.operation == "case":
+            result = service.get_case(args.case_id)
+        elif args.operation == "create-experiment":
+            result = service.create_experiment(
+                name=args.name, description=args.description
+            )
+        elif args.operation == "submit":
+            result = service.submit_job(
+                case_id=args.case_id,
+                idempotency_key=args.idempotency_key,
+                priority=args.priority,
+                watchdog_seconds=args.watchdog_seconds,
+                experiment_id=args.experiment_id,
+                replicate=args.replicate,
+                dry_run=args.dry_run,
+            )
+        elif args.operation == "jobs":
+            result = service.list_jobs(limit=args.limit)
+        elif args.operation == "job":
+            result = service.get_job(args.job_id)
+        elif args.operation == "cancel":
+            result = service.cancel_job(
+                job_id=args.job_id,
+                idempotency_key=args.idempotency_key,
+                dry_run=args.dry_run,
+            )
+        elif args.operation == "run-summary":
+            result = service.get_run_summary(
+                job_id=args.job_id, attempt_id=args.attempt_id
+            )
+        elif args.operation == "run-until-idle":
+            supervisor = SolverLabSupervisor(service)
+            idle = supervisor.run_until_idle()
+            result = {
+                "operation": "run_until_idle",
+                "ok": idle,
+                "supervisor": supervisor.status(),
+                "jobs": service.list_jobs()["result"],
+            }
+        elif args.operation == "supervise":
+            supervisor = SolverLabSupervisor(
+                service, poll_interval_seconds=args.poll_seconds
+            )
+            supervisor.start()
+            try:
+                while supervisor.is_alive():
+                    time.sleep(0.5)
+            except KeyboardInterrupt:
+                supervisor.stop(wait=True)
+            result = {
+                "operation": "supervise",
+                "ok": True,
+                "supervisor": supervisor.status(),
+            }
+        elif args.operation == "gui":
+            from poecraft_ingest.solver_lab_gui import run_gui
+
+            return run_gui(service)
+        else:  # pragma: no cover - argparse owns the finite vocabulary
+            raise AssertionError(args.operation)
+        _emit(result)
+        return 0
+    except Exception as exc:
+        _emit(
+            {
+                "schema_version": "solver_lab_operation_result_v1",
+                "operation": getattr(args, "operation", "unknown"),
+                "dry_run": bool(getattr(args, "dry_run", False)),
+                "ok": False,
+                "error": {
+                    "type": type(exc).__name__,
+                    "message": str(exc),
+                },
+            }
+        )
+        return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -22,7 +22,6 @@ poecraft-validate-fixtures = "poecraft_ingest.spec_fixtures:main"
 poecraft-generate-review = "poecraft_ingest.solver_review:main"
 poecraft-compare-runtime-reports = "poecraft_ingest.runtime_report_parity:main"
 poecraft-solver-lab = "poecraft_ingest.solver_lab:main"
-poecraft-solver-lab-mcp = "poecraft_ingest.solver_lab_mcp:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

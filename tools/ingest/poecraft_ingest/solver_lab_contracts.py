@@ -150,6 +150,15 @@ def validate_profile_case_binding(
             raise ValueError(
                 f"corpus product scope {key} does not match the Lab profile"
             )
+    explicit_scope = corpus_document.get("benchmark_identity_contract", {}).get(
+        "explicit_imprint_scope", {}
+    )
+    expected_explicit = bindings.get("manifest_explicit_imprint_scope", {})
+    for key, expected in expected_explicit.items():
+        if explicit_scope.get(key) != expected:
+            raise ValueError(
+                f"corpus explicit Imprint scope {key} does not match the Lab profile"
+            )
 
 
 def schema_contract() -> dict[str, str]:

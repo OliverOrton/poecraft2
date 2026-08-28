@@ -1,6 +1,6 @@
 # Native Solver Lab v0 Execution Log
 
-**Status: active; Gates 0-1 complete, Gate 2 next.**
+**Status: active; Gates 0-2 complete, Gate 3 next.**
 
 Parent: [Plan](plan.md)
 
@@ -10,7 +10,7 @@ Parent: [Plan](plan.md)
   boundary`) and activated from clean checkpoint `bd86b46` (`Plan native
   solver lab v0`).
 - Working tree was clean at activation.
-- Current gate: Gate 2 — first usable persistent GUI vertical slice.
+- Current gate: Gate 3 — supervisor durability and resource control.
 - Gate 0 added only versioned contracts, the frozen profile/corpus, and
   optional dependencies. No catalog, supervisor, GUI, CLI, or MCP service
   implementation exists yet.
@@ -27,9 +27,9 @@ Parent: [Plan](plan.md)
 
 ## Next executable step
 
-Add the SQLite catalog, typed application service, single-worker supervisor,
-JSON CLI, and the first practical PySide6 Queue / Run Detail GUI on the
-factored worker adapter.
+Add bounded multi-process dispatch, deterministic priority/memory admission,
+live cancellation, leases/recovery, retry/clone/priority operations, and
+attempt artifact hashing to the working Gate 2 vertical slice.
 
 ## Gate 0 result — 2026-08-27
 
@@ -73,3 +73,34 @@ factored worker adapter.
   and memory authority.
 - Focused Gate 1 + Gate 0 tests: 18 passed in 0.89 seconds. No native matrix or
   full acceptance pipeline was run.
+
+## Gate 2 result — 2026-08-27
+
+- Added the WAL-backed SQLite catalog with migrations and immutable
+  experiments, jobs, attempts, commands, events, and artifact schema.
+- Added one typed application service over the frozen profile/corpus. Canonical
+  job identity binds source dirty manifest, executable, compiled artifact,
+  corpus, case bytes, Allflame economy, native profile/action scope, caps,
+  watchdog, measurement mode, and replicate.
+- Added idempotent/dry-run submission, durable queued cancellation, case/job
+  discovery, and bounded run summaries to the JSON CLI.
+- Added a nonblocking single-worker supervisor using the Gate 1 adapter and
+  immutable attempt-specific report, partial, strategy, and log paths.
+- Added the first PySide6 Queue / Run Detail GUI. It submits jobs, polls durable
+  queued/running/final state and native step-boundary partials, shows bound
+  provenance/work/memory/artifact metadata, cancels queued work, and reopens
+  catalog history. Oliver still owns rendered visual review.
+- The first real dispatch failed honestly in 0.283 seconds because the new
+  aggregate manifest omitted the benchmark-required `explicit_imprint_scope`.
+  The failed attempt and log were retained. The manifest/profile now bind that
+  field explicitly; a fresh job and attempt were created rather than
+  overwriting evidence.
+- Real corrected native run:
+  `conquest-lamellar-allflame-clean-3-suffix-product8` completed in 49.869
+  seconds (native total 49.496 seconds), closed exact at
+  `1101.15648683309`, matched independent exact evaluation, retained 49 bound
+  samples, and compiled 78 nodes / 219 edges. No sampled Simulator verification
+  was selected.
+- Nonvisual Qt, service, catalog, supervisor, contract, and legacy runner
+  tests: 23 passed in 1.93 seconds. No broad matrix or full acceptance pipeline
+  was run.

@@ -17,6 +17,10 @@
       "allow_economic_restart": false,
       "consider_imprint_programs": false
     },
+    "manifest_explicit_imprint_scope": {
+      "consider_imprint_programs": false,
+      "disposition": "disabled_by_native_allflame_no_imprint_v1"
+    },
     "terminal_goal_authority": "native_exact_junk_free",
     "action_family_scope": "native_calculator_goal_relevant_priced_v1",
     "fracture_miss_replacement": "native_mechanic_owned_paid_replacement_retained",
