@@ -1,15 +1,16 @@
 # Handoff
 
-**Status: active blocking boundary.** Oliver selected
-[Native Solver Lab GUI Stabilization](docs/active/2026-08-28-native-solver-lab-gui-stabilization/README.md)
-on 2026-08-28 after explicit-null report crashes, unresponsive controls, and
-unreliable live cancellation were observed. Do not resume solver research or
-further Lab features until UI-0 through UI-5 pass.
+**Status: no active implementation boundary.** The
+[Native Solver Lab GUI Stabilization](docs/archive/2026-08-28-native-solver-lab-gui-stabilization/README.md)
+boundary completed on 2026-08-28. Oliver must select the next chunk before
+implementation resumes.
 
 ## Checkpoint
 
 - Branch: `main`, local-only; nothing was pushed.
 - GUI-stabilization selection base: `ee18cc2`.
+- GUI-stabilization plan activation: `b7b383e`.
+- GUI-stabilization implementation: `60bd13f`.
 - Case-authoring selection: `c1dd9d7`.
 - Case-authoring implementation: `88d65a9`.
 - Native Solver Lab checkpoints through typed LLM controls:
@@ -31,6 +32,31 @@ further Lab features until UI-0 through UI-5 pass.
   automatic Imprint programs off, voluntary economic Restart off,
   goal-progress-gated reforges on, junk-free exact terminal success, and no
   disabled action families unless a diagnostic control is selected.
+
+## Completed Native Solver Lab GUI Stabilization
+
+Explicit-null report sections now normalize to bounded service summaries, and
+one malformed attempt cannot abort the job list. Cached aggregation and
+selected-detail reads run off Qt; terminal reports are not reopened, refresh is
+single-flight, unchanged rows avoid model resets, and selection is stable by
+job ID. Every visible action has explicit valid/busy state and persistent
+accepted/rejected feedback. Complete tracebacks and identity context append to
+the Activity & Errors dock and controlled GUI log.
+
+Cancellation was qualified through direct service, JSON CLI, stdio MCP, and
+the real GUI button using actual Windows parent/grandchild process trees. All
+four paths moved `running -> canceling -> canceled`, terminated the tree,
+released the lease and host reservation, and acknowledged in under 0.5 seconds
+using `graceful_then_process_tree_termination`. The reported Cancel problem was
+owned by synchronous GUI polling/model reset and silent no-selection handlers,
+not by the supervisor lifecycle.
+
+The final focused suite passed 34 tests, the rendered PySide smoke passed, and
+the one final full pipeline passed 3,417,290 native checks, all 12 benchmark
+specifications, 28/28 release-WASM checks, and every other layer. No native
+solver, mechanic, ABI, generated-data, strategy-vocabulary, or WASM change was
+made. Stable usage is in [Native Solver Lab](docs/foundation/solver-lab.md),
+and complete evidence is in the archived [result](docs/archive/2026-08-28-native-solver-lab-gui-stabilization/result.md).
 
 ## Completed Native Solver Lab Case Authoring
 

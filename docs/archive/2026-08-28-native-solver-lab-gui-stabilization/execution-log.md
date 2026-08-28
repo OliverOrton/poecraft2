@@ -1,6 +1,6 @@
 # Native Solver Lab GUI Stabilization Execution Log
 
-**Status: active; Gate UI-0 reproduction in progress.**
+**Status: completed; UI-0 through UI-6 passed.**
 
 Parent: [Plan](plan.md)
 
@@ -139,4 +139,36 @@ feedback remained after another poll.
 - Invalid-state coverage checks persistent explanations and disabled-state
   contracts; timer refresh cannot erase selection or feedback.
 
-Rendered smoke and the final consolidated repository acceptance remain open.
+### Rendered manual smoke
+
+The real PySide6 application was launched against an isolated Lab catalog and
+inspected through the visible Windows UI. A live selected job visibly moved
+from `running` to `canceling` and then `canceled`; the selection survived,
+Cancel disabled and Retry enabled at the terminal state, and supervisor health
+changed from `1/1 running · 8192 MiB reserved` to
+`0/1 running · 0 MiB reserved`. The persistent activity dock retained the
+accepted Submit and Cancel records throughout refresh.
+
+The rendered Cases surface showed the frozen/draft/revision inventory and the
+correct enabled/disabled validation, revision, submission, and discard states.
+The rendered Matrix surface successfully produced an accepted five-case dry-
+run preview, and its activity record remained visible alongside the earlier
+cancellation feedback. The GUI closed cleanly after the smoke.
+
+No new GUI limitation was found in the rendered smoke.
+
+## Gate UI-6 final acceptance — 2026-08-28
+
+- Final focused Lab suite: `34 passed in 21.20s`.
+- `powershell -File scripts/test.ps1`: passed on its single final run,
+  including ingest and canonical-data validation, `3,417,290` native checks,
+  all `12` solver benchmark specifications, `28/28` release-WASM checks, and
+  the complete remaining bindings and web suite.
+- `git diff --check`: passed before archival.
+- No compiled-strategy verification was required: the boundary changes local
+  Python orchestration and GUI behavior only. It changes no native strategy,
+  engine ABI, mechanic, generated-data contract, or WASM module.
+
+All blocking stabilization gates are closed. Existing intentional limitations
+remain: the Lab is local-only, running jobs have Cancel rather than Pause, and
+closing the GUI does not silently cancel live work.

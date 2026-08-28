@@ -6,7 +6,7 @@ proof authority, or strategy evaluation.
 
 Parent: [Foundation](README.md)
 
-Verified against the implemented Lab surface: 2026-08-28 @ `88d65a9`.
+Verified against the implemented Lab surface: 2026-08-28 @ `60bd13f`.
 
 ## Purpose And Authority
 
@@ -127,9 +127,24 @@ The GUI has five persistent surfaces:
    Re-submitting the displayed batch is idempotent; **Submit new replicate
    batch** deliberately assigns a new batch identity.
 
-The GUI polls durable state and never performs a solve on its UI thread. Oliver
-owns rendered visual/usability review; automated tests exercise the controller
-and widgets offscreen.
+The GUI polls durable state every 1.5 seconds and never performs a solve,
+catalog aggregation, report parse, native case validation, or mutation on its
+UI thread. Attempt summaries are cached by artifact identity and terminal
+summaries are not reopened; selected detail refresh is separate, overlapping
+refresh is suppressed, unchanged table rows do not reset the model, and job
+selection is preserved by stable ID.
+
+Every visible action has an explicit valid/busy state and explanation. Accepted
+and rejected operations append to the persistent **Activity & Errors** dock
+with affected identities and state transitions. Complete tracebacks and the
+same activity stream are retained in `build/solver-lab/gui-activity.log`;
+ordinary health refresh never clears this history.
+
+Live Cancel changes the durable job to `canceling`, lets the worker observe the
+request, then uses the supervisor's verified Windows process-tree termination
+fallback when graceful completion does not arrive. The final `canceled` state
+is not displayed until the process is gone, the attempt and job are terminal,
+and the lease and host reservation are released.
 
 ## JSON CLI
 
@@ -222,10 +237,11 @@ needed.
 ## Artifacts And Limitations
 
 Each attempt directory may contain `report.json`, `partial.json`,
-`worker.log`, and a `strategies/` directory. The catalog indexes existing files
-with SHA-256 and size after termination. Investigation bundles contain bounded
-summaries, hashes, events, reproduction argv, and a bounded log tail; they do
-not copy arbitrary files or full telemetry.
+`worker.log`, and a `strategies/` directory. The controlled Lab root also owns
+`gui-activity.log`. The catalog indexes existing files with SHA-256 and size
+after termination. Investigation bundles contain bounded summaries, hashes,
+events, reproduction argv, and a bounded log tail; they do not copy arbitrary
+files or full telemetry.
 
 The Lab does not provide a second graphical modifier editor, live solve checkpoint/resume, running pause, remote or
 multi-machine workers, authentication, cloud execution, learned guidance,

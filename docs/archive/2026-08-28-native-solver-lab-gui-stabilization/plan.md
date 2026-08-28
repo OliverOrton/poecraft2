@@ -1,6 +1,6 @@
 # Native Solver Lab GUI Stabilization Plan
 
-**Status: active.** Selected on 2026-08-28.
+**Status: completed.** Selected and accepted on 2026-08-28.
 
 ## Objective
 
@@ -75,4 +75,3 @@ checkpoint commits with `Co-authored-by: Codex <codex@openai.com>`.
 - Do not hide a supervisor/process failure behind GUI-only state.
 - Do not resume solver research or add unrelated case-authoring features until
   UI-0 through UI-5 pass.
-

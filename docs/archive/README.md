@@ -11,6 +11,10 @@ selected active work.
 
 ## 2026-08-28
 
+- [Native Solver Lab GUI Stabilization](2026-08-28-native-solver-lab-gui-stabilization/README.md) —
+  makes explicit-null reports safe, moves cached aggregation off the Qt thread,
+  gives every visible action durable state and feedback, and qualifies real
+  Windows service/CLI/MCP/GUI cancellation plus the full GUI action matrix.
 - [Native Solver Lab Case Authoring](2026-08-28-native-solver-lab-case-authoring/README.md) —
   adds editable local drafts, native validation, immutable content-addressed
   revisions, Calculator clipboard export, a GUI Cases surface, CLI/MCP parity,
