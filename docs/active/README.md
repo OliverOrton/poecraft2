@@ -1,10 +1,17 @@
 # Active Work
 
-**Status: no active implementation boundary.** The Native Solver Lab GUI
-stabilization boundary completed on 2026-08-28. Oliver must select the next
-chunk before implementation resumes.
+**Status: one selected implementation boundary.** Oliver selected
+[Native Solver Lab Unattended Execution and Identity Hardening](2026-08-28-native-solver-lab-unattended-hardening/plan.md)
+on 2026-08-28. Implementation must begin in a fresh Codex task with the
+configured Solver Lab MCP server loaded.
 
 Parent: [Documentation map](../README.md)
+
+## Active boundary
+
+- [Native Solver Lab Unattended Execution and Identity Hardening](2026-08-28-native-solver-lab-unattended-hardening/plan.md)
+  — harden immutable dispatch identity, watchdog enforcement, atomic terminal
+  evidence, orphan ownership, integrity, and unattended MCP operation.
 
 ## Historical work
 

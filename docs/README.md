@@ -31,8 +31,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. Oliver must select the next chunk before
-implementation resumes.
+The selected
+[Native Solver Lab Unattended Execution and Identity Hardening](active/2026-08-28-native-solver-lab-unattended-hardening/plan.md)
+boundary starts from the completed GUI stabilization and hardens immutable
+dispatch identity, watchdog enforcement, atomic hashed terminal publication,
+orphan quarantine/recovery, evidence integrity, host headroom, and one
+MCP-plus-supervisor unattended path. Implementation must begin in a fresh
+Codex task with the configured Lab MCP server loaded.
 
 The completed
 [Native Solver Lab GUI Stabilization](archive/2026-08-28-native-solver-lab-gui-stabilization/README.md)

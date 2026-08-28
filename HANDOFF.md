@@ -1,13 +1,20 @@
 # Handoff
 
-**Status: no active implementation boundary.** The
-[Native Solver Lab GUI Stabilization](docs/archive/2026-08-28-native-solver-lab-gui-stabilization/README.md)
-boundary completed on 2026-08-28. Oliver must select the next chunk before
-implementation resumes.
+**Status: selected implementation boundary; no implementation begun.** Oliver
+selected
+[Native Solver Lab Unattended Execution and Identity Hardening](docs/active/2026-08-28-native-solver-lab-unattended-hardening/plan.md)
+on 2026-08-28. Begin only in a newly opened/restarted Codex task so the
+configured `poecraft2-native-solver-lab` MCP server is loaded.
 
 ## Checkpoint
 
 - Branch: `main`, local-only; nothing was pushed.
+- Unattended-hardening stable source base:
+  `978b200e8d7993a49ee7991f303cc0823f60914b`.
+- Unattended-hardening planning activation: the current HEAD is the single
+  documentation-only commit whose parent is the source base and whose subject
+  is `Activate solver lab unattended hardening`. The fresh task must record its
+  full hash before editing.
 - GUI-stabilization selection base: `ee18cc2`.
 - GUI-stabilization plan activation: `b7b383e`.
 - GUI-stabilization implementation: `60bd13f`.
@@ -32,6 +39,29 @@ implementation resumes.
   automatic Imprint programs off, voluntary economic Restart off,
   goal-progress-gated reforges on, junk-free exact terminal success, and no
   disabled action families unless a diagnostic control is selected.
+
+## Selected Native Solver Lab Unattended Hardening
+
+The fresh implementation task must first verify clean-tree/source ancestry,
+confirm the configured Solver Lab MCP tools, and use MCP to inventory profiles,
+cases, revisions, supervisor state, jobs, and attempts. MCP is the operator
+acceptance surface; normal repository tools remain the only source-editing and
+test surface.
+
+The selected scope is limited to complete dispatch-time identity revalidation,
+actual immutable-watchdog enforcement, canonical-payload idempotency, explicit
+per-worker host headroom, crash-atomic hashed terminal publication, artifact
+integrity verification, valid-final recovery, possible-live orphan quarantine,
+one combined MCP/supervisor launch path, a fresh-task MCP workflow, and
+overnight recovery qualification. Solver mechanics, search order, proof
+bounds, verified options, RCASSP, learned guidance, Imprint, native caps, and
+WASM behavior remain out of scope.
+
+Gates 0–3 form the first coherent retained checkpoint. Do not leave only part
+of canonical idempotency, dispatch/watchdog/headroom, atomic publication,
+integrity, recovery, and quarantine active. The exact startup, tests, hard
+stops, and retained-state rules are in the [plan](docs/active/2026-08-28-native-solver-lab-unattended-hardening/plan.md),
+and all evidence belongs in its [execution log](docs/active/2026-08-28-native-solver-lab-unattended-hardening/execution-log.md).
 
 ## Completed Native Solver Lab GUI Stabilization
 
