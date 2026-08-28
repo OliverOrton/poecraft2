@@ -1,13 +1,15 @@
 # Handoff
 
-**Status: no active implementation boundary.** The completed
-[Native Solver Lab Case Authoring](docs/archive/2026-08-28-native-solver-lab-case-authoring/README.md)
-boundary was selected and completed on 2026-08-28. Oliver must choose the next
-chunk before implementation resumes.
+**Status: active blocking boundary.** Oliver selected
+[Native Solver Lab GUI Stabilization](docs/active/2026-08-28-native-solver-lab-gui-stabilization/README.md)
+on 2026-08-28 after explicit-null report crashes, unresponsive controls, and
+unreliable live cancellation were observed. Do not resume solver research or
+further Lab features until UI-0 through UI-5 pass.
 
 ## Checkpoint
 
 - Branch: `main`, local-only; nothing was pushed.
+- GUI-stabilization selection base: `ee18cc2`.
 - Case-authoring selection: `c1dd9d7`.
 - Case-authoring implementation: `88d65a9`.
 - Native Solver Lab checkpoints through typed LLM controls:

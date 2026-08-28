@@ -1,9 +1,17 @@
 # Active Work
 
-**Status: no active implementation boundary.** Oliver must select the next
-chunk before implementation resumes.
+**Status: one active blocking boundary.** Oliver selected
+[Native Solver Lab GUI Stabilization](2026-08-28-native-solver-lab-gui-stabilization/README.md)
+on 2026-08-28. Solver research and further Lab features remain paused until
+its null-safety, responsiveness, action-state, cancellation, and GUI action
+matrix gates pass.
 
 Parent: [Documentation map](../README.md)
+
+## Active boundary
+
+- [Native Solver Lab GUI Stabilization](2026-08-28-native-solver-lab-gui-stabilization/README.md)
+  — repair the current GUI/service/supervisor lifecycle before adding features.
 
 ## Historical work
 

@@ -31,6 +31,12 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
+The active
+[Native Solver Lab GUI Stabilization](active/2026-08-28-native-solver-lab-gui-stabilization/README.md)
+boundary is a blocking reliability gate for explicit-null partial reports,
+background/cached refresh, durable action feedback, real live cancellation,
+and the complete GUI action matrix. It changes no solver or mechanic behavior.
+
 The completed
 [Native Solver Lab Case Authoring](archive/2026-08-28-native-solver-lab-case-authoring/README.md)
 boundary adds revision-safe local drafts, native validation, immutable
