@@ -313,6 +313,37 @@ def test_mcp_surface_is_closed_finite_and_mutations_are_typed(tmp_path: Path) ->
         assert "dry_run" in schema["properties"]
 
 
+def test_combined_launcher_resource_options_are_typed_and_bounded() -> None:
+    from poecraft_ingest.solver_lab_mcp import build_parser
+
+    parsed = build_parser().parse_args(
+        [
+            "--with-supervisor",
+            "--poll-seconds",
+            "0.02",
+            "--max-workers",
+            "2",
+            "--memory-budget-bytes",
+            "2147483648",
+            "--worker-headroom-bytes",
+            "536870912",
+            "--global-safety-reserve-bytes",
+            "268435456",
+        ]
+    )
+    assert parsed.with_supervisor is True
+    assert parsed.max_workers == 2
+    for rejected in (
+        ["--poll-seconds", "0"],
+        ["--max-workers", "17"],
+        ["--memory-budget-bytes", "-1"],
+        ["--worker-headroom-bytes", "-1"],
+        ["--global-safety-reserve-bytes", "-1"],
+    ):
+        with pytest.raises(SystemExit):
+            build_parser().parse_args(rejected)
+
+
 def test_mcp_stdio_server_initializes_and_serves_bounded_cases(tmp_path: Path) -> None:
     pytest.importorskip("mcp")
     from mcp import ClientSession
@@ -420,3 +451,150 @@ def test_mcp_stdio_binds_idempotency_to_complete_payload(tmp_path: Path) -> None
         )
 
     asyncio.run(exercise())
+
+
+def test_combined_stdio_server_dispatches_without_gui_or_separate_supervisor(
+    tmp_path: Path,
+) -> None:
+    pytest.importorskip("mcp")
+    from mcp import ClientSession
+    from mcp.client.stdio import StdioServerParameters, stdio_client
+
+    catalog_path = tmp_path / "catalog.sqlite3"
+    attempts_path = tmp_path / "attempts"
+
+    async def exercise() -> None:
+        environment = dict(os.environ)
+        environment["PYTHONPATH"] = os.pathsep.join(
+            [
+                str(REPO_ROOT / "tools" / "ingest"),
+                str(REPO_ROOT / "bindings" / "python"),
+            ]
+        )
+        parameters = StdioServerParameters(
+            command=sys.executable,
+            args=[
+                "-m",
+                "poecraft_ingest.solver_lab_mcp",
+                "--root",
+                str(REPO_ROOT),
+                "--catalog",
+                str(catalog_path),
+                "--attempts",
+                str(attempts_path),
+                "--with-supervisor",
+                "--max-workers",
+                "1",
+                "--poll-seconds",
+                "0.02",
+            ],
+            env=environment,
+        )
+        async with stdio_client(parameters) as (read_stream, write_stream):
+            async with ClientSession(read_stream, write_stream) as session:
+                await session.initialize()
+                status = await session.call_tool("get_supervisor_status", {})
+                assert status.structured_content["result"]["runtime_dispatcher"][
+                    "mode"
+                ] == "catalog_owner"
+                cases = await session.call_tool("list_cases", {})
+                case_id = cases.structured_content["result"][0]["case_id"]
+                submitted = await session.call_tool(
+                    "submit_job",
+                    {
+                        "case_id": case_id,
+                        "idempotency_key": "combined-stdio-dispatch",
+                        "watchdog_seconds": 0.15,
+                    },
+                )
+                job_id = submitted.structured_content["result"]["job_id"]
+                deadline = asyncio.get_running_loop().time() + 20.0
+                while True:
+                    detail = await session.call_tool("get_job", {"job_id": job_id})
+                    job_status = detail.structured_content["result"]["job"]["status"]
+                    if job_status not in {
+                        "queued",
+                        "blocked",
+                        "running",
+                        "canceling",
+                        "finalizing",
+                    }:
+                        break
+                    if asyncio.get_running_loop().time() >= deadline:
+                        raise AssertionError(f"combined job remained {job_status}")
+                    await asyncio.sleep(0.05)
+                attempts = await session.call_tool(
+                    "list_attempts", {"job_id": job_id}
+                )
+                assert len(attempts.structured_content["result"]) == 1
+                assert job_status in {"partial", "watchdog", "failed", "completed"}
+
+    asyncio.run(exercise())
+    reopened = _service(tmp_path)
+    ownership = reopened.catalog.get_dispatcher_ownership()
+    assert ownership is not None
+    assert ownership["status"] == "released"
+
+
+def test_second_combined_stdio_server_is_control_only_and_owner_releases(
+    tmp_path: Path,
+) -> None:
+    pytest.importorskip("mcp")
+    from mcp import ClientSession
+    from mcp.client.stdio import StdioServerParameters, stdio_client
+
+    environment = dict(os.environ)
+    environment["PYTHONPATH"] = os.pathsep.join(
+        [
+            str(REPO_ROOT / "tools" / "ingest"),
+            str(REPO_ROOT / "bindings" / "python"),
+        ]
+    )
+    base_args = [
+        "-m",
+        "poecraft_ingest.solver_lab_mcp",
+        "--root",
+        str(REPO_ROOT),
+        "--catalog",
+        str(tmp_path / "catalog.sqlite3"),
+        "--attempts",
+        str(tmp_path / "attempts"),
+        "--with-supervisor",
+        "--max-workers",
+        "1",
+    ]
+
+    async def exercise() -> None:
+        first_parameters = StdioServerParameters(
+            command=sys.executable, args=base_args, env=environment
+        )
+        second_parameters = StdioServerParameters(
+            command=sys.executable, args=base_args, env=environment
+        )
+        async with stdio_client(first_parameters) as first_streams:
+            async with ClientSession(*first_streams) as first_session:
+                await first_session.initialize()
+                first_status = await first_session.call_tool(
+                    "get_supervisor_status", {}
+                )
+                first_owner = first_status.structured_content["result"][
+                    "dispatcher_ownership"
+                ]["dispatcher_id"]
+                async with stdio_client(second_parameters) as second_streams:
+                    async with ClientSession(*second_streams) as second_session:
+                        await second_session.initialize()
+                        second_status = await second_session.call_tool(
+                            "get_supervisor_status", {}
+                        )
+                        result = second_status.structured_content["result"]
+                        assert result["runtime_dispatcher"]["mode"] == "control_only"
+                        assert result["runtime_dispatcher"][
+                            "control_only_reason"
+                        ] == "verified_live_dispatcher"
+                        assert result["dispatcher_ownership"]["dispatcher_id"] == first_owner
+
+    asyncio.run(exercise())
+    reopened = _service(tmp_path)
+    ownership = reopened.catalog.get_dispatcher_ownership()
+    assert ownership is not None
+    assert ownership["status"] == "released"

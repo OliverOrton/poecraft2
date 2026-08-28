@@ -57,6 +57,15 @@ def available_physical_memory_bytes() -> int | None:
         return None
 
 
+def _process_id_from_token(token: Any) -> int | None:
+    if not isinstance(token, str):
+        return None
+    try:
+        return int(token.partition(":")[0])
+    except ValueError:
+        return None
+
+
 @dataclass(frozen=True)
 class RunningAttempt:
     job_id: str
@@ -126,12 +135,24 @@ class SolverLabSupervisor:
         self._last_error: str | None = None
         self._started_at: float | None = None
         self._session_started = False
+        self._owns_dispatcher = False
+        self._control_only_reason: str | None = None
+        self._control_only_owner: dict[str, Any] | None = None
+        self._replaced_dispatcher_id: str | None = None
 
-    def start(self) -> None:
+    def start(self) -> bool:
         if self._thread and self._thread.is_alive():
-            return
-        self._ensure_session()
-        self.recover_stale_attempts()
+            return True
+        if not self._acquire_dispatcher():
+            return False
+        try:
+            self._ensure_session()
+            self.recover_stale_attempts(
+                include_supervisor_id=self._replaced_dispatcher_id
+            )
+        except Exception:
+            self.stop()
+            raise
         self._stop.clear()
         self._wake.clear()
         self._started_at = time.monotonic()
@@ -141,6 +162,7 @@ class SolverLabSupervisor:
             daemon=False,
         )
         self._thread.start()
+        return True
 
     def stop(self, *, wait: bool = True, timeout: float | None = None) -> None:
         """Stop new dispatch; live attempts drain unless separately canceled."""
@@ -152,6 +174,9 @@ class SolverLabSupervisor:
         if not self.is_alive() and self._session_started:
             self.service.catalog.stop_supervisor_session(self.supervisor_id)
             self._session_started = False
+        if not self.is_alive() and self._owns_dispatcher:
+            self.service.catalog.release_dispatcher_ownership(self.supervisor_id)
+            self._owns_dispatcher = False
 
     def wake(self) -> None:
         self._wake.set()
@@ -167,7 +192,16 @@ class SolverLabSupervisor:
         return {
             "supervisor_id": self.supervisor_id,
             "alive": self.is_alive(),
-            "dispatch_mode": "bounded_native_processes_v1",
+            "dispatch_mode": (
+                "catalog_owner"
+                if self._owns_dispatcher
+                else "control_only"
+            ),
+            "control_only_reason": self._control_only_reason,
+            "dispatcher_ownership": (
+                self.service.catalog.get_dispatcher_ownership()
+                or self._control_only_owner
+            ),
             "max_workers": self.max_workers,
             "running_job_ids": [item.job_id for item in running],
             "running_job_id": running[0].job_id if len(running) == 1 else None,
@@ -195,20 +229,31 @@ class SolverLabSupervisor:
     def run_once(self) -> bool:
         """Synchronous deterministic helper used by tests and headless CLI."""
 
-        self._ensure_session()
-        candidates = self.service.catalog.list_dispatch_candidates(limit=1)
-        if not candidates or self.service.catalog.queue_paused():
+        if not self._acquire_dispatcher():
             return False
-        claimed = self._claim(candidates[0], exclusive_oversize=False)
-        if claimed is None:
-            current = self.service.catalog.get_job(candidates[0]["job_id"])
-            return bool(current and current["status"] == "dispatch_refused")
-        job, attempt, running = claimed
-        self._execute_claimed(job, attempt, running)
-        return True
+        self._ensure_session()
+        try:
+            self.recover_stale_attempts(
+                include_supervisor_id=self._replaced_dispatcher_id
+            )
+            if self.service.catalog.list_reserved_leases():
+                return False
+            candidates = self.service.catalog.list_dispatch_candidates(limit=1)
+            if not candidates or self.service.catalog.queue_paused():
+                return False
+            claimed = self._claim(candidates[0], exclusive_oversize=False)
+            if claimed is None:
+                current = self.service.catalog.get_job(candidates[0]["job_id"])
+                return bool(current and current["status"] == "dispatch_refused")
+            job, attempt, running = claimed
+            self._execute_claimed(job, attempt, running)
+            return True
+        finally:
+            self.stop()
 
     def run_until_idle(self, *, timeout_seconds: float | None = None) -> bool:
-        self.start()
+        if not self.start():
+            return False
         started = time.monotonic()
         try:
             while True:
@@ -230,12 +275,17 @@ class SolverLabSupervisor:
         finally:
             self.stop(wait=True)
 
-    def recover_stale_attempts(self) -> list[dict[str, Any]]:
+    def recover_stale_attempts(
+        self, *, include_supervisor_id: str | None = None
+    ) -> list[dict[str, Any]]:
         cutoff = (
             datetime.now(timezone.utc) - timedelta(seconds=self.stale_lease_seconds)
         ).isoformat(timespec="milliseconds")
         recovered: list[dict[str, Any]] = []
-        for attempt in self.service.catalog.stale_attempts(heartbeat_before=cutoff):
+        for attempt in self.service.catalog.stale_attempts(
+            heartbeat_before=cutoff,
+            include_supervisor_id=include_supervisor_id,
+        ):
             process_state = observe_process_identity(
                 attempt.get("process_id"), attempt.get("process_identity_token")
             )
@@ -314,20 +364,102 @@ class SolverLabSupervisor:
             recovered.append(result)
         return recovered
 
+    def _configuration(self) -> dict[str, Any]:
+        return {
+            "max_workers": self.max_workers,
+            "memory_budget_bytes": self.memory_budget_bytes,
+            "worker_headroom_bytes": self.worker_headroom_bytes,
+            "memory_safety_reserve_bytes": self.memory_safety_reserve_bytes,
+            "reservation_policy_version": self.service.reservation_policy_version,
+            "poll_interval_seconds": self.poll_interval_seconds,
+        }
+
+    def _acquire_dispatcher(self) -> bool:
+        if self._owns_dispatcher:
+            return True
+        current = self.service.catalog.get_dispatcher_ownership()
+        replace_dispatcher_id: str | None = None
+        replace_token: str | None = None
+        legacy_dead_id: str | None = None
+        if current is None:
+            for session in self.service.catalog.list_supervisor_sessions(limit=100):
+                if session.get("status") != "active":
+                    continue
+                token = session.get("process_identity_token")
+                process_id = _process_id_from_token(token)
+                state = observe_process_identity(process_id, token)
+                if state == "proved_absent":
+                    legacy_dead_id = str(session["supervisor_id"])
+                    continue
+                self._control_only_reason = (
+                    "verified_live_legacy_supervisor"
+                    if state == "verified_live"
+                    else "possible_live_legacy_supervisor"
+                )
+                self._control_only_owner = {
+                    "scope": "catalog",
+                    "dispatcher_id": session["supervisor_id"],
+                    "process_id": process_id,
+                    "process_identity_token": token,
+                    "status": "active_legacy_session",
+                    "heartbeat_at": session["heartbeat_at"],
+                    "configuration": session["configuration"],
+                }
+                if process_id is not None:
+                    recorded = self.service.catalog.acquire_dispatcher_ownership(
+                        dispatcher_id=str(session["supervisor_id"]),
+                        process_id=process_id,
+                        process_identity_token=token,
+                        configuration={
+                            **session["configuration"],
+                            "ownership_source": "migrated_live_supervisor_session",
+                        },
+                    )
+                    if recorded["acquired"]:
+                        self._control_only_owner = recorded["ownership"]
+                return False
+        if current is not None and current.get("status") == "active":
+            if current.get("dispatcher_id") != self.supervisor_id:
+                state = observe_process_identity(
+                    current.get("process_id"),
+                    current.get("process_identity_token"),
+                )
+                if state != "proved_absent":
+                    self._control_only_reason = (
+                        "verified_live_dispatcher"
+                        if state == "verified_live"
+                        else "possible_live_dispatcher"
+                    )
+                    self._control_only_owner = current
+                    return False
+                replace_dispatcher_id = str(current["dispatcher_id"])
+                replace_token = current.get("process_identity_token")
+        acquired = self.service.catalog.acquire_dispatcher_ownership(
+            dispatcher_id=self.supervisor_id,
+            process_id=os.getpid(),
+            process_identity_token=process_identity_token(os.getpid()),
+            configuration=self._configuration(),
+            replace_dispatcher_id=replace_dispatcher_id,
+            replace_process_identity_token=replace_token,
+        )
+        self._owns_dispatcher = bool(acquired["acquired"])
+        self._replaced_dispatcher_id = (
+            acquired.get("replaced_dispatcher_id") or legacy_dead_id
+        )
+        if self._owns_dispatcher and legacy_dead_id is not None:
+            self.service.catalog.stop_supervisor_session(legacy_dead_id)
+        self._control_only_reason = (
+            None if self._owns_dispatcher else "dispatcher_acquisition_race_lost"
+        )
+        return self._owns_dispatcher
+
     def _ensure_session(self) -> None:
         if self._session_started:
             return
         self.service.catalog.start_supervisor_session(
             supervisor_id=self.supervisor_id,
             process_identity_token=process_identity_token(os.getpid()),
-            configuration={
-                "max_workers": self.max_workers,
-                "memory_budget_bytes": self.memory_budget_bytes,
-                "worker_headroom_bytes": self.worker_headroom_bytes,
-                "memory_safety_reserve_bytes": self.memory_safety_reserve_bytes,
-                "reservation_policy_version": self.service.reservation_policy_version,
-                "poll_interval_seconds": self.poll_interval_seconds,
-            },
+            configuration=self._configuration(),
         )
         self._session_started = True
 
@@ -615,44 +747,74 @@ class SolverLabSupervisor:
         return artifacts
 
     def _loop(self) -> None:
-        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            while not self._stop.is_set() or self._running:
-                self.service.catalog.heartbeat_supervisor(self.supervisor_id)
-                try:
-                    self.recover_stale_attempts()
-                except Exception as exc:
-                    with self._state_lock:
-                        self._last_error = f"{type(exc).__name__}: {exc}"
-                self._reap_completed()
-                if not self._stop.is_set() and not self.service.catalog.queue_paused():
-                    self._dispatch(executor)
-                if self._running:
-                    wait(
-                        list(self._running),
-                        timeout=self.poll_interval_seconds,
-                        return_when=FIRST_COMPLETED,
+        try:
+            with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+                while not self._stop.is_set() or self._running:
+                    owns_dispatcher = self.service.catalog.heartbeat_supervisor(
+                        self.supervisor_id
                     )
-                else:
-                    self._wake.wait(self.poll_interval_seconds)
-                    self._wake.clear()
-            self._reap_completed()
-        self.service.catalog.stop_supervisor_session(self.supervisor_id)
-        self._session_started = False
+                    if not owns_dispatcher:
+                        with self._state_lock:
+                            self._last_error = "catalog dispatcher ownership lost"
+                        self._stop.set()
+                    try:
+                        self.recover_stale_attempts()
+                    except Exception as exc:
+                        with self._state_lock:
+                            self._last_error = f"{type(exc).__name__}: {exc}"
+                    self._reap_completed()
+                    if (
+                        not self._stop.is_set()
+                        and not self.service.catalog.queue_paused()
+                    ):
+                        self._dispatch(executor)
+                    if self._running:
+                        wait(
+                            list(self._running),
+                            timeout=self.poll_interval_seconds,
+                            return_when=FIRST_COMPLETED,
+                        )
+                    else:
+                        self._wake.wait(self.poll_interval_seconds)
+                        self._wake.clear()
+                self._reap_completed()
+        finally:
+            if self._session_started:
+                self.service.catalog.stop_supervisor_session(self.supervisor_id)
+                self._session_started = False
+            if self._owns_dispatcher:
+                self.service.catalog.release_dispatcher_ownership(
+                    self.supervisor_id
+                )
+                self._owns_dispatcher = False
 
     def _dispatch(self, executor: ThreadPoolExecutor) -> None:
         with self._state_lock:
             running = list(self._running.values())
-        if len(running) >= self.max_workers or any(item.exclusive_oversize for item in running):
+        reservations = self.service.catalog.list_reserved_leases()
+        occupied = len(reservations)
+        reserved = sum(
+            int(item.get("reserved_memory_bytes") or 0)
+            for item in reservations
+        )
+        external_oversize = any(
+            int(item.get("reserved_memory_bytes") or 0) > self.memory_budget_bytes
+            for item in reservations
+        )
+        if (
+            occupied >= self.max_workers
+            or external_oversize
+            or any(item.exclusive_oversize for item in running)
+        ):
             return
-        reserved = sum(item.reserved_memory_bytes for item in running)
         available = self.available_memory_provider()
         for job in self.service.catalog.list_dispatch_candidates():
-            if len(running) >= self.max_workers:
+            if occupied >= self.max_workers:
                 break
             requirement = int(job["reserved_memory_bytes"])
             oversize = requirement > self.memory_budget_bytes
             if oversize:
-                if running:
+                if occupied:
                     self.service.catalog.mark_job_blocked(
                         job["job_id"], "exclusive_oversize_waiting_for_drain"
                     )
@@ -683,6 +845,7 @@ class SolverLabSupervisor:
             with self._state_lock:
                 self._running[future] = running_item
             running.append(running_item)
+            occupied += 1
             reserved += requirement
             if oversize:
                 break

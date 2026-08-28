@@ -15,6 +15,29 @@ from poecraft_ingest.solver_lab_service import (
     DEFAULT_WORKER_HEADROOM_BYTES,
     SolverLabService,
 )
+from poecraft_ingest.solver_lab_supervisor import SolverLabSupervisor
+
+
+MAX_HOST_BYTES = 1 << 50
+
+
+def _bounded_integer(name: str, *, minimum: int, maximum: int) -> Callable[[str], int]:
+    def parse(value: str) -> int:
+        parsed = int(value)
+        if not minimum <= parsed <= maximum:
+            raise argparse.ArgumentTypeError(
+                f"{name} must be in {minimum}..{maximum}"
+            )
+        return parsed
+
+    return parse
+
+
+def _bounded_poll_seconds(value: str) -> float:
+    parsed = float(value)
+    if not 0.01 <= parsed <= 60.0:
+        raise argparse.ArgumentTypeError("poll seconds must be in 0.01..60")
+    return parsed
 
 
 def build_server(service: SolverLabService) -> MCPServer:
@@ -25,7 +48,7 @@ def build_server(service: SolverLabService) -> MCPServer:
             "Typed local experiment controls over the native poecraft2 solver. "
             "No arbitrary shell, SQL, path write, or mechanics override is exposed."
         ),
-        version="0.1.0",
+        version="0.2.0",
     )
 
     def mutation(
@@ -360,13 +383,39 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--corpus", type=Path)
     parser.add_argument("--profile", type=Path)
     parser.add_argument(
+        "--with-supervisor",
+        action="store_true",
+        help="own the catalog dispatcher when no verified-live owner exists",
+    )
+    parser.add_argument(
+        "--poll-seconds",
+        type=_bounded_poll_seconds,
+        default=0.25,
+    )
+    parser.add_argument(
+        "--max-workers",
+        type=_bounded_integer("max workers", minimum=1, maximum=16),
+        default=1,
+    )
+    parser.add_argument(
+        "--memory-budget-bytes",
+        type=_bounded_integer(
+            "memory budget bytes", minimum=0, maximum=MAX_HOST_BYTES
+        ),
+        default=0,
+    )
+    parser.add_argument(
         "--worker-headroom-bytes",
-        type=int,
+        type=_bounded_integer(
+            "worker headroom bytes", minimum=0, maximum=MAX_HOST_BYTES
+        ),
         default=DEFAULT_WORKER_HEADROOM_BYTES,
     )
     parser.add_argument(
         "--global-safety-reserve-bytes",
-        type=int,
+        type=_bounded_integer(
+            "global safety reserve bytes", minimum=0, maximum=MAX_HOST_BYTES
+        ),
         default=DEFAULT_GLOBAL_SAFETY_RESERVE_BYTES,
     )
     return parser
@@ -385,7 +434,33 @@ def main(argv: list[str] | None = None) -> int:
         worker_headroom_bytes=args.worker_headroom_bytes,
         global_safety_reserve_bytes=args.global_safety_reserve_bytes,
     )
-    build_server(service).run(transport="stdio")
+    supervisor: SolverLabSupervisor | None = None
+    if args.with_supervisor:
+        supervisor = SolverLabSupervisor(
+            service,
+            poll_interval_seconds=args.poll_seconds,
+            max_workers=args.max_workers,
+            memory_budget_bytes=args.memory_budget_bytes,
+            worker_headroom_bytes=args.worker_headroom_bytes,
+            memory_safety_reserve_bytes=args.global_safety_reserve_bytes,
+        )
+        owns_dispatcher = supervisor.start()
+        supervisor_status = supervisor.status()
+        service.dispatcher_runtime = {
+            "mode": "catalog_owner" if owns_dispatcher else "control_only",
+            "supervisor_id": supervisor.supervisor_id,
+            "control_only_reason": supervisor_status["control_only_reason"],
+        }
+    else:
+        service.dispatcher_runtime = {
+            "mode": "control_only",
+            "control_only_reason": "supervisor_not_requested",
+        }
+    try:
+        build_server(service).run(transport="stdio")
+    finally:
+        if supervisor is not None:
+            supervisor.stop(wait=True)
     return 0
 
 

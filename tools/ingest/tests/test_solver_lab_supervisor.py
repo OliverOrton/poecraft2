@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import sqlite3
 import sys
@@ -397,6 +398,176 @@ def test_priority_clone_and_queue_pause_are_durable_controls(tmp_path: Path) -> 
     assert reopened.catalog.queue_paused() is False
 
 
+def test_catalog_singleton_dispatcher_keeps_second_supervisor_control_only(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    first_service = _service(tmp_path)
+    second_service = _service(tmp_path)
+    counter = {"active": 0, "peak": 0}
+    monkeypatch.setattr(
+        "poecraft_ingest.solver_lab_supervisor._run_case",
+        _fake_completed_run(counter, duration_seconds=0.2),
+    )
+    first = SolverLabSupervisor(first_service, poll_interval_seconds=0.01)
+    second = SolverLabSupervisor(second_service, poll_interval_seconds=0.01)
+
+    assert first.start() is True
+    assert second.start() is False
+    assert second.status()["dispatch_mode"] == "control_only"
+    assert second.status()["control_only_reason"] == "verified_live_dispatcher"
+    owner = second_service.catalog.get_dispatcher_ownership()
+    assert owner is not None
+    assert owner["dispatcher_id"] == first.supervisor_id
+
+    job_id = first_service.submit_job(
+        case_id=_case_id(first_service), idempotency_key="singleton-submit"
+    )["result"]["job_id"]
+    _wait_for(lambda: first_service.catalog.get_job(job_id)["status"] == "completed")
+    assert len(first_service.catalog.list_attempts(job_id=job_id)) == 1
+    assert counter["peak"] == 1
+
+    second.stop()
+    first.stop()
+    released = first_service.catalog.get_dispatcher_ownership()
+    assert released is not None
+    assert released["status"] == "released"
+
+
+def test_live_legacy_supervisor_session_is_migrated_as_control_only_owner(
+    tmp_path: Path,
+) -> None:
+    service = _service(tmp_path)
+    legacy_id = "legacy-gui-supervisor"
+    token = process_identity_token(os.getpid())
+    service.catalog.start_supervisor_session(
+        supervisor_id=legacy_id,
+        process_identity_token=token,
+        configuration={"max_workers": 1},
+    )
+    combined = SolverLabSupervisor(service)
+
+    assert combined.start() is False
+    status = combined.status()
+    assert status["dispatch_mode"] == "control_only"
+    assert status["control_only_reason"] == "verified_live_legacy_supervisor"
+    assert status["dispatcher_ownership"]["dispatcher_id"] == legacy_id
+    assert service.catalog.get_dispatcher_ownership()["dispatcher_id"] == legacy_id
+
+    combined.stop()
+    service.catalog.stop_supervisor_session(legacy_id)
+    service.catalog.release_dispatcher_ownership(legacy_id)
+
+
+def test_concurrent_dispatcher_acquisition_has_exactly_one_owner(
+    tmp_path: Path,
+) -> None:
+    supervisors = [
+        SolverLabSupervisor(_service(tmp_path), poll_interval_seconds=0.01)
+        for _ in range(2)
+    ]
+    barrier = threading.Barrier(2)
+    results: list[bool] = []
+    lock = threading.Lock()
+
+    def start(supervisor: SolverLabSupervisor) -> None:
+        barrier.wait()
+        acquired = supervisor.start()
+        with lock:
+            results.append(acquired)
+
+    threads = [
+        threading.Thread(target=start, args=(supervisor,))
+        for supervisor in supervisors
+    ]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    assert sorted(results) == [False, True]
+    assert sum(
+        supervisor.status()["dispatch_mode"] == "catalog_owner"
+        for supervisor in supervisors
+    ) == 1
+    for supervisor in supervisors:
+        supervisor.stop()
+
+
+@pytest.mark.parametrize(
+    ("phase", "expected_status"),
+    [("queued", "completed"), ("running", "failed"), ("finalizing", "completed")],
+)
+def test_forced_dispatcher_death_recovers_without_duplicate_attempts(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    phase: str,
+    expected_status: str,
+) -> None:
+    service = _service(tmp_path / phase)
+    old_id = f"dead-{phase}-dispatcher"
+    old_token = "999999:dead"
+    service.catalog.start_supervisor_session(
+        supervisor_id=old_id,
+        process_identity_token=old_token,
+        configuration={"max_workers": 1},
+    )
+    acquired = service.catalog.acquire_dispatcher_ownership(
+        dispatcher_id=old_id,
+        process_id=999999,
+        process_identity_token=old_token,
+        configuration={"max_workers": 1},
+    )
+    assert acquired["acquired"] is True
+    job_id = service.submit_job(
+        case_id=_case_id(service), idempotency_key=f"forced-{phase}"
+    )["result"]["job_id"]
+    if phase != "queued":
+        attempt_id = f"attempt-{phase}"
+        attempt_directory = service.paths.attempts / attempt_id
+        claimed = service.catalog.claim_job(
+            job_id=job_id,
+            supervisor_id=old_id,
+            attempt_id=attempt_id,
+            attempt_directory=attempt_directory,
+            lease_id=f"lease-{phase}",
+        )
+        assert claimed is not None
+        if phase == "finalizing":
+            attempt_directory.mkdir(parents=True)
+            (attempt_directory / "report.json").write_text(
+                json.dumps({"cases": [{"id": _case_id(service)}]}),
+                encoding="utf-8",
+            )
+            (attempt_directory / "worker.log").write_text(
+                "finished before dispatcher death", encoding="utf-8"
+            )
+            service.catalog.begin_finalizing(
+                attempt_id=attempt_id,
+                result={"status": "completed", "survivor": False},
+            )
+
+    monkeypatch.setattr(
+        "poecraft_ingest.solver_lab_supervisor.observe_process_identity",
+        lambda *_: "proved_absent",
+    )
+    monkeypatch.setattr(
+        "poecraft_ingest.solver_lab_supervisor._run_case",
+        _fake_completed_run(),
+    )
+    successor = SolverLabSupervisor(service, poll_interval_seconds=0.01)
+    assert successor.start() is True
+    _wait_for(lambda: service.catalog.get_job(job_id)["status"] == expected_status)
+    successor.stop()
+
+    attempts = service.catalog.list_attempts(job_id=job_id)
+    assert len(attempts) == 1
+    assert attempts[0]["status"] == expected_status
+    assert service.catalog.list_reserved_leases() == []
+    ownership = service.catalog.get_dispatcher_ownership()
+    assert ownership is not None
+    assert ownership["status"] == "released"
+
+
 def test_catalog_v1_columns_migrate_in_place(tmp_path: Path) -> None:
     path = tmp_path / "old.sqlite3"
     with sqlite3.connect(path) as connection:
@@ -432,7 +603,12 @@ def test_catalog_v1_columns_migrate_in_place(tmp_path: Path) -> None:
             row[1] for row in connection.execute("PRAGMA table_info(attempts)")
         }
         version = connection.execute("PRAGMA user_version").fetchone()[0]
+        dispatcher_table = connection.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' "
+            "AND name='dispatcher_ownership'"
+        ).fetchone()
 
     assert {"blocked_reason", "cancel_requested"} <= job_columns
     assert {"lease_id", "process_id", "process_identity_token"} <= attempt_columns
-    assert version == 4
+    assert dispatcher_table == ("dispatcher_ownership",)
+    assert version == 5

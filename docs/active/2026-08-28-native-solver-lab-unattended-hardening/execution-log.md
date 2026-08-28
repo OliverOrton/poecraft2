@@ -1,6 +1,6 @@
 # Native Solver Lab Unattended Execution and Identity Hardening Log
 
-**Status: Gates 0–3 passed as one coherent checkpoint; Gate 4 is next.**
+**Status: Gates 0–4 passed; the mandatory fresh-task Gate 5 restart is next.**
 
 Parent: [Plan](plan.md)
 
@@ -103,7 +103,7 @@ source inspection, editing, testing, and Git surface.
 | 2 — dispatch/watchdog/headroom | passed | eight-component identity mutation matrix, local revision mutation, timed child watchdog, and split-resource evidence |
 | 3 — atomic publication/recovery | passed | pre/post-transaction crash points, valid-final recovery, tamper rejection, and possible-live quarantine/reconcile tests |
 | 0–3 checkpoint | passed | 72 focused tests, clean diff check, local checkpoint commit, and exact HANDOFF continuation |
-| 4 — combined MCP/supervisor | not started | one-command dispatch, singleton ownership, forced-restart tests |
+| 4 — combined MCP/supervisor | passed | one-command real-stdio dispatch, singleton/race/legacy ownership, normal release, and queued/running/finalizing forced-restart tests |
 | 5 — fresh-task MCP E2E | not started | revision → submit → partial → cancel → retry → compare → export transcript |
 | 6 — overnight qualification | not started | accelerated suite and six-plus-hour soak ledger/invariants |
 | 7 — final acceptance | not started | full Lab suite, stdio, full pipeline, docs/link/diff checks |
@@ -285,9 +285,72 @@ witnesses and decisions were recorded.
 
 ## Gate 4/5 operator record
 
-After the combined launcher is installed, record the generic command and the
-user-local MCP registration verification without committing user-specific
-paths. Then restart/open a new Codex task and record:
+Gate 4 retained one combined generic command:
+
+```powershell
+poecraft-solver-lab-mcp --root . --with-supervisor --max-workers 1
+```
+
+- MCP server version: `0.2.0`; tool count remains 31 with unchanged finite
+  typed authority and no shell, SQL, arbitrary output path, native argument
+  bag, mechanic control, or remote worker surface.
+- Typed bounded launch controls: poll interval `0.01..60s`, workers `1..16`,
+  automatic-or-bounded host budget, and nonnegative bounded per-worker
+  headroom/global safety reserve. Service/job identity still owns the latter
+  resource values; only the native cap has solver authority.
+- Catalog migration: additive v5 adds the single-row dispatcher ownership,
+  PID-creation identity, heartbeat, configuration, acquisition/release, and
+  replacement record. Existing v4 rows are untouched.
+- Ownership: simultaneous acquisition produces exactly one owner. A second
+  in-process or real stdio combined server reports `control_only` and the live
+  owner. Catalog-wide active/quarantined lease count and reservation bytes are
+  included in admission, so a successor cannot dispatch around a possible-live
+  orphan.
+- Legacy transition: a live pre-v5 supervisor session is conservatively
+  migrated as owner. The exact registered-command probe found the intentionally
+  still-open GUI supervisor
+  `supervisor-0f222afe-f8f1-46dd-915a-48b22b8d37c0` at PID `46580`, recorded it
+  as the catalog owner, and returned
+  `runtime_dispatcher.mode=control_only` with reason
+  `verified_live_legacy_supervisor`. It did not start another dispatcher.
+- Real combined stdio dispatch: an isolated temporary catalog started only the
+  MCP command above, submitted through MCP with a `0.15s` watchdog, created one
+  attempt/native process, reached a truthful terminal result, and released
+  dispatcher ownership when stdio closed.
+- Forced-death fault matrix: proved-dead dispatcher ownership at `queued`,
+  `running`, and `finalizing` was replaced transactionally. The successor
+  dispatched the queued job once, published the evidence-free running attempt
+  as failed with a hashed supervisor error, and recovered the valid finalizing
+  report as completed. Every case retained one attempt, no duplicate worker,
+  no reservation, and released ownership.
+- Normal shutdown: two-server and no-work tests released ownership. Shutdown
+  stops new dispatch but does not cancel live work; the non-daemon supervisor
+  drains it within the immutable watchdog. The documented shorter procedure is
+  pause, typed cancel if desired, wait for terminal/released reservation, then
+  close.
+- User-local registration: removed and re-added successfully with the installed
+  `poecraft-solver-lab-mcp` entry point, repository root, `--with-supervisor`,
+  and `--max-workers 1`; `codex mcp get` confirmed enabled stdio transport and
+  those arguments. No absolute user path or Codex configuration is committed.
+- Registered-command probe: server
+  `poecraft2-native-solver-lab`, version `0.2.0`, 31 tools, no MCP error; the
+  live-GUI control-only result is recorded above.
+- Focused command/result:
+
+  ```powershell
+  py -3 -m pytest tools/ingest/tests/test_solver_lab_contracts.py tools/ingest/tests/test_solver_lab.py tools/ingest/tests/test_solver_lab_supervisor.py tools/ingest/tests/test_solver_lab_mcp.py tools/ingest/tests/test_solver_lab_gui_stabilization.py tools/ingest/tests/test_solver_lab_unattended_hardening.py tools/ingest/tests/test_solver_corpus_runner.py tools/ingest/tests/test_solver_lab_parity.py -q --tb=short
+  # 81 passed in 45.15s
+  ```
+
+- Gate 4 commit: local `Run solver lab MCP with singleton dispatcher` (the
+  commit containing this record), with the required Codex co-author line;
+  nothing pushed.
+- Mandatory stop: do not execute Gate 5 in this task. Oliver should normally
+  close the still-open GUI first so its supervisor drains/releases ownership,
+  then restart/open a fresh Codex task. If it remains open, the registered MCP
+  server must correctly stay control-only and report that owner.
+
+The fresh Gate 5 task must record:
 
 ```text
 fresh task identity:

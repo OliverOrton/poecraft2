@@ -187,23 +187,35 @@ poecraft-solver-lab-parity `
 
 ## Local MCP
 
-`poecraft-solver-lab-mcp` runs a local stdio MCP server over the same service.
-Codex can register the installed bounded stdio server in its user-local
-configuration while rooting the service at this checkout:
+`poecraft-solver-lab-mcp --with-supervisor` runs the local stdio MCP server and
+its bounded native dispatcher together. One registered command is therefore
+enough for unattended operation without opening the GUI or starting a separate
+`supervise` process. Codex can register it in user-local configuration while
+rooting the service at this checkout:
 
 ```powershell
 $labMcp = py -3 -c "import sysconfig; print(sysconfig.get_path('scripts') + r'\poecraft-solver-lab-mcp.exe')"
-codex mcp add poecraft2-native-solver-lab -- $labMcp --root (Get-Location).Path
+codex mcp add poecraft2-native-solver-lab -- $labMcp --root (Get-Location).Path --with-supervisor --max-workers 1
 codex mcp get poecraft2-native-solver-lab
 ```
 
 This is a user-local client setting; do not commit client-specific paths or
 secrets. A task already open while the entry is added cannot acquire the new
-tools; start a new task or restart Codex. The adapter exposes 31 finite typed
-tools, including the complete draft/validation/revision lifecycle. It has no arbitrary shell,
-SQL, write path, benchmark argument bag, mechanics override, or remote worker
-authority. Mutation tools use the same dry-run and idempotency rules as the
-CLI.
+launcher; start a new task or restart Codex. The adapter exposes 31 finite
+typed tools, including the complete draft/validation/revision lifecycle. It has
+no arbitrary shell, SQL, write path, benchmark argument bag, mechanics
+override, or remote worker authority. Mutation tools use the same complete
+canonical-request idempotency rules as the CLI.
+
+The catalog has one durable dispatcher owner. A second combined MCP process
+detects a verified-live owner, remains a read/control surface, and reports
+`runtime_dispatcher.mode=control_only`; it cannot multiply the catalog's worker
+limit. A successor may replace ownership only after proving that the recorded
+dispatcher process identity is absent, and it reconciles the replaced owner's
+running/finalizing attempts before new dispatch. `--poll-seconds`,
+`--max-workers`, `--memory-budget-bytes`, `--worker-headroom-bytes`, and
+`--global-safety-reserve-bytes` are the only bounded dispatcher/resource launch
+options.
 
 ## Statuses, Resources, And Recovery
 
@@ -211,37 +223,53 @@ CLI.
 - `blocked`: host-memory admission or exclusive-drain requirement currently
   prevents dispatch; this is not a solver proof result.
 - `running` / `canceling`: one owned native process and lease are live.
+- `finalizing`: files are being validated and hashed before atomic terminal
+  publication; its reservation remains owned.
+- `dispatch_refused`: complete dispatch-time identity no longer matches the
+  immutable submitted request; no preclaim worker was started.
+- `orphan_quarantined`: the original worker is verified live or cannot yet be
+  proved absent. Its lease/reservation is retained and retry/clone-as-retry is
+  blocked.
 - `completed`: the worker produced its final report. This can contain an exact,
   bounded, state-cap, or solver-owned resource-cap result.
 - `partial`: a watchdog/orphan path retained a valid partial observation.
 - `canceled`: verified process-tree cancellation completed.
 - `failed`: runner error, crash, OS-like OOM, or another terminal failure.
 
-Host reservation is based on case metadata and available system memory. It is
-not `max_solver_owned_bytes` and never becomes bound/proof authority. Queue
-pause stops new dispatch only; running pause is intentionally unavailable.
+Host accounting exposes the native `max_solver_owned_bytes` cap, per-worker
+host headroom (512 MiB by default), their total worker reservation, and the
+global safety reserve separately. Only the native cap is solver/bound/proof
+authority. Queue pause stops new dispatch only; running pause is intentionally
+unavailable.
 
-On restart, the supervisor reconciles stale sessions and leases, verifies PID
-creation identity before touching a process, retains valid partial evidence,
-and records an orphan rather than claiming completion. Retry creates a new
-attempt ordinal and directory. Do not delete or edit catalog rows or attempt
-artifacts to retry work.
+On restart, the supervisor reconciles stale ownership, sessions, and leases and
+verifies PID creation identity before changing attempt state. A proved-absent
+worker with a valid final report is truthfully recovered as completed. A
+verified-live or possible-live worker is quarantined without releasing its
+reservation; periodic reconciliation publishes only after absence is proved.
+Retry creates a new attempt ordinal and directory. Do not delete or edit
+catalog rows or attempt artifacts to retry work.
 
-Closing the GUI stops new dispatch; a running non-daemon worker is allowed to
-drain. To stop live work, cancel the selected job and wait for terminal
-acknowledgment before closing. For a clean maintenance shutdown, pause the
-queue, let running attempts finish (or cancel them), close the GUI/supervisor,
-then copy the catalog and its `-wal`/`-shm` siblings together if a raw backup is
-needed.
+Closing the GUI or normally closing combined stdio stops new dispatch and does
+not cancel live work; the non-daemon supervisor drains each worker within its
+immutable watchdog. For a shorter bounded shutdown, first pause the queue,
+cancel any selected live job through the typed control, wait for terminal
+acknowledgment and released reservation, then close the client. For maintenance,
+copy the catalog and its `-wal`/`-shm` siblings together only after dispatcher
+ownership reports released.
 
 ## Artifacts And Limitations
 
 Each attempt directory may contain `report.json`, `partial.json`,
 `worker.log`, and a `strategies/` directory. The controlled Lab root also owns
-`gui-activity.log`. The catalog indexes existing files with SHA-256 and size
-after termination. Investigation bundles contain bounded summaries, hashes,
-events, reproduction argv, and a bounded log tail; they do not copy arbitrary
-files or full telemetry.
+`supervisor-error.json`, `worker.log`, and a `strategies/` directory. The
+controlled Lab root also owns `gui-activity.log`. The supervisor validates and
+hashes the required evidence before one catalog transaction indexes artifacts,
+terminalizes attempt/job, emits events, and releases the lease. Every terminal
+consumer rechecks owned path, size, and SHA-256 before parsing or export;
+legacy unindexed terminals are disclosed but not trusted. Investigation bundles
+contain bounded summaries, hashes, events, reproduction argv, and a bounded
+log tail; they do not copy arbitrary files or full telemetry.
 
 The Lab does not provide a second graphical modifier editor, live solve checkpoint/resume, running pause, remote or
 multi-machine workers, authentication, cloud execution, learned guidance,

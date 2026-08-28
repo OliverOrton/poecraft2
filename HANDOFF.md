@@ -1,17 +1,18 @@
 # Handoff
 
-**Status: Gates 0–3 of the selected Native Solver Lab Unattended Execution and
-Identity Hardening boundary passed as one coherent checkpoint; Gate 4 is
-next.** The mandatory implementation-task startup gate was completed from clean
-`6400f045a97a0389ce2d48e430ae6e55c9465f01`, including the required MCP-only
-operator inventory.
+**Status: Gates 0–4 of the selected Native Solver Lab Unattended Execution and
+Identity Hardening boundary passed; Gate 5 must begin in a fresh Codex task.**
+The configured MCP registration now uses the combined version `0.2.0` launcher.
 
 ## Checkpoint
 
 - Branch: `main`, local-only; nothing was pushed.
 - Gates 0–3 unattended-hardening checkpoint: local commit
-  `Harden solver lab unattended execution identity` (the commit containing
-  this handoff), with 72 focused tests passing.
+  `9fb0e083ebdbce6d0cf1cf720df550f7a6810cca` (`Harden solver lab unattended
+  execution identity`), with 72 focused tests passing.
+- Gate 4 combined-launch checkpoint: local commit
+  `Run solver lab MCP with singleton dispatcher` (the commit containing this
+  handoff), with 81 focused tests passing.
 - Unattended-hardening stable source base:
   `978b200e8d7993a49ee7991f303cc0823f60914b`.
 - Unattended-hardening planning activation: the current HEAD is the single
@@ -55,11 +56,28 @@ GUI/runner/parity suite passed 72 tests; `git diff --check` passed. No native,
 mechanic, ABI, generated-data, strategy-vocabulary, WASM, browser, or rendered
 GUI change was made.
 
-The next exact action is Gate 4 only: add catalog-scoped singleton dispatcher
-ownership and one combined MCP/supervisor launch path, test dual-server and
-forced-restart behavior, update and verify the user-local MCP registration,
-then stop and open/restart a fresh Codex task for Gate 5. Do not run Gate 5 in
-the task that installs the combined launcher.
+Gate 4 added catalog schema v5 singleton dispatcher ownership, a combined MCP
+plus supervisor entry point, conservative live-legacy-session migration,
+catalog-wide reservation admission, typed bounded launch controls, and normal
+draining shutdown. Real stdio dispatch, dual server/control-only behavior,
+simultaneous ownership race, normal release, and queued/running/finalizing
+forced-death recovery passed. The user-local registration now includes
+`--with-supervisor --max-workers 1`; no user-specific path is committed.
+
+The existing GUI is still intentionally open with verified-live supervisor
+`supervisor-0f222afe-f8f1-46dd-915a-48b22b8d37c0` (PID `46580`). The exact
+registered-command probe migrated it as the catalog owner and correctly stayed
+control-only. Oliver should normally close that GUI before Gate 5 so its
+supervisor drains and releases ownership. If it remains open, the fresh MCP
+server must remain control-only and report it; do not bypass or force-clear the
+owner.
+
+The next exact action is mandatory: restart/open a fresh Codex task, reread
+`AGENTS.md`, this handoff, the active plan, and its execution log, verify the
+clean Gate 4 checkpoint and loaded MCP `0.2.0` tools, then perform Gate 5's
+revision → submit → partial → cancel → retry → compare → bundle workflow
+entirely through MCP without opening the GUI. Do not perform Gate 5 in the task
+that installed the launcher.
 
 The fresh implementation task verified clean-tree/source ancestry, confirmed
 the configured Solver Lab MCP tools, and used MCP to inventory profiles, cases,

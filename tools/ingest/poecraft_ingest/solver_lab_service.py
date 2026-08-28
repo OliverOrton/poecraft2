@@ -1662,6 +1662,10 @@ class SolverLabService:
                 "queue_paused": self.catalog.queue_paused(),
                 "job_status_counts": dict(sorted(counts.items())),
                 "recent_sessions": self.catalog.list_supervisor_sessions(limit=10),
+                "dispatcher_ownership": self.catalog.get_dispatcher_ownership(),
+                "runtime_dispatcher": getattr(
+                    self, "dispatcher_runtime", {"mode": "control_only"}
+                ),
                 "host_resource_policy": {
                     "policy_version": self.reservation_policy_version,
                     "per_worker_headroom_bytes": self.worker_headroom_bytes,

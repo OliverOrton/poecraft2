@@ -23,7 +23,7 @@ from poecraft_ingest.solver_lab_contracts import (
 from poecraft_ingest.solver_lab_normalize import as_mapping
 
 
-CATALOG_SCHEMA_VERSION = 4
+CATALOG_SCHEMA_VERSION = 5
 
 
 def utc_now() -> str:
@@ -201,6 +201,18 @@ class SolverLabCatalog:
                     started_at TEXT NOT NULL,
                     heartbeat_at TEXT NOT NULL,
                     stopped_at TEXT,
+                    configuration_json TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS dispatcher_ownership (
+                    scope TEXT PRIMARY KEY,
+                    dispatcher_id TEXT NOT NULL,
+                    process_id INTEGER,
+                    process_identity_token TEXT,
+                    status TEXT NOT NULL,
+                    acquired_at TEXT NOT NULL,
+                    heartbeat_at TEXT NOT NULL,
+                    released_at TEXT,
                     configuration_json TEXT NOT NULL
                 );
 
@@ -1145,7 +1157,167 @@ class SolverLabCatalog:
                 ),
             )
 
-    def heartbeat_supervisor(self, supervisor_id: str) -> None:
+    def get_dispatcher_ownership(self) -> dict[str, Any] | None:
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM dispatcher_ownership WHERE scope='catalog'"
+            ).fetchone()
+        if row is None:
+            return None
+        return {
+            "scope": row["scope"],
+            "dispatcher_id": row["dispatcher_id"],
+            "process_id": row["process_id"],
+            "process_identity_token": row["process_identity_token"],
+            "status": row["status"],
+            "acquired_at": row["acquired_at"],
+            "heartbeat_at": row["heartbeat_at"],
+            "released_at": row["released_at"],
+            "configuration": as_mapping(
+                _decode(row["configuration_json"], {})
+            ),
+        }
+
+    def acquire_dispatcher_ownership(
+        self,
+        *,
+        dispatcher_id: str,
+        process_id: int,
+        process_identity_token: str | None,
+        configuration: Mapping[str, Any],
+        replace_dispatcher_id: str | None = None,
+        replace_process_identity_token: str | None = None,
+    ) -> dict[str, Any]:
+        """Acquire the one catalog dispatcher, optionally replacing a proved-dead owner."""
+
+        now = utc_now()
+        acquired = False
+        replaced_dispatcher_id: str | None = None
+        with self.transaction(immediate=True) as connection:
+            row = connection.execute(
+                "SELECT * FROM dispatcher_ownership WHERE scope='catalog'"
+            ).fetchone()
+            if row is None or row["status"] != "active":
+                connection.execute(
+                    """
+                    INSERT INTO dispatcher_ownership(
+                        scope, dispatcher_id, process_id, process_identity_token,
+                        status, acquired_at, heartbeat_at, released_at,
+                        configuration_json
+                    ) VALUES('catalog', ?, ?, ?, 'active', ?, ?, NULL, ?)
+                    ON CONFLICT(scope) DO UPDATE SET
+                        dispatcher_id=excluded.dispatcher_id,
+                        process_id=excluded.process_id,
+                        process_identity_token=excluded.process_identity_token,
+                        status='active', acquired_at=excluded.acquired_at,
+                        heartbeat_at=excluded.heartbeat_at, released_at=NULL,
+                        configuration_json=excluded.configuration_json
+                    """,
+                    (
+                        dispatcher_id,
+                        process_id,
+                        process_identity_token,
+                        now,
+                        now,
+                        _json(configuration),
+                    ),
+                )
+                acquired = True
+            elif (
+                row["dispatcher_id"] == dispatcher_id
+                and row["process_id"] == process_id
+                and row["process_identity_token"] == process_identity_token
+            ):
+                connection.execute(
+                    "UPDATE dispatcher_ownership SET heartbeat_at=?, "
+                    "configuration_json=? WHERE scope='catalog'",
+                    (now, _json(configuration)),
+                )
+                acquired = True
+            elif (
+                replace_dispatcher_id is not None
+                and row["dispatcher_id"] == replace_dispatcher_id
+                and row["process_identity_token"]
+                == replace_process_identity_token
+            ):
+                replaced_dispatcher_id = str(row["dispatcher_id"])
+                connection.execute(
+                    "UPDATE supervisor_sessions SET status='stopped', "
+                    "heartbeat_at=?, stopped_at=? WHERE supervisor_id=? "
+                    "AND status='active'",
+                    (now, now, replaced_dispatcher_id),
+                )
+                connection.execute(
+                    """
+                    UPDATE dispatcher_ownership SET
+                        dispatcher_id=?, process_id=?, process_identity_token=?,
+                        status='active', acquired_at=?, heartbeat_at=?,
+                        released_at=NULL, configuration_json=?
+                    WHERE scope='catalog'
+                    """,
+                    (
+                        dispatcher_id,
+                        process_id,
+                        process_identity_token,
+                        now,
+                        now,
+                        _json(configuration),
+                    ),
+                )
+                acquired = True
+            if acquired:
+                self._insert_event(
+                    connection,
+                    "dispatcher_acquired",
+                    "dispatcher",
+                    dispatcher_id,
+                    {
+                        "replaced_dispatcher_id": replaced_dispatcher_id,
+                        "process_id": process_id,
+                    },
+                )
+            current = connection.execute(
+                "SELECT * FROM dispatcher_ownership WHERE scope='catalog'"
+            ).fetchone()
+        assert current is not None
+        return {
+            "acquired": acquired,
+            "replaced_dispatcher_id": replaced_dispatcher_id,
+            "ownership": {
+                "scope": current["scope"],
+                "dispatcher_id": current["dispatcher_id"],
+                "process_id": current["process_id"],
+                "process_identity_token": current["process_identity_token"],
+                "status": current["status"],
+                "acquired_at": current["acquired_at"],
+                "heartbeat_at": current["heartbeat_at"],
+                "released_at": current["released_at"],
+                "configuration": as_mapping(
+                    _decode(current["configuration_json"], {})
+                ),
+            },
+        }
+
+    def release_dispatcher_ownership(self, dispatcher_id: str) -> bool:
+        now = utc_now()
+        with self.transaction(immediate=True) as connection:
+            updated = connection.execute(
+                "UPDATE dispatcher_ownership SET status='released', "
+                "heartbeat_at=?, released_at=? WHERE scope='catalog' "
+                "AND dispatcher_id=? AND status='active'",
+                (now, now, dispatcher_id),
+            )
+            if updated.rowcount:
+                self._insert_event(
+                    connection,
+                    "dispatcher_released",
+                    "dispatcher",
+                    dispatcher_id,
+                    {},
+                )
+            return bool(updated.rowcount)
+
+    def heartbeat_supervisor(self, supervisor_id: str) -> bool:
         now = utc_now()
         with self.transaction(immediate=True) as connection:
             connection.execute(
@@ -1157,6 +1329,12 @@ class SolverLabCatalog:
                 "UPDATE leases SET heartbeat_at=? WHERE supervisor_id=? AND status='active'",
                 (now, supervisor_id),
             )
+            ownership = connection.execute(
+                "UPDATE dispatcher_ownership SET heartbeat_at=? "
+                "WHERE scope='catalog' AND dispatcher_id=? AND status='active'",
+                (now, supervisor_id),
+            )
+            return bool(ownership.rowcount)
 
     def stop_supervisor_session(self, supervisor_id: str) -> None:
         now = utc_now()
@@ -1189,7 +1367,12 @@ class SolverLabCatalog:
             for row in rows
         ]
 
-    def stale_attempts(self, *, heartbeat_before: str) -> list[dict[str, Any]]:
+    def stale_attempts(
+        self,
+        *,
+        heartbeat_before: str,
+        include_supervisor_id: str | None = None,
+    ) -> list[dict[str, Any]]:
         with self._connect() as connection:
             rows = connection.execute(
                 """
@@ -1197,6 +1380,11 @@ class SolverLabCatalog:
                 LEFT JOIN leases l ON l.lease_id = a.lease_id
                 LEFT JOIN supervisor_sessions s ON s.supervisor_id = a.supervisor_id
                 WHERE a.status = 'orphan_quarantined'
+                   OR (
+                    ? IS NOT NULL
+                    AND a.supervisor_id = ?
+                    AND a.status IN ('running', 'canceling', 'finalizing')
+                   )
                    OR (
                     a.status IN ('running', 'canceling', 'finalizing')
                     AND (
@@ -1207,9 +1395,24 @@ class SolverLabCatalog:
                    )
                 ORDER BY a.created_at, a.attempt_id
                 """,
-                (heartbeat_before, heartbeat_before),
+                (
+                    include_supervisor_id,
+                    include_supervisor_id,
+                    heartbeat_before,
+                    heartbeat_before,
+                ),
             ).fetchall()
         return [self._attempt_row(row) for row in rows]
+
+    def list_reserved_leases(self) -> list[dict[str, Any]]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT lease_id, attempt_id, job_id, supervisor_id, status, "
+                "reserved_memory_bytes, acquired_at, heartbeat_at "
+                "FROM leases WHERE status IN ('active', 'quarantined') "
+                "ORDER BY acquired_at, lease_id"
+            ).fetchall()
+        return [dict(row) for row in rows]
 
     def mark_attempt_orphaned(
         self,
