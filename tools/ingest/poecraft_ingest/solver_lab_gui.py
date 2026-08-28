@@ -5,13 +5,16 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import json
 import sys
+import traceback
 import uuid
+from collections.abc import Callable, Mapping
 from typing import Any
 
 from PySide6.QtCore import (
     QAbstractTableModel,
     QModelIndex,
     QSortFilterProxyModel,
+    QThreadPool,
     QTimer,
     Qt,
 )
@@ -19,6 +22,7 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
+    QDockWidget,
     QDoubleSpinBox,
     QFormLayout,
     QHBoxLayout,
@@ -39,6 +43,12 @@ from PySide6.QtWidgets import (
 )
 
 from poecraft_ingest.solver_lab_service import SolverLabService
+from poecraft_ingest.solver_lab_contracts import canonical_sha256
+from poecraft_ingest.solver_lab_gui_runtime import (
+    BackgroundCall,
+    GuiActivityReporter,
+)
+from poecraft_ingest.solver_lab_normalize import as_list, as_mapping
 from poecraft_ingest.solver_lab_supervisor import SolverLabSupervisor
 
 
@@ -77,15 +87,32 @@ class JobsTableModel(QAbstractTableModel):
         super().__init__()
         self.jobs: list[dict[str, Any]] = []
         self.summaries: dict[str, dict[str, Any] | None] = {}
+        self._material_digest: str | None = None
 
     def set_rows(
         self,
         jobs: list[dict[str, Any]],
         summaries: dict[str, dict[str, Any] | None],
     ) -> None:
+        normalized_jobs = [as_mapping(job) for job in jobs]
+        normalized_summaries = {
+            str(job_id): (as_mapping(summary) if summary is not None else None)
+            for job_id, summary in summaries.items()
+        }
+        material_digest = canonical_sha256(
+            {"jobs": normalized_jobs, "summaries": normalized_summaries}
+        )
+        if material_digest == self._material_digest:
+            if self.jobs:
+                self.dataChanged.emit(
+                    self.index(0, 0),
+                    self.index(len(self.jobs) - 1, len(self.COLUMNS) - 1),
+                )
+            return
         self.beginResetModel()
-        self.jobs = jobs
-        self.summaries = summaries
+        self.jobs = normalized_jobs
+        self.summaries = normalized_summaries
+        self._material_digest = material_digest
         self.endResetModel()
 
     def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:
@@ -112,20 +139,24 @@ class JobsTableModel(QAbstractTableModel):
         if not index.isValid() or role != Qt.ItemDataRole.DisplayRole:
             return None
         job = self.jobs[index.row()]
-        attempt = job.get("latest_attempt") or {}
-        summary = self.summaries.get(job["job_id"]) or {}
+        attempt = as_mapping(job.get("latest_attempt"))
+        summary = as_mapping(self.summaries.get(str(job.get("job_id") or "")))
+        result = as_mapping(attempt.get("result"))
+        reserved_bytes = job.get("reserved_memory_bytes")
+        if not isinstance(reserved_bytes, (int, float)):
+            reserved_bytes = 0
         key = self.COLUMNS[index.column()][0]
         values = {
             "status": job.get("status"),
             "case_id": job.get("case_id"),
             "priority": job.get("priority"),
             "attempt": attempt.get("ordinal"),
-            "reserved": f"{job.get('reserved_memory_bytes', 0) / (1024 ** 2):.0f} MiB",
+            "reserved": f"{reserved_bytes / (1024 ** 2):.0f} MiB",
             "elapsed": _elapsed(attempt.get("started_at"), attempt.get("finished_at")),
             "phase": summary.get("phase"),
             "lower": _format_number(summary.get("lower_bound")),
             "upper": _format_number(summary.get("evaluated_policy_cost") or summary.get("upper_bound")),
-            "stop": summary.get("termination") or (attempt.get("result") or {}).get("status"),
+            "stop": summary.get("termination") or result.get("status"),
         }
         return values[key]
 
@@ -170,8 +201,9 @@ class RunDetailWidget(QWidget):
         self.metadata.clear()
 
     def set_detail(self, detail: dict[str, Any]) -> None:
-        job = detail.get("job", {})
-        summary = detail.get("run_summary") or {}
+        detail = as_mapping(detail)
+        job = as_mapping(detail.get("job"))
+        summary = as_mapping(detail.get("run_summary"))
         values = {**summary, "status": job.get("status")}
         for key, label in self.values.items():
             label.setText(_format_number(values.get(key)))
@@ -199,7 +231,7 @@ class RunDetailWidget(QWidget):
             "verification": summary.get("verification"),
             "artifacts": summary.get("artifacts"),
             "warning": summary.get("warning"),
-            "events": detail.get("events", [])[-30:],
+            "events": as_list(detail.get("events"))[-30:],
         }
         self.metadata.setPlainText(json.dumps(bounded, indent=2, ensure_ascii=False))
 
@@ -211,7 +243,7 @@ class SolverLabWindow(QMainWindow):
         *,
         supervisor: SolverLabSupervisor | None = None,
         autostart_supervisor: bool = True,
-        poll_interval_ms: int = 750,
+        poll_interval_ms: int = 1_500,
     ):
         super().__init__()
         self.service = service
@@ -219,10 +251,39 @@ class SolverLabWindow(QMainWindow):
         self.setWindowTitle("poecraft2 Native Solver Lab")
         self.resize(1280, 760)
 
+        self._thread_pool = QThreadPool(self)
+        self._thread_pool.setMaxThreadCount(3)
+        self._background_calls: set[BackgroundCall] = set()
+        self._busy_operations: set[str] = set()
+        self._refresh_in_flight = False
+        self._refresh_pending = False
+        self._detail_in_flight_job_id: str | None = None
+        self._detail_pending_job_id: str | None = None
+        self._attempt_list_digest: str | None = None
+        self._strategy_available_attempt_ids: set[str] = set()
+
         self.tabs = QTabWidget()
         self.setCentralWidget(self.tabs)
         self._matrix_idempotency_key: str | None = None
         self._case_selection: dict[str, Any] | None = None
+        self._case_metadata: dict[str, Any] = {}
+        self._case_loaded_name = ""
+
+        self.activity_history = QPlainTextEdit()
+        self.activity_history.setReadOnly(True)
+        self.activity_history.setMaximumBlockCount(2_000)
+        self.activity_history.setPlaceholderText(
+            "Persistent operation feedback and complete errors appear here."
+        )
+        activity_dock = QDockWidget("Activity & Errors", self)
+        activity_dock.setObjectName("solverLabActivityDock")
+        activity_dock.setWidget(self.activity_history)
+        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, activity_dock)
+        self.activity_reporter = GuiActivityReporter(
+            self.activity_history,
+            self.service.paths.catalog.parent / "gui-activity.log",
+            self._selected_identity_context,
+        )
 
         self._build_cases_tab()
         self._build_queue_tab()
@@ -230,6 +291,7 @@ class SolverLabWindow(QMainWindow):
         self._build_strategy_tab()
         self._build_matrix_tab()
         self._reload_case_surfaces()
+        self._update_button_states()
 
         self.timer = QTimer(self)
         self.timer.setInterval(poll_interval_ms)
@@ -238,6 +300,174 @@ class SolverLabWindow(QMainWindow):
         if autostart_supervisor:
             self.supervisor.start()
         self.refresh()
+
+    def _selected_identity_context(self) -> dict[str, Any]:
+        job = self.selected_job() if hasattr(self, "table") else None
+        attempt = as_mapping(job.get("latest_attempt")) if job else {}
+        case_selection = as_mapping(getattr(self, "_case_selection", None))
+        return {
+            "job_id": job.get("job_id") if job else None,
+            "attempt_id": attempt.get("attempt_id"),
+            "case_id": (
+                case_selection.get("case_id")
+                or (job.get("case_id") if job else None)
+            ),
+            "draft_id": case_selection.get("draft_id"),
+            "revision_id": case_selection.get("revision_id"),
+        }
+
+    def _start_background(
+        self,
+        operation: str,
+        call: Callable[[], Any],
+        on_success: Callable[[Any], None],
+        *,
+        busy_key: str | None = None,
+        on_finished: Callable[[], None] | None = None,
+    ) -> bool:
+        key = busy_key or operation
+        if key in self._busy_operations:
+            self.activity_reporter.feedback(
+                operation,
+                f"{operation} is already in progress.",
+                accepted=False,
+            )
+            return False
+        self._busy_operations.add(key)
+        self._update_button_states()
+        worker = BackgroundCall(call)
+        self._background_calls.add(worker)
+
+        def finish() -> None:
+            self._background_calls.discard(worker)
+            self._busy_operations.discard(key)
+            self._update_button_states()
+            if on_finished is not None:
+                on_finished()
+
+        def succeeded(value: Any) -> None:
+            finish()
+            try:
+                on_success(value)
+            except Exception as exc:
+                self.activity_reporter.error(
+                    f"{operation}.apply",
+                    f"{type(exc).__name__}: {exc}",
+                    traceback.format_exc(),
+                )
+
+        def failed(message: str, traceback_text: str) -> None:
+            finish()
+            self.activity_reporter.error(operation, message, traceback_text)
+
+        worker.signals.succeeded.connect(succeeded)
+        worker.signals.failed.connect(failed)
+        self._thread_pool.start(worker)
+        return True
+
+    def _reject(self, operation: str, message: str) -> None:
+        self.activity_reporter.feedback(operation, message, accepted=False)
+
+    def _record_operation_result(
+        self,
+        operation: str,
+        response: Mapping[str, Any],
+        *,
+        identity: Mapping[str, Any] | None = None,
+        previous: Any = None,
+        requested: Any = None,
+        current: Any = None,
+        idempotency_key: str | None = None,
+    ) -> None:
+        envelope = as_mapping(response)
+        self.activity_reporter.feedback(
+            operation,
+            {
+                "accepted": bool(envelope.get("ok", True)),
+                "operation": envelope.get("operation") or operation,
+                "identity": dict(identity or {}),
+                "idempotency_key": idempotency_key,
+                "previous_state": previous,
+                "requested_state": requested,
+                "current_state": current,
+                "dry_run": bool(envelope.get("dry_run")),
+            },
+            accepted=bool(envelope.get("ok", True)),
+        )
+
+    def _update_button_states(self, *args: Any) -> None:
+        del args
+        job = self.selected_job() if hasattr(self, "table") else None
+        status = str(job.get("status") or "") if job else ""
+        active = {"queued", "blocked", "running", "canceling"}
+        cancelable = {"queued", "blocked", "running", "canceling"}
+        if hasattr(self, "cancel_button"):
+            queue_busy = "queue_mutation" in self._busy_operations
+            self.cancel_button.setEnabled(
+                status in cancelable and not queue_busy
+            )
+            self.cancel_button.setToolTip(
+                "Cancel a queued or live job."
+                if status in cancelable
+                else "Select a queued, blocked, running, or canceling job."
+            )
+            self.retry_button.setEnabled(
+                bool(job)
+                and status not in active
+                and not queue_busy
+            )
+            self.clone_button.setEnabled(
+                bool(job) and not queue_busy
+            )
+            self.priority_button.setEnabled(
+                status in {"queued", "blocked"}
+                and not queue_busy
+            )
+            self.submit_button.setEnabled(
+                isinstance(self.case_picker.currentData(), dict)
+                and not queue_busy
+            )
+            self.pause_button.setEnabled(
+                "queue_pause" not in self._busy_operations
+            )
+            self.refresh_button.setEnabled(
+                "refresh_snapshot" not in self._busy_operations
+            )
+
+        if hasattr(self, "compare_button"):
+            compare_count = len(self.compare_attempts.selectedItems())
+            self.compare_button.setEnabled(
+                2 <= compare_count <= 20
+                and "compare_runs" not in self._busy_operations
+            )
+        if hasattr(self, "strategy_show_button"):
+            attempt_id = str(self.strategy_attempt.currentData() or "")
+            strategy_available = attempt_id in getattr(
+                self, "_strategy_available_attempt_ids", set()
+            )
+            self.strategy_show_button.setEnabled(
+                strategy_available
+                and "strategy_summary" not in self._busy_operations
+            )
+            self.strategy_export_button.setEnabled(
+                strategy_available
+                and "strategy_export" not in self._busy_operations
+            )
+        if hasattr(self, "matrix_preview_button"):
+            matrix_valid = bool(self._selected_matrix_case_ids())
+            matrix_busy = "matrix_operation" in self._busy_operations
+            for button, operation in (
+                (self.matrix_preview_button, "matrix_preview"),
+                (self.matrix_submit_button, "matrix_submit"),
+                (self.matrix_new_batch_button, "matrix_new_batch"),
+            ):
+                button.setEnabled(
+                    matrix_valid
+                    and not matrix_busy
+                    and operation not in self._busy_operations
+                )
+        if hasattr(self, "case_editor"):
+            self._update_case_button_states()
 
     def _build_queue_tab(self) -> None:
         queue_tab = QWidget()
@@ -307,6 +537,10 @@ class SolverLabWindow(QMainWindow):
             self.proxy_model.setFilterFixedString
         )
         self.table.selectionModel().selectionChanged.connect(self.refresh_detail)
+        self.table.selectionModel().selectionChanged.connect(
+            self._update_button_states
+        )
+        self.case_picker.currentIndexChanged.connect(self._update_button_states)
 
     def _build_cases_tab(self) -> None:
         tab = QWidget()
@@ -406,6 +640,17 @@ class SolverLabWindow(QMainWindow):
         self.case_submit_button.clicked.connect(self.submit_current_revision)
         self.case_copy_button.clicked.connect(self.copy_current_case)
         self.case_discard_button.clicked.connect(self.discard_current_case_draft)
+        for control in (
+            self.case_name,
+            self.case_editor,
+        ):
+            control.textChanged.connect(self._update_case_button_states)
+        for control in (
+            self.case_watchdog,
+            self.case_bounded_finish,
+            self.case_memory_gib,
+        ):
+            control.valueChanged.connect(self._update_case_button_states)
 
     @staticmethod
     def _case_selection_key(selection: dict[str, Any] | None) -> str | None:
@@ -423,7 +668,8 @@ class SolverLabWindow(QMainWindow):
     ) -> None:
         wanted = self._case_selection_key(select or self._case_selection)
         entries: list[tuple[str, dict[str, Any]]] = []
-        for case in self.service.list_cases()["result"]:
+        for raw_case in as_list(self.service.list_cases().get("result")):
+            case = as_mapping(raw_case)
             selection = {
                 "source_kind": "frozen",
                 "case_id": case["case_id"],
@@ -434,7 +680,8 @@ class SolverLabWindow(QMainWindow):
                     selection,
                 )
             )
-        for draft in self.service.list_case_drafts()["result"]:
+        for raw_draft in as_list(self.service.list_case_drafts().get("result")):
+            draft = as_mapping(raw_draft)
             selection = {
                 "source_kind": "draft",
                 "draft_id": draft["draft_id"],
@@ -447,7 +694,10 @@ class SolverLabWindow(QMainWindow):
                     selection,
                 )
             )
-        for revision in self.service.list_case_revisions()["result"]:
+        for raw_revision in as_list(
+            self.service.list_case_revisions().get("result")
+        ):
+            revision = as_mapping(raw_revision)
             selection = {
                 "source_kind": "local_revision",
                 "revision_id": revision["revision_id"],
@@ -520,12 +770,15 @@ class SolverLabWindow(QMainWindow):
             return
         selection = current.data(Qt.ItemDataRole.UserRole)
         if not isinstance(selection, dict):
+            self._reject("case_load", "Select a case first.")
             return
         try:
             source_kind = selection["source_kind"]
             if source_kind == "frozen":
-                result = self.service.get_case(selection["case_id"])["result"]
-                document = result["case"]
+                result = as_mapping(
+                    self.service.get_case(selection["case_id"])["result"]
+                )
+                document = as_mapping(result.get("case"))
                 name = document.get("description") or selection["case_id"]
                 metadata = {
                     "source_kind": source_kind,
@@ -534,8 +787,10 @@ class SolverLabWindow(QMainWindow):
                     "editable": False,
                 }
             elif source_kind == "draft":
-                result = self.service.get_case_draft(selection["draft_id"])["result"]
-                document = result["document"]
+                result = as_mapping(
+                    self.service.get_case_draft(selection["draft_id"])["result"]
+                )
+                document = as_mapping(result.get("document"))
                 name = result["name"]
                 metadata = {
                     key: result.get(key)
@@ -552,8 +807,10 @@ class SolverLabWindow(QMainWindow):
                 }
                 metadata["editable"] = True
             else:
-                result = self.service.get_case_revision(selection["revision_id"])["result"]
-                document = result["document"]
+                result = as_mapping(
+                    self.service.get_case_revision(selection["revision_id"])["result"]
+                )
+                document = as_mapping(result.get("document"))
                 name = result["name"]
                 metadata = {
                     key: result.get(key)
@@ -573,8 +830,10 @@ class SolverLabWindow(QMainWindow):
             self._case_selection = dict(selection)
             self._set_case_document(document, name=str(name), metadata=metadata)
         except Exception as exc:
-            self.case_status.setPlainText(
-                f"Case load failed: {type(exc).__name__}: {exc}"
+            self.activity_reporter.error(
+                "case_load",
+                f"{type(exc).__name__}: {exc}",
+                traceback.format_exc(),
             )
 
     def _set_case_document(
@@ -584,14 +843,17 @@ class SolverLabWindow(QMainWindow):
         name: str,
         metadata: dict[str, Any],
     ) -> None:
+        metadata = as_mapping(metadata)
         editable = bool(metadata.get("editable"))
+        self._case_metadata = metadata
+        self._case_loaded_name = name
         self.case_name.setText(name)
         self.case_editor.setPlainText(
             json.dumps(document, indent=2, ensure_ascii=False)
         )
         watchdog = float(document.get("watchdog_seconds", 300.0))
         bounded = float(document.get("requested_bounded_finish_seconds") or 0.0)
-        caps = document.get("caps", {})
+        caps = as_mapping(document.get("caps"))
         memory = float(caps.get("max_solver_owned_bytes", 0) or 0) / (1024 ** 3)
         self.case_watchdog.setValue(max(1.0, watchdog))
         self.case_bounded_finish.setValue(max(0.0, bounded))
@@ -604,17 +866,82 @@ class SolverLabWindow(QMainWindow):
             self.case_memory_gib,
         ):
             control.setEnabled(editable)
-        self.case_update_button.setEnabled(editable)
-        self.case_validate_button.setEnabled(editable)
-        self.case_save_revision_button.setEnabled(editable)
-        self.case_discard_button.setEnabled(editable)
-        self.case_submit_button.setEnabled(
-            self._case_selection is not None
-            and self._case_selection.get("source_kind") != "draft"
-        )
-        self.case_copy_button.setEnabled(True)
         self.case_status.setPlainText(
             json.dumps(metadata, indent=2, ensure_ascii=False)
+        )
+        self._update_case_button_states()
+
+    def _update_case_button_states(self, *args: Any) -> None:
+        del args
+        if not hasattr(self, "case_editor"):
+            return
+        selection = as_mapping(self._case_selection)
+        source_kind = str(selection.get("source_kind") or "")
+        editable = source_kind == "draft"
+        validation = as_mapping(self._case_metadata.get("validation"))
+        case_busy = "case_mutation" in self._busy_operations
+        validated_digest = self._case_metadata.get("validated_content_sha256")
+        current_digest: str | None = None
+        try:
+            current_digest = canonical_sha256(self._editor_document())
+        except Exception:
+            pass
+        current_native_validation = bool(
+            editable
+            and current_digest
+            and current_digest == validated_digest
+            and validation.get("native_valid") is True
+            and validation.get("content_sha256") == current_digest
+            and self.case_name.text() == self._case_loaded_name
+        )
+        self.case_new_button.setEnabled(
+            not case_busy and "case_create" not in self._busy_operations
+        )
+        self.case_import_button.setEnabled(
+            not case_busy and "case_import" not in self._busy_operations
+        )
+        self.case_clone_button.setEnabled(
+            bool(selection)
+            and not case_busy
+            and "case_clone" not in self._busy_operations
+        )
+        self.case_update_button.setEnabled(
+            editable and not case_busy and "case_update" not in self._busy_operations
+        )
+        self.case_validate_button.setEnabled(
+            editable
+            and not case_busy
+            and "case_validate" not in self._busy_operations
+        )
+        self.case_save_revision_button.setEnabled(
+            current_native_validation
+            and not case_busy
+            and "case_save_revision" not in self._busy_operations
+        )
+        self.case_save_revision_button.setToolTip(
+            "Save the exact currently native-validated draft digest."
+            if current_native_validation
+            else "Validate the unchanged current draft before saving a revision."
+        )
+        self.case_submit_button.setEnabled(
+            source_kind == "local_revision"
+            and not case_busy
+            and "case_submit_revision" not in self._busy_operations
+        )
+        self.case_submit_button.setToolTip(
+            "Submit this saved immutable revision."
+            if source_kind == "local_revision"
+            else "Save and select an immutable revision before submitting."
+        )
+        self.case_copy_button.setEnabled(
+            bool(selection)
+            and not case_busy
+            and "case_copy" not in self._busy_operations
+        )
+        self.case_discard_button.setEnabled(
+            editable
+            and not case_busy
+            and "case_discard" not in self._busy_operations
         )
 
     def _editor_document(self) -> dict[str, Any]:
@@ -637,42 +964,42 @@ class SolverLabWindow(QMainWindow):
         document["caps"] = caps
         return document
 
-    def _persist_current_draft(self) -> dict[str, Any]:
-        selection = self._case_selection or {}
-        if selection.get("source_kind") != "draft":
-            raise ValueError("clone the selected case before editing it")
-        result = self.service.update_case_draft(
-            draft_id=selection["draft_id"],
-            name=self.case_name.text(),
-            document=self._editor_document(),
-            idempotency_key=f"gui-case-update-{uuid.uuid4()}",
-        )["result"]
-        self._case_selection = {
-            "source_kind": "draft",
-            "draft_id": result["draft_id"],
-            "case_id": result["case_id"],
-        }
-        return result
-
     def create_case_from_template(self) -> None:
-        try:
-            result = self.service.create_case_draft(
+        idempotency_key = f"gui-case-create-{uuid.uuid4()}"
+
+        def call() -> dict[str, Any]:
+            return self.service.create_case_draft(
                 name="New local solver case",
-                idempotency_key=f"gui-case-create-{uuid.uuid4()}",
-            )["result"]
+                idempotency_key=idempotency_key,
+            )
+
+        def success(response: Any) -> None:
+            response = as_mapping(response)
+            result = as_mapping(response.get("result"))
             selection = {
                 "source_kind": "draft",
                 "draft_id": result["draft_id"],
                 "case_id": result["case_id"],
             }
             self._reload_case_surfaces(select=selection)
-        except Exception as exc:
-            self.case_status.setPlainText(
-                f"Create failed: {type(exc).__name__}: {exc}"
+            self._record_operation_result(
+                "case_create",
+                response,
+                identity=selection,
+                requested="editable draft",
+                current="draft",
+                idempotency_key=idempotency_key,
             )
 
+        self._start_background(
+            "case_create", call, success, busy_key="case_mutation"
+        )
+
     def clone_selected_case(self) -> None:
-        selection = self._case_selection or {}
+        selection = as_mapping(self._case_selection)
+        if not selection:
+            self._reject("case_clone", "Select a case, draft, or revision first.")
+            return
         try:
             kwargs: dict[str, Any] = {}
             if selection.get("source_kind") == "frozen":
@@ -683,22 +1010,46 @@ class SolverLabWindow(QMainWindow):
                 kwargs["document"] = self._editor_document()
             else:
                 raise ValueError("select a case to clone")
-            result = self.service.create_case_draft(
-                name=f"{self.case_name.text()} copy",
-                idempotency_key=f"gui-case-clone-{uuid.uuid4()}",
-                **kwargs,
-            )["result"]
-            self._reload_case_surfaces(
-                select={
-                    "source_kind": "draft",
-                    "draft_id": result["draft_id"],
-                    "case_id": result["case_id"],
-                }
-            )
+            name = f"{self.case_name.text()} copy"
         except Exception as exc:
-            self.case_status.setPlainText(
-                f"Clone failed: {type(exc).__name__}: {exc}"
+            self.activity_reporter.error(
+                "case_clone",
+                f"{type(exc).__name__}: {exc}",
+                traceback.format_exc(),
             )
+            return
+        idempotency_key = f"gui-case-clone-{uuid.uuid4()}"
+
+        def call() -> dict[str, Any]:
+            return self.service.create_case_draft(
+                name=name,
+                idempotency_key=idempotency_key,
+                **kwargs,
+            )
+
+        def success(response: Any) -> None:
+            response = as_mapping(response)
+            result = as_mapping(response.get("result"))
+            cloned = {
+                "source_kind": "draft",
+                "draft_id": result["draft_id"],
+                "case_id": result["case_id"],
+            }
+            self._reload_case_surfaces(
+                select=cloned
+            )
+            self._record_operation_result(
+                "case_clone",
+                response,
+                identity={"source": selection, "created": cloned},
+                requested=name,
+                current="draft",
+                idempotency_key=idempotency_key,
+            )
+
+        self._start_background(
+            "case_clone", call, success, busy_key="case_mutation"
+        )
 
     def import_case_clipboard(self) -> None:
         try:
@@ -707,26 +1058,78 @@ class SolverLabWindow(QMainWindow):
             if not isinstance(payload, dict):
                 raise ValueError("clipboard must contain a JSON object")
             name = str(payload.get("name") or "Imported Calculator case")
-            result = self.service.create_case_draft(
+        except Exception as exc:
+            self.activity_reporter.error(
+                "case_import",
+                f"{type(exc).__name__}: {exc}",
+                traceback.format_exc(),
+            )
+            return
+        idempotency_key = f"gui-case-import-{uuid.uuid4()}"
+
+        def call() -> dict[str, Any]:
+            return self.service.create_case_draft(
                 name=name,
                 import_json=text,
-                idempotency_key=f"gui-case-import-{uuid.uuid4()}",
-            )["result"]
+                idempotency_key=idempotency_key,
+            )
+
+        def success(response: Any) -> None:
+            response = as_mapping(response)
+            result = as_mapping(response.get("result"))
+            imported = {
+                "source_kind": "draft",
+                "draft_id": result["draft_id"],
+                "case_id": result["case_id"],
+            }
             self._reload_case_surfaces(
-                select={
-                    "source_kind": "draft",
-                    "draft_id": result["draft_id"],
-                    "case_id": result["case_id"],
-                }
+                select=imported
             )
-        except Exception as exc:
-            self.case_status.setPlainText(
-                f"Import failed: {type(exc).__name__}: {exc}"
+            self._record_operation_result(
+                "case_import",
+                response,
+                identity=imported,
+                requested=name,
+                current="draft",
+                idempotency_key=idempotency_key,
             )
+
+        self._start_background(
+            "case_import", call, success, busy_key="case_mutation"
+        )
 
     def save_current_case_draft(self) -> None:
         try:
-            result = self._persist_current_draft()
+            selection = as_mapping(self._case_selection)
+            if selection.get("source_kind") != "draft":
+                raise ValueError("select an editable draft first")
+            document = self._editor_document()
+            name = self.case_name.text()
+        except Exception as exc:
+            self.activity_reporter.error(
+                "case_update",
+                f"{type(exc).__name__}: {exc}",
+                traceback.format_exc(),
+            )
+            return
+        idempotency_key = f"gui-case-update-{uuid.uuid4()}"
+
+        def call() -> dict[str, Any]:
+            return self.service.update_case_draft(
+                draft_id=str(selection["draft_id"]),
+                name=name,
+                document=document,
+                idempotency_key=idempotency_key,
+            )
+
+        def success(response: Any) -> None:
+            response = as_mapping(response)
+            result = as_mapping(response.get("result"))
+            self._case_selection = {
+                "source_kind": "draft",
+                "draft_id": result["draft_id"],
+                "case_id": result["case_id"],
+            }
             self._reload_case_surfaces(select=self._case_selection)
             self.case_status.setPlainText(
                 "Draft saved. Native validation has not been rerun.\n"
@@ -738,99 +1141,219 @@ class SolverLabWindow(QMainWindow):
                     indent=2,
                 )
             )
-        except Exception as exc:
-            self.case_status.setPlainText(
-                f"Save failed: {type(exc).__name__}: {exc}"
+            self._record_operation_result(
+                "case_update",
+                response,
+                identity=self._case_selection,
+                previous=self._case_metadata.get("validated_content_sha256"),
+                requested=canonical_sha256(document),
+                current=result.get("validated_content_sha256"),
+                idempotency_key=idempotency_key,
             )
+
+        self._start_background(
+            "case_update", call, success, busy_key="case_mutation"
+        )
 
     def validate_current_case(self) -> None:
         try:
-            draft = self._persist_current_draft()
+            selection = as_mapping(self._case_selection)
+            if selection.get("source_kind") != "draft":
+                raise ValueError("select an editable draft first")
+            document = self._editor_document()
+            name = self.case_name.text()
+        except Exception as exc:
+            self.activity_reporter.error(
+                "case_validate",
+                f"{type(exc).__name__}: {exc}",
+                traceback.format_exc(),
+            )
+            return
+        update_key = f"gui-case-validate-update-{uuid.uuid4()}"
+
+        def call() -> dict[str, Any]:
+            update = self.service.update_case_draft(
+                draft_id=str(selection["draft_id"]),
+                name=name,
+                document=document,
+                idempotency_key=update_key,
+            )
             validation = self.service.validate_case_draft(
-                draft["draft_id"]
-            )["result"]
+                str(selection["draft_id"])
+            )
+            return {"update": update, "validation": validation}
+
+        def success(payload: Any) -> None:
+            payload = as_mapping(payload)
+            validation_response = as_mapping(payload.get("validation"))
+            validation = as_mapping(validation_response.get("result"))
             self._reload_case_surfaces(select=self._case_selection)
             self.case_status.setPlainText(
                 json.dumps(validation, indent=2, ensure_ascii=False)
             )
-        except Exception as exc:
-            self.case_status.setPlainText(
-                f"Validation failed: {type(exc).__name__}: {exc}"
+            self._record_operation_result(
+                "case_validate",
+                validation_response,
+                identity=selection,
+                requested=canonical_sha256(document),
+                current={
+                    "content_sha256": validation.get("content_sha256"),
+                    "native_valid": validation.get("native_valid"),
+                },
+                idempotency_key=update_key,
             )
+
+        self._start_background(
+            "case_validate", call, success, busy_key="case_mutation"
+        )
 
     def save_current_revision(self) -> None:
+        selection = as_mapping(self._case_selection)
         try:
-            draft = self._persist_current_draft()
-            revision = self.service.save_case_revision(
-                draft_id=draft["draft_id"],
-                idempotency_key=f"gui-case-revision-{uuid.uuid4()}",
-            )["result"]
-            self._reload_case_surfaces(
-                select={
-                    "source_kind": "local_revision",
-                    "revision_id": revision["revision_id"],
-                    "case_id": revision["case_id"],
-                }
-            )
+            current_digest = canonical_sha256(self._editor_document())
         except Exception as exc:
-            self.case_status.setPlainText(
-                f"Revision save failed: {type(exc).__name__}: {exc}"
+            self.activity_reporter.error(
+                "case_save_revision",
+                f"{type(exc).__name__}: {exc}",
+                traceback.format_exc(),
+            )
+            return
+        validation = as_mapping(self._case_metadata.get("validation"))
+        if not (
+            selection.get("source_kind") == "draft"
+            and self._case_metadata.get("validated_content_sha256") == current_digest
+            and validation.get("content_sha256") == current_digest
+            and validation.get("native_valid") is True
+        ):
+            self._reject(
+                "case_save_revision",
+                "Validate the unchanged current draft before saving a revision.",
+            )
+            return
+        idempotency_key = f"gui-case-revision-{uuid.uuid4()}"
+
+        def call() -> dict[str, Any]:
+            return self.service.save_case_revision(
+                draft_id=str(selection["draft_id"]),
+                idempotency_key=idempotency_key,
             )
 
+        def success(response: Any) -> None:
+            response = as_mapping(response)
+            revision = as_mapping(response.get("result"))
+            saved = {
+                "source_kind": "local_revision",
+                "revision_id": revision["revision_id"],
+                "case_id": revision["case_id"],
+            }
+            self._reload_case_surfaces(
+                select=saved
+            )
+            self._record_operation_result(
+                "case_save_revision",
+                response,
+                identity=saved,
+                previous="validated draft",
+                requested=current_digest,
+                current="immutable revision",
+                idempotency_key=idempotency_key,
+            )
+
+        self._start_background(
+            "case_save_revision", call, success, busy_key="case_mutation"
+        )
+
     def submit_current_revision(self) -> None:
-        selection = self._case_selection or {}
-        try:
-            if selection.get("source_kind") == "frozen":
-                case_id = selection["case_id"]
-                revision_id = None
-            elif selection.get("source_kind") == "local_revision":
-                case_id = selection["case_id"]
-                revision_id = selection["revision_id"]
-            else:
-                raise ValueError(
-                    "save an immutable revision before submitting a draft"
-                )
-            result = self.service.submit_job(
-                case_id=case_id,
-                revision_id=revision_id,
-                idempotency_key=f"gui-case-submit-{uuid.uuid4()}",
-            )["result"]
+        selection = as_mapping(self._case_selection)
+        if selection.get("source_kind") != "local_revision":
+            self._reject(
+                "case_submit_revision",
+                "Save and select an immutable revision before submitting.",
+            )
+            return
+        idempotency_key = f"gui-case-submit-{uuid.uuid4()}"
+
+        def call() -> dict[str, Any]:
+            response = self.service.submit_job(
+                case_id=str(selection["case_id"]),
+                revision_id=str(selection["revision_id"]),
+                idempotency_key=idempotency_key,
+            )
+            result = as_mapping(response.get("result"))
+            return {
+                "response": response,
+                "job": self.service.catalog.get_job(str(result.get("job_id"))),
+            }
+
+        def success(payload: Any) -> None:
+            payload = as_mapping(payload)
+            response = as_mapping(payload.get("response"))
+            result = as_mapping(response.get("result"))
+            job = as_mapping(payload.get("job"))
             self.case_status.setPlainText(
                 f"Queued {result['job_id']}. Open Queue & Run to monitor it."
             )
+            self._record_operation_result(
+                "case_submit_revision",
+                response,
+                identity={**selection, "job_id": result.get("job_id")},
+                requested="queued",
+                current=job.get("status"),
+                idempotency_key=idempotency_key,
+            )
             self.supervisor.wake()
             self.refresh()
-        except Exception as exc:
-            self.case_status.setPlainText(
-                f"Submit failed: {type(exc).__name__}: {exc}"
-            )
+
+        self._start_background(
+            "case_submit_revision", call, success, busy_key="case_mutation"
+        )
 
     def copy_current_case(self) -> None:
+        selection = as_mapping(self._case_selection)
+        if not selection:
+            self._reject("case_copy", "Select a case first.")
+            return
         try:
-            selection = self._case_selection or {}
+            editor_payload = (
+                self._editor_document()
+                if selection.get("source_kind") == "draft"
+                else as_mapping(json.loads(self.case_editor.toPlainText()))
+            )
+        except Exception as exc:
+            self.activity_reporter.error(
+                "case_copy",
+                f"{type(exc).__name__}: {exc}",
+                traceback.format_exc(),
+            )
+            return
+
+        def call() -> dict[str, Any]:
             if selection.get("source_kind") == "local_revision":
-                payload = self.service.export_case_revision(
-                    selection["revision_id"]
-                )["result"]
-            else:
-                payload = {
-                    "schema_version": "solver_lab_case_import_v1",
-                    "case": self._editor_document()
-                    if selection.get("source_kind") == "draft"
-                    else json.loads(self.case_editor.toPlainText()),
-                }
+                return as_mapping(
+                    self.service.export_case_revision(
+                        str(selection["revision_id"])
+                    ).get("result")
+                )
+            return {
+                "schema_version": "solver_lab_case_import_v1",
+                "case": editor_payload,
+            }
+
+        def success(payload: Any) -> None:
             QApplication.clipboard().setText(
                 json.dumps(payload, indent=2, ensure_ascii=False)
             )
             self.case_status.setPlainText("Case export copied to clipboard.")
-        except Exception as exc:
-            self.case_status.setPlainText(
-                f"Copy failed: {type(exc).__name__}: {exc}"
+            self.activity_reporter.feedback(
+                "case_copy", {"accepted": True, "identity": selection}
             )
 
+        self._start_background("case_copy", call, success)
+
     def discard_current_case_draft(self) -> None:
-        selection = self._case_selection or {}
+        selection = as_mapping(self._case_selection)
         if selection.get("source_kind") != "draft":
+            self._reject("case_discard", "Select an editable draft first.")
             return
         answer = QMessageBox.question(
             self,
@@ -838,18 +1361,32 @@ class SolverLabWindow(QMainWindow):
             "Discard this editable draft? Saved immutable revisions are retained.",
         )
         if answer != QMessageBox.StandardButton.Yes:
+            self._reject("case_discard", "Discard was canceled by the user.")
             return
-        try:
-            self.service.discard_case_draft(
+        idempotency_key = f"gui-case-discard-{uuid.uuid4()}"
+
+        def call() -> dict[str, Any]:
+            return self.service.discard_case_draft(
                 draft_id=selection["draft_id"],
-                idempotency_key=f"gui-case-discard-{uuid.uuid4()}",
+                idempotency_key=idempotency_key,
             )
+
+        def success(response: Any) -> None:
             self._case_selection = None
             self._reload_case_surfaces()
-        except Exception as exc:
-            self.case_status.setPlainText(
-                f"Discard failed: {type(exc).__name__}: {exc}"
+            self._record_operation_result(
+                "case_discard",
+                as_mapping(response),
+                identity=selection,
+                previous="draft",
+                requested="discarded",
+                current="discarded; revisions retained",
+                idempotency_key=idempotency_key,
             )
+
+        self._start_background(
+            "case_discard", call, success, busy_key="case_mutation"
+        )
 
     def _build_compare_tab(self) -> None:
         tab = QWidget()
@@ -873,6 +1410,9 @@ class SolverLabWindow(QMainWindow):
         self.tabs.addTab(tab, "Compare")
         self.compare_filter.textChanged.connect(self._filter_attempt_lists)
         self.compare_button.clicked.connect(self.compare_selected_attempts)
+        self.compare_attempts.itemSelectionChanged.connect(
+            self._update_button_states
+        )
 
     def _build_strategy_tab(self) -> None:
         tab = QWidget()
@@ -898,6 +1438,9 @@ class SolverLabWindow(QMainWindow):
         self.tabs.addTab(tab, "Strategy")
         self.strategy_show_button.clicked.connect(self.show_strategy_summary)
         self.strategy_export_button.clicked.connect(self.export_strategy_bundle)
+        self.strategy_attempt.currentIndexChanged.connect(
+            self._update_button_states
+        )
 
     def _build_matrix_tab(self) -> None:
         tab = QWidget()
@@ -909,7 +1452,8 @@ class SolverLabWindow(QMainWindow):
         self.matrix_filter.setPlaceholderText("Filter frozen cases or roles")
         self.matrix_cases = QListWidget()
         self.matrix_cases.blockSignals(True)
-        for case in self.service.list_cases()["result"]:
+        for raw_case in as_list(self.service.list_cases().get("result")):
+            case = as_mapping(raw_case)
             item = QListWidgetItem(
                 f"{case['role']} — {case['case_id']}"
             )
@@ -947,10 +1491,11 @@ class SolverLabWindow(QMainWindow):
         self.matrix_preview_button.clicked.connect(self.preview_matrix)
         self.matrix_submit_button.clicked.connect(self.submit_matrix)
         self.matrix_new_batch_button.clicked.connect(self.submit_new_matrix_batch)
+        self.matrix_cases.itemChanged.connect(self._update_button_states)
 
     def _profile_action_disclosure(self) -> QLabel:
-        native = self.service.profile.document.get("native_bindings", {})
-        scope = native.get("manifest_general_product_scope", {})
+        native = as_mapping(self.service.profile.document.get("native_bindings"))
+        scope = as_mapping(native.get("manifest_general_product_scope"))
         return QLabel(
             "Profile: "
             f"{self.service.profile.profile_id} · automatic Imprint programs "
@@ -970,138 +1515,353 @@ class SolverLabWindow(QMainWindow):
     def submit_selected(self) -> None:
         reference = self.case_picker.currentData()
         if not isinstance(reference, dict):
+            self._reject("submit_job", "Select a frozen case or saved revision first.")
             return
-        try:
-            result = self.service.submit_job(
+        reference = dict(reference)
+        idempotency_key = f"gui-submit-{uuid.uuid4()}"
+
+        def call() -> dict[str, Any]:
+            response = self.service.submit_job(
                 case_id=reference.get("case_id"),
                 revision_id=reference.get("revision_id"),
-                idempotency_key=f"gui-submit-{uuid.uuid4()}",
+                idempotency_key=idempotency_key,
             )
-            self.health.setText(f"queued {result['result']['job_id']}")
+            job_id = str(as_mapping(response.get("result")).get("job_id") or "")
+            return {
+                "response": response,
+                "job": self.service.catalog.get_job(job_id),
+            }
+
+        def success(payload: Any) -> None:
+            payload = as_mapping(payload)
+            response = as_mapping(payload.get("response"))
+            job = as_mapping(payload.get("job"))
+            self._record_operation_result(
+                "submit_job",
+                response,
+                identity={"job_id": job.get("job_id"), **reference},
+                previous=None,
+                requested="queued",
+                current=job.get("status"),
+                idempotency_key=idempotency_key,
+            )
             self.supervisor.wake()
             self.refresh()
-        except Exception as exc:
-            self.health.setText(f"submit failed: {type(exc).__name__}: {exc}")
+
+        self._start_background(
+            "submit_job", call, success, busy_key="queue_mutation"
+        )
+
+    def _require_selected_job(
+        self, operation: str, allowed_statuses: set[str] | None = None
+    ) -> dict[str, Any] | None:
+        job = self.selected_job()
+        if job is None:
+            self._reject(operation, "Select a job first.")
+            return None
+        status = str(job.get("status") or "")
+        if allowed_statuses is not None and status not in allowed_statuses:
+            self._reject(
+                operation,
+                f"Job {job.get('job_id')} is {status or 'unknown'}; allowed states: "
+                + ", ".join(sorted(allowed_statuses))
+                + ".",
+            )
+            return None
+        return job
 
     def cancel_selected(self) -> None:
-        job = self.selected_job()
+        job = self._require_selected_job(
+            "cancel_job", {"queued", "blocked", "running", "canceling"}
+        )
         if job is None:
             return
-        try:
-            self.service.cancel_job(
+        job = dict(job)
+        previous = job.get("status")
+        idempotency_key = f"gui-cancel-{uuid.uuid4()}"
+
+        def call() -> dict[str, Any]:
+            response = self.service.cancel_job(
                 job_id=job["job_id"],
-                idempotency_key=f"gui-cancel-{uuid.uuid4()}",
+                idempotency_key=idempotency_key,
             )
+            return {
+                "response": response,
+                "job": self.service.catalog.get_job(job["job_id"]),
+            }
+
+        def success(payload: Any) -> None:
+            payload = as_mapping(payload)
+            current = as_mapping(payload.get("job"))
+            self._record_operation_result(
+                "cancel_job",
+                as_mapping(payload.get("response")),
+                identity={"job_id": job["job_id"]},
+                previous=previous,
+                requested=(
+                    "canceled" if previous in {"queued", "blocked"} else "canceling"
+                ),
+                current=current.get("status"),
+                idempotency_key=idempotency_key,
+            )
+            self.supervisor.wake()
             self.refresh()
-        except Exception as exc:
-            self.health.setText(f"cancel unavailable: {type(exc).__name__}: {exc}")
+
+        self._start_background(
+            "cancel_job", call, success, busy_key="queue_mutation"
+        )
 
     def retry_selected(self) -> None:
-        job = self.selected_job()
+        job = self._require_selected_job("retry_job")
         if job is None:
             return
-        try:
-            self.service.retry_job(
+        job = dict(job)
+        previous = str(job.get("status") or "")
+        if previous in {"queued", "blocked", "running", "canceling"}:
+            self._reject("retry_job", f"Job {job['job_id']} is still {previous}.")
+            return
+        idempotency_key = f"gui-retry-{uuid.uuid4()}"
+
+        def call() -> dict[str, Any]:
+            response = self.service.retry_job(
                 job_id=job["job_id"],
-                idempotency_key=f"gui-retry-{uuid.uuid4()}",
+                idempotency_key=idempotency_key,
+            )
+            return {
+                "response": response,
+                "job": self.service.catalog.get_job(job["job_id"]),
+            }
+
+        def success(payload: Any) -> None:
+            payload = as_mapping(payload)
+            current = as_mapping(payload.get("job"))
+            self._record_operation_result(
+                "retry_job",
+                as_mapping(payload.get("response")),
+                identity={"job_id": job["job_id"]},
+                previous=previous,
+                requested="queued",
+                current=current.get("status"),
+                idempotency_key=idempotency_key,
             )
             self.supervisor.wake()
             self.refresh()
-        except Exception as exc:
-            self.health.setText(f"retry unavailable: {type(exc).__name__}: {exc}")
+
+        self._start_background(
+            "retry_job", call, success, busy_key="queue_mutation"
+        )
 
     def clone_selected(self) -> None:
-        job = self.selected_job()
+        job = self._require_selected_job("clone_job")
         if job is None:
             return
-        try:
-            self.service.clone_job(
+        job = dict(job)
+        idempotency_key = f"gui-clone-{uuid.uuid4()}"
+
+        def call() -> dict[str, Any]:
+            response = self.service.clone_job(
                 job_id=job["job_id"],
-                idempotency_key=f"gui-clone-{uuid.uuid4()}",
+                idempotency_key=idempotency_key,
+            )
+            clone = as_mapping(as_mapping(response.get("result")).get("job"))
+            return {"response": response, "clone": clone}
+
+        def success(payload: Any) -> None:
+            payload = as_mapping(payload)
+            clone = as_mapping(payload.get("clone"))
+            self._record_operation_result(
+                "clone_job",
+                as_mapping(payload.get("response")),
+                identity={
+                    "source_job_id": job["job_id"],
+                    "job_id": clone.get("job_id"),
+                },
+                previous=job.get("status"),
+                requested="queued clone",
+                current=clone.get("status"),
+                idempotency_key=idempotency_key,
             )
             self.supervisor.wake()
             self.refresh()
-        except Exception as exc:
-            self.health.setText(f"clone failed: {type(exc).__name__}: {exc}")
+
+        self._start_background(
+            "clone_job", call, success, busy_key="queue_mutation"
+        )
 
     def change_selected_priority(self) -> None:
-        job = self.selected_job()
+        job = self._require_selected_job(
+            "change_priority", {"queued", "blocked"}
+        )
         if job is None:
             return
-        try:
-            self.service.change_priority(
+        job = dict(job)
+        requested = self.priority.value()
+        idempotency_key = f"gui-priority-{uuid.uuid4()}"
+
+        def call() -> dict[str, Any]:
+            response = self.service.change_priority(
                 job_id=job["job_id"],
-                priority=self.priority.value(),
-                idempotency_key=f"gui-priority-{uuid.uuid4()}",
+                priority=requested,
+                idempotency_key=idempotency_key,
+            )
+            return {
+                "response": response,
+                "job": self.service.catalog.get_job(job["job_id"]),
+            }
+
+        def success(payload: Any) -> None:
+            payload = as_mapping(payload)
+            current = as_mapping(payload.get("job"))
+            self._record_operation_result(
+                "change_priority",
+                as_mapping(payload.get("response")),
+                identity={"job_id": job["job_id"]},
+                previous=job.get("priority"),
+                requested=requested,
+                current=current.get("priority"),
+                idempotency_key=idempotency_key,
             )
             self.refresh()
-        except Exception as exc:
-            self.health.setText(f"priority unavailable: {type(exc).__name__}: {exc}")
+
+        self._start_background(
+            "change_priority", call, success, busy_key="queue_mutation"
+        )
 
     def toggle_queue_pause(self) -> None:
-        try:
-            if self.service.catalog.queue_paused():
-                self.service.resume_queue(
-                    idempotency_key=f"gui-resume-{uuid.uuid4()}"
+        previous = self.service.catalog.queue_paused()
+        operation = "resume_queue" if previous else "pause_queue"
+        idempotency_key = f"gui-{'resume' if previous else 'pause'}-{uuid.uuid4()}"
+
+        def call() -> dict[str, Any]:
+            if previous:
+                response = self.service.resume_queue(
+                    idempotency_key=idempotency_key
                 )
             else:
-                self.service.pause_queue(
-                    idempotency_key=f"gui-pause-{uuid.uuid4()}"
+                response = self.service.pause_queue(
+                    idempotency_key=idempotency_key
                 )
+            return {
+                "response": response,
+                "queue_paused": self.service.catalog.queue_paused(),
+            }
+
+        def success(payload: Any) -> None:
+            payload = as_mapping(payload)
+            self._record_operation_result(
+                operation,
+                as_mapping(payload.get("response")),
+                identity={"queue": "native_solver_lab"},
+                previous=previous,
+                requested=not previous,
+                current=payload.get("queue_paused"),
+                idempotency_key=idempotency_key,
+            )
             self.supervisor.wake()
             self.refresh()
-        except Exception as exc:
-            self.health.setText(f"queue control failed: {type(exc).__name__}: {exc}")
+
+        self._start_background(operation, call, success, busy_key="queue_pause")
 
     def refresh(self) -> None:
+        if self._refresh_in_flight:
+            self._refresh_pending = True
+            return
         selected = self.selected_job()
         selected_id = selected.get("job_id") if selected else None
-        try:
-            jobs = self.service.list_jobs()["result"]
-            summaries: dict[str, dict[str, Any] | None] = {}
-            for job in jobs:
-                attempt = job.get("latest_attempt")
-                summaries[job["job_id"]] = (
-                    self.service.get_run_summary(attempt_id=attempt["attempt_id"])["result"]
-                    if attempt
-                    else None
-                )
+        self._refresh_in_flight = True
+        self._refresh_pending = False
+
+        def collect() -> dict[str, Any]:
+            refresh = as_mapping(self.service.list_job_summaries()["result"])
+            return {
+                "selected_job_id": selected_id,
+                "jobs": as_list(refresh.get("jobs")),
+                "summaries": as_mapping(refresh.get("summaries")),
+                "attempts": as_list(self.service.list_attempts()["result"]),
+                "supervisor": as_mapping(self.supervisor.status()),
+            }
+
+        def apply(snapshot: Any) -> None:
+            snapshot = as_mapping(snapshot)
+            jobs = [as_mapping(job) for job in as_list(snapshot.get("jobs"))]
+            summaries = {
+                str(key): (as_mapping(value) if value is not None else None)
+                for key, value in as_mapping(snapshot.get("summaries")).items()
+            }
+            wanted = str(snapshot.get("selected_job_id") or "")
             self.model.set_rows(jobs, summaries)
-            if selected_id:
+            selected_after = False
+            if wanted:
                 for row, job in enumerate(jobs):
-                    if job["job_id"] == selected_id:
+                    if job.get("job_id") == wanted:
                         source = self.model.index(row, 0)
                         proxy = self.proxy_model.mapFromSource(source)
                         if proxy.isValid():
                             self.table.selectRow(proxy.row())
+                            selected_after = True
                         break
-            elif self.proxy_model.rowCount():
+            if not selected_after and self.proxy_model.rowCount():
                 self.table.selectRow(0)
-            state = self.supervisor.status()
+            state = as_mapping(snapshot.get("supervisor"))
             self.pause_button.setText(
-                "Resume queue" if state["queue_paused"] else "Pause queue"
+                "Resume queue" if state.get("queue_paused") else "Pause queue"
             )
             self.health.setText(
-                f"supervisor {'online' if state['alive'] else 'stopped'}"
-                + f" · {state['running_attempts']}/{state['max_workers']} running"
-                + f" · {state['reserved_host_memory_bytes'] / (1024 ** 2):.0f} MiB reserved"
+                f"supervisor {'online' if state.get('alive') else 'stopped'}"
+                + f" · {int(state.get('running_attempts') or 0)}/{int(state.get('max_workers') or 0)} running"
+                + f" · {float(state.get('reserved_host_memory_bytes') or 0) / (1024 ** 2):.0f} MiB reserved"
+            )
+            self._refresh_attempt_lists(
+                as_list(snapshot.get("attempts")), summaries
             )
             self.refresh_detail()
-            self._refresh_attempt_lists()
-        except Exception as exc:
-            self.health.setText(f"refresh failed: {type(exc).__name__}: {exc}")
+            self._update_button_states()
 
-    def _refresh_attempt_lists(self) -> None:
+        def finished() -> None:
+            self._refresh_in_flight = False
+            if self._refresh_pending:
+                QTimer.singleShot(0, self.refresh)
+
+        self._start_background(
+            "refresh_snapshot",
+            collect,
+            apply,
+            busy_key="refresh_snapshot",
+            on_finished=finished,
+        )
+
+    def _refresh_attempt_lists(
+        self,
+        attempts: list[Any],
+        summaries: Mapping[str, Any],
+    ) -> None:
+        normalized_attempts = [as_mapping(attempt) for attempt in attempts]
+        available: set[str] = set()
+        for summary in summaries.values():
+            normalized_summary = as_mapping(summary)
+            attempt = as_mapping(normalized_summary.get("attempt"))
+            artifacts = as_mapping(normalized_summary.get("artifacts"))
+            if attempt.get("attempt_id") and artifacts.get("strategy_directory"):
+                available.add(str(attempt["attempt_id"]))
+        material_digest = canonical_sha256(
+            {"attempts": normalized_attempts, "strategy_available": sorted(available)}
+        )
+        self._strategy_available_attempt_ids = available
+        if material_digest == self._attempt_list_digest:
+            self._update_button_states()
+            return
+        self._attempt_list_digest = material_digest
         selected_compare = {
             str(item.data(Qt.ItemDataRole.UserRole))
             for item in self.compare_attempts.selectedItems()
         }
         selected_strategy = self.strategy_attempt.currentData()
-        attempts = self.service.list_attempts()["result"]
         self.compare_attempts.clear()
         self.strategy_attempt.clear()
-        for attempt in attempts:
-            attempt_id = str(attempt["attempt_id"])
+        for attempt in normalized_attempts:
+            attempt_id = str(attempt.get("attempt_id") or "")
+            if not attempt_id:
+                continue
             text = (
                 f"{attempt.get('case_id') or 'unknown case'} · "
                 f"attempt {attempt.get('ordinal')} · {attempt.get('status')} · {attempt_id}"
@@ -1116,6 +1876,7 @@ class SolverLabWindow(QMainWindow):
             if index >= 0:
                 self.strategy_attempt.setCurrentIndex(index)
         self._filter_attempt_lists(self.compare_filter.text())
+        self._update_button_states()
 
     def _filter_attempt_lists(self, text: str) -> None:
         needle = text.casefold().strip()
@@ -1128,48 +1889,92 @@ class SolverLabWindow(QMainWindow):
             str(item.data(Qt.ItemDataRole.UserRole))
             for item in self.compare_attempts.selectedItems()
         ]
-        try:
-            result = self.service.compare_runs(attempt_ids=attempt_ids)
+        if not (2 <= len(attempt_ids) <= 20):
+            self._reject("compare_runs", "Select two to twenty attempts first.")
+            return
+
+        def success(result: Any) -> None:
             self.compare_output.setPlainText(
                 json.dumps(result, indent=2, ensure_ascii=False)
             )
-        except Exception as exc:
-            self.compare_output.setPlainText(
-                f"Compare unavailable: {type(exc).__name__}: {exc}"
+            self.activity_reporter.feedback(
+                "compare_runs",
+                {"accepted": True, "attempt_ids": attempt_ids},
             )
+
+        self._start_background(
+            "compare_runs",
+            lambda: self.service.compare_runs(attempt_ids=attempt_ids),
+            success,
+        )
 
     def show_strategy_summary(self) -> None:
         attempt_id = self.strategy_attempt.currentData()
         if not attempt_id:
+            self._reject("strategy_summary", "Select an attempt with a strategy first.")
             return
-        try:
-            result = self.service.get_strategy_summary(
-                attempt_id=str(attempt_id)
+        attempt_id = str(attempt_id)
+        if attempt_id not in getattr(self, "_strategy_available_attempt_ids", set()):
+            self._reject(
+                "strategy_summary",
+                f"Attempt {attempt_id} has no compiled strategy.",
             )
+            return
+
+        def success(result: Any) -> None:
             self.strategy_output.setPlainText(
                 json.dumps(result, indent=2, ensure_ascii=False)
             )
-        except Exception as exc:
-            self.strategy_output.setPlainText(
-                f"Strategy unavailable: {type(exc).__name__}: {exc}"
+            self.activity_reporter.feedback(
+                "strategy_summary",
+                {"accepted": True, "attempt_id": attempt_id},
             )
+
+        self._start_background(
+            "strategy_summary",
+            lambda: self.service.get_strategy_summary(attempt_id=attempt_id),
+            success,
+        )
 
     def export_strategy_bundle(self) -> None:
         attempt_id = self.strategy_attempt.currentData()
         if not attempt_id:
+            self._reject("strategy_export", "Select an attempt with a strategy first.")
             return
-        try:
-            result = self.service.export_investigation_bundle(
-                attempt_id=str(attempt_id),
-                idempotency_key=f"gui-export-{attempt_id}",
+        attempt_id = str(attempt_id)
+        if attempt_id not in getattr(self, "_strategy_available_attempt_ids", set()):
+            self._reject(
+                "strategy_export", f"Attempt {attempt_id} has no compiled strategy."
             )
+            return
+        idempotency_key = f"gui-export-{attempt_id}"
+
+        def success(result: Any) -> None:
             self.strategy_output.setPlainText(
                 json.dumps(result, indent=2, ensure_ascii=False)
             )
-        except Exception as exc:
-            self.strategy_output.setPlainText(
-                f"Export unavailable: {type(exc).__name__}: {exc}"
+            response = as_mapping(result)
+            payload = as_mapping(response.get("result"))
+            self._record_operation_result(
+                "strategy_export",
+                response,
+                identity={
+                    "attempt_id": attempt_id,
+                    "bundle_id": payload.get("bundle_id"),
+                },
+                requested="investigation_bundle",
+                current=payload.get("bundle_path"),
+                idempotency_key=idempotency_key,
             )
+
+        self._start_background(
+            "strategy_export",
+            lambda: self.service.export_investigation_bundle(
+                attempt_id=attempt_id,
+                idempotency_key=idempotency_key,
+            ),
+            success,
+        )
 
     def _filter_matrix_cases(self, text: str) -> None:
         needle = text.casefold().strip()
@@ -1179,6 +1984,7 @@ class SolverLabWindow(QMainWindow):
 
     def _reset_matrix_batch(self, *args: Any) -> None:
         self._matrix_idempotency_key = None
+        self._update_button_states()
 
     def _selected_matrix_case_ids(self) -> list[str]:
         return sorted(
@@ -1201,45 +2007,90 @@ class SolverLabWindow(QMainWindow):
 
     def submit_new_matrix_batch(self) -> None:
         self._reset_matrix_batch()
-        self._submit_matrix(dry_run=False)
+        self._submit_matrix(dry_run=False, operation="matrix_new_batch")
 
-    def _submit_matrix(self, *, dry_run: bool) -> None:
-        try:
-            case_ids = self._selected_matrix_case_ids()
-            if not case_ids:
-                raise ValueError("select at least one frozen case")
-            result = self.service.submit_matrix(
+    def _submit_matrix(
+        self, *, dry_run: bool, operation: str | None = None
+    ) -> None:
+        case_ids = self._selected_matrix_case_ids()
+        operation = operation or ("matrix_preview" if dry_run else "matrix_submit")
+        if not case_ids:
+            self._reject(operation, "Select at least one frozen case.")
+            return
+        key = self._matrix_key()
+        replicates = self.matrix_replicates.value()
+
+        def call() -> dict[str, Any]:
+            return self.service.submit_matrix(
                 case_ids=case_ids,
-                replicates=self.matrix_replicates.value(),
-                idempotency_key=self._matrix_key(),
+                replicates=replicates,
+                idempotency_key=key,
                 dry_run=dry_run,
             )
+
+        def success(result: Any) -> None:
             self.matrix_output.setPlainText(
                 json.dumps(result, indent=2, ensure_ascii=False)
+            )
+            response = as_mapping(result)
+            payload = as_mapping(response.get("result"))
+            self._record_operation_result(
+                operation,
+                response,
+                identity={"experiment_id": payload.get("experiment_id")},
+                requested={"case_ids": case_ids, "replicates": replicates},
+                current={"job_count": payload.get("job_count")},
+                idempotency_key=key,
             )
             if not dry_run:
                 self.supervisor.wake()
                 self.refresh()
-        except Exception as exc:
-            self.matrix_output.setPlainText(
-                f"Matrix unavailable: {type(exc).__name__}: {exc}"
-            )
+
+        self._start_background(
+            operation, call, success, busy_key="matrix_operation"
+        )
 
     def refresh_detail(self, *args: Any) -> None:
+        del args
         job = self.selected_job()
         if job is None:
             self.detail.clear()
+            self._update_button_states()
             return
-        try:
-            self.detail.set_detail(self.service.get_job(job["job_id"])["result"])
-            self.priority.setValue(int(job.get("priority", 0)))
-        except Exception as exc:
-            self.detail.clear()
-            self.health.setText(f"detail failed: {type(exc).__name__}: {exc}")
+        job_id = str(job["job_id"])
+        self.priority.setValue(int(job.get("priority", 0)))
+        if self._detail_in_flight_job_id is not None:
+            self._detail_pending_job_id = job_id
+            return
+        self._detail_in_flight_job_id = job_id
+
+        def success(result: Any) -> None:
+            selected = self.selected_job()
+            if selected is not None and selected.get("job_id") == job_id:
+                self.detail.set_detail(as_mapping(as_mapping(result).get("result")))
+
+        def finished() -> None:
+            self._detail_in_flight_job_id = None
+            pending = self._detail_pending_job_id
+            self._detail_pending_job_id = None
+            selected = self.selected_job()
+            selected_id = str(selected.get("job_id") or "") if selected else ""
+            if pending and pending == selected_id:
+                QTimer.singleShot(0, self.refresh_detail)
+
+        self._start_background(
+            "refresh_detail",
+            lambda: self.service.get_job(job_id),
+            success,
+            busy_key="refresh_detail",
+            on_finished=finished,
+        )
 
     def closeEvent(self, event: QCloseEvent) -> None:
         self.timer.stop()
         self.supervisor.stop(wait=False)
+        self._thread_pool.waitForDone(2_000)
+        self._thread_pool.clear()
         event.accept()
 
 

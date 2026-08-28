@@ -14,6 +14,7 @@ from typing import Any, Callable
 
 from poecraft_ingest.solver_corpus_runner import _run_case
 from poecraft_ingest.solver_lab_contracts import canonical_sha256
+from poecraft_ingest.solver_lab_normalize import as_mapping
 from poecraft_ingest.solver_lab_service import SolverLabService
 from poecraft_ingest.solver_worker import (
     AttemptPaths,
@@ -295,7 +296,8 @@ class SolverLabSupervisor:
             )
 
         try:
-            request_case = job.get("request", {}).get("case", {})
+            request = as_mapping(job.get("request"))
+            request_case = as_mapping(request.get("case"))
             resolved_case = self.service._resolve_case_reference(
                 case_id=job["case_id"],
                 revision_id=request_case.get("revision_id"),
@@ -320,23 +322,25 @@ class SolverLabSupervisor:
                 ),
             ).canonical_document()
             self.service.catalog.set_attempt_command(attempt_id, command)
-            result = _run_case(
-                task,
-                executable=self.service.paths.executable,
-                artifact=self.service.paths.artifact,
-                corpus=resolved_case.corpus_path,
-                output_directory=attempt_directory,
-                root=self.service.paths.root,
-                exact_evaluation=worker_options.exact_evaluation,
-                run_verification=worker_options.run_verification,
-                goal_progress_gated_reforges=(
-                    worker_options.goal_progress_gated_reforges
-                ),
-                attempt_paths=paths,
-                cancel_requested=lambda: self.service.catalog.is_cancel_requested(
-                    job["job_id"]
-                ),
-                on_process_started=on_started,
+            result = as_mapping(
+                _run_case(
+                    task,
+                    executable=self.service.paths.executable,
+                    artifact=self.service.paths.artifact,
+                    corpus=resolved_case.corpus_path,
+                    output_directory=attempt_directory,
+                    root=self.service.paths.root,
+                    exact_evaluation=worker_options.exact_evaluation,
+                    run_verification=worker_options.run_verification,
+                    goal_progress_gated_reforges=(
+                        worker_options.goal_progress_gated_reforges
+                    ),
+                    attempt_paths=paths,
+                    cancel_requested=lambda: self.service.catalog.is_cancel_requested(
+                        job["job_id"]
+                    ),
+                    on_process_started=on_started,
+                )
             )
             attempt_status, job_status = self._terminal_statuses(result)
         except Exception as exc:

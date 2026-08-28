@@ -19,6 +19,7 @@ from poecraft_ingest.solver_lab_contracts import (
     EXPERIMENT_SCHEMA_VERSION,
     JOB_SCHEMA_VERSION,
 )
+from poecraft_ingest.solver_lab_normalize import as_mapping
 
 
 CATALOG_SCHEMA_VERSION = 3
@@ -316,7 +317,7 @@ class SolverLabCatalog:
                 "SELECT document_json FROM experiments WHERE experiment_id=?",
                 (experiment_id,),
             ).fetchone()
-        return _decode(row[0], {}) if row else None
+        return as_mapping(_decode(row[0], {})) if row else None
 
     def create_case_draft(
         self,
@@ -1015,7 +1016,9 @@ class SolverLabCatalog:
                 "started_at": row["started_at"],
                 "heartbeat_at": row["heartbeat_at"],
                 "stopped_at": row["stopped_at"],
-                "configuration": _decode(row["configuration_json"], {}),
+                "configuration": as_mapping(
+                    _decode(row["configuration_json"], {})
+                ),
             }
             for row in rows
         ]
@@ -1110,6 +1113,27 @@ class SolverLabCatalog:
                 "SELECT cancel_requested FROM jobs WHERE job_id=?", (job_id,)
             ).fetchone()
         return bool(row and row[0])
+
+    def get_lease(self, lease_id: str) -> dict[str, Any] | None:
+        """Return bounded lease state for lifecycle diagnostics and tests."""
+
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM leases WHERE lease_id=?", (lease_id,)
+            ).fetchone()
+        if row is None:
+            return None
+        return {
+            "lease_id": row["lease_id"],
+            "attempt_id": row["attempt_id"],
+            "job_id": row["job_id"],
+            "supervisor_id": row["supervisor_id"],
+            "status": row["status"],
+            "process_identity_token": row["process_identity_token"],
+            "acquired_at": row["acquired_at"],
+            "heartbeat_at": row["heartbeat_at"],
+            "released_at": row["released_at"],
+        }
 
     def finish_attempt(
         self,
@@ -1573,7 +1597,7 @@ class SolverLabCatalog:
             "watchdog_seconds": row["watchdog_seconds"],
             "reserved_memory_bytes": row["reserved_memory_bytes"],
             "identity_sha256": row["identity_sha256"],
-            "request": _decode(row["request_json"], {}),
+            "request": as_mapping(_decode(row["request_json"], {})),
             "created_at": row["created_at"],
             "updated_at": row["updated_at"],
         }
@@ -1587,9 +1611,9 @@ class SolverLabCatalog:
             "case_id": row["case_id"],
             "source_kind": row["source_kind"],
             "base_revision_id": row["base_revision_id"],
-            "document": _decode(row["document_json"], {}),
+            "document": as_mapping(_decode(row["document_json"], {})),
             "validated_content_sha256": row["validated_content_sha256"],
-            "validation": _decode(row["validation_json"], None),
+            "validation": as_mapping(_decode(row["validation_json"], {})),
             "created_at": row["created_at"],
             "updated_at": row["updated_at"],
         }
@@ -1605,7 +1629,7 @@ class SolverLabCatalog:
             "source_kind": row["source_kind"],
             "parent_revision_id": row["parent_revision_id"],
             "content_sha256": row["content_sha256"],
-            "document": _decode(row["document_json"], {}),
+            "document": as_mapping(_decode(row["document_json"], {})),
             "case_path": row["case_path"],
             "corpus_path": row["corpus_path"],
             "created_at": row["created_at"],
@@ -1624,9 +1648,9 @@ class SolverLabCatalog:
             "lease_id": row["lease_id"],
             "process_id": row["process_id"],
             "process_identity_token": row["process_identity_token"],
-            "command": _decode(row["command_json"], None),
+            "command": as_mapping(_decode(row["command_json"], {})),
             "command_identity_sha256": row["command_identity_sha256"],
-            "result": _decode(row["result_json"], None),
+            "result": as_mapping(_decode(row["result_json"], {})),
             "created_at": row["created_at"],
             "started_at": row["started_at"],
             "finished_at": row["finished_at"],
@@ -1641,8 +1665,8 @@ class SolverLabCatalog:
             "operation": row["operation"],
             "target_id": row["target_id"],
             "dry_run": bool(row["dry_run"]),
-            "request": _decode(row["request_json"], {}),
-            "result": _decode(row["result_json"], {}),
+            "request": as_mapping(_decode(row["request_json"], {})),
+            "result": as_mapping(_decode(row["result_json"], {})),
             "created_at": row["created_at"],
         }
 
@@ -1655,5 +1679,5 @@ class SolverLabCatalog:
             "kind": row["kind"],
             "entity_type": row["entity_type"],
             "entity_id": row["entity_id"],
-            "payload": _decode(row["payload_json"], {}),
+            "payload": as_mapping(_decode(row["payload_json"], {})),
         }

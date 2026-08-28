@@ -128,9 +128,13 @@ def validate_local_profile_binding(
 
     bindings = profile.document["native_bindings"]
     scope = bindings["manifest_general_product_scope"]
-    corpus_scope = (
-        corpus_document.get("benchmark_identity_contract", {})
-        .get("general_product_scope", {})
+    identity_contract = _object(
+        corpus_document.get("benchmark_identity_contract"),
+        "corpus benchmark_identity_contract",
+    )
+    corpus_scope = _object(
+        identity_contract.get("general_product_scope"),
+        "corpus general_product_scope",
     )
     for key, expected in scope.items():
         if corpus_scope.get(key) != expected:
@@ -216,9 +220,7 @@ def calculator_export_to_case(
     case["watchdog_seconds"] = watchdog
     case["requested_bounded_finish_seconds"] = bounded
     caps = deepcopy(_object(case.get("caps"), "template caps"))
-    options = solve.get("options", {})
-    if not isinstance(options, dict):
-        raise ValueError("solve options must be an object")
+    options = _object(solve.get("options"), "solve options")
     allowed_options = {
         "max_states",
         "max_sweeps",
@@ -298,7 +300,7 @@ def build_local_manifest(
     manifest["cases"] = ["case.json"]
     manifest["case_roles"] = {case_id: "local_case_revision"}
     manifest["source_checkpoint"] = {
-        **dict(manifest.get("source_checkpoint", {})),
+        **_object(manifest.get("source_checkpoint"), "manifest source_checkpoint"),
         "local_case_authoring": "immutable_solver_lab_revision",
     }
     return manifest
@@ -311,9 +313,9 @@ def case_summary(
     revision_id: str | None = None,
     role: str | None = None,
 ) -> dict[str, Any]:
-    goal = document.get("goal", {})
-    start = document.get("start", {})
-    caps = document.get("caps", {})
+    goal = document.get("goal")
+    start = document.get("start")
+    caps = document.get("caps")
     return {
         "case_id": document.get("id"),
         "source_kind": source_kind,
@@ -321,7 +323,11 @@ def case_summary(
         "role": role,
         "description": document.get("description"),
         "watchdog_seconds": document.get("watchdog_seconds"),
-        "reserved_memory_bytes": caps.get("max_solver_owned_bytes", 0),
+        "reserved_memory_bytes": (
+            caps.get("max_solver_owned_bytes", 0)
+            if isinstance(caps, dict)
+            else 0
+        ),
         "goal_slots": len(goal.get("slots", [])) if isinstance(goal, dict) else 0,
         "min_satisfied_slots": (
             goal.get("min_satisfied_slots") if isinstance(goal, dict) else None

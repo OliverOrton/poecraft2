@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import time
 
 import pytest
 
@@ -13,6 +14,16 @@ from poecraft_ingest.solver_lab_supervisor import SolverLabSupervisor
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+
+
+def _wait_qt(app, predicate, timeout: float = 5.0) -> None:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        app.processEvents()
+        if predicate():
+            return
+        time.sleep(0.01)
+    raise AssertionError("Qt condition did not become true before timeout")
 
 
 def _service(tmp_path: Path) -> SolverLabService:
@@ -236,18 +247,22 @@ def test_qt_queue_and_detail_widgets_use_persisted_service(tmp_path: Path) -> No
     )
     window.refresh()
 
+    _wait_qt(app, lambda: window.model.rowCount() == 1)
+
     assert window.model.rowCount() == 1
     assert window.proxy_model.rowCount() == 1
     assert window.case_picker.count() == 5
     assert window.tabs.count() == 5
     assert window.case_list.count() == 5
     assert window.selected_job()["case_id"] == case_id
+    _wait_qt(app, lambda: "queued" in window.detail.values["status"].text())
     assert "queued" in window.detail.values["status"].text()
     window.job_filter.setText("does-not-exist")
     assert window.proxy_model.rowCount() == 0
     window.job_filter.clear()
     assert window.proxy_model.rowCount() == 1
     window.create_case_from_template()
+    _wait_qt(app, lambda: window.case_list.count() == 6)
     assert window.case_list.count() == 6
     assert window._case_selection["source_kind"] == "draft"
     assert window.case_editor.isReadOnly() is False
@@ -255,13 +270,17 @@ def test_qt_queue_and_detail_widgets_use_persisted_service(tmp_path: Path) -> No
     for row in range(1, window.matrix_cases.count()):
         window.matrix_cases.item(row).setCheckState(Qt.CheckState.Unchecked)
     window.preview_matrix()
+    _wait_qt(app, lambda: bool(window.matrix_output.toPlainText()))
     preview = json.loads(window.matrix_output.toPlainText())
     assert preview["dry_run"] is True
     assert preview["result"]["job_count"] == 1
     window.submit_matrix()
     window.submit_matrix()
+    _wait_qt(app, lambda: len(service.catalog.list_jobs()) == 2)
     assert len(service.catalog.list_jobs()) == 2
+    _wait_qt(app, window.matrix_new_batch_button.isEnabled)
     window.submit_new_matrix_batch()
+    _wait_qt(app, lambda: len(service.catalog.list_jobs()) == 3)
     assert len(service.catalog.list_jobs()) == 3
     window.close()
     app.processEvents()
@@ -273,6 +292,7 @@ def test_qt_queue_and_detail_widgets_use_persisted_service(tmp_path: Path) -> No
         autostart_supervisor=False,
         poll_interval_ms=60_000,
     )
+    _wait_qt(app, lambda: reopened.model.rowCount() == 3)
     assert reopened.model.rowCount() == 3
     assert reopened.selected_job()["case_id"] == case_id
     reopened.close()

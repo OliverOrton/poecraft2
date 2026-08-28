@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import threading
 import uuid
 from typing import Any, Mapping
 
@@ -25,6 +26,11 @@ from poecraft_ingest.solver_lab_cases import (
     validate_local_profile_binding,
 )
 from poecraft_ingest.solver_lab_catalog import SolverLabCatalog, utc_now
+from poecraft_ingest.solver_lab_normalize import (
+    as_list,
+    as_mapping,
+    first_mapping,
+)
 from poecraft_ingest.solver_lab_contracts import (
     EXPERIMENT_SCHEMA_VERSION,
     CASE_DRAFT_SCHEMA_VERSION,
@@ -87,6 +93,13 @@ class ResolvedLabCase:
     revision_id: str | None = None
 
 
+@dataclass(frozen=True)
+class _RunSummaryCacheEntry:
+    signature: tuple[str, int, int, str]
+    terminal: bool
+    summary: dict[str, Any]
+
+
 def operation_result(
     operation: str,
     result: Any,
@@ -130,6 +143,8 @@ class SolverLabService:
         self._authoring_template = self._cases[
             "conquest-lamellar-allflame-clean-3-prefix-extended-product8"
         ]
+        self._run_summary_cache: dict[str, _RunSummaryCacheEntry] = {}
+        self._run_summary_cache_lock = threading.RLock()
 
     def native_worker_options(self) -> NativeWorkerOptions:
         native = self.profile.document["native_bindings"]
@@ -183,7 +198,7 @@ class SolverLabService:
         )
 
     def list_cases(self) -> dict[str, Any]:
-        roles = self.corpus_document.get("case_roles", {})
+        roles = as_mapping(self.corpus_document.get("case_roles"))
         result = []
         for case_id in sorted(self._cases):
             case = self._cases[case_id]
@@ -439,7 +454,7 @@ class SolverLabService:
         draft = self.catalog.get_case_draft(draft_id)
         if draft is None:
             raise KeyError(draft_id)
-        validation = self._validate_case_document(draft["document"])
+        validation = as_mapping(self._validate_case_document(draft["document"]))
         self.catalog.record_case_validation(
             draft_id=draft_id,
             content_sha256=validation["content_sha256"],
@@ -464,7 +479,7 @@ class SolverLabService:
         draft = self.catalog.get_case_draft(draft_id)
         if draft is None:
             raise KeyError(draft_id)
-        validation = self._validate_case_document(draft["document"])
+        validation = as_mapping(self._validate_case_document(draft["document"]))
         if not validation["native_valid"]:
             raise ValueError(
                 "native case validation failed: " + validation["detail"]
@@ -675,10 +690,44 @@ class SolverLabService:
         )
 
     def list_jobs(self, *, limit: int = 200) -> dict[str, Any]:
-        jobs = self.catalog.list_jobs(limit=limit)
+        jobs = [as_mapping(job) for job in self.catalog.list_jobs(limit=limit)]
         for job in jobs:
-            job["latest_attempt"] = self.catalog.latest_attempt(job["job_id"])
+            job["request"] = as_mapping(job.get("request"))
+            latest = self.catalog.latest_attempt(job["job_id"])
+            job["latest_attempt"] = as_mapping(latest) if latest else None
         return operation_result("list_jobs", jobs)
+
+    def list_job_summaries(self, *, limit: int = 200) -> dict[str, Any]:
+        """Return one refresh snapshot without letting one artifact abort it."""
+
+        jobs = as_list(self.list_jobs(limit=limit)["result"])
+        summaries: dict[str, dict[str, Any] | None] = {}
+        for raw_job in jobs:
+            job = as_mapping(raw_job)
+            job_id = str(job.get("job_id") or "")
+            attempt = as_mapping(job.get("latest_attempt"))
+            if not job_id:
+                continue
+            if not attempt:
+                summaries[job_id] = None
+                continue
+            try:
+                summaries[job_id] = self._run_summary(attempt)
+            except Exception as exc:
+                summaries[job_id] = {
+                    "attempt": attempt,
+                    "source_kind": "unreadable",
+                    "warning": f"{type(exc).__name__}: {exc}",
+                    "phase": None,
+                    "lower_bound": None,
+                    "upper_bound": None,
+                    "evaluated_policy_cost": None,
+                    "termination": None,
+                    "bound_sample_count": 0,
+                }
+        return operation_result(
+            "list_job_summaries", {"jobs": jobs, "summaries": summaries}
+        )
 
     def list_attempts(
         self,
@@ -698,8 +747,10 @@ class SolverLabService:
             [
                 {
                     **attempt,
-                    "case_id": jobs.get(attempt["job_id"], {}).get("case_id"),
-                    "profile_id": jobs.get(attempt["job_id"], {}).get(
+                    "case_id": as_mapping(jobs.get(attempt["job_id"])).get(
+                        "case_id"
+                    ),
+                    "profile_id": as_mapping(jobs.get(attempt["job_id"])).get(
                         "profile_id"
                     ),
                 }
@@ -708,8 +759,8 @@ class SolverLabService:
         )
 
     def get_job(self, job_id: str) -> dict[str, Any]:
-        job = self.catalog.get_job(job_id)
-        if job is None:
+        job = as_mapping(self.catalog.get_job(job_id))
+        if not job:
             raise KeyError(job_id)
         attempt = self.catalog.latest_attempt(job_id)
         return operation_result(
@@ -957,7 +1008,7 @@ class SolverLabService:
         requested_case_ids = sorted(set(case_ids or []))
         requested_roles = sorted(set(include_roles or []))
         excluded_case_ids = sorted(set(exclude_case_ids or []))
-        roles = self.corpus_document.get("case_roles", {})
+        roles = as_mapping(self.corpus_document.get("case_roles"))
         known_roles = {str(role) for role in roles.values()}
         unknown_roles = sorted(set(requested_roles) - known_roles)
         if unknown_roles:
@@ -1049,10 +1100,8 @@ class SolverLabService:
         attempt = self._resolve_attempt(job_id=job_id, attempt_id=attempt_id)
         max_samples = max(2, min(int(max_samples), 256))
         case, source_kind, source_path, warning = self._load_attempt_case(attempt)
-        trace = case.get("bound_trace", {}) if isinstance(case, dict) else {}
-        samples = trace.get("samples", []) if isinstance(trace, dict) else []
-        if not isinstance(samples, list):
-            samples = []
+        trace = as_mapping(case.get("bound_trace"))
+        samples = as_list(trace.get("samples"))
         original_count = len(samples)
         if original_count > max_samples:
             indices = sorted(
@@ -1094,9 +1143,11 @@ class SolverLabService:
                 },
             )
         strategy_path = strategy_paths[0]
-        strategy = json.loads(strategy_path.read_text(encoding="utf-8"))
-        nodes = strategy.get("nodes", [])
-        edges = strategy.get("edges", [])
+        strategy = as_mapping(
+            json.loads(strategy_path.read_text(encoding="utf-8"))
+        )
+        nodes = as_list(strategy.get("nodes"))
+        edges = as_list(strategy.get("edges"))
         node_kinds = Counter(
             node.get("kind", "unknown")
             for node in nodes
@@ -1106,17 +1157,16 @@ class SolverLabService:
         for node in nodes:
             if not isinstance(node, dict) or node.get("kind") != "operation":
                 continue
-            operation = node.get("operation", {})
-            if isinstance(operation, dict):
-                operation_types[str(operation.get("type", "unknown"))] += 1
+            operation = as_mapping(node.get("operation"))
+            operation_types[str(operation.get("type", "unknown"))] += 1
         case, _, _, warning = self._load_attempt_case(attempt)
-        exact = case.get("exact_strategy_evaluation") if isinstance(case, dict) else None
-        exact_result = exact.get("result", {}) if isinstance(exact, dict) else {}
-        terminals = exact_result.get("terminals", {}) if isinstance(exact_result, dict) else {}
-        accounting = exact_result.get("accounting", {}) if isinstance(exact_result, dict) else {}
-        pricing = accounting.get("pricing", {}) if isinstance(accounting, dict) else {}
-        consumption = exact_result.get("expected_consumption", []) if isinstance(exact_result, dict) else []
-        failures = exact_result.get("failures_by_node", []) if isinstance(exact_result, dict) else []
+        exact = as_mapping(case.get("exact_strategy_evaluation"))
+        exact_result = as_mapping(exact.get("result"))
+        terminals = as_mapping(exact_result.get("terminals"))
+        accounting = as_mapping(exact_result.get("accounting"))
+        pricing = as_mapping(accounting.get("pricing"))
+        consumption = as_list(exact_result.get("expected_consumption"))
+        failures = as_list(exact_result.get("failures_by_node"))
         return operation_result(
             "get_strategy_summary",
             {
@@ -1159,14 +1209,14 @@ class SolverLabService:
                             "total_expected_cost",
                         )
                     }
-                    if isinstance(exact, dict)
+                    if exact
                     else None
                 ),
                 "terminal_mass": terminals,
                 "pricing": pricing,
-                "expected_consumption": consumption[:40] if isinstance(consumption, list) else [],
-                "route_failure_count": len(failures) if isinstance(failures, list) else None,
-                "route_failure_samples": failures[:20] if isinstance(failures, list) else [],
+                "expected_consumption": consumption[:40],
+                "route_failure_count": len(failures),
+                "route_failure_samples": failures[:20],
                 "warning": warning,
             },
         )
@@ -1183,9 +1233,9 @@ class SolverLabService:
             assert job is not None
             summary = self._run_summary(attempt)
             strategy = self.get_strategy_summary(attempt_id=attempt_id)["result"]
-            sample = summary.get("latest_sample") or {}
-            work = sample.get("work", {}) if isinstance(sample, dict) else {}
-            states = sample.get("states", {}) if isinstance(sample, dict) else {}
+            sample = as_mapping(summary.get("latest_sample"))
+            work = as_mapping(sample.get("work"))
+            states = as_mapping(sample.get("states"))
             rows.append(
                 {
                     "attempt_id": attempt_id,
@@ -1213,7 +1263,9 @@ class SolverLabService:
                         "evaluated_policy_cost": summary.get("evaluated_policy_cost"),
                         "absolute_gap": summary.get("absolute_gap"),
                         "multiplicative_gap": summary.get("multiplicative_gap"),
-                        "total_wall_ms": (summary.get("phase_wall_ms") or {}).get("total"),
+                        "total_wall_ms": as_mapping(
+                            summary.get("phase_wall_ms")
+                        ).get("total"),
                     },
                     "deterministic_work": {
                         "states": states,
@@ -1337,7 +1389,9 @@ class SolverLabService:
                 entity_type="attempt", entity_id=attempt["attempt_id"], limit=200
             ),
             "bounded_worker_log_tail": log_tail,
-            "reproduction_command": (attempt.get("command") or {}).get("argv"),
+            "reproduction_command": as_mapping(attempt.get("command")).get(
+                "argv"
+            ),
         }
         bundle_directory.mkdir(parents=True, exist_ok=True)
         bundle_path.write_text(
@@ -1408,10 +1462,12 @@ class SolverLabService:
         if source_path is None:
             return {}, source_kind, None, None
         try:
-            report = json.loads(source_path.read_text(encoding="utf-8"))
-            cases = report.get("cases", [])
-            if isinstance(cases, list) and cases and isinstance(cases[0], dict):
-                return cases[0], source_kind, str(source_path), None
+            report = as_mapping(
+                json.loads(source_path.read_text(encoding="utf-8"))
+            )
+            case = first_mapping(report.get("cases"))
+            if case:
+                return case, source_kind, str(source_path), None
             return {}, source_kind, str(source_path), "report has no case payload"
         except (OSError, ValueError, json.JSONDecodeError) as exc:
             return {}, source_kind, str(source_path), f"{type(exc).__name__}: {exc}"
@@ -1468,7 +1524,35 @@ class SolverLabService:
         }
 
     def _run_summary(self, attempt: Mapping[str, Any]) -> dict[str, Any]:
-        directory = Path(str(attempt["directory"]))
+        normalized_attempt = as_mapping(attempt)
+        normalized_attempt["command"] = as_mapping(
+            normalized_attempt.get("command")
+        )
+        normalized_attempt["result"] = as_mapping(
+            normalized_attempt.get("result")
+        )
+        attempt_id = str(normalized_attempt.get("attempt_id") or "")
+        attempt_status = str(normalized_attempt.get("status") or "")
+        terminal = attempt_status in {
+            "completed",
+            "partial",
+            "failed",
+            "canceled",
+            "orphaned",
+        }
+        summary_cache = getattr(self, "_run_summary_cache", None)
+        summary_cache_lock = getattr(self, "_run_summary_cache_lock", None)
+        cache_available = bool(
+            attempt_id
+            and summary_cache is not None
+            and summary_cache_lock is not None
+        )
+        if cache_available:
+            with summary_cache_lock:
+                cached = summary_cache.get(attempt_id)
+                if cached is not None and cached.terminal:
+                    return dict(cached.summary)
+        directory = Path(str(normalized_attempt["directory"]))
         final_path = directory / "report.json"
         partial_path = directory / "partial.json"
         source_path: Path | None = None
@@ -1479,25 +1563,42 @@ class SolverLabService:
         elif partial_path.is_file():
             source_path = partial_path
             source_kind = "partial"
-        case: Mapping[str, Any] = {}
+        signature = ("", 0, 0, attempt_status)
+        if source_path is not None:
+            stat = source_path.stat()
+            signature = (
+                str(source_path.resolve()),
+                stat.st_mtime_ns,
+                stat.st_size,
+                attempt_status,
+            )
+        if cache_available:
+            with summary_cache_lock:
+                cached = summary_cache.get(attempt_id)
+                if cached is not None and (
+                    cached.terminal or cached.signature == signature
+                ):
+                    return dict(cached.summary)
+
+        case: dict[str, Any] = {}
         warning: str | None = None
         if source_path:
             try:
-                report = json.loads(source_path.read_text(encoding="utf-8"))
-                cases = report.get("cases", [])
-                if isinstance(cases, list) and cases and isinstance(cases[0], dict):
-                    case = cases[0]
-                else:
+                report = as_mapping(
+                    json.loads(source_path.read_text(encoding="utf-8"))
+                )
+                case = first_mapping(report.get("cases"))
+                if not case:
                     warning = "report has no case payload"
             except (OSError, ValueError, json.JSONDecodeError) as exc:
                 warning = f"{type(exc).__name__}: {exc}"
-        solve = case.get("solve_summary", {}) if isinstance(case, dict) else {}
-        telemetry = case.get("solver_telemetry", {}) if isinstance(case, dict) else {}
-        policy = telemetry.get("policy_result", {}) if isinstance(telemetry, dict) else {}
-        execution = telemetry.get("execution", {}) if isinstance(telemetry, dict) else {}
-        telemetry_work = telemetry.get("work", {}) if isinstance(telemetry, dict) else {}
-        telemetry_memory = telemetry.get("memory", {}) if isinstance(telemetry, dict) else {}
-        timings = telemetry.get("timings_ns", {}) if isinstance(telemetry, dict) else {}
+        solve = as_mapping(case.get("solve_summary"))
+        telemetry = as_mapping(case.get("solver_telemetry"))
+        policy = as_mapping(telemetry.get("policy_result"))
+        execution = as_mapping(telemetry.get("execution"))
+        telemetry_work = as_mapping(telemetry.get("work"))
+        telemetry_memory = as_mapping(telemetry.get("memory"))
+        timings = as_mapping(telemetry.get("timings_ns"))
         dominant_timings = sorted(
             (
                 {"owner": str(key), "nanoseconds": value}
@@ -1506,10 +1607,10 @@ class SolverLabService:
             ),
             key=lambda item: item["nanoseconds"],
             reverse=True,
-        )[:12] if isinstance(timings, dict) else []
-        trace = case.get("bound_trace", {}) if isinstance(case, dict) else {}
-        samples = trace.get("samples", []) if isinstance(trace, dict) else []
-        last = samples[-1] if isinstance(samples, list) and samples else {}
+        )[:12]
+        trace = as_mapping(case.get("bound_trace"))
+        samples = as_list(trace.get("samples"))
+        last = as_mapping(samples[-1]) if samples else {}
         lower = solve.get("lower_bound", last.get("lower_bound"))
         upper = solve.get("upper_bound", last.get("upper_bound"))
         absolute_gap = solve.get("absolute_optimality_gap", last.get("absolute_gap"))
@@ -1517,13 +1618,13 @@ class SolverLabService:
         if isinstance(lower, (int, float)) and isinstance(upper, (int, float)):
             if lower > 0:
                 multiplicative_gap = upper / lower
-        return {
-            "attempt": dict(attempt),
+        summary = {
+            "attempt": normalized_attempt,
             "source_kind": source_kind,
             "source_path": str(source_path) if source_path else None,
             "warning": warning,
-            "native_status": case.get("actual_status") if isinstance(case, dict) else None,
-            "workflow_status": case.get("workflow_status") if isinstance(case, dict) else None,
+            "native_status": case.get("actual_status"),
+            "workflow_status": as_mapping(case.get("workflow_status")),
             "phase": execution.get("phase", last.get("phase")),
             "solution_scope": execution.get("solution_scope"),
             "policy_status": solve.get("policy_status", policy.get("status")),
@@ -1538,15 +1639,18 @@ class SolverLabService:
             "relative_gap": solve.get("relative_optimality_gap", last.get("relative_gap")),
             "multiplicative_gap": multiplicative_gap,
             "latest_sample": last or None,
-            "phase_wall_ms": case.get("phase_wall_ms") if isinstance(case, dict) else None,
-            "memory": case.get("memory") if isinstance(case, dict) else None,
+            "phase_wall_ms": as_mapping(case.get("phase_wall_ms")),
+            "memory": as_mapping(case.get("memory")),
             "native_work": telemetry_work,
             "native_owned_memory": telemetry_memory,
             "dominant_timings_ns": dominant_timings,
-            "compiled_graph": case.get("compiled_graph") if isinstance(case, dict) else None,
-            "verification": case.get("verification") if isinstance(case, dict) else None,
-            "errors": case.get("errors") if isinstance(case, dict) else None,
-            "bound_sample_count": len(samples) if isinstance(samples, list) else 0,
+            "compiled_graph": as_mapping(case.get("compiled_graph")),
+            "verification": as_mapping(case.get("verification")),
+            "exact_strategy_evaluation": as_mapping(
+                case.get("exact_strategy_evaluation")
+            ),
+            "errors": as_list(case.get("errors")),
+            "bound_sample_count": len(samples),
             "artifacts": {
                 "report": str(final_path) if final_path.is_file() else None,
                 "partial": str(partial_path) if partial_path.is_file() else None,
@@ -1554,6 +1658,14 @@ class SolverLabService:
                 "strategy_directory": str(directory / "strategies") if (directory / "strategies").is_dir() else None,
             },
         }
+        if cache_available:
+            with summary_cache_lock:
+                summary_cache[attempt_id] = _RunSummaryCacheEntry(
+                    signature=signature,
+                    terminal=terminal,
+                    summary=dict(summary),
+                )
+        return summary
 
     def _require_case(self, case_id: str) -> dict[str, Any]:
         case = self._cases.get(case_id)
@@ -1608,7 +1720,7 @@ class SolverLabService:
             "bounded_best_policy_contract",
         ):
             case.pop(key, None)
-        goal = json.loads(json.dumps(case.get("goal", {})))
+        goal = json.loads(json.dumps(as_mapping(case.get("goal"))))
         goal.setdefault("version", "v1")
         goal["action_mode"] = "goal_relevant"
         goal.pop("actions", None)
@@ -1622,7 +1734,7 @@ class SolverLabService:
         case["allowed_mechanic_families"] = [
             "calculator_goal_relevant_product_envelope"
         ]
-        caps = dict(case.get("caps", {}))
+        caps = as_mapping(case.get("caps"))
         bindings = self.profile.document["native_bindings"]
         scope = bindings["manifest_general_product_scope"]
         caps["solve_profile"] = bindings["solve_profile"]
@@ -1634,16 +1746,16 @@ class SolverLabService:
         ):
             caps[key] = scope[key]
         case["caps"] = caps
-        verification = dict(case.get("verification", {}))
+        verification = as_mapping(case.get("verification"))
         verification["runs"] = 0
         verification["exact_evaluation"] = True
         case["verification"] = verification
         case["corpus"] = {
             "tier": "solver-lab-local",
             "stratum": "local_revision",
-            "goal_modifier_count": len(goal.get("slots", [])),
+            "goal_modifier_count": len(as_list(goal.get("slots"))),
             "start_goal_modifier_count": len(
-                case.get("start", {}).get("mods", [])
+                as_list(as_mapping(case.get("start")).get("mods"))
             ),
             "product_worker_profile": "calculator_default_adaptive_max_8",
         }
@@ -1685,7 +1797,7 @@ class SolverLabService:
         validate_local_profile_binding(
             self.profile, self.corpus_document, document
         )
-        caps = document.get("caps", {})
+        caps = as_mapping(document.get("caps"))
         task = CaseTask(
             case_id=revision["case_id"],
             case_path=case_path,
