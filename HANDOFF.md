@@ -1,9 +1,10 @@
 # Handoff
 
-**Status: no active implementation boundary.** Oliver must select the next
-chunk before implementation resumes. The stopped
-[PDR Strict-Proof Memory Attribution And Repair](docs/archive/2026-08-27-pdr-strict-proof-memory/README.md)
-probe is the latest boundary.
+**Status: proposed implementation boundary awaiting Oliver's approval.** The
+[Native Solver Lab v0](docs/active/2026-08-27-native-solver-lab-v0/plan.md)
+plan delivers a persistent native experiment catalog and supervisor, an early
+PySide6 Queue/Run Detail GUI, JSON CLI, and typed local MCP controls. No Lab
+implementation has started.
 
 ## Checkpoint
 
@@ -20,6 +21,30 @@ probe is the latest boundary.
   automatic Imprint programs off, voluntary economic Restart off,
   goal-progress-gated reforges on, junk-free exact terminal success, and no
   disabled action families unless a diagnostic control is selected.
+
+## Proposed Next Boundary
+
+Native Solver Lab v0 extends the existing `solver_corpus_runner.py` and
+`poecraft_solver_benchmark`; it does not create another solver backend. GUI,
+CLI, and MCP share one typed application service. One isolated OS process owns
+each solve, attempts and artifacts are immutable, the catalog is persistent,
+and partial/crash/watchdog/resource outcomes remain distinct.
+
+The first usable checkpoint is Gate 2: a persistent single-worker vertical
+slice that submits and monitors a small native case through both the GUI and
+JSON operations. Later gates add robust resource-aware supervision, LLM tools,
+comparison, strategy summary, matrices, and final current-semantic parity.
+
+The locked research profile is `native_allflame_no_imprint_v1`: fixed resolved
+Allflame economy, Calculator product profile, automatic Imprints off,
+voluntary economic Restart off, mechanic-owned paid Fracture miss replacement
+retained, goal-progress gating on, and exact junk-free success.
+
+Explicit non-goals include scheduler-aware replay, PDR memory repair, option
+behavior, RCASSP, learned guidance, solver ordering changes, release-WASM
+redesign, and remote/cloud execution. The supporting read-only reports are
+archived under
+[Solver Research Architecture Audits](docs/archive/2026-08-27-solver-research-audits/README.md).
 
 ## Stopped PDR Replay Result
 
@@ -44,10 +69,11 @@ unchanged: bounded upper `7866.432124027084`, certified lower
 proof/quotient bytes, and `max_solver_owned_bytes` at a native peak of
 `1179431999` bytes.
 
-## Required Successor
+## Prior PDR Successor Requirement
 
-Do not use the existing coarse replay for PDR memory attribution. A selected
-successor must first implement either:
+Do not use the existing coarse replay as a live PDR scheduler snapshot. If a
+future PDR boundary requires identical-prefix continuation, it must implement
+either:
 
 1. a scheduler-aware checkpoint that atomically preserves incremental carrier
    order/generations/cursors, delayed rows and status, focused/support
@@ -57,10 +83,12 @@ successor must first implement either:
    persistent oracle, partition/dependency generations, obligations, kernels,
    cursors, and incumbent.
 
-Its first acceptance gate is an ordinary/save/replay triplet on the fixed 1
-GiB PDR witness with identical request/action scope, upper/evaluation, lower,
-strict frontier/work, open obligations, and resource stop. Only after that
-parity may retained proof/quotient memory be attributed or repaired.
+That replay boundary's first acceptance gate is an ordinary/save/replay
+triplet on the fixed 1 GiB PDR witness with identical request/action scope,
+upper/evaluation, lower, strict frontier/work, open obligations, and resource
+stop. Only after that parity may replay evidence be used for retained
+proof/quotient attribution. Fresh ordinary-run behavior-neutral memory
+telemetry remains a separately valid future measurement route.
 
 ## Stable Baseline
 

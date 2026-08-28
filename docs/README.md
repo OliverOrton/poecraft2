@@ -30,8 +30,11 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. Oliver must select the next chunk before
-implementation resumes.
+No implementation boundary is active yet. The proposed
+[Native Solver Lab v0](active/2026-08-27-native-solver-lab-v0/plan.md) plan is
+ready for Oliver's approval. It uses the existing native runner and benchmark
+to deliver persistent experiments, an early practical GUI, JSON CLI, and typed
+local LLM controls while leaving mechanics and solver behavior native-owned.
 
 The stopped
 [PDR Strict-Proof Memory Attribution And Repair](archive/2026-08-27-pdr-strict-proof-memory/README.md)
@@ -40,6 +43,11 @@ the four-mod PDR witness's open incremental scheduler. A scheduler-aware or
 first-strict-partition checkpoint must prove ordinary/replay parity before
 replay can support strict-proof memory attribution; no solver change from the
 probe was retained.
+
+The archived
+[Solver Research Architecture Audits](archive/2026-08-27-solver-research-audits/README.md)
+preserve the read-only evidence and proposals behind this choice and the later
+verified-option, PDR-memory, retention-proof, and learned-guidance tracks.
 
 The completed
 [Solver Development Checkpoint/Replay](archive/2026-08-27-solver-development-checkpoint-replay/README.md)

@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-08-27
 
+- [Solver Research Architecture Audits](2026-08-27-solver-research-audits/README.md) —
+  preserves five read-only audits, their integrated synthesis, and focused
+  implementation notes at `769c3de`; they motivate the proposed Native Solver
+  Lab and later exact-option, PDR-memory, proof-pattern, and learned-guidance
+  tracks but hold no implementation authority.
 - [PDR Strict-Proof Memory Attribution And Repair](2026-08-27-pdr-strict-proof-memory/README.md) —
   stopped at Gate 1 after stable-prefix and broader-closure experiments proved
   that the coarse checkpoint omits behavior-bearing incremental scheduler

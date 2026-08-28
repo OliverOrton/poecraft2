@@ -6,8 +6,8 @@ selects an item or coherent group before an active plan is created.
 
 Parent: [Future work](README.md)
 
-Verified against current documentation, source ownership, and local PDR
-resource evidence: 2026-08-27 @ `952524b`.
+Verified against current documentation, source ownership, local PDR resource
+evidence, and the archived solver research audits: 2026-08-27 @ `769c3de`.
 
 ## Ranking Rules
 
@@ -25,17 +25,22 @@ correctness issue may preempt every performance item.
 
 ## Recommended Sequence
 
-1. Attribute and reduce the retained strict/proof memory owner reached after
-   the first successful PDR frontier insertion in P1.4.
-2. Qualify successor-complete rare/Eldritch proof coverage only if it reaches
-   a measured lower-bound consumer.
-3. Extend development replay to the first closed strict partition only if
-   coarse replay leaves strict-iteration cost materially dominant.
-4. Finish the remaining source gravity-well splits after those owners settle.
-5. Return to product and strategy-review work from P3 without reopening
-   completed solver cleanup by default.
+1. Qualify the proposed
+   [Native Solver Lab v0](../active/2026-08-27-native-solver-lab-v0/plan.md) as
+   a usable persistent GUI/CLI/LLM experiment surface over the existing native
+   runner.
+2. Reopen subgoal planning only as independently verified executable graph
+   fragments and qualify it on current four/five-mod bounded strategies.
+3. Attribute PDR retained proof memory through fresh ordinary-run telemetry;
+   add scheduler-aware replay only when identical-prefix continuation is
+   required for the chosen experiment.
+4. Qualify a small action-specific retention/capacity proof portfolio only
+   after selecting a measured strict-obligation consumer.
+5. Establish deterministic scheduling and resource-prediction baselines before
+   learned guidance, while retaining exact fairness and fallback service.
 
-This sequence deliberately does not prescribe another cap increase. The
+This sequence deliberately does not prescribe another cap increase or make
+the Lab a second solver. The
 frontier-yield repair reached one real strict frontier while completing only
 two alternative rows, then stopped on 846,846,750 retained proof/quotient bytes
 and a 1,179,431,999-byte native owned peak. Memory ownership, not another
@@ -205,13 +210,17 @@ rather than reusing the coarse format name.
 
 ### P1.4 — Attribute and repair PDR strict-proof amplification
 
-**State:** narrow first repair completed; retained-memory continuation open.
-Returning immediately after an alternative exposes a strict frontier reduced
-about 14,000 completed alternatives to 2, inserted one real frontier state,
-and reduced logical/V3 strict reforge work to 3,507,568 / 1,380,787. The next
-measured owner is retained proof/quotient memory, not repeated stale rows.
+**State:** narrow first repair completed; replay-based continuation stopped at
+Gate 1 on 2026-08-27. Returning immediately after an alternative exposes a
+strict frontier reduced about 14,000 completed alternatives to 2, inserted one
+real frontier state, and reduced logical/V3 strict reforge work to 3,507,568 /
+1,380,787. The next measured owner remains retained proof/quotient memory, but
+the completed-coarse checkpoint cannot faithfully resume the open incremental
+scheduler. No memory repair was attempted in the stopped probe.
 
-Use P1.1 and P1.3 to answer before designing the repair:
+Use fresh ordinary-run telemetry, and a future scheduler-aware checkpoint only
+when identical-prefix evidence is necessary, to answer before designing the
+repair:
 
 - which action/operator families own the 299,394 obligations;
 - which 131 rows consumed the extra 50M work;
