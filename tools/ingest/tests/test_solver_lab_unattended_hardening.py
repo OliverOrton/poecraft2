@@ -19,6 +19,7 @@ from poecraft_ingest.solver_lab_service import (
     SolverLabService,
 )
 from poecraft_ingest.solver_lab_supervisor import SolverLabSupervisor
+from poecraft_ingest.solver_lab_unattended_qualification import run_soak
 import poecraft_ingest.solver_lab_supervisor as supervisor_module
 from poecraft_ingest.solver_worker import run_isolated_process
 
@@ -881,3 +882,23 @@ def test_legacy_unindexed_terminal_is_disclosed_without_parsing(tmp_path: Path) 
     assert summary["source_kind"] == "legacy_unindexed_terminal"
     assert summary["lower_bound"] is None
     assert "content was not parsed" in summary["warning"]
+
+
+def test_unattended_qualification_harness_writes_passing_isolated_ledger(
+    tmp_path: Path,
+) -> None:
+    output_root = tmp_path / "qualification"
+    ledger = run_soak(
+        repo_root=REPO_ROOT,
+        output_root=output_root,
+        duration_seconds=0.1,
+        interval_seconds=0.05,
+        run_real_native=False,
+    )
+
+    assert ledger["passed"] is True
+    assert ledger["duration_seconds"] >= 0.1
+    assert ledger["restart_count"] >= 1
+    assert all(ledger["invariants"].values())
+    assert (Path(ledger["artifact_root"]) / "ledger.json").is_file()
+    assert not list(tmp_path.glob("*.sqlite3"))

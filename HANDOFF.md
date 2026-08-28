@@ -1,8 +1,9 @@
 # Handoff
 
-**Status: Gates 0–4 of the selected Native Solver Lab Unattended Execution and
-Identity Hardening boundary passed; Gate 5 must begin in a fresh Codex task.**
-The configured MCP registration now uses the combined version `0.2.0` launcher.
+**Status: Gates 0–5 of the selected Native Solver Lab Unattended Execution and
+Identity Hardening boundary passed; the Gate 6 harness and accelerated suite
+passed, and the required six-plus-hour soak is next.** The configured MCP
+registration uses the combined version `0.2.0` launcher.
 
 ## Checkpoint
 
@@ -72,12 +73,18 @@ supervisor drains and releases ownership. If it remains open, the fresh MCP
 server must remain control-only and report it; do not bypass or force-clear the
 owner.
 
-The next exact action is mandatory: restart/open a fresh Codex task, reread
-`AGENTS.md`, this handoff, the active plan, and its execution log, verify the
-clean Gate 4 checkpoint and loaded MCP `0.2.0` tools, then perform Gate 5's
-revision → submit → partial → cancel → retry → compare → bundle workflow
-entirely through MCP without opening the GUI. Do not perform Gate 5 in the task
-that installed the launcher.
+The fresh Gate 5 task passed the MCP-only revision → submit → live partial →
+cancel → verified termination/release → retry ordinal 2 → compare → bundle
+workflow without opening the GUI. The accepted job is
+`job-4d55bb58-097e-4882-8a01-831a078ef550`; exact attempt, artifact, command,
+request, comparison, and bundle identities are retained in the execution log.
+
+Gate 6 now has a deterministic qualification module, 22 passing accelerated
+fault cases, and a passing 56.3-second real-native rehearsal. The next exact
+action is to start its immutable ignored six-hour soak from the clean harness
+checkpoint, using 600-second audits and the retained accelerated result. Do not
+edit source during the soak because periodic provenance revalidation must stay
+exact.
 
 The fresh implementation task verified clean-tree/source ancestry, confirmed
 the configured Solver Lab MCP tools, and used MCP to inventory profiles, cases,

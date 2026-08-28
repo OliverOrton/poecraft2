@@ -1,6 +1,7 @@
 # Native Solver Lab Unattended Execution and Identity Hardening Log
 
-**Status: Gates 0–4 passed; the mandatory fresh-task Gate 5 restart is next.**
+**Status: Gates 0–5 passed; the Gate 6 unattended qualification harness is
+implemented and its six-plus-hour soak is next.**
 
 Parent: [Plan](plan.md)
 
@@ -104,8 +105,8 @@ source inspection, editing, testing, and Git surface.
 | 3 — atomic publication/recovery | passed | pre/post-transaction crash points, valid-final recovery, tamper rejection, and possible-live quarantine/reconcile tests |
 | 0–3 checkpoint | passed | 72 focused tests, clean diff check, local checkpoint commit, and exact HANDOFF continuation |
 | 4 — combined MCP/supervisor | passed | one-command real-stdio dispatch, singleton/race/legacy ownership, normal release, and queued/running/finalizing forced-restart tests |
-| 5 — fresh-task MCP E2E | not started | revision → submit → partial → cancel → retry → compare → export transcript |
-| 6 — overnight qualification | not started | accelerated suite and six-plus-hour soak ledger/invariants |
+| 5 — fresh-task MCP E2E | passed | revision → submit → partial → cancel → retry → compare → export transcript below |
+| 6 — overnight qualification | in progress | harness/accelerated suite/real-native rehearsal passed; six-plus-hour soak next |
 | 7 — final acceptance | not started | full Lab suite, stdio, full pipeline, docs/link/diff checks |
 
 ## Source-confirmed pre-implementation owners
@@ -366,6 +367,80 @@ bundle identity and verified artifact hashes:
 GUI opened: no
 ```
 
+### Fresh Gate 5 MCP transcript
+
+- Fresh task identity: yes; clean `main` at exact Gate 4 checkpoint
+  `9a5a0f72190ac66e025fd90228dcf207b58e9c29` (`Run solver lab MCP with
+  singleton dispatcher`), parent
+  `9fb0e083ebdbce6d0cf1cf720df550f7a6810cca`, with no status output.
+- MCP server/version/tools: enabled registered stdio server
+  `poecraft2-native-solver-lab`; configured combined command
+  `poecraft-solver-lab-mcp --root <checkout> --with-supervisor --max-workers
+  1`; loaded implementation version `0.2.0`; exactly 31 finite typed tools.
+- Dispatcher ownership mode: `catalog_owner`, supervisor
+  `supervisor-7a5fd080-1103-4240-9ffa-a790569e3178`, PID `50836`; the prior GUI
+  supervisor was stopped. The loaded MCP process, not a control-only legacy
+  owner, owned dispatch.
+- Initial MCP-only inventory: one profile, five frozen cases, three immutable
+  revisions, 15 jobs (`completed=11`, `partial=4`), and 15 attempts
+  (`completed=11`, `watchdog=4`); every call returned `ok: true`.
+- Selected revision: existing immutable
+  `case-rev-15ce203781cd7935c4e0326fc1a65ca0`, case
+  `spine-bow-4-goal-calculator-case`, content SHA-256
+  `15ce203781cd7935c4e0326fc1a65ca065e6448e91667b8f107a1f7fc085ab3b`.
+  A retained three-goal timing probe completed in 11.2 seconds before it could
+  be canceled; an early four-goal cancel truthfully retained no partial. Neither
+  was relabeled as acceptance evidence.
+- Submitted acceptance job: `job-4d55bb58-097e-4882-8a01-831a078ef550`,
+  immutable request SHA-256
+  `4a25f22b2d726147a89ca61bd8cfcbe94cd05b5422f8f216574ab22ab26f1f08`,
+  host watchdog `240s`, native cap `17179869184`, worker headroom `536870912`,
+  reservation `17716740096`, global reserve `536870912`.
+- Observed live partial: attempt
+  `attempt-698d01a5-399c-4430-bbaa-10439fd69807`, ordinal 1, phase 1,
+  `unindexed_live_observation`, one sample at `5885.3352ms`, 306 discovered / 1
+  expanded / 305 frontier states, 2 rows, 305 transitions, 856248 reforge work,
+  13541511 live/peak bytes.
+- Cancellation attempt/mode/reservation release: MCP returned
+  `running -> canceling`; terminal attempt status `canceled`, acknowledgment
+  `486.7286999942735ms`, mode
+  `graceful_then_process_tree_termination`, `survivor=false`, verified partial
+  available. Terminal publication indexed verified partial
+  `3eaeafc96e9f0f4ea686b68585f954697d7636d221c65def45c86014198d1b22`,
+  supervisor error
+  `3659ceed49c44b2d70d3cd1bdf2a01db33b13dc7adb71e599d5e26a57004e88d`,
+  and empty worker-log
+  `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+  The equal 17.7 GiB retry dispatched immediately under a 29.1 GB host budget,
+  proving the canceled attempt no longer held its reservation.
+- Retry attempt ordinal: 2,
+  `attempt-1d8e70e1-2561-4180-924b-f489e831d5c1`; completed in
+  `127528.07850000681ms`, `survivor=false`, with the same validated request and
+  dispatch SHA-256. Its four verified artifacts were partial
+  `6c8bae57514d64a888353e8971506dec2db0730fdb1f6d1c78ce70dc076180c6`,
+  report `8762b80fab166489f5256b949662fd68abad9f9fa7b15adeb34a843d5f1421a3`,
+  strategy `ca0818e4d8e224dc1fbcedb2e6b632a009521dbe4a39f81ebf4bcb44dade0da1`,
+  and worker log
+  `a35df03ab819b71b240a2d4f1f015b86b6b8522311cf4ea30af5b7c3d68d288d`.
+- Comparison identity: two attempts; `request_identities_equal=true`; both job
+  identities equal the request/dispatch/validated request SHA-256 above; each
+  catalog command SHA-256 equals its embedded command identity. The first
+  outcome is canceled/verified-partial and the second completed/verified-final.
+- Bundle identity and verification: latest-attempt job bundle
+  `bundle-a8536d99e6149e3dbf771e8b`, SHA-256
+  `792e27c404960d9342f775a732d90d2603371cc322e49ac205183779592e2e92`,
+  `1529644` bytes. Equal idempotent replay returned the identical ID/hash/size;
+  request/dispatch/attempt identities matched and all seven attempt artifacts
+  reverified through MCP with no warning or error.
+- One initial submit named a nonexistent optional experiment and returned an
+  MCP execution error; MCP inventory proved no job was created before the
+  corrected bounded submit. No catalog, file, GUI, or alternate operator
+  surface was used to manufacture the workflow.
+- GUI opened: **no**.
+
+Gate 5 decision: **pass**. All Lab operator actions and verification used the
+configured MCP surface exclusively.
+
 ## Gate 6 overnight record
 
 ```text
@@ -382,6 +457,33 @@ process survivors:
 active/quarantined/released reservations:
 unexplained failures:
 ```
+
+Gate 6 harness checkpoint:
+
+- Added `poecraft_ingest.solver_lab_unattended_qualification`, which gives each
+  run an immutable ignored output directory, runs the deterministic accelerated
+  crash/fault matrix, exercises synthetic queued restart, live cancel/retry,
+  idempotency conflict, resource block, finalizing recovery, quarantine and
+  proved-absent reconciliation, compare/bundle integrity, one real native case,
+  periodic dispatcher restart, provenance revalidation, artifact rehashing,
+  process-survivor checks, and reservation audits. It enforces the requested
+  wall-clock minimum rather than accepting an accelerated duration as soak
+  evidence.
+- Narrow harness regression: `1 passed in 5.00s`.
+- Accelerated artifact root:
+  `build/solver-lab/unattended-hardening/accelerated-20260828T205046.815181Z-50384`;
+  22 cases passed in `17.89s` (`18.53058899997268s` harness wall), stdout
+  SHA-256 `f50f759912c065d85d68ad3cf5494ac1109a00bfea0f27c1f5ff433501f528b4`.
+- Real-native rehearsal root:
+  `build/solver-lab/unattended-hardening/soak-20260828T205113.322498Z-7808`;
+  passed all invariants in `56.32446200004779s`, including one real completed
+  fast three-suffix solve, 18 verified terminal artifacts across five isolated
+  catalogs, zero survivors, zero held leases/reservations, one dispatcher
+  restart/release, and exact periodic request/fresh-provenance equality.
+- The rehearsal is integration evidence only, not the required six-hour soak.
+  The next exact action after the clean harness checkpoint is the same command
+  with `--duration-seconds 21600 --interval-seconds 600` and the accelerated
+  result as `--accelerated-evidence`.
 
 ## Final acceptance record
 
