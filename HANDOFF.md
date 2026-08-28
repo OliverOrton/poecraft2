@@ -1,10 +1,12 @@
 # Handoff
 
-**Status: Verified Executable Graph-Fragment Core v1 Gates 0–2 are complete.**
+**Status: Verified Executable Graph-Fragment Core v1 Gates 0–3 are complete.**
 The first coherent checkpoint adds the private probability-free leaf IR,
-authority firewall, and exact single-entry product verifier. Gate 3's real
-engine-backed Transmute/Scour renewal leaf is the exact next boundary; no
-flattening or shadow integration has begun.
+authority firewall, and exact single-entry product verifier. Gate 3 now adds a
+real engine-backed Transmute/Scour renewal leaf and explicit native benchmark
+diagnostic fixture. Gate 4's probability-free one-fragment flattener and
+independent exact evaluation are the exact next boundary; no shadow process or
+incumbent integration has begun.
 
 The preceding unattended-hardening boundary's six-hour soak was
 **owner-waived, not passed**. It is not overnight qualification and must not be
@@ -13,14 +15,28 @@ cited as such.
 ## Checkpoint
 
 - Branch: `main`, local-only; nothing was pushed.
-- Gates 0–2 checkpoint: local commit `Add exact executable fragment leaf
-  verifier`; 119 focused fragment checks, 362 refinement checks, and 15,761
+- Gates 0–2 checkpoint: local commit
+  `94f9584a98298c9987e335bbcd82c41423877997` (`Add exact executable fragment
+  leaf verifier`); 119 focused fragment checks, 362 refinement checks, and 15,761
   evaluator checks pass. The evaluator control hashes remain
   `9a12bd4cc7d2f472` compressed and `eee79a5659d79e68` raw.
-- Native-only placement: the new contract/verifier lives under
+- Gate 3 checkpoint: local commit titled `Add real engine-backed fragment
+  renewal leaf`; 143 focused checks pass. The actual
+  artifact produces 4,031 exact Transmute physical outcomes, 4,031 product
+  rows, 8,061 transitions, one positive-probability SCC, terminal probability
+  `0.0041946308724832215`, expected Transmute/Scour quantities
+  `238.40000000000001` / `237.40000000000001`, zero row-mass error, residual
+  `9.9708300426923357e-14`, IR digest `c63a344470b77adf`, and certificate digest
+  `82e161b8b3e07889`. Full canonical bytes remain the authority.
+- Gate 3 ordinary control: two runs converge exactly at
+  `23.789999999999708`, independently evaluate to success 1 and the same cost,
+  and emit the same 2,141-byte ordinary strategy with sha256
+  `b230e26e579004d15b5cf506108209463002e4977094c540516fd28e785876b3`.
+  Gate 3 launches no shadow work.
+- Native-only placement: the new contract/verifier/engine adapter lives under
   `engine/benchmarks`, is linked explicitly only into the benchmark and native
   focused test targets, and is absent from `engine/engine-sources.txt`; Gates
-  0–2 therefore do not trigger the conditional release-WASM gate.
+  0–3 therefore do not trigger the conditional release-WASM gate.
 - The checkpoint certifies only exact leaf mass/properness/resources for one
   exact entry. It is not ordinary strategy JSON, an executable/public upper,
   an incumbent, product behavior, or option-quality evidence.

@@ -186,6 +186,7 @@ endif()
 # spec/report parsing.
 add_executable(poecraft_solver_benchmark
     benchmarks/solver_executable_fragment.cpp
+    benchmarks/solver_executable_fragment_engine.cpp
     benchmarks/solver_benchmark.cpp)
 target_include_directories(poecraft_solver_benchmark
     PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
@@ -225,6 +226,7 @@ if(BUILD_TESTING)
         tests/test_solver_api.cpp
         tests/test_solver_refinement.cpp
         benchmarks/solver_executable_fragment.cpp
+        benchmarks/solver_executable_fragment_engine.cpp
         tests/test_solver_fragment.cpp
         tests/test_solver_quotient_proof.cpp
         tests/test_solver_quotient_partition.cpp
@@ -276,7 +278,8 @@ if(BUILD_TESTING)
     add_test(NAME poecraft_solver_refinement
         COMMAND poecraft_engine_tests --solver-refinement-only)
     add_test(NAME poecraft_solver_fragment
-        COMMAND poecraft_engine_tests --solver-fragment-only)
+        COMMAND poecraft_engine_tests --solver-fragment-only
+            "${POECRAFT_COMPILED_ARTIFACT}")
     add_test(NAME poecraft_solver_quotient_proof
         COMMAND poecraft_engine_tests --solver-quotient-proof-only)
 

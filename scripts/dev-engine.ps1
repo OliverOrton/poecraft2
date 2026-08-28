@@ -98,7 +98,7 @@ function Get-SuiteArguments {
         "policy-refinement" { return @("--solver-policy-refinement-only") }
         "quotient-proof" { return @("--solver-quotient-proof-only") }
         "refinement" { return @("--solver-refinement-only") }
-        "fragment" { return @("--solver-fragment-only") }
+        "fragment" { return @("--solver-fragment-only", $Artifact) }
         "s8-3" { return @("--solver-s8-3-only") }
         "solve" { return @("--solver-solve-only", $Artifact) }
     }

@@ -1,7 +1,9 @@
 # Verified Executable Graph-Fragment Core v1 Log
 
-**Status: Gates 0–2 passed; the exact verified-leaf checkpoint is ready for
-its local commit. Gate 3 is the next implementation boundary.**
+**Status: Gates 0–3 passed. Gates 0–2 are retained in local commit
+`94f9584a98298c9987e335bbcd82c41423877997`; Gate 3 is retained in the local
+checkpoint titled `Add real engine-backed fragment renewal leaf`. Gate 4 is
+next.**
 
 Parent: [Plan](plan.md)
 
@@ -104,8 +106,8 @@ Stop without editing or cleaning if any source/tree/MCP condition differs.
 | 0 — source/failure freeze | passed | current owners, option-disabled controls, historical `0.80` missing-mass witness |
 | 1 — authority firewall/IR | passed | non-convertible types, canonical v1 identity, probability-free finite leaf IR |
 | 2 — exact leaf verifier | passed | exact product rows, exit mass, SCC absorption, resources, historical regressions |
-| 0–2 checkpoint | passed | first coherent clean local commit and exact HANDOFF continuation |
-| 3 — real cyclic leaf | not started | exact-terminal Transmute/Scour renewal certificate, analytical oracle, deterministic control |
+| 0–2 checkpoint | passed | clean local commit `94f9584a98298c9987e335bbcd82c41423877997` and exact HANDOFF continuation |
+| 3 — real cyclic leaf | passed | exact-terminal Transmute/Scour renewal certificate, analytical oracle, deterministic ordinary control |
 | 4 — flatten/evaluate | not started | FinalSuccess-only positive exit mass, ordinary JSON, independent exact evaluator, resource/cost reconciliation |
 | 5 — shadow/MCP | not started | immutable ordinary finalization, isolated private caps/process, full/core identity comparison, MCP operator evidence |
 | 6 — final acceptance | not started | focused/native/10k/full pipeline/conditional WASM/docs/scope checks and archive |
@@ -214,8 +216,9 @@ focused test command/result: powershell -File scripts/dev-engine.ps1 -Task
   Test -Suite fragment => PASS, 119 checks / 0 failures; required post-change
   controls: refinement PASS 362/0; evaluator PASS 15,761/0 with unchanged
   compressed/raw hashes 9a12bd4cc7d2f472 / eee79a5659d79e68
-checkpoint commit: local commit titled `Add exact executable fragment leaf
-  verifier` (this checkpoint; Co-authored-by: Codex <codex@openai.com>)
+checkpoint commit: local commit `94f9584a98298c9987e335bbcd82c41423877997`,
+  titled `Add exact executable fragment leaf verifier`, with
+  Co-authored-by: Codex <codex@openai.com>
 git status: clean after the local checkpoint commit; branch remains unpushed
 decision: PASS; retain Gates 0–2 and continue only with Gate 3's real
   engine-backed cyclic leaf. No executable strategy, upper improvement,
@@ -229,22 +232,59 @@ option quality.
 ## Gate 3 Real Cyclic Leaf Record
 
 ```text
-fixture/case identity:
-base/goal identity:
-IR/certificate identity:
-product states/rows/transitions:
-positive-probability SCC:
-exit mass:
-absorption/properness:
-exact terminal probability p:
-expected Transmute quantity:
-expected Scour quantity:
-analytical oracle 1/p and (1-p)/p:
-residuals:
-deterministic repeat:
-ordinary control identity:
-focused test command/result:
-decision:
+fixture/case identity: benchmark case
+  fragment-clean-one-goal-renewal-v1; private fragment case
+  clean_one_goal_transmute_scour_renewal_v1; schema
+  verified_executable_graph_fragment_shadow_v1; explicitly enabled only in
+  the native diagnostic field and never admitted to an ordinary/product API
+base/goal identity: Metadata/Items/Armours/BodyArmours/BodyInt17@86;
+  magic exact one LocalIncreasedEnergyShield11 at min tier 1, exactly one
+  prefix, zero suffixes, and no junk/unrequested affix
+engine authority path: compiled artifact -> current SessionImpl/CalcContext ->
+  actual Transmute/Scour ActionDescriptors and outcome kernels; resource keys
+  come from the descriptors; conditions are compiled/evaluated through the
+  existing native strategy parser/compiler rather than reimplemented
+IR/certificate identity: full canonical IR identity digest
+  c63a344470b77adf; full exact certificate identity digest
+  82e161b8b3e07889; canonical bytes, not the display digests alone, are the
+  equality authority
+product states/rows/transitions: 4,031 exact product states / 4,031 rows /
+  8,061 retained transitions from 4,031 authoritative Transmute physical
+  outcomes plus actual Scour recovery rows
+positive-probability SCC: 1 strongly connected component, and it is a real
+  positive-probability cyclic component
+exit mass: exactly 1.0 to one exact FinalSuccess exit; zero accepted positive
+  failure/subgoal/recoverable mass
+absorption/properness: PASS; the SCC has the exact final-success exit and the
+  verified absorption system is proper
+exact terminal probability p: 0.0041946308724832215; actual engine coverage
+  also proves positive goal-plus-junk and other nonterminal mass, both routed
+  through Scour rather than accepted as success
+expected Transmute quantity: 238.40000000000001
+expected Scour quantity: 237.40000000000001
+analytical oracle 1/p and (1-p)/p: exact agreement within 1e-9 in the verifier
+  and independent forward-reference bits; the ordinary solver's independent
+  exact evaluator reports 238.39999999999708 / 237.3999999999971
+residuals: exact row-mass error 0; maximum absorption/resource residual
+  9.9708300426923357e-14; exit-mass error 0
+deterministic repeat: two fresh artifact/session/IR/oracle builds produce
+  identical full IR, product-graph/exit-kernel/resource certificate, base,
+  goal, and forward-reference identities
+benchmark contract validation: PASS; --validate-only accepts the case and
+  --fragment-contract-rejection-probes proves that an unknown proposal-
+  probability field and malformed private cap are rejected by the same shape
+  validator
+ordinary control identity: shadow work is not launched at Gate 3; two ordinary
+  native benchmark runs both converge exactly at 23.789999999999708, both
+  exact evaluations match with success 1 and cost 23.789999999999708, and both
+  produce the identical 2,141-byte compiled ordinary strategy with sha256
+  b230e26e579004d15b5cf506108209463002e4977094c540516fd28e785876b3
+focused test command/result: powershell -File scripts/dev-engine.ps1 -Task
+  Test -Suite fragment => PASS, 143 checks / 0 failures; observed work
+  258,091,648 and peak private estimated bytes 4,321,232
+decision: PASS; retain the native real cyclic leaf and its explicit benchmark
+  fixture, then continue to Gate 4. No flattening, incumbent authority, public
+  upper, product behavior, or overnight qualification is claimed
 ```
 
 ## Gate 4 Flattening/Evaluation Record

@@ -1,4 +1,5 @@
 #include "../benchmarks/solver_executable_fragment.hpp"
+#include "../benchmarks/solver_executable_fragment_engine.hpp"
 #include "../src/solver_policy_refinement.hpp"
 #include "tests.hpp"
 
@@ -841,7 +842,7 @@ void properness_resource_and_refusal_tests() {
     limits.max_work_items = 0;
     check_refusal(cyclic, "max_work_items", limits);
     limits = {};
-    limits.max_work_items = 10;
+    limits.max_work_items = 9;
     check_refusal(cyclic, "max_work_items", limits);
     limits = {};
     limits.canceled = [] { return true; };
@@ -855,11 +856,142 @@ void properness_resource_and_refusal_tests() {
         cyclic, "unsupported_tolerance_configuration", limits);
 }
 
+double resource_value(
+        const ResourceVectorV1& resources,
+        const std::string& key) {
+    const auto found = std::find_if(
+        resources.begin(), resources.end(),
+        [&](const auto& value) { return value.first == key; });
+    return found == resources.end()
+        ? std::numeric_limits<double>::quiet_NaN()
+        : found->second;
+}
+
+void engine_backed_renewal_tests(const char* artifact_dir) {
+    if (artifact_dir == nullptr) {
+        std::printf("solver fragment engine fixture skipped (no artifact)\n");
+        return;
+    }
+    const auto first_build =
+        build_clean_one_goal_transmute_scour_renewal_v1(artifact_dir);
+    PC_CHECK(first_build.ok());
+    if (!first_build.ok()) {
+        std::printf(
+            "solver fragment engine fixture: %s\n",
+            first_build.refusal.c_str());
+        return;
+    }
+    const EngineBackedRenewalFixtureV1& first_fixture =
+        *first_build.fixture;
+    PC_CHECK(first_fixture.exact_terminal_probability > 0.0);
+    PC_CHECK(first_fixture.exact_terminal_probability < 1.0);
+    PC_CHECK(first_fixture.exact_goal_plus_junk_probability > 0.0);
+    PC_CHECK(first_fixture.exact_other_nonterminal_probability > 0.0);
+    PC_CHECK(first_fixture.transmute_physical_outcomes > 2);
+
+    LeafVerificationLimitsV1 limits;
+    limits.max_states = 20000;
+    limits.max_transitions = 1000000;
+    limits.max_work_items = 1000000000;
+    limits.max_estimated_bytes = 1024ull * 1024ull * 1024ull;
+    const auto first = ExactLeafFragmentVerifierV1{}.verify(
+        first_fixture.ir, first_fixture.context,
+        *first_fixture.oracle, limits);
+    PC_CHECK(first.ok());
+    if (!first.ok()) {
+        std::printf(
+            "solver fragment renewal refusal: %s (%s), outcomes=%llu, "
+            "p=%.17g\n",
+            first.refusal.code.c_str(), first.refusal.witness.c_str(),
+            static_cast<unsigned long long>(
+                first_fixture.transmute_physical_outcomes),
+            first_fixture.exact_terminal_probability);
+        return;
+    }
+
+    const auto second_build =
+        build_clean_one_goal_transmute_scour_renewal_v1(artifact_dir);
+    PC_CHECK(second_build.ok());
+    if (!second_build.ok()) return;
+    const EngineBackedRenewalFixtureV1& second_fixture =
+        *second_build.fixture;
+    const auto second = ExactLeafFragmentVerifierV1{}.verify(
+        second_fixture.ir, second_fixture.context,
+        *second_fixture.oracle, limits);
+    PC_CHECK(second.ok());
+    if (!second.ok()) return;
+
+    const double p = first_fixture.exact_terminal_probability;
+    const double expected_transmute = 1.0 / p;
+    const double expected_scour = (1.0 - p) / p;
+    PC_CHECK(std::fabs(
+        resource_value(
+            first.verified->expected_resources(), "transmute") -
+        expected_transmute) < 1e-9);
+    PC_CHECK(std::fabs(
+        resource_value(first.verified->expected_resources(), "scour") -
+        expected_scour) < 1e-9);
+    PC_CHECK(std::fabs(first.verified->exit_probability_sum() - 1.0) <
+             kExecutableFragmentProbabilityToleranceV1);
+    PC_CHECK(first.verified->positive_probability_cyclic_components() >= 1);
+    PC_CHECK(first.verified->exits().size() == 1);
+    PC_CHECK(
+        first.verified->exits().front().identity.descriptor.kind ==
+        FragmentExitKindV1::FinalSuccess);
+    PC_CHECK(
+        first.verified->certificate_identity() ==
+        second.verified->certificate_identity());
+    PC_CHECK(first.verified->ir_identity() == second.verified->ir_identity());
+    PC_CHECK(
+        first.verified->expected_resources() ==
+        second.verified->expected_resources());
+    PC_CHECK(
+        first.verified->expected_action_counts() ==
+        second.verified->expected_action_counts());
+    PC_CHECK(
+        first.verified->rows().size() == second.verified->rows().size());
+    PC_CHECK(
+        first.verified->exits().size() == second.verified->exits().size());
+    PC_CHECK(
+        first_fixture.forward_reference_identity ==
+        second_fixture.forward_reference_identity);
+    PC_CHECK(first_fixture.base_identity == second_fixture.base_identity);
+    PC_CHECK(first_fixture.goal_identity == second_fixture.goal_identity);
+
+    std::uint64_t transitions = 0;
+    for (const VerifiedProductRowV1& row : first.verified->rows()) {
+        transitions += row.transitions.size();
+    }
+    std::printf(
+        "solver fragment renewal: outcomes=%llu rows=%llu transitions=%llu "
+        "scc=%u cyclic_scc=%u exit_mass=%.17g mass_error=%.17g "
+        "residual=%.17g p=%.17g transmute=%.17g scour=%.17g "
+        "ir=%016llx certificate=%016llx work=%llu bytes=%llu\n",
+        static_cast<unsigned long long>(
+            first_fixture.transmute_physical_outcomes),
+        static_cast<unsigned long long>(first.verified->rows().size()),
+        static_cast<unsigned long long>(transitions),
+        first.verified->strongly_connected_components(),
+        first.verified->positive_probability_cyclic_components(),
+        first.verified->exit_probability_sum(),
+        first.verified->max_probability_mass_error(),
+        first.verified->max_resource_residual(), p, expected_transmute,
+        expected_scour,
+        static_cast<unsigned long long>(
+            first.verified->ir_identity().digest),
+        static_cast<unsigned long long>(
+            first.verified->certificate_identity().digest),
+        static_cast<unsigned long long>(first.verified->work_items()),
+        static_cast<unsigned long long>(
+            first.verified->peak_estimated_bytes()));
+}
+
 } // namespace
 
-void run_solver_fragment_tests() {
+void run_solver_fragment_tests(const char* artifact_dir) {
     authority_and_identity_tests();
     malformed_ir_tests();
     mass_and_projection_regression_tests();
     properness_resource_and_refusal_tests();
+    engine_backed_renewal_tests(artifact_dir);
 }

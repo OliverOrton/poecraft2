@@ -1323,27 +1323,146 @@ LeafVerificationResultV1 ExactLeafFragmentVerifierV1::verify(
     }
 
     const std::size_t order = states.size();
-    const long double dense_bytes =
-        static_cast<long double>(order) * order * sizeof(double) * 2.0L;
-    if (dense_bytes > limits.max_estimated_bytes ||
-        dense_bytes + peak_bytes > limits.max_estimated_bytes) {
-        peak_bytes = std::numeric_limits<std::uint64_t>::max();
-        return refuse("max_estimated_bytes", "linear_system");
-    }
-    peak_bytes = std::max(
-        peak_bytes,
-        static_cast<std::uint64_t>(dense_bytes + peak_bytes));
-    std::vector<std::vector<double>> matrix(
-        order, std::vector<double>(order, 0.0));
-    for (std::size_t row = 0; row < order; ++row) {
-        matrix[row][row] = 1.0;
-        for (const VerifiedTransitionV1& transition : rows[row].transitions) {
-            if (transition.target_state) {
-                matrix[row][state_id.at(*transition.target_state)] -=
-                    transition.probability;
+    constexpr std::size_t kDenseLinearSystemMaximumOrder = 256;
+    const bool use_dense_linear_system =
+        order <= kDenseLinearSystemMaximumOrder;
+    std::vector<std::vector<double>> matrix;
+    if (use_dense_linear_system) {
+        const long double dense_bytes =
+            static_cast<long double>(order) * order *
+            sizeof(double) * 2.0L;
+        if (dense_bytes > limits.max_estimated_bytes ||
+            dense_bytes + peak_bytes > limits.max_estimated_bytes) {
+            peak_bytes = std::numeric_limits<std::uint64_t>::max();
+            return refuse("max_estimated_bytes", "linear_system");
+        }
+        peak_bytes = static_cast<std::uint64_t>(dense_bytes + peak_bytes);
+        matrix.assign(order, std::vector<double>(order, 0.0));
+        for (std::size_t row = 0; row < order; ++row) {
+            matrix[row][row] = 1.0;
+            for (const VerifiedTransitionV1& transition :
+                 rows[row].transitions) {
+                if (transition.target_state) {
+                    matrix[row][state_id.at(*transition.target_state)] -=
+                        transition.probability;
+                }
             }
         }
+    } else {
+        const std::uint64_t sparse_bytes =
+            static_cast<std::uint64_t>(order) * sizeof(double) * 2;
+        if (sparse_bytes > limits.max_estimated_bytes - peak_bytes) {
+            peak_bytes = std::numeric_limits<std::uint64_t>::max();
+            return refuse("max_estimated_bytes", "linear_system");
+        }
+        peak_bytes += sparse_bytes;
     }
+
+    const auto linear_residual = [&](const std::vector<double>& solution,
+                                     const std::vector<double>& rhs) {
+        if (use_dense_linear_system) {
+            return residual_for(matrix, solution, rhs);
+        }
+        double residual = 0.0;
+        for (std::size_t row = 0; row < order; ++row) {
+            long double observed = solution[row];
+            for (const VerifiedTransitionV1& transition :
+                 rows[row].transitions) {
+                if (transition.target_state) {
+                    observed -=
+                        static_cast<long double>(transition.probability) *
+                        solution[state_id.at(*transition.target_state)];
+                }
+            }
+            residual = std::max(
+                residual,
+                std::fabs(static_cast<double>(observed) - rhs[row]));
+        }
+        return residual;
+    };
+
+    std::map<std::string, std::vector<double>> linear_solution_cache;
+    std::string linear_failure_code;
+    const auto solve_linear = [&](const std::vector<double>& rhs,
+                                  const std::string& witness)
+            -> std::optional<std::vector<double>> {
+        std::string rhs_identity;
+        rhs_identity.reserve(rhs.size() * 24);
+        for (const double value : rhs) append_double(rhs_identity, value);
+        const auto cached = linear_solution_cache.find(rhs_identity);
+        if (cached != linear_solution_cache.end()) return cached->second;
+
+        std::optional<std::vector<double>> solution;
+        if (use_dense_linear_system) {
+            if (!reserve_work(estimated_dense_solve_work(order))) {
+                linear_failure_code = "max_work_items";
+                return std::nullopt;
+            }
+            if (auto stop = interrupted()) {
+                linear_failure_code = *stop;
+                return std::nullopt;
+            }
+            solution = solve_dense_system(matrix, rhs);
+        } else {
+            std::vector<double> values(order, 0.0);
+            constexpr double kSparseIterationTarget = 1e-13;
+            while (true) {
+                if (!reserve_work(states.size() + transition_count)) {
+                    linear_failure_code = "max_work_items";
+                    return std::nullopt;
+                }
+                if (auto stop = interrupted()) {
+                    linear_failure_code = *stop;
+                    return std::nullopt;
+                }
+                double maximum_delta = 0.0;
+                for (std::size_t row = 0; row < order; ++row) {
+                    long double next = rhs[row];
+                    for (const VerifiedTransitionV1& transition :
+                         rows[row].transitions) {
+                        if (transition.target_state) {
+                            next +=
+                                static_cast<long double>(
+                                    transition.probability) *
+                                values[state_id.at(
+                                    *transition.target_state)];
+                        }
+                    }
+                    const double next_value = static_cast<double>(next);
+                    if (!std::isfinite(next_value) || next_value < 0.0) {
+                        linear_failure_code = "invalid_linear_solution";
+                        return std::nullopt;
+                    }
+                    maximum_delta = std::max(
+                        maximum_delta,
+                        std::fabs(next_value - values[row]));
+                    values[row] = next_value;
+                }
+                if (maximum_delta <= kSparseIterationTarget &&
+                    linear_residual(values, rhs) <=
+                        kSparseIterationTarget) {
+                    solution = std::move(values);
+                    break;
+                }
+            }
+        }
+        if (!solution) return std::nullopt;
+        if (auto stop = interrupted()) {
+            linear_failure_code = *stop;
+            return std::nullopt;
+        }
+        const std::uint64_t retained_bytes =
+            static_cast<std::uint64_t>(order) * sizeof(double);
+        if (retained_bytes > limits.max_estimated_bytes - peak_bytes) {
+            peak_bytes = std::numeric_limits<std::uint64_t>::max();
+            linear_failure_code = "max_estimated_bytes";
+            return std::nullopt;
+        }
+        peak_bytes += retained_bytes;
+        linear_solution_cache.emplace(rhs_identity, *solution);
+        (void)witness;
+        return solution;
+    };
 
     std::sort(exit_keys.begin(), exit_keys.end());
     exit_id.clear();
@@ -1363,10 +1482,6 @@ LeafVerificationResultV1 ExactLeafFragmentVerifierV1::verify(
         exit_solution_bytes + peak_bytes);
     double max_residual = 0.0;
     for (std::size_t exit = 0; exit < exit_keys.size(); ++exit) {
-        if (!reserve_work(estimated_dense_solve_work(order))) {
-            return refuse("max_work_items", "absorption");
-        }
-        if (auto stop = interrupted()) return refuse(*stop, "absorption");
         std::vector<double> rhs(order, 0.0);
         for (std::size_t row = 0; row < order; ++row) {
             for (const VerifiedTransitionV1& transition : rows[row].transitions) {
@@ -1376,12 +1491,25 @@ LeafVerificationResultV1 ExactLeafFragmentVerifierV1::verify(
                 }
             }
         }
-        auto solution = solve_dense_system(matrix, rhs);
-        if (!solution) return refuse("singular_absorption_system", "exit");
+        if (exit_keys.size() == 1) {
+            exit_probabilities[exit].assign(order, 1.0);
+            max_residual = std::max(
+                max_residual,
+                linear_residual(exit_probabilities[exit], rhs));
+            continue;
+        }
+        linear_failure_code.clear();
+        auto solution = solve_linear(rhs, "absorption");
+        if (!solution) {
+            return refuse(
+                linear_failure_code.empty()
+                    ? "singular_absorption_system"
+                    : linear_failure_code,
+                "absorption");
+        }
         max_residual = std::max(
-            max_residual, residual_for(matrix, *solution, rhs));
+            max_residual, linear_residual(*solution, rhs));
         exit_probabilities[exit] = std::move(*solution);
-        if (auto stop = interrupted()) return refuse(*stop, "absorption");
     }
     double max_mass_error = 0.0;
     for (std::size_t state = 0; state < order; ++state) {
@@ -1419,12 +1547,6 @@ LeafVerificationResultV1 ExactLeafFragmentVerifierV1::verify(
     std::map<std::string, double> expected_resources;
     std::map<std::string, double> expected_actions;
     for (const std::string& resource : resource_keys) {
-        if (!reserve_work(estimated_dense_solve_work(order))) {
-            return refuse("max_work_items", "resources:" + resource);
-        }
-        if (auto stop = interrupted()) {
-            return refuse(*stop, "resources:" + resource);
-        }
         std::vector<double> rhs(order, 0.0);
         for (std::size_t row = 0; row < order; ++row) {
             for (const VerifiedTransitionV1& transition : rows[row].transitions) {
@@ -1438,19 +1560,20 @@ LeafVerificationResultV1 ExactLeafFragmentVerifierV1::verify(
                 }
             }
         }
-        auto solution = solve_dense_system(matrix, rhs);
-        if (!solution) return refuse("singular_resource_system", resource);
+        linear_failure_code.clear();
+        auto solution = solve_linear(rhs, "resources:" + resource);
+        if (!solution) {
+            return refuse(
+                linear_failure_code.empty()
+                    ? "singular_resource_system"
+                    : linear_failure_code,
+                resource);
+        }
         max_residual = std::max(
-            max_residual, residual_for(matrix, *solution, rhs));
+            max_residual, linear_residual(*solution, rhs));
         expected_resources[resource] = solution->front();
     }
     for (const std::string& action : action_keys) {
-        if (!reserve_work(estimated_dense_solve_work(order))) {
-            return refuse("max_work_items", "actions:" + action);
-        }
-        if (auto stop = interrupted()) {
-            return refuse(*stop, "actions:" + action);
-        }
         std::vector<double> rhs(order, 0.0);
         for (std::size_t row = 0; row < order; ++row) {
             if (rows[row].primitive_action &&
@@ -1458,10 +1581,17 @@ LeafVerificationResultV1 ExactLeafFragmentVerifierV1::verify(
                 rhs[row] = 1.0;
             }
         }
-        auto solution = solve_dense_system(matrix, rhs);
-        if (!solution) return refuse("singular_action_system", action);
+        linear_failure_code.clear();
+        auto solution = solve_linear(rhs, "actions:" + action);
+        if (!solution) {
+            return refuse(
+                linear_failure_code.empty()
+                    ? "singular_action_system"
+                    : linear_failure_code,
+                action);
+        }
         max_residual = std::max(
-            max_residual, residual_for(matrix, *solution, rhs));
+            max_residual, linear_residual(*solution, rhs));
         expected_actions[action] = solution->front();
     }
     if (max_residual > limits.residual_tolerance) {
@@ -1477,12 +1607,11 @@ LeafVerificationResultV1 ExactLeafFragmentVerifierV1::verify(
         verified_exit.probability_from_entry = exit_probabilities[exit].front();
         std::map<std::string, double> joint;
         for (const std::string& resource : resource_keys) {
-            if (!reserve_work(estimated_dense_solve_work(order))) {
-                return refuse(
-                    "max_work_items", "joint_resources:" + resource);
-            }
-            if (auto stop = interrupted()) {
-                return refuse(*stop, "joint_resources:" + resource);
+            if (exit_keys.size() == 1) {
+                joint[resource] = expected_resources.at(resource);
+                joint_resource_totals[resource] +=
+                    expected_resources.at(resource);
+                continue;
             }
             std::vector<double> rhs(order, 0.0);
             for (std::size_t row = 0; row < order; ++row) {
@@ -1510,12 +1639,18 @@ LeafVerificationResultV1 ExactLeafFragmentVerifierV1::verify(
                     rhs[row] += found->second * eventual;
                 }
             }
-            auto solution = solve_dense_system(matrix, rhs);
+            linear_failure_code.clear();
+            auto solution = solve_linear(
+                rhs, "joint_resources:" + resource);
             if (!solution) {
-                return refuse("singular_joint_resource_system", resource);
+                return refuse(
+                    linear_failure_code.empty()
+                        ? "singular_joint_resource_system"
+                        : linear_failure_code,
+                    resource);
             }
             max_residual = std::max(
-                max_residual, residual_for(matrix, *solution, rhs));
+                max_residual, linear_residual(*solution, rhs));
             joint[resource] = solution->front();
             joint_resource_totals[resource] += solution->front();
         }

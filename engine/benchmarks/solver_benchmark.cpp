@@ -17,6 +17,7 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -52,6 +53,7 @@ struct Arguments {
     fs::path development_checkpoint_load;
     std::string case_id;
     bool validate_only = false;
+    bool fragment_contract_rejection_probes = false;
     bool skip_verification = false;
     bool emit_progress = false;
     bool goal_progress_gated_reforges = false;
@@ -2253,6 +2255,98 @@ void validate_case_shape(const Value& specification) {
                 "bounded best-policy contract requires exact evaluation");
         }
     }
+    const Value* fragment_shadow = optional(
+        specification, "fragment_shadow_v1", Type::Object);
+    if (fragment_shadow != nullptr) {
+        const std::set<std::string> allowed_fields = {
+            "schema_version", "case_id", "enabled", "execution_mode",
+            "goal_family_mod_key", "action_ids", "caps"};
+        std::set<std::string> seen_fields;
+        for (const auto& [key, value] : fragment_shadow->object) {
+            (void)value;
+            if (!allowed_fields.contains(key)) {
+                throw std::runtime_error(
+                    "fragment_shadow_v1 contains unknown field: " + key);
+            }
+            if (!seen_fields.insert(key).second) {
+                throw std::runtime_error(
+                    "fragment_shadow_v1 contains duplicate field: " + key);
+            }
+        }
+        if (seen_fields != allowed_fields) {
+            throw std::runtime_error(
+                "fragment_shadow_v1 requires every versioned field");
+        }
+        if (required_string(*fragment_shadow, "schema_version") !=
+                "verified_executable_graph_fragment_shadow_v1" ||
+            required_string(*fragment_shadow, "case_id") !=
+                "clean_one_goal_transmute_scour_renewal_v1" ||
+            !required(*fragment_shadow, "enabled", Type::Bool).boolean ||
+            required_string(*fragment_shadow, "execution_mode") !=
+                "isolated_native_process") {
+            throw std::runtime_error(
+                "fragment_shadow_v1 identity/mode is unsupported");
+        }
+        const std::string goal_mod = required_string(
+            *fragment_shadow, "goal_family_mod_key");
+        const Value& actions = required(
+            *fragment_shadow, "action_ids", Type::Array);
+        if (actions.array.size() != 2 ||
+            actions.array[0].type != Type::String ||
+            actions.array[0].string != "transmute" ||
+            actions.array[1].type != Type::String ||
+            actions.array[1].string != "scour") {
+            throw std::runtime_error(
+                "fragment_shadow_v1 action_ids must be exactly "
+                "[transmute, scour]");
+        }
+        const Value& private_caps = required(
+            *fragment_shadow, "caps", Type::Object);
+        const std::set<std::string> allowed_caps = {
+            "max_states", "max_transitions", "max_work_items",
+            "max_estimated_bytes", "time_limit_seconds"};
+        std::set<std::string> seen_caps;
+        for (const auto& [key, value] : private_caps.object) {
+            if (!allowed_caps.contains(key)) {
+                throw std::runtime_error(
+                    "fragment_shadow_v1 caps contain unknown field: " + key);
+            }
+            if (!seen_caps.insert(key).second) {
+                throw std::runtime_error(
+                    "fragment_shadow_v1 caps contain duplicate field: " + key);
+            }
+            if (value.type != Type::Number ||
+                !std::isfinite(value.number) || value.number <= 0.0 ||
+                (key != "time_limit_seconds" &&
+                 std::floor(value.number) != value.number)) {
+                throw std::runtime_error(
+                    "fragment_shadow_v1 cap has an invalid positive "
+                    "finite value: " + key);
+            }
+        }
+        if (seen_caps != allowed_caps) {
+            throw std::runtime_error(
+                "fragment_shadow_v1 requires every private cap");
+        }
+        const Value& fragment_goal = required(
+            specification, "goal", Type::Object);
+        const Value& slots = required(fragment_goal, "slots", Type::Array);
+        if (slots.array.size() != 1 ||
+            slots.array.front().type != Type::Object ||
+            required_string(
+                slots.array.front(), "family_mod_key") != goal_mod ||
+            required(
+                slots.array.front(), "min_tier", Type::Number).number !=
+                1.0 ||
+            required_string(fragment_goal, "rarity") != "magic" ||
+            required(
+                fragment_goal, "min_satisfied_slots", Type::Number).number !=
+                1.0) {
+            throw std::runtime_error(
+                "fragment_shadow_v1 goal does not match the exact "
+                "one-goal renewal contract");
+        }
+    }
     const Value* mechanic_family = optional(
         specification, "mechanic_family_control", Type::Object);
     if (mechanic_family != nullptr) {
@@ -2498,6 +2592,54 @@ void validate_case_shape(const Value& specification) {
             "material ratio contract requires exact evaluation and sampled "
             "verification");
     }
+}
+
+Value* mutable_member(Value& object, const std::string& key) {
+    if (object.type != Type::Object) {
+        return nullptr;
+    }
+    for (auto& [member_key, value] : object.object) {
+        if (member_key == key) {
+            return &value;
+        }
+    }
+    return nullptr;
+}
+
+void run_fragment_contract_rejection_probes(const Value& specification) {
+    if (specification.find("fragment_shadow_v1") == nullptr) {
+        throw std::runtime_error(
+            "fragment contract rejection probes require fragment_shadow_v1");
+    }
+    const auto expect_rejection = [](Value probe, const char* label) {
+        try {
+            validate_case_shape(probe);
+        } catch (const std::runtime_error&) {
+            return;
+        }
+        throw std::runtime_error(
+            std::string("fragment contract rejection probe was accepted: ") +
+            label);
+    };
+
+    Value unknown_field = specification;
+    Value* unknown_fragment = mutable_member(
+        unknown_field, "fragment_shadow_v1");
+    Value unexpected;
+    unexpected.type = Type::Bool;
+    unexpected.boolean = true;
+    unknown_fragment->object.emplace_back(
+        "proposal_probability", std::move(unexpected));
+    expect_rejection(std::move(unknown_field), "unknown fragment field");
+
+    Value malformed_cap = specification;
+    Value* cap_fragment = mutable_member(
+        malformed_cap, "fragment_shadow_v1");
+    Value* caps = mutable_member(*cap_fragment, "caps");
+    Value* max_states = mutable_member(*caps, "max_states");
+    max_states->type = Type::String;
+    max_states->string = "unbounded";
+    expect_rejection(std::move(malformed_cap), "malformed fragment cap");
 }
 
 void validate_case_manifest_contract(
@@ -4814,6 +4956,9 @@ Arguments parse_arguments(int argc, char** argv) {
         }
         else if (argument == "--case") args.case_id = value("--case");
         else if (argument == "--validate-only") args.validate_only = true;
+        else if (argument == "--fragment-contract-rejection-probes") {
+            args.fragment_contract_rejection_probes = true;
+        }
         else if (argument == "--progress") args.emit_progress = true;
         else if (argument == "--goal-progress-gated-reforges") {
             args.goal_progress_gated_reforges = true;
@@ -4870,6 +5015,12 @@ Arguments parse_arguments(int argc, char** argv) {
     if (args.corpus.empty()) throw std::runtime_error("--corpus is required");
     if (!args.validate_only && args.output.empty()) {
         throw std::runtime_error("--output is required unless --validate-only is used");
+    }
+    if (args.fragment_contract_rejection_probes &&
+        (!args.validate_only || args.case_id.empty())) {
+        throw std::runtime_error(
+            "--fragment-contract-rejection-probes requires --validate-only "
+            "and one selected --case");
     }
     if (!args.partial_output.empty() && args.case_id.empty()) {
         throw std::runtime_error(
@@ -4996,6 +5147,9 @@ int main(int argc, char** argv) {
 
             if (args.validate_only) {
                 for (const Value& specification : specifications) {
+                    if (args.fragment_contract_rejection_probes) {
+                        run_fragment_contract_rejection_probes(specification);
+                    }
                     if (optional_string(specification, "execution_backend", "artifact") ==
                         "native_unit_fixture") {
                         continue;

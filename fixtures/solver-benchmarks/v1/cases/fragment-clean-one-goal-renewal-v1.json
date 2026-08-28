@@ -1,0 +1,96 @@
+{
+  "schema_version": "solver_benchmark_case_v1",
+  "id": "fragment-clean-one-goal-renewal-v1",
+  "category": "native_shadow_diagnostic",
+  "approval_status": "selected_boundary_2026-08-28",
+  "benchmark_enabled": true,
+  "description": "Ordinary one-goal Vaal Regalia control with an explicit isolated Transmute/Scour verified-fragment shadow request.",
+  "comparison_profile": "native-wasm-solver-v1",
+  "watchdog_seconds": 240,
+  "session": {
+    "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+    "base_name": "Vaal Regalia",
+    "item_level": 86
+  },
+  "start": {
+    "rarity": "normal",
+    "with_implicits": false,
+    "mods": []
+  },
+  "goal": {
+    "version": "v1",
+    "rarity": "magic",
+    "min_satisfied_slots": 1,
+    "slots": [
+      {
+        "family_mod_key": "LocalIncreasedEnergyShield11",
+        "min_tier": 1
+      }
+    ],
+    "actions": ["transmute", "scour"]
+  },
+  "allowed_mechanic_families": ["ordinary_currency"],
+  "economy": {
+    "version": "v1",
+    "id": "solver-benchmark-fragment-control-v1",
+    "prices": {
+      "transmute": 0.05,
+      "scour": 0.05,
+      "base": 5.0
+    }
+  },
+  "fragment_shadow_v1": {
+    "schema_version": "verified_executable_graph_fragment_shadow_v1",
+    "case_id": "clean_one_goal_transmute_scour_renewal_v1",
+    "enabled": true,
+    "execution_mode": "isolated_native_process",
+    "goal_family_mod_key": "LocalIncreasedEnergyShield11",
+    "action_ids": ["transmute", "scour"],
+    "caps": {
+      "max_states": 20000,
+      "max_transitions": 1000000,
+      "max_work_items": 1000000000,
+      "max_estimated_bytes": 1073741824,
+      "time_limit_seconds": 180
+    }
+  },
+  "expected": {
+    "solve_status": "converged",
+    "optimality_status": "exact",
+    "compile_status": "compiled",
+    "verification_status": "not_required"
+  },
+  "caps": {
+    "max_states": 10000,
+    "max_sweeps": 100000,
+    "solve_step_work_items": 256,
+    "max_discovered_states": 10000,
+    "max_expanded_states": 10000,
+    "max_state_action_rows": 100000,
+    "max_transitions": 1000000,
+    "max_reforge_work": 1000000,
+    "max_solver_owned_bytes": 268435456,
+    "max_compiled_nodes": 25000,
+    "max_compiled_edges": 100000,
+    "max_strategy_json_bytes": 16777216,
+    "worker_step_ms": 50,
+    "cancel_ack_ms": 250,
+    "goal_progress_gated_reforges": false,
+    "allow_economic_restart": false,
+    "high_impact_executable_uppers": true,
+    "consider_imprint_programs": false,
+    "full_evidence": true
+  },
+  "verification": {
+    "runs": 0,
+    "seed": 2026082801,
+    "max_actions_per_run": 100000,
+    "exact_evaluation": true,
+    "exact_max_states": 1000000,
+    "exact_max_pairs": 5000000,
+    "exact_max_transitions": 20000000,
+    "exact_max_owned_bytes": 1073741824,
+    "exact_cost_absolute_tolerance": 1e-7,
+    "exact_cost_relative_tolerance": 1e-9
+  }
+}

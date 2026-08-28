@@ -32,11 +32,13 @@
     "The 50 ms worker-step and 250 ms cancellation acknowledgement budgets are approved.",
     "Per-case limits are approved as operational guardrails.",
     "Every compiled-strategy verification uses 10000 simulator runs.",
+    "Verified executable fragment diagnostics are explicit native shadow requests and do not change ordinary solver authority.",
     "Negligible-value policy trimming for readable strategies is a later owner-controlled follow-up."
   ],
   "cases": [
     "cases/oracle-synthetic-six-slot.json",
     "cases/oracle-real-one-mod.json",
+    "cases/fragment-clean-one-goal-renewal-v1.json",
     "cases/oracle-real-two-mod.json",
     "cases/ordinary-es-bench.json",
     "cases/advanced-es-resist-bench.json",
