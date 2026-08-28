@@ -19,6 +19,7 @@ when Oliver has selected one.
 | Economy data and deployment | [Economy](economy/README.md) |
 | Durable choices and terms | [Decisions](decisions.md) and [glossary](glossary.md) |
 | Measurements, fixtures, and acceptance evidence | [Evidence](evidence.md) |
+| Local native solver experiments, GUI, CLI, and MCP | [Native Solver Lab](foundation/solver-lab.md) |
 | Deferred possibilities, not scheduled work | [Future](future/README.md) |
 | Open mechanic rulings and raw observations | [Notes](notes/ruling-needed.md) |
 | Proposed or selected execution boundary | [Active work](active/README.md) |

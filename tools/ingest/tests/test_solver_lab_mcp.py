@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 import asyncio
+import os
 from pathlib import Path
+import sys
 
 import pytest
 
@@ -295,3 +297,45 @@ def test_mcp_surface_is_closed_finite_and_mutations_are_typed(tmp_path: Path) ->
         schema = by_name[name].input_schema
         assert "idempotency_key" in schema["properties"]
         assert "dry_run" in schema["properties"]
+
+
+def test_mcp_stdio_server_initializes_and_serves_bounded_cases(tmp_path: Path) -> None:
+    pytest.importorskip("mcp")
+    from mcp import ClientSession
+    from mcp.client.stdio import StdioServerParameters, stdio_client
+
+    async def exercise() -> None:
+        environment = dict(os.environ)
+        environment["PYTHONPATH"] = os.pathsep.join(
+            [
+                str(REPO_ROOT / "tools" / "ingest"),
+                str(REPO_ROOT / "bindings" / "python"),
+            ]
+        )
+        parameters = StdioServerParameters(
+            command=sys.executable,
+            args=[
+                "-m",
+                "poecraft_ingest.solver_lab_mcp",
+                "--root",
+                str(REPO_ROOT),
+                "--catalog",
+                str(tmp_path / "catalog.sqlite3"),
+                "--attempts",
+                str(tmp_path / "attempts"),
+            ],
+            env=environment,
+        )
+        async with stdio_client(parameters) as (read_stream, write_stream):
+            async with ClientSession(read_stream, write_stream) as session:
+                initialized = await session.initialize()
+                tools = await session.list_tools()
+                result = await session.call_tool("list_cases", {})
+
+        assert initialized.server_info.name == "poecraft2-native-solver-lab"
+        assert len(tools.tools) == 21
+        assert result.is_error is False
+        assert result.structured_content is not None
+        assert len(result.structured_content["result"]) == 5
+
+    asyncio.run(exercise())
