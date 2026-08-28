@@ -2,12 +2,14 @@
 
 **Status: active implementation boundary.** Oliver approved
 [Native Solver Lab v0](docs/active/2026-08-27-native-solver-lab-v0/plan.md)
-from clean checkpoint `bd86b46` on 2026-08-27. Gates 0-4 are complete; Gate 5
+from clean checkpoint `bd86b46` on 2026-08-27. Gates 0-5 are complete; Gate 6
 is next.
 
 ## Checkpoint
 
 - Branch: `main`, local-only; nothing was pushed.
+- Native Solver Lab checkpoints through typed LLM controls:
+  `d893db9`, `b047f02`, `91d44dd`, `7bf0f9d`, `cde2ccb`, and `1d5350a`.
 - Active-boundary selection commit: `25737c3` (`Activate PDR strict proof
   memory boundary`).
 - Native checkpoint/replay implementation: `f15f590` (`Add native solver
@@ -29,10 +31,16 @@ CLI, and MCP share one typed application service. One isolated OS process owns
 each solve, attempts and artifacts are immutable, the catalog is persistent,
 and partial/crash/watchdog/resource outcomes remain distinct.
 
-The first usable checkpoint is Gate 2: a persistent single-worker vertical
-slice that submits and monitors a small native case through both the GUI and
-JSON operations. Later gates add robust resource-aware supervision, LLM tools,
-comparison, strategy summary, matrices, and final current-semantic parity.
+Gates 0-5 now provide persistent immutable attempts, resource-aware native
+supervision, JSON and a closed 21-tool MCP adapter, investigation bundles, and
+Queue & Run / Compare / Strategy / Matrix GUI surfaces. Matrix expansion is
+canonical and idempotent unless the explicit new-batch action is used. Oliver
+still owns rendered visual/usability review.
+
+The next boundary is Gate 6 behavior-neutral qualification: run the frozen
+five-case v0 corpus through the direct runner and Lab under the same locked
+profile, compare semantic projections, and report orchestration overhead. Do
+not run the full acceptance pipeline until Gate 7.
 
 The locked research profile is `native_allflame_no_imprint_v1`: fixed resolved
 Allflame economy, Calculator product profile, automatic Imprints off,

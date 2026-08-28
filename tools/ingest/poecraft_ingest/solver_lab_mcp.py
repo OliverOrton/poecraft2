@@ -61,15 +61,19 @@ def build_server(service: SolverLabService) -> MCPServer:
 
     @server.tool()
     def submit_matrix(
-        case_ids: list[str],
         replicates: int,
         idempotency_key: str,
+        case_ids: list[str] | None = None,
+        include_roles: list[str] | None = None,
+        exclude_case_ids: list[str] | None = None,
         priority: int = 0,
         dry_run: bool = False,
     ) -> dict[str, Any]:
         """Submit a bounded case-by-replicate matrix under one experiment."""
         return service.submit_matrix(
             case_ids=case_ids,
+            include_roles=include_roles,
+            exclude_case_ids=exclude_case_ids,
             replicates=replicates,
             idempotency_key=idempotency_key,
             priority=priority,
@@ -80,6 +84,13 @@ def build_server(service: SolverLabService) -> MCPServer:
     def list_jobs(limit: int = 200) -> dict[str, Any]:
         """List bounded durable job summaries."""
         return service.list_jobs(limit=limit)
+
+    @server.tool()
+    def list_attempts(
+        job_id: str | None = None, limit: int = 1000
+    ) -> dict[str, Any]:
+        """List immutable attempts, optionally for one durable job."""
+        return service.list_attempts(job_id=job_id, limit=limit)
 
     @server.tool()
     def get_job(job_id: str) -> dict[str, Any]:

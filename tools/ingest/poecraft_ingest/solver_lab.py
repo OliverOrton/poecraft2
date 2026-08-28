@@ -46,7 +46,9 @@ def build_parser() -> argparse.ArgumentParser:
     submit.add_argument("--replicate", type=int, default=0)
     submit.add_argument("--dry-run", action="store_true")
     matrix = subparsers.add_parser("submit-matrix")
-    matrix.add_argument("--case-id", action="append", required=True)
+    matrix.add_argument("--case-id", action="append")
+    matrix.add_argument("--include-role", action="append")
+    matrix.add_argument("--exclude-case-id", action="append")
     matrix.add_argument("--replicates", type=int, default=1)
     matrix.add_argument("--idempotency-key", required=True)
     matrix.add_argument("--priority", type=int, default=0)
@@ -54,6 +56,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     jobs = subparsers.add_parser("jobs")
     jobs.add_argument("--limit", type=int, default=200)
+    attempts = subparsers.add_parser("attempts")
+    attempts.add_argument("--job-id")
+    attempts.add_argument("--limit", type=int, default=1000)
     job = subparsers.add_parser("job")
     job.add_argument("job_id")
 
@@ -160,6 +165,8 @@ def main(argv: list[str] | None = None) -> int:
         elif args.operation == "submit-matrix":
             result = service.submit_matrix(
                 case_ids=args.case_id,
+                include_roles=args.include_role,
+                exclude_case_ids=args.exclude_case_id,
                 replicates=args.replicates,
                 idempotency_key=args.idempotency_key,
                 priority=args.priority,
@@ -167,6 +174,8 @@ def main(argv: list[str] | None = None) -> int:
             )
         elif args.operation == "jobs":
             result = service.list_jobs(limit=args.limit)
+        elif args.operation == "attempts":
+            result = service.list_attempts(job_id=args.job_id, limit=args.limit)
         elif args.operation == "job":
             result = service.get_job(args.job_id)
         elif args.operation == "cancel":

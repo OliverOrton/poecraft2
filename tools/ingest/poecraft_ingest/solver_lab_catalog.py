@@ -403,6 +403,27 @@ class SolverLabCatalog:
             ).fetchone()
         return self._attempt_row(row) if row else None
 
+    def list_attempts(
+        self,
+        *,
+        job_id: str | None = None,
+        limit: int = 1000,
+    ) -> list[dict[str, Any]]:
+        limit = max(1, min(int(limit), 5000))
+        with self._connect() as connection:
+            if job_id is None:
+                rows = connection.execute(
+                    "SELECT * FROM attempts ORDER BY created_at DESC, attempt_id DESC LIMIT ?",
+                    (limit,),
+                ).fetchall()
+            else:
+                rows = connection.execute(
+                    "SELECT * FROM attempts WHERE job_id=? "
+                    "ORDER BY ordinal DESC LIMIT ?",
+                    (job_id, limit),
+                ).fetchall()
+        return [self._attempt_row(row) for row in rows]
+
     def list_dispatch_candidates(self, *, limit: int = 200) -> list[dict[str, Any]]:
         limit = max(1, min(int(limit), 1000))
         with self._connect() as connection:

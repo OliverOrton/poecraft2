@@ -8,7 +8,13 @@ import sys
 import uuid
 from typing import Any
 
-from PySide6.QtCore import QAbstractTableModel, QModelIndex, QTimer, Qt
+from PySide6.QtCore import (
+    QAbstractTableModel,
+    QModelIndex,
+    QSortFilterProxyModel,
+    QTimer,
+    Qt,
+)
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QApplication,
@@ -16,12 +22,16 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
+    QListWidget,
+    QListWidgetItem,
     QMainWindow,
     QPlainTextEdit,
     QPushButton,
     QSplitter,
     QSpinBox,
     QTableView,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -207,8 +217,28 @@ class SolverLabWindow(QMainWindow):
         self.setWindowTitle("poecraft2 Native Solver Lab")
         self.resize(1280, 760)
 
+        self.tabs = QTabWidget()
+        self.setCentralWidget(self.tabs)
+        self._matrix_idempotency_key: str | None = None
+
+        self._build_queue_tab()
+        self._build_compare_tab()
+        self._build_strategy_tab()
+        self._build_matrix_tab()
+
+        self.timer = QTimer(self)
+        self.timer.setInterval(poll_interval_ms)
+        self.timer.timeout.connect(self.refresh)
+        self.timer.start()
+        if autostart_supervisor:
+            self.supervisor.start()
+        self.refresh()
+
+    def _build_queue_tab(self) -> None:
+        queue_tab = QWidget()
+
         self.case_picker = QComboBox()
-        for item in service.list_cases()["result"]:
+        for item in self.service.list_cases()["result"]:
             self.case_picker.addItem(
                 f"{item['role']} — {item['case_id']}", item["case_id"]
             )
@@ -235,9 +265,20 @@ class SolverLabWindow(QMainWindow):
         controls.addWidget(self.refresh_button)
         controls.addWidget(self.health)
 
+        self.job_filter = QLineEdit()
+        self.job_filter.setPlaceholderText(
+            "Filter jobs by status, case, phase, bound, or termination"
+        )
+
         self.model = JobsTableModel()
+        self.proxy_model = QSortFilterProxyModel(self)
+        self.proxy_model.setSourceModel(self.model)
+        self.proxy_model.setFilterCaseSensitivity(
+            Qt.CaseSensitivity.CaseInsensitive
+        )
+        self.proxy_model.setFilterKeyColumn(-1)
         self.table = QTableView()
-        self.table.setModel(self.model)
+        self.table.setModel(self.proxy_model)
         self.table.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QTableView.SelectionMode.SingleSelection)
         self.table.setSortingEnabled(False)
@@ -248,11 +289,11 @@ class SolverLabWindow(QMainWindow):
         splitter.addWidget(self.detail)
         splitter.setSizes([760, 520])
 
-        central = QWidget()
-        layout = QVBoxLayout(central)
+        layout = QVBoxLayout(queue_tab)
         layout.addLayout(controls)
+        layout.addWidget(self.job_filter)
         layout.addWidget(splitter, 1)
-        self.setCentralWidget(central)
+        self.tabs.addTab(queue_tab, "Queue & Run")
 
         self.submit_button.clicked.connect(self.submit_selected)
         self.cancel_button.clicked.connect(self.cancel_selected)
@@ -261,18 +302,126 @@ class SolverLabWindow(QMainWindow):
         self.pause_button.clicked.connect(self.toggle_queue_pause)
         self.priority_button.clicked.connect(self.change_selected_priority)
         self.refresh_button.clicked.connect(self.refresh)
+        self.job_filter.textChanged.connect(
+            self.proxy_model.setFilterFixedString
+        )
         self.table.selectionModel().selectionChanged.connect(self.refresh_detail)
-        self.timer = QTimer(self)
-        self.timer.setInterval(poll_interval_ms)
-        self.timer.timeout.connect(self.refresh)
-        self.timer.start()
-        if autostart_supervisor:
-            self.supervisor.start()
-        self.refresh()
+
+    def _build_compare_tab(self) -> None:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        self.compare_filter = QLineEdit()
+        self.compare_filter.setPlaceholderText("Filter immutable attempts")
+        self.compare_attempts = QListWidget()
+        self.compare_attempts.setSelectionMode(
+            QListWidget.SelectionMode.MultiSelection
+        )
+        self.compare_button = QPushButton("Compare selected attempts")
+        self.compare_output = QPlainTextEdit()
+        self.compare_output.setReadOnly(True)
+        self.compare_output.setPlaceholderText(
+            "Select two to twenty attempts. The comparison discloses request identity before outcomes."
+        )
+        layout.addWidget(self.compare_filter)
+        layout.addWidget(self.compare_attempts, 1)
+        layout.addWidget(self.compare_button)
+        layout.addWidget(self.compare_output, 2)
+        self.tabs.addTab(tab, "Compare")
+        self.compare_filter.textChanged.connect(self._filter_attempt_lists)
+        self.compare_button.clicked.connect(self.compare_selected_attempts)
+
+    def _build_strategy_tab(self) -> None:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        disclosure = self._profile_action_disclosure()
+        disclosure.setWordWrap(True)
+        layout.addWidget(disclosure)
+        self.strategy_attempt = QComboBox()
+        self.strategy_show_button = QPushButton("Show strategy summary")
+        self.strategy_export_button = QPushButton("Export investigation bundle")
+        buttons = QHBoxLayout()
+        buttons.addWidget(QLabel("Attempt"))
+        buttons.addWidget(self.strategy_attempt, 1)
+        buttons.addWidget(self.strategy_show_button)
+        buttons.addWidget(self.strategy_export_button)
+        self.strategy_output = QPlainTextEdit()
+        self.strategy_output.setReadOnly(True)
+        self.strategy_output.setPlaceholderText(
+            "Graph shape, action use, exact evaluation, and route failures appear here."
+        )
+        layout.addLayout(buttons)
+        layout.addWidget(self.strategy_output, 1)
+        self.tabs.addTab(tab, "Strategy")
+        self.strategy_show_button.clicked.connect(self.show_strategy_summary)
+        self.strategy_export_button.clicked.connect(self.export_strategy_bundle)
+
+    def _build_matrix_tab(self) -> None:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        disclosure = self._profile_action_disclosure()
+        disclosure.setWordWrap(True)
+        layout.addWidget(disclosure)
+        self.matrix_filter = QLineEdit()
+        self.matrix_filter.setPlaceholderText("Filter frozen cases or roles")
+        self.matrix_cases = QListWidget()
+        self.matrix_cases.blockSignals(True)
+        for case in self.service.list_cases()["result"]:
+            item = QListWidgetItem(
+                f"{case['role']} — {case['case_id']}"
+            )
+            item.setData(Qt.ItemDataRole.UserRole, case["case_id"])
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+            item.setCheckState(Qt.CheckState.Checked)
+            self.matrix_cases.addItem(item)
+        self.matrix_cases.blockSignals(False)
+        matrix_controls = QHBoxLayout()
+        self.matrix_replicates = QSpinBox()
+        self.matrix_replicates.setRange(1, 100)
+        self.matrix_replicates.setValue(1)
+        self.matrix_preview_button = QPushButton("Preview")
+        self.matrix_submit_button = QPushButton("Submit / resubmit batch")
+        self.matrix_new_batch_button = QPushButton("Submit new replicate batch")
+        matrix_controls.addWidget(QLabel("Replicates"))
+        matrix_controls.addWidget(self.matrix_replicates)
+        matrix_controls.addWidget(self.matrix_preview_button)
+        matrix_controls.addWidget(self.matrix_submit_button)
+        matrix_controls.addWidget(self.matrix_new_batch_button)
+        matrix_controls.addStretch(1)
+        self.matrix_output = QPlainTextEdit()
+        self.matrix_output.setReadOnly(True)
+        self.matrix_output.setPlaceholderText(
+            "Preview shows the canonical case × replicate cross-product before submission."
+        )
+        layout.addWidget(self.matrix_filter)
+        layout.addWidget(self.matrix_cases, 1)
+        layout.addLayout(matrix_controls)
+        layout.addWidget(self.matrix_output, 1)
+        self.tabs.addTab(tab, "Matrix")
+        self.matrix_filter.textChanged.connect(self._filter_matrix_cases)
+        self.matrix_cases.itemChanged.connect(self._reset_matrix_batch)
+        self.matrix_replicates.valueChanged.connect(self._reset_matrix_batch)
+        self.matrix_preview_button.clicked.connect(self.preview_matrix)
+        self.matrix_submit_button.clicked.connect(self.submit_matrix)
+        self.matrix_new_batch_button.clicked.connect(self.submit_new_matrix_batch)
+
+    def _profile_action_disclosure(self) -> QLabel:
+        native = self.service.profile.document.get("native_bindings", {})
+        scope = native.get("manifest_general_product_scope", {})
+        return QLabel(
+            "Profile: "
+            f"{self.service.profile.profile_id} · automatic Imprint programs "
+            f"{'enabled' if scope.get('consider_imprint_programs') else 'disabled'} · "
+            "voluntary/economic Restart "
+            f"{'enabled' if scope.get('allow_economic_restart') else 'disabled'} · "
+            "paid Fracture miss replacement retained by the native mechanic"
+        )
 
     def selected_job(self) -> dict[str, Any] | None:
         indexes = self.table.selectionModel().selectedRows()
-        return self.model.job_at(indexes[0].row()) if indexes else None
+        if not indexes:
+            return None
+        source = self.proxy_model.mapToSource(indexes[0])
+        return self.model.job_at(source.row())
 
     def submit_selected(self) -> None:
         case_id = self.case_picker.currentData()
@@ -376,9 +525,12 @@ class SolverLabWindow(QMainWindow):
             if selected_id:
                 for row, job in enumerate(jobs):
                     if job["job_id"] == selected_id:
-                        self.table.selectRow(row)
+                        source = self.model.index(row, 0)
+                        proxy = self.proxy_model.mapFromSource(source)
+                        if proxy.isValid():
+                            self.table.selectRow(proxy.row())
                         break
-            elif jobs:
+            elif self.proxy_model.rowCount():
                 self.table.selectRow(0)
             state = self.supervisor.status()
             self.pause_button.setText(
@@ -390,8 +542,143 @@ class SolverLabWindow(QMainWindow):
                 + f" · {state['reserved_host_memory_bytes'] / (1024 ** 2):.0f} MiB reserved"
             )
             self.refresh_detail()
+            self._refresh_attempt_lists()
         except Exception as exc:
             self.health.setText(f"refresh failed: {type(exc).__name__}: {exc}")
+
+    def _refresh_attempt_lists(self) -> None:
+        selected_compare = {
+            str(item.data(Qt.ItemDataRole.UserRole))
+            for item in self.compare_attempts.selectedItems()
+        }
+        selected_strategy = self.strategy_attempt.currentData()
+        attempts = self.service.list_attempts()["result"]
+        self.compare_attempts.clear()
+        self.strategy_attempt.clear()
+        for attempt in attempts:
+            attempt_id = str(attempt["attempt_id"])
+            text = (
+                f"{attempt.get('case_id') or 'unknown case'} · "
+                f"attempt {attempt.get('ordinal')} · {attempt.get('status')} · {attempt_id}"
+            )
+            item = QListWidgetItem(text)
+            item.setData(Qt.ItemDataRole.UserRole, attempt_id)
+            self.compare_attempts.addItem(item)
+            item.setSelected(attempt_id in selected_compare)
+            self.strategy_attempt.addItem(text, attempt_id)
+        if selected_strategy is not None:
+            index = self.strategy_attempt.findData(selected_strategy)
+            if index >= 0:
+                self.strategy_attempt.setCurrentIndex(index)
+        self._filter_attempt_lists(self.compare_filter.text())
+
+    def _filter_attempt_lists(self, text: str) -> None:
+        needle = text.casefold().strip()
+        for row in range(self.compare_attempts.count()):
+            item = self.compare_attempts.item(row)
+            item.setHidden(bool(needle) and needle not in item.text().casefold())
+
+    def compare_selected_attempts(self) -> None:
+        attempt_ids = [
+            str(item.data(Qt.ItemDataRole.UserRole))
+            for item in self.compare_attempts.selectedItems()
+        ]
+        try:
+            result = self.service.compare_runs(attempt_ids=attempt_ids)
+            self.compare_output.setPlainText(
+                json.dumps(result, indent=2, ensure_ascii=False)
+            )
+        except Exception as exc:
+            self.compare_output.setPlainText(
+                f"Compare unavailable: {type(exc).__name__}: {exc}"
+            )
+
+    def show_strategy_summary(self) -> None:
+        attempt_id = self.strategy_attempt.currentData()
+        if not attempt_id:
+            return
+        try:
+            result = self.service.get_strategy_summary(
+                attempt_id=str(attempt_id)
+            )
+            self.strategy_output.setPlainText(
+                json.dumps(result, indent=2, ensure_ascii=False)
+            )
+        except Exception as exc:
+            self.strategy_output.setPlainText(
+                f"Strategy unavailable: {type(exc).__name__}: {exc}"
+            )
+
+    def export_strategy_bundle(self) -> None:
+        attempt_id = self.strategy_attempt.currentData()
+        if not attempt_id:
+            return
+        try:
+            result = self.service.export_investigation_bundle(
+                attempt_id=str(attempt_id),
+                idempotency_key=f"gui-export-{attempt_id}",
+            )
+            self.strategy_output.setPlainText(
+                json.dumps(result, indent=2, ensure_ascii=False)
+            )
+        except Exception as exc:
+            self.strategy_output.setPlainText(
+                f"Export unavailable: {type(exc).__name__}: {exc}"
+            )
+
+    def _filter_matrix_cases(self, text: str) -> None:
+        needle = text.casefold().strip()
+        for row in range(self.matrix_cases.count()):
+            item = self.matrix_cases.item(row)
+            item.setHidden(bool(needle) and needle not in item.text().casefold())
+
+    def _reset_matrix_batch(self, *args: Any) -> None:
+        self._matrix_idempotency_key = None
+
+    def _selected_matrix_case_ids(self) -> list[str]:
+        return sorted(
+            str(item.data(Qt.ItemDataRole.UserRole))
+            for row in range(self.matrix_cases.count())
+            if (item := self.matrix_cases.item(row)).checkState()
+            == Qt.CheckState.Checked
+        )
+
+    def _matrix_key(self) -> str:
+        if self._matrix_idempotency_key is None:
+            self._matrix_idempotency_key = f"gui-matrix-{uuid.uuid4()}"
+        return self._matrix_idempotency_key
+
+    def preview_matrix(self) -> None:
+        self._submit_matrix(dry_run=True)
+
+    def submit_matrix(self) -> None:
+        self._submit_matrix(dry_run=False)
+
+    def submit_new_matrix_batch(self) -> None:
+        self._reset_matrix_batch()
+        self._submit_matrix(dry_run=False)
+
+    def _submit_matrix(self, *, dry_run: bool) -> None:
+        try:
+            case_ids = self._selected_matrix_case_ids()
+            if not case_ids:
+                raise ValueError("select at least one frozen case")
+            result = self.service.submit_matrix(
+                case_ids=case_ids,
+                replicates=self.matrix_replicates.value(),
+                idempotency_key=self._matrix_key(),
+                dry_run=dry_run,
+            )
+            self.matrix_output.setPlainText(
+                json.dumps(result, indent=2, ensure_ascii=False)
+            )
+            if not dry_run:
+                self.supervisor.wake()
+                self.refresh()
+        except Exception as exc:
+            self.matrix_output.setPlainText(
+                f"Matrix unavailable: {type(exc).__name__}: {exc}"
+            )
 
     def refresh_detail(self, *args: Any) -> None:
         job = self.selected_job()

@@ -212,7 +212,8 @@ def test_bounded_trace_strategy_compare_and_bundle(
 
 def test_matrix_is_bounded_dry_runnable_and_idempotent(tmp_path: Path) -> None:
     service = _service(tmp_path)
-    cases = [item["case_id"] for item in service.list_cases()["result"][:2]]
+    listed_cases = service.list_cases()["result"]
+    cases = [item["case_id"] for item in reversed(listed_cases[:2])]
 
     preview = service.submit_matrix(
         case_ids=cases,
@@ -232,8 +233,20 @@ def test_matrix_is_bounded_dry_runnable_and_idempotent(tmp_path: Path) -> None:
     )
 
     assert preview["result"]["job_count"] == 4
+    assert preview["result"]["case_ids"] == sorted(cases)
     assert first == second
     assert len(service.catalog.list_jobs()) == 4
+
+    role = listed_cases[2]["role"]
+    role_preview = service.submit_matrix(
+        include_roles=[role],
+        exclude_case_ids=[listed_cases[0]["case_id"]],
+        replicates=1,
+        idempotency_key="matrix-role-preview",
+        dry_run=True,
+    )["result"]
+    assert role_preview["selection_rules"]["include_roles"] == [role]
+    assert role_preview["case_ids"] == [listed_cases[2]["case_id"]]
 
 
 def test_mcp_surface_is_closed_finite_and_mutations_are_typed(tmp_path: Path) -> None:
@@ -251,6 +264,7 @@ def test_mcp_surface_is_closed_finite_and_mutations_are_typed(tmp_path: Path) ->
         "submit_job",
         "submit_matrix",
         "list_jobs",
+        "list_attempts",
         "get_job",
         "pause_queue",
         "resume_queue",

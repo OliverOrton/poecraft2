@@ -1,6 +1,6 @@
 # Native Solver Lab v0 Execution Log
 
-**Status: active; Gates 0-4 complete, Gate 5 next.**
+**Status: active; Gates 0-5 complete, Gate 6 next.**
 
 Parent: [Plan](plan.md)
 
@@ -10,7 +10,7 @@ Parent: [Plan](plan.md)
   boundary`) and activated from clean checkpoint `bd86b46` (`Plan native
   solver lab v0`).
 - Working tree was clean at activation.
-- Current gate: Gate 5 — Compare, Strategy, and Matrix GUI.
+- Current gate: Gate 6 — baseline freeze and behavior-neutral qualification.
 - Gate 0 added only versioned contracts, the frozen profile/corpus, and
   optional dependencies. No catalog, supervisor, GUI, CLI, or MCP service
   implementation exists yet.
@@ -27,8 +27,9 @@ Parent: [Plan](plan.md)
 
 ## Next executable step
 
-Add GUI tabs for matrix submission, immutable attempt comparison, bounded bound
-trajectories, and strategy/evaluation summaries over the Gate 4 service.
+Run the frozen v0 cases through the direct runner and the Lab under the same
+profile, then compare canonical semantic projections and characterize measured
+orchestration overhead without treating wall time or OS state as semantics.
 
 ## Gate 0 result — 2026-08-27
 
@@ -173,3 +174,31 @@ trajectories, and strategy/evaluation summaries over the Gate 4 service.
   false. Bundle dry-run produced no file.
 - Focused Gate 0-4 tests: 35 passed in 7.11 seconds. No native matrix or full
   acceptance pipeline was run.
+
+## Gate 5 result — 2026-08-27
+
+- The PySide6 application now has Queue & Run, Compare, Strategy, and Matrix
+  tabs. Job and attempt filtering is local and read-only; all actions continue
+  through the shared typed service.
+- Compare selects 2..20 immutable attempts and presents request-identity,
+  outcome, deterministic-work, memory, and strategy projections. Strategy
+  Summary presents bounded graph/action/evaluation evidence and exports the
+  Gate 4 investigation bundle to the controlled ignored bundle directory.
+- Both Strategy and Matrix surfaces disclose the active profile distinction:
+  automatic Imprint programs disabled, voluntary/economic Restart disabled,
+  and native mechanic-owned paid Fracture miss replacement retained.
+- Matrix selection supports explicit case IDs, role expansion, exclusions,
+  and 1..100 replicates. Expansion is canonical case-ID order followed by
+  replicate ordinal. Empty programmatic includes mean the full frozen corpus;
+  the GUI requires at least one checked case.
+- Preview and submission share one batch idempotency identity. Re-submitting
+  the same batch cannot add jobs; the separate new-replicate-batch action
+  deliberately creates a fresh identity.
+- Immutable attempts gained a bounded typed list operation in service, JSON
+  CLI, and MCP. The MCP vocabulary is therefore 21 finite tools; it still
+  exposes no arbitrary execution, SQL, or path-write surface.
+- Controller/model coverage exercises persistent tabs, job filtering,
+  canonical matrix preview, idempotent resubmission, and explicit new batches.
+  Service coverage exercises role/include/exclude expansion. Focused Gate 0-5
+  tests: 35 passed in 7.09 seconds. No native matrix, rendered visual review,
+  or full acceptance pipeline was run.

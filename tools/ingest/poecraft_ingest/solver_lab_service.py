@@ -269,6 +269,33 @@ class SolverLabService:
             job["latest_attempt"] = self.catalog.latest_attempt(job["job_id"])
         return operation_result("list_jobs", jobs)
 
+    def list_attempts(
+        self,
+        *,
+        job_id: str | None = None,
+        limit: int = 1000,
+    ) -> dict[str, Any]:
+        if job_id is not None and self.catalog.get_job(job_id) is None:
+            raise KeyError(job_id)
+        attempts = self.catalog.list_attempts(job_id=job_id, limit=limit)
+        jobs = {
+            job["job_id"]: job
+            for job in self.catalog.list_jobs(limit=1000)
+        }
+        return operation_result(
+            "list_attempts",
+            [
+                {
+                    **attempt,
+                    "case_id": jobs.get(attempt["job_id"], {}).get("case_id"),
+                    "profile_id": jobs.get(attempt["job_id"], {}).get(
+                        "profile_id"
+                    ),
+                }
+                for attempt in attempts
+            ],
+        )
+
     def get_job(self, job_id: str) -> dict[str, Any]:
         job = self.catalog.get_job(job_id)
         if job is None:
@@ -504,7 +531,9 @@ class SolverLabService:
     def submit_matrix(
         self,
         *,
-        case_ids: list[str],
+        case_ids: list[str] | None = None,
+        include_roles: list[str] | None = None,
+        exclude_case_ids: list[str] | None = None,
         replicates: int,
         idempotency_key: str,
         priority: int = 0,
@@ -512,12 +541,28 @@ class SolverLabService:
     ) -> dict[str, Any]:
         if not idempotency_key:
             raise ValueError("submit_matrix requires an idempotency key")
-        if not case_ids or len(case_ids) > 100:
-            raise ValueError("submit_matrix requires 1..100 case ids")
         if not (1 <= replicates <= 100):
             raise ValueError("replicates must be in 1..100")
-        for case_id in case_ids:
+        requested_case_ids = sorted(set(case_ids or []))
+        requested_roles = sorted(set(include_roles or []))
+        excluded_case_ids = sorted(set(exclude_case_ids or []))
+        roles = self.corpus_document.get("case_roles", {})
+        known_roles = {str(role) for role in roles.values()}
+        unknown_roles = sorted(set(requested_roles) - known_roles)
+        if unknown_roles:
+            raise KeyError(f"unknown case roles: {', '.join(unknown_roles)}")
+        for case_id in requested_case_ids + excluded_case_ids:
             self._require_case(case_id)
+        selected = set(requested_case_ids)
+        for case_id, role in roles.items():
+            if role in requested_roles:
+                selected.add(str(case_id))
+        if not requested_case_ids and not requested_roles:
+            selected.update(self._cases)
+        selected.difference_update(excluded_case_ids)
+        resolved_case_ids = sorted(selected)
+        if not resolved_case_ids or len(resolved_case_ids) > 100:
+            raise ValueError("submit_matrix must resolve to 1..100 cases")
         existing = self.catalog.command_by_idempotency_key(idempotency_key)
         if existing:
             if existing["operation"] != "submit_matrix":
@@ -528,9 +573,15 @@ class SolverLabService:
         )[:24]
         preview = {
             "experiment_id": experiment_id,
-            "case_ids": list(case_ids),
+            "selection_rules": {
+                "include_case_ids": requested_case_ids,
+                "include_roles": requested_roles,
+                "exclude_case_ids": excluded_case_ids,
+                "empty_include_means_all": True,
+            },
+            "case_ids": resolved_case_ids,
             "replicates": replicates,
-            "job_count": len(case_ids) * replicates,
+            "job_count": len(resolved_case_ids) * replicates,
             "profile": self.profile.identity(),
             "priority": int(priority),
         }
@@ -548,7 +599,7 @@ class SolverLabService:
                 }
             )
         jobs = []
-        for case_id in case_ids:
+        for case_id in resolved_case_ids:
             for replicate in range(replicates):
                 result = self.submit_job(
                     case_id=case_id,
@@ -569,7 +620,8 @@ class SolverLabService:
             operation="submit_matrix",
             target_id=experiment_id,
             request={
-                "case_ids": case_ids,
+                "case_ids": resolved_case_ids,
+                "selection_rules": preview["selection_rules"],
                 "replicates": replicates,
                 "priority": priority,
             },

@@ -150,6 +150,7 @@ def test_single_worker_records_immutable_attempt_and_native_summary(
 def test_qt_queue_and_detail_widgets_use_persisted_service(tmp_path: Path) -> None:
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     pytest.importorskip("PySide6")
+    from PySide6.QtCore import Qt
     from PySide6.QtWidgets import QApplication
     from poecraft_ingest.solver_lab_gui import SolverLabWindow
 
@@ -168,9 +169,27 @@ def test_qt_queue_and_detail_widgets_use_persisted_service(tmp_path: Path) -> No
     window.refresh()
 
     assert window.model.rowCount() == 1
+    assert window.proxy_model.rowCount() == 1
     assert window.case_picker.count() == 5
+    assert window.tabs.count() == 4
     assert window.selected_job()["case_id"] == case_id
     assert "queued" in window.detail.values["status"].text()
+    window.job_filter.setText("does-not-exist")
+    assert window.proxy_model.rowCount() == 0
+    window.job_filter.clear()
+    assert window.proxy_model.rowCount() == 1
+
+    for row in range(1, window.matrix_cases.count()):
+        window.matrix_cases.item(row).setCheckState(Qt.CheckState.Unchecked)
+    window.preview_matrix()
+    preview = json.loads(window.matrix_output.toPlainText())
+    assert preview["dry_run"] is True
+    assert preview["result"]["job_count"] == 1
+    window.submit_matrix()
+    window.submit_matrix()
+    assert len(service.catalog.list_jobs()) == 2
+    window.submit_new_matrix_batch()
+    assert len(service.catalog.list_jobs()) == 3
     window.close()
     app.processEvents()
 
@@ -181,7 +200,7 @@ def test_qt_queue_and_detail_widgets_use_persisted_service(tmp_path: Path) -> No
         autostart_supervisor=False,
         poll_interval_ms=60_000,
     )
-    assert reopened.model.rowCount() == 1
+    assert reopened.model.rowCount() == 3
     assert reopened.selected_job()["case_id"] == case_id
     reopened.close()
     app.processEvents()
