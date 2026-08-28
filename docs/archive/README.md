@@ -11,6 +11,12 @@ selected active work.
 
 ## 2026-08-28
 
+- [Native Solver Lab Unattended Execution And Identity Hardening](2026-08-28-native-solver-lab-unattended-hardening/README.md) —
+  binds complete mutation and dispatch identities, adds crash-atomic hashed
+  evidence, truthful recovery/quarantine, split host accounting, and one
+  singleton MCP-plus-supervisor launcher. Oliver waived the six-hour soak;
+  accelerated, real-native, partial-soak, MCP, and full regression evidence is
+  retained without claiming overnight qualification.
 - [Native Solver Lab GUI Stabilization](2026-08-28-native-solver-lab-gui-stabilization/README.md) —
   makes explicit-null reports safe, moves cached aggregation off the Qt thread,
   gives every visible action durable state and feedback, and qualifies real

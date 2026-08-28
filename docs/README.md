@@ -31,15 +31,14 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The selected
-[Native Solver Lab Unattended Execution and Identity Hardening](active/2026-08-28-native-solver-lab-unattended-hardening/plan.md)
-boundary starts from the completed GUI stabilization and hardens immutable
+The completed
+[Native Solver Lab Unattended Execution and Identity Hardening](archive/2026-08-28-native-solver-lab-unattended-hardening/README.md)
+boundary started from the completed GUI stabilization and hardened immutable
 dispatch identity, watchdog enforcement, atomic hashed terminal publication,
 orphan quarantine/recovery, evidence integrity, host headroom, and one
-MCP-plus-supervisor unattended path. Gates 0–5 and every non-soak regression,
-pipeline, and documentation check are complete. Its six-plus-hour unattended
-qualification is explicitly deferred, so the boundary remains active rather
-than archived.
+MCP-plus-supervisor unattended path. Gates 0–5 and every non-soak acceptance
+check passed. Oliver explicitly waived its six-plus-hour soak; the result
+retains that limitation and does not claim overnight qualification.
 
 The completed
 [Native Solver Lab GUI Stabilization](archive/2026-08-28-native-solver-lab-gui-stabilization/README.md)

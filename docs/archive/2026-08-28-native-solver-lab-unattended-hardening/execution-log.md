@@ -1,9 +1,8 @@
 # Native Solver Lab Unattended Execution and Identity Hardening Log
 
-**Status: Gates 0–5 passed. The Gate 6 harness, accelerated suite, and
-real-native rehearsal passed; every non-soak Gate 7 check passed. Oliver
-explicitly deferred the required six-plus-hour soak, so Gate 6 and final
-archival remain open.**
+**Status: completed on 2026-08-28 with an explicit owner-approved qualification
+exception.** Gates 0–5 and every non-soak Gate 7 check passed. Oliver waived
+the Gate 6 six-plus-hour soak; it is not recorded as overnight qualification.
 
 Parent: [Plan](plan.md)
 
@@ -108,8 +107,8 @@ source inspection, editing, testing, and Git surface.
 | 0–3 checkpoint | passed | 72 focused tests, clean diff check, local checkpoint commit, and exact HANDOFF continuation |
 | 4 — combined MCP/supervisor | passed | one-command real-stdio dispatch, singleton/race/legacy ownership, normal release, and queued/running/finalizing forced-restart tests |
 | 5 — fresh-task MCP E2E | passed | revision → submit → partial → cancel → retry → compare → export transcript below |
-| 6 — overnight qualification | deferred by Oliver | harness/accelerated suite/real-native rehearsal passed; interrupted soak retained as non-qualifying evidence |
-| 7 — final acceptance | non-soak checks passed; final closure pending Gate 6 | 82-test Lab suite, stdio, full pipeline, docs/link/diff checks passed |
+| 6 — overnight qualification | waived by Oliver; not passed | harness/accelerated suite/real-native rehearsal passed; interrupted soak retained as non-qualifying evidence |
+| 7 — final acceptance | passed under owner-amended acceptance | 82-test Lab suite, stdio, full pipeline, docs/link/diff checks passed; Gate 6 omission disclosed |
 
 ## Source-confirmed pre-implementation owners
 
@@ -510,15 +509,15 @@ source checkpoint:
 focused Lab suite: 82 passed in 60.84s
 stdio MCP integration: passed inside the focused suite, including initialize/tool schema/combined dispatch/control-only/release
 fresh-task MCP E2E: Gate 5 passed exclusively through the configured MCP surface
-overnight evidence audit: deferred; interrupted ledger passed two audits but is explicitly non-qualifying
+overnight evidence audit: explicitly waived by Oliver; interrupted ledger passed two audits but is non-qualifying
 shared corpus-worker/parity tests: passed inside the 82-test focused suite
 full scripts/test.ps1: passed once
 git diff --check: passed
-documentation link/reachability audit: passed; 435 Markdown files, 1797 local targets, zero missing after line-suffix/directory normalization, 431 reachable plus four policy exemptions
+documentation link/reachability audit: passed after archival; 437 Markdown files, 1800 local targets, zero missing after line-suffix/directory normalization, 433 reachable plus four template policy exemptions
 native/WASM changes: none
 10,000-run strategy verification: no new verification required; existing pipeline controls passed
 final source checkpoint: 4886594eab7e499669dabdbeb674fcefd7fa84b0
-archive/result checkpoint: deferred until Gate 6 passes
+archive/result checkpoint: commit containing the archived result
 ```
 
 The full pipeline included canonical ingest/validation and artifact
@@ -526,6 +525,15 @@ regeneration, `3,417,290` native checks with zero failures, all 12 solver
 benchmark specifications, existing 10,000-run compiled-strategy controls,
 28/28 release-WASM worker checks, and all web suites. These checks do not turn
 the interrupted soak into Gate 6 acceptance.
+
+## Owner closure decision
+
+Oliver explicitly decided on 2026-08-28 to skip the six-hour soak and close
+the milestone using the retained evidence above. The amendment changes only
+the boundary's acceptance requirement: it does not change the harness, source
+contracts, native mechanics, ABI, compiled data, strategy vocabulary, WASM
+behavior, or the immutable partial ledger. The completed result therefore
+states that overnight qualification was waived and remains unproved.
 
 ## Stop/handoff record
 

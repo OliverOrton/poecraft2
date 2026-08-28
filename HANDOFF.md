@@ -1,11 +1,10 @@
 # Handoff
 
-**Status: Gates 0–5 of the selected Native Solver Lab Unattended Execution and
-Identity Hardening boundary passed. The Gate 6 harness, accelerated suite, and
-real-native rehearsal passed, and every non-soak Gate 7 acceptance check is
-green. Oliver explicitly deferred the required six-plus-hour soak, so Gate 6
-and final archival remain open.** The configured MCP registration uses the
-combined version `0.2.0` launcher.
+**Status: no implementation boundary is active.** The Native Solver Lab
+Unattended Execution and Identity Hardening boundary is complete with an
+explicit owner-approved qualification exception: Oliver waived the six-hour
+soak, and the result does not claim overnight qualification. The configured
+MCP registration uses the combined version `0.2.0` launcher.
 
 ## Checkpoint
 
@@ -50,7 +49,7 @@ combined version `0.2.0` launcher.
   goal-progress-gated reforges on, junk-free exact terminal success, and no
   disabled action families unless a diagnostic control is selected.
 
-## Selected Native Solver Lab Unattended Hardening
+## Completed Native Solver Lab Unattended Hardening
 
 Gates 0–3 now add complete canonical mutation-request binding, full immutable
 dispatch identity revalidation, exact submitted-watchdog enforcement, separate
@@ -95,22 +94,10 @@ source checkpoint `4886594`, and the one permitted full
 root-reachability audit and `git diff --check` also passed. No native, ABI,
 compiled-data, strategy-vocabulary, WASM, browser, or mechanic source changed.
 
-The next exact action, when Oliver wants the overnight gate, is:
-
-```powershell
-$env:PYTHONPATH = "tools/ingest;bindings/python"
-py -3 -m poecraft_ingest.solver_lab_unattended_qualification `
-  --root . `
-  --output-root build/solver-lab/unattended-hardening `
-  --soak `
-  --duration-seconds 21600 `
-  --interval-seconds 600 `
-  --accelerated-evidence build/solver-lab/unattended-hardening/accelerated-20260828T205046.815181Z-50384/result.json
-```
-
-Do not edit source during that soak because periodic provenance revalidation
-must stay exact. Only after its ledger passes may the active boundary receive
-a final result and move to the archive.
+Oliver subsequently made the owner decision to waive the six-hour duration
+requirement and close the boundary. The harness still enforces 21,600 seconds
+if sustained evidence is wanted later, but this milestone is not overnight-
+qualified and must never be described that way.
 
 The fresh implementation task verified clean-tree/source ancestry, confirmed
 the configured Solver Lab MCP tools, and used MCP to inventory profiles, cases,
@@ -122,16 +109,18 @@ The selected scope is limited to complete dispatch-time identity revalidation,
 actual immutable-watchdog enforcement, canonical-payload idempotency, explicit
 per-worker host headroom, crash-atomic hashed terminal publication, artifact
 integrity verification, valid-final recovery, possible-live orphan quarantine,
-one combined MCP/supervisor launch path, a fresh-task MCP workflow, and
-overnight recovery qualification. Solver mechanics, search order, proof
+one combined MCP/supervisor launch path, a fresh-task MCP workflow, and the
+retained unattended qualification harness. Solver mechanics, search order, proof
 bounds, verified options, RCASSP, learned guidance, Imprint, native caps, and
 WASM behavior remain out of scope.
 
 Gates 0–3 are retained together as the first coherent checkpoint. The exact
 startup, tests, state decisions, and continuation are in the
-[execution log](docs/active/2026-08-28-native-solver-lab-unattended-hardening/execution-log.md);
-the remaining hard stops and retained-state rules remain authoritative in the
-[plan](docs/active/2026-08-28-native-solver-lab-unattended-hardening/plan.md).
+[execution log](docs/archive/2026-08-28-native-solver-lab-unattended-hardening/execution-log.md);
+the owner amendment and original hard-stop contracts are preserved in the
+[plan](docs/archive/2026-08-28-native-solver-lab-unattended-hardening/plan.md),
+and the final disposition is in the
+[result](docs/archive/2026-08-28-native-solver-lab-unattended-hardening/result.md).
 
 ## Completed Native Solver Lab GUI Stabilization
 

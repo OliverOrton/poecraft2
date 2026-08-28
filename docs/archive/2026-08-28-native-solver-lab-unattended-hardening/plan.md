@@ -1,12 +1,24 @@
 # Native Solver Lab Unattended Execution and Identity Hardening
 
-**Status: selected; implementation has not begun.** Selected by Oliver on
-2026-08-28 from the completed GUI-stabilization source checkpoint
-`978b200e8d7993a49ee7991f303cc0823f60914b`.
+**Status: completed on 2026-08-28 with an explicit owner-approved qualification
+exception.** Gates 0–5 and every non-soak Gate 7 check passed. Oliver waived
+the Gate 6 six-plus-hour soak after reviewing the accelerated, real-native,
+partial-soak, and complete regression evidence; this result does not claim
+overnight qualification.
 
-Parent: [Active work](../README.md)
+Parent: [Documentation archive](../README.md)
 
 Progress and exact evidence belong in the [execution log](execution-log.md).
+
+## Owner Closure Decision
+
+On 2026-08-28, after the complete focused suite, stdio integrations, full
+repository pipeline, and documentation audit passed, Oliver explicitly chose
+to skip the remaining six-hour soak and close the boundary. The original Gate
+6 duration and pass language remains below as the historical plan contract.
+Its disposition is **waived by Oliver, not passed**. No process, hash,
+reservation, or native-control assertion was weakened, and the interrupted
+ledger remains `passed: false`.
 
 ## Objective
 
