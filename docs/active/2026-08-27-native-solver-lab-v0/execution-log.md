@@ -1,6 +1,6 @@
 # Native Solver Lab v0 Execution Log
 
-**Status: active; Gates 0-3 complete, Gate 4 next.**
+**Status: active; Gates 0-4 complete, Gate 5 next.**
 
 Parent: [Plan](plan.md)
 
@@ -10,7 +10,7 @@ Parent: [Plan](plan.md)
   boundary`) and activated from clean checkpoint `bd86b46` (`Plan native
   solver lab v0`).
 - Working tree was clean at activation.
-- Current gate: Gate 4 — LLM controls and investigation bundles.
+- Current gate: Gate 5 — Compare, Strategy, and Matrix GUI.
 - Gate 0 added only versioned contracts, the frozen profile/corpus, and
   optional dependencies. No catalog, supervisor, GUI, CLI, or MCP service
   implementation exists yet.
@@ -27,9 +27,8 @@ Parent: [Plan](plan.md)
 
 ## Next executable step
 
-Complete the stable JSON vocabulary, add the closed local stdio MCP adapter,
-and export bounded investigation bundles without exposing arbitrary shell,
-SQL, path writes, mechanics overrides, or raw multi-megabyte telemetry.
+Add GUI tabs for matrix submission, immutable attempt comparison, bounded bound
+trajectories, and strategy/evaluation summaries over the Gate 4 service.
 
 ## Gate 0 result — 2026-08-27
 
@@ -138,4 +137,39 @@ SQL, path writes, mechanics overrides, or raw multi-megabyte telemetry.
   live cancel, stale lease/supervisor restart, retry artifact preservation,
   priority/clone/pause controls, and v1-to-v2 catalog migration.
 - Focused Gate 0-3 tests: 32 passed in 4.83 seconds. No native matrix or full
+  acceptance pipeline was run.
+
+## Gate 4 result — 2026-08-27
+
+- Completed the stable JSON CLI vocabulary for profiles/cases, individual and
+  matrix submission, durable job controls, run/bound/strategy reads,
+  comparison, exact-evaluation disclosure, bundle export, and supervisor
+  status.
+- Added a local stdio MCP 2.1 adapter with 20 finite typed tools over the same
+  application service. It exposes no arbitrary shell, SQL, write path,
+  benchmark-argument bag, or mechanics override. All nine mutating tools
+  require idempotency and expose dry-run.
+- Read results are bounded: job/event limits are capped, bound traces are
+  deterministically downsampled to at most 256 samples, strategy reads return
+  census/action/pricing/terminal/route-failure summaries, and worker logs are
+  available only as a bounded tail inside an investigation bundle.
+- Native run summaries now include lower authority, independently evaluated
+  upper, gaps, latest deterministic work, native owned memory, and the largest
+  top-level timing owners without returning full multi-megabyte telemetry.
+- `evaluate_strategy` discloses the independent native exact evaluation already
+  required during every published-profile solve; v0 does not introduce a
+  second evaluator backend.
+- Investigation export writes only under ignored
+  `build/solver-lab/bundles/<content-derived-id>/`. The bounded bundle includes
+  request/profile/action-scope identity, terminal status, bound milestones,
+  work/memory/timing owners, strategy/evaluation summary, hashed artifact
+  index, events, bounded log tail, and exact reproduction argv.
+- Matrix submission is bounded to 100 cases x 100 replicates, uses one durable
+  experiment, and gives every child job its own derived idempotency identity.
+- The MCP schema test pins the complete 20-tool vocabulary and verifies every
+  mutation schema. The real Gate 2 exact suffix attempt was read successfully
+  through the new CLI: 78 nodes / 219 edges, complete pricing, exact cost
+  `1101.15648683309`, success mass 1, off-policy mass 0, and automatic Imprint
+  false. Bundle dry-run produced no file.
+- Focused Gate 0-4 tests: 35 passed in 7.11 seconds. No native matrix or full
   acceptance pipeline was run.

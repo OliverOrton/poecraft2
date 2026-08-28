@@ -276,6 +276,35 @@ class SolverLabCatalog:
             ).fetchone()
         return self._command_row(row) if row else None
 
+    def record_operation(
+        self,
+        *,
+        command_id: str,
+        idempotency_key: str,
+        operation: str,
+        target_id: str | None,
+        request: Mapping[str, Any],
+        result: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        with self.transaction(immediate=True) as connection:
+            existing = connection.execute(
+                "SELECT * FROM commands WHERE idempotency_key=?",
+                (idempotency_key,),
+            ).fetchone()
+            if existing:
+                return _decode(existing["result_json"], {})
+            self._insert_command(
+                connection,
+                command_id=command_id,
+                idempotency_key=idempotency_key,
+                operation=operation,
+                target_id=target_id,
+                dry_run=False,
+                request=request,
+                result=result,
+            )
+        return dict(result)
+
     def submit_job(
         self,
         *,
@@ -583,6 +612,26 @@ class SolverLabCatalog:
                 "heartbeat_at=?, stopped_at=? WHERE supervisor_id=?",
                 (now, now, supervisor_id),
             )
+
+    def list_supervisor_sessions(self, *, limit: int = 20) -> list[dict[str, Any]]:
+        limit = max(1, min(int(limit), 100))
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT * FROM supervisor_sessions ORDER BY started_at DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [
+            {
+                "supervisor_id": row["supervisor_id"],
+                "process_identity_token": row["process_identity_token"],
+                "status": row["status"],
+                "started_at": row["started_at"],
+                "heartbeat_at": row["heartbeat_at"],
+                "stopped_at": row["stopped_at"],
+                "configuration": _decode(row["configuration_json"], {}),
+            }
+            for row in rows
+        ]
 
     def stale_attempts(self, *, heartbeat_before: str) -> list[dict[str, Any]]:
         with self._connect() as connection:

@@ -45,6 +45,12 @@ def build_parser() -> argparse.ArgumentParser:
     submit.add_argument("--experiment-id")
     submit.add_argument("--replicate", type=int, default=0)
     submit.add_argument("--dry-run", action="store_true")
+    matrix = subparsers.add_parser("submit-matrix")
+    matrix.add_argument("--case-id", action="append", required=True)
+    matrix.add_argument("--replicates", type=int, default=1)
+    matrix.add_argument("--idempotency-key", required=True)
+    matrix.add_argument("--priority", type=int, default=0)
+    matrix.add_argument("--dry-run", action="store_true")
 
     jobs = subparsers.add_parser("jobs")
     jobs.add_argument("--limit", type=int, default=200)
@@ -81,6 +87,28 @@ def build_parser() -> argparse.ArgumentParser:
     identity = summary.add_mutually_exclusive_group(required=True)
     identity.add_argument("--job-id")
     identity.add_argument("--attempt-id")
+    trace = subparsers.add_parser("bound-trace")
+    trace_identity = trace.add_mutually_exclusive_group(required=True)
+    trace_identity.add_argument("--job-id")
+    trace_identity.add_argument("--attempt-id")
+    trace.add_argument("--max-samples", type=int, default=128)
+    compare = subparsers.add_parser("compare")
+    compare.add_argument("attempt_ids", nargs="+")
+    strategy = subparsers.add_parser("strategy-summary")
+    strategy_identity = strategy.add_mutually_exclusive_group(required=True)
+    strategy_identity.add_argument("--job-id")
+    strategy_identity.add_argument("--attempt-id")
+    evaluation = subparsers.add_parser("evaluate-strategy")
+    evaluation_identity = evaluation.add_mutually_exclusive_group(required=True)
+    evaluation_identity.add_argument("--job-id")
+    evaluation_identity.add_argument("--attempt-id")
+    bundle = subparsers.add_parser("export-bundle")
+    bundle_identity = bundle.add_mutually_exclusive_group(required=True)
+    bundle_identity.add_argument("--job-id")
+    bundle_identity.add_argument("--attempt-id")
+    bundle.add_argument("--idempotency-key", required=True)
+    bundle.add_argument("--dry-run", action="store_true")
+    subparsers.add_parser("supervisor-status")
 
     idle = subparsers.add_parser("run-until-idle")
     idle.add_argument("--max-workers", type=int, default=1)
@@ -129,6 +157,14 @@ def main(argv: list[str] | None = None) -> int:
                 replicate=args.replicate,
                 dry_run=args.dry_run,
             )
+        elif args.operation == "submit-matrix":
+            result = service.submit_matrix(
+                case_ids=args.case_id,
+                replicates=args.replicates,
+                idempotency_key=args.idempotency_key,
+                priority=args.priority,
+                dry_run=args.dry_run,
+            )
         elif args.operation == "jobs":
             result = service.list_jobs(limit=args.limit)
         elif args.operation == "job":
@@ -171,6 +207,31 @@ def main(argv: list[str] | None = None) -> int:
             result = service.get_run_summary(
                 job_id=args.job_id, attempt_id=args.attempt_id
             )
+        elif args.operation == "bound-trace":
+            result = service.get_bound_trace(
+                job_id=args.job_id,
+                attempt_id=args.attempt_id,
+                max_samples=args.max_samples,
+            )
+        elif args.operation == "compare":
+            result = service.compare_runs(attempt_ids=args.attempt_ids)
+        elif args.operation == "strategy-summary":
+            result = service.get_strategy_summary(
+                job_id=args.job_id, attempt_id=args.attempt_id
+            )
+        elif args.operation == "evaluate-strategy":
+            result = service.evaluate_strategy(
+                job_id=args.job_id, attempt_id=args.attempt_id
+            )
+        elif args.operation == "export-bundle":
+            result = service.export_investigation_bundle(
+                idempotency_key=args.idempotency_key,
+                job_id=args.job_id,
+                attempt_id=args.attempt_id,
+                dry_run=args.dry_run,
+            )
+        elif args.operation == "supervisor-status":
+            result = service.get_supervisor_status()
         elif args.operation == "run-until-idle":
             supervisor = SolverLabSupervisor(
                 service,
