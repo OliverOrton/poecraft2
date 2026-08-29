@@ -1,11 +1,21 @@
 # Active Work
 
-**Status: no implementation boundary is active.** The Verified Executable
-Graph-Fragment Core v1 boundary completed and moved to the
-[documentation archive](../archive/2026-08-28-verified-executable-graph-fragment-core-v1/README.md).
-Oliver must select the next boundary before implementation resumes.
+**Status: one implementation boundary is active.** Oliver selected
+[Generated Planner-Envelope Qualification And Ladder-Service Repair v1](2026-08-28-generated-planner-envelope-qualification-ladder-service-repair-v1/plan.md)
+on 2026-08-28. It first repairs Solver Lab disabled-family identity and native
+low-cap finalization, then attributes primitive and generated-envelope work
+before permitting any narrow solver repair.
+
+The completed
+[Verified Executable Graph-Fragment Core v1](../archive/2026-08-28-verified-executable-graph-fragment-core-v1/README.md)
+remains parked and outside the active implementation scope.
 
 Parent: [Documentation map](../README.md)
+
+## Active execution record
+
+- [Plan](2026-08-28-generated-planner-envelope-qualification-ladder-service-repair-v1/plan.md)
+- [Execution log](2026-08-28-generated-planner-envelope-qualification-ladder-service-repair-v1/execution-log.md)
 
 ## Historical work
 

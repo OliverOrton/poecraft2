@@ -31,14 +31,18 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. Oliver must select the next boundary
-before implementation resumes. The completed
+Oliver selected
+[Generated Planner-Envelope Qualification And Ladder-Service Repair v1](active/2026-08-28-generated-planner-envelope-qualification-ladder-service-repair-v1/plan.md)
+on 2026-08-28. It preserves the complete required action envelope and the
+existing exact-goal carrier ladder while repairing disabled-family identity,
+low-cap finalization, operator lineage, phase ownership, and measured
+generation/admission/row/scheduling service. The completed
 [Verified Executable Graph-Fragment Core v1](archive/2026-08-28-verified-executable-graph-fragment-core-v1/README.md)
 adds a probability-free leaf-control IR, exact engine-built single-entry
 verification, complete exit/SCC/resource evidence, FinalSuccess-only ordinary
 flattening, independent evaluation, and an MCP-qualified isolated shadow lane.
 It changes no incumbent, product default, C ABI, strategy vocabulary, or WASM
-behavior.
+behavior and remains parked outside the active boundary.
 
 The completed
 [Native Solver Lab Unattended Execution and Identity Hardening](archive/2026-08-28-native-solver-lab-unattended-hardening/README.md)

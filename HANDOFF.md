@@ -1,8 +1,10 @@
 # Handoff
 
-**Status: no implementation boundary is active.** Verified Executable
-Graph-Fragment Core v1 completed all six gates on 2026-08-28 and is archived.
-Oliver must select the next boundary before implementation resumes.
+**Status: Generated Planner-Envelope Qualification And Ladder-Service Repair
+v1 is active.** Oliver selected it on 2026-08-28 after a controlled Native
+Solver Lab diagnosis localized the next problem to broad generated-envelope
+execution economics rather than the permanent registry, carrier-ladder
+concept, or fragment verifier.
 
 The preceding Native Solver Lab unattended-hardening six-hour soak was
 **owner-waived, not passed**. It is not overnight qualification and must not be
@@ -10,7 +12,8 @@ cited as such.
 
 ## Completed Checkpoint
 
-- Branch: `main`, local-only; nothing was pushed.
+- Branch: `main`; the completed fragment checkpoint is synchronized with
+  `origin/main`.
 - Gate 5 integration base:
   `79c925f73f48c9bb60b02a5218a05bb236c84870`, with parents
   `cc9facd527d86ae72d187bc1771499c1ecd9808c` and
@@ -49,5 +52,22 @@ hashes are retained in the execution log.
 
 ## Current Boundary
 
-None. Archived plans and notes do not select work. Wait for Oliver to choose a
-new boundary before implementation.
+[Generated Planner-Envelope Qualification And Ladder-Service Repair v1](docs/active/2026-08-28-generated-planner-envelope-qualification-ladder-service-repair-v1/plan.md)
+is selected and active from source checkpoint
+`28c4c30c75cef6ff8e1b38fa218f9b5a98d70203`.
+
+Gate 0 first removes the developer-specific Visual Studio 2022 Ninja binding
+from the portable build path, provisions the hosted UCRT64 toolchain, and
+activates the documentation boundary. Gate 1 then repairs the false Solver Lab
+disabled-family identity component and the native 256-discovered-state access
+violation before any action-envelope behavior change.
+
+The worktree contains one preserved untracked file named `0`, three bytes with
+the content line `0`, which appeared during the preceding diagnostic window.
+Do not delete, clean, edit, stage, rename, or commit it. Stop if any other
+unexpected dirty path appears.
+
+The fragment archive remains parked and unchanged. Do not implement fragment
+integration, a new planner, meta-policy search, RCASSP, or learned guidance in
+this boundary. Detailed progress and exact diagnostic identities are in the
+[execution log](docs/active/2026-08-28-generated-planner-envelope-qualification-ladder-service-repair-v1/execution-log.md).
