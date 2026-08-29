@@ -1,8 +1,8 @@
 # Handoff
 
-**Status: Verified Executable Graph-Fragment Core v1 Gates 0–4 are complete;
-Gate 5 automated shadow isolation is committed, but a fresh configured MCP
-connection is required before operator qualification can continue.**
+**Status: Verified Executable Graph-Fragment Core v1 Gates 0–5 are complete;
+Gate 5 configured-MCP operator qualification passed from the clean integration
+checkpoint, and Gate 6 final acceptance is the exact next action.**
 The first coherent checkpoint adds the private probability-free leaf IR,
 authority firewall, and exact single-entry product verifier. Gate 3 now adds a
 real engine-backed Transmute/Scour renewal leaf and explicit native benchmark
@@ -10,16 +10,11 @@ diagnostic fixture. Gate 4 now flattens only a verified FinalSuccess-only
 structural projection into ordinary strategy JSON and independently evaluates
 it. Gate 5 now has an isolated post-finalization native shadow process, frozen
 control/shadow cases, explicit full/core identities, and automated ordinary-
-parity evidence. MCP-only qualification is the exact next action; no incumbent
-integration has begun.
-
-The configured MCP connection in the implementation task remained loaded on
-the preceding five-case corpus after the seven-case checkpoint was committed.
-Its recorded dispatcher owner was already absent and there were no running
-jobs. The exact control-only loader processes were ended without editing or
-force-clearing catalog ownership, but this task's MCP transport remained
-closed. Start with a genuinely fresh configured MCP connection; do not replace
-the required operator workflow with the repository CLI or catalog access.
+parity evidence. A fresh configured server then discovered all seven frozen
+cases and completed MCP-only discovery, submission, live monitoring,
+cancellation, terminal process-tree/release verification, natural control and
+shadow runs, exact comparison, bundle replay, and artifact-integrity checks.
+No incumbent integration has begun.
 
 The preceding unattended-hardening boundary's six-hour soak was
 **owner-waived, not passed**. It is not overnight qualification and must not be
@@ -28,6 +23,12 @@ cited as such.
 ## Checkpoint
 
 - Branch: `main`, local-only; nothing was pushed.
+- Gate 5 operator-qualification integration base:
+  `79c925f73f48c9bb60b02a5218a05bb236c84870` (`Resolve verified fragment
+  planning divergence`), with first parent
+  `cc9facd527d86ae72d187bc1771499c1ecd9808c` and second parent
+  `f89b67a839ca8199605422947195c72b9175b600`. The branch and worktree matched
+  exactly and were clean before MCP mutation.
 - Gate 5 automated source checkpoint: local commit
   `faf6eba8704df8c79d4bc448d3bea18f14cbb185` (`Isolate verified fragment
   shadow execution`). The tree was clean after this commit. The MCP-only Gate
@@ -80,8 +81,29 @@ cited as such.
   `8b1e6be735e3de9703ca27411ae19721b0445500a7691a8abf720a38edb55a59`.
   The shadow alone verified/evaluated the 4,031-row cyclic leaf with Allflame
   cost `91.58869999999888`; killed, capped, malformed, and independently
-  refused shadow tests preserve the completed ordinary result. The MCP-only
-  Gate 5 operator transcript is still pending, so Gate 5 is not yet complete.
+  refused shadow tests preserve the completed ordinary result.
+- Gate 5 MCP cancellation witness: frozen case
+  `conquest-lamellar-allflame-clean-4-pdr-product8`, job
+  `job-cf9cd214-8642-4cea-b817-8e5d7c28c150`, attempt
+  `attempt-535ea8a1-1fbb-4ce1-a96f-06295c48b808`. MCP observed a genuine
+  phase-1 partial, acknowledged `running -> canceling`, and finalized canceled
+  in `476.5198000241071` ms using
+  `graceful_then_process_tree_termination`; `survivor=false`, and the next
+  singleton job dispatched normally with no running remainder.
+- Gate 5 MCP control/shadow: control job/attempt
+  `job-b190c0ee-a2c9-4c18-8c36-b91686e0f76c` /
+  `attempt-05faedf6-0614-46f4-b7b4-6ce481f1d623`; shadow job/attempt
+  `job-c3134c27-a64c-47cd-a77a-5097c75cc00a` /
+  `attempt-63fea1b3-6ab0-40e7-8cc6-1c8cef121a18`. Both completed naturally.
+  Full request identities are unequal (`9fc1e35b...` versus `8e98f9c3...`),
+  core solve identity is equal (`87d11484686d552a...`), all 17 enumerated core
+  components and all nine ordinary components are equal, and ordinary result
+  identity is equal (`1f40d2f423ffd66d...`). Only the isolated
+  `fragment_shadow_v1` diagnostic differs.
+- Gate 5 MCP bundle: `bundle-ded87deaef203dc6696308f4`, SHA-256
+  `1850e74ae282ebb6deed7edfcc4d8c8cc87f209f267a684294f8949e2dfc08ab`,
+  `264714` bytes. Same-key MCP replay returned the identical ID/hash/path/size,
+  and all seven shadow artifact identities remained stable and verified.
 - The checkpoint certifies only exact leaf mass/properness/resources for one
   exact entry. It is not ordinary strategy JSON, an executable/public upper,
   an incumbent, product behavior, or option-quality evidence.
