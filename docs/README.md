@@ -31,8 +31,12 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. Oliver must select the next chunk before
-implementation resumes.
+[Carrier-Ladder Online Continuation Completion v1](active/2026-08-29-carrier-ladder-online-continuation-completion-v1/plan.md)
+is active. It gives the existing exact-goal carrier ladder one bounded,
+solve-local continuation-completion lane. The ladder selects exact entries and
+exits; only mechanically verified and independently evaluated ordinary
+strategies may reach existing incumbent/publication authority. The boundary
+does not create a permanent fragment library or enable product defaults.
 
 The completed
 [Native Solver CLI Workflow v1](archive/2026-08-29-native-solver-cli-workflow-v1/README.md)

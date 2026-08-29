@@ -1,7 +1,19 @@
 # Handoff
 
-**Status: no implementation boundary is active.** Oliver must choose the next
-chunk before implementation resumes.
+**Status: Carrier-Ladder Online Continuation Completion v1 is active.**
+
+Selected plan:
+[docs/active/2026-08-29-carrier-ladder-online-continuation-completion-v1/plan.md](docs/active/2026-08-29-carrier-ladder-online-continuation-completion-v1/plan.md)
+
+Execution log:
+[docs/active/2026-08-29-carrier-ladder-online-continuation-completion-v1/execution-log.md](docs/active/2026-08-29-carrier-ladder-online-continuation-completion-v1/execution-log.md)
+
+The initial boundary is benchmark-private and uses the already-qualified
+full-minus-Fossil envelope. The existing ladder is the only source of exact
+entry/exit obligations; the fragment verifier may certify solve-local control
+but gains no direct incumbent or publication authority. No permanent fragment
+catalogue, ladder replacement, product-default enablement, or full-envelope
+claim is authorized.
 
 ## Completed Checkpoint
 
@@ -35,9 +47,10 @@ chunk before implementation resumes.
 - [Stable Solver Lab contract](docs/foundation/solver-lab.md)
 - [Evidence index](docs/evidence.md#native-solver-cli-workflow)
 
-The completed Verified Executable Graph-Fragment Core v1 remains parked. Do
-not resume fragment integration, solver behavior work, a new planner, meta-
-policy search, RCASSP, or learned guidance without a newly selected boundary.
+The completed Verified Executable Graph-Fragment Core v1 is now in scope only
+as the exact verifier for this selected ladder-owned continuation boundary. It
+does not authorize a fragment library, separate planner, meta-policy search,
+RCASSP, learned guidance, or product integration.
 
 The earlier Native Solver Lab unattended-hardening six-hour soak was
 **owner-waived, not passed**. It remains non-overnight evidence and must not be
