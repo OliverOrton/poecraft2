@@ -1,9 +1,13 @@
 # Handoff
 
-**Status: no implementation boundary is active.** Generated
-Planner-Envelope Qualification And Ladder-Service Repair v1 completed on
-2026-08-29. Oliver must choose the next boundary before implementation
-resumes.
+**Status: implementation boundary active.** Oliver selected
+[Native Solver Lab CLI-First MCP Removal v1](docs/active/2026-08-29-native-solver-lab-cli-first-mcp-removal-v1/plan.md)
+on 2026-08-29. The boundary removes the repository and user-local Solver Lab
+MCP transport while preserving the existing JSON CLI, typed service, catalog,
+supervisor, saved evidence, cancellation guarantees, and GUI.
+
+Progress and exact evidence belong in the
+[execution log](docs/active/2026-08-29-native-solver-lab-cli-first-mcp-removal-v1/execution-log.md).
 
 The preceding Native Solver Lab unattended-hardening six-hour soak was
 **owner-waived, not passed**. It remains non-overnight evidence and must not be
