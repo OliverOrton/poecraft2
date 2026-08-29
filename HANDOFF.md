@@ -1,7 +1,18 @@
 # Handoff
 
-**Status: no implementation boundary is active.** Oliver must choose the next
-chunk before implementation resumes.
+**Status: implementation boundary active.**
+
+## Current Boundary
+
+[Carrier-Ladder Selected-Prefix Closure v1](docs/active/2026-08-29-carrier-ladder-selected-prefix-closure-v1/plan.md)
+is active from source checkpoint
+`e5c5ad6b0bfed7287a3f7892330755e77efc35ba`.
+
+The boundary attributes strict exact replay's first missing coarse selected
+row and may close strict-only prefix support exclusively from already-
+completed selected rows in the same captured graph. It may not invent or
+reoptimize actions, change ordinary solver authority, or begin fragment
+composition.
 
 ## Most Recent Completed Boundary
 
@@ -24,12 +35,12 @@ Full identities and artifacts are in the
 the concise disposition is in the
 [result](docs/archive/2026-08-29-carrier-ladder-exact-boundary-contract-v1/result.md).
 
-## Proposed Next Owner
+## Current Owner
 
-No next owner is selected. The evidence narrows any later ladder/fragment
-continuation work to the incomplete selected-prefix support that occurs before
-the named boundary. Do not infer a repair, fragment integration, or broader
-search boundary without Oliver selecting it.
+Gate 0 provenance audit, then the typed strict-support-hole witness. The first
+implementation decision depends on whether state 213 already owns a completed
+ordinary row that capture excluded solely because the ordinary row's support
+did not include the strict outcome projection.
 
 ## Retained Repository State
 

@@ -1,9 +1,16 @@
 # Active Work
 
-**Status: no implementation boundary is active.** Oliver must choose the next
-chunk before implementation resumes.
+**Status: one implementation boundary is active.**
 
 Parent: [Documentation map](../README.md)
+
+## Current work
+
+- [Carrier-Ladder Selected-Prefix Closure v1](2026-08-29-carrier-ladder-selected-prefix-closure-v1/plan.md) —
+  attributes strict exact replay's first missing coarse selected row and may
+  extend the private prefix only from completed rows already owned by the same
+  captured graph; ordinary solver authority and fragment composition remain
+  out of scope.
 
 ## Historical work
 

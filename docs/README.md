@@ -31,8 +31,12 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. Oliver must choose the next chunk
-before implementation resumes.
+The selected
+[Carrier-Ladder Selected-Prefix Closure v1](active/2026-08-29-carrier-ladder-selected-prefix-closure-v1/plan.md)
+boundary is active. It attributes strict exact replay's first missing coarse
+selected row and may close private prefix support only from already-completed
+rows in the same captured graph. It does not authorize ordinary solver or
+fragment-composition changes.
 
 The completed diagnosis-only
 [Carrier-Ladder Exact Boundary Contract v1](archive/2026-08-29-carrier-ladder-exact-boundary-contract-v1/README.md)
