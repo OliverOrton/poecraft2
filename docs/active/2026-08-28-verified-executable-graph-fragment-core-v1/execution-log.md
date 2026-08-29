@@ -1,9 +1,10 @@
 # Verified Executable Graph-Fragment Core v1 Log
 
-**Status: Gates 0–3 passed. Gates 0–2 are retained in local commit
+**Status: Gates 0–4 passed. Gates 0–2 are retained in local commit
 `94f9584a98298c9987e335bbcd82c41423877997`; Gate 3 is retained in the local
-checkpoint titled `Add real engine-backed fragment renewal leaf`. Gate 4 is
-next.**
+commit `fdc7e10fd4f1e4112ebf680e1a734f467309b668`; Gate 4 is retained in the
+local checkpoint titled `Flatten verified fragment into ordinary strategy`.
+Gate 5 is next.**
 
 Parent: [Plan](plan.md)
 
@@ -81,9 +82,12 @@ merge of `f89b67a839ca8199605422947195c72b9175b600` into the required local
 planning commit. Oliver then explicitly instructed Codex to deal with the
 conflicts and continue. Codex aborted the untouched merge; the incoming commit
 remains reachable through `origin/main`. The same untouched merge reappeared
-once during read-only baseline work and was aborted under that same explicit
-instruction. No merge commit, conflict resolution, remote update, source edit,
-or catalog mutation was used to manufacture the startup result.
+once during read-only baseline work and again while Gate 4 documentation was
+being updated. Both were aborted under that same explicit instruction; the
+later abort preserved all uncommitted, passing Gate 4 source work and restored
+the committed local planning documents without conflict markers. No merge
+commit, remote update, source edit, or catalog mutation was used to manufacture
+the startup result.
 
 Expected conditions:
 
@@ -108,7 +112,7 @@ Stop without editing or cleaning if any source/tree/MCP condition differs.
 | 2 — exact leaf verifier | passed | exact product rows, exit mass, SCC absorption, resources, historical regressions |
 | 0–2 checkpoint | passed | clean local commit `94f9584a98298c9987e335bbcd82c41423877997` and exact HANDOFF continuation |
 | 3 — real cyclic leaf | passed | exact-terminal Transmute/Scour renewal certificate, analytical oracle, deterministic ordinary control |
-| 4 — flatten/evaluate | not started | FinalSuccess-only positive exit mass, ordinary JSON, independent exact evaluator, resource/cost reconciliation |
+| 4 — flatten/evaluate | passed | FinalSuccess-only positive exit disposition, ordinary JSON, independent exact evaluator, resource/cost reconciliation |
 | 5 — shadow/MCP | not started | immutable ordinary finalization, isolated private caps/process, full/core identity comparison, MCP operator evidence |
 | 6 — final acceptance | not started | focused/native/10k/full pipeline/conditional WASM/docs/scope checks and archive |
 
@@ -290,19 +294,61 @@ decision: PASS; retain the native real cyclic leaf and its explicit benchmark
 ## Gate 4 Flattening/Evaluation Record
 
 ```text
-flattened strategy identity:
-nodes/edges/JSON bytes:
-probability-free flattener audit:
-fresh parser/compiler result:
-exact evaluator status/cost:
-success/off-policy mass:
-properness/mass error:
-expected resource reconciliation:
-forward-reference comparison:
-non-final positive-exit fail-closed fixtures:
-seeded incumbent unchanged:
-focused test command/result:
-decision:
+flattened strategy identity: full candidate canonical bytes with display digest
+  2edeed49ce1d5e6a; repeated fresh verified controls emit byte-identical JSON
+nodes/edges/JSON bytes: 5 compiled nodes / 6 compiled edges / 2,049 bytes;
+  only existing start, operation, router/condition, edge-default, and success/
+  failure terminal vocabulary is used
+verified structural projection: the exact verifier alone constructs
+  VerifiedLeafStructuralControlV1 from canonical IR plus exact positive-exit
+  dispositions; complete exact-exit canonical identities remain distinct but
+  the projection exposes no exit probability, resource, action-count,
+  certificate, priced-cost, or expected-value getter
+clean start binding: FragmentCleanBaseStateV1 is part of the canonical IR and
+  is independently copied into the immutable verification context; mismatch
+  refuses before graph work. V1 permits only the exact clean normal entry
+  shape needed by this selected leaf
+probability-free flattener audit: SingleFragmentFlattenerV1 accepts only the
+  structural projection. Compile-time view checks prove that parameter is not
+  probability-bearing; the flattener body never receives VerifiedLeafFragmentV1.
+  Missing-price and NaN-price verifier diagnostics produce identical JSON and
+  candidate identity; emitted JSON contains neither probability nor
+  expected_cost fields
+fresh parser/compiler result: PASS through a new compiled-artifact session and
+  compile_strategy_json call over the emitted bytes; every non-exit IR node
+  emits its explicit certification-failure default
+exact evaluator status/cost: production exact evaluator converged, complete
+  pricing, cost reconciliation PASS; total expected cost
+  23.789999999999708 at Transmute/Scour price 0.05 each
+success/off-policy mass: success 1; failure, stop, action-not-applied,
+  no-matching-edge, and unresolved probabilities all exactly 0
+properness/mass error: PASS; terminal mass 1, production residual and maximum
+  conservation/terminal-mass error 1.2212453270876722e-14
+expected resource reconciliation: Transmute 238.40000000000001, Scour
+  237.40000000000001, expected actions 475.80000000000001; resource,
+  action-descriptor, node-operation, material, and cost dot-product
+  reconciliation all pass within 1e-9
+forward-reference comparison: independent high-precision whole-graph forward
+  propagation agrees with production success/off-policy mass, expected
+  actions/resources, and total cost within 1e-9; it consumes only the freshly
+  compiled ordinary strategy and economy with maximum delta
+  9.9752406140089234e-13, never fragment certificate/value evidence
+non-final positive-exit fail-closed fixtures: separately verified positive
+  Subgoal, Recoverable, and CertificationFailure fixtures all refuse
+  non_final_positive_exit. Two FinalSuccess exits with distinct exact states
+  but one diagnostic carrier projection retain two exact dispositions and two
+  distinct flattened routes
+seeded incumbent unchanged: an actual native IncumbentPortfolio seeded at
+  identity feedbeef/value 10 remains bit-identical after a cheaper-looking
+  flattened diagnostic plus malformed and improper fragment refusals;
+  compile-time construction/conversion checks expose no candidate-to-incumbent
+  path
+focused test command/result: powershell -File scripts/dev-engine.ps1 -Task
+  Test -Suite fragment => PASS, 207 checks / 0 failures
+decision: PASS; retain one deterministic FinalSuccess-only flattener and the
+  independently evaluated shadow candidate. No IncumbentPortfolio observation,
+  public upper, product behavior, new vocabulary, or overnight qualification
+  is claimed
 ```
 
 ## Gate 5 Shadow And MCP Record

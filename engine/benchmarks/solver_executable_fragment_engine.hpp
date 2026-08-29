@@ -3,6 +3,7 @@
 #include "solver_executable_fragment.hpp"
 
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <optional>
 #include <string>
@@ -41,6 +42,45 @@ struct EngineBackedRenewalBuildResultV1 {
 EngineBackedRenewalBuildResultV1
 build_clean_one_goal_transmute_scour_renewal_v1(
     const std::string& compiled_artifact_directory);
+
+struct IndependentFragmentEvaluationV1 {
+    CanonicalIdentityV1 candidate_identity;
+    std::uint64_t strategy_json_bytes = 0;
+    std::uint64_t compiled_nodes = 0;
+    std::uint64_t compiled_edges = 0;
+    bool converged = false;
+    bool proper = false;
+    bool cost_complete = false;
+    bool cost_reconciled = false;
+    double success_probability = 0.0;
+    double failure_probability = 0.0;
+    double stop_probability = 0.0;
+    double action_not_applied_probability = 0.0;
+    double no_matching_edge_probability = 0.0;
+    double unresolved_probability = 0.0;
+    double expected_actions = 0.0;
+    std::map<std::string, double> expected_consumption;
+    double total_expected_cost = 0.0;
+    double maximum_mass_error = 0.0;
+    double forward_maximum_delta = 0.0;
+};
+
+struct EngineBackedFragmentEvaluationResultV1 {
+    std::optional<FlattenedFragmentCandidateV1> candidate;
+    std::optional<IndependentFragmentEvaluationV1> evaluation;
+    std::string refusal;
+
+    bool ok() const {
+        return candidate.has_value() && evaluation.has_value();
+    }
+};
+
+class EngineBackedFragmentEvaluatorV1 {
+public:
+    EngineBackedFragmentEvaluationResultV1 evaluate(
+        const FlattenedFragmentCandidateV1& candidate,
+        const std::string& compiled_artifact_directory) const;
+};
 
 } // namespace fragment_v1
 } // namespace solver

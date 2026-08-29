@@ -63,6 +63,71 @@ std::string hex_bytes(const std::string& bytes) {
     return encoded;
 }
 
+std::string json_string(const std::string& value) {
+    std::ostringstream out;
+    out << '"';
+    for (const unsigned char ch : value) {
+        switch (ch) {
+        case '"': out << "\\\""; break;
+        case '\\': out << "\\\\"; break;
+        case '\b': out << "\\b"; break;
+        case '\f': out << "\\f"; break;
+        case '\n': out << "\\n"; break;
+        case '\r': out << "\\r"; break;
+        case '\t': out << "\\t"; break;
+        default:
+            if (ch < 0x20) {
+                out << "\\u" << std::hex << std::setw(4)
+                    << std::setfill('0') << static_cast<unsigned>(ch)
+                    << std::dec << std::setfill(' ');
+            } else {
+                out << static_cast<char>(ch);
+            }
+        }
+    }
+    out << '"';
+    return out.str();
+}
+
+bool numeric_condition_parameter(const std::string& key) {
+    return key == "min" || key == "max" || key == "value" ||
+           key == "count" || key == "min_tier" || key == "version";
+}
+
+bool boolean_condition_parameter(const std::string& key) {
+    return key == "fractured" || key == "crafted";
+}
+
+std::string condition_json(const FragmentConditionV1& condition) {
+    std::ostringstream out;
+    out << "{\"type\":" << json_string(condition.type);
+    for (const auto& [key, value] : condition.parameters) {
+        out << ',' << json_string(key) << ':';
+        if (numeric_condition_parameter(key)) {
+            out << value;
+        } else if (boolean_condition_parameter(key) &&
+                   (value == "true" || value == "false")) {
+            out << value;
+        } else {
+            out << json_string(value);
+        }
+    }
+    if (!condition.children.empty()) {
+        out << ",\"conditions\":[";
+        for (std::size_t index = 0;
+             index < condition.children.size(); ++index) {
+            if (index != 0) out << ',';
+            out << condition_json(condition.children[index]);
+        }
+        out << ']';
+    }
+    if (condition.type == "at_least") {
+        out << ",\"count\":" << condition.at_least_count;
+    }
+    out << '}';
+    return out.str();
+}
+
 StableParametersV1 canonical_parameters(StableParametersV1 value) {
     std::sort(value.begin(), value.end());
     return value;
@@ -489,6 +554,13 @@ CanonicalIdentityV1 canonical_fragment_ir_identity_v1(
     append_string(bytes, ir.verifier_version);
     append_string(bytes, ir.properness_version);
     append_string(bytes, ir.tolerance_version);
+    append_string(bytes, ir.clean_base_state.base_metadata_path);
+    append_integer(bytes, ir.clean_base_state.item_level);
+    append_string(bytes, ir.clean_base_state.rarity);
+    append_integer(bytes, ir.clean_base_state.item_flags);
+    append_integer(bytes, ir.clean_base_state.generic_influence_bits);
+    append_integer(bytes, ir.clean_base_state.searing_exarch_tier);
+    append_integer(bytes, ir.clean_base_state.eater_of_worlds_tier);
     append_string(bytes, ir.entry_node_id);
     append_string_vector(bytes, ir.controller_memory_schema);
     append_i64_vector(bytes, ir.initial_controller_memory);
@@ -563,6 +635,17 @@ FragmentStructuralValidationV1 validate_executable_fragment_ir_v1(
         ir.properness_version != kExecutableFragmentPropernessVersionV1 ||
         ir.tolerance_version != kExecutableFragmentToleranceVersionV1) {
         return refuse("unsupported_verification_version", ir.fragment_id);
+    }
+    if (ir.clean_base_state.base_metadata_path.empty() ||
+        ir.clean_base_state.item_level == 0) {
+        return refuse("missing_clean_base_state", ir.fragment_id);
+    }
+    if (ir.clean_base_state.rarity != "normal" ||
+        ir.clean_base_state.item_flags != 0 ||
+        ir.clean_base_state.generic_influence_bits != 0 ||
+        ir.clean_base_state.searing_exarch_tier != 0 ||
+        ir.clean_base_state.eater_of_worlds_tier != 0) {
+        return refuse("unsupported_clean_base_state", ir.fragment_id);
     }
     if (ir.controller_memory_schema.size() !=
         ir.initial_controller_memory.size()) {
@@ -753,10 +836,154 @@ FragmentStructuralValidationV1 validate_executable_fragment_ir_v1(
     return result;
 }
 
-VerifiedLeafFragmentV1::VerifiedLeafFragmentV1(
+FlattenedFragmentCandidateV1::FlattenedFragmentCandidateV1(
+        ConstructionToken,
+        CanonicalIdentityV1 candidate_identity,
+        std::string ordinary_strategy_json,
+        std::optional<double> independently_evaluated_candidate_cost)
+    : candidate_identity_(std::move(candidate_identity)),
+      ordinary_strategy_json_(std::move(ordinary_strategy_json)),
+      independently_evaluated_candidate_cost_(
+          independently_evaluated_candidate_cost) {}
+
+VerifiedLeafStructuralControlV1::VerifiedLeafStructuralControlV1(
         ConstructionToken,
         ExecutableFragmentIRV1 ir,
         CanonicalIdentityV1 ir_identity,
+        std::vector<PositiveExitDispositionV1> positive_exit_dispositions)
+    : ir_(std::move(ir)),
+      ir_identity_(std::move(ir_identity)),
+      positive_exit_dispositions_(std::move(positive_exit_dispositions)) {}
+
+FragmentFlatteningResultV1 SingleFragmentFlattenerV1::flatten(
+        const VerifiedLeafStructuralControlV1& control) const {
+    FragmentFlatteningResultV1 result;
+    const ExecutableFragmentIRV1 ir = canonicalize_ir(
+        control.structural_ir());
+    const FragmentStructuralValidationV1 structural =
+        validate_executable_fragment_ir_v1(ir);
+    if (!structural.valid || !(structural.identity == control.ir_identity())) {
+        result.refusal = {
+            "structural_control_identity_mismatch", ir.fragment_id};
+        return result;
+    }
+    if (control.positive_exit_dispositions().empty()) {
+        result.refusal = {"missing_positive_exit", ir.fragment_id};
+        return result;
+    }
+    for (const PositiveExitDispositionV1& exit :
+         control.positive_exit_dispositions()) {
+        if (exit.descriptor.kind != FragmentExitKindV1::FinalSuccess) {
+            result.refusal = {
+                "non_final_positive_exit", exit.descriptor.label};
+            return result;
+        }
+        if (exit.exact_exit_identity.canonical_bytes.empty()) {
+            result.refusal = {
+                "missing_exact_exit_disposition", exit.descriptor.label};
+            return result;
+        }
+    }
+
+    constexpr const char* kStartNodeId = "__fragment_v1_start";
+    if (std::any_of(
+            ir.nodes.begin(), ir.nodes.end(),
+            [&](const FragmentNodeV1& node) {
+                return node.node_id == kStartNodeId;
+            })) {
+        result.refusal = {"reserved_node_id", kStartNodeId};
+        return result;
+    }
+
+    std::ostringstream json;
+    json << "{\"version\":\"v1\",\"name\":"
+         << json_string("verified fragment " + ir.fragment_id)
+         << ",\"description\":\"private verified leaf shadow; "
+            "certification failures are fail closed\""
+         << ",\"base_state\":{\"base_key\":"
+         << json_string(ir.clean_base_state.base_metadata_path)
+         << ",\"item_level\":" << ir.clean_base_state.item_level
+         << ",\"rarity\":" << json_string(ir.clean_base_state.rarity)
+         << ",\"item_flags\":" << ir.clean_base_state.item_flags
+         << ",\"generic_influence_bits\":"
+         << ir.clean_base_state.generic_influence_bits
+         << ",\"searing_exarch_tier\":"
+         << ir.clean_base_state.searing_exarch_tier
+         << ",\"eater_of_worlds_tier\":"
+         << ir.clean_base_state.eater_of_worlds_tier
+         << ",\"prefixes\":[],\"suffixes\":[]}"
+         << ",\"start_node_id\":" << json_string(kStartNodeId)
+         << ",\"nodes\":[{\"id\":" << json_string(kStartNodeId)
+         << ",\"kind\":\"start\"}";
+    for (const FragmentNodeV1& node : ir.nodes) {
+        json << ",{\"id\":" << json_string(node.node_id);
+        switch (node.kind) {
+        case FragmentNodeKindV1::Route:
+        case FragmentNodeKindV1::ObservedChoice:
+            json << ",\"kind\":\"router\"";
+            break;
+        case FragmentNodeKindV1::PrimitiveOperation:
+            json << ",\"kind\":\"operation\",\"operation\":{"
+                 << "\"type\":"
+                 << json_string(node.stable_action_identity) << '}';
+            break;
+        case FragmentNodeKindV1::Exit:
+            json << ",\"kind\":\"terminal\",\"terminal\":"
+                 << json_string(
+                        node.exit.kind == FragmentExitKindV1::FinalSuccess
+                            ? "success"
+                            : "failure");
+            if (node.exit.kind != FragmentExitKindV1::FinalSuccess) {
+                json << ",\"reason\":"
+                     << json_string(
+                            "fragment fail closed: " + node.exit.label);
+            }
+            break;
+        }
+        json << '}';
+    }
+    json << "],\"edges\":[{\"id\":\"__fragment_v1_begin\","
+         << "\"from\":" << json_string(kStartNodeId)
+         << ",\"to\":" << json_string(ir.entry_node_id)
+         << ",\"priority\":0,\"is_default\":true}";
+    for (std::size_t node_index = 0;
+         node_index < ir.nodes.size(); ++node_index) {
+        const FragmentNodeV1& node = ir.nodes[node_index];
+        if (node.kind == FragmentNodeKindV1::Exit) continue;
+        for (std::size_t edge_index = 0;
+             edge_index < node.edges.size(); ++edge_index) {
+            const FragmentEdgeV1& edge = node.edges[edge_index];
+            json << ",{\"id\":"
+                 << json_string(
+                        "__fragment_v1_edge_" +
+                        std::to_string(node_index) + "_" +
+                        std::to_string(edge_index))
+                 << ",\"from\":" << json_string(node.node_id)
+                 << ",\"to\":" << json_string(edge.target_node_id)
+                 << ",\"priority\":" << edge.priority;
+            if (edge.certification_fail_closed_default) {
+                json << ",\"is_default\":true";
+            } else {
+                json << ",\"condition\":"
+                     << condition_json(edge.condition);
+            }
+            json << '}';
+        }
+    }
+    json << "]}";
+    std::string ordinary_strategy_json = json.str();
+    const CanonicalIdentityV1 candidate_identity =
+        identity_from_bytes(ordinary_strategy_json);
+    FlattenedFragmentCandidateV1 candidate(
+        FlattenedFragmentCandidateV1::ConstructionToken{},
+        candidate_identity, std::move(ordinary_strategy_json), std::nullopt);
+    result.candidate = std::move(candidate);
+    return result;
+}
+
+VerifiedLeafFragmentV1::VerifiedLeafFragmentV1(
+        ConstructionToken,
+        VerifiedLeafStructuralControlV1 structural_control,
         CanonicalIdentityV1 certificate_identity,
         std::vector<VerifiedProductRowV1> rows,
         std::vector<VerifiedExitV1> exits,
@@ -770,8 +997,7 @@ VerifiedLeafFragmentV1::VerifiedLeafFragmentV1(
         const std::uint32_t positive_probability_cyclic_components,
         const std::uint64_t work_items,
         const std::uint64_t peak_estimated_bytes)
-    : ir_(std::move(ir)),
-      ir_identity_(std::move(ir_identity)),
+    : structural_control_(std::move(structural_control)),
       certificate_identity_(std::move(certificate_identity)),
       rows_(std::move(rows)),
       exits_(std::move(exits)),
@@ -876,7 +1102,8 @@ LeafVerificationResultV1 ExactLeafFragmentVerifierV1::verify(
             context.disabled_action_family_identity ||
         input_ir.exact_goal_identity != context.exact_goal_identity ||
         input_ir.mechanics_artifact_identity !=
-            context.mechanics_artifact_identity) {
+            context.mechanics_artifact_identity ||
+        !(input_ir.clean_base_state == context.clean_base_state)) {
         return refuse("verification_context_identity_mismatch", input_ir.fragment_id);
     }
     ExecutableFragmentIRV1 ir = canonicalize_ir(input_ir);
@@ -1351,7 +1578,8 @@ LeafVerificationResultV1 ExactLeafFragmentVerifierV1::verify(
     } else {
         const std::uint64_t sparse_bytes =
             static_cast<std::uint64_t>(order) * sizeof(double) * 2;
-        if (sparse_bytes > limits.max_estimated_bytes - peak_bytes) {
+        if (peak_bytes > limits.max_estimated_bytes ||
+            sparse_bytes > limits.max_estimated_bytes - peak_bytes) {
             peak_bytes = std::numeric_limits<std::uint64_t>::max();
             return refuse("max_estimated_bytes", "linear_system");
         }
@@ -1453,7 +1681,8 @@ LeafVerificationResultV1 ExactLeafFragmentVerifierV1::verify(
         }
         const std::uint64_t retained_bytes =
             static_cast<std::uint64_t>(order) * sizeof(double);
-        if (retained_bytes > limits.max_estimated_bytes - peak_bytes) {
+        if (peak_bytes > limits.max_estimated_bytes ||
+            retained_bytes > limits.max_estimated_bytes - peak_bytes) {
             peak_bytes = std::numeric_limits<std::uint64_t>::max();
             linear_failure_code = "max_estimated_bytes";
             return std::nullopt;
@@ -1755,9 +1984,22 @@ LeafVerificationResultV1 ExactLeafFragmentVerifierV1::verify(
     const CanonicalIdentityV1 certificate_identity =
         identity_from_bytes(std::move(certificate_bytes));
 
+    std::vector<PositiveExitDispositionV1> positive_exit_dispositions;
+    for (const VerifiedExitV1& exit : verified_exits) {
+        if (exit.probability_from_entry <= 0.0) continue;
+        positive_exit_dispositions.push_back({
+            exit.identity.descriptor,
+            identity_from_bytes(exit_key_bytes(exit.identity)),
+        });
+    }
+    VerifiedLeafStructuralControlV1 structural_control(
+        VerifiedLeafStructuralControlV1::ConstructionToken{},
+        std::move(ir), structural.identity,
+        std::move(positive_exit_dispositions));
+
     VerifiedLeafFragmentV1 verified(
         VerifiedLeafFragmentV1::ConstructionToken{},
-        std::move(ir), structural.identity, certificate_identity,
+        std::move(structural_control), certificate_identity,
         std::move(rows), std::move(verified_exits),
         vector_from_map(expected_resources), vector_from_map(expected_actions),
         priced_expected_cost, exit_probability_sum, max_mass_error,

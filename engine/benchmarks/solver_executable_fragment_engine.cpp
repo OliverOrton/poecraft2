@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <bit>
+#include <cmath>
 #include <cstdio>
 #include <fstream>
 #include <iomanip>
@@ -484,6 +485,9 @@ build_clean_one_goal_transmute_scour_renewal_v1(
             std::string{"magic-exact-one-family:"} +
             kCleanOneGoalRenewalGoalModV1 +
             ":min-tier=1:no-junk:v1";
+        fixture.context.clean_base_state.base_metadata_path =
+            kCleanOneGoalRenewalBaseV1;
+        fixture.context.clean_base_state.item_level = 86;
         fixture.context.mechanics_artifact_identity =
             "compiled-artifact-manifest-v1:" + manifest;
         fixture.context.resource_vocabulary = {"scour", "transmute"};
@@ -505,6 +509,7 @@ build_clean_one_goal_transmute_scour_renewal_v1(
             "calc-distinguish-modifier-identity-v1";
         fixture.ir.condition_semantics_version =
             "native-strategy-condition-v1";
+        fixture.ir.clean_base_state = fixture.context.clean_base_state;
         fixture.ir.entry_node_id = "transmute";
 
         FragmentNodeV1 transmute_node;
@@ -570,6 +575,177 @@ build_clean_one_goal_transmute_scour_renewal_v1(
         result.refusal = error.what();
     }
     return result;
+}
+
+EngineBackedFragmentEvaluationResultV1
+EngineBackedFragmentEvaluatorV1::evaluate(
+        const FlattenedFragmentCandidateV1& candidate,
+        const std::string& compiled_artifact_directory) const {
+    EngineBackedFragmentEvaluationResultV1 output;
+    try {
+        const std::string manifest = read_text(
+            compiled_artifact_directory + "/manifest.json");
+        const std::string strings = read_text(
+            compiled_artifact_directory + "/strings.json");
+        const std::string game = read_text(
+            compiled_artifact_directory + "/game-data.json");
+        const auto data = load_data_impl(manifest, strings, game);
+        const auto base = data->base_by_path.find(
+            kCleanOneGoalRenewalBaseV1);
+        if (base == data->base_by_path.end()) {
+            throw std::runtime_error(
+                "evaluation base is absent from artifact");
+        }
+        auto session = std::make_shared<SessionImpl>();
+        session->data = data;
+        session->base_index = base->second;
+        session->item_level = 86;
+        build_session(*session);
+
+        const std::string strategy_json =
+            candidate.ordinary_strategy_json();
+        const auto strategy = compile_strategy_json(
+            session, strategy_json.data(), strategy_json.size());
+        const std::string economy_json =
+            "{\"version\":\"v1\",\"id\":"
+            "\"verified-fragment-independent-evaluation-v1\","
+            "\"prices\":{\"transmute\":0.05,\"scour\":0.05}}";
+        StrategyEvalOptions options;
+        options.max_states = 1000000;
+        options.max_pairs = 5000000;
+        options.max_transitions = 20000000;
+        options.max_owned_bytes = 1024ull * 1024ull * 1024ull;
+        options.economy = load_economy_json(
+            economy_json.data(), economy_json.size());
+        const StrategyEvalResult evaluated = evaluate_strategy(
+            *strategy, options);
+        const StrategyEvalResult forward =
+            evaluate_strategy_forward_reference_for_test(
+                *strategy, options);
+
+        constexpr double kTolerance = 1e-9;
+        double forward_maximum_delta = 0.0;
+        const auto compare = [&](const double left, const double right) {
+            if (!std::isfinite(left) || !std::isfinite(right)) {
+                throw std::runtime_error(
+                    "independent evaluation produced nonfinite output");
+            }
+            const double delta = std::fabs(left - right);
+            forward_maximum_delta = std::max(
+                forward_maximum_delta, delta);
+            if (delta > kTolerance *
+                    std::max({1.0, std::fabs(left), std::fabs(right)})) {
+                throw std::runtime_error(
+                    "exact evaluator and forward reference disagree");
+            }
+        };
+        compare(evaluated.success_probability, forward.success_probability);
+        compare(evaluated.failure_probability, forward.failure_probability);
+        compare(evaluated.stop_probability, forward.stop_probability);
+        compare(
+            evaluated.action_not_applied_probability,
+            forward.action_not_applied_probability);
+        compare(
+            evaluated.no_matching_edge_probability,
+            forward.no_matching_edge_probability);
+        compare(
+            evaluated.unresolved_probability,
+            forward.unresolved_probability);
+        compare(evaluated.expected_actions, forward.expected_actions);
+        compare(
+            evaluated.total_expected_cost,
+            forward.total_expected_cost);
+        if (evaluated.expected_consumption.size() !=
+            forward.expected_consumption.size()) {
+            throw std::runtime_error(
+                "exact evaluator resource vocabulary disagrees with forward "
+                "reference");
+        }
+        for (const auto& [key, value] : evaluated.expected_consumption) {
+            const auto found = forward.expected_consumption.find(key);
+            if (found == forward.expected_consumption.end()) {
+                throw std::runtime_error(
+                    "forward reference omitted resource: " + key);
+            }
+            compare(value, found->second);
+        }
+
+        const double terminal_mass =
+            evaluated.success_probability +
+            evaluated.failure_probability + evaluated.stop_probability +
+            evaluated.action_not_applied_probability +
+            evaluated.no_matching_edge_probability +
+            evaluated.unresolved_probability;
+        const double maximum_mass_error = std::max({
+            std::fabs(1.0 - terminal_mass),
+            std::fabs(evaluated.residual_mass),
+            std::fabs(evaluated.max_mass_conservation_error),
+        });
+        const bool zero_non_success =
+            evaluated.failure_probability == 0.0 &&
+            evaluated.stop_probability == 0.0 &&
+            evaluated.action_not_applied_probability == 0.0 &&
+            evaluated.no_matching_edge_probability == 0.0 &&
+            evaluated.unresolved_probability == 0.0;
+        const bool cost_reconciled =
+            std::fabs(evaluated.cost_dot_product_difference) <= kTolerance &&
+            std::fabs(evaluated.action_descriptor_visits_difference) <=
+                kTolerance &&
+            std::fabs(evaluated.action_descriptor_applied_difference) <=
+                kTolerance &&
+            std::fabs(evaluated.node_operation_visits_difference) <=
+                kTolerance;
+        if (!evaluated.converged || !forward.converged ||
+            !evaluated.cost_complete || !forward.cost_complete ||
+            !cost_reconciled || !zero_non_success ||
+            std::fabs(evaluated.success_probability - 1.0) > kTolerance ||
+            maximum_mass_error > kTolerance) {
+            throw std::runtime_error(
+                "flattened fragment failed independent exact acceptance");
+        }
+        for (const auto& [key, difference] :
+             evaluated.material_quantity_differences) {
+            if (std::fabs(difference) > kTolerance) {
+                throw std::runtime_error(
+                    "material reconciliation failed: " + key);
+            }
+        }
+
+        IndependentFragmentEvaluationV1 summary;
+        summary.candidate_identity = candidate.candidate_identity();
+        summary.strategy_json_bytes = strategy_json.size();
+        summary.compiled_nodes = strategy->nodes.size();
+        for (const StrategyNode& node : strategy->nodes) {
+            summary.compiled_edges += node.edges.size();
+        }
+        summary.converged = evaluated.converged;
+        summary.proper = zero_non_success && maximum_mass_error <= kTolerance;
+        summary.cost_complete = evaluated.cost_complete;
+        summary.cost_reconciled = cost_reconciled;
+        summary.success_probability = evaluated.success_probability;
+        summary.failure_probability = evaluated.failure_probability;
+        summary.stop_probability = evaluated.stop_probability;
+        summary.action_not_applied_probability =
+            evaluated.action_not_applied_probability;
+        summary.no_matching_edge_probability =
+            evaluated.no_matching_edge_probability;
+        summary.unresolved_probability = evaluated.unresolved_probability;
+        summary.expected_actions = evaluated.expected_actions;
+        summary.expected_consumption = evaluated.expected_consumption;
+        summary.total_expected_cost = evaluated.total_expected_cost;
+        summary.maximum_mass_error = maximum_mass_error;
+        summary.forward_maximum_delta = forward_maximum_delta;
+
+        FlattenedFragmentCandidateV1 evaluated_candidate(
+            FlattenedFragmentCandidateV1::ConstructionToken{},
+            candidate.candidate_identity(), strategy_json,
+            evaluated.total_expected_cost);
+        output.candidate = std::move(evaluated_candidate);
+        output.evaluation = std::move(summary);
+    } catch (const std::exception& error) {
+        output.refusal = error.what();
+    }
+    return output;
 }
 
 } // namespace fragment_v1

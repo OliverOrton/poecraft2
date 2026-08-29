@@ -125,6 +125,18 @@ struct ExecutableFragmentProposalV1 {
     StableParametersV1 ranking_annotations;
 };
 
+struct FragmentCleanBaseStateV1 {
+    std::string base_metadata_path;
+    std::uint32_t item_level = 0;
+    std::string rarity = "normal";
+    std::uint32_t item_flags = 0;
+    std::uint32_t generic_influence_bits = 0;
+    std::uint32_t searing_exarch_tier = 0;
+    std::uint32_t eater_of_worlds_tier = 0;
+
+    bool operator==(const FragmentCleanBaseStateV1&) const = default;
+};
+
 struct ExecutableFragmentIRV1 {
     std::uint32_t schema_version =
         kExecutableFragmentSchemaVersionV1;
@@ -143,6 +155,7 @@ struct ExecutableFragmentIRV1 {
         kExecutableFragmentPropernessVersionV1;
     std::string tolerance_version =
         kExecutableFragmentToleranceVersionV1;
+    FragmentCleanBaseStateV1 clean_base_state;
     std::string entry_node_id;
     std::vector<std::string> controller_memory_schema;
     std::vector<std::int64_t> initial_controller_memory;
@@ -153,6 +166,8 @@ struct ExecutableFragmentIRV1 {
 };
 
 class SingleFragmentFlattenerV1;
+class EngineBackedFragmentEvaluatorV1;
+class VerifiedLeafStructuralControlV1;
 
 class FlattenedFragmentCandidateV1 {
 public:
@@ -190,6 +205,7 @@ private:
     std::optional<double> independently_evaluated_candidate_cost_;
 
     friend class SingleFragmentFlattenerV1;
+    friend class EngineBackedFragmentEvaluatorV1;
 };
 
 struct FragmentStructuralRefusalV1 {
@@ -201,6 +217,19 @@ struct FragmentStructuralValidationV1 {
     bool valid = false;
     CanonicalIdentityV1 identity;
     FragmentStructuralRefusalV1 refusal;
+};
+
+struct FragmentFlatteningResultV1 {
+    std::optional<FlattenedFragmentCandidateV1> candidate;
+    FragmentStructuralRefusalV1 refusal;
+
+    bool ok() const { return candidate.has_value(); }
+};
+
+class SingleFragmentFlattenerV1 {
+public:
+    FragmentFlatteningResultV1 flatten(
+        const VerifiedLeafStructuralControlV1& control) const;
 };
 
 CanonicalIdentityV1 canonical_fragment_condition_identity_v1(
@@ -253,6 +282,7 @@ public:
 struct LeafVerificationContextV1 {
     ExactStateV1 exact_entry;
     std::vector<std::int64_t> initial_controller_memory;
+    FragmentCleanBaseStateV1 clean_base_state;
     std::string caller_action_scope_identity;
     std::string disabled_action_family_identity;
     std::string exact_goal_identity;
@@ -326,6 +356,47 @@ struct VerifiedExitV1 {
     ResourceVectorV1 joint_resource_mass_from_entry;
 };
 
+struct PositiveExitDispositionV1 {
+    FragmentExitDescriptorV1 descriptor;
+    CanonicalIdentityV1 exact_exit_identity;
+
+    bool operator==(const PositiveExitDispositionV1&) const = default;
+};
+
+class VerifiedLeafStructuralControlV1 {
+public:
+    VerifiedLeafStructuralControlV1(
+        const VerifiedLeafStructuralControlV1&) = default;
+    VerifiedLeafStructuralControlV1(
+        VerifiedLeafStructuralControlV1&&) noexcept = default;
+    VerifiedLeafStructuralControlV1& operator=(
+        const VerifiedLeafStructuralControlV1&) = default;
+    VerifiedLeafStructuralControlV1& operator=(
+        VerifiedLeafStructuralControlV1&&) noexcept = default;
+
+    const ExecutableFragmentIRV1& structural_ir() const { return ir_; }
+    const CanonicalIdentityV1& ir_identity() const { return ir_identity_; }
+    const std::vector<PositiveExitDispositionV1>&
+    positive_exit_dispositions() const {
+        return positive_exit_dispositions_;
+    }
+
+private:
+    struct ConstructionToken {};
+
+    VerifiedLeafStructuralControlV1(
+        ConstructionToken,
+        ExecutableFragmentIRV1 ir,
+        CanonicalIdentityV1 ir_identity,
+        std::vector<PositiveExitDispositionV1> positive_exit_dispositions);
+
+    ExecutableFragmentIRV1 ir_;
+    CanonicalIdentityV1 ir_identity_;
+    std::vector<PositiveExitDispositionV1> positive_exit_dispositions_;
+
+    friend class ExactLeafFragmentVerifierV1;
+};
+
 class VerifiedLeafFragmentV1 {
 public:
     VerifiedLeafFragmentV1(const VerifiedLeafFragmentV1&) = default;
@@ -335,8 +406,15 @@ public:
     VerifiedLeafFragmentV1& operator=(
         VerifiedLeafFragmentV1&&) noexcept = default;
 
-    const ExecutableFragmentIRV1& structural_ir() const { return ir_; }
-    const CanonicalIdentityV1& ir_identity() const { return ir_identity_; }
+    const ExecutableFragmentIRV1& structural_ir() const {
+        return structural_control_.structural_ir();
+    }
+    const CanonicalIdentityV1& ir_identity() const {
+        return structural_control_.ir_identity();
+    }
+    const VerifiedLeafStructuralControlV1& structural_control() const {
+        return structural_control_;
+    }
     const CanonicalIdentityV1& certificate_identity() const {
         return certificate_identity_;
     }
@@ -372,8 +450,7 @@ private:
 
     VerifiedLeafFragmentV1(
         ConstructionToken,
-        ExecutableFragmentIRV1 ir,
-        CanonicalIdentityV1 ir_identity,
+        VerifiedLeafStructuralControlV1 structural_control,
         CanonicalIdentityV1 certificate_identity,
         std::vector<VerifiedProductRowV1> rows,
         std::vector<VerifiedExitV1> exits,
@@ -388,8 +465,7 @@ private:
         std::uint64_t work_items,
         std::uint64_t peak_estimated_bytes);
 
-    ExecutableFragmentIRV1 ir_;
-    CanonicalIdentityV1 ir_identity_;
+    VerifiedLeafStructuralControlV1 structural_control_;
     CanonicalIdentityV1 certificate_identity_;
     std::vector<VerifiedProductRowV1> rows_;
     std::vector<VerifiedExitV1> exits_;

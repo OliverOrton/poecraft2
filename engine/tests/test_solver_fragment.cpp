@@ -1,6 +1,7 @@
 #include "../benchmarks/solver_executable_fragment.hpp"
 #include "../benchmarks/solver_executable_fragment_engine.hpp"
 #include "../src/solver_policy_refinement.hpp"
+#include "../src/solver_solve_types.hpp"
 #include "tests.hpp"
 
 #include <algorithm>
@@ -12,13 +13,36 @@
 #include <type_traits>
 #include <utility>
 
+namespace poecraft::solver {
+
+struct SolveWorkTestAccess {
+    using Impl = SolveWork::Impl;
+};
+
+} // namespace poecraft::solver
+
 namespace {
 
 using namespace poecraft::solver::fragment_v1;
 using poecraft::solver::refinement::CompiledPolicyAssertion;
 
+template <typename Value>
+concept ProbabilityBearingFragmentView = requires(const Value& value) {
+    value.exits();
+    value.expected_resources();
+    value.expected_action_counts();
+    value.priced_expected_cost();
+    value.exit_probability_sum();
+};
+
 static_assert(!std::is_default_constructible_v<VerifiedLeafFragmentV1>);
+static_assert(
+    !std::is_default_constructible_v<VerifiedLeafStructuralControlV1>);
 static_assert(!std::is_default_constructible_v<FlattenedFragmentCandidateV1>);
+static_assert(
+    !ProbabilityBearingFragmentView<VerifiedLeafStructuralControlV1>);
+static_assert(
+    ProbabilityBearingFragmentView<VerifiedLeafFragmentV1>);
 static_assert(!std::is_constructible_v<
               VerifiedLeafFragmentV1, ExecutableFragmentProposalV1>);
 static_assert(!std::is_constructible_v<
@@ -49,6 +73,10 @@ static_assert(!std::is_convertible_v<
               VerifiedLeafFragmentV1, CompiledPolicyAssertion>);
 static_assert(!std::is_convertible_v<
               FlattenedFragmentCandidateV1, CompiledPolicyAssertion>);
+static_assert(!std::is_constructible_v<
+              poecraft::solver::SolveWorkTestAccess::Impl::
+                  BoundedPolicyIncumbent,
+              FlattenedFragmentCandidateV1>);
 
 FragmentConditionV1 condition(
         std::string type,
@@ -242,6 +270,9 @@ Fixture deterministic_fixture() {
     fixture.context.disabled_action_family_identity = "families:none-v1";
     fixture.context.exact_goal_identity = "goal:one-exact-mod-v1";
     fixture.context.mechanics_artifact_identity = "artifact:test-v1";
+    fixture.context.clean_base_state.base_metadata_path =
+        "Metadata/Items/Test/VerifiedFragmentBase";
+    fixture.context.clean_base_state.item_level = 86;
     fixture.context.resource_vocabulary = {"transmute"};
     fixture.context.prices = {{"transmute", 2.0}};
 
@@ -260,6 +291,7 @@ Fixture deterministic_fixture() {
     fixture.ir.exact_state_key_semantics_version = "exact-test-key-v1";
     fixture.ir.refinement_semantics_version = "refinement-test-v1";
     fixture.ir.condition_semantics_version = "simulator-condition-v1";
+    fixture.ir.clean_base_state = fixture.context.clean_base_state;
     fixture.ir.entry_node_id = "act";
 
     FragmentNodeV1 act;
@@ -403,6 +435,14 @@ void malformed_ir_tests() {
     PC_CHECK(structural_code(ir) == "unsupported_schema_version");
 
     ir = baseline.ir;
+    ir.clean_base_state.base_metadata_path.clear();
+    PC_CHECK(structural_code(ir) == "missing_clean_base_state");
+
+    ir = baseline.ir;
+    ir.clean_base_state.rarity = "magic";
+    PC_CHECK(structural_code(ir) == "unsupported_clean_base_state");
+
+    ir = baseline.ir;
     ir.nodes.push_back(ir.nodes.front());
     PC_CHECK(structural_code(ir) == "duplicate_node");
 
@@ -463,6 +503,11 @@ void malformed_ir_tests() {
     imprint_entry.context.has_live_imprint_checkpoint = true;
     check_refusal(
         imprint_entry, "imprint_checkpoint_not_supported");
+
+    Fixture mismatched_base = deterministic_fixture();
+    ++mismatched_base.ir.clean_base_state.item_level;
+    check_refusal(
+        mismatched_base, "verification_context_identity_mismatch");
 
     Fixture unknown_resource = deterministic_fixture();
     PrimitiveExpansionV1 unknown_resource_expansion =
@@ -592,6 +637,38 @@ void mass_and_projection_regression_tests() {
     PC_CHECK(
         exit_result.verified->exits()[0].identity.exact_item_key !=
         exit_result.verified->exits()[1].identity.exact_item_key);
+    const auto rejected_nonfinal = SingleFragmentFlattenerV1{}.flatten(
+        exit_result.verified->structural_control());
+    PC_CHECK(!rejected_nonfinal.ok());
+    PC_CHECK(
+        rejected_nonfinal.refusal.code == "non_final_positive_exit");
+
+    Fixture final_exits = exits;
+    for (FragmentNodeV1& node : final_exits.ir.nodes) {
+        if (node.node_id == "left-exit" || node.node_id == "right-exit") {
+            node.exit.kind = FragmentExitKindV1::FinalSuccess;
+        }
+    }
+    const auto final_exit_result = ExactLeafFragmentVerifierV1{}.verify(
+        final_exits.ir, final_exits.context, final_exits.oracle);
+    PC_CHECK(final_exit_result.ok());
+    PC_CHECK(
+        final_exit_result.verified->structural_control()
+            .positive_exit_dispositions().size() == 2);
+    PC_CHECK(
+        !(final_exit_result.verified->structural_control()
+              .positive_exit_dispositions()[0].exact_exit_identity ==
+          final_exit_result.verified->structural_control()
+              .positive_exit_dispositions()[1].exact_exit_identity));
+    const auto flattened_final_exits = SingleFragmentFlattenerV1{}.flatten(
+        final_exit_result.verified->structural_control());
+    PC_CHECK(flattened_final_exits.ok());
+    PC_CHECK(
+        flattened_final_exits.candidate->ordinary_strategy_json().find(
+            "\"id\":\"left-exit\"") != std::string::npos);
+    PC_CHECK(
+        flattened_final_exits.candidate->ordinary_strategy_json().find(
+            "\"id\":\"right-exit\"") != std::string::npos);
 
     Fixture states = deterministic_fixture();
     const FragmentConditionV1 continue_condition =
@@ -754,6 +831,48 @@ void properness_resource_and_refusal_tests() {
     PC_CHECK(invalid_price_result.ok());
     PC_CHECK(!invalid_price_result.verified->priced_expected_cost());
 
+    const auto flattened_first = SingleFragmentFlattenerV1{}.flatten(
+        first.verified->structural_control());
+    const auto flattened_missing_price =
+        SingleFragmentFlattenerV1{}.flatten(
+            missing_price_result.verified->structural_control());
+    const auto flattened_invalid_price =
+        SingleFragmentFlattenerV1{}.flatten(
+            invalid_price_result.verified->structural_control());
+    PC_CHECK(flattened_first.ok());
+    PC_CHECK(flattened_missing_price.ok());
+    PC_CHECK(flattened_invalid_price.ok());
+    PC_CHECK(
+        flattened_first.candidate->ordinary_strategy_json() ==
+        flattened_missing_price.candidate->ordinary_strategy_json());
+    PC_CHECK(
+        flattened_first.candidate->ordinary_strategy_json() ==
+        flattened_invalid_price.candidate->ordinary_strategy_json());
+    PC_CHECK(
+        flattened_first.candidate->candidate_identity() ==
+        flattened_invalid_price.candidate->candidate_identity());
+
+    for (const FragmentExitKindV1 nonfinal : {
+             FragmentExitKindV1::Subgoal,
+             FragmentExitKindV1::Recoverable,
+             FragmentExitKindV1::CertificationFailure}) {
+        Fixture positive_nonfinal = deterministic_fixture();
+        for (FragmentNodeV1& node : positive_nonfinal.ir.nodes) {
+            if (node.node_id == "success") node.exit.kind = nonfinal;
+        }
+        const auto positive_nonfinal_result =
+            ExactLeafFragmentVerifierV1{}.verify(
+                positive_nonfinal.ir, positive_nonfinal.context,
+                positive_nonfinal.oracle);
+        PC_CHECK(positive_nonfinal_result.ok());
+        const auto rejected_nonfinal =
+            SingleFragmentFlattenerV1{}.flatten(
+                positive_nonfinal_result.verified->structural_control());
+        PC_CHECK(!rejected_nonfinal.ok());
+        PC_CHECK(
+            rejected_nonfinal.refusal.code == "non_final_positive_exit");
+    }
+
     Fixture improper = cyclic_fixture(0.0);
     check_refusal(improper, "improper_closed_nonexit_scc");
     const auto improper_result = ExactLeafFragmentVerifierV1{}.verify(
@@ -854,6 +973,44 @@ void properness_resource_and_refusal_tests() {
     limits.probability_sum_tolerance = 1e-6;
     check_refusal(
         cyclic, "unsupported_tolerance_configuration", limits);
+}
+
+void incumbent_isolation_tests() {
+    using Impl = poecraft::solver::SolveWorkTestAccess::Impl;
+    Impl::IncumbentPortfolio portfolio;
+    Impl::BoundedPolicyIncumbent seeded;
+    seeded.evaluated_policy_cost = 10.0;
+    seeded.certified_upper_bound = 10.0;
+    seeded.portfolio_identity = 0xfeedbeef;
+    seeded.source_generation = 7;
+    seeded.independently_certified = true;
+    seeded.independently_evaluated = true;
+    seeded.proper = true;
+    seeded.executable = true;
+    portfolio.observe_verified(seeded);
+
+    const Fixture cheaper = cyclic_fixture();
+    const auto verified = ExactLeafFragmentVerifierV1{}.verify(
+        cheaper.ir, cheaper.context, cheaper.oracle);
+    PC_CHECK(verified.ok());
+    const auto flattened = SingleFragmentFlattenerV1{}.flatten(
+        verified.verified->structural_control());
+    PC_CHECK(flattened.ok());
+    PC_CHECK(*verified.verified->priced_expected_cost() < 10.0);
+
+    Fixture malformed = cheaper;
+    malformed.ir.nodes.front().edges.pop_back();
+    const auto malformed_result = ExactLeafFragmentVerifierV1{}.verify(
+        malformed.ir, malformed.context, malformed.oracle);
+    PC_CHECK(!malformed_result.ok());
+    Fixture improper = cyclic_fixture(0.0);
+    const auto improper_result = ExactLeafFragmentVerifierV1{}.verify(
+        improper.ir, improper.context, improper.oracle);
+    PC_CHECK(!improper_result.ok());
+
+    PC_CHECK(portfolio.verified_executable_upper() == 10.0);
+    PC_CHECK(portfolio.best_verified_identity == 0xfeedbeef);
+    PC_CHECK(portfolio.verified_replacements == 0);
 }
 
 double resource_value(
@@ -958,6 +1115,74 @@ void engine_backed_renewal_tests(const char* artifact_dir) {
     PC_CHECK(first_fixture.base_identity == second_fixture.base_identity);
     PC_CHECK(first_fixture.goal_identity == second_fixture.goal_identity);
 
+    const auto flattened = SingleFragmentFlattenerV1{}.flatten(
+        first.verified->structural_control());
+    const auto flattened_repeat = SingleFragmentFlattenerV1{}.flatten(
+        second.verified->structural_control());
+    PC_CHECK(flattened.ok());
+    PC_CHECK(flattened_repeat.ok());
+    if (!flattened.ok() || !flattened_repeat.ok()) return;
+    PC_CHECK(
+        flattened.candidate->ordinary_strategy_json() ==
+        flattened_repeat.candidate->ordinary_strategy_json());
+    PC_CHECK(
+        flattened.candidate->candidate_identity() ==
+        flattened_repeat.candidate->candidate_identity());
+    PC_CHECK(
+        flattened.candidate->ordinary_strategy_json().find(
+            "\"expected_cost\"") == std::string::npos);
+    PC_CHECK(
+        flattened.candidate->ordinary_strategy_json().find(
+            "\"probability\"") == std::string::npos);
+    PC_CHECK(
+        flattened.candidate->ordinary_strategy_json().find(
+            "\"is_default\":true") != std::string::npos);
+
+    const auto evaluated = EngineBackedFragmentEvaluatorV1{}.evaluate(
+        *flattened.candidate, artifact_dir);
+    PC_CHECK(evaluated.ok());
+    if (!evaluated.ok()) {
+        std::printf(
+            "solver fragment independent evaluation refusal: %s\n",
+            evaluated.refusal.c_str());
+        return;
+    }
+    const IndependentFragmentEvaluationV1& evaluation =
+        *evaluated.evaluation;
+    PC_CHECK(evaluation.converged);
+    PC_CHECK(evaluation.proper);
+    PC_CHECK(evaluation.cost_complete);
+    PC_CHECK(evaluation.cost_reconciled);
+    PC_CHECK(std::fabs(evaluation.success_probability - 1.0) < 1e-12);
+    PC_CHECK(evaluation.failure_probability == 0.0);
+    PC_CHECK(evaluation.stop_probability == 0.0);
+    PC_CHECK(evaluation.action_not_applied_probability == 0.0);
+    PC_CHECK(evaluation.no_matching_edge_probability == 0.0);
+    PC_CHECK(evaluation.unresolved_probability == 0.0);
+    PC_CHECK(evaluation.maximum_mass_error < 1e-10);
+    PC_CHECK(evaluation.forward_maximum_delta < 1e-9);
+    PC_CHECK(std::fabs(
+        evaluation.expected_actions -
+        (expected_transmute + expected_scour)) < 1e-9);
+    PC_CHECK(std::fabs(
+        evaluation.expected_consumption.at("transmute") -
+        expected_transmute) < 1e-9);
+    PC_CHECK(std::fabs(
+        evaluation.expected_consumption.at("scour") -
+        expected_scour) < 1e-9);
+    const double expected_cost =
+        0.05 * (expected_transmute + expected_scour);
+    PC_CHECK(std::fabs(
+        evaluation.total_expected_cost - expected_cost) < 1e-9);
+    PC_CHECK(evaluation.compiled_nodes == 5);
+    PC_CHECK(evaluation.compiled_edges == 6);
+    PC_CHECK(
+        evaluated.candidate->independently_evaluated_candidate_cost()
+            .has_value());
+    PC_CHECK(std::fabs(
+        *evaluated.candidate->independently_evaluated_candidate_cost() -
+        expected_cost) < 1e-9);
+
     std::uint64_t transitions = 0;
     for (const VerifiedProductRowV1& row : first.verified->rows()) {
         transitions += row.transitions.size();
@@ -966,7 +1191,9 @@ void engine_backed_renewal_tests(const char* artifact_dir) {
         "solver fragment renewal: outcomes=%llu rows=%llu transitions=%llu "
         "scc=%u cyclic_scc=%u exit_mass=%.17g mass_error=%.17g "
         "residual=%.17g p=%.17g transmute=%.17g scour=%.17g "
-        "ir=%016llx certificate=%016llx work=%llu bytes=%llu\n",
+        "ir=%016llx certificate=%016llx flat=%016llx json=%llu "
+        "nodes=%llu edges=%llu cost=%.17g eval_mass_error=%.17g "
+        "forward_delta=%.17g work=%llu bytes=%llu\n",
         static_cast<unsigned long long>(
             first_fixture.transmute_physical_outcomes),
         static_cast<unsigned long long>(first.verified->rows().size()),
@@ -981,6 +1208,14 @@ void engine_backed_renewal_tests(const char* artifact_dir) {
             first.verified->ir_identity().digest),
         static_cast<unsigned long long>(
             first.verified->certificate_identity().digest),
+        static_cast<unsigned long long>(
+            evaluated.candidate->candidate_identity().digest),
+        static_cast<unsigned long long>(evaluation.strategy_json_bytes),
+        static_cast<unsigned long long>(evaluation.compiled_nodes),
+        static_cast<unsigned long long>(evaluation.compiled_edges),
+        evaluation.total_expected_cost,
+        evaluation.maximum_mass_error,
+        evaluation.forward_maximum_delta,
         static_cast<unsigned long long>(first.verified->work_items()),
         static_cast<unsigned long long>(
             first.verified->peak_estimated_bytes()));
@@ -993,5 +1228,6 @@ void run_solver_fragment_tests(const char* artifact_dir) {
     malformed_ir_tests();
     mass_and_projection_regression_tests();
     properness_resource_and_refusal_tests();
+    incumbent_isolation_tests();
     engine_backed_renewal_tests(artifact_dir);
 }

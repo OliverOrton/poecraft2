@@ -1,12 +1,13 @@
 # Handoff
 
-**Status: Verified Executable Graph-Fragment Core v1 Gates 0–3 are complete.**
+**Status: Verified Executable Graph-Fragment Core v1 Gates 0–4 are complete.**
 The first coherent checkpoint adds the private probability-free leaf IR,
 authority firewall, and exact single-entry product verifier. Gate 3 now adds a
 real engine-backed Transmute/Scour renewal leaf and explicit native benchmark
-diagnostic fixture. Gate 4's probability-free one-fragment flattener and
-independent exact evaluation are the exact next boundary; no shadow process or
-incumbent integration has begun.
+diagnostic fixture. Gate 4 now flattens only a verified FinalSuccess-only
+structural projection into ordinary strategy JSON and independently evaluates
+it. Gate 5's isolated post-finalization shadow process and MCP operator
+qualification are the exact next boundary; no incumbent integration has begun.
 
 The preceding unattended-hardening boundary's six-hour soak was
 **owner-waived, not passed**. It is not overnight qualification and must not be
@@ -33,10 +34,26 @@ cited as such.
   and emit the same 2,141-byte ordinary strategy with sha256
   `b230e26e579004d15b5cf506108209463002e4977094c540516fd28e785876b3`.
   Gate 3 launches no shadow work.
+- Gate 4 checkpoint: local commit titled `Flatten verified fragment into
+  ordinary strategy`; 207 focused checks pass. The current context-bound IR,
+  exact certificate, and flattened-candidate display digests are
+  `041927484ddf6dd2`, `4005aaa4a497331d`, and `2edeed49ce1d5e6a` respectively;
+  full canonical bytes remain the equality authority. The emitted existing-
+  vocabulary strategy is 2,049 bytes, 5 nodes, and 6 edges. Fresh parse/
+  compile plus production and independent forward evaluation yield success 1,
+  zero off-policy/failure mass, Transmute/Scour expectations
+  `238.40000000000001` / `237.40000000000001`, and complete reconciled cost
+  `23.789999999999708`.
+- The Gate 4 flattener accepts only `VerifiedLeafStructuralControlV1`, which
+  contains canonical structural control and exact positive-exit dispositions
+  but exposes no probability, expected resource/action, certificate, or cost
+  view. Positive Subgoal, Recoverable, or CertificationFailure exits refuse.
+  The evaluated candidate has no conversion or call path into the native
+  incumbent portfolio.
 - Native-only placement: the new contract/verifier/engine adapter lives under
   `engine/benchmarks`, is linked explicitly only into the benchmark and native
   focused test targets, and is absent from `engine/engine-sources.txt`; Gates
-  0–3 therefore do not trigger the conditional release-WASM gate.
+  0–4 therefore do not trigger the conditional release-WASM gate.
 - The checkpoint certifies only exact leaf mass/properness/resources for one
   exact entry. It is not ordinary strategy JSON, an executable/public upper,
   an incumbent, product behavior, or option-quality evidence.
