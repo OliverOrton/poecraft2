@@ -6,13 +6,14 @@ future work or define crafting mechanics.
 
 Parent: [Foundation](README.md)
 
-Verified against current source: 2026-08-28 @ `f866508`. Scope: private solve
+Verified against current source: 2026-08-29 @ `13a5321`. Scope: private solve
 phase ownership, cooperative continuation boundaries, current
 proof/publication boundaries, action-family contract, exact evaluator gated-
 kernel authority, exact reforge row continuation, telemetry serialization
 ownership, the benchmark-private verified leaf-fragment core, and the native
-source inventory. Final acceptance for a selected boundary is recorded in its
-result rather than implied by this source audit.
+source inventory, plus benchmark-private generated-envelope attribution.
+Final acceptance for a selected boundary is recorded in its result rather
+than implied by this source audit.
 
 ## Execution Flow
 
@@ -110,6 +111,26 @@ WASM progress object and benchmark bound trace expose the same string
 vocabulary. Setup-only work that completes before the first stepped snapshot
 remains visible as aggregate phase evidence in operator lineage; live progress
 never claims those owners retroactively.
+
+The benchmark-private automatic-kind mask has deliberately closed semantics:
+omission preserves the complete product default, an empty list suppresses all
+generated kinds, and a non-empty list admits only those finite enum values.
+The mask is applied to both the product-envelope solver used to derive
+`goal.actions` and the case solver that materializes rows. It is diagnostic
+scope only: mechanics, the primitive registry, public requests, product
+defaults, scheduling, proof, and publication do not read it.
+
+The 2026-08-29 qualification held the primitive envelope fixed at the complete
+product scope minus Fossil, the independently measured setup blocker. Under
+that envelope, Fracture, temporary Bench blockers, protected metamods,
+Eldritch-side programs, and cannot-roll programs each produced nonzero
+operators and serviced rows. Permanent Bench, multimod finish, Imprint,
+constructive renewal, and Veiled were structurally inapplicable under the
+pinned case/profile rather than unobserved. All cumulative rows completed,
+including successful joint assemblies. The remaining broad owner is
+continuation/missing-upper frontier work after generated rows have been
+served; neither generated construction nor carrier-ladder starvation
+qualified a behavior repair.
 
 ## Benchmark-Private Verified Leaf Fragments
 

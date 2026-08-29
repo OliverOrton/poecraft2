@@ -1,140 +1,61 @@
 # Handoff
 
-**Status: Generated Planner-Envelope Qualification And Ladder-Service Repair
-v1 is active.** Oliver selected it on 2026-08-28 after a controlled Native
-Solver Lab diagnosis localized the next problem to broad generated-envelope
-execution economics rather than the permanent registry, carrier-ladder
-concept, or fragment verifier.
+**Status: no implementation boundary is active.** Generated
+Planner-Envelope Qualification And Ladder-Service Repair v1 completed on
+2026-08-29. Oliver must choose the next boundary before implementation
+resumes.
 
 The preceding Native Solver Lab unattended-hardening six-hour soak was
-**owner-waived, not passed**. It is not overnight qualification and must not be
-cited as such.
+**owner-waived, not passed**. It remains non-overnight evidence and must not be
+cited as overnight qualification.
 
 ## Completed Checkpoint
 
-- Branch: `main`; the completed fragment checkpoint is synchronized with
-  `origin/main`.
-- Gate 5 integration base:
-  `79c925f73f48c9bb60b02a5218a05bb236c84870`, with parents
-  `cc9facd527d86ae72d187bc1771499c1ecd9808c` and
-  `f89b67a839ca8199605422947195c72b9175b600` in that order.
-- Gate 5 MCP qualification record:
-  `e551d519420f51889663bef701dd537279c8ff04`.
-- Gate 6 10,000-run Simulator acceptance hook:
-  `b775c90ce7d1d8ffb8313d3e6b535d8e802c3cef`.
-- Final accepted source checkpoint and stable artifact-identity repair:
-  `f8665081746a9eaff4d04c1b77c3df496104f413`.
-- Final full pipeline: passed from `f866508` with 3,417,510 native checks and
-  zero failures, 13 benchmark specifications, 28/28 release-WASM checks, and
-  every ingest, database/artifact, binding, and web test.
-- Final cyclic fragment: IR `d84bd8994955608a`, certificate
-  `c9008653e9bc81a4`, flattened candidate `2edeed49ce1d5e6a`, and exactly
-  10,000/10,000 Simulator successes with every failure/stop/limit/
-  inapplicable/missing-edge/missing-price counter zero.
-- Scope: benchmark/test-private native shadow only. No incumbent integration,
-  product behavior, C ABI, strategy vocabulary, common engine source, binding,
-  web, schema, data, or release-WASM source changed.
+- Branch: `main`.
+- Final qualified solver source:
+  `13a53219f9585b048d1a0156c8debcaa13cef933` (`Repair planner envelope
+  qualification scope`).
+- Gate 3: passed on a fixed full-minus-Fossil primitive envelope. All 20
+  zero/singleton/cumulative generated-kind rows completed; mechanically
+  meaningful kinds produced nonzero operators, structural zeroes were
+  disclosed, and cumulative joint assembly completed without triggering the
+  pairwise fallback.
+- Gate 4: completed diagnosis-only. The measured remaining owner is
+  continuation/publication coverage after generated construction, admission,
+  row service, and joint consumption—not generated construction or ladder
+  starvation. No behavior repair was retained.
+- Gate 5: passed. Same-side prefix/suffix remain exact; partial four-to-five
+  and PDR retain independently exact-matched bounded policies; clean-five and
+  non-armour controls retain truthful setup/policy-assembly owners.
+- Gate 6: passed locally. Fresh native and release-WASM builds, 74 focused Lab
+  tests, all 15 affected solver/benchmark CTest targets, TypeScript typecheck,
+  and the full repository pipeline passed. The final pipeline completed
+  3,417,655 native checks with zero failures, all 13 benchmark specifications,
+  28/28 release-WASM checks, and the required 10,000-run Simulator controls.
+- The configured MCP queue is resumed with no active job or attempt and
+  healthy singleton ownership under
+  `supervisor-6062511b-bd95-47e7-ba61-b604f71527b3`.
+- No push or rendered/visual review was performed. Hosted Windows CI from
+  Gate 0 remains unobserved because the boundary was not pushed.
 
 ## Retained Evidence
 
-- [Archived boundary](docs/archive/2026-08-28-verified-executable-graph-fragment-core-v1/README.md)
-- [Final result](docs/archive/2026-08-28-verified-executable-graph-fragment-core-v1/result.md)
-- [Execution log](docs/archive/2026-08-28-verified-executable-graph-fragment-core-v1/execution-log.md)
-- [Stable solver-internal contract](docs/foundation/solver-internals.md#benchmark-private-verified-leaf-fragments)
+- [Archived boundary](docs/archive/2026-08-28-generated-planner-envelope-qualification-ladder-service-repair-v1/README.md)
+- [Final result](docs/archive/2026-08-28-generated-planner-envelope-qualification-ladder-service-repair-v1/result.md)
+- [Execution log](docs/archive/2026-08-28-generated-planner-envelope-qualification-ladder-service-repair-v1/execution-log.md)
+- [Stable solver internals](docs/foundation/solver-internals.md)
+- [Stable Solver Lab contract](docs/foundation/solver-lab.md)
+- [Evidence index](docs/evidence.md#generated-planner-envelope-and-ladder-qualification)
 
-Gate 5 used the configured Solver Lab MCP server version `0.2.0` with exactly
-31 typed tools. It discovered all seven frozen cases, canceled a genuinely
-running PDR witness with no process-tree survivor and released reservation,
-completed the fragment control and shadow naturally, proved all 17 core and
-all nine ordinary identity components equal while only the isolated diagnostic
-differed, and replayed a stable verified investigation bundle. Exact IDs and
-hashes are retained in the execution log.
+The execution log preserves every immutable revision, job, attempt, complete
+identity, terminal classification, phase milestone, work/memory/bound sample,
+artifact, comparison, exact evaluation, and investigation bundle used by
+Gates 3–5. Existing failed and dispatch-refused evidence was not rewritten.
 
-## Current Boundary
+The completed Verified Executable Graph-Fragment Core v1 remains parked. Do
+not implement fragment integration, a new planner, meta-policy search, RCASSP,
+or learned guidance without a newly selected boundary.
 
-[Generated Planner-Envelope Qualification And Ladder-Service Repair v1](docs/active/2026-08-28-generated-planner-envelope-qualification-ladder-service-repair-v1/plan.md)
-is selected and active from source checkpoint
-`28c4c30c75cef6ff8e1b38fa218f9b5a98d70203`.
-
-Gate 0's local source work removes the developer-specific Visual Studio 2022
-binding, resolves and injects the full UCRT64 toolchain, and provisions that
-toolchain in hosted Windows CI. Local configure and native test-target build
-pass. A hosted result cannot be claimed until these changes are pushed and an
-actual run is observed. Gate 1 is source complete: execution-request v4 exposes
-five truthful envelope components, and the C ABI safely reports an unavailable
-start value when a discovery cap finishes before any Bellman value row.
-Immutable MCP caps 1, 2, 255, 256, 257, and 512 all terminate as named resource
-refusals with no crash or invalid policy; native API and solver regressions
-cover one completed row and retained executable fallback contracts.
-
-Gate 2 source is complete. `solver_operator_lineage_v1` now joins the permanent
-registry, primitive candidate/dependency roles, every generated fixed option,
-native automatic-kind canonicalization/synthesis telemetry, priced support,
-carrier/operator ledger, scheduler, retained rows, missing-frontier lifecycle,
-joint-policy participation, and selected-policy consumption. The complete
-aggregate and semantic hash are independent of bounded operator samples and
-remain observational. Refused runs retain the projection even if an older
-optional diagnostic is interrupted by the cap. Live C ABI, WASM progress, and
-benchmark bound traces expose a narrow phase owner through row, ladder,
-Bellman, policy, compilation, exact-evaluation, and done states. Focused S8.3
-and public API regressions pass, the native benchmark builds, and web TypeScript
-type-checks. No mechanics, action scope, row admission, scheduler behavior,
-proof, or publication behavior changed. Gate 3 two-layer add-back attribution
-is the current owner; no ladder repair is authorized until it measures a
-specific exact cost owner.
-
-Gate 3 is stopped at its MCP preflight, before any draft, revision, or job
-mutation. The configured server is reachable and exposes version 0.2.0's exact
-31-tool typed surface, all seven frozen cases, one profile, 19 immutable local
-revisions, 40 terminal jobs, and 41 terminal attempts. There are no active jobs
-or attempts; dispatcher ownership is healthy under
-`supervisor-c0ee9221-d818-461f-8f38-046e0f1dda7a`. However, a read-only dry-run
-submission from source `9ad971e` still produced
-`solver_lab_execution_request_v3` and the false `disabled_families` identity
-component. The MCP process is therefore stale and cannot qualify Gate 3's v4
-matrix. Per the boundary, do not kill it, force-clear ownership, edit the
-catalogue, use SQL, or substitute repository CLI runs. Resume only after the
-configured MCP server has been normally restarted and a new dry run exposes
-`solver_lab_execution_request_v4` with the five truthful action-envelope
-components.
-
-Oliver subsequently authorized a normal restart. Fresh-task MCP preflight now
-passes v4 with all five truthful identity components, and dispatcher ownership
-recovered normally with no active work or forced catalogue mutation. Gate 3's
-benchmark-private finite automatic-kind allowlist is source complete and
-native-validated: omission preserves the full product envelope, while an empty
-list suppresses generated candidates without changing the primitive registry,
-goal abstraction, mechanics, public ABI, bindings, WASM, or product defaults.
-The benchmark, S8.3, and complete solve suites pass. The two-layer immutable
-MCP add-back matrix is the current owner. Its first 34 immutable attempts
-exposed an in-scope diagnostic-scope defect rather than a qualified Gate 4
-behavior owner: the benchmark-private automatic-kind mask reached the case
-solver but not the product-envelope solver used to derive `goal.actions`.
-Consequently the full-primitive baseline and every generated row expired
-before native partial telemetry, while 13 of 14 one-family primitive rows
-completed and Fossil alone expired. The exact revision, request, component,
-job, attempt, terminal, finalization, and artifact identities are in the
-execution log.
-
-The narrow source correction applies the same private mask to both diagnostic
-solvers, publishes setup/planner-construction checkpoints before synchronous
-registry work, and exposes the already-bounded action-control, automatic,
-ledger, lineage, scheduler, ladder, and missing-frontier telemetry through MCP
-run summaries. It changes no public ABI, product/default envelope, mechanic,
-admission, scheduling, proof, or publication behavior. The benchmark target,
-13-specification validation, and focused Solver Lab summary regression pass.
-After this checkpoint is committed, normally restart the configured MCP
-server so it loads the corrected summary parser, then retry the immutable
-Gate 3 matrix. No Gate 4 behavior repair is authorized until that corrected
-matrix measures a specific owner; diagnosis-only Gate 4 completion remains
-valid.
-
-The worktree contains one preserved untracked file named `0`, three bytes with
-the content line `0`, which appeared during the preceding diagnostic window.
-Do not delete, clean, edit, stage, rename, or commit it. Stop if any other
-unexpected dirty path appears.
-
-The fragment archive remains parked and unchanged. Do not implement fragment
-integration, a new planner, meta-policy search, RCASSP, or learned guidance in
-this boundary. Detailed progress and exact diagnostic identities are in the
-[execution log](docs/active/2026-08-28-generated-planner-envelope-qualification-ladder-service-repair-v1/execution-log.md).
+The worktree contains one preserved untracked file named `0`, three bytes.
+Do not read, delete, clean, edit, stage, rename, or commit it. Stop if any
+other unexpected dirty path appears after the archive closeout commit.

@@ -1,10 +1,11 @@
 # Generated Planner-Envelope Qualification And Ladder-Service Repair v1
 
-**Status: selected and active.** Selected by Oliver on 2026-08-28 from source
-checkpoint `28c4c30c75cef6ff8e1b38fa218f9b5a98d70203` after a controlled Native
-Solver Lab investigation and independent review of its evidence.
+**Status: completed on 2026-08-29.** Selected by Oliver on 2026-08-28 from
+source checkpoint `28c4c30c75cef6ff8e1b38fa218f9b5a98d70203` after a controlled
+Native Solver Lab investigation and independent review of its evidence. This
+is the preserved execution contract; it no longer owns current sequencing.
 
-Parent: [Active work](../README.md)
+Parent: [Archived boundary](README.md)
 
 Progress and exact evidence belong in the [execution log](execution-log.md).
 
@@ -327,4 +328,3 @@ injection.
 Only after this boundary establishes that operators are correctly canonical,
 admitted, and serviced—and that global continuation coverage still dominates—
 may online continuation completion through verified fragments be reconsidered.
-

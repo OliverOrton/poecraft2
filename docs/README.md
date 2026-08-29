@@ -31,12 +31,14 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-Oliver selected
-[Generated Planner-Envelope Qualification And Ladder-Service Repair v1](active/2026-08-28-generated-planner-envelope-qualification-ladder-service-repair-v1/plan.md)
-on 2026-08-28. It preserves the complete required action envelope and the
-existing exact-goal carrier ladder while repairing disabled-family identity,
-low-cap finalization, operator lineage, phase ownership, and measured
-generation/admission/row/scheduling service. The completed
+No implementation boundary is active. The completed
+[Generated Planner-Envelope Qualification And Ladder-Service Repair v1](archive/2026-08-28-generated-planner-envelope-qualification-ladder-service-repair-v1/README.md)
+boundary qualified a full-minus-Fossil generated layer, attributed remaining
+work to continuation/publication coverage, requalified the existing carrier
+ladder, and closed diagnosis-only without a speculative behavior repair.
+Oliver must choose the next boundary before implementation resumes.
+
+The completed
 [Verified Executable Graph-Fragment Core v1](archive/2026-08-28-verified-executable-graph-fragment-core-v1/README.md)
 adds a probability-free leaf-control IR, exact engine-built single-entry
 verification, complete exit/SCC/resource evidence, FinalSuccess-only ordinary

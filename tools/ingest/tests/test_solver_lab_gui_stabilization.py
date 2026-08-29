@@ -308,7 +308,9 @@ def test_large_hundred_job_refresh_is_background_cached_and_selection_stable(
     from poecraft_ingest.solver_lab_supervisor import SolverLabSupervisor
 
     service = _service(tmp_path)
-    case_id = service.list_cases()["result"][0]["case_id"]
+    frozen_cases = service.list_cases()["result"]
+    case_id = frozen_cases[0]["case_id"]
+    expected_case_count = len(frozen_cases) + 1
     first = service.submit_job(
         case_id=case_id, idempotency_key="large-refresh-first"
     )["result"]
@@ -363,7 +365,11 @@ def test_large_hundred_job_refresh_is_background_cached_and_selection_stable(
     )
     started = time.monotonic()
     window.case_new_button.click()
-    _wait_for(lambda: window.case_list.count() == 6, timeout=0.65, app=app)
+    _wait_for(
+        lambda: window.case_list.count() == expected_case_count,
+        timeout=0.65,
+        app=app,
+    )
     assert time.monotonic() - started < 0.65
     assert window._refresh_in_flight is True
     _wait_for(lambda: window.model.rowCount() == 100, app=app)

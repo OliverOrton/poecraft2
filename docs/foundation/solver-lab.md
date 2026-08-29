@@ -6,7 +6,7 @@ proof authority, or strategy evaluation.
 
 Parent: [Foundation](README.md)
 
-Verified against the implemented Lab surface: 2026-08-28 @ `4886594`.
+Verified against the implemented Lab surface: 2026-08-29 @ `13a5321`.
 Checked owners include `solver_lab_catalog.py`, `solver_lab_service.py`,
 `solver_lab_supervisor.py`, `solver_lab_mcp.py`, and
 `solver_lab_unattended_qualification.py` plus their focused contract,
@@ -219,6 +219,17 @@ typed tools, including the complete draft/validation/revision lifecycle. It has
 no arbitrary shell, SQL, write path, benchmark argument bag, mechanics
 override, or remote worker authority. Mutation tools use the same complete
 canonical-request idempotency rules as the CLI.
+
+`get_run_summary` preserves the bounded native attribution surfaces needed
+to diagnose completed and partial work: `action_control`,
+`automatic_candidates`, `incremental_action_envelope`,
+`action_envelope_ledger`, `operator_lineage`,
+`cooperative_scheduler`, `carrier_ladder`, and `missing_frontier`.
+These are reads of native evidence, not orchestration authority. Retrying an
+immutable terminal job revalidates its complete dispatch identity; if source,
+executable, artifact, or another dispatch component no longer matches, the
+job becomes `dispatch_refused` without creating a worker or attempt. Clone
+or submit a new immutable revision when a new identity is intended.
 
 The catalog has one durable dispatcher owner. A second combined MCP process
 detects a verified-live owner, remains a read/control surface, and reports

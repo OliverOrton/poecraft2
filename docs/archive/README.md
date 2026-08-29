@@ -11,6 +11,12 @@ selected active work.
 
 ## 2026-08-28
 
+- [Generated Planner-Envelope Qualification And Ladder-Service Repair v1](2026-08-28-generated-planner-envelope-qualification-ladder-service-repair-v1/README.md) —
+  repairs truthful envelope identity and low-cap finalization, qualifies the
+  ten-kind generated layer on a full-minus-Fossil primitive envelope,
+  attributes the remaining owner to continuation/publication coverage, and
+  requalifies carrier-ladder service without retaining a speculative behavior
+  repair.
 - [Verified Executable Graph-Fragment Core v1](2026-08-28-verified-executable-graph-fragment-core-v1/README.md) —
   adds a probability-free leaf-control IR, exact engine-built single-entry
   verifier, complete mass/SCC/resource evidence, FinalSuccess-only ordinary

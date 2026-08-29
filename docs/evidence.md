@@ -6,6 +6,40 @@ routes to them rather than duplicating complete reports.
 
 Parent: [Documentation map](README.md)
 
+## Generated Planner-Envelope And Ladder Qualification
+
+The 2026-08-29
+[archived result](archive/2026-08-28-generated-planner-envelope-qualification-ladder-service-repair-v1/result.md)
+qualifies the benchmark-private ten-kind attribution control and records
+diagnosis-only completion. Historical attempts remain immutable. A corrected
+current-source full-envelope matrix shows that Fossil alone owns the
+synchronous setup stop, and a currency-only control truthfully generates no
+dependency programs.
+
+The qualifying 20-row matrix fixes the primitive envelope at full scope minus
+Fossil. All rows complete. Fracture, temporary Bench blocker, protected
+metamod, Eldritch-side, and cannot-roll singletons produce nonzero operators
+and serviced rows; the five other kinds are structurally inapplicable under
+the pinned goal/profile. Cumulative steps 8–10 each complete with successful
+joint assembly. Cumulative-10 publishes a bounded policy with 95 generated
+operators, ladder 2/343/31, 23,420 rows, 75,665 transitions, 1,345,828 reforge
+work, and two truthful open continuation-frontier obligations. Its bundle is
+`bundle-4d191bba91daf0b77def9ebc`, SHA-256
+`dd51dc26fde9d1395cb02baca3a26b90b0eea460a9a29fe368f2aa75a7f10f02`.
+
+Fresh ladder requalification then preserves exact closure for the same-side
+prefix/suffix controls at `1618.2138946963837` and
+`1101.15648683309`, publishes the partial four-to-five bounded policy at
+`7896721.254200992`, and preserves the PDR bounded policy at
+`7866.432124027084`. Native independent exact evaluation matches all four
+with success probability 1, zero off-policy mass, complete pricing, and
+reconciled cost. PDR records 279 generated operators, ladder 5/7,212/65,
+3/3 closed missing-frontier services, one success in six joint assemblies,
+and a truthful 1,179,419,034-byte solver-owned resource stop. Clean-five and
+non-armour controls retain their truthful setup and policy-assembly
+watchdogs. The evidence therefore rejects ladder starvation as the current
+owner and does not authorize a behavior repair.
+
 ## Native Solver Lab Qualification
 
 The 2026-08-28
