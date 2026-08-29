@@ -287,3 +287,54 @@ performance substitute.
 Gate 2 changes no solve behavior. Gate 3 two-layer primitive/generated add-back
 attribution is next; a Gate 4 ladder-service repair remains unauthorized until
 that matrix names a specific measured owner.
+
+## Gate 3 — MCP Preflight Stopped On Stale Identity Authority
+
+The mandated read-only MCP inventory completed before any Gate 3 catalogue or
+job mutation:
+
+- configured MCP source advertises version `0.2.0`; the live configured server
+  exposes exactly 31 typed `poecraft2-native-solver-lab` tools;
+- profile `native_allflame_no_imprint_v1`, SHA-256
+  `876824a29d51ef8e87013639a86120315ca13235833261980b3eb28917b6bb56`;
+- exactly seven frozen cases, including both
+  `fragment-clean-one-goal-renewal-control-v1` and
+  `fragment-clean-one-goal-renewal-shadow-v1`;
+- 19 immutable local revisions, 20 pre-existing drafts, 40 bounded terminal
+  jobs, and 41 bounded terminal attempts;
+- job statuses: 23 completed, 11 failed, two canceled, four partial; attempt
+  statuses: 23 completed, 14 watchdog, one crash, three canceled;
+- no queued/running/cancel-requested job and no starting/running/
+  cancel-requested attempt;
+- queue active under dispatcher/supervisor
+  `supervisor-c0ee9221-d818-461f-8f38-046e0f1dda7a`, process identity
+  `57428:134324392766030429`, with one-worker
+  `solver_lab_host_reservation_v2` ownership and no current reservation; and
+- host reservation formula remains solver-owned cap plus 512 MiB worker
+  headroom, with a separate 512 MiB global safety reserve.
+
+A read-only `submit_job(dry_run=true)` for frozen case
+`conquest-lamellar-allflame-clean-3-prefix-extended-product8`, idempotency key
+`gate3-inventory-dryrun-current-contract-20260829-001`, resolved current source
+commit `9ad971e42d24fd861b720bb41a80248118211d70` and current benchmark SHA-256
+`7a4597fa3a04a33c8691fdea2572cd29fd9c59c9ff7c9534ba20fbad41f0cfd0`.
+It nevertheless emitted `solver_lab_execution_request_v3`, grouped
+`action_scope` / `action_vocabulary`, and the known false
+`disabled_families` component. Full dry-run identity was
+`5dbdb8bfec58a2067fe4082c7d97687bea4c353eaffe722c30c60dfda4c564a1`;
+core identity was
+`212b93e2c8c312eb3ad033ba1e3e0ffd16976a51a0c970d2124b8b14cf2657d2`.
+
+This proves that the long-lived configured MCP process still owns the stale v3
+Python identity contract even though it resolves the current native executable.
+The boundary's explicit stale-server stop applies. No Gate 3 draft, revision,
+job, attempt, queue, priority, ownership, or catalogue mutation was made. No
+process was killed or restarted, no ownership was force-cleared, no GUI or SQL
+was used, and no repository CLI run substitutes for MCP qualification.
+
+Resume Gate 3 only after an owner-controlled normal restart of the configured
+MCP server and a fresh dry run proves `solver_lab_execution_request_v4` with
+`explicit_imprint_scope`, `effective_disabled_action_families`,
+`allowed_mechanic_families`, `product_action_envelope`, and
+`goal_action_list`. Re-run the full read-only inventory at that time before
+creating the two-layer add-back matrix.

@@ -83,6 +83,21 @@ proof, or publication behavior changed. Gate 3 two-layer add-back attribution
 is the current owner; no ladder repair is authorized until it measures a
 specific exact cost owner.
 
+Gate 3 is stopped at its MCP preflight, before any draft, revision, or job
+mutation. The configured server is reachable and exposes version 0.2.0's exact
+31-tool typed surface, all seven frozen cases, one profile, 19 immutable local
+revisions, 40 terminal jobs, and 41 terminal attempts. There are no active jobs
+or attempts; dispatcher ownership is healthy under
+`supervisor-c0ee9221-d818-461f-8f38-046e0f1dda7a`. However, a read-only dry-run
+submission from source `9ad971e` still produced
+`solver_lab_execution_request_v3` and the false `disabled_families` identity
+component. The MCP process is therefore stale and cannot qualify Gate 3's v4
+matrix. Per the boundary, do not kill it, force-clear ownership, edit the
+catalogue, use SQL, or substitute repository CLI runs. Resume only after the
+configured MCP server has been normally restarted and a new dry run exposes
+`solver_lab_execution_request_v4` with the five truthful action-envelope
+components.
+
 The worktree contains one preserved untracked file named `0`, three bytes with
 the content line `0`, which appeared during the preceding diagnostic window.
 Do not delete, clean, edit, stage, rename, or commit it. Stop if any other
