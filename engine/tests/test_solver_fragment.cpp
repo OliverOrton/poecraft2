@@ -1138,8 +1138,10 @@ void engine_backed_renewal_tests(const char* artifact_dir) {
         flattened.candidate->ordinary_strategy_json().find(
             "\"is_default\":true") != std::string::npos);
 
+    EngineBackedFragmentEvaluationLimitsV1 evaluation_limits;
+    evaluation_limits.simulator_runs = 10000;
     const auto evaluated = EngineBackedFragmentEvaluatorV1{}.evaluate(
-        *flattened.candidate, artifact_dir);
+        *flattened.candidate, artifact_dir, {}, evaluation_limits);
     PC_CHECK(evaluated.ok());
     if (!evaluated.ok()) {
         std::printf(
@@ -1182,6 +1184,17 @@ void engine_backed_renewal_tests(const char* artifact_dir) {
     PC_CHECK(std::fabs(
         *evaluated.candidate->independently_evaluated_candidate_cost() -
         expected_cost) < 1e-9);
+    PC_CHECK(evaluation.simulator_completed_runs == 10000);
+    PC_CHECK(evaluation.simulator_success_count == 10000);
+    PC_CHECK(evaluation.simulator_failure_count == 0);
+    PC_CHECK(evaluation.simulator_stop_count == 0);
+    PC_CHECK(evaluation.simulator_action_limit_count == 0);
+    PC_CHECK(evaluation.simulator_cost_limit_count == 0);
+    PC_CHECK(evaluation.simulator_step_limit_count == 0);
+    PC_CHECK(evaluation.simulator_action_not_applied_count == 0);
+    PC_CHECK(evaluation.simulator_no_matching_edge_count == 0);
+    PC_CHECK(evaluation.simulator_missing_price_run_count == 0);
+    PC_CHECK(evaluation.simulator_missing_price_action_count == 0);
 
     std::uint64_t transitions = 0;
     for (const VerifiedProductRowV1& row : first.verified->rows()) {
@@ -1193,7 +1206,9 @@ void engine_backed_renewal_tests(const char* artifact_dir) {
         "residual=%.17g p=%.17g transmute=%.17g scour=%.17g "
         "ir=%016llx certificate=%016llx flat=%016llx json=%llu "
         "nodes=%llu edges=%llu cost=%.17g eval_mass_error=%.17g "
-        "forward_delta=%.17g work=%llu bytes=%llu\n",
+        "forward_delta=%.17g work=%llu bytes=%llu sim=%llu/%llu "
+        "sim_fail=%llu sim_stop=%llu sim_limit=%llu "
+        "sim_inapplicable=%llu sim_missing_edge=%llu sim_missing_price=%llu\n",
         static_cast<unsigned long long>(
             first_fixture.transmute_physical_outcomes),
         static_cast<unsigned long long>(first.verified->rows().size()),
@@ -1218,7 +1233,25 @@ void engine_backed_renewal_tests(const char* artifact_dir) {
         evaluation.forward_maximum_delta,
         static_cast<unsigned long long>(first.verified->work_items()),
         static_cast<unsigned long long>(
-            first.verified->peak_estimated_bytes()));
+            first.verified->peak_estimated_bytes()),
+        static_cast<unsigned long long>(
+            evaluation.simulator_success_count),
+        static_cast<unsigned long long>(
+            evaluation.simulator_completed_runs),
+        static_cast<unsigned long long>(
+            evaluation.simulator_failure_count),
+        static_cast<unsigned long long>(
+            evaluation.simulator_stop_count),
+        static_cast<unsigned long long>(
+            evaluation.simulator_action_limit_count +
+            evaluation.simulator_cost_limit_count +
+            evaluation.simulator_step_limit_count),
+        static_cast<unsigned long long>(
+            evaluation.simulator_action_not_applied_count),
+        static_cast<unsigned long long>(
+            evaluation.simulator_no_matching_edge_count),
+        static_cast<unsigned long long>(
+            evaluation.simulator_missing_price_run_count));
 }
 
 } // namespace

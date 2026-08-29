@@ -1,8 +1,10 @@
 # Handoff
 
 **Status: Verified Executable Graph-Fragment Core v1 Gates 0–5 are complete;
-Gate 5 configured-MCP operator qualification passed from the clean integration
-checkpoint, and Gate 6 final acceptance is the exact next action.**
+Gate 6 native build, focused native acceptance, exact evaluation, the mandated
+10,000-run cyclic Simulator control, benchmark validation, and focused Solver
+Lab integration pass. Commit this coherent test-only acceptance hook, then run
+the full repository pipeline exactly once from the clean checkpoint.**
 The first coherent checkpoint adds the private probability-free leaf IR,
 authority firewall, and exact single-entry product verifier. Gate 3 now adds a
 real engine-backed Transmute/Scour renewal leaf and explicit native benchmark
@@ -104,6 +106,15 @@ cited as such.
   `1850e74ae282ebb6deed7edfcc4d8c8cc87f209f267a684294f8949e2dfc08ab`,
   `264714` bytes. Same-key MCP replay returned the identical ID/hash/path/size,
   and all seven shadow artifact identities remained stable and verified.
+- Gate 6 focused acceptance in progress: the native build passes; fragment,
+  refinement, compiler, evaluator, solve, and API suites pass `218`, `362`,
+  `583`, `15,761`, `86,220`, and `2,686` checks respectively; all 13 benchmark
+  specifications, all seven Lab cases, malformed fragment-contract probes, and
+  52 focused Lab tests pass. The compiled cyclic fragment completed exactly
+  `10,000/10,000` Simulator successes with zero failure, stop, action/cost/step
+  limit, inapplicable-action, missing-edge, or missing-price counts. The next
+  action is the single permitted full `powershell -File scripts/test.ps1` run
+  from the clean acceptance-hook checkpoint.
 - The checkpoint certifies only exact leaf mass/properness/resources for one
   exact entry. It is not ordinary strategy JSON, an executable/public upper,
   an incumbent, product behavior, or option-quality evidence.

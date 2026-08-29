@@ -613,15 +613,31 @@ shadow diagnostic differs. Gate 6 final acceptance is the exact next action.
 ## Final Acceptance Record
 
 ```text
-final source checkpoint:
-native build:
-complete focused fragment suite:
-refinement/compiler/evaluator/solve/API suites:
-benchmark/corpus validation:
-Solver Lab integration suite:
-real cyclic deterministic repeat:
-independent exact evaluation:
-10,000-run Simulator result:
+final source checkpoint: pending the clean Gate 6 acceptance-hook commit
+native build: PASS through powershell -File scripts/build.ps1 after the final
+  test-only change; benchmark and native test targets linked successfully
+complete focused fragment suite: PASS, 218 checks / 0 failures
+refinement/compiler/evaluator/solve/API suites: PASS respectively 362, 583,
+  15,761, 86,220, and 2,686 checks with 0 failures; evaluator controls remain
+  compressed=9a12bd4cc7d2f472 / raw=eee79a5659d79e68
+benchmark/corpus validation: PASS; 13 solver benchmark specifications, all 7
+  Solver Lab specifications, and the selected shadow case's malformed fragment
+  contract rejection probes validate
+Solver Lab integration suite: PASS, 52 tests in 30.88s across fragment shadow,
+  service, MCP, contracts, corpus runner, and supervisor
+real cyclic deterministic repeat: PASS inside the focused fragment suite; two
+  fresh artifact/session/IR/oracle/verifier builds retain IR
+  041927484ddf6dd2, certificate 4005aaa4a497331d, and flattened candidate
+  2edeed49ce1d5e6a with 4,031 rows and 8,061 transitions
+independent exact evaluation: PASS; success 1, every non-success/off-policy
+  mass 0, expected Transmute/Scour 238.40000000000001 /
+  237.40000000000001, total cost 23.789999999999708, maximum mass error
+  1.2212453270876722e-14, forward delta 9.9752406140089234e-13
+10,000-run Simulator result: PASS; exactly 10,000 completed and 10,000
+  successes; failure, stop, action/cost/step limit, action-not-applied,
+  no-matching-edge, missing-price-run, and missing-price-action counts all 0.
+  The hook is benchmark/test-private, defaults to zero runs, and does not alter
+  the shadow report, product request, ABI, or strategy vocabulary
 MCP operator evidence audit:
 full powershell -File scripts/test.ps1:
 git diff --check:

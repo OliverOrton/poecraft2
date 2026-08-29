@@ -716,6 +716,39 @@ EngineBackedFragmentEvaluatorV1::evaluate(
             }
         }
 
+        SimulationSummaryInternal simulator_summary;
+        if (limits.simulator_runs > 0) {
+            SimulatorImpl simulator;
+            simulator.session = session;
+            simulator.strategy = strategy;
+            simulator.economy = options.economy;
+            simulator.action_counts.assign(strategy->nodes.size(), 0);
+            SimulationOptionsInternal simulation_options;
+            simulation_options.target_runs = limits.simulator_runs;
+            simulation_options.seed = limits.simulator_seed;
+            simulation_options.max_actions_per_run =
+                limits.simulator_max_actions_per_run;
+            simulation_options.max_graph_steps_per_run =
+                limits.simulator_max_graph_steps_per_run;
+            run_simulator_chunk(
+                simulator, simulation_options, limits.simulator_runs);
+            simulator_summary = simulator.summary;
+            if (simulator_summary.completed_runs != limits.simulator_runs ||
+                simulator_summary.success_count != limits.simulator_runs ||
+                simulator_summary.failure_count != 0 ||
+                simulator_summary.stop_count != 0 ||
+                simulator_summary.action_limit_count != 0 ||
+                simulator_summary.cost_limit_count != 0 ||
+                simulator_summary.step_limit_count != 0 ||
+                simulator_summary.action_not_applied_count != 0 ||
+                simulator_summary.no_matching_edge_count != 0 ||
+                simulator_summary.missing_price_run_count != 0 ||
+                simulator_summary.missing_price_action_count != 0) {
+                throw std::runtime_error(
+                    "flattened fragment failed Simulator acceptance");
+            }
+        }
+
         IndependentFragmentEvaluationV1 summary;
         summary.candidate_identity = candidate.candidate_identity();
         summary.strategy_json_bytes = strategy_json.size();
@@ -740,6 +773,25 @@ EngineBackedFragmentEvaluatorV1::evaluate(
         summary.total_expected_cost = evaluated.total_expected_cost;
         summary.maximum_mass_error = maximum_mass_error;
         summary.forward_maximum_delta = forward_maximum_delta;
+        summary.simulator_completed_runs =
+            simulator_summary.completed_runs;
+        summary.simulator_success_count = simulator_summary.success_count;
+        summary.simulator_failure_count = simulator_summary.failure_count;
+        summary.simulator_stop_count = simulator_summary.stop_count;
+        summary.simulator_action_limit_count =
+            simulator_summary.action_limit_count;
+        summary.simulator_cost_limit_count =
+            simulator_summary.cost_limit_count;
+        summary.simulator_step_limit_count =
+            simulator_summary.step_limit_count;
+        summary.simulator_action_not_applied_count =
+            simulator_summary.action_not_applied_count;
+        summary.simulator_no_matching_edge_count =
+            simulator_summary.no_matching_edge_count;
+        summary.simulator_missing_price_run_count =
+            simulator_summary.missing_price_run_count;
+        summary.simulator_missing_price_action_count =
+            simulator_summary.missing_price_action_count;
 
         FlattenedFragmentCandidateV1 evaluated_candidate(
             FlattenedFragmentCandidateV1::ConstructionToken{},

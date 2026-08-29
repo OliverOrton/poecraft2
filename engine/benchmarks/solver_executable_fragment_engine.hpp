@@ -63,6 +63,17 @@ struct IndependentFragmentEvaluationV1 {
     double total_expected_cost = 0.0;
     double maximum_mass_error = 0.0;
     double forward_maximum_delta = 0.0;
+    std::uint64_t simulator_completed_runs = 0;
+    std::uint64_t simulator_success_count = 0;
+    std::uint64_t simulator_failure_count = 0;
+    std::uint64_t simulator_stop_count = 0;
+    std::uint64_t simulator_action_limit_count = 0;
+    std::uint64_t simulator_cost_limit_count = 0;
+    std::uint64_t simulator_step_limit_count = 0;
+    std::uint64_t simulator_action_not_applied_count = 0;
+    std::uint64_t simulator_no_matching_edge_count = 0;
+    std::uint64_t simulator_missing_price_run_count = 0;
+    std::uint64_t simulator_missing_price_action_count = 0;
 };
 
 struct EngineBackedFragmentEvaluationResultV1 {
@@ -80,6 +91,10 @@ struct EngineBackedFragmentEvaluationLimitsV1 {
     std::uint32_t max_pairs = 5000000;
     std::uint64_t max_transitions = 20000000;
     std::uint64_t max_owned_bytes = 1024ull * 1024ull * 1024ull;
+    std::uint32_t simulator_runs = 0;
+    std::uint64_t simulator_seed = 2026082801;
+    std::uint32_t simulator_max_actions_per_run = 100000;
+    std::uint32_t simulator_max_graph_steps_per_run = 4000000;
 };
 
 class EngineBackedFragmentEvaluatorV1 {
