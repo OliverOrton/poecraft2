@@ -1,15 +1,12 @@
 # Active Work
 
-**Status: Carrier-Ladder Online Continuation Completion v1 is active.**
+**Status: no implementation boundary is active.** Oliver must select the next
+chunk before implementation resumes.
 
-The selected boundary extends the existing carrier ladder with one bounded,
-solve-local continuation-completion lane. The ladder remains the only entry
-and exit selector; mechanically verified local control may rejoin ordinary
-policy assembly only after complete composition and independent exact
-evaluation. Product defaults remain off.
-
-- [Plan](2026-08-29-carrier-ladder-online-continuation-completion-v1/plan.md)
-- [Execution log](2026-08-29-carrier-ladder-online-continuation-completion-v1/execution-log.md)
+The most recent boundary completed diagnosis-only after proving that the
+current ladder exposes abstract state obligations rather than the exact entry
+and exit contract required by online continuation search. Its evidence is
+preserved in the [documentation archive](../archive/README.md).
 
 Parent: [Documentation map](../README.md)
 

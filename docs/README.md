@@ -31,12 +31,17 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[Carrier-Ladder Online Continuation Completion v1](active/2026-08-29-carrier-ladder-online-continuation-completion-v1/plan.md)
-is active. It gives the existing exact-goal carrier ladder one bounded,
-solve-local continuation-completion lane. The ladder selects exact entries and
-exits; only mechanically verified and independently evaluated ordinary
-strategies may reach existing incumbent/publication authority. The boundary
-does not create a permanent fragment library or enable product defaults.
+No implementation boundary is active. Oliver must select the next chunk
+before implementation resumes.
+
+The completed diagnosis-only
+[Carrier-Ladder Online Continuation Completion v1](archive/2026-08-29-carrier-ladder-online-continuation-completion-v1/README.md)
+boundary established that the existing ladder schedules abstract solver
+states and that its open missing-frontier records name neither an exact item
+entry nor a requested exit contract. No fragment or solver behavior changed.
+The next proposed owner is a bounded exact-boundary contract that preserves a
+failed ladder prefix and replays it from the authored exact start through
+native strict-kernel authority before any online continuation search resumes.
 
 The completed
 [Native Solver CLI Workflow v1](archive/2026-08-29-native-solver-cli-workflow-v1/README.md)

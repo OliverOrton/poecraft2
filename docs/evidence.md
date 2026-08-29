@@ -6,6 +6,33 @@ routes to them rather than duplicating complete reports.
 
 Parent: [Documentation map](README.md)
 
+## Carrier-Ladder Online Continuation Diagnosis
+
+The 2026-08-29
+[archived result](archive/2026-08-29-carrier-ladder-online-continuation-completion-v1/result.md)
+closes Gate 0 diagnosis-only. Current source stores ladder carriers and open
+missing-frontier work as abstract `CalcContext` state IDs. Cumulative-10's
+last retained record is state 4489 / goal mask 0, with `is_carrier=0`, no
+broad expansion, and no owner rows. It supplies neither an exact item snapshot
+nor a requested exit contract.
+
+`CalcContext::materialize` can build one representative consistent with an
+abstract state, but it cannot prove that representative is the reachable item
+behind the obligation or stand for every exact member. The temporary failed
+coarse policy prefix is restored away before strict native-kernel replay can
+recover those members. The fragment core therefore remains parked: using it
+now would invent both the exact entry and exit authorities.
+
+The immutable cumulative-10 revision remains
+`case-rev-cdfb71c9e2403db6b20d067ea8b42e91` / SHA-256
+`cdfb71c9e2403db6b20d067ea8b42e91839c5c9862c9fe4eebe213c06d3df07e`;
+its attempt is `attempt-283cf8c6-5576-42c7-bf39-4a063d1fa79d` and its
+bundle is `bundle-4d191bba91daf0b77def9ebc` / SHA-256
+`dd51dc26fde9d1395cb02baca3a26b90b0eea460a9a29fe368f2aa75a7f10f02`.
+The PDR control remains independently exact-matched at
+`7866.432124027084` with its truthful 1,179,419,034-byte stop; it does not
+supply the missing cumulative-10 exact boundary.
+
 ## Native Solver CLI Workflow
 
 The 2026-08-29

@@ -1,7 +1,11 @@
 # Carrier-Ladder Online Continuation Completion v1
 
-**Status: selected and active.** Oliver selected this boundary on 2026-08-29
-from source checkpoint `c2c5fb29cfd4f3392c808a732c7771eeaa94bbe1`.
+**Status: completed diagnosis-only on 2026-08-29.** Oliver selected this
+boundary from source checkpoint
+`c2c5fb29cfd4f3392c808a732c7771eeaa94bbe1`. Gate 0 reached the plan's hard
+stop: the ladder exposes neither an exact entry carrier nor a requested exit
+contract for its open continuation-frontier records. No solver or fragment
+behavior change was retained.
 
 Parent: [Active work](../README.md)
 
@@ -315,4 +319,3 @@ defaults remain off; product integration requires a later selected boundary.
 - GUI/rendered review; and
 - overnight qualification. The prior six-hour soak was owner-waived, not
   passed, and remains non-overnight evidence.
-

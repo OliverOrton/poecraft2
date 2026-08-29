@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-08-29
 
+- [Carrier-Ladder Online Continuation Completion v1](2026-08-29-carrier-ladder-online-continuation-completion-v1/README.md) —
+  completes diagnosis-only at Gate 0 after proving that open ladder records
+  contain abstract solver states and no requested exit contract; it retains
+  no solver or fragment behavior change and identifies exact boundary
+  recovery as the prerequisite seam.
 - [Native Solver CLI Workflow v1](2026-08-29-native-solver-cli-workflow-v1/README.md) —
   adds versioned matrix files, bounded JSON-Pointer derivation, and one-shot
   targeted run/summary over existing Lab authority; native acceptance also
