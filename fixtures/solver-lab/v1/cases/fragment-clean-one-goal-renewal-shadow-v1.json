@@ -1,0 +1,109 @@
+{
+  "schema_version": "solver_benchmark_case_v1",
+  "id": "fragment-clean-one-goal-renewal-shadow-v1",
+  "category": "native_shadow_diagnostic",
+  "approval_status": "selected_boundary_2026_08_28",
+  "benchmark_enabled": true,
+  "description": "Fixed ordinary one-goal Vaal Regalia solve paired with an optional isolated Transmute/Scour verified-fragment shadow diagnostic.",
+  "comparison_profile": "calculator-product-quality-ladder-v1",
+  "watchdog_seconds": 240,
+  "session": {
+    "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+    "base_name": "Vaal Regalia",
+    "item_class_key": "Body Armour",
+    "item_level": 86,
+    "minimum_item_level": 86
+  },
+  "start": {
+    "rarity": "normal",
+    "with_implicits": false,
+    "mods": []
+  },
+  "goal": {
+    "version": "v1",
+    "rarity": "magic",
+    "action_mode": "goal_relevant",
+    "min_satisfied_slots": 1,
+    "slots": [
+      {
+        "family_mod_key": "LocalIncreasedEnergyShield11",
+        "min_tier": 1
+      }
+    ],
+    "actions": ["transmute", "alteration", "augment", "annul", "scour"]
+  },
+  "allowed_mechanic_families": ["ordinary_currency"],
+  "economy": {
+    "version": "v1",
+    "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+    "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+    "league_key": "allflame",
+    "league_name": "Allflame",
+    "manual_overrides": {"base": 1.0},
+    "fallback_price": null,
+    "missing_price_decisions": {"base": "verified_fragment_control_input_1_chaos"}
+  },
+  "fragment_shadow_v1": {
+    "schema_version": "verified_executable_graph_fragment_shadow_v1",
+    "case_id": "clean_one_goal_transmute_scour_renewal_v1",
+    "enabled": true,
+    "execution_mode": "isolated_native_process",
+    "goal_family_mod_key": "LocalIncreasedEnergyShield11",
+    "action_ids": ["transmute", "scour"],
+    "caps": {
+      "max_states": 20000,
+      "max_transitions": 1000000,
+      "max_work_items": 1000000000,
+      "max_estimated_bytes": 1073741824,
+      "time_limit_seconds": 180
+    }
+  },
+  "expected": {
+    "solve_status": "reliability_classified",
+    "optimality_status": "exact",
+    "compile_status": "compiled",
+    "verification_status": "not_required"
+  },
+  "caps": {
+    "solve_profile": "calculator_product_v1",
+    "max_states": 10000,
+    "max_sweeps": 100000,
+    "solve_step_work_items": 8,
+    "max_discovered_states": 10000,
+    "max_expanded_states": 10000,
+    "max_state_action_rows": 100000,
+    "max_transitions": 1000000,
+    "max_reforge_work": 1000000,
+    "max_solver_owned_bytes": 268435456,
+    "max_diagnostic_samples": 64,
+    "max_telemetry_json_bytes": 2097152,
+    "max_compiled_nodes": 25000,
+    "max_compiled_edges": 100000,
+    "max_strategy_json_bytes": 16777216,
+    "worker_step_ms": 50,
+    "cancel_ack_ms": 250,
+    "high_impact_executable_uppers": false,
+    "full_evidence": true
+  },
+  "verification": {
+    "runs": 0,
+    "seed": 2026082801,
+    "max_actions_per_run": 100000,
+    "exact_evaluation": true,
+    "exact_max_states": 1000000,
+    "exact_max_pairs": 5000000,
+    "exact_max_transitions": 20000000,
+    "exact_max_owned_bytes": 1073741824,
+    "exact_cost_absolute_tolerance": 1e-7,
+    "exact_cost_relative_tolerance": 1e-9
+  },
+  "corpus": {
+    "tier": "verified-fragment-shadow-v1",
+    "stratum": "clean_one_goal_transmute_scour_renewal_v1",
+    "goal_modifier_count": 1,
+    "start_goal_modifier_count": 0,
+    "product_worker_profile": "calculator_default_adaptive_max_8"
+  }
+}

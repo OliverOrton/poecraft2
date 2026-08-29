@@ -1453,6 +1453,13 @@ class SolverLabService:
             assert job is not None
             summary = self._run_summary(attempt)
             strategy = self.get_strategy_summary(attempt_id=attempt_id)["result"]
+            attempt_result = as_mapping(attempt.get("result"))
+            ordinary_finalization = as_mapping(
+                attempt_result.get("ordinary_finalization")
+            )
+            fragment_shadow = as_mapping(
+                attempt_result.get("fragment_shadow_v1")
+            )
             sample = as_mapping(summary.get("latest_sample"))
             work = as_mapping(sample.get("work"))
             states = as_mapping(sample.get("states"))
@@ -1462,6 +1469,15 @@ class SolverLabService:
                     "job_id": job["job_id"],
                     "case_id": job["case_id"],
                     "job_identity_sha256": job["identity_sha256"],
+                    "full_request_identity": job["request"].get(
+                        "full_request_identity"
+                    ),
+                    "core_solve_identity_v1": job["request"].get(
+                        "core_solve_identity_v1"
+                    ),
+                    "core_solve_component_identities_v1": job["request"].get(
+                        "core_solve_component_identities_v1"
+                    ),
                     "request_identity": {
                         "source": job["request"].get("source"),
                         "executable": job["request"].get("executable"),
@@ -1504,16 +1520,116 @@ class SolverLabService:
                             "route_failure_count",
                         )
                     },
+                    "ordinary_finalization": {
+                        "ordinary_result_identity_v1": ordinary_finalization.get(
+                            "ordinary_result_identity_v1"
+                        ),
+                        "component_identities": ordinary_finalization.get(
+                            "component_identities"
+                        ),
+                        "ordinary_report_sha256": ordinary_finalization.get(
+                            "ordinary_report_sha256"
+                        ),
+                        "strategy_files": ordinary_finalization.get(
+                            "strategy_files"
+                        ),
+                        "phase_order": ordinary_finalization.get("phase_order"),
+                    },
+                    "fragment_shadow_v1": {
+                        "present": bool(fragment_shadow),
+                        "status": fragment_shadow.get("status"),
+                        "phase_order": fragment_shadow.get("phase_order"),
+                        "ordinary_finalized_before_shadow": fragment_shadow.get(
+                            "ordinary_finalized_before_shadow"
+                        ),
+                        "ordinary_unchanged_after_shadow": fragment_shadow.get(
+                            "ordinary_unchanged_after_shadow"
+                        ),
+                        "private_caps": fragment_shadow.get("private_caps"),
+                        "report_sha256": fragment_shadow.get("report_sha256"),
+                        "report": fragment_shadow.get("report"),
+                    },
                 }
             )
         identities_equal = len(
             {canonical_sha256(row["request_identity"]) for row in rows}
+        ) == 1
+        full_request_identities_equal = len(
+            {row.get("full_request_identity") for row in rows}
+        ) == 1
+        core_solve_identities_equal = len(
+            {row.get("core_solve_identity_v1") for row in rows}
+        ) == 1
+        core_component_names = sorted(
+            {
+                key
+                for row in rows
+                for key in as_mapping(
+                    row.get("core_solve_component_identities_v1")
+                )
+            }
+        )
+        core_component_equal = {
+            name: len(
+                {
+                    as_mapping(
+                        row.get("core_solve_component_identities_v1")
+                    ).get(name)
+                    for row in rows
+                }
+            )
+            == 1
+            for name in core_component_names
+        }
+        ordinary_component_names = sorted(
+            {
+                key
+                for row in rows
+                for key in as_mapping(
+                    as_mapping(row.get("ordinary_finalization")).get(
+                        "component_identities"
+                    )
+                )
+            }
+        )
+        ordinary_component_equal = {
+            name: len(
+                {
+                    as_mapping(
+                        as_mapping(row.get("ordinary_finalization")).get(
+                            "component_identities"
+                        )
+                    ).get(name)
+                    for row in rows
+                }
+            )
+            == 1
+            for name in ordinary_component_names
+        }
+        ordinary_result_identities_equal = len(
+            {
+                as_mapping(row.get("ordinary_finalization")).get(
+                    "ordinary_result_identity_v1"
+                )
+                for row in rows
+            }
         ) == 1
         return operation_result(
             "compare_runs",
             {
                 "attempt_count": len(rows),
                 "request_identities_equal": identities_equal,
+                "full_request_identities_equal": full_request_identities_equal,
+                "core_solve_identities_equal": core_solve_identities_equal,
+                "core_solve_components_equal": core_component_equal,
+                "all_core_solve_components_equal": bool(core_component_equal)
+                and all(core_component_equal.values()),
+                "ordinary_result_identities_equal": (
+                    ordinary_result_identities_equal
+                ),
+                "ordinary_components_equal": ordinary_component_equal,
+                "all_ordinary_components_equal": bool(ordinary_component_equal)
+                and all(ordinary_component_equal.values()),
                 "runs": rows,
             },
         )
@@ -1845,7 +1961,7 @@ class SolverLabService:
             "global_safety_reserve_bytes": self.global_safety_reserve_bytes,
             "authority": "host_scheduler_only",
         }
-        return {
+        request = {
             "schema_version": EXECUTION_REQUEST_SCHEMA_VERSION,
             "source": dict(provenance.source),
             "executable": dict(provenance.executable),
@@ -1896,6 +2012,49 @@ class SolverLabService:
             },
             "scheduler": scheduler,
         }
+        core_case_document = {
+            key: value
+            for key, value in disk_case.items()
+            if key not in {"id", "fragment_shadow_v1"}
+        }
+        core_components = {
+            "source": request["source"],
+            "executable": request["executable"],
+            "compiled_artifact": request["compiled_artifact"],
+            "corpus": request["corpus"],
+            "case_without_id_or_fragment_shadow_v1": core_case_document,
+            "start": core_case_document.get("start"),
+            "goal": core_case_document.get("goal"),
+            "economy": request["economy"],
+            "profile": request["profile"],
+            "action_scope": request["action_scope"],
+            "action_vocabulary": {
+                "goal_actions": as_mapping(
+                    core_case_document.get("goal")
+                ).get("actions"),
+                "allowed_mechanic_families": core_case_document.get(
+                    "allowed_mechanic_families"
+                ),
+                "product_action_envelope": core_case_document.get(
+                    "product_action_envelope"
+                ),
+            },
+            "disabled_families": request["action_scope"].get("explicit"),
+            "solver_caps": request["solver_caps"],
+            "watchdog_seconds": request["watchdog_seconds"],
+            "requested_bounded_finish": core_case_document.get(
+                "requested_bounded_finish_seconds"
+            ),
+            "measurement": request["measurement"],
+            "scheduler": request["scheduler"],
+        }
+        request["core_solve_component_identities_v1"] = {
+            key: canonical_sha256(value)
+            for key, value in sorted(core_components.items())
+        }
+        request["core_solve_identity_v1"] = canonical_sha256(core_components)
+        request["full_request_identity"] = canonical_sha256(request)
+        return request
 
     def dispatch_preflight(self, job: Mapping[str, Any]) -> dict[str, Any]:
         expected = as_mapping(job.get("request"))

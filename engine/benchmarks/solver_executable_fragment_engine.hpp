@@ -75,11 +75,20 @@ struct EngineBackedFragmentEvaluationResultV1 {
     }
 };
 
+struct EngineBackedFragmentEvaluationLimitsV1 {
+    std::uint32_t max_states = 1000000;
+    std::uint32_t max_pairs = 5000000;
+    std::uint64_t max_transitions = 20000000;
+    std::uint64_t max_owned_bytes = 1024ull * 1024ull * 1024ull;
+};
+
 class EngineBackedFragmentEvaluatorV1 {
 public:
     EngineBackedFragmentEvaluationResultV1 evaluate(
         const FlattenedFragmentCandidateV1& candidate,
-        const std::string& compiled_artifact_directory) const;
+        const std::string& compiled_artifact_directory,
+        const std::string& economy_json = {},
+        const EngineBackedFragmentEvaluationLimitsV1& limits = {}) const;
 };
 
 } // namespace fragment_v1

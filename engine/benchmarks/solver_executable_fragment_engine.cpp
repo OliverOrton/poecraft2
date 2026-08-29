@@ -580,7 +580,9 @@ build_clean_one_goal_transmute_scour_renewal_v1(
 EngineBackedFragmentEvaluationResultV1
 EngineBackedFragmentEvaluatorV1::evaluate(
         const FlattenedFragmentCandidateV1& candidate,
-        const std::string& compiled_artifact_directory) const {
+        const std::string& compiled_artifact_directory,
+        const std::string& economy_json_override,
+        const EngineBackedFragmentEvaluationLimitsV1& limits) const {
     EngineBackedFragmentEvaluationResultV1 output;
     try {
         const std::string manifest = read_text(
@@ -606,15 +608,18 @@ EngineBackedFragmentEvaluatorV1::evaluate(
             candidate.ordinary_strategy_json();
         const auto strategy = compile_strategy_json(
             session, strategy_json.data(), strategy_json.size());
-        const std::string economy_json =
+        const std::string default_economy_json =
             "{\"version\":\"v1\",\"id\":"
             "\"verified-fragment-independent-evaluation-v1\","
             "\"prices\":{\"transmute\":0.05,\"scour\":0.05}}";
+        const std::string& economy_json = economy_json_override.empty()
+            ? default_economy_json
+            : economy_json_override;
         StrategyEvalOptions options;
-        options.max_states = 1000000;
-        options.max_pairs = 5000000;
-        options.max_transitions = 20000000;
-        options.max_owned_bytes = 1024ull * 1024ull * 1024ull;
+        options.max_states = limits.max_states;
+        options.max_pairs = limits.max_pairs;
+        options.max_transitions = limits.max_transitions;
+        options.max_owned_bytes = limits.max_owned_bytes;
         options.economy = load_economy_json(
             economy_json.data(), economy_json.size());
         const StrategyEvalResult evaluated = evaluate_strategy(

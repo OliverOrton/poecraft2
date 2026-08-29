@@ -6,6 +6,7 @@
 
 #include "json.hpp"
 #include "solver_diagnostic_options.hpp"
+#include "solver_executable_fragment_engine.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -54,6 +55,7 @@ struct Arguments {
     std::string case_id;
     bool validate_only = false;
     bool fragment_contract_rejection_probes = false;
+    bool fragment_shadow_only = false;
     bool skip_verification = false;
     bool emit_progress = false;
     bool goal_progress_gated_reforges = false;
@@ -352,6 +354,12 @@ std::string escape_json(std::string_view value) {
         }
     }
     out << '"';
+    return out.str();
+}
+
+std::string hex_u64(const std::uint64_t value) {
+    std::ostringstream out;
+    out << std::hex << std::setfill('0') << std::setw(16) << value;
     return out.str();
 }
 
@@ -2141,7 +2149,9 @@ std::string classify_completed_solve(
     return "converged";
 }
 
-void validate_case_shape(const Value& specification) {
+void validate_case_shape(
+        const Value& specification,
+        const bool validate_fragment_shadow = true) {
     if (required_string(specification, "schema_version") !=
         "solver_benchmark_case_v1") {
         throw std::runtime_error("case schema_version must be solver_benchmark_case_v1");
@@ -2255,8 +2265,9 @@ void validate_case_shape(const Value& specification) {
                 "bounded best-policy contract requires exact evaluation");
         }
     }
-    const Value* fragment_shadow = optional(
-        specification, "fragment_shadow_v1", Type::Object);
+    const Value* fragment_shadow = validate_fragment_shadow
+        ? optional(specification, "fragment_shadow_v1", Type::Object)
+        : nullptr;
     if (fragment_shadow != nullptr) {
         const std::set<std::string> allowed_fields = {
             "schema_version", "case_id", "enabled", "execution_mode",
@@ -4927,6 +4938,215 @@ void write_partial_case_report(
     write_file_atomic(fs::absolute(path), output.str());
 }
 
+int run_fragment_shadow_only(
+        const Value& specification,
+        const fs::path& artifact,
+        const fs::path& output_path) {
+    using namespace poecraft::solver::fragment_v1;
+    const auto started = Clock::now();
+    std::string status = "refused";
+    std::string refusal_code;
+    std::string refusal_witness;
+    std::optional<VerifiedLeafFragmentV1> verified;
+    std::optional<FlattenedFragmentCandidateV1> flattened;
+    std::optional<IndependentFragmentEvaluationV1> evaluation;
+    try {
+        const Value& request = required(
+            specification, "fragment_shadow_v1", Type::Object);
+        const Value& caps = required(request, "caps", Type::Object);
+        LeafVerificationLimitsV1 limits;
+        limits.max_states = optional_u32(caps, "max_states", 0);
+        limits.max_transitions = optional_u64(
+            caps, "max_transitions", 0);
+        limits.max_work_items = optional_u64(
+            caps, "max_work_items", 0);
+        limits.max_estimated_bytes = optional_u64(
+            caps, "max_estimated_bytes", 0);
+        const double time_limit = required(
+            caps, "time_limit_seconds", Type::Number).number;
+        limits.deadline = std::chrono::steady_clock::now() +
+            std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+                std::chrono::duration<double>(time_limit));
+
+        const auto built = build_clean_one_goal_transmute_scour_renewal_v1(
+            fs::absolute(artifact).string());
+        if (!built.ok()) {
+            refusal_code = "engine_fixture_refused";
+            refusal_witness = built.refusal;
+        } else {
+            const auto checked = ExactLeafFragmentVerifierV1{}.verify(
+                built.fixture->ir, built.fixture->context,
+                *built.fixture->oracle, limits);
+            if (!checked.ok()) {
+                refusal_code = checked.refusal.code;
+                refusal_witness = checked.refusal.witness;
+            } else {
+                verified = *checked.verified;
+                const auto flattened_result =
+                    SingleFragmentFlattenerV1{}.flatten(
+                        verified->structural_control());
+                if (!flattened_result.ok()) {
+                    refusal_code = flattened_result.refusal.code;
+                    refusal_witness = flattened_result.refusal.witness;
+                } else {
+                    flattened = *flattened_result.candidate;
+                    const std::string economy =
+                        load_case_economy_json(specification);
+                    EngineBackedFragmentEvaluationLimitsV1 evaluation_limits;
+                    evaluation_limits.max_states = limits.max_states;
+                    evaluation_limits.max_pairs = static_cast<std::uint32_t>(
+                        std::min<std::uint64_t>(
+                            limits.max_transitions,
+                            std::numeric_limits<std::uint32_t>::max()));
+                    evaluation_limits.max_transitions =
+                        limits.max_transitions;
+                    evaluation_limits.max_owned_bytes =
+                        limits.max_estimated_bytes;
+                    const auto evaluated =
+                        EngineBackedFragmentEvaluatorV1{}.evaluate(
+                            *flattened, fs::absolute(artifact).string(),
+                            economy, evaluation_limits);
+                    if (!evaluated.ok()) {
+                        refusal_code = "independent_evaluation_refused";
+                        refusal_witness = evaluated.refusal;
+                    } else {
+                        flattened = *evaluated.candidate;
+                        evaluation = *evaluated.evaluation;
+                        status = "verified_evaluated";
+                    }
+                }
+            }
+        }
+    } catch (const std::exception& error) {
+        refusal_code = "shadow_internal_error";
+        refusal_witness = error.what();
+    }
+
+    std::uint64_t transitions = 0;
+    if (verified) {
+        for (const auto& row : verified->rows()) {
+            transitions += row.transitions.size();
+        }
+    }
+    const auto resource_json = [](const ResourceVectorV1& resources) {
+        std::ostringstream out;
+        out << '{';
+        bool first = true;
+        for (const auto& [key, value] : resources) {
+            if (!first) out << ',';
+            first = false;
+            out << escape_json(key) << ':' << std::setprecision(17) << value;
+        }
+        out << '}';
+        return out.str();
+    };
+    const auto consumption_json = [](const std::map<std::string, double>& values) {
+        std::ostringstream out;
+        out << '{';
+        bool first = true;
+        for (const auto& [key, value] : values) {
+            if (!first) out << ',';
+            first = false;
+            out << escape_json(key) << ':' << std::setprecision(17) << value;
+        }
+        out << '}';
+        return out.str();
+    };
+    std::ostringstream report;
+    report << std::setprecision(17)
+           << "{\"schema_version\":"
+              "\"verified_executable_graph_fragment_shadow_report_v1\","
+           << "\"case_id\":"
+           << escape_json(required_string(specification, "id")) << ','
+           << "\"status\":" << escape_json(status) << ','
+           << "\"authority\":{\"lane\":\"private_shadow_diagnostic\","
+              "\"ordinary_upper\":false,\"incumbent_observation\":false},"
+           << "\"refusal\":{\"code\":"
+           << (refusal_code.empty() ? "null" : escape_json(refusal_code))
+           << ",\"witness\":"
+           << (refusal_witness.empty() ? "null" : escape_json(refusal_witness))
+           << "},\"verification\":";
+    if (!verified) {
+        report << "null";
+    } else {
+        report << "{\"ir_identity\":"
+               << escape_json(
+                      hex_u64(verified->ir_identity().digest))
+               << ",\"certificate_identity\":"
+               << escape_json(
+                      hex_u64(verified->certificate_identity().digest))
+               << ",\"states\":" << verified->rows().size()
+               << ",\"rows\":" << verified->rows().size()
+               << ",\"transitions\":" << transitions
+               << ",\"strongly_connected_components\":"
+               << verified->strongly_connected_components()
+               << ",\"positive_probability_cyclic_components\":"
+               << verified->positive_probability_cyclic_components()
+               << ",\"exit_mass\":"
+               << verified->exit_probability_sum()
+               << ",\"mass_error\":"
+               << verified->max_probability_mass_error()
+               << ",\"resource_residual\":"
+               << verified->max_resource_residual()
+               << ",\"expected_resources\":"
+               << resource_json(verified->expected_resources())
+               << ",\"work_items\":" << verified->work_items()
+               << ",\"peak_estimated_bytes\":"
+               << verified->peak_estimated_bytes() << '}';
+    }
+    report << ",\"flattened\":";
+    if (!flattened) {
+        report << "null";
+    } else {
+        report << "{\"candidate_identity\":"
+               << escape_json(
+                      hex_u64(flattened->candidate_identity().digest))
+               << ",\"strategy_json_bytes\":"
+               << flattened->ordinary_strategy_json().size() << '}';
+    }
+    report << ",\"independent_evaluation\":";
+    if (!evaluation) {
+        report << "null";
+    } else {
+        report << "{\"converged\":"
+               << (evaluation->converged ? "true" : "false")
+               << ",\"proper\":"
+               << (evaluation->proper ? "true" : "false")
+               << ",\"cost_complete\":"
+               << (evaluation->cost_complete ? "true" : "false")
+               << ",\"cost_reconciled\":"
+               << (evaluation->cost_reconciled ? "true" : "false")
+               << ",\"success_probability\":"
+               << evaluation->success_probability
+               << ",\"failure_probability\":"
+               << evaluation->failure_probability
+               << ",\"stop_probability\":"
+               << evaluation->stop_probability
+               << ",\"action_not_applied_probability\":"
+               << evaluation->action_not_applied_probability
+               << ",\"no_matching_edge_probability\":"
+               << evaluation->no_matching_edge_probability
+               << ",\"unresolved_probability\":"
+               << evaluation->unresolved_probability
+               << ",\"expected_actions\":"
+               << evaluation->expected_actions
+               << ",\"expected_consumption\":"
+               << consumption_json(evaluation->expected_consumption)
+               << ",\"total_expected_cost\":"
+               << evaluation->total_expected_cost
+               << ",\"maximum_mass_error\":"
+               << evaluation->maximum_mass_error
+               << ",\"forward_maximum_delta\":"
+               << evaluation->forward_maximum_delta << '}';
+    }
+    const double wall_ms = std::chrono::duration<double, std::milli>(
+        Clock::now() - started).count();
+    report << ",\"private_resources\":{\"wall_ms\":" << wall_ms
+           << "}}\n";
+    write_file_atomic(fs::absolute(output_path), report.str());
+    return status == "verified_evaluated" ? 0 : 2;
+}
+
 Arguments parse_arguments(int argc, char** argv) {
     Arguments args;
     for (int index = 1; index < argc; ++index) {
@@ -4958,6 +5178,9 @@ Arguments parse_arguments(int argc, char** argv) {
         else if (argument == "--validate-only") args.validate_only = true;
         else if (argument == "--fragment-contract-rejection-probes") {
             args.fragment_contract_rejection_probes = true;
+        }
+        else if (argument == "--fragment-shadow-only") {
+            args.fragment_shadow_only = true;
         }
         else if (argument == "--progress") args.emit_progress = true;
         else if (argument == "--goal-progress-gated-reforges") {
@@ -5021,6 +5244,21 @@ Arguments parse_arguments(int argc, char** argv) {
         throw std::runtime_error(
             "--fragment-contract-rejection-probes requires --validate-only "
             "and one selected --case");
+    }
+    if (args.fragment_shadow_only &&
+        (args.validate_only || args.case_id.empty())) {
+        throw std::runtime_error(
+            "--fragment-shadow-only requires one selected --case and is "
+            "mutually exclusive with --validate-only");
+    }
+    if (args.fragment_shadow_only &&
+        (!args.partial_output.empty() || !args.strategy_output.empty() ||
+         !args.development_checkpoint_save.empty() ||
+         !args.development_checkpoint_load.empty() ||
+         args.verification_runs != 0 || args.skip_verification)) {
+        throw std::runtime_error(
+            "--fragment-shadow-only accepts no ordinary solve output, "
+            "checkpoint, or verification option");
     }
     if (!args.partial_output.empty() && args.case_id.empty()) {
         throw std::runtime_error(
@@ -5135,7 +5373,9 @@ int main(int argc, char** argv) {
                 }
                 const fs::path path = corpus_dir / relative.string;
                 Value specification = parse_json(read_file(path), path);
-                validate_case_shape(specification);
+                validate_case_shape(
+                    specification,
+                    args.validate_only || args.fragment_shadow_only);
                 validate_case_manifest_contract(manifest, specification);
                 const std::string id = required_string(specification, "id");
                 if (!args.case_id.empty() && id != args.case_id) continue;
@@ -5143,6 +5383,18 @@ int main(int argc, char** argv) {
             }
             if (!args.case_id.empty() && specifications.empty()) {
                 throw std::runtime_error("unknown corpus case: " + args.case_id);
+            }
+
+            if (args.fragment_shadow_only) {
+                if (specifications.size() != 1) {
+                    throw std::runtime_error(
+                        "--fragment-shadow-only requires exactly one case");
+                }
+                const int result = run_fragment_shadow_only(
+                    specifications.front(), fs::absolute(args.artifact),
+                    fs::absolute(args.output));
+                pc_data_destroy(data);
+                return result;
             }
 
             if (args.validate_only) {

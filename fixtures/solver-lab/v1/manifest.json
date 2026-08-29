@@ -49,7 +49,9 @@
     "conquest-lamellar-allflame-clean-3-suffix-product8": "fast_exact_three_suffix",
     "conquest-lamellar-allflame-clean-4-pdr-product8": "bounded_four_mod_pdr",
     "spine-bow-allflame-clean-4-goal-product8": "non_armour_four_goal_control",
-    "conquest-lamellar-allflame-partial-4-to-5-product8": "dirty_partial_carrier_control"
+    "conquest-lamellar-allflame-partial-4-to-5-product8": "dirty_partial_carrier_control",
+    "fragment-clean-one-goal-renewal-control-v1": "verified_fragment_cyclic_control",
+    "fragment-clean-one-goal-renewal-shadow-v1": "verified_fragment_cyclic_shadow"
   },
   "lab_profile": "profiles/native_allflame_no_imprint_v1.json",
   "cases": [
@@ -57,6 +59,8 @@
     "../../solver-exact-same-side/v1/cases/conquest-lamellar-allflame-clean-3-suffix-product8.json",
     "../../solver-exact-same-side/v1/cases/conquest-lamellar-allflame-clean-4-pdr-product8.json",
     "../../solver-quality-ladder/v1/cases/spine-bow-allflame-clean-4-goal-product8.json",
-    "../../solver-quality-ladder/v1/qualification-1024/cases/conquest-lamellar-allflame-partial-4-to-5-product8.json"
+    "../../solver-quality-ladder/v1/qualification-1024/cases/conquest-lamellar-allflame-partial-4-to-5-product8.json",
+    "cases/fragment-clean-one-goal-renewal-control-v1.json",
+    "cases/fragment-clean-one-goal-renewal-shadow-v1.json"
   ]
 }

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 from pathlib import Path
 import sys
@@ -12,6 +13,8 @@ from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
 from dataclasses import dataclass
 from typing import Any, Iterable
 from collections.abc import Callable
+
+from poecraft_ingest.solver_lab_contracts import canonical_sha256
 
 from poecraft_ingest.solver_worker import (
     AttemptPaths,
@@ -42,6 +45,206 @@ def _atomic_json(path: Path, value: dict[str, Any]) -> None:
         encoding="utf-8",
     )
     os.replace(temporary, path)
+
+
+_DYNAMIC_ORDINARY_KEYS = {
+    "elapsed_ms",
+    "wall_ms",
+    "total_ms",
+    "phase_wall_ms",
+    "registry_layout_ms",
+    "solve_ms",
+    "compile_ms",
+    "verification_ms",
+    "max_solve_step_ms",
+    "solve_step_wall_ms",
+    "cooperative_abandon_ms",
+    "strategy_output_path",
+    "memory",
+    "timings_ns",
+    "diagnostic_cost",
+}
+
+
+def _without_dynamic_ordinary_measurements(
+    value: Any, path: tuple[str, ...] = ()
+) -> Any:
+    """Keep authority/work telemetry while excluding host timing/allocation noise."""
+
+    if isinstance(value, dict):
+        return {
+            key: _without_dynamic_ordinary_measurements(item, (*path, key))
+            for key, item in value.items()
+            if key not in _DYNAMIC_ORDINARY_KEYS
+            and not key.endswith("_ns")
+            and not key.endswith("_ms")
+            and "_ns_" not in key
+            and not (
+                key == "artifact_identity" and "core_policy" in path
+            )
+            and not (
+                key in {"identity", "retained_bytes"}
+                and (
+                    "publication_candidates" in path
+                    or "selected_policy_candidate" in path
+                )
+            )
+        }
+    if isinstance(value, list):
+        return [
+            _without_dynamic_ordinary_measurements(item, path) for item in value
+        ]
+    return value
+
+
+def _ordinary_finalization_components(
+    report: dict[str, Any], strategy_hashes: list[dict[str, Any]]
+) -> dict[str, Any]:
+    cases = report.get("cases")
+    if not isinstance(cases, list) or len(cases) != 1 or not isinstance(cases[0], dict):
+        raise ValueError("ordinary finalization requires exactly one case report")
+    case = cases[0]
+    telemetry = case.get("solver_telemetry")
+    if not isinstance(telemetry, dict):
+        telemetry = {}
+    solve = case.get("solve_summary")
+    if not isinstance(solve, dict):
+        solve = {}
+    exact = case.get("exact_strategy_evaluation")
+    if not isinstance(exact, dict):
+        exact = {}
+    execution = case.get("execution")
+    if not isinstance(execution, dict):
+        execution = {}
+    stable = _without_dynamic_ordinary_measurements
+    return {
+        "ordinary_inputs": stable(case.get("input")),
+        "core_graph_scheduler": stable(
+            {
+                "states": telemetry.get("states"),
+                "work": telemetry.get("work"),
+                "exact_state_scaling": telemetry.get("exact_state_scaling"),
+                "focused_expansion": telemetry.get("focused_expansion"),
+                "optimization": telemetry.get("optimization"),
+            }
+        ),
+        "action_envelope_ledger": stable(
+            {
+                "product_action_ids": case.get("product_action_ids"),
+                "actions": telemetry.get("actions"),
+                "action_control": telemetry.get("action_control"),
+                "incremental_action_envelope": telemetry.get(
+                    "incremental_action_envelope"
+                ),
+            }
+        ),
+        "proof_lower_provenance": stable(
+            {
+                "carrier_bound_attribution": telemetry.get(
+                    "carrier_bound_attribution"
+                ),
+                "policy_refinement": telemetry.get("policy_refinement"),
+                "policy_result": telemetry.get("policy_result"),
+                "lower_bound": solve.get("lower_bound"),
+            }
+        ),
+        "incumbent_public_upper": stable(
+            {
+                "incumbent_portfolio": telemetry.get("incumbent_portfolio"),
+                "upper_bound": solve.get("upper_bound"),
+                "evaluated_policy_cost": solve.get("evaluated_policy_cost"),
+                "absolute_optimality_gap": solve.get("absolute_optimality_gap"),
+                "relative_optimality_gap": solve.get("relative_optimality_gap"),
+            }
+        ),
+        "compiled_ordinary_strategy": stable(
+            {
+                "compiled_graph": case.get("compiled_graph"),
+                "compilation": telemetry.get("compilation"),
+                "strategy_files": [
+                    {
+                        "sha256": item["sha256"],
+                        "size_bytes": item["size_bytes"],
+                    }
+                    for item in strategy_hashes
+                ],
+            }
+        ),
+        "exact_evaluation": stable(exact),
+        "status_termination": {
+            "actual_status": case.get("actual_status"),
+            "workflow_status": case.get("workflow_status"),
+            "expectation_met": case.get("expectation_met"),
+            "solve_result_class": case.get("solve_result_class"),
+            "policy_status": solve.get("policy_status"),
+            "termination": solve.get("termination"),
+            "stop_cause": solve.get("stop_cause"),
+            "target_met": solve.get("target_met"),
+            "target_fired": solve.get("target_fired"),
+        },
+        "cap_resource_classification": stable(
+            {
+                "ordinary_caps": (
+                    case.get("input", {}).get("caps")
+                    if isinstance(case.get("input"), dict)
+                    else None
+                ),
+                "cap_checks": case.get("cap_checks"),
+                "cap_hit_mask": solve.get("cap_hit_mask"),
+                "diagnostic_stop_reason": execution.get(
+                    "diagnostic_stop_reason"
+                ),
+                "watchdog_expired": execution.get("watchdog_expired"),
+                "optimization_cap_hits": (
+                    telemetry.get("optimization", {}).get("cap_hits")
+                    if isinstance(telemetry.get("optimization"), dict)
+                    else None
+                ),
+            }
+        ),
+    }
+
+
+def _capture_ordinary_finalization(paths: AttemptPaths, case_id: str) -> dict[str, Any]:
+    report = read_json_object(paths.report_path)
+    cases = report.get("cases")
+    if (
+        not isinstance(cases, list)
+        or len(cases) != 1
+        or not isinstance(cases[0], dict)
+        or cases[0].get("id") != case_id
+    ):
+        raise ValueError("ordinary finalization case identity mismatch")
+    strategy_hashes = [
+        {
+            "name": path.name,
+            "sha256": sha256_file(path),
+            "size_bytes": path.stat().st_size,
+        }
+        for path in sorted(paths.strategy_output_path.glob("*.json"))
+        if path.is_file()
+    ]
+    components = _ordinary_finalization_components(report, strategy_hashes)
+    captured = {
+        "schema_version": "solver_lab_ordinary_finalization_v1",
+        "case_id": case_id,
+        "phase_order": 1,
+        "ordinary_report_sha256": sha256_file(paths.report_path),
+        "strategy_files": strategy_hashes,
+        "component_identities": {
+            name: canonical_sha256(value)
+            for name, value in sorted(components.items())
+        },
+        "ordinary_result_identity_v1": canonical_sha256(components),
+        "finalized_at_unix_ns": time.time_ns(),
+    }
+    finalization_path = paths.attempt_directory / "ordinary-finalization.json"
+    _atomic_json(finalization_path, captured)
+    return {
+        **captured,
+        "path": str(finalization_path.resolve()),
+        "document_sha256": sha256_file(finalization_path),
+    }
 
 
 @dataclass(frozen=True)
@@ -160,6 +363,11 @@ def _run_case(
     cancel_requested: Callable[[], bool] | None = None,
     on_process_started: Callable[[int, str | None], None] | None = None,
 ) -> dict[str, Any]:
+    immutable_lab_attempt = bool(
+        attempt_paths is not None
+        and attempt_paths.report_path.parent.resolve()
+        == attempt_paths.attempt_directory.resolve()
+    )
     if attempt_paths is None:
         attempt_id = f"{time.time_ns()}-{os.getpid()}"
         attempt_paths = AttemptPaths.legacy(
@@ -195,6 +403,146 @@ def _run_case(
     partial_available = partial_observation_available(
         resolved.paths.partial_report_path, task.case_id
     )
+    ordinary_finalization: dict[str, Any] | None = None
+    fragment_shadow: dict[str, Any] | None = None
+    if immutable_lab_attempt and classification.completed:
+        ordinary_finalization = _capture_ordinary_finalization(
+            resolved.paths, task.case_id
+        )
+        case_document = (
+            read_json_object(task.case_path)
+            if task.case_path.is_file()
+            else {}
+        )
+        shadow_request = case_document.get("fragment_shadow_v1")
+        if shadow_request is not None:
+            shadow_report_path = (
+                resolved.paths.attempt_directory / "fragment-shadow.json"
+            )
+            shadow_log_path = (
+                resolved.paths.attempt_directory / "fragment-shadow.log"
+            )
+            shadow_launch_unix_ns = time.time_ns()
+            caps = (
+                shadow_request.get("caps")
+                if isinstance(shadow_request, dict)
+                else None
+            )
+            try:
+                private_watchdog = (
+                    float(caps.get("time_limit_seconds", 0.0))
+                    if isinstance(caps, dict)
+                    else 0.0
+                )
+            except (TypeError, ValueError):
+                private_watchdog = 0.0
+            if not (math.isfinite(private_watchdog) and private_watchdog > 0.0):
+                fragment_shadow = {
+                    "schema_version": "solver_lab_fragment_shadow_result_v1",
+                    "status": "refused_before_launch",
+                    "failure_kind": "invalid_private_wall_cap",
+                    "phase_order": 2,
+                    "ordinary_finalized_before_shadow": True,
+                    "ordinary_finalization_sha256": ordinary_finalization[
+                        "document_sha256"
+                    ],
+                    "launch_unix_ns": shadow_launch_unix_ns,
+                    "private_caps": caps,
+                    "ordinary_unchanged_after_shadow": True,
+                }
+            else:
+                shadow_command = [
+                    str(executable.resolve()),
+                    "--artifact",
+                    str(artifact.resolve()),
+                    "--corpus",
+                    str(corpus.resolve()),
+                    "--case",
+                    task.case_id,
+                    "--output",
+                    str(shadow_report_path.resolve()),
+                    "--fragment-shadow-only",
+                ]
+                shadow_process = run_isolated_process(
+                    shadow_command,
+                    watchdog_seconds=private_watchdog,
+                    cwd=root.resolve(),
+                    cancel_requested=cancel_requested,
+                    on_started=on_process_started,
+                )
+                shadow_log_path.write_text(
+                    str(shadow_process.pop("output", "")), encoding="utf-8"
+                )
+                shadow_report: dict[str, Any] | None = None
+                if shadow_report_path.is_file():
+                    try:
+                        shadow_report = read_json_object(shadow_report_path)
+                    except (OSError, ValueError, json.JSONDecodeError):
+                        shadow_report = None
+                shadow_status = (
+                    str(shadow_report.get("status"))
+                    if shadow_report is not None
+                    else (
+                        "canceled"
+                        if shadow_process.get("canceled")
+                        else (
+                            "private_wall_cap"
+                            if shadow_process.get("timed_out")
+                            else "failed"
+                        )
+                    )
+                )
+                ordinary_report_unchanged = (
+                    sha256_file(resolved.paths.report_path)
+                    == ordinary_finalization["ordinary_report_sha256"]
+                )
+                ordinary_strategies_unchanged = all(
+                    (resolved.paths.strategy_output_path / item["name"]).is_file()
+                    and sha256_file(
+                        resolved.paths.strategy_output_path / item["name"]
+                    )
+                    == item["sha256"]
+                    for item in ordinary_finalization["strategy_files"]
+                )
+                fragment_shadow = {
+                    "schema_version": "solver_lab_fragment_shadow_result_v1",
+                    "status": shadow_status,
+                    "failure_kind": (
+                        None
+                        if shadow_report is not None
+                        else "isolated_shadow_process_failure"
+                    ),
+                    "phase_order": 2,
+                    "ordinary_finalized_before_shadow": (
+                        shadow_launch_unix_ns
+                        >= ordinary_finalization["finalized_at_unix_ns"]
+                    ),
+                    "ordinary_finalization_sha256": ordinary_finalization[
+                        "document_sha256"
+                    ],
+                    "launch_unix_ns": shadow_launch_unix_ns,
+                    "private_caps": caps,
+                    "command": shadow_command,
+                    "report_path": str(shadow_report_path.resolve()),
+                    "report_sha256": (
+                        sha256_file(shadow_report_path)
+                        if shadow_report_path.is_file()
+                        else None
+                    ),
+                    "log_path": str(shadow_log_path.resolve()),
+                    "report": shadow_report,
+                    "process": shadow_process,
+                    "ordinary_report_unchanged_after_shadow": (
+                        ordinary_report_unchanged
+                    ),
+                    "ordinary_strategies_unchanged_after_shadow": (
+                        ordinary_strategies_unchanged
+                    ),
+                    "ordinary_unchanged_after_shadow": (
+                        ordinary_report_unchanged
+                        and ordinary_strategies_unchanged
+                    ),
+                }
     return {
         "case_id": task.case_id,
         "attempt_id": resolved.paths.attempt_id,
@@ -209,6 +557,8 @@ def _run_case(
         "partial_report_path": str(resolved.paths.partial_report_path.resolve()),
         "partial_observation_available": partial_available,
         "log_path": str(resolved.paths.log_path.resolve()),
+        "ordinary_finalization": ordinary_finalization,
+        "fragment_shadow_v1": fragment_shadow,
         **result,
     }
 

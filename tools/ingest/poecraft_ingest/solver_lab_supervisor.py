@@ -705,6 +705,9 @@ class SolverLabSupervisor:
             ("report", report_path),
             ("partial_report", directory / "partial.json"),
             ("worker_log", worker_log),
+            ("ordinary_finalization", directory / "ordinary-finalization.json"),
+            ("fragment_shadow_report", directory / "fragment-shadow.json"),
+            ("fragment_shadow_log", directory / "fragment-shadow.log"),
             ("supervisor_error", error_path),
         ]
         strategy_directory = directory / "strategies"

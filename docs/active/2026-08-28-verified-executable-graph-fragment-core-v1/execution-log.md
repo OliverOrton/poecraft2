@@ -3,8 +3,8 @@
 **Status: Gates 0–4 passed. Gates 0–2 are retained in local commit
 `94f9584a98298c9987e335bbcd82c41423877997`; Gate 3 is retained in the local
 commit `fdc7e10fd4f1e4112ebf680e1a734f467309b668`; Gate 4 is retained in the
-local checkpoint titled `Flatten verified fragment into ordinary strategy`.
-Gate 5 is next.**
+local commit `d9ef102853ac7e00d7c7bae3e245e8518354346a`. Gate 5 automated shadow
+isolation is coherent; its MCP-only operator qualification remains next.**
 
 Parent: [Plan](plan.md)
 
@@ -356,23 +356,60 @@ decision: PASS; retain one deterministic FinalSuccess-only flattener and the
 Automated isolation:
 
 ```text
-ordinary result/strategy/evaluation/telemetry finalized before shadow:
-shadow process/lifetime isolation:
-shadow wall/work/state/transition/byte caps:
-ordinary allowance/non-consumption proof:
+ordinary result/strategy/evaluation/telemetry finalized before shadow: PASS;
+  ordinary-finalization.json is atomically written and hashed at phase 1
+  before the separately invoked native shadow command at phase 2. The real
+  worker sequence rehashed the final report and strategy after shadow and
+  found both unchanged
+shadow process/lifetime isolation: PASS; poecraft_solver_benchmark runs a
+  second time with --fragment-shadow-only, a fresh artifact/session/verifier/
+  parser/compiler/evaluator lifetime, separate report/log files, and no
+  ordinary partial, strategy, checkpoint, Simulator, or solver arguments
+shadow wall/work/state/transition/byte caps: external whole-process wall 180s;
+  exact verifier max 20,000 states, 1,000,000 transitions, 1,000,000,000 work
+  items, and 1 GiB estimated bytes; the fresh exact evaluator receives the
+  same state/transition/byte allowances. The passing real shadow used
+  258,091,648 work items and 4,321,232 peak estimated bytes in 25,374.8409ms
+ordinary allowance/non-consumption proof: PASS; ordinary caps, watchdog,
+  bounded-finish, status/termination, cap classification, report hash, and
+  compiled strategy hash are captured before launch and remain unchanged;
+  shadow cancellation/timeout/refusal never rewrites ordinary classification
 control/shadow full_request_identity (expected unequal):
 control/shadow core_solve_identity_v1 (required equal):
 individual start/goal/economy/artifact/executable/vocabulary/scope/family parity:
 individual ordinary cap/watchdog/bounded-finish parity:
-allowed diagnostic differences:
-core graph/scheduler parity:
-action-ledger parity:
-proof/lower parity:
-incumbent/public-upper parity:
-compiled-policy parity:
-status/termination/resource parity:
-malformed/capped/canceled isolation:
-focused test command/result:
+allowed diagnostic differences: only fragment_shadow_v1 request/report plus
+  its private process command, caps, wall/work/state/transition/byte evidence
+core graph/scheduler parity: PASS; component sha256
+  b2132dd21e9b81dc795fec2e36f910268989582b1d27acb85239a1b2685194b2
+action-ledger parity: PASS; component sha256
+  a92d9aad6d74608dcf31d7e60ceb739fb6de1ce08b49a5b9bbc28d6f01c4fbb6
+proof/lower parity: PASS; component sha256
+  9f7001eb4ba1175a052b236d7f6f6351d05c4bb0cd96b8658f9f102fe6410523
+incumbent/public-upper parity: PASS; component sha256
+  163c0b7a3f74a9654747c37f35fd941fbad6919dbc968a7b6171708f76ceec33
+compiled-policy parity: PASS; both ordinary strategies are byte-identical at
+  57,287 bytes with sha256
+  8b1e6be735e3de9703ca27411ae19721b0445500a7691a8abf720a38edb55a59
+status/termination/resource parity: PASS; the nine-component ordinary result
+  identity is
+  1f40d2f423ffd66d324087f624fd3a3a7c823e018c172c38a20ca14d460d0283
+  on both real worker runs
+malformed/capped/canceled isolation: PASS; malformed private wall caps refuse
+  before launch, native independent refusal remains diagnostic, and killed or
+  canceled shadow processes preserve completed ordinary status and hashes
+real shadow diagnostic: verified_evaluated; IR 041927484ddf6dd2,
+  certificate 4005aaa4a497331d, 4,031 states/rows, 8,061 transitions, one
+  positive-probability cyclic SCC, exit mass 1, flattened identity
+  2edeed49ce1d5e6a, independent success 1 / off-policy 0, and complete
+  Allflame cost 91.58869999999888; local report sha256
+  6fe05ef19e6a16fdd5f74a82136491056d30b2d104be72c6e205263412a10011
+focused test command/result: fragment native suite PASS, 207 checks / 0
+  failures; focused Solver Lab/runner/contracts/supervisor/MCP suite PASS,
+  52 tests; native Lab case validation plus malformed fragment probes PASS
+source checkpoint decision: automated isolation is coherent and ready for a
+  local source commit. MCP operator qualification remains pending; Gate 5 is
+  not yet claimed complete
 ```
 
 MCP-only operator transcript:

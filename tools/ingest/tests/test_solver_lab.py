@@ -251,9 +251,9 @@ def test_qt_queue_and_detail_widgets_use_persisted_service(tmp_path: Path) -> No
 
     assert window.model.rowCount() == 1
     assert window.proxy_model.rowCount() == 1
-    assert window.case_picker.count() == 5
+    assert window.case_picker.count() == 7
     assert window.tabs.count() == 5
-    assert window.case_list.count() == 5
+    assert window.case_list.count() == 7
     assert window.selected_job()["case_id"] == case_id
     _wait_qt(app, lambda: "queued" in window.detail.values["status"].text())
     assert "queued" in window.detail.values["status"].text()
@@ -262,8 +262,8 @@ def test_qt_queue_and_detail_widgets_use_persisted_service(tmp_path: Path) -> No
     window.job_filter.clear()
     assert window.proxy_model.rowCount() == 1
     window.create_case_from_template()
-    _wait_qt(app, lambda: window.case_list.count() == 6)
-    assert window.case_list.count() == 6
+    _wait_qt(app, lambda: window.case_list.count() == 8)
+    assert window.case_list.count() == 8
     assert window._case_selection["source_kind"] == "draft"
     assert window.case_editor.isReadOnly() is False
 

@@ -381,7 +381,7 @@ def test_mcp_stdio_server_initializes_and_serves_bounded_cases(tmp_path: Path) -
         assert len(tools.tools) == 31
         assert result.is_error is False
         assert result.structured_content is not None
-        assert len(result.structured_content["result"]) == 5
+        assert len(result.structured_content["result"]) == 7
 
     asyncio.run(exercise())
 

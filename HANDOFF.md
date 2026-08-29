@@ -1,13 +1,16 @@
 # Handoff
 
-**Status: Verified Executable Graph-Fragment Core v1 Gates 0–4 are complete.**
+**Status: Verified Executable Graph-Fragment Core v1 Gates 0–4 are complete;
+Gate 5 automated shadow isolation is coherent and MCP qualification is next.**
 The first coherent checkpoint adds the private probability-free leaf IR,
 authority firewall, and exact single-entry product verifier. Gate 3 now adds a
 real engine-backed Transmute/Scour renewal leaf and explicit native benchmark
 diagnostic fixture. Gate 4 now flattens only a verified FinalSuccess-only
 structural projection into ordinary strategy JSON and independently evaluates
-it. Gate 5's isolated post-finalization shadow process and MCP operator
-qualification are the exact next boundary; no incumbent integration has begun.
+it. Gate 5 now has an isolated post-finalization native shadow process, frozen
+control/shadow cases, explicit full/core identities, and automated ordinary-
+parity evidence. MCP-only qualification is the exact next action; no incumbent
+integration has begun.
 
 The preceding unattended-hardening boundary's six-hour soak was
 **owner-waived, not passed**. It is not overnight qualification and must not be
@@ -54,6 +57,17 @@ cited as such.
   `engine/benchmarks`, is linked explicitly only into the benchmark and native
   focused test targets, and is absent from `engine/engine-sources.txt`; Gates
   0–4 therefore do not trigger the conditional release-WASM gate.
+- Gate 5 automated isolation candidate: the ordinary result is atomically
+  finalized before a separately capped `--fragment-shadow-only` process. A
+  real control/shadow worker pair produced identical nine-component ordinary
+  identity
+  `1f40d2f423ffd66d324087f624fd3a3a7c823e018c172c38a20ca14d460d0283`
+  and byte-identical 57,287-byte strategies with sha256
+  `8b1e6be735e3de9703ca27411ae19721b0445500a7691a8abf720a38edb55a59`.
+  The shadow alone verified/evaluated the 4,031-row cyclic leaf with Allflame
+  cost `91.58869999999888`; killed, capped, malformed, and independently
+  refused shadow tests preserve the completed ordinary result. The MCP-only
+  Gate 5 operator transcript is still pending, so Gate 5 is not yet complete.
 - The checkpoint certifies only exact leaf mass/properness/resources for one
   exact entry. It is not ordinary strategy JSON, an executable/public upper,
   an incumbent, product behavior, or option-quality evidence.
