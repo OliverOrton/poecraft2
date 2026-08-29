@@ -2562,6 +2562,21 @@ void run_exact_boundary_closure_tests() {
     REFINE_CHECK(no_entry.absorption_proved);
     REFINE_CHECK(no_entry.requested_nodes.empty());
 
+    ExactState unresolved_stop = state(905, 8);
+    unresolved_stop.terminal = true;
+    const std::vector<ExactBoundaryClosureNode> unresolved_boundary{
+        {root, 0, {1}},
+        {unresolved_stop, 1, {}},
+    };
+    const ExactBoundaryClosureResult unresolved_no_entry =
+        analyze_exact_boundary_closure(unresolved_boundary, 7);
+    REFINE_CHECK(
+        unresolved_no_entry.status ==
+        ExactBoundaryRecoveryStatus::NoRequestedEntry);
+    REFINE_CHECK(unresolved_no_entry.complete_support);
+    REFINE_CHECK(unresolved_no_entry.absorption_proved);
+    REFINE_CHECK(unresolved_no_entry.requested_nodes.empty());
+
     const ExactState loop = state(904, 8);
     const std::vector<ExactBoundaryClosureNode> improper{
         {root, 0, {1, 2}},

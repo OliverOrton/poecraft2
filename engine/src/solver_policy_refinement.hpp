@@ -446,6 +446,24 @@ struct ExactBoundaryRecoveredMember {
     pc_item_state item{};
 };
 
+/* One exact selected-row edge that terminates at a captured non-goal
+ * observation stop. This is provenance only: it cannot supply an action or
+ * turn the stop into a successful requested entry. */
+struct ExactBoundaryReachedStop {
+    StableKey predecessor_stable_key;
+    std::uint32_t predecessor_coarse_state = kNoId;
+    StableKey predecessor_coarse_state_key;
+    std::uint32_t selected_coarse_operator = kNoId;
+    std::uint32_t selected_strict_operator = kNoId;
+    StableKey selected_action_semantic_key;
+    StableKey stopped_stable_key;
+    std::uint32_t stopped_coarse_state = kNoId;
+    StableKey stopped_coarse_state_key;
+    std::uint64_t probability_bits = 0;
+
+    bool operator==(const ExactBoundaryReachedStop&) const = default;
+};
+
 struct ExactBoundaryRecoveryResult {
     ExactBoundaryRecoveryStatus status =
         ExactBoundaryRecoveryStatus::NotRun;
@@ -460,8 +478,12 @@ struct ExactBoundaryRecoveryResult {
     std::uint64_t peak_owned_bytes = 0;
     std::uint64_t wall_time_ms = 0;
     std::uint64_t member_identity = 0;
+    std::uint64_t reached_stop_identity = 0;
+    std::uint64_t reached_stop_count = 0;
+    std::uint64_t reached_stop_samples_omitted = 0;
     PolicyLiftAdapterTelemetry adapter;
     std::vector<ExactBoundaryRecoveredMember> requested_entries;
+    std::vector<ExactBoundaryReachedStop> reached_stops;
 };
 
 /* Internal closure input shared by production recovery and focused native

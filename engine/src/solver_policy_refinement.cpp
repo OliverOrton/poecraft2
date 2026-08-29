@@ -5159,6 +5159,8 @@ ExactBoundaryClosureResult analyze_exact_boundary_closure(
 
 struct ExactBoundaryRecoveryWork::Impl {
     RefinementLimits limits;
+    const SolveResult& selected_prefix;
+    std::set<std::uint32_t> observation_stops;
     std::uint64_t max_work = 0;
     std::uint64_t max_wall_time_ms = 0;
     std::uint32_t requested_entry = kNoId;
@@ -5172,6 +5174,7 @@ struct ExactBoundaryRecoveryWork::Impl {
     std::size_t cursor = 0;
     std::uint32_t active_node = kNoId;
     bool finished = false;
+    bool reached_stops_finalized = false;
     std::chrono::steady_clock::time_point started_at =
         std::chrono::steady_clock::now();
 
@@ -5187,9 +5190,14 @@ struct ExactBoundaryRecoveryWork::Impl {
             const std::uint64_t max_work_value,
             const std::uint64_t max_wall_time_ms_value)
         : limits(std::move(limits_value)),
+          selected_prefix(selected_prefix),
+          observation_stops(observation_stops),
           max_work(max_work_value),
           max_wall_time_ms(max_wall_time_ms_value),
           requested_entry(requested_entry_value) {
+        result.reached_stop_identity = 1469598103934665603ULL;
+        result.reached_stop_identity ^= 1;
+        result.reached_stop_identity *= 1099511628211ULL;
         oracle = std::make_unique<ProductionPolicyOracle>(
             coarse, selected_prefix, exact_start, prices, options, limits,
             result.adapter, nullptr, true, true, false,
@@ -5223,6 +5231,15 @@ struct ExactBoundaryRecoveryWork::Impl {
              result.requested_entries) {
             bytes += member.stable_key.capacity() * sizeof(std::uint64_t);
         }
+        bytes += result.reached_stops.capacity() *
+            sizeof(ExactBoundaryReachedStop);
+        for (const ExactBoundaryReachedStop& stop : result.reached_stops) {
+            bytes += stable_key_bytes(stop.predecessor_stable_key);
+            bytes += stable_key_bytes(stop.predecessor_coarse_state_key);
+            bytes += stable_key_bytes(stop.selected_action_semantic_key);
+            bytes += stable_key_bytes(stop.stopped_stable_key);
+            bytes += stable_key_bytes(stop.stopped_coarse_state_key);
+        }
         if (oracle != nullptr) {
             saturating_add(
                 bytes, oracle->estimated_owned_bytes());
@@ -5241,6 +5258,7 @@ struct ExactBoundaryRecoveryWork::Impl {
     void refuse(
             const ExactBoundaryRecoveryStatus status,
             std::string reason) {
+        finalize_reached_stops();
         result.status = status;
         result.refusal = std::move(reason);
         result.wall_time_ms = elapsed_ms();
@@ -5278,8 +5296,47 @@ struct ExactBoundaryRecoveryWork::Impl {
         return ordinal;
     }
 
+    void record_reached_stop(ExactBoundaryReachedStop stop) {
+        if (reached_stops_finalized) {
+            throw std::logic_error(
+                "exact boundary stop provenance changed after finalization");
+        }
+        const auto mix = [&](const std::uint64_t word) {
+            result.reached_stop_identity ^= word;
+            result.reached_stop_identity *= 1099511628211ULL;
+        };
+        const auto mix_key = [&](const StableKey& key) {
+            mix(key.size());
+            for (const std::uint64_t word : key) mix(word);
+        };
+        mix_key(stop.predecessor_stable_key);
+        mix(stop.predecessor_coarse_state);
+        mix_key(stop.predecessor_coarse_state_key);
+        mix(stop.selected_coarse_operator);
+        mix(stop.selected_strict_operator);
+        mix_key(stop.selected_action_semantic_key);
+        mix_key(stop.stopped_stable_key);
+        mix(stop.stopped_coarse_state);
+        mix_key(stop.stopped_coarse_state_key);
+        mix(stop.probability_bits);
+        ++result.reached_stop_count;
+        if (result.reached_stops.empty() && limits.max_witnesses > 0) {
+            result.reached_stops.push_back(std::move(stop));
+        }
+    }
+
+    void finalize_reached_stops() {
+        if (reached_stops_finalized) return;
+        result.reached_stop_identity ^= result.reached_stop_count;
+        result.reached_stop_identity *= 1099511628211ULL;
+        result.reached_stop_samples_omitted =
+            result.reached_stop_count - result.reached_stops.size();
+        reached_stops_finalized = true;
+    }
+
     void finish_graph() {
         result.exact_states = static_cast<std::uint32_t>(nodes.size());
+        finalize_reached_stops();
         const ExactBoundaryClosureResult closure =
             analyze_exact_boundary_closure(nodes, requested_entry);
         result.complete_support = closure.complete_support;
@@ -5400,6 +5457,39 @@ struct ExactBoundaryRecoveryWork::Impl {
                 for (const auto& [successor, probability] : mass) {
                     node.successors.push_back(successor);
                     total += probability;
+                    const ExactBoundaryClosureNode& stopped =
+                        nodes.at(successor);
+                    if (stopped.state.terminal && !stopped.state.goal &&
+                        observation_stops.contains(
+                            stopped.state.coarse_state)) {
+                        std::uint32_t selected_coarse_operator = kNoId;
+                        if (node.state.coarse_state <
+                            selected_prefix.policy.size()) {
+                            selected_coarse_operator = selected_prefix.policy[
+                                node.state.coarse_state].index;
+                        }
+                        if (result.reached_stop_count == 0) {
+                            /* The first exact boundary edge is the diagnostic
+                             * authority. Later edges contribute only to the
+                             * bounded count; repeatedly hashing large exact
+                             * keys would turn observation into unbounded work
+                             * before the existing transition cap can fire. */
+                            record_reached_stop({
+                                node.state.stable_key,
+                                node.state.coarse_state,
+                                node.state.coarse_state_key,
+                                selected_coarse_operator,
+                                row.selected.action_id,
+                                row.selected.semantic_key,
+                                stopped.state.stable_key,
+                                stopped.state.coarse_state,
+                                stopped.state.coarse_state_key,
+                                std::bit_cast<std::uint64_t>(
+                                    probability.value())});
+                        } else {
+                            ++result.reached_stop_count;
+                        }
+                    }
                 }
                 result.exact_transitions += mass.size();
                 if (result.exact_transitions > limits.max_transitions) {

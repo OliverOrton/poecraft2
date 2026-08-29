@@ -37,10 +37,12 @@ the concise disposition is in the
 
 ## Current Owner
 
-Gate 0 provenance audit, then the typed strict-support-hole witness. The first
-implementation decision depends on whether state 213 already owns a completed
-ordinary row that capture excluded solely because the ordinary row's support
-did not include the strict outcome projection.
+Gates 0–2 reached a diagnosis-only implementation checkpoint. Exact replay
+proves the first boundary is root Chaos to unresolved coarse state 213, which
+has no captured or completed selected row. No support extension is sound.
+Gate 3 now owns deterministic replay and genuine cancellation controls,
+followed by matched behavior-neutral qualification, final CLI evidence, and
+closeout.
 
 ## Retained Repository State
 

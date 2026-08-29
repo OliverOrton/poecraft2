@@ -1250,6 +1250,23 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
             std::uint32_t coarse_state = kNoId;
             pc_item_state item{};
         };
+        struct ReachedStop {
+            std::vector<std::uint64_t> predecessor_stable_key;
+            std::uint32_t predecessor_coarse_state = kNoId;
+            std::vector<std::uint64_t> predecessor_coarse_state_key;
+            std::uint32_t selected_coarse_operator = kNoId;
+            std::uint32_t selected_strict_operator = kNoId;
+            std::vector<std::uint64_t> selected_action_semantic_key;
+            std::vector<std::uint64_t> stopped_stable_key;
+            std::uint32_t stopped_coarse_state = kNoId;
+            std::vector<std::uint64_t> stopped_coarse_state_key;
+            std::uint64_t probability_bits = 0;
+            std::uint64_t captured_policy_row =
+                std::numeric_limits<std::uint64_t>::max();
+            StopKind kind = StopKind::UnresolvedMissing;
+            bool captured_coarse_reachable = false;
+            bool completed_selected_row = false;
+        };
         BoundedPolicyIncumbent prefix;
         std::vector<Stop> stops;
         std::uint32_t target_state = kNoId;
@@ -1271,6 +1288,9 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         std::uint64_t recovery_work = 0;
         std::uint64_t recovery_wall_time_ms = 0;
         std::uint64_t exact_member_identity = 0;
+        std::uint64_t reached_stop_identity = 0;
+        std::uint64_t reached_stop_count = 0;
+        std::uint64_t reached_stop_samples_omitted = 0;
         std::uint32_t selected_states = 0;
         std::uint32_t goal_stops = 0;
         std::uint32_t certified_frontier_stops = 0;
@@ -1285,6 +1305,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         std::string recovery_status = "not_run";
         std::string recovery_refusal;
         std::vector<RecoveredMember> recovered_members;
+        std::vector<ReachedStop> reached_stops;
     };
     /*
      * A Bellman-selected row policy is not a certified upper bound. Keep its

@@ -1100,6 +1100,20 @@ std::uint64_t SolveWork::Impl::carrier_ladder_boundary_owned_bytes(
         for (const auto& member : capture.recovered_members) {
             bytes += member.stable_key.capacity() * sizeof(std::uint64_t);
         }
+        bytes += capture.reached_stops.capacity() *
+            sizeof(CarrierLadderBoundaryCapture::ReachedStop);
+        for (const auto& stop : capture.reached_stops) {
+            bytes += stop.predecessor_stable_key.capacity() *
+                sizeof(std::uint64_t);
+            bytes += stop.predecessor_coarse_state_key.capacity() *
+                sizeof(std::uint64_t);
+            bytes += stop.selected_action_semantic_key.capacity() *
+                sizeof(std::uint64_t);
+            bytes += stop.stopped_stable_key.capacity() *
+                sizeof(std::uint64_t);
+            bytes += stop.stopped_coarse_state_key.capacity() *
+                sizeof(std::uint64_t);
+        }
         bytes += capture.status.capacity() + 1;
         bytes += capture.refusal.capacity() + 1;
         bytes += capture.recovery_status.capacity() + 1;
@@ -1152,7 +1166,7 @@ void SolveWork::Impl::capture_carrier_ladder_exact_boundary(
     capture.source_identity = 1469598103934665603ULL;
     identity_mix_string(
         capture.source_identity,
-        "carrier_ladder_exact_boundary_source_v1");
+        "carrier_ladder_exact_boundary_source_v2");
     capture.executable_identity = 1469598103934665603ULL;
     identity_mix_string(
         capture.executable_identity,
@@ -1585,6 +1599,15 @@ void SolveWork::Impl::refresh_carrier_ladder_exact_boundary_diagnostics(
     json += ",\"member_count\":" +
         std::to_string(capture.recovered_members.size());
     json += ",\"members\":[";
+    const auto key_identity = [&](const std::vector<std::uint64_t>& key) {
+        std::uint64_t identity = 1469598103934665603ULL;
+        identity_mix(identity, 1); /* bounded stable-key projection schema */
+        identity_mix(identity, key.size());
+        for (const std::uint64_t word : key) {
+            identity_mix(identity, word);
+        }
+        return identity;
+    };
     const std::size_t member_samples = std::min<std::size_t>(
         capture.recovered_members.size(), limits.max_samples);
     const auto append_slot = [&](const pc_mod_slot& slot) {
@@ -1620,13 +1643,13 @@ void SolveWork::Impl::refresh_carrier_ladder_exact_boundary_diagnostics(
         if (index != 0) json.push_back(',');
         const auto& member = capture.recovered_members[index];
         json += "{\"coarse_state\":" +
-            std::to_string(member.coarse_state) + ",\"stable_key\":[";
-        for (std::size_t word = 0; word < member.stable_key.size(); ++word) {
-            if (word != 0) json.push_back(',');
-            json += "\"" + hex(member.stable_key[word]) + "\"";
-        }
+            std::to_string(member.coarse_state) +
+            ",\"stable_key_identity\":\"" +
+            hex(key_identity(member.stable_key)) +
+            "\",\"stable_key_words\":" +
+            std::to_string(member.stable_key.size());
         const pc_item_state& item = member.item;
-        json += "],\"item\":{\"rarity\":" +
+        json += ",\"item\":{\"rarity\":" +
             std::to_string(item.rarity) + ",\"quality\":" +
             std::to_string(item.quality) + ",\"item_flags\":" +
             std::to_string(item.item_flags) + ",\"prefixes\":";
@@ -1652,8 +1675,88 @@ void SolveWork::Impl::refresh_carrier_ladder_exact_boundary_diagnostics(
             "}}";
     }
     json += "],\"member_samples_omitted\":" +
-        std::to_string(capture.recovered_members.size() - member_samples) +
-        "}}}";
+        std::to_string(capture.recovered_members.size() - member_samples);
+    json += ",\"selected_prefix_support_v1\":{\"identity\":\"" +
+        hex(capture.reached_stop_identity) + "\",\"reached_stop_count\":" +
+        std::to_string(capture.reached_stop_count) +
+        ",\"samples\":[";
+    const auto append_key = [&](const std::vector<std::uint64_t>& key) {
+        json.push_back('[');
+        for (std::size_t word = 0; word < key.size(); ++word) {
+            if (word != 0) json.push_back(',');
+            json += "\"" + hex(key[word]) + "\"";
+        }
+        json.push_back(']');
+    };
+    for (std::size_t index = 0;
+         index < capture.reached_stops.size(); ++index) {
+        if (index != 0) json.push_back(',');
+        const CarrierLadderBoundaryCapture::ReachedStop& reached =
+            capture.reached_stops[index];
+        const char* kind = "unresolved_missing";
+        switch (reached.kind) {
+        case CarrierLadderBoundaryCapture::StopKind::RequestedEntry:
+            kind = "requested_entry";
+            break;
+        case CarrierLadderBoundaryCapture::StopKind::GoalSuccess:
+            kind = "goal_success";
+            break;
+        case CarrierLadderBoundaryCapture::StopKind::CertifiedFrontier:
+            kind = "certified_frontier";
+            break;
+        case CarrierLadderBoundaryCapture::StopKind::UnresolvedMissing:
+            break;
+        }
+        json += "{\"predecessor_stable_key_identity\":\"" +
+            hex(key_identity(reached.predecessor_stable_key)) +
+            "\",\"predecessor_stable_key_words\":" +
+            std::to_string(reached.predecessor_stable_key.size()) +
+            ",\"predecessor_coarse_state\":" +
+            std::to_string(reached.predecessor_coarse_state) +
+            ",\"predecessor_coarse_state_key\":";
+        append_key(reached.predecessor_coarse_state_key);
+        json += ",\"selected_coarse_operator\":";
+        if (reached.selected_coarse_operator == kNoId) json += "null";
+        else json += std::to_string(reached.selected_coarse_operator);
+        json += ",\"selected_strict_operator\":";
+        if (reached.selected_strict_operator == kNoId) json += "null";
+        else json += std::to_string(reached.selected_strict_operator);
+        json += ",\"selected_action_semantic_identity\":\"" +
+            hex(key_identity(reached.selected_action_semantic_key)) +
+            "\",\"selected_action_semantic_key_words\":" +
+            std::to_string(reached.selected_action_semantic_key.size()) +
+            ",\"stopped_stable_key_identity\":\"" +
+            hex(key_identity(reached.stopped_stable_key)) +
+            "\",\"stopped_stable_key_words\":" +
+            std::to_string(reached.stopped_stable_key.size()) +
+            ",\"stopped_coarse_state\":" +
+            std::to_string(reached.stopped_coarse_state) +
+            ",\"stopped_coarse_state_key\":";
+        append_key(reached.stopped_coarse_state_key);
+        json += ",\"probability_bits\":\"" +
+            hex(reached.probability_bits) + "\",\"captured_policy_row\":";
+        if (reached.captured_policy_row ==
+                std::numeric_limits<std::uint64_t>::max()) {
+            json += "null";
+        } else {
+            json += std::to_string(reached.captured_policy_row);
+        }
+        json += ",\"stop_kind\":\"" + std::string(kind) +
+            "\",\"captured_coarse_reachable\":" +
+            std::string(
+                reached.captured_coarse_reachable ? "true" : "false") +
+            ",\"completed_selected_row\":" +
+            std::string(
+                reached.completed_selected_row ? "true" : "false") +
+            ",\"disposition\":\"" +
+            std::string(
+                reached.completed_selected_row
+                    ? "completed_selected_row_available"
+                    : "unresolved_no_completed_selected_row") +
+            "\"}";
+    }
+    json += "],\"samples_omitted\":" +
+        std::to_string(capture.reached_stop_samples_omitted) + "}}}}";
     diagnostics.carrier_ladder_exact_boundary_json = std::move(json);
 }
 

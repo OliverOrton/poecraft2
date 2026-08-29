@@ -5521,7 +5521,10 @@ SolveWork::Impl::run_publication_pipeline() {
                                     RequestedEntry ||
                             stop.kind ==
                                 CarrierLadderBoundaryCapture::StopKind::
-                                    CertifiedFrontier) {
+                                    CertifiedFrontier ||
+                            stop.kind ==
+                                CarrierLadderBoundaryCapture::StopKind::
+                                    UnresolvedMissing) {
                             observation_stops.insert(stop.state);
                         }
                     }
@@ -5573,6 +5576,12 @@ SolveWork::Impl::run_publication_pipeline() {
                         recovered.wall_time_ms;
                     capture.exact_member_identity =
                         recovered.member_identity;
+                    capture.reached_stop_identity =
+                        recovered.reached_stop_identity;
+                    capture.reached_stop_count =
+                        recovered.reached_stop_count;
+                    capture.reached_stop_samples_omitted =
+                        recovered.reached_stop_samples_omitted;
                     capture.recovered_members.reserve(
                         recovered.requested_entries.size());
                     for (auto& member : recovered.requested_entries) {
@@ -5581,11 +5590,69 @@ SolveWork::Impl::run_publication_pipeline() {
                             member.coarse_state,
                             member.item});
                     }
+                    capture.reached_stops.reserve(
+                        recovered.reached_stops.size());
+                    const std::uint64_t no_row =
+                        std::numeric_limits<std::uint64_t>::max();
+                    for (auto& reached : recovered.reached_stops) {
+                        CarrierLadderBoundaryCapture::StopKind kind =
+                            CarrierLadderBoundaryCapture::StopKind::
+                                UnresolvedMissing;
+                        const auto captured_stop = std::lower_bound(
+                            capture.stops.begin(), capture.stops.end(),
+                            reached.stopped_coarse_state,
+                            [](const CarrierLadderBoundaryCapture::Stop& left,
+                               const std::uint32_t right) {
+                                return left.state < right;
+                            });
+                        if (captured_stop != capture.stops.end() &&
+                            captured_stop->state ==
+                                reached.stopped_coarse_state) {
+                            kind = captured_stop->kind;
+                        }
+                        const std::uint64_t policy_row =
+                            reached.stopped_coarse_state <
+                                    capture.prefix.policy_rows.size()
+                                ? capture.prefix.policy_rows[
+                                      reached.stopped_coarse_state]
+                                : no_row;
+                        const bool reachable =
+                            reached.stopped_coarse_state <
+                                capture.prefix.policy_reachable.size() &&
+                            capture.prefix.policy_reachable[
+                                reached.stopped_coarse_state];
+                        const bool completed_selected_row =
+                            policy_row != no_row &&
+                            reached.stopped_coarse_state <
+                                capture.prefix.policy.size() &&
+                            capture.prefix.policy[
+                                reached.stopped_coarse_state].index != kNoId;
+                        capture.reached_stops.push_back({
+                            std::move(reached.predecessor_stable_key),
+                            reached.predecessor_coarse_state,
+                            std::move(
+                                reached.predecessor_coarse_state_key),
+                            reached.selected_coarse_operator,
+                            reached.selected_strict_operator,
+                            std::move(
+                                reached.selected_action_semantic_key),
+                            std::move(reached.stopped_stable_key),
+                            reached.stopped_coarse_state,
+                            std::move(reached.stopped_coarse_state_key),
+                            reached.probability_bits,
+                            policy_row,
+                            kind,
+                            reachable,
+                            completed_selected_row});
+                    }
                     capture.retained_owned_bytes =
                         carrier_ladder_boundary_owned_bytes(capture);
                     if (capture.retained_owned_bytes >
                         private_limits.max_owned_bytes) {
                         capture.recovered_members.clear();
+                        capture.reached_stops.clear();
+                        capture.reached_stop_samples_omitted =
+                            capture.reached_stop_count;
                         capture.complete_support = false;
                         capture.absorption_proved = false;
                         capture.recovery_status = "resource_cap";
