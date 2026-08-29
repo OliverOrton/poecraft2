@@ -49,10 +49,10 @@ ACCELERATED_TESTS = (
     "test_running_cancel_and_retry_preserve_first_attempt_artifacts",
     "tools/ingest/tests/test_solver_lab_supervisor.py::"
     "test_forced_dispatcher_death_recovers_without_duplicate_attempts",
-    "tools/ingest/tests/test_solver_lab_mcp.py::"
-    "test_combined_stdio_server_dispatches_without_gui_or_separate_supervisor",
-    "tools/ingest/tests/test_solver_lab_mcp.py::"
-    "test_second_combined_stdio_server_is_control_only_and_owner_releases",
+    "tools/ingest/tests/test_solver_lab_supervisor.py::"
+    "test_catalog_singleton_dispatcher_keeps_second_supervisor_control_only",
+    "tools/ingest/tests/test_solver_lab_supervisor.py::"
+    "test_concurrent_dispatcher_acquisition_has_exactly_one_owner",
 )
 
 

@@ -55,3 +55,101 @@ Read-only CLI calls returned:
 This establishes that removal does not require a replacement serialization
 layer. Subsequent gates retain and qualify the existing JSON and artifact
 contracts.
+
+## 2026-08-29 — Gate 1 transport-independent coverage
+
+The two tests that had exercised service analysis beneath the MCP filename
+were retained under unattended-hardening coverage. They verify:
+
+- deterministic bound-trace downsampling from five samples to three;
+- strategy graph/action and recorded independent-evaluation summaries;
+- two-attempt identity/result comparison;
+- dry-run bundle preview;
+- stable bundle replay under the same idempotency key;
+- bounded investigation-bundle content; and
+- bounded, sorted, idempotent case/replicate matrix selection.
+
+The real Windows cancellation test now qualifies service, CLI, and GUI paths.
+Every path reaches terminal `canceled`, removes the grandchild process tree,
+observes cancellation, and releases its lease and host reservation. The MCP
+leg was removed without weakening the CLI assertion.
+
+The unattended accelerated list now cites direct catalog singleton and
+concurrent dispatcher-acquisition tests instead of combined stdio launchers.
+The existing JSON CLI identity and complete-payload idempotency tests remain.
+
+Focused result: 7 passed in 10.37 seconds. Complete Solver Lab result after
+removal: 67 passed in 44.40 seconds.
+
+## 2026-08-29 — Gate 2 repository MCP removal
+
+Removed:
+
+- `poecraft_ingest/solver_lab_mcp.py`;
+- `tests/test_solver_lab_mcp.py`;
+- optional dependency `mcp>=2.1,<3`; and
+- console entry point `poecraft-solver-lab-mcp`.
+
+Current service/contract docstrings, the frozen-corpus install guide, and the
+stable Solver Lab reference now describe the CLI, GUI, typed service, and
+supervisor. The stable reference documents headless `supervise` and bounded
+`run-until-idle` operation through the existing JSON envelope. Historical
+archives and their current index summaries retain truthful historical MCP
+qualification wording.
+
+## 2026-08-29 — Gate 3 CLI qualification
+
+The editable ingest package was reinstalled from the changed project. Windows
+initially held the removed launcher open because four registered servers were
+still live; Gate 4 shut down those exact processes before the successful
+installation check. Pip's inert rollback metadata and the obsolete launcher
+were moved out of the Python environment and then sent to the Windows Recycle
+Bin. They are recoverable there but are no longer installed or runnable.
+
+Installed-surface result:
+
+- `poecraft-solver-lab.exe`: present;
+- `poecraft-solver-lab-mcp.exe`: absent;
+- `poecraft_ingest.solver_lab`: importable;
+- `poecraft_ingest.solver_lab_mcp`: absent; and
+- current `poecraft-ingest` entry-point metadata lists only the CLI and parity
+  Lab commands.
+
+An isolated installed-CLI exercise returned:
+
+- schema `solver_lab_operation_result_v1`;
+- one profile and seven frozen cases;
+- both fragment control/shadow case IDs;
+- a dry-run submission with core identity
+  `293afa7f4961cd46eb505f931aec520132898b834237b3737bae15388b402f7a`;
+- zero persisted jobs, attempts, or local revisions after the dry-run;
+- successful `run-until-idle` with zero reserved bytes; and
+- released dispatcher ownership with the queue resumed.
+
+The accelerated unattended harness selected 13 direct tests and reported 22
+passed in 13.27 seconds. Ledger:
+`build/solver-lab/unattended-hardening/accelerated-20260829T164523.457225Z-54524`.
+
+## 2026-08-29 — Gate 4 user-local decommission
+
+Pre-decommission CLI audit found zero nonterminal jobs, zero nonterminal
+attempts, and a resumed queue. Oliver's user-local
+`poecraft2-native-solver-lab` registration was removed with `codex mcp
+remove`. The four previously inventoried repository launcher trees (eight
+exact wrapper/Python processes) were terminated; no unrelated Python or Codex
+process was targeted.
+
+The installed CLI then ran `run-until-idle` on the shared catalog. Supervisor
+`supervisor-b0b55db4-3e0e-4d5a-a07d-8f7a712633bd` recovered the dead MCP
+owner, reconciled the session, found no work, and released ownership at
+`2026-08-29T16:44:37.033+00:00`. Its final status recorded zero running
+attempts, zero reserved host bytes, and a resumed queue.
+
+Final decommission checks:
+
+- user-local MCP registration absent;
+- repository MCP processes: zero;
+- MCP executable: absent;
+- MCP Python module: absent;
+- dispatcher ownership: released; and
+- queue paused: false.

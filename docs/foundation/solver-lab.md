@@ -6,18 +6,18 @@ proof authority, or strategy evaluation.
 
 Parent: [Foundation](README.md)
 
-Verified against the implemented Lab surface: 2026-08-29 @ `13a5321`.
-Checked owners include `solver_lab_catalog.py`, `solver_lab_service.py`,
-`solver_lab_supervisor.py`, `solver_lab_mcp.py`, and
-`solver_lab_unattended_qualification.py` plus their focused contract,
-stdio-MCP, supervisor, nonvisual-GUI, corpus-runner, and parity tests.
+Verified against the implemented Lab surface: 2026-08-29 @ CLI-first MCP
+removal boundary. Checked owners include `solver_lab_catalog.py`,
+`solver_lab_service.py`, `solver_lab_supervisor.py`, `solver_lab.py`, and
+`solver_lab_unattended_qualification.py` plus their focused contract, CLI,
+supervisor, nonvisual-GUI, corpus-runner, and parity tests.
 
 ## Purpose And Authority
 
 The Native Solver Lab is a local Windows research workbench for repeatable
 native solver experiments. A persistent SQLite catalog, resource-aware
-supervisor, PySide6 GUI, JSON CLI, and local stdio MCP adapter all call the same
-typed Python service. Every solve still runs in its own
+supervisor, PySide6 GUI, and JSON CLI all call the same typed Python service.
+Every solve still runs in its own
 `poecraft_solver_benchmark.exe` process through the shared corpus-worker
 adapter.
 
@@ -82,7 +82,7 @@ every job:
 
 Simulator verification is opt-in. Whenever it is required, the repository
 acceptance count is 10,000 runs. The profile resolves worker flags through the
-typed service; UI, CLI, and MCP do not reproduce those controls.
+typed service; the GUI and CLI do not reproduce those controls.
 
 ## Case Authoring And Revision Identity
 
@@ -175,6 +175,7 @@ poecraft-solver-lab --root . submit LOCAL_CASE_ID --revision-id REVISION_ID --id
 poecraft-solver-lab --root . submit CASE_ID --idempotency-key study-a-case-1
 poecraft-solver-lab --root . submit-matrix --include-role fast_exact_three_prefix --replicates 2 --idempotency-key study-a
 poecraft-solver-lab --root . run-until-idle --max-workers 1
+poecraft-solver-lab --root . supervise --max-workers 1
 poecraft-solver-lab --root . attempts
 poecraft-solver-lab --root . strategy-summary --attempt-id ATTEMPT_ID
 poecraft-solver-lab --root . export-bundle --attempt-id ATTEMPT_ID --idempotency-key export-ATTEMPT_ID
@@ -198,27 +199,20 @@ poecraft-solver-lab-parity `
   --output build/solver-lab/qualification.json
 ```
 
-## Local MCP
+## CLI Automation And Supervision
 
-`poecraft-solver-lab-mcp --with-supervisor` runs the local stdio MCP server and
-its bounded native dispatcher together. One registered command is therefore
-enough for unattended operation without opening the GUI or starting a separate
-`supervise` process. Codex can register it in user-local configuration while
-rooting the service at this checkout:
+Use `supervise` for a durable headless dispatcher, or `run-until-idle` for a
+bounded batch that exits when the queue drains. Other terminal processes can
+submit, inspect, compare, cancel, and export through the same CLI while the
+supervisor owns dispatch. No GUI needs to be open.
 
-```powershell
-$labMcp = py -3 -c "import sysconfig; print(sysconfig.get_path('scripts') + r'\poecraft-solver-lab-mcp.exe')"
-codex mcp add poecraft2-native-solver-lab -- $labMcp --root (Get-Location).Path --with-supervisor --max-workers 1
-codex mcp get poecraft2-native-solver-lab
-```
-
-This is a user-local client setting; do not commit client-specific paths or
-secrets. A task already open while the entry is added cannot acquire the new
-launcher; start a new task or restart Codex. The adapter exposes 31 finite
-typed tools, including the complete draft/validation/revision lifecycle. It has
-no arbitrary shell, SQL, write path, benchmark argument bag, mechanics
-override, or remote worker authority. Mutation tools use the same complete
-canonical-request idempotency rules as the CLI.
+The CLI exposes a finite operation vocabulary, including the complete
+draft/validation/revision lifecycle. It has no arbitrary shell, SQL,
+unrestricted path-write, benchmark argument bag, mechanics override, or remote
+worker authority. Mutations use complete canonical-request idempotency, and
+every response uses the structured `solver_lab_operation_result_v1` JSON
+envelope. Detailed native output remains in immutable attempt artifacts rather
+than being truncated into another transport protocol.
 
 `get_run_summary` preserves the bounded native attribution surfaces needed
 to diagnose completed and partial work: `action_control`,
@@ -231,15 +225,14 @@ executable, artifact, or another dispatch component no longer matches, the
 job becomes `dispatch_refused` without creating a worker or attempt. Clone
 or submit a new immutable revision when a new identity is intended.
 
-The catalog has one durable dispatcher owner. A second combined MCP process
-detects a verified-live owner, remains a read/control surface, and reports
-`runtime_dispatcher.mode=control_only`; it cannot multiply the catalog's worker
-limit. A successor may replace ownership only after proving that the recorded
-dispatcher process identity is absent, and it reconciles the replaced owner's
-running/finalizing attempts before new dispatch. `--poll-seconds`,
-`--max-workers`, `--memory-budget-bytes`, `--worker-headroom-bytes`, and
-`--global-safety-reserve-bytes` are the only bounded dispatcher/resource launch
-options.
+The catalog has one durable dispatcher owner. A second `supervise` process
+detects a verified-live owner, remains control-only, reports the existing
+owner, and exits; it cannot multiply the catalog's worker limit. A successor
+may replace ownership only after proving that the recorded dispatcher process
+identity is absent, and it reconciles the replaced owner's running/finalizing
+attempts before new dispatch. `--poll-seconds`, `--max-workers`,
+`--memory-budget-bytes`, `--worker-headroom-bytes`, and
+`--global-safety-reserve-bytes` are the dispatcher/resource launch options.
 
 ## Statuses, Resources, And Recovery
 
@@ -274,10 +267,10 @@ reservation; periodic reconciliation publishes only after absence is proved.
 Retry creates a new attempt ordinal and directory. Do not delete or edit
 catalog rows or attempt artifacts to retry work.
 
-Closing the GUI or normally closing combined stdio stops new dispatch and does
-not cancel live work; the non-daemon supervisor drains each worker within its
-immutable watchdog. For a shorter bounded shutdown, first pause the queue,
-cancel any selected live job through the typed control, wait for terminal
+Closing the GUI or interrupting `supervise` normally stops new dispatch and
+does not cancel live work; the non-daemon supervisor drains each worker within
+its immutable watchdog. For a shorter bounded shutdown, first pause the queue,
+cancel any selected live job through the CLI, wait for terminal
 acknowledgment and released reservation, then close the client. For maintenance,
 copy the catalog and its `-wal`/`-shm` siblings together only after dispatcher
 ownership reports released.
@@ -288,7 +281,7 @@ The repository-owned qualification harness writes each run to a new immutable,
 ignored directory below `build/solver-lab/unattended-hardening/`. The
 accelerated mode covers the deterministic crash, idempotency, dispatch,
 watchdog, terminal-publication, integrity, quarantine, cancel/retry,
-dispatcher-death, dual-owner, and combined-stdio matrix in ordinary test time:
+dispatcher-death, and dual-owner matrix in ordinary test time:
 
 ```powershell
 $env:PYTHONPATH = "tools/ingest;bindings/python"

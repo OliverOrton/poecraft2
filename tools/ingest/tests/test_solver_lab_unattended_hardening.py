@@ -102,10 +102,11 @@ def _completed_run(task, **kwargs):
                         "bound_trace": {
                             "samples": [
                                 {
-                                    "elapsed_ms": 1,
-                                    "lower_bound": 5.0,
-                                    "upper_bound": 5.0,
+                                    "elapsed_ms": index * 10,
+                                    "lower_bound": float(index),
+                                    "upper_bound": 10.0 - index,
                                 }
+                                for index in range(5)
                             ]
                         },
                         "exact_strategy_evaluation": {
@@ -210,6 +211,94 @@ def test_run_summary_exposes_bounded_action_envelope_evidence(
         "schema": "solver_operator_lineage_v1",
         "complete_generated_operator_count": 5,
     }
+
+
+def test_analysis_surfaces_and_bundle_are_bounded_and_replay_stable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    service = _service(tmp_path)
+    first_job, first_attempt = _complete_job(
+        service, monkeypatch, "analysis-first"
+    )
+    _, second_attempt = _complete_job(service, monkeypatch, "analysis-second")
+
+    trace = service.get_bound_trace(
+        attempt_id=first_attempt, max_samples=3
+    )["result"]
+    strategy = service.get_strategy_summary(attempt_id=first_attempt)["result"]
+    evaluation = service.evaluate_strategy(attempt_id=first_attempt)["result"]
+    comparison = service.compare_runs(
+        attempt_ids=[first_attempt, second_attempt]
+    )["result"]
+    preview = service.export_investigation_bundle(
+        idempotency_key="analysis-bundle",
+        job_id=first_job,
+        dry_run=True,
+    )
+    exported = service.export_investigation_bundle(
+        idempotency_key="analysis-bundle",
+        job_id=first_job,
+    )
+    repeated = service.export_investigation_bundle(
+        idempotency_key="analysis-bundle",
+        job_id=first_job,
+    )
+
+    assert trace["original_sample_count"] == 5
+    assert trace["returned_sample_count"] == 3
+    assert strategy["nodes"] == 2
+    assert strategy["operation_types"] == {"chaos": 1}
+    assert strategy["exact_evaluation"]["status"] == "matched"
+    assert evaluation["authority"] == (
+        "recorded_native_independent_exact_evaluation"
+    )
+    assert comparison["attempt_count"] == 2
+    assert preview["dry_run"] is True
+    assert exported == repeated
+    bundle_path = Path(exported["result"]["bundle_path"])
+    bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
+    assert bundle["schema_version"] == "solver_lab_investigation_bundle_v1"
+    assert "solver_telemetry" not in json.dumps(bundle)
+    assert bundle["strategy_summary"]["operation_types"] == {"chaos": 1}
+
+
+def test_matrix_selection_is_bounded_sorted_and_idempotent(tmp_path: Path) -> None:
+    service = _service(tmp_path)
+    listed_cases = service.list_cases()["result"]
+    cases = [item["case_id"] for item in reversed(listed_cases[:2])]
+
+    preview = service.submit_matrix(
+        case_ids=cases,
+        replicates=2,
+        idempotency_key="matrix-selection",
+        dry_run=True,
+    )
+    first = service.submit_matrix(
+        case_ids=cases,
+        replicates=2,
+        idempotency_key="matrix-selection",
+    )
+    second = service.submit_matrix(
+        case_ids=cases,
+        replicates=2,
+        idempotency_key="matrix-selection",
+    )
+
+    assert preview["result"]["job_count"] == 4
+    assert preview["result"]["case_ids"] == sorted(cases)
+    assert first == second
+    assert len(service.catalog.list_jobs()) == 4
+
+    role = listed_cases[2]["role"]
+    role_preview = service.submit_matrix(
+        include_roles=[role],
+        exclude_case_ids=[listed_cases[0]["case_id"]],
+        replicates=1,
+        idempotency_key="matrix-role-preview",
+        dry_run=True,
+    )["result"]
+    assert role_preview["selection_rules"]["include_roles"] == [role]
+    assert role_preview["case_ids"] == [listed_cases[2]["case_id"]]
 
 
 def test_complete_idempotency_binding_for_mutation_families(

@@ -1,4 +1,4 @@
-"""Typed application service shared by Solver Lab CLI, GUI, and MCP."""
+"""Typed application service shared by Solver Lab CLI and GUI."""
 
 from __future__ import annotations
 

@@ -11,7 +11,7 @@ The cases retain native exact terminal semantics, fixed Allflame pricing,
 Calculator-product action scope, automatic Imprint programs off, voluntary
 economic Restart off, and independent exact strategy evaluation.
 
-Install the optional local GUI and MCP dependencies from the repository root:
+Install the optional local GUI dependency from the repository root:
 
 ```powershell
 py -3 -m pip install -e "tools/ingest[solver-lab]"

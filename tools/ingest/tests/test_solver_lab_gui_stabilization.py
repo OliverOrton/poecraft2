@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 from contextlib import redirect_stdout
 import io
 import json
@@ -813,16 +812,13 @@ def test_cases_buttons_enforce_validation_revision_and_single_shot_calls(
 
 
 @pytest.mark.skipif(os.name != "nt", reason="qualifies Windows process groups")
-def test_cancel_lifecycle_through_service_cli_mcp_and_gui(
+def test_cancel_lifecycle_through_service_cli_and_gui(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     request: pytest.FixtureRequest,
 ) -> None:
-    pytest.importorskip("mcp")
     pytest.importorskip("PySide6")
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    from mcp import ClientSession
-    from mcp.client.stdio import StdioServerParameters, stdio_client
     from PySide6.QtWidgets import QApplication
     from poecraft_ingest.solver_lab import main as solver_lab_main
     from poecraft_ingest.solver_lab_gui import SolverLabWindow
@@ -995,45 +991,6 @@ def test_cancel_lifecycle_through_service_cli_mcp_and_gui(
     assert cli_response["result"]["to_status"] == "canceling"
     assert_closed(cli_job, cli_attempt)
 
-    mcp_job, mcp_attempt = start_job("mcp")
-
-    async def cancel_with_mcp() -> dict[str, object]:
-        environment = dict(os.environ)
-        environment["PYTHONPATH"] = os.pathsep.join(
-            [str(REPO_ROOT / "tools" / "ingest"), str(REPO_ROOT / "bindings" / "python")]
-        )
-        parameters = StdioServerParameters(
-            command=sys.executable,
-            args=[
-                "-m",
-                "poecraft_ingest.solver_lab_mcp",
-                "--root",
-                str(REPO_ROOT),
-                "--catalog",
-                str(service.paths.catalog),
-                "--attempts",
-                str(service.paths.attempts),
-            ],
-            env=environment,
-        )
-        async with stdio_client(parameters) as streams:
-            async with ClientSession(*streams) as session:
-                await session.initialize()
-                response = await session.call_tool(
-                    "cancel_job",
-                    {
-                        "job_id": mcp_job,
-                        "idempotency_key": "cancel-mcp-request",
-                    },
-                )
-                assert response.is_error is False
-                assert response.structured_content is not None
-                return response.structured_content
-
-    mcp_response = asyncio.run(cancel_with_mcp())
-    assert mcp_response["result"]["to_status"] == "canceling"
-    assert_closed(mcp_job, mcp_attempt)
-
     gui_job, gui_attempt = start_job("gui")
     app = QApplication.instance() or QApplication([])
     window = SolverLabWindow(
@@ -1081,5 +1038,5 @@ def test_cancel_lifecycle_through_service_cli_mcp_and_gui(
     _wait_for(lambda: supervisor.status()["running_attempts"] == 0)
     assert supervisor.status()["reserved_host_memory_bytes"] == 0
     supervisor.stop()
-    assert len(cancellation_results) == 4
+    assert len(cancellation_results) == 3
     print("cancel_lifecycle=" + json.dumps(cancellation_results, sort_keys=True))

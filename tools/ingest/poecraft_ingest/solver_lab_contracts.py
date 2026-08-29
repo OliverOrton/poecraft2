@@ -251,6 +251,6 @@ def validate_profile_case_binding(
 
 
 def schema_contract() -> dict[str, str]:
-    """Return the stable schema vocabulary for CLI, GUI, and MCP discovery."""
+    """Return the stable schema vocabulary for CLI and GUI discovery."""
 
     return dict(SCHEMA_VERSIONS)

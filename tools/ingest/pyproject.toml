@@ -12,7 +12,6 @@ dependencies = []
 [project.optional-dependencies]
 solver-lab = [
   "PySide6>=6.11,<7",
-  "mcp>=2.1,<3",
 ]
 
 [project.scripts]
@@ -22,7 +21,6 @@ poecraft-validate-fixtures = "poecraft_ingest.spec_fixtures:main"
 poecraft-generate-review = "poecraft_ingest.solver_review:main"
 poecraft-compare-runtime-reports = "poecraft_ingest.runtime_report_parity:main"
 poecraft-solver-lab = "poecraft_ingest.solver_lab:main"
-poecraft-solver-lab-mcp = "poecraft_ingest.solver_lab_mcp:main"
 poecraft-solver-lab-parity = "poecraft_ingest.solver_lab_parity:main"
 
 [tool.setuptools.packages.find]
