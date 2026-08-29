@@ -79,6 +79,38 @@ The stateful Solve path has six named private authorities:
 These types establish lifetime and authority boundaries. They do not broaden
 mechanics, action scope, exactness, or the public ABI.
 
+### Generated-operator lineage and narrow phase owner
+
+`SolveDiagnostics::operator_lineage_json` is the bounded observational join
+over those existing authorities. It does not create another registry,
+scheduler, admission ledger, or row ledger. Its complete aggregate follows
+the native chain from permanent registry candidate/dependency roles through
+generated fixed options and automatic kinds, canonical template/effect
+telemetry, priced support, carrier/operator ledger state, retained sparse rows,
+joint-policy attempts, and selected-policy consumption. Per-family relations
+are intentionally non-disjoint because a compound fixed option may depend on
+several primitive families. Generated-operator samples are deterministic by
+planner index and bounded by `max_diagnostic_samples`; the complete generated
+operator count and semantic hash are not sample-derived.
+
+The projection is never read by mechanics, pricing, admission, scheduling,
+Bellman work, proof, or publication. Its retained JSON allocation is excluded
+from the solver-owned resource cap so observing the solve cannot alter the cap
+boundary; the existing `max_telemetry_json_bytes` serialization boundary still
+applies. Finalization invokes this projection independently of older optional
+row diagnostics so a named resource refusal retains lineage even if one of
+those diagnostics is itself interrupted.
+
+`SolveProgress::phase_owner` and the append-only C ABI
+`pc_solve_progress.phase_owner` refine the broad solve phase into setup,
+planner construction, temporary-effect precompile, dependency preparation,
+primitive rows, state-local automatic synthesis, ladder scheduling, Bellman
+optimization, policy assembly, compilation, exact evaluation, or done. The
+WASM progress object and benchmark bound trace expose the same string
+vocabulary. Setup-only work that completes before the first stepped snapshot
+remains visible as aggregate phase evidence in operator lineage; live progress
+never claims those owners retroactively.
+
 ## Benchmark-Private Verified Leaf Fragments
 
 The native benchmark/Lab lane has one deliberately narrow executable-fragment

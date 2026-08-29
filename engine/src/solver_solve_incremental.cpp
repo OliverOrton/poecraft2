@@ -1,4 +1,5 @@
 #include "solver_solve_types.hpp"
+#include "solver_action_family_contract.hpp"
 #include "solver_sparse_policy.hpp"
 
 namespace poecraft {
@@ -189,6 +190,7 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
                 if (found != incremental_carriers.begin() + end &&
                     ordered_members.insert(urgent).second) {
                     ordered.push_back(urgent);
+                    ++incremental_missing_frontier_priority_offers;
                 }
             }
             bool advanced = true;
@@ -384,12 +386,18 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
             }
             ++incremental_automatic_carrier_cursor;
             ++incremental_automatic_order_cursor;
+            const std::size_t missing_before =
+                incremental_anytime_missing_frontier_states.size();
             incremental_anytime_missing_frontier_states.erase(
                 std::remove(
                     incremental_anytime_missing_frontier_states.begin(),
                     incremental_anytime_missing_frontier_states.end(),
                     state),
                 incremental_anytime_missing_frontier_states.end());
+            if (incremental_anytime_missing_frontier_states.size() <
+                missing_before) {
+                ++incremental_missing_frontier_service_completions;
+            }
             incremental_dynamic_prepared = false;
             incremental_dynamic_prepare_active = false;
             incremental_dynamic_operator_cursor = 0;
@@ -1029,6 +1037,23 @@ bool SolveWork::Impl::maybe_install_incremental_anytime_incumbent() {
 
     const std::size_t completed = incremental_alternative_rows.size();
     ++incremental_anytime_policy_attempts;
+    std::array<bool, kAutomaticCandidateKindCount> attempted_kinds{};
+    for (const IncrementalAlternativeRow& candidate :
+         incremental_alternative_rows) {
+        if (candidate.operator_index >= calc.operators().size()) continue;
+        const AutomaticCandidateKind kind =
+            calc.operators()[candidate.operator_index].automatic_kind;
+        const std::size_t kind_index = static_cast<std::size_t>(kind);
+        if (kind != AutomaticCandidateKind::None &&
+            kind_index < attempted_kinds.size()) {
+            attempted_kinds[kind_index] = true;
+        }
+    }
+    for (std::size_t index = 1; index < attempted_kinds.size(); ++index) {
+        if (attempted_kinds[index]) {
+            ++incremental_joint_policy_attempt_kinds[index];
+        }
+    }
     incremental_anytime_policy_last_failure.clear();
     incremental_anytime_policy_last_completed_rows = completed;
     /* Geometric checkpoints make the total selection/evaluation work
@@ -1050,6 +1075,30 @@ bool SolveWork::Impl::maybe_install_incremental_anytime_incumbent() {
     if (installed && output_incumbent.has_value() &&
         output_incumbent->certified_upper_bound < prior) {
         ++incremental_anytime_policy_successes;
+        std::array<bool, kAutomaticCandidateKindCount> selected_kinds{};
+        for (std::size_t state = 0;
+             state < output_incumbent->policy.size(); ++state) {
+            if (!output_incumbent->policy_reachable.empty() &&
+                (state >= output_incumbent->policy_reachable.size() ||
+                 output_incumbent->policy_reachable[state] == 0)) {
+                continue;
+            }
+            const std::uint32_t operator_index =
+                output_incumbent->policy[state].index;
+            if (operator_index >= calc.operators().size()) continue;
+            const AutomaticCandidateKind kind =
+                calc.operators()[operator_index].automatic_kind;
+            const std::size_t kind_index = static_cast<std::size_t>(kind);
+            if (kind != AutomaticCandidateKind::None &&
+                kind_index < selected_kinds.size()) {
+                selected_kinds[kind_index] = true;
+            }
+        }
+        for (std::size_t index = 1; index < selected_kinds.size(); ++index) {
+            if (selected_kinds[index]) {
+                ++incremental_joint_policy_success_kinds[index];
+            }
+        }
         incremental_anytime_policy_best_upper = std::min(
             incremental_anytime_policy_best_upper,
             output_incumbent->certified_upper_bound);
@@ -2558,6 +2607,610 @@ void SolveWork::Impl::refresh_anytime_scheduler_diagnostics(
     diagnostics.anytime_scheduler_json = std::move(json);
 }
 
+void SolveWork::Impl::refresh_operator_lineage_diagnostics(
+        SolveDiagnostics& diagnostics,
+        const SolveResult* const published) const {
+    struct Lifecycle {
+        std::uint64_t scheduled = 0;
+        std::uint64_t begun = 0;
+        std::uint64_t completed = 0;
+        std::uint64_t interrupted = 0;
+        std::uint64_t retained_rows = 0;
+        std::uint64_t retained_bytes = 0;
+        std::uint64_t policy_consumptions = 0;
+    };
+    struct FamilyTotals : Lifecycle {
+        std::uint64_t registry_actions = 0;
+        std::uint64_t primitive_candidates = 0;
+        std::uint64_t dependency_actions = 0;
+        std::uint64_t primitive_dependency_uses = 0;
+        std::uint64_t generated_planner_operators = 0;
+        std::uint64_t priced_supported_operators = 0;
+        std::uint64_t pre_canonical_candidate_variants = 0;
+        std::uint64_t canonical_effect_template_classes = 0;
+        std::uint64_t collapsed_variants = 0;
+        std::uint64_t carrier_local_checks = 0;
+        std::uint64_t carrier_local_admissions = 0;
+        std::uint64_t synthesis_ns = 0;
+        std::uint64_t raw_outcomes = 0;
+        std::uint64_t retained_transitions = 0;
+        std::uint64_t joint_policy_attempt_participations = 0;
+        std::uint64_t joint_policy_success_participations = 0;
+    };
+
+    const auto phase_owner_name = [](const SolvePhaseOwner owner) {
+        switch (owner) {
+        case SolvePhaseOwner::Setup: return "setup";
+        case SolvePhaseOwner::PlannerConstruction:
+            return "planner_construction";
+        case SolvePhaseOwner::TemporaryEffectPrecompile:
+            return "temporary_effect_precompile";
+        case SolvePhaseOwner::DependencyPreparation:
+            return "dependency_preparation";
+        case SolvePhaseOwner::PrimitiveRows: return "primitive_rows";
+        case SolvePhaseOwner::StateLocalAutomaticSynthesis:
+            return "state_local_automatic_synthesis";
+        case SolvePhaseOwner::LadderScheduling: return "ladder_scheduling";
+        case SolvePhaseOwner::BellmanOptimization:
+            return "bellman_optimization";
+        case SolvePhaseOwner::PolicyAssembly: return "policy_assembly";
+        case SolvePhaseOwner::Compilation: return "compilation";
+        case SolvePhaseOwner::ExactEvaluation: return "exact_evaluation";
+        case SolvePhaseOwner::Done: return "done";
+        }
+        return "unknown";
+    };
+    const auto fixed_option_kind_name = [](const FixedOptionKind kind) {
+        switch (kind) {
+        case FixedOptionKind::ScourAlchemy: return "scour_alchemy";
+        case FixedOptionKind::EldritchSideIntent:
+            return "eldritch_side_intent";
+        case FixedOptionKind::ProtectedSide: return "protected_side";
+        case FixedOptionKind::MultimodFinish: return "multimod_finish";
+        case FixedOptionKind::Renewal: return "renewal";
+        case FixedOptionKind::ProtectedRepeat: return "protected_repeat";
+        case FixedOptionKind::FracturePrepare: return "fracture_prepare";
+        case FixedOptionKind::ImprintRetry: return "imprint_retry";
+        case FixedOptionKind::TemporaryBenchRepeat:
+            return "temporary_bench_repeat";
+        }
+        return "unknown";
+    };
+    const auto mix_hash = [](std::uint64_t& hash, const std::uint64_t word) {
+        hash ^= word;
+        hash *= 1099511628211ull;
+    };
+    const auto hash_text = [&](const std::uint64_t value) {
+        char buffer[17];
+        std::snprintf(
+            buffer, sizeof(buffer), "%016llx",
+            static_cast<unsigned long long>(value));
+        return std::string(buffer);
+    };
+
+    const std::vector<PlannerOperator>& planners = calc.operators();
+    const ActionRegistry& registry = calc.registry();
+    std::vector<Lifecycle> lifecycle(planners.size());
+    std::vector<bool> priced_supported(planners.size(), false);
+    for (const PricedOperator& priced : operators) {
+        if (priced.index < priced_supported.size()) {
+            priced_supported[priced.index] = true;
+        }
+    }
+    for (const auto& [identity, entry] : action_envelope_ledger.entries()) {
+        (void)identity;
+        if (entry.operator_index >= lifecycle.size()) continue;
+        Lifecycle& values = lifecycle[entry.operator_index];
+        if (entry.lane != ActionEnvelopeLane::Unassigned &&
+            entry.lane != ActionEnvelopeLane::ExplicitCallerScope) {
+            ++values.scheduled;
+        }
+        if (entry.lifecycle != ActionEnvelopeState::Queued &&
+            entry.lifecycle != ActionEnvelopeState::OmittedCallerScope) {
+            ++values.begun;
+        }
+        if (entry.lifecycle == ActionEnvelopeState::ExactRowComplete ||
+            entry.lifecycle ==
+                ActionEnvelopeState::ExactInapplicabilityProved ||
+            entry.lifecycle == ActionEnvelopeState::IncumbentDominated) {
+            ++values.completed;
+        }
+        if (entry.lifecycle == ActionEnvelopeState::RolledBackAfterCap) {
+            ++values.interrupted;
+        }
+    }
+    for (const PricedSparseRow& row : priced_rows) {
+        if (row.operator_index < lifecycle.size()) {
+            ++lifecycle[row.operator_index].retained_rows;
+        }
+    }
+    for (std::size_t index = 0; index < planners.size(); ++index) {
+        const auto found =
+            diagnostics.action_search_costs.find(planners[index].id);
+        if (found == diagnostics.action_search_costs.end()) continue;
+        lifecycle[index].retained_bytes = found->second.retained_bytes;
+        lifecycle[index].interrupted = std::max(
+            lifecycle[index].interrupted, found->second.interrupted_rows);
+    }
+
+    const auto count_policy = [&](const auto& policy,
+                                  const auto& reachable) {
+        for (std::size_t state = 0; state < policy.size(); ++state) {
+            if (!reachable.empty() &&
+                (state >= reachable.size() || reachable[state] == 0)) {
+                continue;
+            }
+            const std::uint32_t operator_index = policy[state].index;
+            if (operator_index < lifecycle.size()) {
+                ++lifecycle[operator_index].policy_consumptions;
+            }
+        }
+    };
+    if (published != nullptr && published->policy_available) {
+        count_policy(published->policy, published->policy_reachable);
+    } else if (output_incumbent.has_value()) {
+        count_policy(
+            output_incumbent->policy, output_incumbent->policy_reachable);
+    }
+
+    std::vector<std::vector<std::uint32_t>> dependencies(planners.size());
+    std::vector<SolverActionFamilyMask> family_masks(planners.size(), 0);
+    for (std::size_t index = 0; index < planners.size(); ++index) {
+        const PlannerOperator& planner = planners[index];
+        std::vector<std::uint32_t>& action_dependencies = dependencies[index];
+        const auto add_dependency = [&](const std::uint32_t action) {
+            if (action != kNoId && action < registry.actions.size()) {
+                action_dependencies.push_back(action);
+            }
+        };
+        add_dependency(planner.primitive_action);
+        for (const std::uint32_t action : planner.primitive_program) {
+            add_dependency(action);
+        }
+        add_dependency(planner.conditional_action);
+        add_dependency(planner.bestiary_create_action);
+        add_dependency(planner.bestiary_restore_action);
+        add_dependency(planner.setup_action);
+        add_dependency(planner.followup_action);
+        add_dependency(planner.cleanup_action);
+        std::sort(action_dependencies.begin(), action_dependencies.end());
+        action_dependencies.erase(
+            std::unique(
+                action_dependencies.begin(), action_dependencies.end()),
+            action_dependencies.end());
+        for (const std::uint32_t action : action_dependencies) {
+            family_masks[index] |= solver_action_family_bit(
+                solver_action_family_for_action(registry.actions[action]));
+        }
+        if (planner.automatic_kind != AutomaticCandidateKind::None) {
+            const SolverActionFamily family =
+                solver_action_family_for_automatic_candidate(
+                    planner.automatic_kind);
+            if (family != SolverActionFamily::Count) {
+                family_masks[index] |= solver_action_family_bit(family);
+            }
+        }
+    }
+
+    std::array<FamilyTotals, kSolverActionFamilyCount> family_totals{};
+    for (const ActionDescriptor& action : registry.actions) {
+        FamilyTotals& values = family_totals[static_cast<std::size_t>(
+            solver_action_family_for_action(action))];
+        ++values.registry_actions;
+        if (action.product_role == ProductActionRole::Candidate) {
+            ++values.primitive_candidates;
+        } else if (action.product_role ==
+                   ProductActionRole::AutomaticDependency) {
+            ++values.dependency_actions;
+        }
+    }
+    for (std::size_t index = 0; index < planners.size(); ++index) {
+        if (planners[index].kind != PlannerOperatorKind::FixedOption) {
+            continue;
+        }
+        for (std::size_t family_index = 0;
+             family_index < family_totals.size(); ++family_index) {
+            const SolverActionFamily family =
+                static_cast<SolverActionFamily>(family_index);
+            if ((family_masks[index] & solver_action_family_bit(family)) == 0) {
+                continue;
+            }
+            FamilyTotals& values = family_totals[family_index];
+            ++values.generated_planner_operators;
+            values.primitive_dependency_uses += dependencies[index].size();
+            values.priced_supported_operators += priced_supported[index];
+            values.scheduled += lifecycle[index].scheduled;
+            values.begun += lifecycle[index].begun;
+            values.completed += lifecycle[index].completed;
+            values.interrupted += lifecycle[index].interrupted;
+            values.retained_rows += lifecycle[index].retained_rows;
+            values.retained_bytes += lifecycle[index].retained_bytes;
+            values.policy_consumptions +=
+                lifecycle[index].policy_consumptions;
+        }
+    }
+    std::array<SolverActionFamilyMask, kAutomaticCandidateKindCount>
+        automatic_family_masks{};
+    for (std::size_t index = 0; index < planners.size(); ++index) {
+        const std::size_t kind_index =
+            static_cast<std::size_t>(planners[index].automatic_kind);
+        if (kind_index > 0 && kind_index < automatic_family_masks.size()) {
+            automatic_family_masks[kind_index] |= family_masks[index];
+        }
+    }
+    for (std::size_t kind_index = 1;
+         kind_index < automatic_family_masks.size(); ++kind_index) {
+        const AutomaticTelemetryKind telemetry_kind =
+            automatic_telemetry_kind_for_candidate(
+                static_cast<AutomaticCandidateKind>(kind_index));
+        const AutomaticKindTelemetry& telemetry =
+            diagnostics.automatic_kind_telemetry[
+                static_cast<std::size_t>(telemetry_kind)];
+        for (std::size_t family_index = 0;
+             family_index < family_totals.size(); ++family_index) {
+            const SolverActionFamily family =
+                static_cast<SolverActionFamily>(family_index);
+            if ((automatic_family_masks[kind_index] &
+                 solver_action_family_bit(family)) == 0) {
+                continue;
+            }
+            FamilyTotals& values = family_totals[family_index];
+            values.pre_canonical_candidate_variants +=
+                telemetry.candidate_variants;
+            values.canonical_effect_template_classes +=
+                telemetry.effect_classes;
+            values.collapsed_variants += telemetry.collapsed_variants;
+            values.carrier_local_checks += telemetry.candidates;
+            values.carrier_local_admissions +=
+                telemetry.eligible_candidates;
+            values.synthesis_ns += telemetry.enumeration_ns +
+                                   telemetry.admission_ns +
+                                   telemetry.kernel_evaluation_ns;
+            values.raw_outcomes += telemetry.raw_outcomes;
+            values.retained_transitions += telemetry.retained_transitions;
+            values.retained_bytes += telemetry.selected_bytes;
+            values.joint_policy_attempt_participations +=
+                incremental_joint_policy_attempt_kinds[kind_index];
+            values.joint_policy_success_participations +=
+                incremental_joint_policy_success_kinds[kind_index];
+        }
+    }
+
+    std::uint64_t complete_hash = 1469598103934665603ull;
+    std::uint64_t generated_count = 0;
+    for (std::size_t index = 0; index < planners.size(); ++index) {
+        const PlannerOperator& planner = planners[index];
+        if (planner.kind != PlannerOperatorKind::FixedOption) continue;
+        ++generated_count;
+        mix_hash(complete_hash, index);
+        const std::vector<std::uint64_t> key =
+            planner_operator_semantic_key(planner);
+        mix_hash(complete_hash, key.size());
+        for (const std::uint64_t word : key) mix_hash(complete_hash, word);
+    }
+
+    const auto append_lifecycle = [](std::string& json,
+                                     const Lifecycle& values) {
+        json += "{\"scheduled\":" + std::to_string(values.scheduled);
+        json += ",\"begun\":" + std::to_string(values.begun);
+        json += ",\"completed\":" + std::to_string(values.completed);
+        json += ",\"interrupted\":" +
+                std::to_string(values.interrupted);
+        json += ",\"retained_rows\":" +
+                std::to_string(values.retained_rows);
+        json += ",\"retained_bytes\":" +
+                std::to_string(values.retained_bytes);
+        json += ",\"selected_policy_consumptions\":" +
+                std::to_string(values.policy_consumptions) + "}";
+    };
+
+    std::string json = "{\"schema\":\"solver_operator_lineage_v1\"";
+    json += ",\"observational\":true";
+    json += ",\"authority\":\"existing_registry_planner_ledger_scheduler_rows_policy\"";
+    json += ",\"counting_contract\":{\"family_relations_are_non_disjoint\":true,\"operator_samples_are_bounded\":true}";
+    json += ",\"complete_generated_operator_count\":" +
+            std::to_string(generated_count);
+    json += ",\"complete_generated_operator_semantics_fnv1a64\":\"" +
+            hash_text(complete_hash) + "\"";
+    json += ",\"phase_owners\":{\"current\":";
+    append_json_string(json, phase_owner_name(current_phase_owner()));
+    json += ",\"setup\":{\"duration_ns\":" +
+            std::to_string(diagnostics.solve_setup_ns) + "}";
+    json += ",\"planner_construction\":{\"registry_actions\":" +
+            std::to_string(registry.actions.size()) +
+            ",\"planner_operators\":" + std::to_string(planners.size()) +
+            "}";
+    std::uint64_t precompiled_classes = 0;
+    std::uint64_t precompile_ns = 0;
+    std::uint64_t precompiled_bytes = 0;
+    for (const AutomaticKindTelemetry& values :
+         diagnostics.automatic_kind_telemetry) {
+        precompiled_classes += values.precompiled_classes;
+        precompile_ns += values.precompile_ns;
+        precompiled_bytes += values.precompiled_bytes;
+    }
+    json += ",\"temporary_effect_precompile\":{\"classes\":" +
+            std::to_string(precompiled_classes) + ",\"duration_ns\":" +
+            std::to_string(precompile_ns) + ",\"retained_bytes\":" +
+            std::to_string(precompiled_bytes) + "}";
+    std::uint64_t dependency_count = 0;
+    for (std::size_t index = 0; index < planners.size(); ++index) {
+        if (planners[index].kind == PlannerOperatorKind::FixedOption) {
+            dependency_count += dependencies[index].size();
+        }
+    }
+    json += ",\"dependency_preparation\":{\"generated_dependencies\":" +
+            std::to_string(dependency_count) + "}";
+    std::uint64_t primitive_rows = 0;
+    std::uint64_t generated_rows = 0;
+    std::uint64_t automatic_rows = 0;
+    for (std::size_t index = 0; index < planners.size(); ++index) {
+        if (planners[index].kind == PlannerOperatorKind::Primitive) {
+            primitive_rows += lifecycle[index].retained_rows;
+        } else {
+            generated_rows += lifecycle[index].retained_rows;
+            if (planners[index].automatic_kind !=
+                AutomaticCandidateKind::None) {
+                automatic_rows += lifecycle[index].retained_rows;
+            }
+        }
+    }
+    json += ",\"primitive_rows\":{\"retained_rows\":" +
+            std::to_string(primitive_rows) + "}";
+    json += ",\"generated_fixed_option_rows\":{\"retained_rows\":" +
+            std::to_string(generated_rows) + "}";
+    json += ",\"state_local_automatic_synthesis\":{\"carriers\":" +
+            std::to_string(
+                diagnostics.automatic_admission_phases.carriers) +
+            ",\"duration_ns\":" + std::to_string(
+                diagnostics.automatic_admission_phases.synthesis_ns) +
+            ",\"retained_rows\":" + std::to_string(automatic_rows) +
+            "}";
+    json += ",\"ladder_scheduling\":{\"epochs\":" +
+            std::to_string(diagnostics.incremental_carrier_ladder_epochs) +
+            ",\"candidates\":" + std::to_string(
+                diagnostics.incremental_carrier_ladder_candidates) +
+            ",\"goal_subsets\":" + std::to_string(
+                diagnostics.incremental_carrier_ladder_goal_subsets) + "}";
+    json += ",\"bellman_optimization\":{\"work_units\":" +
+            std::to_string(diagnostics.bellman_work_units) +
+            ",\"duration_ns\":" +
+            std::to_string(diagnostics.optimization_ns) + "}";
+    json += ",\"policy_assembly\":{\"joint_attempts\":" +
+            std::to_string(diagnostics.incremental_anytime_policy_attempts) +
+            ",\"joint_successes\":" + std::to_string(
+                diagnostics.incremental_anytime_policy_successes) +
+            ",\"finalization_work_items\":" +
+            std::to_string(finalization_work_items) + "}";
+    json += ",\"compilation\":{\"active\":" + std::string(
+        current_phase_owner() == SolvePhaseOwner::Compilation
+            ? "true" : "false") + "}";
+    json += ",\"exact_evaluation\":{\"active\":" + std::string(
+        current_phase_owner() == SolvePhaseOwner::ExactEvaluation
+            ? "true" : "false") +
+            ",\"discovered_pairs\":" + std::to_string(
+                finalization_evaluation_progress.discovered_pairs) +
+            ",\"pending_pairs\":" + std::to_string(
+                finalization_evaluation_progress.pending_pairs) +
+            ",\"solved_sccs\":" + std::to_string(
+                finalization_evaluation_progress.solved_sccs) + "}}";
+
+    json += ",\"missing_frontier\":{\"discovered\":" +
+            std::to_string(
+                diagnostics.incremental_missing_frontier_discovered);
+    json += ",\"priority_offers\":" + std::to_string(
+        diagnostics.incremental_missing_frontier_priority_offers);
+    json += ",\"service_completions\":" + std::to_string(
+        diagnostics.incremental_missing_frontier_service_completions);
+    json += ",\"max_open\":" + std::to_string(
+        diagnostics.incremental_missing_frontier_max_open);
+    json += ",\"open\":" + std::to_string(
+        diagnostics.incremental_missing_frontier_open) + "}";
+
+    json += ",\"by_solver_family\":{";
+    for (std::size_t index = 0; index < family_totals.size(); ++index) {
+        if (index != 0) json.push_back(',');
+        append_json_string(
+            json,
+            std::string(solver_action_family_name(
+                static_cast<SolverActionFamily>(index))));
+        const FamilyTotals& values = family_totals[index];
+        json += ":{\"registry_actions\":" +
+                std::to_string(values.registry_actions);
+        json += ",\"primitive_candidates\":" +
+                std::to_string(values.primitive_candidates);
+        json += ",\"dependency_actions\":" +
+                std::to_string(values.dependency_actions);
+        json += ",\"primitive_dependency_uses\":" +
+                std::to_string(values.primitive_dependency_uses);
+        json += ",\"generated_planner_operators\":" +
+                std::to_string(values.generated_planner_operators);
+        json += ",\"priced_supported_operators\":" +
+                std::to_string(values.priced_supported_operators);
+        json += ",\"pre_canonical_candidate_variants\":" +
+                std::to_string(values.pre_canonical_candidate_variants);
+        json += ",\"canonical_effect_template_classes\":" +
+                std::to_string(values.canonical_effect_template_classes);
+        json += ",\"collapsed_variants\":" +
+                std::to_string(values.collapsed_variants);
+        json += ",\"carrier_local_checks\":" +
+                std::to_string(values.carrier_local_checks);
+        json += ",\"carrier_local_admissions\":" +
+                std::to_string(values.carrier_local_admissions);
+        json += ",\"synthesis\":{\"duration_ns\":" +
+                std::to_string(values.synthesis_ns);
+        json += ",\"raw_outcomes\":" +
+                std::to_string(values.raw_outcomes);
+        json += ",\"retained_transitions\":" +
+                std::to_string(values.retained_transitions) + "}";
+        json += ",\"pair_scheduler\":{\"offers\":" +
+                std::to_string(values.scheduled);
+        json += ",\"services\":" + std::to_string(values.begun);
+        json += ",\"waits\":" + std::to_string(
+            values.scheduled > values.begun
+                ? values.scheduled - values.begun : 0) + "}";
+        json += ",\"global_carrier_epochs\":" + std::to_string(
+            diagnostics.incremental_carrier_ladder_epochs);
+        json += ",\"joint_policy_attempt_participations\":" +
+                std::to_string(
+                    values.joint_policy_attempt_participations);
+        json += ",\"joint_policy_success_participations\":" +
+                std::to_string(
+                    values.joint_policy_success_participations);
+        json += ",\"lifecycle\":";
+        append_lifecycle(json, values);
+        json += "}";
+    }
+    json += "}";
+
+    json += ",\"by_automatic_kind\":{";
+    for (std::size_t kind_index = 1;
+         kind_index < kAutomaticCandidateKindCount; ++kind_index) {
+        if (kind_index != 1) json.push_back(',');
+        const AutomaticCandidateKind kind =
+            static_cast<AutomaticCandidateKind>(kind_index);
+        const AutomaticFamilyContract& contract =
+            kAutomaticFamilyContracts[kind_index];
+        append_json_string(json, std::string(contract.candidate_identity));
+        const AutomaticTelemetryKind telemetry_kind =
+            automatic_telemetry_kind_for_candidate(kind);
+        const AutomaticKindTelemetry& telemetry =
+            diagnostics.automatic_kind_telemetry[
+                static_cast<std::size_t>(telemetry_kind)];
+        Lifecycle values;
+        std::uint64_t planner_count = 0;
+        std::uint64_t primitive_dependencies = 0;
+        std::uint64_t priced_count = 0;
+        for (std::size_t index = 0; index < planners.size(); ++index) {
+            if (planners[index].automatic_kind != kind) continue;
+            ++planner_count;
+            primitive_dependencies += dependencies[index].size();
+            priced_count += priced_supported[index];
+            values.scheduled += lifecycle[index].scheduled;
+            values.begun += lifecycle[index].begun;
+            values.completed += lifecycle[index].completed;
+            values.interrupted += lifecycle[index].interrupted;
+            values.retained_rows += lifecycle[index].retained_rows;
+            values.retained_bytes += lifecycle[index].retained_bytes;
+            values.policy_consumptions +=
+                lifecycle[index].policy_consumptions;
+        }
+        values.retained_bytes += telemetry.selected_bytes;
+        json += ":{\"pre_canonical_candidate_variants\":" +
+                std::to_string(telemetry.candidate_variants);
+        json += ",\"canonical_effect_template_classes\":" +
+                std::to_string(telemetry.effect_classes);
+        json += ",\"collapsed_variants\":" +
+                std::to_string(telemetry.collapsed_variants);
+        json += ",\"planner_operators\":" +
+                std::to_string(planner_count);
+        json += ",\"primitive_dependencies\":" +
+                std::to_string(primitive_dependencies);
+        json += ",\"priced_supported_operators\":" +
+                std::to_string(priced_count);
+        json += ",\"carrier_local_checks\":" +
+                std::to_string(telemetry.candidates);
+        json += ",\"carrier_local_admissions\":" +
+                std::to_string(telemetry.eligible_candidates);
+        json += ",\"synthesis\":{\"enumeration_ns\":" +
+                std::to_string(telemetry.enumeration_ns);
+        json += ",\"admission_ns\":" +
+                std::to_string(telemetry.admission_ns);
+        json += ",\"kernel_evaluation_ns\":" +
+                std::to_string(telemetry.kernel_evaluation_ns);
+        json += ",\"raw_outcomes\":" +
+                std::to_string(telemetry.raw_outcomes);
+        json += ",\"transitions\":" +
+                std::to_string(telemetry.retained_transitions) + "}";
+        json += ",\"pair_scheduler\":{\"offers\":" +
+                std::to_string(values.scheduled);
+        json += ",\"services\":" + std::to_string(values.begun);
+        json += ",\"waits\":" + std::to_string(
+            values.scheduled > values.begun
+                ? values.scheduled - values.begun : 0);
+        json += ",\"rows_completed\":" +
+                std::to_string(values.completed);
+        json += ",\"interrupted\":" +
+                std::to_string(values.interrupted) + "}";
+        json += ",\"global_carrier_epochs\":" + std::to_string(
+            diagnostics.incremental_carrier_ladder_epochs);
+        json += ",\"joint_policy_attempt_participations\":" +
+                std::to_string(
+                    incremental_joint_policy_attempt_kinds[kind_index]);
+        json += ",\"joint_policy_success_participations\":" +
+                std::to_string(
+                    incremental_joint_policy_success_kinds[kind_index]);
+        json += ",\"lifecycle\":";
+        append_lifecycle(json, values);
+        json += "}";
+    }
+    json += "}";
+
+    json += ",\"generated_operator_samples\":[";
+    std::uint64_t sample_count = 0;
+    for (std::size_t index = 0;
+         index < planners.size() &&
+         sample_count < options.max_diagnostic_samples; ++index) {
+        const PlannerOperator& planner = planners[index];
+        if (planner.kind != PlannerOperatorKind::FixedOption) continue;
+        if (sample_count++ != 0) json.push_back(',');
+        std::uint64_t semantic_hash = 1469598103934665603ull;
+        const std::vector<std::uint64_t> key =
+            planner_operator_semantic_key(planner);
+        for (const std::uint64_t word : key) mix_hash(semantic_hash, word);
+        json += "{\"operator_index\":" + std::to_string(index);
+        json += ",\"planner_id\":";
+        append_json_string(json, planner.id);
+        json += ",\"planner_kind\":\"fixed_option\"";
+        json += ",\"fixed_option_kind\":";
+        append_json_string(json, fixed_option_kind_name(planner.option_kind));
+        json += ",\"automatic_kind\":";
+        append_json_string(
+            json,
+            std::string(kAutomaticFamilyContracts[
+                static_cast<std::size_t>(planner.automatic_kind)]
+                            .candidate_identity));
+        json += ",\"semantic_fnv1a64\":\"" +
+                hash_text(semantic_hash) + "\"";
+        json += ",\"priced_supported\":" +
+                std::string(priced_supported[index] ? "true" : "false");
+        json += ",\"state_local_automatic\":" + std::string(
+            calc.is_state_local_automatic_operator(index)
+                ? "true" : "false");
+        json += ",\"dependencies\":[";
+        for (std::size_t dependency = 0;
+             dependency < dependencies[index].size(); ++dependency) {
+            if (dependency != 0) json.push_back(',');
+            append_json_string(
+                json, registry.actions[dependencies[index][dependency]].id);
+        }
+        json += "],\"families\":[";
+        bool first_family = true;
+        for (std::size_t family_index = 0;
+             family_index < kSolverActionFamilyCount; ++family_index) {
+            const SolverActionFamily family =
+                static_cast<SolverActionFamily>(family_index);
+            if ((family_masks[index] & solver_action_family_bit(family)) == 0) {
+                continue;
+            }
+            if (!first_family) json.push_back(',');
+            first_family = false;
+            append_json_string(
+                json, std::string(solver_action_family_name(family)));
+        }
+        json += "],\"lifecycle\":";
+        append_lifecycle(json, lifecycle[index]);
+        json += "}";
+    }
+    json += "],\"sample_counts\":{\"retained\":" +
+            std::to_string(sample_count);
+    json += ",\"omitted\":" +
+            std::to_string(generated_count - sample_count);
+    json += ",\"limit\":" +
+            std::to_string(options.max_diagnostic_samples) + "}}";
+    diagnostics.operator_lineage_json = std::move(json);
+}
+
 void SolveWork::Impl::finalize_incremental_diagnostics() {
     if (!incremental_envelope_closed) {
         if (requested_bounded_finish) {
@@ -2633,6 +3286,16 @@ void SolveWork::Impl::finalize_incremental_diagnostics() {
         incremental_anytime_policy_best_upper;
     diagnostics.incremental_anytime_policy_last_failure =
         incremental_anytime_policy_last_failure;
+    diagnostics.incremental_missing_frontier_discovered =
+        incremental_missing_frontier_discovered;
+    diagnostics.incremental_missing_frontier_priority_offers =
+        incremental_missing_frontier_priority_offers;
+    diagnostics.incremental_missing_frontier_service_completions =
+        incremental_missing_frontier_service_completions;
+    diagnostics.incremental_missing_frontier_max_open =
+        incremental_missing_frontier_max_open;
+    diagnostics.incremental_missing_frontier_open =
+        incremental_anytime_missing_frontier_states.size();
     diagnostics.incremental_refinement_uncertainty =
         incremental_refinement_uncertainty;
     diagnostics.incremental_action_witnesses.clear();
@@ -2698,6 +3361,7 @@ void SolveWork::Impl::finalize_incremental_diagnostics() {
     }
     refresh_action_envelope_ledger_diagnostics(diagnostics);
     refresh_anytime_scheduler_diagnostics(diagnostics);
+    refresh_operator_lineage_diagnostics(diagnostics, &result);
 }
 
 void SolveWork::Impl::finalize_upper_policy_provenance() {

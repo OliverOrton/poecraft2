@@ -553,6 +553,24 @@ typedef enum pc_solve_incumbent_kind {
     PC_SOLVE_INCUMBENT_OTHER = 8
 } pc_solve_incumbent_kind;
 
+/* Narrow live owner inside the broad solve phase. Setup-only owners remain
+ * available in the final telemetry even though they complete before the
+ * first stepped progress snapshot. */
+typedef enum pc_solve_phase_owner {
+    PC_SOLVE_PHASE_OWNER_SETUP = 1,
+    PC_SOLVE_PHASE_OWNER_PLANNER_CONSTRUCTION = 2,
+    PC_SOLVE_PHASE_OWNER_TEMPORARY_EFFECT_PRECOMPILE = 3,
+    PC_SOLVE_PHASE_OWNER_DEPENDENCY_PREPARATION = 4,
+    PC_SOLVE_PHASE_OWNER_PRIMITIVE_ROWS = 5,
+    PC_SOLVE_PHASE_OWNER_STATE_LOCAL_AUTOMATIC_SYNTHESIS = 6,
+    PC_SOLVE_PHASE_OWNER_LADDER_SCHEDULING = 7,
+    PC_SOLVE_PHASE_OWNER_BELLMAN_OPTIMIZATION = 8,
+    PC_SOLVE_PHASE_OWNER_POLICY_ASSEMBLY = 9,
+    PC_SOLVE_PHASE_OWNER_COMPILATION = 10,
+    PC_SOLVE_PHASE_OWNER_EXACT_EVALUATION = 11,
+    PC_SOLVE_PHASE_OWNER_DONE = 12
+} pc_solve_phase_owner;
+
 typedef struct pc_solve_progress {
     uint32_t struct_size;
     uint32_t abi_version;
@@ -591,6 +609,7 @@ typedef struct pc_solve_progress {
     uint64_t certification_pending_pairs;
     uint64_t certification_solved_sccs;
     uint64_t certification_total_sccs;
+    int32_t phase_owner; /* pc_solve_phase_owner; observational only */
 } pc_solve_progress;
 
 /* Stateful solve surface. After non-null argument validation, begin releases

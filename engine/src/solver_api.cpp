@@ -775,6 +775,36 @@ int32_t solve_phase(const solver::SolvePhase phase) {
     return PC_SOLVE_PHASE_DONE;
 }
 
+int32_t solve_phase_owner(const solver::SolvePhaseOwner owner) {
+    switch (owner) {
+    case solver::SolvePhaseOwner::Setup:
+        return PC_SOLVE_PHASE_OWNER_SETUP;
+    case solver::SolvePhaseOwner::PlannerConstruction:
+        return PC_SOLVE_PHASE_OWNER_PLANNER_CONSTRUCTION;
+    case solver::SolvePhaseOwner::TemporaryEffectPrecompile:
+        return PC_SOLVE_PHASE_OWNER_TEMPORARY_EFFECT_PRECOMPILE;
+    case solver::SolvePhaseOwner::DependencyPreparation:
+        return PC_SOLVE_PHASE_OWNER_DEPENDENCY_PREPARATION;
+    case solver::SolvePhaseOwner::PrimitiveRows:
+        return PC_SOLVE_PHASE_OWNER_PRIMITIVE_ROWS;
+    case solver::SolvePhaseOwner::StateLocalAutomaticSynthesis:
+        return PC_SOLVE_PHASE_OWNER_STATE_LOCAL_AUTOMATIC_SYNTHESIS;
+    case solver::SolvePhaseOwner::LadderScheduling:
+        return PC_SOLVE_PHASE_OWNER_LADDER_SCHEDULING;
+    case solver::SolvePhaseOwner::BellmanOptimization:
+        return PC_SOLVE_PHASE_OWNER_BELLMAN_OPTIMIZATION;
+    case solver::SolvePhaseOwner::PolicyAssembly:
+        return PC_SOLVE_PHASE_OWNER_POLICY_ASSEMBLY;
+    case solver::SolvePhaseOwner::Compilation:
+        return PC_SOLVE_PHASE_OWNER_COMPILATION;
+    case solver::SolvePhaseOwner::ExactEvaluation:
+        return PC_SOLVE_PHASE_OWNER_EXACT_EVALUATION;
+    case solver::SolvePhaseOwner::Done:
+        return PC_SOLVE_PHASE_OWNER_DONE;
+    }
+    return PC_SOLVE_PHASE_OWNER_DONE;
+}
+
 int32_t solve_policy_status(const solver::SolvePolicyStatus status) {
     switch (status) {
     case solver::SolvePolicyStatus::None:
@@ -923,6 +953,7 @@ void copy_solve_progress(
     target.struct_size = sizeof(target);
     target.abi_version = PC_ABI_VERSION;
     target.phase = solve_phase(source.phase);
+    target.phase_owner = solve_phase_owner(source.phase_owner);
     target.done = source.done ? 1 : 0;
     target.expanded_states = source.expanded_states;
     target.sweeps = source.sweeps;

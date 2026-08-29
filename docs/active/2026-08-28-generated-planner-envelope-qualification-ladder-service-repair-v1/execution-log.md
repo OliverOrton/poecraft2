@@ -221,3 +221,69 @@ the requested envelope:
 Narrow verification passed: public API suite, 2,727 checks / zero failures;
 solver suite, 86,220 checks / zero failures. Gate 1 changes no action-envelope
 behavior. Gate 2 operator-lineage and phase-owner instrumentation is next.
+
+## Gate 2 — Source Complete
+
+Implemented `solver_operator_lineage_v1` as a bounded read-only projection over
+the owners that already existed. It does not add a catalogue, scheduler,
+admission path, or ledger. The complete projection now records:
+
+- all 14 `SolverActionFamily` values and all ten non-None native
+  `AutomaticCandidateKind` values;
+- permanent registry candidate/dependency roles, generated fixed-option count,
+  primitive dependency uses, priced/supported operators, and a complete
+  fixed-option semantic FNV-1a identity independent of samples;
+- pre-canonical variants, canonical effect/template classes, collapsed
+  variants, carrier-local checks/admissions, synthesis work/time, retained
+  rows/bytes/transitions, and bounded deterministic planner-index samples;
+- carrier/operator pairs scheduled, begun, completed, interrupted, and still
+  waiting; carrier epochs; joint-policy attempt/success participation by
+  automatic kind; and selected reachable-policy consumption; and
+- missing-frontier discoveries, priority offers, service completions, maximum
+  open obligations, and terminal/current open obligations.
+
+The lineage allocation is intentionally excluded from solver-owned cap
+authority; it is emitted only as observational telemetry and remains subject
+to `max_telemetry_json_bytes`. A separate finalization call preserves lineage
+on named refusals even if a pre-existing optional per-row diagnostic encounters
+the already-fired resource cap first.
+
+Added the append-only `pc_solve_phase_owner` vocabulary and
+`pc_solve_progress.phase_owner`. Native progress, the WASM JSON facade, web
+protocol, worker initial state, and benchmark bound trace now use the same
+twelve names: setup, planner construction, temporary-effect precompile,
+dependency preparation, primitive rows, state-local automatic synthesis,
+ladder scheduling, Bellman optimization, policy assembly, compilation, exact
+evaluation, and done. Final lineage retains aggregate setup/precompile evidence
+for synchronous owners that finish before the first stepped snapshot.
+
+Focused verification:
+
+- native engine and benchmark targets built successfully under the portable
+  UCRT64 toolchain;
+- automatic Veiled S8.3 fixture: 552 checks / zero failures, including a
+  non-empty generated-operator lineage, parsed JSON object, positive complete
+  generated count, positive Veiled planner count, bounded samples, and the
+  nested public telemetry projection; its existing 10,000-run Simulator check
+  remained 10,000/10,000;
+- public C ABI suite: 2,816 checks / zero failures, including append-only struct
+  size, valid live owner range, broad-to-narrow Bellman/policy/compile/evaluate
+  mappings, and terminal `done` ownership;
+- `apps/web` `npx tsc --noEmit`: passed; and
+- `git diff --check`: passed before documentation finalization.
+
+A non-qualification reduced-cap instrumentation probe used the checked
+`endgame-fractured-es` benchmark with `max_discovered_states=32`, progress
+enabled, and Simulator verification skipped. It terminated normally as
+`refused_state_cap` in 400.03 ms. The final telemetry retained
+`solver_operator_lineage_v1`, complete hash `14650fb0739d0383`, all 14 family
+and ten automatic-kind aggregates, and the bound trace observed
+`dependency_preparation -> done`. This explicit-envelope case generated zero
+fixed options, as expected. Its temporary report SHA-256 was
+`905b0eb932f04fe0f4393a64b4cfe7900e1ba3b6797c0ccfafcd994939132b17`;
+it is diagnostic evidence only, not an immutable Lab result or a Gate 3
+performance substitute.
+
+Gate 2 changes no solve behavior. Gate 3 two-layer primitive/generated add-back
+attribution is next; a Gate 4 ladder-service repair remains unauthorized until
+that matrix names a specific measured owner.

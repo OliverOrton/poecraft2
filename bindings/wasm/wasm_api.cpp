@@ -818,11 +818,37 @@ const char* solve_incumbent_kind_name(const int32_t kind) {
     }
 }
 
+const char* solve_phase_owner_name(const int32_t owner) {
+    switch (owner) {
+    case PC_SOLVE_PHASE_OWNER_SETUP: return "setup";
+    case PC_SOLVE_PHASE_OWNER_PLANNER_CONSTRUCTION:
+        return "planner_construction";
+    case PC_SOLVE_PHASE_OWNER_TEMPORARY_EFFECT_PRECOMPILE:
+        return "temporary_effect_precompile";
+    case PC_SOLVE_PHASE_OWNER_DEPENDENCY_PREPARATION:
+        return "dependency_preparation";
+    case PC_SOLVE_PHASE_OWNER_PRIMITIVE_ROWS: return "primitive_rows";
+    case PC_SOLVE_PHASE_OWNER_STATE_LOCAL_AUTOMATIC_SYNTHESIS:
+        return "state_local_automatic_synthesis";
+    case PC_SOLVE_PHASE_OWNER_LADDER_SCHEDULING:
+        return "ladder_scheduling";
+    case PC_SOLVE_PHASE_OWNER_BELLMAN_OPTIMIZATION:
+        return "bellman_optimization";
+    case PC_SOLVE_PHASE_OWNER_POLICY_ASSEMBLY: return "policy_assembly";
+    case PC_SOLVE_PHASE_OWNER_COMPILATION: return "compilation";
+    case PC_SOLVE_PHASE_OWNER_EXACT_EVALUATION: return "exact_evaluation";
+    case PC_SOLVE_PHASE_OWNER_DONE: return "done";
+    default: return "setup";
+    }
+}
+
 void append_solve_progress(
     std::string& out,
     const pc_solve_progress& progress) {
     out += "{\"phase\":\"";
     out += solve_phase_name(progress.phase);
+    out += "\",\"phase_owner\":\"";
+    out += solve_phase_owner_name(progress.phase_owner);
     out += "\",\"done\":";
     out += progress.done ? "true" : "false";
     out += ",\"expanded_states\":" +

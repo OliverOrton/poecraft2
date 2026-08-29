@@ -3473,6 +3473,19 @@ std::string serialize_solver_telemetry(
             json,
             diagnostics->incremental_anytime_policy_last_failure);
         json += "}";
+        json += ",\"missing_frontier\":{\"discovered\":" +
+                std::to_string(
+                    diagnostics
+                        ->incremental_missing_frontier_discovered);
+        json += ",\"priority_offers\":" + std::to_string(
+            diagnostics->incremental_missing_frontier_priority_offers);
+        json += ",\"service_completions\":" + std::to_string(
+            diagnostics
+                ->incremental_missing_frontier_service_completions);
+        json += ",\"max_open\":" + std::to_string(
+            diagnostics->incremental_missing_frontier_max_open);
+        json += ",\"open\":" + std::to_string(
+            diagnostics->incremental_missing_frontier_open) + "}";
         json += ",\"remaining_action_envelope\":" +
                 std::to_string(
                     diagnostics->incremental_actions_unevaluated +
@@ -3489,6 +3502,12 @@ std::string serialize_solver_telemetry(
             json += "null";
         } else {
             json += diagnostics->anytime_scheduler_json;
+        }
+        json += ",\"operator_lineage\":";
+        if (diagnostics->operator_lineage_json.empty()) {
+            json += "null";
+        } else {
+            json += diagnostics->operator_lineage_json;
         }
         json += ",\"witnesses\":[";
         for (std::size_t i = 0;

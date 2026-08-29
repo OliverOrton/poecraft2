@@ -570,6 +570,47 @@ void run_automatic_veiled_program() {
         high_impact_solved.diagnostics.automatic_kind_telemetry[
             static_cast<std::size_t>(AutomaticTelemetryKind::Veiled)]
             .eligible_candidates > 0);
+    PC_CHECK(!high_impact_solved.diagnostics.operator_lineage_json.empty());
+    const json::Value high_impact_lineage = json::Parser(
+        high_impact_solved.diagnostics.operator_lineage_json.data(),
+        high_impact_solved.diagnostics.operator_lineage_json.size()).parse();
+    PC_CHECK(
+        high_impact_lineage.type == json::Type::Object);
+    PC_CHECK(
+        high_impact_lineage.at("complete_generated_operator_count").number >
+        0.0);
+    PC_CHECK(
+        high_impact_lineage.at("by_automatic_kind")
+                .at("veiled")
+                .at("planner_operators")
+                .number > 0.0);
+    PC_CHECK(
+        high_impact_lineage.at("sample_counts").at("retained").number >
+        0.0);
+    PC_CHECK(
+        high_impact_solved.diagnostics.operator_lineage_json.find(
+            "\"schema\":\"solver_operator_lineage_v1\"") !=
+        std::string::npos);
+    PC_CHECK(
+        high_impact_solved.diagnostics.operator_lineage_json.find(
+            "\"by_solver_family\":{") != std::string::npos);
+    PC_CHECK(
+        high_impact_solved.diagnostics.operator_lineage_json.find(
+            "\"veiled\":{\"pre_canonical_candidate_variants\":") !=
+        std::string::npos);
+    PC_CHECK(
+        high_impact_solved.diagnostics.operator_lineage_json.find(
+            "\"generated_operator_samples\":[{") !=
+        std::string::npos);
+    const std::string high_impact_telemetry = serialize_solver_telemetry(
+        high_impact_calc, &high_impact_solved, nullptr, std::nullopt, nullptr);
+    PC_CHECK(
+        high_impact_telemetry.find(
+            "\"operator_lineage\":{\"schema\":"
+            "\"solver_operator_lineage_v1\"") != std::string::npos);
+    PC_CHECK(
+        high_impact_telemetry.find("\"missing_frontier\":{") !=
+        std::string::npos);
     PC_CHECK(
         !high_impact_solved.diagnostics
              .incremental_action_envelope_closed);

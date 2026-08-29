@@ -1018,6 +1018,11 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
         bytes += sizeof(std::pair<const std::string, std::uint64_t>) +
                  id.capacity() + 1;
     }
+    /* operator_lineage_json is an observational projection assembled only
+     * after the authoritative ledgers/counters above have been updated. It
+     * must not consume the solver-owned cap and thereby change the work it is
+     * reporting. The public telemetry byte limit remains its serialization
+     * bound. */
     return bytes;
 }
 
@@ -1115,9 +1120,57 @@ std::uint64_t SolveTransitionCache::estimated_owned_bytes() const {
         return audited_estimated_owned_bytes();
     }
 
+SolvePhaseOwner SolveWork::Impl::current_phase_owner() const {
+        switch (phase) {
+        case SolvePhase::Iterating:
+            return SolvePhaseOwner::BellmanOptimization;
+        case SolvePhase::Refining:
+            return SolvePhaseOwner::PolicyAssembly;
+        case SolvePhase::Compiling:
+            return SolvePhaseOwner::Compilation;
+        case SolvePhase::Certifying:
+            return SolvePhaseOwner::ExactEvaluation;
+        case SolvePhase::Done:
+            return SolvePhaseOwner::Done;
+        case SolvePhase::Expanding:
+            break;
+        }
+        if (incremental_dynamic_prepare_active) {
+            return SolvePhaseOwner::StateLocalAutomaticSynthesis;
+        }
+        if (expansion_active) {
+            if (!expansion_prepared) {
+                return SolvePhaseOwner::DependencyPreparation;
+            }
+            if (!expansion_operator_indices.empty()) {
+                const std::size_t owner_cursor =
+                    expansion_operator_cursor <
+                            expansion_operator_indices.size()
+                        ? expansion_operator_cursor
+                        : expansion_operator_indices.size() - 1;
+                const std::uint32_t index = expansion_operator_indices[
+                    owner_cursor];
+                if (index < calc.operators().size()) {
+                    const PlannerOperator& planner = calc.operators()[index];
+                    if (planner.automatic_kind !=
+                            AutomaticCandidateKind::None ||
+                        calc.is_state_local_automatic_operator(index)) {
+                        return SolvePhaseOwner::
+                            StateLocalAutomaticSynthesis;
+                    }
+                }
+            }
+            return SolvePhaseOwner::PrimitiveRows;
+        }
+        return incremental_action_generation
+                   ? SolvePhaseOwner::LadderScheduling
+                   : SolvePhaseOwner::PrimitiveRows;
+    }
+
 SolveProgress SolveWork::Impl::progress() const {
         SolveProgress value;
         value.phase = phase;
+        value.phase_owner = current_phase_owner();
         value.done = phase == SolvePhase::Done;
         value.expanded_states = expanded_count;
         value.sweeps = sweeps;
@@ -1501,10 +1554,24 @@ SolveTelemetrySnapshot SolveWork::Impl::telemetry_snapshot(bool abandoned) const
             incremental_anytime_policy_best_upper;
         snapshot.diagnostics.incremental_anytime_policy_last_failure =
             incremental_anytime_policy_last_failure;
+        snapshot.diagnostics.incremental_missing_frontier_discovered =
+            incremental_missing_frontier_discovered;
+        snapshot.diagnostics.incremental_missing_frontier_priority_offers =
+            incremental_missing_frontier_priority_offers;
+        snapshot.diagnostics
+            .incremental_missing_frontier_service_completions =
+            incremental_missing_frontier_service_completions;
+        snapshot.diagnostics.incremental_missing_frontier_max_open =
+            incremental_missing_frontier_max_open;
+        snapshot.diagnostics.incremental_missing_frontier_open =
+            incremental_anytime_missing_frontier_states.size();
         snapshot.diagnostics.incremental_refinement_uncertainty =
             incremental_refinement_uncertainty;
         refresh_action_envelope_ledger_diagnostics(snapshot.diagnostics);
         refresh_anytime_scheduler_diagnostics(snapshot.diagnostics);
+        refresh_operator_lineage_diagnostics(
+            snapshot.diagnostics,
+            finalized_result.has_value() ? &*finalized_result : nullptr);
         refresh_incumbent_portfolio_diagnostics(
             snapshot.diagnostics,
             finalized_result.has_value() ? &*finalized_result : nullptr);
@@ -1519,7 +1586,8 @@ SolveTelemetrySnapshot SolveWork::Impl::telemetry_snapshot(bool abandoned) const
             std::max(peak_owned_bytes, live_bytes);
         snapshot.diagnostics.solver_live_owned_bytes_estimate = live_bytes;
         snapshot.diagnostics.diagnostics_retained_bytes_estimate =
-            diagnostics_owned_bytes(snapshot.diagnostics);
+            diagnostics_owned_bytes(snapshot.diagnostics) +
+            snapshot.diagnostics.operator_lineage_json.capacity() + 1;
         snapshot.raw_start_bound = progress().start_value_bound;
         return snapshot;
     }

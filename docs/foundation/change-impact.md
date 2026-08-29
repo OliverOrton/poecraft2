@@ -238,6 +238,10 @@ unverified rather than copying a stale plan assertion.
 ### Add a solver telemetry field
 
 1. Update native telemetry ownership/serialization and its cap accounting.
+   State explicitly whether retained diagnostic storage consumes the solver
+   cap or is a post-authority observational projection bounded only at public
+   telemetry serialization. An observational join must never become an input
+   to mechanics, admission, scheduling, proof, or publication.
 2. Update the WASM JSON facade, TypeScript protocol type, and any product
    presentation or diagnostic parser.
 3. Update native/API fixtures and worker/WASM checks.

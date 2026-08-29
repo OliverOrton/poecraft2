@@ -895,6 +895,14 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
             .first_incumbent_checkpoint_rows;
     std::uint64_t incremental_anytime_policy_attempts = 0;
     std::uint64_t incremental_anytime_policy_successes = 0;
+    std::array<
+        std::uint64_t,
+        static_cast<std::size_t>(AutomaticCandidateKind::Veiled) + 1>
+        incremental_joint_policy_attempt_kinds{};
+    std::array<
+        std::uint64_t,
+        static_cast<std::size_t>(AutomaticCandidateKind::Veiled) + 1>
+        incremental_joint_policy_success_kinds{};
     std::uint64_t incremental_anytime_policy_last_completed_rows = 0;
     double incremental_anytime_policy_best_upper = kInfinity;
     double incremental_anytime_checkpoint_upper = kInfinity;
@@ -903,6 +911,10 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
      * continuation is not valid for that carrier shape. Feed that concrete
      * state back into ordinary exact expansion before retrying composition. */
     std::vector<std::uint32_t> incremental_anytime_missing_frontier_states;
+    std::uint64_t incremental_missing_frontier_discovered = 0;
+    std::uint64_t incremental_missing_frontier_priority_offers = 0;
+    std::uint64_t incremental_missing_frontier_service_completions = 0;
+    std::uint64_t incremental_missing_frontier_max_open = 0;
     double incremental_refinement_uncertainty = 0.0;
     std::uint32_t expansion_states_outside_chaos_support = 0;
     std::vector<std::uint8_t> incremental_chaos_support;
@@ -1941,6 +1953,12 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
 
     void refresh_anytime_scheduler_diagnostics(
         SolveDiagnostics& diagnostics) const;
+
+    void refresh_operator_lineage_diagnostics(
+        SolveDiagnostics& diagnostics,
+        const SolveResult* published = nullptr) const;
+
+    SolvePhaseOwner current_phase_owner() const;
 
     void refresh_incumbent_portfolio_diagnostics(
         SolveDiagnostics& diagnostics,

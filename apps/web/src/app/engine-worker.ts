@@ -349,6 +349,7 @@ async function solveSolver(
         (params.reportProgress === true && requestedWorkItems === 1);
     let progress: SolveProgress = {
         phase: "expanding",
+        phase_owner: "setup",
         done: false,
         expanded_states: 0,
         sweeps: 0,

@@ -2087,6 +2087,8 @@ void run_public_solver_gate(const char* artifact_dir) {
             ++capped_steps;
         } while (!capped_progress.done && capped_steps < 10000);
         PC_CHECK(capped_progress.done == 1);
+        PC_CHECK(capped_progress.phase_owner ==
+                 PC_SOLVE_PHASE_OWNER_DONE);
         pc_solve_summary capped_summary{};
         PC_CHECK(pc_solver_solve_finish(
                      capped_solver, &capped_summary,
@@ -2168,6 +2170,12 @@ void run_public_solver_gate(const char* artifact_dir) {
     pc_solve_progress solve_progress{};
     PC_CHECK(pc_solver_solve_step(solver, 1, &solve_progress, &error) ==
              PC_RESULT_OK);
+    static_assert(PC_SOLVE_PHASE_OWNER_SETUP == 1);
+    static_assert(PC_SOLVE_PHASE_OWNER_DONE == 12);
+    PC_CHECK(solve_progress.struct_size == sizeof(pc_solve_progress));
+    PC_CHECK(solve_progress.phase_owner >=
+             PC_SOLVE_PHASE_OWNER_DEPENDENCY_PREPARATION);
+    PC_CHECK(solve_progress.phase_owner <= PC_SOLVE_PHASE_OWNER_DONE);
     PC_CHECK(solve_progress.phase != PC_SOLVE_PHASE_DONE);
     PC_CHECK(solve_progress.expanded_states >= 1);
     PC_CHECK(solve_progress.lower_bound >= 0.0);
@@ -2274,6 +2282,22 @@ void run_public_solver_gate(const char* artifact_dir) {
                                       &error) == PC_RESULT_OK);
         PC_CHECK(solve_progress.expanded_states > 0);
         PC_CHECK(solve_progress.start_value_bound >= 0.0);
+        PC_CHECK(solve_progress.phase_owner >=
+                 PC_SOLVE_PHASE_OWNER_DEPENDENCY_PREPARATION);
+        PC_CHECK(solve_progress.phase_owner <= PC_SOLVE_PHASE_OWNER_DONE);
+        if (solve_progress.phase == PC_SOLVE_PHASE_ITERATING) {
+            PC_CHECK(solve_progress.phase_owner ==
+                     PC_SOLVE_PHASE_OWNER_BELLMAN_OPTIMIZATION);
+        } else if (solve_progress.phase == PC_SOLVE_PHASE_REFINING) {
+            PC_CHECK(solve_progress.phase_owner ==
+                     PC_SOLVE_PHASE_OWNER_POLICY_ASSEMBLY);
+        } else if (solve_progress.phase == PC_SOLVE_PHASE_COMPILING) {
+            PC_CHECK(solve_progress.phase_owner ==
+                     PC_SOLVE_PHASE_OWNER_COMPILATION);
+        } else if (solve_progress.phase == PC_SOLVE_PHASE_CERTIFYING) {
+            PC_CHECK(solve_progress.phase_owner ==
+                     PC_SOLVE_PHASE_OWNER_EXACT_EVALUATION);
+        }
         saw_refining |=
             solve_progress.phase == PC_SOLVE_PHASE_REFINING;
         saw_compiling |=
@@ -2284,6 +2308,7 @@ void run_public_solver_gate(const char* artifact_dir) {
     } while (!solve_progress.done);
     PC_CHECK(step_count >= 2);
     PC_CHECK(solve_progress.phase == PC_SOLVE_PHASE_DONE);
+    PC_CHECK(solve_progress.phase_owner == PC_SOLVE_PHASE_OWNER_DONE);
     PC_CHECK(solve_progress.discovered_states >=
              solve_progress.expanded_states);
     PC_CHECK(solve_progress.state_action_rows > 0);

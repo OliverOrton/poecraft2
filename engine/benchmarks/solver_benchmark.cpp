@@ -109,6 +109,7 @@ struct CaseResult {
     struct BoundTraceEntry {
         double elapsed_ms = 0.0;
         std::int32_t phase = 0;
+        std::int32_t phase_owner = PC_SOLVE_PHASE_OWNER_SETUP;
         std::uint32_t round = 0;
         double lower_bound = 0.0;
         double upper_bound = std::numeric_limits<double>::infinity();
@@ -3134,6 +3135,7 @@ CaseResult run_case(
             CaseResult::BoundTraceEntry entry;
             entry.elapsed_ms = milliseconds(solve_begin, now);
             entry.phase = progress.phase;
+            entry.phase_owner = progress.phase_owner;
             entry.round = progress.focused_round;
             entry.lower_bound = progress.lower_bound;
             entry.upper_bound = progress.upper_bound;
@@ -4061,6 +4063,30 @@ const char* incumbent_kind_name(const int32_t kind) {
     }
 }
 
+const char* phase_owner_name(const int32_t owner) {
+    switch (owner) {
+    case PC_SOLVE_PHASE_OWNER_SETUP: return "setup";
+    case PC_SOLVE_PHASE_OWNER_PLANNER_CONSTRUCTION:
+        return "planner_construction";
+    case PC_SOLVE_PHASE_OWNER_TEMPORARY_EFFECT_PRECOMPILE:
+        return "temporary_effect_precompile";
+    case PC_SOLVE_PHASE_OWNER_DEPENDENCY_PREPARATION:
+        return "dependency_preparation";
+    case PC_SOLVE_PHASE_OWNER_PRIMITIVE_ROWS: return "primitive_rows";
+    case PC_SOLVE_PHASE_OWNER_STATE_LOCAL_AUTOMATIC_SYNTHESIS:
+        return "state_local_automatic_synthesis";
+    case PC_SOLVE_PHASE_OWNER_LADDER_SCHEDULING:
+        return "ladder_scheduling";
+    case PC_SOLVE_PHASE_OWNER_BELLMAN_OPTIMIZATION:
+        return "bellman_optimization";
+    case PC_SOLVE_PHASE_OWNER_POLICY_ASSEMBLY: return "policy_assembly";
+    case PC_SOLVE_PHASE_OWNER_COMPILATION: return "compilation";
+    case PC_SOLVE_PHASE_OWNER_EXACT_EVALUATION: return "exact_evaluation";
+    case PC_SOLVE_PHASE_OWNER_DONE: return "done";
+    default: return "unknown";
+    }
+}
+
 void append_case_report(
     std::ostringstream& out, const Value& specification,
     const CaseResult& result) {
@@ -4549,6 +4575,8 @@ void append_case_report(
         out << "{\"elapsed_ms\":";
         append_nullable_number(out, true, entry.elapsed_ms);
         out << ",\"phase\":" << entry.phase
+            << ",\"phase_owner\":"
+            << escape_json(phase_owner_name(entry.phase_owner))
             << ",\"round\":" << entry.round
             << ",\"lower_bound\":";
         append_nullable_number(out, true, entry.lower_bound);

@@ -812,6 +812,11 @@ struct SolveDiagnostics {
     double incremental_anytime_policy_best_upper =
         std::numeric_limits<double>::infinity();
     std::string incremental_anytime_policy_last_failure;
+    std::uint64_t incremental_missing_frontier_discovered = 0;
+    std::uint64_t incremental_missing_frontier_priority_offers = 0;
+    std::uint64_t incremental_missing_frontier_service_completions = 0;
+    std::uint64_t incremental_missing_frontier_max_open = 0;
+    std::uint64_t incremental_missing_frontier_open = 0;
     double incremental_refinement_uncertainty = 0.0;
     std::vector<std::string> incremental_action_witnesses;
     std::uint64_t incremental_action_witnesses_omitted = 0;
@@ -820,6 +825,10 @@ struct SolveDiagnostics {
      * remains false until a later gate explicitly migrates work ordering. */
     std::string action_envelope_ledger_json;
     std::string anytime_scheduler_json;
+    /* Bounded observational join over existing registry, automatic-candidate,
+     * ledger, scheduler, row, and selected-policy owners. It is never read by
+     * mechanics, admission, scheduling, Bellman, or publication. */
+    std::string operator_lineage_json;
     struct IncumbentPortfolioSnapshot {
         struct Identity {
             std::uint64_t portfolio = 0;
@@ -1125,8 +1134,24 @@ enum class SolvePhase : std::uint8_t {
     Certifying = 5,
 };
 
+enum class SolvePhaseOwner : std::uint8_t {
+    Setup = 0,
+    PlannerConstruction,
+    TemporaryEffectPrecompile,
+    DependencyPreparation,
+    PrimitiveRows,
+    StateLocalAutomaticSynthesis,
+    LadderScheduling,
+    BellmanOptimization,
+    PolicyAssembly,
+    Compilation,
+    ExactEvaluation,
+    Done,
+};
+
 struct SolveProgress {
     SolvePhase phase = SolvePhase::Expanding;
+    SolvePhaseOwner phase_owner = SolvePhaseOwner::Setup;
     bool done = false;
     std::uint32_t expanded_states = 0;
     std::uint32_t sweeps = 0;

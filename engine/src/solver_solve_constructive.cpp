@@ -2392,6 +2392,12 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                                             .end()) {
                                     incremental_anytime_missing_frontier_states
                                         .push_back(state);
+                                    ++incremental_missing_frontier_discovered;
+                                    incremental_missing_frontier_max_open =
+                                        std::max<std::uint64_t>(
+                                            incremental_missing_frontier_max_open,
+                                            incremental_anytime_missing_frontier_states
+                                                .size());
                                 }
                                 attempt_failure =
                                     "missing_completed_row_and_certified_"
@@ -2686,6 +2692,12 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                                         .end()) {
                                 incremental_anytime_missing_frontier_states
                                     .push_back(state);
+                                ++incremental_missing_frontier_discovered;
+                                incremental_missing_frontier_max_open =
+                                    std::max<std::uint64_t>(
+                                        incremental_missing_frontier_max_open,
+                                        incremental_anytime_missing_frontier_states
+                                            .size());
                             }
                             attempt_failure =
                                 "publication_successor_has_no_certified_"

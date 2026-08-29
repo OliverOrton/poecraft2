@@ -401,6 +401,14 @@ SolveWork::Impl::run_publication_pipeline() {
             };
         finalize_diagnostic(
             [&] { finalize_incremental_diagnostics(); });
+        /* A cap may interrupt an earlier optional per-row diagnostic before
+         * it reaches the lineage join. Keep the bounded ownership projection
+         * independently finalizable so refused runs still explain the exact
+         * envelope state that existed at the stop. */
+        finalize_diagnostic([&] {
+            refresh_operator_lineage_diagnostics(
+                result.diagnostics, &result);
+        });
         /*
          * Capture provenance while the incumbent still owns its complete
          * selected-row/value witness. Keep the optional strings outside
@@ -5436,7 +5444,8 @@ SolveWork::Impl::run_publication_pipeline() {
         result.diagnostics.solver_live_owned_bytes_estimate =
             fast_estimated_retained_solver_bytes(calc, &result);
         result.diagnostics.diagnostics_retained_bytes_estimate =
-            diagnostics_owned_bytes(result.diagnostics);
+            diagnostics_owned_bytes(result.diagnostics) +
+            result.diagnostics.operator_lineage_json.capacity() + 1;
         result.diagnostics.upper_policy_provenance_samples =
             std::move(upper_policy_provenance_samples);
         result.diagnostics.upper_policy_provenance_samples_omitted =

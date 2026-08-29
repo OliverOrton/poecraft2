@@ -60,16 +60,28 @@ Gate 0's local source work removes the developer-specific Visual Studio 2022
 binding, resolves and injects the full UCRT64 toolchain, and provisions that
 toolchain in hosted Windows CI. Local configure and native test-target build
 pass. A hosted result cannot be claimed until these changes are pushed and an
-actual run is observed. Gate 1 is now repairing the false Solver Lab
-disabled-family identity component and the native 256-discovered-state access
-violation before any action-envelope behavior change. Gate 1 is source
-complete: execution-request v4 now exposes five truthful envelope components,
-and the C ABI safely reports an unavailable start value when a discovery cap
-finishes before any Bellman value row. Immutable MCP caps 1, 2, 255, 256, 257,
-and 512 all terminate as named resource refusals with no crash or invalid
-policy; native API and solver regressions cover one completed row and retained
-executable fallback contracts. Gate 2 operator lineage and phase ownership is
-the current owner.
+actual run is observed. Gate 1 is source complete: execution-request v4 exposes
+five truthful envelope components, and the C ABI safely reports an unavailable
+start value when a discovery cap finishes before any Bellman value row.
+Immutable MCP caps 1, 2, 255, 256, 257, and 512 all terminate as named resource
+refusals with no crash or invalid policy; native API and solver regressions
+cover one completed row and retained executable fallback contracts.
+
+Gate 2 source is complete. `solver_operator_lineage_v1` now joins the permanent
+registry, primitive candidate/dependency roles, every generated fixed option,
+native automatic-kind canonicalization/synthesis telemetry, priced support,
+carrier/operator ledger, scheduler, retained rows, missing-frontier lifecycle,
+joint-policy participation, and selected-policy consumption. The complete
+aggregate and semantic hash are independent of bounded operator samples and
+remain observational. Refused runs retain the projection even if an older
+optional diagnostic is interrupted by the cap. Live C ABI, WASM progress, and
+benchmark bound traces expose a narrow phase owner through row, ladder,
+Bellman, policy, compilation, exact-evaluation, and done states. Focused S8.3
+and public API regressions pass, the native benchmark builds, and web TypeScript
+type-checks. No mechanics, action scope, row admission, scheduler behavior,
+proof, or publication behavior changed. Gate 3 two-layer add-back attribution
+is the current owner; no ladder repair is authorized until it measures a
+specific exact cost owner.
 
 The worktree contains one preserved untracked file named `0`, three bytes with
 the content line `0`, which appeared during the preceding diagnostic window.

@@ -751,6 +751,20 @@ export interface SolveProgress {
         | "compiling"
         | "certifying"
         | "done";
+    /** Narrow native owner inside the broad phase; observational only. */
+    phase_owner:
+        | "setup"
+        | "planner_construction"
+        | "temporary_effect_precompile"
+        | "dependency_preparation"
+        | "primitive_rows"
+        | "state_local_automatic_synthesis"
+        | "ladder_scheduling"
+        | "bellman_optimization"
+        | "policy_assembly"
+        | "compilation"
+        | "exact_evaluation"
+        | "done";
     done: boolean;
     expanded_states: number;
     sweeps: number;
