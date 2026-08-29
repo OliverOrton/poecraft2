@@ -2182,6 +2182,10 @@ class SolverLabService:
         execution = as_mapping(telemetry.get("execution"))
         telemetry_work = as_mapping(telemetry.get("work"))
         telemetry_memory = as_mapping(telemetry.get("memory"))
+        automatic_candidates = as_mapping(telemetry.get("automatic_candidates"))
+        incremental_action_envelope = as_mapping(
+            telemetry.get("incremental_action_envelope")
+        )
         timings = as_mapping(telemetry.get("timings_ns"))
         dominant_timings = sorted(
             (
@@ -2227,6 +2231,24 @@ class SolverLabService:
             "memory": as_mapping(case.get("memory")),
             "native_work": telemetry_work,
             "native_owned_memory": telemetry_memory,
+            "action_control": as_mapping(telemetry.get("action_control")),
+            "automatic_candidates": automatic_candidates,
+            "incremental_action_envelope": incremental_action_envelope,
+            "action_envelope_ledger": as_mapping(
+                incremental_action_envelope.get("typed_ledger")
+            ),
+            "operator_lineage": as_mapping(
+                incremental_action_envelope.get("operator_lineage")
+            ),
+            "cooperative_scheduler": as_mapping(
+                incremental_action_envelope.get("cooperative_scheduler")
+            ),
+            "carrier_ladder": as_mapping(
+                incremental_action_envelope.get("carrier_ladder")
+            ),
+            "missing_frontier": as_mapping(
+                incremental_action_envelope.get("missing_frontier")
+            ),
             "dominant_timings_ns": dominant_timings,
             "compiled_graph": as_mapping(case.get("compiled_graph")),
             "verification": as_mapping(case.get("verification")),

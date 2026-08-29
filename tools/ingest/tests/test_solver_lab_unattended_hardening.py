@@ -69,6 +69,35 @@ def _completed_run(task, **kwargs):
                             "policy_result": {
                                 "lower_bound_provenance": "exact_policy_closure"
                             },
+                            "action_control": {"mode": "goal_relevant"},
+                            "automatic_candidates": {
+                                "generated": 7,
+                                "canonical_groups": 5,
+                            },
+                            "incremental_action_envelope": {
+                                "carrier_ladder": {
+                                    "epochs": 3,
+                                    "candidates": 11,
+                                    "goal_subsets": 9,
+                                },
+                                "missing_frontier": {
+                                    "discovered": 4,
+                                    "service_completions": 4,
+                                    "open": 0,
+                                },
+                                "typed_ledger": {
+                                    "schema": "action_envelope_ledger_v1",
+                                    "entries": 12,
+                                },
+                                "cooperative_scheduler": {
+                                    "schema": "solver_anytime_scheduler_v1",
+                                    "offers": 13,
+                                },
+                                "operator_lineage": {
+                                    "schema": "solver_operator_lineage_v1",
+                                    "complete_generated_operator_count": 5,
+                                },
+                            },
                         },
                         "bound_trace": {
                             "samples": [
@@ -155,6 +184,31 @@ def _native_valid(document: dict[str, Any]) -> dict[str, Any]:
         "native_exit_code": 0,
         "detail": "fixture native validation passed",
         "command": ["fixture", "--validate-only"],
+    }
+
+
+def test_run_summary_exposes_bounded_action_envelope_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    service = _service(tmp_path)
+    _job_id, attempt_id = _complete_job(
+        service, monkeypatch, "bounded-action-envelope-summary"
+    )
+
+    summary = service.get_run_summary(attempt_id=attempt_id)["result"]
+    assert summary["action_control"] == {"mode": "goal_relevant"}
+    assert summary["automatic_candidates"]["generated"] == 7
+    assert summary["carrier_ladder"] == {
+        "epochs": 3,
+        "candidates": 11,
+        "goal_subsets": 9,
+    }
+    assert summary["missing_frontier"]["open"] == 0
+    assert summary["action_envelope_ledger"]["entries"] == 12
+    assert summary["cooperative_scheduler"]["offers"] == 13
+    assert summary["operator_lineage"] == {
+        "schema": "solver_operator_lineage_v1",
+        "complete_generated_operator_count": 5,
     }
 
 

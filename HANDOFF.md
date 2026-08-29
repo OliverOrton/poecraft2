@@ -106,8 +106,28 @@ native-validated: omission preserves the full product envelope, while an empty
 list suppresses generated candidates without changing the primitive registry,
 goal abstraction, mechanics, public ABI, bindings, WASM, or product defaults.
 The benchmark, S8.3, and complete solve suites pass. The two-layer immutable
-MCP add-back matrix is the current owner; no Gate 4 behavior repair is yet
-authorized.
+MCP add-back matrix is the current owner. Its first 34 immutable attempts
+exposed an in-scope diagnostic-scope defect rather than a qualified Gate 4
+behavior owner: the benchmark-private automatic-kind mask reached the case
+solver but not the product-envelope solver used to derive `goal.actions`.
+Consequently the full-primitive baseline and every generated row expired
+before native partial telemetry, while 13 of 14 one-family primitive rows
+completed and Fossil alone expired. The exact revision, request, component,
+job, attempt, terminal, finalization, and artifact identities are in the
+execution log.
+
+The narrow source correction applies the same private mask to both diagnostic
+solvers, publishes setup/planner-construction checkpoints before synchronous
+registry work, and exposes the already-bounded action-control, automatic,
+ledger, lineage, scheduler, ladder, and missing-frontier telemetry through MCP
+run summaries. It changes no public ABI, product/default envelope, mechanic,
+admission, scheduling, proof, or publication behavior. The benchmark target,
+13-specification validation, and focused Solver Lab summary regression pass.
+After this checkpoint is committed, normally restart the configured MCP
+server so it loads the corrected summary parser, then retry the immutable
+Gate 3 matrix. No Gate 4 behavior repair is authorized until that corrected
+matrix measures a specific owner; diagnosis-only Gate 4 completion remains
+valid.
 
 The worktree contains one preserved untracked file named `0`, three bytes with
 the content line `0`, which appeared during the preceding diagnostic window.

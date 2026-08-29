@@ -692,7 +692,9 @@ std::string load_case_economy_json(const Value& specification) {
 
 std::vector<std::string> priced_product_action_ids(
     pc_session_handle session, const Value& specification,
-    const std::string& economy_json) {
+    const std::string& economy_json,
+    const std::optional<std::uint32_t> automatic_candidate_mask =
+        std::nullopt) {
     const Value* product =
         optional(specification, "product_action_envelope", Type::Object);
     if (product == nullptr) return {};
@@ -705,9 +707,13 @@ std::vector<std::string> priced_product_action_ids(
     pc_error_info error;
     pc_error_info_init(&error);
     pc_solver_handle envelope_solver = nullptr;
-    pc_result result = pc_solver_create(
-        session, envelope_goal.data(), envelope_goal.size(),
-        &envelope_solver, &error);
+    pc_result result = automatic_candidate_mask.has_value()
+        ? poecraft::solver::create_solver_with_automatic_candidate_diagnostic(
+              session, envelope_goal.data(), envelope_goal.size(),
+              *automatic_candidate_mask, &envelope_solver, &error)
+        : pc_solver_create(
+              session, envelope_goal.data(), envelope_goal.size(),
+              &envelope_solver, &error);
     if (result != PC_RESULT_OK) {
         throw std::runtime_error(api_error(
             "pc_solver_create(product envelope)", result, error));
@@ -2875,7 +2881,9 @@ void validate_case_manifest_contract(
 void create_case_objects(
     pc_data_handle data, const Value& specification, NativeHandles& handles,
     pc_item_state& start_item,
-    std::vector<std::string>* product_action_ids = nullptr) {
+    std::vector<std::string>* product_action_ids = nullptr,
+    const std::function<void(std::int32_t)>& phase_checkpoint = {}) {
+    if (phase_checkpoint) phase_checkpoint(PC_SOLVE_PHASE_OWNER_SETUP);
     const Value& session_spec = required(specification, "session", Type::Object);
     const std::string base = required_string(session_spec, "base_metadata_path");
     pc_session_options session_options{};
@@ -2893,8 +2901,14 @@ void create_case_objects(
     start_item = build_start_item(
         handles.session, required(specification, "start", Type::Object));
     const std::string economy = load_case_economy_json(specification);
+    const std::optional<std::uint32_t> automatic_mask =
+        automatic_candidate_diagnostic_mask(specification);
+    if (phase_checkpoint) {
+        phase_checkpoint(PC_SOLVE_PHASE_OWNER_PLANNER_CONSTRUCTION);
+    }
     const std::vector<std::string> derived_actions =
-        priced_product_action_ids(handles.session, specification, economy);
+        priced_product_action_ids(
+            handles.session, specification, economy, automatic_mask);
     if (product_action_ids != nullptr) *product_action_ids = derived_actions;
     if (const Value* product = optional(
             specification, "product_action_envelope", Type::Object)) {
@@ -2917,8 +2931,9 @@ void create_case_objects(
     }
     const std::string goal = goal_with_actions(
         required(specification, "goal", Type::Object), derived_actions);
-    const std::optional<std::uint32_t> automatic_mask =
-        automatic_candidate_diagnostic_mask(specification);
+    if (phase_checkpoint) {
+        phase_checkpoint(PC_SOLVE_PHASE_OWNER_PLANNER_CONSTRUCTION);
+    }
     result = automatic_mask.has_value()
         ? poecraft::solver::create_solver_with_automatic_candidate_diagnostic(
               handles.session, goal.data(), goal.size(), *automatic_mask,
@@ -2929,6 +2944,7 @@ void create_case_objects(
     if (result != PC_RESULT_OK) {
         throw std::runtime_error(api_error("pc_solver_create", result, error));
     }
+    if (phase_checkpoint) phase_checkpoint(PC_SOLVE_PHASE_OWNER_SETUP);
     result = pc_economy_load_json(economy.data(), economy.size(),
                                   &handles.economy, &error);
     if (result != PC_RESULT_OK) {
@@ -2993,9 +3009,16 @@ CaseResult run_case(
         report.actual_status = "running";
         pc_item_state start_item{};
         const auto create_begin = Clock::now();
+        const auto publish_setup_phase = [&](const std::int32_t owner) {
+            CaseResult::BoundTraceEntry entry;
+            entry.elapsed_ms = milliseconds(total_begin, Clock::now());
+            entry.phase_owner = owner;
+            report.bound_trace.push_back(entry);
+            if (checkpoint) checkpoint(report);
+        };
         create_case_objects(
             data, specification, handles, start_item,
-            &report.product_action_ids);
+            &report.product_action_ids, publish_setup_phase);
         if (report.has_mechanic_family_control) {
             /* Validation pins every declared control action into goal.actions.
              * Successful solver construction proves that the exact registry
