@@ -6,12 +6,13 @@ future work or define crafting mechanics.
 
 Parent: [Foundation](README.md)
 
-Verified against current source: 2026-08-27 @ `952524b`. Scope: private solve
+Verified against current source: 2026-08-28 @ `f866508`. Scope: private solve
 phase ownership, cooperative continuation boundaries, current
 proof/publication boundaries, action-family contract, exact evaluator gated-
 kernel authority, exact reforge row continuation, telemetry serialization
-ownership, and the native source inventory. Final acceptance for the active
-boundary is recorded in its result rather than implied by this source audit.
+ownership, the benchmark-private verified leaf-fragment core, and the native
+source inventory. Final acceptance for a selected boundary is recorded in its
+result rather than implied by this source audit.
 
 ## Execution Flow
 
@@ -77,6 +78,63 @@ The stateful Solve path has six named private authorities:
 
 These types establish lifetime and authority boundaries. They do not broaden
 mechanics, action scope, exactness, or the public ABI.
+
+## Benchmark-Private Verified Leaf Fragments
+
+The native benchmark/Lab lane has one deliberately narrow executable-fragment
+vertical slice. Its authority chain is non-convertible:
+
+```text
+ExecutableFragmentProposalV1 (heuristic annotations only)
+  -> ExecutableFragmentIRV1 (versioned, finite, probability-free control)
+  -> ExactLeafFragmentVerifierV1 (engine-owned primitive transitions)
+  -> VerifiedLeafFragmentV1 (exact evidence for one exact entry)
+  -> VerifiedLeafStructuralControlV1 (probability-free structural view)
+  -> SingleFragmentFlattenerV1
+  -> FlattenedFragmentCandidateV1 (ordinary strategy JSON candidate only)
+```
+
+Only the verifier can construct verified evidence, and only the verified
+structural view can reach the flattener. Proposal estimates cannot become
+probabilities, proof values, lowers, scheduler priorities, action-ledger facts,
+incumbents, executable/public uppers, or publication authority. The fragment
+types are private to `engine/benchmarks`, are linked explicitly into the native
+benchmark and focused test targets, and are absent from
+`engine/engine-sources.txt`, the C ABI, release WASM, and product defaults.
+
+Version 1 verifies exactly one exact entry product state. It rebuilds every
+row from native primitive outcomes, requires complete probability mass without
+renormalization, rejects duplicate or missing outcomes, and permits product-
+state or exit merging only on complete exact-key equality. It proves terminal
+absorption over the positive-probability SCC graph, rejects closed livelock,
+and solves finite expected action/resource vectors with explicit residual and
+mass diagnostics. It does not claim nontrivial lumpability, behavioral
+quotients, reusable entry domains, or multi-fragment composition.
+
+Flattening is narrower still: every positive exit must be `FinalSuccess` after
+internal recovery. Subgoal, recoverable, certification-failure, and other
+non-final exits fail closed. The flattener receives no probability,
+certificate, expected-resource, or cost view. Its ordinary strategy is parsed,
+compiled, and evaluated through the existing production path, and a separate
+forward evaluator checks mass, terminal disposition, action counts, resources,
+and price reconciliation. Native Simulator acceptance is independent sampled
+execution, not exactness authority.
+
+The Solver Lab shadow runs only after the ordinary result is atomically
+finalized, in a separately capped native process. Control and shadow requests
+must have different full identities but equal `core_solve_identity_v1`, every
+enumerated core input, and every ordinary result component; only the isolated
+shadow diagnostic may differ. The shadow cannot mutate or lend storage to the
+core solve and has no incumbent or product integration.
+
+Retained regression probes cover proposal-authored probabilities, missing or
+renormalized mass, duplicates, projection-only carrier merges, exit-identity
+collisions, near-improper cycles, closed livelock, resource-accounting drift,
+forged construction paths, and non-final flattening exits. Fragment artifact
+identity also excludes generated-manifest timestamps and path spelling: it is
+bound to the compiled artifact schema, source-data hash, game-data hash, and
+strings hash, so approved regeneration of byte-identical data does not change
+the IR or certificate identity.
 
 Strict exact-evaluation layouts also retain feature-specific uniformity facts
 on goal-member and junk classes. Observation extraction may reuse only a fact

@@ -31,17 +31,14 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The selected
-[Verified Executable Graph-Fragment Core v1](active/2026-08-28-verified-executable-graph-fragment-core-v1/plan.md)
-boundary creates a non-convertible proposal/fragment/incumbent authority
-firewall, a versioned probability-free leaf IR, exact engine-built product
-verification, complete exit mass, SCC absorption, expected resource vectors,
-and one ordinary-strategy flatten/evaluate vertical slice. It remains
-shadow-only: no meta search, broad option library, proof/lower/scheduler/action-
-ledger/incumbent behavior, Imprint, product default, ABI, or WASM change is in
-scope. The fresh implementation task must use configured Solver Lab MCP tools
-for case discovery and operator evidence while repository tools own source and
-tests.
+No implementation boundary is active. Oliver must select the next boundary
+before implementation resumes. The completed
+[Verified Executable Graph-Fragment Core v1](archive/2026-08-28-verified-executable-graph-fragment-core-v1/README.md)
+adds a probability-free leaf-control IR, exact engine-built single-entry
+verification, complete exit/SCC/resource evidence, FinalSuccess-only ordinary
+flattening, independent evaluation, and an MCP-qualified isolated shadow lane.
+It changes no incumbent, product default, C ABI, strategy vocabulary, or WASM
+behavior.
 
 The completed
 [Native Solver Lab Unattended Execution and Identity Hardening](archive/2026-08-28-native-solver-lab-unattended-hardening/README.md)
@@ -50,8 +47,8 @@ dispatch identity, watchdog enforcement, atomic hashed terminal publication,
 orphan quarantine/recovery, evidence integrity, host headroom, and one
 MCP-plus-supervisor unattended path. Gates 0–5 and every non-soak acceptance
 check passed. Oliver explicitly waived its six-plus-hour soak; the result
-retains that limitation and does not claim overnight qualification. The new
-fragment-core boundary must preserve that wording.
+retains that limitation and does not claim overnight qualification. The
+completed fragment-core result preserves that wording.
 
 The completed
 [Native Solver Lab GUI Stabilization](archive/2026-08-28-native-solver-lab-gui-stabilization/README.md)

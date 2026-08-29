@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-08-28
 
+- [Verified Executable Graph-Fragment Core v1](2026-08-28-verified-executable-graph-fragment-core-v1/README.md) —
+  adds a probability-free leaf-control IR, exact engine-built single-entry
+  verifier, complete mass/SCC/resource evidence, FinalSuccess-only ordinary
+  flattening, independent evaluation, and an MCP-qualified isolated shadow
+  lane without incumbent, product, ABI, or WASM integration.
 - [Native Solver Lab Unattended Execution And Identity Hardening](2026-08-28-native-solver-lab-unattended-hardening/README.md) —
   binds complete mutation and dispatch identities, adds crash-atomic hashed
   evidence, truthful recovery/quarantine, split host accounting, and one

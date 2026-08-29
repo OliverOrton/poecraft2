@@ -1,7 +1,7 @@
 # Solver
 
 **Status: current architecture index.** Verified against current source on
-2026-08-27. Historical measurements and superseded implementation narratives
+2026-08-28. Historical measurements and superseded implementation narratives
 live in [Architecture History](architecture-history.md) and the dated archive.
 
 Parent: [Documentation](../README.md) | Private source map:
@@ -29,6 +29,9 @@ the web app only describes a request and presents native results.
 Supporting references:
 
 - [End-to-end solver flow](flow.md) retains the detailed sequence diagrams.
+- [Solver Internals](../foundation/solver-internals.md#benchmark-private-verified-leaf-fragments)
+  owns the benchmark-private verified leaf-fragment authority, exact verifier,
+  flattening, independent-evaluation, and shadow-isolation contract.
 - [Benchmarking](benchmarking.md) defines corpus and harness practice.
 - [Solver notes](NOTES.md) contains observations that have not become stable
   contract.

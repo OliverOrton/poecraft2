@@ -613,9 +613,10 @@ shadow diagnostic differs. Gate 6 final acceptance is the exact next action.
 ## Final Acceptance Record
 
 ```text
-final source checkpoint: pending the clean stable-artifact-identity repair
-  commit; preceding acceptance-hook checkpoint is
-  b775c90ce7d1d8ffb8313d3e6b535d8e802c3cef
+final source checkpoint: f8665081746a9eaff4d04c1b77c3df496104f413;
+  preceding acceptance-hook checkpoint is
+  b775c90ce7d1d8ffb8313d3e6b535d8e802c3cef and Gate 5 MCP record is
+  e551d519420f51889663bef701dd537279c8ff04
 native build: PASS through powershell -File scripts/build.ps1 after the final
   test-only change; benchmark and native test targets linked successfully
 complete focused fragment suite: PASS initially at 218 checks / 0 failures;
@@ -643,7 +644,13 @@ independent exact evaluation: PASS; success 1, every non-success/off-policy
   no-matching-edge, missing-price-run, and missing-price-action counts all 0.
   The hook is benchmark/test-private, defaults to zero runs, and does not alter
   the shadow report, product request, ABI, or strategy vocabulary
-MCP operator evidence audit:
+MCP operator evidence audit: PASS; version 0.2.0 / 31 typed tools, seven
+  frozen cases, three immutable revisions, active singleton owner, bounded
+  jobs/attempts, genuine live cancellation with no survivor and released
+  reservation, natural control/shadow completion, all 17 core and all nine
+  ordinary identity components equal, isolated diagnostic as the only
+  difference, and stable verified bundle/artifact replay. Exact IDs/hashes are
+  retained in the Gate 5 transcript above
 full powershell -File scripts/test.ps1: first invocation passed 3,417,508
   native checks, 13 benchmark specifications, 28/28 WASM checks, and every
   remaining layer, but the post-run manual identity audit correctly refused
@@ -653,15 +660,37 @@ full powershell -File scripts/test.ps1: first invocation passed 3,417,508
   identity defect, not mechanic/result drift. The repair now binds only schema,
   source-data hash, game-data hash, and strings hash; targeted regeneration and
   220-check fragment evidence pass. A final complete pipeline rerun from the
-  clean repair checkpoint is required and will be recorded separately rather
-  than relabeling the first invocation as final acceptance
-git diff --check:
-native ABI/strategy vocabulary/product/WASM scope audit:
-Gate 0 source-placement decision:
-conditional release-WASM build/parity result or native-only proof:
-documentation link/reachability audit:
-stable docs updated:
-result/archive checkpoint:
+  clean repair checkpoint was required and is recorded separately rather than
+  relabeling the first invocation as final acceptance
+final powershell -File scripts/test.ps1: PASS from clean f866508; 18 ingest
+  tests, 12 economy tests, database/fixture/compiled-artifact validation, 17
+  Python binding tests, 3,417,510 native checks / 0 failures, all 13 benchmark
+  specifications, 28/28 release-WASM checks, and every remaining web test
+final fragment line: 4,031 rows, 8,061 transitions, IR d84bd8994955608a,
+  certificate c9008653e9bc81a4, flattened candidate 2edeed49ce1d5e6a,
+  independent success 1, and Simulator 10,000/10,000 with every failure,
+  stop, limit, inapplicable, missing-edge, and missing-price counter 0
+git diff --check: PASS before final documentation moves
+native ABI/strategy vocabulary/product/WASM scope audit: PASS; no changed path
+  under engine/include/poecraft, bindings, apps/web, data, or schemas; no
+  product request/default or strategy-vocabulary change
+Gate 0 source-placement decision: native-only benchmark/test-private; fragment
+  source is absent from engine/engine-sources.txt and linked explicitly only to
+  poecraft_solver_benchmark and poecraft_engine_tests
+conditional release-WASM build/parity result or native-only proof: no source-
+  triggered release-WASM rebuild required; the unchanged release artifact
+  nevertheless passed the repository pipeline's complete 28/28 acceptance
+documentation link/reachability audit: PASS after archival; 441 Markdown files,
+  1,811 local targets, zero missing after file-line/directory normalization,
+  437 reachable from docs/README.md, five template-policy exemptions, and zero
+  unreachable non-template documents
+stable docs updated: docs/foundation/solver-internals.md and docs/solver/README.md
+  now own/link the authority firewall, probability-free v1 IR, exact verifier,
+  exit/SCC/resource contract, FinalSuccess-only flattening, independent
+  evaluation, retained regressions, stable artifact identity, and shadow limit
+result/archive checkpoint: PASS; result.md and folder README.md written,
+  boundary moved one-way from docs/active to docs/archive, archive and root
+  indexes updated, and HANDOFF set to no active boundary
 push: no
 ```
 
@@ -693,13 +722,14 @@ fallback if they passed.
 ## Current Stop/Handoff Record
 
 ```text
-first failing invariant: none; Gate 5 passed
-deepest coherent checkpoint before this log update:
-  79c925f73f48c9bb60b02a5218a05bb236c84870
-retained evidence: immutable MCP jobs/attempts/bundle listed above plus the
-  committed Gate 5 automated source and tests
-tree/build status: clean integration source before this documentation update;
-  configured MCP dispatcher healthy, queue unpaused, no running job status
-one exact next command: create the Gate 5 documentation checkpoint, restore a
-  clean source state, then begin Gate 6 with powershell -File scripts/build.ps1
+first failing invariant: none; Gates 0–6 passed
+deepest coherent source checkpoint:
+  f8665081746a9eaff4d04c1b77c3df496104f413
+retained evidence: committed implementation/tests, immutable MCP jobs,
+  attempts, bundle and artifact identities listed above, final complete
+  pipeline output, stable contract documentation, result, and archive
+tree/build status: accepted native build and complete pipeline; documentation
+  archive/link closeout passes and is ready for its local commit
+one exact next command: commit the documentation closeout locally and stop
+  with no active boundary
 ```
