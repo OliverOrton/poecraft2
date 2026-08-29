@@ -223,6 +223,12 @@ def test_derive_case_replays_complete_identity_and_preserves_frozen_case(
     assert revision["document"]["goal"]["disabled_action_families"] == [
         "fossil"
     ]
+    envelope_goal = revision["document"]["product_action_envelope"][
+        "envelope_goal"
+    ]
+    assert envelope_goal["fossil_mode"] == "goal_relevant"
+    assert envelope_goal["requested_fossil_actions"] == []
+    assert envelope_goal["disabled_action_families"] == ["fossil"]
     assert revision["document"]["watchdog_seconds"] == 600
     assert (
         canonical_sha256(service.get_case(frozen_id)["result"]["case"])

@@ -57,6 +57,32 @@ def normalize_case_id(value: str) -> str:
     return case_id
 
 
+def synchronize_product_action_envelope(
+    case: Mapping[str, Any], goal: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Synchronize editable goal fields without dropping envelope controls."""
+
+    existing = case.get("product_action_envelope")
+    envelope = deepcopy(dict(existing)) if isinstance(existing, Mapping) else {}
+    existing_goal = envelope.get("envelope_goal")
+    envelope_goal = (
+        deepcopy(dict(existing_goal))
+        if isinstance(existing_goal, Mapping)
+        else {}
+    )
+    envelope_goal.update(deepcopy(dict(goal)))
+    envelope_goal.pop("actions", None)
+    envelope.update(
+        {
+            "mode": "calculator_goal_relevant_priced_v1",
+            "envelope_goal": envelope_goal,
+            "pricing_filter": "all_declared_cost_keys_present",
+            "bench_goal_slots_forbidden": True,
+        }
+    )
+    return envelope
+
+
 def slugify_case_id(value: str, *, fallback: str = "local-case") -> str:
     slug = re.sub(r"[^a-z0-9._-]+", "-", value.strip().lower()).strip("-._")
     if not slug:
@@ -251,12 +277,9 @@ def calculator_export_to_case(
     case["caps"] = caps
     goal = deepcopy(case["goal"])
     goal.pop("actions", None)
-    case["product_action_envelope"] = {
-        "mode": "calculator_goal_relevant_priced_v1",
-        "envelope_goal": goal,
-        "pricing_filter": "all_declared_cost_keys_present",
-        "bench_goal_slots_forbidden": True,
-    }
+    case["product_action_envelope"] = synchronize_product_action_envelope(
+        case, goal
+    )
     case["allowed_mechanic_families"] = [
         "calculator_goal_relevant_product_envelope"
     ]

@@ -22,6 +22,7 @@ from poecraft_ingest.solver_lab_cases import (
     normalize_imported_case,
     parse_case_json,
     slugify_case_id,
+    synchronize_product_action_envelope,
     validate_case_document_shape,
     validate_local_profile_binding,
 )
@@ -753,6 +754,7 @@ class SolverLabService:
         mutation_request = self._mutation_request(
             "derive_case",
             {
+                "workflow_version": "solver_lab_case_derivation_v1",
                 "name": normalized_name,
                 "base": base_identity,
                 "patches": normalized_patches,
@@ -2704,12 +2706,9 @@ class SolverLabService:
         goal["action_mode"] = "goal_relevant"
         goal.pop("actions", None)
         case["goal"] = goal
-        case["product_action_envelope"] = {
-            "mode": "calculator_goal_relevant_priced_v1",
-            "envelope_goal": json.loads(json.dumps(goal)),
-            "pricing_filter": "all_declared_cost_keys_present",
-            "bench_goal_slots_forbidden": True,
-        }
+        case["product_action_envelope"] = synchronize_product_action_envelope(
+            case, goal
+        )
         case["allowed_mechanic_families"] = [
             "calculator_goal_relevant_product_envelope"
         ]
