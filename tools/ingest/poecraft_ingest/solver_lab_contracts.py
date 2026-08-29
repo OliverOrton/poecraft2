@@ -28,6 +28,8 @@ EXECUTION_REQUEST_SCHEMA_VERSION = "solver_lab_execution_request_v4"
 CASE_DRAFT_SCHEMA_VERSION = "solver_lab_case_draft_v1"
 CASE_REVISION_SCHEMA_VERSION = "solver_lab_case_revision_v1"
 CALCULATOR_EXPORT_SCHEMA_VERSION = "solver_lab_calculator_export_v1"
+MATRIX_DEFINITION_SCHEMA_VERSION = "solver_lab_matrix_v1"
+RESOLVED_MATRIX_SCHEMA_VERSION = "solver_lab_resolved_matrix_v1"
 
 SCHEMA_VERSIONS = {
     "profile": PROFILE_SCHEMA_VERSION,
@@ -43,6 +45,8 @@ SCHEMA_VERSIONS = {
     "case_draft": CASE_DRAFT_SCHEMA_VERSION,
     "case_revision": CASE_REVISION_SCHEMA_VERSION,
     "calculator_export": CALCULATOR_EXPORT_SCHEMA_VERSION,
+    "matrix_definition": MATRIX_DEFINITION_SCHEMA_VERSION,
+    "resolved_matrix": RESOLVED_MATRIX_SCHEMA_VERSION,
 }
 
 

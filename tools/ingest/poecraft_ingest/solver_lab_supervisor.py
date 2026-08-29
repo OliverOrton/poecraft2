@@ -11,7 +11,7 @@ from pathlib import Path
 import threading
 import time
 import uuid
-from typing import Any, Callable
+from typing import Any, Callable, Iterable
 
 from poecraft_ingest.solver_corpus_runner import _run_case
 from poecraft_ingest.solver_lab_contracts import canonical_sha256
@@ -88,6 +88,7 @@ class SolverLabSupervisor:
         memory_safety_reserve_bytes: int | None = None,
         stale_lease_seconds: float = 15.0,
         available_memory_provider: Callable[[], int | None] = available_physical_memory_bytes,
+        dispatch_job_ids: Iterable[str] | None = None,
     ):
         if max_workers <= 0:
             raise ValueError("max_workers must be positive")
@@ -126,6 +127,13 @@ class SolverLabSupervisor:
             else max(0, int(memory_safety_reserve_bytes))
         )
         self.stale_lease_seconds = stale_lease_seconds
+        self.dispatch_job_ids = (
+            frozenset(str(job_id) for job_id in dispatch_job_ids)
+            if dispatch_job_ids is not None
+            else None
+        )
+        if self.dispatch_job_ids is not None and not self.dispatch_job_ids:
+            raise ValueError("dispatch_job_ids cannot be empty")
         self.supervisor_id = f"supervisor-{uuid.uuid4()}"
         self._stop = threading.Event()
         self._wake = threading.Event()
@@ -205,6 +213,11 @@ class SolverLabSupervisor:
             "max_workers": self.max_workers,
             "running_job_ids": [item.job_id for item in running],
             "running_job_id": running[0].job_id if len(running) == 1 else None,
+            "dispatch_job_ids": (
+                sorted(self.dispatch_job_ids)
+                if self.dispatch_job_ids is not None
+                else None
+            ),
             "running_attempts": len(running),
             "reserved_host_memory_bytes": reserved,
             "solver_owned_cap_bytes": sum(
@@ -238,7 +251,7 @@ class SolverLabSupervisor:
             )
             if self.service.catalog.list_reserved_leases():
                 return False
-            candidates = self.service.catalog.list_dispatch_candidates(limit=1)
+            candidates = self._dispatch_candidates()
             if not candidates or self.service.catalog.queue_paused():
                 return False
             claimed = self._claim(candidates[0], exclusive_oversize=False)
@@ -257,7 +270,7 @@ class SolverLabSupervisor:
         started = time.monotonic()
         try:
             while True:
-                candidates = self.service.catalog.list_dispatch_candidates()
+                candidates = self._dispatch_candidates()
                 with self._state_lock:
                     running = bool(self._running)
                 if not candidates and not running:
@@ -372,7 +385,29 @@ class SolverLabSupervisor:
             "memory_safety_reserve_bytes": self.memory_safety_reserve_bytes,
             "reservation_policy_version": self.service.reservation_policy_version,
             "poll_interval_seconds": self.poll_interval_seconds,
+            "dispatch_job_ids": (
+                sorted(self.dispatch_job_ids)
+                if self.dispatch_job_ids is not None
+                else None
+            ),
         }
+
+    def _dispatch_candidates(self) -> list[dict[str, Any]]:
+        if self.dispatch_job_ids is None:
+            return self.service.catalog.list_dispatch_candidates()
+        candidates = []
+        for job_id in self.dispatch_job_ids:
+            job = self.service.catalog.get_job(job_id)
+            if job is not None and job.get("status") in {"queued", "blocked"}:
+                candidates.append(job)
+        return sorted(
+            candidates,
+            key=lambda job: (
+                -int(job.get("priority") or 0),
+                str(job.get("created_at") or ""),
+                str(job.get("job_id") or ""),
+            ),
+        )
 
     def _acquire_dispatcher(self) -> bool:
         if self._owns_dispatcher:
@@ -811,7 +846,7 @@ class SolverLabSupervisor:
         ):
             return
         available = self.available_memory_provider()
-        for job in self.service.catalog.list_dispatch_candidates():
+        for job in self._dispatch_candidates():
             if occupied >= self.max_workers:
                 break
             requirement = int(job["reserved_memory_bytes"])

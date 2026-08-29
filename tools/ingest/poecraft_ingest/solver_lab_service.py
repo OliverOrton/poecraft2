@@ -38,6 +38,7 @@ from poecraft_ingest.solver_lab_contracts import (
     JOB_SCHEMA_VERSION,
     OPERATION_RESULT_SCHEMA_VERSION,
     EXECUTION_REQUEST_SCHEMA_VERSION,
+    RESOLVED_MATRIX_SCHEMA_VERSION,
     LabProfile,
     canonical_disabled_action_families,
     canonical_sha256,
@@ -45,6 +46,12 @@ from poecraft_ingest.solver_lab_contracts import (
     identity_component_diff,
     read_json,
     validate_profile_case_binding,
+)
+from poecraft_ingest.solver_lab_workflow import (
+    apply_case_patches,
+    expand_matrix_definition,
+    normalize_case_patches,
+    normalize_matrix_definition,
 )
 from poecraft_ingest.solver_worker import (
     capture_execution_provenance,
@@ -151,8 +158,10 @@ class SolverLabService:
         self.catalog = SolverLabCatalog(paths.catalog)
         self.case_store = paths.catalog.parent / "cases"
         self.validation_store = paths.catalog.parent / "validation"
+        self.matrix_store = paths.catalog.parent / "matrices"
         self.case_store.mkdir(parents=True, exist_ok=True)
         self.validation_store.mkdir(parents=True, exist_ok=True)
+        self.matrix_store.mkdir(parents=True, exist_ok=True)
         self.corpus_document = read_json(paths.corpus)
         self.profile = LabProfile.load(paths.profile)
         self._tasks = {
@@ -329,6 +338,7 @@ class SolverLabService:
         document: Mapping[str, Any] | None = None,
         import_json: str | None = None,
         dry_run: bool = False,
+        _derived_case_id: str | None = None,
     ) -> dict[str, Any]:
         if not idempotency_key:
             raise ValueError("create_case_draft requires an idempotency key")
@@ -371,9 +381,24 @@ class SolverLabService:
                 "kind": "template",
                 "content_sha256": canonical_sha256(self._authoring_template),
             }
+        derived_case_id = (
+            normalize_case_id(_derived_case_id)
+            if _derived_case_id is not None
+            else None
+        )
+        if derived_case_id in self._cases:
+            raise ValueError("a derived case id cannot reuse a frozen case id")
         mutation_request = self._mutation_request(
             "create_case_draft",
-            {"name": normalized_name, "source": source_identity},
+            {
+                "name": normalized_name,
+                "source": source_identity,
+                **(
+                    {"derived_case_id": derived_case_id}
+                    if derived_case_id is not None
+                    else {}
+                ),
+            },
         )
         existing = self._mutation_replay(
             operation="create_case_draft",
@@ -414,6 +439,8 @@ class SolverLabService:
             case["id"] = self._unique_local_case_id(
                 slugify_case_id(normalized_name)
             )
+        if derived_case_id is not None:
+            case["id"] = derived_case_id
         case = self._localize_editable_case(case)
         if case["id"] in self._cases:
             case["id"] = self._unique_local_case_id(f"{case['id']}-local")
@@ -688,6 +715,121 @@ class SolverLabService:
             },
         )
 
+    def derive_case(
+        self,
+        *,
+        name: str,
+        idempotency_key: str,
+        patches: list[Mapping[str, Any]],
+        source_case_id: str | None = None,
+        source_revision_id: str | None = None,
+        validate: bool = False,
+        save: bool = False,
+    ) -> dict[str, Any]:
+        """Compose bounded edits through the existing draft/revision authority."""
+
+        if not idempotency_key:
+            raise ValueError("derive_case requires an idempotency key")
+        if bool(source_case_id) == bool(source_revision_id):
+            raise ValueError("provide exactly one base case id or revision id")
+        normalized_name = normalize_case_name(name)
+        normalized_patches = normalize_case_patches(patches)
+        resolved = self._resolve_case_reference(
+            case_id=source_case_id,
+            revision_id=source_revision_id,
+        )
+        base_identity = {
+            "source_kind": resolved.source_kind,
+            "case_id": resolved.task.case_id,
+            "revision_id": resolved.revision_id,
+            "content_sha256": canonical_sha256(resolved.document),
+        }
+        derivation_identity = canonical_sha256(
+            {"base": base_identity, "patches": normalized_patches}
+        )
+        derived_case_id = slugify_case_id(
+            f"{resolved.task.case_id}-derived-{derivation_identity[:16]}"
+        )
+        mutation_request = self._mutation_request(
+            "derive_case",
+            {
+                "name": normalized_name,
+                "base": base_identity,
+                "patches": normalized_patches,
+                "derived_case_id": derived_case_id,
+                "validate": bool(validate or save),
+                "save": bool(save),
+            },
+        )
+        existing = self._mutation_replay(
+            operation="derive_case",
+            idempotency_key=idempotency_key,
+            request=mutation_request,
+            dry_run=False,
+        )
+        if existing is not None:
+            return existing
+        child_identity = canonical_sha256(mutation_request)
+        created = self.create_case_draft(
+            name=normalized_name,
+            idempotency_key=f"{idempotency_key}:create:{child_identity}",
+            source_case_id=source_case_id,
+            source_revision_id=source_revision_id,
+            _derived_case_id=derived_case_id,
+        )["result"]
+        patched_document = apply_case_patches(
+            as_mapping(created["document"]), normalized_patches
+        )
+        updated = self.update_case_draft(
+            draft_id=str(created["draft_id"]),
+            name=normalized_name,
+            document=patched_document,
+            idempotency_key=f"{idempotency_key}:update:{child_identity}",
+        )["result"]
+        validation = None
+        revision = None
+        if validate or save:
+            validation = self.validate_case_draft(str(created["draft_id"]))[
+                "result"
+            ]
+            if not validation["native_valid"]:
+                raise ValueError(
+                    "native case validation failed: " + validation["detail"]
+                )
+        if save:
+            revision = self.save_case_revision(
+                draft_id=str(created["draft_id"]),
+                idempotency_key=f"{idempotency_key}:save:{child_identity}",
+            )["result"]
+        result = operation_result(
+            "derive_case",
+            {
+                "derivation_identity": derivation_identity,
+                "base": base_identity,
+                "applied_patches": normalized_patches,
+                "draft_id": updated["draft_id"],
+                "case_id": updated["case_id"],
+                "document_sha256": canonical_sha256(updated["document"]),
+                "validation": validation,
+                "revision_id": revision["revision_id"] if revision else None,
+                "revision_sha256": (
+                    revision["content_sha256"] if revision else None
+                ),
+            },
+        )
+        return self.catalog.record_operation(
+            command_id=f"cmd-{uuid.uuid4()}",
+            idempotency_key=idempotency_key,
+            operation="derive_case",
+            target_id=(
+                str(revision["revision_id"])
+                if revision
+                else str(updated["draft_id"])
+            ),
+            request=mutation_request,
+            result=result,
+        )
+
     def create_experiment(
         self,
         *,
@@ -718,6 +860,7 @@ class SolverLabService:
         experiment_id: str | None = None,
         replicate: int = 0,
         dry_run: bool = False,
+        _planned_job_id: str | None = None,
     ) -> dict[str, Any]:
         if not idempotency_key:
             raise ValueError("submit_job requires an idempotency key")
@@ -745,6 +888,10 @@ class SolverLabService:
             replicate=replicate,
         )
         identity_sha256 = canonical_sha256(request)
+        if _planned_job_id is not None and not str(_planned_job_id).startswith(
+            "job-matrix-"
+        ):
+            raise ValueError("planned job id must use the matrix namespace")
         mutation_request = self._mutation_request(
             "submit_job",
             {
@@ -752,6 +899,11 @@ class SolverLabService:
                 "priority": int(priority),
                 "experiment_id": experiment_id,
                 "desired_status": "queued",
+                **(
+                    {"planned_job_id": str(_planned_job_id)}
+                    if _planned_job_id is not None
+                    else {}
+                ),
             },
         )
         existing = self._mutation_replay(
@@ -782,7 +934,7 @@ class SolverLabService:
         if dry_run:
             return operation_result("submit_job", preview, dry_run=True)
 
-        job_id = f"job-{uuid.uuid4()}"
+        job_id = str(_planned_job_id or f"job-{uuid.uuid4()}")
         now = utc_now()
         job = {
             "schema_version": JOB_SCHEMA_VERSION,
@@ -1307,6 +1459,203 @@ class SolverLabService:
             result=result,
         )
 
+    def run_matrix_definition(
+        self,
+        *,
+        definition: Mapping[str, Any],
+        idempotency_key: str | None = None,
+    ) -> dict[str, Any]:
+        """Derive, resolve, snapshot, and submit one versioned matrix file."""
+
+        normalized = normalize_matrix_definition(definition)
+        coordinates = expand_matrix_definition(normalized)
+        base = as_mapping(normalized["base"])
+        source_case_id = (
+            str(base["case_id"]) if base.get("case_id") is not None else None
+        )
+        source_revision_id = (
+            str(base["revision_id"])
+            if base.get("revision_id") is not None
+            else None
+        )
+        resolved_base = self._resolve_case_reference(
+            case_id=source_case_id,
+            revision_id=source_revision_id,
+        )
+        base_identity = {
+            "source_kind": resolved_base.source_kind,
+            "case_id": resolved_base.task.case_id,
+            "revision_id": resolved_base.revision_id,
+            "content_sha256": canonical_sha256(resolved_base.document),
+        }
+        definition_sha256 = canonical_sha256(normalized)
+        variants: list[dict[str, Any]] = []
+        for coordinate in coordinates:
+            coordinate_key = (
+                f"matrix-coordinate:{definition_sha256}:"
+                f"{base_identity['content_sha256']}:"
+                f"{coordinate['coordinate_sha256']}"
+            )
+            derived = self.derive_case(
+                name=f"{normalized['name']} [{coordinate['ordinal'] + 1}]",
+                idempotency_key=coordinate_key,
+                patches=coordinate["patches"],
+                source_case_id=source_case_id,
+                source_revision_id=source_revision_id,
+                validate=True,
+                save=True,
+            )["result"]
+            revision_id = str(derived["revision_id"])
+            revision = self.catalog.get_case_revision(revision_id)
+            if revision is None:
+                raise KeyError(revision_id)
+            resolved_revision = self._resolve_case_reference(
+                case_id=None, revision_id=revision_id
+            )
+            jobs = []
+            for replicate in range(int(normalized["replicates"])):
+                execution_request = self._resolved_job_request(
+                    case_id=resolved_revision.task.case_id,
+                    case=resolved_revision.document,
+                    case_path=resolved_revision.case_path,
+                    corpus_path=resolved_revision.corpus_path,
+                    source_kind=resolved_revision.source_kind,
+                    revision_id=resolved_revision.revision_id,
+                    watchdog_seconds=resolved_revision.task.watchdog_seconds,
+                    replicate=replicate,
+                )
+                jobs.append(
+                    {
+                        "replicate": replicate,
+                        "execution_identity_sha256": canonical_sha256(
+                            execution_request
+                        ),
+                        "execution_request": execution_request,
+                    }
+                )
+            variants.append(
+                {
+                    "ordinal": coordinate["ordinal"],
+                    "coordinate_sha256": coordinate["coordinate_sha256"],
+                    "patches": coordinate["patches"],
+                    "derivation_identity": derived["derivation_identity"],
+                    "case_id": derived["case_id"],
+                    "revision_id": revision_id,
+                    "revision_sha256": revision["content_sha256"],
+                    "jobs": jobs,
+                }
+            )
+        identity_payload = {
+            "schema_version": RESOLVED_MATRIX_SCHEMA_VERSION,
+            "definition_sha256": definition_sha256,
+            "definition": normalized,
+            "base": base_identity,
+            "variants": variants,
+        }
+        resolved_matrix_identity = canonical_sha256(identity_payload)
+        experiment_id = f"exp-matrix-file-{resolved_matrix_identity[:24]}"
+        for variant in variants:
+            for job in variant["jobs"]:
+                job["job_id"] = (
+                    f"job-matrix-{resolved_matrix_identity[:20]}-"
+                    f"{variant['ordinal']:03d}-{job['replicate']:03d}"
+                )
+                job["idempotency_key"] = (
+                    f"matrix-job:{resolved_matrix_identity}:"
+                    f"{variant['ordinal']}:{job['replicate']}"
+                )
+        manifest = {
+            **identity_payload,
+            "resolved_matrix_identity": resolved_matrix_identity,
+            "experiment_id": experiment_id,
+        }
+        manifest_sha256 = canonical_sha256(manifest)
+        manifest_path = (
+            self.matrix_store / f"{resolved_matrix_identity}.json"
+        ).resolve()
+        mutation_key = idempotency_key or (
+            f"run-matrix-file:{resolved_matrix_identity}"
+        )
+        mutation_request = self._mutation_request(
+            "run_matrix_definition",
+            {
+                "resolved_matrix_identity": resolved_matrix_identity,
+                "manifest_sha256": manifest_sha256,
+                "experiment_id": experiment_id,
+            },
+        )
+        existing = self._mutation_replay(
+            operation="run_matrix_definition",
+            idempotency_key=mutation_key,
+            request=mutation_request,
+            dry_run=False,
+        )
+        if existing is not None:
+            return existing
+        if manifest_path.is_file():
+            if canonical_sha256(read_json(manifest_path)) != manifest_sha256:
+                raise ValueError("content-addressed resolved matrix was changed")
+        else:
+            self._write_json_atomic(manifest_path, manifest)
+        experiment = self.catalog.get_experiment(experiment_id)
+        if experiment is None:
+            self.catalog.create_experiment(
+                {
+                    "schema_version": EXPERIMENT_SCHEMA_VERSION,
+                    "experiment_id": experiment_id,
+                    "name": normalized["name"],
+                    "description": normalized["description"],
+                    "profile_id": self.profile.profile_id,
+                    "resolved_matrix_identity": resolved_matrix_identity,
+                    "manifest_path": str(manifest_path),
+                    "manifest_sha256": manifest_sha256,
+                    "created_at": utc_now(),
+                }
+            )
+        elif experiment.get("resolved_matrix_identity") != resolved_matrix_identity:
+            raise ValueError("resolved matrix experiment identity changed")
+        submitted_jobs = []
+        for variant in variants:
+            for planned in variant["jobs"]:
+                submitted = self.submit_job(
+                    case_id=None,
+                    revision_id=str(variant["revision_id"]),
+                    idempotency_key=str(planned["idempotency_key"]),
+                    priority=int(normalized["priority"]),
+                    experiment_id=experiment_id,
+                    replicate=int(planned["replicate"]),
+                    _planned_job_id=str(planned["job_id"]),
+                )["result"]
+                if canonical_sha256(submitted["request"]) != planned[
+                    "execution_identity_sha256"
+                ]:
+                    raise ValueError("matrix execution identity changed before submission")
+                submitted_jobs.append(str(submitted["job_id"]))
+        result = operation_result(
+            "run_matrix_definition",
+            {
+                "resolved_matrix_identity": resolved_matrix_identity,
+                "manifest_path": str(manifest_path),
+                "manifest_sha256": manifest_sha256,
+                "experiment_id": experiment_id,
+                "definition_sha256": definition_sha256,
+                "variant_count": len(variants),
+                "job_count": len(submitted_jobs),
+                "revision_ids": [
+                    str(variant["revision_id"]) for variant in variants
+                ],
+                "job_ids": submitted_jobs,
+            },
+        )
+        return self.catalog.record_operation(
+            command_id=f"cmd-{uuid.uuid4()}",
+            idempotency_key=mutation_key,
+            operation="run_matrix_definition",
+            target_id=experiment_id,
+            request=mutation_request,
+            result=result,
+        )
+
     def get_bound_trace(
         self,
         *,
@@ -1773,6 +2122,7 @@ class SolverLabService:
     def get_supervisor_status(self) -> dict[str, Any]:
         jobs = self.catalog.list_jobs(limit=1000)
         counts = Counter(job["status"] for job in jobs)
+        reserved_leases = self.catalog.list_reserved_leases()
         return operation_result(
             "get_supervisor_status",
             {
@@ -1780,6 +2130,23 @@ class SolverLabService:
                 "job_status_counts": dict(sorted(counts.items())),
                 "recent_sessions": self.catalog.list_supervisor_sessions(limit=10),
                 "dispatcher_ownership": self.catalog.get_dispatcher_ownership(),
+                "reserved_leases": [
+                    {
+                        key: lease.get(key)
+                        for key in (
+                            "lease_id",
+                            "job_id",
+                            "attempt_id",
+                            "reserved_memory_bytes",
+                            "status",
+                        )
+                    }
+                    for lease in reserved_leases
+                ],
+                "reserved_host_memory_bytes": sum(
+                    int(lease.get("reserved_memory_bytes") or 0)
+                    for lease in reserved_leases
+                ),
                 "runtime_dispatcher": getattr(
                     self, "dispatcher_runtime", {"mode": "control_only"}
                 ),

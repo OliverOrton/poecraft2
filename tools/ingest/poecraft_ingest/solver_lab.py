@@ -7,14 +7,45 @@ import json
 from pathlib import Path
 import sys
 import time
-from typing import Any
+from typing import Any, Mapping
 
+from poecraft_ingest.solver_lab_contracts import canonical_sha256
+from poecraft_ingest.solver_lab_normalize import as_mapping
 from poecraft_ingest.solver_lab_service import (
     DEFAULT_GLOBAL_SAFETY_RESERVE_BYTES,
     DEFAULT_WORKER_HEADROOM_BYTES,
     SolverLabService,
+    operation_result,
 )
 from poecraft_ingest.solver_lab_supervisor import SolverLabSupervisor
+from poecraft_ingest.solver_lab_workflow import read_matrix_definition
+
+
+TERMINAL_JOB_STATUSES = frozenset(
+    {
+        "completed",
+        "partial",
+        "canceled",
+        "failed",
+        "dispatch_refused",
+        "orphan_quarantined",
+    }
+)
+SUMMARY_FIELDS = frozenset(
+    {
+        "status",
+        "phase",
+        "lower",
+        "upper",
+        "states",
+        "rows",
+        "memory",
+        "stop",
+        "policy",
+        "work",
+    }
+)
+DEFAULT_SUMMARY_FIELDS = "status,phase,lower,upper,states,rows,memory"
 
 
 def _emit(value: Any) -> None:
@@ -82,6 +113,16 @@ def build_parser() -> argparse.ArgumentParser:
     revision.add_argument("revision_id")
     export_revision = subparsers.add_parser("export-case-revision")
     export_revision.add_argument("revision_id")
+    derive = subparsers.add_parser("derive-case")
+    derive_source = derive.add_mutually_exclusive_group(required=True)
+    derive_source.add_argument("--source-case-id")
+    derive_source.add_argument("--source-revision-id")
+    derive.add_argument("--name", required=True)
+    derive.add_argument("--set", dest="scalar_patches", action="append")
+    derive.add_argument("--set-json", dest="json_patches", action="append")
+    derive.add_argument("--validate", action="store_true")
+    derive.add_argument("--save", action="store_true")
+    derive.add_argument("--idempotency-key", required=True)
 
     experiment = subparsers.add_parser("create-experiment")
     experiment.add_argument("--name", required=True)
@@ -104,6 +145,25 @@ def build_parser() -> argparse.ArgumentParser:
     matrix.add_argument("--idempotency-key", required=True)
     matrix.add_argument("--priority", type=int, default=0)
     matrix.add_argument("--dry-run", action="store_true")
+    matrix_file = subparsers.add_parser("run-matrix-file")
+    matrix_file.add_argument("file", type=Path)
+    matrix_file.add_argument("--idempotency-key")
+    matrix_file.add_argument("--wait", action="store_true")
+    matrix_file.add_argument("--poll-seconds", type=float, default=0.25)
+    matrix_file.add_argument("--wait-timeout-seconds", type=float)
+    matrix_file.add_argument(
+        "--summary-fields", default=DEFAULT_SUMMARY_FIELDS
+    )
+    run = subparsers.add_parser("run")
+    run.add_argument("case_id", nargs="?")
+    run.add_argument("--revision-id")
+    run.add_argument("--idempotency-key")
+    run.add_argument("--priority", type=int, default=0)
+    run.add_argument("--watchdog-seconds", type=float)
+    run.add_argument("--wait", action="store_true")
+    run.add_argument("--poll-seconds", type=float, default=0.25)
+    run.add_argument("--wait-timeout-seconds", type=float)
+    run.add_argument("--summary-fields", default=DEFAULT_SUMMARY_FIELDS)
 
     jobs = subparsers.add_parser("jobs")
     jobs.add_argument("--limit", type=int, default=200)
@@ -191,6 +251,221 @@ def _service(args: argparse.Namespace) -> SolverLabService:
     )
 
 
+def _parse_assignment(raw: str, *, structured: bool) -> dict[str, Any]:
+    path, separator, raw_value = raw.partition("=")
+    if not separator or not path or raw_value == "":
+        raise ValueError("case patches use /json/pointer=value")
+    try:
+        value = json.loads(raw_value)
+    except json.JSONDecodeError:
+        if structured:
+            raise ValueError(f"--set-json value is not valid JSON: {path}") from None
+        value = raw_value
+    if not structured and isinstance(value, (dict, list)):
+        raise ValueError("arrays and objects require --set-json")
+    return {"path": path, "value": value}
+
+
+def _case_patches(args: argparse.Namespace) -> list[dict[str, Any]]:
+    patches = [
+        _parse_assignment(raw, structured=False)
+        for raw in (args.scalar_patches or [])
+    ]
+    patches.extend(
+        _parse_assignment(raw, structured=True)
+        for raw in (args.json_patches or [])
+    )
+    if not patches:
+        raise ValueError("derive-case requires at least one --set or --set-json")
+    return patches
+
+
+def _summary_fields(raw: str) -> list[str]:
+    fields = [field.strip() for field in raw.split(",") if field.strip()]
+    if not fields:
+        raise ValueError("summary-fields cannot be empty")
+    unknown = sorted(set(fields) - SUMMARY_FIELDS)
+    if unknown:
+        raise ValueError(f"unknown summary fields: {', '.join(unknown)}")
+    if len(set(fields)) != len(fields):
+        raise ValueError("summary-fields cannot contain duplicates")
+    return fields
+
+
+def _compact_job_result(
+    service: SolverLabService,
+    job_id: str,
+    fields: list[str],
+) -> dict[str, Any]:
+    detail = as_mapping(service.get_job(job_id)["result"])
+    job = as_mapping(detail["job"])
+    attempt = as_mapping(detail.get("latest_attempt"))
+    summary = as_mapping(detail.get("run_summary"))
+    latest = as_mapping(summary.get("latest_sample"))
+    sample_states = as_mapping(latest.get("states"))
+    sample_work = as_mapping(latest.get("work"))
+    native_work = as_mapping(summary.get("native_work"))
+    states = sample_states or as_mapping(native_work.get("states"))
+    rows = sample_work.get("rows")
+    if rows is None:
+        rows = native_work.get("rows")
+    memory = as_mapping(summary.get("memory")) or as_mapping(
+        summary.get("native_owned_memory")
+    )
+    values = {
+        "status": job.get("status"),
+        "phase": summary.get("phase"),
+        "lower": summary.get("lower_bound"),
+        "upper": summary.get("upper_bound"),
+        "states": states,
+        "rows": rows,
+        "memory": memory,
+        "stop": summary.get("termination"),
+        "policy": summary.get("policy_status"),
+        "work": sample_work or native_work,
+    }
+    strategy = (
+        as_mapping(service.get_strategy_summary(job_id=job_id)["result"])
+        if attempt and job.get("status") in TERMINAL_JOB_STATUSES
+        else {}
+    )
+    request = as_mapping(job.get("request"))
+    return {
+        "job_id": job_id,
+        "attempt_id": attempt.get("attempt_id"),
+        "artifact_directory": attempt.get("directory"),
+        "status": job.get("status"),
+        "attempt_status": attempt.get("status"),
+        "summary": {field: values[field] for field in fields},
+        "bounds": {
+            "lower": summary.get("lower_bound"),
+            "upper": summary.get("upper_bound"),
+            "evaluated_policy_cost": summary.get("evaluated_policy_cost"),
+            "absolute_gap": summary.get("absolute_gap"),
+            "relative_gap": summary.get("relative_gap"),
+        },
+        "stop": summary.get("termination"),
+        "policy_status": summary.get("policy_status"),
+        "identities": {
+            "job": job.get("identity_sha256"),
+            "full_request": request.get("full_request_identity"),
+            "core_solve_v1": request.get("core_solve_identity_v1"),
+        },
+        "strategy": {
+            key: strategy.get(key)
+            for key in (
+                "available",
+                "strategy_path",
+                "strategy_sha256",
+                "nodes",
+                "edges",
+                "exact_evaluation",
+            )
+        },
+    }
+
+
+def _wait_for_jobs(
+    service: SolverLabService,
+    job_ids: list[str],
+    *,
+    poll_seconds: float,
+    timeout_seconds: float | None,
+    summary_fields: list[str],
+) -> dict[str, Any]:
+    if not job_ids:
+        raise ValueError("wait requires at least one job")
+    if not (0.05 <= poll_seconds <= 60):
+        raise ValueError("poll-seconds must be in 0.05..60")
+    initial = [as_mapping(service.get_job(job_id)["result"]) for job_id in job_ids]
+    watchdog_total = sum(
+        float(as_mapping(detail["job"]).get("watchdog_seconds") or 0)
+        for detail in initial
+        if as_mapping(detail["job"]).get("status") not in TERMINAL_JOB_STATUSES
+    )
+    safe_timeout = watchdog_total + max(60.0, len(job_ids) * 5.0)
+    if timeout_seconds is None:
+        timeout_seconds = safe_timeout
+    if timeout_seconds <= 0:
+        raise ValueError("wait-timeout-seconds must be positive")
+    if watchdog_total and timeout_seconds < safe_timeout:
+        raise ValueError(
+            "wait-timeout-seconds must cover the targeted native watchdogs "
+            f"and finalization grace ({safe_timeout:g} seconds)"
+        )
+    if all(
+        as_mapping(detail["job"]).get("status") in TERMINAL_JOB_STATUSES
+        for detail in initial
+    ):
+        return {
+            "dispatcher": "not_needed",
+            "timed_out": False,
+            "jobs": [
+                _compact_job_result(service, job_id, summary_fields)
+                for job_id in job_ids
+            ],
+        }
+    supervisor = SolverLabSupervisor(
+        service,
+        poll_interval_seconds=poll_seconds,
+        max_workers=1,
+        dispatch_job_ids=job_ids,
+    )
+    owns_dispatcher = supervisor.start()
+    dispatcher = "target_filtered_owner" if owns_dispatcher else "existing_owner"
+    deadline = time.monotonic() + timeout_seconds
+    last_observation: dict[str, tuple[Any, ...]] = {}
+    timed_out = False
+    try:
+        while True:
+            terminal = True
+            for job_id in job_ids:
+                detail = as_mapping(service.get_job(job_id)["result"])
+                job = as_mapping(detail["job"])
+                attempt = as_mapping(detail.get("latest_attempt"))
+                summary = as_mapping(detail.get("run_summary"))
+                observation = (
+                    job.get("status"),
+                    attempt.get("status"),
+                    summary.get("phase"),
+                )
+                if observation != last_observation.get(job_id):
+                    print(
+                        json.dumps(
+                            {
+                                "job_id": job_id,
+                                "status": observation[0],
+                                "attempt_status": observation[1],
+                                "phase": observation[2],
+                            },
+                            ensure_ascii=False,
+                            sort_keys=True,
+                        ),
+                        file=sys.stderr,
+                        flush=True,
+                    )
+                    last_observation[job_id] = observation
+                if job.get("status") not in TERMINAL_JOB_STATUSES:
+                    terminal = False
+            if terminal:
+                break
+            if time.monotonic() >= deadline:
+                timed_out = True
+                break
+            time.sleep(poll_seconds)
+    finally:
+        if owns_dispatcher:
+            supervisor.stop(wait=True, timeout=30.0)
+    return {
+        "dispatcher": dispatcher,
+        "timed_out": timed_out,
+        "jobs": [
+            _compact_job_result(service, job_id, summary_fields)
+            for job_id in job_ids
+        ],
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -249,6 +524,16 @@ def main(argv: list[str] | None = None) -> int:
             result = service.get_case_revision(args.revision_id)
         elif args.operation == "export-case-revision":
             result = service.export_case_revision(args.revision_id)
+        elif args.operation == "derive-case":
+            result = service.derive_case(
+                name=args.name,
+                idempotency_key=args.idempotency_key,
+                patches=_case_patches(args),
+                source_case_id=args.source_case_id,
+                source_revision_id=args.source_revision_id,
+                validate=args.validate,
+                save=args.save,
+            )
         elif args.operation == "create-experiment":
             result = service.create_experiment(
                 name=args.name, description=args.description
@@ -274,6 +559,73 @@ def main(argv: list[str] | None = None) -> int:
                 priority=args.priority,
                 dry_run=args.dry_run,
             )
+        elif args.operation == "run-matrix-file":
+            matrix_result = service.run_matrix_definition(
+                definition=read_matrix_definition(str(args.file)),
+                idempotency_key=args.idempotency_key,
+            )["result"]
+            waited = (
+                _wait_for_jobs(
+                    service,
+                    list(matrix_result["job_ids"]),
+                    poll_seconds=args.poll_seconds,
+                    timeout_seconds=args.wait_timeout_seconds,
+                    summary_fields=_summary_fields(args.summary_fields),
+                )
+                if args.wait
+                else None
+            )
+            result = operation_result(
+                "run_matrix_file",
+                {**matrix_result, "wait": waited},
+                ok=not waited or not waited["timed_out"],
+            )
+        elif args.operation == "run":
+            if bool(args.case_id) == bool(args.revision_id):
+                raise ValueError(
+                    "run requires exactly one frozen case id or --revision-id"
+                )
+            preview = service.submit_job(
+                case_id=args.case_id,
+                revision_id=args.revision_id,
+                idempotency_key="run-preview",
+                priority=args.priority,
+                watchdog_seconds=args.watchdog_seconds,
+                dry_run=True,
+            )
+            run_key = args.idempotency_key or (
+                "run:" + canonical_sha256(preview["result"])
+            )
+            submitted = service.submit_job(
+                case_id=args.case_id,
+                revision_id=args.revision_id,
+                idempotency_key=run_key,
+                priority=args.priority,
+                watchdog_seconds=args.watchdog_seconds,
+            )["result"]
+            if args.wait:
+                waited = _wait_for_jobs(
+                    service,
+                    [str(submitted["job_id"])],
+                    poll_seconds=args.poll_seconds,
+                    timeout_seconds=args.wait_timeout_seconds,
+                    summary_fields=_summary_fields(args.summary_fields),
+                )
+                result = operation_result(
+                    "run",
+                    {
+                        "idempotency_key": run_key,
+                        "dispatcher": waited["dispatcher"],
+                        "timed_out": waited["timed_out"],
+                        "job": waited["jobs"][0],
+                    },
+                    ok=not waited["timed_out"],
+                )
+            else:
+                result = operation_result(
+                    "run",
+                    {"idempotency_key": run_key, "job": submitted},
+                )
         elif args.operation == "jobs":
             result = service.list_jobs(limit=args.limit)
         elif args.operation == "attempts":
@@ -381,6 +733,12 @@ def main(argv: list[str] | None = None) -> int:
         else:  # pragma: no cover - argparse owns the finite vocabulary
             raise AssertionError(args.operation)
         _emit(result)
+        if (
+            args.operation in {"run", "run-matrix-file"}
+            and isinstance(result, Mapping)
+            and result.get("ok") is False
+        ):
+            return 3
         return 0
     except Exception as exc:
         _emit(
