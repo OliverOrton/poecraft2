@@ -1,15 +1,7 @@
 # Active Work
 
-**Status: Carrier-Ladder Exact Boundary Contract v1 is active.**
-
-The selected boundary retains one bounded failed ladder prefix and uses
-existing strict native-kernel authority to recover the exact items that reach
-its missing coarse parent. It is observational only: no continuation search,
-solver ordering, bound, incumbent, publication, or product behavior change is
-authorized.
-
-- [Plan](2026-08-29-carrier-ladder-exact-boundary-contract-v1/plan.md)
-- [Execution log](2026-08-29-carrier-ladder-exact-boundary-contract-v1/execution-log.md)
+**Status: no implementation boundary is active.** Oliver must choose the next
+chunk before implementation resumes.
 
 Parent: [Documentation map](../README.md)
 

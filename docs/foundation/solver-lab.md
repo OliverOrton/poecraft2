@@ -6,7 +6,7 @@ proof authority, or strategy evaluation.
 
 Parent: [Foundation](README.md)
 
-Verified against the implemented Lab surface: 2026-08-29 @ `0e9d907`.
+Verified against the implemented Lab surface: 2026-08-29 @ `22c00f5`.
 Checked owners include `solver_lab_catalog.py`,
 `solver_lab_service.py`, `solver_lab_supervisor.py`, `solver_lab.py`, and
 `solver_lab_unattended_qualification.py` plus their focused contract, CLI,
@@ -109,8 +109,11 @@ case or immutable revision, applies a registered set of JSON-Pointer
 replacements, optionally invokes native validation, and optionally saves the
 content-addressed revision. Registered paths cover watchdog/bounded finish,
 disabled action families, minimum goal satisfaction, goal slots or slot tiers,
-and approved solver caps. Unknown, malformed, duplicate, overlapping, or
-oversized patches are rejected before mutation. Derivation synchronizes goal
+and approved solver caps. Registered diagnostic paths also include the
+complete versioned `carrier_ladder_exact_boundary_v1` object and its finite
+caps; this remains benchmark-private and cannot change product defaults.
+Unknown, malformed, duplicate, overlapping, or oversized patches are rejected
+before mutation. Derivation synchronizes goal
 edits into the existing product action envelope while retaining native
 envelope controls such as fossil mode and requested fossil actions; it must
 not reconstruct or broaden the action catalogue.
@@ -257,6 +260,15 @@ immutable terminal job revalidates its complete dispatch identity; if source,
 executable, artifact, or another dispatch component no longer matches, the
 job becomes `dispatch_refused` without creating a worker or attempt. Clone
 or submit a new immutable revision when a new identity is intended.
+
+For private observation qualification, execution request v4 includes the
+complete diagnostic setting in `full_request_identity` but excludes it from
+`core_solve_identity_v1`. Local revision/corpus path spelling is normalized so
+off/record/recover revisions with otherwise equal inputs compare as the same
+core solve. `ordinary_finalization` is captured before the diagnostic and
+provides nine separately hashed ordinary-result components. A valid matched
+comparison therefore requires unequal full requests, equal core components,
+and equal ordinary components; only the bounded private diagnostic may differ.
 
 The catalog has one durable dispatcher owner. A second `supervise` process
 detects a verified-live owner, remains control-only, reports the existing

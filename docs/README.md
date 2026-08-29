@@ -31,22 +31,16 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The
-[Carrier-Ladder Exact Boundary Contract v1](active/2026-08-29-carrier-ladder-exact-boundary-contract-v1/plan.md)
-boundary is active. It is adding the bounded observational seam required to
-retain one failed coarse ladder prefix, replay it from the authored exact
-start through native strict kernels, and recover exact boundary members plus a
-typed exit/refusal contract. It does not run continuation search or alter
-ordinary solver authority.
+No implementation boundary is active. Oliver must choose the next chunk
+before implementation resumes.
 
 The completed diagnosis-only
-[Carrier-Ladder Online Continuation Completion v1](archive/2026-08-29-carrier-ladder-online-continuation-completion-v1/README.md)
-boundary established that the existing ladder schedules abstract solver
-states and that its open missing-frontier records name neither an exact item
-entry nor a requested exit contract. No fragment or solver behavior changed.
-The next proposed owner is a bounded exact-boundary contract that preserves a
-failed ladder prefix and replays it from the authored exact start through
-native strict-kernel authority before any online continuation search resumes.
+[Carrier-Ladder Exact Boundary Contract v1](archive/2026-08-29-carrier-ladder-exact-boundary-contract-v1/README.md)
+retains and qualifies a benchmark-private failed-prefix capture and strict
+selected-row replay seam. It proves ordinary off/record/recover behavior
+neutrality, but cumulative-10 reaches an earlier unresolved selected-row hole
+before the named boundary. It therefore establishes no exact entry domain or
+usable continuation and selects no automatic successor.
 
 The completed
 [Native Solver CLI Workflow v1](archive/2026-08-29-native-solver-cli-workflow-v1/README.md)

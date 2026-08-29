@@ -1,10 +1,11 @@
 # Carrier-Ladder Exact Boundary Contract v1
 
-**Status: selected and active.** Oliver selected this boundary on 2026-08-29
-from clean source checkpoint
-`dc14aab6c9f3bfa933573451c672c52ba8df94a2` by asking Codex to keep working.
+**Status: completed diagnosis-only on 2026-08-29.** Oliver selected this
+boundary from clean source checkpoint
+`dc14aab6c9f3bfa933573451c672c52ba8df94a2`. The final disposition is in the
+[result](result.md).
 
-Parent: [Active work](../README.md)
+Parent: [Documentation archive](../README.md)
 
 Progress and exact evidence belong in the [execution log](execution-log.md).
 

@@ -6,12 +6,13 @@ future work or define crafting mechanics.
 
 Parent: [Foundation](README.md)
 
-Verified against current source: 2026-08-29 @ `13a5321`. Scope: private solve
+Verified against current source: 2026-08-29 @ `22c00f5`. Scope: private solve
 phase ownership, cooperative continuation boundaries, current
 proof/publication boundaries, action-family contract, exact evaluator gated-
 kernel authority, exact reforge row continuation, telemetry serialization
-ownership, the benchmark-private verified leaf-fragment core, and the native
-source inventory, plus benchmark-private generated-envelope attribution.
+ownership, benchmark-private carrier-ladder boundary observation, the
+benchmark-private verified leaf-fragment core, and the native source
+inventory, plus benchmark-private generated-envelope attribution.
 Final acceptance for a selected boundary is recorded in its result rather
 than implied by this source audit.
 
@@ -131,6 +132,39 @@ including successful joint assemblies. The remaining broad owner is
 continuation/missing-upper frontier work after generated rows have been
 served; neither generated construction nor carrier-ladder starvation
 qualified a behavior repair.
+
+## Benchmark-Private Carrier-Ladder Boundary Observation
+
+`carrier_ladder_exact_boundary_v1` is a disabled-by-default native benchmark
+diagnostic with `off`, `record`, and `recover` modes. It observes exactly one
+failed selected-policy prefix inside finalization before ordinary incumbent
+restore. Its retained copy is separate from the graph, Bellman values,
+scheduler, proof lower, incumbent portfolio, compiler, and publication
+pipeline. Ordinary finalization is frozen before any strict replay begins.
+
+Record mode closes the complete routed selected prefix and emits typed stops:
+exact goal success, a same-identity independently evaluated/proper/executable
+ordinary frontier, or unresolved. Recover mode starts from the authored exact
+item and follows only those selected rows through the existing production
+strict oracle and native primitive/fixed-option kernels. It does not
+materialize an abstract representative, enumerate alternative actions,
+optimize a replacement policy, or publish a value. Exact members at a named
+coarse stop remain distinct by collision-checked complete item key.
+
+Capture and replay have independent caps for prefix states, exact states,
+rows, transitions, logical work, owned bytes, wall time, and samples. Missing
+selected rows, stale identities, incomplete support, unsupported option
+semantics, caps, and cancellation all fail closed. Private bytes and clock
+time are excluded from ordinary solve accounting. Benchmark qualification may
+also request an exact ordinary completed-row fence; zero preserves the normal
+wall-clock requested-finish behavior.
+
+The first cumulative-10 qualification closed diagnosis-only: the stable
+prefix reaches an unresolved non-goal coarse state with no selected row before
+the named missing parent. That proves the seam and refusal contract without
+claiming an exact entry domain or usable continuation. The diagnostic remains
+private to the benchmark/Lab path and adds no public ABI, release-WASM input,
+strategy vocabulary, or product behavior.
 
 ## Benchmark-Private Verified Leaf Fragments
 

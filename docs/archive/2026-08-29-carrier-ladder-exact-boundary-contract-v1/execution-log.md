@@ -396,3 +396,72 @@ bundle ID, path, 2,891,613-byte size, artifact identities, and content SHA-256
 Its artifacts are the recover ordinary/partial/report/strategy/log IDs and
 hashes listed above. Gate 5 passes without MCP, GUI, direct SQLite, catalog
 editing, or an alternate runner.
+
+## Gate 6 — Final Acceptance And Closeout
+
+Implementation checkpoint: `22c00f50d8d0dd6ef8269cc0dc73a0eab0887bab`
+(`Implement carrier ladder exact boundary diagnostics`).
+
+The clean native rebuild relinked three common objects and therefore produced
+a new Windows PE byte identity. This build path regenerates the Harvest
+header and relinks on every invocation, so the executable file SHA is not a
+cross-build semantic identity. Gate 5 remains correctly pinned to the exact
+`f8228a13...` executable that produced its immutable matched matrix.
+
+One fresh Gate 6 recovery repetition used the rebuilt executable SHA
+`9e933b91b4009b661ada1c7d81bdf666161f51fff7f85aab82c54a3af7b773a0`,
+job `job-61b97176-d16e-478a-91e1-edd102f93868`, and attempt
+`attempt-1f714e67-3822-47f3-9252-067489688a0a`. Its core/full/job identities
+were respectively
+`95e697bb3b3866d185ba11c3addda8aa1e273c03c06aca5cd475d0e08d7158f4`,
+`5d49fd79fe8d71cca8ab818b05d0013f38866cee83ce43a612106cba843c9f35`,
+and
+`b679e4cbeddfcbd652087db99ad2e9b98e52ac0e37054aaca8a2e0398f82f58a`.
+Executable binding intentionally changed the request/core identities, while
+every semantic boundary identity, count, refusal, work, and private peak
+remained exactly equal to Gate 5. Ordinary states, rows, bounds, strategy hash,
+and exact evaluation also remained equal.
+
+The Gate 6 repetition artifacts are:
+
+- ordinary `artifact-627366f6f7bb7c9808b6fa49949e714d` /
+  `cccfaf6871c44a13a7582f14238744780a02270d3f76299d810c3b2c3a44179f`;
+- partial `artifact-7294501f2e61957c61891c7ecbd9f80b` /
+  `c7010496e9d7a1f47f39384b8e2e5dc517ca20dce8da89e93431bc356046359c`;
+- report `artifact-40eeb96808776053508088af0e2a101e` /
+  `7bbba9a92209b53fe2cb5091f95c154db3c0ba4c418bb9357a7afbc1014f40fd`;
+- strategy `artifact-27b277966ad2c09f99ba3f0cb1a88329` /
+  `bee87369fee733fff3d2e093eae5fa914ddd6616badcbf6f324234e4d95d8892`;
+  and
+- log `artifact-fb441ee62ef3e974b525aeac79a46b94` /
+  `a7c11f104170301de14fb635fe0cefeff83af5543e9d00883f5d0670b70aed78`.
+
+Acceptance results:
+
+1. `powershell -File scripts/build.ps1` passed.
+2. Focused native suites passed: refinement 375/0, production policy
+   refinement 2,083/0, solve 86,224/0, compile 583/0, evaluator 15,761/0,
+   API 2,816/0, and fragment 220/0.
+3. The complete affected Lab/CLI batch passed 79 tests. The deterministic
+   rebuilt-executable recovery repetition passed as described above.
+4. `scripts/build-wasm.ps1` completed. An initial unobserved-session attempt
+   left a newly optimized `.wasm` beside the old wrapper and the first web
+   smoke correctly failed its import contract. A retained-session rebuild
+   completed the post-link/wrapper step; rerun `npm test` and
+   `npx tsc --noEmit` both passed. The retained release WASM is 6,454,837
+   bytes with SHA-256
+   `56ea67f3221e5f650019824b9cd54598c27efe8c9a0d0176b120d9234e5ba088`.
+5. The single final `powershell -File scripts/test.ps1` pipeline passed:
+   ingest/data/fixture/artifact validation, 3,417,668 native checks with zero
+   failures, 13 benchmark specifications, and the complete web suite.
+6. `git diff --check` passed. Scope audit found only the benchmark-private
+   diagnostic, typed internal source, its CLI adapter/tests, release WASM, and
+   governing docs. No public C ABI, strategy vocabulary, mechanic, canonical
+   data, GUI, fragment integration, product default, or protected `0` change
+   is present.
+
+Gate 6 passes. The valid completion outcome is **diagnosis-only**. The exact
+boundary seam is retained and qualified, but cumulative-10 exposes an earlier
+selected-prefix hole rather than a recoverable named entry. Online
+continuation and fragment integration remain parked. No next implementation
+boundary is selected.

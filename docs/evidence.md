@@ -6,6 +6,32 @@ routes to them rather than duplicating complete reports.
 
 Parent: [Documentation map](README.md)
 
+## Carrier-Ladder Exact Boundary Diagnosis
+
+The 2026-08-29
+[archived result](archive/2026-08-29-carrier-ladder-exact-boundary-contract-v1/result.md)
+retains a disabled benchmark-private seam that captures one failed selected
+prefix before ordinary restore and replays only its selected rows from the
+authored exact item through existing strict native kernels. Matched
+off/record/recover/replay jobs have unequal full requests but equal core
+identity, all 20 core components, all nine ordinary-result components,
+deterministic work, bounds, strategy SHA, and exact evaluation.
+
+The stable selection/prefix/exit-contract identities are
+`817a9a5c93d6b30b`, `94dcb0cfc5162f29`, and `c621919aa67c36dc`.
+Recovery reaches `non-goal coarse state 213 has no selected policy action`
+before the named missing parent, so support and absorption remain incomplete
+and no exact entry members are claimed. A real one-state private cap refuses
+cleanly; a genuinely long-running CLI attempt terminates its process tree and
+releases its reservation; investigation bundle
+`bundle-465824d1da2e39466dcb8468` replays at SHA-256
+`b9fffc77d7b8bd27c852671ead1e5d053e8b7ae4233c6acc09b465950960deb5`.
+
+Focused native and Lab/CLI suites, release WASM/web parity, and the full
+3,417,668-check native repository pipeline pass. The result is diagnosis-only:
+it proves the observation/refusal seam, not an exact entry domain, fragment
+integration, usable continuation, or better policy.
+
 ## Carrier-Ladder Online Continuation Diagnosis
 
 The 2026-08-29

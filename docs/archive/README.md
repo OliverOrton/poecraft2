@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-08-29
 
+- [Carrier-Ladder Exact Boundary Contract v1](2026-08-29-carrier-ladder-exact-boundary-contract-v1/README.md) —
+  retains and qualifies a benchmark-private failed-prefix capture/strict-replay
+  seam while proving ordinary behavior neutrality; cumulative-10 reaches an
+  earlier unresolved selected-row hole, so it completes diagnosis-only with
+  no exact entry domain or usable continuation claim.
 - [Carrier-Ladder Online Continuation Completion v1](2026-08-29-carrier-ladder-online-continuation-completion-v1/README.md) —
   completes diagnosis-only at Gate 0 after proving that open ladder records
   contain abstract solver states and no requested exit contract; it retains
