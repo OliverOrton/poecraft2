@@ -153,3 +153,26 @@ Final decommission checks:
 - MCP Python module: absent;
 - dispatcher ownership: released; and
 - queue paused: false.
+
+## 2026-08-29 — Gate 5 acceptance and closeout
+
+`powershell -File scripts/test.ps1` passed at implementation checkpoint
+`48da3eeaa7fa03d890c3353eb0758d58694d537c`:
+
+- ingest unit suites: 18 and 12 passed;
+- canonical SQLite validation and six spec fixtures: passed;
+- compiled artifact rebuild and SQLite parity: passed;
+- Python binding tests: 17 passed;
+- native engine: 3,417,655 checks, zero failures;
+- solver benchmark specifications: 13 validated;
+- release-WASM engine checks: 28/28 passed;
+- all remaining web suites: passed; and
+- every required compiled-strategy Simulator control used its prescribed run
+  count, including 10,000/10,000 cyclic fragment-control successes with zero
+  failure, stop, limit, inapplicable, missing-edge, or missing-price event.
+
+The acceptance run produced no tracked change. Final runtime audit retained
+the installed CLI, found no installed MCP executable or importable adapter,
+found no Codex registration and no matching process, and left the dispatcher
+released with the queue resumed. The protected untracked file `0` remained
+untouched. No push or rendered/visual review was performed.

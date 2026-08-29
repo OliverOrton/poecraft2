@@ -6,6 +6,26 @@ routes to them rather than duplicating complete reports.
 
 Parent: [Documentation map](README.md)
 
+## Native Solver Lab CLI-First Removal
+
+The 2026-08-29
+[archived result](archive/2026-08-29-native-solver-lab-cli-first-mcp-removal-v1/result.md)
+removes the repository and user-local Solver Lab MCP surface while preserving
+the existing structured JSON CLI, typed service, persistent catalog,
+supervisor, cancellation, immutable evidence, and GUI. Service-level analysis
+and bundle tests were retained, real Windows CLI cancellation still proves
+process-tree removal and reservation release, and direct supervisor tests own
+singleton/recovery guarantees.
+
+The focused Lab suite passed 67 tests. The accelerated unattended harness
+selected 13 direct tests and reported 22 passes. Installed-CLI qualification
+found one profile, seven frozen cases, both fragment control/shadow IDs, stable
+dry-run identity, zero persisted dry-run work, zero reservation, released
+ownership, and a resumed queue. The full repository pipeline passed 3,417,655
+native checks, 13 benchmark specifications, 28/28 release-WASM checks, and all
+remaining suites. Final runtime audit found no MCP registration, process,
+console executable, or importable adapter.
+
 ## Generated Planner-Envelope And Ladder Qualification
 
 The 2026-08-29

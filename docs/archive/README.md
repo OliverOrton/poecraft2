@@ -9,6 +9,14 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-08-29
+
+- [Native Solver Lab CLI-First MCP Removal v1](2026-08-29-native-solver-lab-cli-first-mcp-removal-v1/README.md) —
+  removes the repository adapter, dependency, entry point, user-local
+  registration, and live server processes while retaining and qualifying the
+  existing structured JSON CLI, typed service, persistent catalog, supervisor,
+  cancellation, evidence, and GUI contracts.
+
 ## 2026-08-28
 
 - [Generated Planner-Envelope Qualification And Ladder-Service Repair v1](2026-08-28-generated-planner-envelope-qualification-ladder-service-repair-v1/README.md) —

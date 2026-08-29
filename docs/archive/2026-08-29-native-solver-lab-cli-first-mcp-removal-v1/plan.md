@@ -1,10 +1,10 @@
 # Native Solver Lab CLI-First MCP Removal v1
 
-**Status: active.** Selected by Oliver on 2026-08-29 from source checkpoint
+**Status: completed on 2026-08-29.** Selected by Oliver on 2026-08-29 from source checkpoint
 `ecf778c0ab9b8e3ebbeb285ca7748774845c325f` after completion of Generated
 Planner-Envelope Qualification And Ladder-Service Repair v1.
 
-Parent: [Active work](../README.md)
+Parent: [Documentation archive](../README.md)
 
 Progress and exact evidence belong in the [execution log](execution-log.md).
 

@@ -31,13 +31,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active
-[Native Solver Lab CLI-First MCP Removal v1](active/2026-08-29-native-solver-lab-cli-first-mcp-removal-v1/plan.md)
-boundary removes the repository and user-local Solver Lab MCP transport. It
-keeps the existing structured JSON CLI and saved artifacts as the automation
-surface and preserves the typed service, catalog, supervisor, cancellation,
-identity, evidence-integrity, and GUI contracts. It changes no solver,
-mechanic, fragment, ABI, WASM, or product behavior.
+No implementation boundary is active. The completed
+[Native Solver Lab CLI-First MCP Removal v1](archive/2026-08-29-native-solver-lab-cli-first-mcp-removal-v1/README.md)
+boundary removed the repository and user-local Solver Lab MCP transport. The
+existing structured JSON CLI and saved artifacts remain the automation
+surface, with the typed service, catalog, supervisor, cancellation, identity,
+evidence-integrity, and GUI contracts preserved and qualified. Oliver must
+choose the next boundary before implementation resumes.
 
 The completed
 [Generated Planner-Envelope Qualification And Ladder-Service Repair v1](archive/2026-08-28-generated-planner-envelope-qualification-ladder-service-repair-v1/README.md)

@@ -6,8 +6,8 @@ proof authority, or strategy evaluation.
 
 Parent: [Foundation](README.md)
 
-Verified against the implemented Lab surface: 2026-08-29 @ CLI-first MCP
-removal boundary. Checked owners include `solver_lab_catalog.py`,
+Verified against the implemented Lab surface: 2026-08-29 @ `48da3ee`.
+Checked owners include `solver_lab_catalog.py`,
 `solver_lab_service.py`, `solver_lab_supervisor.py`, `solver_lab.py`, and
 `solver_lab_unattended_qualification.py` plus their focused contract, CLI,
 supervisor, nonvisual-GUI, corpus-runner, and parity tests.
