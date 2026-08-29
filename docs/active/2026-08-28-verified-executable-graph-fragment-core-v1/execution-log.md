@@ -416,8 +416,17 @@ MCP-only operator transcript:
 
 ```text
 server version/tool count:
-dispatcher owner/mode:
-discovered control/shadow case or revision IDs:
+  poecraft2-native-solver-lab 0.2.0 / 31 typed tools (reconfirmed before
+  operator qualification)
+dispatcher owner/mode: the configured connection was control_only behind the
+  catalog record for supervisor-7a5fd080-1103-4240-9ffa-a790569e3178,
+  process token 50836:134324226021189767. Read-only OS inspection proved PID
+  50836 absent and no job running; the live configured MCP loader itself was
+  control-only and still held the pre-checkpoint five-case corpus in memory
+discovered control/shadow case or revision IDs: BLOCKED in the configured
+  connection; committed frozen IDs are fragment-clean-one-goal-renewal-
+  control-v1 and fragment-clean-one-goal-renewal-shadow-v1, but the stale MCP
+  service returned only the preceding five frozen cases
 known long-running frozen cancellation case/revision:
 cancellation job/attempt ID and live partial evidence:
 canceled acknowledgment:
@@ -430,11 +439,22 @@ bundle ID/content hash:
 same-key export replay:
 artifact integrity:
 GUI opened: no
-decision:
+decision: STOP before submission. The exact stale control-only MCP processes
+  were ended only after proving the recorded dispatcher owner absent and zero
+  running jobs; no catalog/ownership state was edited or force-cleared. This
+  task's MCP transport then returned Transport closed and did not reconnect.
+  A genuinely fresh configured MCP connection must load checkpoint faf6eba,
+  discover seven frozen cases, and resume the listed workflow from discovery.
+  No cancellation/control/shadow job or bundle claim is made
 ```
 
 All listed operator actions must use MCP. Repository tools remain the source,
 build, and test surface only.
+
+Gate 5 remains incomplete because the configured transport could not reload
+the just-committed source in this task. Automated isolation remains a clean,
+passing local checkpoint; operator evidence must not be substituted with the
+repository CLI or direct catalog access.
 
 ## Final Acceptance Record
 
@@ -484,3 +504,28 @@ one exact next command:
 Do not weaken mass, identity, properness, residual, process, or independence
 assertions to finish a gate. Preserve Gates 0–2 as the preferred coherent
 fallback if they passed.
+
+## Current Stop/Handoff Record
+
+```text
+first failing invariant: configured MCP must discover the committed immutable
+  cyclic control/shadow inputs and execute every listed operator action
+exact reproduction command: call configured
+  poecraft2-native-solver-lab/list_cases from this task after checkpoint
+  faf6eba
+observed vs required result: stale live connection returned 5 frozen cases;
+  after precise control-only process reload the task transport returns
+  Transport closed, while a fresh connection must return 7 cases
+why it cannot be fixed safely inside scope: this task has no MCP reconnect or
+  graceful server-reload tool; repository CLI/catalog operations may not
+  replace the configured MCP workflow, and ownership must not be force-cleared
+deepest coherent checkpoint: faf6eba8704df8c79d4bc448d3bea18f14cbb185
+  (Gates 0–4 complete plus passing Gate 5 automated isolation)
+retained files/evidence: committed source/fixtures/tests/docs; local ignored
+  real-worker evidence under build/engine/gate5-worker-1787963034754198000
+tree/build status: source clean at faf6eba; benchmark builds; 207 native
+  fragment checks and 52 focused Lab checks pass
+one exact next command: in a genuinely fresh Codex task, call configured MCP
+  list_cases and require the two fragment-clean-one-goal-renewal-* IDs before
+  any submission
+```

@@ -1,7 +1,8 @@
 # Handoff
 
 **Status: Verified Executable Graph-Fragment Core v1 Gates 0–4 are complete;
-Gate 5 automated shadow isolation is coherent and MCP qualification is next.**
+Gate 5 automated shadow isolation is committed, but a fresh configured MCP
+connection is required before operator qualification can continue.**
 The first coherent checkpoint adds the private probability-free leaf IR,
 authority firewall, and exact single-entry product verifier. Gate 3 now adds a
 real engine-backed Transmute/Scour renewal leaf and explicit native benchmark
@@ -12,6 +13,14 @@ control/shadow cases, explicit full/core identities, and automated ordinary-
 parity evidence. MCP-only qualification is the exact next action; no incumbent
 integration has begun.
 
+The configured MCP connection in the implementation task remained loaded on
+the preceding five-case corpus after the seven-case checkpoint was committed.
+Its recorded dispatcher owner was already absent and there were no running
+jobs. The exact control-only loader processes were ended without editing or
+force-clearing catalog ownership, but this task's MCP transport remained
+closed. Start with a genuinely fresh configured MCP connection; do not replace
+the required operator workflow with the repository CLI or catalog access.
+
 The preceding unattended-hardening boundary's six-hour soak was
 **owner-waived, not passed**. It is not overnight qualification and must not be
 cited as such.
@@ -19,6 +28,11 @@ cited as such.
 ## Checkpoint
 
 - Branch: `main`, local-only; nothing was pushed.
+- Gate 5 automated source checkpoint: local commit
+  `faf6eba8704df8c79d4bc448d3bea18f14cbb185` (`Isolate verified fragment
+  shadow execution`). The tree was clean after this commit. The MCP-only Gate
+  5 workflow is not complete and no operator submission/bundle evidence is
+  claimed.
 - Gates 0–2 checkpoint: local commit
   `94f9584a98298c9987e335bbcd82c41423877997` (`Add exact executable fragment
   leaf verifier`); 119 focused fragment checks, 362 refinement checks, and 15,761
