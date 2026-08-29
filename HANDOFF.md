@@ -1,7 +1,19 @@
 # Handoff
 
-**Status: no implementation boundary is active.** Oliver must select the next
-chunk before implementation resumes.
+**Status: Carrier-Ladder Exact Boundary Contract v1 is active.**
+
+Selected plan:
+[docs/active/2026-08-29-carrier-ladder-exact-boundary-contract-v1/plan.md](docs/active/2026-08-29-carrier-ladder-exact-boundary-contract-v1/plan.md)
+
+Execution log:
+[docs/active/2026-08-29-carrier-ladder-exact-boundary-contract-v1/execution-log.md](docs/active/2026-08-29-carrier-ladder-exact-boundary-contract-v1/execution-log.md)
+
+Oliver selected the proposed next chunk by asking Codex to keep working. The
+boundary is observational: retain one failed coarse prefix, recover genuinely
+reachable exact boundary members through existing native strict-kernel
+authority, and define a typed exit/refusal contract. No fragment search,
+solver ordering, bound, incumbent, publication, or product behavior change is
+authorized.
 
 ## Most Recent Completed Boundary
 

@@ -31,8 +31,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. Oliver must select the next chunk
-before implementation resumes.
+The
+[Carrier-Ladder Exact Boundary Contract v1](active/2026-08-29-carrier-ladder-exact-boundary-contract-v1/plan.md)
+boundary is active. It is adding the bounded observational seam required to
+retain one failed coarse ladder prefix, replay it from the authored exact
+start through native strict kernels, and recover exact boundary members plus a
+typed exit/refusal contract. It does not run continuation search or alter
+ordinary solver authority.
 
 The completed diagnosis-only
 [Carrier-Ladder Online Continuation Completion v1](archive/2026-08-29-carrier-ladder-online-continuation-completion-v1/README.md)
