@@ -632,6 +632,11 @@ inline SolverActionFamily solver_action_family_for_automatic_candidate(
 inline bool solver_automatic_candidate_disabled(
     const GoalSpec& goal,
     const AutomaticCandidateKind kind) {
+    if (kind != AutomaticCandidateKind::None &&
+        (goal.automatic_candidate_kind_mask &
+         automatic_candidate_kind_bit(kind)) == 0) {
+        return true;
+    }
     const SolverActionFamily family =
         solver_action_family_for_automatic_candidate(kind);
     return family != SolverActionFamily::Count &&

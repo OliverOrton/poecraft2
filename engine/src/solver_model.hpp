@@ -81,6 +81,15 @@ enum class AutomaticCandidateKind : std::uint8_t {
     Veiled = 10,
 };
 
+inline constexpr std::uint32_t automatic_candidate_kind_bit(
+        const AutomaticCandidateKind kind) {
+    return 1u << static_cast<std::uint32_t>(kind);
+}
+
+inline constexpr std::uint32_t kAllAutomaticCandidateKindsMask =
+    (1u << (static_cast<std::uint32_t>(AutomaticCandidateKind::Veiled) + 1u)) -
+    2u;
+
 /* R3A retention/accounting categories. These are deliberately independent
  * of AutomaticCandidateKind: explicit renewal/fracture envelopes use the
  * same carrier-relative kernel representation even though they are not
@@ -335,6 +344,11 @@ struct GoalSpec {
     /* Product goal-relevant solves enable native S8.3 candidate synthesis.
      * Explicit historical/manual goal documents remain unchanged. */
     bool automatic_candidates = false;
+    /* Native benchmark diagnostics may retain the product primitive envelope
+     * while selecting a finite subset of generated automatic kinds. Product
+     * and public API construction always retain the complete mask. */
+    std::uint32_t automatic_candidate_kind_mask =
+        kAllAutomaticCandidateKindsMask;
     /* A solve with any bit set is exact only within this explicitly
      * restricted action envelope. The engine owns family membership for both
      * ordinary primitives and generated carrier-local programs. */

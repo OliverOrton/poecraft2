@@ -4557,6 +4557,7 @@ void run_constructive_state_certificate_tests() {
     goal.rarity = PC_RARITY_RARE;
     const std::uint32_t chaos = registry.index_by_id.at("chaos");
     const std::uint32_t restart = registry.index_by_id.at("restart");
+
     CalcContext calc(
         session, goal, registry, {chaos, restart, bench_index});
 
@@ -4651,6 +4652,44 @@ void run_constructive_renewal_upper_tests() {
     }
     const std::uint32_t chaos = registry.index_by_id.at("chaos");
     const std::uint32_t restart = registry.index_by_id.at("restart");
+
+    GoalSpec primitive_only_goal = goal;
+    primitive_only_goal.automatic_candidate_kind_mask = 0;
+    CalcContext primitive_only_calc(
+        session, primitive_only_goal, registry,
+        {chaos, restart, bench_index});
+    PC_CHECK(primitive_only_calc.operators().size() ==
+             registry.actions.size());
+    PC_CHECK(std::none_of(
+        primitive_only_calc.operators().begin(),
+        primitive_only_calc.operators().end(),
+        [](const PlannerOperator& planner) {
+            return planner.automatic_kind != AutomaticCandidateKind::None;
+        }));
+
+    GoalSpec renewal_only_goal = goal;
+    renewal_only_goal.automatic_candidate_kind_mask =
+        automatic_candidate_kind_bit(
+            AutomaticCandidateKind::ConstructiveRenewal);
+    CalcContext renewal_only_calc(
+        session, renewal_only_goal, registry,
+        {chaos, restart, bench_index});
+    PC_CHECK(std::any_of(
+        renewal_only_calc.operators().begin(),
+        renewal_only_calc.operators().end(),
+        [](const PlannerOperator& planner) {
+            return planner.automatic_kind ==
+                   AutomaticCandidateKind::ConstructiveRenewal;
+        }));
+    PC_CHECK(std::none_of(
+        renewal_only_calc.operators().begin(),
+        renewal_only_calc.operators().end(),
+        [](const PlannerOperator& planner) {
+            return planner.automatic_kind != AutomaticCandidateKind::None &&
+                   planner.automatic_kind !=
+                       AutomaticCandidateKind::ConstructiveRenewal;
+        }));
+
     CalcContext calc(
         session, goal, registry, {chaos, restart, bench_index});
     PC_CHECK(std::any_of(

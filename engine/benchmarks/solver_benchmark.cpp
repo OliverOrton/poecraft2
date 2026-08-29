@@ -9,6 +9,7 @@
 #include "solver_executable_fragment_engine.hpp"
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
@@ -18,6 +19,7 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <optional>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -802,6 +804,88 @@ std::string optional_string(
 bool optional_bool(const Value& object, const char* key, bool fallback) {
     const Value* value = optional(object, key, Type::Bool);
     return value == nullptr ? fallback : value->boolean;
+}
+
+std::optional<std::uint32_t> automatic_candidate_diagnostic_mask(
+    const Value& specification) {
+    const Value* control = optional(
+        specification, "planner_envelope_diagnostic_v1", Type::Object);
+    if (control == nullptr) return std::nullopt;
+    const std::set<std::string> required_fields = {
+        "schema_version", "automatic_candidate_kinds"};
+    std::set<std::string> seen_fields;
+    for (const auto& [key, value] : control->object) {
+        (void)value;
+        if (!required_fields.contains(key)) {
+            throw std::runtime_error(
+                "planner_envelope_diagnostic_v1 contains unknown field: " +
+                key);
+        }
+        if (!seen_fields.insert(key).second) {
+            throw std::runtime_error(
+                "planner_envelope_diagnostic_v1 contains duplicate field: " +
+                key);
+        }
+    }
+    if (seen_fields != required_fields ||
+        required_string(*control, "schema_version") !=
+            "solver_planner_envelope_diagnostic_v1") {
+        throw std::runtime_error(
+            "planner_envelope_diagnostic_v1 requires its exact v1 fields");
+    }
+    const Value& kinds = required(
+        *control, "automatic_candidate_kinds", Type::Array);
+    const std::array<
+        std::pair<std::string_view, poecraft::solver::AutomaticCandidateKind>,
+        10> vocabulary{{
+        {"fracture", poecraft::solver::AutomaticCandidateKind::Fracture},
+        {"permanent_bench",
+         poecraft::solver::AutomaticCandidateKind::PermanentBench},
+        {"temporary_bench_blocker",
+         poecraft::solver::AutomaticCandidateKind::TemporaryBenchBlocker},
+        {"protected_metamod",
+         poecraft::solver::AutomaticCandidateKind::ProtectedMetamod},
+        {"multimod_finish",
+         poecraft::solver::AutomaticCandidateKind::MultimodFinish},
+        {"imprint", poecraft::solver::AutomaticCandidateKind::Imprint},
+        {"constructive_renewal",
+         poecraft::solver::AutomaticCandidateKind::ConstructiveRenewal},
+        {"eldritch_side",
+         poecraft::solver::AutomaticCandidateKind::EldritchSide},
+        {"cannot_roll",
+         poecraft::solver::AutomaticCandidateKind::CannotRoll},
+        {"veiled", poecraft::solver::AutomaticCandidateKind::Veiled},
+    }};
+    std::uint32_t mask = 0;
+    std::uint32_t previous = 0;
+    for (const Value& entry : kinds.array) {
+        if (entry.type != Type::String) {
+            throw std::runtime_error(
+                "planner envelope automatic kinds must be strings");
+        }
+        const auto found = std::find_if(
+            vocabulary.begin(), vocabulary.end(),
+            [&](const auto& candidate) {
+                return candidate.first == entry.string;
+            });
+        if (found == vocabulary.end()) {
+            throw std::runtime_error(
+                "unknown planner envelope automatic kind: " +
+                entry.string);
+        }
+        const std::uint32_t ordinal =
+            static_cast<std::uint32_t>(found->second);
+        const std::uint32_t bit =
+            poecraft::solver::automatic_candidate_kind_bit(found->second);
+        if ((mask & bit) != 0 || (mask != 0 && ordinal <= previous)) {
+            throw std::runtime_error(
+                "planner envelope automatic kinds must be unique and in "
+                "native enum order");
+        }
+        mask |= bit;
+        previous = ordinal;
+    }
+    return mask;
 }
 
 std::uint32_t optional_u32(
@@ -2186,6 +2270,7 @@ void validate_case_shape(
         }
     }
     required(specification, "benchmark_enabled", Type::Bool);
+    (void)automatic_candidate_diagnostic_mask(specification);
     if (const Value* expected = specification.find("expected")) {
         if (expected->type != Type::Object) {
             throw std::runtime_error("case expected must be an object");
@@ -2832,8 +2917,15 @@ void create_case_objects(
     }
     const std::string goal = goal_with_actions(
         required(specification, "goal", Type::Object), derived_actions);
-    result = pc_solver_create(handles.session, goal.data(), goal.size(),
-                              &handles.solver, &error);
+    const std::optional<std::uint32_t> automatic_mask =
+        automatic_candidate_diagnostic_mask(specification);
+    result = automatic_mask.has_value()
+        ? poecraft::solver::create_solver_with_automatic_candidate_diagnostic(
+              handles.session, goal.data(), goal.size(), *automatic_mask,
+              &handles.solver, &error)
+        : pc_solver_create(
+              handles.session, goal.data(), goal.size(), &handles.solver,
+              &error);
     if (result != PC_RESULT_OK) {
         throw std::runtime_error(api_error("pc_solver_create", result, error));
     }
@@ -4121,7 +4213,7 @@ void append_case_report(
         << (result.verification_skipped ? "true" : "false") << ",\n";
     out << "  \"input\":{";
     bool first_input = true;
-    for (const char* key : {"comparison_profile", "watchdog_seconds", "requested_bounded_finish_seconds", "session", "start", "goal", "corpus", "feasibility", "generation", "product_action_envelope", "allowed_mechanic_families", "mechanic_family_control", "compiled_operation_contract", "compiled_operation_contracts", "material_ratio_contract", "market_price_override_contracts", "forced_winner_contract", "bounded_best_policy_contract", "economy", "caps", "verification"}) {
+    for (const char* key : {"comparison_profile", "watchdog_seconds", "requested_bounded_finish_seconds", "session", "start", "goal", "corpus", "feasibility", "generation", "product_action_envelope", "allowed_mechanic_families", "planner_envelope_diagnostic_v1", "mechanic_family_control", "compiled_operation_contract", "compiled_operation_contracts", "material_ratio_contract", "market_price_override_contracts", "forced_winner_contract", "bounded_best_policy_contract", "economy", "caps", "verification"}) {
         const Value* value = specification.find(key);
         if (value == nullptr) continue;
         if (!first_input) out << ',';

@@ -338,3 +338,53 @@ MCP server and a fresh dry run proves `solver_lab_execution_request_v4` with
 `allowed_mechanic_families`, `product_action_envelope`, and
 `goal_action_list`. Re-run the full read-only inventory at that time before
 creating the two-layer add-back matrix.
+
+## Gate 3 — Fresh v4 Preflight And Matrix Control
+
+Oliver authorized a normal MCP restart. The verified idle stale launcher tree
+(`53364` / Python supervisor `57428`) was terminated without force-clearing
+catalogue ownership. A fresh task and configured server recovered ownership
+through the normal dispatcher protocol as
+`supervisor-9bfd7140-1c63-4470-93f4-366284619fe1`, process identity
+`5464:134324587492816518`. The prior owner is durably `stopped`; the queue is
+active and there was no active job, attempt, worker reservation, or process
+survivor.
+
+The repeated read-only inventory before any new catalogue mutation found the
+same version `0.2.0`, exact 31 typed tools, one profile, seven frozen cases, 19
+immutable local revisions, 20 pre-existing drafts, 40 terminal jobs, and 41
+terminal attempts. The seven cases include both fragment control/shadow cases.
+A fresh dry-run submission for the three-prefix frozen case used idempotency
+key `gate3-fresh-v4-preflight-20260829-001` and proved
+`solver_lab_execution_request_v4`. Its request identity was
+`96a28de42c91b22815ea171fc3f2a66b9fbb068baa7a6a1b814def13dc8d0435`,
+core solve identity
+`bec03ea55120f37ddacd506f5dc0ed6b30e8c18d93d2e88c0502041b548e1bad`,
+and operation identity
+`dccf7348a227801c349c8d1128db2df5df0f7c52bc36540e307cd6e983c47a62`.
+The core components include all five truthful inputs and no legacy
+`disabled_families` component.
+
+The required generated-candidate suppression control did not previously
+exist. Added `solver_planner_envelope_diagnostic_v1` as a benchmark-private,
+finite allowlist over the ten non-None native `AutomaticCandidateKind` values.
+Omission retains the complete product envelope; an empty list retains the
+same product primitive registry/goal abstraction while suppressing every
+generated automatic kind. The private construction hook is absent from the
+public C header, bindings, WASM, and product goal vocabulary. Family controls,
+mechanics, transitions, prices, caps, and ordinary defaults are unchanged.
+
+The first MCP draft, `draft-f25e6ecd-a49b-4694-b4ba-782678781b0b`, clones the
+normal-cap currency-only baseline and selects the empty automatic-kind list.
+MCP native validation passed with content SHA-256
+`806889b65fa89a63b1cff0f014dce03e7e86c7c5c668b150f19133525adbe20e`.
+It remains a draft until the source checkpoint is committed.
+
+Focused source verification passed: the benchmark target builds, the S8.3
+suite reports 552 checks / zero failures, and the complete solve suite reports
+86,224 checks / zero failures. The latter exposed a Gate 2 observational
+defect: lineage classification could throw on deliberately synthetic
+white-box action types outside the product family vocabulary. Lineage now
+counts those as unclassified and skips their family join; it cannot fail or
+alter a solve. Product registries continue to require zero unclassified
+actions.

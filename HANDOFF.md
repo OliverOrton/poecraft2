@@ -98,6 +98,17 @@ configured MCP server has been normally restarted and a new dry run exposes
 `solver_lab_execution_request_v4` with the five truthful action-envelope
 components.
 
+Oliver subsequently authorized a normal restart. Fresh-task MCP preflight now
+passes v4 with all five truthful identity components, and dispatcher ownership
+recovered normally with no active work or forced catalogue mutation. Gate 3's
+benchmark-private finite automatic-kind allowlist is source complete and
+native-validated: omission preserves the full product envelope, while an empty
+list suppresses generated candidates without changing the primitive registry,
+goal abstraction, mechanics, public ABI, bindings, WASM, or product defaults.
+The benchmark, S8.3, and complete solve suites pass. The two-layer immutable
+MCP add-back matrix is the current owner; no Gate 4 behavior repair is yet
+authorized.
+
 The worktree contains one preserved untracked file named `0`, three bytes with
 the content line `0`, which appeared during the preceding diagnostic window.
 Do not delete, clean, edit, stage, rename, or commit it. Stop if any other

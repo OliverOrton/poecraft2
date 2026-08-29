@@ -1013,6 +1013,8 @@ CalcContext::build_state_local_automatic_candidates(
     std::array<std::uint64_t, kAutomaticTelemetryKindCount> shared_weights{};
     const bool imprint_family_enabled =
         limits.consider_imprint_programs &&
+        !solver_automatic_candidate_disabled(
+            goal_, AutomaticCandidateKind::Imprint) &&
         !solver_action_family_disabled(
             goal_, SolverActionFamily::Imprint);
     if (imprint_family_enabled) {

@@ -2690,6 +2690,19 @@ void SolveWork::Impl::refresh_operator_lineage_diagnostics(
 
     const std::vector<PlannerOperator>& planners = calc.operators();
     const ActionRegistry& registry = calc.registry();
+    const auto lineage_family_for_action = [](
+            const ActionDescriptor& action)
+            -> std::optional<SolverActionFamily> {
+        try {
+            return solver_action_family_for_action(action);
+        } catch (const std::logic_error&) {
+            /* Native white-box tests may inject deliberately synthetic action
+             * types that are not part of the product family vocabulary.
+             * Observational lineage must disclose and skip those entries,
+             * never turn them into solve authority or a solve failure. */
+            return std::nullopt;
+        }
+    };
     std::vector<Lifecycle> lifecycle(planners.size());
     std::vector<bool> priced_supported(planners.size(), false);
     for (const PricedOperator& priced : operators) {
@@ -2779,8 +2792,11 @@ void SolveWork::Impl::refresh_operator_lineage_diagnostics(
                 action_dependencies.begin(), action_dependencies.end()),
             action_dependencies.end());
         for (const std::uint32_t action : action_dependencies) {
-            family_masks[index] |= solver_action_family_bit(
-                solver_action_family_for_action(registry.actions[action]));
+            const std::optional<SolverActionFamily> family =
+                lineage_family_for_action(registry.actions[action]);
+            if (family.has_value()) {
+                family_masks[index] |= solver_action_family_bit(*family);
+            }
         }
         if (planner.automatic_kind != AutomaticCandidateKind::None) {
             const SolverActionFamily family =
@@ -2793,9 +2809,16 @@ void SolveWork::Impl::refresh_operator_lineage_diagnostics(
     }
 
     std::array<FamilyTotals, kSolverActionFamilyCount> family_totals{};
+    std::uint64_t unclassified_registry_actions = 0;
     for (const ActionDescriptor& action : registry.actions) {
-        FamilyTotals& values = family_totals[static_cast<std::size_t>(
-            solver_action_family_for_action(action))];
+        const std::optional<SolverActionFamily> family =
+            lineage_family_for_action(action);
+        if (!family.has_value()) {
+            ++unclassified_registry_actions;
+            continue;
+        }
+        FamilyTotals& values =
+            family_totals[static_cast<std::size_t>(*family)];
         ++values.registry_actions;
         if (action.product_role == ProductActionRole::Candidate) {
             ++values.primitive_candidates;
@@ -2918,6 +2941,8 @@ void SolveWork::Impl::refresh_operator_lineage_diagnostics(
             std::to_string(diagnostics.solve_setup_ns) + "}";
     json += ",\"planner_construction\":{\"registry_actions\":" +
             std::to_string(registry.actions.size()) +
+            ",\"unclassified_registry_actions\":" +
+            std::to_string(unclassified_registry_actions) +
             ",\"planner_operators\":" + std::to_string(planners.size()) +
             "}";
     std::uint64_t precompiled_classes = 0;

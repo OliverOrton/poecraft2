@@ -594,6 +594,61 @@ struct pc_solver {
 
 namespace {
 
+pc_result create_solver(
+    pc_session_handle session,
+    const char* goal_json,
+    const size_t goal_json_size,
+    const std::optional<std::uint32_t> automatic_candidate_kind_mask,
+    pc_solver_handle* out_solver,
+    pc_error_info* out_error) {
+    if (session == nullptr || goal_json == nullptr || out_solver == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (automatic_candidate_kind_mask.has_value() &&
+        (*automatic_candidate_kind_mask &
+         ~solver::kAllAutomaticCandidateKindsMask) != 0) {
+        set_error(
+            out_error, PC_RESULT_INVALID_ARGUMENT,
+            "automatic candidate diagnostic mask contains an unknown kind");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    *out_solver = nullptr;
+    try {
+        auto holder = std::make_unique<pc_solver>();
+        holder->session = session->impl;
+        const auto registry_started = std::chrono::steady_clock::now();
+        const solver::ActionRegistryBuildOptions registry_options =
+            registry_build_options(
+                *holder->session, goal_json, goal_json_size);
+        solver::ActionRegistry registry =
+            solver::build_action_registry(*holder->session, registry_options);
+        holder->registry_generation_ns = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - registry_started)
+                .count());
+        std::vector<std::uint32_t> candidates;
+        solver::GoalSpec goal = parse_goal(
+            *holder->session, goal_json, goal_json_size, candidates,
+            registry);
+        if (automatic_candidate_kind_mask.has_value()) {
+            goal.automatic_candidate_kind_mask =
+                *automatic_candidate_kind_mask;
+        }
+        holder->calc = std::make_unique<solver::CalcContext>(
+            holder->session, goal, std::move(registry), candidates, false,
+            !goal.primitive_actions_explicit, false, std::nullopt,
+            std::vector<solver::CountObservation>{},
+            goal.automatic_candidates);
+        *out_solver = holder.release();
+        clear_error(out_error);
+        return PC_RESULT_OK;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, ex.what());
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+}
+
 solver::SolveOptions solve_options(const pc_solve_options* options) {
     solver::SolveOptions value;
     if (options == nullptr) return value;
@@ -1058,40 +1113,21 @@ pc_result pc_solver_create(
     size_t goal_json_size,
     pc_solver_handle* out_solver,
     pc_error_info* out_error) {
-    if (session == nullptr || goal_json == nullptr || out_solver == nullptr) {
-        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
-        return PC_RESULT_INVALID_ARGUMENT;
-    }
-    *out_solver = nullptr;
-    try {
-        auto holder = std::make_unique<pc_solver>();
-        holder->session = session->impl;
-        const auto registry_started = std::chrono::steady_clock::now();
-        const solver::ActionRegistryBuildOptions registry_options =
-            registry_build_options(
-                *holder->session, goal_json, goal_json_size);
-        solver::ActionRegistry registry =
-            solver::build_action_registry(*holder->session, registry_options);
-        holder->registry_generation_ns = static_cast<std::uint64_t>(
-            std::chrono::duration_cast<std::chrono::nanoseconds>(
-                std::chrono::steady_clock::now() - registry_started)
-                .count());
-        std::vector<std::uint32_t> candidates;
-        const solver::GoalSpec goal = parse_goal(
-            *holder->session, goal_json, goal_json_size, candidates,
-            registry);
-        holder->calc = std::make_unique<solver::CalcContext>(
-            holder->session, goal, std::move(registry), candidates, false,
-            !goal.primitive_actions_explicit, false, std::nullopt,
-            std::vector<solver::CountObservation>{},
-            goal.automatic_candidates);
-        *out_solver = holder.release();
-        clear_error(out_error);
-        return PC_RESULT_OK;
-    } catch (const std::exception& ex) {
-        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, ex.what());
-        return PC_RESULT_INVALID_ARGUMENT;
-    }
+    return create_solver(
+        session, goal_json, goal_json_size, std::nullopt, out_solver,
+        out_error);
+}
+
+pc_result solver::create_solver_with_automatic_candidate_diagnostic(
+    pc_session_handle session,
+    const char* goal_json,
+    const std::size_t goal_json_size,
+    const std::uint32_t automatic_candidate_kind_mask,
+    pc_solver_handle* out_solver,
+    pc_error_info* out_error) {
+    return create_solver(
+        session, goal_json, goal_json_size,
+        automatic_candidate_kind_mask, out_solver, out_error);
 }
 
 void pc_solver_destroy(pc_solver_handle solver) {

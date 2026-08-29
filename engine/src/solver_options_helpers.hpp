@@ -407,7 +407,8 @@ AutomaticOptionSynthesis synthesize_automatic_options(
     const AbstractState& state = calc.state(state_id);
     AutomaticOptionSynthesis synthesis;
     std::vector<FixedOptionSpec>& result = synthesis.specs;
-    if (!goal.automatic_candidates) return synthesis;
+    if (!goal.automatic_candidates ||
+        goal.automatic_candidate_kind_mask == 0) return synthesis;
     const auto action_has_prices = [&](const std::uint32_t action_index) {
         if (prices == nullptr) return true;
         return std::all_of(
@@ -426,7 +427,9 @@ AutomaticOptionSynthesis synthesize_automatic_options(
      * an observed set has no goal offer, the cheapest exact cleanup/retry
      * continuation among the legal non-goal offers.
      */
-    if (!solver_action_family_disabled(
+    if (!solver_automatic_candidate_disabled(
+            goal, AutomaticCandidateKind::Veiled) &&
+        !solver_action_family_disabled(
             goal, SolverActionFamily::Veiled) &&
         state.rarity == PC_RARITY_RARE &&
         (state.flags & kFlagVeiledMod) == 0 &&
@@ -494,7 +497,9 @@ AutomaticOptionSynthesis synthesize_automatic_options(
      * sequence of real currency operations; no hidden dominance flag enters
      * the state or evaluator.
      */
-    if (!solver_action_family_disabled(
+    if (!solver_automatic_candidate_disabled(
+            goal, AutomaticCandidateKind::EldritchSide) &&
+        !solver_action_family_disabled(
             goal, SolverActionFamily::Eldritch) &&
         session.eldritch_eligible &&
         state.rarity == PC_RARITY_RARE) {
@@ -724,7 +729,9 @@ AutomaticOptionSynthesis synthesize_automatic_options(
             : goal_mask_for_mod(
                   session, goal,
                   registry.actions.at(multimod_entry->second).params.mod_id);
-    if (!solver_action_family_disabled(
+    if (!solver_automatic_candidate_disabled(
+            goal, AutomaticCandidateKind::MultimodFinish) &&
+        !solver_action_family_disabled(
             goal, SolverActionFamily::Metamod) &&
         !solver_action_family_disabled(
             goal, SolverActionFamily::Bench) &&
@@ -763,7 +770,11 @@ AutomaticOptionSynthesis synthesize_automatic_options(
     const bool cleanup_before_setup =
         state_has_unfractured_crafted(state) &&
         state.crafted_goal_mask == 0;
-    if (!solver_action_family_disabled(
+    if ((!solver_automatic_candidate_disabled(
+             goal, AutomaticCandidateKind::TemporaryBenchBlocker) ||
+         !solver_automatic_candidate_disabled(
+             goal, AutomaticCandidateKind::CannotRoll)) &&
+        !solver_action_family_disabled(
             goal, SolverActionFamily::TemporaryBench) &&
         !solver_action_family_disabled(
             goal, SolverActionFamily::Bench) &&
@@ -953,6 +964,10 @@ AutomaticOptionSynthesis synthesize_automatic_options(
             option.automatic_kind = group.pool_tag_blocker
                 ? AutomaticCandidateKind::CannotRoll
                 : AutomaticCandidateKind::TemporaryBenchBlocker;
+            if (solver_automatic_candidate_disabled(
+                    goal, option.automatic_kind)) {
+                continue;
+            }
             option.relevant_goal_mask = 1u << group.goal_slot;
             result.push_back(std::move(option));
         }
@@ -981,7 +996,9 @@ AutomaticOptionSynthesis synthesize_automatic_options(
             reachable_by_followup.at(followup),
             calc.layout().slots.at(slot).satisfying_mask);
     };
-    if (!solver_action_family_disabled(
+    if (!solver_automatic_candidate_disabled(
+            goal, AutomaticCandidateKind::ProtectedMetamod) &&
+        !solver_action_family_disabled(
             goal, SolverActionFamily::Metamod) &&
         !solver_action_family_disabled(
             goal, SolverActionFamily::Bench))
@@ -1878,6 +1895,8 @@ discover_automatic_imprint_options_cooperatively(
     AutomaticAdmissionLimits limits) {
     ImprintDiscoveryResult result;
     if (!limits.consider_imprint_programs ||
+        solver_automatic_candidate_disabled(
+            calc.goal(), AutomaticCandidateKind::Imprint) ||
         solver_action_family_disabled(
             calc.goal(), SolverActionFamily::Imprint)) {
         co_return result;

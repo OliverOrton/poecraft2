@@ -96,13 +96,17 @@ std::vector<PlannerOperator> build_planner_operators(
         bind_planner_bestiary_action_ids(session, primitive);
         if (goal.automatic_candidates &&
             !solver_action_disabled(goal, action)) {
-            if (action.params.type == ActionType::Fracture) {
+            if (action.params.type == ActionType::Fracture &&
+                !solver_automatic_candidate_disabled(
+                    goal, AutomaticCandidateKind::Fracture)) {
                 primitive.relevant_goal_mask =
                     goal.slots.size() == 32
                         ? 0xffffffffu
                         : (1u << goal.slots.size()) - 1u;
                 primitive.automatic_kind = AutomaticCandidateKind::Fracture;
             } else if (action.params.type == ActionType::Bench &&
+                       !solver_automatic_candidate_disabled(
+                           goal, AutomaticCandidateKind::PermanentBench) &&
                        action.params.mod_id < session.mod_count) {
                 primitive.relevant_goal_mask =
                     goal_mask_for_mod(session, goal, action.params.mod_id);
@@ -116,7 +120,9 @@ std::vector<PlannerOperator> build_planner_operators(
     }
 
     std::vector<FixedOptionSpec> option_specs = goal.fixed_options;
-    if (goal.automatic_candidates && goal.required_satisfied_slots() > 1) {
+    if (goal.automatic_candidates && goal.required_satisfied_slots() > 1 &&
+        !solver_automatic_candidate_disabled(
+            goal, AutomaticCandidateKind::ConstructiveRenewal)) {
         const std::uint32_t all_goal_slots =
             goal.slots.size() == 32
                 ? 0xffffffffu
