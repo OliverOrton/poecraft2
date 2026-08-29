@@ -61,11 +61,15 @@ binding, resolves and injects the full UCRT64 toolchain, and provisions that
 toolchain in hosted Windows CI. Local configure and native test-target build
 pass. A hosted result cannot be claimed until these changes are pushed and an
 actual run is observed. Gate 1 is now repairing the false Solver Lab
-disabled-family identity component, followed by the native
-256-discovered-state access violation, before any action-envelope behavior
-change. The execution-request v4 identity repair is source-complete with
-service, JSON CLI, and real stdio MCP regressions; low-cap native finalization
-is the current owner.
+disabled-family identity component and the native 256-discovered-state access
+violation before any action-envelope behavior change. Gate 1 is source
+complete: execution-request v4 now exposes five truthful envelope components,
+and the C ABI safely reports an unavailable start value when a discovery cap
+finishes before any Bellman value row. Immutable MCP caps 1, 2, 255, 256, 257,
+and 512 all terminate as named resource refusals with no crash or invalid
+policy; native API and solver regressions cover one completed row and retained
+executable fallback contracts. Gate 2 operator lineage and phase ownership is
+the current owner.
 
 The worktree contains one preserved untracked file named `0`, three bytes with
 the content line `0`, which appeared during the preceding diagnostic window.

@@ -128,7 +128,7 @@ Gate 0's local source prerequisite is complete. Its hosted observation remains
 pending an owner-authorized push and does not block local Gate 1 correctness
 work.
 
-## Gate 1 — In Progress
+## Gate 1 — Source Complete
 
 ### Effective Family Identity — Source Complete
 
@@ -155,5 +155,69 @@ work.
 - Narrow result: 15 tests passed in 9.35 seconds across the contracts, service,
   JSON CLI identity regression, and real stdio MCP identity regression.
 
-Next: reproduce and repair the currency-only low-cap access violation without
-changing the requested envelope.
+### Native Low-Cap Finalization — Source Complete
+
+- Reproduced the immutable original witness
+  `diagnostic-clean5-census-currency-only-20260829` revision
+  `case-rev-a48530752a745e57cb5055019e8d330e`, job
+  `job-eb673849-7476-4480-bc25-7b2a93fb9306`, attempt
+  `attempt-c9da5c17-cd0d-4698-94fc-d706fa8741e7`. Its Windows exit was
+  `0xC0000005` after a verified partial with 256 discovered, zero expanded,
+  256 frontier, zero rows, and zero transitions.
+- GDB reproduced the same immutable input and stopped in
+  `copy_solve_summary -> pc_solver_solve_finish`. The facade unconditionally
+  indexed `result.values[result.start_state]`, although a discovery cap may
+  truthfully finish before the Bellman table has any row. This is a C ABI
+  finalization defect, not an action-envelope or catalogue defect.
+- The C ABI now publishes positive infinity as the unavailable start value
+  when no value row exists. Existing JSON serialization therefore retains its
+  safe `null` representation. The result remains a named resource-cap refusal
+  with no policy; it does not fabricate closure or a strategy.
+- A direct exact rerun of the original immutable case exited zero in 473 ms as
+  `refused_state_cap`, `refused_resource_cap`, with 256 discovered, zero
+  expanded, zero rows, zero transitions, no policy, and no process survivor.
+
+All seven immutable MCP runs below use the same case
+`diagnostic-clean5-census-currency-only-20260829`. Each revision was cloned
+from the original witness, natively validated, submitted with a complete
+idempotency key, and allowed to finish naturally. Every attempt exited zero,
+had `survivor=false`, and reported `refused_state_cap` /
+`refused_resource_cap`, no policy, zero expanded states, zero rows, and zero
+transitions. Discovered/frontier states exactly equalled the selected cap.
+
+| Cap/evidence | Revision / content SHA-256 | Job / attempt | Full request / core solve | Ordinary result / finalization | Report artifact / SHA-256 |
+| --- | --- | --- | --- | --- | --- |
+| 1 / full | `case-rev-c4b29c26af43c6720552b61a8289d78a` / `c4b29c26af43c6720552b61a8289d78a63b4b486d1b806b903651126cf83db1c` | `job-763c9641-43a2-44ce-abea-eda51377adbf` / `attempt-e1d619ae-d393-4bc5-bc03-cf3ce9b1814d` | `d5921b7261bad14a2a2c14102afffc166b66be7d03727b4bf5c9513402581cf2` / `c5dc3a24bb800a5d23b682b8d89f82e8865f86e7c6bf7fac321683c720094760` | `8e6e87d15c0539254056960d4c2a82a7aa6cf581480f3e55c15f851d5c124bef` / `5fec8f977ad267777c8b151f0363a0d5b2381eac03af5399ed3babd195147d4a` | `artifact-ed92bfac8c467d1d9bc257972992581e` / `c641ccce6186fa0755b3ed5ad0bedfff99d0552e44243054b82ff62989bd6b7b` |
+| 2 / full | `case-rev-13bd4c3cf4bab3a69017d628cff9f6d7` / `13bd4c3cf4bab3a69017d628cff9f6d7788b81ccd4edd516356dc57ebee35e1a` | `job-3b9d3190-4161-4761-9ad3-8930edb5bfcb` / `attempt-acd8f3c7-eb88-461f-a1e7-7d569df4428a` | `14aa88de442ba36720f54fe078ffb4f6cdc8a7344dba8969223a6684a437fc8e` / `6c11e46a52f0ab6e8c8dd3d1debfa6cb18535b3d881e689c51050ff82ecc64e6` | `9871e2846659abe792a57d407c139ad468e2e0f96096c8bce8d17b261720e158` / `accfac012b3d5cf5e6bfb412e29ffbef3c3f9a655522f7ce8da094396a365caf` | `artifact-00217ee01db1d0e0833730dd2c2a30a6` / `d209b4dcbfc26ec1c732790195b888c073f56f61dbce98ea0e5a4960ff84c9ea` |
+| 255 / full | `case-rev-c2a5b8ac0d2c6ecbf61b8d997ada10bf` / `c2a5b8ac0d2c6ecbf61b8d997ada10bf5252e79b3319dd9038dd28af8634d219` | `job-bbf76d70-5831-481f-be97-18a0fbf5a573` / `attempt-e3c75403-3cd2-4f37-8a02-cf1ec0a00fa3` | `e0dafc7d0da7860d280ba6397637bca03f61e1c3fbb48b3f77596f7727ef5125` / `f54d6aba2bc7095615291bfca49e520b5c076e16ca45db7b2afe5b5cf78f0126` | `953d1ceba7cfc0ab015a60642e6e3ab958b4293f4b4fd83ea70c8b41e46e27b4` / `59efbd538247cf70a505039f3717eb8a41e8753d6e62faa012e355cf6b6c84e2` | `artifact-c1cb2889d1855eb7ac6c66c5967df0d7` / `6adaa0df7771642f66cf2c73b5fc09308f5f2e6945f01cd190e7572d0edbb909` |
+| 256 / full | `case-rev-3383ce15e7584b7ba39fd2aefb17b996` / `3383ce15e7584b7ba39fd2aefb17b99696e768cb3a73340e03238b3102cf1744` | `job-b06b5a60-64cb-4907-8cda-c31a471439db` / `attempt-3b7d3f7d-0751-42c5-ac98-aa8dc345eaf1` | `0b96a4e59e66cbb20efc526fc7f0dcea68969f5b7d69ad11d2ce2dec92fadbbd` / `14f9d8022586bc11d7d63dd8555b21afafdfef647626e48ee1275f5560e0670c` | `046e6f7bbb0ce95dfeec9ba3670201a1217ac8c320d2d94bddd14abb04dcbfd3` / `ba30d8864d151dddaff23f72f9832a81a44a35cca39e429a1dba43b0eb1fe6f9` | `artifact-93ee25dd87da5dde0367c935fbdc3db5` / `12fce36310858724b6776d6188f88b28099b69bb06482b61ff1e6f25b4447645` |
+| 257 / full | `case-rev-a4f58821e5979becfe7f00ae52c309a4` / `a4f58821e5979becfe7f00ae52c309a44598ef955795cf4bfdf618a6aab8aa64` | `job-2c985c1a-5fae-4804-87b6-517424bd4485` / `attempt-09c53492-5ffd-4f18-a132-084f04a01977` | `f82dfa2af9802cff32e58c3f91bada08e742ebc2fa72a8e8eb80c4ded68a3aa8` / `e8696b87ee2fd2b918d64add4c368c0ae06c60efd731bc114c403e81bb4f9670` | `2dad51c1eb0571c5423d8e4e026f3bb4c6d51f10fcff6c8f2a22595f95aeb9d8` / `21fba7dda065df56cba104d9dbc49a0d41c7347f94c4d7e205d60412e21e5da1` | `artifact-7e957787515b51b5b0a1d4e0fb3cb06e` / `1098c728b5b5d9b9d843674cf1d4fe11fa059658a8bc08358776daab76084c16` |
+| 512 / full | `case-rev-97c03e2ecffcee979979ee75e1338b3e` / `97c03e2ecffcee979979ee75e1338b3e067601dd209fc5ec9657b2c324df6e1b` | `job-b1ffeade-8054-4240-af66-60cb277eef0f` / `attempt-eb861404-059f-42b2-a284-e1ffa2bc957a` | `f8ac046cd7765a04e529e1988d61ff362e55a70c3d995ccd102c60520d6cf33b` / `3b28afb32b548bf92be050a9f24abbc5796f6d21b2ffba9bb55bf31215893858` | `ecc59fc1ed16a25af430d81bcf2278d5b2d3bd072ccffff29a0f9d895f6af927` / `02babbd78fda5aaf57d34dd66b018de5cbc2b14eaef514a895abade1d4892493` | `artifact-b1e0d34a9b4317ba3aa0e18d86e4319f` / `34fd680044c5fac2a85a6c37fd8d248987ba025a75c023430be7b6ba514aef05` |
+| 256 / compact | `case-rev-e248f974899ff55527f84e60e895de93` / `e248f974899ff55527f84e60e895de9375adf73de268e562af18113f16c4d32b` | `job-55262c5d-c46f-43a2-909d-b5b1bf53552e` / `attempt-1aa13532-7da9-43c3-a44b-e369b2d1052a` | `c67a5b4fef7a456074798c38b2d6d5b7356689ee10ae21b48c11ca9f8146ff05` / `b2d6b2bf450a27e1e12b42aca18df24eb477420388fc3939b9ba4273e7d5296e` | `ddb076ad07510209bd4f944bedd2974d37271f8babb92a338f37f4d42d2dbf64` / `c09585ab2710ccc38953d3b4c849fb2a62d4ed8a281d4b5bf1f5fe68116436fa` | `artifact-ef79f7aba780ae423509b063811629bd` / `449fa2258cf57239a830c7bc9491f48ca0bdd791ee44f5e0d30a7c065b9d50fd` |
+
+The full-evidence runs used 22,200, 42,920, 83,060, 83,080, 83,420, and
+149,280 reforge-work units respectively. Their native walls were 769, 767,
+768, 775, 771, and 782 ms; compact cap 256 used the same 83,080 deterministic
+work units and 767 ms. None published an invalid strategy.
+
+The persistent configured MCP process used for this crash-only matrix was
+started before the v4 identity source change and therefore bound these jobs to
+legacy execution-request v3. Its process provenance is recorded rather than
+misrepresented as v4 evidence. The fresh stdio MCP regression above is the
+v4 identity proof; final operator qualification will require a fresh
+current-source server before v4 identities are accepted.
+
+Native regressions complete the remaining structural cases without changing
+the requested envelope:
+
+- the stepped public C ABI runs both full-evidence modes at a one-state cap,
+  completes one row, and returns a named state-cap refusal with no policy;
+- the direct finalization helper exercises a cap before any value row; and
+- the existing solver fallback fixture interrupts refinement after retaining
+  a verified executable policy, requires bounded-feasible publication and a
+  compilable strategy, or accepts direct exact certification if the cheaper
+  core policy now closes first.
+
+Narrow verification passed: public API suite, 2,727 checks / zero failures;
+solver suite, 86,220 checks / zero failures. Gate 1 changes no action-envelope
+behavior. Gate 2 operator-lineage and phase-owner instrumentation is next.

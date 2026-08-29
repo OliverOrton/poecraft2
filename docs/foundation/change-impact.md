@@ -131,6 +131,14 @@ G++; local configure and native test-target build completed through the
 canonical preset. Hosted completion still requires observing a run after these
 workflow changes are pushed.
 
+Low-cap C ABI addendum (2026-08-29): the solver summary's existing
+`start_value` field now explicitly represents a missing Bellman row as
+positive infinity; no symbol, layout, enum, facade export, or binding shape
+changed. Native API and solver suites are the narrow source checks. Because
+the WASM JSON surface converts non-finite numbers to `null`, the release WASM
+rebuild and downstream web checks remain required once at the active plan's
+final acceptance gate rather than at this intermediate checkpoint.
+
 Native and WASM source discovery has one owner:
 `engine/engine-sources.txt`. CMake, `scripts/build.ps1`, and
 `scripts/build-wasm.ps1` consume that inventory and reject missing, duplicate,

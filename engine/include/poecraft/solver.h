@@ -503,7 +503,8 @@ typedef struct pc_solve_summary {
     uint32_t abi_version;
     int32_t converged;
     uint32_t start_state;
-    double start_value; /* expected remaining cost from the start item */
+    double start_value; /* expected remaining cost from the start item;
+                           infinity when no value row was completed */
     uint32_t expanded_states;
     uint32_t sweeps;
     double residual;

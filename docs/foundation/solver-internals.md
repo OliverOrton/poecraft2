@@ -255,6 +255,12 @@ Oliver ruling and belong in the [mechanics library](../mechanics/README.md).
   not its coarse, selected, direct, strict, or fallback source estimate. Later
   candidates cannot replace a cheaper verified artifact without beating that
   exact evaluated cost.
+- A resource cap may finish before the start state has a Bellman value row.
+  Native finalization then publishes an unavailable start value (positive
+  infinity in the C ABI and `null` in JSON), a named resource-cap termination,
+  and no policy. It must not index a missing row, fabricate closure, or emit a
+  strategy. A previously certified executable fallback remains a separate
+  bounded-feasible publication contract.
 - Crafting legality and probabilities stay in the native engine. Compilation,
   evaluation, WASM, and TypeScript consume native results; they do not recreate
   mechanics.

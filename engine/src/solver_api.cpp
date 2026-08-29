@@ -966,7 +966,7 @@ void copy_solve_summary(
     out_summary->abi_version = PC_ABI_VERSION;
     out_summary->converged = result.converged ? 1 : 0;
     out_summary->start_state = result.start_state;
-    out_summary->start_value = result.values[result.start_state];
+    out_summary->start_value = solver::solve_result_start_value(result);
     out_summary->expanded_states = result.diagnostics.expanded_states;
     out_summary->sweeps = result.diagnostics.sweeps;
     out_summary->residual = result.diagnostics.residual;

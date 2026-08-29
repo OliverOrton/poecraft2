@@ -8,6 +8,7 @@
 #include "poecraft/solver.h"
 
 #include "../src/json.hpp"
+#include "../src/solver_solve_contracts.hpp"
 
 #include <algorithm>
 #include <array>
@@ -1609,6 +1610,11 @@ void run_public_product_reforge_family_gate(const char* artifact_dir) {
 void run_public_solver_gate(const char* artifact_dir) {
     const std::string dir = artifact_dir;
 
+    poecraft::solver::SolveResult no_value_row;
+    no_value_row.start_state = 0;
+    PC_CHECK(std::isinf(
+        poecraft::solver::solve_result_start_value(no_value_row)));
+
     pc_error_info error;
     pc_error_info_init(&error);
     pc_data_handle data = nullptr;
@@ -2040,6 +2046,66 @@ void run_public_solver_gate(const char* artifact_dir) {
     pc_economy_handle economy = nullptr;
     PC_CHECK(pc_economy_load_json(economy_json, std::strlen(economy_json),
                                   &economy, &error) == PC_RESULT_OK);
+
+    /* A discovery cap can also fire after one row exists. Exercise both
+     * evidence modes through the stepped C ABI used by the benchmark worker
+     * and require the same truthful named no-policy result. */
+    const std::string one_row_cap_goal =
+        std::string("{\"version\":\"v1\",\"rarity\":\"rare\",\"slots\":["
+                    "{\"family_mod_key\":\"") +
+        mod_info.key +
+        "\",\"min_tier\":0}],\"actions\":[\"scour\"]}";
+    for (const uint32_t evidence_flag : {
+             uint32_t{0}, uint32_t{PC_SOLVER_FLAG_FULL_EVIDENCE}}) {
+        pc_solver_handle capped_solver = nullptr;
+        PC_CHECK(pc_solver_create(
+                     session, one_row_cap_goal.c_str(), one_row_cap_goal.size(),
+                     &capped_solver, &error) == PC_RESULT_OK);
+        pc_solve_options capped_options{};
+        capped_options.struct_size = sizeof(capped_options);
+        capped_options.abi_version = PC_ABI_VERSION;
+        capped_options.max_states = 1;
+        capped_options.max_discovered_states = 1;
+        capped_options.max_expanded_states = 1;
+        capped_options.max_state_action_rows = 16;
+        capped_options.max_transitions = 16;
+        capped_options.max_reforge_work = 1024;
+        capped_options.max_solver_owned_bytes = 64ull * 1024ull * 1024ull;
+        capped_options.max_diagnostic_samples = 16;
+        capped_options.max_telemetry_json_bytes = 1024ull * 1024ull;
+        capped_options.solver_flags =
+            PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES | evidence_flag;
+        PC_CHECK(pc_solver_solve_begin(
+                     capped_solver, &item, economy, &capped_options,
+                     &error) == PC_RESULT_OK);
+        pc_solve_progress capped_progress{};
+        std::uint32_t capped_steps = 0;
+        do {
+            PC_CHECK(pc_solver_solve_step(
+                         capped_solver, 1, &capped_progress,
+                         &error) == PC_RESULT_OK);
+            ++capped_steps;
+        } while (!capped_progress.done && capped_steps < 10000);
+        PC_CHECK(capped_progress.done == 1);
+        pc_solve_summary capped_summary{};
+        PC_CHECK(pc_solver_solve_finish(
+                     capped_solver, &capped_summary,
+                     &error) == PC_RESULT_OK);
+        PC_CHECK(capped_summary.start_state == 0);
+        PC_CHECK(capped_summary.expanded_states == 1);
+        PC_CHECK(capped_summary.policy_available == 0);
+        PC_CHECK(capped_summary.termination ==
+                 PC_SOLVE_TERMINATION_REFUSED_RESOURCE_CAP);
+        PC_CHECK(capped_summary.stop_cause == PC_SOLVE_STOP_STATE_CAP);
+        PC_CHECK((capped_summary.cap_hit_mask & PC_SOLVE_CAP_STATE) != 0);
+        double unavailable_value = -1.0;
+        PC_CHECK(pc_solver_state_value(
+                     capped_solver, capped_summary.start_state,
+                     &unavailable_value, nullptr,
+                     &error) == PC_RESULT_OK);
+        PC_CHECK(unavailable_value == capped_summary.start_value);
+        pc_solver_destroy(capped_solver);
+    }
 
     pc_solve_summary solve_summary;
     PC_CHECK(pc_solver_solve(solver, &item, economy, nullptr,

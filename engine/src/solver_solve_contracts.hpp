@@ -1071,6 +1071,12 @@ struct SolveResult {
     SolveOptions options;
 };
 
+inline double solve_result_start_value(const SolveResult& result) {
+    return result.start_state < result.values.size()
+               ? result.values[result.start_state]
+               : std::numeric_limits<double>::infinity();
+}
+
 namespace solve_detail {
 
 /* A Bellman optimum over a strict subset of delayed actions is scheduling
