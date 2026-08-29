@@ -256,13 +256,12 @@ std::uint64_t SolveWork::Impl::graph_identity() const {
 
 std::uint64_t SolveWork::Impl::artifact_identity() const {
         std::uint64_t hash = 1469598103934665603ULL;
-        identity_mix(
-            hash,
-            static_cast<std::uint64_t>(
-                reinterpret_cast<std::uintptr_t>(
-                    calc.session().data.get())));
-        identity_mix(
-            hash, calc.session().data->artifact_schema_version);
+        const DataImpl& data = *calc.session().data;
+        identity_mix(hash, data.artifact_schema_version);
+        identity_mix_string(hash, data.artifact_data_hash);
+        identity_mix_string(hash, data.artifact_source_hash);
+        identity_mix_string(hash, data.artifact_game_data_hash);
+        identity_mix_string(hash, data.artifact_strings_hash);
         identity_mix(hash, calc.session().base_index);
         identity_mix(hash, calc.session().item_level);
         return hash;
@@ -1080,6 +1079,583 @@ std::uint64_t SolveWork::Impl::incumbent_owned_bytes(
         }
         return bytes;
     }
+
+std::uint64_t SolveWork::Impl::carrier_ladder_boundary_owned_bytes(
+        const CarrierLadderBoundaryCapture& capture) const {
+        std::uint64_t bytes = sizeof(CarrierLadderBoundaryCapture);
+        const std::uint64_t incumbent = incumbent_owned_bytes(capture.prefix);
+        if (incumbent >= sizeof(BoundedPolicyIncumbent)) {
+            bytes += incumbent - sizeof(BoundedPolicyIncumbent);
+        }
+        bytes += capture.stops.capacity() *
+            sizeof(CarrierLadderBoundaryCapture::Stop);
+        bytes += capture.target_state_key.capacity() *
+            sizeof(std::uint64_t);
+        for (const auto& stop : capture.stops) {
+            bytes += stop.coarse_state_key.capacity() *
+                sizeof(std::uint64_t);
+        }
+        bytes += capture.recovered_members.capacity() *
+            sizeof(CarrierLadderBoundaryCapture::RecoveredMember);
+        for (const auto& member : capture.recovered_members) {
+            bytes += member.stable_key.capacity() * sizeof(std::uint64_t);
+        }
+        bytes += capture.status.capacity() + 1;
+        bytes += capture.refusal.capacity() + 1;
+        bytes += capture.recovery_status.capacity() + 1;
+        bytes += capture.recovery_refusal.capacity() + 1;
+        return bytes;
+    }
+
+void SolveWork::Impl::capture_carrier_ladder_exact_boundary(
+        const std::uint32_t target_state,
+        const std::vector<double>& candidate_values,
+        const std::vector<std::uint64_t>& candidate_policy_rows,
+        const std::vector<std::uint8_t>& candidate_reachable,
+        const std::vector<std::uint32_t>& certified_frontier_operators,
+        std::vector<CarrierLadderBoundaryCapture::Stop> stops,
+        const char* refusal) {
+    if (options.carrier_ladder_exact_boundary_mode ==
+            CarrierLadderExactBoundaryMode::Off ||
+        carrier_ladder_exact_boundary_capture.has_value()) {
+        return;
+    }
+    struct PrivateWallCharge {
+        std::uint64_t& total_ns;
+        std::chrono::steady_clock::time_point started_at =
+            std::chrono::steady_clock::now();
+        ~PrivateWallCharge() {
+            const auto elapsed = std::chrono::duration_cast<
+                std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - started_at);
+            const std::uint64_t amount = static_cast<std::uint64_t>(
+                std::max<std::int64_t>(0, elapsed.count()));
+            total_ns = amount >
+                    std::numeric_limits<std::uint64_t>::max() - total_ns
+                ? std::numeric_limits<std::uint64_t>::max()
+                : total_ns + amount;
+        }
+    } private_wall_charge{
+        carrier_ladder_exact_boundary_private_wall_ns};
+    CarrierLadderBoundaryCapture capture;
+    capture.target_state = target_state;
+    if (target_state < calc.state_count()) {
+        capture.target_state_key =
+            exact_abstract_state_key(calc.state(target_state), 0);
+    }
+    capture.goal_identity = goal_identity();
+    capture.economy_identity = economy_identity();
+    capture.caller_scope_identity = caller_scope_identity();
+    capture.action_vocabulary_identity = action_vocabulary_identity();
+    capture.graph_identity = graph_identity();
+    capture.artifact_identity = artifact_identity();
+    capture.source_identity = 1469598103934665603ULL;
+    identity_mix_string(
+        capture.source_identity,
+        "carrier_ladder_exact_boundary_source_v1");
+    capture.executable_identity = 1469598103934665603ULL;
+    identity_mix_string(
+        capture.executable_identity,
+        "poecraft_native_carrier_boundary_contract_v1");
+    identity_mix(capture.executable_identity, PC_ABI_VERSION);
+
+    if (refusal != nullptr) {
+        capture.status = "refused_resource_cap";
+        capture.refusal = refusal;
+        capture.retained_owned_bytes =
+            carrier_ladder_boundary_owned_bytes(capture);
+        carrier_ladder_exact_boundary_capture.emplace(std::move(capture));
+        return;
+    }
+
+    const auto& limits =
+        options.carrier_ladder_exact_boundary_limits;
+    if (candidate_values.size() > limits.max_prefix_states ||
+        candidate_policy_rows.size() > limits.max_prefix_states ||
+        candidate_reachable.size() > limits.max_prefix_states) {
+        capture.status = "refused_resource_cap";
+        capture.refusal = "max_prefix_states";
+        capture.retained_owned_bytes =
+            carrier_ladder_boundary_owned_bytes(capture);
+        carrier_ladder_exact_boundary_capture.emplace(std::move(capture));
+        return;
+    }
+
+    capture.prefix.values = candidate_values;
+    capture.prefix.policy_rows = candidate_policy_rows;
+    capture.prefix.policy_reachable = candidate_reachable;
+    capture.prefix.frontier_operators = certified_frontier_operators;
+    capture.prefix.behavioral_representative_by_state =
+        result.behavioral_representative_by_state;
+    capture.prefix.goal_identity = capture.goal_identity;
+    capture.prefix.economy_identity = capture.economy_identity;
+    capture.prefix.action_vocabulary_identity =
+        capture.action_vocabulary_identity;
+    capture.prefix.action_vocabulary_size = operators.size();
+    capture.prefix.caller_scope_identity = capture.caller_scope_identity;
+    capture.prefix.graph_identity = capture.graph_identity;
+    capture.prefix.artifact_identity = capture.artifact_identity;
+    capture.prefix.source_generation = transition_cache->rows.size();
+    capture.prefix.target_generation = calc.state_count();
+    capture.prefix.graph_row_count = transition_cache->rows.size();
+    capture.prefix.graph_priced_row_count = priced_rows.size();
+    capture.prefix.graph_successor_count =
+        transition_cache->successors.size();
+    capture.prefix.graph_probability_count =
+        transition_cache->probabilities.size();
+    capture.prefix.graph_choice_count =
+        transition_cache->choices.size();
+    capture.prefix.graph_choice_successor_count =
+        transition_cache->choice_successors.size();
+    capture.prefix.graph_choice_option_count =
+        transition_cache->choice_options.size();
+    capture.prefix.graph_prefix_identity = incumbent_graph_prefix_identity(
+        capture.prefix.graph_row_count,
+        capture.prefix.graph_priced_row_count,
+        capture.prefix.graph_successor_count,
+        capture.prefix.graph_probability_count,
+        capture.prefix.graph_choice_count,
+        capture.prefix.graph_choice_successor_count,
+        capture.prefix.graph_choice_option_count);
+    capture.graph_prefix_identity = capture.prefix.graph_prefix_identity;
+    capture.prefix.kind = "carrier_ladder_failed_prefix_v1";
+    capture_incumbent_policy(capture.prefix);
+
+    std::sort(
+        stops.begin(), stops.end(),
+        [](const CarrierLadderBoundaryCapture::Stop& left,
+           const CarrierLadderBoundaryCapture::Stop& right) {
+            return std::tie(left.state, left.kind, left.operator_index) <
+                   std::tie(right.state, right.kind, right.operator_index);
+        });
+    stops.erase(
+        std::unique(
+            stops.begin(), stops.end(),
+            [](const CarrierLadderBoundaryCapture::Stop& left,
+               const CarrierLadderBoundaryCapture::Stop& right) {
+                return left.state == right.state &&
+                       left.kind == right.kind &&
+                       left.operator_index == right.operator_index;
+            }),
+        stops.end());
+    capture.stops = std::move(stops);
+    const bool has_certified_continuation =
+        output_incumbent.has_value() &&
+        output_incumbent->independently_certified &&
+        output_incumbent->independently_evaluated &&
+        output_incumbent->proper && output_incumbent->executable;
+    for (CarrierLadderBoundaryCapture::Stop& stop : capture.stops) {
+        if (stop.state >= calc.state_count()) {
+            capture.status = "refused_invalid_prefix";
+            capture.refusal = "exit_state_outside_graph";
+            continue;
+        }
+        stop.coarse_state_key =
+            exact_abstract_state_key(calc.state(stop.state), 0);
+        if (stop.operator_index != kNoId &&
+            stop.operator_index < calc.operators().size()) {
+            const PlannerOperator& planner =
+                calc.operators().at(stop.operator_index);
+            std::uint64_t semantic = 1469598103934665603ULL;
+            identity_mix(semantic, 1); /* exit operator schema */
+            identity_mix(semantic, stop.operator_index);
+            identity_mix(
+                semantic, static_cast<std::uint64_t>(planner.kind));
+            identity_mix_string(semantic, planner.id);
+            stop.operator_semantic_identity = semantic;
+        }
+        if (stop.kind ==
+                CarrierLadderBoundaryCapture::StopKind::CertifiedFrontier) {
+            if (!has_certified_continuation ||
+                stop.operator_semantic_identity == 0 ||
+                stop.state >= output_incumbent->values.size() ||
+                !std::isfinite(output_incumbent->values[stop.state])) {
+                stop.kind = CarrierLadderBoundaryCapture::StopKind::
+                    UnresolvedMissing;
+                stop.operator_index = kNoId;
+                stop.operator_semantic_identity = 0;
+            } else {
+                stop.incumbent_identity =
+                    output_incumbent->portfolio_identity;
+                stop.incumbent_graph_prefix_identity =
+                    output_incumbent->graph_prefix_identity;
+                stop.incumbent_artifact_identity =
+                    output_incumbent->artifact_identity;
+                stop.frontier_value_bits = std::bit_cast<std::uint64_t>(
+                    output_incumbent->values[stop.state]);
+                stop.independently_certified =
+                    output_incumbent->independently_certified;
+                stop.independently_evaluated =
+                    output_incumbent->independently_evaluated;
+                stop.proper = output_incumbent->proper;
+                stop.executable = output_incumbent->executable;
+            }
+        }
+        std::uint64_t continuation = 1469598103934665603ULL;
+        identity_mix(continuation, 1); /* exit continuation schema */
+        identity_mix(continuation, stop.state);
+        identity_mix(
+            continuation, static_cast<std::uint64_t>(stop.kind));
+        identity_mix(continuation, stop.operator_index);
+        for (const std::uint64_t word : stop.coarse_state_key) {
+            identity_mix(continuation, word);
+        }
+        identity_mix(continuation, stop.operator_semantic_identity);
+        identity_mix(continuation, stop.incumbent_identity);
+        identity_mix(
+            continuation, stop.incumbent_graph_prefix_identity);
+        identity_mix(continuation, stop.incumbent_artifact_identity);
+        identity_mix(continuation, stop.frontier_value_bits);
+        identity_mix(continuation, stop.independently_certified);
+        identity_mix(continuation, stop.independently_evaluated);
+        identity_mix(continuation, stop.proper);
+        identity_mix(continuation, stop.executable);
+        stop.continuation_identity = continuation;
+    }
+
+    std::uint64_t prefix_identity = 1469598103934665603ULL;
+    identity_mix(prefix_identity, 1); /* prefix schema */
+    identity_mix(prefix_identity, result.start_state);
+    identity_mix(prefix_identity, target_state);
+    for (std::uint32_t state = 0;
+         state < capture.prefix.policy_reachable.size(); ++state) {
+        if (!capture.prefix.policy_reachable[state]) continue;
+        ++capture.selected_states;
+        identity_mix(prefix_identity, state);
+        const std::uint64_t row =
+            state < capture.prefix.policy_rows.size()
+                ? capture.prefix.policy_rows[state]
+                : std::numeric_limits<std::uint64_t>::max();
+        identity_mix(prefix_identity, row);
+        if (state < capture.prefix.policy.size()) {
+            identity_mix(
+                prefix_identity,
+                static_cast<std::uint64_t>(
+                    capture.prefix.policy[state].kind));
+            identity_mix(prefix_identity, capture.prefix.policy[state].index);
+        }
+    }
+    for (const auto& source : capture.prefix.choice_sources) {
+        identity_mix(prefix_identity, source.state);
+        identity_mix(prefix_identity, source.choices.size());
+        for (const OutcomeChoiceOption& choice : source.choices) {
+            identity_mix(prefix_identity, choice.observation_state);
+            identity_mix(prefix_identity, choice.mod_id);
+            identity_mix(prefix_identity, choice.state);
+            identity_mix(prefix_identity, choice.actual_state);
+        }
+    }
+    capture.prefix_identity = prefix_identity;
+
+    std::uint64_t exit_identity = 1469598103934665603ULL;
+    identity_mix(exit_identity, 1); /* exit-contract schema */
+    for (const CarrierLadderBoundaryCapture::Stop& stop : capture.stops) {
+        identity_mix(exit_identity, stop.state);
+        identity_mix(exit_identity, static_cast<std::uint64_t>(stop.kind));
+        identity_mix(exit_identity, stop.operator_index);
+        identity_mix(exit_identity, stop.continuation_identity);
+        switch (stop.kind) {
+        case CarrierLadderBoundaryCapture::StopKind::RequestedEntry:
+            break;
+        case CarrierLadderBoundaryCapture::StopKind::GoalSuccess:
+            ++capture.goal_stops;
+            break;
+        case CarrierLadderBoundaryCapture::StopKind::CertifiedFrontier:
+            ++capture.certified_frontier_stops;
+            break;
+        case CarrierLadderBoundaryCapture::StopKind::UnresolvedMissing:
+            ++capture.unresolved_stops;
+            break;
+        }
+    }
+    capture.exit_contract_identity = exit_identity;
+    std::uint64_t selection = 1469598103934665603ULL;
+    identity_mix(selection, 1); /* deterministic selection schema */
+    identity_mix(selection, capture.goal_identity);
+    identity_mix(selection, capture.economy_identity);
+    identity_mix(selection, capture.caller_scope_identity);
+    identity_mix(selection, capture.action_vocabulary_identity);
+    identity_mix(selection, capture.graph_prefix_identity);
+    identity_mix(selection, capture.artifact_identity);
+    identity_mix(selection, capture.executable_identity);
+    identity_mix(selection, capture.source_identity);
+    identity_mix(selection, target_state);
+    for (const std::uint64_t word : capture.target_state_key) {
+        identity_mix(selection, word);
+    }
+    identity_mix(selection, capture.prefix_identity);
+    identity_mix(selection, capture.exit_contract_identity);
+    capture.selection_identity = selection;
+    capture.status = capture.certified_frontier_stops > 0 ||
+            capture.goal_stops > 0
+        ? "captured"
+        : "captured_no_independently_executable_exit";
+    populate_incumbent_policy(capture.prefix);
+    capture.retained_owned_bytes =
+        carrier_ladder_boundary_owned_bytes(capture);
+    if (capture.retained_owned_bytes > limits.max_owned_bytes) {
+        CarrierLadderBoundaryCapture refused;
+        refused.target_state = target_state;
+        refused.target_state_key = capture.target_state_key;
+        refused.goal_identity = capture.goal_identity;
+        refused.economy_identity = capture.economy_identity;
+        refused.caller_scope_identity = capture.caller_scope_identity;
+        refused.action_vocabulary_identity =
+            capture.action_vocabulary_identity;
+        refused.graph_identity = capture.graph_identity;
+        refused.graph_prefix_identity = capture.graph_prefix_identity;
+        refused.artifact_identity = capture.artifact_identity;
+        refused.executable_identity = capture.executable_identity;
+        refused.source_identity = capture.source_identity;
+        refused.status = "refused_resource_cap";
+        refused.refusal = "max_owned_bytes";
+        refused.retained_owned_bytes =
+            carrier_ladder_boundary_owned_bytes(refused);
+        capture = std::move(refused);
+    }
+    carrier_ladder_exact_boundary_capture.emplace(std::move(capture));
+}
+
+void SolveWork::Impl::refresh_carrier_ladder_exact_boundary_diagnostics(
+        SolveDiagnostics& diagnostics) const {
+    if (options.carrier_ladder_exact_boundary_mode ==
+            CarrierLadderExactBoundaryMode::Off) {
+        diagnostics.carrier_ladder_exact_boundary_json.clear();
+        return;
+    }
+    const auto mode_name = [&] {
+        return options.carrier_ladder_exact_boundary_mode ==
+                CarrierLadderExactBoundaryMode::Record
+            ? "record" : "recover";
+    };
+    const auto hex = [](const std::uint64_t value) {
+        char text[17];
+        std::snprintf(
+            text, sizeof(text), "%016llx",
+            static_cast<unsigned long long>(value));
+        return std::string{text};
+    };
+    const auto& limits =
+        options.carrier_ladder_exact_boundary_limits;
+    std::string json =
+        "{\"schema_version\":\"carrier_ladder_exact_boundary_v1\",";
+    json += "\"state_key_version\":1,\"mode\":\"";
+    json += mode_name();
+    json += "\",\"caps\":{\"max_prefix_states\":" +
+        std::to_string(limits.max_prefix_states);
+    json += ",\"ordinary_finish_state_action_rows\":" +
+        std::to_string(limits.ordinary_finish_state_action_rows);
+    json += ",\"max_exact_states\":" +
+        std::to_string(limits.max_exact_states);
+    json += ",\"max_exact_rows\":" +
+        std::to_string(limits.max_exact_rows);
+    json += ",\"max_exact_transitions\":" +
+        std::to_string(limits.max_exact_transitions);
+    json += ",\"max_exact_work\":" +
+        std::to_string(limits.max_exact_work);
+    json += ",\"max_owned_bytes\":" +
+        std::to_string(limits.max_owned_bytes);
+    json += ",\"max_wall_time_ms\":" +
+        std::to_string(limits.max_wall_time_ms);
+    json += ",\"max_samples\":" +
+        std::to_string(limits.max_samples) + "}";
+    if (!carrier_ladder_exact_boundary_capture.has_value()) {
+        json += ",\"status\":\"not_observed\",\"capture\":null}";
+        diagnostics.carrier_ladder_exact_boundary_json = std::move(json);
+        return;
+    }
+    const CarrierLadderBoundaryCapture& capture =
+        *carrier_ladder_exact_boundary_capture;
+    json += ",\"status\":";
+    append_json_string(json, capture.status);
+    json += ",\"refusal\":";
+    if (capture.refusal.empty()) json += "null";
+    else append_json_string(json, capture.refusal);
+    json += ",\"capture\":{\"boundary_kind\":\"missing_frontier\"";
+    json += ",\"target_state\":" + std::to_string(capture.target_state);
+    json += ",\"target_state_key\":[";
+    for (std::size_t word = 0;
+         word < capture.target_state_key.size(); ++word) {
+        if (word != 0) json.push_back(',');
+        json += "\"" + hex(capture.target_state_key[word]) + "\"";
+    }
+    json += "]";
+    json += ",\"selection_identity\":\"" +
+        hex(capture.selection_identity) + "\"";
+    json += ",\"prefix_identity\":\"" +
+        hex(capture.prefix_identity) + "\"";
+    json += ",\"exit_contract_identity\":\"" +
+        hex(capture.exit_contract_identity) + "\"";
+    json += ",\"identities\":{\"goal\":\"" +
+        hex(capture.goal_identity) + "\",\"economy\":\"" +
+        hex(capture.economy_identity) + "\",\"caller_scope\":\"" +
+        hex(capture.caller_scope_identity) +
+        "\",\"action_vocabulary\":\"" +
+        hex(capture.action_vocabulary_identity) +
+        "\",\"graph\":\"" + hex(capture.graph_identity) +
+        "\",\"graph_prefix\":\"" +
+        hex(capture.graph_prefix_identity) +
+        "\",\"artifact\":\"" + hex(capture.artifact_identity) +
+        "\",\"executable\":\"" +
+        hex(capture.executable_identity) + "\",\"source\":\"" +
+        hex(capture.source_identity) + "\"}";
+    json += ",\"counts\":{\"selected_states\":" +
+        std::to_string(capture.selected_states) +
+        ",\"goal_stops\":" + std::to_string(capture.goal_stops) +
+        ",\"certified_frontier_stops\":" +
+        std::to_string(capture.certified_frontier_stops) +
+        ",\"unresolved_stops\":" +
+        std::to_string(capture.unresolved_stops) + "}";
+    json += ",\"retained_owned_bytes\":" +
+        std::to_string(capture.retained_owned_bytes);
+    json += ",\"stops\":[";
+    const std::size_t sample_count = std::min<std::size_t>(
+        capture.stops.size(), limits.max_samples);
+    for (std::size_t index = 0; index < sample_count; ++index) {
+        if (index != 0) json.push_back(',');
+        const CarrierLadderBoundaryCapture::Stop& stop = capture.stops[index];
+        const char* kind = "unresolved_missing";
+        switch (stop.kind) {
+        case CarrierLadderBoundaryCapture::StopKind::RequestedEntry:
+            kind = "requested_entry";
+            break;
+        case CarrierLadderBoundaryCapture::StopKind::GoalSuccess:
+            kind = "goal_success";
+            break;
+        case CarrierLadderBoundaryCapture::StopKind::CertifiedFrontier:
+            kind = "certified_frontier";
+            break;
+        case CarrierLadderBoundaryCapture::StopKind::UnresolvedMissing:
+            break;
+        }
+        json += "{\"state\":" + std::to_string(stop.state) +
+            ",\"kind\":\"" + kind + "\",\"operator_index\":";
+        if (stop.operator_index == kNoId) json += "null";
+        else json += std::to_string(stop.operator_index);
+        json += ",\"coarse_state_key\":[";
+        for (std::size_t word = 0;
+             word < stop.coarse_state_key.size(); ++word) {
+            if (word != 0) json.push_back(',');
+            json += "\"" + hex(stop.coarse_state_key[word]) + "\"";
+        }
+        json += "],\"operator_semantic_identity\":\"" +
+            hex(stop.operator_semantic_identity) +
+            "\",\"continuation_identity\":\"" +
+            hex(stop.continuation_identity) +
+            "\",\"incumbent_identity\":\"" +
+            hex(stop.incumbent_identity) +
+            "\",\"incumbent_graph_prefix_identity\":\"" +
+            hex(stop.incumbent_graph_prefix_identity) +
+            "\",\"incumbent_artifact_identity\":\"" +
+            hex(stop.incumbent_artifact_identity) +
+            "\",\"frontier_value_bits\":\"" +
+            hex(stop.frontier_value_bits) +
+            "\",\"independently_certified\":" +
+            std::string(stop.independently_certified ? "true" : "false") +
+            ",\"independently_evaluated\":" +
+            std::string(stop.independently_evaluated ? "true" : "false") +
+            ",\"proper\":" +
+            std::string(stop.proper ? "true" : "false") +
+            ",\"executable\":" +
+            std::string(stop.executable ? "true" : "false") + "}";
+    }
+    json += "],\"stop_samples_omitted\":" +
+        std::to_string(capture.stops.size() - sample_count);
+    json += ",\"recovery\":{\"status\":";
+    append_json_string(json, capture.recovery_status);
+    json += ",\"refusal\":";
+    if (capture.recovery_refusal.empty()) json += "null";
+    else append_json_string(json, capture.recovery_refusal);
+    json += ",\"complete_support\":" +
+        std::string(capture.complete_support ? "true" : "false");
+    json += ",\"absorption_proved\":" +
+        std::string(capture.absorption_proved ? "true" : "false");
+    json += ",\"exact_states\":" +
+        std::to_string(capture.exact_states);
+    json += ",\"exact_rows\":" + std::to_string(capture.exact_rows);
+    json += ",\"exact_transitions\":" +
+        std::to_string(capture.exact_transitions);
+    json += ",\"work_items\":" + std::to_string(capture.recovery_work);
+    json += ",\"peak_owned_bytes\":" +
+        std::to_string(capture.recovery_peak_owned_bytes);
+    json += ",\"wall_time_ms\":" +
+        std::to_string(capture.recovery_wall_time_ms);
+    json += ",\"member_identity\":\"" +
+        hex(capture.exact_member_identity) + "\"";
+    json += ",\"member_count\":" +
+        std::to_string(capture.recovered_members.size());
+    json += ",\"members\":[";
+    const std::size_t member_samples = std::min<std::size_t>(
+        capture.recovered_members.size(), limits.max_samples);
+    const auto append_slot = [&](const pc_mod_slot& slot) {
+        json += "{\"mod_id\":" + std::to_string(slot.mod_id) +
+            ",\"group_id\":" + std::to_string(slot.group_id) +
+            ",\"flags\":" + std::to_string(slot.flags) +
+            ",\"rolls\":[";
+        for (std::uint32_t roll = 0; roll < slot.roll_count; ++roll) {
+            if (roll != 0) json.push_back(',');
+            json += std::to_string(slot.rolls[roll]);
+        }
+        json += "],\"veiled_options\":[";
+        for (std::uint32_t option = 0;
+             option < slot.veiled_option_count; ++option) {
+            if (option != 0) json.push_back(',');
+            json += std::to_string(slot.veiled_option_mod_ids[option]);
+        }
+        json += "],\"veiled_chosen_mod_id\":";
+        if (slot.veiled_chosen_mod_id == PC_MOD_NONE) json += "null";
+        else json += std::to_string(slot.veiled_chosen_mod_id);
+        json += "}";
+    };
+    const auto append_slots = [&](const pc_mod_slot* slots,
+                                  const std::uint8_t count) {
+        json.push_back('[');
+        for (std::uint32_t index = 0; index < count; ++index) {
+            if (index != 0) json.push_back(',');
+            append_slot(slots[index]);
+        }
+        json.push_back(']');
+    };
+    for (std::size_t index = 0; index < member_samples; ++index) {
+        if (index != 0) json.push_back(',');
+        const auto& member = capture.recovered_members[index];
+        json += "{\"coarse_state\":" +
+            std::to_string(member.coarse_state) + ",\"stable_key\":[";
+        for (std::size_t word = 0; word < member.stable_key.size(); ++word) {
+            if (word != 0) json.push_back(',');
+            json += "\"" + hex(member.stable_key[word]) + "\"";
+        }
+        const pc_item_state& item = member.item;
+        json += "],\"item\":{\"rarity\":" +
+            std::to_string(item.rarity) + ",\"quality\":" +
+            std::to_string(item.quality) + ",\"item_flags\":" +
+            std::to_string(item.item_flags) + ",\"prefixes\":";
+        append_slots(item.prefixes, item.prefix_count);
+        json += ",\"suffixes\":";
+        append_slots(item.suffixes, item.suffix_count);
+        json += ",\"implicits\":";
+        append_slots(item.implicits, item.implicit_count);
+        json += ",\"enchantments\":";
+        append_slots(item.enchantments, item.enchantment_count);
+        json += ",\"generic_influence_bits\":" +
+            std::to_string(item.generic_influence_bits);
+        json += ",\"searing_exarch_tier\":" +
+            std::to_string(item.searing_exarch_tier);
+        json += ",\"eater_of_worlds_tier\":" +
+            std::to_string(item.eater_of_worlds_tier);
+        json += ",\"socket_colors\":[";
+        for (std::uint32_t socket = 0; socket < item.socket_count; ++socket) {
+            if (socket != 0) json.push_back(',');
+            json += std::to_string(item.socket_colors[socket]);
+        }
+        json += "],\"link_mask\":" + std::to_string(item.link_mask) +
+            "}}";
+    }
+    json += "],\"member_samples_omitted\":" +
+        std::to_string(capture.recovered_members.size() - member_samples) +
+        "}}}";
+    diagnostics.carrier_ladder_exact_boundary_json = std::move(json);
+}
 
 bool SolveWork::Impl::incumbent_precedes(
         const BoundedPolicyIncumbent& left,
@@ -2354,6 +2930,128 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                     priced_rows[row].operator_index != kNoId;
             };
 
+            const auto capture_failed_prefix =
+                [&](const std::uint32_t target_state) {
+                    if (options.carrier_ladder_exact_boundary_mode ==
+                            CarrierLadderExactBoundaryMode::Off ||
+                        carrier_ladder_exact_boundary_capture.has_value()) {
+                        return;
+                    }
+                    const auto& private_limits =
+                        options.carrier_ladder_exact_boundary_limits;
+                    std::vector<std::uint64_t> captured_policy_rows =
+                        policy_rows;
+                    std::vector<std::uint8_t> captured_reachable(
+                        state_count, 0);
+                    std::vector<std::uint8_t> visited(state_count, 0);
+                    std::vector<std::uint32_t> capture_walk{
+                        result.start_state};
+                    std::vector<CarrierLadderBoundaryCapture::Stop> stops;
+                    std::uint64_t work = 0;
+                    const auto refuse = [&](const char* cap) {
+                        capture_carrier_ladder_exact_boundary(
+                            target_state, result.values,
+                            captured_policy_rows,
+                            captured_reachable,
+                            certified_frontier_operators,
+                            std::move(stops), cap);
+                    };
+                    const auto route = [&](const std::uint32_t successor) {
+                        if (successor >= state_count) return false;
+                        if (!visited[successor]) {
+                            capture_walk.push_back(successor);
+                        }
+                        return true;
+                    };
+                    for (std::size_t cursor = 0;
+                         cursor < capture_walk.size(); ++cursor) {
+                        if (++work > private_limits.max_exact_work) {
+                            refuse("max_exact_work");
+                            return;
+                        }
+                        if (capture_walk.size() >
+                            private_limits.max_prefix_states) {
+                            refuse("max_prefix_states");
+                            return;
+                        }
+                        const std::uint32_t state = capture_walk[cursor];
+                        if (state >= state_count) {
+                            refuse("prefix_state_outside_graph");
+                            return;
+                        }
+                        if (visited[state]) continue;
+                        visited[state] = 1;
+                        if (result.goal_states[state]) {
+                            stops.push_back({
+                                state, kNoId,
+                                CarrierLadderBoundaryCapture::StopKind::
+                                    GoalSuccess});
+                            continue;
+                        }
+                        if (!row_is_completed(
+                                state, captured_policy_rows[state])) {
+                            captured_policy_rows[state] =
+                                select_initial_row(state);
+                        }
+                        if (!row_is_completed(
+                                state, captured_policy_rows[state])) {
+                            const std::uint32_t frontier =
+                                state < certified_frontier_operators.size()
+                                    ? certified_frontier_operators[state]
+                                    : kNoId;
+                            CarrierLadderBoundaryCapture::StopKind kind =
+                                CarrierLadderBoundaryCapture::StopKind::
+                                    UnresolvedMissing;
+                            if (state == target_state) {
+                                kind = CarrierLadderBoundaryCapture::StopKind::
+                                    RequestedEntry;
+                            } else if (frontier != kNoId) {
+                                kind = CarrierLadderBoundaryCapture::StopKind::
+                                    CertifiedFrontier;
+                            }
+                            stops.push_back({state, frontier, kind});
+                            continue;
+                        }
+                        captured_reachable[state] = 1;
+                        const SparseRow& row = transition_cache->rows.at(
+                            captured_policy_rows[state]);
+                        for (std::uint32_t index = 0;
+                             index < row.transition_count; ++index) {
+                            const std::uint64_t offset =
+                                row.transition_offset + index;
+                            if (transition_cache->probabilities.at(offset) >
+                                    0.0 &&
+                                !route(
+                                    transition_cache->successors.at(
+                                        offset))) {
+                                refuse("prefix_successor_outside_graph");
+                                return;
+                            }
+                        }
+                        for (std::uint32_t index = 0;
+                             index < row.choice_count; ++index) {
+                            const SparseChoiceGroup& choice =
+                                transition_cache->choices.at(
+                                    row.choice_offset + index);
+                            if (!(choice.probability > 0.0)) continue;
+                            const std::uint32_t selected =
+                                select_sparse_policy_choice_successor(
+                                    *transition_cache, choice, state,
+                                    result.values);
+                            if (selected == kNoId || !route(selected)) {
+                                refuse("prefix_observation_routing_invalid");
+                                return;
+                            }
+                        }
+                    }
+                    capture_carrier_ladder_exact_boundary(
+                        target_state, result.values,
+                        captured_policy_rows,
+                        captured_reachable,
+                        certified_frontier_operators,
+                        std::move(stops));
+                };
+
             const auto rebuild_reachable =
                 [&](std::uint64_t& choice_identity) {
                     reachable.assign(state_count, 0);
@@ -2423,6 +3121,7 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                                             ? transition_cache
                                                   ->state_rows[state].count
                                             : 0);
+                                capture_failed_prefix(state);
                                 return false;
                             }
                             policy_rows[state] = no_row;

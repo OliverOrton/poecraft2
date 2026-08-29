@@ -12,6 +12,26 @@ enum class SolveProfile : std::uint32_t {
     CalculatorProductV1 = 1,
 };
 
+enum class CarrierLadderExactBoundaryMode : std::uint8_t {
+    Off = 0,
+    Record,
+    Recover,
+};
+
+struct CarrierLadderExactBoundaryLimits {
+    /* Optional deterministic harness fence shared by off/record/recover.
+     * Zero preserves the case's requested wall-bounded finish. */
+    std::uint64_t ordinary_finish_state_action_rows = 0;
+    std::uint32_t max_prefix_states = 200000;
+    std::uint32_t max_exact_states = 200000;
+    std::uint32_t max_exact_rows = 200000;
+    std::uint64_t max_exact_transitions = 10000000;
+    std::uint64_t max_exact_work = 50000000;
+    std::uint64_t max_owned_bytes = 268435456;
+    std::uint64_t max_wall_time_ms = 300000;
+    std::uint32_t max_samples = 32;
+};
+
 inline const char* solve_profile_name(const SolveProfile profile) {
     switch (profile) {
     case SolveProfile::Default: return "default";
@@ -86,6 +106,11 @@ struct SolveOptions {
     bool factored_terminal_reforge_diagnostic = false;
     bool reforge_resource_accounting = true;
     bool raw_strict_reforge_oracle_diagnostic = false;
+    /* Benchmark-private, write-only observation of one failed carrier-ladder
+     * joint-policy prefix. No public profile or binding can enable it. */
+    CarrierLadderExactBoundaryMode carrier_ladder_exact_boundary_mode =
+        CarrierLadderExactBoundaryMode::Off;
+    CarrierLadderExactBoundaryLimits carrier_ladder_exact_boundary_limits;
     double max_absolute_optimality_gap = 0.0;
     double max_relative_optimality_gap = 0.0;
     SolveProfile solve_profile = SolveProfile::Default;
@@ -829,6 +854,9 @@ struct SolveDiagnostics {
      * ledger, scheduler, row, and selected-policy owners. It is never read by
      * mechanics, admission, scheduling, Bellman, or publication. */
     std::string operator_lineage_json;
+    /* Bounded canonical projection of the benchmark-private exact-boundary
+     * observation. It is never consumed by solve authority. */
+    std::string carrier_ladder_exact_boundary_json;
     struct IncumbentPortfolioSnapshot {
         struct Identity {
             std::uint64_t portfolio = 0;
@@ -1218,6 +1246,9 @@ class SolveWork {
     SolveResult finish();
     std::uint64_t live_owned_bytes() const;
     std::uint64_t peak_owned_bytes() const;
+    /* Internal benchmark-only clock debit. Product callers never configure
+     * the private diagnostic, so this remains zero for public solves. */
+    std::uint64_t private_diagnostic_wall_ns() const;
 
   private:
     friend struct SolveWorkTestAccess;

@@ -590,6 +590,8 @@ struct pc_solver {
     bool abandoned_telemetry_capped = false;
     std::uint64_t abandoned_telemetry_limit = 0;
     std::uint64_t peak_owned_bytes = 0;
+    std::optional<solver::CarrierLadderExactBoundaryDiagnosticConfig>
+        carrier_ladder_exact_boundary_diagnostic;
 };
 
 namespace {
@@ -810,6 +812,19 @@ solver::SolveOptions solve_options(const pc_solve_options* options) {
     }
     return value;
 #undef PC_SOLVE_OPTION_HAS
+}
+
+solver::SolveOptions solve_options(
+        const pc_solver& holder,
+        const pc_solve_options* options) {
+    solver::SolveOptions value = solve_options(options);
+    if (holder.carrier_ladder_exact_boundary_diagnostic.has_value()) {
+        value.carrier_ladder_exact_boundary_mode =
+            holder.carrier_ladder_exact_boundary_diagnostic->mode;
+        value.carrier_ladder_exact_boundary_limits =
+            holder.carrier_ladder_exact_boundary_diagnostic->limits;
+    }
+    return value;
 }
 
 std::unordered_map<std::string, double> economy_prices(
@@ -1128,6 +1143,43 @@ pc_result solver::create_solver_with_automatic_candidate_diagnostic(
     return create_solver(
         session, goal_json, goal_json_size,
         automatic_candidate_kind_mask, out_solver, out_error);
+}
+
+pc_result solver::configure_solver_carrier_ladder_exact_boundary_diagnostic(
+        pc_solver_handle solver,
+        const CarrierLadderExactBoundaryDiagnosticConfig& config,
+        pc_error_info* out_error) {
+    if (solver == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null solver");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (solver->solve_work != nullptr || solver->solved.has_value()) {
+        set_error(
+            out_error, PC_RESULT_INVALID_ARGUMENT,
+            "exact-boundary diagnostic must be configured before solve");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    const auto& limits = config.limits;
+    if (limits.max_prefix_states == 0 || limits.max_exact_states == 0 ||
+        limits.max_exact_rows == 0 || limits.max_exact_transitions == 0 ||
+        limits.max_exact_work == 0 || limits.max_owned_bytes == 0 ||
+        limits.max_wall_time_ms == 0 || limits.max_samples == 0) {
+        set_error(
+            out_error, PC_RESULT_INVALID_ARGUMENT,
+            "exact-boundary diagnostic caps must all be positive");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    solver->carrier_ladder_exact_boundary_diagnostic = config;
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+std::uint64_t
+solver::solver_carrier_ladder_exact_boundary_private_wall_ns(
+        pc_solver_handle solver) {
+    return solver == nullptr || solver->solve_work == nullptr
+        ? 0
+        : solver->solve_work->private_diagnostic_wall_ns();
 }
 
 void pc_solver_destroy(pc_solver_handle solver) {
@@ -1656,7 +1708,7 @@ pc_result pc_solver_solve(
         solver->abandoned_telemetry_limit = 0;
         solver::SolveWork work(
             *solver->calc, *start_item, economy_prices(economy),
-            solve_options(options));
+            solve_options(*solver, options));
         while (!work.progress().done) work.step(4096);
         solver->peak_owned_bytes = std::max(
             solver->peak_owned_bytes,
@@ -1695,7 +1747,7 @@ pc_result pc_solver_solve_begin(
         std::string{}.swap(solver->compiled_strategy);
         auto work = std::make_unique<solver::SolveWork>(
             *solver->calc, *start_item, economy_prices(economy),
-            solve_options(options));
+            solve_options(*solver, options));
         solver->solve_work = std::move(work);
         solver->solve_log.clear();
         solver->abandoned_telemetry.clear();

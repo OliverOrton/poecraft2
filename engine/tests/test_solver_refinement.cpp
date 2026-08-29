@@ -2524,6 +2524,67 @@ void run_policy_observation_cooperative_tests() {
     }
 }
 
+void run_exact_boundary_closure_tests() {
+    const ExactState root = state(900, 0);
+    ExactState entry_left = state(901, 7);
+    entry_left.terminal = true;
+    ExactState entry_right = state(902, 7);
+    entry_right.terminal = true;
+    const ExactState goal = state(903, 7, {}, true);
+
+    const std::vector<ExactBoundaryClosureNode> distinct_members{
+        {root, 0, {1, 2, 3}},
+        {entry_left, 1, {}},
+        {entry_right, 2, {}},
+        {goal, 3, {}},
+    };
+    const ExactBoundaryClosureResult complete =
+        analyze_exact_boundary_closure(distinct_members, 7);
+    REFINE_CHECK(
+        complete.status == ExactBoundaryRecoveryStatus::Complete);
+    REFINE_CHECK(complete.complete_support);
+    REFINE_CHECK(complete.absorption_proved);
+    REFINE_CHECK(
+        complete.requested_nodes ==
+        std::vector<std::uint32_t>({1, 2}));
+    REFINE_CHECK(
+        distinct_members[complete.requested_nodes[0]].state.stable_key !=
+        distinct_members[complete.requested_nodes[1]].state.stable_key);
+
+    const std::vector<ExactBoundaryClosureNode> goal_only{
+        {root, 0, {1}},
+        {goal, 1, {}},
+    };
+    const ExactBoundaryClosureResult no_entry =
+        analyze_exact_boundary_closure(goal_only, 7);
+    REFINE_CHECK(
+        no_entry.status == ExactBoundaryRecoveryStatus::NoRequestedEntry);
+    REFINE_CHECK(no_entry.absorption_proved);
+    REFINE_CHECK(no_entry.requested_nodes.empty());
+
+    const ExactState loop = state(904, 8);
+    const std::vector<ExactBoundaryClosureNode> improper{
+        {root, 0, {1, 2}},
+        {entry_left, 1, {}},
+        {loop, 2, {2}},
+    };
+    const ExactBoundaryClosureResult refused =
+        analyze_exact_boundary_closure(improper, 7);
+    REFINE_CHECK(
+        refused.status == ExactBoundaryRecoveryStatus::ImproperPrefix);
+    REFINE_CHECK(refused.complete_support);
+    REFINE_CHECK(!refused.absorption_proved);
+
+    const std::vector<ExactBoundaryClosureNode> stale_edge{
+        {root, 0, {1}},
+    };
+    const ExactBoundaryClosureResult invalid =
+        analyze_exact_boundary_closure(stale_edge, 7);
+    REFINE_CHECK(
+        invalid.status == ExactBoundaryRecoveryStatus::InvalidPrefix);
+    REFINE_CHECK(!invalid.absorption_proved);
+}
+
 } // namespace
 
 void run_solver_refinement_tests() {
@@ -2554,4 +2615,5 @@ void run_solver_refinement_tests() {
     run_policy_evaluation_memory_cap_tests();
     run_rejection_and_cap_tests();
     run_policy_observation_cooperative_tests();
+    run_exact_boundary_closure_tests();
 }

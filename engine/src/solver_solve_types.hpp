@@ -1222,6 +1222,70 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         bool proper = false;
         bool executable = false;
     };
+    struct CarrierLadderBoundaryCapture {
+        enum class StopKind : std::uint8_t {
+            RequestedEntry = 0,
+            GoalSuccess,
+            CertifiedFrontier,
+            UnresolvedMissing,
+        };
+        struct Stop {
+            std::uint32_t state = kNoId;
+            std::uint32_t operator_index = kNoId;
+            StopKind kind = StopKind::UnresolvedMissing;
+            std::vector<std::uint64_t> coarse_state_key;
+            std::uint64_t operator_semantic_identity = 0;
+            std::uint64_t continuation_identity = 0;
+            std::uint64_t incumbent_identity = 0;
+            std::uint64_t incumbent_graph_prefix_identity = 0;
+            std::uint64_t incumbent_artifact_identity = 0;
+            std::uint64_t frontier_value_bits = 0;
+            bool independently_certified = false;
+            bool independently_evaluated = false;
+            bool proper = false;
+            bool executable = false;
+        };
+        struct RecoveredMember {
+            std::vector<std::uint64_t> stable_key;
+            std::uint32_t coarse_state = kNoId;
+            pc_item_state item{};
+        };
+        BoundedPolicyIncumbent prefix;
+        std::vector<Stop> stops;
+        std::uint32_t target_state = kNoId;
+        std::vector<std::uint64_t> target_state_key;
+        std::uint64_t selection_identity = 0;
+        std::uint64_t prefix_identity = 0;
+        std::uint64_t exit_contract_identity = 0;
+        std::uint64_t goal_identity = 0;
+        std::uint64_t economy_identity = 0;
+        std::uint64_t caller_scope_identity = 0;
+        std::uint64_t action_vocabulary_identity = 0;
+        std::uint64_t graph_identity = 0;
+        std::uint64_t graph_prefix_identity = 0;
+        std::uint64_t artifact_identity = 0;
+        std::uint64_t executable_identity = 0;
+        std::uint64_t source_identity = 0;
+        std::uint64_t retained_owned_bytes = 0;
+        std::uint64_t recovery_peak_owned_bytes = 0;
+        std::uint64_t recovery_work = 0;
+        std::uint64_t recovery_wall_time_ms = 0;
+        std::uint64_t exact_member_identity = 0;
+        std::uint32_t selected_states = 0;
+        std::uint32_t goal_stops = 0;
+        std::uint32_t certified_frontier_stops = 0;
+        std::uint32_t unresolved_stops = 0;
+        std::uint32_t exact_states = 0;
+        std::uint32_t exact_rows = 0;
+        std::uint64_t exact_transitions = 0;
+        bool complete_support = false;
+        bool absorption_proved = false;
+        std::string status = "not_captured";
+        std::string refusal;
+        std::string recovery_status = "not_run";
+        std::string recovery_refusal;
+        std::vector<RecoveredMember> recovered_members;
+    };
     /*
      * A Bellman-selected row policy is not a certified upper bound. Keep its
      * complete captured materialization in a distinct wrapper so no
@@ -1309,6 +1373,11 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
             incumbent_portfolio.pending_candidate;
     std::vector<BoundedPolicyIncumbent>& certified_fallback_portfolio =
         incumbent_portfolio.retained_candidates;
+    /* Separate observational owner. Nothing in incumbent_portfolio,
+     * scheduling, Bellman optimization, or publication reads this record. */
+    std::optional<CarrierLadderBoundaryCapture>
+        carrier_ladder_exact_boundary_capture;
+    std::uint64_t carrier_ladder_exact_boundary_private_wall_ns = 0;
     bool target_gap_stop = false;
     SolveGapTarget target_gap_fired = SolveGapTarget::None;
     std::uint64_t focused_direct_upper_row =
@@ -1600,6 +1669,21 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
 
     std::uint64_t incumbent_owned_bytes(
         const BoundedPolicyIncumbent& incumbent) const;
+
+    std::uint64_t carrier_ladder_boundary_owned_bytes(
+        const CarrierLadderBoundaryCapture& capture) const;
+
+    void capture_carrier_ladder_exact_boundary(
+        std::uint32_t target_state,
+        const std::vector<double>& candidate_values,
+        const std::vector<std::uint64_t>& candidate_policy_rows,
+        const std::vector<std::uint8_t>& candidate_reachable,
+        const std::vector<std::uint32_t>& certified_frontier_operators,
+        std::vector<CarrierLadderBoundaryCapture::Stop> stops,
+        const char* refusal = nullptr);
+
+    void refresh_carrier_ladder_exact_boundary_diagnostics(
+        SolveDiagnostics& diagnostics) const;
 
     std::uint64_t fallback_policy_dynamic_owned_bytes(
         const FocusedFallbackPolicy& fallback) const;

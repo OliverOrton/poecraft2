@@ -148,6 +148,43 @@ def test_registered_case_patches_are_bounded_and_order_independent() -> None:
             [{"path": "/watchdog_seconds", "value": 86401}]
         )
 
+    boundary = {
+        "schema_version": "carrier_ladder_exact_boundary_v1",
+        "mode": "recover",
+        "caps": {
+            "max_prefix_states": 100,
+            "max_exact_states": 100,
+            "max_exact_rows": 100,
+            "max_exact_transitions": 1000,
+            "max_exact_work": 1000,
+            "max_owned_bytes": 1024,
+            "max_wall_time_ms": 1000,
+            "max_samples": 8,
+            "ordinary_finish_state_action_rows": 1234,
+        },
+    }
+    with_boundary = apply_case_patches(
+        source,
+        [
+            {
+                "path": "/carrier_ladder_exact_boundary_v1",
+                "value": boundary,
+            }
+        ],
+    )
+    assert with_boundary["carrier_ladder_exact_boundary_v1"] == boundary
+    invalid_boundary = json.loads(json.dumps(boundary))
+    invalid_boundary["caps"].pop("max_exact_rows")
+    with pytest.raises(ValueError, match="caps require every"):
+        normalize_case_patches(
+            [
+                {
+                    "path": "/carrier_ladder_exact_boundary_v1",
+                    "value": invalid_boundary,
+                }
+            ]
+        )
+
 
 def test_matrix_contract_expands_stably_and_rejects_overlap() -> None:
     definition = {

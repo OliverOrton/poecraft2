@@ -1018,11 +1018,12 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
         bytes += sizeof(std::pair<const std::string, std::uint64_t>) +
                  id.capacity() + 1;
     }
-    /* operator_lineage_json is an observational projection assembled only
-     * after the authoritative ledgers/counters above have been updated. It
-     * must not consume the solver-owned cap and thereby change the work it is
-     * reporting. The public telemetry byte limit remains its serialization
-     * bound. */
+    /* operator_lineage_json and the benchmark-private exact-boundary JSON are
+     * observational projections assembled only after the authoritative
+     * ledgers/counters above have been updated. They must not consume the
+     * ordinary solver-owned cap and thereby change the work they report. The
+     * public telemetry byte limit remains their serialization bound; exact-
+     * boundary retained work is accounted by its separate private ledger. */
     return bytes;
 }
 
@@ -1572,6 +1573,8 @@ SolveTelemetrySnapshot SolveWork::Impl::telemetry_snapshot(bool abandoned) const
         refresh_operator_lineage_diagnostics(
             snapshot.diagnostics,
             finalized_result.has_value() ? &*finalized_result : nullptr);
+        refresh_carrier_ladder_exact_boundary_diagnostics(
+            snapshot.diagnostics);
         refresh_incumbent_portfolio_diagnostics(
             snapshot.diagnostics,
             finalized_result.has_value() ? &*finalized_result : nullptr);

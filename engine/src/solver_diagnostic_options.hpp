@@ -5,6 +5,7 @@
 
 #include "poecraft/solver.h"
 #include "solver_model.hpp"
+#include "solver_solve_contracts.hpp"
 
 namespace poecraft {
 namespace solver {
@@ -27,6 +28,12 @@ inline constexpr std::uint32_t kDisableReforgeResourceAccountingDiagnosticFlag =
 inline constexpr std::uint32_t kRawStrictReforgeOracleDiagnosticFlag =
     1u << 27;
 
+struct CarrierLadderExactBoundaryDiagnosticConfig {
+    CarrierLadderExactBoundaryMode mode =
+        CarrierLadderExactBoundaryMode::Off;
+    CarrierLadderExactBoundaryLimits limits;
+};
+
 /* Private benchmark construction hook. It retains the ordinary product
  * primitive registry and goal abstraction while allowing a finite subset of
  * generated AutomaticCandidateKind values. It is deliberately absent from
@@ -38,6 +45,19 @@ pc_result create_solver_with_automatic_candidate_diagnostic(
     std::uint32_t automatic_candidate_kind_mask,
     pc_solver_handle* out_solver,
     pc_error_info* out_error);
+
+/* Private benchmark request hook. Configuration is copied into the solver
+ * handle and applied only to subsequently started work. It is absent from the
+ * public C ABI and every product binding. */
+pc_result configure_solver_carrier_ladder_exact_boundary_diagnostic(
+    pc_solver_handle solver,
+    const CarrierLadderExactBoundaryDiagnosticConfig& config,
+    pc_error_info* out_error);
+
+/* Read-only benchmark clock accounting for the private diagnostic. It is not
+ * part of the public C ABI or any binding. */
+std::uint64_t solver_carrier_ladder_exact_boundary_private_wall_ns(
+    pc_solver_handle solver);
 
 } // namespace solver
 } // namespace poecraft

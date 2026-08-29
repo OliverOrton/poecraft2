@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from collections import Counter
+from copy import deepcopy
 import json
 import os
 from pathlib import Path
@@ -2382,17 +2383,36 @@ class SolverLabService:
             },
             "scheduler": scheduler,
         }
+        boundary_diagnostic = disk_case.get(
+            "carrier_ladder_exact_boundary_v1"
+        )
+        if boundary_diagnostic is not None:
+            request["carrier_ladder_exact_boundary_v1"] = deepcopy(
+                boundary_diagnostic
+            )
         core_case_document = {
             key: value
             for key, value in disk_case.items()
-            if key not in {"id", "fragment_shadow_v1"}
+            if key
+            not in {
+                "id",
+                "fragment_shadow_v1",
+                "carrier_ladder_exact_boundary_v1",
+            }
+        }
+        core_corpus_identity = {
+            "schema_version": corpus_document.get("schema_version"),
+            "artifact": corpus_document.get("artifact"),
+            "benchmark_identity_contract": corpus_document.get(
+                "benchmark_identity_contract"
+            ),
         }
         core_goal = as_mapping(core_case_document.get("goal"))
         core_components = {
             "source": request["source"],
             "executable": request["executable"],
             "compiled_artifact": request["compiled_artifact"],
-            "corpus": request["corpus"],
+            "corpus": core_corpus_identity,
             "case_without_id_or_fragment_shadow_v1": core_case_document,
             "start": core_case_document.get("start"),
             "goal": core_case_document.get("goal"),
@@ -2600,6 +2620,17 @@ class SolverLabService:
             "memory": as_mapping(case.get("memory")),
             "native_work": telemetry_work,
             "native_owned_memory": telemetry_memory,
+            "native_states": as_mapping(telemetry.get("states")),
+            "exact_state_scaling": as_mapping(
+                telemetry.get("exact_state_scaling")
+            ),
+            "focused_expansion": as_mapping(
+                telemetry.get("focused_expansion")
+            ),
+            "optimization": as_mapping(telemetry.get("optimization")),
+            "policy_refinement": as_mapping(
+                telemetry.get("policy_refinement")
+            ),
             "action_control": as_mapping(telemetry.get("action_control")),
             "automatic_candidates": automatic_candidates,
             "incremental_action_envelope": incremental_action_envelope,

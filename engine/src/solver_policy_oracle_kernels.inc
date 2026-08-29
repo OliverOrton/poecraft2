@@ -595,6 +595,7 @@
     std::set<std::uint32_t> reoptimization_parents_;
     std::uint64_t caller_seed_retained_bytes_ = 0;
     bool force_semantic_strict_identity_ = false;
+    std::set<std::uint32_t> observation_boundaries_;
     std::unique_ptr<CalcContext> strict_;
     std::vector<std::uint32_t> strict_junk_to_coarse_;
     std::array<
@@ -648,7 +649,8 @@
         exact.coarse_state = known.coarse_state;
         exact.coarse_state_key = abstract_state_key(
             coarse_.state(known.coarse_state));
-        exact.goal = known.terminal;
+        exact.goal = strict_->is_goal_state(
+            strict_->state(known.strict_state));
         exact.terminal = known.terminal;
         if (known.policy_collapsed) {
             exact.features = known.collapsed_features;
@@ -719,15 +721,15 @@
             const FeatureSignature& features,
             const bool witness_parent,
             const CoarsePolicyNode& policy) const {
+        if (witness_parent || force_semantic_strict_identity_) {
+            return std::nullopt;
+        }
         if (terminal) {
             StableKey key{
                 0x7063727465726d31ull, /* "pcrterm1" */
                 coarse_key.size()};
             key.insert(key.end(), coarse_key.begin(), coarse_key.end());
             return key;
-        }
-        if (witness_parent || force_semantic_strict_identity_) {
-            return std::nullopt;
         }
         if (!policy.selected.has_value() ||
             policy.selected->action_id >= strict_->operators().size()) {

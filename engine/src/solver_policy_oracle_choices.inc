@@ -779,7 +779,8 @@
                     "max_coarse_states");
             }
             CoarsePolicyNode node;
-            if (!coarse_.is_goal_state(coarse_.state(state))) {
+            if (!coarse_.is_goal_state(coarse_.state(state)) &&
+                !observation_boundaries_.contains(state)) {
                 const PlannerOperator& planner =
                     coarse_operator(state);
                 node.coarse_operator =

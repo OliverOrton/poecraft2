@@ -915,6 +915,97 @@ std::uint64_t optional_u64(
     return static_cast<std::uint64_t>(value->number);
 }
 
+std::optional<poecraft::solver::
+    CarrierLadderExactBoundaryDiagnosticConfig>
+carrier_ladder_exact_boundary_diagnostic_config(
+        const Value& specification) {
+    const Value* control = optional(
+        specification, "carrier_ladder_exact_boundary_v1", Type::Object);
+    if (control == nullptr) return std::nullopt;
+    const std::set<std::string> required_fields = {
+        "schema_version", "mode", "caps"};
+    std::set<std::string> seen;
+    for (const auto& [key, unused] : control->object) {
+        (void)unused;
+        if (!required_fields.contains(key)) {
+            throw std::runtime_error(
+                "carrier_ladder_exact_boundary_v1 contains unknown field: " +
+                key);
+        }
+        if (!seen.insert(key).second) {
+            throw std::runtime_error(
+                "carrier_ladder_exact_boundary_v1 contains duplicate field: " +
+                key);
+        }
+    }
+    if (seen != required_fields ||
+        required_string(*control, "schema_version") !=
+            "carrier_ladder_exact_boundary_v1") {
+        throw std::runtime_error(
+            "carrier_ladder_exact_boundary_v1 requires its exact v1 fields");
+    }
+    poecraft::solver::CarrierLadderExactBoundaryDiagnosticConfig config;
+    const std::string mode = required_string(*control, "mode");
+    if (mode == "off") {
+        config.mode = poecraft::solver::
+            CarrierLadderExactBoundaryMode::Off;
+    } else if (mode == "record") {
+        config.mode = poecraft::solver::
+            CarrierLadderExactBoundaryMode::Record;
+    } else if (mode == "recover") {
+        config.mode = poecraft::solver::
+            CarrierLadderExactBoundaryMode::Recover;
+    } else {
+        throw std::runtime_error(
+            "carrier_ladder_exact_boundary_v1 mode must be off, record, or recover");
+    }
+    const Value& caps = required(*control, "caps", Type::Object);
+    const std::set<std::string> required_caps = {
+        "max_prefix_states", "max_exact_states", "max_exact_rows",
+        "max_exact_transitions", "max_exact_work", "max_owned_bytes",
+        "max_wall_time_ms", "max_samples"};
+    const std::set<std::string> optional_caps = {
+        "ordinary_finish_state_action_rows"};
+    seen.clear();
+    for (const auto& [key, unused] : caps.object) {
+        (void)unused;
+        if (!required_caps.contains(key) && !optional_caps.contains(key)) {
+            throw std::runtime_error(
+                "carrier_ladder_exact_boundary_v1 caps contain unknown field: " +
+                key);
+        }
+        if (!seen.insert(key).second) {
+            throw std::runtime_error(
+                "carrier_ladder_exact_boundary_v1 caps contain duplicate field: " +
+                key);
+        }
+    }
+    if (!std::includes(
+            seen.begin(), seen.end(),
+            required_caps.begin(), required_caps.end())) {
+        throw std::runtime_error(
+            "carrier_ladder_exact_boundary_v1 caps require every v1 field");
+    }
+    config.limits.max_prefix_states = optional_u32(
+        caps, "max_prefix_states", 0);
+    config.limits.ordinary_finish_state_action_rows = optional_u64(
+        caps, "ordinary_finish_state_action_rows", 0);
+    config.limits.max_exact_states = optional_u32(
+        caps, "max_exact_states", 0);
+    config.limits.max_exact_rows = optional_u32(
+        caps, "max_exact_rows", 0);
+    config.limits.max_exact_transitions = optional_u64(
+        caps, "max_exact_transitions", 0);
+    config.limits.max_exact_work = optional_u64(
+        caps, "max_exact_work", 0);
+    config.limits.max_owned_bytes = optional_u64(
+        caps, "max_owned_bytes", 0);
+    config.limits.max_wall_time_ms = optional_u64(
+        caps, "max_wall_time_ms", 0);
+    config.limits.max_samples = optional_u32(caps, "max_samples", 0);
+    return config;
+}
+
 double optional_nonnegative_double(
     const Value& object, const char* key, double fallback) {
     const Value* value = optional(object, key, Type::Number);
@@ -3185,6 +3276,18 @@ CaseResult run_case(
             optional_u32(caps, "solve_step_work_items", 1);
         pc_error_info error;
         pc_error_info_init(&error);
+        const auto boundary_config =
+            carrier_ladder_exact_boundary_diagnostic_config(specification);
+        if (boundary_config.has_value()) {
+            const pc_result configured = poecraft::solver::
+                configure_solver_carrier_ladder_exact_boundary_diagnostic(
+                    handles.solver, *boundary_config, &error);
+            if (configured != PC_RESULT_OK) {
+                throw std::runtime_error(api_error(
+                    "configure_solver_carrier_ladder_exact_boundary_diagnostic",
+                    configured, error));
+            }
+        }
         if (!development_checkpoint_load.empty()) {
             const std::string checkpoint_path =
                 fs::absolute(development_checkpoint_load).string();
@@ -3328,6 +3431,10 @@ CaseResult run_case(
             requested_bounded_finish_value == nullptr
                 ? 0.0
                 : requested_bounded_finish_value->number;
+        const std::uint64_t requested_bounded_finish_rows =
+            boundary_config.has_value()
+            ? boundary_config->limits.ordinary_finish_state_action_rows
+            : 0;
         bool requested_bounded_finish = false;
         do {
             const auto step_begin = Clock::now();
@@ -3373,9 +3480,18 @@ CaseResult run_case(
                 break;
             }
             if (!progress.done && !requested_bounded_finish &&
-                requested_bounded_finish_seconds > 0.0 &&
-                milliseconds(solve_begin, after_step) >=
-                    requested_bounded_finish_seconds * 1000.0) {
+                ((requested_bounded_finish_rows > 0 &&
+                  progress.state_action_rows >=
+                      requested_bounded_finish_rows) ||
+                 (requested_bounded_finish_rows == 0 &&
+                  requested_bounded_finish_seconds > 0.0 &&
+                  milliseconds(solve_begin, after_step) -
+                          static_cast<double>(
+                              poecraft::solver::
+                                  solver_carrier_ladder_exact_boundary_private_wall_ns(
+                                      handles.solver)) /
+                              1000000.0 >=
+                      requested_bounded_finish_seconds * 1000.0))) {
                 result = pc_solver_solve_request_bounded_finish(
                     handles.solver, &error);
                 if (result != PC_RESULT_OK) {
@@ -4236,7 +4352,7 @@ void append_case_report(
         << (result.verification_skipped ? "true" : "false") << ",\n";
     out << "  \"input\":{";
     bool first_input = true;
-    for (const char* key : {"comparison_profile", "watchdog_seconds", "requested_bounded_finish_seconds", "session", "start", "goal", "corpus", "feasibility", "generation", "product_action_envelope", "allowed_mechanic_families", "planner_envelope_diagnostic_v1", "mechanic_family_control", "compiled_operation_contract", "compiled_operation_contracts", "material_ratio_contract", "market_price_override_contracts", "forced_winner_contract", "bounded_best_policy_contract", "economy", "caps", "verification"}) {
+    for (const char* key : {"comparison_profile", "watchdog_seconds", "requested_bounded_finish_seconds", "session", "start", "goal", "corpus", "feasibility", "generation", "product_action_envelope", "allowed_mechanic_families", "planner_envelope_diagnostic_v1", "carrier_ladder_exact_boundary_v1", "mechanic_family_control", "compiled_operation_contract", "compiled_operation_contracts", "material_ratio_contract", "market_price_override_contracts", "forced_winner_contract", "bounded_best_policy_contract", "economy", "caps", "verification"}) {
         const Value* value = specification.find(key);
         if (value == nullptr) continue;
         if (!first_input) out << ',';

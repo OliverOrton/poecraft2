@@ -5081,6 +5081,450 @@ PolicyExactLiftCertificate lift_policy_exact(
     return certificate;
 }
 
+const char* exact_boundary_recovery_status_name(
+        const ExactBoundaryRecoveryStatus status) {
+    switch (status) {
+    case ExactBoundaryRecoveryStatus::NotRun: return "not_run";
+    case ExactBoundaryRecoveryStatus::Complete: return "complete";
+    case ExactBoundaryRecoveryStatus::InvalidPrefix:
+        return "invalid_prefix";
+    case ExactBoundaryRecoveryStatus::UnsupportedKernel:
+        return "unsupported_kernel";
+    case ExactBoundaryRecoveryStatus::ResourceCap:
+        return "resource_cap";
+    case ExactBoundaryRecoveryStatus::WallTimeCap:
+        return "wall_time_cap";
+    case ExactBoundaryRecoveryStatus::ImproperPrefix:
+        return "improper_prefix";
+    case ExactBoundaryRecoveryStatus::NoRequestedEntry:
+        return "no_requested_entry";
+    }
+    return "unknown";
+}
+
+ExactBoundaryClosureResult analyze_exact_boundary_closure(
+        const std::vector<ExactBoundaryClosureNode>& nodes,
+        const std::uint32_t requested_entry) {
+    ExactBoundaryClosureResult result;
+    result.complete_support = true;
+    std::vector<std::vector<std::uint32_t>> predecessors(nodes.size());
+    std::vector<std::uint8_t> reaches_stop(nodes.size(), 0);
+    std::vector<std::uint32_t> pending;
+    for (std::uint32_t source = 0; source < nodes.size(); ++source) {
+        const ExactBoundaryClosureNode& node = nodes[source];
+        if (node.state.terminal) {
+            reaches_stop[source] = 1;
+            pending.push_back(source);
+            if (!node.state.goal &&
+                node.state.coarse_state == requested_entry) {
+                result.requested_nodes.push_back(source);
+            }
+        }
+        for (const std::uint32_t successor : node.successors) {
+            if (successor >= nodes.size()) {
+                result.status = ExactBoundaryRecoveryStatus::InvalidPrefix;
+                result.refusal =
+                    "selected exact prefix names an unknown successor";
+                return result;
+            }
+            predecessors[successor].push_back(source);
+        }
+    }
+    for (std::size_t position = 0; position < pending.size(); ++position) {
+        for (const std::uint32_t predecessor :
+             predecessors[pending[position]]) {
+            if (!reaches_stop[predecessor]) {
+                reaches_stop[predecessor] = 1;
+                pending.push_back(predecessor);
+            }
+        }
+    }
+    if (std::find(reaches_stop.begin(), reaches_stop.end(), 0) !=
+        reaches_stop.end()) {
+        result.status = ExactBoundaryRecoveryStatus::ImproperPrefix;
+        result.refusal =
+            "selected exact prefix contains a closed nonterminal class";
+        return result;
+    }
+    result.absorption_proved = true;
+    if (result.requested_nodes.empty()) {
+        result.status = ExactBoundaryRecoveryStatus::NoRequestedEntry;
+        result.refusal =
+            "selected exact prefix does not reach the requested entry";
+        return result;
+    }
+    result.status = ExactBoundaryRecoveryStatus::Complete;
+    return result;
+}
+
+struct ExactBoundaryRecoveryWork::Impl {
+    RefinementLimits limits;
+    std::uint64_t max_work = 0;
+    std::uint64_t max_wall_time_ms = 0;
+    std::uint32_t requested_entry = kNoId;
+    ExactBoundaryRecoveryResult result;
+    std::unique_ptr<ProductionPolicyOracle> oracle;
+    std::optional<solve_detail::CooperativeTask<bool>> initialization;
+    std::optional<solve_detail::CooperativeTask<QuotientOracleCompactRow>>
+        row_work;
+    std::vector<ExactBoundaryClosureNode> nodes;
+    std::map<StableKey, std::uint32_t> node_by_key;
+    std::size_t cursor = 0;
+    std::uint32_t active_node = kNoId;
+    bool finished = false;
+    std::chrono::steady_clock::time_point started_at =
+        std::chrono::steady_clock::now();
+
+    Impl(
+            CalcContext& coarse,
+            const SolveResult& selected_prefix,
+            const pc_item_state& exact_start,
+            const std::unordered_map<std::string, double>& prices,
+            const SolveOptions& options,
+            std::set<std::uint32_t> observation_stops,
+            const std::uint32_t requested_entry_value,
+            RefinementLimits limits_value,
+            const std::uint64_t max_work_value,
+            const std::uint64_t max_wall_time_ms_value)
+        : limits(std::move(limits_value)),
+          max_work(max_work_value),
+          max_wall_time_ms(max_wall_time_ms_value),
+          requested_entry(requested_entry_value) {
+        oracle = std::make_unique<ProductionPolicyOracle>(
+            coarse, selected_prefix, exact_start, prices, options, limits,
+            result.adapter, nullptr, true, true, false,
+            std::move(observation_stops));
+        initialization.emplace(oracle->initialize_cooperatively());
+    }
+
+    std::uint64_t elapsed_ms() const {
+        return static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - started_at).count());
+    }
+
+    std::uint64_t owned_bytes() const {
+        std::uint64_t bytes = sizeof(*this);
+        bytes += nodes.capacity() * sizeof(ExactBoundaryClosureNode);
+        for (const ExactBoundaryClosureNode& node : nodes) {
+            bytes += exact_state_bytes(node.state);
+            bytes += node.successors.capacity() * sizeof(std::uint32_t);
+        }
+        bytes += node_by_key.size() *
+            (sizeof(std::pair<const StableKey, std::uint32_t>) +
+             3 * sizeof(void*));
+        for (const auto& [key, unused] : node_by_key) {
+            (void)unused;
+            bytes += key.capacity() * sizeof(std::uint64_t);
+        }
+        bytes += result.requested_entries.capacity() *
+            sizeof(ExactBoundaryRecoveredMember);
+        for (const ExactBoundaryRecoveredMember& member :
+             result.requested_entries) {
+            bytes += member.stable_key.capacity() * sizeof(std::uint64_t);
+        }
+        if (oracle != nullptr) {
+            saturating_add(
+                bytes, oracle->estimated_owned_bytes());
+        }
+        if (initialization.has_value()) {
+            saturating_add(
+                bytes, initialization->retained_bytes());
+        }
+        if (row_work.has_value()) {
+            saturating_add(
+                bytes, row_work->retained_bytes());
+        }
+        return bytes;
+    }
+
+    void refuse(
+            const ExactBoundaryRecoveryStatus status,
+            std::string reason) {
+        result.status = status;
+        result.refusal = std::move(reason);
+        result.wall_time_ms = elapsed_ms();
+        result.retained_owned_bytes = owned_bytes();
+        result.peak_owned_bytes = std::max(
+            result.peak_owned_bytes, result.retained_owned_bytes);
+        row_work.reset();
+        initialization.reset();
+        oracle.reset();
+        finished = true;
+    }
+
+    std::uint32_t intern(const std::uint32_t locator) {
+        ExactState state = oracle->quotient_materialize_locator(locator);
+        const auto found = node_by_key.find(state.stable_key);
+        if (found != node_by_key.end()) {
+            if (nodes.at(found->second).state != state) {
+                throw AdapterFailure(
+                    PolicyExactLiftStatus::RefinementFailure,
+                    "one exact boundary identity changed its hard payload");
+            }
+            return found->second;
+        }
+        if (nodes.size() >= limits.max_exact_states) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::ResourceCap,
+                "exact boundary replay reached max_exact_states",
+                "max_exact_states");
+        }
+        const std::uint32_t ordinal =
+            static_cast<std::uint32_t>(nodes.size());
+        node_by_key.emplace(state.stable_key, ordinal);
+        nodes.push_back({std::move(state), locator, {}});
+        result.exact_states = static_cast<std::uint32_t>(nodes.size());
+        return ordinal;
+    }
+
+    void finish_graph() {
+        result.exact_states = static_cast<std::uint32_t>(nodes.size());
+        const ExactBoundaryClosureResult closure =
+            analyze_exact_boundary_closure(nodes, requested_entry);
+        result.complete_support = closure.complete_support;
+        result.absorption_proved = closure.absorption_proved;
+        if (closure.status != ExactBoundaryRecoveryStatus::Complete) {
+            refuse(closure.status, closure.refusal);
+            return;
+        }
+        for (const std::uint32_t ordinal : closure.requested_nodes) {
+            const ExactBoundaryClosureNode& node = nodes.at(ordinal);
+            pc_item_state item{};
+            if (!oracle->quotient_export_item(node.locator, item)) {
+                throw AdapterFailure(
+                    PolicyExactLiftStatus::ObservationUnavailable,
+                    "exact boundary member cannot export its hard item");
+            }
+            result.requested_entries.push_back({
+                node.state.stable_key,
+                node.state.coarse_state,
+                item});
+        }
+        std::sort(
+            result.requested_entries.begin(),
+            result.requested_entries.end(),
+            [](const ExactBoundaryRecoveredMember& left,
+               const ExactBoundaryRecoveredMember& right) {
+                return left.stable_key < right.stable_key;
+            });
+        result.requested_entries.erase(
+            std::unique(
+                result.requested_entries.begin(),
+                result.requested_entries.end(),
+                [](const ExactBoundaryRecoveredMember& left,
+                   const ExactBoundaryRecoveredMember& right) {
+                    return left.stable_key == right.stable_key;
+                }),
+            result.requested_entries.end());
+        std::uint64_t identity = 1469598103934665603ULL;
+        const auto mix = [&](const std::uint64_t word) {
+            identity ^= word;
+            identity *= 1099511628211ULL;
+        };
+        mix(1); /* exact-member identity schema */
+        mix(requested_entry);
+        mix(result.requested_entries.size());
+        for (const ExactBoundaryRecoveredMember& member :
+             result.requested_entries) {
+            mix(member.coarse_state);
+            mix(member.stable_key.size());
+            for (const std::uint64_t word : member.stable_key) mix(word);
+        }
+        result.member_identity = identity;
+        result.status = ExactBoundaryRecoveryStatus::Complete;
+        result.wall_time_ms = elapsed_ms();
+        result.retained_owned_bytes = owned_bytes();
+        result.peak_owned_bytes = std::max(
+            result.peak_owned_bytes, result.retained_owned_bytes);
+        row_work.reset();
+        initialization.reset();
+        oracle.reset();
+        finished = true;
+    }
+
+    void advance_one() {
+        if (finished) return;
+        if (elapsed_ms() > max_wall_time_ms) {
+            refuse(
+                ExactBoundaryRecoveryStatus::WallTimeCap,
+                "max_wall_time_ms");
+            return;
+        }
+        if (++result.work_items > max_work) {
+            refuse(
+                ExactBoundaryRecoveryStatus::ResourceCap,
+                "max_exact_work");
+            return;
+        }
+        try {
+            if (initialization.has_value()) {
+                if (!initialization->resume()) return;
+                (void)initialization->take_result();
+                initialization.reset();
+                const std::uint32_t root =
+                    oracle->quotient_locator(oracle->root_key());
+                intern(root);
+                return;
+            }
+            if (row_work.has_value()) {
+                if (!row_work->resume()) return;
+                QuotientOracleCompactRow row = row_work->take_result();
+                row_work.reset();
+                ++result.exact_rows;
+                if (result.exact_rows > limits.max_exact_kernels) {
+                    throw AdapterFailure(
+                        PolicyExactLiftStatus::ResourceCap,
+                        "exact boundary replay reached max_exact_kernels",
+                        "max_exact_kernels");
+                }
+                std::map<std::uint32_t, solve_detail::WideFloat> mass;
+                for (const QuotientOracleCompactTransition& transition :
+                     row.transitions) {
+                    if (!std::isfinite(transition.probability) ||
+                        transition.probability < 0.0) {
+                        throw AdapterFailure(
+                            PolicyExactLiftStatus::RefinementFailure,
+                            "exact boundary row has invalid probability");
+                    }
+                    if (transition.probability == 0.0) continue;
+                    const std::uint32_t canonical =
+                        oracle->quotient_canonical_locator(
+                            transition.strict_state);
+                    const std::uint32_t successor = intern(canonical);
+                    mass[successor] += solve_detail::WideFloat{
+                        transition.probability};
+                }
+                solve_detail::WideFloat total{0.0};
+                ExactBoundaryClosureNode& node = nodes.at(active_node);
+                for (const auto& [successor, probability] : mass) {
+                    node.successors.push_back(successor);
+                    total += probability;
+                }
+                result.exact_transitions += mass.size();
+                if (result.exact_transitions > limits.max_transitions) {
+                    throw AdapterFailure(
+                        PolicyExactLiftStatus::ResourceCap,
+                        "exact boundary replay reached max_transitions",
+                        "max_transitions");
+                }
+                if (mass.empty() ||
+                    std::fabs(total.value() - 1.0) >
+                        limits.probability_sum_tolerance) {
+                    throw AdapterFailure(
+                        PolicyExactLiftStatus::RefinementFailure,
+                        "exact boundary selected row is not stochastic");
+                }
+                ++cursor;
+                active_node = kNoId;
+                return;
+            }
+            if (cursor >= nodes.size()) {
+                finish_graph();
+                return;
+            }
+            ExactBoundaryClosureNode& node = nodes[cursor];
+            if (node.state.terminal) {
+                ++cursor;
+                return;
+            }
+            active_node = static_cast<std::uint32_t>(cursor);
+            row_work.emplace(
+                oracle->boundary_selected_compact_row_cooperatively(
+                    node.state));
+        } catch (const AdapterFailure& error) {
+            const ExactBoundaryRecoveryStatus status =
+                error.status == PolicyExactLiftStatus::ResourceCap
+                    ? ExactBoundaryRecoveryStatus::ResourceCap
+                    : error.status ==
+                              PolicyExactLiftStatus::UnsupportedPrimitiveKernel
+                        ? ExactBoundaryRecoveryStatus::UnsupportedKernel
+                        : ExactBoundaryRecoveryStatus::InvalidPrefix;
+            refuse(status, error.cap.empty() ? error.what() : error.cap);
+        } catch (const SolverResourceLimit& error) {
+            refuse(
+                ExactBoundaryRecoveryStatus::ResourceCap,
+                adapter_resource_cap_name(error.cap_name()));
+        } catch (const std::length_error& error) {
+            refuse(
+                ExactBoundaryRecoveryStatus::ResourceCap,
+                resource_cap_from_message(error.what()));
+        } catch (const std::exception& error) {
+            refuse(
+                ExactBoundaryRecoveryStatus::InvalidPrefix,
+                error.what());
+        }
+        if (!finished) {
+            const std::uint64_t live = owned_bytes();
+            result.peak_owned_bytes = std::max(
+                result.peak_owned_bytes, live);
+            if (live > limits.max_estimated_memory_bytes) {
+                refuse(
+                    ExactBoundaryRecoveryStatus::ResourceCap,
+                    "max_owned_bytes");
+            }
+        }
+    }
+};
+
+ExactBoundaryRecoveryWork::ExactBoundaryRecoveryWork(
+        CalcContext& coarse,
+        const SolveResult& selected_prefix,
+        const pc_item_state& exact_start,
+        const std::unordered_map<std::string, double>& prices,
+        const SolveOptions& options,
+        std::set<std::uint32_t> observation_stops,
+        const std::uint32_t requested_entry,
+        RefinementLimits limits,
+        const std::uint64_t max_work,
+        const std::uint64_t max_wall_time_ms)
+    : impl_(std::make_unique<Impl>(
+          coarse, selected_prefix, exact_start, prices, options,
+          std::move(observation_stops), requested_entry,
+          std::move(limits), max_work, max_wall_time_ms)) {}
+
+ExactBoundaryRecoveryWork::~ExactBoundaryRecoveryWork() = default;
+ExactBoundaryRecoveryWork::ExactBoundaryRecoveryWork(
+    ExactBoundaryRecoveryWork&&) noexcept = default;
+ExactBoundaryRecoveryWork& ExactBoundaryRecoveryWork::operator=(
+    ExactBoundaryRecoveryWork&&) noexcept = default;
+
+void ExactBoundaryRecoveryWork::step(const std::uint32_t max_work_items) {
+    if (max_work_items == 0) return;
+    for (std::uint32_t item = 0;
+         item < max_work_items && !impl_->finished; ++item) {
+        impl_->advance_one();
+        if (!impl_->finished) {
+            const std::uint64_t live = impl_->owned_bytes();
+            impl_->result.peak_owned_bytes = std::max(
+                impl_->result.peak_owned_bytes, live);
+            if (live > impl_->limits.max_estimated_memory_bytes) {
+                impl_->refuse(
+                    ExactBoundaryRecoveryStatus::ResourceCap,
+                    "max_owned_bytes");
+            }
+        }
+    }
+}
+
+bool ExactBoundaryRecoveryWork::done() const {
+    return impl_->finished;
+}
+
+std::uint64_t ExactBoundaryRecoveryWork::retained_bytes() const {
+    return impl_->owned_bytes();
+}
+
+ExactBoundaryRecoveryResult ExactBoundaryRecoveryWork::take_result() {
+    if (!impl_->finished) {
+        throw std::logic_error(
+            "exact boundary recovery result requested before completion");
+    }
+    ExactBoundaryRecoveryResult result = std::move(impl_->result);
+    impl_.reset();
+    return result;
+}
+
 } // namespace refinement
 } // namespace solver
 } // namespace poecraft

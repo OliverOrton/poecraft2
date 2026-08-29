@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
+#include <set>
 #include <string>
 #include <unordered_map>
 
@@ -419,6 +420,101 @@ class PolicyExactLiftWork {
     const PolicyLiftAdapterTelemetry& live_adapter_telemetry();
     PolicyExactLiftCertificate take_result();
     std::uint64_t retained_bytes() const;
+
+  private:
+    struct Impl;
+    std::unique_ptr<Impl> impl_;
+};
+
+enum class ExactBoundaryRecoveryStatus : std::uint8_t {
+    NotRun = 0,
+    Complete,
+    InvalidPrefix,
+    UnsupportedKernel,
+    ResourceCap,
+    WallTimeCap,
+    ImproperPrefix,
+    NoRequestedEntry,
+};
+
+const char* exact_boundary_recovery_status_name(
+    ExactBoundaryRecoveryStatus status);
+
+struct ExactBoundaryRecoveredMember {
+    StableKey stable_key;
+    std::uint32_t coarse_state = kNoId;
+    pc_item_state item{};
+};
+
+struct ExactBoundaryRecoveryResult {
+    ExactBoundaryRecoveryStatus status =
+        ExactBoundaryRecoveryStatus::NotRun;
+    std::string refusal;
+    bool complete_support = false;
+    bool absorption_proved = false;
+    std::uint32_t exact_states = 0;
+    std::uint32_t exact_rows = 0;
+    std::uint64_t exact_transitions = 0;
+    std::uint64_t work_items = 0;
+    std::uint64_t retained_owned_bytes = 0;
+    std::uint64_t peak_owned_bytes = 0;
+    std::uint64_t wall_time_ms = 0;
+    std::uint64_t member_identity = 0;
+    PolicyLiftAdapterTelemetry adapter;
+    std::vector<ExactBoundaryRecoveredMember> requested_entries;
+};
+
+/* Internal closure input shared by production recovery and focused native
+ * controls. A terminal exact state can be either goal success or a named
+ * observation stop; only a non-goal terminal at requested_entry is an entry
+ * member. */
+struct ExactBoundaryClosureNode {
+    ExactState state;
+    std::uint32_t locator = kNoId;
+    std::vector<std::uint32_t> successors;
+};
+
+struct ExactBoundaryClosureResult {
+    ExactBoundaryRecoveryStatus status =
+        ExactBoundaryRecoveryStatus::NotRun;
+    std::string refusal;
+    bool complete_support = false;
+    bool absorption_proved = false;
+    std::vector<std::uint32_t> requested_nodes;
+};
+
+ExactBoundaryClosureResult analyze_exact_boundary_closure(
+    const std::vector<ExactBoundaryClosureNode>& nodes,
+    std::uint32_t requested_entry);
+
+/* Cooperative selected-prefix-only replay. Named coarse stops are absorbing
+ * observations, never policy goals. The adapter is forbidden from falling
+ * back to an alternative action or invoking local reoptimization. */
+class ExactBoundaryRecoveryWork {
+  public:
+    ExactBoundaryRecoveryWork(
+        CalcContext& coarse,
+        const SolveResult& selected_prefix,
+        const pc_item_state& exact_start,
+        const std::unordered_map<std::string, double>& prices,
+        const SolveOptions& options,
+        std::set<std::uint32_t> observation_stops,
+        std::uint32_t requested_entry,
+        RefinementLimits limits,
+        std::uint64_t max_work,
+        std::uint64_t max_wall_time_ms);
+    ~ExactBoundaryRecoveryWork();
+    ExactBoundaryRecoveryWork(ExactBoundaryRecoveryWork&&) noexcept;
+    ExactBoundaryRecoveryWork& operator=(
+        ExactBoundaryRecoveryWork&&) noexcept;
+    ExactBoundaryRecoveryWork(const ExactBoundaryRecoveryWork&) = delete;
+    ExactBoundaryRecoveryWork& operator=(
+        const ExactBoundaryRecoveryWork&) = delete;
+
+    void step(std::uint32_t max_work_items);
+    bool done() const;
+    std::uint64_t retained_bytes() const;
+    ExactBoundaryRecoveryResult take_result();
 
   private:
     struct Impl;

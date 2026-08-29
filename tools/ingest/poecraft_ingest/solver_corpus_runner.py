@@ -76,6 +76,8 @@ def _without_dynamic_ordinary_measurements(
             key: _without_dynamic_ordinary_measurements(item, (*path, key))
             for key, item in value.items()
             if key not in _DYNAMIC_ORDINARY_KEYS
+            and key != "carrier_ladder_exact_boundary_v1"
+            and key != "carrier_ladder_exact_boundary"
             and not key.endswith("_ns")
             and not key.endswith("_ms")
             and "_ns_" not in key

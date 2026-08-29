@@ -121,6 +121,13 @@ struct DataImpl {
 
     std::uint32_t artifact_schema_version = 0;
     bool complete_dataset = false;
+    // Stable manifest-backed artifact identity components. These deliberately
+    // exclude load addresses so identity-bound diagnostic records can be
+    // compared across processes.
+    std::string artifact_data_hash;
+    std::string artifact_source_hash;
+    std::string artifact_game_data_hash;
+    std::string artifact_strings_hash;
 
     // manifest row counts
     std::uint32_t count_tags = 0;

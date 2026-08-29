@@ -5443,6 +5443,161 @@ SolveWork::Impl::run_publication_pipeline() {
             std::max(peak_owned_bytes, final_live_bytes);
         result.diagnostics.solver_live_owned_bytes_estimate =
             fast_estimated_retained_solver_bytes(calc, &result);
+
+        /* This benchmark-private replay starts only after ordinary
+         * publication, cap handling, hashes, and retained-memory accounting
+         * are frozen. Its checkpoints deliberately carry zero ordinary
+         * retained bytes; the private contract owns and reports its separate
+         * allowance, and no result of this work is read by solver authority. */
+        if (carrier_ladder_exact_boundary_capture.has_value()) {
+            CarrierLadderBoundaryCapture& capture =
+                *carrier_ladder_exact_boundary_capture;
+            if (options.carrier_ladder_exact_boundary_mode ==
+                    CarrierLadderExactBoundaryMode::Record) {
+                capture.recovery_status = "not_run_record_mode";
+            } else if (options.carrier_ladder_exact_boundary_mode ==
+                       CarrierLadderExactBoundaryMode::Recover) {
+                const char* stale = nullptr;
+                if (capture.goal_identity != goal_identity()) {
+                    stale = "goal_identity_changed";
+                } else if (capture.economy_identity != economy_identity()) {
+                    stale = "economy_identity_changed";
+                } else if (capture.caller_scope_identity !=
+                           caller_scope_identity()) {
+                    stale = "caller_scope_identity_changed";
+                } else if (capture.action_vocabulary_identity !=
+                           action_vocabulary_identity()) {
+                    stale = "action_vocabulary_identity_changed";
+                } else if (capture.graph_prefix_identity !=
+                           incumbent_graph_prefix_identity(
+                               capture.prefix.graph_row_count,
+                               capture.prefix.graph_priced_row_count,
+                               capture.prefix.graph_successor_count,
+                               capture.prefix.graph_probability_count,
+                               capture.prefix.graph_choice_count,
+                               capture.prefix.graph_choice_successor_count,
+                               capture.prefix.graph_choice_option_count)) {
+                    stale = "graph_prefix_identity_changed";
+                } else if (capture.artifact_identity != artifact_identity()) {
+                    stale = "artifact_identity_changed";
+                }
+                const auto& private_limits =
+                    options.carrier_ladder_exact_boundary_limits;
+                if (stale != nullptr) {
+                    capture.recovery_status = "invalid_prefix";
+                    capture.recovery_refusal = stale;
+                } else if (capture.status == "refused_resource_cap") {
+                    capture.recovery_status = "not_run_capture_refused";
+                    capture.recovery_refusal = capture.refusal;
+                } else if (capture.retained_owned_bytes >=
+                           private_limits.max_owned_bytes) {
+                    capture.recovery_status = "resource_cap";
+                    capture.recovery_refusal = "max_owned_bytes";
+                } else {
+                    SolveResult prefix;
+                    prefix.policy_available = true;
+                    prefix.policy_status =
+                        SolvePolicyStatus::BoundedFeasible;
+                    prefix.start_state = result.start_state;
+                    prefix.has_exact_start_item = true;
+                    prefix.exact_start_item = exact_start_item;
+                    prefix.values = capture.prefix.values;
+                    prefix.policy = capture.prefix.policy;
+                    prefix.policy_reachable =
+                        capture.prefix.policy_reachable;
+                    prefix.unveil_preferences =
+                        capture.prefix.unveil_preferences;
+                    prefix.option_unveil_preferences =
+                        capture.prefix.option_unveil_preferences;
+                    prefix.behavioral_representative_by_state =
+                        capture.prefix.behavioral_representative_by_state;
+                    prefix.goal_states = result.goal_states;
+                    prefix.options = options;
+                    std::set<std::uint32_t> observation_stops;
+                    for (const CarrierLadderBoundaryCapture::Stop& stop :
+                         capture.stops) {
+                        if (stop.kind ==
+                                CarrierLadderBoundaryCapture::StopKind::
+                                    RequestedEntry ||
+                            stop.kind ==
+                                CarrierLadderBoundaryCapture::StopKind::
+                                    CertifiedFrontier) {
+                            observation_stops.insert(stop.state);
+                        }
+                    }
+                    refinement::RefinementLimits limits;
+                    limits.max_coarse_states =
+                        private_limits.max_prefix_states;
+                    limits.max_exact_states =
+                        private_limits.max_exact_states;
+                    limits.max_exact_kernels =
+                        private_limits.max_exact_rows;
+                    limits.max_transitions =
+                        private_limits.max_exact_transitions;
+                    limits.max_refinement_classes =
+                        private_limits.max_exact_states;
+                    limits.max_refinement_rounds =
+                        std::max<std::uint32_t>(
+                            1, private_limits.max_exact_states);
+                    limits.max_estimated_memory_bytes =
+                        private_limits.max_owned_bytes -
+                        capture.retained_owned_bytes;
+                    limits.max_witnesses = private_limits.max_samples;
+                    refinement::ExactBoundaryRecoveryWork recovery(
+                        calc, prefix, exact_start_item, prices, options,
+                        std::move(observation_stops), capture.target_state,
+                        limits, private_limits.max_exact_work,
+                        private_limits.max_wall_time_ms);
+                    while (!recovery.done()) {
+                        recovery.step(1);
+                        co_await solve_detail::CooperativeCheckpoint{};
+                    }
+                    refinement::ExactBoundaryRecoveryResult recovered =
+                        recovery.take_result();
+                    capture.recovery_status =
+                        refinement::exact_boundary_recovery_status_name(
+                            recovered.status);
+                    capture.recovery_refusal =
+                        std::move(recovered.refusal);
+                    capture.complete_support = recovered.complete_support;
+                    capture.absorption_proved =
+                        recovered.absorption_proved;
+                    capture.exact_states = recovered.exact_states;
+                    capture.exact_rows = recovered.exact_rows;
+                    capture.exact_transitions =
+                        recovered.exact_transitions;
+                    capture.recovery_work = recovered.work_items;
+                    capture.recovery_peak_owned_bytes =
+                        recovered.peak_owned_bytes;
+                    capture.recovery_wall_time_ms =
+                        recovered.wall_time_ms;
+                    capture.exact_member_identity =
+                        recovered.member_identity;
+                    capture.recovered_members.reserve(
+                        recovered.requested_entries.size());
+                    for (auto& member : recovered.requested_entries) {
+                        capture.recovered_members.push_back({
+                            std::move(member.stable_key),
+                            member.coarse_state,
+                            member.item});
+                    }
+                    capture.retained_owned_bytes =
+                        carrier_ladder_boundary_owned_bytes(capture);
+                    if (capture.retained_owned_bytes >
+                        private_limits.max_owned_bytes) {
+                        capture.recovered_members.clear();
+                        capture.complete_support = false;
+                        capture.absorption_proved = false;
+                        capture.recovery_status = "resource_cap";
+                        capture.recovery_refusal = "max_owned_bytes";
+                        capture.retained_owned_bytes =
+                            carrier_ladder_boundary_owned_bytes(capture);
+                    }
+                }
+            }
+            refresh_carrier_ladder_exact_boundary_diagnostics(
+                result.diagnostics);
+        }
         result.diagnostics.diagnostics_retained_bytes_estimate =
             diagnostics_owned_bytes(result.diagnostics) +
             result.diagnostics.operator_lineage_json.capacity() + 1;

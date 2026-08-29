@@ -15,6 +15,13 @@ authority, and define a typed exit/refusal contract. No fragment search,
 solver ordering, bound, incumbent, publication, or product behavior change is
 authorized.
 
+Gates 0–5 are complete on the retained source. The matched off/record/recover
+CLI matrix has equal core and ordinary-result identities, the private cap and
+real process-tree cancellation controls are recorded, and the investigation
+bundle replays stably. Recovery truthfully stops diagnosis-only because a
+reachable non-goal coarse state has no selected policy action before the named
+boundary. Gate 6 final downstream acceptance and archival are in progress.
+
 ## Most Recent Completed Boundary
 
 [Carrier-Ladder Online Continuation Completion v1](docs/archive/2026-08-29-carrier-ladder-online-continuation-completion-v1/README.md)

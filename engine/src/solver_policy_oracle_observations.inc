@@ -93,7 +93,8 @@
                 "table");
         }
         CoarsePolicyNode node;
-        if (!coarse_.is_goal_state(coarse_.state(state))) {
+        if (!coarse_.is_goal_state(coarse_.state(state)) &&
+            !observation_boundaries_.contains(state)) {
             if (solved_.policy[state].index == kNoId) {
                 if (!enable_local_reoptimization_ &&
                     !enable_quotient_bootstrap_) {
@@ -271,7 +272,8 @@
         exact.stable_key = raw_key;
         exact.goal =
             strict_->is_goal_state(strict_->state(strict_state));
-        exact.terminal = exact.goal;
+        exact.terminal = exact.goal ||
+            observation_boundaries_.contains(parent);
         const bool witness_parent =
             enable_local_reoptimization_ &&
             reoptimization_parents_.contains(parent);

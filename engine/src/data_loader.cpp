@@ -40,6 +40,14 @@ static std::shared_ptr<DataImpl> build_data_impl(
     // --- manifest -----------------------------------------------------------
     data->artifact_schema_version = static_cast<std::uint32_t>(
         manifest.at("artifact_schema_version").as_int());
+    const Value& source = manifest.at("source");
+    data->artifact_data_hash = source.at("data_hash").as_string();
+    data->artifact_source_hash = source.at("source_hash").as_string();
+    const Value& files = manifest.at("files");
+    data->artifact_game_data_hash =
+        files.at("game-data.json").at("sha256").as_string();
+    data->artifact_strings_hash =
+        files.at("strings.json").at("sha256").as_string();
     const Value* complete = manifest.find("complete_dataset");
     data->complete_dataset = complete != nullptr &&
                              complete->type == json::Type::Bool &&

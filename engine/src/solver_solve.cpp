@@ -668,6 +668,10 @@ std::uint64_t SolveWork::peak_owned_bytes() const {
         impl_->peak_owned_bytes, impl_->estimated_owned_bytes());
 }
 
+std::uint64_t SolveWork::private_diagnostic_wall_ns() const {
+    return impl_->carrier_ladder_exact_boundary_private_wall_ns;
+}
+
 SolveResult solve(
     CalcContext& calc,
     const pc_item_state& start_item,

@@ -7,6 +7,7 @@ import sys
 
 from poecraft_ingest.solver_corpus_runner import (
     CaseTask,
+    _ordinary_finalization_components,
     _run_case,
     load_case_tasks,
     run_corpus,
@@ -24,6 +25,39 @@ from poecraft_ingest.solver_worker import (
 def _write_json(path: Path, value: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value), encoding="utf-8")
+
+
+def test_ordinary_finalization_excludes_private_carrier_boundary_projection() -> None:
+    def report(mode: str) -> dict[str, object]:
+        return {
+            "cases": [
+                {
+                    "input": {
+                        "caps": {"max_states": 8},
+                        "carrier_ladder_exact_boundary_v1": {
+                            "schema_version": "carrier_ladder_exact_boundary_v1",
+                            "mode": mode,
+                            "caps": {"max_exact_states": 16},
+                        },
+                    },
+                    "solver_telemetry": {
+                        "incremental_action_envelope": {
+                            "typed_ledger": {"entries": 3},
+                            "carrier_ladder_exact_boundary": {
+                                "mode": mode,
+                                "capture": {"status": "captured"},
+                            },
+                        }
+                    },
+                    "solve_summary": {},
+                }
+            ]
+        }
+
+    off = _ordinary_finalization_components(report("off"), [])
+    recover = _ordinary_finalization_components(report("recover"), [])
+
+    assert off == recover
 
 
 def test_load_case_tasks_is_deterministic_and_caps_watchdogs(tmp_path: Path) -> None:

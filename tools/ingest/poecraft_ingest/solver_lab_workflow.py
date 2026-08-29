@@ -47,6 +47,21 @@ _NUMBER_CAPS = frozenset(
 _BOOLEAN_CAPS = frozenset(
     {"full_evidence", "strict_states", "kernel_reuse", "high_impact_executable_uppers"}
 )
+_CARRIER_BOUNDARY_CAPS = frozenset(
+    {
+        "max_prefix_states",
+        "max_exact_states",
+        "max_exact_rows",
+        "max_exact_transitions",
+        "max_exact_work",
+        "max_owned_bytes",
+        "max_wall_time_ms",
+        "max_samples",
+    }
+)
+_OPTIONAL_CARRIER_BOUNDARY_CAPS = frozenset(
+    {"ordinary_finish_state_action_rows"}
+)
 
 
 def _decode_pointer(pointer: str) -> tuple[str, ...]:
@@ -98,6 +113,51 @@ def _normalize_slot(value: Any) -> dict[str, Any]:
     return slot
 
 
+def _normalize_carrier_ladder_exact_boundary(value: Any) -> dict[str, Any]:
+    if not isinstance(value, Mapping):
+        raise ValueError("carrier ladder exact boundary must be a JSON object")
+    control = deepcopy(dict(value))
+    if set(control) != {"schema_version", "mode", "caps"}:
+        raise ValueError(
+            "carrier ladder exact boundary requires exactly schema_version, mode, and caps"
+        )
+    if control["schema_version"] != "carrier_ladder_exact_boundary_v1":
+        raise ValueError("carrier ladder exact boundary schema version is invalid")
+    if control["mode"] not in {"off", "record", "recover"}:
+        raise ValueError("carrier ladder exact boundary mode is invalid")
+    caps = control["caps"]
+    if (
+        not isinstance(caps, Mapping)
+        or not _CARRIER_BOUNDARY_CAPS.issubset(caps)
+        or not set(caps).issubset(
+            _CARRIER_BOUNDARY_CAPS | _OPTIONAL_CARRIER_BOUNDARY_CAPS
+        )
+    ):
+        raise ValueError(
+            "carrier ladder exact boundary caps require every exact v1 field"
+        )
+    normalized_caps: dict[str, int] = {}
+    for key in sorted(_CARRIER_BOUNDARY_CAPS):
+        cap = caps[key]
+        if not _is_integer(cap) or cap <= 0 or cap > 2**63 - 1:
+            raise ValueError(
+                f"carrier ladder exact boundary cap {key} must be a positive 64-bit integer"
+            )
+        normalized_caps[key] = cap
+    for key in sorted(_OPTIONAL_CARRIER_BOUNDARY_CAPS & set(caps)):
+        cap = caps[key]
+        if not _is_integer(cap) or cap <= 0 or cap > 2**63 - 1:
+            raise ValueError(
+                f"carrier ladder exact boundary cap {key} must be a positive 64-bit integer"
+            )
+        normalized_caps[key] = cap
+    return {
+        "schema_version": control["schema_version"],
+        "mode": control["mode"],
+        "caps": normalized_caps,
+    }
+
+
 def _normalize_patch_value(segments: tuple[str, ...], value: Any) -> Any:
     if segments == ("watchdog_seconds",):
         if (
@@ -133,6 +193,8 @@ def _normalize_patch_value(segments: tuple[str, ...], value: Any) -> Any:
         if not isinstance(value, list) or not (1 <= len(value) <= 20):
             raise ValueError("goal slots must contain 1..20 entries")
         return [_normalize_slot(slot) for slot in value]
+    if segments == ("carrier_ladder_exact_boundary_v1",):
+        return _normalize_carrier_ladder_exact_boundary(value)
     if (
         len(segments) == 4
         and segments[:2] == ("goal", "slots")
@@ -223,10 +285,10 @@ def apply_case_patches(
                 raise ValueError(f"patch path does not exist: {patch['path']}")
             parent[int(leaf)] = deepcopy(patch["value"])
         elif isinstance(parent, dict):
-            if leaf not in parent and segments != (
-                "goal",
-                "disabled_action_families",
-            ):
+            if leaf not in parent and segments not in {
+                ("goal", "disabled_action_families"),
+                ("carrier_ladder_exact_boundary_v1",),
+            }:
                 raise ValueError(f"patch path does not exist: {patch['path']}")
             parent[leaf] = deepcopy(patch["value"])
         else:

@@ -3509,6 +3509,12 @@ std::string serialize_solver_telemetry(
         } else {
             json += diagnostics->operator_lineage_json;
         }
+        json += ",\"carrier_ladder_exact_boundary\":";
+        if (diagnostics->carrier_ladder_exact_boundary_json.empty()) {
+            json += "null";
+        } else {
+            json += diagnostics->carrier_ladder_exact_boundary_json;
+        }
         json += ",\"witnesses\":[";
         for (std::size_t i = 0;
              i < diagnostics->incremental_action_witnesses.size(); ++i) {

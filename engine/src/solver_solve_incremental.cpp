@@ -3387,6 +3387,7 @@ void SolveWork::Impl::finalize_incremental_diagnostics() {
     refresh_action_envelope_ledger_diagnostics(diagnostics);
     refresh_anytime_scheduler_diagnostics(diagnostics);
     refresh_operator_lineage_diagnostics(diagnostics, &result);
+    refresh_carrier_ladder_exact_boundary_diagnostics(diagnostics);
 }
 
 void SolveWork::Impl::finalize_upper_policy_provenance() {

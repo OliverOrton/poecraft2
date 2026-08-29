@@ -10,7 +10,8 @@
         const ReoptimizationSeed* reoptimization_seed,
         const bool force_semantic_strict_identity = false,
         const bool defer_initialization = false,
-        const bool enable_quotient_bootstrap = false)
+        const bool enable_quotient_bootstrap = false,
+        std::set<std::uint32_t> observation_boundaries = {})
         : coarse_(coarse),
           solved_(solved),
           exact_start_(exact_start),
@@ -34,7 +35,8 @@
                   : reoptimization_seed_bytes(
                         *reoptimization_seed)),
           force_semantic_strict_identity_(
-              force_semantic_strict_identity) {
+              force_semantic_strict_identity),
+          observation_boundaries_(std::move(observation_boundaries)) {
         if (defer_initialization) return;
         auto initialization = initialize_cooperatively();
         while (!initialization.resume()) {}
@@ -312,6 +314,13 @@
     AbstractState quotient_export_locator(
             const std::uint32_t strict_state) const {
         return strict_->state(strict_state);
+    }
+
+    bool quotient_export_item(
+            const std::uint32_t strict_state,
+            pc_item_state& item) const {
+        return strict_state < strict_->state_count() &&
+               strict_->materialize(strict_state, item);
     }
 
     void quotient_sync_resource_telemetry() {
@@ -1055,6 +1064,53 @@
             }
         }
         co_return quotient_selected_compact_row(state);
+    }
+
+    solve_detail::CooperativeTask<QuotientOracleCompactRow>
+    boundary_selected_compact_row_cooperatively(
+            const ExactState& state) {
+        if (state.terminal) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::InvalidSolveState,
+                "boundary observation stop has no selected row");
+        }
+        const std::optional<SelectedAction> current = selected_action(state);
+        if (!current.has_value()) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::InvalidSolveState,
+                "boundary prefix carrier has no selected row");
+        }
+        ScopedReforgeRowProvenance provenance(
+            *strict_, ReforgeRowOwner::StrictSelected);
+        const std::size_t attribution_sample_begin =
+            strict_->telemetry().reforge_build_attribution_samples.size();
+        const std::uint64_t work_before =
+            strict_->telemetry().reforge_frontier_work;
+        auto preparation = quotient_prepare_primitive_row(
+            state, current->action_id);
+        while (!preparation.resume()) {
+            co_await solve_detail::CooperativeCheckpoint{
+                preparation.retained_bytes()};
+        }
+        const std::shared_ptr<const OutcomeDistribution> prepared =
+            preparation.take_result();
+        const std::size_t attribution_sample_end =
+            strict_->telemetry().reforge_build_attribution_samples.size();
+        const std::uint64_t work_after =
+            strict_->telemetry().reforge_frontier_work;
+        saturating_add(
+            telemetry_.selected_reforge_work,
+            work_after >= work_before ? work_after - work_before : 0);
+        telemetry_.strict_reforge_work = work_after;
+        QuotientOracleCompactRow row = quotient_build_compact_row(
+            state, *current, false, attribution_sample_begin);
+        record_broad_row_attribution(
+            state, row.selected, false, attribution_sample_begin,
+            prepared == nullptr ? row.transitions.size()
+                                : prepared->entries.size(),
+            attribution_sample_end);
+        provenance.publish();
+        co_return row;
     }
 
     std::optional<StableKey> quotient_selected_compact_row_identity(
