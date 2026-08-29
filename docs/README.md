@@ -31,13 +31,20 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. The completed
+The active
+[Native Solver CLI Workflow v1](active/2026-08-29-native-solver-cli-workflow-v1/plan.md)
+boundary adds three tightly capped terminal workflows: versioned matrix files,
+bounded JSON-Pointer case derivation, and one-shot submit/targeted-wait/summary.
+All work remains inside the existing typed service, native validation,
+supervisor, catalog, and artifact authorities. It adds no GUI, MCP, alternate
+runner, database access, solver behavior, or output protocol.
+
+The completed
 [Native Solver Lab CLI-First MCP Removal v1](archive/2026-08-29-native-solver-lab-cli-first-mcp-removal-v1/README.md)
 boundary removed the repository and user-local Solver Lab MCP transport. The
 existing structured JSON CLI and saved artifacts remain the automation
 surface, with the typed service, catalog, supervisor, cancellation, identity,
-evidence-integrity, and GUI contracts preserved and qualified. Oliver must
-choose the next boundary before implementation resumes.
+evidence-integrity, and GUI contracts preserved and qualified.
 
 The completed
 [Generated Planner-Envelope Qualification And Ladder-Service Repair v1](archive/2026-08-28-generated-planner-envelope-qualification-ladder-service-repair-v1/README.md)

@@ -1,8 +1,13 @@
 # Handoff
 
-**Status: no implementation boundary is active.** Native Solver Lab CLI-First
-MCP Removal v1 completed on 2026-08-29. Oliver must choose the next boundary
-before implementation resumes.
+**Status: implementation boundary active.** Oliver selected
+[Native Solver CLI Workflow v1](docs/active/2026-08-29-native-solver-cli-workflow-v1/plan.md)
+on 2026-08-29. The boundary adds versioned matrix files, bounded JSON-Pointer
+case derivation, and one-shot submit/targeted-wait/summary through the existing
+service, supervisor, catalog, and JSON artifact contracts.
+
+Progress and exact evidence belong in the
+[execution log](docs/active/2026-08-29-native-solver-cli-workflow-v1/execution-log.md).
 
 The preceding Native Solver Lab unattended-hardening six-hour soak was
 **owner-waived, not passed**. It remains non-overnight evidence and must not be

@@ -1,9 +1,10 @@
 # Active Work
 
-**Status: no implementation boundary is active.** The completed
-[Native Solver Lab CLI-First MCP Removal v1](../archive/2026-08-29-native-solver-lab-cli-first-mcp-removal-v1/README.md)
-boundary was archived on 2026-08-29. Oliver must choose the next boundary
-before implementation resumes.
+**Status: implementation boundary active.** Oliver selected
+[Native Solver CLI Workflow v1](2026-08-29-native-solver-cli-workflow-v1/plan.md)
+on 2026-08-29. It adds versioned matrix files, bounded JSON-Pointer case
+derivation, and a one-shot submit/targeted-wait/summary path through the
+existing service, supervisor, and JSON artifact contracts.
 
 Parent: [Documentation map](../README.md)
 
