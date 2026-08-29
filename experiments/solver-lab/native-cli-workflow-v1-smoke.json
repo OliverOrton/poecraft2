@@ -1,9 +1,9 @@
 {
   "schema_version": "solver_lab_matrix_v1",
   "name": "Native CLI workflow v1 smoke",
-  "description": "Two deterministic diagnostic-sample caps over the fast exact three-prefix frozen case.",
+  "description": "Two deterministic diagnostic-sample caps over the completing exact three-suffix frozen control.",
   "base": {
-    "case_id": "conquest-lamellar-allflame-clean-3-prefix-extended-product8"
+    "case_id": "conquest-lamellar-allflame-clean-3-suffix-product8"
   },
   "axes": [
     {
