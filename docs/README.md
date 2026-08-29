@@ -31,13 +31,16 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active
-[Native Solver CLI Workflow v1](active/2026-08-29-native-solver-cli-workflow-v1/plan.md)
-boundary adds three tightly capped terminal workflows: versioned matrix files,
-bounded JSON-Pointer case derivation, and one-shot submit/targeted-wait/summary.
-All work remains inside the existing typed service, native validation,
-supervisor, catalog, and artifact authorities. It adds no GUI, MCP, alternate
-runner, database access, solver behavior, or output protocol.
+No implementation boundary is active. Oliver must select the next chunk before
+implementation resumes.
+
+The completed
+[Native Solver CLI Workflow v1](archive/2026-08-29-native-solver-cli-workflow-v1/README.md)
+boundary adds versioned matrix files, bounded JSON-Pointer case derivation, and
+one-shot submit/targeted-wait/summary through the existing Lab authority. Its
+terminal acceptance also repaired local authoring that dropped native product-
+envelope controls and broadened action-catalogue work; no solver, ladder,
+fragment, proof, ABI, WASM, GUI, or product logic changed.
 
 The completed
 [Native Solver Lab CLI-First MCP Removal v1](archive/2026-08-29-native-solver-lab-cli-first-mcp-removal-v1/README.md)

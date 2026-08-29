@@ -80,6 +80,8 @@ def test_lab_contract_vocabulary_is_complete() -> None:
         "case_draft",
         "case_revision",
         "calculator_export",
+        "matrix_definition",
+        "resolved_matrix",
     }
 
 

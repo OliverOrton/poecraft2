@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-08-29
 
+- [Native Solver CLI Workflow v1](2026-08-29-native-solver-cli-workflow-v1/README.md) —
+  adds versioned matrix files, bounded JSON-Pointer derivation, and one-shot
+  targeted run/summary over existing Lab authority; native acceptance also
+  repairs dropped local product-envelope controls without changing solver,
+  ladder, fragment, ABI, WASM, GUI, or product behavior.
 - [Native Solver Lab CLI-First MCP Removal v1](2026-08-29-native-solver-lab-cli-first-mcp-removal-v1/README.md) —
   removes the repository adapter, dependency, entry point, user-local
   registration, and live server processes while retaining and qualifying the

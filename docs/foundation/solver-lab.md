@@ -6,7 +6,7 @@ proof authority, or strategy evaluation.
 
 Parent: [Foundation](README.md)
 
-Verified against the implemented Lab surface: 2026-08-29 @ `48da3ee`.
+Verified against the implemented Lab surface: 2026-08-29 @ `0e9d907`.
 Checked owners include `solver_lab_catalog.py`,
 `solver_lab_service.py`, `solver_lab_supervisor.py`, `solver_lab.py`, and
 `solver_lab_unattended_qualification.py` plus their focused contract, CLI,
@@ -62,8 +62,9 @@ its Scripts directory to PowerShell's `PATH`.
 
 By default the catalog is `build/solver-lab/catalog.sqlite3`, attempts are
 under `build/solver-lab/attempts/`, and investigation bundles are under
-`build/solver-lab/bundles/`. These paths are ignored build evidence, separate
-from canonical game SQLite and the compiled runtime artifact.
+`build/solver-lab/bundles/`. Resolved matrix manifests are under
+`build/solver-lab/matrices/`. These paths are ignored build evidence,
+separate from canonical game SQLite and the compiled runtime artifact.
 
 ## Locked v0 Profile
 
@@ -102,6 +103,17 @@ creates the next ordinal. Draft deletion retains saved revisions. Before a
 revision can be saved, the service checks the bounded document shape, locks it
 to the selected Lab profile, and invokes the native benchmark's genuine
 `--validate-only` path. The Lab never infers mechanic validity itself.
+
+`derive-case` is the bounded terminal authoring adapter. It clones one frozen
+case or immutable revision, applies a registered set of JSON-Pointer
+replacements, optionally invokes native validation, and optionally saves the
+content-addressed revision. Registered paths cover watchdog/bounded finish,
+disabled action families, minimum goal satisfaction, goal slots or slot tiers,
+and approved solver caps. Unknown, malformed, duplicate, overlapping, or
+oversized patches are rejected before mutation. Derivation synchronizes goal
+edits into the existing product action envelope while retaining native
+envelope controls such as fossil mode and requested fossil actions; it must
+not reconstruct or broaden the action catalogue.
 
 Execution request v4 discloses the action-envelope identity through separate
 components for explicit Imprint scope, the effective disabled native action
@@ -171,9 +183,12 @@ poecraft-solver-lab --root . cases
 poecraft-solver-lab --root . create-case-draft --name local-three-prefix --source-case-id CASE_ID --idempotency-key create-local-three
 poecraft-solver-lab --root . validate-case-draft DRAFT_ID
 poecraft-solver-lab --root . save-case-revision DRAFT_ID --idempotency-key save-local-three-v1
+poecraft-solver-lab --root . derive-case --source-case-id CASE_ID --name no-fossil --set-json '/goal/disabled_action_families=["fossil"]' --set /watchdog_seconds=600 --validate --save --idempotency-key derive-no-fossil-v1
 poecraft-solver-lab --root . submit LOCAL_CASE_ID --revision-id REVISION_ID --idempotency-key run-local-three-v1
+poecraft-solver-lab --root . run --revision-id REVISION_ID --wait --summary-fields status,phase,lower,upper,states,rows,memory
 poecraft-solver-lab --root . submit CASE_ID --idempotency-key study-a-case-1
 poecraft-solver-lab --root . submit-matrix --include-role fast_exact_three_prefix --replicates 2 --idempotency-key study-a
+poecraft-solver-lab --root . run-matrix-file experiments/solver-lab/native-cli-workflow-v1-smoke.json --wait
 poecraft-solver-lab --root . run-until-idle --max-workers 1
 poecraft-solver-lab --root . supervise --max-workers 1
 poecraft-solver-lab --root . attempts
@@ -181,12 +196,30 @@ poecraft-solver-lab --root . strategy-summary --attempt-id ATTEMPT_ID
 poecraft-solver-lab --root . export-bundle --attempt-id ATTEMPT_ID --idempotency-key export-ATTEMPT_ID
 ```
 
-Mutating operations require an idempotency key and accept `--dry-run`. Matrix
-includes are the union of explicit case IDs and roles, exclusions apply last,
-and empty programmatic includes mean the full frozen corpus. Expansion order
-is sorted case ID followed by replicate ordinal. Limits are 100 cases, 100
-replicates, 1,000 listed attempts, 20 compared attempts, and 256 returned bound
-samples.
+Low-level mutating operations require an idempotency key and accept
+`--dry-run`. `derive-case` requires a complete idempotency key; `run` derives
+one from the complete dry-resolved execution request unless supplied.
+`run --wait` emits changed status to stderr and one compact structured result
+to stdout. It starts a supervisor filtered to its submitted job when it can
+own dispatch, or observes only that durable job when another legitimate owner
+already exists.
+
+`solver_lab_matrix_v1` files contain one frozen/revision base, ordered
+JSON-Pointer axes, replicates, and priority. Expansion is capped at eight
+axes, 20 values per axis, 100 coordinates, and 1,000 jobs. The service derives
+and native-validates every coordinate, resolves complete execution identities,
+writes one immutable `solver_lab_resolved_matrix_v1` manifest before any job
+is submitted, and then creates deterministic experiment and job IDs. The
+manifest binds definition, source, executable, artifact, profile, economy,
+base, patch coordinate, revision, request, job, and replicate identities.
+Unchanged replay returns the same file/revisions/jobs; changed definition or
+resolved execution input produces a new visible matrix identity.
+
+Legacy matrix includes are the union of explicit case IDs and roles,
+exclusions apply last, and empty programmatic includes mean the full frozen
+corpus. Expansion order is sorted case ID followed by replicate ordinal.
+Limits are 100 cases, 100 replicates, 1,000 listed attempts, 20 compared
+attempts, and 256 returned bound samples.
 
 The parity command separates immutable request identity, strict native
 semantics, runner classification, and clock-positioned observations:
@@ -233,6 +266,11 @@ identity is absent, and it reconciles the replaced owner's running/finalizing
 attempts before new dispatch. `--poll-seconds`, `--max-workers`,
 `--memory-budget-bytes`, `--worker-headroom-bytes`, and
 `--global-safety-reserve-bytes` are the dispatcher/resource launch options.
+Target-filtered one-shot supervisors retain the same singleton ownership,
+preflight, watchdog, cancellation, finalization, and lease contracts but may
+claim only their declared job IDs. `supervisor-status` includes currently held
+lease IDs and total reserved host bytes so terminal automation can verify
+release without direct catalog access.
 
 ## Statuses, Resources, And Recovery
 

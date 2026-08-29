@@ -6,6 +6,32 @@ routes to them rather than duplicating complete reports.
 
 Parent: [Documentation map](README.md)
 
+## Native Solver CLI Workflow
+
+The 2026-08-29
+[archived result](archive/2026-08-29-native-solver-cli-workflow-v1/result.md)
+qualifies versioned matrix files, bounded JSON-Pointer case derivation, and
+one-shot targeted run/summary entirely through `SolverLabService`, the native
+validator, singleton supervisor, immutable catalog, and existing JSON result
+envelope.
+
+Fresh terminal acceptance native-validated and replayed a patched four-mod
+revision, retained a truthful 60-second partial, canceled a genuinely running
+second job in 416.1 ms with no survivor or reservation, compared equal full and
+core request identities, read matched native exact evaluation, and naturally
+published and replayed a two-coordinate matrix. The resolved matrix identity
+is `199366024423df4cea39fe2bd8cd5fba93ba52c17c37ded24d06baf2d039af00`;
+manifest SHA-256 is
+`aa742d1ff1858889a955c0c7de00d46eaeec5d50f580fd86b4146b85f797fabb`.
+
+Acceptance exposed and repaired a local-authoring action-catalogue defect:
+derived cases dropped frozen product-envelope fossil controls and remained at
+phase 0. The repaired synchronizer preserves those controls; corrected derived
+matrix work progressed and published naturally. The focused Lab suite passed
+73 tests, and the full repository pipeline passed 3,417,655 native checks,
+13 benchmark specifications, 28/28 release-WASM checks, and every remaining
+suite.
+
 ## Native Solver Lab CLI-First Removal
 
 The 2026-08-29

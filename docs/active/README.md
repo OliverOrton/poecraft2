@@ -1,10 +1,7 @@
 # Active Work
 
-**Status: implementation boundary active.** Oliver selected
-[Native Solver CLI Workflow v1](2026-08-29-native-solver-cli-workflow-v1/plan.md)
-on 2026-08-29. It adds versioned matrix files, bounded JSON-Pointer case
-derivation, and a one-shot submit/targeted-wait/summary path through the
-existing service, supervisor, and JSON artifact contracts.
+**Status: no implementation boundary is active.** Oliver must select the next
+chunk before implementation resumes.
 
 Parent: [Documentation map](../README.md)
 
