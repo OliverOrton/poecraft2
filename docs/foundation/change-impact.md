@@ -115,11 +115,21 @@ provider adapter + economy schema/catalogs
 
 Run `powershell -File scripts/build.ps1` after native source/header changes.
 The script compiles the ingest and economy Python packages, regenerates the
-Harvest allowlist header, discovers the installed Visual Studio CMake/Ninja
-tools even when they are absent from `PATH`, then configures/builds the checked
-UCRT64 GCC Release preset. CMake builds the object library, static/shared
-engines, tests, and solver benchmark. A prominent direct-g++ fallback remains
-for portability, but it recompiles all sources and is not the development path.
+Harvest allowlist header, discovers CMake, Ninja, and UCRT64 C/C++ compilers
+from task-specific environment overrides, `PATH`, portable local locations,
+or a dynamically discovered Visual Studio installation, then passes the
+resolved paths into the path-agnostic UCRT64 GCC Release preset. Hosted Windows
+CI provisions the same tool classes through MSYS2 UCRT64. CMake builds the
+object library, static/shared engines, tests, and solver benchmark. A prominent
+direct-g++ fallback remains for portability, but it recompiles all sources and
+is not the development path.
+
+Build-portability verification addendum (2026-08-28): rechecked from active
+planning checkpoint `77627b2`. The preset contains no developer-installation
+paths; both PowerShell entry points resolve and inject CMake, Ninja, GCC, and
+G++; local configure and native test-target build completed through the
+canonical preset. Hosted completion still requires observing a run after these
+workflow changes are pushed.
 
 Native and WASM source discovery has one owner:
 `engine/engine-sources.txt`. CMake, `scripts/build.ps1`, and

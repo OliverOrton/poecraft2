@@ -93,15 +93,44 @@ Historical reference evidence:
 - both are reference evidence, not current incumbent injection or literal pass
   thresholds.
 
-## Gate 0 — In Progress
+## Gate 0 — Local Source Complete; Hosted Observation Pending
 
 - Read the repository documentation lifecycle and cross-layer impact map.
+- Activated the boundary and committed its plan, execution log, active indexes,
+  and handoff as `77627b2` (`Activate generated planner-envelope repair v1`).
 - Confirmed the hardcoded hosted/local portability problem spans
   `engine/CMakePresets.json`, `scripts/engine-build-common.ps1`, and the Windows
   workflow.
 - Confirmed `HANDOFF.md` incorrectly says nothing was pushed even though
   `main` is synchronized with `origin/main`.
-- Next: activate the indexes/handoff, repair portable tool discovery and hosted
-  provisioning, run narrow configuration/build checks, and commit Gate 0 while
-  excluding `0`.
+- Removed compiler and Ninja installation paths from the CMake preset. The two
+  PowerShell build entry points now resolve CMake, Ninja, GCC, and G++ from
+  task-specific overrides, `PATH`, bounded portable locations, or dynamically
+  discovered Visual Studio bundled tools, and pass the result to CMake.
+- The Windows workflow now provisions MSYS2 UCRT64 GCC, CMake, and Ninja and
+  exports their resolved absolute paths to the build script.
+- Local narrow verification passed:
+  - each of CMake, Ninja, GCC, and G++ resolved without an edition/version
+    hardcode;
+  - `cmake --list-presets` accepted the path-agnostic preset;
+  - `scripts/dev-engine.ps1 -Task Configure` configured and generated the
+    UCRT64 Release build; and
+  - `scripts/dev-engine.ps1 -Task Tests` completed successfully with no work
+    remaining.
+- The workflow YAML parsed successfully and exposes the expected
+  `msys2/setup-msys2@v2` provisioning step. The public Actions history confirms
+  the synchronized starting checkpoint, but these unpushed workflow changes
+  have no hosted run. No hosted success is claimed.
+- The preserved untracked `0` was neither read after initial characterization
+  nor modified, staged, renamed, or committed.
 
+Gate 0's local source prerequisite is complete. Its hosted observation remains
+pending an owner-authorized push and does not block local Gate 1 correctness
+work.
+
+## Gate 1 — In Progress
+
+- First owner: replace the falsely named `disabled_families` disclosure with
+  truthful canonical action-envelope components and regressions.
+- Second owner: reproduce and repair the currency-only low-cap access violation
+  without changing the requested envelope.

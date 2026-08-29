@@ -19,8 +19,10 @@ $Root = Split-Path -Parent $PSScriptRoot
 
 $CMake = Find-PoeCraftCMake
 $Ninja = Find-PoeCraftNinja
-if (-not $CMake -or -not $Ninja) {
-    throw "The canonical development path requires the installed CMake and Ninja tools."
+$CCompiler = Find-PoeCraftCCompiler
+$Compiler = Find-PoeCraftCompiler
+if (-not $CMake -or -not $Ninja -or -not $CCompiler -or -not $Compiler) {
+    throw "The canonical development path requires CMake, Ninja, and C/C++ compilers."
 }
 
 $BuildDirectory = "$Root/build/engine"
@@ -45,7 +47,12 @@ function Invoke-Checked {
 }
 
 function Invoke-Configure {
-    $ConfigureArgs = @("--preset", "ucrt64-ninja-release")
+    $ConfigureArgs = @(
+        "--preset", "ucrt64-ninja-release",
+        "-DCMAKE_MAKE_PROGRAM=$(ConvertTo-PoeCraftCMakePath $Ninja)",
+        "-DCMAKE_C_COMPILER=$(ConvertTo-PoeCraftCMakePath $CCompiler)",
+        "-DCMAKE_CXX_COMPILER=$(ConvertTo-PoeCraftCMakePath $Compiler)"
+    )
     $Ccache = Find-PoeCraftCcache
     if ($Ccache) {
         Write-Host "Using optional compiler cache: $Ccache"

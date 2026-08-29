@@ -51,9 +51,16 @@ if ($LASTEXITCODE -ne 0) {
 
 $CMake = Find-PoeCraftCMake
 $Ninja = Find-PoeCraftNinja
-if ($CMake -and $Ninja) {
+$CCompiler = Find-PoeCraftCCompiler
+$Compiler = Find-PoeCraftCompiler
+if ($CMake -and $Ninja -and $CCompiler -and $Compiler) {
     $Ccache = Find-PoeCraftCcache
-    $ConfigureArgs = @("--preset", "ucrt64-ninja-release")
+    $ConfigureArgs = @(
+        "--preset", "ucrt64-ninja-release",
+        "-DCMAKE_MAKE_PROGRAM=$(ConvertTo-PoeCraftCMakePath $Ninja)",
+        "-DCMAKE_C_COMPILER=$(ConvertTo-PoeCraftCMakePath $CCompiler)",
+        "-DCMAKE_CXX_COMPILER=$(ConvertTo-PoeCraftCMakePath $Compiler)"
+    )
     if ($Ccache) {
         Write-Host "Using optional compiler cache: $Ccache"
         $CcacheCMakePath = $Ccache.Replace("\", "/")
@@ -87,7 +94,6 @@ each output. This path is intentionally retained for portability but is not
 the normal development workflow. Use scripts/dev-engine.ps1 when the checked
 toolchain is installed.
 "@
-    $Compiler = Find-PoeCraftCompiler
     if ($Compiler) {
         $BuildDirectory = "$Root/build/engine"
         New-Item -ItemType Directory -Force -Path $BuildDirectory | Out-Null

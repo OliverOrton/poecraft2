@@ -12,6 +12,24 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - uses: msys2/setup-msys2@v2
+        id: msys2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+      - name: Configure UCRT64 tool paths
+        shell: pwsh
+        run: |
+          $bin = Join-Path '${{ steps.msys2.outputs.msys2-location }}' 'ucrt64/bin'
+          "POECRAFT_CMAKE=$(Join-Path $bin 'cmake.exe')" >> $env:GITHUB_ENV
+          "POECRAFT_NINJA=$(Join-Path $bin 'ninja.exe')" >> $env:GITHUB_ENV
+          "POECRAFT_CC=$(Join-Path $bin 'gcc.exe')" >> $env:GITHUB_ENV
+          "POECRAFT_CXX=$(Join-Path $bin 'g++.exe')" >> $env:GITHUB_ENV
+          $bin >> $env:GITHUB_PATH
       - name: Build
         shell: pwsh
         run: ./scripts/build.ps1

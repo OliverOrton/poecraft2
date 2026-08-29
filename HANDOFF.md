@@ -56,11 +56,14 @@ hashes are retained in the execution log.
 is selected and active from source checkpoint
 `28c4c30c75cef6ff8e1b38fa218f9b5a98d70203`.
 
-Gate 0 first removes the developer-specific Visual Studio 2022 Ninja binding
-from the portable build path, provisions the hosted UCRT64 toolchain, and
-activates the documentation boundary. Gate 1 then repairs the false Solver Lab
-disabled-family identity component and the native 256-discovered-state access
-violation before any action-envelope behavior change.
+Gate 0's local source work removes the developer-specific Visual Studio 2022
+binding, resolves and injects the full UCRT64 toolchain, and provisions that
+toolchain in hosted Windows CI. Local configure and native test-target build
+pass. A hosted result cannot be claimed until these changes are pushed and an
+actual run is observed. Gate 1 is now repairing the false Solver Lab
+disabled-family identity component, followed by the native
+256-discovered-state access violation, before any action-envelope behavior
+change.
 
 The worktree contains one preserved untracked file named `0`, three bytes with
 the content line `0`, which appeared during the preceding diagnostic window.
