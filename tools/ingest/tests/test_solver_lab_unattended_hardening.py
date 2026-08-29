@@ -407,6 +407,98 @@ def test_json_cli_reports_changed_payload_idempotency_conflict(tmp_path: Path) -
     assert "request_sha256_mismatch" in changed["error"]["message"]
 
 
+def test_json_cli_discloses_canonical_action_envelope_identities(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    service = _service(tmp_path)
+
+    def save_revision(key: str, disabled: list[str] | None) -> dict[str, Any]:
+        draft = service.create_case_draft(
+            name=f"CLI identity {key}",
+            source_case_id=(
+                "conquest-lamellar-allflame-clean-3-prefix-extended-product8"
+            ),
+            idempotency_key=f"cli-identity-create-{key}",
+        )["result"]
+        document = json.loads(json.dumps(draft["document"]))
+        if disabled:
+            document["goal"]["disabled_action_families"] = disabled
+        else:
+            document["goal"].pop("disabled_action_families", None)
+        service.update_case_draft(
+            draft_id=draft["draft_id"],
+            name=f"CLI identity {key}",
+            document=document,
+            idempotency_key=f"cli-identity-update-{key}",
+        )
+        monkeypatch.setattr(service, "_validate_case_document", _native_valid)
+        service.validate_case_draft(draft["draft_id"])
+        return service.save_case_revision(
+            draft_id=draft["draft_id"],
+            idempotency_key=f"cli-identity-save-{key}",
+        )["result"]
+
+    revisions = {
+        "unrestricted": save_revision("unrestricted", None),
+        "temporary_bench": save_revision(
+            "temporary-bench", ["temporary_bench"]
+        ),
+        "metamod": save_revision("metamod", ["metamod"]),
+    }
+
+    def invoke(
+        key: str, *, case_id: str, revision_id: str | None = None
+    ) -> dict[str, Any]:
+        arguments = [
+            "--root",
+            str(REPO_ROOT),
+            "--catalog",
+            str(service.paths.catalog),
+            "--attempts",
+            str(service.paths.attempts),
+            "submit",
+            case_id,
+        ]
+        if revision_id:
+            arguments.extend(["--revision-id", revision_id])
+        arguments.extend(
+            ["--idempotency-key", f"cli-identity-preview-{key}", "--dry-run"]
+        )
+        output = io.StringIO()
+        with redirect_stdout(output):
+            assert solver_lab_main(arguments) == 0
+        return json.loads(output.getvalue())["result"]["request"]
+
+    requests = {
+        key: invoke(
+            key,
+            case_id=revision["case_id"],
+            revision_id=revision["revision_id"],
+        )
+        for key, revision in revisions.items()
+    }
+    requests["currency_only"] = invoke(
+        "currency-only",
+        case_id="fragment-clean-one-goal-renewal-control-v1",
+    )
+
+    components = [
+        request["core_solve_component_identities_v1"]
+        for request in requests.values()
+    ]
+    assert len(
+        {row["effective_disabled_action_families"] for row in components}
+    ) == 3
+    assert len({row["explicit_imprint_scope"] for row in components}) == 1
+    assert all("disabled_families" not in row for row in components)
+    assert len(
+        {request["core_solve_identity_v1"] for request in requests.values()}
+    ) == 4
+    assert len(
+        {request["full_request_identity"] for request in requests.values()}
+    ) == 4
+
+
 @pytest.mark.parametrize(
     "component",
     [

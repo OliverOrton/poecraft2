@@ -130,7 +130,30 @@ work.
 
 ## Gate 1 — In Progress
 
-- First owner: replace the falsely named `disabled_families` disclosure with
-  truthful canonical action-envelope components and regressions.
-- Second owner: reproduce and repair the currency-only low-cap access violation
-  without changing the requested envelope.
+### Effective Family Identity — Source Complete
+
+- Bumped the immutable execution-request contract from v3 to v4 so legacy
+  queued identities cannot be mistaken for the repaired disclosure.
+- Removed the false `disabled_families` and grouped `action_vocabulary`
+  components. Request comparison now exposes distinct hashes for
+  `explicit_imprint_scope`, `effective_disabled_action_families`,
+  `allowed_mechanic_families`, `product_action_envelope`, and
+  `goal_action_list`.
+- Added the finite 14-name native family vocabulary to the Lab contract solely
+  for identity validation. A synchronization regression reads the native
+  contract owner and fails if the mirror drifts. Family membership remains
+  native authority.
+- The effective disabled-family input is validated, deduplicated, and sorted,
+  matching the native bit-mask's order-independent semantics. Unknown or
+  malformed family documents are rejected before request identity is issued.
+- Service, JSON CLI, and freshly launched stdio MCP regressions cover
+  unrestricted, `temporary_bench` disabled, `metamod` disabled, and the frozen
+  currency-only case. They prove three truthful effective-disabled identities,
+  one unchanged explicit-Imprint identity, four distinct core/full identities,
+  stable dry-run replay, and appropriate stability/change in the other three
+  action-envelope inputs.
+- Narrow result: 15 tests passed in 9.35 seconds across the contracts, service,
+  JSON CLI identity regression, and real stdio MCP identity regression.
+
+Next: reproduce and repair the currency-only low-cap access violation without
+changing the requested envelope.

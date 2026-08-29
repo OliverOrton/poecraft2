@@ -103,6 +103,15 @@ revision can be saved, the service checks the bounded document shape, locks it
 to the selected Lab profile, and invokes the native benchmark's genuine
 `--validate-only` path. The Lab never infers mechanic validity itself.
 
+Execution request v4 discloses the action-envelope identity through separate
+components for explicit Imprint scope, the effective disabled native action
+families, allowed mechanic families, the product action envelope, and the goal
+action list. Disabled families are validated against the native public family
+vocabulary and canonicalized as a sorted unique list before hashing, matching
+the engine's order-independent bit-mask interpretation. The Lab does not assign
+actions to families; that remains native authority. A profile's Imprint scope
+therefore cannot be mistaken for the goal's effective disabled-family list.
+
 The browser Calculator owns graphical item and goal authoring. Its **Copy Lab
 case** action exports the current concrete affixes, crafted/fractured/veiled
 slot flags, influence and Eldritch state, product goal, diagnostic family

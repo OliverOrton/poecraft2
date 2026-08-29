@@ -8,6 +8,7 @@ import sys
 
 import pytest
 
+from poecraft_ingest.solver_lab_contracts import canonical_sha256
 from poecraft_ingest.solver_lab_service import SolverLabService
 from poecraft_ingest.solver_lab_supervisor import SolverLabSupervisor
 
@@ -21,6 +22,19 @@ def _service(tmp_path: Path) -> SolverLabService:
         catalog=tmp_path / "catalog.sqlite3",
         attempts=tmp_path / "attempts",
     )
+
+
+def _native_valid(document: dict[str, object]) -> dict[str, object]:
+    return {
+        "case_id": document["id"],
+        "content_sha256": canonical_sha256(document),
+        "structural_valid": True,
+        "profile_valid": True,
+        "native_valid": True,
+        "native_exit_code": 0,
+        "detail": "fixture native validation passed",
+        "command": ["fixture", "--validate-only"],
+    }
 
 
 def _complete_attempt(
@@ -382,6 +396,121 @@ def test_mcp_stdio_server_initializes_and_serves_bounded_cases(tmp_path: Path) -
         assert result.is_error is False
         assert result.structured_content is not None
         assert len(result.structured_content["result"]) == 7
+
+    asyncio.run(exercise())
+
+
+def test_mcp_stdio_discloses_canonical_action_envelope_identities(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pytest.importorskip("mcp")
+    from mcp import ClientSession
+    from mcp.client.stdio import StdioServerParameters, stdio_client
+
+    service = _service(tmp_path)
+
+    def save_revision(key: str, disabled: list[str] | None) -> dict[str, object]:
+        draft = service.create_case_draft(
+            name=f"MCP identity {key}",
+            source_case_id=(
+                "conquest-lamellar-allflame-clean-3-prefix-extended-product8"
+            ),
+            idempotency_key=f"mcp-identity-create-{key}",
+        )["result"]
+        document = json.loads(json.dumps(draft["document"]))
+        if disabled:
+            document["goal"]["disabled_action_families"] = disabled
+        else:
+            document["goal"].pop("disabled_action_families", None)
+        service.update_case_draft(
+            draft_id=draft["draft_id"],
+            name=f"MCP identity {key}",
+            document=document,
+            idempotency_key=f"mcp-identity-update-{key}",
+        )
+        monkeypatch.setattr(service, "_validate_case_document", _native_valid)
+        service.validate_case_draft(draft["draft_id"])
+        return service.save_case_revision(
+            draft_id=draft["draft_id"],
+            idempotency_key=f"mcp-identity-save-{key}",
+        )["result"]
+
+    revisions = {
+        "unrestricted": save_revision("unrestricted", None),
+        "temporary_bench": save_revision(
+            "temporary-bench", ["temporary_bench"]
+        ),
+        "metamod": save_revision("metamod", ["metamod"]),
+    }
+
+    async def exercise() -> None:
+        environment = dict(os.environ)
+        environment["PYTHONPATH"] = os.pathsep.join(
+            [
+                str(REPO_ROOT / "tools" / "ingest"),
+                str(REPO_ROOT / "bindings" / "python"),
+            ]
+        )
+        parameters = StdioServerParameters(
+            command=sys.executable,
+            args=[
+                "-m",
+                "poecraft_ingest.solver_lab_mcp",
+                "--root",
+                str(REPO_ROOT),
+                "--catalog",
+                str(service.paths.catalog),
+                "--attempts",
+                str(service.paths.attempts),
+            ],
+            env=environment,
+        )
+        requests: dict[str, dict[str, object]] = {}
+        async with stdio_client(parameters) as (read_stream, write_stream):
+            async with ClientSession(read_stream, write_stream) as session:
+                await session.initialize()
+                for key, revision in revisions.items():
+                    response = await session.call_tool(
+                        "submit_job",
+                        {
+                            "case_id": revision["case_id"],
+                            "revision_id": revision["revision_id"],
+                            "idempotency_key": f"mcp-identity-preview-{key}",
+                            "dry_run": True,
+                        },
+                    )
+                    assert response.is_error is False
+                    requests[key] = response.structured_content["result"][
+                        "request"
+                    ]
+                currency = await session.call_tool(
+                    "submit_job",
+                    {
+                        "case_id": "fragment-clean-one-goal-renewal-control-v1",
+                        "idempotency_key": "mcp-identity-preview-currency",
+                        "dry_run": True,
+                    },
+                )
+                assert currency.is_error is False
+                requests["currency_only"] = currency.structured_content["result"][
+                    "request"
+                ]
+
+        components = [
+            request["core_solve_component_identities_v1"]
+            for request in requests.values()
+        ]
+        assert len(
+            {row["effective_disabled_action_families"] for row in components}
+        ) == 3
+        assert len({row["explicit_imprint_scope"] for row in components}) == 1
+        assert all("disabled_families" not in row for row in components)
+        assert len(
+            {request["core_solve_identity_v1"] for request in requests.values()}
+        ) == 4
+        assert len(
+            {request["full_request_identity"] for request in requests.values()}
+        ) == 4
 
     asyncio.run(exercise())
 

@@ -70,6 +70,167 @@ def test_submit_is_idempotent_and_dry_run_is_not_persistent(tmp_path: Path) -> N
     assert first["result"]["identity_sha256"] == preview["result"]["identity_sha256"]
 
 
+def test_action_envelope_identity_components_are_truthful_and_stable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    service = _service(tmp_path)
+
+    def preview_revision(
+        *, source_case_id: str, key: str, disabled: list[str] | None
+    ) -> dict:
+        draft = service.create_case_draft(
+            name=f"Identity {key}",
+            source_case_id=source_case_id,
+            idempotency_key=f"identity-create-{key}",
+        )["result"]
+        document = json.loads(json.dumps(draft["document"]))
+        if disabled:
+            document["goal"]["disabled_action_families"] = disabled
+        else:
+            document["goal"].pop("disabled_action_families", None)
+        service.update_case_draft(
+            draft_id=draft["draft_id"],
+            name=f"Identity {key}",
+            document=document,
+            idempotency_key=f"identity-update-{key}",
+        )
+
+        def valid(case):
+            return {
+                "case_id": case["id"],
+                "content_sha256": canonical_sha256(case),
+                "structural_valid": True,
+                "profile_valid": True,
+                "native_valid": True,
+                "native_exit_code": 0,
+                "detail": "fixture native validation passed",
+                "command": ["fixture", "--validate-only"],
+            }
+
+        monkeypatch.setattr(service, "_validate_case_document", valid)
+        service.validate_case_draft(draft["draft_id"])
+        revision = service.save_case_revision(
+            draft_id=draft["draft_id"],
+            idempotency_key=f"identity-save-{key}",
+        )["result"]
+        first = service.submit_job(
+            case_id=revision["case_id"],
+            revision_id=revision["revision_id"],
+            idempotency_key=f"identity-preview-one-{key}",
+            dry_run=True,
+        )["result"]["request"]
+        replay = service.submit_job(
+            case_id=revision["case_id"],
+            revision_id=revision["revision_id"],
+            idempotency_key=f"identity-preview-two-{key}",
+            dry_run=True,
+        )["result"]["request"]
+        assert replay == first
+        return first
+
+    broad_case = "conquest-lamellar-allflame-clean-3-prefix-extended-product8"
+    unrestricted = preview_revision(
+        source_case_id=broad_case, key="unrestricted", disabled=None
+    )
+    no_temporary_bench = preview_revision(
+        source_case_id=broad_case,
+        key="no-temporary-bench",
+        disabled=["temporary_bench"],
+    )
+    no_metamod = preview_revision(
+        source_case_id=broad_case, key="no-metamod", disabled=["metamod"]
+    )
+    currency_only = service.submit_job(
+        case_id="fragment-clean-one-goal-renewal-control-v1",
+        idempotency_key="identity-preview-currency-only",
+        dry_run=True,
+    )["result"]["request"]
+    currency_replay = service.submit_job(
+        case_id="fragment-clean-one-goal-renewal-control-v1",
+        idempotency_key="identity-preview-currency-only-replay",
+        dry_run=True,
+    )["result"]["request"]
+    assert currency_replay == currency_only
+
+    component_names = set(unrestricted["core_solve_component_identities_v1"])
+    assert {
+        "explicit_imprint_scope",
+        "effective_disabled_action_families",
+        "allowed_mechanic_families",
+        "product_action_envelope",
+        "goal_action_list",
+    } <= component_names
+    assert "disabled_families" not in component_names
+    assert "action_vocabulary" not in component_names
+
+    component_sets = [
+        request["core_solve_component_identities_v1"]
+        for request in (
+            unrestricted,
+            no_temporary_bench,
+            no_metamod,
+            currency_only,
+        )
+    ]
+    imprint_identities = {
+        components["explicit_imprint_scope"] for components in component_sets
+    }
+    disabled_identities = {
+        components["effective_disabled_action_families"]
+        for components in component_sets
+    }
+    assert len(imprint_identities) == 1
+    assert len(disabled_identities) == 3
+    assert unrestricted["core_solve_component_identities_v1"][
+        "effective_disabled_action_families"
+    ] == currency_only["core_solve_component_identities_v1"][
+        "effective_disabled_action_families"
+    ]
+
+    assert len(
+        {
+            request["core_solve_identity_v1"]
+            for request in (
+                unrestricted,
+                no_temporary_bench,
+                no_metamod,
+                currency_only,
+            )
+        }
+    ) == 4
+    assert len(
+        {
+            request["full_request_identity"]
+            for request in (
+                unrestricted,
+                no_temporary_bench,
+                no_metamod,
+                currency_only,
+            )
+        }
+    ) == 4
+    for name in ("allowed_mechanic_families", "goal_action_list"):
+        assert unrestricted["core_solve_component_identities_v1"][name] == (
+            no_temporary_bench["core_solve_component_identities_v1"][name]
+        )
+        assert unrestricted["core_solve_component_identities_v1"][name] == (
+            no_metamod["core_solve_component_identities_v1"][name]
+        )
+    assert unrestricted["core_solve_component_identities_v1"][
+        "product_action_envelope"
+    ] != no_temporary_bench["core_solve_component_identities_v1"][
+        "product_action_envelope"
+    ]
+    assert unrestricted["core_solve_component_identities_v1"][
+        "product_action_envelope"
+    ] != no_metamod["core_solve_component_identities_v1"][
+        "product_action_envelope"
+    ]
+    assert unrestricted["core_solve_component_identities_v1"][
+        "goal_action_list"
+    ] != currency_only["core_solve_component_identities_v1"]["goal_action_list"]
+
+
 def test_cancel_queued_job_is_durable_and_idempotent(tmp_path: Path) -> None:
     service = _service(tmp_path)
     case_id = service.list_cases()["result"][0]["case_id"]

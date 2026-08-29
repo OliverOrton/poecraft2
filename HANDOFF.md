@@ -63,7 +63,9 @@ pass. A hosted result cannot be claimed until these changes are pushed and an
 actual run is observed. Gate 1 is now repairing the false Solver Lab
 disabled-family identity component, followed by the native
 256-discovered-state access violation, before any action-envelope behavior
-change.
+change. The execution-request v4 identity repair is source-complete with
+service, JSON CLI, and real stdio MCP regressions; low-cap native finalization
+is the current owner.
 
 The worktree contains one preserved untracked file named `0`, three bytes with
 the content line `0`, which appeared during the preceding diagnostic window.

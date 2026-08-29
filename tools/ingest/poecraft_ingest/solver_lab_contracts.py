@@ -24,7 +24,7 @@ EVENT_SCHEMA_VERSION = "solver_lab_event_v1"
 ARTIFACT_SCHEMA_VERSION = "solver_lab_artifact_v1"
 OPERATION_RESULT_SCHEMA_VERSION = "solver_lab_operation_result_v1"
 OPERATION_REQUEST_SCHEMA_VERSION = "solver_lab_operation_request_v2"
-EXECUTION_REQUEST_SCHEMA_VERSION = "solver_lab_execution_request_v3"
+EXECUTION_REQUEST_SCHEMA_VERSION = "solver_lab_execution_request_v4"
 CASE_DRAFT_SCHEMA_VERSION = "solver_lab_case_draft_v1"
 CASE_REVISION_SCHEMA_VERSION = "solver_lab_case_revision_v1"
 CALCULATOR_EXPORT_SCHEMA_VERSION = "solver_lab_calculator_export_v1"
@@ -44,6 +44,27 @@ SCHEMA_VERSIONS = {
     "case_revision": CASE_REVISION_SCHEMA_VERSION,
     "calculator_export": CALCULATOR_EXPORT_SCHEMA_VERSION,
 }
+
+
+# The native parser in solver_action_family_contract.hpp owns this public
+# vocabulary. The Lab mirrors it only to validate and canonicalize an immutable
+# request identity before dispatch; it does not assign actions to families.
+NATIVE_SOLVER_ACTION_FAMILIES_V1 = (
+    "currency",
+    "essence",
+    "fossil",
+    "harvest",
+    "bench",
+    "eldritch",
+    "influence",
+    "fracture",
+    "veiled",
+    "cleanup",
+    "temporary_bench",
+    "metamod",
+    "imprint",
+    "restart",
+)
 
 
 class JobStatus(StrEnum):
@@ -86,6 +107,25 @@ def canonical_json_bytes(value: Any) -> bytes:
 
 def canonical_sha256(value: Any) -> str:
     return hashlib.sha256(canonical_json_bytes(value)).hexdigest()
+
+
+def canonical_disabled_action_families(
+    goal: Mapping[str, Any],
+) -> list[str]:
+    """Validate and canonicalize the native goal's restricted envelope."""
+
+    value = goal.get("disabled_action_families", [])
+    if not isinstance(value, list):
+        raise ValueError("goal disabled_action_families must be an array")
+    allowed = set(NATIVE_SOLVER_ACTION_FAMILIES_V1)
+    canonical: set[str] = set()
+    for entry in value:
+        if not isinstance(entry, str):
+            raise ValueError("goal disabled action families must be strings")
+        if entry not in allowed:
+            raise ValueError(f"goal unknown disabled action family: {entry}")
+        canonical.add(entry)
+    return sorted(canonical)
 
 
 def canonical_operation_request(

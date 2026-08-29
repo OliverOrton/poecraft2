@@ -39,6 +39,7 @@ from poecraft_ingest.solver_lab_contracts import (
     OPERATION_RESULT_SCHEMA_VERSION,
     EXECUTION_REQUEST_SCHEMA_VERSION,
     LabProfile,
+    canonical_disabled_action_families,
     canonical_sha256,
     canonical_operation_request,
     identity_component_diff,
@@ -2017,6 +2018,7 @@ class SolverLabService:
             for key, value in disk_case.items()
             if key not in {"id", "fragment_shadow_v1"}
         }
+        core_goal = as_mapping(core_case_document.get("goal"))
         core_components = {
             "source": request["source"],
             "executable": request["executable"],
@@ -2028,18 +2030,17 @@ class SolverLabService:
             "economy": request["economy"],
             "profile": request["profile"],
             "action_scope": request["action_scope"],
-            "action_vocabulary": {
-                "goal_actions": as_mapping(
-                    core_case_document.get("goal")
-                ).get("actions"),
-                "allowed_mechanic_families": core_case_document.get(
-                    "allowed_mechanic_families"
-                ),
-                "product_action_envelope": core_case_document.get(
-                    "product_action_envelope"
-                ),
-            },
-            "disabled_families": request["action_scope"].get("explicit"),
+            "explicit_imprint_scope": request["action_scope"].get("explicit"),
+            "effective_disabled_action_families": (
+                canonical_disabled_action_families(core_goal)
+            ),
+            "allowed_mechanic_families": core_case_document.get(
+                "allowed_mechanic_families"
+            ),
+            "product_action_envelope": core_case_document.get(
+                "product_action_envelope"
+            ),
+            "goal_action_list": core_goal.get("actions"),
             "solver_caps": request["solver_caps"],
             "watchdog_seconds": request["watchdog_seconds"],
             "requested_bounded_finish": core_case_document.get(

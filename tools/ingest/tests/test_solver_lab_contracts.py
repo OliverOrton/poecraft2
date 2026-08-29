@@ -5,7 +5,9 @@ import pytest
 
 from poecraft_ingest.solver_lab_contracts import (
     LabProfile,
+    NATIVE_SOLVER_ACTION_FAMILIES_V1,
     SCHEMA_VERSIONS,
+    canonical_disabled_action_families,
     canonical_json_bytes,
     canonical_sha256,
     validate_profile_case_binding,
@@ -21,6 +23,46 @@ def test_canonical_json_is_order_independent() -> None:
     right = {"a": {"x": True}, "b": [2, 1]}
     assert canonical_json_bytes(left) == canonical_json_bytes(right)
     assert canonical_sha256(left) == canonical_sha256(right)
+
+
+def test_disabled_action_family_identity_is_validated_and_order_independent() -> None:
+    left = canonical_disabled_action_families(
+        {"disabled_action_families": ["temporary_bench", "metamod"]}
+    )
+    right = canonical_disabled_action_families(
+        {
+            "disabled_action_families": [
+                "metamod",
+                "temporary_bench",
+                "metamod",
+            ]
+        }
+    )
+
+    assert left == right == ["metamod", "temporary_bench"]
+    assert canonical_disabled_action_families({}) == []
+    with pytest.raises(ValueError, match="must be an array"):
+        canonical_disabled_action_families(
+            {"disabled_action_families": "temporary_bench"}
+        )
+    with pytest.raises(ValueError, match="unknown disabled action family"):
+        canonical_disabled_action_families(
+            {"disabled_action_families": ["not_a_native_family"]}
+        )
+
+
+def test_lab_family_vocabulary_matches_native_contract() -> None:
+    contract = (
+        REPO_ROOT / "engine" / "src" / "solver_action_family_contract.hpp"
+    ).read_text(encoding="utf-8")
+    table = contract.split("kSolverActionFamilyNames{{", 1)[1].split("}};", 1)[0]
+    native_names = tuple(
+        line.strip().strip(",").strip('"')
+        for line in table.splitlines()
+        if line.strip().startswith('"')
+    )
+
+    assert native_names == NATIVE_SOLVER_ACTION_FAMILIES_V1
 
 
 def test_lab_contract_vocabulary_is_complete() -> None:
