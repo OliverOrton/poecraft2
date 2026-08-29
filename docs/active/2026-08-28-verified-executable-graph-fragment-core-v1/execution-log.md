@@ -613,10 +613,13 @@ shadow diagnostic differs. Gate 6 final acceptance is the exact next action.
 ## Final Acceptance Record
 
 ```text
-final source checkpoint: pending the clean Gate 6 acceptance-hook commit
+final source checkpoint: pending the clean stable-artifact-identity repair
+  commit; preceding acceptance-hook checkpoint is
+  b775c90ce7d1d8ffb8313d3e6b535d8e802c3cef
 native build: PASS through powershell -File scripts/build.ps1 after the final
   test-only change; benchmark and native test targets linked successfully
-complete focused fragment suite: PASS, 218 checks / 0 failures
+complete focused fragment suite: PASS initially at 218 checks / 0 failures;
+  final narrow repair suite PASS at 220 checks / 0 failures
 refinement/compiler/evaluator/solve/API suites: PASS respectively 362, 583,
   15,761, 86,220, and 2,686 checks with 0 failures; evaluator controls remain
   compressed=9a12bd4cc7d2f472 / raw=eee79a5659d79e68
@@ -625,10 +628,12 @@ benchmark/corpus validation: PASS; 13 solver benchmark specifications, all 7
   contract rejection probes validate
 Solver Lab integration suite: PASS, 52 tests in 30.88s across fragment shadow,
   service, MCP, contracts, corpus runner, and supervisor
-real cyclic deterministic repeat: PASS inside the focused fragment suite; two
-  fresh artifact/session/IR/oracle/verifier builds retain IR
-  041927484ddf6dd2, certificate 4005aaa4a497331d, and flattened candidate
-  2edeed49ce1d5e6a with 4,031 rows and 8,061 transitions
+real cyclic deterministic repeat: PASS inside the focused fragment suite; the
+  stable compiled-artifact tuple yields IR d84bd8994955608a, certificate
+  c9008653e9bc81a4, and flattened candidate 2edeed49ce1d5e6a with 4,031 rows
+  and 8,061 transitions. Backslash/forward-slash artifact paths and an approved
+  derived-artifact regeneration with a changed generated_at_utc retained those
+  identities exactly
 independent exact evaluation: PASS; success 1, every non-success/off-policy
   mass 0, expected Transmute/Scour 238.40000000000001 /
   237.40000000000001, total cost 23.789999999999708, maximum mass error
@@ -639,7 +644,17 @@ independent exact evaluation: PASS; success 1, every non-success/off-policy
   The hook is benchmark/test-private, defaults to zero runs, and does not alter
   the shadow report, product request, ABI, or strategy vocabulary
 MCP operator evidence audit:
-full powershell -File scripts/test.ps1:
+full powershell -File scripts/test.ps1: first invocation passed 3,417,508
+  native checks, 13 benchmark specifications, 28/28 WASM checks, and every
+  remaining layer, but the post-run manual identity audit correctly refused
+  final acceptance: artifact regeneration changed the IR/certificate display
+  digests because mechanics_artifact_identity embedded the complete generated
+  manifest including generated_at_utc. This was an in-scope benchmark-private
+  identity defect, not mechanic/result drift. The repair now binds only schema,
+  source-data hash, game-data hash, and strings hash; targeted regeneration and
+  220-check fragment evidence pass. A final complete pipeline rerun from the
+  clean repair checkpoint is required and will be recorded separately rather
+  than relabeling the first invocation as final acceptance
 git diff --check:
 native ABI/strategy vocabulary/product/WASM scope audit:
 Gate 0 source-placement decision:

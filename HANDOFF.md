@@ -1,10 +1,11 @@
 # Handoff
 
 **Status: Verified Executable Graph-Fragment Core v1 Gates 0–5 are complete;
-Gate 6 native build, focused native acceptance, exact evaluation, the mandated
-10,000-run cyclic Simulator control, benchmark validation, and focused Solver
-Lab integration pass. Commit this coherent test-only acceptance hook, then run
-the full repository pipeline exactly once from the clean checkpoint.**
+Gate 6 build/focused/full-pipeline tests pass, but the post-pipeline identity
+audit found and repaired one in-scope benchmark-private defect: fragment
+mechanics identity included the generated manifest timestamp. The stable
+artifact tuple now survives path spelling and approved artifact regeneration;
+commit the repair, then rerun final acceptance from that clean checkpoint.**
 The first coherent checkpoint adds the private probability-free leaf IR,
 authority firewall, and exact single-entry product verifier. Gate 3 now adds a
 real engine-backed Transmute/Scour renewal leaf and explicit native benchmark
@@ -112,9 +113,21 @@ cited as such.
   specifications, all seven Lab cases, malformed fragment-contract probes, and
   52 focused Lab tests pass. The compiled cyclic fragment completed exactly
   `10,000/10,000` Simulator successes with zero failure, stop, action/cost/step
-  limit, inapplicable-action, missing-edge, or missing-price counts. The next
-  action is the single permitted full `powershell -File scripts/test.ps1` run
-  from the clean acceptance-hook checkpoint.
+  limit, inapplicable-action, missing-edge, or missing-price counts. The first
+  full `powershell -File scripts/test.ps1` invocation then ran from the clean
+  acceptance-hook checkpoint as recorded below.
+- Gate 6 first full-pipeline invocation passed all automated layers at
+  `b775c90`, including `3,417,508` native checks, 13 benchmark specifications,
+  and `28/28` release-WASM checks. The subsequent required identity audit did
+  not accept it as final: recompiling byte-identical data changed the fragment
+  IR/certificate display digests because the benchmark-private mechanics
+  identity embedded `generated_at_utc`. The repair now uses only artifact
+  schema, source-data hash, game-data hash, and strings hash. Three targeted
+  10,000-run fragment checks—including after approved artifact regeneration—
+  retain IR `d84bd8994955608a`, certificate `c9008653e9bc81a4`, flattened
+  identity `2edeed49ce1d5e6a`, and zero Simulator failures. Final acceptance must
+  run from the clean repair commit; the first invocation is retained honestly
+  as non-final evidence rather than relabeled.
 - The checkpoint certifies only exact leaf mass/properness/resources for one
   exact entry. It is not ordinary strategy JSON, an executable/public upper,
   an incumbent, product behavior, or option-quality evidence.

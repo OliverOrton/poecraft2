@@ -1,6 +1,7 @@
 #include "solver_executable_fragment_engine.hpp"
 
 #include "../src/handles_internal.hpp"
+#include "../src/json.hpp"
 #include "../src/solver_internal.hpp"
 
 #include <algorithm>
@@ -26,6 +27,23 @@ std::string read_text(const std::string& path) {
     if (!stream) throw std::runtime_error("unable to read " + path);
     std::ostringstream out;
     out << stream.rdbuf();
+    return out.str();
+}
+
+std::string stable_compiled_artifact_identity_v1(
+        const std::string& manifest) {
+    const json::Value root =
+        json::Parser(manifest.data(), manifest.size()).parse();
+    const json::Value& files = root.at("files");
+    std::ostringstream out;
+    out << "compiled-artifact-v1:schema="
+        << root.at("artifact_schema_version").as_int()
+        << ":source_data_hash="
+        << root.at("source").at("data_hash").as_string()
+        << ":game_data_sha256="
+        << files.at("game-data.json").at("sha256").as_string()
+        << ":strings_sha256="
+        << files.at("strings.json").at("sha256").as_string();
     return out.str();
 }
 
@@ -489,7 +507,7 @@ build_clean_one_goal_transmute_scour_renewal_v1(
             kCleanOneGoalRenewalBaseV1;
         fixture.context.clean_base_state.item_level = 86;
         fixture.context.mechanics_artifact_identity =
-            "compiled-artifact-manifest-v1:" + manifest;
+            stable_compiled_artifact_identity_v1(manifest);
         fixture.context.resource_vocabulary = {"scour", "transmute"};
         fixture.context.prices = {{"scour", 0.05}, {"transmute", 0.05}};
 

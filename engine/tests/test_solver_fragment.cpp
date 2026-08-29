@@ -1040,6 +1040,12 @@ void engine_backed_renewal_tests(const char* artifact_dir) {
     }
     const EngineBackedRenewalFixtureV1& first_fixture =
         *first_build.fixture;
+    PC_CHECK(
+        first_fixture.context.mechanics_artifact_identity.rfind(
+            "compiled-artifact-v1:schema=", 0) == 0);
+    PC_CHECK(
+        first_fixture.context.mechanics_artifact_identity.find(
+            "generated_at_utc") == std::string::npos);
     PC_CHECK(first_fixture.exact_terminal_probability > 0.0);
     PC_CHECK(first_fixture.exact_terminal_probability < 1.0);
     PC_CHECK(first_fixture.exact_goal_plus_junk_probability > 0.0);
