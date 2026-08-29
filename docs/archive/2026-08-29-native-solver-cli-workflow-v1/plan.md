@@ -1,6 +1,6 @@
 # Native Solver CLI Workflow v1
 
-**Status: active.** Selected by Oliver on 2026-08-29 from source checkpoint
+**Status: completed on 2026-08-29.** Selected by Oliver from source checkpoint
 `d690a954ccb47d2d041b2faaf9b2963b37eba231` following Native Solver Lab
 CLI-First MCP Removal v1.
 
