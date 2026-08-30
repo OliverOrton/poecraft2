@@ -1,17 +1,19 @@
 # Active Work
 
-**Status: one implementation boundary is active.**
+**Status: one boundary remains active at deferred final acceptance.**
 
 Parent: [Documentation map](../README.md)
 
 ## Current work
 
 [Full-Primitive Fossil Setup And Carrier-Ladder Qualification v1](2026-08-29-full-primitive-fossil-setup-ladder-qualification-v1/README.md)
-is active from source checkpoint
-`f975c0cb4eb2b4069473e6f9281c208d40c8f29d`. It attributes and removes the
-measured synchronous Fossil setup blocker without changing mechanics or action
-scope, then qualifies the existing carrier ladder under the genuinely full
-primitive envelope.
+is evidence-complete from source checkpoint
+`f975c0cb4eb2b4069473e6f9281c208d40c8f29d`. It attributes the apparent
+synchronous Fossil setup blocker to stale pre-fix request authoring, retains no
+runtime repair, and qualifies the existing carrier ladder under the genuinely
+full primitive envelope. Oliver deferred the exact remaining Simulator count
+and complete repository acceptance, so it remains active rather than being
+archived with an unearned pass claim.
 
 ## Historical work
 

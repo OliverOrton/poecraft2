@@ -1,7 +1,7 @@
 # Handoff
 
 **Status: Full-Primitive Fossil Setup And Carrier-Ladder Qualification v1 is
-active.**
+evidence-complete; final acceptance is deferred by Oliver.**
 
 ## Current Boundary
 
@@ -18,9 +18,24 @@ add-back generated 13 loadouts, deferred 12,937, reached cooperative phases,
 and completed naturally with an independently evaluated strategy.
 
 Gate 1 exact requested-single, requested-multi, bounded goal-relevant, and
-synthetic/real exhaustive controls pass. No engine repair is indicated or
-authorized. The active owner is now fresh full-primitive execution followed
-by carrier-ladder requalification with Fossil present.
+synthetic/real exhaustive controls pass. Gate 2 retained no engine repair.
+Fresh full-minus-Fossil, genuinely full, exact same-side, partial four-to-five,
+non-armour, and PDR controls all reached truthful terminal evidence. The full
+case generated 13 bounded Fossil loadouts and the ladder generated 31 goal
+subsets, two epochs, 343 candidates, 95 operators, 2,251 rows, and one
+successful joint candidate. Natural replay preserved request/core identity,
+compiled strategy bytes, bounds, terminal result, and independent exact
+evaluation. No Fossil setup, action-catalogue, or ordinary ladder lifecycle
+defect was found.
+
+The authoritative full strategy independently evaluates with success
+probability one, zero off-policy mass, complete pricing, approximately 1.19
+million expected actions, and expected cost approximately 1.57 million chaos.
+A separate 10,000-run headroom diagnostic completed with truthful action-limit
+accounting but compiled a different wall-bounded strategy. Sampling of the
+authoritative saved strategy was stopped at the last observed 7,040/10,000
+progress sample when Oliver said that was enough for now. Oliver also deferred
+the full repository acceptance suite. Neither is claimed as passed.
 
 The exact gates and hard stops are in the
 [plan](docs/active/2026-08-29-full-primitive-fossil-setup-ladder-qualification-v1/plan.md);
@@ -49,22 +64,43 @@ the concise disposition is in the
 
 ## Current Owner
 
-Codex owns execution of the selected plan. Oliver retains mechanic rulings and
-approval of any material scope or public-contract expansion. The boundary
-does not permit a state-213 repair, fragment integration, private capture-
-recency cleanup, MCP restoration, GUI work, or cap increase.
+No further runtime implementation is indicated inside the current boundary.
+Codex may finish the deferred acceptance and archive only when Oliver resumes
+that closeout or explicitly waives it permanently. Oliver retains mechanic
+rulings and selection of the next implementation boundary. The current plan
+does not permit fragment integration, another planner, MCP restoration, GUI
+work, or cap increase.
+
+The recommended next implementation question, if Oliver selects it, is
+**carrier-ladder selected-policy utilization and practical incumbent quality**:
+attribute why the full five-goal run builds and services a rich ladder plus a
+successful joint candidate but publishes an approximately 1.19-million-action
+strategy with no occupied Fossil route. Retain a narrow repair only if an
+already-authorized executable ladder candidate is lost, under-serviced,
+mispriced, or rejected by existing selection/publication authority. This is a
+ladder-quality boundary, not fragment composition or a ladder reimplementation.
 
 ## Retained Repository State
 
 - Branch: `main`.
-- Starting HEAD and `origin/main`:
-  `f975c0cb4eb2b4069473e6f9281c208d40c8f29d`.
+- Runtime/source qualification checkpoint:
+  `1029801df505299d7528754277529350686674d3`.
+- Current `origin/main`:
+  `1029801df505299d7528754277529350686674d3` (the tracking ref advanced
+  externally during documentation closeout; Codex did not push).
+- The current branch has one documentation-only successor commit over that
+  runtime/source checkpoint.
+- The sole retained source change is one native test-only explicitly requested
+  multi-Fossil oracle; no engine runtime behavior changed.
 - No push was performed.
 - The ladder remains the product architecture; fragment composition is parked
   without a recovered exact entry domain.
 - Fossil is not a synchronous blocker in the correctly authored bounded
   product envelope. The old blocking revisions remain immutable negative
   controls for the pre-fix authoring defect.
+- Full-envelope and ladder evidence is complete in the active execution log.
+  The exact 10,000-run authoritative-strategy sample and full repository suite
+  remain explicitly unclaimed/deferred.
 - The earlier Native Solver Lab six-hour soak was owner-waived, not passed,
   and is not overnight qualification.
 - The worktree contains one preserved untracked file named `0`, three bytes.
