@@ -1928,6 +1928,57 @@ void run_public_solver_gate(const char* artifact_dir) {
         PC_CHECK((info.can_preserve & (1u << 4)) != 0);
         pc_solver_destroy(fossil_solver);
     }
+    const std::string multi_fossil_id =
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold+"
+        "Metadata/Items/Currency/CurrencyDelveCraftingDefences";
+    const std::string multi_fossil_goal_json =
+        std::string("{\"version\":\"v1\",\"rarity\":\"rare\",\"slots\":["
+                    "{\"family_mod_key\":\"") +
+        mod_info.key +
+        "\",\"min_tier\":0}],\"actions\":[\"" + multi_fossil_id +
+        "\"]}";
+    pc_solver_handle multi_fossil_solver = nullptr;
+    PC_CHECK(pc_solver_create(
+                 session, multi_fossil_goal_json.c_str(),
+                 multi_fossil_goal_json.size(), &multi_fossil_solver,
+                 &error) == PC_RESULT_OK);
+    if (multi_fossil_solver != nullptr) {
+        uint32_t multi_fossil_action = 0;
+        PC_CHECK(pc_solver_find_action(
+                     multi_fossil_solver, multi_fossil_id.c_str(),
+                     &multi_fossil_action, &error) == PC_RESULT_OK);
+        pc_solver_action_info info{};
+        PC_CHECK(pc_solver_get_action_info(
+                     multi_fossil_solver, multi_fossil_action, &info,
+                     &error) == PC_RESULT_OK);
+        PC_CHECK(std::string(info.id) == multi_fossil_id);
+        PC_CHECK(info.cost_key_count == 3);
+        PC_CHECK(std::string(info.cost_keys[0]) ==
+                 "fossil:Metadata/Items/Currency/"
+                 "CurrencyDelveCraftingCold");
+        PC_CHECK(std::string(info.cost_keys[1]) ==
+                 "fossil:Metadata/Items/Currency/"
+                 "CurrencyDelveCraftingDefences");
+        PC_CHECK(std::string(info.cost_keys[2]) == "resonator:2");
+        uint32_t multi_candidate_count = 0;
+        PC_CHECK(pc_solver_candidates(
+                     multi_fossil_solver, nullptr, 0,
+                     &multi_candidate_count, &error) == PC_RESULT_OK);
+        PC_CHECK(multi_candidate_count == 1);
+        uint32_t multi_candidate = 0;
+        PC_CHECK(pc_solver_candidates(
+                     multi_fossil_solver, &multi_candidate, 1,
+                     &multi_candidate_count, &error) == PC_RESULT_OK);
+        PC_CHECK(multi_candidate == multi_fossil_action);
+        const std::string multi_fossil_telemetry =
+            solver_telemetry_json(multi_fossil_solver, &error);
+        PC_CHECK(multi_fossil_telemetry.find(
+                     "\"fossil_loadouts\":{\"possible\":12950,"
+                     "\"generated\":1,\"deferred\":12949,"
+                     "\"lazy\":true,\"mode\":\"requested\"}") !=
+                 std::string::npos);
+        pc_solver_destroy(multi_fossil_solver);
+    }
     PC_CHECK(saw_fossil_metadata);
     PC_CHECK(saw_essence_metadata);
     PC_CHECK(saw_respecting_reforge);

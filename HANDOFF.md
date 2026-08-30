@@ -9,12 +9,18 @@ active.**
 was selected by Oliver on 2026-08-29 from source checkpoint
 `f975c0cb4eb2b4069473e6f9281c208d40c8f29d`.
 
-The boundary first attributes why Fossil prevents the pinned full primitive
-request from reaching native progress, then permits only a narrow
-behavior-neutral setup repair. It must preserve complete Fossil action scope,
-mechanics, pricing, ordering, identities, caps, product goal-relevant
-construction, and exact solver authority. After setup is observable and
-cancellable, it qualifies the existing carrier ladder with Fossil present.
+Gate 0 attributed the prior Fossil stop to a stale immutable request authored
+before the CLI envelope-preservation repair: it omitted the nested
+`fossil_mode=goal_relevant` field, expanded all 12,950 loadouts, and carried
+12,959 explicit actions into a second synchronous solver construction. The
+current bounded product path is healthy. A fresh correctly authored Fossil
+add-back generated 13 loadouts, deferred 12,937, reached cooperative phases,
+and completed naturally with an independently evaluated strategy.
+
+Gate 1 exact requested-single, requested-multi, bounded goal-relevant, and
+synthetic/real exhaustive controls pass. No engine repair is indicated or
+authorized. The active owner is now fresh full-primitive execution followed
+by carrier-ladder requalification with Fossil present.
 
 The exact gates and hard stops are in the
 [plan](docs/active/2026-08-29-full-primitive-fossil-setup-ladder-qualification-v1/plan.md);
@@ -56,8 +62,9 @@ recency cleanup, MCP restoration, GUI work, or cap increase.
 - No push was performed.
 - The ladder remains the product architecture; fragment composition is parked
   without a recovered exact entry domain.
-- Fossil remains the separately measured synchronous setup blocker for the
-  full primitive envelope.
+- Fossil is not a synchronous blocker in the correctly authored bounded
+  product envelope. The old blocking revisions remain immutable negative
+  controls for the pre-fix authoring defect.
 - The earlier Native Solver Lab six-hour soak was owner-waived, not passed,
   and is not overnight qualification.
 - The worktree contains one preserved untracked file named `0`, three bytes.
