@@ -1,13 +1,15 @@
 # Handoff
 
-**Status: one implementation boundary is active.**
+**Status: no implementation boundary is active. Oliver must choose the next
+chunk before implementation resumes.**
 
-## Active Boundary
+## Last Evaluated Boundary
 
 [Carrier-Ladder Resumable Joint-Policy Continuation v1](docs/active/2026-08-30-carrier-ladder-resumable-joint-policy-continuation-v1/README.md)
 uses the ordinary-interleaving engine at
 `b690cad1e376baa5b267603f5cb619c9596a4f94` through clean evidence/WASM child
-`a270bd35902546aac09ba41d6187f4f15e1bafa7`.
+`a270bd35902546aac09ba41d6187f4f15e1bafa7`; its retained diagnostic-only HEAD
+is `a26ad047572c45f8c432b9c536ea06a233696b09`.
 
 The saved winner occupies no Imprint or replacement-base action. Independent
 exact evaluation under the pinned current economy remains
@@ -15,9 +17,10 @@ exact evaluation under the pinned current economy remains
 mass. A fresh fixed 180-second no-Imprint run independently produced
 `85408.46200624379` Chaos.
 
-## Current Implementation Boundary
+## Retained Diagnostic Checkpoint
 
-Implement at most one snapshot-pure resumable ordinary joint-policy candidate.
+The disabled benchmark-private path retains at most one snapshot-pure
+resumable ordinary joint-policy candidate.
 When its exact selected-policy traversal names a missing continuation, request
 normal exact service, yield to ordinary interleaving, then resume the same
 candidate cursor and fixed prefix. Do not retain carrier ownership, drain an
@@ -41,11 +44,18 @@ actions, success one, zero off-policy mass, complete reconciled pricing, and
 strategy SHA-256
 `c5ddf81a73eeec532a3efdbcbe661216942c32464ac51127401bd657b3aa1597`.
 Candidate `51d67b3219b70c43` did not publish it; it remained safely waiting on
-its third obligation after two resumptions. Next promote only this proved
-service mechanism into ordinary interleaving, include its retained bytes in
-normal solver cap accounting, and preserve ordinary compiler/evaluator/
-publication authority. Run one production PDR gate after the focused fixture;
-clean-five still follows only if production PDR passes.
+its third obligation after two resumptions.
+
+Production promotion was attempted and then removed. Corrected normal-cap PDR
+closed exact at the same `3758.12442725521` cost, but the required matched
+120-second clean-five control regressed from `85408.64362148782` to the valid
+primitive fallback at `470485191.442781`. This is Outcome B: current exact
+capture eligibility cannot distinguish beneficial PDR continuation ownership
+from harmful clean-five ownership. Partial four-to-five and non-armour were
+therefore not run. The smallest missing contract is an action/state-specific
+exact retention-capacity predicate for the candidate capture/continue/release
+decision; it must prove bounded service is compatible with retaining the
+ordinary ladder's stronger executable-upper path.
 
 ## Retained Repository State
 
@@ -66,5 +76,7 @@ clean-five still follows only if production PDR passes.
 - Reproduce the current focused checkpoint with
   `build/engine/poecraft_engine_tests.exe --solver-joint-policy-continuation-only`.
   Last result: 54 checks, zero failures. The native benchmark target also
-  builds. Broad tests, WASM rebuild, and Simulator are unrun for this
+  builds. That result belongs to retained diagnostic HEAD `a26ad04`; later
+  59/60-check results exercised uncommitted production integration that was
+  removed. Broad tests, WASM rebuild, and Simulator are unrun for this
   checkpoint.

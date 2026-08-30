@@ -1,7 +1,7 @@
 # Carrier-Ladder Resumable Joint-Policy Continuation v1
 
-**Status: active — Phase 3 benchmark-private causal proof passed; Phase 4
-production promotion next.**
+**Status: stopped at Outcome B — benchmark-private resumability proved;
+production activation rejected and removed.**
 
 ## Objective
 
@@ -167,12 +167,70 @@ bounded projections belong in this document.
   `c5ddf81a73eeec532a3efdbcbe661216942c32464ac51127401bd657b3aa1597`.
   The retained candidate did not hand off or publish: it remained safely
   waiting on its third obligation. This is causal proof that candidate-local
-  resumption improves ordinary exact service without acquiring planner,
-  compiler, evaluator, or publication authority. Next, enable the proved
-  mechanism in ordinary interleaving, include its retained ownership in normal
-  solver memory accounting, preserve bounded refusal/release behavior, and run
-  the single production PDR gate before any clean-five run.
+  resumption can improve ordinary exact service without acquiring planner,
+  compiler, evaluator, or publication authority.
+- 2026-08-30: promoted the same mechanism locally through the existing
+  high-impact ordinary profile and charged candidate ownership to the normal
+  live/peak solver byte ledgers. The first production PDR attempt exposed an
+  in-scope O(candidate-size) fast-ledger defect and reached its 300-second
+  watchdog at 7,133 states. Caching current retained bytes while preserving the
+  full audited traversal repaired that implementation defect; the focused
+  fixture passed 60 checks and the native benchmark rebuilt. This production
+  code was never committed.
+- The corrected production PDR run at
+  `build/qualification/resumable-joint-policy-continuation-v1/pdr-production-r2/report.json`
+  closed exact in 227,219.0545 ms at `3758.12442725521` Chaos,
+  `8608.87713157432` expected actions, success `1`, off-policy mass `0`,
+  complete reconciled pricing, and strategy SHA-256
+  `c5ddf81a73eeec532a3efdbcbe661216942c32464ac51127401bd657b3aa1597`.
+  Compilation produced 312 nodes and 881 edges; all caps passed, including
+  normal peak ownership of 804,899,393 bytes. This was a different, strictly
+  better strategy than the exact PDR reference.
+- An older handoff pointed to the later 180-second no-Imprint clean-five
+  revision. Its one run produced valid but inapplicable evidence at
+  `91889.5602708236` Chaos and `8333.24955468757` actions. The selected boundary
+  instead requires the matched 120-second request that produced the qualified
+  current-main baseline. The repository JSON CLI imported its authoritative
+  source, changed only `/requested_bounded_finish_seconds` from 60 to 120,
+  validated it natively, and saved immutable revision
+  `case-rev-54343c2296afe4f624f622c16779498c`, revision SHA-256
+  `54343c2296afe4f624f622c16779498cfc0f0d03f6170e323837a1a06c74edb0`.
+- The matched production clean-five run at
+  `build/qualification/resumable-joint-policy-continuation-v1/clean5-production-120/report.json`
+  reached its natural requested bounded finish but retained only the primitive
+  fallback: exact cost and expected actions were both
+  `470485191.442781`, versus the required `98220`/`10000` ceilings and the
+  matched `85408.64362148782` baseline. The graph was valid and independently
+  exact-evaluated with success `1`, off-policy mass `0`, complete reconciled
+  pricing, all caps passed, and strategy SHA-256
+  `a9e33a62edd46e870327888d891738aa71c5ea436c27994047734ca94f11b61b`.
+  This is a quality/eligibility failure, not invalid publication or a resource
+  failure.
+- Outcome B: the resumable representation and multi-state lifecycle work, but
+  the available exact capture predicate admits both useful PDR ownership and
+  harmful clean-five ownership. A concrete first-missing state, exact selected
+  prefix, compatible boundary, stable identity, and improving candidate
+  estimate do not prove that preferentially servicing that continuation is a
+  better use of the remaining bounded horizon than ordinary ladder work. The
+  smallest missing predicate is an action/state-specific exact
+  retention-capacity certificate that authorizes continued ownership only when
+  the competitive candidate's named continuation can be retained and serviced
+  within proved capacity without displacing the ordinary ladder's stronger
+  executable-upper path. The future Retention-Capacity proof pilot's precise
+  consumer is this candidate's capture/continue/release decision; it must not
+  become a new planner or heuristic score.
+- The uncommitted production activation, normal-ledger integration, and cached
+  fast-byte optimization were removed after the matched primary failure.
+  Retained HEAD `a26ad04` is benchmark-private diagnostic code only. The
+  partial four-to-five and non-armour controls were not run because both
+  primaries did not pass. Simulator, WASM rebuild, broad native tests, and the
+  complete repository pipeline were not run; no failed production strategy is
+  being claimed or retained.
 
 ## Outcome
 
-Open.
+Outcome B. Snapshot-pure candidate-local resumption is proved and retained only
+behind the disabled benchmark-private diagnostic. Production activation is not
+qualified because the same eligibility contract that closes PDR destroys the
+matched 120-second clean-five upper. No implementation boundary remains active;
+the next chunk requires an explicit direction choice.
