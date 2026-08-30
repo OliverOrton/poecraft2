@@ -1,6 +1,6 @@
 # Full-Primitive Fossil Setup And Carrier-Ladder Qualification v1
 
-**Status: evidence complete; final acceptance deferred by Oliver.** Oliver
+**Status: archived diagnosis-only / evidence-complete.** Oliver
 selected this boundary on 2026-08-29 from clean tracked source checkpoint
 `f975c0cb4eb2b4069473e6f9281c208d40c8f29d`. Branch `main` and `origin/main`
 matched at activation. The only worktree entry was the protected untracked file
@@ -8,7 +8,7 @@ matched at activation. The only worktree entry was the protected untracked file
 full-envelope/ladder qualification, owner-reduced Simulator count, and deferred
 complete acceptance.
 
-Parent: [Active boundary](README.md)
+Parent: [Archived boundary](README.md)
 
 Progress, measurements, exact identities, and decisions belong in the
 [execution log](execution-log.md).

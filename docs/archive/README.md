@@ -11,6 +11,12 @@ selected active work.
 
 ## 2026-08-29
 
+- [Full-Primitive Fossil Setup And Carrier-Ladder Qualification v1](2026-08-29-full-primitive-fossil-setup-ladder-qualification-v1/README.md) —
+  archives diagnosis-only evidence that stale malformed immutable requests,
+  not current bounded Fossil generation, owned the apparent setup block;
+  retains only a test oracle, qualifies the ladder under full scope, and
+  preserves the incomplete 7,040/10,000 authoritative sample plus deferred
+  full suite without claiming either passed.
 - [Carrier-Ladder State-213 Service Coverage v1](2026-08-29-carrier-ladder-state-213-service-coverage-v1/README.md) —
   retains a two-stage row-service witness and proves diagnosis-only that state
   213 was observed early in the ordinary queue before naturally receiving six

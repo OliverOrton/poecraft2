@@ -1,11 +1,11 @@
 # Full-Primitive Fossil Setup And Carrier-Ladder Qualification v1 Execution Log
 
-**Status: evidence complete; final acceptance deferred by Oliver.** This log
-records chronological execution evidence for the [plan](plan.md). The boundary
-remains active rather than being archived with an unearned complete-acceptance
-claim.
+**Status: archived diagnosis-only / evidence-complete.** This log records
+chronological execution evidence for the [plan](plan.md). The result preserves
+the incomplete authoritative Simulator sample and deferred full suite without
+converting either into a pass.
 
-Parent: [Active boundary](README.md)
+Parent: [Archived boundary](README.md)
 
 ## 2026-08-29 — Boundary Activation
 

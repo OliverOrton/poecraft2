@@ -32,13 +32,19 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 ## Execution State
 
 The selected
-[Full-Primitive Fossil Setup And Carrier-Ladder Qualification v1](active/2026-08-29-full-primitive-fossil-setup-ladder-qualification-v1/README.md)
-boundary is active from source checkpoint
-`f975c0cb4eb2b4069473e6f9281c208d40c8f29d`. It owns attribution and a narrow
-behavior-neutral repair of the synchronous Fossil setup blocker, followed by
-qualification of the existing carrier ladder under the genuinely full
-primitive envelope. Fragment composition, private capture-recency cleanup,
-MCP, GUI work, cap increases, and mechanic changes remain outside scope.
+[Carrier-Ladder Frozen-Graph Candidate Utilization v1](active/2026-08-29-carrier-ladder-frozen-graph-candidate-utilization-v1.md)
+boundary determines whether the fresh current full five-goal run's final
+materialized rows already support a substantially cheaper proper executable
+policy that current joint assembly, exact evaluation, incumbent selection, or
+publication loses.
+
+The archived diagnosis-only
+[Full-Primitive Fossil Setup And Carrier-Ladder Qualification v1](archive/2026-08-29-full-primitive-fossil-setup-ladder-qualification-v1/README.md)
+boundary attributes the apparent setup blocker to stale malformed immutable
+requests, retains no runtime behavior repair, and qualifies bounded current
+Fossil generation plus the carrier ladder. Its authoritative Simulator sample
+stopped at 7,040/10,000 and the full suite was deferred; neither is claimed as
+passed.
 
 The completed diagnosis-only
 [Carrier-Ladder State-213 Service Coverage v1](archive/2026-08-29-carrier-ladder-state-213-service-coverage-v1/README.md)
