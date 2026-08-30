@@ -1,9 +1,10 @@
 # PDR Retention-Capacity Operator-Proof Pilot v1
 
-**Status: active implementation boundary.** Selected on 2026-08-30 after the
-production resumable-candidate mechanism qualified. Work is local-only.
+**Status: completed diagnosis-only on 2026-08-30.** The measured consumer did
+not have a useful early executable upper, so the written stop gate fired before
+any retention/capacity abstraction was implemented. Work is local-only.
 
-Parent: [Active work](../README.md)
+Parent: [Documentation archive](../README.md)
 
 ## Objective
 
@@ -144,3 +145,41 @@ a retained production consumer crosses enough layers to require it.
   it is the narrow target for one retention/capacity shadow. The pilot must
   stop if that pattern cannot materially strengthen this live comparison
   within the existing 16 MiB, 5% growth, soundness, and exact-row gates.
+- Candidate-lineage tracing corrected the interpretation of that sample. The
+  aligned per-state vector belongs to independently evaluated candidate
+  `8940567103860554455`, a `gated_primitive_destructive_renewal` candidate
+  whose exact cost is `15772148.66294307`. The audit therefore compared a
+  sound but catastrophically loose early executable upper, not the eventual
+  exact winner.
+- A different `direct_compiled_core_policy` candidate,
+  `3153018158135326262`, already estimates `3770.7208497712586`, but its
+  independent evaluation reports only `0.028958` success and `0.971042`
+  off-policy/failure mass. Final strict refinement repairs that policy into
+  `strict_candidate_record` `12798937337675811455` at exact cost
+  `3758.1244272552067`; that terminal record owns only the verified root
+  scalar and does not expose an aligned coarse per-state vector to this audit.
+- **Outcome C — prerequisite absent.** The operator consumer is now observable,
+  but no useful stable executable upper exists at its consumption point. The
+  Harvest sample is withdrawn as an implementation target: strengthening an
+  RC lower against a 15.77-million-Chaos upper would optimize the wrong
+  boundary, while the useful 3,758-Chaos upper arrives only at terminal exact
+  closure. No RC pattern, pruning authority, scheduling behavior, mechanic,
+  ABI, WASM, or product behavior was added.
+- The retained change is bounded observational telemetry plus its focused
+  fixture. `scripts/build.ps1` passed, and
+  `poecraft_engine_tests.exe --solver-carrier-bounds-only` passed 2,370 checks
+  with zero failures. The fresh diagnostic report is
+  `build/qualification/pdr-retention-capacity-operator-proof-pilot-v1/operator-consumer-shadow-r2/report.json`
+  with SHA-256
+  `219708AAB8194200482345243B1BDCAECFAAAAA38B2B7A18C182372A0741D3BF`.
+
+## Resulting Direction
+
+Do not build retention/capacity or fragment state next. The measured
+prerequisite is ladder-side: the near-optimal direct core policy must become a
+proper independently evaluated candidate earlier, or another materially
+stronger early executable candidate must be produced through the existing
+continuation/refinement services. The first follow-up should attribute the
+`0.971042` off-policy/failure mass to concrete missing/default routes and test
+the smallest existing-service closure needed to remove it. That recommendation
+is not an active boundary until Oliver selects it.

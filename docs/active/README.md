@@ -1,14 +1,16 @@
 # Active Work
 
-**Status: one implementation boundary is active.**
+**Status: no implementation boundary is active.** Oliver must select the next
+chunk before implementation resumes.
 
 Parent: [Documentation map](../README.md)
 
 ## Current work
 
-[PDR Retention-Capacity Operator-Proof Pilot v1](2026-08-30-pdr-retention-capacity-operator-proof-pilot-v1/README.md)
-is identifying one or two measured live PDR obligations before implementing a
-small proof-only, 16 MiB shadow abstraction. It has no production authority.
+None. The PDR retention-capacity pilot completed diagnosis-only because the
+only aligned early executable upper was 15.77 million Chaos. The recommended,
+unselected follow-up is ladder-side early executable-policy properness, not a
+retention/capacity or fragment abstraction.
 
 ## Historical work
 

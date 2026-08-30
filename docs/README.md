@@ -34,6 +34,15 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 No implementation boundary is active. Oliver must select the next chunk
 before implementation resumes.
 
+The completed diagnosis-only
+[PDR Retention-Capacity Operator-Proof Pilot v1](archive/2026-08-30-pdr-retention-capacity-operator-proof-pilot-v1/README.md)
+retains a bounded observational audit over verified-incumbent operator
+consumers. It proves that the aligned early ladder candidate costs 15.77
+million Chaos, while a near-optimal 3,770-Chaos direct policy remains 97.1%
+off-policy until terminal strict closure produces the exact 3,758-Chaos
+winner. No retention/capacity abstraction was built; the recommended next
+question is ladder-side early executable-policy properness.
+
 The completed
 [Historical Five-Goal Quality Regression v1](archive/2026-08-30-historical-five-goal-quality-regression-v1/README.md)
 boundary reproduces the byte-identical historical 87k strategy, isolates the

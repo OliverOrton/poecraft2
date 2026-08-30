@@ -1,87 +1,62 @@
 # Handoff
 
-**Status: PDR Retention-Capacity Operator-Proof Pilot v1 is active.**
-
-## Current Boundary
-
-[PDR Retention-Capacity Operator-Proof Pilot v1](docs/active/2026-08-30-pdr-retention-capacity-operator-proof-pilot-v1/README.md)
-is the selected proof-only follow-up. Begin by identifying one or two dominant
-live PDR carrier/action obligations and their existing typed lower consumers.
-No abstraction has production authority; the first implementation must be a
-16 MiB-capped shadow with exact local rows, sound terminal inclusion, stable
-identity, byte accounting, and direct-retirement telemetry.
-
-Initial attribution found the consumer timing gap: all 213,532 PDR ledger
-entries were terminal before the independently evaluated resumable incumbent
-arrived, so existing operator-proof lower evaluations and retirements were
-both zero. The bounded verified-incumbent audit is now implemented and proved
-observational. A fresh exact PDR diagnostic compared 8,279 aligned finite
-state/action values, changed zero ledger lifecycles, and found zero retirements
-under the current lower.
-
-The measured first shadow target is `harvest_augment:physical`: its current
-lower is `792.6016500000001` versus the closest aligned verified upper of
-`15772148.688824013`. Build only the smallest retention/capacity pattern needed
-for this action and the sampled clean/occupied goal-subset shapes. It remains
-shadow-only. Stop if it cannot materially strengthen that live comparison,
-if cheap action cost still pins the shadow, or if it fails the 16 MiB retained,
-5% strict-growth, exact-row, mass, terminal, identity, or subsolution gates.
-Do not activate pruning merely because the audit consumer is now observable.
+**Status: no implementation boundary is active.** Oliver must select the next
+chunk before implementation resumes.
 
 ## Completed Boundary
 
-[Carrier-Ladder Released-Candidate Reclamation v1](docs/archive/2026-08-30-carrier-ladder-released-candidate-reclamation-v1/README.md)
-completed as Outcome A.
+[PDR Retention-Capacity Operator-Proof Pilot v1](docs/archive/2026-08-30-pdr-retention-capacity-operator-proof-pilot-v1/README.md)
+completed diagnosis-only as Outcome C.
 
-The retained production mechanism preserves active candidate yield as one
-bounded exclusive preference, reclaims payload on terminal refusal, and then
-restores ordinary joint-policy work. It is enabled by the existing
-high-impact executable-upper profile, owns no publication authority, and is
-fully included in fast/full/audited native byte accounting.
+The retained bounded audit observes existing operator lower consumers only
+after an incumbent passes independent final-graph evaluation. It owns no proof,
+retirement, scheduling, incumbent, mechanic, publication, ABI, WASM, or product
+authority. A focused native fixture proves a would-retire comparison, zero
+ledger/proof-owner mutation, and identity-deduplicated replay.
 
-Production independently reproduced:
+Fresh PDR evidence reproduced the exact `3758.1244272552067` result and audited
+all 213,532 typed ledger entries. It found 8,279 aligned finite lower/upper
+comparisons, zero would-retire comparisons, and zero lifecycle mutations. The
+report is
+`build/qualification/pdr-retention-capacity-operator-proof-pilot-v1/operator-consumer-shadow-r2/report.json`;
+its SHA-256 is
+`219708AAB8194200482345243B1BDCAECFAAAAA38B2B7A18C182372A0741D3BF`.
 
-- PDR: exact `3758.1244272552067` Chaos, `8608.877131574318` expected
-  actions, 312 nodes/881 edges, strategy SHA-256
-  `c5ddf81a73eeec532a3efdbcbe661216942c32464ac51127401bd657b3aa1597`;
-- clean-five: exact `85408.64362148782` Chaos, `8259.468210528557`
-  expected actions, 775 nodes/1,634 edges, strategy SHA-256
-  `9e8687ac1f1de705cd1bef59e5269395190e6b8d2134d26d0cf1aac2468717b1`;
-- partial four-to-five and non-armour: exact matches to the selected
-  `b690cad` current-main baselines.
+Lineage tracing changed the conclusion. The aligned vector belongs to
+`gated_primitive_destructive_renewal` candidate `8940567103860554455`, whose
+independently evaluated exact cost is `15772148.66294307`. The near-optimal
+`direct_compiled_core_policy` candidate `3153018158135326262` estimates
+`3770.7208497712586` but evaluates with `0.028958` success and `0.971042`
+off-policy/failure mass. Terminal strict refinement repairs it into
+`strict_candidate_record` `12798937337675811455` at exact cost
+`3758.1244272552067`, but that terminal record does not own the aligned coarse
+per-state vector needed by the operator audit.
 
-All four have success probability one, zero off-policy mass, complete
-reconciled pricing, unchanged caller scopes/caps, and no case-specific rule.
-The older partial four-to-five quality gap is real but predates this change.
+The written stop gate therefore fired before any retention/capacity pattern
+was implemented. The previously named `harvest_augment:physical` sample is not
+an implementation target: it was only the closest comparison against the
+15.77-million-Chaos candidate.
 
-Final acceptance passed native CTest 17/17, web tests 11/11, TypeScript
-type-checking, and rebuilt WASM. A direct 10,000-run simulation of the saved
-hash-identical PDR strategy also passed, but was unnecessary because that
-artifact was already qualified under identical semantics. Oliver has changed
-future required simulations to 1,000 trials, and none for identical already-
-qualified artifacts.
+## Recommended Next Direction — Not Selected
 
-Exact paths, report hashes, resource figures, and the rejected strict-
-publication experiment are in the archived execution log.
+Return to the carrier ladder. Attribute the direct core policy's `0.971042`
+off-policy/failure mass to concrete missing/default routes, then test the
+smallest closure through existing continuation and strict-refinement services
+that can make the approximately 3,770-Chaos policy proper and independently
+evaluable earlier. Do not introduce RC/fragment state, a new planner, broad
+whole-policy retry, fixed scheduling windows, learned guidance, or MCP inside
+that diagnosis.
 
-## Selected Next Direction
+This is a recommendation only. Per the repository lifecycle contract, Oliver
+must select the next boundary before implementation resumes.
 
-The evidence now satisfies the prerequisite for the proof-only **PDR
-Retention-Capacity Operator-Proof Pilot v1**. Start from one or two dominant
-live PDR carrier/action obligations whose current lower remains competitive
-against the verified upper. The first pass is shadow-only with a 16 MiB
-ownership ceiling and must measure direct obligation retirement and RC-
-attributable strict-state growth before it can affect an existing typed proof
-consumer.
+## Verification And Repository State
 
-Do not reopen fragment promotion, frozen-graph attribution, whole-policy
-retries, fixed scheduling windows, a new planner, learned guidance, MCP, or the
-older partial-quality debt inside that proof pilot.
-
-## Repository State
-
+- `powershell -File scripts/build.ps1` passed.
+- `build/engine/poecraft_engine_tests.exe --solver-carrier-bounds-only` passed
+  2,370 checks with zero failures.
+- Broad acceptance and WASM rebuild were not required: the retained change is
+  internal observational telemetry with no C ABI or product behavior change.
 - Work is local-only. Do not push.
 - Protected untracked `0` is user state. It was not read, modified, staged,
   moved, cleaned, or deleted. Preserve it exactly.
-- The implementation checkpoint immediately before production activation is
-  `fdfbd7c831b837ea6b6d7946aba26c3166f70416`.

@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-08-30
 
+- [PDR Retention-Capacity Operator-Proof Pilot v1](2026-08-30-pdr-retention-capacity-operator-proof-pilot-v1/README.md) —
+  retains a bounded verified-incumbent operator-consumer audit, proves that the
+  only aligned early executable upper is a 15.77-million-Chaos ladder
+  candidate, and stops diagnosis-only before building RC state because the
+  useful 3,758-Chaos policy becomes proper only during terminal strict closure.
 - [Carrier-Ladder Released-Candidate Reclamation v1](2026-08-30-carrier-ladder-released-candidate-reclamation-v1/README.md) —
   reclaims refused resumable-candidate payload, restores ordinary work after
   terminal refusal, activates bounded candidate continuation in the existing
