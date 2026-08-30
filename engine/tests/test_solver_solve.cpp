@@ -117,6 +117,7 @@ void run_resumable_joint_policy_continuation_fixture_tests() {
     snapshot.economy_identity = 2;
     snapshot.caller_scope_identity = 3;
     snapshot.action_vocabulary_identity = 4;
+    snapshot.action_vocabulary_size = 10;
     snapshot.mechanics_artifact_identity = 5;
     snapshot.exact_terminal_identity = 6;
     snapshot.boundary_identity = 7;
@@ -126,7 +127,7 @@ void run_resumable_joint_policy_continuation_fixture_tests() {
     snapshot.graph_successor_count = 1;
     snapshot.graph_probability_count = 1;
     snapshot.source_generation = 1;
-    snapshot.target_generation = 4;
+    snapshot.target_generation = 2;
     snapshot.action_generation = 1;
     snapshot.admission_generation = 1;
     snapshot.value_snapshot_generation = 11;
@@ -175,7 +176,7 @@ void run_resumable_joint_policy_continuation_fixture_tests() {
     };
     Candidate candidate = Candidate::capture(
         snapshot, node(0), {30.0, 20.0, 10.0, 0.0}, {}, {}, 30.0,
-        0x65786163745f7631ull, 4);
+        0x65786163745f7631ull, 2);
     const std::uint64_t capture_identity = candidate.semantic_identity;
     const auto first = candidate.advance(resolve, validate, 32);
     PC_CHECK(first.lifecycle == Lifecycle::WaitingForExactContinuation);
@@ -193,6 +194,7 @@ void run_resumable_joint_policy_continuation_fixture_tests() {
      * events. Completing one row merely makes the sole obligation resumable. */
     std::uint64_t ordinary_work = 7;
     row_ready[1] = true;
+    PC_CHECK(candidate.extend_state_capacity(3));
     PC_CHECK(candidate.mark_resumable(node(1)));
     ordinary_work += 5;
     const auto second = candidate.advance(resolve, validate, 32);
@@ -207,6 +209,7 @@ void run_resumable_joint_policy_continuation_fixture_tests() {
     PC_CHECK(ordinary_work == 12);
 
     row_ready[2] = true;
+    PC_CHECK(candidate.extend_state_capacity(4));
     PC_CHECK(candidate.mark_resumable(node(2)));
     const auto third = candidate.advance(resolve, validate, 32);
     PC_CHECK(third.lifecycle == Lifecycle::CompleteCandidate);
@@ -225,13 +228,15 @@ void run_resumable_joint_policy_continuation_fixture_tests() {
      * determines repeat identity. */
     Candidate repeat = Candidate::capture(
         snapshot, node(0), {30.0, 20.0, 10.0, 0.0}, {}, {}, 30.0,
-        0x65786163745f7631ull, 4);
+        0x65786163745f7631ull, 2);
     PC_CHECK(repeat.semantic_identity == capture_identity);
 
     Context newer_values = snapshot;
     newer_values.value_snapshot_generation = 99;
     newer_values.proof_snapshot_generation = 100;
     newer_values.source_generation = 4;
+    newer_values.target_generation = 4;
+    newer_values.action_vocabulary_size = 12;
     PC_CHECK(candidate.compatible_with(newer_values) == Refusal::None);
     Context stale_scope = newer_values;
     ++stale_scope.caller_scope_identity;
@@ -241,6 +246,10 @@ void run_resumable_joint_policy_continuation_fixture_tests() {
     ++stale_action.action_vocabulary_identity;
     PC_CHECK(candidate.compatible_with(stale_action) ==
              Refusal::StaleIdentity);
+    Context truncated_action = newer_values;
+    truncated_action.action_vocabulary_size = 9;
+    PC_CHECK(candidate.compatible_with(truncated_action) ==
+             Refusal::StaleGeneration);
     Context stale_prefix = newer_values;
     ++stale_prefix.graph_prefix_identity;
     PC_CHECK(candidate.compatible_with(stale_prefix) ==

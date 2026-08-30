@@ -1933,9 +1933,14 @@ void SolveWork::Impl::refresh_carrier_ladder_exact_boundary_diagnostics(
         return;
     }
     const auto mode_name = [&] {
-        return options.carrier_ladder_exact_boundary_mode ==
-                CarrierLadderExactBoundaryMode::Record
-            ? "record" : "recover";
+        switch (options.carrier_ladder_exact_boundary_mode) {
+        case CarrierLadderExactBoundaryMode::Off: return "off";
+        case CarrierLadderExactBoundaryMode::Record: return "record";
+        case CarrierLadderExactBoundaryMode::Recover: return "recover";
+        case CarrierLadderExactBoundaryMode::ResumableContinuation:
+            return "resumable_continuation";
+        }
+        return "unknown";
     };
     const auto hex = [](const std::uint64_t value) {
         char text[17];
@@ -1968,6 +1973,169 @@ void SolveWork::Impl::refresh_carrier_ladder_exact_boundary_diagnostics(
         std::to_string(limits.max_wall_time_ms);
     json += ",\"max_samples\":" +
         std::to_string(limits.max_samples) + "}";
+    json += ",\"resumable_joint_policy_continuation\":";
+    if (!resumable_joint_policy_candidate.has_value()) {
+        json += "null";
+    } else {
+        const ResumableJointPolicyCandidateState& retained =
+            *resumable_joint_policy_candidate;
+        const auto& candidate = retained.continuation;
+        const auto lifecycle_name = [&] {
+            using Lifecycle =
+                solve_detail::JointPolicyContinuationLifecycle;
+            switch (candidate.lifecycle) {
+            case Lifecycle::Inactive: return "inactive";
+            case Lifecycle::Captured: return "captured";
+            case Lifecycle::WaitingForExactContinuation:
+                return "waiting_for_exact_continuation";
+            case Lifecycle::Resumable: return "resumable";
+            case Lifecycle::Advancing: return "advancing";
+            case Lifecycle::CompleteCandidate: return "complete_candidate";
+            case Lifecycle::Refused: return "refused";
+            }
+            return "unknown";
+        };
+        const auto semantic_key_identity = [&](const auto& key) {
+            std::uint64_t identity = 1469598103934665603ULL;
+            identity_mix_string(
+                identity, "joint_policy_semantic_key_v1");
+            identity_mix(identity, key.size());
+            for (const std::uint64_t word : key) {
+                identity_mix(identity, word);
+            }
+            return identity;
+        };
+        json += "{\"schema_version\":\"resumable_joint_policy_"
+            "continuation_lineage_v1\"";
+        json += ",\"candidate_identity\":\"" +
+            hex(candidate.semantic_identity) + "\"";
+        json += ",\"lifecycle\":\"" +
+            std::string(lifecycle_name()) + "\"";
+        json += ",\"refusal\":\"" + std::string(
+            solve_detail::joint_policy_continuation_refusal_name(
+                candidate.refusal)) + "\"";
+        json += ",\"counts\":{\"captures\":" +
+            std::to_string(candidate.capture_count);
+        json += ",\"resumes\":" +
+            std::to_string(candidate.resume_count);
+        json += ",\"yields\":" +
+            std::to_string(candidate.yield_count);
+        json += ",\"rebases\":" +
+            std::to_string(candidate.rebase_count);
+        json += ",\"stale_discards\":" +
+            std::to_string(candidate.stale_discard_count);
+        json += ",\"noncompetitive_discards\":" +
+            std::to_string(candidate.noncompetitive_discard_count);
+        json += ",\"completions\":" +
+            std::to_string(candidate.completion_count);
+        json += ",\"handoffs\":" +
+            std::to_string(retained.handoff_count) + "}";
+        json += ",\"selected_prefix\":{\"rows_appended\":" +
+            std::to_string(candidate.rows_appended);
+        json += ",\"fixed_decisions\":" +
+            std::to_string(candidate.fixed_decisions.size());
+        json += ",\"cursor\":" + std::to_string(candidate.cursor);
+        json += ",\"walk_states\":" +
+            std::to_string(candidate.walk.size());
+        json += ",\"capture_reconstructions\":" +
+            std::to_string(candidate.capture_count);
+        json += ",\"global_rebuilds_between_resumes\":0}";
+        json += ",\"missing_state_identities\":[";
+        const std::size_t sample_count = std::min<std::size_t>(
+            candidate.missing_state_history.size(), limits.max_samples);
+        for (std::size_t index = 0; index < sample_count; ++index) {
+            if (index != 0) json.push_back(',');
+            const auto& key = candidate.missing_state_history[index];
+            json += "{\"identity\":\"" +
+                hex(semantic_key_identity(key)) + "\",\"words\":" +
+                std::to_string(key.size()) + "}";
+        }
+        json += "]";
+        json += ",\"generations\":{\"source_at_capture\":" +
+            std::to_string(candidate.context.source_generation);
+        json += ",\"target_at_capture\":" +
+            std::to_string(candidate.context.target_generation);
+        json += ",\"source_current\":" +
+            std::to_string(
+                transition_cache == nullptr
+                    ? 0
+                    : transition_cache->rows.size());
+        json += ",\"target_current\":" +
+            std::to_string(calc.state_count()) + "}";
+        const auto current_context =
+            current_joint_policy_continuation_context(&retained);
+        json += ",\"identity_comparison\":{";
+        const auto append_identity = [&](const char* name,
+                                         const std::uint64_t captured,
+                                         const std::uint64_t current) {
+            json += "\"" + std::string(name) + "\":{\"captured\":\"" +
+                hex(captured) + "\",\"current\":\"" + hex(current) +
+                "\",\"equal\":" +
+                std::string(captured == current ? "true" : "false") + "},";
+        };
+        append_identity(
+            "goal", candidate.context.goal_identity,
+            current_context.goal_identity);
+        append_identity(
+            "economy", candidate.context.economy_identity,
+            current_context.economy_identity);
+        append_identity(
+            "caller_scope", candidate.context.caller_scope_identity,
+            current_context.caller_scope_identity);
+        append_identity(
+            "action_vocabulary_prefix",
+            candidate.context.action_vocabulary_identity,
+            current_context.action_vocabulary_identity);
+        append_identity(
+            "artifact", candidate.context.mechanics_artifact_identity,
+            current_context.mechanics_artifact_identity);
+        append_identity(
+            "terminal", candidate.context.exact_terminal_identity,
+            current_context.exact_terminal_identity);
+        append_identity(
+            "boundary", candidate.context.boundary_identity,
+            current_context.boundary_identity);
+        json += "\"action_vocabulary_size\":{\"captured\":" +
+            std::to_string(candidate.context.action_vocabulary_size) +
+            ",\"current\":" +
+            std::to_string(current_context.action_vocabulary_size) +
+            ",\"monotone\":" + std::string(
+                current_context.action_vocabulary_size >=
+                        candidate.context.action_vocabulary_size
+                    ? "true" : "false") + "}}";
+        json += ",\"ordinary_interleave\":{\"events_between_resumes\":" +
+            std::to_string(retained.ordinary_interleave_events);
+        json += ",\"carrier_epoch_delta\":" + std::to_string(
+            incremental_carrier_ladder_epochs -
+            retained.carrier_epochs_at_capture);
+        json += ",\"refinement_round_delta\":" + std::to_string(
+            incremental_refinement_rounds -
+            retained.refinement_rounds_at_capture);
+        json += ",\"sweep_delta\":" + std::to_string(
+            sweeps - retained.sweeps_at_capture) + "}";
+        json += ",\"work\":{\"retained\":" +
+            std::to_string(candidate.retained_work);
+        json += ",\"retained_bytes\":" +
+            std::to_string(candidate.retained_owned_bytes());
+        json += ",\"retained_peak_bytes\":" +
+            std::to_string(candidate.retained_peak_bytes);
+        json += ",\"transient_peak_bytes\":" +
+            std::to_string(candidate.transient_peak_bytes) + "}";
+        json += ",\"root_estimate\":{\"value\":" +
+            finite_json(candidate.candidate_root_estimate);
+        json += ",\"provenance\":\"" +
+            hex(candidate.root_estimate_provenance) + "\"}";
+        const bool has_new_exact = retained.handed_off_for_evaluation &&
+            output_incumbent.has_value() &&
+            output_incumbent->portfolio_identity !=
+                candidate.context.incumbent_identity &&
+            output_incumbent->independently_evaluated;
+        json += ",\"final_exact_cost\":" + finite_json(
+            has_new_exact
+                ? output_incumbent->evaluated_policy_cost
+                : kInfinity);
+        json += "}";
+    }
     std::uint64_t terminal_attempts = 0;
     bool terminal_row_visibility_proved = true;
     for (const JointAnytimeAttemptLineage& lineage :
@@ -3670,6 +3838,545 @@ void SolveWork::Impl::install_direct_output_incumbent(
         commit_output_incumbent(std::move(candidate));
     }
 
+solve_detail::JointPolicyContinuationContext
+SolveWork::Impl::current_joint_policy_continuation_context(
+        const ResumableJointPolicyCandidateState* const retained) const {
+    solve_detail::JointPolicyContinuationContext context;
+    context.goal_identity = goal_identity();
+    context.economy_identity = economy_identity();
+    context.caller_scope_identity = caller_scope_identity();
+    context.action_vocabulary_size = operators.size();
+    context.action_vocabulary_identity = retained == nullptr
+        ? action_vocabulary_identity()
+        : action_vocabulary_prefix_identity(
+              retained->continuation.context.action_vocabulary_size);
+    context.mechanics_artifact_identity = artifact_identity();
+    context.exact_terminal_identity = goal_identity();
+    const auto& continuation = retained == nullptr
+        ? static_cast<const solve_detail::ResumableJointPolicyContinuation*>(
+              nullptr)
+        : &retained->continuation;
+    if (continuation != nullptr) {
+        context.boundary_identity = continuation->context.boundary_identity;
+        context.graph_row_count = continuation->context.graph_row_count;
+        context.graph_priced_row_count =
+            continuation->context.graph_priced_row_count;
+        context.graph_successor_count =
+            continuation->context.graph_successor_count;
+        context.graph_probability_count =
+            continuation->context.graph_probability_count;
+        context.graph_choice_count =
+            continuation->context.graph_choice_count;
+        context.graph_choice_successor_count =
+            continuation->context.graph_choice_successor_count;
+        context.graph_choice_option_count =
+            continuation->context.graph_choice_option_count;
+    } else {
+        std::uint64_t boundary = 1469598103934665603ULL;
+        identity_mix_string(boundary, "joint_policy_boundary_snapshot_v1");
+        if (output_incumbent.has_value()) {
+            identity_mix(boundary, output_incumbent->portfolio_identity);
+            identity_mix(
+                boundary,
+                std::bit_cast<std::uint64_t>(
+                    output_incumbent->evaluated_policy_cost));
+            identity_mix(boundary, output_incumbent->values.size());
+            for (const double value : output_incumbent->values) {
+                identity_mix(boundary, std::bit_cast<std::uint64_t>(value));
+            }
+            identity_mix(
+                boundary, output_incumbent->frontier_operators.size());
+            for (const std::uint32_t action :
+                 output_incumbent->frontier_operators) {
+                identity_mix(boundary, action);
+            }
+        }
+        context.boundary_identity = boundary;
+        context.graph_row_count = transition_cache->rows.size();
+        context.graph_priced_row_count = priced_rows.size();
+        context.graph_successor_count = transition_cache->successors.size();
+        context.graph_probability_count =
+            transition_cache->probabilities.size();
+        context.graph_choice_count = transition_cache->choices.size();
+        context.graph_choice_successor_count =
+            transition_cache->choice_successors.size();
+        context.graph_choice_option_count =
+            transition_cache->choice_options.size();
+    }
+    context.graph_prefix_identity = incumbent_graph_prefix_identity(
+        context.graph_row_count, context.graph_priced_row_count,
+        context.graph_successor_count, context.graph_probability_count,
+        context.graph_choice_count, context.graph_choice_successor_count,
+        context.graph_choice_option_count);
+    context.source_generation = transition_cache->rows.size();
+    context.target_generation = calc.state_count();
+    /* The broad sparse graph is append-only in this solver. New rows are an
+     * allowed generation advance, while action/admission removal has no
+     * generation in this path and therefore remains schema generation one. */
+    context.action_generation = 1;
+    context.admission_generation = 1;
+    context.value_snapshot_generation =
+        static_cast<std::uint64_t>(sweeps) + incremental_reoptimizations;
+    context.proof_snapshot_generation = incremental_anytime_policy_attempts;
+    if (output_incumbent.has_value()) {
+        context.incumbent_identity = output_incumbent->portfolio_identity;
+        context.incumbent_exact_cost =
+            output_incumbent->independently_evaluated &&
+                    std::isfinite(output_incumbent->evaluated_policy_cost)
+                ? output_incumbent->evaluated_policy_cost
+                : output_incumbent->certified_upper_bound;
+    }
+    return context;
+}
+
+solve_detail::JointPolicyContinuationNode
+SolveWork::Impl::joint_policy_continuation_node(
+        const std::uint32_t state) const {
+    solve_detail::JointPolicyContinuationNode node;
+    node.locator = state;
+    if (state < calc.state_count()) {
+        node.semantic_key = exact_abstract_state_key(calc.state(state), 0);
+    }
+    return node;
+}
+
+bool SolveWork::Impl::joint_policy_row_completed(
+        const std::uint64_t row) const {
+    if (row >= transition_cache->rows.size() || row >= priced_rows.size() ||
+        priced_rows[row].operator_index == kNoId) {
+        return false;
+    }
+    if (transition_cache->rows[row].admitted) return true;
+    return std::any_of(
+        incremental_alternative_rows.begin(),
+        incremental_alternative_rows.end(),
+        [&](const IncrementalAlternativeRow& alternative) {
+            return alternative.row_index == row;
+        });
+}
+
+std::uint64_t SolveWork::Impl::select_joint_policy_seed_row(
+        const std::uint32_t state,
+        const std::vector<double>& selection_values) const {
+    const std::uint64_t no_row =
+        std::numeric_limits<std::uint64_t>::max();
+    if (state >= transition_cache->state_rows.size()) return no_row;
+    const auto goal_probability = [&](const std::uint64_t row_index) {
+        const SparseRow& row = transition_cache->rows.at(row_index);
+        WideFloat probability{0.0};
+        for (std::uint32_t i = 0; i < row.transition_count; ++i) {
+            const std::uint64_t offset = row.transition_offset + i;
+            const std::uint32_t successor =
+                transition_cache->successors.at(offset);
+            if (successor < result.goal_states.size() &&
+                result.goal_states[successor]) {
+                probability += WideFloat{
+                    transition_cache->probabilities.at(offset)};
+            }
+        }
+        for (std::uint32_t i = 0; i < row.choice_count; ++i) {
+            const SparseChoiceGroup& group = transition_cache->choices.at(
+                row.choice_offset + i);
+            bool reaches_goal = false;
+            for (std::uint32_t option = 0;
+                 option < group.successor_count; ++option) {
+                const std::uint32_t successor =
+                    transition_cache->choice_successors.at(
+                        group.successor_offset + option);
+                reaches_goal |= successor < result.goal_states.size() &&
+                    result.goal_states[successor];
+            }
+            if (reaches_goal) probability += WideFloat{group.probability};
+        }
+        return probability.value();
+    };
+    const auto progress_probability = [&](const std::uint64_t row_index) {
+        const SparseRow& row = transition_cache->rows.at(row_index);
+        const std::uint32_t owner_progress = std::popcount(
+            satisfied_goal_mask_for_state(state));
+        const auto advances = [&](const std::uint32_t successor) {
+            return successor < result.goal_states.size() &&
+                (result.goal_states[successor] ||
+                 std::popcount(satisfied_goal_mask_for_state(successor)) >
+                     owner_progress);
+        };
+        WideFloat probability{0.0};
+        for (std::uint32_t i = 0; i < row.transition_count; ++i) {
+            const std::uint64_t offset = row.transition_offset + i;
+            if (advances(transition_cache->successors.at(offset))) {
+                probability += WideFloat{
+                    transition_cache->probabilities.at(offset)};
+            }
+        }
+        for (std::uint32_t i = 0; i < row.choice_count; ++i) {
+            const SparseChoiceGroup& group = transition_cache->choices.at(
+                row.choice_offset + i);
+            bool advances_choice = false;
+            for (std::uint32_t option = 0;
+                 option < group.successor_count; ++option) {
+                advances_choice |= advances(
+                    transition_cache->choice_successors.at(
+                        group.successor_offset + option));
+            }
+            if (advances_choice) probability += WideFloat{group.probability};
+        }
+        return probability.value();
+    };
+    std::uint64_t best = no_row;
+    std::tuple<int, double, double, double, std::uint64_t> best_key{
+        std::numeric_limits<int>::max(), kInfinity, kInfinity, kInfinity,
+        no_row};
+    for (const std::uint64_t row_index :
+         state_row_indices(*transition_cache, state)) {
+        if (!joint_policy_row_completed(row_index)) continue;
+        const PricedSparseRow& priced = priced_rows[row_index];
+        if (priced.operator_index >= calc.operators().size() ||
+            !std::isfinite(priced.cost) || priced.cost < 0.0) {
+            continue;
+        }
+        const double goal = goal_probability(row_index);
+        const double progress = progress_probability(row_index);
+        const bool restart = priced.operator_index == restart_operator_index;
+        const int class_rank = progress > 0.0 ? 0 : restart ? 1 : 2;
+        const double attempt_cost = progress > 0.0
+            ? priced.cost / progress
+            : priced.cost;
+        const auto key = std::tuple{
+            class_rank, attempt_cost, -goal, -progress, row_index};
+        if (key < best_key) {
+            best_key = key;
+            best = row_index;
+        }
+    }
+    (void)selection_values;
+    return best;
+}
+
+solve_detail::JointPolicySemanticKey
+SolveWork::Impl::joint_policy_row_semantic_key(
+        const std::uint32_t state,
+        const std::uint64_t row_index,
+        const std::vector<double>& selection_values) const {
+    solve_detail::JointPolicySemanticKey key{0x6a70726f775f7631ull};
+    if (!joint_policy_row_completed(row_index) ||
+        transition_cache->rows[row_index].owner_state != state) {
+        return {};
+    }
+    const auto append_key = [&](const solve_detail::JointPolicySemanticKey& in) {
+        key.push_back(in.size());
+        key.insert(key.end(), in.begin(), in.end());
+    };
+    append_key(exact_abstract_state_key(calc.state(state), 0));
+    const PricedSparseRow& priced = priced_rows[row_index];
+    if (priced.operator_index >= calc.operators().size()) return {};
+    append_key(planner_operator_semantic_key(
+        calc.operators()[priced.operator_index]));
+    key.push_back(std::bit_cast<std::uint64_t>(priced.cost));
+    const SparseRow& row = transition_cache->rows[row_index];
+    key.push_back(std::bit_cast<std::uint64_t>(row.self_probability));
+    key.push_back(
+        std::bit_cast<std::uint64_t>(row.embedded_self_probability));
+    key.push_back(row.self_probability_embedded);
+    key.push_back(row.transition_count);
+    for (std::uint32_t i = 0; i < row.transition_count; ++i) {
+        const std::uint64_t offset = row.transition_offset + i;
+        key.push_back(std::bit_cast<std::uint64_t>(
+            transition_cache->probabilities.at(offset)));
+        append_key(exact_abstract_state_key(
+            calc.state(transition_cache->successors.at(offset)), 0));
+    }
+    key.push_back(row.choice_count);
+    for (std::uint32_t i = 0; i < row.choice_count; ++i) {
+        const SparseChoiceGroup& choice = transition_cache->choices.at(
+            row.choice_offset + i);
+        key.push_back(std::bit_cast<std::uint64_t>(choice.probability));
+        key.push_back(choice.has_self);
+        key.push_back(choice.successor_count);
+        for (std::uint32_t option = 0;
+             option < choice.successor_count; ++option) {
+            append_key(exact_abstract_state_key(
+                calc.state(transition_cache->choice_successors.at(
+                    choice.successor_offset + option)),
+                0));
+        }
+        const std::uint32_t selected =
+            select_sparse_policy_choice_successor(
+                *transition_cache, choice, state, selection_values);
+        if (selected == kNoId) return {};
+        append_key(exact_abstract_state_key(calc.state(selected), 0));
+    }
+    key.push_back(priced.choice_option_count);
+    for (std::uint32_t i = 0; i < priced.choice_option_count; ++i) {
+        const OutcomeChoiceOption& option = transition_cache->choice_options.at(
+            priced.choice_option_offset + i);
+        key.push_back(option.mod_id);
+        key.push_back(option.state);
+        key.push_back(option.observation_state);
+        key.push_back(option.actual_state);
+    }
+    return key;
+}
+
+solve_detail::JointPolicyContinuationResolvedState
+SolveWork::Impl::resolve_joint_policy_continuation_state(
+        const solve_detail::JointPolicyContinuationNode& source,
+        const ResumableJointPolicyCandidateState& retained) const {
+    using Resolved = solve_detail::JointPolicyContinuationResolvedState;
+    Resolved resolved;
+    resolved.source = joint_policy_continuation_node(source.locator);
+    if (resolved.source != source) {
+        resolved.kind = Resolved::Kind::Unsupported;
+        return resolved;
+    }
+    if (calc.is_goal_state(calc.state(source.locator))) {
+        resolved.kind = Resolved::Kind::Goal;
+        return resolved;
+    }
+    const auto& continuation = retained.continuation;
+    const std::uint64_t row = select_joint_policy_seed_row(
+        source.locator, continuation.selection_values);
+    if (row == std::numeric_limits<std::uint64_t>::max()) {
+        const bool boundary =
+            source.locator < continuation.certified_boundary_values.size() &&
+            source.locator < continuation.certified_frontier_actions.size() &&
+            std::isfinite(
+                continuation.certified_boundary_values[source.locator]) &&
+            continuation.certified_boundary_values[source.locator] >= 0.0 &&
+            continuation.certified_frontier_actions[source.locator] != kNoId &&
+            continuation.certified_frontier_actions[source.locator] <
+                calc.operators().size();
+        resolved.kind = boundary
+            ? Resolved::Kind::CertifiedBoundary
+            : Resolved::Kind::Missing;
+        return resolved;
+    }
+    resolved.kind = Resolved::Kind::Row;
+    resolved.row_locator = row;
+    resolved.row_semantic_key = joint_policy_row_semantic_key(
+        source.locator, row, continuation.selection_values);
+    if (resolved.row_semantic_key.empty()) {
+        resolved.kind = Resolved::Kind::Unsupported;
+        return resolved;
+    }
+    const PricedSparseRow& priced = priced_rows[row];
+    resolved.action_semantic_key = planner_operator_semantic_key(
+        calc.operators()[priced.operator_index]);
+    const SparseRow& sparse = transition_cache->rows[row];
+    for (std::uint32_t i = 0; i < sparse.transition_count; ++i) {
+        const std::uint64_t offset = sparse.transition_offset + i;
+        if (transition_cache->probabilities.at(offset) > 0.0) {
+            resolved.successors.push_back(joint_policy_continuation_node(
+                transition_cache->successors.at(offset)));
+        }
+    }
+    for (std::uint32_t i = 0; i < sparse.choice_count; ++i) {
+        const SparseChoiceGroup& choice = transition_cache->choices.at(
+            sparse.choice_offset + i);
+        if (!(choice.probability > 0.0)) continue;
+        const std::uint32_t selected =
+            select_sparse_policy_choice_successor(
+                *transition_cache, choice, source.locator,
+                continuation.selection_values);
+        if (selected == kNoId) {
+            resolved.kind = Resolved::Kind::Unsupported;
+            return resolved;
+        }
+        resolved.observed_choices.push_back(
+            {i, joint_policy_continuation_node(selected)});
+    }
+    return resolved;
+}
+
+solve_detail::JointPolicyContinuationRefusal
+SolveWork::Impl::validate_joint_policy_continuation_decision(
+        const solve_detail::JointPolicyContinuationDecision& decision,
+        const ResumableJointPolicyCandidateState& retained) const {
+    using Refusal = solve_detail::JointPolicyContinuationRefusal;
+    if (decision.source !=
+        joint_policy_continuation_node(decision.source.locator)) {
+        return Refusal::StaleIdentity;
+    }
+    if (!joint_policy_row_completed(decision.row_locator) ||
+        joint_policy_row_semantic_key(
+            decision.source.locator, decision.row_locator,
+            retained.continuation.selection_values) !=
+                decision.row_semantic_key) {
+        return Refusal::StructuralPrefixInvalid;
+    }
+    const PricedSparseRow& priced = priced_rows[decision.row_locator];
+    if (priced.operator_index >= calc.operators().size() ||
+        planner_operator_semantic_key(calc.operators()[priced.operator_index]) !=
+            decision.action_semantic_key) {
+        return Refusal::ActionOrRowUnavailable;
+    }
+    return Refusal::None;
+}
+
+bool SolveWork::Impl::capture_resumable_joint_policy_candidate(
+        const std::uint32_t expected_missing_state,
+        const std::vector<double>& selection_values,
+        const std::vector<double>& certified_boundary_values,
+        const std::vector<std::uint32_t>& certified_frontier_operators,
+        const std::vector<std::uint8_t>& certified_boundary_reachable,
+        const FocusedFallbackWitness& certified_fallback,
+        const PrimitiveRenewalWitness& certified_renewal,
+        const std::uint64_t root_estimate_provenance) {
+    using Lifecycle = solve_detail::JointPolicyContinuationLifecycle;
+    if (options.carrier_ladder_exact_boundary_mode !=
+            CarrierLadderExactBoundaryMode::ResumableContinuation ||
+        resumable_joint_policy_candidate.has_value() ||
+        !output_incumbent.has_value() ||
+        !std::isfinite(output_incumbent->certified_upper_bound) ||
+        output_incumbent->values.empty() ||
+        output_incumbent->frontier_operators.empty() ||
+        expected_missing_state >= calc.state_count() ||
+        result.start_state >= selection_values.size()) {
+        return false;
+    }
+    const double root_estimate = selection_values[result.start_state];
+    if (!std::isfinite(root_estimate) || root_estimate < 0.0 ||
+        root_estimate > output_incumbent->certified_upper_bound +
+                value_comparison_tolerance(
+                    output_incumbent->certified_upper_bound)) {
+        return false;
+    }
+    ResumableJointPolicyCandidateState retained;
+    retained.continuation =
+        solve_detail::ResumableJointPolicyContinuation::capture(
+            current_joint_policy_continuation_context(),
+            joint_policy_continuation_node(result.start_state),
+            selection_values, certified_boundary_values,
+            certified_frontier_operators, root_estimate,
+            root_estimate_provenance, calc.state_count());
+    retained.certified_fallback = certified_fallback;
+    retained.certified_renewal = certified_renewal;
+    retained.certified_boundary_reachable = certified_boundary_reachable;
+    retained.carrier_epochs_at_capture = incremental_carrier_ladder_epochs;
+    retained.refinement_rounds_at_capture = incremental_refinement_rounds;
+    retained.sweeps_at_capture = sweeps;
+    retained.carrier_epochs_before_last_resume =
+        incremental_carrier_ladder_epochs;
+    retained.refinement_rounds_before_last_resume =
+        incremental_refinement_rounds;
+    retained.sweeps_before_last_resume = sweeps;
+    resumable_joint_policy_candidate.emplace(std::move(retained));
+    ResumableJointPolicyCandidateState& candidate =
+        *resumable_joint_policy_candidate;
+    const auto advanced = candidate.continuation.advance(
+        [&](const solve_detail::JointPolicyContinuationNode& state) {
+            return resolve_joint_policy_continuation_state(state, candidate);
+        },
+        [&](const solve_detail::JointPolicyContinuationDecision& decision) {
+            return validate_joint_policy_continuation_decision(
+                decision, candidate);
+        },
+        options.carrier_ladder_exact_boundary_limits.max_exact_work);
+    const bool captured_expected =
+        advanced.lifecycle ==
+            Lifecycle::WaitingForExactContinuation &&
+        candidate.continuation.missing ==
+            joint_policy_continuation_node(expected_missing_state) &&
+        candidate.continuation.retained_owned_bytes() <=
+            options.carrier_ladder_exact_boundary_limits.max_owned_bytes;
+    if (!captured_expected) {
+        resumable_joint_policy_candidate.reset();
+        return false;
+    }
+    return true;
+}
+
+SolveWork::Impl::ResumableJointPolicyAdvance
+SolveWork::Impl::resume_joint_policy_candidate_if_ready() {
+    using Lifecycle = solve_detail::JointPolicyContinuationLifecycle;
+    using Refusal = solve_detail::JointPolicyContinuationRefusal;
+    if (options.carrier_ladder_exact_boundary_mode !=
+            CarrierLadderExactBoundaryMode::ResumableContinuation ||
+        !resumable_joint_policy_candidate.has_value()) {
+        return ResumableJointPolicyAdvance::NoProgress;
+    }
+    ResumableJointPolicyCandidateState& retained =
+        *resumable_joint_policy_candidate;
+    if (retained.continuation.lifecycle == Lifecycle::CompleteCandidate) {
+        return ResumableJointPolicyAdvance::Complete;
+    }
+    if (retained.continuation.lifecycle == Lifecycle::Refused) {
+        return ResumableJointPolicyAdvance::Released;
+    }
+    const Refusal incompatible = retained.continuation.compatible_with(
+        current_joint_policy_continuation_context(&retained));
+    if (incompatible != Refusal::None) {
+        retained.continuation.release(incompatible);
+        return ResumableJointPolicyAdvance::Released;
+    }
+    if (retained.continuation.lifecycle !=
+        Lifecycle::WaitingForExactContinuation) {
+        return ResumableJointPolicyAdvance::NoProgress;
+    }
+    if (!retained.continuation.extend_state_capacity(calc.state_count())) {
+        retained.continuation.release(Refusal::StaleGeneration);
+        return ResumableJointPolicyAdvance::Released;
+    }
+    if (retained.continuation.retained_owned_bytes() >
+        options.carrier_ladder_exact_boundary_limits.max_owned_bytes) {
+        retained.continuation.release(Refusal::ResourceInterrupted);
+        return ResumableJointPolicyAdvance::Released;
+    }
+    const std::uint32_t missing = retained.continuation.missing.locator;
+    if (select_joint_policy_seed_row(
+            missing, retained.continuation.selection_values) ==
+        std::numeric_limits<std::uint64_t>::max()) {
+        return ResumableJointPolicyAdvance::NoProgress;
+    }
+    retained.ordinary_interleave_events +=
+        incremental_carrier_ladder_epochs -
+            retained.carrier_epochs_before_last_resume +
+        incremental_refinement_rounds -
+            retained.refinement_rounds_before_last_resume +
+        sweeps - retained.sweeps_before_last_resume;
+    if (!retained.continuation.mark_resumable(
+            joint_policy_continuation_node(missing))) {
+        retained.continuation.release(Refusal::ActionOrRowUnavailable);
+        return ResumableJointPolicyAdvance::Released;
+    }
+    const auto advanced = retained.continuation.advance(
+        [&](const solve_detail::JointPolicyContinuationNode& state) {
+            return resolve_joint_policy_continuation_state(state, retained);
+        },
+        [&](const solve_detail::JointPolicyContinuationDecision& decision) {
+            return validate_joint_policy_continuation_decision(
+                decision, retained);
+        },
+        options.carrier_ladder_exact_boundary_limits.max_exact_work);
+    retained.carrier_epochs_before_last_resume =
+        incremental_carrier_ladder_epochs;
+    retained.refinement_rounds_before_last_resume =
+        incremental_refinement_rounds;
+    retained.sweeps_before_last_resume = sweeps;
+    if (retained.continuation.retained_owned_bytes() >
+        options.carrier_ladder_exact_boundary_limits.max_owned_bytes) {
+        retained.continuation.release(Refusal::ResourceInterrupted);
+        return ResumableJointPolicyAdvance::Released;
+    }
+    if (advanced.lifecycle == Lifecycle::WaitingForExactContinuation) {
+        const std::uint32_t next = retained.continuation.missing.locator;
+        if (std::find(
+                incremental_anytime_missing_frontier_states.begin(),
+                incremental_anytime_missing_frontier_states.end(), next) ==
+            incremental_anytime_missing_frontier_states.end()) {
+            incremental_anytime_missing_frontier_states.push_back(next);
+            ++incremental_missing_frontier_discovered;
+            incremental_missing_frontier_max_open = std::max<std::uint64_t>(
+                incremental_missing_frontier_max_open,
+                incremental_anytime_missing_frontier_states.size());
+        }
+        return ResumableJointPolicyAdvance::Yielded;
+    }
+    if (advanced.lifecycle == Lifecycle::CompleteCandidate) {
+        return ResumableJointPolicyAdvance::Complete;
+    }
+    return ResumableJointPolicyAdvance::Released;
+}
+
 bool SolveWork::Impl::try_install_reachable_incumbent(
         const bool require_resource_stop,
         const JointAnytimeAttemptLineage::Trigger trigger) {
@@ -3697,6 +4404,28 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
             record_attempt_failure("precondition_not_satisfied");
             return false;
         }
+
+        ResumableJointPolicyAdvance continuation_advance =
+            ResumableJointPolicyAdvance::NoProgress;
+        if (!require_resource_stop) {
+            continuation_advance = resume_joint_policy_candidate_if_ready();
+            if (continuation_advance ==
+                    ResumableJointPolicyAdvance::Yielded ||
+                continuation_advance ==
+                    ResumableJointPolicyAdvance::Released) {
+                record_attempt_failure(
+                    continuation_advance ==
+                            ResumableJointPolicyAdvance::Yielded
+                        ? "resumable_candidate_waiting_for_next_continuation"
+                        : "resumable_candidate_released");
+                return false;
+            }
+        }
+        const bool retained_candidate_ready =
+            continuation_advance == ResumableJointPolicyAdvance::Complete &&
+            resumable_joint_policy_candidate.has_value() &&
+            !resumable_joint_policy_candidate
+                 ->handed_off_for_evaluation;
 
         const std::size_t state_count = calc.state_count();
         if (options.carrier_ladder_exact_boundary_mode !=
@@ -3737,7 +4466,21 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
         std::vector<std::uint8_t> certified_boundary_reachable;
         FocusedFallbackWitness certified_fallback;
         PrimitiveRenewalWitness certified_renewal;
-        if (output_incumbent.has_value()) {
+        if (retained_candidate_ready) {
+            const ResumableJointPolicyCandidateState& retained =
+                *resumable_joint_policy_candidate;
+            certified_boundary_values =
+                retained.continuation.certified_boundary_values;
+            certified_boundary_values.resize(state_count, kInfinity);
+            certified_frontier_operators =
+                retained.continuation.certified_frontier_actions;
+            certified_frontier_operators.resize(state_count, kNoId);
+            certified_boundary_reachable =
+                retained.certified_boundary_reachable;
+            certified_boundary_reachable.resize(state_count, 0);
+            certified_fallback = retained.certified_fallback;
+            certified_renewal = retained.certified_renewal;
+        } else if (output_incumbent.has_value()) {
             certified_boundary_values = output_incumbent->values;
             certified_boundary_values.resize(state_count, kInfinity);
             certified_frontier_operators =
@@ -3940,12 +4683,28 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
         };
 
         try {
-            result.values = certified_boundary_values.empty()
-                ? saved_values
-                : certified_boundary_values;
+            result.values = retained_candidate_ready
+                ? resumable_joint_policy_candidate
+                      ->continuation.selection_values
+                : certified_boundary_values.empty()
+                      ? saved_values
+                      : certified_boundary_values;
             result.values.resize(state_count, kValueCeiling);
             result.expanded.assign(state_count, 0);
             policy_rows.assign(state_count, no_row);
+            if (retained_candidate_ready) {
+                for (const auto& decision :
+                     resumable_joint_policy_candidate
+                         ->continuation.fixed_decisions) {
+                    if (decision.source.locator < policy_rows.size()) {
+                        policy_rows[decision.source.locator] =
+                            decision.row_locator;
+                    }
+                }
+                resumable_joint_policy_candidate
+                    ->handed_off_for_evaluation = true;
+                ++resumable_joint_policy_candidate->handoff_count;
+            }
             if (result.goal_states.size() < state_count) {
                 result.goal_states.resize(state_count, 0);
                 for (std::uint32_t state = 0; state < state_count; ++state) {
@@ -4178,8 +4937,10 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
 
             const auto capture_failed_prefix =
                 [&](const std::uint32_t target_state) {
-                    if (options.carrier_ladder_exact_boundary_mode ==
-                            CarrierLadderExactBoundaryMode::Off ||
+                    if ((options.carrier_ladder_exact_boundary_mode !=
+                             CarrierLadderExactBoundaryMode::Record &&
+                         options.carrier_ladder_exact_boundary_mode !=
+                             CarrierLadderExactBoundaryMode::Recover) ||
                         carrier_ladder_exact_boundary_capture.has_value()) {
                         return;
                     }
@@ -4445,6 +5206,27 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                                             ? transition_cache
                                                   ->state_rows[state].count
                                             : 0);
+                                std::uint64_t completed_identity =
+                                    1469598103934665603ULL;
+                                identity_mix_string(
+                                    completed_identity,
+                                    "resumable_joint_policy_completed_rows_v1");
+                                for (std::uint64_t completed_row = 0;
+                                     completed_row < completed.size();
+                                     ++completed_row) {
+                                    if (completed[completed_row]) {
+                                        identity_mix(
+                                            completed_identity,
+                                            completed_row);
+                                    }
+                                }
+                                capture_resumable_joint_policy_candidate(
+                                    state, result.values,
+                                    certified_boundary_values,
+                                    certified_frontier_operators,
+                                    certified_boundary_reachable,
+                                    certified_fallback, certified_renewal,
+                                    completed_identity);
                                 capture_failed_prefix(state);
                                 return false;
                             }

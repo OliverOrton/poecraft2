@@ -84,6 +84,7 @@ struct JointPolicyContinuationContext {
     std::uint64_t economy_identity = 0;
     std::uint64_t caller_scope_identity = 0;
     std::uint64_t action_vocabulary_identity = 0;
+    std::uint64_t action_vocabulary_size = 0;
     std::uint64_t mechanics_artifact_identity = 0;
     std::uint64_t exact_terminal_identity = 0;
     std::uint64_t boundary_identity = 0;
@@ -242,7 +243,9 @@ public:
         if (context.graph_prefix_identity != current.graph_prefix_identity) {
             return JointPolicyContinuationRefusal::StructuralPrefixInvalid;
         }
-        if (current.source_generation < context.source_generation ||
+        if (current.action_vocabulary_size <
+                context.action_vocabulary_size ||
+            current.source_generation < context.source_generation ||
             current.target_generation < context.target_generation ||
             current.action_generation != context.action_generation ||
             current.admission_generation != context.admission_generation) {
@@ -271,6 +274,17 @@ public:
             return false;
         }
         lifecycle = JointPolicyContinuationLifecycle::Resumable;
+        return true;
+    }
+
+    bool extend_state_capacity(const std::size_t state_capacity) {
+        if (state_capacity < processed.size() ||
+            processed.size() != reachable.size()) {
+            return false;
+        }
+        processed.resize(state_capacity, 0);
+        reachable.resize(state_capacity, 0);
+        refresh_retained_peak();
         return true;
     }
 
@@ -515,6 +529,7 @@ private:
                    left.economy_identity,
                    left.caller_scope_identity,
                    left.action_vocabulary_identity,
+                   left.action_vocabulary_size,
                    left.mechanics_artifact_identity,
                    left.exact_terminal_identity,
                    left.boundary_identity,
@@ -539,6 +554,7 @@ private:
                    right.economy_identity,
                    right.caller_scope_identity,
                    right.action_vocabulary_identity,
+                   right.action_vocabulary_size,
                    right.mechanics_artifact_identity,
                    right.exact_terminal_identity,
                    right.boundary_identity,
@@ -574,6 +590,7 @@ private:
         mix(hash, context.economy_identity);
         mix(hash, context.caller_scope_identity);
         mix(hash, context.action_vocabulary_identity);
+        mix(hash, context.action_vocabulary_size);
         mix(hash, context.mechanics_artifact_identity);
         mix(hash, context.exact_terminal_identity);
         mix(hash, context.boundary_identity);

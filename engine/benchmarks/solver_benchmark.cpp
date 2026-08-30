@@ -58,6 +58,7 @@ struct Arguments {
     bool validate_only = false;
     bool fragment_contract_rejection_probes = false;
     bool fragment_shadow_only = false;
+    bool resumable_joint_policy_continuation_diagnostic = false;
     bool skip_verification = false;
     bool emit_progress = false;
     bool goal_progress_gated_reforges = false;
@@ -955,9 +956,13 @@ carrier_ladder_exact_boundary_diagnostic_config(
     } else if (mode == "recover") {
         config.mode = poecraft::solver::
             CarrierLadderExactBoundaryMode::Recover;
+    } else if (mode == "resumable_continuation") {
+        config.mode = poecraft::solver::
+            CarrierLadderExactBoundaryMode::ResumableContinuation;
     } else {
         throw std::runtime_error(
-            "carrier_ladder_exact_boundary_v1 mode must be off, record, or recover");
+            "carrier_ladder_exact_boundary_v1 mode must be off, record, "
+            "recover, or resumable_continuation");
     }
     const Value& caps = required(*control, "caps", Type::Object);
     const std::set<std::string> required_caps = {
@@ -3054,6 +3059,7 @@ CaseResult run_case(
     const std::uint32_t max_discovered_states_override,
     const bool exact_strategy_evaluation,
     const double exact_strategy_evaluation_time_limit_seconds,
+    const bool resumable_joint_policy_continuation_diagnostic,
     const fs::path& development_checkpoint_save,
     const fs::path& development_checkpoint_load,
     const std::string& development_checkpoint_identity_prefix,
@@ -3276,8 +3282,20 @@ CaseResult run_case(
             optional_u32(caps, "solve_step_work_items", 1);
         pc_error_info error;
         pc_error_info_init(&error);
-        const auto boundary_config =
+        auto boundary_config =
             carrier_ladder_exact_boundary_diagnostic_config(specification);
+        if (resumable_joint_policy_continuation_diagnostic) {
+            if (boundary_config.has_value()) {
+                throw std::runtime_error(
+                    "--resumable-joint-policy-continuation-diagnostic "
+                    "cannot override a case-owned carrier diagnostic");
+            }
+            poecraft::solver::CarrierLadderExactBoundaryDiagnosticConfig
+                config;
+            config.mode = poecraft::solver::
+                CarrierLadderExactBoundaryMode::ResumableContinuation;
+            boundary_config = config;
+        }
         if (boundary_config.has_value()) {
             const pc_result configured = poecraft::solver::
                 configure_solver_carrier_ladder_exact_boundary_diagnostic(
@@ -5441,6 +5459,10 @@ Arguments parse_arguments(int argc, char** argv) {
         else if (argument == "--fragment-shadow-only") {
             args.fragment_shadow_only = true;
         }
+        else if (argument ==
+                 "--resumable-joint-policy-continuation-diagnostic") {
+            args.resumable_joint_policy_continuation_diagnostic = true;
+        }
         else if (argument == "--progress") args.emit_progress = true;
         else if (argument == "--goal-progress-gated-reforges") {
             args.goal_progress_gated_reforges = true;
@@ -5518,6 +5540,14 @@ Arguments parse_arguments(int argc, char** argv) {
         throw std::runtime_error(
             "--fragment-shadow-only accepts no ordinary solve output, "
             "checkpoint, or verification option");
+    }
+    if (args.resumable_joint_policy_continuation_diagnostic &&
+        (args.validate_only || args.case_id.empty() ||
+         args.fragment_shadow_only ||
+         args.fragment_contract_rejection_probes)) {
+        throw std::runtime_error(
+            "--resumable-joint-policy-continuation-diagnostic requires one "
+            "ordinary selected --case");
     }
     if (!args.partial_output.empty() && args.case_id.empty()) {
         throw std::runtime_error(
@@ -5786,6 +5816,7 @@ int main(int argc, char** argv) {
                     args.max_discovered_states_override,
                     args.exact_strategy_evaluation,
                     args.exact_strategy_evaluation_time_limit_seconds,
+                    args.resumable_joint_policy_continuation_diagnostic,
                     args.development_checkpoint_save,
                     args.development_checkpoint_load,
                     development_checkpoint_identity_prefix,

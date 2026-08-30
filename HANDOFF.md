@@ -29,21 +29,30 @@ missing state is handed to ordinary exact refinement, but stack-local selected
 rows, observation routing, reachability, and traversal cursor are destroyed by
 `restore`, so the next checkpoint reconstructs the complete attempt. Phase 2
 now retains those candidate-local concepts in an internal snapshot-pure state
-machine. Its focused two-resume fixture passes 51 checks with zero failures.
+machine. Phase 3 connected it only to benchmark-private diagnostics and proved
+the same candidate identity across two resumptions, three missing states,
+append-only action and state growth, and 43 ordinary interleave events, with no
+global prefix reconstruction or stale discard. Its focused two-resume fixture
+passes 54 checks with zero failures.
 
-Next connect the object only to the existing benchmark-private diagnostic,
-retain one candidate from an actual ordinary missing-prefix attempt, and emit
-bounded identity/resume/yield/row/work/byte lineage. Do not run PDR until the
-native diagnostic itself can demonstrate a second wait/resume without a new
-capture. Then run one PDR causal witness; clean-five still follows only if PDR
-passes.
+The final private PDR witness independently exact-evaluated the ordinary
+published strategy at `3758.12442725521` Chaos, `8608.87713157432` expected
+actions, success one, zero off-policy mass, complete reconciled pricing, and
+strategy SHA-256
+`c5ddf81a73eeec532a3efdbcbe661216942c32464ac51127401bd657b3aa1597`.
+Candidate `51d67b3219b70c43` did not publish it; it remained safely waiting on
+its third obligation after two resumptions. Next promote only this proved
+service mechanism into ordinary interleaving, include its retained bytes in
+normal solver cap accounting, and preserve ordinary compiler/evaluator/
+publication authority. Run one production PDR gate after the focused fixture;
+clean-five still follows only if production PDR passes.
 
 ## Retained Repository State
 
 - The production selection/scheduler path remains behaviorally unchanged from
-  `b690cad`; the retained source addition is an unconnected internal contract
-  plus focused fixture. All rejected fixed-window and sticky-witness changes
-  exist only in ignored evidence.
+  `b690cad`; the current integration is reachable only through the private
+  benchmark diagnostic flag. All rejected fixed-window and sticky-witness
+  changes exist only in ignored evidence.
 - The user-requested rebuilt
   `bindings/wasm/dist/poecraft_engine.wasm` is the only retained binary change
   at this handoff. No test result is claimed for it; Oliver owns frontend
@@ -56,5 +65,6 @@ passes.
   moved, cleaned, or deleted. Preserve it exactly.
 - Reproduce the current focused checkpoint with
   `build/engine/poecraft_engine_tests.exe --solver-joint-policy-continuation-only`.
-  Last result: 51 checks, zero failures. Broad tests, long solves, WASM rebuild,
-  and Simulator are unrun for this checkpoint.
+  Last result: 54 checks, zero failures. The native benchmark target also
+  builds. Broad tests, WASM rebuild, and Simulator are unrun for this
+  checkpoint.

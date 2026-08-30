@@ -16,6 +16,7 @@ enum class CarrierLadderExactBoundaryMode : std::uint8_t {
     Off = 0,
     Record,
     Recover,
+    ResumableContinuation,
 };
 
 struct CarrierLadderExactBoundaryLimits {

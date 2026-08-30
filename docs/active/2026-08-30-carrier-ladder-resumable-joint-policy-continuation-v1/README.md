@@ -1,6 +1,7 @@
 # Carrier-Ladder Resumable Joint-Policy Continuation v1
 
-**Status: active — Phase 2 contract/fixture passed; Phase 3 integration next.**
+**Status: active — Phase 3 benchmark-private causal proof passed; Phase 4
+production promotion next.**
 
 ## Objective
 
@@ -128,11 +129,49 @@ bounded projections belong in this document.
   supplied admissible lower.
 - Focused evidence: native target built successfully; command
   `build/engine/poecraft_engine_tests.exe --solver-joint-policy-continuation-only`
-  passed 51 checks with zero failures. No long solve or Simulator run was
-  launched. Next, connect this object only to the benchmark-private diagnostic
-  mode, expose bounded lineage in the existing report, rebuild the native
-  benchmark, and run one PDR causal witness only after the diagnostic shows
-  the same identity can reach its second wait state.
+  initially passed 51 checks with zero failures. No long solve or Simulator
+  run was launched for that checkpoint.
+- 2026-08-30: connected the object only to benchmark-private
+  `resumable_continuation` mode and emitted bounded lineage under the existing
+  carrier-ladder diagnostic report. The first causal PDR witness captured
+  candidate `1cbf53094bd04aa9` and named missing state
+  `cbcf6552cf31d0da`, but correctly refused `stale_identity` after the action
+  vocabulary grew append-only from 288 to 300 entries. The fixed selected rows
+  remained semantically valid, proving the identity contract had bound the
+  mutable suffix too broadly.
+- 2026-08-30: changed compatibility to bind the exact capture-time action
+  prefix plus monotone vocabulary size; every retained decision still validates
+  the complete planner action and row semantic keys. The second causal PDR
+  witness deterministically captured candidate `51d67b3219b70c43`, resumed it
+  once, appended the serviced row, and then refused `stale_generation` because
+  the candidate's numeric state-index vectors had capture-time capacity 3431
+  while the exact graph had grown append-only to 5742 states. This named the
+  remaining representational defect rather than weakening graph compatibility.
+- 2026-08-30: made bounded state-index capacity growth explicit and extended
+  the mechanics-independent fixture across two graph-growth/resume cycles.
+  The focused command now passes 54 checks with zero failures. The final causal
+  PDR witness at
+  `build/qualification/resumable-joint-policy-continuation-v1/pdr-diagnostic-r3/report.json`
+  retained candidate `51d67b3219b70c43` through two resumptions and three
+  distinct missing states (`cbcf6552cf31d0da`, `c5a8e1d23d3e1891`, and
+  `4049f0ae084648d7`), with one capture, three yields, 1,189 fixed decisions,
+  48,183 retained work, zero global reconstruction, zero stale discard, and
+  43 ordinary interleave events. Source/target generations grew from
+  13,564/3,431 to 150,188/7,242 while the exact action prefix remained equal
+  and the action vocabulary grew to 306 entries. Retained candidate ownership
+  was 169,227,180 bytes with 350,576 transient peak bytes.
+- The same final diagnostic let the ordinary solver close independently exact,
+  compile, and reconcile PDR at `3758.12442725521` Chaos,
+  `8608.87713157432` expected actions, success `1`, off-policy mass `0`, and
+  strategy SHA-256
+  `c5ddf81a73eeec532a3efdbcbe661216942c32464ac51127401bd657b3aa1597`.
+  The retained candidate did not hand off or publish: it remained safely
+  waiting on its third obligation. This is causal proof that candidate-local
+  resumption improves ordinary exact service without acquiring planner,
+  compiler, evaluator, or publication authority. Next, enable the proved
+  mechanism in ordinary interleaving, include its retained ownership in normal
+  solver memory accounting, preserve bounded refusal/release behavior, and run
+  the single production PDR gate before any clean-five run.
 
 ## Outcome
 

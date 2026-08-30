@@ -1570,6 +1570,23 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
                 best_verified_upper, finalization_verified_upper);
         }
     } incumbent_portfolio;
+    struct ResumableJointPolicyCandidateState {
+        solve_detail::ResumableJointPolicyContinuation continuation;
+        FocusedFallbackWitness certified_fallback;
+        PrimitiveRenewalWitness certified_renewal;
+        std::vector<std::uint8_t> certified_boundary_reachable;
+        std::uint64_t carrier_epochs_at_capture = 0;
+        std::uint64_t refinement_rounds_at_capture = 0;
+        std::uint64_t sweeps_at_capture = 0;
+        std::uint64_t carrier_epochs_before_last_resume = 0;
+        std::uint64_t refinement_rounds_before_last_resume = 0;
+        std::uint64_t sweeps_before_last_resume = 0;
+        std::uint64_t ordinary_interleave_events = 0;
+        std::uint64_t handoff_count = 0;
+        bool handed_off_for_evaluation = false;
+    };
+    std::optional<ResumableJointPolicyCandidateState>
+        resumable_joint_policy_candidate;
     std::optional<BoundedPolicyIncumbent>& output_incumbent =
         incumbent_portfolio.output;
     std::optional<UnverifiedSelectedPolicyCandidate>&
@@ -1958,6 +1975,54 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         bool require_resource_stop,
         JointAnytimeAttemptLineage::Trigger trigger =
             JointAnytimeAttemptLineage::Trigger::IncrementalCheckpoint);
+
+    solve_detail::JointPolicyContinuationContext
+    current_joint_policy_continuation_context(
+        const ResumableJointPolicyCandidateState* retained = nullptr) const;
+
+    solve_detail::JointPolicyContinuationNode
+    joint_policy_continuation_node(std::uint32_t state) const;
+
+    bool joint_policy_row_completed(std::uint64_t row) const;
+
+    std::uint64_t select_joint_policy_seed_row(
+        std::uint32_t state,
+        const std::vector<double>& selection_values) const;
+
+    solve_detail::JointPolicySemanticKey joint_policy_row_semantic_key(
+        std::uint32_t state,
+        std::uint64_t row,
+        const std::vector<double>& selection_values) const;
+
+    solve_detail::JointPolicyContinuationResolvedState
+    resolve_joint_policy_continuation_state(
+        const solve_detail::JointPolicyContinuationNode& state,
+        const ResumableJointPolicyCandidateState& retained) const;
+
+    solve_detail::JointPolicyContinuationRefusal
+    validate_joint_policy_continuation_decision(
+        const solve_detail::JointPolicyContinuationDecision& decision,
+        const ResumableJointPolicyCandidateState& retained) const;
+
+    bool capture_resumable_joint_policy_candidate(
+        std::uint32_t expected_missing_state,
+        const std::vector<double>& selection_values,
+        const std::vector<double>& certified_boundary_values,
+        const std::vector<std::uint32_t>& certified_frontier_operators,
+        const std::vector<std::uint8_t>& certified_boundary_reachable,
+        const FocusedFallbackWitness& certified_fallback,
+        const PrimitiveRenewalWitness& certified_renewal,
+        std::uint64_t root_estimate_provenance);
+
+    enum class ResumableJointPolicyAdvance : std::uint8_t {
+        NoProgress = 0,
+        Yielded,
+        Complete,
+        Released,
+    };
+
+    ResumableJointPolicyAdvance
+    resume_joint_policy_candidate_if_ready();
 
     bool maybe_install_incremental_anytime_incumbent();
 
