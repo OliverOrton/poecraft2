@@ -234,8 +234,126 @@ ID and path, 2,900,507-byte size, content SHA-256
 and the same five recover-A artifact IDs and hashes listed above. Gate 5
 passes.
 
-## Gate 6 — Pending
+## 2026-08-29 — Committed-Source And Gate 6 Closeout
 
-Run final affected-layer acceptance, release WASM/web parity, the full
-repository pipeline, then perform documentation/scope audits, archive, and
-local-only closeout.
+Implementation checkpoint:
+`3d3d63ad3c959dc501b45570f8e21943755130d2` (`Attribute state 213 row
+service lifecycle`). The checkpoint contains only the benchmark-private typed
+witness, focused native controls, and governing active documentation.
+
+### Committed-source identity replay
+
+Before the clean native relink, the executable remained SHA-256
+`e79b2c9318f05acb2a75185ace09fd85b7796071f12a65fd220d848c832652c4`.
+Fresh committed-source off/record jobs were:
+
+| Mode | Complete key | Job / attempt | Core / full / job identity | Report SHA-256 |
+| --- | --- | --- | --- | --- |
+| off | `state-213-service-final-off-v1` | `job-b1fcedae-498f-4795-8fad-c7617d393814` / `attempt-4d7416ca-b13d-431d-91e3-0136e9b4715a` | `36af24c162bf6f87d524fd8d7273020cd77d5c928127dedd8abad9092f1f0aff` / `e70a1d309768a01c9869b0924d1eb5b5bf7e59b185418183a5c9642696fa2696` / `72a78191ecbeba062c404d5dcade13c7822d221ded812765dbe5a7ff97b729a6` | `a91ef7d7c8268a029687f042308f37554031c373dc3c0babe687137993f9f9f3` |
+| record | `state-213-service-final-record-v1` | `job-d27fa9ac-9ed0-46d5-9f1a-2997986ddbe8` / `attempt-d17163cd-bb97-40f6-9077-187acf607a99` | `36af24c1...` / `73226302108503c77103ab09c9fc1db2ffcbb3972ec14a5de3b566a14f575b14` / `83c7b1537b15d22a0c50f9ec8b63ba3dfd16a1a17e8f4e30f03b36ebdc0b42a1` | `65536c831eb07972f20c90e87d8d3abdbc8bb25b0b07c3250ee0cc753bc17d52` |
+
+The structured comparison again reports full request unequal, core solve
+identity equal, ordinary result identity equal, all 20 core components equal,
+and all nine ordinary result components equal.
+
+Committed-source transition-capped recovery A used key
+`state-213-service-final-recover-a-v1`, job
+`job-110a8237-1673-4fdb-bc0b-cd81b8383e4d`, attempt
+`attempt-461ff299-432f-4733-a01f-8a1c297d4d53`, full/job identities
+`3b619b7b56d3f9e35612a65aaeb014fc9ef5d7aa39b076c52839319b76a1322d` /
+`852e7954f0d93ab4f10a5b473ecf6bd9a804e549db8b4174405332c1dac80ea9`,
+and report SHA-256
+`a110275b11aa8a86a5dd9937f33cae5508266ace8c4158325afedd9414d65b4c`.
+It exactly reproduces the two earlier final-executable recovery runs' private
+identities and counts.
+
+Two additional committed-source observations used jobs
+`job-e6aa72cc-0a71-47e1-a7eb-ceedbc46d95e` /
+`job-ed0117e8-7d3f-42fe-ad8d-5c3144be4358`, attempts
+`attempt-3f43df03-3694-4762-89f6-87427f0a9df8` /
+`attempt-653edfd2-15a8-41f0-adfb-33d1c6baff3b`, and report SHA-256 values
+`4cb2d45a03aaddb55df7b41c14263a032520200bc5ce4fcaf1ea60ac8e15bc9c` /
+`3f00d967e144de0e25e040943ce17d271753a19755c52ef730e4f10ec577e3d7`.
+Both truthfully hit `max_wall_time_ms` before `max_transitions`; they retain
+the same state-213 witness and first support-edge sample but are excluded from
+the deterministic count-equality claim. This is cap behavior, not a solver
+failure or permission to raise the wall limit.
+
+Committed-source bundle key `state-213-service-final-bundle-v1` created and
+replayed `bundle-626f38027bb41319c1053b3d`, 2,899,112 bytes, content SHA-256
+`e950de545eadff17ee7fd548c35eaa9be9b816e28c172b919be364351c1cfef1`,
+with stable path and artifact identities.
+
+Committed-source artifact entries are `kind: artifact ID / content SHA-256`:
+
+- off: ordinary `artifact-c6640f0d48090700ace8ad7b3c293c5a` / `35e285c59df6d6ca1b54b34e0ee922cfd600c1b4aa92fb149d2ecda932a94a57`; partial `artifact-a8c5c31c78376ca5c1a144039753cdfa` / `53d3f4fd4358243f561a9c91cd6429c81e6b60ec2a32c7169609a9a305c464a4`; report `artifact-96aa66485b7bff1380faa8c31c4324a7` / `a91ef7d7c8268a029687f042308f37554031c373dc3c0babe687137993f9f9f3`; strategy `artifact-3d8b6a8bc1a44c54bfe057dca02beea2` / `bee87369fee733fff3d2e093eae5fa914ddd6616badcbf6f324234e4d95d8892`; log `artifact-cf8e412b3a4c43070049afc3c5f22555` / `c7413fcd2a56cedeae6388638d0b50b626b813aa6ad5d7ea5b2408f333c43935`.
+- record: ordinary `artifact-9fac66b056fd7a6db55f995493763f8c` / `ecdb83585a6d8fb8fb2817305cd6ec5382dc531a8cb21aab4e66f3564ee88843`; partial `artifact-328182c48af14014840ee9d1b5675de3` / `4bfdf2e8777c02e21f2ea225c5f24f01f0adcad166def64bbc87d49dd2867d60`; report `artifact-59f62240d361f61976ae397d3f18ce89` / `65536c831eb07972f20c90e87d8d3abdbc8bb25b0b07c3250ee0cc753bc17d52`; strategy `artifact-c77de48ffa401115ed2f8395033de03f` / `bee87369fee733fff3d2e093eae5fa914ddd6616badcbf6f324234e4d95d8892`; log `artifact-d9eafbd2a666c451168abf0627e9a433` / `066a3a79029d9309c01b07a020595aeab8b63ce623b11fe848f6273239827433`.
+- recovery A: ordinary `artifact-b50a4192afde62d9f7fa6a7157b096ea` / `2b2b4453add68d95102cc973037994f5eed6d4bf6a8b4702b69eebf91ce38568`; partial `artifact-5fa9328bd11b772c4662e35aadb066e9` / `5d8de3aa50b2643532dd0aed5d80b7c0cbec92f9f0a6d6c6487c97c3972d8ec1`; report `artifact-86484fde24984d7de69e11d0705b04d2` / `a110275b11aa8a86a5dd9937f33cae5508266ace8c4158325afedd9414d65b4c`; strategy `artifact-9adcd08368fbb36d2d5699bdb667886e` / `bee87369fee733fff3d2e093eae5fa914ddd6616badcbf6f324234e4d95d8892`; log `artifact-e9853e41061717f3dc2ae32f8adcb940` / `43653865822387a9683ebaa318ca4457efb6b0a9a4e54ee4a022101448163d9f`.
+- wall observation B: ordinary `artifact-f27d56d83b6224399d3c3c5602e53d08` / `38756daf749ff5c01bf62ceddfe5c7f218ea05e482e29ed23ae226eabb8df654`; partial `artifact-190b165341b85c60c690778e4f72cc63` / `eb56e736c2ca919e80d78638d965ec041880891903b0c9efa6ec588850cfa1ec`; report `artifact-c2de0b2e7702954ef65d05c8cce0d5fd` / `4cb2d45a03aaddb55df7b41c14263a032520200bc5ce4fcaf1ea60ac8e15bc9c`; strategy `artifact-1ae655b704a42af1eded0a425acc1bcd` / `bee87369fee733fff3d2e093eae5fa914ddd6616badcbf6f324234e4d95d8892`; log `artifact-d263ce42295533a398eaff0f7b0b3e01` / `f8cafcfb1575bfcca3952c83b19b42d9942427b19f6078b3d63b2ac829928ba8`.
+- wall observation C: ordinary `artifact-7e3980250935c54ec18306aed8825fde` / `9f57e884599b9b3871263fceebb761fffde1533abf123493f431c951cde2edc1`; partial `artifact-6e22cc0d0e15850ebd6d1956e67c1440` / `e3dcd25c27701e9f4d9cf7c8ff76466ce79b532c8ff81aa292d8cb4e18107a2f`; report `artifact-3029f1694cbb2aa09a20a23cd032ea88` / `3f00d967e144de0e25e040943ce17d271753a19755c52ef730e4f10ec577e3d7`; strategy `artifact-c539162e335818332557511f3dc60ef3` / `bee87369fee733fff3d2e093eae5fa914ddd6616badcbf6f324234e4d95d8892`; log `artifact-fe34563e6d7728efd11fdde3fe1f636c` / `3deb998d05dddfc7faefbac3449a0020f6a0b3ea6f20b402f20fcc16882a1ed8`.
+
+### Clean relink and post-relink evidence
+
+`powershell -File scripts/build.ps1` passed. The relinked benchmark executable
+SHA-256 is
+`33b00a678191e53eac057b756cc121516635c7f6f875857bc84c1b01bfeb2450`.
+Post-relink key `state-213-service-post-relink-recover-v1`, job
+`job-be76aa17-474f-4129-9b7a-5f273620ace5`, and attempt
+`attempt-95bee28a-2846-4155-91c5-3ca9a0ea9ad7` bind core/full/job identities
+`713936a84ab5edcde363ac3e7af93bb6140a611f857c4f55225b16a16f984051`,
+`a7c9d3cf4dd6aadf0573936d7c4718ebc455abf2b3ba344645fe7c7bb2f2a56c`,
+and `d8162f71f897c67f30f1ff514fe1577bb0f93ce719379a89fea2903098fc8c62`.
+Report SHA-256 is
+`4f8bb86a797b80097ea71ef317a9de127384efbe97f2eb402f4e0646ccbfa64d`.
+Executable binding intentionally changes request/core identity; all ordinary
+results, state-213 witness identities, selection/prefix/exit/source
+identities, exact private counts, support identity, reached-stop count,
+strategy bytes, and exact evaluation equal the transition-capped Gate 5
+evidence.
+
+The post-relink artifact ledger is:
+
+- ordinary `artifact-d53e30a6a969019a73fb4acf36b50b9c` /
+  `5424127898887af634176be202cc3c85bd52e995c395f2c3b37e9260ef11d582`;
+- partial `artifact-f558a342e8f14602d8e94d910c9e3502` /
+  `e1d2109e161c09a45cfb695c2fc77888803861d73883c3ed28907057a0c7c62a`;
+- report `artifact-4961f41a2fc3ec8f30ce6b2565b3f476` /
+  `4f8bb86a797b80097ea71ef317a9de127384efbe97f2eb402f4e0646ccbfa64d`;
+- strategy `artifact-7f5d0e392a4ea46c8fac349b3b2ec9d8` /
+  `bee87369fee733fff3d2e093eae5fa914ddd6616badcbf6f324234e4d95d8892`;
+  and
+- log `artifact-dd180f41757bcee5e3a6eec12d6a1a2a` /
+  `2da88f8577c67d89902a2488732d27ae864458ef03df887ca3c9b091b912cf49`.
+
+### Acceptance results
+
+1. Complete affected native suites passed: refinement 379/0, policy
+   refinement 2,083/0, solve 86,235/0, compile 583/0, evaluator 15,761/0,
+   API 2,816/0, and fragment 220/0.
+2. All 13 native benchmark specifications validated. The complete Solver Lab
+   and structured CLI pytest batch passed 73 tests.
+3. Release WASM rebuilt to 6,567,617 bytes with SHA-256
+   `fcecd0e6fdabad7dc6a141d1d396c1a43880aea55d45d5bf9f1ce7eb0d63a053`.
+   `npm test` and `npx tsc --noEmit` passed.
+4. The first full `powershell -File scripts/test.ps1` invocation passed every
+   Python/data/native/benchmark stage and 3,417,683 native checks, then hit a
+   timing race in the web finalization-cancellation assertion at
+   `engine-smoke.test.ts:1642`. The isolated engine-smoke suite immediately
+   passed 28/28 without a source change, confirming no retained regression.
+   A complete rerun then passed all ingest/data/fixture/artifact/binding
+   checks, 3,417,683 native checks with zero failures, all 13 benchmark
+   specifications, and the full web suite.
+
+No compiled strategy behavior changed, so no new standalone 10,000-run
+strategy qualification was required. Existing affected and full native/web
+acceptance still ran their normal simulator controls.
+
+Gate 6 passes with the valid completion outcome **diagnosis-only**.
+
+Final `git diff --check` and local documentation-link audit passed. Relative
+to implementation checkpoint `3d3d63a`, the scope contains only regenerated
+release WASM plus stable internals, handoff, active/archive indexes, and this
+archived boundary. Native source and focused tests are unchanged from the
+checkpoint. No public C ABI, strategy vocabulary, mechanic, canonical data,
+GUI, action catalogue, fragment integration, product default, or protected
+untracked `0` change is present. No push was performed.

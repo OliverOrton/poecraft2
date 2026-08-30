@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-08-29
 
+- [Carrier-Ladder State-213 Service Coverage v1](2026-08-29-carrier-ladder-state-213-service-coverage-v1/README.md) —
+  retains a two-stage row-service witness and proves diagnosis-only that state
+  213 was observed early in the ordinary queue before naturally receiving six
+  completed selectable rows; no action-catalogue, ladder-service, fragment,
+  or ordinary behavior change was authorized.
 - [Carrier-Ladder Selected-Prefix Closure v1](2026-08-29-carrier-ladder-selected-prefix-closure-v1/README.md) —
   treats unresolved captured stops as non-goal absorbing observations, retains
   a bounded exact support-edge witness, and proves diagnosis-only that coarse

@@ -1,16 +1,12 @@
 # Active Work
 
-**Status: one implementation boundary is active.**
+**Status: no implementation boundary is active.**
 
 Parent: [Documentation map](../README.md)
 
 ## Current work
 
-- [Carrier-Ladder State-213 Service Coverage v1](2026-08-29-carrier-ladder-state-213-service-coverage-v1/plan.md) —
-  attributes why ordinary completed-row service ends at coarse state 213 after
-  selected root Chaos and permits a repair only for an already-authorized
-  lifecycle omission; fragments, catalogue expansion, and cap changes remain
-  out of scope.
+None. Oliver chooses the next chunk before implementation resumes.
 
 ## Historical work
 

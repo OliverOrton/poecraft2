@@ -31,20 +31,24 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The selected
-[Carrier-Ladder State-213 Service Coverage v1](active/2026-08-29-carrier-ladder-state-213-service-coverage-v1/plan.md)
-boundary attributes why ordinary completed-row service ends at coarse state
-213 after selected root Chaos. It permits a repair only for an existing-
-authority lifecycle omission and does not authorize fragment composition,
-action-catalogue expansion, cap changes, or broader solver redesign.
+No implementation boundary is active. Oliver chooses the next chunk before
+implementation resumes.
+
+The completed diagnosis-only
+[Carrier-Ladder State-213 Service Coverage v1](archive/2026-08-29-carrier-ladder-state-213-service-coverage-v1/README.md)
+boundary retains a two-stage row-service witness and proves that state 213 was
+captured early while first in the ordinary queue, then naturally received six
+completed, priced, selectable rows before ordinary publication. There is no
+action-catalogue or ladder-service defect to repair; ordinary behavior remains
+unchanged and fragment composition remains parked.
 
 The completed
 [Carrier-Ladder Selected-Prefix Closure v1](archive/2026-08-29-carrier-ladder-selected-prefix-closure-v1/README.md)
 boundary makes unresolved captured stops explicit non-goal observations and
 retains a bounded exact support-edge witness. Cumulative-10 closes diagnosis-
-only at coarse state 213 after selected root Chaos because no completed
-selected row exists there; ordinary behavior is unchanged and fragment
-composition remains parked.
+only at an early observation of coarse state 213 after selected root Chaos;
+the later service-coverage boundary establishes that ordinary service
+naturally completes its rows before publication.
 
 The completed diagnosis-only
 [Carrier-Ladder Exact Boundary Contract v1](archive/2026-08-29-carrier-ladder-exact-boundary-contract-v1/README.md)

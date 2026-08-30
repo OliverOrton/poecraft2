@@ -1,8 +1,8 @@
 # Carrier-Ladder State-213 Service Coverage v1
 
-**Status: active; Gates 0-5 passed diagnosis-only, Gate 6 final acceptance in
-progress on 2026-08-29.** Oliver selected this boundary from clean source
-checkpoint `c51e6e3f8e30eeb683a964ddd6f971119d509368` by asking to continue the
+**Status: completed diagnosis-only on 2026-08-29.** Oliver selected this
+boundary from clean source checkpoint
+`c51e6e3f8e30eeb683a964ddd6f971119d509368` by asking to continue the
 recommended ladder work.
 
 Parent: [Active work](../README.md)
@@ -23,7 +23,7 @@ fragment composition, or build a second solver.
 ## Starting Evidence
 
 The completed
-[selected-prefix closure](../../../archive/2026-08-29-carrier-ladder-selected-prefix-closure-v1/result.md)
+[selected-prefix closure](../2026-08-29-carrier-ladder-selected-prefix-closure-v1/result.md)
 proved the deterministic strict edge:
 
 - predecessor coarse state 0 selects operator 5 (`chaos`);

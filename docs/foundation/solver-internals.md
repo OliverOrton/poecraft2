@@ -163,18 +163,28 @@ also request an exact ordinary completed-row fence; zero preserves the normal
 wall-clock requested-finish behavior.
 
 The cumulative-10 qualification closed diagnosis-only: strict replay reaches
-the captured unresolved non-goal coarse state 213 from the selected root Chaos
-row. State 213 has no captured or completed selected row, so no support closure
-is authorized and the named missing parent remains unrecovered. Recovery
-retains one bounded first predecessor/action/outcome witness and streams the
-reached-stop count/identity without storing every event. Complete exact keys
-remain internal; public telemetry exposes their collision-checked identities
-and word counts with complete coarse, operator, semantic, probability, row,
-reachability, and completion facts. This attributes the next owner to ordinary
-completed-row/service coverage rather than an action-catalogue omission or
-fragment composition. The diagnostic remains private to the benchmark/Lab
-path and adds no public ABI, release-WASM input, strategy vocabulary, or
-product behavior.
+captured unresolved non-goal coarse state 213 from the selected root Chaos
+row. A bounded, versioned two-stage row-service witness now distinguishes the
+capture-time observation from terminal ordinary publication. At capture,
+state 213 is first in the ordinary queue and has no declared rows. By terminal
+publication, ordinary service has completed six owned, admitted, priced,
+valid, selectable rows for it. The earlier missing-row observation was stale
+with respect to the naturally completed ordinary solve; it was not an action-
+catalogue, scheduler, row-service, or fragment defect and authorized no
+ordinary behavior repair.
+
+The service witness binds its state, graph generation, row lifecycle,
+scheduler position, action-envelope ledger, cap, and finish facts to fixed
+deterministic identities. Recovery still retains one bounded first
+predecessor/action/outcome witness and streams the reached-stop count/identity
+without storing every event. Complete exact keys remain internal; public
+telemetry exposes collision-checked identities and word counts with complete
+coarse, operator, semantic, probability, row, reachability, and completion
+facts. The diagnostic remains private to the benchmark/Lab path and adds no
+public ABI, strategy vocabulary, action authority, fragment integration, or
+product behavior. The common native source is compiled into release WASM, but
+the diagnostic remains disabled and has no release-WASM input or product
+activation path.
 
 ## Benchmark-Private Verified Leaf Fragments
 
