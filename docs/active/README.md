@@ -1,16 +1,14 @@
 # Active Work
 
-**Status: one implementation boundary is active.**
+**Status: no implementation boundary is active.**
 
 Parent: [Documentation map](../README.md)
 
 ## Current work
 
-[Carrier-Ladder Released-Candidate Reclamation v1](2026-08-30-carrier-ladder-released-candidate-reclamation-v1/README.md)
-is repairing the measured lifecycle defect behind the rejected clean-five
-production result. Private evidence now proves that the over-cap candidate can
-reclaim its payload and restore the qualified ordinary upper while preserving
-the bounded active-yield preference required by PDR.
+No boundary is active. The qualified sequencing point is now the proof-only
+PDR Retention-Capacity Operator-Proof Pilot v1; its plan should be activated
+only from measured live PDR obligation shapes.
 
 ## Historical work
 

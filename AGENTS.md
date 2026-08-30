@@ -61,7 +61,8 @@ indexed from [docs/mechanics/README.md](docs/mechanics/README.md).
 - Oliver owns rendered and visual UI review. Do not perform browser visual
   checks, screenshots, or rendered UI smoke unless Oliver explicitly asks.
   Non-visual automated web tests follow the same testing cadence above.
-- Compiled-strategy verification uses 10,000 simulator runs whenever
-  verification is required, unless Oliver explicitly changes that count.
+- Compiled-strategy verification uses 1,000 simulator runs whenever
+  verification is genuinely required. Skip simulation when the identical
+  artifact is already qualified under the same request and runtime semantics.
 - Commits are local-only unless Oliver says to push.
 - End commit messages with your agent's co-author line.

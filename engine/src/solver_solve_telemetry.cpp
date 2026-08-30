@@ -1605,6 +1605,22 @@ std::uint64_t SolveWork::Impl::audited_estimated_owned_bytes() const {
             calc.audited_estimated_owned_bytes();
         const std::uint64_t audited =
             estimated_owned_bytes_with_calc(calc_bytes);
+        if (resumable_joint_policy_candidate.has_value()) {
+            const std::uint64_t candidate_audited =
+                resumable_joint_policy_candidate
+                    ->audited_owned_payload_bytes();
+            if (candidate_audited !=
+                resumable_joint_policy_candidate
+                    ->current_owned_payload_bytes) {
+                throw std::logic_error(
+                    "resumable joint-policy candidate owned-byte cache "
+                    "drifted (audited=" +
+                    std::to_string(candidate_audited) + ", cached=" +
+                    std::to_string(
+                        resumable_joint_policy_candidate
+                            ->current_owned_payload_bytes) + ")");
+            }
+        }
         const std::uint64_t fast =
             fast_estimated_owned_bytes_with_calc(calc.fast_estimated_owned_bytes());
         ++owned_byte_reconciliations;
@@ -1898,6 +1914,10 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
                      .certification_policy_route_default_mode.capacity() + 1;
         bytes += owned_result_nested_bytes;
         bytes += output_incumbent_owned_bytes();
+        if (resumable_joint_policy_candidate.has_value()) {
+            bytes += resumable_joint_policy_candidate
+                         ->current_owned_payload_bytes;
+        }
         if (finalization_task.has_value()) {
             bytes += finalization_task->retained_bytes();
         }
@@ -2149,6 +2169,10 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
         bytes += result.refined_policy_artifact
                      .certification_policy_route_default_mode.capacity() + 1;
         bytes += output_incumbent_owned_bytes();
+        if (resumable_joint_policy_candidate.has_value()) {
+            bytes += resumable_joint_policy_candidate
+                         ->current_owned_payload_bytes;
+        }
         if (finalization_task.has_value()) {
             bytes += finalization_task->retained_bytes();
         }

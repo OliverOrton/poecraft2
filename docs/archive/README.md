@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-08-30
 
+- [Carrier-Ladder Released-Candidate Reclamation v1](2026-08-30-carrier-ladder-released-candidate-reclamation-v1/README.md) —
+  reclaims refused resumable-candidate payload, restores ordinary work after
+  terminal refusal, activates bounded candidate continuation in the existing
+  production profile, reproduces exact PDR and clean-five winners, matches two
+  current-main secondary controls, and passes affected native/WASM acceptance.
 - [Historical Five-Goal Quality Regression v1](2026-08-30-historical-five-goal-quality-regression-v1/README.md) —
   reproduces the byte-identical historical 87k strategy, isolates the first
   quality regression to missing-frontier/automatic-epoch scheduling in

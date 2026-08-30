@@ -4222,8 +4222,7 @@ bool SolveWork::Impl::capture_resumable_joint_policy_candidate(
         const PrimitiveRenewalWitness& certified_renewal,
         const std::uint64_t root_estimate_provenance) {
     using Lifecycle = solve_detail::JointPolicyContinuationLifecycle;
-    if (options.carrier_ladder_exact_boundary_mode !=
-            CarrierLadderExactBoundaryMode::ResumableContinuation ||
+    if (!resumable_joint_policy_continuation_enabled() ||
         resumable_joint_policy_candidate.has_value() ||
         !output_incumbent.has_value() ||
         !std::isfinite(output_incumbent->certified_upper_bound) ||
@@ -4259,6 +4258,7 @@ bool SolveWork::Impl::capture_resumable_joint_policy_candidate(
     retained.refinement_rounds_before_last_resume =
         incremental_refinement_rounds;
     retained.sweeps_before_last_resume = sweeps;
+    retained.refresh_owned_payload_bytes();
     resumable_joint_policy_candidate.emplace(std::move(retained));
     ResumableJointPolicyCandidateState& candidate =
         *resumable_joint_policy_candidate;
@@ -4271,12 +4271,13 @@ bool SolveWork::Impl::capture_resumable_joint_policy_candidate(
                 decision, candidate);
         },
         options.carrier_ladder_exact_boundary_limits.max_exact_work);
+    candidate.refresh_owned_payload_bytes();
     const bool captured_expected =
         advanced.lifecycle ==
             Lifecycle::WaitingForExactContinuation &&
         candidate.continuation.missing ==
             joint_policy_continuation_node(expected_missing_state) &&
-        candidate.continuation.retained_owned_bytes() <=
+        candidate.current_owned_payload_bytes <=
             options.carrier_ladder_exact_boundary_limits.max_owned_bytes;
     if (!captured_expected) {
         resumable_joint_policy_candidate.reset();
@@ -4289,8 +4290,7 @@ SolveWork::Impl::ResumableJointPolicyAdvance
 SolveWork::Impl::resume_joint_policy_candidate_if_ready() {
     using Lifecycle = solve_detail::JointPolicyContinuationLifecycle;
     using Refusal = solve_detail::JointPolicyContinuationRefusal;
-    if (options.carrier_ladder_exact_boundary_mode !=
-            CarrierLadderExactBoundaryMode::ResumableContinuation ||
+    if (!resumable_joint_policy_continuation_enabled() ||
         !resumable_joint_policy_candidate.has_value()) {
         return ResumableJointPolicyAdvance::NoProgress;
     }
@@ -4316,7 +4316,8 @@ SolveWork::Impl::resume_joint_policy_candidate_if_ready() {
         retained.continuation.release(Refusal::StaleGeneration);
         return ResumableJointPolicyAdvance::Released;
     }
-    if (retained.continuation.retained_owned_bytes() >
+    retained.refresh_owned_payload_bytes();
+    if (retained.current_owned_payload_bytes >
         options.carrier_ladder_exact_boundary_limits.max_owned_bytes) {
         retained.continuation.release(Refusal::ResourceInterrupted);
         return ResumableJointPolicyAdvance::Released;
@@ -4347,12 +4348,13 @@ SolveWork::Impl::resume_joint_policy_candidate_if_ready() {
                 decision, retained);
         },
         options.carrier_ladder_exact_boundary_limits.max_exact_work);
+    retained.refresh_owned_payload_bytes();
     retained.carrier_epochs_before_last_resume =
         incremental_carrier_ladder_epochs;
     retained.refinement_rounds_before_last_resume =
         incremental_refinement_rounds;
     retained.sweeps_before_last_resume = sweeps;
-    if (retained.continuation.retained_owned_bytes() >
+    if (retained.current_owned_payload_bytes >
         options.carrier_ladder_exact_boundary_limits.max_owned_bytes) {
         retained.continuation.release(Refusal::ResourceInterrupted);
         return ResumableJointPolicyAdvance::Released;

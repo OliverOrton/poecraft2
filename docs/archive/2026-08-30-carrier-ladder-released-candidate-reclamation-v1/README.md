@@ -1,7 +1,7 @@
 # Carrier-Ladder Released-Candidate Reclamation v1
 
-**Status: active implementation boundary.** Oliver selected this evidence-first
-follow-up on 2026-08-30. Work is local-only and must not be pushed.
+**Status: completed — Outcome A.** The narrow lifecycle repair and production
+activation qualified on 2026-08-30. Work is local-only and was not pushed.
 
 Parent: [Active work](../README.md)
 
@@ -110,3 +110,23 @@ the remaining written controls pass, release bytes are genuinely reclaimed,
 ordinary work remains observable after candidate events, native/WASM artifacts
 are current, and the final affected-layer suite is green. No soak result is
 claimed by this boundary.
+
+## Outcome
+
+Outcome A qualified. Terminal refusal now reclaims candidate-owned traversal
+payload and no longer suppresses the ordinary joint-policy attempt. Active
+yield remains a bounded exclusive preference. Production enables the
+resumable path only through the existing high-impact executable-upper profile,
+and cached candidate ownership is reconciled against the audited estimator.
+
+The retained implementation reproduced the exact PDR strategy at
+`3758.1244272552067` Chaos and the clean-five strategy at
+`85408.64362148782` Chaos. Partial four-to-five and non-armour exactly matched
+their current-main controls. Native acceptance and rebuilt-WASM web acceptance
+passed. A 10,000-run PDR simulation was also completed, but the strategy was
+byte-identical to an already qualified artifact, so that rerun was unnecessary
+and is not part of the minimum acceptance rationale.
+
+The next sequenced boundary is the proof-only PDR Retention-Capacity
+Operator-Proof Pilot v1. It must begin in shadow mode from measured live
+obligations and may not change solving, scheduling, publication, or pruning.

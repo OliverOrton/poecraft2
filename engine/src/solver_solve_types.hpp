@@ -1583,13 +1583,27 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         std::uint64_t sweeps_before_last_resume = 0;
         std::uint64_t ordinary_interleave_events = 0;
         std::uint64_t handoff_count = 0;
+        std::uint64_t current_owned_payload_bytes = 0;
         bool handed_off_for_evaluation = false;
+
+        std::uint64_t audited_owned_payload_bytes() const {
+            return continuation.retained_owned_bytes() +
+                certified_boundary_reachable.capacity() *
+                    sizeof(std::uint8_t) +
+                certified_renewal.kernel_signature.capacity() *
+                    sizeof(std::uint64_t);
+        }
+
+        void refresh_owned_payload_bytes() {
+            current_owned_payload_bytes = audited_owned_payload_bytes();
+        }
 
         void release_owned_payload() {
             certified_fallback.reset();
             certified_renewal = PrimitiveRenewalWitness{};
             std::vector<std::uint8_t>().swap(
                 certified_boundary_reachable);
+            refresh_owned_payload_bytes();
         }
     };
     std::optional<ResumableJointPolicyCandidateState>
@@ -2020,6 +2034,14 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         const FocusedFallbackWitness& certified_fallback,
         const PrimitiveRenewalWitness& certified_renewal,
         std::uint64_t root_estimate_provenance);
+
+    bool resumable_joint_policy_continuation_enabled() const {
+        return options.carrier_ladder_exact_boundary_mode ==
+                CarrierLadderExactBoundaryMode::ResumableContinuation ||
+            (options.carrier_ladder_exact_boundary_mode ==
+                 CarrierLadderExactBoundaryMode::Off &&
+             options.high_impact_executable_uppers);
+    }
 
     enum class ResumableJointPolicyAdvance : std::uint8_t {
         NoProgress = 0,
