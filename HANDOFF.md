@@ -1,10 +1,17 @@
 # Handoff
 
-**Status: no implementation boundary is active.**
+**Status: implementation boundary active.**
 
 ## Current Boundary
 
-None. Oliver must select the next chunk before implementation resumes.
+[Carrier-Ladder State-213 Service Coverage v1](docs/active/2026-08-29-carrier-ladder-state-213-service-coverage-v1/plan.md)
+is active from clean source checkpoint
+`c51e6e3f8e30eeb683a964ddd6f971119d509368`.
+
+It diagnoses why ordinary selected-policy service ends at coarse state 213
+after root Chaos and may repair only an already-authorized row lifecycle
+omission. It may not expand the action catalogue, raise caps, change bounded-
+finish authority, begin fragment composition, or redesign the solver.
 
 ## Most Recent Completed Boundary
 
@@ -28,12 +35,12 @@ Full identities and artifacts are in the
 the concise disposition is in the
 [result](docs/archive/2026-08-29-carrier-ladder-selected-prefix-closure-v1/result.md).
 
-## Candidate Next Owner
+## Current Owner
 
-If Oliver selects another ladder chunk, the evidence points first to a narrow
-diagnosis of why ordinary completed-row/service coverage ends at coarse state
-213 after root Chaos. Do not infer an action-catalogue rewrite, fragment
-implementation, or broader solver redesign from this handoff.
+Gate 0 owns source provenance across state discovery, row allocation,
+scheduling, completion, pricing, selection, and failed-prefix capture. The
+first evidence must distinguish absent rows, incomplete rows, rejected rows,
+deliberate frontier/cap ownership, and missed scheduling before any repair.
 
 ## Retained Repository State
 

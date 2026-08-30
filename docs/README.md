@@ -31,9 +31,12 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. [Active work](active/README.md) and
-[HANDOFF](../HANDOFF.md) require Oliver to select the next chunk before
-implementation resumes.
+The selected
+[Carrier-Ladder State-213 Service Coverage v1](active/2026-08-29-carrier-ladder-state-213-service-coverage-v1/plan.md)
+boundary attributes why ordinary completed-row service ends at coarse state
+213 after selected root Chaos. It permits a repair only for an existing-
+authority lifecycle omission and does not authorize fragment composition,
+action-catalogue expansion, cap changes, or broader solver redesign.
 
 The completed
 [Carrier-Ladder Selected-Prefix Closure v1](archive/2026-08-29-carrier-ladder-selected-prefix-closure-v1/README.md)
