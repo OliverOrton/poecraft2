@@ -31,12 +31,15 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The selected
-[Carrier-Ladder Online Continuation Completion v2](active/2026-08-29-carrier-ladder-online-continuation-completion-v2.md)
-boundary uses the completed frozen-row diagnosis to route a live missing
-continuation through the existing exact service lifecycle early enough for a
-later joint-policy retry. It does not introduce a permanent fragment library
-or second planner.
+No implementation boundary is active. Oliver must select the next chunk before
+implementation resumes.
+
+The archived
+[Carrier-Ladder Online Continuation Completion v2](archive/2026-08-29-carrier-ladder-online-continuation-completion-v2/README.md)
+boundary proves that existing exact refinement services live missing
+continuations, then rejects whole-policy retry after every serviced state
+because it materially displaces ordinary work and worsens exact incumbent
+quality. Only benchmark-private lifecycle evidence remains.
 
 The archived
 [Carrier-Ladder Frozen-Graph Candidate Utilization v1](archive/2026-08-29-carrier-ladder-frozen-graph-candidate-utilization-v1/README.md)

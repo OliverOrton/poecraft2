@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-08-29
 
+- [Carrier-Ladder Online Continuation Completion v2](2026-08-29-carrier-ladder-online-continuation-completion-v2/README.md) —
+  proves that existing exact refinement services live missing continuations,
+  then rejects and removes per-state whole-policy retry because it closes 25
+  obligations while materially reducing row work and worsening exact
+  incumbent quality; only benchmark-private lifecycle lineage remains.
 - [Carrier-Ladder Frozen-Graph Candidate Utilization v1](2026-08-29-carrier-ladder-frozen-graph-candidate-utilization-v1/README.md) —
   retains benchmark-private joint-attempt lineage and proves diagnosis-only
   that terminal assembly sees every frozen completed row but remains improper

@@ -45,7 +45,7 @@ cross-layer production behavior was retained.
 
 ## Next Owner
 
-[Carrier-Ladder Online Continuation Completion v2](../../active/2026-08-29-carrier-ladder-online-continuation-completion-v2.md)
+[Carrier-Ladder Online Continuation Completion v2](../2026-08-29-carrier-ladder-online-continuation-completion-v2/README.md)
 owns the narrow follow-up. It must turn a live, exact, solve-local missing
 continuation into existing ordinary row service early enough to retry joint
 assembly. It does not authorize a fragment library, a second planner, cap

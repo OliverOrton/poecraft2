@@ -1470,6 +1470,9 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         std::uint64_t compiled_edges = 0;
         double independently_evaluated_cost = kInfinity;
         bool incumbent_independently_evaluated_before = false;
+        bool requested_bounded_finish_at_attempt = false;
+        bool missing_refinement_selected = false;
+        std::uint32_t missing_refinement_selected_at_expanded_states = kNoId;
         bool completed_rows_monotone = true;
         bool terminal_sees_all_completed_alternative_rows = false;
         bool fixed_policy_proper = false;

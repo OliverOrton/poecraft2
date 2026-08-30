@@ -1980,7 +1980,7 @@ void SolveWork::Impl::refresh_carrier_ladder_exact_boundary_diagnostics(
         }
     }
     json += ",\"joint_anytime_attempt_lineage\":{";
-    json += "\"schema_version\":\"joint_anytime_attempt_lineage_v1\"";
+    json += "\"schema_version\":\"joint_anytime_attempt_lineage_v2\"";
     json += ",\"attempts\":" +
         std::to_string(joint_anytime_attempt_lineage.size());
     json += ",\"terminal_attempts\":" +
@@ -2094,6 +2094,68 @@ void SolveWork::Impl::refresh_carrier_ladder_exact_boundary_diagnostics(
             std::to_string(lineage.renewal_boundary_attempts) + "}";
         json += ",\"fixed_policy_proper\":" +
             std::string(lineage.fixed_policy_proper ? "true" : "false");
+        json +=
+            ",\"online_handoff\":{\"requested_bounded_finish_at_attempt\":" +
+            std::string(
+                lineage.requested_bounded_finish_at_attempt
+                    ? "true" : "false");
+        json += ",\"refinement_selected\":" +
+            std::string(
+                lineage.missing_refinement_selected ? "true" : "false");
+        json += ",\"refinement_selected_at_expanded_states\":";
+        if (lineage.missing_refinement_selected_at_expanded_states == kNoId) {
+            json += "null";
+        } else {
+            json += std::to_string(
+                lineage.missing_refinement_selected_at_expanded_states);
+        }
+        if (lineage.first_missing_state == kNoId) {
+            json += ",\"terminal_state\":null}";
+        } else {
+            const std::uint32_t missing = lineage.first_missing_state;
+            const bool terminal_expanded =
+                missing < expanded.size() && expanded[missing] != 0;
+            const bool terminal_queued =
+                missing < queued.size() && queued[missing] != 0;
+            const bool terminal_carrier = std::find(
+                incremental_carriers.begin(), incremental_carriers.end(),
+                missing) != incremental_carriers.end();
+            const bool terminal_open = std::find(
+                incremental_anytime_missing_frontier_states.begin(),
+                incremental_anytime_missing_frontier_states.end(),
+                missing) !=
+                incremental_anytime_missing_frontier_states.end();
+            std::uint64_t terminal_owned_rows = 0;
+            std::uint64_t terminal_valid_priced_rows = 0;
+            if (transition_cache != nullptr &&
+                missing < transition_cache->state_rows.size()) {
+                const StateRowSpan span =
+                    transition_cache->state_rows[missing];
+                terminal_owned_rows = span.count;
+                const std::uint64_t end = std::min<std::uint64_t>(
+                    transition_cache->rows.size(), span.offset + span.count);
+                for (std::uint64_t row = span.offset; row < end; ++row) {
+                    if (row < priced_rows.size() &&
+                        priced_rows[row].operator_index != kNoId &&
+                        transition_cache->rows[row].owner_state == missing) {
+                        ++terminal_valid_priced_rows;
+                    }
+                }
+            }
+            json += ",\"terminal_state\":{";
+            json += "\"expanded\":" +
+                std::string(terminal_expanded ? "true" : "false");
+            json += ",\"queued\":" +
+                std::string(terminal_queued ? "true" : "false");
+            json += ",\"carrier\":" +
+                std::string(terminal_carrier ? "true" : "false");
+            json += ",\"still_open\":" +
+                std::string(terminal_open ? "true" : "false");
+            json += ",\"owned_rows\":" +
+                std::to_string(terminal_owned_rows);
+            json += ",\"valid_priced_rows\":" +
+                std::to_string(terminal_valid_priced_rows) + "}}";
+        }
         json += ",\"first_missing_continuation\":";
         if (lineage.first_missing_state == kNoId) {
             json += "null";
@@ -3644,6 +3706,8 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
             lineage.trigger = trigger;
             lineage.source_generation = transition_cache->rows.size();
             lineage.target_generation = state_count;
+            lineage.requested_bounded_finish_at_attempt =
+                requested_bounded_finish;
             if (output_incumbent.has_value()) {
                 lineage.incumbent_identity_before =
                     output_incumbent->portfolio_identity;

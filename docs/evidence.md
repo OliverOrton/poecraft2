@@ -6,6 +6,23 @@ routes to them rather than duplicating complete reports.
 
 Parent: [Documentation map](README.md)
 
+## Online Continuation Lifecycle And Retry Cost
+
+The 2026-08-29
+[archived result](archive/2026-08-29-carrier-ladder-online-continuation-completion-v2/result.md)
+proves that missing state 1780 is discovered before bounded finish, selected
+by existing exact refinement, expanded into a carrier, and given five valid
+priced rows. Terminal joint assembly passes it and reaches state 4489 only
+after requested finish. The service path works; the unresolved owner is an
+affordable incremental continuation walk.
+
+A removed benchmark-private per-state retry probe closed 25 successive
+continuations but reduced final rows from 24,578 to 17,233 and worsened exact
+incumbent cost from `1550334.436668944` to `8690805.04129252` under the same
+solve horizon. It is evidence against repeated global reassembly, not a
+retained solver mode. Final source retains only bounded
+`joint_anytime_attempt_lineage_v2` observation.
+
 ## Frozen Carrier-Graph Candidate Utilization
 
 The 2026-08-29

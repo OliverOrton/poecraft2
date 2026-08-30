@@ -1,15 +1,13 @@
 # Active Work
 
-**Status: one implementation boundary is active.**
+**Status: no implementation boundary is active.** Oliver must select the next
+chunk before implementation resumes.
 
 Parent: [Documentation map](../README.md)
 
 ## Current work
 
-[Carrier-Ladder Online Continuation Completion v2](2026-08-29-carrier-ladder-online-continuation-completion-v2.md)
-uses the frozen-graph diagnosis to route one live missing continuation through
-the existing ordinary exact service lifecycle early enough for a later joint
-policy retry. It does not authorize a fragment library or second planner.
+None.
 
 ## Historical work
 

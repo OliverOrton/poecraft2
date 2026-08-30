@@ -1788,6 +1788,18 @@ bool SolveWork::Impl::schedule_incremental_refinement(
         selected_uncertainty = std::min(
             unbounded_priority,
             selected_uncertainty + priority[state]);
+        if (options.carrier_ladder_exact_boundary_mode !=
+                CarrierLadderExactBoundaryMode::Off) {
+            for (JointAnytimeAttemptLineage& lineage :
+                 joint_anytime_attempt_lineage) {
+                if (lineage.first_missing_state == state &&
+                    !lineage.missing_refinement_selected) {
+                    lineage.missing_refinement_selected = true;
+                    lineage.missing_refinement_selected_at_expanded_states =
+                        expanded_count;
+                }
+            }
+        }
     }
     std::deque<std::uint32_t> remainder;
     for (const std::uint32_t state : queue) {
