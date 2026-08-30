@@ -2392,6 +2392,12 @@ SolveWork::Impl::run_publication_pipeline() {
                     candidate.retained_owned_bytes =
                         incumbent_owned_bytes(candidate);
                     incumbent_portfolio.observe_verified(candidate);
+                    if (options.carrier_ladder_exact_boundary_mode ==
+                            CarrierLadderExactBoundaryMode::
+                                ResumableContinuation) {
+                        audit_verified_incumbent_operator_proof_shadow(
+                            candidate);
+                    }
                     record_candidate_sample(
                         candidate, "final_graph_evaluation",
                         "eligible_verified_candidate",

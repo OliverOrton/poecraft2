@@ -112,3 +112,35 @@ a retained production consumer crosses enough layers to require it.
   closest still-competitive shapes by family/goal subset/side capacity, and
   leave every ledger lifecycle unchanged. This is the minimum evidence needed
   to select one live RC consumer rather than optimizing a root display value.
+- Implemented that audit as fixed-capacity full-evidence telemetry. It runs
+  only after an incumbent has passed independent final-graph evaluation,
+  suppresses proof-owner attribution while evaluating the shadow lower, keeps
+  at most 32 deterministic closest-margin samples, and reports zero ledger
+  lifecycle mutations. A mechanics-independent carrier-bound fixture proves
+  a known would-retire comparison, unchanged ledger authority and proof-owner
+  counts, and identity-deduplicated replay. Focused native verification passed
+  2,370 checks with zero failures.
+- The first production diagnostic exposed and then corrected an audit-hook
+  timing mistake: report SHA-256
+  `3B376A0EE46A9D42BAFEE03746F6037049517C343365E2F684661CFC3872412F`
+  reproduced the exact PDR result but audited before the independent flags
+  were installed, so it correctly recorded zero executions. No safety guard
+  was weakened; the hook moved to the verified final-graph transition.
+- The corrected fresh diagnostic converged exact at
+  `3758.1244272552067` after the unchanged 7,213-state expansion. Report
+  SHA-256
+  `219708AAB8194200482345243B1BDCAECFAAAAA38B2B7A18C182372A0741D3BF`
+  records one audit over all 213,532 ledger entries, 8,279 aligned finite
+  upper/lower comparisons, zero would-retire comparisons, 8,279 still
+  competitive comparisons, and zero lifecycle mutations. Family counts were
+  currency 2,950, fossil 2,655, harvest 1,180, fracture 295, protected-side
+  21, temporary-Bench 45, and Eldritch-side 1,133.
+- The deterministic closest-margin samples select
+  `harvest_augment:physical` as the first shadow action, not from frequency
+  but from the measured verified-upper comparison. Its current lower is
+  `792.6016500000001` against an aligned incumbent upper of
+  `15772148.688824013`, a gap of `15771356.087174013`, across the retained
+  clean and occupied goal-subset shapes. This is not evidence for activation;
+  it is the narrow target for one retention/capacity shadow. The pilot must
+  stop if that pattern cannot materially strengthen this live comparison
+  within the existing 16 MiB, 5% growth, soundness, and exact-row gates.

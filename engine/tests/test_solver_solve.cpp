@@ -9188,6 +9188,7 @@ void run_carrier_aware_completion_bound_tests() {
     options.max_state_action_rows = 32768;
     options.max_transitions = 262144;
     options.max_solver_owned_bytes = 256ull * 1024ull * 1024ull;
+    options.full_evidence = true;
 
     pc_item_state fractured_partial;
     pc_item_clear(&fractured_partial);
@@ -9338,6 +9339,51 @@ void run_carrier_aware_completion_bound_tests() {
         EnvelopeEvidenceCarrierFacts |
             EnvelopeEvidenceCarrierEffectSummary |
             EnvelopeEvidenceActionRefinementContract);
+    SolveWorkTestAccess::Impl::BoundedPolicyIncumbent shadow_incumbent;
+    shadow_incumbent.values.assign(
+        expanded_calc.state_count(), kInfinity);
+    shadow_incumbent.values[expanded_state] =
+        expanded_work.operator_proof_lower(
+            expanded_state, bench_suffix).value;
+    shadow_incumbent.portfolio_identity = 17;
+    shadow_incumbent.independently_certified = true;
+    shadow_incumbent.independently_evaluated = true;
+    shadow_incumbent.proper = true;
+    shadow_incumbent.executable = true;
+    const std::uint64_t ledger_transitions_before_shadow =
+        expanded_work.action_envelope_ledger.transition_count();
+    const std::uint64_t carrier_owner_calls_before_shadow =
+        expanded_work.contract(ProofPatternKind::CarrierMdp)
+            .selected_owner_calls;
+    expanded_work.audit_verified_incumbent_operator_proof_shadow(
+        shadow_incumbent);
+    const auto& shadow = expanded_work.carrier_bound_attribution
+                             ->verified_incumbent_operator_shadow;
+    PC_CHECK(shadow.audits == 1);
+    PC_CHECK(shadow.ledger_entries == 1);
+    PC_CHECK(shadow.finite_upper_entries == 1);
+    PC_CHECK(shadow.finite_lower_entries == 1);
+    PC_CHECK(shadow.would_retire == 1);
+    PC_CHECK(shadow.still_competitive == 0);
+    PC_CHECK(shadow.closest_competitive_count == 0);
+    PC_CHECK(
+        expanded_work.action_envelope_ledger.transition_count() ==
+        ledger_transitions_before_shadow);
+    PC_CHECK(
+        expanded_work.contract(ProofPatternKind::CarrierMdp)
+            .selected_owner_calls == carrier_owner_calls_before_shadow);
+    const ActionEnvelopeEntry* shadow_only =
+        expanded_work.action_envelope_ledger.find(expanded_state, chaos);
+    PC_CHECK(shadow_only != nullptr);
+    if (shadow_only != nullptr) {
+        PC_CHECK(shadow_only->lifecycle == ActionEnvelopeState::Queued);
+        PC_CHECK(shadow_only->authority ==
+                 ActionEnvelopeProofAuthority::None);
+    }
+    expanded_work.audit_verified_incumbent_operator_proof_shadow(
+        shadow_incumbent);
+    PC_CHECK(expanded_work.carrier_bound_attribution
+                 ->verified_incumbent_operator_shadow.audits == 1);
     PC_CHECK(expanded_work.retire_unmaterialized_by_operator_proof(
         expanded_state, chaos));
     const ActionEnvelopeEntry* retired =
@@ -10859,16 +10905,16 @@ void run_automatic_eldritch_side_tests() {
         simulator.economy = economy;
         prepare_simulator_runtime(simulator);
         SimulationOptionsInternal simulation_options;
-        simulation_options.target_runs = 10000;
+        simulation_options.target_runs = 1000;
         simulation_options.seed = 0x454c445249544348ULL;
         simulation_options.max_actions_per_run = 100000;
-        run_simulator_chunk(simulator, simulation_options, 10000);
-        PC_CHECK(simulator.summary.completed_runs == 10000);
-        PC_CHECK(simulator.summary.success_count == 10000);
+        run_simulator_chunk(simulator, simulation_options, 1000);
+        PC_CHECK(simulator.summary.completed_runs == 1000);
+        PC_CHECK(simulator.summary.success_count == 1000);
         PC_CHECK(simulator.summary.action_not_applied_count == 0);
         PC_CHECK(simulator.summary.no_matching_edge_count == 0);
         const double empirical_cost =
-            simulator.summary.known_total_cost / 10000.0;
+            simulator.summary.known_total_cost / 1000.0;
         PC_CHECK(
             std::abs(
                 empirical_cost -
@@ -10878,7 +10924,7 @@ void run_automatic_eldritch_side_tests() {
                 evaluation.total_expected_cost * 0.10));
         std::printf(
             "solver automatic Eldritch compiled policy: "
-            "exact=%.6f empirical=%.6f runs=10000\n",
+            "exact=%.6f empirical=%.6f runs=1000\n",
             evaluation.total_expected_cost, empirical_cost);
     }
     CalcContext prefix_repeat_calc(

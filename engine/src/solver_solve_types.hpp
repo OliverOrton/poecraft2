@@ -1726,6 +1726,38 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
             double maximum_margin = -kInfinity;
         };
 
+        static constexpr std::size_t kOperatorShadowSampleLimit = 32;
+        struct OperatorShadowSample {
+            std::uint32_t state = kNoId;
+            std::uint32_t operator_index = kNoId;
+            std::uint32_t satisfied_goal_mask = 0;
+            std::uint32_t blocked_mask = 0;
+            std::uint8_t prefix_count = 0;
+            std::uint8_t suffix_count = 0;
+            std::uint8_t unrelated_occupancy = 0;
+            ActionEnvelopeState lifecycle = ActionEnvelopeState::Queued;
+            double lower = kInfinity;
+            double upper = kInfinity;
+            double absolute_margin = kInfinity;
+        };
+
+        struct VerifiedIncumbentOperatorShadow {
+            std::uint64_t incumbent_identity = 0;
+            std::uint64_t audits = 0;
+            std::uint64_t ledger_entries = 0;
+            std::uint64_t finite_upper_entries = 0;
+            std::uint64_t finite_lower_entries = 0;
+            std::uint64_t would_retire = 0;
+            std::uint64_t still_competitive = 0;
+            std::array<std::uint64_t, kOperatorFamilyCount>
+                would_retire_by_family{};
+            std::array<std::uint64_t, kOperatorFamilyCount>
+                still_competitive_by_family{};
+            std::array<OperatorShadowSample, kOperatorShadowSampleLimit>
+                closest_competitive{};
+            std::size_t closest_competitive_count = 0;
+        };
+
         enum class OperatorLowerSkipReason : std::uint8_t {
             NoFiniteIncumbent = 0,
             Count,
@@ -1766,6 +1798,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
             operator_lower_skips{};
         std::array<std::uint64_t, kOperatorFamilyCount>
             carrier_action_admissions_by_family{};
+        VerifiedIncumbentOperatorShadow verified_incumbent_operator_shadow;
         UpperMilestone first_finite_upper;
         UpperMilestone first_verified_upper;
     };
@@ -2128,10 +2161,12 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
 
     double operator_proof_lower_value(
         const std::uint32_t state,
-        const std::uint32_t operator_index);
+        const std::uint32_t operator_index,
+        bool record_pattern_owners = true);
 
     double carrier_action_bellman_lower_value(
-        std::uint32_t state) const;
+        std::uint32_t state,
+        bool record_pattern_owners = true) const;
 
     solve_detail::ProofLowerValue operator_proof_lower(
         const std::uint32_t state,
@@ -2346,6 +2381,9 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     bool retire_unmaterialized_by_operator_proof(
         std::uint32_t state,
         std::uint32_t operator_index);
+
+    void audit_verified_incumbent_operator_proof_shadow(
+        const BoundedPolicyIncumbent& incumbent);
 
     void retire_certified_unmaterialized_obligations();
 

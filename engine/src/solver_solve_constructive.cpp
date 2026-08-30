@@ -3249,6 +3249,10 @@ bool SolveWork::Impl::retain_certified_incumbent(
                 return incumbent_precedes(left, right);
             });
         incumbent_portfolio.observe_verified(incumbent);
+        if (options.carrier_ladder_exact_boundary_mode ==
+                CarrierLadderExactBoundaryMode::ResumableContinuation) {
+            audit_verified_incumbent_operator_proof_shadow(incumbent);
+        }
         telemetry.fallback_portfolio_candidates =
             certified_fallback_portfolio.size();
         telemetry.fallback_portfolio_owned_bytes = 0;

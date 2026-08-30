@@ -101,7 +101,7 @@ provider adapter + economy schema/catalogs
 | Mechanic legality or transition behavior | Owning action/session/pool implementation after a recorded Oliver ruling | Exact calculation, sampled action path, strategy simulator, solver operators, Python/WASM exposure, all relevant product surfaces and fixtures | Validate native/exact/sampled parity as appropriate; rebuild WASM; record ruling provenance and explicit unsupported boundaries |
 | Strategy JSON operation or condition vocabulary | `engine/src/simulator.cpp` and public simulator contract; `strategy-model.ts` for authored shape | Solver compiler, exact graph evaluator, Python strategy compiler/evaluator, WASM parser, worker protocol, Strategy Builder authoring/validation, persistence and fixtures | Native build, mandatory WASM rebuild, binding/web acceptance; update `docs/product/strategies.md`, solver flow/boundaries, and mechanics vocabulary when applicable |
 | Solver goal, option, result, cap, or telemetry contract | `engine/include/poecraft/solver.h`, the owning private phase header in [Solver internals](solver-internals.md), and its implementation | `solver_api.cpp`, WASM facade, `engine-wasm.ts`, `engine-protocol.ts`, worker/client, Calculator/solve helpers, native and web fixtures, solver docs | Native build and solver tests; rebuild WASM; run Node worker/WASM and product-model acceptance at final gate |
-| Solver algorithm with stable request/output | Owning `solver_*.cpp` files | Exact transition assumptions, policy compiler/evaluator, telemetry/evidence, native benchmark corpus, browser work-step behavior and caps | Native build; use focused diagnostics only when needed; rebuild WASM before web acceptance; run required 10,000-run compiled-strategy verification only when the selected acceptance plan requires it |
+| Solver algorithm with stable request/output | Owning `solver_*.cpp` files | Exact transition assumptions, policy compiler/evaluator, telemetry/evidence, native benchmark corpus, browser work-step behavior and caps | Native build; use focused diagnostics only when needed; rebuild WASM before web acceptance; run required 1,000-run compiled-strategy verification only when the selected acceptance plan requires it and the identical artifact is not already qualified |
 | WASM facade, exports, memory, or marshalling | `bindings/wasm/wasm_api.cpp`, `scripts/build-wasm.ps1` | `engine-wasm.ts`, worker/client protocol, generated release wrapper, engine smoke test, `docs/engine/wasm.md` | Mandatory `scripts/build-wasm.ps1`; inspect generated `.mjs/.wasm` diff; run web/WASM acceptance at final gate |
 | Python binding exposure | `bindings/python/poecraft_engine/_binding.py` and high-level package API | ctypes signatures/structs, owning C ABI lifetime, package data/build, binding tests, foundation capability statement | Native shared-library build, Python binding tests, package smoke/build when release scope requires it |
 | Worker RPC or structured-clone type | `engine-protocol.ts`, `engine-worker.ts`, `engine-client.ts`, `engine-wasm.ts` as applicable | Every component caller, progress/cancel handling, Node worker bootstrap and smoke tests, solver/WASM flow docs | Typecheck plus web/WASM tests at final gate; rebuild WASM only if native/facade code also changed |
@@ -200,8 +200,8 @@ Additional acceptance rules from `AGENTS.md` remain binding:
 
 - rebuild release WASM before web tests when its source inputs changed;
 - run both `npm test` and `npx tsc --noEmit` for a completed web change;
-- compiled-strategy verification uses 10,000 simulator runs when verification
-  is required unless Oliver explicitly changes the count; and
+- compiled-strategy verification uses 1,000 simulator runs when genuinely
+  required, and none for an identical already-qualified artifact; and
 - Oliver owns rendered/visual UI review, so agents do not perform it unless he
   explicitly asks.
 

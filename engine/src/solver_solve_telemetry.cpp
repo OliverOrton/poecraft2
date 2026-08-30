@@ -856,6 +856,96 @@ SolveWork::Impl::finalize_carrier_bound_attribution() {
             std::to_string(pair_admissions) + '}';
     }
     json += "]}";
+    const auto& shadow = carrier_bound_attribution
+                             ->verified_incumbent_operator_shadow;
+    json += ",\"verified_incumbent_operator_shadow\":{";
+    json += "\"authority\":\"observational_only\"";
+    json += ",\"ledger_lifecycle_mutations\":0";
+    json += ",\"incumbent_identity\":" +
+        std::to_string(shadow.incumbent_identity);
+    json += ",\"audits\":" + std::to_string(shadow.audits);
+    json += ",\"ledger_entries\":" +
+        std::to_string(shadow.ledger_entries);
+    json += ",\"finite_upper_entries\":" +
+        std::to_string(shadow.finite_upper_entries);
+    json += ",\"finite_lower_entries\":" +
+        std::to_string(shadow.finite_lower_entries);
+    json += ",\"would_retire\":" +
+        std::to_string(shadow.would_retire);
+    json += ",\"still_competitive\":" +
+        std::to_string(shadow.still_competitive);
+    json += ",\"families\":[";
+    first = true;
+    for (std::size_t family = 0;
+         family < Work::kOperatorFamilyCount; ++family) {
+        if (shadow.would_retire_by_family[family] == 0 &&
+            shadow.still_competitive_by_family[family] == 0) {
+            continue;
+        }
+        if (!first) json += ',';
+        first = false;
+        json += "{\"family\":";
+        append_json_string(json, operator_family_name(family));
+        json += ",\"would_retire\":" +
+            std::to_string(shadow.would_retire_by_family[family]);
+        json += ",\"still_competitive\":" +
+            std::to_string(
+                shadow.still_competitive_by_family[family]) + '}';
+    }
+    const auto lifecycle_name = [](
+            const ActionEnvelopeState lifecycle) -> const char* {
+        switch (lifecycle) {
+        case ActionEnvelopeState::Queued: return "queued";
+        case ActionEnvelopeState::ExactRowComplete:
+            return "exact_row_complete";
+        case ActionEnvelopeState::ExactInapplicabilityProved:
+            return "exact_inapplicability_proved";
+        case ActionEnvelopeState::IncumbentDominated:
+            return "incumbent_dominated";
+        case ActionEnvelopeState::RolledBackAfterCap:
+            return "rolled_back_after_cap";
+        case ActionEnvelopeState::OmittedCallerScope:
+            return "omitted_caller_scope";
+        case ActionEnvelopeState::UnresolvedNamedStop:
+            return "unresolved_named_stop";
+        case ActionEnvelopeState::Count: return "invalid";
+        }
+        return "invalid";
+    };
+    json += "],\"closest_competitive\":[";
+    for (std::size_t index = 0;
+         index < shadow.closest_competitive_count; ++index) {
+        if (index != 0) json += ',';
+        const auto& sample = shadow.closest_competitive[index];
+        json += "{\"state\":" + std::to_string(sample.state);
+        json += ",\"operator_index\":" +
+            std::to_string(sample.operator_index);
+        json += ",\"action\":";
+        append_json_string(
+            json, calc.operators().at(sample.operator_index).id);
+        json += ",\"family\":";
+        append_json_string(
+            json,
+            operator_family_name(
+                carrier_bound_operator_family(sample.operator_index)));
+        json += ",\"lifecycle\":";
+        append_json_string(json, lifecycle_name(sample.lifecycle));
+        json += ",\"lower\":" + finite_json(sample.lower);
+        json += ",\"upper\":" + finite_json(sample.upper);
+        json += ",\"absolute_margin\":" +
+            finite_json(sample.absolute_margin);
+        json += ",\"satisfied_goal_mask\":" +
+            std::to_string(sample.satisfied_goal_mask);
+        json += ",\"blocked_mask\":" +
+            std::to_string(sample.blocked_mask);
+        json += ",\"prefixes\":" +
+            std::to_string(sample.prefix_count);
+        json += ",\"suffixes\":" +
+            std::to_string(sample.suffix_count);
+        json += ",\"unrelated_occupancy\":" +
+            std::to_string(sample.unrelated_occupancy) + '}';
+    }
+    json += "]}";
     static constexpr std::array<const char*, Work::kScheduleStageCount>
         kScheduleNames{{
             "focused_candidates", "focused_admissions",

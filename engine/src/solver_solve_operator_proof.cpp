@@ -38,7 +38,8 @@ double SolveWork::Impl::authored_fixed_program_cost_lower(
 
 double SolveWork::Impl::operator_proof_lower_value(
         const std::uint32_t state,
-        const std::uint32_t operator_index) {
+        const std::uint32_t operator_index,
+        const bool record_pattern_owners) {
         if (operator_index >= priced_operator_position.size()) {
             return kInfinity;
         }
@@ -114,7 +115,8 @@ double SolveWork::Impl::operator_proof_lower_value(
              * the universal cover on a sparse action envelope. */
             return std::max(
                 immediate + std::max(universal_fresh, shaped_fresh),
-                carrier_action_bellman_lower_value(state));
+                carrier_action_bellman_lower_value(
+                    state, record_pattern_owners));
         }
         /* Carry only source slots with at least one identity-preserving
          * runtime path, then grant every slot any constituent could possibly
@@ -128,11 +130,13 @@ double SolveWork::Impl::operator_proof_lower_value(
             optimistic_completion_cost(optimistic_satisfied);
         return std::max(
             immediate + continuation,
-            carrier_action_bellman_lower_value(state));
+            carrier_action_bellman_lower_value(
+                state, record_pattern_owners));
     }
 
 double SolveWork::Impl::carrier_action_bellman_lower_value(
-        const std::uint32_t state) const {
+        const std::uint32_t state,
+        const bool record_pattern_owners) const {
         /* Each component is an independently proved global completion lower.
          * Their maximum is therefore a lower bound on every concrete Q value
          * through V*(state) <= Q(action, state), not executable policy or
@@ -140,6 +144,11 @@ double SolveWork::Impl::carrier_action_bellman_lower_value(
          * component unavailable and the terminal-debt component at zero. */
         const double debt = carrier_terminal_debt_lower_value(state);
         const double progress = carrier_goal_progress_lower_value(state);
+        if (!record_pattern_owners) {
+            return std::max(
+                debt,
+                std::isfinite(progress) ? progress : 0.0);
+        }
         return select_maximum({
             {ProofPatternKind::TerminalDebt, {debt}, true},
             {ProofPatternKind::CarrierMdp, {progress},
@@ -157,6 +166,110 @@ solve_detail::ProofLowerValue SolveWork::Impl::operator_proof_lower(
               .selected_owner_calls;
     }
     return lower;
+}
+
+void SolveWork::Impl::audit_verified_incumbent_operator_proof_shadow(
+        const BoundedPolicyIncumbent& incumbent) {
+    if (!carrier_bound_attribution ||
+        !incumbent.independently_certified ||
+        !incumbent.independently_evaluated || !incumbent.proper ||
+        !incumbent.executable || incumbent.values.empty()) {
+        return;
+    }
+    using Work = CarrierBoundAttributionWork;
+    auto& prior = carrier_bound_attribution
+                      ->verified_incumbent_operator_shadow;
+    const std::uint64_t incumbent_identity =
+        incumbent.portfolio_identity != 0
+        ? incumbent.portfolio_identity
+        : incumbent.graph_identity;
+    if (prior.audits != 0 &&
+        prior.incumbent_identity == incumbent_identity) {
+        return;
+    }
+    const std::uint64_t audits = prior.audits + 1;
+    prior = {};
+    prior.audits = audits;
+    prior.incumbent_identity = incumbent_identity;
+    prior.ledger_entries = action_envelope_ledger.entries().size();
+
+    const auto sample_precedes = [](
+            const Work::OperatorShadowSample& left,
+            const Work::OperatorShadowSample& right) {
+        if (left.absolute_margin != right.absolute_margin) {
+            return left.absolute_margin < right.absolute_margin;
+        }
+        if (left.state != right.state) return left.state < right.state;
+        return left.operator_index < right.operator_index;
+    };
+    for (const auto& [unused_key, entry] :
+         action_envelope_ledger.entries()) {
+        (void)unused_key;
+        if (entry.state >= incumbent.values.size() ||
+            entry.state >= calc.state_count() ||
+            entry.operator_index >= calc.operators().size()) {
+            continue;
+        }
+        const double upper = incumbent.values[entry.state];
+        if (!std::isfinite(upper) || upper < 0.0 ||
+            upper >= kValueCeiling) {
+            continue;
+        }
+        ++prior.finite_upper_entries;
+        const double lower = operator_proof_lower_value(
+            entry.state, entry.operator_index, false);
+        if (!std::isfinite(lower) || lower < 0.0 ||
+            lower >= kValueCeiling) {
+            continue;
+        }
+        ++prior.finite_lower_entries;
+        const std::size_t family =
+            carrier_bound_operator_family(entry.operator_index);
+        const double separation = options.epsilon *
+            std::max({1.0, std::abs(upper), std::abs(lower)});
+        if (lower > upper + separation) {
+            ++prior.would_retire;
+            ++prior.would_retire_by_family.at(family);
+            continue;
+        }
+        ++prior.still_competitive;
+        ++prior.still_competitive_by_family.at(family);
+
+        const AbstractState& state = calc.state(entry.state);
+        Work::OperatorShadowSample sample;
+        sample.state = entry.state;
+        sample.operator_index = entry.operator_index;
+        sample.satisfied_goal_mask =
+            satisfied_goal_mask_for_state(entry.state);
+        sample.blocked_mask = state.blocked_mask;
+        sample.prefix_count = state.prefix_count;
+        sample.suffix_count = state.suffix_count;
+        const std::uint32_t occupied =
+            state.prefix_count + state.suffix_count;
+        const std::uint32_t satisfied =
+            std::popcount(sample.satisfied_goal_mask);
+        sample.unrelated_occupancy = static_cast<std::uint8_t>(
+            std::min<std::uint32_t>(
+                Work::kUnrelatedOccupancyCount - 1,
+                occupied > satisfied ? occupied - satisfied : 0));
+        sample.lifecycle = entry.lifecycle;
+        sample.lower = lower;
+        sample.upper = upper;
+        sample.absolute_margin = std::abs(upper - lower);
+
+        auto begin = prior.closest_competitive.begin();
+        auto end = begin + prior.closest_competitive_count;
+        if (prior.closest_competitive_count <
+            Work::kOperatorShadowSampleLimit) {
+            prior.closest_competitive[prior.closest_competitive_count++] =
+                sample;
+            end = begin + prior.closest_competitive_count;
+            std::sort(begin, end, sample_precedes);
+        } else if (sample_precedes(sample, *(end - 1))) {
+            *(end - 1) = sample;
+            std::sort(begin, end, sample_precedes);
+        }
+    }
 }
 
 bool SolveWork::Impl::retire_unmaterialized_by_operator_proof(

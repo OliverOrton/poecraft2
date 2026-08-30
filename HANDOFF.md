@@ -14,11 +14,19 @@ identity, byte accounting, and direct-retirement telemetry.
 Initial attribution found the consumer timing gap: all 213,532 PDR ledger
 entries were terminal before the independently evaluated resumable incumbent
 arrived, so existing operator-proof lower evaluations and retirements were
-both zero. The first code change should therefore be a bounded shadow audit at
-verified-incumbent installation, comparing retained state/action facts with
-the incumbent's aligned certified values without changing ledger lifecycle.
-Use its would-retire margins to select the first RC action shape; do not choose
-Fracture, Exalt, or Annul from sample frequency alone.
+both zero. The bounded verified-incumbent audit is now implemented and proved
+observational. A fresh exact PDR diagnostic compared 8,279 aligned finite
+state/action values, changed zero ledger lifecycles, and found zero retirements
+under the current lower.
+
+The measured first shadow target is `harvest_augment:physical`: its current
+lower is `792.6016500000001` versus the closest aligned verified upper of
+`15772148.688824013`. Build only the smallest retention/capacity pattern needed
+for this action and the sampled clean/occupied goal-subset shapes. It remains
+shadow-only. Stop if it cannot materially strengthen that live comparison,
+if cheap action cost still pins the shadow, or if it fails the 16 MiB retained,
+5% strict-growth, exact-row, mass, terminal, identity, or subsolution gates.
+Do not activate pruning merely because the audit consumer is now observable.
 
 ## Completed Boundary
 
