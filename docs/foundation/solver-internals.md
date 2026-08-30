@@ -144,9 +144,12 @@ pipeline. Ordinary finalization is frozen before any strict replay begins.
 
 Record mode closes the complete routed selected prefix and emits typed stops:
 exact goal success, a same-identity independently evaluated/proper/executable
-ordinary frontier, or unresolved. Recover mode starts from the authored exact
-item and follows only those selected rows through the existing production
-strict oracle and native primitive/fixed-option kernels. It does not
+ordinary frontier, or unresolved. Unresolved captured stops are explicit
+non-goal absorbing observations during recovery; they never become successful
+requested entries and are not executed as if they owned a selected action.
+Recover mode starts from the authored exact item and follows only those
+selected rows through the existing production strict oracle and native
+primitive/fixed-option kernels. It does not
 materialize an abstract representative, enumerate alternative actions,
 optimize a replacement policy, or publish a value. Exact members at a named
 coarse stop remain distinct by collision-checked complete item key.
@@ -159,12 +162,19 @@ time are excluded from ordinary solve accounting. Benchmark qualification may
 also request an exact ordinary completed-row fence; zero preserves the normal
 wall-clock requested-finish behavior.
 
-The first cumulative-10 qualification closed diagnosis-only: the stable
-prefix reaches an unresolved non-goal coarse state with no selected row before
-the named missing parent. That proves the seam and refusal contract without
-claiming an exact entry domain or usable continuation. The diagnostic remains
-private to the benchmark/Lab path and adds no public ABI, release-WASM input,
-strategy vocabulary, or product behavior.
+The cumulative-10 qualification closed diagnosis-only: strict replay reaches
+the captured unresolved non-goal coarse state 213 from the selected root Chaos
+row. State 213 has no captured or completed selected row, so no support closure
+is authorized and the named missing parent remains unrecovered. Recovery
+retains one bounded first predecessor/action/outcome witness and streams the
+reached-stop count/identity without storing every event. Complete exact keys
+remain internal; public telemetry exposes their collision-checked identities
+and word counts with complete coarse, operator, semantic, probability, row,
+reachability, and completion facts. This attributes the next owner to ordinary
+completed-row/service coverage rather than an action-catalogue omission or
+fragment composition. The diagnostic remains private to the benchmark/Lab
+path and adds no public ABI, release-WASM input, strategy vocabulary, or
+product behavior.
 
 ## Benchmark-Private Verified Leaf Fragments
 

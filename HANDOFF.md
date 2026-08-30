@@ -1,53 +1,46 @@
 # Handoff
 
-**Status: implementation boundary active.**
+**Status: no implementation boundary is active.**
 
 ## Current Boundary
 
-[Carrier-Ladder Selected-Prefix Closure v1](docs/active/2026-08-29-carrier-ladder-selected-prefix-closure-v1/plan.md)
-is active from source checkpoint
-`e5c5ad6b0bfed7287a3f7892330755e77efc35ba`.
-
-The boundary attributes strict exact replay's first missing coarse selected
-row and may close strict-only prefix support exclusively from already-
-completed selected rows in the same captured graph. It may not invent or
-reoptimize actions, change ordinary solver authority, or begin fragment
-composition.
+None. Oliver must select the next chunk before implementation resumes.
 
 ## Most Recent Completed Boundary
 
-[Carrier-Ladder Exact Boundary Contract v1](docs/archive/2026-08-29-carrier-ladder-exact-boundary-contract-v1/README.md)
-completed diagnosis-only. It retains a disabled benchmark-private seam that
-captures one failed coarse selected prefix before ordinary restore and replays
-only its selected rows from the authored exact item through existing strict
-native kernels. Matched off/record/recover runs proved every ordinary input,
-work result, bound, strategy, and exact-evaluation component unchanged.
+[Carrier-Ladder Selected-Prefix Closure v1](docs/archive/2026-08-29-carrier-ladder-selected-prefix-closure-v1/README.md)
+completed diagnosis-only. The benchmark-private ladder seam now treats
+captured unresolved stops as non-goal absorbing observations and retains one
+bounded exact predecessor/action/outcome witness without changing ordinary
+solver authority.
 
-The cumulative-10 recovery truthfully reaches an unresolved non-goal coarse
-state with no selected policy action before the named missing parent. It
-therefore establishes no exact entry domain or usable continuation. A real
-private cap, genuine CLI cancellation with process-tree removal and released
-reservation, deterministic relink repetition, stable bundle replay, release
+Cumulative-10 deterministically reaches coarse state 213 after the existing
+selected root Chaos row. State 213 has no captured or completed selected row,
+so no support extension, requested exact entry, continuation, or fragment
+integration is sound. This is ordinary completed-row/service coverage, not a
+missing action-catalogue entry. Matched behavior-neutral runs, deterministic
+replay, a real cap, genuine cancellation with process-tree removal and
+reservation release, fresh ladder controls, stable bundle replay, release
 WASM/web parity, and the full repository pipeline all passed.
 
 Full identities and artifacts are in the
-[execution log](docs/archive/2026-08-29-carrier-ladder-exact-boundary-contract-v1/execution-log.md);
+[execution log](docs/archive/2026-08-29-carrier-ladder-selected-prefix-closure-v1/execution-log.md);
 the concise disposition is in the
-[result](docs/archive/2026-08-29-carrier-ladder-exact-boundary-contract-v1/result.md).
+[result](docs/archive/2026-08-29-carrier-ladder-selected-prefix-closure-v1/result.md).
 
-## Current Owner
+## Candidate Next Owner
 
-Gates 0–2 reached a diagnosis-only implementation checkpoint. Exact replay
-proves the first boundary is root Chaos to unresolved coarse state 213, which
-has no captured or completed selected row. No support extension is sound.
-Gate 3 now owns deterministic replay and genuine cancellation controls,
-followed by matched behavior-neutral qualification, final CLI evidence, and
-closeout.
+If Oliver selects another ladder chunk, the evidence points first to a narrow
+diagnosis of why ordinary completed-row/service coverage ends at coarse state
+213 after root Chaos. Do not infer an action-catalogue rewrite, fragment
+implementation, or broader solver redesign from this handoff.
 
 ## Retained Repository State
 
 - Branch: `main`.
 - No push was performed.
+- The ladder remains the product architecture; fragment composition is parked
+  without a recovered exact entry domain.
 - Fossil remains the separately measured synchronous setup blocker for the
   full primitive envelope.
 - The earlier Native Solver Lab six-hour soak was owner-waived, not passed,

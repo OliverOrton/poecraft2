@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-08-29
 
+- [Carrier-Ladder Selected-Prefix Closure v1](2026-08-29-carrier-ladder-selected-prefix-closure-v1/README.md) —
+  treats unresolved captured stops as non-goal absorbing observations, retains
+  a bounded exact support-edge witness, and proves diagnosis-only that coarse
+  state 213 after selected root Chaos has no completed selected row; ordinary
+  behavior is unchanged and fragment composition remains parked.
 - [Carrier-Ladder Exact Boundary Contract v1](2026-08-29-carrier-ladder-exact-boundary-contract-v1/README.md) —
   retains and qualifies a benchmark-private failed-prefix capture/strict-replay
   seam while proving ordinary behavior neutrality; cumulative-10 reaches an

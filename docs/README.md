@@ -31,12 +31,17 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The selected
-[Carrier-Ladder Selected-Prefix Closure v1](active/2026-08-29-carrier-ladder-selected-prefix-closure-v1/plan.md)
-boundary is active. It attributes strict exact replay's first missing coarse
-selected row and may close private prefix support only from already-completed
-rows in the same captured graph. It does not authorize ordinary solver or
-fragment-composition changes.
+No implementation boundary is active. [Active work](active/README.md) and
+[HANDOFF](../HANDOFF.md) require Oliver to select the next chunk before
+implementation resumes.
+
+The completed
+[Carrier-Ladder Selected-Prefix Closure v1](archive/2026-08-29-carrier-ladder-selected-prefix-closure-v1/README.md)
+boundary makes unresolved captured stops explicit non-goal observations and
+retains a bounded exact support-edge witness. Cumulative-10 closes diagnosis-
+only at coarse state 213 after selected root Chaos because no completed
+selected row exists there; ordinary behavior is unchanged and fragment
+composition remains parked.
 
 The completed diagnosis-only
 [Carrier-Ladder Exact Boundary Contract v1](archive/2026-08-29-carrier-ladder-exact-boundary-contract-v1/README.md)

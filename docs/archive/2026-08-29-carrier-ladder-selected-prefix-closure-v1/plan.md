@@ -1,8 +1,8 @@
 # Carrier-Ladder Selected-Prefix Closure v1
 
-**Status: active; Gates 0–2 reached a diagnosis-only implementation
-checkpoint on 2026-08-29.** Oliver selected this boundary from clean source
-checkpoint `e5c5ad6b0bfed7287a3f7892330755e77efc35ba`.
+**Status: completed diagnosis-only on 2026-08-29.** Oliver selected this
+boundary from clean source checkpoint
+`e5c5ad6b0bfed7287a3f7892330755e77efc35ba`.
 
 Parent: [Active work](../README.md)
 
