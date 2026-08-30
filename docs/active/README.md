@@ -1,12 +1,15 @@
 # Active Work
 
-**Status: no implementation boundary is active.**
+**Status: one implementation boundary is active.**
 
 Parent: [Documentation map](../README.md)
 
 ## Current work
 
-None. Oliver must select the next boundary before implementation resumes.
+[Carrier-Ladder Missing-Frontier Handoff Repair v1](2026-08-30-carrier-ladder-missing-frontier-handoff-repair-v1/README.md)
+has completed Outcome C attribution. Production source is unchanged while its
+witness-local continuation repair proceeds; the PDR retention-capacity pilot
+is blocked.
 
 ## Historical work
 

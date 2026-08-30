@@ -1,41 +1,52 @@
 # Handoff
 
-**Status: no implementation boundary is active.**
+**Status: one implementation boundary is active.**
 
-## Most Recent Completed Boundary
+## Active Boundary
 
-[Historical Five-Goal Quality Regression v1](docs/archive/2026-08-30-historical-five-goal-quality-regression-v1/README.md)
-reproduced the byte-identical historical 87k Conquest Lamellar strategy,
-isolated the first quality regression to the `b6fb861` missing-frontier and
-automatic-epoch scheduling bundle, and restored ordinary interleaving between
-carrier-local work, value refinement, and joint executable-policy assembly.
+[Carrier-Ladder Missing-Frontier Handoff Repair v1](docs/active/2026-08-30-carrier-ladder-missing-frontier-handoff-repair-v1/README.md)
+started from `main` at
+`b690cad1e376baa5b267603f5cb619c9596a4f94`. The required current-profile
+qualification classified Outcome C: clean-five remains strong under the
+actual no-Imprint profile, but PDR produces no executable upper at 300 seconds
+and partial four-to-five materially regresses.
 
-Current source then independently produced a different exact strategy at
-`85408.64362148782` Chaos: success probability one, zero off-policy mass,
-8,259.46821052856 expected actions, strategy SHA-256
-`9e8687ac1f1de705cd1bef59e5269395190e6b8d2134d26d0cf1aac2468717b1`.
-The required native Simulator qualification passed 10,000/10,000 runs with
-zero failure, stop, action-limit, step-limit, no-edge, action-not-applied, or
-missing-price outcomes. Focused native solve tests passed 86,241 checks.
+The saved winner occupies no Imprint or replacement-base action. Independent
+exact evaluation under the pinned current economy remains
+`85408.64362148794` Chaos with success probability one and zero off-policy
+mass. A fresh fixed 180-second no-Imprint run independently produced
+`85408.46200624379` Chaos.
 
-## Current Stop
+## Current Implementation Boundary
 
-The selected goal is complete. Oliver must choose the next implementation
-boundary before work resumes. Do not automatically return to fragment
-promotion or add another planner; this result shows that the existing carrier
-ladder improves once its scheduling cadence is preserved.
+Matched-parent and factor runs isolate the regression to the handoff of a
+failed joint-policy missing-frontier witness into automatic carrier service.
+Restoring old witness ownership recovers PDR at `7852.71432971444` Chaos but
+regresses clean-five to `1650831.39165144`. One-carrier and fixed 128-carrier
+windows are also inadequate. None of those experimental source changes is
+retained.
+
+The next implementation is one witness-local continuation closure: preserve
+the named witness and carriers causally introduced by its exact automatic
+rows, then force refinement and a joint-policy attempt without draining the
+unrelated frozen frontier. The production change may be retained only after
+PDR, clean-five, and partial four-to-five all meet the explicit gates in the
+living boundary.
+
+Do not begin the PDR retention-capacity pilot, reopen fragment promotion, add
+another planner, or change mechanics, probabilities, or action vocabulary.
 
 ## Retained Repository State
 
-- Boundary started from `main` at
-  `a9b8e5cc1343f635e7214c0eaadcb802676f3357`; the closeout is local-only and
-  no push is authorized.
-- The retained production change is internal to incremental solver work
-  ordering plus focused native regression coverage. It changes no mechanic,
-  probability, action catalogue, C ABI, strategy vocabulary, compiled data,
-  fragment authority, or WASM-facing contract.
-- The winning 120-second report and strategy remain ignored build evidence
-  under `build/regression/current-complete-interleave-fix-120s/`; their hashes
-  and complete result are recorded in the archived boundary.
+- Production engine source remains byte-for-byte at `b690cad`; factor changes
+  exist only in ignored build evidence and disposable detached worktrees.
+- The user-requested rebuilt
+  `bindings/wasm/dist/poecraft_engine.wasm` is the only retained binary change
+  at this handoff. No test result is claimed for it; Oliver owns frontend
+  testing.
+- The failed derived Solver Lab draft was discarded through the supported CLI
+  after a dry run. The validated 180-second immutable revision and all jobs,
+  attempts, reports, strategies, and hashes remain preserved.
+- Work is local-only. Do not push.
 - Protected untracked `0` is user state. It was not read, modified, staged,
   moved, cleaned, or deleted. Preserve it exactly.
