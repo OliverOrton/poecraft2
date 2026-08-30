@@ -1,14 +1,14 @@
 # Active Work
 
-**Status: no implementation boundary is active.**
+**Status: one implementation boundary is active.**
 
 Parent: [Documentation map](../README.md)
 
 ## Current work
 
-No boundary is active. The qualified sequencing point is now the proof-only
-PDR Retention-Capacity Operator-Proof Pilot v1; its plan should be activated
-only from measured live PDR obligation shapes.
+[PDR Retention-Capacity Operator-Proof Pilot v1](2026-08-30-pdr-retention-capacity-operator-proof-pilot-v1/README.md)
+is identifying one or two measured live PDR obligations before implementing a
+small proof-only, 16 MiB shadow abstraction. It has no production authority.
 
 ## Historical work
 

@@ -1,6 +1,24 @@
 # Handoff
 
-**Status: no implementation boundary is active.**
+**Status: PDR Retention-Capacity Operator-Proof Pilot v1 is active.**
+
+## Current Boundary
+
+[PDR Retention-Capacity Operator-Proof Pilot v1](docs/active/2026-08-30-pdr-retention-capacity-operator-proof-pilot-v1/README.md)
+is the selected proof-only follow-up. Begin by identifying one or two dominant
+live PDR carrier/action obligations and their existing typed lower consumers.
+No abstraction has production authority; the first implementation must be a
+16 MiB-capped shadow with exact local rows, sound terminal inclusion, stable
+identity, byte accounting, and direct-retirement telemetry.
+
+Initial attribution found the consumer timing gap: all 213,532 PDR ledger
+entries were terminal before the independently evaluated resumable incumbent
+arrived, so existing operator-proof lower evaluations and retirements were
+both zero. The first code change should therefore be a bounded shadow audit at
+verified-incumbent installation, comparing retained state/action facts with
+the incumbent's aligned certified values without changing ledger lifecycle.
+Use its would-retire margins to select the first RC action shape; do not choose
+Fracture, Exalt, or Annul from sample frequency alone.
 
 ## Completed Boundary
 
