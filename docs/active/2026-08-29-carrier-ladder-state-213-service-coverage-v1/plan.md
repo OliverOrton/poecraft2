@@ -1,8 +1,8 @@
 # Carrier-Ladder State-213 Service Coverage v1
 
-**Status: active; Gate 0 provenance audit in progress on 2026-08-29.** Oliver
-selected this boundary from clean source checkpoint
-`c51e6e3f8e30eeb683a964ddd6f971119d509368` by asking to continue the
+**Status: active; Gates 0-5 passed diagnosis-only, Gate 6 final acceptance in
+progress on 2026-08-29.** Oliver selected this boundary from clean source
+checkpoint `c51e6e3f8e30eeb683a964ddd6f971119d509368` by asking to continue the
 recommended ladder work.
 
 Parent: [Active work](../README.md)

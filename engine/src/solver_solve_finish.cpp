@@ -5450,6 +5450,7 @@ SolveWork::Impl::run_publication_pipeline() {
          * retained bytes; the private contract owns and reports its separate
          * allowance, and no result of this work is read by solver authority. */
         if (carrier_ladder_exact_boundary_capture.has_value()) {
+            refresh_carrier_ladder_terminal_row_service_witness();
             CarrierLadderBoundaryCapture& capture =
                 *carrier_ladder_exact_boundary_capture;
             if (options.carrier_ladder_exact_boundary_mode ==

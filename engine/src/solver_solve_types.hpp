@@ -9,6 +9,7 @@
 #include "poecraft/bitset.h"
 
 #include <algorithm>
+#include <array>
 #include <bit>
 #include <charconv>
 #include <chrono>
@@ -1229,6 +1230,126 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
             CertifiedFrontier,
             UnresolvedMissing,
         };
+        enum class RowServiceDisposition : std::uint8_t {
+            NotObserved = 0,
+            Undiscovered,
+            Goal,
+            SelectableRowAvailable,
+            CertifiedFrontier,
+            RequestedBoundedFinish,
+            ResourceCap,
+            NoRowSpan,
+            RowsNotScheduled,
+            RowsScheduledIncomplete,
+            CompletedRowsInvalidOrUnpriced,
+            OtherMissing,
+        };
+        struct RowServiceWitness {
+            static constexpr std::uint64_t kNoPosition =
+                std::numeric_limits<std::uint64_t>::max();
+
+            std::uint32_t state = kNoId;
+            std::uint32_t goal_mask = 0;
+            std::uint32_t goal_progress = 0;
+            std::uint32_t certified_frontier_operator = kNoId;
+            std::uint32_t planner_operator_count = 0;
+            std::uint32_t priced_operator_count = 0;
+            std::uint32_t static_candidate_operator_count = 0;
+            std::uint32_t delayed_candidate_operator_count = 0;
+            std::uint32_t dynamic_candidate_operator_count = 0;
+            std::uint32_t declared_row_count = 0;
+            std::uint32_t owned_row_count = 0;
+            std::uint32_t row_owner_mismatch_count = 0;
+            std::uint32_t admitted_row_count = 0;
+            std::uint32_t completed_row_count = 0;
+            std::uint32_t alternative_row_count = 0;
+            std::uint32_t alternative_completed_row_count = 0;
+            std::uint32_t priced_row_count = 0;
+            std::uint32_t valid_operator_row_count = 0;
+            std::uint32_t finite_nonnegative_priced_row_count = 0;
+            std::uint32_t selectable_row_count = 0;
+            std::uint32_t selectable_operator_count = 0;
+            std::uint32_t priority_task_count = 0;
+            std::uint32_t pending_priority_task_count = 0;
+            std::uint32_t completed_pair_count = 0;
+            std::uint64_t variant_count = 0;
+            std::uint64_t transition_count = 0;
+            std::uint64_t choice_count = 0;
+            std::uint64_t queue_position = kNoPosition;
+            std::uint64_t carrier_position = kNoPosition;
+            std::uint64_t automatic_order_position = kNoPosition;
+            std::uint64_t fairness_order_position = kNoPosition;
+            std::uint64_t high_progress_order_position = kNoPosition;
+            std::uint64_t missing_frontier_position = kNoPosition;
+            std::uint64_t first_priority_task_position = kNoPosition;
+            std::uint64_t carrier_cursor = 0;
+            std::uint64_t automatic_carrier_cursor = 0;
+            std::uint64_t automatic_order_cursor = 0;
+            std::uint64_t fairness_carrier_cursor = 0;
+            std::uint64_t fairness_operator_cursor = 0;
+            std::uint64_t high_progress_carrier_cursor = 0;
+            std::uint64_t high_progress_operator_cursor = 0;
+            std::uint64_t closure_carrier_cursor = 0;
+            std::uint64_t closure_operator_cursor = 0;
+            std::uint64_t priority_task_cursor = 0;
+            std::uint64_t action_envelope_transition_count = 0;
+            std::uint64_t action_envelope_entry_count = 0;
+            std::uint64_t action_envelope_row_entry_count = 0;
+            std::uint64_t action_envelope_scheduling_complete_count = 0;
+            std::uint64_t observation_state_count = 0;
+            std::uint64_t observation_row_count = 0;
+            std::uint64_t observation_priced_row_count = 0;
+            std::uint64_t observation_successor_count = 0;
+            std::uint64_t observation_probability_count = 0;
+            std::uint64_t observation_choice_count = 0;
+            std::uint64_t observation_choice_successor_count = 0;
+            std::uint64_t observation_choice_option_count = 0;
+            std::array<
+                std::uint64_t,
+                solve_detail::ActionEnvelopeLedger::kStateCount>
+                action_envelope_lifecycle_counts{};
+            std::array<
+                std::uint64_t,
+                solve_detail::ActionEnvelopeLedger::kLaneCount>
+                action_envelope_lane_counts{};
+            std::array<
+                std::uint64_t,
+                solve_detail::ActionEnvelopeLedger::kAuthorityCount>
+                action_envelope_authority_counts{};
+            std::array<
+                std::uint64_t,
+                solve_detail::ActionEnvelopeLedger::kStopOwnerCount>
+                action_envelope_stop_owner_counts{};
+            std::uint64_t selectable_operator_identity = 0;
+            std::uint64_t row_identity = 0;
+            std::uint64_t action_envelope_identity = 0;
+            std::uint64_t scheduler_identity = 0;
+            std::uint64_t observation_graph_identity = 0;
+            std::uint64_t observation_graph_prefix_identity = 0;
+            std::uint64_t facts_identity = 0;
+            std::uint64_t identity = 0;
+            RowServiceDisposition disposition =
+                RowServiceDisposition::NotObserved;
+            bool observed = false;
+            bool state_in_calc = false;
+            bool goal = false;
+            bool broad_expanded = false;
+            bool ordinary_result_expanded = false;
+            bool transition_cache_expanded = false;
+            bool focused_strict_expanded = false;
+            bool queued = false;
+            bool queue_contains_state = false;
+            bool row_span_present = false;
+            bool carrier = false;
+            bool missing_frontier = false;
+            bool expansion_active_for_state = false;
+            bool expansion_incremental_alternative = false;
+            bool incremental_refinement_active = false;
+            bool incremental_refinement_targets_state = false;
+            bool action_envelope_scheduler_view_enabled = false;
+            bool requested_bounded_finish = false;
+            bool resource_cap_hit = false;
+        };
         struct Stop {
             std::uint32_t state = kNoId;
             std::uint32_t operator_index = kNoId;
@@ -1269,6 +1390,8 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         };
         BoundedPolicyIncumbent prefix;
         std::vector<Stop> stops;
+        RowServiceWitness row_service_witness;
+        RowServiceWitness terminal_row_service_witness;
         std::uint32_t target_state = kNoId;
         std::vector<std::uint64_t> target_state_key;
         std::uint64_t selection_identity = 0;
@@ -1701,7 +1824,25 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         const std::vector<std::uint8_t>& candidate_reachable,
         const std::vector<std::uint32_t>& certified_frontier_operators,
         std::vector<CarrierLadderBoundaryCapture::Stop> stops,
+        CarrierLadderBoundaryCapture::RowServiceWitness row_service_witness,
         const char* refusal = nullptr);
+
+    CarrierLadderBoundaryCapture::RowServiceWitness
+    capture_carrier_ladder_row_service_witness(
+        std::uint32_t state,
+        const std::vector<std::uint8_t>& completed_rows,
+        const std::vector<std::uint8_t>& ordinary_result_expanded,
+        std::uint32_t certified_frontier_operator) const;
+
+    static CarrierLadderBoundaryCapture::RowServiceDisposition
+    classify_carrier_ladder_row_service_witness(
+        const CarrierLadderBoundaryCapture::RowServiceWitness& witness);
+
+    void bind_carrier_ladder_row_service_witness_identity(
+        CarrierLadderBoundaryCapture::RowServiceWitness& witness,
+        const CarrierLadderBoundaryCapture& capture) const;
+
+    void refresh_carrier_ladder_terminal_row_service_witness();
 
     void refresh_carrier_ladder_exact_boundary_diagnostics(
         SolveDiagnostics& diagnostics) const;

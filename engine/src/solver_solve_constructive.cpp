@@ -1121,6 +1121,494 @@ std::uint64_t SolveWork::Impl::carrier_ladder_boundary_owned_bytes(
         return bytes;
     }
 
+SolveWork::Impl::CarrierLadderBoundaryCapture::RowServiceDisposition
+SolveWork::Impl::classify_carrier_ladder_row_service_witness(
+        const CarrierLadderBoundaryCapture::RowServiceWitness& witness) {
+    using Disposition =
+        CarrierLadderBoundaryCapture::RowServiceDisposition;
+    if (!witness.observed) return Disposition::NotObserved;
+    if (!witness.state_in_calc) return Disposition::Undiscovered;
+    if (witness.goal) return Disposition::Goal;
+    if (witness.selectable_row_count != 0) {
+        return Disposition::SelectableRowAvailable;
+    }
+    if (witness.certified_frontier_operator != kNoId) {
+        return Disposition::CertifiedFrontier;
+    }
+    /* The host-requested stop owns publication when both it and a later
+     * observational resource flag are present. This matches the ordinary
+     * termination precedence and does not claim that the missing row itself
+     * is a cap. */
+    if (witness.requested_bounded_finish) {
+        return Disposition::RequestedBoundedFinish;
+    }
+    if (witness.resource_cap_hit) return Disposition::ResourceCap;
+    if (!witness.row_span_present || witness.owned_row_count == 0) {
+        return Disposition::NoRowSpan;
+    }
+    if (witness.completed_row_count != 0) {
+        return Disposition::CompletedRowsInvalidOrUnpriced;
+    }
+    if (witness.action_envelope_entry_count == 0 &&
+        !witness.queued && !witness.queue_contains_state &&
+        !witness.expansion_active_for_state &&
+        !witness.incremental_refinement_targets_state) {
+        return Disposition::RowsNotScheduled;
+    }
+    if (witness.action_envelope_entry_count != 0 || witness.queued ||
+        witness.queue_contains_state || witness.expansion_active_for_state ||
+        witness.incremental_refinement_targets_state || witness.carrier) {
+        return Disposition::RowsScheduledIncomplete;
+    }
+    return Disposition::OtherMissing;
+}
+
+SolveWork::Impl::CarrierLadderBoundaryCapture::RowServiceWitness
+SolveWork::Impl::capture_carrier_ladder_row_service_witness(
+        const std::uint32_t state,
+        const std::vector<std::uint8_t>& completed_rows,
+        const std::vector<std::uint8_t>& ordinary_result_expanded,
+        const std::uint32_t certified_frontier_operator) const {
+    using Witness = CarrierLadderBoundaryCapture::RowServiceWitness;
+    Witness witness;
+    witness.observed = true;
+    witness.state = state;
+    witness.state_in_calc = state < calc.state_count();
+    witness.goal = witness.state_in_calc &&
+        calc.is_goal_state(calc.state(state));
+    witness.goal_mask = witness.state_in_calc
+        ? satisfied_goal_mask_for_state(state) : 0;
+    witness.goal_progress = std::popcount(witness.goal_mask);
+    witness.certified_frontier_operator = certified_frontier_operator;
+    witness.planner_operator_count = static_cast<std::uint32_t>(
+        std::min<std::size_t>(calc.operators().size(), kNoId));
+    witness.priced_operator_count = static_cast<std::uint32_t>(
+        std::min<std::size_t>(operators.size(), kNoId));
+    witness.static_candidate_operator_count = static_cast<std::uint32_t>(
+        std::min<std::size_t>(static_operator_indices.size(), kNoId));
+    witness.delayed_candidate_operator_count = static_cast<std::uint32_t>(
+        std::min<std::size_t>(delayed_operator_indices.size(), kNoId));
+    witness.dynamic_candidate_operator_count =
+        static_cast<std::uint32_t>(std::min<std::size_t>(
+            incremental_dynamic_operator_indices.size(), kNoId));
+    witness.broad_expanded =
+        state < expanded.size() && expanded[state] != 0;
+    witness.ordinary_result_expanded =
+        state < ordinary_result_expanded.size() &&
+        ordinary_result_expanded[state] != 0;
+    witness.transition_cache_expanded = transition_cache != nullptr &&
+        state < transition_cache->expanded.size() &&
+        transition_cache->expanded[state] != 0;
+    witness.focused_strict_expanded =
+        state < focused_strict_expanded.size() &&
+        focused_strict_expanded[state] != 0;
+    witness.queued = state < queued.size() && queued[state] != 0;
+    witness.expansion_active_for_state = expansion_active &&
+        expansion_state == state;
+    witness.expansion_incremental_alternative =
+        witness.expansion_active_for_state &&
+        expansion_is_incremental_alternative;
+    witness.incremental_refinement_active = incremental_refinement_active;
+    witness.action_envelope_scheduler_view_enabled =
+        action_envelope_ledger.scheduler_view_enabled;
+    witness.requested_bounded_finish = requested_bounded_finish;
+    witness.resource_cap_hit = result.diagnostics.resource_cap_hit;
+    witness.observation_state_count = calc.state_count();
+    witness.observation_graph_identity = graph_identity();
+    if (transition_cache != nullptr) {
+        witness.observation_row_count = transition_cache->rows.size();
+        witness.observation_priced_row_count = priced_rows.size();
+        witness.observation_successor_count =
+            transition_cache->successors.size();
+        witness.observation_probability_count =
+            transition_cache->probabilities.size();
+        witness.observation_choice_count =
+            transition_cache->choices.size();
+        witness.observation_choice_successor_count =
+            transition_cache->choice_successors.size();
+        witness.observation_choice_option_count =
+            transition_cache->choice_options.size();
+        witness.observation_graph_prefix_identity =
+            incumbent_graph_prefix_identity(
+                witness.observation_row_count,
+                witness.observation_priced_row_count,
+                witness.observation_successor_count,
+                witness.observation_probability_count,
+                witness.observation_choice_count,
+                witness.observation_choice_successor_count,
+                witness.observation_choice_option_count);
+    }
+
+    const auto position_of = [&](const auto& values) {
+        const auto found = std::find(values.begin(), values.end(), state);
+        return found == values.end()
+            ? Witness::kNoPosition
+            : static_cast<std::uint64_t>(
+                  std::distance(values.begin(), found));
+    };
+    witness.queue_position = position_of(queue);
+    witness.queue_contains_state =
+        witness.queue_position != Witness::kNoPosition;
+    witness.incremental_refinement_targets_state =
+        incremental_refinement_active &&
+        (witness.queued || witness.queue_contains_state ||
+         witness.expansion_active_for_state);
+    witness.carrier_position = position_of(incremental_carriers);
+    witness.carrier = witness.carrier_position != Witness::kNoPosition;
+    witness.automatic_order_position =
+        position_of(incremental_automatic_carrier_order);
+    witness.fairness_order_position =
+        position_of(incremental_fairness_carrier_order);
+    witness.high_progress_order_position =
+        position_of(incremental_high_progress_carrier_order);
+    witness.missing_frontier_position =
+        position_of(incremental_anytime_missing_frontier_states);
+    witness.missing_frontier =
+        witness.missing_frontier_position != Witness::kNoPosition;
+    for (std::size_t index = 0;
+         index < incremental_priority_tasks.size(); ++index) {
+        if (incremental_priority_tasks[index].state != state) continue;
+        if (witness.first_priority_task_position == Witness::kNoPosition) {
+            witness.first_priority_task_position = index;
+        }
+        ++witness.priority_task_count;
+        if (index >= incremental_priority_task_cursor) {
+            ++witness.pending_priority_task_count;
+        }
+    }
+    witness.carrier_cursor = incremental_carrier_cursor;
+    witness.automatic_carrier_cursor =
+        incremental_automatic_carrier_cursor;
+    witness.automatic_order_cursor = incremental_automatic_order_cursor;
+    witness.fairness_carrier_cursor =
+        incremental_fairness_carrier_cursor;
+    witness.fairness_operator_cursor =
+        incremental_fairness_operator_cursor;
+    witness.high_progress_carrier_cursor =
+        incremental_high_progress_carrier_cursor;
+    witness.high_progress_operator_cursor =
+        incremental_high_progress_operator_cursor;
+    witness.closure_carrier_cursor = incremental_closure_carrier_cursor;
+    witness.closure_operator_cursor = incremental_closure_operator_cursor;
+    witness.priority_task_cursor = incremental_priority_task_cursor;
+
+    std::vector<std::uint8_t> seen_selectable_operator(
+        calc.operators().size(), 0);
+    std::uint64_t selectable_operator_identity = 1469598103934665603ULL;
+    identity_mix_string(
+        selectable_operator_identity,
+        "carrier_ladder_selectable_operator_set_v1");
+    std::uint64_t row_identity = 1469598103934665603ULL;
+    identity_mix_string(row_identity, "carrier_ladder_row_service_rows_v1");
+    if (transition_cache != nullptr &&
+        state < transition_cache->state_rows.size()) {
+        witness.row_span_present = true;
+        witness.declared_row_count =
+            transition_cache->state_rows[state].count;
+        for (const std::uint64_t row_index :
+             state_row_indices(*transition_cache, state)) {
+            ++witness.owned_row_count;
+            const SparseRow& row = transition_cache->rows.at(row_index);
+            const bool owner_matches = row.owner_state == state;
+            if (!owner_matches) ++witness.row_owner_mismatch_count;
+            if (row.admitted) ++witness.admitted_row_count;
+            const bool completed = row_index < completed_rows.size() &&
+                completed_rows[row_index] != 0;
+            if (completed) ++witness.completed_row_count;
+            const bool priced = row_index < priced_rows.size();
+            if (priced) ++witness.priced_row_count;
+            const std::uint32_t operator_index = priced
+                ? priced_rows[row_index].operator_index : kNoId;
+            const bool valid_operator = priced && operator_index != kNoId &&
+                operator_index < calc.operators().size();
+            if (valid_operator) ++witness.valid_operator_row_count;
+            const bool finite_nonnegative = valid_operator &&
+                std::isfinite(priced_rows[row_index].cost) &&
+                priced_rows[row_index].cost >= 0.0;
+            if (finite_nonnegative) {
+                ++witness.finite_nonnegative_priced_row_count;
+            }
+            const bool selectable = owner_matches && completed &&
+                finite_nonnegative;
+            if (selectable) {
+                ++witness.selectable_row_count;
+                if (!seen_selectable_operator[operator_index]) {
+                    seen_selectable_operator[operator_index] = 1;
+                    ++witness.selectable_operator_count;
+                    identity_mix(
+                        selectable_operator_identity, operator_index);
+                }
+            }
+            witness.variant_count += row.variant_count;
+            witness.transition_count += row.transition_count;
+            witness.choice_count += row.choice_count;
+            identity_mix(row_identity, row_index);
+            identity_mix(row_identity, row.owner_state);
+            identity_mix(row_identity, row.admitted);
+            identity_mix(row_identity, completed);
+            identity_mix(row_identity, priced);
+            identity_mix(row_identity, operator_index);
+            identity_mix(row_identity, finite_nonnegative);
+            identity_mix(row_identity, selectable);
+            if (priced) {
+                identity_mix(
+                    row_identity,
+                    std::bit_cast<std::uint64_t>(priced_rows[row_index].cost));
+            }
+            identity_mix(row_identity, row.variant_count);
+            identity_mix(row_identity, row.transition_count);
+            identity_mix(row_identity, row.choice_count);
+        }
+    }
+    witness.selectable_operator_identity = selectable_operator_identity;
+    witness.row_identity = row_identity;
+    for (const IncrementalAlternativeRow& alternative :
+         incremental_alternative_rows) {
+        if (alternative.state != state) continue;
+        ++witness.alternative_row_count;
+        if (alternative.row_index < completed_rows.size() &&
+            completed_rows[alternative.row_index]) {
+            ++witness.alternative_completed_row_count;
+        }
+    }
+
+    std::uint64_t envelope_identity = 1469598103934665603ULL;
+    identity_mix_string(
+        envelope_identity,
+        "carrier_ladder_row_service_action_envelope_v1");
+    witness.action_envelope_transition_count =
+        action_envelope_ledger.transition_count();
+    const auto observe_envelope_entry =
+        [&](const solve_detail::ActionEnvelopeEntry* entry) {
+            if (entry == nullptr || entry->state != state) return;
+            ++witness.action_envelope_entry_count;
+            ++witness.action_envelope_lifecycle_counts.at(
+                static_cast<std::size_t>(entry->lifecycle));
+            ++witness.action_envelope_lane_counts.at(
+                static_cast<std::size_t>(entry->lane));
+            ++witness.action_envelope_authority_counts.at(
+                static_cast<std::size_t>(entry->authority));
+            ++witness.action_envelope_stop_owner_counts.at(
+                static_cast<std::size_t>(entry->stop_owner));
+            if (entry->row_index !=
+                std::numeric_limits<std::uint64_t>::max()) {
+                ++witness.action_envelope_row_entry_count;
+            }
+            if (action_envelope_ledger.scheduling_complete(
+                    state, entry->operator_index)) {
+                ++witness.action_envelope_scheduling_complete_count;
+            }
+            identity_mix(envelope_identity, entry->operator_index);
+            identity_mix(
+                envelope_identity,
+                static_cast<std::uint64_t>(entry->lifecycle));
+            identity_mix(
+                envelope_identity,
+                static_cast<std::uint64_t>(entry->lane));
+            identity_mix(
+                envelope_identity,
+                static_cast<std::uint64_t>(entry->authority));
+            identity_mix(
+                envelope_identity,
+                static_cast<std::uint64_t>(entry->stop_owner));
+            identity_mix(envelope_identity, entry->evidence);
+            identity_mix(envelope_identity, entry->row_index);
+            identity_mix(envelope_identity, entry->revision);
+            identity_mix_string(envelope_identity, entry->detail);
+        };
+    observe_envelope_entry(action_envelope_ledger.find(state, kNoId));
+    for (std::uint32_t operator_index = 0;
+         operator_index < calc.operators().size(); ++operator_index) {
+        observe_envelope_entry(
+            action_envelope_ledger.find(state, operator_index));
+        if (incremental_completed_pairs.contains(
+                solve_detail::ActionEnvelopeLedger::key(
+                    state, operator_index))) {
+            ++witness.completed_pair_count;
+        }
+    }
+    witness.action_envelope_identity = envelope_identity;
+
+    std::uint64_t scheduler_identity = 1469598103934665603ULL;
+    identity_mix_string(
+        scheduler_identity, "carrier_ladder_row_service_scheduler_v1");
+    for (const std::uint64_t value : {
+             witness.queue_position,
+             witness.carrier_position,
+             witness.automatic_order_position,
+             witness.fairness_order_position,
+             witness.high_progress_order_position,
+             witness.missing_frontier_position,
+             witness.first_priority_task_position,
+             witness.carrier_cursor,
+             witness.automatic_carrier_cursor,
+             witness.automatic_order_cursor,
+             witness.fairness_carrier_cursor,
+             witness.fairness_operator_cursor,
+             witness.high_progress_carrier_cursor,
+             witness.high_progress_operator_cursor,
+             witness.closure_carrier_cursor,
+             witness.closure_operator_cursor,
+             witness.priority_task_cursor}) {
+        identity_mix(scheduler_identity, value);
+    }
+    identity_mix(scheduler_identity, witness.priority_task_count);
+    identity_mix(scheduler_identity, witness.pending_priority_task_count);
+    identity_mix(scheduler_identity, witness.expansion_active_for_state);
+    identity_mix(
+        scheduler_identity, witness.expansion_incremental_alternative);
+    identity_mix(scheduler_identity, witness.incremental_refinement_active);
+    identity_mix(
+        scheduler_identity, witness.incremental_refinement_targets_state);
+    witness.scheduler_identity = scheduler_identity;
+
+    witness.disposition =
+        classify_carrier_ladder_row_service_witness(witness);
+    std::uint64_t facts_identity = 1469598103934665603ULL;
+    identity_mix_string(
+        facts_identity, "carrier_ladder_row_service_witness_facts_v1");
+    const auto mix_fact_values = [&]<typename... Values>(Values... values) {
+        (identity_mix(
+             facts_identity, static_cast<std::uint64_t>(values)), ...);
+    };
+    mix_fact_values(
+        witness.state,
+        witness.goal_mask,
+        witness.goal_progress,
+        witness.certified_frontier_operator,
+        witness.planner_operator_count,
+        witness.priced_operator_count,
+        witness.static_candidate_operator_count,
+        witness.delayed_candidate_operator_count,
+        witness.dynamic_candidate_operator_count,
+        witness.declared_row_count,
+        witness.owned_row_count,
+        witness.row_owner_mismatch_count,
+        witness.admitted_row_count,
+        witness.completed_row_count,
+        witness.alternative_row_count,
+        witness.alternative_completed_row_count,
+        witness.priced_row_count,
+        witness.valid_operator_row_count,
+        witness.finite_nonnegative_priced_row_count,
+        witness.selectable_row_count,
+        witness.selectable_operator_count,
+        witness.priority_task_count,
+        witness.pending_priority_task_count,
+        witness.completed_pair_count,
+        witness.variant_count,
+        witness.transition_count,
+        witness.choice_count,
+        witness.action_envelope_transition_count,
+        witness.action_envelope_entry_count,
+        witness.action_envelope_row_entry_count,
+        witness.action_envelope_scheduling_complete_count,
+        witness.observation_state_count,
+        witness.observation_row_count,
+        witness.observation_priced_row_count,
+        witness.observation_successor_count,
+        witness.observation_probability_count,
+        witness.observation_choice_count,
+        witness.observation_choice_successor_count,
+        witness.observation_choice_option_count,
+        witness.selectable_operator_identity,
+        witness.row_identity,
+        witness.action_envelope_identity,
+        witness.scheduler_identity,
+        witness.observation_graph_identity,
+        witness.observation_graph_prefix_identity,
+        witness.disposition);
+    const auto mix_counts = [&](const auto& counts) {
+        for (const std::uint64_t count : counts) {
+            identity_mix(facts_identity, count);
+        }
+    };
+    mix_counts(witness.action_envelope_lifecycle_counts);
+    mix_counts(witness.action_envelope_lane_counts);
+    mix_counts(witness.action_envelope_authority_counts);
+    mix_counts(witness.action_envelope_stop_owner_counts);
+    for (const bool value : {
+             witness.observed,
+             witness.state_in_calc,
+             witness.goal,
+             witness.broad_expanded,
+             witness.ordinary_result_expanded,
+             witness.transition_cache_expanded,
+             witness.focused_strict_expanded,
+             witness.queued,
+             witness.queue_contains_state,
+             witness.row_span_present,
+             witness.carrier,
+             witness.missing_frontier,
+             witness.expansion_active_for_state,
+             witness.expansion_incremental_alternative,
+             witness.incremental_refinement_active,
+             witness.incremental_refinement_targets_state,
+             witness.action_envelope_scheduler_view_enabled,
+             witness.requested_bounded_finish,
+             witness.resource_cap_hit}) {
+        identity_mix(facts_identity, value);
+    }
+    witness.facts_identity = facts_identity;
+    return witness;
+}
+
+void SolveWork::Impl::bind_carrier_ladder_row_service_witness_identity(
+        CarrierLadderBoundaryCapture::RowServiceWitness& witness,
+        const CarrierLadderBoundaryCapture& capture) const {
+    std::uint64_t identity = 1469598103934665603ULL;
+    identity_mix_string(
+        identity, "carrier_ladder_row_service_witness_v1");
+    identity_mix(identity, capture.goal_identity);
+    identity_mix(identity, capture.economy_identity);
+    identity_mix(identity, capture.caller_scope_identity);
+    identity_mix(identity, capture.action_vocabulary_identity);
+    identity_mix(identity, capture.graph_identity);
+    identity_mix(identity, capture.graph_prefix_identity);
+    identity_mix(identity, capture.artifact_identity);
+    identity_mix(identity, capture.executable_identity);
+    identity_mix(identity, capture.source_identity);
+    identity_mix(identity, witness.facts_identity);
+    witness.identity = identity;
+}
+
+void SolveWork::Impl::refresh_carrier_ladder_terminal_row_service_witness() {
+    if (!carrier_ladder_exact_boundary_capture.has_value()) return;
+    CarrierLadderBoundaryCapture& capture =
+        *carrier_ladder_exact_boundary_capture;
+    if (!capture.row_service_witness.observed ||
+        transition_cache == nullptr) {
+        return;
+    }
+    std::vector<std::uint8_t> completed(
+        transition_cache->rows.size(), 0);
+    for (std::uint64_t row = 0;
+         row < transition_cache->rows.size(); ++row) {
+        completed[row] = transition_cache->rows[row].admitted ? 1 : 0;
+    }
+    for (const IncrementalAlternativeRow& alternative :
+         incremental_alternative_rows) {
+        if (alternative.row_index < completed.size() &&
+            alternative.row_index < priced_rows.size()) {
+            completed[alternative.row_index] = 1;
+        }
+    }
+    const std::uint32_t state = capture.row_service_witness.state;
+    std::uint32_t frontier = kNoId;
+    for (const CarrierLadderBoundaryCapture::Stop& stop : capture.stops) {
+        if (stop.state == state && stop.kind ==
+                CarrierLadderBoundaryCapture::StopKind::CertifiedFrontier) {
+            frontier = stop.operator_index;
+            break;
+        }
+    }
+    capture.terminal_row_service_witness =
+        capture_carrier_ladder_row_service_witness(
+            state, completed, result.expanded, frontier);
+    bind_carrier_ladder_row_service_witness_identity(
+        capture.terminal_row_service_witness, capture);
+}
+
 void SolveWork::Impl::capture_carrier_ladder_exact_boundary(
         const std::uint32_t target_state,
         const std::vector<double>& candidate_values,
@@ -1128,6 +1616,7 @@ void SolveWork::Impl::capture_carrier_ladder_exact_boundary(
         const std::vector<std::uint8_t>& candidate_reachable,
         const std::vector<std::uint32_t>& certified_frontier_operators,
         std::vector<CarrierLadderBoundaryCapture::Stop> stops,
+        CarrierLadderBoundaryCapture::RowServiceWitness row_service_witness,
         const char* refusal) {
     if (options.carrier_ladder_exact_boundary_mode ==
             CarrierLadderExactBoundaryMode::Off ||
@@ -1153,6 +1642,7 @@ void SolveWork::Impl::capture_carrier_ladder_exact_boundary(
         carrier_ladder_exact_boundary_private_wall_ns};
     CarrierLadderBoundaryCapture capture;
     capture.target_state = target_state;
+    capture.row_service_witness = std::move(row_service_witness);
     if (target_state < calc.state_count()) {
         capture.target_state_key =
             exact_abstract_state_key(calc.state(target_state), 0);
@@ -1166,7 +1656,7 @@ void SolveWork::Impl::capture_carrier_ladder_exact_boundary(
     capture.source_identity = 1469598103934665603ULL;
     identity_mix_string(
         capture.source_identity,
-        "carrier_ladder_exact_boundary_source_v2");
+        "carrier_ladder_exact_boundary_source_v5");
     capture.executable_identity = 1469598103934665603ULL;
     identity_mix_string(
         capture.executable_identity,
@@ -1232,6 +1722,8 @@ void SolveWork::Impl::capture_carrier_ladder_exact_boundary(
         capture.prefix.graph_choice_successor_count,
         capture.prefix.graph_choice_option_count);
     capture.graph_prefix_identity = capture.prefix.graph_prefix_identity;
+    bind_carrier_ladder_row_service_witness_identity(
+        capture.row_service_witness, capture);
     capture.prefix.kind = "carrier_ladder_failed_prefix_v1";
     capture_incumbent_policy(capture.prefix);
 
@@ -1421,6 +1913,9 @@ void SolveWork::Impl::capture_carrier_ladder_exact_boundary(
         refused.artifact_identity = capture.artifact_identity;
         refused.executable_identity = capture.executable_identity;
         refused.source_identity = capture.source_identity;
+        refused.row_service_witness = capture.row_service_witness;
+        refused.terminal_row_service_witness =
+            capture.terminal_row_service_witness;
         refused.status = "refused_resource_cap";
         refused.refusal = "max_owned_bytes";
         refused.retained_owned_bytes =
@@ -1513,6 +2008,267 @@ void SolveWork::Impl::refresh_carrier_ladder_exact_boundary_diagnostics(
         "\",\"executable\":\"" +
         hex(capture.executable_identity) + "\",\"source\":\"" +
         hex(capture.source_identity) + "\"}";
+    const auto append_row_service_witness = [&]
+        (const CarrierLadderBoundaryCapture::RowServiceWitness& service) {
+    const char* service_disposition = "not_observed";
+    switch (service.disposition) {
+    case CarrierLadderBoundaryCapture::RowServiceDisposition::NotObserved:
+        break;
+    case CarrierLadderBoundaryCapture::RowServiceDisposition::Undiscovered:
+        service_disposition = "undiscovered";
+        break;
+    case CarrierLadderBoundaryCapture::RowServiceDisposition::Goal:
+        service_disposition = "goal";
+        break;
+    case CarrierLadderBoundaryCapture::RowServiceDisposition::
+            SelectableRowAvailable:
+        service_disposition = "selectable_row_available";
+        break;
+    case CarrierLadderBoundaryCapture::RowServiceDisposition::
+            CertifiedFrontier:
+        service_disposition = "certified_frontier";
+        break;
+    case CarrierLadderBoundaryCapture::RowServiceDisposition::
+            RequestedBoundedFinish:
+        service_disposition = "requested_bounded_finish";
+        break;
+    case CarrierLadderBoundaryCapture::RowServiceDisposition::ResourceCap:
+        service_disposition = "resource_cap";
+        break;
+    case CarrierLadderBoundaryCapture::RowServiceDisposition::NoRowSpan:
+        service_disposition = "no_row_span";
+        break;
+    case CarrierLadderBoundaryCapture::RowServiceDisposition::
+            RowsNotScheduled:
+        service_disposition = "rows_not_scheduled";
+        break;
+    case CarrierLadderBoundaryCapture::RowServiceDisposition::
+            RowsScheduledIncomplete:
+        service_disposition = "rows_scheduled_incomplete";
+        break;
+    case CarrierLadderBoundaryCapture::RowServiceDisposition::
+            CompletedRowsInvalidOrUnpriced:
+        service_disposition = "completed_rows_invalid_or_unpriced";
+        break;
+    case CarrierLadderBoundaryCapture::RowServiceDisposition::OtherMissing:
+        service_disposition = "other_missing";
+        break;
+    }
+    const auto bool_json = [](const bool value) {
+        return value ? "true" : "false";
+    };
+    const auto append_position = [&](const char* name,
+                                     const std::uint64_t position) {
+        json += ",\"" + std::string(name) + "\":";
+        if (position == CarrierLadderBoundaryCapture::RowServiceWitness::
+                            kNoPosition) {
+            json += "null";
+        } else {
+            json += std::to_string(position);
+        }
+    };
+    const auto append_named_counts = [&](const auto& counts,
+                                         const auto& names) {
+        json.push_back('{');
+        for (std::size_t index = 0; index < counts.size(); ++index) {
+            if (index != 0) json.push_back(',');
+            append_json_string(json, names[index]);
+            json += ":" + std::to_string(counts[index]);
+        }
+        json.push_back('}');
+    };
+    static constexpr std::array<const char*, 7> lifecycle_names = {
+        "queued", "exact_row_complete", "exact_inapplicability_proved",
+        "incumbent_dominated", "rolled_back_after_cap",
+        "omitted_caller_scope", "unresolved_named_stop"};
+    static constexpr std::array<const char*, 8> lane_names = {
+        "unassigned", "restricted_anchor", "incremental_carrier_local",
+        "incremental_automatic", "incremental_priority",
+        "incremental_operator_major", "incremental_closure",
+        "explicit_caller_scope"};
+    static constexpr std::array<const char*, 7> authority_names = {
+        "none", "exact_row_materialization", "exact_registry_legality",
+        "independent_global_lower_vs_verified_upper",
+        "explicit_caller_scope", "transactional_resource_cap",
+        "named_open_obligation"};
+    static constexpr std::array<const char*, 5> stop_owner_names = {
+        "none", "resource_cap", "successor_frontier",
+        "missing_verified_upper", "requested_bounded_finish"};
+    json += "{\"schema_version\":"
+        "\"carrier_ladder_row_service_witness_v1\",\"observed\":" +
+        std::string(bool_json(service.observed)) +
+        ",\"state\":" + std::to_string(service.state) +
+        ",\"disposition\":\"" + service_disposition +
+        "\",\"identity\":\"" + hex(service.identity) +
+        "\",\"facts_identity\":\"" + hex(service.facts_identity) +
+        "\",\"classification\":{\"state_in_calc\":" +
+        std::string(bool_json(service.state_in_calc)) +
+        ",\"goal\":" + std::string(bool_json(service.goal)) +
+        ",\"goal_mask\":" + std::to_string(service.goal_mask) +
+        ",\"goal_progress\":" + std::to_string(service.goal_progress) +
+        ",\"certified_frontier_operator\":";
+    if (service.certified_frontier_operator == kNoId) json += "null";
+    else json += std::to_string(service.certified_frontier_operator);
+    json += "},\"observation_graph\":{\"identity\":\"" +
+        hex(service.observation_graph_identity) +
+        "\",\"prefix_identity\":\"" +
+        hex(service.observation_graph_prefix_identity) +
+        "\",\"states\":" +
+        std::to_string(service.observation_state_count) +
+        ",\"rows\":" + std::to_string(service.observation_row_count) +
+        ",\"priced_rows\":" +
+        std::to_string(service.observation_priced_row_count) +
+        ",\"successors\":" +
+        std::to_string(service.observation_successor_count) +
+        ",\"probabilities\":" +
+        std::to_string(service.observation_probability_count) +
+        ",\"choices\":" +
+        std::to_string(service.observation_choice_count) +
+        ",\"choice_successors\":" +
+        std::to_string(service.observation_choice_successor_count) +
+        ",\"choice_options\":" +
+        std::to_string(service.observation_choice_option_count) + "}";
+    json += ",\"expansion\":{\"broad\":" +
+        std::string(bool_json(service.broad_expanded)) +
+        ",\"ordinary_result\":" +
+        std::string(bool_json(service.ordinary_result_expanded)) +
+        ",\"transition_cache\":" +
+        std::string(bool_json(service.transition_cache_expanded)) +
+        ",\"focused_strict\":" +
+        std::string(bool_json(service.focused_strict_expanded)) +
+        ",\"queued_flag\":" + std::string(bool_json(service.queued)) +
+        ",\"queue_contains_state\":" +
+        std::string(bool_json(service.queue_contains_state)) +
+        ",\"active_for_state\":" +
+        std::string(bool_json(service.expansion_active_for_state)) +
+        ",\"incremental_alternative\":" +
+        std::string(bool_json(
+            service.expansion_incremental_alternative)) + "}";
+    json += ",\"candidate_scope\":{\"planner_operators\":" +
+        std::to_string(service.planner_operator_count) +
+        ",\"priced_operators\":" +
+        std::to_string(service.priced_operator_count) +
+        ",\"static_operators\":" +
+        std::to_string(service.static_candidate_operator_count) +
+        ",\"delayed_operators\":" +
+        std::to_string(service.delayed_candidate_operator_count) +
+        ",\"dynamic_operators\":" +
+        std::to_string(service.dynamic_candidate_operator_count) + "}";
+    json += ",\"rows\":{\"span_present\":" +
+        std::string(bool_json(service.row_span_present)) +
+        ",\"declared\":" + std::to_string(service.declared_row_count) +
+        ",\"owned\":" + std::to_string(service.owned_row_count) +
+        ",\"owner_mismatches\":" +
+        std::to_string(service.row_owner_mismatch_count) +
+        ",\"admitted\":" +
+        std::to_string(service.admitted_row_count) +
+        ",\"completed\":" +
+        std::to_string(service.completed_row_count) +
+        ",\"alternative\":" +
+        std::to_string(service.alternative_row_count) +
+        ",\"alternative_completed\":" +
+        std::to_string(service.alternative_completed_row_count) +
+        ",\"priced\":" + std::to_string(service.priced_row_count) +
+        ",\"valid_operator\":" +
+        std::to_string(service.valid_operator_row_count) +
+        ",\"finite_nonnegative_priced\":" +
+        std::to_string(service.finite_nonnegative_priced_row_count) +
+        ",\"selectable\":" +
+        std::to_string(service.selectable_row_count) +
+        ",\"selectable_operators\":" +
+        std::to_string(service.selectable_operator_count) +
+        ",\"variants\":" + std::to_string(service.variant_count) +
+        ",\"transitions\":" +
+        std::to_string(service.transition_count) +
+        ",\"choices\":" + std::to_string(service.choice_count) +
+        ",\"selectable_operator_identity\":\"" +
+        hex(service.selectable_operator_identity) +
+        "\",\"row_identity\":\"" + hex(service.row_identity) + "\"}";
+    json += ",\"scheduler\":{\"carrier\":" +
+        std::string(bool_json(service.carrier)) +
+        ",\"missing_frontier\":" +
+        std::string(bool_json(service.missing_frontier)) +
+        ",\"priority_tasks\":" +
+        std::to_string(service.priority_task_count) +
+        ",\"pending_priority_tasks\":" +
+        std::to_string(service.pending_priority_task_count) +
+        ",\"carrier_cursor\":" + std::to_string(service.carrier_cursor) +
+        ",\"automatic_carrier_cursor\":" +
+        std::to_string(service.automatic_carrier_cursor) +
+        ",\"automatic_order_cursor\":" +
+        std::to_string(service.automatic_order_cursor) +
+        ",\"fairness_carrier_cursor\":" +
+        std::to_string(service.fairness_carrier_cursor) +
+        ",\"fairness_operator_cursor\":" +
+        std::to_string(service.fairness_operator_cursor) +
+        ",\"high_progress_carrier_cursor\":" +
+        std::to_string(service.high_progress_carrier_cursor) +
+        ",\"high_progress_operator_cursor\":" +
+        std::to_string(service.high_progress_operator_cursor) +
+        ",\"closure_carrier_cursor\":" +
+        std::to_string(service.closure_carrier_cursor) +
+        ",\"closure_operator_cursor\":" +
+        std::to_string(service.closure_operator_cursor) +
+        ",\"priority_task_cursor\":" +
+        std::to_string(service.priority_task_cursor) +
+        ",\"refinement_active\":" +
+        std::string(bool_json(service.incremental_refinement_active)) +
+        ",\"refinement_targets_state\":" +
+        std::string(bool_json(
+            service.incremental_refinement_targets_state)) +
+        ",\"identity\":\"" + hex(service.scheduler_identity) + "\"";
+    append_position("queue_position", service.queue_position);
+    append_position("carrier_position", service.carrier_position);
+    append_position(
+        "automatic_order_position", service.automatic_order_position);
+    append_position(
+        "fairness_order_position", service.fairness_order_position);
+    append_position(
+        "high_progress_order_position",
+        service.high_progress_order_position);
+    append_position(
+        "missing_frontier_position", service.missing_frontier_position);
+    append_position(
+        "first_priority_task_position",
+        service.first_priority_task_position);
+    json += "}";
+    json += ",\"terminal\":{\"requested_bounded_finish\":" +
+        std::string(bool_json(service.requested_bounded_finish)) +
+        ",\"resource_cap_hit\":" +
+        std::string(bool_json(service.resource_cap_hit)) + "}";
+    json += ",\"action_envelope\":{\"scheduler_view_enabled\":" +
+        std::string(bool_json(
+            service.action_envelope_scheduler_view_enabled)) +
+        ",\"transition_count\":" +
+        std::to_string(service.action_envelope_transition_count) +
+        ",\"entries\":" +
+        std::to_string(service.action_envelope_entry_count) +
+        ",\"row_entries\":" +
+        std::to_string(service.action_envelope_row_entry_count) +
+        ",\"scheduling_complete\":" +
+        std::to_string(
+            service.action_envelope_scheduling_complete_count) +
+        ",\"completed_pairs\":" +
+        std::to_string(service.completed_pair_count) +
+        ",\"identity\":\"" + hex(service.action_envelope_identity) +
+        "\",\"lifecycle_counts\":";
+    append_named_counts(
+        service.action_envelope_lifecycle_counts, lifecycle_names);
+    json += ",\"lane_counts\":";
+    append_named_counts(service.action_envelope_lane_counts, lane_names);
+    json += ",\"authority_counts\":";
+    append_named_counts(
+        service.action_envelope_authority_counts, authority_names);
+    json += ",\"stop_owner_counts\":";
+    append_named_counts(
+        service.action_envelope_stop_owner_counts, stop_owner_names);
+    json += "}}";
+    };
+    json += ",\"row_service_witness_v1\":{\"initial\":";
+    append_row_service_witness(capture.row_service_witness);
+    json += ",\"terminal\":";
+    append_row_service_witness(capture.terminal_row_service_witness);
+    json += "}";
     json += ",\"counts\":{\"selected_states\":" +
         std::to_string(capture.selected_states) +
         ",\"goal_stops\":" + std::to_string(capture.goal_stops) +
@@ -3042,6 +3798,8 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                     }
                     const auto& private_limits =
                         options.carrier_ladder_exact_boundary_limits;
+                    CarrierLadderBoundaryCapture::RowServiceWitness
+                        row_service_witness;
                     std::vector<std::uint64_t> captured_policy_rows =
                         policy_rows;
                     std::vector<std::uint8_t> captured_reachable(
@@ -3051,13 +3809,76 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                         result.start_state};
                     std::vector<CarrierLadderBoundaryCapture::Stop> stops;
                     std::uint64_t work = 0;
+                    const auto select_row_service_witness = [&] {
+                        std::uint32_t service_state = kNoId;
+                        for (const auto& stop : stops) {
+                            bool unresolved = stop.kind ==
+                                CarrierLadderBoundaryCapture::StopKind::
+                                    UnresolvedMissing;
+                            if (stop.kind ==
+                                CarrierLadderBoundaryCapture::StopKind::
+                                    CertifiedFrontier) {
+                                const bool valid_certified_continuation =
+                                    output_incumbent.has_value() &&
+                                    output_incumbent
+                                        ->independently_certified &&
+                                    output_incumbent
+                                        ->independently_evaluated &&
+                                    output_incumbent->proper &&
+                                    output_incumbent->executable &&
+                                    stop.operator_index != kNoId &&
+                                    stop.operator_index <
+                                        calc.operators().size() &&
+                                    stop.state <
+                                        output_incumbent->values.size() &&
+                                    std::isfinite(
+                                        output_incumbent->values[stop.state]);
+                                unresolved =
+                                    !valid_certified_continuation;
+                            }
+                            if (!unresolved) {
+                                continue;
+                            }
+                            service_state = std::min(
+                                service_state, stop.state);
+                        }
+                        if (service_state == kNoId) {
+                            service_state = target_state;
+                        }
+                        std::uint32_t frontier =
+                            service_state <
+                                    certified_frontier_operators.size()
+                                ? certified_frontier_operators[service_state]
+                                : kNoId;
+                        const bool valid_certified_continuation =
+                            output_incumbent.has_value() &&
+                            output_incumbent->independently_certified &&
+                            output_incumbent->independently_evaluated &&
+                            output_incumbent->proper &&
+                            output_incumbent->executable &&
+                            frontier != kNoId &&
+                            frontier < calc.operators().size() &&
+                            service_state <
+                                output_incumbent->values.size() &&
+                            std::isfinite(
+                                output_incumbent->values[service_state]);
+                        if (!valid_certified_continuation) {
+                            frontier = kNoId;
+                        }
+                        row_service_witness =
+                            capture_carrier_ladder_row_service_witness(
+                                service_state, completed, saved_expanded,
+                                frontier);
+                    };
                     const auto refuse = [&](const char* cap) {
+                        select_row_service_witness();
                         capture_carrier_ladder_exact_boundary(
                             target_state, result.values,
                             captured_policy_rows,
                             captured_reachable,
                             certified_frontier_operators,
-                            std::move(stops), cap);
+                            std::move(stops),
+                            std::move(row_service_witness), cap);
                     };
                     const auto route = [&](const std::uint32_t successor) {
                         if (successor >= state_count) return false;
@@ -3147,12 +3968,14 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                             }
                         }
                     }
+                    select_row_service_witness();
                     capture_carrier_ladder_exact_boundary(
                         target_state, result.values,
                         captured_policy_rows,
                         captured_reachable,
                         certified_frontier_operators,
-                        std::move(stops));
+                        std::move(stops),
+                        std::move(row_service_witness));
                 };
 
             const auto rebuild_reachable =

@@ -13,6 +13,18 @@ after root Chaos and may repair only an already-authorized row lifecycle
 omission. It may not expand the action catalogue, raise caps, change bounded-
 finish authority, begin fragment composition, or redesign the solver.
 
+Gates 0-5 passed diagnosis-only. The retained two-stage row-service witness
+proves that state 213 was captured early while first in the ordinary service
+queue with no rows yet, then was naturally serviced before ordinary
+publication with six completed, priced, selectable rows. There is no action-
+catalogue defect and no ordinary ladder-service omission to repair. Matched
+off/record/recover results, two deterministic natural recoveries, a real cap,
+genuine cancellation, four fresh ladder controls, and exact bundle replay all
+passed on native executable SHA-256
+`e79b2c9318f05acb2a75185ace09fd85b7796071f12a65fd220d848c832652c4`.
+Gate 6 owns the one final acceptance run, documentation closeout, archive, and
+local commits.
+
 ## Most Recent Completed Boundary
 
 [Carrier-Ladder Selected-Prefix Closure v1](docs/archive/2026-08-29-carrier-ladder-selected-prefix-closure-v1/README.md)
@@ -37,10 +49,10 @@ the concise disposition is in the
 
 ## Current Owner
 
-Gate 0 owns source provenance across state discovery, row allocation,
-scheduling, completion, pricing, selection, and failed-prefix capture. The
-first evidence must distinguish absent rows, incomplete rows, rejected rows,
-deliberate frontier/cap ownership, and missed scheduling before any repair.
+Gate 6 owns final native/CLI acceptance, release WASM and web/TypeScript
+parity, the full repository pipeline, documentation and scope audits, archive,
+and local-only closeout. No solver behavior repair is authorized because the
+service witness disproved the suspected defect.
 
 ## Retained Repository State
 

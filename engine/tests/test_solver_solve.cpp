@@ -99,6 +99,50 @@ void run_incumbent_portfolio_monotonicity_tests() {
     PC_CHECK(!portfolio.monotonicity_violation);
 }
 
+void run_carrier_ladder_row_service_witness_classification_tests() {
+    using Impl = SolveWorkTestAccess::Impl;
+    using Witness =
+        Impl::CarrierLadderBoundaryCapture::RowServiceWitness;
+    using Disposition =
+        Impl::CarrierLadderBoundaryCapture::RowServiceDisposition;
+    const auto classify = [](const Witness& witness) {
+        return Impl::classify_carrier_ladder_row_service_witness(witness);
+    };
+
+    Witness witness;
+    PC_CHECK(classify(witness) == Disposition::NotObserved);
+    witness.observed = true;
+    PC_CHECK(classify(witness) == Disposition::Undiscovered);
+    witness.state_in_calc = true;
+    PC_CHECK(classify(witness) == Disposition::NoRowSpan);
+
+    witness.row_span_present = true;
+    witness.owned_row_count = 1;
+    PC_CHECK(classify(witness) == Disposition::RowsNotScheduled);
+    witness.action_envelope_entry_count = 1;
+    PC_CHECK(classify(witness) == Disposition::RowsScheduledIncomplete);
+    witness.completed_row_count = 1;
+    PC_CHECK(
+        classify(witness) ==
+        Disposition::CompletedRowsInvalidOrUnpriced);
+    witness.selectable_row_count = 1;
+    PC_CHECK(classify(witness) == Disposition::SelectableRowAvailable);
+
+    witness.selectable_row_count = 0;
+    witness.certified_frontier_operator = 7;
+    PC_CHECK(classify(witness) == Disposition::CertifiedFrontier);
+    witness.certified_frontier_operator = kNoId;
+    witness.completed_row_count = 0;
+    witness.requested_bounded_finish = true;
+    witness.resource_cap_hit = true;
+    PC_CHECK(classify(witness) == Disposition::RequestedBoundedFinish);
+    witness.requested_bounded_finish = false;
+    PC_CHECK(classify(witness) == Disposition::ResourceCap);
+    witness.resource_cap_hit = false;
+    witness.goal = true;
+    PC_CHECK(classify(witness) == Disposition::Goal);
+}
+
 void run_anytime_scheduler_tests() {
     using solve_detail::SolveScheduler;
     using solve_detail::AnytimeSchedulerLane;
@@ -11404,6 +11448,7 @@ void run_solver_solve_tests(const char* artifact_dir) {
     run_executable_carrier_projection_tests();
     run_proof_pattern_manager_tests();
     run_incumbent_portfolio_monotonicity_tests();
+    run_carrier_ladder_row_service_witness_classification_tests();
     run_bounded_policy_row_capture_tests();
     run_automatic_sample_copy_ledger_tests();
     run_certified_fallback_contract_tests();
