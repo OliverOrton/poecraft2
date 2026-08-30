@@ -1,16 +1,15 @@
 # Active Work
 
-**Status: no implementation boundary is active.** Oliver must select the next
-chunk before implementation resumes.
+**Status: one implementation boundary is active.**
 
 Parent: [Documentation map](../README.md)
 
 ## Current work
 
-None. The PDR retention-capacity pilot completed diagnosis-only because the
-only aligned early executable upper was 15.77 million Chaos. The recommended,
-unselected follow-up is ladder-side early executable-policy properness, not a
-retention/capacity or fragment abstraction.
+[Carrier-Ladder Early Executable Closure v1](2026-08-30-carrier-ladder-early-executable-closure-v1/README.md)
+is attributing the one fail-closed route that makes the near-optimal PDR direct
+policy 97.1% off-policy, then will test only the smallest existing-service
+closure supported by that evidence.
 
 ## Historical work
 

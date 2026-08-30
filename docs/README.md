@@ -31,8 +31,10 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. Oliver must select the next chunk
-before implementation resumes.
+[Carrier-Ladder Early Executable Closure v1](active/2026-08-30-carrier-ladder-early-executable-closure-v1/README.md)
+is active. It is tracing the single fail-closed router default that prevents a
+near-optimal PDR direct policy from becoming a proper executable candidate
+before terminal strict refinement.
 
 The completed diagnosis-only
 [PDR Retention-Capacity Operator-Proof Pilot v1](archive/2026-08-30-pdr-retention-capacity-operator-proof-pilot-v1/README.md)
