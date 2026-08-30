@@ -31,8 +31,16 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. Oliver must select the next chunk before
-implementation resumes.
+No implementation boundary is active. Oliver must select the next chunk
+before implementation resumes.
+
+The completed
+[Historical Five-Goal Quality Regression v1](archive/2026-08-30-historical-five-goal-quality-regression-v1/README.md)
+boundary reproduces the byte-identical historical 87k strategy, isolates the
+first source quality regression to missing-frontier/automatic-epoch
+scheduling, restores ladder/value/joint-policy interleaving, and independently
+produces an exact 85,408.64-Chaos strategy that passes 10,000/10,000 native
+Simulator trials.
 
 The archived
 [Carrier-Ladder Online Continuation Completion v2](archive/2026-08-29-carrier-ladder-online-continuation-completion-v2/README.md)

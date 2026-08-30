@@ -1,17 +1,16 @@
 # Active Work
 
-**Status: no implementation boundary is active.** Oliver must select the next
-chunk before implementation resumes.
+**Status: no implementation boundary is active.**
 
 Parent: [Documentation map](../README.md)
 
 ## Current work
 
-None.
+None. Oliver must select the next boundary before implementation resumes.
 
 ## Historical work
 
-All completed and stopped solver boundaries through 2026-08-29 are preserved
+All completed and stopped solver boundaries through 2026-08-30 are preserved
 in the [documentation archive](../archive/README.md). Archived wording may
 describe historical “next” work but has no current sequencing authority.
 

@@ -117,14 +117,18 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
     if (!incremental_action_generation || incremental_envelope_closed) {
         return false;
     }
-    const bool frozen_automatic_epoch_pending =
-        options.high_impact_executable_uppers &&
-        incremental_automatic_order_cursor <
-            incremental_automatic_carrier_order.size();
     const bool continue_current_epoch =
         continue_current_epoch_request ||
-        incremental_resume_epoch_after_dynamic_prepare ||
-        frozen_automatic_epoch_pending;
+        incremental_resume_epoch_after_dynamic_prepare;
+    /* Do not turn a frozen automatic frontier into one indivisible scheduler
+     * epoch. Re-entering through the ordinary boundary lets value/refinement
+     * work consume each newly materialized carrier slice and attempt a joint
+     * executable policy before the remaining automatic frontier is drained.
+     * Keeping the whole frozen order pending here starved that interleave:
+     * the historical five-goal request fell from 35 carrier epochs / 15 joint
+     * attempts to 3 / 2 while doing more carrier work overall. Dynamic
+     * preparation still resumes explicitly above, so a carrier cannot lose
+     * the operator list it has just synthesized. */
     incremental_resume_epoch_after_dynamic_prepare = false;
     if (!continue_current_epoch) {
         incremental_epoch_added_states = false;
@@ -177,22 +181,6 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
             ordered.reserve(end - begin);
             std::unordered_set<std::uint32_t> ordered_members;
             ordered_members.reserve(end - begin);
-            /* A failed joint-policy proof names the exact carrier whose
-             * continuation is missing. Expansion alone does not complete its
-             * carrier-local automatic rows, so preserve that witness through
-             * the second scheduling stage and put it ahead of the ordinary
-             * fair ladder. This is executable-upper work ordering only. */
-            for (const std::uint32_t urgent :
-                 incremental_anytime_missing_frontier_states) {
-                const auto found = std::find(
-                    incremental_carriers.begin() + begin,
-                    incremental_carriers.begin() + end, urgent);
-                if (found != incremental_carriers.begin() + end &&
-                    ordered_members.insert(urgent).second) {
-                    ordered.push_back(urgent);
-                    ++incremental_missing_frontier_priority_offers;
-                }
-            }
             bool advanced = true;
             while (advanced) {
                 advanced = false;
@@ -386,18 +374,6 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
             }
             ++incremental_automatic_carrier_cursor;
             ++incremental_automatic_order_cursor;
-            const std::size_t missing_before =
-                incremental_anytime_missing_frontier_states.size();
-            incremental_anytime_missing_frontier_states.erase(
-                std::remove(
-                    incremental_anytime_missing_frontier_states.begin(),
-                    incremental_anytime_missing_frontier_states.end(),
-                    state),
-                incremental_anytime_missing_frontier_states.end());
-            if (incremental_anytime_missing_frontier_states.size() <
-                missing_before) {
-                ++incremental_missing_frontier_service_completions;
-            }
             incremental_dynamic_prepared = false;
             incremental_dynamic_prepare_active = false;
             incremental_dynamic_operator_cursor = 0;
@@ -1598,9 +1574,7 @@ bool SolveWork::Impl::schedule_incremental_refinement(
     for (const IncrementalAlternativeRow& candidate :
          incremental_alternative_rows) {
         if (candidate.status !=
-                IncrementalAlternativeRow::Status::Unresolved &&
-            !(force && candidate.status ==
-                IncrementalAlternativeRow::Status::PendingValues)) {
+            IncrementalAlternativeRow::Status::Unresolved) {
             continue;
         }
         has_unresolved = true;
@@ -1801,6 +1775,26 @@ bool SolveWork::Impl::schedule_incremental_refinement(
             }
         }
     }
+    /* A missing joint-policy frontier has been serviced once ordinary exact
+     * refinement selects it. Retire that request at the selection boundary
+     * instead of pinning the carrier at the head of every later automatic
+     * epoch: the latter repeatedly drained carrier-local synthesis before
+     * value updates could attempt another joint executable policy. */
+    for (const std::uint32_t state :
+         incremental_anytime_missing_frontier_states) {
+        if (state < selected.size() && selected[state]) {
+            ++incremental_missing_frontier_priority_offers;
+            ++incremental_missing_frontier_service_completions;
+        }
+    }
+    incremental_anytime_missing_frontier_states.erase(
+        std::remove_if(
+            incremental_anytime_missing_frontier_states.begin(),
+            incremental_anytime_missing_frontier_states.end(),
+            [&](const std::uint32_t state) {
+                return state < selected.size() && selected[state];
+            }),
+        incremental_anytime_missing_frontier_states.end());
     std::deque<std::uint32_t> remainder;
     for (const std::uint32_t state : queue) {
         if (state >= selected.size() || !selected[state]) {

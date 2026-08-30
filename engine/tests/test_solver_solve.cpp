@@ -7543,6 +7543,41 @@ void run_frontier_incumbent_epoch_skew_tests() {
         [&](const std::uint32_t state) {
             return state >= work.transition_cache->state_rows.size();
         }));
+
+    /* The missing carrier is an exact-refinement request, not a permanent
+     * head-of-line reservation in every later automatic epoch. Selecting it
+     * must retire the request immediately so value updates and joint policy
+     * assembly can interleave with the remaining carrier-local work. */
+    const std::uint32_t missing_state =
+        work.incremental_anytime_missing_frontier_states.front();
+    PC_CHECK(missing_state < work.calc.state_count());
+    if (missing_state < work.expanded.size() &&
+        work.expanded[missing_state]) {
+        work.expanded[missing_state] = 0;
+        --work.expanded_count;
+    }
+    work.incremental_alternative_rows.clear();
+    work.incremental_envelope_closed = false;
+    work.incremental_refinement_active = false;
+    work.options.max_expanded_states = std::max(
+        work.options.max_expanded_states,
+        work.expanded_count + 1);
+    const std::uint64_t offers_before =
+        work.incremental_missing_frontier_priority_offers;
+    const std::uint64_t completions_before =
+        work.incremental_missing_frontier_service_completions;
+    PC_CHECK(work.schedule_incremental_refinement(true));
+    PC_CHECK(std::find(
+                 work.incremental_anytime_missing_frontier_states.begin(),
+                 work.incremental_anytime_missing_frontier_states.end(),
+                 missing_state) ==
+             work.incremental_anytime_missing_frontier_states.end());
+    PC_CHECK(
+        work.incremental_missing_frontier_priority_offers ==
+        offers_before + 1);
+    PC_CHECK(
+        work.incremental_missing_frontier_service_completions ==
+        completions_before + 1);
 }
 
 void run_mixed_side_rare_cap_reporting_regression() {

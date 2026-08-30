@@ -9,6 +9,15 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-08-30
+
+- [Historical Five-Goal Quality Regression v1](2026-08-30-historical-five-goal-quality-regression-v1/README.md) —
+  reproduces the byte-identical historical 87k strategy, isolates the first
+  quality regression to missing-frontier/automatic-epoch scheduling in
+  `b6fb861`, restores ordinary ladder/value/joint-policy interleaving, and
+  independently produces an exact 85,408.64-Chaos strategy that passes
+  10,000/10,000 native Simulator trials.
+
 ## 2026-08-29
 
 - [Carrier-Ladder Online Continuation Completion v2](2026-08-29-carrier-ladder-online-continuation-completion-v2/README.md) —
