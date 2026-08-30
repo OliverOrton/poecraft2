@@ -1,10 +1,25 @@
 # Handoff
 
-**Status: no implementation boundary is active.**
+**Status: Full-Primitive Fossil Setup And Carrier-Ladder Qualification v1 is
+active.**
 
 ## Current Boundary
 
-None. Oliver must choose the next chunk before implementation resumes.
+[Full-Primitive Fossil Setup And Carrier-Ladder Qualification v1](docs/active/2026-08-29-full-primitive-fossil-setup-ladder-qualification-v1/README.md)
+was selected by Oliver on 2026-08-29 from source checkpoint
+`f975c0cb4eb2b4069473e6f9281c208d40c8f29d`.
+
+The boundary first attributes why Fossil prevents the pinned full primitive
+request from reaching native progress, then permits only a narrow
+behavior-neutral setup repair. It must preserve complete Fossil action scope,
+mechanics, pricing, ordering, identities, caps, product goal-relevant
+construction, and exact solver authority. After setup is observable and
+cancellable, it qualifies the existing carrier ladder with Fossil present.
+
+The exact gates and hard stops are in the
+[plan](docs/active/2026-08-29-full-primitive-fossil-setup-ladder-qualification-v1/plan.md);
+chronological identities and results belong in the
+[execution log](docs/active/2026-08-29-full-primitive-fossil-setup-ladder-qualification-v1/execution-log.md).
 
 ## Most Recent Completed Boundary
 
@@ -28,14 +43,16 @@ the concise disposition is in the
 
 ## Current Owner
 
-Oliver owns selection of the next implementation boundary. The completed
-evidence permits no follow-on state-213 service repair. A separate future
-boundary could improve private capture recency, but it is not active or
-required for ordinary ladder correctness.
+Codex owns execution of the selected plan. Oliver retains mechanic rulings and
+approval of any material scope or public-contract expansion. The boundary
+does not permit a state-213 repair, fragment integration, private capture-
+recency cleanup, MCP restoration, GUI work, or cap increase.
 
 ## Retained Repository State
 
 - Branch: `main`.
+- Starting HEAD and `origin/main`:
+  `f975c0cb4eb2b4069473e6f9281c208d40c8f29d`.
 - No push was performed.
 - The ladder remains the product architecture; fragment composition is parked
   without a recovered exact entry domain.

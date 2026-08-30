@@ -31,8 +31,14 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. Oliver chooses the next chunk before
-implementation resumes.
+The selected
+[Full-Primitive Fossil Setup And Carrier-Ladder Qualification v1](active/2026-08-29-full-primitive-fossil-setup-ladder-qualification-v1/README.md)
+boundary is active from source checkpoint
+`f975c0cb4eb2b4069473e6f9281c208d40c8f29d`. It owns attribution and a narrow
+behavior-neutral repair of the synchronous Fossil setup blocker, followed by
+qualification of the existing carrier ladder under the genuinely full
+primitive envelope. Fragment composition, private capture-recency cleanup,
+MCP, GUI work, cap increases, and mechanic changes remain outside scope.
 
 The completed diagnosis-only
 [Carrier-Ladder State-213 Service Coverage v1](archive/2026-08-29-carrier-ladder-state-213-service-coverage-v1/README.md)
