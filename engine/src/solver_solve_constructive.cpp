@@ -2033,10 +2033,10 @@ void SolveWork::Impl::refresh_carrier_ladder_exact_boundary_diagnostics(
         json += ",\"selected_prefix\":{\"rows_appended\":" +
             std::to_string(candidate.rows_appended);
         json += ",\"fixed_decisions\":" +
-            std::to_string(candidate.fixed_decisions.size());
+            std::to_string(candidate.fixed_decision_count());
         json += ",\"cursor\":" + std::to_string(candidate.cursor);
         json += ",\"walk_states\":" +
-            std::to_string(candidate.walk.size());
+            std::to_string(candidate.walk_state_count());
         json += ",\"capture_reconstructions\":" +
             std::to_string(candidate.capture_count);
         json += ",\"global_rebuilds_between_resumes\":0}";
@@ -4410,15 +4410,19 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
         if (!require_resource_stop) {
             continuation_advance = resume_joint_policy_candidate_if_ready();
             if (continuation_advance ==
-                    ResumableJointPolicyAdvance::Yielded ||
-                continuation_advance ==
-                    ResumableJointPolicyAdvance::Released) {
+                    ResumableJointPolicyAdvance::Yielded) {
                 record_attempt_failure(
-                    continuation_advance ==
-                            ResumableJointPolicyAdvance::Yielded
-                        ? "resumable_candidate_waiting_for_next_continuation"
-                        : "resumable_candidate_released");
+                    "resumable_candidate_waiting_for_next_continuation");
                 return false;
+            }
+            if (continuation_advance ==
+                    ResumableJointPolicyAdvance::Released) {
+                if (resumable_joint_policy_candidate.has_value()) {
+                    resumable_joint_policy_candidate
+                        ->release_owned_payload();
+                }
+                record_attempt_failure(
+                    "resumable_candidate_released");
             }
         }
         const bool retained_candidate_ready =

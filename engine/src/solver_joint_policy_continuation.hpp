@@ -195,6 +195,8 @@ public:
     std::uint64_t retained_work = 0;
     std::uint64_t transient_peak_bytes = 0;
     std::uint64_t retained_peak_bytes = 0;
+    std::size_t released_fixed_decision_count = 0;
+    std::size_t released_walk_state_count = 0;
     std::vector<JointPolicySemanticKey> missing_state_history;
 
     static ResumableJointPolicyContinuation capture(
@@ -430,6 +432,26 @@ public:
         noncompetitive_discard_count +=
             reason == JointPolicyContinuationRefusal::ExactNoncompetitive;
         refresh_retained_peak();
+        released_fixed_decision_count = std::max(
+            released_fixed_decision_count, fixed_decisions.size());
+        released_walk_state_count = std::max(
+            released_walk_state_count, walk.size());
+        release_vector(selection_values);
+        release_vector(certified_boundary_values);
+        release_vector(certified_frontier_actions);
+        release_vector(walk);
+        release_vector(processed);
+        release_vector(reachable);
+        release_vector(fixed_decisions);
+    }
+
+    std::size_t fixed_decision_count() const {
+        return std::max(
+            released_fixed_decision_count, fixed_decisions.size());
+    }
+
+    std::size_t walk_state_count() const {
+        return std::max(released_walk_state_count, walk.size());
     }
 
     void rebase() {
@@ -521,6 +543,11 @@ public:
     }
 
 private:
+    template <typename T>
+    static void release_vector(std::vector<T>& values) {
+        std::vector<T>().swap(values);
+    }
+
     static bool canonical_context_precedes(
             const JointPolicyContinuationContext& left,
             const JointPolicyContinuationContext& right) {

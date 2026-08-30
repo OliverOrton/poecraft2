@@ -1,7 +1,24 @@
 # Handoff
 
-**Status: no implementation boundary is active. Oliver must choose the next
-chunk before implementation resumes.**
+**Status: active implementation boundary selected by Oliver.**
+
+## Current Boundary
+
+[Carrier-Ladder Released-Candidate Reclamation v1](docs/active/2026-08-30-carrier-ladder-released-candidate-reclamation-v1/README.md)
+is the evidence-first follow-up to Outcome B.
+
+The matched clean-five private witness proved that the existing 256 MiB
+candidate cap already rejects the harmful continuation after bounded growth,
+but `release(ResourceInterrupted)` retains 304,701,928 bytes of payload and
+leaves the refused optional engaged. Repair true reclamation and let terminal
+refusal fall through to ordinary work. PDR evidence rejects making active
+yield fall through: that over-served the candidate and missed its 300-second
+watchdog. Do not add a planner, heuristic admission score, or
+retention-capacity proof unless the narrowed private controls still require
+one.
+
+Current execution evidence and exact gates are in the active plan and
+[execution log](docs/active/2026-08-30-carrier-ladder-released-candidate-reclamation-v1/execution-log.md).
 
 ## Last Evaluated Boundary
 

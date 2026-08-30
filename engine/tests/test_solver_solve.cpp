@@ -273,6 +273,17 @@ void run_resumable_joint_policy_continuation_fixture_tests() {
     invalidated.advance(resolve, validate, 32);
     PC_CHECK(invalidated.lifecycle == Lifecycle::Refused);
     PC_CHECK(invalidated.refusal == Refusal::StructuralPrefixInvalid);
+    PC_CHECK(invalidated.fixed_decision_count() == 1);
+    PC_CHECK(invalidated.walk_state_count() == 2);
+    PC_CHECK(invalidated.selection_values.empty());
+    PC_CHECK(invalidated.certified_boundary_values.empty());
+    PC_CHECK(invalidated.certified_frontier_actions.empty());
+    PC_CHECK(invalidated.walk.empty());
+    PC_CHECK(invalidated.processed.empty());
+    PC_CHECK(invalidated.reachable.empty());
+    PC_CHECK(invalidated.fixed_decisions.empty());
+    PC_CHECK(invalidated.retained_peak_bytes >
+             invalidated.retained_owned_bytes());
     authoritative_rows.at(10) = row_key(0);
 
     Candidate rebased = repeat;

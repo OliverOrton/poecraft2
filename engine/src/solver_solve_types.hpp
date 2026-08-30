@@ -1584,6 +1584,13 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         std::uint64_t ordinary_interleave_events = 0;
         std::uint64_t handoff_count = 0;
         bool handed_off_for_evaluation = false;
+
+        void release_owned_payload() {
+            certified_fallback.reset();
+            certified_renewal = PrimitiveRenewalWitness{};
+            std::vector<std::uint8_t>().swap(
+                certified_boundary_reachable);
+        }
     };
     std::optional<ResumableJointPolicyCandidateState>
         resumable_joint_policy_candidate;
