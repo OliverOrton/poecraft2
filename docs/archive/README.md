@@ -11,6 +11,12 @@ selected active work.
 
 ## 2026-08-29
 
+- [Carrier-Ladder Frozen-Graph Candidate Utilization v1](2026-08-29-carrier-ladder-frozen-graph-candidate-utilization-v1/README.md) —
+  retains benchmark-private joint-attempt lineage and proves diagnosis-only
+  that terminal assembly sees every frozen completed row but remains improper
+  at unserved continuation states; the historical 87k policy remains current-
+  valid and no action-catalogue, publication, or ordinary behavior repair was
+  retained.
 - [Full-Primitive Fossil Setup And Carrier-Ladder Qualification v1](2026-08-29-full-primitive-fossil-setup-ladder-qualification-v1/README.md) —
   archives diagnosis-only evidence that stale malformed immutable requests,
   not current bounded Fossil generation, owned the apparent setup block;

@@ -6,11 +6,10 @@ Parent: [Documentation map](../README.md)
 
 ## Current work
 
-[Carrier-Ladder Frozen-Graph Candidate Utilization v1](2026-08-29-carrier-ladder-frozen-graph-candidate-utilization-v1.md)
-determines whether the current full five-goal run's final materialized graph
-already contains a substantially cheaper proper executable candidate that
-joint assembly, exact evaluation, incumbent comparison, or publication loses.
-The historical 87k strategy is diagnostic evidence only.
+[Carrier-Ladder Online Continuation Completion v2](2026-08-29-carrier-ladder-online-continuation-completion-v2.md)
+uses the frozen-graph diagnosis to route one live missing continuation through
+the existing ordinary exact service lifecycle early enough for a later joint
+policy retry. It does not authorize a fragment library or second planner.
 
 ## Historical work
 

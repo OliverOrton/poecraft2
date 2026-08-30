@@ -6,6 +6,25 @@ routes to them rather than duplicating complete reports.
 
 Parent: [Documentation map](README.md)
 
+## Frozen Carrier-Graph Candidate Utilization
+
+The 2026-08-29
+[archived result](archive/2026-08-29-carrier-ladder-frozen-graph-candidate-utilization-v1/result.md)
+retains bounded benchmark-private lineage for all three joint-policy
+invocations. Terminal invocation identity `c6b0184652cbaf2c` sees all 2,251
+completed alternatives at completed-row identity `1068752fe7990f46`, but the
+policy is improper at unexpanded non-carrier state 4489 / goal mask 0. The
+same run retains two open missing continuations, zero priority offers, and zero
+service completions.
+
+The historical strategy SHA-256
+`6082eef2462295c167cc6b0ec9855b397f2f3f673c15245fdef93b2300358104`
+remains current-valid at exact cost `87361.16904205013`, success probability
+one, and zero off-policy mass. The current caller scope also contains and
+prices the Eldritch dependencies. The first quality divergence is therefore
+online continuation completion, not action-catalogue absence, semantic drift,
+lost frozen rows, incumbent comparison, or publication.
+
 ## Carrier-Ladder Exact Boundary Diagnosis
 
 The 2026-08-29

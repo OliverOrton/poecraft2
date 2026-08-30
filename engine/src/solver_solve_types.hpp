@@ -1430,6 +1430,62 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         std::vector<RecoveredMember> recovered_members;
         std::vector<ReachedStop> reached_stops;
     };
+    struct JointAnytimeAttemptLineage {
+        enum class Trigger : std::uint8_t {
+            IncrementalCheckpoint = 0,
+            PublicationPreflight,
+            TerminalPublication,
+        };
+        struct SelectedDecision {
+            std::uint32_t state = kNoId;
+            std::uint64_t row = std::numeric_limits<std::uint64_t>::max();
+            std::uint32_t operator_index = kNoId;
+        };
+
+        std::uint64_t ordinal = 0;
+        Trigger trigger = Trigger::IncrementalCheckpoint;
+        std::uint64_t source_generation = 0;
+        std::uint64_t target_generation = 0;
+        std::uint64_t ordinary_admitted_rows = 0;
+        std::uint64_t completed_row_count = 0;
+        std::uint64_t completed_row_identity = 0;
+        std::uint64_t completed_row_delta = 0;
+        std::uint64_t completed_alternative_rows = 0;
+        std::uint64_t alternative_row_identity = 0;
+        std::uint64_t alternative_row_delta = 0;
+        std::uint64_t incumbent_identity_before = 0;
+        double incumbent_estimate_before = kInfinity;
+        double incumbent_exact_cost_before = kInfinity;
+        double candidate_root_estimate = kInfinity;
+        std::uint64_t selection_identity = 0;
+        std::uint64_t selected_state_count = 0;
+        std::uint64_t selected_samples_omitted = 0;
+        std::uint64_t certified_frontier_uses = 0;
+        std::uint64_t renewal_boundary_attempts = 0;
+        std::uint64_t renewal_boundary_successes = 0;
+        std::uint32_t first_missing_state = kNoId;
+        std::uint32_t first_missing_goal_mask = 0;
+        std::uint64_t candidate_portfolio_identity = 0;
+        std::uint64_t compiled_nodes = 0;
+        std::uint64_t compiled_edges = 0;
+        double independently_evaluated_cost = kInfinity;
+        bool incumbent_independently_evaluated_before = false;
+        bool completed_rows_monotone = true;
+        bool terminal_sees_all_completed_alternative_rows = false;
+        bool fixed_policy_proper = false;
+        bool installed_for_finalization = false;
+        bool compilation_attempted = false;
+        bool compilation_succeeded = false;
+        bool independent_evaluation_attempted = false;
+        bool independent_evaluation_succeeded = false;
+        std::string candidate_kind;
+        std::string failure;
+        std::string compilation_result;
+        std::string independent_evaluation_result;
+        std::string portfolio_decision;
+        std::string portfolio_reason;
+        std::vector<SelectedDecision> selected_decisions;
+    };
     /*
      * A Bellman-selected row policy is not a certified upper bound. Keep its
      * complete captured materialization in a distinct wrapper so no
@@ -1521,6 +1577,8 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
      * scheduling, Bellman optimization, or publication reads this record. */
     std::optional<CarrierLadderBoundaryCapture>
         carrier_ladder_exact_boundary_capture;
+    std::vector<JointAnytimeAttemptLineage>
+        joint_anytime_attempt_lineage;
     std::uint64_t carrier_ladder_exact_boundary_private_wall_ns = 0;
     bool target_gap_stop = false;
     SolveGapTarget target_gap_fired = SolveGapTarget::None;
@@ -1892,7 +1950,10 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     void install_direct_output_incumbent(
         const double upper, const std::uint64_t row);
 
-    bool try_install_reachable_incumbent(bool require_resource_stop);
+    bool try_install_reachable_incumbent(
+        bool require_resource_stop,
+        JointAnytimeAttemptLineage::Trigger trigger =
+            JointAnytimeAttemptLineage::Trigger::IncrementalCheckpoint);
 
     bool maybe_install_incremental_anytime_incumbent();
 

@@ -380,7 +380,8 @@ SolveWork::Impl::run_publication_pipeline() {
             open_incremental_anytime_candidate) {
             (void)try_install_reachable_incumbent(
                 result.diagnostics.resource_cap_hit &&
-                !requested_bounded_finish);
+                !requested_bounded_finish,
+                JointAnytimeAttemptLineage::Trigger::TerminalPublication);
         }
         const auto finalize_diagnostic =
             [&](auto&& finalizer) {
@@ -2156,6 +2157,36 @@ SolveWork::Impl::run_publication_pipeline() {
                 const std::string& stage,
                 const std::string& disposition,
                 const std::string& reason) {
+                if (options.carrier_ladder_exact_boundary_mode !=
+                    CarrierLadderExactBoundaryMode::Off) {
+                    for (JointAnytimeAttemptLineage& lineage :
+                         joint_anytime_attempt_lineage) {
+                        if (lineage.candidate_portfolio_identity !=
+                            candidate.portfolio_identity) {
+                            continue;
+                        }
+                        lineage.portfolio_decision = disposition;
+                        lineage.portfolio_reason = reason;
+                        if (stage == "final_graph_evaluation") {
+                            lineage.independent_evaluation_attempted = true;
+                            lineage.independent_evaluation_succeeded =
+                                candidate.independently_evaluated &&
+                                candidate.independently_certified &&
+                                candidate.proper && candidate.executable;
+                            lineage.independently_evaluated_cost =
+                                candidate.evaluated_policy_cost;
+                            lineage.independent_evaluation_result =
+                                lineage.independent_evaluation_succeeded
+                                    ? "verified_executable"
+                                    : candidate
+                                              .final_graph_verification_failure
+                                              .empty()
+                                          ? reason
+                                          : candidate
+                                                .final_graph_verification_failure;
+                        }
+                    }
+                }
                 record_upper_attribution_milestone(
                     candidate.evaluated_policy_cost,
                     candidate.independently_evaluated &&
@@ -2235,6 +2266,18 @@ SolveWork::Impl::run_publication_pipeline() {
         const auto verify_retained_final_graph =
             [&](BoundedPolicyIncumbent& candidate)
                 -> solve_detail::CooperativeTask<bool> {
+                if (options.carrier_ladder_exact_boundary_mode !=
+                    CarrierLadderExactBoundaryMode::Off) {
+                    for (JointAnytimeAttemptLineage& lineage :
+                         joint_anytime_attempt_lineage) {
+                        if (lineage.candidate_portfolio_identity ==
+                            candidate.portfolio_identity) {
+                            lineage.independent_evaluation_attempted = true;
+                            lineage.independent_evaluation_result =
+                                "started";
+                        }
+                    }
+                }
                 if (certified_incumbent_invalid_reason(candidate) ==
                     nullptr) {
                     co_return true;
@@ -5729,7 +5772,9 @@ void SolveWork::Impl::begin_publication_pipeline() {
             }
             const std::size_t missing_before =
                 incremental_anytime_missing_frontier_states.size();
-            (void)try_install_reachable_incumbent(false);
+            (void)try_install_reachable_incumbent(
+                false,
+                JointAnytimeAttemptLineage::Trigger::PublicationPreflight);
             if (incremental_anytime_missing_frontier_states.size() >
                     missing_before &&
                 (schedule_incremental_refinement(true) ||

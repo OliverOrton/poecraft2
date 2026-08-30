@@ -1968,6 +1968,187 @@ void SolveWork::Impl::refresh_carrier_ladder_exact_boundary_diagnostics(
         std::to_string(limits.max_wall_time_ms);
     json += ",\"max_samples\":" +
         std::to_string(limits.max_samples) + "}";
+    std::uint64_t terminal_attempts = 0;
+    bool terminal_row_visibility_proved = true;
+    for (const JointAnytimeAttemptLineage& lineage :
+         joint_anytime_attempt_lineage) {
+        if (lineage.trigger == JointAnytimeAttemptLineage::Trigger::
+                                   TerminalPublication) {
+            ++terminal_attempts;
+            terminal_row_visibility_proved &=
+                lineage.terminal_sees_all_completed_alternative_rows;
+        }
+    }
+    json += ",\"joint_anytime_attempt_lineage\":{";
+    json += "\"schema_version\":\"joint_anytime_attempt_lineage_v1\"";
+    json += ",\"attempts\":" +
+        std::to_string(joint_anytime_attempt_lineage.size());
+    json += ",\"terminal_attempts\":" +
+        std::to_string(terminal_attempts);
+    json += ",\"complete_terminal_row_visibility_proved\":" +
+        std::string(
+            terminal_attempts != 0 && terminal_row_visibility_proved
+                ? "true" : "false");
+    json += ",\"records\":[";
+    for (std::size_t attempt_index = 0;
+         attempt_index < joint_anytime_attempt_lineage.size();
+         ++attempt_index) {
+        if (attempt_index != 0) json.push_back(',');
+        const JointAnytimeAttemptLineage& lineage =
+            joint_anytime_attempt_lineage[attempt_index];
+        const char* trigger = "incremental_checkpoint";
+        switch (lineage.trigger) {
+        case JointAnytimeAttemptLineage::Trigger::IncrementalCheckpoint:
+            break;
+        case JointAnytimeAttemptLineage::Trigger::PublicationPreflight:
+            trigger = "publication_preflight";
+            break;
+        case JointAnytimeAttemptLineage::Trigger::TerminalPublication:
+            trigger = "terminal_publication";
+            break;
+        }
+        json += "{\"ordinal\":" + std::to_string(lineage.ordinal) +
+            ",\"trigger\":\"" + trigger + "\"";
+        json += ",\"source_generation\":" +
+            std::to_string(lineage.source_generation);
+        json += ",\"target_generation\":" +
+            std::to_string(lineage.target_generation);
+        json += ",\"completed_rows\":{";
+        json += "\"ordinary_admitted\":" +
+            std::to_string(lineage.ordinary_admitted_rows);
+        json += ",\"available\":" +
+            std::to_string(lineage.completed_row_count);
+        json += ",\"identity\":\"" +
+            hex(lineage.completed_row_identity) + "\"";
+        json += ",\"delta\":" +
+            std::to_string(lineage.completed_row_delta);
+        json += ",\"monotone\":" +
+            std::string(lineage.completed_rows_monotone ? "true" : "false");
+        json += ",\"completed_alternatives\":" +
+            std::to_string(lineage.completed_alternative_rows);
+        json += ",\"alternative_identity\":\"" +
+            hex(lineage.alternative_row_identity) + "\"";
+        json += ",\"alternative_delta\":" +
+            std::to_string(lineage.alternative_row_delta);
+        json += ",\"terminal_sees_all_completed_alternatives\":" +
+            std::string(
+                lineage.terminal_sees_all_completed_alternative_rows
+                    ? "true" : "false") + "}";
+        json += ",\"incumbent_before\":{";
+        json += "\"present\":" + std::string(
+            lineage.incumbent_identity_before != 0 ? "true" : "false");
+        json += ",\"identity\":";
+        if (lineage.incumbent_identity_before == 0) json += "null";
+        else json += "\"" + hex(lineage.incumbent_identity_before) + "\"";
+        json += ",\"estimate\":" +
+            finite_json(lineage.incumbent_estimate_before);
+        json += ",\"independently_evaluated\":" + std::string(
+            lineage.incumbent_independently_evaluated_before
+                ? "true" : "false");
+        json += ",\"exact_cost\":" +
+            finite_json(lineage.incumbent_exact_cost_before) + "}";
+        json += ",\"candidate_root_estimate\":" +
+            finite_json(lineage.candidate_root_estimate);
+        json += ",\"selection\":{";
+        json += "\"identity\":\"" +
+            hex(lineage.selection_identity) + "\"";
+        json += ",\"reachable_non_goal_states\":" +
+            std::to_string(lineage.selected_state_count);
+        json += ",\"samples_omitted\":" +
+            std::to_string(lineage.selected_samples_omitted);
+        json += ",\"decisions\":[";
+        for (std::size_t decision_index = 0;
+             decision_index < lineage.selected_decisions.size();
+             ++decision_index) {
+            if (decision_index != 0) json.push_back(',');
+            const JointAnytimeAttemptLineage::SelectedDecision& decision =
+                lineage.selected_decisions[decision_index];
+            json += "{\"state\":" + std::to_string(decision.state);
+            json += ",\"row\":";
+            if (decision.row ==
+                std::numeric_limits<std::uint64_t>::max()) {
+                json += "null";
+            } else {
+                json += std::to_string(decision.row);
+            }
+            json += ",\"operator_index\":";
+            if (decision.operator_index == kNoId) json += "null";
+            else json += std::to_string(decision.operator_index);
+            json += ",\"action\":";
+            if (decision.operator_index == kNoId ||
+                decision.operator_index >= calc.operators().size()) {
+                json += "null";
+            } else {
+                append_json_string(
+                    json, calc.operators()[decision.operator_index].id);
+            }
+            json += "}";
+        }
+        json += "]}";
+        json += ",\"frontier_uses\":" +
+            std::to_string(lineage.certified_frontier_uses);
+        json += ",\"renewal_boundaries\":{";
+        json += "\"successes\":" +
+            std::to_string(lineage.renewal_boundary_successes);
+        json += ",\"attempts\":" +
+            std::to_string(lineage.renewal_boundary_attempts) + "}";
+        json += ",\"fixed_policy_proper\":" +
+            std::string(lineage.fixed_policy_proper ? "true" : "false");
+        json += ",\"first_missing_continuation\":";
+        if (lineage.first_missing_state == kNoId) {
+            json += "null";
+        } else {
+            json += "{\"state\":" +
+                std::to_string(lineage.first_missing_state) +
+                ",\"goal_mask\":" +
+                std::to_string(lineage.first_missing_goal_mask) + "}";
+        }
+        json += ",\"failure\":";
+        if (lineage.failure.empty()) json += "null";
+        else append_json_string(json, lineage.failure);
+        json += ",\"candidate\":{";
+        json += "\"installed_for_finalization\":" + std::string(
+            lineage.installed_for_finalization ? "true" : "false");
+        json += ",\"portfolio_identity\":";
+        if (lineage.candidate_portfolio_identity == 0) json += "null";
+        else json += "\"" + hex(lineage.candidate_portfolio_identity) + "\"";
+        json += ",\"kind\":";
+        if (lineage.candidate_kind.empty()) json += "null";
+        else append_json_string(json, lineage.candidate_kind);
+        json += "}";
+        json += ",\"compilation\":{";
+        json += "\"attempted\":" + std::string(
+            lineage.compilation_attempted ? "true" : "false");
+        json += ",\"succeeded\":" + std::string(
+            lineage.compilation_succeeded ? "true" : "false");
+        json += ",\"nodes\":" + std::to_string(lineage.compiled_nodes);
+        json += ",\"edges\":" + std::to_string(lineage.compiled_edges);
+        json += ",\"result\":";
+        if (lineage.compilation_result.empty()) json += "null";
+        else append_json_string(json, lineage.compilation_result);
+        json += "}";
+        json += ",\"independent_exact_evaluation\":{";
+        json += "\"attempted\":" + std::string(
+            lineage.independent_evaluation_attempted ? "true" : "false");
+        json += ",\"succeeded\":" + std::string(
+            lineage.independent_evaluation_succeeded ? "true" : "false");
+        json += ",\"cost\":" +
+            finite_json(lineage.independently_evaluated_cost);
+        json += ",\"result\":";
+        if (lineage.independent_evaluation_result.empty()) json += "null";
+        else append_json_string(
+            json, lineage.independent_evaluation_result);
+        json += "}";
+        json += ",\"portfolio\":{";
+        json += "\"decision\":";
+        if (lineage.portfolio_decision.empty()) json += "null";
+        else append_json_string(json, lineage.portfolio_decision);
+        json += ",\"reason\":";
+        if (lineage.portfolio_reason.empty()) json += "null";
+        else append_json_string(json, lineage.portfolio_reason);
+        json += "}}";
+    }
+    json += "]}";
     if (!carrier_ladder_exact_boundary_capture.has_value()) {
         json += ",\"status\":\"not_observed\",\"capture\":null}";
         diagnostics.carrier_ladder_exact_boundary_json = std::move(json);
@@ -2899,6 +3080,12 @@ auto SolveWork::Impl::best_current_certified_fallback()
 
 bool SolveWork::Impl::commit_output_incumbent(
         BoundedPolicyIncumbent candidate) {
+        const std::uint64_t displaced_identity =
+            output_incumbent.has_value() &&
+                output_incumbent->portfolio_identity !=
+                    candidate.portfolio_identity
+            ? output_incumbent->portfolio_identity
+            : 0;
         record_upper_attribution_milestone(
             candidate.certified_upper_bound,
             candidate.independently_evaluated &&
@@ -2922,6 +3109,30 @@ bool SolveWork::Impl::commit_output_incumbent(
             return false;
         }
         output_incumbent = std::move(candidate);
+        if (displaced_identity != 0 &&
+            options.carrier_ladder_exact_boundary_mode !=
+                CarrierLadderExactBoundaryMode::Off) {
+            const bool retained = std::any_of(
+                certified_fallback_portfolio.begin(),
+                certified_fallback_portfolio.end(),
+                [&](const BoundedPolicyIncumbent& fallback) {
+                    return fallback.portfolio_identity ==
+                        displaced_identity;
+                });
+            for (JointAnytimeAttemptLineage& lineage :
+                 joint_anytime_attempt_lineage) {
+                if (lineage.candidate_portfolio_identity !=
+                    displaced_identity) {
+                    continue;
+                }
+                lineage.portfolio_decision = retained
+                    ? "retained_for_final_graph_comparison"
+                    : "displaced_before_final_graph_comparison";
+                lineage.portfolio_reason = retained
+                    ? "compiled candidate retained in bounded portfolio"
+                    : "candidate had no retained compiled artifact";
+            }
+        }
         incumbent_portfolio.observe_verified(*output_incumbent);
         result.diagnostics.incumbent_kind = output_incumbent->kind;
         result.diagnostics.incumbent_round = output_incumbent->round;
@@ -3398,8 +3609,18 @@ void SolveWork::Impl::install_direct_output_incumbent(
     }
 
 bool SolveWork::Impl::try_install_reachable_incumbent(
-        const bool require_resource_stop) {
+        const bool require_resource_stop,
+        const JointAnytimeAttemptLineage::Trigger trigger) {
+        std::optional<std::size_t> lineage_index;
         const auto record_attempt_failure = [&](std::string failure) {
+            if (lineage_index.has_value()) {
+                JointAnytimeAttemptLineage& lineage =
+                    joint_anytime_attempt_lineage.at(*lineage_index);
+                lineage.failure = failure;
+                lineage.portfolio_decision =
+                    "not_installed_for_finalization";
+                lineage.portfolio_reason = failure;
+            }
             if (!require_resource_stop) {
                 incremental_anytime_policy_last_failure =
                     std::move(failure);
@@ -3416,6 +3637,28 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
         }
 
         const std::size_t state_count = calc.state_count();
+        if (options.carrier_ladder_exact_boundary_mode !=
+            CarrierLadderExactBoundaryMode::Off) {
+            JointAnytimeAttemptLineage lineage;
+            lineage.ordinal = joint_anytime_attempt_lineage.size() + 1;
+            lineage.trigger = trigger;
+            lineage.source_generation = transition_cache->rows.size();
+            lineage.target_generation = state_count;
+            if (output_incumbent.has_value()) {
+                lineage.incumbent_identity_before =
+                    output_incumbent->portfolio_identity;
+                lineage.incumbent_estimate_before =
+                    output_incumbent->certified_upper_bound;
+                lineage.incumbent_independently_evaluated_before =
+                    output_incumbent->independently_evaluated;
+                if (output_incumbent->independently_evaluated) {
+                    lineage.incumbent_exact_cost_before =
+                        output_incumbent->evaluated_policy_cost;
+                }
+            }
+            joint_anytime_attempt_lineage.push_back(std::move(lineage));
+            lineage_index = joint_anytime_attempt_lineage.size() - 1;
+        }
         const std::uint64_t no_row =
             std::numeric_limits<std::uint64_t>::max();
         /* A completed staged row does not need every stochastic successor to
@@ -3457,9 +3700,11 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
         std::vector<std::uint8_t> completed(
             transition_cache->rows.size(), 0);
         std::vector<std::uint64_t> temporarily_admitted;
+        std::uint64_t ordinary_admitted_rows = 0;
         for (std::uint64_t row = 0;
              row < transition_cache->rows.size(); ++row) {
             completed[row] = transition_cache->rows[row].admitted ? 1 : 0;
+            ordinary_admitted_rows += completed[row] ? 1 : 0;
         }
         /* An IncrementalAlternativeRow is appended only after its exact row
          * has been fully materialized. PendingValues/Unresolved describe its
@@ -3477,6 +3722,84 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                 transition_cache->rows[alternative.row_index].admitted = true;
                 temporarily_admitted.push_back(alternative.row_index);
             }
+        }
+        if (lineage_index.has_value()) {
+            const auto diagnostic_started =
+                std::chrono::steady_clock::now();
+            JointAnytimeAttemptLineage& lineage =
+                joint_anytime_attempt_lineage.at(*lineage_index);
+            lineage.ordinary_admitted_rows = ordinary_admitted_rows;
+            std::uint64_t completed_identity = 1469598103934665603ULL;
+            identity_mix_string(
+                completed_identity,
+                "joint_anytime_completed_row_set_v1");
+            for (std::uint64_t row = 0; row < completed.size(); ++row) {
+                if (!completed[row]) continue;
+                ++lineage.completed_row_count;
+                identity_mix(completed_identity, row);
+                identity_mix(
+                    completed_identity,
+                    transition_cache->rows[row].owner_state);
+                identity_mix(
+                    completed_identity,
+                    row < priced_rows.size()
+                        ? priced_rows[row].operator_index
+                        : static_cast<std::uint64_t>(kNoId));
+            }
+            lineage.completed_row_identity = completed_identity;
+            std::uint64_t alternative_identity = 1469598103934665603ULL;
+            identity_mix_string(
+                alternative_identity,
+                "joint_anytime_completed_alternative_rows_v1");
+            for (const IncrementalAlternativeRow& alternative :
+                 incremental_alternative_rows) {
+                if (alternative.row_index >= completed.size() ||
+                    alternative.row_index >= priced_rows.size()) {
+                    continue;
+                }
+                ++lineage.completed_alternative_rows;
+                identity_mix(alternative_identity, alternative.row_index);
+                identity_mix(alternative_identity, alternative.operator_index);
+            }
+            lineage.alternative_row_identity = alternative_identity;
+            if (*lineage_index != 0) {
+                const JointAnytimeAttemptLineage& previous =
+                    joint_anytime_attempt_lineage.at(*lineage_index - 1);
+                lineage.completed_rows_monotone =
+                    lineage.completed_row_count >=
+                    previous.completed_row_count;
+                if (lineage.completed_rows_monotone) {
+                    lineage.completed_row_delta =
+                        lineage.completed_row_count -
+                        previous.completed_row_count;
+                }
+                if (lineage.completed_alternative_rows >=
+                    previous.completed_alternative_rows) {
+                    lineage.alternative_row_delta =
+                        lineage.completed_alternative_rows -
+                        previous.completed_alternative_rows;
+                }
+            } else {
+                lineage.completed_row_delta =
+                    lineage.completed_row_count;
+                lineage.alternative_row_delta =
+                    lineage.completed_alternative_rows;
+            }
+            lineage.terminal_sees_all_completed_alternative_rows =
+                trigger == JointAnytimeAttemptLineage::Trigger::
+                               TerminalPublication &&
+                lineage.completed_alternative_rows ==
+                    incremental_alternative_rows.size();
+            const auto elapsed = std::chrono::duration_cast<
+                std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - diagnostic_started);
+            const std::uint64_t amount = static_cast<std::uint64_t>(
+                std::max<std::int64_t>(0, elapsed.count()));
+            carrier_ladder_exact_boundary_private_wall_ns = amount >
+                    std::numeric_limits<std::uint64_t>::max() -
+                        carrier_ladder_exact_boundary_private_wall_ns
+                ? std::numeric_limits<std::uint64_t>::max()
+                : carrier_ladder_exact_boundary_private_wall_ns + amount;
         }
 
         std::vector<double> saved_values = std::move(result.values);
@@ -4005,6 +4328,17 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                         }
                         if (!row_is_completed(state, policy_rows[state])) {
                             if (!has_certified_boundary(state)) {
+                                if (lineage_index.has_value()) {
+                                    JointAnytimeAttemptLineage& lineage =
+                                        joint_anytime_attempt_lineage.at(
+                                            *lineage_index);
+                                    if (lineage.first_missing_state == kNoId) {
+                                        lineage.first_missing_state = state;
+                                        lineage.first_missing_goal_mask =
+                                            satisfied_goal_mask_for_state(
+                                                state);
+                                    }
+                                }
                                 if (!require_resource_stop &&
                                     std::find(
                                         incremental_anytime_missing_frontier_states
@@ -4133,6 +4467,10 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                     if (!policy_evaluation_incomplete) break;
                 }
                 if (evaluated) {
+                    if (lineage_index.has_value()) {
+                        joint_anytime_attempt_lineage.at(*lineage_index)
+                            .fixed_policy_proper = true;
+                    }
                     std::uint64_t evaluated_choice_identity = 0;
                     if (!rebuild_reachable(evaluated_choice_identity)) break;
                     if (reachable != prior_reachable ||
@@ -4162,6 +4500,10 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                     }
                     const double upper =
                         result.values.at(result.start_state);
+                    if (lineage_index.has_value()) {
+                        joint_anytime_attempt_lineage.at(*lineage_index)
+                            .candidate_root_estimate = upper;
+                    }
                     if (!std::isfinite(upper) || upper < 0.0 ||
                         upper >= kValueCeiling) {
                         attempt_failure = "evaluated_upper_is_invalid";
@@ -4306,6 +4648,16 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                         if (operator_index == kNoId ||
                             operator_index >= calc.operators().size()) {
                             publication_complete = false;
+                            if (lineage_index.has_value()) {
+                                JointAnytimeAttemptLineage& lineage =
+                                    joint_anytime_attempt_lineage.at(
+                                        *lineage_index);
+                                if (lineage.first_missing_state == kNoId) {
+                                    lineage.first_missing_state = state;
+                                    lineage.first_missing_goal_mask =
+                                        satisfied_goal_mask_for_state(state);
+                                }
+                            }
                             if (!require_resource_stop &&
                                 std::find(
                                     incremental_anytime_missing_frontier_states
@@ -4457,6 +4809,35 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                         (!had_prior_incumbent ||
                          output_incumbent->portfolio_identity !=
                              prior_identity);
+                    if (installed && lineage_index.has_value()) {
+                        JointAnytimeAttemptLineage& lineage =
+                            joint_anytime_attempt_lineage.at(
+                                *lineage_index);
+                        lineage.installed_for_finalization = true;
+                        lineage.candidate_portfolio_identity =
+                            output_incumbent->portfolio_identity;
+                        lineage.candidate_kind = output_incumbent->kind;
+                        lineage.compilation_attempted =
+                            output_incumbent->primitive_renewal_witness.valid;
+                        lineage.compilation_succeeded =
+                            !output_incumbent->compiled_artifact
+                                 .strategy_json.empty();
+                        lineage.compiled_nodes =
+                            output_incumbent->compiled_artifact.nodes;
+                        lineage.compiled_edges =
+                            output_incumbent->compiled_artifact.edges;
+                        lineage.compilation_result =
+                            lineage.compilation_succeeded
+                                ? "compiled_for_final_graph_evaluation"
+                                : lineage.compilation_attempted
+                                      ? "fallback_compilation_not_retained"
+                                      : "candidate_has_no_root_primitive_"
+                                        "renewal_witness";
+                        lineage.portfolio_decision =
+                            "installed_for_finalization";
+                        lineage.portfolio_reason =
+                            "reachable fixed policy proved proper";
+                    }
                     if (!installed) {
                         attempt_failure =
                             "proved_candidate_not_preferred:upper=" +
@@ -4487,6 +4868,73 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
             throw;
         }
 
+        if (lineage_index.has_value()) {
+            const auto diagnostic_started =
+                std::chrono::steady_clock::now();
+            JointAnytimeAttemptLineage& lineage =
+                joint_anytime_attempt_lineage.at(*lineage_index);
+            lineage.certified_frontier_uses = certified_frontier_uses;
+            lineage.renewal_boundary_attempts = renewal_boundary_attempts;
+            lineage.renewal_boundary_successes =
+                renewal_boundary_successes;
+            const std::vector<std::uint8_t>& selected_reachable =
+                installed && !prior_reachable.empty()
+                    ? prior_reachable
+                    : reachable;
+            std::uint64_t selection_identity = 1469598103934665603ULL;
+            identity_mix_string(
+                selection_identity,
+                "joint_anytime_selected_reachable_policy_v1");
+            const auto& limits =
+                options.carrier_ladder_exact_boundary_limits;
+            const std::uint64_t owned_sample_limit =
+                limits.max_owned_bytes /
+                std::max<std::uint64_t>(
+                    1, sizeof(JointAnytimeAttemptLineage::SelectedDecision));
+            const std::uint64_t sample_limit = std::min<std::uint64_t>(
+                limits.max_samples, owned_sample_limit);
+            for (std::uint32_t state = 0;
+                 state < selected_reachable.size(); ++state) {
+                if (!selected_reachable[state] ||
+                    (state < result.goal_states.size() &&
+                     result.goal_states[state])) {
+                    continue;
+                }
+                const std::uint64_t row = state < policy_rows.size()
+                    ? policy_rows[state]
+                    : no_row;
+                std::uint32_t operator_index = kNoId;
+                if (row < completed.size() && completed[row] &&
+                    row < priced_rows.size()) {
+                    operator_index = priced_rows[row].operator_index;
+                } else if (state <
+                           certified_frontier_operators.size()) {
+                    operator_index =
+                        certified_frontier_operators[state];
+                }
+                ++lineage.selected_state_count;
+                identity_mix(selection_identity, state);
+                identity_mix(selection_identity, row);
+                identity_mix(selection_identity, operator_index);
+                if (lineage.selected_decisions.size() < sample_limit) {
+                    lineage.selected_decisions.push_back(
+                        {state, row, operator_index});
+                } else {
+                    ++lineage.selected_samples_omitted;
+                }
+            }
+            lineage.selection_identity = selection_identity;
+            const auto elapsed = std::chrono::duration_cast<
+                std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - diagnostic_started);
+            const std::uint64_t amount = static_cast<std::uint64_t>(
+                std::max<std::int64_t>(0, elapsed.count()));
+            carrier_ladder_exact_boundary_private_wall_ns = amount >
+                    std::numeric_limits<std::uint64_t>::max() -
+                        carrier_ladder_exact_boundary_private_wall_ns
+                ? std::numeric_limits<std::uint64_t>::max()
+                : carrier_ladder_exact_boundary_private_wall_ns + amount;
+        }
         restore(installed);
         if (!installed) {
             if (attempt_failure.empty()) {
