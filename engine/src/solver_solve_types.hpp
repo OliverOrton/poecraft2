@@ -3,6 +3,7 @@
 #include "solver_action_envelope_ledger.hpp"
 #include "solver_anytime_scheduler.hpp"
 #include "solver_executable_carrier_planner.hpp"
+#include "solver_joint_policy_continuation.hpp"
 #include "solver_proof_pattern_manager.hpp"
 #include "solver_solve_contracts.hpp"
 

@@ -68,6 +68,16 @@ int main(int argc, char** argv) {
         return pctest::g_failures == 0 ? 0 : 1;
     }
     if (argc > 1 &&
+        std::string(argv[1]) ==
+            "--solver-joint-policy-continuation-only") {
+        run_solver_joint_policy_continuation_tests();
+        std::printf(
+            "solver joint-policy continuation tests: %d checks, "
+            "%d failures\n",
+            pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
+    if (argc > 1 &&
         std::string(argv[1]) == "--solver-carrier-bounds-only") {
         run_solver_carrier_bound_tests();
         std::printf(

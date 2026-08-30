@@ -99,6 +99,217 @@ void run_incumbent_portfolio_monotonicity_tests() {
     PC_CHECK(!portfolio.monotonicity_violation);
 }
 
+void run_resumable_joint_policy_continuation_fixture_tests() {
+    using Candidate =
+        solve_detail::ResumableJointPolicyContinuation;
+    using Context = solve_detail::JointPolicyContinuationContext;
+    using Decision = solve_detail::JointPolicyContinuationDecision;
+    using Lifecycle = solve_detail::JointPolicyContinuationLifecycle;
+    using Node = solve_detail::JointPolicyContinuationNode;
+    using Refusal = solve_detail::JointPolicyContinuationRefusal;
+    using Resolved = solve_detail::JointPolicyContinuationResolvedState;
+
+    const auto node = [](const std::uint32_t locator) {
+        return Node{locator, {0x73746174655f7631ull, locator}};
+    };
+    Context snapshot;
+    snapshot.goal_identity = 1;
+    snapshot.economy_identity = 2;
+    snapshot.caller_scope_identity = 3;
+    snapshot.action_vocabulary_identity = 4;
+    snapshot.mechanics_artifact_identity = 5;
+    snapshot.exact_terminal_identity = 6;
+    snapshot.boundary_identity = 7;
+    snapshot.graph_prefix_identity = 8;
+    snapshot.graph_row_count = 1;
+    snapshot.graph_priced_row_count = 1;
+    snapshot.graph_successor_count = 1;
+    snapshot.graph_probability_count = 1;
+    snapshot.source_generation = 1;
+    snapshot.target_generation = 4;
+    snapshot.action_generation = 1;
+    snapshot.admission_generation = 1;
+    snapshot.value_snapshot_generation = 11;
+    snapshot.proof_snapshot_generation = 12;
+    snapshot.incumbent_identity = 13;
+    snapshot.incumbent_exact_cost = 100.0;
+
+    std::array<bool, 3> row_ready{true, false, false};
+    std::map<std::uint64_t, solve_detail::JointPolicySemanticKey>
+        authoritative_rows;
+    const auto row_key = [](const std::uint32_t source) {
+        return solve_detail::JointPolicySemanticKey{
+            0x726f775f7631ull, source, source + 1};
+    };
+    const auto action_key = [](const std::uint32_t source) {
+        return solve_detail::JointPolicySemanticKey{
+            0x616374696f6e5full, source};
+    };
+    for (std::uint32_t source = 0; source < 3; ++source) {
+        authoritative_rows.emplace(source + 10, row_key(source));
+    }
+    const auto resolve = [&](const Node& source) {
+        Resolved result;
+        result.source = source;
+        if (source.locator == 3) {
+            result.kind = Resolved::Kind::Goal;
+            return result;
+        }
+        if (!row_ready.at(source.locator)) {
+            result.kind = Resolved::Kind::Missing;
+            return result;
+        }
+        result.kind = Resolved::Kind::Row;
+        result.row_locator = source.locator + 10;
+        result.row_semantic_key = row_key(source.locator);
+        result.action_semantic_key = action_key(source.locator);
+        result.successors.push_back(node(source.locator + 1));
+        return result;
+    };
+    const auto validate = [&](const Decision& decision) {
+        const auto found = authoritative_rows.find(decision.row_locator);
+        return found != authoritative_rows.end() &&
+                found->second == decision.row_semantic_key
+            ? Refusal::None
+            : Refusal::StructuralPrefixInvalid;
+    };
+    Candidate candidate = Candidate::capture(
+        snapshot, node(0), {30.0, 20.0, 10.0, 0.0}, {}, {}, 30.0,
+        0x65786163745f7631ull, 4);
+    const std::uint64_t capture_identity = candidate.semantic_identity;
+    const auto first = candidate.advance(resolve, validate, 32);
+    PC_CHECK(first.lifecycle == Lifecycle::WaitingForExactContinuation);
+    PC_CHECK(candidate.missing == node(1));
+    PC_CHECK(candidate.fixed_decisions.size() == 1);
+    PC_CHECK(candidate.cursor == 1);
+    PC_CHECK(candidate.capture_count == 1);
+    PC_CHECK(candidate.yield_count == 1);
+    const auto premature = candidate.advance(resolve, validate, 32);
+    PC_CHECK(
+        premature.lifecycle == Lifecycle::WaitingForExactContinuation);
+    PC_CHECK(premature.work == 0);
+
+    /* Ordinary work remains outside candidate ownership between service
+     * events. Completing one row merely makes the sole obligation resumable. */
+    std::uint64_t ordinary_work = 7;
+    row_ready[1] = true;
+    PC_CHECK(candidate.mark_resumable(node(1)));
+    ordinary_work += 5;
+    const auto second = candidate.advance(resolve, validate, 32);
+    PC_CHECK(second.lifecycle == Lifecycle::WaitingForExactContinuation);
+    PC_CHECK(candidate.missing == node(2));
+    PC_CHECK(candidate.fixed_decisions.size() == 2);
+    PC_CHECK(candidate.cursor == 2);
+    PC_CHECK(candidate.resume_count == 1);
+    PC_CHECK(candidate.yield_count == 2);
+    PC_CHECK(candidate.capture_count == 1);
+    PC_CHECK(candidate.semantic_identity == capture_identity);
+    PC_CHECK(ordinary_work == 12);
+
+    row_ready[2] = true;
+    PC_CHECK(candidate.mark_resumable(node(2)));
+    const auto third = candidate.advance(resolve, validate, 32);
+    PC_CHECK(third.lifecycle == Lifecycle::CompleteCandidate);
+    PC_CHECK(candidate.resume_count == 2);
+    PC_CHECK(candidate.completion_count == 1);
+    PC_CHECK(candidate.rows_appended == 3);
+    PC_CHECK(candidate.fixed_decisions.size() == 3);
+    PC_CHECK(candidate.capture_count == 1);
+    PC_CHECK(candidate.missing_state_history.size() == 2);
+    PC_CHECK(candidate.retained_owned_bytes() > sizeof(Candidate));
+    PC_CHECK(candidate.retained_peak_bytes >=
+             candidate.retained_owned_bytes());
+    PC_CHECK(candidate.transient_peak_bytes >= sizeof(Resolved));
+
+    /* The complete semantic snapshot, not allocation addresses or timing,
+     * determines repeat identity. */
+    Candidate repeat = Candidate::capture(
+        snapshot, node(0), {30.0, 20.0, 10.0, 0.0}, {}, {}, 30.0,
+        0x65786163745f7631ull, 4);
+    PC_CHECK(repeat.semantic_identity == capture_identity);
+
+    Context newer_values = snapshot;
+    newer_values.value_snapshot_generation = 99;
+    newer_values.proof_snapshot_generation = 100;
+    newer_values.source_generation = 4;
+    PC_CHECK(candidate.compatible_with(newer_values) == Refusal::None);
+    Context stale_scope = newer_values;
+    ++stale_scope.caller_scope_identity;
+    PC_CHECK(candidate.compatible_with(stale_scope) ==
+             Refusal::StaleIdentity);
+    Context stale_action = newer_values;
+    ++stale_action.action_vocabulary_identity;
+    PC_CHECK(candidate.compatible_with(stale_action) ==
+             Refusal::StaleIdentity);
+    Context stale_prefix = newer_values;
+    ++stale_prefix.graph_prefix_identity;
+    PC_CHECK(candidate.compatible_with(stale_prefix) ==
+             Refusal::StructuralPrefixInvalid);
+    Context stale_boundary = newer_values;
+    ++stale_boundary.boundary_identity;
+    PC_CHECK(candidate.compatible_with(stale_boundary) ==
+             Refusal::BoundarySnapshotIncompatible);
+    Context stale_generation = snapshot;
+    stale_generation.source_generation = 0;
+    PC_CHECK(candidate.compatible_with(stale_generation) ==
+             Refusal::StaleGeneration);
+
+    Candidate invalidated = Candidate::capture(
+        snapshot, node(0), {3.0, 2.0, 1.0, 0.0}, {}, {}, 3.0, 17, 4);
+    row_ready = {true, false, false};
+    invalidated.advance(resolve, validate, 32);
+    authoritative_rows.at(10) = {0x636f6c6c6973696full, 0};
+    row_ready[1] = true;
+    PC_CHECK(invalidated.mark_resumable(node(1)));
+    invalidated.advance(resolve, validate, 32);
+    PC_CHECK(invalidated.lifecycle == Lifecycle::Refused);
+    PC_CHECK(invalidated.refusal == Refusal::StructuralPrefixInvalid);
+    authoritative_rows.at(10) = row_key(0);
+
+    Candidate rebased = repeat;
+    rebased.rebase();
+    PC_CHECK(rebased.lifecycle == Lifecycle::Refused);
+    PC_CHECK(rebased.rebase_count == 1);
+    Candidate interrupted = Candidate::capture(
+        snapshot, node(0), {3.0, 2.0, 1.0, 0.0}, {}, {}, 3.0, 18, 4);
+    interrupted.advance(resolve, validate, 0);
+    PC_CHECK(interrupted.refusal == Refusal::ResourceInterrupted);
+    Candidate improper = Candidate::capture(
+        snapshot, node(0), {3.0, 2.0, 1.0, 0.0}, {}, {}, 3.0, 19, 4);
+    const auto resolve_improper = [&](const Node& source) {
+        Resolved result;
+        result.source = source;
+        result.kind = Resolved::Kind::Improper;
+        return result;
+    };
+    improper.advance(resolve_improper, validate, 1);
+    PC_CHECK(improper.refusal == Refusal::ImproperClosedComponent);
+
+    Candidate noncompetitive = repeat;
+    PC_CHECK(noncompetitive.exactly_noncompetitive(30.0, 2.0));
+    PC_CHECK(!noncompetitive.exactly_noncompetitive(
+        std::numeric_limits<double>::infinity(), 2.0));
+    noncompetitive.release(Refusal::ExactNoncompetitive);
+    PC_CHECK(noncompetitive.noncompetitive_discard_count == 1);
+    Candidate better = Candidate::capture(
+        snapshot, node(0), {2.0, 1.0, 0.5, 0.0}, {}, {}, 2.0, 20, 4);
+    PC_CHECK(Candidate::candidate_precedes(better, repeat));
+    Candidate displaced = repeat;
+    displaced.release(Refusal::ReplacedByBetterCandidate);
+    PC_CHECK(displaced.refusal == Refusal::ReplacedByBetterCandidate);
+    Candidate row_unavailable = repeat;
+    row_unavailable.release(Refusal::ActionOrRowUnavailable);
+    PC_CHECK(
+        solve_detail::joint_policy_continuation_refusal_name(
+            row_unavailable.refusal) == "action_or_row_unavailable");
+    Candidate compiler_refused = repeat;
+    compiler_refused.release(Refusal::CompilerRefused);
+    Candidate evaluator_refused = repeat;
+    evaluator_refused.release(Refusal::ExactEvaluatorRefused);
+    PC_CHECK(compiler_refused.lifecycle == Lifecycle::Refused);
+    PC_CHECK(evaluator_refused.lifecycle == Lifecycle::Refused);
+}
+
 void run_carrier_ladder_row_service_witness_classification_tests() {
     using Impl = SolveWorkTestAccess::Impl;
     using Witness =
@@ -11449,6 +11660,10 @@ void run_solver_carrier_bound_tests() {
     run_automatic_eldritch_side_tests();
 }
 
+void run_solver_joint_policy_continuation_tests() {
+    run_resumable_joint_policy_continuation_fixture_tests();
+}
+
 void run_solver_proof_pattern_tests() {
     run_proof_pattern_manager_tests();
 }
@@ -11483,6 +11698,7 @@ void run_solver_solve_tests(const char* artifact_dir) {
     run_executable_carrier_projection_tests();
     run_proof_pattern_manager_tests();
     run_incumbent_portfolio_monotonicity_tests();
+    run_resumable_joint_policy_continuation_fixture_tests();
     run_carrier_ladder_row_service_witness_classification_tests();
     run_bounded_policy_row_capture_tests();
     run_automatic_sample_copy_ledger_tests();
