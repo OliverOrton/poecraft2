@@ -34,6 +34,15 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 No implementation boundary is active. Oliver must select the next chunk before
 implementation resumes.
 
+The completed diagnosis-only
+[Early Executable Statewise Upper Certificate and PDR RC Consumer v1](archive/2026-08-30-early-executable-statewise-upper-rc-consumer-v1/README.md)
+adds exact evaluator-owned arbitrary-entry continuation certification and an
+identity-bound observational lower comparison. PDR safely certifies only the
+requested root: all 71 root lowers remain competitive, the coarse ledger has
+no live entries at comparison, strict alternatives are already zero, and no
+complete coarse-to-exact-member adapter exists. No RC or production authority
+was added.
+
 The completed
 [Carrier-Ladder Early Executable Closure v1](archive/2026-08-30-carrier-ladder-early-executable-closure-v1/README.md)
 compiles the exact closed coarse assertion domain into a proper independently

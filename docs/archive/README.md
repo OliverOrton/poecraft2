@@ -11,6 +11,12 @@ selected active work.
 
 ## 2026-08-30
 
+- [Early Executable Statewise Upper Certificate and PDR RC Consumer v1](2026-08-30-early-executable-statewise-upper-rc-consumer-v1/README.md) —
+  adds a typed exact-evaluator continuation-upper certificate and replaces the
+  copied-coarse-value operator shadow with an identity-bound observational
+  audit; PDR proves diagnosis-only that only the already-materialized root is
+  safely covered, all 71 existing lowers remain competitive, no live ledger
+  or strict-alternative consumer exists, and no RC refinement is selected.
 - [Carrier-Ladder Early Executable Closure v1](2026-08-30-carrier-ladder-early-executable-closure-v1/README.md) —
   compiles the exact closed coarse assertion domain into a proper zero-off-
   policy PDR candidate at `3758.1244272552067`, retains it before strict lift,

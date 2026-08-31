@@ -7,8 +7,9 @@ Parent: [Documentation map](../README.md)
 ## Current work
 
 None. Oliver must select the next implementation boundary before work resumes.
-The completed Carrier-Ladder Early Executable Closure result is preserved in
-the [documentation archive](../archive/2026-08-30-carrier-ladder-early-executable-closure-v1/README.md).
+The completed diagnosis-only statewise executable-continuation certificate
+result is preserved in the
+[documentation archive](../archive/2026-08-30-early-executable-statewise-upper-rc-consumer-v1/README.md).
 
 ## Historical work
 
