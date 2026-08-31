@@ -233,6 +233,12 @@ struct StrategyEvalWork::Impl {
     std::uint64_t memory_probe_unit_bytes = 0;
     std::size_t discover_index = 0;
     std::uint32_t start_pair = kNoId;
+    /* Parallel to options.continuation_entries.  Entries are seeded at the
+     * compiled ordinary start node, never at a transient offer/checkpoint
+     * node.  The full pre-quotient key remains the exact entry identity while
+     * the pair handle is remapped through the proved behavioral quotient. */
+    std::vector<std::uint32_t> continuation_entry_pairs;
+    std::vector<refinement::StableKey> continuation_entry_keys;
 
     std::vector<std::vector<std::uint32_t>> components;
     std::vector<std::uint32_t> component_by_pair;
@@ -539,6 +545,26 @@ struct StrategyEvalWork::Impl {
         return bytes;
     }
 
+    static std::uint64_t continuation_certificate_bytes(
+            const StrategyContinuationUpperCertificate& certificate) {
+        std::uint64_t bytes = sizeof(certificate);
+        bytes += certificate.members.capacity() *
+                 sizeof(StrategyContinuationMemberResult);
+        for (const StrategyContinuationMemberResult& member :
+             certificate.members) {
+            bytes += member.exact_entry_identity.capacity() *
+                     sizeof(std::uint64_t);
+        }
+        bytes += certificate.states.capacity() *
+                 sizeof(StrategyContinuationStateUpper);
+        for (const StrategyContinuationStateUpper& state :
+             certificate.states) {
+            bytes += state.exact_member_identities.capacity() *
+                     sizeof(std::uint64_t);
+        }
+        return bytes;
+    }
+
     std::uint64_t output_owned_bytes() const {
         std::uint64_t bytes = sizeof(output);
         bytes += output.economy_id.capacity() + 1;
@@ -571,6 +597,9 @@ struct StrategyEvalWork::Impl {
                  sizeof(StrategyEvalOccupancyEntry);
         bytes += output.reforge_row_samples.capacity() *
                  sizeof(ReforgeRowTelemetry);
+        bytes += continuation_certificate_bytes(
+                     output.continuation_upper) -
+                 sizeof(output.continuation_upper);
         bytes += output.action_totals.capacity() * sizeof(StrategyEvalActionTotal);
         for (const auto& action : output.action_totals) {
             bytes += action_total_bytes(action) - sizeof(action);
@@ -634,6 +663,16 @@ struct StrategyEvalWork::Impl {
                      section.role.capacity() + 3;
             bytes += section.nodes.capacity() * sizeof(std::uint32_t);
             bytes += string_vector_bytes(section.edges);
+        }
+        bytes += options.continuation_entries.capacity() *
+                 sizeof(StrategyContinuationEntryRequest);
+        bytes += continuation_entry_pairs.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += continuation_entry_keys.capacity() *
+                 sizeof(refinement::StableKey);
+        for (const refinement::StableKey& key :
+             continuation_entry_keys) {
+            bytes += key.capacity() * sizeof(std::uint64_t);
         }
         bytes += pair_bucket_heads.capacity() * sizeof(std::uint32_t);
         bytes += pair_next.owned_bytes();
@@ -822,6 +861,16 @@ struct StrategyEvalWork::Impl {
         bytes += model.targets.capacity() * sizeof(GoalSlot);
         bytes += review_sections.capacity() * sizeof(ReviewSectionSpec);
         bytes += review_payload_owned_bytes;
+        bytes += options.continuation_entries.capacity() *
+                 sizeof(StrategyContinuationEntryRequest);
+        bytes += continuation_entry_pairs.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += continuation_entry_keys.capacity() *
+                 sizeof(refinement::StableKey);
+        for (const refinement::StableKey& key :
+             continuation_entry_keys) {
+            bytes += key.capacity() * sizeof(std::uint64_t);
+        }
         bytes += pair_bucket_heads.capacity() * sizeof(std::uint32_t);
         bytes += pair_next.owned_bytes();
         bytes += pairs.owned_bytes();
@@ -1313,16 +1362,50 @@ struct StrategyEvalWork::Impl {
         const std::uint32_t start_state =
             model.calc->intern_item(strategy->start_item);
         ensure_state_limit();
+        continuation_entry_pairs.reserve(
+            options.continuation_entries.size());
+        continuation_entry_keys.reserve(
+            options.continuation_entries.size());
         if (strategy->nodes[strategy->start_node].kind ==
             StrategyNodeKind::Terminal) {
             terminal_mass[strategy->start_node] = 1.0;
             add_terminal_incoming(
                 strategy->start_node, start_state, 1.0);
+            for (const StrategyContinuationEntryRequest& request :
+                 options.continuation_entries) {
+                const std::uint32_t state =
+                    model.calc->intern_item(request.item);
+                ensure_state_limit();
+                EvalPair entry;
+                entry.node = strategy->start_node;
+                entry.state = state;
+                continuation_entry_pairs.push_back(kNoId);
+                continuation_entry_keys.push_back(
+                    raw_pair_stable_key(entry));
+            }
             phase = StrategyEvalPhase::Finalization;
         } else {
             subphase = StrategyEvalSubphase::PairDiscovery;
             start_pair = intern_pair(strategy->start_node, start_state);
+            for (const StrategyContinuationEntryRequest& request :
+                 options.continuation_entries) {
+                const std::uint32_t state =
+                    model.calc->intern_item(request.item);
+                ensure_state_limit();
+                const std::uint32_t pair =
+                    intern_pair(strategy->start_node, state);
+                continuation_entry_pairs.push_back(pair);
+                continuation_entry_keys.push_back(
+                    raw_pair_stable_key(pairs.at(pair)));
+            }
         }
+        output.continuation_upper.requested =
+            !options.continuation_entries.empty();
+        output.continuation_upper.requested_members =
+            static_cast<std::uint32_t>(
+                std::min<std::size_t>(
+                    options.continuation_entries.size(),
+                    std::numeric_limits<std::uint32_t>::max()));
         check_owned_cap();
     }
 
@@ -3303,6 +3386,24 @@ struct StrategyEvalWork::Impl {
         key.insert(key.end(), mods.begin(), mods.end());
     }
 
+    static void append_exact_string_identity(
+            refinement::StableKey& key,
+            const std::string_view value) {
+        key.push_back(value.size());
+        for (std::size_t offset = 0; offset < value.size(); offset += 8) {
+            std::uint64_t word = 0;
+            const std::size_t count = std::min<std::size_t>(
+                8, value.size() - offset);
+            for (std::size_t byte = 0; byte < count; ++byte) {
+                word |= static_cast<std::uint64_t>(
+                            static_cast<unsigned char>(
+                                value[offset + byte]))
+                        << (byte * 8);
+            }
+            key.push_back(word);
+        }
+    }
+
     void append_compressed_policy_trace(
         refinement::StableKey& key,
         const std::uint32_t root,
@@ -3346,7 +3447,14 @@ struct StrategyEvalWork::Impl {
         const EvalPair& pair) const {
         refinement::StableKey key{
             0x6576616c70616972ull, /* "evalpair" */
-            pair.node};
+            1, /* exact entry identity schema */};
+        if (pair.node >= strategy->nodes.size()) {
+            throw std::logic_error(
+                "strategy evaluation pair has no compiled node identity");
+        }
+        /* Authored node ids are exact graph identities. Local parser indexes
+         * are deliberately excluded from the reusable entry key. */
+        append_exact_string_identity(key, strategy->nodes[pair.node].id);
         if (pair.state == kNoId ||
             pair.state >= model.calc->state_count()) {
             throw std::logic_error(
@@ -4146,6 +4254,15 @@ struct StrategyEvalWork::Impl {
 
             if (start_pair != kNoId) {
                 start_pair = class_by_node.at(start_pair);
+            }
+            for (std::uint32_t& entry_pair :
+                 continuation_entry_pairs) {
+                if (entry_pair == kNoId ||
+                    entry_pair >= class_by_node.size()) {
+                    entry_pair = kNoId;
+                } else {
+                    entry_pair = class_by_node.at(entry_pair);
+                }
             }
             discover_index = pairs.size();
             attribution_pairs = std::move(raw_pairs);
@@ -6459,8 +6576,746 @@ struct StrategyEvalWork::Impl {
         co_return exact_visits;
     }
 
+    solve_detail::CooperativeTask<bool>
+    build_continuation_upper_certificate() {
+        const Clock::time_point started = Clock::now();
+        StrategyContinuationUpperCertificate certificate;
+        certificate.requested = !options.continuation_entries.empty();
+        certificate.requested_members = static_cast<std::uint32_t>(
+            std::min<std::size_t>(
+                options.continuation_entries.size(),
+                std::numeric_limits<std::uint32_t>::max()));
+        if (options.continuation_entries.empty()) {
+            certificate.build_ns = static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    Clock::now() - started)
+                    .count());
+            certificate.retained_owned_bytes =
+                continuation_certificate_bytes(certificate);
+            output.continuation_upper = std::move(certificate);
+            co_return true;
+        }
+
+        if (continuation_entry_keys.size() !=
+                options.continuation_entries.size() ||
+            continuation_entry_pairs.size() !=
+                options.continuation_entries.size()) {
+            throw std::logic_error(
+                "strategy continuation entry sidecars are incomplete");
+        }
+
+        const auto merge_status = [](
+                const StrategyContinuationEntryStatus left,
+                const StrategyContinuationEntryStatus right) {
+            if (left == StrategyContinuationEntryStatus::Complete) {
+                return right;
+            }
+            if (right == StrategyContinuationEntryStatus::Complete) {
+                return left;
+            }
+            /* Stable refusal precedence.  Coverage/request errors are owned
+             * by grouping below; graph refusals prefer missing authority,
+             * then failure mass, then properness, then numerics. */
+            const auto rank = [](const StrategyContinuationEntryStatus value) {
+                switch (value) {
+                case StrategyContinuationEntryStatus::InvalidRequest:
+                    return 8;
+                case StrategyContinuationEntryStatus::
+                        IncompleteMemberCoverage:
+                    return 7;
+                case StrategyContinuationEntryStatus::EntryNotRepresented:
+                    return 6;
+                case StrategyContinuationEntryStatus::MissingPrice:
+                    return 5;
+                case StrategyContinuationEntryStatus::FailureReachable:
+                    return 4;
+                case StrategyContinuationEntryStatus::ImproperPolicy:
+                    return 3;
+                case StrategyContinuationEntryStatus::NonFiniteCost:
+                    return 2;
+                case StrategyContinuationEntryStatus::ResidualFailure:
+                    return 1;
+                case StrategyContinuationEntryStatus::Complete:
+                    return 0;
+                }
+                return 8;
+            };
+            return rank(left) >= rank(right) ? left : right;
+        };
+
+        std::uint64_t peak_build_live = fast_estimated_owned_bytes();
+        const auto observe_transient = [&](const std::uint64_t bytes) {
+            check_owned_cap(bytes);
+            peak_build_live = std::max(
+                peak_build_live,
+                capped_add(fast_estimated_owned_bytes(), bytes));
+        };
+        constexpr double kContinuationResidualTolerance = 1e-10;
+
+        std::vector<double> values;
+        std::vector<double> residuals;
+        std::vector<StrategyContinuationEntryStatus> pair_status;
+        if (strategy->nodes[strategy->start_node].kind !=
+            StrategyNodeKind::Terminal) {
+            const std::size_t pair_count = pairs.size();
+            if (pair_contracted.size() != pair_count ||
+                component_by_pair.size() != pair_count) {
+                throw std::logic_error(
+                    "strategy continuation graph is not component-complete");
+            }
+            std::vector<double> immediate_cost(pair_count, 0.0);
+            std::vector<StrategyContinuationEntryStatus> price_status(
+                pair_count, StrategyContinuationEntryStatus::Complete);
+            std::vector<double> chain_cost(pair_count, 0.0);
+            std::vector<StrategyContinuationEntryStatus> chain_status(
+                pair_count, StrategyContinuationEntryStatus::Complete);
+            std::vector<std::uint8_t> chain_done(pair_count, 0);
+            pair_status.assign(
+                pair_count,
+                StrategyContinuationEntryStatus::EntryNotRepresented);
+            values.assign(
+                pair_count, std::numeric_limits<double>::infinity());
+            residuals.assign(
+                pair_count, std::numeric_limits<double>::infinity());
+
+            const auto vector_bytes = [&]() {
+                return capped_add(
+                    capped_product(
+                        immediate_cost.capacity() + chain_cost.capacity() +
+                            values.capacity() + residuals.capacity(),
+                        sizeof(double)),
+                    capped_add(
+                        capped_product(
+                            price_status.capacity() +
+                                chain_status.capacity() +
+                                pair_status.capacity(),
+                            sizeof(StrategyContinuationEntryStatus)),
+                        capped_product(
+                            chain_done.capacity(), sizeof(std::uint8_t))));
+            };
+            observe_transient(vector_bytes());
+
+            for (std::uint32_t pair = 0; pair < pair_count; ++pair) {
+                const EvalPair& entry = pairs.at(pair);
+                if (!entry.consumes) continue;
+                if (entry.node >= strategy->nodes.size() ||
+                    strategy->nodes[entry.node].kind !=
+                        StrategyNodeKind::Operation) {
+                    price_status[pair] =
+                        StrategyContinuationEntryStatus::NonFiniteCost;
+                    continue;
+                }
+                double cost = 0.0;
+                for (const std::string& key :
+                     strategy->nodes[entry.node].price_keys) {
+                    if (options.economy == nullptr) {
+                        price_status[pair] =
+                            StrategyContinuationEntryStatus::MissingPrice;
+                        break;
+                    }
+                    const auto price = options.economy->prices.find(key);
+                    if (price == options.economy->prices.end() ||
+                        !std::isfinite(price->second) ||
+                        price->second < 0.0) {
+                        price_status[pair] =
+                            StrategyContinuationEntryStatus::MissingPrice;
+                        break;
+                    }
+                    cost += price->second;
+                }
+                if (price_status[pair] ==
+                        StrategyContinuationEntryStatus::Complete &&
+                    (!std::isfinite(cost) || cost < 0.0)) {
+                    price_status[pair] =
+                        StrategyContinuationEntryStatus::NonFiniteCost;
+                } else {
+                    immediate_cost[pair] = cost;
+                }
+                if ((pair & 1023u) == 1023u) {
+                    observe_transient(vector_bytes());
+                    co_await solve_detail::CooperativeCheckpoint{
+                        vector_bytes()};
+                }
+            }
+
+            /* Pass-through contraction preserves the first entered pair in
+             * transition_via.  Price every full deterministic chain once so
+             * the continuation Bellman RHS includes operations removed from
+             * the occupancy graph. */
+            std::vector<std::uint32_t> path;
+            for (std::uint32_t root = 0; root < pair_count; ++root) {
+                if (!pair_contracted[root] || chain_done[root]) continue;
+                path.clear();
+                std::uint32_t cursor = root;
+                while (pair_contracted[cursor] && !chain_done[cursor]) {
+                    path.push_back(cursor);
+                    cursor = chain_next.at(cursor);
+                }
+                while (!path.empty()) {
+                    const std::uint32_t pair = path.back();
+                    path.pop_back();
+                    const std::uint32_t next = chain_next.at(pair);
+                    chain_cost[pair] = immediate_cost[pair];
+                    chain_status[pair] = price_status[pair];
+                    if (pair_contracted[next]) {
+                        chain_cost[pair] += chain_cost[next];
+                        chain_status[pair] = merge_status(
+                            chain_status[pair], chain_status[next]);
+                    }
+                    if (!std::isfinite(chain_cost[pair]) ||
+                        chain_cost[pair] < 0.0) {
+                        chain_status[pair] = merge_status(
+                            chain_status[pair],
+                            StrategyContinuationEntryStatus::NonFiniteCost);
+                    }
+                    chain_done[pair] = 1;
+                }
+                if ((root & 1023u) == 1023u) {
+                    observe_transient(capped_add(
+                        vector_bytes(),
+                        capped_product(
+                            path.capacity(), sizeof(std::uint32_t))));
+                    co_await solve_detail::CooperativeCheckpoint{
+                        vector_bytes()};
+                }
+            }
+
+            /* Components are source-first for root occupancy.  Reverse them
+             * for arbitrary-entry properness: every positive-probability
+             * downstream component has already been classified. */
+            for (std::size_t offset = components.size(); offset-- > 0;) {
+                const std::uint32_t component =
+                    static_cast<std::uint32_t>(offset);
+                StrategyContinuationEntryStatus status =
+                    StrategyContinuationEntryStatus::Complete;
+                bool has_success_or_component_exit = false;
+                for (const std::uint32_t member : components[offset]) {
+                    status = merge_status(status, price_status[member]);
+                    const EvalRow& row = pair_row(member);
+                    solve_detail::WideFloat mass{0.0};
+                    for (std::size_t transition_index = 0;
+                         transition_index < row.transitions.size();
+                         ++transition_index) {
+                        const EvalTransition& transition =
+                            row.transitions[transition_index];
+                        if (!std::isfinite(transition.probability) ||
+                            transition.probability < 0.0) {
+                            status = merge_status(
+                                status,
+                                StrategyContinuationEntryStatus::
+                                    NonFiniteCost);
+                            continue;
+                        }
+                        if (!(transition.probability > 0.0)) continue;
+                        mass += solve_detail::WideFloat{
+                            transition.probability};
+                        const std::uint32_t via =
+                            transition_via(row, transition_index);
+                        if (via != kNoId) {
+                            status = merge_status(
+                                status, chain_status.at(via));
+                        }
+                        if (component_by_pair.at(transition.target) !=
+                            component) {
+                            has_success_or_component_exit = true;
+                            status = merge_status(
+                                status, pair_status.at(transition.target));
+                        }
+                    }
+                    for (const EvalAbsorption& absorption :
+                         row.absorptions) {
+                        if (!std::isfinite(absorption.probability) ||
+                            absorption.probability < 0.0) {
+                            status = merge_status(
+                                status,
+                                StrategyContinuationEntryStatus::
+                                    NonFiniteCost);
+                            continue;
+                        }
+                        if (!(absorption.probability > 0.0)) continue;
+                        mass += solve_detail::WideFloat{
+                            absorption.probability};
+                        const bool success =
+                            absorption.kind ==
+                                EvalAbsorptionKind::Terminal &&
+                            absorption.node < strategy->nodes.size() &&
+                            strategy->nodes[absorption.node].kind ==
+                                StrategyNodeKind::Terminal &&
+                            strategy->nodes[absorption.node].terminal_kind ==
+                                PC_TERMINAL_SUCCESS;
+                        if (success) {
+                            has_success_or_component_exit = true;
+                        } else {
+                            status = merge_status(
+                                status,
+                                StrategyContinuationEntryStatus::
+                                    FailureReachable);
+                        }
+                    }
+                    if (std::fabs(mass.value() - 1.0) > 1e-9) {
+                        status = merge_status(
+                            status,
+                            StrategyContinuationEntryStatus::NonFiniteCost);
+                    }
+                }
+                if (!has_success_or_component_exit) {
+                    status = merge_status(
+                        status,
+                        StrategyContinuationEntryStatus::ImproperPolicy);
+                }
+                for (const std::uint32_t member : components[offset]) {
+                    pair_status[member] = status;
+                }
+                if ((offset & 255u) == 0u) {
+                    observe_transient(capped_add(
+                        vector_bytes(),
+                        capped_product(
+                            path.capacity(), sizeof(std::uint32_t))));
+                    co_await solve_detail::CooperativeCheckpoint{
+                        vector_bytes()};
+                }
+            }
+            for (std::uint32_t pair = 0; pair < pair_count; ++pair) {
+                if (!pair_contracted[pair]) continue;
+                const std::uint32_t terminal = chain_terminal.at(pair);
+                pair_status[pair] = merge_status(
+                    chain_status[pair], pair_status.at(terminal));
+            }
+
+            std::vector<solve_detail::PolicyRow> policy_rows(pair_count);
+            std::vector<solve_detail::PolicyEdge> policy_edges;
+            policy_edges.reserve(static_cast<std::size_t>(
+                std::min<std::uint64_t>(
+                    stored_transitions,
+                    std::numeric_limits<std::size_t>::max())));
+            std::vector<std::int32_t> local_by_pair(pair_count, -1);
+            for (std::uint32_t pair = 0; pair < pair_count; ++pair) {
+                if (pair_contracted[pair] ||
+                    pair_status[pair] !=
+                        StrategyContinuationEntryStatus::Complete) {
+                    continue;
+                }
+                solve_detail::PolicyRow& policy = policy_rows[pair];
+                policy.edge_offset = policy_edges.size();
+                policy.cost = immediate_cost[pair];
+                for (const EvalTransition& transition : pair_row(pair).transitions) {
+                    if (!(transition.probability > 0.0)) continue;
+                    policy_edges.push_back({
+                        transition.target, transition.probability});
+                }
+                policy.edge_count = static_cast<std::uint32_t>(
+                    policy_edges.size() - policy.edge_offset);
+            }
+            const auto solve_vector_bytes = [&]() {
+                return capped_add(
+                    vector_bytes(),
+                    capped_add(
+                        capped_product(
+                            policy_rows.capacity(),
+                            sizeof(solve_detail::PolicyRow)),
+                        capped_add(
+                            capped_product(
+                                policy_edges.capacity(),
+                                sizeof(solve_detail::PolicyEdge)),
+                            capped_product(
+                                local_by_pair.capacity(),
+                                sizeof(std::int32_t)))));
+            };
+            observe_transient(solve_vector_bytes());
+
+            StrategyContinuationEntryStatus solve_failure =
+                StrategyContinuationEntryStatus::Complete;
+            for (std::size_t offset = components.size(); offset-- > 0;) {
+                const std::vector<std::uint32_t>& members =
+                    components[offset];
+                if (members.empty() ||
+                    pair_status[members.front()] !=
+                        StrategyContinuationEntryStatus::Complete) {
+                    continue;
+                }
+                const std::uint32_t component =
+                    static_cast<std::uint32_t>(offset);
+                std::vector<double> rhs(members.size(), 0.0);
+                for (std::size_t row_index = 0;
+                     row_index < members.size(); ++row_index) {
+                    local_by_pair[members[row_index]] =
+                        static_cast<std::int32_t>(row_index);
+                }
+                for (std::size_t row_index = 0;
+                     row_index < members.size(); ++row_index) {
+                    const std::uint32_t member = members[row_index];
+                    solve_detail::WideFloat external{
+                        immediate_cost[member]};
+                    const EvalRow& row = pair_row(member);
+                    for (std::size_t transition_index = 0;
+                         transition_index < row.transitions.size();
+                         ++transition_index) {
+                        const EvalTransition& transition =
+                            row.transitions[transition_index];
+                        if (!(transition.probability > 0.0)) continue;
+                        const std::uint32_t via =
+                            transition_via(row, transition_index);
+                        if (via != kNoId) {
+                            external += solve_detail::WideFloat{
+                                transition.probability} *
+                                solve_detail::WideFloat{chain_cost[via]};
+                        }
+                        if (component_by_pair[transition.target] !=
+                            component) {
+                            external += solve_detail::WideFloat{
+                                transition.probability} *
+                                solve_detail::WideFloat{
+                                    values[transition.target]};
+                        }
+                    }
+                    rhs[row_index] = external.value();
+                    if (!std::isfinite(rhs[row_index]) ||
+                        rhs[row_index] < 0.0) {
+                        solve_failure =
+                            StrategyContinuationEntryStatus::NonFiniteCost;
+                    }
+                }
+                if (solve_failure !=
+                    StrategyContinuationEntryStatus::Complete) {
+                    break;
+                }
+                const std::uint64_t component_scratch = capped_add(
+                    solve_detail::sparse_policy_component_scratch_bytes(
+                        members.size(), true),
+                    capped_product(rhs.capacity(), sizeof(double)));
+                observe_transient(capped_add(
+                    solve_vector_bytes(), component_scratch));
+                std::unique_ptr<solve_detail::SparsePolicyResume> resume;
+                solve_detail::SparsePolicyComponentResult solved;
+                do {
+                    solved = solve_detail::advance_sparse_policy_component(
+                        solve_detail::SparsePolicyComponentView{
+                            members,
+                            component,
+                            component_by_pair,
+                            local_by_pair,
+                            policy_rows,
+                            policy_edges,
+                            rhs,
+                            values,
+                            options.max_sweeps},
+                        resume);
+                    if (solved.status ==
+                        solve_detail::SparsePolicyComponentStatus::
+                            Incomplete) {
+                        observe_transient(capped_add(
+                            solve_vector_bytes(), component_scratch));
+                        co_await solve_detail::CooperativeCheckpoint{
+                            capped_add(
+                                solve_vector_bytes(), component_scratch)};
+                    }
+                } while (solved.status ==
+                         solve_detail::SparsePolicyComponentStatus::
+                             Incomplete);
+                if (solved.status !=
+                        solve_detail::SparsePolicyComponentStatus::Complete ||
+                    solved.values.size() != members.size()) {
+                    solve_failure =
+                        StrategyContinuationEntryStatus::NonFiniteCost;
+                    break;
+                }
+                for (std::size_t index = 0;
+                     index < members.size(); ++index) {
+                    const double value = solved.values[index];
+                    if (!std::isfinite(value) || value < 0.0) {
+                        solve_failure =
+                            StrategyContinuationEntryStatus::NonFiniteCost;
+                        break;
+                    }
+                    values[members[index]] = value;
+                    local_by_pair[members[index]] = -1;
+                }
+                if (solve_failure !=
+                    StrategyContinuationEntryStatus::Complete) {
+                    break;
+                }
+                co_await solve_detail::CooperativeCheckpoint{
+                    solve_vector_bytes()};
+            }
+
+            if (solve_failure ==
+                StrategyContinuationEntryStatus::Complete) {
+                for (std::uint32_t pair = 0; pair < pair_count; ++pair) {
+                    if (!pair_contracted[pair] ||
+                        pair_status[pair] !=
+                            StrategyContinuationEntryStatus::Complete) {
+                        continue;
+                    }
+                    const double value =
+                        chain_cost[pair] +
+                        values[chain_terminal.at(pair)];
+                    if (!std::isfinite(value) || value < 0.0) {
+                        solve_failure =
+                            StrategyContinuationEntryStatus::NonFiniteCost;
+                        break;
+                    }
+                    values[pair] = value;
+                }
+            }
+
+            if (solve_failure ==
+                StrategyContinuationEntryStatus::Complete) {
+                for (std::uint32_t pair = 0; pair < pair_count; ++pair) {
+                    if (pair_status[pair] !=
+                        StrategyContinuationEntryStatus::Complete) {
+                        continue;
+                    }
+                    solve_detail::WideFloat expected{
+                        immediate_cost[pair]};
+                    const EvalRow& row = pair_row(pair);
+                    for (std::size_t transition_index = 0;
+                         transition_index < row.transitions.size();
+                         ++transition_index) {
+                        const EvalTransition& transition =
+                            row.transitions[transition_index];
+                        if (!(transition.probability > 0.0)) continue;
+                        const std::uint32_t via =
+                            transition_via(row, transition_index);
+                        if (via != kNoId) {
+                            expected += solve_detail::WideFloat{
+                                transition.probability} *
+                                solve_detail::WideFloat{
+                                    chain_cost[via]};
+                        }
+                        expected += solve_detail::WideFloat{
+                            transition.probability} *
+                            solve_detail::WideFloat{
+                                values[transition.target]};
+                    }
+                    const double residual = std::fabs(
+                        (solve_detail::WideFloat{values[pair]} - expected)
+                            .value());
+                    residuals[pair] = residual;
+                    certificate.maximum_bellman_residual = std::max(
+                        certificate.maximum_bellman_residual, residual);
+                    const double scale = std::max(
+                        {1.0, std::fabs(values[pair]),
+                         std::fabs(expected.value())});
+                    if (!std::isfinite(residual) ||
+                        residual >
+                            kContinuationResidualTolerance * scale) {
+                        solve_failure =
+                            StrategyContinuationEntryStatus::ResidualFailure;
+                        break;
+                    }
+                }
+            }
+            if (solve_failure !=
+                StrategyContinuationEntryStatus::Complete) {
+                for (StrategyContinuationEntryStatus& status :
+                     pair_status) {
+                    if (status ==
+                        StrategyContinuationEntryStatus::Complete) {
+                        status = solve_failure;
+                    }
+                }
+            }
+            observe_transient(solve_vector_bytes());
+        }
+
+        certificate.members.reserve(
+            options.continuation_entries.size());
+        for (std::size_t index = 0;
+             index < options.continuation_entries.size(); ++index) {
+            const StrategyContinuationEntryRequest& request =
+                options.continuation_entries[index];
+            StrategyContinuationMemberResult member;
+            member.represented_state_identity =
+                request.represented_state_identity;
+            member.exact_member_identity = request.exact_member_identity;
+            member.item = request.item;
+            member.exact_entry_identity = continuation_entry_keys[index];
+            member.status = StrategyContinuationEntryStatus::Complete;
+            if (request.complete_member_count == 0) {
+                member.status =
+                    StrategyContinuationEntryStatus::InvalidRequest;
+            } else if (strategy->nodes[strategy->start_node].kind ==
+                       StrategyNodeKind::Terminal) {
+                member.status =
+                    strategy->nodes[strategy->start_node].terminal_kind ==
+                            PC_TERMINAL_SUCCESS
+                        ? StrategyContinuationEntryStatus::Complete
+                        : StrategyContinuationEntryStatus::FailureReachable;
+                if (member.status ==
+                    StrategyContinuationEntryStatus::Complete) {
+                    member.exact_continuation_upper = 0.0;
+                    member.bellman_residual = 0.0;
+                }
+            } else {
+                const std::uint32_t pair =
+                    continuation_entry_pairs[index];
+                if (pair == kNoId || pair >= pair_status.size()) {
+                    member.status = StrategyContinuationEntryStatus::
+                        EntryNotRepresented;
+                } else {
+                    member.status = pair_status[pair];
+                    if (member.status ==
+                        StrategyContinuationEntryStatus::Complete) {
+                        member.exact_continuation_upper = values[pair];
+                        member.bellman_residual = residuals[pair];
+                    }
+                }
+            }
+            certificate.members.push_back(std::move(member));
+        }
+
+        std::map<std::uint64_t, std::vector<std::size_t>> members_by_state;
+        for (std::size_t index = 0;
+             index < certificate.members.size(); ++index) {
+            members_by_state[
+                certificate.members[index]
+                    .represented_state_identity]
+                .push_back(index);
+        }
+        certificate.states.reserve(members_by_state.size());
+        for (const auto& [state_identity, member_indexes] :
+             members_by_state) {
+            StrategyContinuationStateUpper state;
+            state.represented_state_identity = state_identity;
+            state.status = StrategyContinuationEntryStatus::Complete;
+            bool declared = false;
+            for (const std::size_t index : member_indexes) {
+                const StrategyContinuationEntryRequest& request =
+                    options.continuation_entries[index];
+                if (!declared) {
+                    state.declared_member_count =
+                        request.complete_member_count;
+                    declared = true;
+                } else if (state.declared_member_count !=
+                           request.complete_member_count) {
+                    state.status = merge_status(
+                        state.status,
+                        StrategyContinuationEntryStatus::InvalidRequest);
+                }
+                state.exact_member_identities.push_back(
+                    request.exact_member_identity);
+            }
+            std::sort(
+                state.exact_member_identities.begin(),
+                state.exact_member_identities.end());
+            const auto unique_end = std::unique(
+                state.exact_member_identities.begin(),
+                state.exact_member_identities.end());
+            const std::size_t unique_members = static_cast<std::size_t>(
+                unique_end - state.exact_member_identities.begin());
+            if (unique_end != state.exact_member_identities.end() ||
+                state.declared_member_count == 0 ||
+                unique_members != state.declared_member_count ||
+                member_indexes.size() != state.declared_member_count) {
+                state.status = merge_status(
+                    state.status,
+                    StrategyContinuationEntryStatus::
+                        IncompleteMemberCoverage);
+            }
+            state.exact_member_identities.erase(
+                unique_end, state.exact_member_identities.end());
+            if (state.status ==
+                StrategyContinuationEntryStatus::Complete) {
+                for (const std::size_t index : member_indexes) {
+                    state.status = merge_status(
+                        state.status,
+                        certificate.members[index].status);
+                }
+            }
+            if (state.status ==
+                StrategyContinuationEntryStatus::Complete) {
+                state.minimum_member_upper =
+                    std::numeric_limits<double>::infinity();
+                state.maximum_member_upper = 0.0;
+                for (const std::size_t index : member_indexes) {
+                    const double value = certificate.members[index]
+                                             .exact_continuation_upper;
+                    state.minimum_member_upper = std::min(
+                        state.minimum_member_upper, value);
+                    state.maximum_member_upper = std::max(
+                        state.maximum_member_upper, value);
+                }
+                state.exact_continuation_upper =
+                    state.maximum_member_upper;
+                state.member_value_spread =
+                    state.maximum_member_upper -
+                    state.minimum_member_upper;
+                certificate.maximum_member_value_spread = std::max(
+                    certificate.maximum_member_value_spread,
+                    state.member_value_spread);
+            } else if (
+                state.status == StrategyContinuationEntryStatus::
+                    IncompleteMemberCoverage ||
+                state.status ==
+                    StrategyContinuationEntryStatus::InvalidRequest) {
+                for (const std::size_t index : member_indexes) {
+                    if (certificate.members[index].status ==
+                        StrategyContinuationEntryStatus::Complete) {
+                        certificate.members[index].status = state.status;
+                        certificate.members[index]
+                            .exact_continuation_upper =
+                            std::numeric_limits<double>::infinity();
+                        certificate.members[index].bellman_residual =
+                            std::numeric_limits<double>::infinity();
+                    }
+                }
+            }
+            certificate.maximum_member_multiplicity = std::max(
+                certificate.maximum_member_multiplicity,
+                state.declared_member_count);
+            certificate.states.push_back(std::move(state));
+        }
+
+        certificate.represented_states = static_cast<std::uint32_t>(
+            certificate.states.size());
+        for (const StrategyContinuationMemberResult& member :
+             certificate.members) {
+            if (member.available()) {
+                ++certificate.certified_members;
+            } else {
+                ++certificate.refused_members;
+            }
+        }
+        for (const StrategyContinuationStateUpper& state :
+             certificate.states) {
+            if (state.available()) {
+                ++certificate.certified_states;
+            } else {
+                ++certificate.refused_states;
+            }
+        }
+        certificate.build_ns = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                Clock::now() - started)
+                .count());
+        certificate.retained_owned_bytes =
+            continuation_certificate_bytes(certificate);
+        certificate.transient_evaluator_bytes =
+            peak_build_live > certificate.retained_owned_bytes
+                ? peak_build_live - certificate.retained_owned_bytes
+                : 0;
+        output.continuation_upper = std::move(certificate);
+        continuation_entry_pairs.clear();
+        continuation_entry_pairs.shrink_to_fit();
+        continuation_entry_keys.clear();
+        continuation_entry_keys.shrink_to_fit();
+        check_owned_cap();
+        co_return true;
+    }
+
     solve_detail::CooperativeTask<bool> finalize() {
         co_await solve_detail::CooperativeCheckpoint{};
+        {
+            ActiveTimer continuation_timer(
+                output.stage_timings.continuation_solve_ns);
+            auto continuation =
+                build_continuation_upper_certificate();
+            while (!continuation.resume()) {
+                co_await solve_detail::CooperativeCheckpoint{
+                    continuation.retained_bytes()};
+            }
+            (void)continuation.take_result();
+        }
         auto chain_propagation = propagate_chain_inflow();
         while (!chain_propagation.resume()) {
             co_await solve_detail::CooperativeCheckpoint{

@@ -1017,6 +1017,127 @@ struct PrimitiveRenewalWitness {
     std::vector<std::uint64_t> kernel_signature;
 };
 
+/* Collision-free canonical context carried beside evaluator statewise
+ * continuation evidence. Hashes elsewhere remain lookup accelerators; this
+ * payload is compared by full vector equality before a consumer may use an
+ * exposed upper. The strategy graph itself remains the exact attached JSON
+ * below, avoiding a second multi-megabyte copy. */
+struct ExecutableContinuationAuthorityContext {
+    std::vector<std::uint64_t> goal;
+    std::vector<std::uint64_t> economy;
+    std::vector<std::uint64_t> mechanics_artifact;
+    std::vector<std::uint64_t> caller_scope;
+    std::vector<std::uint64_t> action_vocabulary;
+    std::vector<std::uint64_t> terminal_semantics;
+
+    bool complete() const {
+        return !goal.empty() && !economy.empty() &&
+            !mechanics_artifact.empty() && !caller_scope.empty() &&
+            !action_vocabulary.empty() && !terminal_semantics.empty();
+    }
+
+    bool operator==(
+        const ExecutableContinuationAuthorityContext&) const = default;
+};
+
+struct ExecutableContinuationUpperCertificate {
+    static constexpr std::uint64_t kSchemaVersion = 1;
+
+    std::uint64_t schema_version = kSchemaVersion;
+    ExecutableContinuationAuthorityContext authority;
+    StrategyContinuationUpperCertificate evaluation;
+    /* Accelerator only. Reuse separately requires byte equality of the
+     * attached certification_strategy_json. */
+    std::uint64_t strategy_identity_digest = 0;
+    std::uint64_t strategy_identity_bytes = 0;
+
+    bool available() const {
+        return schema_version == kSchemaVersion && authority.complete() &&
+            evaluation.requested && evaluation.certified_states != 0 &&
+            strategy_identity_digest != 0 && strategy_identity_bytes != 0;
+    }
+};
+
+enum class ExecutableContinuationReuseStatus : std::uint8_t {
+    Complete = 0,
+    IncompleteCertificate,
+    StrategyMismatch,
+    GoalMismatch,
+    EconomyMismatch,
+    MechanicsArtifactMismatch,
+    CallerScopeMismatch,
+    ActionVocabularyMismatch,
+    TerminalSemanticsMismatch,
+};
+
+inline const char* executable_continuation_reuse_status_name(
+        const ExecutableContinuationReuseStatus status) {
+    switch (status) {
+    case ExecutableContinuationReuseStatus::Complete: return "complete";
+    case ExecutableContinuationReuseStatus::IncompleteCertificate:
+        return "incomplete_certificate";
+    case ExecutableContinuationReuseStatus::StrategyMismatch:
+        return "strategy_mismatch";
+    case ExecutableContinuationReuseStatus::GoalMismatch:
+        return "goal_mismatch";
+    case ExecutableContinuationReuseStatus::EconomyMismatch:
+        return "economy_mismatch";
+    case ExecutableContinuationReuseStatus::MechanicsArtifactMismatch:
+        return "mechanics_artifact_mismatch";
+    case ExecutableContinuationReuseStatus::CallerScopeMismatch:
+        return "caller_scope_mismatch";
+    case ExecutableContinuationReuseStatus::ActionVocabularyMismatch:
+        return "action_vocabulary_mismatch";
+    case ExecutableContinuationReuseStatus::TerminalSemanticsMismatch:
+        return "terminal_semantics_mismatch";
+    }
+    return "incomplete_certificate";
+}
+
+inline ExecutableContinuationReuseStatus
+validate_executable_continuation_upper_reuse(
+        const ExecutableContinuationUpperCertificate& certificate,
+        const ExecutableContinuationAuthorityContext& current,
+        const std::uint64_t strategy_digest,
+        const std::uint64_t strategy_bytes,
+        const bool exact_strategy_graph_equal) {
+    if (!certificate.available() || !current.complete()) {
+        return ExecutableContinuationReuseStatus::IncompleteCertificate;
+    }
+    /* A digest narrows lookup only. The caller must also compare the exact
+     * attached graph payload and explicitly report that equality here. */
+    if (certificate.strategy_identity_digest != strategy_digest ||
+        certificate.strategy_identity_bytes != strategy_bytes ||
+        !exact_strategy_graph_equal) {
+        return ExecutableContinuationReuseStatus::StrategyMismatch;
+    }
+    if (certificate.authority.goal != current.goal) {
+        return ExecutableContinuationReuseStatus::GoalMismatch;
+    }
+    if (certificate.authority.economy != current.economy) {
+        return ExecutableContinuationReuseStatus::EconomyMismatch;
+    }
+    if (certificate.authority.mechanics_artifact !=
+        current.mechanics_artifact) {
+        return ExecutableContinuationReuseStatus::
+            MechanicsArtifactMismatch;
+    }
+    if (certificate.authority.caller_scope != current.caller_scope) {
+        return ExecutableContinuationReuseStatus::CallerScopeMismatch;
+    }
+    if (certificate.authority.action_vocabulary !=
+        current.action_vocabulary) {
+        return ExecutableContinuationReuseStatus::
+            ActionVocabularyMismatch;
+    }
+    if (certificate.authority.terminal_semantics !=
+        current.terminal_semantics) {
+        return ExecutableContinuationReuseStatus::
+            TerminalSemanticsMismatch;
+    }
+    return ExecutableContinuationReuseStatus::Complete;
+}
+
 /*
  * A policy-guided exact lift is compiled and independently evaluated while
  * its strict child CalcContext is alive. Retain that proven ordinary strategy
@@ -1026,6 +1147,10 @@ struct PrimitiveRenewalWitness {
 struct RetainedCompiledPolicyArtifact {
     std::string strategy_json;
     std::string certification_strategy_json;
+    /* Typed evaluator-owned arbitrary-entry authority. It remains attached
+     * to the exact ordinary strategy that produced it; public policy values
+     * retain their historical coarse/search meaning. */
+    ExecutableContinuationUpperCertificate continuation_upper;
     std::uint32_t working_states = 0;
     std::uint32_t closed_coarse_domain_added_states = 0;
     std::uint32_t closed_coarse_domain_route_states = 0;

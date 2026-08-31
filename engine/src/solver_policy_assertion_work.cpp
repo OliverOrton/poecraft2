@@ -185,6 +185,7 @@ struct CompiledPolicyAssertionWork::Impl {
     const RefinedPolicyCompileRouting* refined_routing = nullptr;
     const std::string* emitted_strategy_json = nullptr;
     const PolicyCompilationTelemetry* emitted_compilation = nullptr;
+    bool request_root_continuation_upper = false;
     CompiledPolicyAssertion result;
     Stage stage = Stage::Compiling;
     std::shared_ptr<StrategyImpl> parsed_strategy;
@@ -201,7 +202,8 @@ struct CompiledPolicyAssertionWork::Impl {
             std::string strategy_name_value,
             const RefinedPolicyCompileRouting* routing,
             const std::string* emitted_json,
-            const PolicyCompilationTelemetry* emitted_telemetry)
+            const PolicyCompilationTelemetry* emitted_telemetry,
+            const bool request_root_upper)
         : coarse(coarse_value),
           solved(solved_value),
           prices(prices_value),
@@ -209,7 +211,8 @@ struct CompiledPolicyAssertionWork::Impl {
           strategy_name(std::move(strategy_name_value)),
           refined_routing(routing),
           emitted_strategy_json(emitted_json),
-          emitted_compilation(emitted_telemetry) {
+          emitted_compilation(emitted_telemetry),
+          request_root_continuation_upper(request_root_upper) {
         result.solver_cost = solved.evaluated_policy_cost;
     }
 
@@ -532,6 +535,21 @@ struct CompiledPolicyAssertionWork::Impl {
             evaluation_options.max_reforge_work =
                 options.max_reforge_work;
             evaluation_options.economy = economy;
+            if (request_root_continuation_upper) {
+                if (solved.start_state == kNoId) {
+                    finish_failure(
+                        CompiledPolicyAssertionStatus::CompilationFailure,
+                        "statewise continuation request has no solver root");
+                    record_evaluation_time();
+                    return;
+                }
+                evaluation_options.continuation_entries.push_back({
+                    solved.start_state,
+                    0,
+                    1,
+                    parsed_strategy->start_item,
+                });
+            }
             evaluation_work = std::make_unique<StrategyEvalWork>(
                 parsed_strategy, evaluation_options);
             stage = Stage::Evaluating;
@@ -803,11 +821,12 @@ CompiledPolicyAssertionWork::CompiledPolicyAssertionWork(
         std::string strategy_name,
         const RefinedPolicyCompileRouting* refined_routing,
         const std::string* emitted_strategy_json,
-        const PolicyCompilationTelemetry* emitted_compilation)
+        const PolicyCompilationTelemetry* emitted_compilation,
+        const bool request_root_continuation_upper)
     : impl_(std::make_unique<Impl>(
           coarse, solved, prices, options, std::move(strategy_name),
           refined_routing, emitted_strategy_json,
-          emitted_compilation)) {}
+          emitted_compilation, request_root_continuation_upper)) {}
 
 CompiledPolicyAssertionWork::~CompiledPolicyAssertionWork() = default;
 CompiledPolicyAssertionWork::CompiledPolicyAssertionWork(

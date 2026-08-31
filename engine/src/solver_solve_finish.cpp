@@ -2691,11 +2691,27 @@ SolveWork::Impl::run_publication_pipeline() {
                 return "not_run";
             };
         const auto retained_artifact_from_assertion =
-            [](refinement::CompiledPolicyAssertion& assertion) {
+            [&](refinement::CompiledPolicyAssertion& assertion) {
                 RetainedCompiledPolicyArtifact artifact;
                 artifact.strategy_json = std::move(assertion.strategy_json);
                 artifact.certification_strategy_json =
                     std::move(assertion.certification_strategy_json);
+                artifact.continuation_upper.authority =
+                    executable_continuation_authority_context();
+                artifact.continuation_upper.evaluation =
+                    std::move(assertion.evaluation.continuation_upper);
+                if (!artifact.certification_strategy_json.empty() &&
+                    artifact.continuation_upper.evaluation.requested) {
+                    std::uint64_t identity = 1469598103934665603ULL;
+                    identity_mix_string(
+                        identity,
+                        artifact.certification_strategy_json);
+                    artifact.continuation_upper
+                        .strategy_identity_digest = identity;
+                    artifact.continuation_upper
+                        .strategy_identity_bytes =
+                            artifact.certification_strategy_json.size();
+                }
                 artifact.working_states =
                     assertion.compilation.working_states;
                 artifact.closed_coarse_domain_added_states =
@@ -3739,7 +3755,8 @@ SolveWork::Impl::run_publication_pipeline() {
                 co_await solve_detail::CooperativeCheckpoint{};
                 refinement::CompiledPolicyAssertionWork assertion_work(
                     calc, result, prices, scoped_assertion_options,
-                    "selected core policy");
+                    "selected core policy", nullptr, nullptr, nullptr,
+                    true);
                 while (!assertion_work.progress().done) {
                     const auto assertion_progress =
                         assertion_work.progress();

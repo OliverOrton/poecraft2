@@ -1739,23 +1739,57 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
             double lower = kInfinity;
             double upper = kInfinity;
             double absolute_margin = kInfinity;
+            double retirement_margin = -kInfinity;
         };
 
         struct VerifiedIncumbentOperatorShadow {
             std::uint64_t incumbent_identity = 0;
             std::uint64_t audits = 0;
+            ExecutableContinuationReuseStatus reuse_status =
+                ExecutableContinuationReuseStatus::IncompleteCertificate;
             std::uint64_t ledger_entries = 0;
+            std::uint64_t uncertified_upper_entries = 0;
             std::uint64_t finite_upper_entries = 0;
             std::uint64_t finite_lower_entries = 0;
+            std::uint64_t comparable_entries = 0;
             std::uint64_t would_retire = 0;
             std::uint64_t still_competitive = 0;
+            std::uint64_t live_ledger_entries = 0;
+            std::uint64_t live_finite_upper_entries = 0;
+            std::uint64_t live_finite_lower_entries = 0;
+            std::uint64_t live_comparable_entries = 0;
+            std::uint64_t live_would_retire = 0;
+            std::uint64_t live_still_competitive = 0;
+            std::uint64_t strict_obligations_examined = 0;
+            std::uint64_t strict_rows_begun_before_comparison = 0;
+            std::uint64_t strict_alternative_rows_begun_before_comparison = 0;
+            std::uint64_t ledger_transitions_before_comparison = 0;
+            std::uint64_t solver_rows_before_comparison = 0;
+            std::uint64_t comparison_available_wall_ns = 0;
+            std::uint32_t certificate_requested_members = 0;
+            std::uint32_t certificate_certified_members = 0;
+            std::uint32_t certificate_refused_members = 0;
+            std::uint32_t certificate_represented_states = 0;
+            std::uint32_t certificate_certified_states = 0;
+            std::uint32_t certificate_refused_states = 0;
+            std::uint32_t certificate_maximum_member_multiplicity = 0;
+            double certificate_maximum_member_value_spread = 0.0;
+            double certificate_maximum_bellman_residual = 0.0;
+            std::uint64_t certificate_retained_bytes = 0;
+            std::uint64_t certificate_transient_bytes = 0;
+            std::uint64_t certificate_build_ns = 0;
             std::array<std::uint64_t, kOperatorFamilyCount>
                 would_retire_by_family{};
             std::array<std::uint64_t, kOperatorFamilyCount>
                 still_competitive_by_family{};
+            CarrierShapeHistogram comparable_shapes;
+            CarrierShapeHistogram would_retire_shapes;
             std::array<OperatorShadowSample, kOperatorShadowSampleLimit>
                 closest_competitive{};
             std::size_t closest_competitive_count = 0;
+            std::array<OperatorShadowSample, kOperatorShadowSampleLimit>
+                largest_retirement_margins{};
+            std::size_t largest_retirement_margin_count = 0;
         };
 
         enum class OperatorLowerSkipReason : std::uint8_t {
@@ -1892,6 +1926,9 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         const std::size_t count) const;
 
     std::uint64_t action_vocabulary_identity() const;
+
+    ExecutableContinuationAuthorityContext
+    executable_continuation_authority_context() const;
 
     std::uint64_t graph_identity() const;
     std::uint64_t artifact_identity() const;

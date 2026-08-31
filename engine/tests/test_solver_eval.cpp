@@ -2,6 +2,7 @@
 
 #include "../src/handles_internal.hpp"
 #include "../src/solver_internal.hpp"
+#include "../src/solver_proof_pattern_manager.hpp"
 #include "../src/solver_refinement.hpp"
 #include "../src/solver_segmented_vector.hpp"
 #include "poecraft/bitset.h"
@@ -16,6 +17,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -347,6 +349,256 @@ void expect_observation_program_refusal(
             std::string::npos;
     }
     PC_CHECK(refused);
+}
+
+const StrategyContinuationStateUpper* continuation_state(
+        const StrategyEvalResult& result,
+        const std::uint64_t identity) {
+    const auto found = std::find_if(
+        result.continuation_upper.states.begin(),
+        result.continuation_upper.states.end(),
+        [&](const StrategyContinuationStateUpper& state) {
+            return state.represented_state_identity == identity;
+        });
+    return found == result.continuation_upper.states.end()
+               ? nullptr
+               : &*found;
+}
+
+pc_item_state observation_item(
+    const SessionImpl& session,
+    std::uint32_t mod);
+
+void run_continuation_upper_certificate_tests() {
+    auto session = make_eval_session();
+    const auto strategy = compile(
+        session,
+        shell(
+            "statewise executable continuation upper", "rare",
+            R"JSON({"id":"start","kind":"start"},
+{"id":"chaos","kind":"operation","operation":{"type":"chaos","params":{}}},
+{"id":"bad_loop_a","kind":"router"},
+{"id":"bad_loop_b","kind":"router"},
+{"id":"success","kind":"terminal","terminal":"success"},
+{"id":"failure","kind":"terminal","terminal":"failure"})JSON",
+            R"JSON({"id":"already_done","from":"start","to":"success","priority":0,"condition":{"type":"has_mod_family","family_mod_key":"mod0","min_tier":1}},
+{"id":"unreachable_improper","from":"start","to":"bad_loop_a","priority":1,"condition":{"type":"has_mod_family","family_mod_key":"mod2","min_tier":1}},
+{"id":"certification_fail_closed","from":"start","to":"failure","priority":2,"condition":{"type":"has_mod_family","family_mod_key":"mod3","min_tier":1}},
+{"id":"begin","from":"start","to":"chaos","priority":999,"is_default":true},
+{"id":"hit","from":"chaos","to":"success","priority":0,"condition":{"type":"has_mod_family","family_mod_key":"mod0","min_tier":1}},
+{"id":"repeat","from":"chaos","to":"chaos","priority":999,"is_default":true},
+{"id":"bad_a_to_b","from":"bad_loop_a","to":"bad_loop_b","priority":0,"condition":{"type":"always"}},
+{"id":"bad_b_to_a","from":"bad_loop_b","to":"bad_loop_a","priority":0,"condition":{"type":"always"}})JSON"));
+
+    pc_item_state clean;
+    pc_item_clear(&clean);
+    clean.rarity = PC_RARITY_RARE;
+    const pc_item_state already_done = observation_item(*session, 0);
+    const pc_item_state improper = observation_item(*session, 2);
+    const pc_item_state fail_closed = observation_item(*session, 3);
+
+    StrategyEvalOptions root_options;
+    root_options.epsilon = 1e-13;
+    auto continuation_economy = std::make_shared<EconomyImpl>();
+    continuation_economy->id = "continuation-certificate-prices";
+    continuation_economy->prices = {{"chaos", 2.0}};
+    root_options.economy = continuation_economy;
+    const StrategyEvalResult root_only =
+        evaluate_strategy(*strategy, root_options);
+    PC_CHECK(root_only.converged);
+    PC_CHECK(near(root_only.success_probability, 1.0, 1e-12));
+    PC_CHECK(near(root_only.failure_probability, 0.0, 1e-12));
+    PC_CHECK(root_only.continuation_upper.states.empty());
+
+    StrategyEvalOptions options = root_options;
+    options.continuation_entries = {
+        {100, 1000, 1, clean},
+        {101, 1010, 1, already_done},
+        {102, 1020, 1, improper},
+        {103, 1030, 2, clean},
+        {103, 1031, 2, already_done},
+        {104, 1040, 2, clean},
+        {104, 1041, 2, fail_closed},
+        {105, 1050, 2, clean},
+    };
+    const StrategyEvalResult exact = evaluate_strategy(*strategy, options);
+    const StrategyContinuationUpperCertificate& certificate =
+        exact.continuation_upper;
+
+    /* Extra arbitrary-entry discovery must not change requested-root
+     * occupancy, policy, cost, or terminal reporting. */
+    PC_CHECK(exact.converged == root_only.converged);
+    PC_CHECK(near(
+        exact.success_probability, root_only.success_probability, 1e-12));
+    PC_CHECK(near(
+        exact.failure_probability, root_only.failure_probability, 1e-12));
+    PC_CHECK(near(
+        exact.expected_actions, root_only.expected_actions, 1e-10));
+    PC_CHECK(near(
+        exact.total_expected_cost, root_only.total_expected_cost, 1e-10));
+    PC_CHECK(certificate.requested);
+    PC_CHECK(certificate.requested_members == 8);
+    PC_CHECK(certificate.represented_states == 6);
+    PC_CHECK(certificate.certified_states == 3);
+    PC_CHECK(certificate.refused_states == 3);
+    PC_CHECK(certificate.maximum_member_multiplicity == 2);
+    PC_CHECK(certificate.retained_owned_bytes > 0);
+    PC_CHECK(certificate.transient_evaluator_bytes > 0);
+    PC_CHECK(certificate.maximum_bellman_residual <= 1e-9);
+
+    const StrategyContinuationStateUpper* root =
+        continuation_state(exact, 100);
+    const StrategyContinuationStateUpper* done =
+        continuation_state(exact, 101);
+    const StrategyContinuationStateUpper* bad =
+        continuation_state(exact, 102);
+    const StrategyContinuationStateUpper* multiple =
+        continuation_state(exact, 103);
+    const StrategyContinuationStateUpper* failed_member =
+        continuation_state(exact, 104);
+    const StrategyContinuationStateUpper* incomplete =
+        continuation_state(exact, 105);
+    PC_CHECK(root != nullptr && root->available());
+    PC_CHECK(done != nullptr && done->available());
+    PC_CHECK(bad != nullptr && !bad->available());
+    PC_CHECK(multiple != nullptr && multiple->available());
+    PC_CHECK(failed_member != nullptr && !failed_member->available());
+    PC_CHECK(incomplete != nullptr && !incomplete->available());
+    if (root != nullptr && done != nullptr && multiple != nullptr) {
+        PC_CHECK(root->exact_continuation_upper > 0.0);
+        PC_CHECK(near(done->exact_continuation_upper, 0.0, 1e-12));
+        PC_CHECK(near(
+            root->exact_continuation_upper,
+            exact.total_expected_cost,
+            1e-9));
+        PC_CHECK(near(
+            multiple->exact_continuation_upper,
+            root->exact_continuation_upper,
+            1e-9));
+        PC_CHECK(near(
+            multiple->minimum_member_upper,
+            done->exact_continuation_upper,
+            1e-12));
+        PC_CHECK(near(
+            multiple->member_value_spread,
+            root->exact_continuation_upper,
+            1e-9));
+    }
+    if (bad != nullptr) {
+        PC_CHECK(
+            bad->status ==
+            StrategyContinuationEntryStatus::ImproperPolicy);
+        PC_CHECK(!std::isfinite(bad->exact_continuation_upper));
+    }
+    if (failed_member != nullptr) {
+        PC_CHECK(
+            failed_member->status ==
+            StrategyContinuationEntryStatus::FailureReachable);
+    }
+    if (incomplete != nullptr) {
+        PC_CHECK(
+            incomplete->status ==
+            StrategyContinuationEntryStatus::IncompleteMemberCoverage);
+    }
+    for (const StrategyContinuationMemberResult& member :
+         certificate.members) {
+        PC_CHECK(!member.exact_entry_identity.empty());
+    }
+
+    /* Identical requests must retain deterministic member order, full entry
+     * identities, grouped maxima, statuses, and exact values. */
+    const StrategyEvalResult repeated =
+        evaluate_strategy(*strategy, options);
+    PC_CHECK(
+        repeated.continuation_upper.members.size() ==
+        certificate.members.size());
+    PC_CHECK(
+        repeated.continuation_upper.states.size() ==
+        certificate.states.size());
+    for (std::size_t index = 0;
+         index < certificate.members.size() &&
+         index < repeated.continuation_upper.members.size(); ++index) {
+        const StrategyContinuationMemberResult& left =
+            certificate.members[index];
+        const StrategyContinuationMemberResult& right =
+            repeated.continuation_upper.members[index];
+        PC_CHECK(
+            left.represented_state_identity ==
+            right.represented_state_identity);
+        PC_CHECK(left.exact_member_identity == right.exact_member_identity);
+        PC_CHECK(left.exact_entry_identity == right.exact_entry_identity);
+        PC_CHECK(left.status == right.status);
+        PC_CHECK(
+            left.exact_continuation_upper ==
+            right.exact_continuation_upper);
+    }
+    for (std::size_t index = 0;
+         index < certificate.states.size() &&
+         index < repeated.continuation_upper.states.size(); ++index) {
+        const StrategyContinuationStateUpper& left =
+            certificate.states[index];
+        const StrategyContinuationStateUpper& right =
+            repeated.continuation_upper.states[index];
+        PC_CHECK(
+            left.represented_state_identity ==
+            right.represented_state_identity);
+        PC_CHECK(
+            left.exact_member_identities ==
+            right.exact_member_identities);
+        PC_CHECK(left.status == right.status);
+        PC_CHECK(
+            left.exact_continuation_upper ==
+            right.exact_continuation_upper);
+    }
+
+    ExecutableContinuationUpperCertificate bound;
+    bound.authority.goal = {1};
+    bound.authority.economy = {2};
+    bound.authority.mechanics_artifact = {3};
+    bound.authority.caller_scope = {4};
+    bound.authority.action_vocabulary = {5};
+    bound.authority.terminal_semantics = {6};
+    bound.evaluation = certificate;
+    bound.strategy_identity_digest = 700;
+    bound.strategy_identity_bytes = 701;
+    PC_CHECK(
+        validate_executable_continuation_upper_reuse(
+            bound, bound.authority, 700, 701, true) ==
+        ExecutableContinuationReuseStatus::Complete);
+    PC_CHECK(
+        validate_executable_continuation_upper_reuse(
+            bound, bound.authority, 700, 701, false) ==
+        ExecutableContinuationReuseStatus::StrategyMismatch);
+    const auto expect_context_refusal = [&](const std::size_t component) {
+        ExecutableContinuationAuthorityContext changed = bound.authority;
+        std::vector<std::uint64_t>* identities[] = {
+            &changed.goal,
+            &changed.economy,
+            &changed.mechanics_artifact,
+            &changed.caller_scope,
+            &changed.action_vocabulary,
+            &changed.terminal_semantics,
+        };
+        identities[component]->push_back(99);
+        PC_CHECK(
+            validate_executable_continuation_upper_reuse(
+                bound, changed, 700, 701, true) !=
+            ExecutableContinuationReuseStatus::Complete);
+    };
+    for (std::size_t component = 0; component < 6; ++component) {
+        expect_context_refusal(component);
+    }
+
+    static_assert(!std::is_convertible_v<
+        ExecutableContinuationUpperCertificate,
+        solve_detail::ProofLowerValue>);
+    static_assert(!std::is_convertible_v<
+        ExecutableContinuationUpperCertificate, double>);
+    static_assert(!std::is_convertible_v<
+        ExecutableContinuationUpperCertificate, bool>);
+    static_assert(!std::is_convertible_v<
+        StrategyContinuationStateUpper,
+        solve_detail::ProofLowerValue>);
 }
 
 std::string replace_once(
@@ -2973,6 +3225,9 @@ void run_solver_eval_tests(const char* artifact_dir) {
     };
     stage("segmented vector", [&] { run_segmented_vector_tests(); });
     stage("closed form", [&] { run_closed_form_tests(); });
+    stage("continuation upper certificate", [&] {
+        run_continuation_upper_certificate_tests();
+    });
     stage("modifier offer resolution", [&] {
         run_modifier_offer_resolution_tests();
     });

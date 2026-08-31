@@ -303,7 +303,8 @@ class CompiledPolicyAssertionWork {
         std::string strategy_name,
         const RefinedPolicyCompileRouting* refined_routing = nullptr,
         const std::string* emitted_strategy_json = nullptr,
-        const PolicyCompilationTelemetry* emitted_compilation = nullptr);
+        const PolicyCompilationTelemetry* emitted_compilation = nullptr,
+        bool request_root_continuation_upper = false);
     ~CompiledPolicyAssertionWork();
     CompiledPolicyAssertionWork(CompiledPolicyAssertionWork&&) noexcept;
     CompiledPolicyAssertionWork& operator=(

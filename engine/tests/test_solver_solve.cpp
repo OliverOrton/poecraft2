@@ -4340,6 +4340,55 @@ void run_policy_guided_primitive_choice_reoptimization_tests() {
     const std::unordered_map<std::string, double> prices{
         {"annul", 1.0}, {"bench:mod0", 5.0}};
 
+    /* Statewise continuation evaluation owns the compiled fixed observed
+     * choice. The authored order intentionally chooses mod3 before the free
+     * goal mod0 and therefore has a positive exact cost even though the
+     * authored/global value snapshot says zero. The certificate must retain
+     * that compiled-policy cost rather than reoptimizing the offer. */
+    refinement::CompiledPolicyAssertion fixed_choice_assertion;
+    {
+        refinement::CompiledPolicyAssertionWork work(
+            calc, authored, prices, options,
+            "focused fixed observed-choice continuation",
+            nullptr, nullptr, nullptr, true);
+        while (!work.progress().done) work.step(4096);
+        fixed_choice_assertion = work.take_result();
+    }
+    PC_CHECK(fixed_choice_assertion.executable);
+    PC_CHECK(fixed_choice_assertion.proper);
+    PC_CHECK(fixed_choice_assertion.zero_off_policy);
+    PC_CHECK(std::isfinite(fixed_choice_assertion.exact_cost));
+    PC_CHECK(fixed_choice_assertion.exact_cost > 0.0);
+    const auto fixed_root = std::find_if(
+        fixed_choice_assertion.evaluation.continuation_upper.states.begin(),
+        fixed_choice_assertion.evaluation.continuation_upper.states.end(),
+        [&](const StrategyContinuationStateUpper& state) {
+            return state.represented_state_identity == start_state;
+        });
+    PC_CHECK(
+        fixed_root !=
+        fixed_choice_assertion.evaluation.continuation_upper.states.end());
+    if (fixed_root !=
+        fixed_choice_assertion.evaluation.continuation_upper.states.end()) {
+        PC_CHECK(fixed_root->available());
+        PC_CHECK(near(
+            fixed_root->exact_continuation_upper,
+            fixed_choice_assertion.exact_cost, 1e-10));
+    }
+    const std::string fixed_mod0_guard =
+        "\"type\":\"has_unveil_option\",\"mod_key\":\"mod0\"";
+    const std::string fixed_mod3_guard =
+        "\"type\":\"has_unveil_option\",\"mod_key\":\"mod3\"";
+    const std::size_t fixed_mod0_position =
+        fixed_choice_assertion.certification_strategy_json.find(
+            fixed_mod0_guard);
+    const std::size_t fixed_mod3_position =
+        fixed_choice_assertion.certification_strategy_json.find(
+            fixed_mod3_guard);
+    PC_CHECK(fixed_mod0_position != std::string::npos);
+    PC_CHECK(fixed_mod3_position != std::string::npos);
+    PC_CHECK(fixed_mod3_position < fixed_mod0_position);
+
     /*
      * A valid authored prefix need not enumerate strict-only offers absent
      * from the coarse sidecar.  Seed completion must retain mod0 first and
@@ -9388,12 +9437,57 @@ void run_carrier_aware_completion_bound_tests() {
             EnvelopeEvidenceCarrierEffectSummary |
             EnvelopeEvidenceActionRefinementContract);
     SolveWorkTestAccess::Impl::BoundedPolicyIncumbent shadow_incumbent;
-    shadow_incumbent.values.assign(
-        expanded_calc.state_count(), kInfinity);
-    shadow_incumbent.values[expanded_state] =
-        expanded_work.operator_proof_lower(
-            expanded_state, bench_suffix).value;
+    const double shadow_upper = expanded_work.operator_proof_lower(
+        expanded_state, bench_suffix).value;
+    expanded_work.result.start_state = expanded_state;
+    expanded_work.result.has_exact_start_item = true;
+    expanded_work.result.exact_start_item = fractured_partial;
+    auto& bound =
+        shadow_incumbent.compiled_artifact.continuation_upper;
+    bound.authority =
+        expanded_work.executable_continuation_authority_context();
+    bound.evaluation.requested = true;
+    bound.evaluation.requested_members = 1;
+    bound.evaluation.certified_members = 1;
+    bound.evaluation.represented_states = 1;
+    bound.evaluation.certified_states = 1;
+    StrategyContinuationMemberResult shadow_member;
+    shadow_member.represented_state_identity = expanded_state;
+    shadow_member.exact_member_identity = 0;
+    shadow_member.item = fractured_partial;
+    shadow_member.exact_entry_identity = {1};
+    shadow_member.status = StrategyContinuationEntryStatus::Complete;
+    shadow_member.exact_continuation_upper = shadow_upper;
+    shadow_member.bellman_residual = 0.0;
+    bound.evaluation.members.push_back(std::move(shadow_member));
+    StrategyContinuationStateUpper shadow_state;
+    shadow_state.represented_state_identity = expanded_state;
+    shadow_state.declared_member_count = 1;
+    shadow_state.exact_member_identities = {0};
+    shadow_state.status = StrategyContinuationEntryStatus::Complete;
+    shadow_state.exact_continuation_upper = shadow_upper;
+    shadow_state.minimum_member_upper = shadow_upper;
+    shadow_state.maximum_member_upper = shadow_upper;
+    shadow_state.member_value_spread = 0.0;
+    bound.evaluation.states.push_back(std::move(shadow_state));
+    shadow_incumbent.compiled_artifact.certification_strategy_json =
+        "fixed-shadow-graph";
+    bound.strategy_identity_bytes = shadow_incumbent.compiled_artifact
+        .certification_strategy_json.size();
+    bound.strategy_identity_digest = 1469598103934665603ULL;
+    expanded_work.identity_mix_string(
+        bound.strategy_identity_digest,
+        shadow_incumbent.compiled_artifact.certification_strategy_json);
     shadow_incumbent.portfolio_identity = 17;
+    shadow_incumbent.goal_identity = expanded_work.goal_identity();
+    shadow_incumbent.economy_identity = expanded_work.economy_identity();
+    shadow_incumbent.action_vocabulary_identity =
+        expanded_work.action_vocabulary_identity();
+    shadow_incumbent.action_vocabulary_size =
+        expanded_work.operators.size();
+    shadow_incumbent.caller_scope_identity =
+        expanded_work.caller_scope_identity();
+    shadow_incumbent.artifact_identity = expanded_work.artifact_identity();
     shadow_incumbent.independently_certified = true;
     shadow_incumbent.independently_evaluated = true;
     shadow_incumbent.proper = true;
@@ -9413,6 +9507,12 @@ void run_carrier_aware_completion_bound_tests() {
     PC_CHECK(shadow.finite_lower_entries == 1);
     PC_CHECK(shadow.would_retire == 1);
     PC_CHECK(shadow.still_competitive == 0);
+    PC_CHECK(shadow.live_ledger_entries == 1);
+    PC_CHECK(shadow.live_finite_upper_entries == 1);
+    PC_CHECK(shadow.live_finite_lower_entries == 1);
+    PC_CHECK(shadow.live_comparable_entries == 1);
+    PC_CHECK(shadow.live_would_retire == 1);
+    PC_CHECK(shadow.live_still_competitive == 0);
     PC_CHECK(shadow.closest_competitive_count == 0);
     PC_CHECK(
         expanded_work.action_envelope_ledger.transition_count() ==
@@ -9450,6 +9550,16 @@ void run_carrier_aware_completion_bound_tests() {
         expanded_state, chaos));
     PC_CHECK(expanded_work.descriptor_proof_evaluations == 1);
     PC_CHECK(expanded_work.descriptor_proof_separations == 1);
+    auto finalized_attribution =
+        expanded_work.finalize_carrier_bound_attribution();
+    while (!finalized_attribution.resume()) {}
+    PC_CHECK(finalized_attribution.take_result());
+    PC_CHECK(valid_json_object(
+        expanded_work.result.diagnostics.carrier_bound_attribution_json));
+    PC_CHECK(
+        expanded_work.result.diagnostics.carrier_bound_attribution_json.find(
+            "\"live\":{\"ledger_entries\":1") !=
+        std::string::npos);
 
     /* Economic Restart must enter the carrier MDP as a priced transition to
      * a fresh Normal carrier with mask zero. This vocabulary gives that fresh

@@ -238,6 +238,109 @@ std::uint64_t SolveWork::Impl::action_vocabulary_identity() const {
         return action_vocabulary_prefix_identity(operators.size());
     }
 
+ExecutableContinuationAuthorityContext
+SolveWork::Impl::executable_continuation_authority_context() const {
+        ExecutableContinuationAuthorityContext context;
+        const auto append_string = [](
+                std::vector<std::uint64_t>& key,
+                const std::string_view value) {
+            key.push_back(value.size());
+            for (std::size_t offset = 0; offset < value.size(); offset += 8) {
+                std::uint64_t word = 0;
+                const std::size_t count = std::min<std::size_t>(
+                    8, value.size() - offset);
+                for (std::size_t byte = 0; byte < count; ++byte) {
+                    word |= static_cast<std::uint64_t>(
+                                static_cast<unsigned char>(
+                                    value[offset + byte]))
+                            << (byte * 8);
+                }
+                key.push_back(word);
+            }
+        };
+
+        context.goal = {
+            1, /* statewise continuation goal identity schema */
+            calc.goal().rarity,
+            calc.goal().required_satisfied_slots(),
+            calc.layout().slots.size(),
+        };
+        for (const ResolvedGoalSlot& slot : calc.layout().slots) {
+            context.goal.push_back(slot.satisfying_mask.size());
+            context.goal.insert(
+                context.goal.end(), slot.satisfying_mask.begin(),
+                slot.satisfying_mask.end());
+        }
+
+        context.economy = {
+            1, /* exact sorted price identity schema */
+            prices.size(),
+        };
+        std::vector<std::pair<std::string_view, double>> sorted_prices;
+        sorted_prices.reserve(prices.size());
+        for (const auto& [key, value] : prices) {
+            sorted_prices.emplace_back(key, value);
+        }
+        std::sort(sorted_prices.begin(), sorted_prices.end());
+        for (const auto& [key, value] : sorted_prices) {
+            append_string(context.economy, key);
+            context.economy.push_back(std::bit_cast<std::uint64_t>(value));
+        }
+
+        const DataImpl& data = *calc.session().data;
+        context.mechanics_artifact = {
+            1, /* compiled artifact/session identity schema */
+            data.artifact_schema_version,
+        };
+        append_string(
+            context.mechanics_artifact, data.artifact_data_hash);
+        append_string(
+            context.mechanics_artifact, data.artifact_source_hash);
+        append_string(
+            context.mechanics_artifact, data.artifact_game_data_hash);
+        append_string(
+            context.mechanics_artifact, data.artifact_strings_hash);
+        context.mechanics_artifact.push_back(calc.session().base_index);
+        context.mechanics_artifact.push_back(calc.session().item_level);
+
+        context.caller_scope = {
+            1, /* exact caller action-scope identity schema */
+            calc.action_control().explicit_envelope,
+            options.goal_progress_gated_reforges,
+            options.consider_imprint_programs,
+            options.allow_economic_restart,
+            calc.candidates().size(),
+        };
+        context.caller_scope.insert(
+            context.caller_scope.end(), calc.candidates().begin(),
+            calc.candidates().end());
+
+        context.action_vocabulary = {
+            1, /* exact admitted planner-operator vocabulary schema */
+            operators.size(),
+        };
+        for (const PricedOperator& priced : operators) {
+            context.action_vocabulary.push_back(priced.index);
+            context.action_vocabulary.push_back(
+                std::bit_cast<std::uint64_t>(priced.cost));
+            const std::vector<std::uint64_t> semantic =
+                planner_operator_semantic_key(
+                    calc.operators().at(priced.index));
+            context.action_vocabulary.push_back(semantic.size());
+            context.action_vocabulary.insert(
+                context.action_vocabulary.end(), semantic.begin(),
+                semantic.end());
+        }
+
+        context.terminal_semantics = {
+            1, /* exact-explicit-affix success terminal schema */
+            calc.goal().rarity,
+            calc.goal().required_satisfied_slots(),
+            calc.layout().slots.size(),
+        };
+        return context;
+    }
+
 std::uint64_t SolveWork::Impl::graph_identity() const {
         std::uint64_t hash = 1469598103934665603ULL;
         identity_mix(hash, transition_cache->discovered_states);
@@ -1038,6 +1141,23 @@ std::uint64_t SolveWork::Impl::incumbent_owned_bytes(
         bytes += incumbent.compiled_artifact.strategy_json.capacity() + 1;
         bytes += incumbent.compiled_artifact
                      .certification_strategy_json.capacity() + 1;
+        const auto& continuation =
+            incumbent.compiled_artifact.continuation_upper;
+        const auto& continuation_evaluation = continuation.evaluation;
+        if (continuation_evaluation.retained_owned_bytes >=
+            sizeof(StrategyContinuationUpperCertificate)) {
+            bytes += continuation_evaluation.retained_owned_bytes -
+                sizeof(StrategyContinuationUpperCertificate);
+        }
+        const auto add_identity = [&](const std::vector<std::uint64_t>& key) {
+            bytes += key.capacity() * sizeof(std::uint64_t);
+        };
+        add_identity(continuation.authority.goal);
+        add_identity(continuation.authority.economy);
+        add_identity(continuation.authority.mechanics_artifact);
+        add_identity(continuation.authority.caller_scope);
+        add_identity(continuation.authority.action_vocabulary);
+        add_identity(continuation.authority.terminal_semantics);
         bytes += incumbent.compiled_artifact
                      .policy_route_default_mode.capacity() + 1;
         bytes += incumbent.compiled_artifact

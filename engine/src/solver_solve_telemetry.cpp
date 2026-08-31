@@ -864,16 +864,77 @@ SolveWork::Impl::finalize_carrier_bound_attribution() {
     json += ",\"incumbent_identity\":" +
         std::to_string(shadow.incumbent_identity);
     json += ",\"audits\":" + std::to_string(shadow.audits);
+    json += ",\"reuse_status\":";
+    append_json_string(
+        json,
+        executable_continuation_reuse_status_name(shadow.reuse_status));
+    json += ",\"upper_provenance\":\"exact_fixed_policy_statewise_continuation_v1\"";
+    json += ",\"lower_provenance\":\"typed_operator_proof_lower_v1\"";
     json += ",\"ledger_entries\":" +
         std::to_string(shadow.ledger_entries);
+    json += ",\"uncertified_upper_entries\":" +
+        std::to_string(shadow.uncertified_upper_entries);
     json += ",\"finite_upper_entries\":" +
         std::to_string(shadow.finite_upper_entries);
     json += ",\"finite_lower_entries\":" +
         std::to_string(shadow.finite_lower_entries);
+    json += ",\"comparable_entries\":" +
+        std::to_string(shadow.comparable_entries);
     json += ",\"would_retire\":" +
         std::to_string(shadow.would_retire);
     json += ",\"still_competitive\":" +
         std::to_string(shadow.still_competitive);
+    json += ",\"live\":{";
+    json += "\"ledger_entries\":" +
+        std::to_string(shadow.live_ledger_entries);
+    json += ",\"finite_upper_entries\":" +
+        std::to_string(shadow.live_finite_upper_entries);
+    json += ",\"finite_lower_entries\":" +
+        std::to_string(shadow.live_finite_lower_entries);
+    json += ",\"comparable_entries\":" +
+        std::to_string(shadow.live_comparable_entries);
+    json += ",\"would_retire\":" +
+        std::to_string(shadow.live_would_retire);
+    json += ",\"still_competitive\":" +
+        std::to_string(shadow.live_still_competitive) + '}';
+    json += ",\"comparison_available_wall_ns\":" +
+        std::to_string(shadow.comparison_available_wall_ns);
+    json += ",\"work_before_comparison\":{\"ledger_transitions\":" +
+        std::to_string(shadow.ledger_transitions_before_comparison);
+    json += ",\"solver_rows\":" +
+        std::to_string(shadow.solver_rows_before_comparison);
+    json += ",\"strict_selected_rows_begun\":" +
+        std::to_string(shadow.strict_rows_begun_before_comparison);
+    json += ",\"strict_alternative_rows_begun\":" +
+        std::to_string(
+            shadow.strict_alternative_rows_begun_before_comparison) + '}';
+    json += ",\"strict_obligations_examined\":" +
+        std::to_string(shadow.strict_obligations_examined);
+    json += ",\"certificate\":{\"requested_members\":" +
+        std::to_string(shadow.certificate_requested_members);
+    json += ",\"certified_members\":" +
+        std::to_string(shadow.certificate_certified_members);
+    json += ",\"refused_members\":" +
+        std::to_string(shadow.certificate_refused_members);
+    json += ",\"represented_states\":" +
+        std::to_string(shadow.certificate_represented_states);
+    json += ",\"certified_states\":" +
+        std::to_string(shadow.certificate_certified_states);
+    json += ",\"refused_states\":" +
+        std::to_string(shadow.certificate_refused_states);
+    json += ",\"maximum_member_multiplicity\":" +
+        std::to_string(
+            shadow.certificate_maximum_member_multiplicity);
+    json += ",\"maximum_member_value_spread\":" +
+        finite_json(shadow.certificate_maximum_member_value_spread);
+    json += ",\"maximum_bellman_residual\":" +
+        finite_json(shadow.certificate_maximum_bellman_residual);
+    json += ",\"retained_bytes\":" +
+        std::to_string(shadow.certificate_retained_bytes);
+    json += ",\"transient_evaluator_bytes\":" +
+        std::to_string(shadow.certificate_transient_bytes);
+    json += ",\"build_ns\":" +
+        std::to_string(shadow.certificate_build_ns) + '}';
     json += ",\"families\":[";
     first = true;
     for (std::size_t family = 0;
@@ -892,6 +953,10 @@ SolveWork::Impl::finalize_carrier_bound_attribution() {
             std::to_string(
                 shadow.still_competitive_by_family[family]) + '}';
     }
+    json += "],\"comparable_carrier_shapes\":";
+    append_shape_histogram(json, shadow.comparable_shapes);
+    json += ",\"would_retire_carrier_shapes\":";
+    append_shape_histogram(json, shadow.would_retire_shapes);
     const auto lifecycle_name = [](
             const ActionEnvelopeState lifecycle) -> const char* {
         switch (lifecycle) {
@@ -912,7 +977,7 @@ SolveWork::Impl::finalize_carrier_bound_attribution() {
         }
         return "invalid";
     };
-    json += "],\"closest_competitive\":[";
+    json += ",\"closest_competitive\":[";
     for (std::size_t index = 0;
          index < shadow.closest_competitive_count; ++index) {
         if (index != 0) json += ',';
@@ -934,6 +999,41 @@ SolveWork::Impl::finalize_carrier_bound_attribution() {
         json += ",\"upper\":" + finite_json(sample.upper);
         json += ",\"absolute_margin\":" +
             finite_json(sample.absolute_margin);
+        json += ",\"retirement_margin\":" +
+            finite_json(sample.retirement_margin);
+        json += ",\"satisfied_goal_mask\":" +
+            std::to_string(sample.satisfied_goal_mask);
+        json += ",\"blocked_mask\":" +
+            std::to_string(sample.blocked_mask);
+        json += ",\"prefixes\":" +
+            std::to_string(sample.prefix_count);
+        json += ",\"suffixes\":" +
+            std::to_string(sample.suffix_count);
+        json += ",\"unrelated_occupancy\":" +
+            std::to_string(sample.unrelated_occupancy) + '}';
+    }
+    json += "],\"largest_retirement_margins\":[";
+    for (std::size_t index = 0;
+         index < shadow.largest_retirement_margin_count; ++index) {
+        if (index != 0) json += ',';
+        const auto& sample = shadow.largest_retirement_margins[index];
+        json += "{\"state\":" + std::to_string(sample.state);
+        json += ",\"operator_index\":" +
+            std::to_string(sample.operator_index);
+        json += ",\"action\":";
+        append_json_string(
+            json, calc.operators().at(sample.operator_index).id);
+        json += ",\"family\":";
+        append_json_string(
+            json,
+            operator_family_name(
+                carrier_bound_operator_family(sample.operator_index)));
+        json += ",\"lifecycle\":";
+        append_json_string(json, lifecycle_name(sample.lifecycle));
+        json += ",\"lower\":" + finite_json(sample.lower);
+        json += ",\"upper\":" + finite_json(sample.upper);
+        json += ",\"retirement_margin\":" +
+            finite_json(sample.retirement_margin);
         json += ",\"satisfied_goal_mask\":" +
             std::to_string(sample.satisfied_goal_mask);
         json += ",\"blocked_mask\":" +
@@ -1120,6 +1220,26 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
     return bytes;
 }
 
+std::uint64_t continuation_upper_dynamic_owned_bytes(
+        const ExecutableContinuationUpperCertificate& certificate) {
+    std::uint64_t bytes = 0;
+    if (certificate.evaluation.retained_owned_bytes >=
+        sizeof(StrategyContinuationUpperCertificate)) {
+        bytes += certificate.evaluation.retained_owned_bytes -
+            sizeof(StrategyContinuationUpperCertificate);
+    }
+    const auto add = [&](const std::vector<std::uint64_t>& key) {
+        bytes += key.capacity() * sizeof(std::uint64_t);
+    };
+    add(certificate.authority.goal);
+    add(certificate.authority.economy);
+    add(certificate.authority.mechanics_artifact);
+    add(certificate.authority.caller_scope);
+    add(certificate.authority.action_vocabulary);
+    add(certificate.authority.terminal_semantics);
+    return bytes;
+}
+
 std::uint64_t solve_result_owned_bytes(const SolveResult& result) {
     std::uint64_t bytes =
         sizeof(result) -
@@ -1150,6 +1270,8 @@ std::uint64_t solve_result_owned_bytes(const SolveResult& result) {
     bytes += result.refined_policy_artifact.strategy_json.capacity() + 1;
     bytes += result.refined_policy_artifact
                  .certification_strategy_json.capacity() + 1;
+    bytes += continuation_upper_dynamic_owned_bytes(
+        result.refined_policy_artifact.continuation_upper);
     bytes += result.refined_policy_artifact
                  .policy_route_default_mode.capacity() + 1;
     bytes += result.refined_policy_artifact
@@ -2001,6 +2123,8 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
             result.refined_policy_artifact.strategy_json.capacity() + 1;
         bytes += result.refined_policy_artifact
                      .certification_strategy_json.capacity() + 1;
+        bytes += continuation_upper_dynamic_owned_bytes(
+            result.refined_policy_artifact.continuation_upper);
         bytes += result.refined_policy_artifact
                      .policy_route_default_mode.capacity() + 1;
         bytes += result.refined_policy_artifact
@@ -2257,6 +2381,8 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
             result.refined_policy_artifact.strategy_json.capacity() + 1;
         bytes += result.refined_policy_artifact
                      .certification_strategy_json.capacity() + 1;
+        bytes += continuation_upper_dynamic_owned_bytes(
+            result.refined_policy_artifact.continuation_upper);
         bytes += result.refined_policy_artifact
                      .policy_route_default_mode.capacity() + 1;
         bytes += result.refined_policy_artifact

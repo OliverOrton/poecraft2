@@ -2,10 +2,133 @@
 
 #include "solver_calc_types.hpp"
 
+#include <cmath>
+
 namespace poecraft {
 namespace solver {
 
 // --- exact compiled-strategy evaluator ---------------------------------------
+
+/*
+ * Opt-in exact entry domain for executable-continuation evaluation.  A
+ * represented state may name several exact physical members.  The caller
+ * must declare the complete member count; the evaluator publishes a grouped
+ * upper only when every declared member is present and independently passes
+ * the fixed compiled strategy's exact continuation checks.
+ *
+ * Numeric identities are caller-local handles.  They are never used as a
+ * semantic substitute for `item`, which remains the complete exact entry
+ * payload bound to the evaluator's session/artifact.
+ */
+struct StrategyContinuationEntryRequest {
+    std::uint64_t represented_state_identity = 0;
+    std::uint64_t exact_member_identity = 0;
+    std::uint32_t complete_member_count = 0;
+    pc_item_state item{};
+};
+
+enum class StrategyContinuationEntryStatus : std::uint8_t {
+    Complete = 0,
+    InvalidRequest,
+    IncompleteMemberCoverage,
+    EntryNotRepresented,
+    FailureReachable,
+    ImproperPolicy,
+    MissingPrice,
+    NonFiniteCost,
+    ResidualFailure,
+};
+
+inline const char* strategy_continuation_entry_status_name(
+        const StrategyContinuationEntryStatus status) {
+    switch (status) {
+    case StrategyContinuationEntryStatus::Complete: return "complete";
+    case StrategyContinuationEntryStatus::InvalidRequest:
+        return "invalid_request";
+    case StrategyContinuationEntryStatus::IncompleteMemberCoverage:
+        return "incomplete_member_coverage";
+    case StrategyContinuationEntryStatus::EntryNotRepresented:
+        return "entry_not_represented";
+    case StrategyContinuationEntryStatus::FailureReachable:
+        return "failure_reachable";
+    case StrategyContinuationEntryStatus::ImproperPolicy:
+        return "improper_policy";
+    case StrategyContinuationEntryStatus::MissingPrice:
+        return "missing_price";
+    case StrategyContinuationEntryStatus::NonFiniteCost:
+        return "non_finite_cost";
+    case StrategyContinuationEntryStatus::ResidualFailure:
+        return "residual_failure";
+    }
+    return "invalid_request";
+}
+
+struct StrategyContinuationMemberResult {
+    std::uint64_t represented_state_identity = 0;
+    std::uint64_t exact_member_identity = 0;
+    pc_item_state item{};
+    /* Collision-free semantic entry key built from the parsed strategy node
+     * and evaluator carrier.  Digests may index it, but equality of this full
+     * key and the exact item payload is the reuse authority. */
+    std::vector<std::uint64_t> exact_entry_identity;
+    StrategyContinuationEntryStatus status =
+        StrategyContinuationEntryStatus::InvalidRequest;
+    double exact_continuation_upper =
+        std::numeric_limits<double>::infinity();
+    double bellman_residual =
+        std::numeric_limits<double>::infinity();
+
+    bool available() const {
+        return status == StrategyContinuationEntryStatus::Complete &&
+               std::isfinite(exact_continuation_upper) &&
+               exact_continuation_upper >= 0.0;
+    }
+};
+
+struct StrategyContinuationStateUpper {
+    std::uint64_t represented_state_identity = 0;
+    std::uint32_t declared_member_count = 0;
+    std::vector<std::uint64_t> exact_member_identities;
+    StrategyContinuationEntryStatus status =
+        StrategyContinuationEntryStatus::InvalidRequest;
+    double exact_continuation_upper =
+        std::numeric_limits<double>::infinity();
+    double minimum_member_upper =
+        std::numeric_limits<double>::infinity();
+    double maximum_member_upper =
+        std::numeric_limits<double>::infinity();
+    double member_value_spread =
+        std::numeric_limits<double>::infinity();
+
+    bool available() const {
+        return status == StrategyContinuationEntryStatus::Complete &&
+               std::isfinite(exact_continuation_upper) &&
+               exact_continuation_upper >= 0.0;
+    }
+};
+
+struct StrategyContinuationUpperCertificate {
+    static constexpr std::uint64_t kSchemaVersion = 1;
+    static constexpr std::uint64_t kEvaluatorVersion = 1;
+
+    std::uint64_t schema_version = kSchemaVersion;
+    std::uint64_t evaluator_version = kEvaluatorVersion;
+    bool requested = false;
+    std::uint32_t requested_members = 0;
+    std::uint32_t certified_members = 0;
+    std::uint32_t refused_members = 0;
+    std::uint32_t represented_states = 0;
+    std::uint32_t certified_states = 0;
+    std::uint32_t refused_states = 0;
+    std::uint32_t maximum_member_multiplicity = 0;
+    double maximum_member_value_spread = 0.0;
+    double maximum_bellman_residual = 0.0;
+    std::uint64_t retained_owned_bytes = 0;
+    std::uint64_t transient_evaluator_bytes = 0;
+    std::uint64_t build_ns = 0;
+    std::vector<StrategyContinuationMemberResult> members;
+    std::vector<StrategyContinuationStateUpper> states;
+};
 
 struct StrategyEvalOptions {
     double epsilon = 1e-12;
@@ -32,6 +155,11 @@ struct StrategyEvalOptions {
      * junk-family symmetry reduction whenever the evaluator carrier is
      * coarse. Identity-observing carriers always retain the raw family path. */
     bool use_exact_exchangeable_family_compression = true;
+    /* Empty preserves historical root-only evaluation and output.  Non-empty
+     * requests add discovery seeds at the compiled strategy's ordinary start
+     * node, then reuse the same exact graph, quotient, SCCs, and sparse
+     * component solver for continuation certification. */
+    std::vector<StrategyContinuationEntryRequest> continuation_entries;
 };
 
 enum class StrategyEvalPhase {
@@ -99,6 +227,7 @@ struct StrategyEvalStageTimings {
     std::uint64_t pair_quotient_conversion_ns = 0;
     std::uint64_t component_construction_ns = 0;
     std::uint64_t component_solve_ns = 0;
+    std::uint64_t continuation_solve_ns = 0;
     std::uint64_t finalization_ns = 0;
 };
 
@@ -327,6 +456,7 @@ struct StrategyEvalResult {
     std::uint64_t pair_lumpability_checks = 0;
     StrategyEvalStageTimings stage_timings;
     StrategyEvalOperationRowCensus operation_row_census;
+    StrategyContinuationUpperCertificate continuation_upper;
     /* Largest single resumable evaluator work item. This is active native
      * wall time and identifies the subphase that owns responsiveness. */
     std::uint64_t max_work_item_ns = 0;
