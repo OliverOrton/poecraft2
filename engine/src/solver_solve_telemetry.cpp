@@ -1018,18 +1018,21 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
                diagnostics.policy_refinement.counterexample_samples) +
            string_vector_owned_bytes(
                diagnostics.policy_refinement.refusal_cause_samples) +
-           string_vector_owned_bytes(
-               diagnostics.policy_refinement
-                   .publication_candidate_samples) +
-           string_vector_owned_bytes(
-               diagnostics.policy_refinement
-                   .structural_failure_samples) +
-           string_vector_owned_bytes(
-               diagnostics.policy_refinement
-                   .evaluator_memory_samples) +
-           diagnostics.policy_refinement.trigger_coarse_states.capacity() *
-               sizeof(std::uint32_t) +
-           diagnostics.policy_refinement.status.capacity() + 1 +
+            string_vector_owned_bytes(
+                diagnostics.policy_refinement
+                    .publication_candidate_samples) +
+            string_vector_owned_bytes(
+                diagnostics.policy_refinement
+                    .structural_failure_samples) +
+            string_vector_owned_bytes(
+                diagnostics.policy_refinement
+                    .evaluator_memory_samples) +
+            string_vector_owned_bytes(
+                diagnostics.policy_refinement
+                    .direct_offpolicy_state_samples) +
+            diagnostics.policy_refinement.trigger_coarse_states.capacity() *
+                sizeof(std::uint32_t) +
+            diagnostics.policy_refinement.status.capacity() + 1 +
            diagnostics.policy_refinement.resource_cap.capacity() + 1 +
            diagnostics.policy_refinement.core_policy_status.capacity() + 1 +
            diagnostics.policy_refinement.core_policy_root_action.capacity() +

@@ -473,7 +473,9 @@ std::string serialize_solver_telemetry(
                 "\"resource_cap\":null,\"solver_cost\":null,"
                 "\"exact_cost\":null,\"offpolicy_probability\":null,"
                 "\"reforge_work\":null,\"artifact_bytes\":null,"
-                "\"peak_owned_bytes\":null,\"executable\":null,"
+                "\"closed_coarse_domain\":null,"
+                "\"peak_owned_bytes\":null,\"route_defaults\":null,"
+                "\"offpolicy_state_classes\":null,\"executable\":null,"
                 "\"proper\":null,\"cost_complete\":null,"
                 "\"zero_off_policy\":null,\"cost_reconciled\":null,"
                 "\"candidate_retained\":null}";
@@ -772,6 +774,18 @@ std::string serialize_solver_telemetry(
         json += ",\"artifact_bytes\":" +
                 std::to_string(
                     refinement.direct_certification_artifact_bytes);
+        json += ",\"closed_coarse_domain\":{\"working_states\":" +
+                std::to_string(
+                    refinement.direct_certification_working_states);
+        json += ",\"added_states\":" +
+                std::to_string(
+                    refinement
+                        .direct_closed_coarse_domain_added_states);
+        json += ",\"route_states\":" +
+                std::to_string(
+                    refinement
+                        .direct_closed_coarse_domain_route_states) +
+                "}";
         json += ",\"peak_owned_bytes\":" +
                 std::to_string(
                     refinement.direct_certification_peak_owned_bytes);
@@ -845,7 +859,20 @@ std::string serialize_solver_telemetry(
         json += ",\"edges\":" +
                 std::to_string(
                     refinement
-                        .direct_certification_route_default_edges) +
+                        .direct_certification_route_default_edges);
+        json += ",\"source_edges\":{\"root\":" +
+                std::to_string(
+                    refinement
+                        .direct_certification_root_default_edges);
+        json += ",\"refined_parent\":" +
+                std::to_string(
+                    refinement
+                        .direct_certification_refined_parent_default_edges);
+        json += ",\"internal_tree\":" +
+                std::to_string(
+                    refinement
+                        .direct_certification_internal_default_edges) +
+                "}" +
                 "},\"product\":{\"mode\":";
         if (refinement.direct_product_route_default_mode.empty()) {
             json += "null";
@@ -857,6 +884,29 @@ std::string serialize_solver_telemetry(
                 std::to_string(
                     refinement.direct_product_route_default_edges) +
                 "}}";
+        json += ",\"offpolicy_state_classes\":{\"expected_visits\":" +
+                telemetry_finite_json(
+                    refinement.direct_offpolicy_expected_visits);
+        json += ",\"classes_truncated_share\":" +
+                telemetry_finite_json(
+                    refinement.direct_offpolicy_classes_truncated_share);
+        json += ",\"samples\":[";
+        for (std::size_t i = 0;
+             i < refinement.direct_offpolicy_state_samples.size(); ++i) {
+            if (i != 0) json.push_back(',');
+            json += refinement.direct_offpolicy_state_samples[i];
+        }
+        json += "],\"retained\":" +
+                std::to_string(
+                    refinement.direct_offpolicy_state_samples.size());
+        json += ",\"omitted\":" +
+                std::to_string(
+                    refinement.direct_offpolicy_state_samples_omitted);
+        json += ",\"retained_bytes\":" +
+                std::to_string(
+                    refinement.direct_offpolicy_state_sample_bytes);
+        json += ",\"limit\":" +
+                std::to_string(diagnostics->diagnostic_sample_limit) + "}";
         json += ",\"executable\":" +
                 std::string(bool_json(
                     refinement.direct_certification_executable));
@@ -4025,6 +4075,7 @@ std::string serialize_solver_telemetry(
     json += ",\"compilation\":{";
     if (compilation == nullptr) {
         json += "\"available\":false,\"working_states\":null";
+        json += ",\"closed_coarse_domain\":null";
         json += ",\"behavioral_classes\":null";
         json += ",\"policy_regions\":null";
         json += ",\"graph_census\":null";
@@ -4046,6 +4097,13 @@ std::string serialize_solver_telemetry(
     } else {
         json += "\"available\":true,\"working_states\":" +
                 std::to_string(compilation->working_states);
+        json += ",\"closed_coarse_domain\":{\"added_states\":" +
+                std::to_string(
+                    compilation->closed_coarse_domain_added_states);
+        json += ",\"route_states\":" +
+                std::to_string(
+                    compilation->closed_coarse_domain_route_states) +
+                "}";
         json += ",\"behavioral_classes\":" +
                 std::to_string(compilation->behavioral_classes);
         json += ",\"policy_regions\":" +
@@ -4114,7 +4172,18 @@ std::string serialize_solver_telemetry(
                     compilation->policy_route_restart_default_edges);
         json += ",\"offpolicy\":" +
                 std::to_string(
-                    compilation->policy_route_offpolicy_default_edges) +
+                    compilation->policy_route_offpolicy_default_edges);
+        json += ",\"source_edges\":{\"root\":" +
+                std::to_string(
+                    compilation->policy_route_root_default_edges);
+        json += ",\"refined_parent\":" +
+                std::to_string(
+                    compilation
+                        ->policy_route_refined_parent_default_edges);
+        json += ",\"internal_tree\":" +
+                std::to_string(
+                    compilation->policy_route_internal_default_edges) +
+                "}" +
                 "}";
         json += ",\"certification_policy_route_defaults\":{";
         json += "\"mode\":";

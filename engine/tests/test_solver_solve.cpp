@@ -1951,6 +1951,24 @@ void run_alt_spam_tests() {
         refinement.direct_certification_cost_complete = true;
         refinement.direct_certification_zero_off_policy = true;
         refinement.direct_candidate_retained = true;
+        refinement.direct_certification_route_default_edges = 1;
+        refinement.direct_certification_root_default_edges = 1;
+        refinement.direct_certification_refined_parent_default_edges = 0;
+        refinement.direct_certification_internal_default_edges = 0;
+        refinement.direct_product_route_default_edges = 0;
+        refinement.direct_paired_default_only = false;
+        refinement.direct_certification_working_states = 23;
+        refinement.direct_closed_coarse_domain_added_states = 1;
+        refinement.direct_closed_coarse_domain_route_states = 24;
+        refinement.direct_certification_route_default_mode =
+            "certification_fail_closed";
+        refinement.direct_offpolicy_expected_visits = 0.75;
+        refinement.direct_offpolicy_classes_truncated_share = 0.25;
+        refinement.direct_offpolicy_state_samples = {
+            "{\"share\":0.5,\"state_hash\":\"abc\"}"};
+        refinement.direct_offpolicy_state_samples_omitted = 2;
+        refinement.direct_offpolicy_state_sample_bytes =
+            refinement.direct_offpolicy_state_samples.front().size();
         refinement.strict_lift_status = "resource_cap";
         refinement.strict_lift_failure_reason = "strict cap";
         refinement.strict_lift_resource_cap = "max_exact_states";
@@ -2059,6 +2077,8 @@ void run_alt_spam_tests() {
         incumbent_snapshot.restricted_search_envelope_global = false;
         PolicyCompilationTelemetry compilation_sample;
         compilation_sample.working_states = 23;
+        compilation_sample.closed_coarse_domain_added_states = 1;
+        compilation_sample.closed_coarse_domain_route_states = 24;
         compilation_sample.behavioral_classes = 22;
         compilation_sample.policy_regions = 24;
         compilation_sample.nodes = 25;
@@ -2081,6 +2101,9 @@ void run_alt_spam_tests() {
         compilation_sample.junk_predicates = 273;
         compilation_sample.policy_route_default_edges = 5;
         compilation_sample.policy_route_restart_default_edges = 5;
+        compilation_sample.policy_route_root_default_edges = 1;
+        compilation_sample.policy_route_refined_parent_default_edges = 2;
+        compilation_sample.policy_route_internal_default_edges = 2;
         compilation_sample.policy_route_default_mode =
             "product_safe_restart";
         compilation_sample.certification_policy_route_default_edges = 5;
@@ -2165,6 +2188,27 @@ void run_alt_spam_tests() {
                      "\"raw_pairs\":51,\"refined_pairs\":52,"
                      "\"refined_pair_limit\":53,"
                      "\"discovery_index_peak_bytes\":54}") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"route_defaults\":{\"paired_default_only\":false,"
+                     "\"certification\":{"
+                     "\"mode\":\"certification_fail_closed\","
+                     "\"edges\":1,\"source_edges\":{"
+                     "\"root\":1,\"refined_parent\":0,"
+                     "\"internal_tree\":0}}") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"closed_coarse_domain\":{"
+                     "\"working_states\":23,\"added_states\":1,"
+                     "\"route_states\":24}") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"offpolicy_state_classes\":{"
+                     "\"expected_visits\":0.75,"
+                     "\"classes_truncated_share\":0.25,"
+                     "\"samples\":[{\"share\":0.5,"
+                     "\"state_hash\":\"abc\"}],"
+                     "\"retained\":1,\"omitted\":2,") !=
                  std::string::npos);
         PC_CHECK(refinement_telemetry.find(
                      "\"strict_lift\":{\"status\":\"resource_cap\","
@@ -2276,6 +2320,8 @@ void run_alt_spam_tests() {
         PC_CHECK(refinement_telemetry.find(
                      "\"compilation\":{\"available\":true,"
                      "\"working_states\":23,"
+                     "\"closed_coarse_domain\":{"
+                     "\"added_states\":1,\"route_states\":24},"
                      "\"behavioral_classes\":22,"
                      "\"policy_regions\":24,"
                      "\"graph_census\":{"
@@ -2301,9 +2347,11 @@ void run_alt_spam_tests() {
                      "\"max_distinct_targets\":5},"
                      "\"exact_state_fallbacks\":2,"
                      "\"junk_predicates\":273,"
-                     "\"policy_route_defaults\":{"
-                     "\"mode\":\"product_safe_restart\","
-                     "\"edges\":5,\"restart\":5,\"offpolicy\":0},"
+                      "\"policy_route_defaults\":{"
+                      "\"mode\":\"product_safe_restart\","
+                      "\"edges\":5,\"restart\":5,\"offpolicy\":0,"
+                      "\"source_edges\":{\"root\":1,"
+                      "\"refined_parent\":2,\"internal_tree\":2}},"
                      "\"certification_policy_route_defaults\":{"
                      "\"mode\":\"certification_fail_closed\","
                      "\"edges\":5,\"offpolicy\":5},"

@@ -2129,6 +2129,17 @@ SolveWork::Impl::run_publication_pipeline() {
                 if (error != std::errc{}) return std::string{"null"};
                 return std::string(buffer, end);
             };
+        const auto diagnostic_integral_array_json =
+            [](const auto& values) {
+                std::string json = "[";
+                for (std::size_t i = 0; i < values.size(); ++i) {
+                    if (i != 0) json.push_back(',');
+                    json += std::to_string(
+                        static_cast<std::uint64_t>(values[i]));
+                }
+                json.push_back(']');
+                return json;
+            };
         const auto retain_bounded_json_sample =
             [&](std::vector<std::string>& samples,
                 std::uint64_t& omitted,
@@ -2139,7 +2150,8 @@ SolveWork::Impl::run_publication_pipeline() {
                 const std::uint64_t shared_bytes =
                     telemetry.publication_candidate_sample_bytes +
                     telemetry.structural_failure_sample_bytes +
-                    telemetry.evaluator_memory_sample_bytes;
+                    telemetry.evaluator_memory_sample_bytes +
+                    telemetry.direct_offpolicy_state_sample_bytes;
                 const std::uint64_t byte_limit =
                     options.max_telemetry_json_bytes / 4;
                 if (samples.size() >=
@@ -2686,6 +2698,12 @@ SolveWork::Impl::run_publication_pipeline() {
                     std::move(assertion.certification_strategy_json);
                 artifact.working_states =
                     assertion.compilation.working_states;
+                artifact.closed_coarse_domain_added_states =
+                    assertion.compilation
+                        .closed_coarse_domain_added_states;
+                artifact.closed_coarse_domain_route_states =
+                    assertion.compilation
+                        .closed_coarse_domain_route_states;
                 artifact.behavioral_classes =
                     assertion.compilation.behavioral_classes;
                 artifact.policy_regions =
@@ -2742,6 +2760,15 @@ SolveWork::Impl::run_publication_pipeline() {
                 artifact.policy_route_offpolicy_default_edges =
                     assertion.compilation
                         .policy_route_offpolicy_default_edges;
+                artifact.policy_route_root_default_edges =
+                    assertion.compilation
+                        .policy_route_root_default_edges;
+                artifact.policy_route_refined_parent_default_edges =
+                    assertion.compilation
+                        .policy_route_refined_parent_default_edges;
+                artifact.policy_route_internal_default_edges =
+                    assertion.compilation
+                        .policy_route_internal_default_edges;
                 artifact.policy_route_default_mode =
                     assertion.compilation.policy_route_default_mode;
                 artifact.certification_policy_route_default_edges =
@@ -3808,10 +3835,27 @@ SolveWork::Impl::run_publication_pipeline() {
             telemetry.direct_certification_route_default_edges =
                 certification_compilation
                     .policy_route_default_edges;
+            telemetry.direct_certification_root_default_edges =
+                certification_compilation
+                    .policy_route_root_default_edges;
+            telemetry.direct_certification_refined_parent_default_edges =
+                certification_compilation
+                    .policy_route_refined_parent_default_edges;
+            telemetry.direct_certification_internal_default_edges =
+                certification_compilation
+                    .policy_route_internal_default_edges;
             telemetry.direct_product_route_default_edges =
                 assertion.paired_default_only
                     ? assertion.compilation.policy_route_default_edges
                     : 0;
+            telemetry.direct_certification_working_states =
+                certification_compilation.working_states;
+            telemetry.direct_closed_coarse_domain_added_states =
+                certification_compilation
+                    .closed_coarse_domain_added_states;
+            telemetry.direct_closed_coarse_domain_route_states =
+                certification_compilation
+                    .closed_coarse_domain_route_states;
             telemetry.direct_certification_route_default_mode =
                 certification_compilation
                     .policy_route_default_mode;
@@ -3830,6 +3874,68 @@ SolveWork::Impl::run_publication_pipeline() {
                 assertion.zero_off_policy;
             telemetry.direct_certification_cost_reconciled =
                 assertion.cost_reconciled;
+            for (const StrategyEvalNode& node : assertion.evaluation.nodes) {
+                if (node.id != "offpolicy") continue;
+                telemetry.direct_offpolicy_expected_visits =
+                    node.expected_visits;
+                telemetry.direct_offpolicy_classes_truncated_share =
+                    node.classes_truncated_share;
+                for (const StrategyEvalClass& entry : node.classes) {
+                    const AbstractState& state = entry.state;
+                    retain_bounded_json_sample(
+                        telemetry.direct_offpolicy_state_samples,
+                        telemetry.direct_offpolicy_state_samples_omitted,
+                        telemetry.direct_offpolicy_state_sample_bytes,
+                        "{\"share\":" +
+                            diagnostic_finite_double(entry.share) +
+                            ",\"state_hash\":\"" +
+                            std::to_string(abstract_state_hash(state)) +
+                            "\",\"rarity\":" +
+                            std::to_string(state.rarity) +
+                            ",\"prefixes\":" +
+                            std::to_string(state.prefix_count) +
+                            ",\"suffixes\":" +
+                            std::to_string(state.suffix_count) +
+                            ",\"influence_bits\":" +
+                            std::to_string(state.influence_bits) +
+                            ",\"veiled_side\":" +
+                            std::to_string(state.veiled_side) +
+                            ",\"searing_exarch_tier\":" +
+                            std::to_string(state.searing_exarch_tier) +
+                            ",\"eater_of_worlds_tier\":" +
+                            std::to_string(state.eater_of_worlds_tier) +
+                            ",\"flags\":" +
+                            std::to_string(state.flags) +
+                            ",\"blocked_goal_mask\":" +
+                            std::to_string(state.blocked_mask) +
+                            ",\"fractured_goal_mask\":" +
+                            std::to_string(state.fractured_goal_mask) +
+                            ",\"crafted_goal_mask\":" +
+                            std::to_string(state.crafted_goal_mask) +
+                            ",\"fractured_metamod_flags\":" +
+                            std::to_string(state.fractured_metamod_flags) +
+                            ",\"goal_progress_retry_basin\":" +
+                            std::to_string(state.goal_progress_retry_basin) +
+                            ",\"slot_status\":" +
+                            diagnostic_integral_array_json(
+                                state.slot_status) +
+                            ",\"goal_member_class_tokens\":" +
+                            diagnostic_integral_array_json(
+                                state.goal_member_class_tokens) +
+                            ",\"junk_counts\":" +
+                            count_vector_json(state.junk_counts) +
+                            ",\"fractured_junk_counts\":" +
+                            count_vector_json(
+                                state.fractured_junk_counts) +
+                            ",\"crafted_junk_counts\":" +
+                            count_vector_json(state.crafted_junk_counts) +
+                            ",\"fractured_crafted_junk_counts\":" +
+                            count_vector_json(
+                                state.fractured_crafted_junk_counts) +
+                            "}");
+                }
+                break;
+            }
             if ((assertion.resource_cap ==
                      "max_solver_owned_bytes" ||
                  assertion.failure_reason.find(
@@ -4999,6 +5105,12 @@ SolveWork::Impl::run_publication_pipeline() {
                             .certification_strategy_json);
                 artifact.working_states =
                     certificate.compiled.compilation.working_states;
+                artifact.closed_coarse_domain_added_states =
+                    certificate.compiled.compilation
+                        .closed_coarse_domain_added_states;
+                artifact.closed_coarse_domain_route_states =
+                    certificate.compiled.compilation
+                        .closed_coarse_domain_route_states;
                 artifact.behavioral_classes =
                     certificate.compiled.compilation.behavioral_classes;
                 artifact.policy_regions =
@@ -5069,6 +5181,15 @@ SolveWork::Impl::run_publication_pipeline() {
                 artifact.policy_route_offpolicy_default_edges =
                     certificate.compiled.compilation
                         .policy_route_offpolicy_default_edges;
+                artifact.policy_route_root_default_edges =
+                    certificate.compiled.compilation
+                        .policy_route_root_default_edges;
+                artifact.policy_route_refined_parent_default_edges =
+                    certificate.compiled.compilation
+                        .policy_route_refined_parent_default_edges;
+                artifact.policy_route_internal_default_edges =
+                    certificate.compiled.compilation
+                        .policy_route_internal_default_edges;
                 artifact.policy_route_default_mode =
                     certificate.compiled.compilation
                         .policy_route_default_mode;

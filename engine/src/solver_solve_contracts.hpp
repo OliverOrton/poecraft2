@@ -368,7 +368,13 @@ struct PolicyRefinementTelemetry {
     std::uint32_t direct_certification_refined_pairs = 0;
     std::uint32_t direct_certification_refined_pair_limit = 0;
     std::uint64_t direct_certification_route_default_edges = 0;
+    std::uint64_t direct_certification_root_default_edges = 0;
+    std::uint64_t direct_certification_refined_parent_default_edges = 0;
+    std::uint64_t direct_certification_internal_default_edges = 0;
     std::uint64_t direct_product_route_default_edges = 0;
+    std::uint32_t direct_certification_working_states = 0;
+    std::uint32_t direct_closed_coarse_domain_added_states = 0;
+    std::uint32_t direct_closed_coarse_domain_route_states = 0;
     std::string direct_certification_route_default_mode;
     std::string direct_product_route_default_mode;
     bool direct_paired_default_only = false;
@@ -378,6 +384,11 @@ struct PolicyRefinementTelemetry {
     bool direct_certification_zero_off_policy = false;
     bool direct_certification_cost_reconciled = false;
     bool direct_candidate_retained = false;
+    double direct_offpolicy_expected_visits = 0.0;
+    double direct_offpolicy_classes_truncated_share = 0.0;
+    std::vector<std::string> direct_offpolicy_state_samples;
+    std::uint64_t direct_offpolicy_state_samples_omitted = 0;
+    std::uint64_t direct_offpolicy_state_sample_bytes = 0;
     std::string strict_lift_status = "not_run";
     std::string strict_lift_failure_reason;
     std::string strict_lift_resource_cap;
@@ -1016,6 +1027,8 @@ struct RetainedCompiledPolicyArtifact {
     std::string strategy_json;
     std::string certification_strategy_json;
     std::uint32_t working_states = 0;
+    std::uint32_t closed_coarse_domain_added_states = 0;
+    std::uint32_t closed_coarse_domain_route_states = 0;
     std::uint32_t behavioral_classes = 0;
     std::uint32_t policy_regions = 0;
     std::uint32_t infrastructure_nodes = 0;
@@ -1043,6 +1056,9 @@ struct RetainedCompiledPolicyArtifact {
     std::uint64_t policy_route_default_edges = 0;
     std::uint64_t policy_route_restart_default_edges = 0;
     std::uint64_t policy_route_offpolicy_default_edges = 0;
+    std::uint64_t policy_route_root_default_edges = 0;
+    std::uint64_t policy_route_refined_parent_default_edges = 0;
+    std::uint64_t policy_route_internal_default_edges = 0;
     std::string policy_route_default_mode;
     std::uint64_t certification_policy_route_default_edges = 0;
     std::uint64_t certification_policy_route_offpolicy_default_edges = 0;
@@ -1286,6 +1302,11 @@ std::string serialize_solve_log(
 struct PolicyCompilationTelemetry {
     std::uint64_t duration_ns = 0;
     std::uint32_t working_states = 0;
+    /* Assertion-only extension of a closed exact coarse quotient. Action
+     * nodes are expanded representatives; route states are every physical
+     * state mapped to those representatives. */
+    std::uint32_t closed_coarse_domain_added_states = 0;
+    std::uint32_t closed_coarse_domain_route_states = 0;
     std::uint32_t behavioral_classes = 0;
     std::uint32_t policy_regions = 0;
     /* Exact emitted graph census. Policy-route nodes include the root;
@@ -1325,6 +1346,9 @@ struct PolicyCompilationTelemetry {
     std::uint64_t policy_route_default_edges = 0;
     std::uint64_t policy_route_restart_default_edges = 0;
     std::uint64_t policy_route_offpolicy_default_edges = 0;
+    std::uint64_t policy_route_root_default_edges = 0;
+    std::uint64_t policy_route_refined_parent_default_edges = 0;
+    std::uint64_t policy_route_internal_default_edges = 0;
     std::string policy_route_default_mode;
     std::uint64_t certification_policy_route_default_edges = 0;
     std::uint64_t certification_policy_route_offpolicy_default_edges = 0;

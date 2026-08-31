@@ -4,6 +4,7 @@
 #include "../src/solver_condition_expr.hpp"
 #include "../src/solver_policy_refinement.hpp"
 #include "../src/solver_policy_route.hpp"
+#include "../src/solver_solve_types.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
 
@@ -1033,6 +1034,108 @@ void run_structured_observation_route_tests() {
     }
 }
 
+void run_closed_coarse_certification_domain_test() {
+    StructuredRouteFixture fixture =
+        make_structured_route_fixture();
+    const pc_item_state mapped_item =
+        compile_item(*fixture.session, 4, PC_SIDE_PREFIX);
+    const std::uint32_t mapped_state =
+        fixture.calc->intern_item(mapped_item);
+    const pc_item_state losing_item =
+        compile_item(*fixture.session, 2, PC_SIDE_PREFIX);
+    const std::uint32_t losing_state =
+        fixture.calc->intern_item(losing_item);
+    pc_item_state mapped_goal_item =
+        compile_item(*fixture.session, 7, PC_SIDE_SUFFIX);
+    mapped_goal_item.suffixes[0].flags |= PC_MOD_SLOT_FRACTURED;
+    const std::uint32_t mapped_goal_state =
+        fixture.calc->intern_item(mapped_goal_item);
+    PC_CHECK(
+        fixture.calc->is_goal_state(
+            fixture.calc->state(mapped_goal_state)));
+    const std::size_t state_count = fixture.calc->state_count();
+    fixture.solved.values.resize(state_count, 1.0);
+    fixture.solved.policy.resize(state_count);
+    fixture.solved.expanded.resize(state_count, 0);
+    fixture.solved.goal_states.resize(state_count, 0);
+    fixture.solved.policy_reachable.resize(state_count, 0);
+    fixture.solved.unveil_preferences.resize(state_count);
+    fixture.solved.option_unveil_preferences.resize(state_count);
+    fixture.solved.behavioral_representative_by_state.resize(
+        state_count, kNoId);
+    fixture.solved.behavioral_representative_by_state[mapped_state] =
+        fixture.right_state;
+    fixture.solved.behavioral_representative_by_state[losing_state] =
+        losing_state;
+    fixture.solved.behavioral_representative_by_state[mapped_goal_state] =
+        fixture.goal_state;
+    fixture.solved.expanded[losing_state] = 1;
+    fixture.solved.values[losing_state] =
+        solve_detail::kValueCeiling;
+    fixture.solved.policy_reachable[fixture.right_state] = 0;
+    fixture.solved.policy[fixture.right_state] =
+        PolicyOperatorRef{fixture.chaos};
+    PolicyRefinementTelemetry& closure =
+        fixture.solved.diagnostics.policy_refinement;
+    closure.pre_extraction_non_goal_closed = true;
+    closure.coarse_action_envelope_closed = true;
+    closure.coarse_discovery_closed = true;
+
+    const std::uint64_t unlimited =
+        std::numeric_limits<std::uint64_t>::max();
+    const std::string reachable_only = compile_policy_strategy_json(
+        *fixture.calc, fixture.solved,
+        "reachable quotient policy", nullptr, unlimited, nullptr,
+        unlimited, PolicyRouteDefaultMode::CertificationFailClosed);
+    PC_CHECK(
+        reachable_only.find("\"type\":\"chaos\"") ==
+        std::string::npos);
+    fixture.solved.refined_policy_artifact.strategy_json =
+        reachable_only;
+    fixture.solved.refined_policy_artifact.policy_route_default_mode =
+        "certification_fail_closed";
+    /* A retained reachable-only artifact is not a cache hit for the
+     * assertion-owned closed-domain request. */
+    fixture.solved.refined_policy_artifact
+        .closed_coarse_domain_route_states = 0;
+
+    PolicyCompilationTelemetry certification;
+    const std::string expanded = compile_policy_strategy_json(
+        *fixture.calc, fixture.solved,
+        "closed coarse certification policy", &certification,
+        unlimited, nullptr, unlimited,
+        PolicyRouteDefaultMode::CertificationFailClosed, true);
+    PC_CHECK(
+        expanded.find("\"type\":\"chaos\"") !=
+        std::string::npos);
+    PC_CHECK(certification.working_states == 2);
+    PC_CHECK(certification.closed_coarse_domain_added_states == 1);
+    /* Only behavioral representatives carry sparse Bellman goal bits. The
+     * physical goal member must be accepted, but never routed as policy
+     * work. */
+    PC_CHECK(fixture.solved.goal_states[mapped_goal_state] == 0);
+    PC_CHECK(certification.closed_coarse_domain_route_states == 3);
+    PC_CHECK(certification.policy_route_root_default_edges == 1);
+    PC_CHECK(certification.policy_route_internal_default_edges > 0);
+    PC_CHECK(
+        certification.policy_route_default_edges ==
+        certification.policy_route_root_default_edges +
+            certification.policy_route_internal_default_edges);
+
+    PolicyCompilationTelemetry product;
+    const std::string paired = compile_policy_strategy_json(
+        *fixture.calc, fixture.solved,
+        "closed coarse certification policy", &product, unlimited, nullptr,
+        unlimited, PolicyRouteDefaultMode::ProductSafeRestart, true);
+    PC_CHECK(paired == expanded);
+    PC_CHECK(
+        product.closed_coarse_domain_added_states ==
+        certification.closed_coarse_domain_added_states);
+    PC_CHECK(
+        product.closed_coarse_domain_route_states ==
+        certification.closed_coarse_domain_route_states);
+}
+
 void run_synthetic_gate() {
     auto session = make_compile_session();
     ActionRegistry registry = build_action_registry(*session);
@@ -1099,7 +1202,11 @@ void run_synthetic_gate() {
             ++region_route_count;
             ++route_at;
         }
-        PC_CHECK(region_route_count == compilation.policy_regions);
+        PC_CHECK(
+            region_route_count == compilation.policy_regions ||
+            (compilation.policy_route_nondefault_edges > 0 &&
+             compilation.policy_route_distinct_targets >=
+                 compilation.policy_regions));
         PC_CHECK(compilation.strategy_json_bytes == json.size());
         PC_CHECK(
             compilation.complete_peak_owned_bytes ==
@@ -1368,6 +1475,12 @@ void run_synthetic_gate() {
             product_telemetry.policy_route_default_mode ==
             "product_safe_restart");
         PC_CHECK(product_telemetry.policy_route_default_edges > 0);
+        PC_CHECK(product_telemetry.policy_route_root_default_edges == 1);
+        PC_CHECK(
+            product_telemetry.policy_route_default_edges ==
+            product_telemetry.policy_route_root_default_edges +
+                product_telemetry.policy_route_refined_parent_default_edges +
+                product_telemetry.policy_route_internal_default_edges);
         PC_CHECK(
             product_telemetry.policy_route_restart_default_edges ==
             product_telemetry.policy_route_default_edges);
@@ -1377,6 +1490,13 @@ void run_synthetic_gate() {
         PC_CHECK(
             certification_telemetry.policy_route_offpolicy_default_edges ==
             certification_telemetry.policy_route_default_edges);
+        PC_CHECK(
+            certification_telemetry.policy_route_default_edges ==
+            certification_telemetry.policy_route_root_default_edges +
+                certification_telemetry
+                    .policy_route_refined_parent_default_edges +
+                certification_telemetry
+                    .policy_route_internal_default_edges);
         PC_CHECK(
             product_telemetry.policy_route_default_edges ==
             certification_telemetry.policy_route_default_edges);
@@ -2717,6 +2837,7 @@ void run_solver_compile_tests(const char* artifact_dir) {
     run_future_observed_choice_compile_test();
     run_structured_observation_route_tests();
     run_synthetic_gate();
+    run_closed_coarse_certification_domain_test();
     run_artifact_gate(artifact_dir);
     run_imprint_gate(artifact_dir);
 }

@@ -273,7 +273,8 @@ static CompiledPolicyAssertion assert_compiled_policy_exact_reference(
                 coarse, solved, strategy_name, &result.compilation,
                 compilation_json_limit, refined_routing,
                 compilation_memory,
-                PolicyRouteDefaultMode::CertificationFailClosed);
+                PolicyRouteDefaultMode::CertificationFailClosed,
+                true);
             record_compilation_time();
             {
                 std::uint64_t live =

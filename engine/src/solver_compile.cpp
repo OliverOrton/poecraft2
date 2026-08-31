@@ -21,7 +21,8 @@ std::string compile_policy_strategy_json(
     const std::uint64_t max_strategy_json_bytes,
     const refinement::RefinedPolicyCompileRouting* refined_routing,
     const std::uint64_t max_compiler_owned_bytes,
-    const PolicyRouteDefaultMode route_default_mode) {
+    const PolicyRouteDefaultMode route_default_mode,
+    const bool compile_closed_coarse_certification_domain) {
     const std::uint64_t strategy_json_limit = std::min(
         result.options.max_strategy_json_bytes,
         max_strategy_json_bytes);
@@ -76,9 +77,24 @@ std::string compile_policy_strategy_json(
         telemetry->policy_route_default_mode =
             route_default_mode_name;
     }
+    const PolicyRefinementTelemetry& requested_refinement =
+        result.diagnostics.policy_refinement;
+    const bool requested_closed_coarse_certification_domain =
+        compile_closed_coarse_certification_domain &&
+        refined_routing == nullptr &&
+        !result.behavioral_representative_by_state.empty() &&
+        result.policy_status == SolvePolicyStatus::Exact &&
+        requested_refinement.pre_extraction_non_goal_closed &&
+        requested_refinement.coarse_action_envelope_closed &&
+        requested_refinement.coarse_discovery_closed &&
+        !result.diagnostics.state_cap_hit &&
+        !result.diagnostics.resource_cap_hit;
     if (!result.refined_policy_artifact.strategy_json.empty() &&
         result.refined_policy_artifact.policy_route_default_mode ==
-            route_default_mode_name) {
+            route_default_mode_name &&
+        (!requested_closed_coarse_certification_domain ||
+         result.refined_policy_artifact
+                 .closed_coarse_domain_route_states != 0)) {
         if (result.refined_policy_artifact.strategy_json.size() >
             strategy_json_limit) {
             if (telemetry != nullptr) {
@@ -90,6 +106,12 @@ std::string compile_policy_strategy_json(
         if (telemetry != nullptr) {
             telemetry->working_states =
                 result.refined_policy_artifact.working_states;
+            telemetry->closed_coarse_domain_added_states =
+                result.refined_policy_artifact
+                    .closed_coarse_domain_added_states;
+            telemetry->closed_coarse_domain_route_states =
+                result.refined_policy_artifact
+                    .closed_coarse_domain_route_states;
             telemetry->behavioral_classes =
                 result.refined_policy_artifact.behavioral_classes;
             telemetry->policy_regions =
@@ -152,6 +174,15 @@ std::string compile_policy_strategy_json(
             telemetry->policy_route_offpolicy_default_edges =
                 result.refined_policy_artifact
                     .policy_route_offpolicy_default_edges;
+            telemetry->policy_route_root_default_edges =
+                result.refined_policy_artifact
+                    .policy_route_root_default_edges;
+            telemetry->policy_route_refined_parent_default_edges =
+                result.refined_policy_artifact
+                    .policy_route_refined_parent_default_edges;
+            telemetry->policy_route_internal_default_edges =
+                result.refined_policy_artifact
+                    .policy_route_internal_default_edges;
             telemetry->policy_route_default_mode =
                 result.refined_policy_artifact
                     .policy_route_default_mode;
@@ -626,29 +657,119 @@ std::string compile_policy_strategy_json(
         return std::move(*compact);
     }
 
-    /* Collect and validate the policy-reachable working states. */
+    /* Direct exact-policy assertion may compile a larger, already-solved
+     * coarse domain than the root-reachable quotient. Exact evaluator
+     * refinements can project onto those expanded representatives even when
+     * quotient reachability merged the corresponding carrier transition.
+     * This scope is explicitly requested only by the assertion workflow and
+     * requires the solver's complete closed-envelope authority. */
+    const bool closed_coarse_certification_domain =
+        requested_closed_coarse_certification_domain;
+    if (closed_coarse_certification_domain &&
+        (result.policy.size() != result.values.size() ||
+         result.expanded.size() != result.values.size() ||
+         result.goal_states.size() != result.values.size() ||
+         result.policy_reachable.size() != result.values.size() ||
+         result.behavioral_representative_by_state.size() !=
+             result.values.size())) {
+        gap("closed coarse certification domain disagrees with the state "
+            "table");
+    }
+
+    /* Collect and validate the policy working states. */
     std::vector<std::uint32_t> compiled_states;
+    std::vector<std::uint8_t> compiled_state_membership(
+        result.values.size(), 0);
+    const auto add_compiled_state =
+        [&](const std::uint32_t state_id, const char* provenance) {
+            if (state_id >= result.values.size()) {
+                gap(std::string(provenance) +
+                    " state is outside the solved table");
+            }
+            if (compiled_state_membership[state_id] != 0) return false;
+            if (result.goal_states[state_id]) {
+                gap(std::string(provenance) +
+                    " working state is terminal");
+            }
+            if (result.policy[state_id] == kNoId) {
+                gap(std::string(provenance) + " state " +
+                    std::to_string(state_id) + " has no action");
+            }
+            if (result.policy[state_id] >= calc.operators().size()) {
+                gap(std::string(provenance) + " state " +
+                    std::to_string(state_id) +
+                    " has an unknown planner operator");
+            }
+            const PlannerOperator& selected =
+                calc.operators().at(result.policy[state_id]);
+            if (result.policy[state_id].kind != selected.kind) {
+                gap(std::string(provenance) + " state " +
+                    std::to_string(state_id) +
+                    " has a mismatched planner-operator tag");
+            }
+            compiled_states.push_back(state_id);
+            compiled_state_membership[state_id] = 1;
+            return true;
+        };
     for (std::uint32_t state_id = 0; state_id < result.values.size();
          ++state_id) {
         if (!result.policy_reachable[state_id] ||
             result.goal_states[state_id]) {
             continue;
         }
-        if (result.policy[state_id] == kNoId) {
-            gap("policy-reachable state " + std::to_string(state_id) +
-                " has no action");
+        add_compiled_state(state_id, "policy-reachable");
+    }
+    std::uint32_t closed_coarse_domain_added_states = 0;
+    if (closed_coarse_certification_domain) {
+        for (std::uint32_t state = 0; state < result.values.size(); ++state) {
+            const std::uint32_t representative =
+                result.behavioral_representative_by_state[state];
+            if (representative == kNoId ||
+                representative >= result.values.size()) {
+                gap("closed coarse certification domain has an invalid "
+                    "behavioral representative");
+            }
+            if (result.behavioral_representative_by_state[representative] !=
+                representative) {
+                gap("closed coarse certification domain has a "
+                    "non-canonical behavioral assignment");
+            }
+            const bool state_is_goal =
+                calc.is_goal_state(calc.state(state));
+            const bool representative_is_goal =
+                calc.is_goal_state(calc.state(representative));
+            if (state_is_goal != representative_is_goal ||
+                (result.goal_states[representative] != 0) !=
+                    representative_is_goal) {
+                /* Bellman bookkeeping marks only behavioral
+                 * representatives as goal rows. Validate the semantic class
+                 * without requiring every physical member's sparse goal bit
+                 * to be populated. */
+                gap("closed coarse certification domain has a "
+                    "goal-inconsistent behavioral assignment");
+            }
+            if (representative != state || state_is_goal) {
+                continue;
+            }
+            if (!result.expanded[state]) {
+                gap("closed coarse certification domain contains an "
+                    "unexpanded non-goal representative");
+            }
+            const double value = result.values[state];
+            if (!std::isfinite(value) || value < 0.0 ||
+                value >= kValueCeiling ||
+                result.policy[state] == kNoId) {
+                /* Closed discovery can retain losing or unreachable rows.
+                 * They own no executable continuation and deliberately stay
+                 * outside the routed domain; any exact mass reaching them is
+                 * then visible at the fail-closed terminal. */
+                continue;
+            }
+            if (add_compiled_state(
+                    state, "closed coarse certification")) {
+                ++closed_coarse_domain_added_states;
+            }
         }
-        if (result.policy[state_id] >= calc.operators().size()) {
-            gap("policy-reachable state " + std::to_string(state_id) +
-                " has an unknown planner operator");
-        }
-        const PlannerOperator& selected =
-            calc.operators().at(result.policy[state_id]);
-        if (result.policy[state_id].kind != selected.kind) {
-            gap("policy-reachable state " + std::to_string(state_id) +
-                " has a mismatched planner-operator tag");
-        }
-        compiled_states.push_back(state_id);
     }
     if (compiled_states.empty()) gap("policy reaches no working states");
 
@@ -1536,8 +1657,8 @@ std::string compile_policy_strategy_json(
                 : result.behavioral_representative_by_state[
                       retry_state];
         if (retry_policy_state == kNoId ||
-            retry_policy_state >= result.policy_reachable.size() ||
-            !result.policy_reachable[retry_policy_state] ||
+            retry_policy_state >= compiled_state_membership.size() ||
+            compiled_state_membership[retry_policy_state] == 0 ||
             result.goal_states[retry_policy_state] ||
             result.policy[retry_policy_state] == kNoId ||
             calc.state(retry_policy_state)
@@ -1981,9 +2102,27 @@ std::string compile_policy_strategy_json(
     std::vector<PolicyRouteEntry> policy_route_entries;
     const bool strict_policy_route =
         result.behavioral_representative_by_state.empty();
-    if (strict_policy_route) {
-        policy_route_entries.reserve(compiled_states.size());
-        for (const std::uint32_t state : compiled_states) {
+    const bool represented_domain_policy_route =
+        strict_policy_route || closed_coarse_certification_domain;
+    if (represented_domain_policy_route) {
+        const bool route_all_mapped_states =
+            closed_coarse_certification_domain && !strict_policy_route;
+        policy_route_entries.reserve(
+            route_all_mapped_states
+                ? result.values.size()
+                : compiled_states.size());
+        const std::uint32_t route_state_count =
+            route_all_mapped_states
+                ? static_cast<std::uint32_t>(result.values.size())
+                : static_cast<std::uint32_t>(compiled_states.size());
+        for (std::uint32_t index = 0; index < route_state_count; ++index) {
+            const std::uint32_t state = route_all_mapped_states
+                ? index
+                : compiled_states[index];
+            if (calc.is_goal_state(calc.state(state)) ||
+                policy_region_by_state[state] == kNoId) {
+                continue;
+            }
             if (calc.state(state).goal_progress_retry_basin != 0) {
                 continue;
             }
@@ -1995,7 +2134,11 @@ std::string compile_policy_strategy_json(
         }
     }
     const bool use_exact_policy_tree =
-        strict_policy_route && !policy_route_entries.empty();
+        represented_domain_policy_route &&
+        !policy_route_entries.empty();
+    if (closed_coarse_certification_domain && !use_exact_policy_tree) {
+        gap("closed coarse certification domain has no physical routes");
+    }
     const bool bounded_policy =
         result.policy_status == SolvePolicyStatus::BoundedFeasible ||
         result.policy_status == SolvePolicyStatus::BoundedNearOptimal;
@@ -2051,7 +2194,8 @@ std::string compile_policy_strategy_json(
         route_default_mode ==
                 PolicyRouteDefaultMode::CertificationFailClosed
             ? "offpolicy"
-        : result.options.allow_economic_restart && strict_policy_route &&
+        : result.options.allow_economic_restart &&
+              represented_domain_policy_route &&
               restart_region_leader != kNoId
             ? state_node(restart_region_leader)
             : bounded_policy && bounded_default_restart_action != kNoId
@@ -2273,7 +2417,9 @@ std::string compile_policy_strategy_json(
         policy_route_root = build_policy_decision_dag(
             policy_route_entries,
             route_features,
-            PolicyRouteDomainMode::StopAtUniformTarget,
+            closed_coarse_certification_domain
+                ? PolicyRouteDomainMode::ProveRepresentedDomain
+                : PolicyRouteDomainMode::StopAtUniformTarget,
             [&](const PolicyRouteEntry& entry,
                 const std::size_t feature) {
                 return feature_index.at(entry.state, feature);
@@ -2380,6 +2526,11 @@ std::string compile_policy_strategy_json(
                 add_string(slot.satisfied);
             }
             add_u32_vector(compiled_states);
+            add_owned_bytes(
+                bytes,
+                static_cast<std::uint64_t>(
+                    compiled_state_membership.capacity()) *
+                    sizeof(std::uint8_t));
             add_map_nodes(
                 state_conditions.size(),
                 sizeof(std::uint32_t) + sizeof(std::string));
@@ -3118,8 +3269,14 @@ std::string compile_policy_strategy_json(
         observe_complete_compiler_owned(
             owned, audited_compiler_owned_bytes(&json));
     };
+    enum class PolicyRouteDefaultSource {
+        Root,
+        RefinedParent,
+        InternalTree,
+    };
     const auto policy_route_default_edge =
-        [&](const std::string& from, const int priority) {
+        [&](const std::string& from, const int priority,
+            const PolicyRouteDefaultSource source) {
             edge(
                 from, policy_route_default_node, priority, "", true);
             if (telemetry == nullptr) return;
@@ -3128,6 +3285,17 @@ std::string compile_policy_strategy_json(
                 ++telemetry->policy_route_offpolicy_default_edges;
             } else {
                 ++telemetry->policy_route_restart_default_edges;
+            }
+            switch (source) {
+            case PolicyRouteDefaultSource::Root:
+                ++telemetry->policy_route_root_default_edges;
+                break;
+            case PolicyRouteDefaultSource::RefinedParent:
+                ++telemetry->policy_route_refined_parent_default_edges;
+                break;
+            case PolicyRouteDefaultSource::InternalTree:
+                ++telemetry->policy_route_internal_default_edges;
+                break;
             }
         };
 
@@ -3142,12 +3310,10 @@ std::string compile_policy_strategy_json(
     }
 
     int root_default_priority = 2;
-    if (strict_policy_route) {
-        if (use_exact_policy_tree) {
-            edge(
-                root_router_id, policy_route_root.to, 1,
-                policy_route_root.guard.json(), false);
-        }
+    if (use_exact_policy_tree) {
+        edge(
+            root_router_id, policy_route_root.to, 1,
+            policy_route_root.guard.json(), false);
     } else if (structured_refined_route) {
         if (use_refined_parent_tree) {
             edge(
@@ -3201,7 +3367,9 @@ std::string compile_policy_strategy_json(
                     router_id, route.to, route_priority++,
                     route.condition.json(), false);
             }
-            policy_route_default_edge(router_id, route_priority);
+            policy_route_default_edge(
+                router_id, route_priority,
+                PolicyRouteDefaultSource::RefinedParent);
         }
     } else if (structured_refined_route) {
         std::set<std::pair<std::string, std::string>> emitted_routes;
@@ -3227,7 +3395,8 @@ std::string compile_policy_strategy_json(
         }
     }
     policy_route_default_edge(
-        root_router_id, root_default_priority);
+        root_router_id, root_default_priority,
+        PolicyRouteDefaultSource::Root);
     for (const PolicyRouteNode& route : policy_route_nodes) {
         int priority = 0;
         for (const PolicyRouteEdge& route_edge : route.edges) {
@@ -3235,7 +3404,8 @@ std::string compile_policy_strategy_json(
                 route.id, route_edge.to, priority++,
                 route_edge.condition.json(), false);
         }
-        policy_route_default_edge(route.id, priority);
+        policy_route_default_edge(
+            route.id, priority, PolicyRouteDefaultSource::InternalTree);
     }
     if (bounded_default_restart_action != kNoId) {
         edge("bounded_default_restart", root_router_id, 0, "", true);
@@ -3551,6 +3721,13 @@ std::string compile_policy_strategy_json(
     if (telemetry != nullptr) {
         telemetry->working_states = static_cast<std::uint32_t>(
             compiled_states.size());
+        telemetry->closed_coarse_domain_added_states =
+            closed_coarse_domain_added_states;
+        telemetry->closed_coarse_domain_route_states =
+            closed_coarse_certification_domain
+                ? static_cast<std::uint32_t>(
+                      policy_route_entries.size())
+                : 0;
         if (structured_refined_route) {
             telemetry->behavioral_classes =
                 static_cast<std::uint32_t>(std::count_if(

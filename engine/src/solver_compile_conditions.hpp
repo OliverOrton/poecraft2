@@ -643,6 +643,55 @@ std::vector<QuotientFeature> quotient_features(
             present ? 1u : 0u,
             present ? condition : not_of(condition)});
     }
+    /* Item flags alone do not distinguish an ordinary crafted metamod from
+     * the same metamod after it has been fractured. Keep that physical
+     * distinction in the collision-checked policy-route vocabulary so a
+     * represented-domain decision DAG cannot silently broaden across it. */
+    const DataImpl& data = *session.data;
+    const std::pair<std::uint32_t, int> metamod_flags[] = {
+        {kFlagMultimod, data.metamod_multimod_code},
+        {kFlagNoAttack, data.metamod_no_attack_code},
+        {kFlagNoCaster, data.metamod_no_caster_code},
+        {kFlagPrefixesLocked, data.metamod_prefixes_locked_code},
+        {kFlagSuffixesLocked, data.metamod_suffixes_locked_code},
+    };
+    for (const auto& [flag, code] : metamod_flags) {
+        const bool fractured =
+            (state.fractured_metamod_flags & flag) != 0;
+        if (code < 0) {
+            if (fractured) {
+                gap("fractured metamod has no stable session identity");
+            }
+            features.push_back({0u, ConditionExpr::always()});
+            continue;
+        }
+        std::uint32_t representative = kNoId;
+        std::vector<std::uint64_t> family_mask(session.words, 0);
+        for (std::uint32_t mod = 0; mod < session.mod_count; ++mod) {
+            if (mod < session.metamod_type.size() &&
+                session.metamod_type[mod] == code) {
+                if (representative == kNoId) representative = mod;
+                pc_bitset_set(family_mask.data(), mod);
+            }
+        }
+        if (representative == kNoId) {
+            if (fractured || (state.flags & flag) != 0) {
+                gap("active metamod vocabulary has no stable session "
+                    "modifier");
+            }
+            features.push_back({0u, ConditionExpr::always()});
+            continue;
+        }
+        /* Count observations do not become exact evaluator goal targets.
+         * A negated has_mod_family predicate would, and five metamod families
+         * can otherwise exceed the fixed goal-target vocabulary. */
+        const std::string zero = mod_count_condition_for_mask(
+            session, family_mask, 0,
+            PC_MOD_SLOT_FRACTURED, true, "metamod family");
+        features.push_back({
+            fractured ? 1u : 0u,
+            fractured ? not_of(zero) : zero});
+    }
     const std::string veiled_prefix = item_flag_condition("veiled_prefix");
     const std::string veiled_suffix = item_flag_condition("veiled_suffix");
     features.push_back({
@@ -713,6 +762,14 @@ std::vector<std::uint32_t> quotient_feature_values(
     };
     for (const std::uint32_t flag : flags) {
         values.push_back((state.flags & flag) != 0 ? 1u : 0u);
+    }
+    static const std::uint32_t metamod_flags[] = {
+        kFlagMultimod, kFlagNoAttack, kFlagNoCaster,
+        kFlagPrefixesLocked, kFlagSuffixesLocked,
+    };
+    for (const std::uint32_t flag : metamod_flags) {
+        values.push_back(
+            (state.fractured_metamod_flags & flag) != 0 ? 1u : 0u);
     }
     values.push_back(static_cast<std::uint8_t>(state.veiled_side + 1));
     values.push_back(state.influence_bits);

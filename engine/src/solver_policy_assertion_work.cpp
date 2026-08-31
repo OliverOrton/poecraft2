@@ -365,7 +365,8 @@ struct CompiledPolicyAssertionWork::Impl {
                     compilation_memory,
                     evaluating_product_restart_recovery
                         ? PolicyRouteDefaultMode::ProductSafeRestart
-                        : PolicyRouteDefaultMode::CertificationFailClosed);
+                        : PolicyRouteDefaultMode::CertificationFailClosed,
+                    true);
                 record_compilation_time();
                 std::uint64_t live = result.retained_solver_bytes;
                 saturating_add(
@@ -645,7 +646,8 @@ struct CompiledPolicyAssertionWork::Impl {
                         options.max_strategy_json_bytes,
                         refined_routing,
                         options.max_solver_owned_bytes - paired_retained,
-                        PolicyRouteDefaultMode::ProductSafeRestart);
+                        PolicyRouteDefaultMode::ProductSafeRestart,
+                        true);
                 } catch (const SolverResourceLimit& error) {
                     finish_failure(
                         CompiledPolicyAssertionStatus::ResourceCap,

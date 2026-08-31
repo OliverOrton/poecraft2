@@ -2075,6 +2075,10 @@ pc_result pc_solver_compile_strategy(
                 solver::PolicyCompilationTelemetry& telemetry =
                     *solver->compilation;
                 telemetry.working_states = refined.working_states;
+                telemetry.closed_coarse_domain_added_states =
+                    refined.closed_coarse_domain_added_states;
+                telemetry.closed_coarse_domain_route_states =
+                    refined.closed_coarse_domain_route_states;
                 telemetry.behavioral_classes =
                     refined.behavioral_classes;
                 telemetry.policy_regions = refined.policy_regions;
@@ -2125,6 +2129,12 @@ pc_result pc_solver_compile_strategy(
                     refined.policy_route_restart_default_edges;
                 telemetry.policy_route_offpolicy_default_edges =
                     refined.policy_route_offpolicy_default_edges;
+                telemetry.policy_route_root_default_edges =
+                    refined.policy_route_root_default_edges;
+                telemetry.policy_route_refined_parent_default_edges =
+                    refined.policy_route_refined_parent_default_edges;
+                telemetry.policy_route_internal_default_edges =
+                    refined.policy_route_internal_default_edges;
                 telemetry.policy_route_default_mode =
                     refined.policy_route_default_mode;
                 telemetry.certification_policy_route_default_edges =

@@ -3114,6 +3114,10 @@ bool SolveWork::Impl::certify_incumbent_for_fallback(
         }
         incumbent.compiled_artifact.working_states =
             compilation.working_states;
+        incumbent.compiled_artifact.closed_coarse_domain_added_states =
+            compilation.closed_coarse_domain_added_states;
+        incumbent.compiled_artifact.closed_coarse_domain_route_states =
+            compilation.closed_coarse_domain_route_states;
         incumbent.compiled_artifact.behavioral_classes =
             compilation.behavioral_classes;
         incumbent.compiled_artifact.policy_regions =
@@ -3166,6 +3170,13 @@ bool SolveWork::Impl::certify_incumbent_for_fallback(
             compilation.policy_route_restart_default_edges;
         incumbent.compiled_artifact.policy_route_offpolicy_default_edges =
             compilation.policy_route_offpolicy_default_edges;
+        incumbent.compiled_artifact.policy_route_root_default_edges =
+            compilation.policy_route_root_default_edges;
+        incumbent.compiled_artifact
+            .policy_route_refined_parent_default_edges =
+            compilation.policy_route_refined_parent_default_edges;
+        incumbent.compiled_artifact.policy_route_internal_default_edges =
+            compilation.policy_route_internal_default_edges;
         incumbent.compiled_artifact.policy_route_default_mode =
             compilation.policy_route_default_mode;
         incumbent.compiled_artifact.peak_owned_bytes =

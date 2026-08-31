@@ -39,7 +39,8 @@ std::string compile_policy_strategy_json(
     std::uint64_t max_compiler_owned_bytes =
         std::numeric_limits<std::uint64_t>::max(),
     PolicyRouteDefaultMode route_default_mode =
-        PolicyRouteDefaultMode::ProductSafeRestart);
+        PolicyRouteDefaultMode::ProductSafeRestart,
+    bool compile_closed_coarse_certification_domain = false);
 
 
 } // namespace solver
