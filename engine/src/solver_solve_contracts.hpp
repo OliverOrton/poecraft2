@@ -107,6 +107,10 @@ struct SolveOptions {
     bool factored_terminal_reforge_diagnostic = false;
     bool reforge_resource_accounting = true;
     bool raw_strict_reforge_oracle_diagnostic = false;
+    /* Native benchmark-only exact verified-policy alternative census. It
+     * requests evaluator decision entries and invokes an isolated strict
+     * proof oracle, but owns no pruning, scheduling, or publication path. */
+    bool verified_policy_alternative_shadow_diagnostic = false;
     /* Benchmark-private, write-only observation of one failed carrier-ladder
      * joint-policy prefix. No public profile or binding can enable it. */
     CarrierLadderExactBoundaryMode carrier_ladder_exact_boundary_mode =
@@ -1017,6 +1021,17 @@ struct PrimitiveRenewalWitness {
     std::vector<std::uint64_t> kernel_signature;
 };
 
+struct CompiledPolicyDecisionBinding {
+    std::string compiled_node_id;
+    std::uint32_t coarse_state = kNoId;
+    std::uint32_t selected_operator = kNoId;
+    std::vector<std::uint64_t> coarse_state_identity;
+    std::vector<std::uint64_t> selected_operator_identity;
+    bool fixed_observed_choice_policy = false;
+
+    bool operator==(const CompiledPolicyDecisionBinding&) const = default;
+};
+
 /* Collision-free canonical context carried beside evaluator statewise
  * continuation evidence. Hashes elsewhere remain lookup accelerators; this
  * payload is compared by full vector equality before a consumer may use an
@@ -1046,6 +1061,7 @@ struct ExecutableContinuationUpperCertificate {
     std::uint64_t schema_version = kSchemaVersion;
     ExecutableContinuationAuthorityContext authority;
     StrategyContinuationUpperCertificate evaluation;
+    StrategyPolicyEntryCertificate policy_entries;
     /* Accelerator only. Reuse separately requires byte equality of the
      * attached certification_strategy_json. */
     std::uint64_t strategy_identity_digest = 0;
@@ -1054,6 +1070,13 @@ struct ExecutableContinuationUpperCertificate {
     bool available() const {
         return schema_version == kSchemaVersion && authority.complete() &&
             evaluation.requested && evaluation.certified_states != 0 &&
+            strategy_identity_digest != 0 && strategy_identity_bytes != 0;
+    }
+
+    bool policy_entries_available() const {
+        return schema_version == kSchemaVersion && authority.complete() &&
+            policy_entries.requested &&
+            policy_entries.certified_entries != 0 &&
             strategy_identity_digest != 0 && strategy_identity_bytes != 0;
     }
 };
@@ -1095,13 +1118,14 @@ inline const char* executable_continuation_reuse_status_name(
 }
 
 inline ExecutableContinuationReuseStatus
-validate_executable_continuation_upper_reuse(
+validate_executable_continuation_context_reuse(
         const ExecutableContinuationUpperCertificate& certificate,
         const ExecutableContinuationAuthorityContext& current,
         const std::uint64_t strategy_digest,
         const std::uint64_t strategy_bytes,
-        const bool exact_strategy_graph_equal) {
-    if (!certificate.available() || !current.complete()) {
+        const bool exact_strategy_graph_equal,
+        const bool requested_authority_available) {
+    if (!requested_authority_available || !current.complete()) {
         return ExecutableContinuationReuseStatus::IncompleteCertificate;
     }
     /* A digest narrows lookup only. The caller must also compare the exact
@@ -1138,6 +1162,31 @@ validate_executable_continuation_upper_reuse(
     return ExecutableContinuationReuseStatus::Complete;
 }
 
+inline ExecutableContinuationReuseStatus
+validate_executable_continuation_upper_reuse(
+        const ExecutableContinuationUpperCertificate& certificate,
+        const ExecutableContinuationAuthorityContext& current,
+        const std::uint64_t strategy_digest,
+        const std::uint64_t strategy_bytes,
+        const bool exact_strategy_graph_equal) {
+    return validate_executable_continuation_context_reuse(
+        certificate, current, strategy_digest, strategy_bytes,
+        exact_strategy_graph_equal, certificate.available());
+}
+
+inline ExecutableContinuationReuseStatus
+validate_executable_policy_entry_upper_reuse(
+        const ExecutableContinuationUpperCertificate& certificate,
+        const ExecutableContinuationAuthorityContext& current,
+        const std::uint64_t strategy_digest,
+        const std::uint64_t strategy_bytes,
+        const bool exact_strategy_graph_equal) {
+    return validate_executable_continuation_context_reuse(
+        certificate, current, strategy_digest, strategy_bytes,
+        exact_strategy_graph_equal,
+        certificate.policy_entries_available());
+}
+
 /*
  * A policy-guided exact lift is compiled and independently evaluated while
  * its strict child CalcContext is alive. Retain that proven ordinary strategy
@@ -1151,6 +1200,7 @@ struct RetainedCompiledPolicyArtifact {
      * to the exact ordinary strategy that produced it; public policy values
      * retain their historical coarse/search meaning. */
     ExecutableContinuationUpperCertificate continuation_upper;
+    std::vector<CompiledPolicyDecisionBinding> policy_decision_bindings;
     std::uint32_t working_states = 0;
     std::uint32_t closed_coarse_domain_added_states = 0;
     std::uint32_t closed_coarse_domain_route_states = 0;
@@ -1444,6 +1494,10 @@ struct PolicyCompilationTelemetry {
     std::uint32_t local_gated_route_nodes = 0;
     std::uint32_t primitive_region_nodes = 0;
     std::uint32_t additional_recipe_nodes = 0;
+    /* Complete compiler-owned provenance for genuine selected-policy entry
+     * nodes. Fixed-program continuation operations, route nodes, checkpoints,
+     * and terminals are deliberately absent. */
+    std::vector<CompiledPolicyDecisionBinding> policy_decision_bindings;
     std::uint32_t nodes = 0;
     std::uint32_t edges = 0;
     std::uint64_t strategy_json_bytes = 0;

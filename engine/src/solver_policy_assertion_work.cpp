@@ -105,6 +105,26 @@ std::uint64_t compiled_policy_assertion_retained_bytes(
     saturating_add(
         bytes,
         assertion.evaluation.retained_output_owned_bytes_estimate);
+    const auto add_bindings = [&](const PolicyCompilationTelemetry& value) {
+        saturating_add(
+            bytes,
+            value.policy_decision_bindings.capacity() *
+                sizeof(CompiledPolicyDecisionBinding));
+        for (const CompiledPolicyDecisionBinding& binding :
+             value.policy_decision_bindings) {
+            saturating_add(bytes, binding.compiled_node_id.capacity() + 1);
+            saturating_add(
+                bytes,
+                binding.coarse_state_identity.capacity() *
+                    sizeof(std::uint64_t));
+            saturating_add(
+                bytes,
+                binding.selected_operator_identity.capacity() *
+                    sizeof(std::uint64_t));
+        }
+    };
+    add_bindings(assertion.compilation);
+    add_bindings(assertion.certification_compilation);
     saturating_add(
         bytes,
         assertion.compilation.policy_route_default_mode.capacity() + 1);
@@ -186,6 +206,7 @@ struct CompiledPolicyAssertionWork::Impl {
     const std::string* emitted_strategy_json = nullptr;
     const PolicyCompilationTelemetry* emitted_compilation = nullptr;
     bool request_root_continuation_upper = false;
+    bool request_policy_decision_entries = false;
     CompiledPolicyAssertion result;
     Stage stage = Stage::Compiling;
     std::shared_ptr<StrategyImpl> parsed_strategy;
@@ -203,7 +224,8 @@ struct CompiledPolicyAssertionWork::Impl {
             const RefinedPolicyCompileRouting* routing,
             const std::string* emitted_json,
             const PolicyCompilationTelemetry* emitted_telemetry,
-            const bool request_root_upper)
+            const bool request_root_upper,
+            const bool request_policy_entries)
         : coarse(coarse_value),
           solved(solved_value),
           prices(prices_value),
@@ -212,7 +234,8 @@ struct CompiledPolicyAssertionWork::Impl {
           refined_routing(routing),
           emitted_strategy_json(emitted_json),
           emitted_compilation(emitted_telemetry),
-          request_root_continuation_upper(request_root_upper) {
+          request_root_continuation_upper(request_root_upper),
+          request_policy_decision_entries(request_policy_entries) {
         result.solver_cost = solved.evaluated_policy_cost;
     }
 
@@ -550,6 +573,21 @@ struct CompiledPolicyAssertionWork::Impl {
                     parsed_strategy->start_item,
                 });
             }
+            if (request_policy_decision_entries) {
+                evaluation_options.policy_decision_entries.reserve(
+                    result.compilation.policy_decision_bindings.size());
+                for (const CompiledPolicyDecisionBinding& binding :
+                     result.compilation.policy_decision_bindings) {
+                    evaluation_options.policy_decision_entries.push_back({
+                        binding.compiled_node_id,
+                        binding.coarse_state,
+                        binding.selected_operator,
+                        binding.coarse_state_identity,
+                        binding.selected_operator_identity,
+                        binding.fixed_observed_choice_policy,
+                    });
+                }
+            }
             evaluation_work = std::make_unique<StrategyEvalWork>(
                 parsed_strategy, evaluation_options);
             stage = Stage::Evaluating;
@@ -822,11 +860,13 @@ CompiledPolicyAssertionWork::CompiledPolicyAssertionWork(
         const RefinedPolicyCompileRouting* refined_routing,
         const std::string* emitted_strategy_json,
         const PolicyCompilationTelemetry* emitted_compilation,
-        const bool request_root_continuation_upper)
+        const bool request_root_continuation_upper,
+        const bool request_policy_decision_entries)
     : impl_(std::make_unique<Impl>(
           coarse, solved, prices, options, std::move(strategy_name),
           refined_routing, emitted_strategy_json,
-          emitted_compilation, request_root_continuation_upper)) {}
+          emitted_compilation, request_root_continuation_upper,
+          request_policy_decision_entries)) {}
 
 CompiledPolicyAssertionWork::~CompiledPolicyAssertionWork() = default;
 CompiledPolicyAssertionWork::CompiledPolicyAssertionWork(

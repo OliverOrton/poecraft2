@@ -130,6 +130,134 @@ struct StrategyContinuationUpperCertificate {
     std::vector<StrategyContinuationStateUpper> states;
 };
 
+/*
+ * Compiler-owned provenance for one genuine policy decision entry in an
+ * ordinary emitted strategy.  The authored node id is the stable compiled
+ * graph identity; numeric solver/operator ids remain call-local handles and
+ * are always paired with their collision-free semantic identities.
+ */
+struct StrategyPolicyDecisionRequest {
+    std::string compiled_node_id;
+    std::uint32_t coarse_state = kNoId;
+    std::uint32_t selected_operator = kNoId;
+    std::vector<std::uint64_t> coarse_state_identity;
+    std::vector<std::uint64_t> selected_operator_identity;
+    bool fixed_observed_choice_policy = false;
+};
+
+enum class StrategyPolicyEntryStatus : std::uint8_t {
+    Complete = 0,
+    InvalidRequest,
+    DecisionNodeNotFound,
+    DecisionNodeNotReached,
+    EntryNotRepresented,
+    CheckpointOrOfferActive,
+    FailureReachable,
+    ImproperPolicy,
+    MissingPrice,
+    NonFiniteCost,
+    ResidualFailure,
+    MaterializationFailure,
+};
+
+inline const char* strategy_policy_entry_status_name(
+        const StrategyPolicyEntryStatus status) {
+    switch (status) {
+    case StrategyPolicyEntryStatus::Complete: return "complete";
+    case StrategyPolicyEntryStatus::InvalidRequest:
+        return "invalid_request";
+    case StrategyPolicyEntryStatus::DecisionNodeNotFound:
+        return "decision_node_not_found";
+    case StrategyPolicyEntryStatus::DecisionNodeNotReached:
+        return "decision_node_not_reached";
+    case StrategyPolicyEntryStatus::EntryNotRepresented:
+        return "entry_not_represented";
+    case StrategyPolicyEntryStatus::CheckpointOrOfferActive:
+        return "checkpoint_or_offer_active";
+    case StrategyPolicyEntryStatus::FailureReachable:
+        return "failure_reachable";
+    case StrategyPolicyEntryStatus::ImproperPolicy:
+        return "improper_policy";
+    case StrategyPolicyEntryStatus::MissingPrice:
+        return "missing_price";
+    case StrategyPolicyEntryStatus::NonFiniteCost:
+        return "non_finite_cost";
+    case StrategyPolicyEntryStatus::ResidualFailure:
+        return "residual_failure";
+    case StrategyPolicyEntryStatus::MaterializationFailure:
+        return "materialization_failure";
+    }
+    return "invalid_request";
+}
+
+struct StrategyPolicyEntryResult {
+    std::string compiled_node_id;
+    std::uint32_t coarse_state = kNoId;
+    std::uint32_t selected_operator = kNoId;
+    std::vector<std::uint64_t> coarse_state_identity;
+    std::vector<std::uint64_t> selected_operator_identity;
+    std::vector<std::uint64_t> exact_entry_identity;
+    pc_item_state item{};
+    bool fixed_observed_choice_policy = false;
+    bool checkpoint_active = false;
+    bool observed_offer_active = false;
+    StrategyPolicyEntryStatus status =
+        StrategyPolicyEntryStatus::InvalidRequest;
+    double exact_continuation_upper =
+        std::numeric_limits<double>::infinity();
+    double bellman_residual =
+        std::numeric_limits<double>::infinity();
+
+    bool available() const {
+        return status == StrategyPolicyEntryStatus::Complete &&
+               !compiled_node_id.empty() &&
+               !coarse_state_identity.empty() &&
+               !selected_operator_identity.empty() &&
+               !exact_entry_identity.empty() &&
+               std::isfinite(exact_continuation_upper) &&
+               exact_continuation_upper >= 0.0;
+    }
+};
+
+struct StrategyPolicyDecisionCoverage {
+    std::string compiled_node_id;
+    std::uint32_t coarse_state = kNoId;
+    std::uint32_t selected_operator = kNoId;
+    std::vector<std::uint64_t> coarse_state_identity;
+    std::vector<std::uint64_t> selected_operator_identity;
+    bool fixed_observed_choice_policy = false;
+    StrategyPolicyEntryStatus status =
+        StrategyPolicyEntryStatus::InvalidRequest;
+    std::uint32_t reached_entries = 0;
+    std::uint32_t certified_entries = 0;
+};
+
+struct StrategyPolicyEntryCertificate {
+    static constexpr std::uint64_t kSchemaVersion = 1;
+    static constexpr std::uint64_t kEvaluatorVersion = 1;
+
+    std::uint64_t schema_version = kSchemaVersion;
+    std::uint64_t evaluator_version = kEvaluatorVersion;
+    bool requested = false;
+    std::uint32_t requested_decisions = 0;
+    std::uint32_t reached_decisions = 0;
+    std::uint32_t refused_decisions = 0;
+    std::uint32_t reached_entries = 0;
+    std::uint32_t certified_entries = 0;
+    std::uint32_t refused_entries = 0;
+    std::uint32_t fixed_observed_choice_decisions = 0;
+    double maximum_bellman_residual = 0.0;
+    std::uint64_t semantic_identity = 0;
+    std::uint64_t retained_owned_bytes = 0;
+    std::uint64_t transient_evaluator_bytes = 0;
+    std::uint64_t build_ns = 0;
+    std::vector<StrategyPolicyDecisionCoverage> decisions;
+    std::vector<StrategyPolicyEntryResult> entries;
+};
+
+std::uint64_t strategy_policy_entry_certificate_semantic_identity(
+    const StrategyPolicyEntryCertificate& certificate);
+
 struct StrategyEvalOptions {
     double epsilon = 1e-12;
     std::uint32_t max_sweeps = 100000;
@@ -160,6 +288,11 @@ struct StrategyEvalOptions {
      * node, then reuse the same exact graph, quotient, SCCs, and sparse
      * component solver for continuation certification. */
     std::vector<StrategyContinuationEntryRequest> continuation_entries;
+    /* Empty preserves ordinary evaluation. Non-empty requests a complete
+     * census of every root-reachable evaluator pair at the compiler-declared
+     * genuine decision nodes. Route nodes and fixed-program continuation
+     * operations are absent by construction. */
+    std::vector<StrategyPolicyDecisionRequest> policy_decision_entries;
 };
 
 enum class StrategyEvalPhase {
@@ -457,6 +590,7 @@ struct StrategyEvalResult {
     StrategyEvalStageTimings stage_timings;
     StrategyEvalOperationRowCensus operation_row_census;
     StrategyContinuationUpperCertificate continuation_upper;
+    StrategyPolicyEntryCertificate policy_entries;
     /* Largest single resumable evaluator work item. This is active native
      * wall time and identifies the subphase that owns responsiveness. */
     std::uint64_t max_work_item_ns = 0;

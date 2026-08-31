@@ -2,11 +2,216 @@
 #include "solver_quotient_bellman.hpp"
 #include "solver_cooperative_task.hpp"
 
+#include <bit>
 #include <chrono>
 
 namespace poecraft {
 namespace solver {
 namespace refinement {
+
+StableKey retention_capacity_fracture_shadow_row_semantic_identity(
+        const RetentionCapacityFractureShadowRow& row) {
+    const auto append = [](StableKey& target, const StableKey& value) {
+        target.push_back(value.size());
+        target.insert(target.end(), value.begin(), value.end());
+    };
+    StableKey identity{
+        0x7263667261637631ull,
+        1,
+        static_cast<std::uint64_t>(row.status),
+        row.source_satisfied_goal_mask,
+        row.source_blocked_mask,
+        row.source_prefix_count,
+        row.source_suffix_count,
+        std::bit_cast<std::uint64_t>(row.immediate_cost),
+        std::bit_cast<std::uint64_t>(row.probability_mass),
+        std::bit_cast<std::uint64_t>(row.fractured_goal_probability),
+        std::bit_cast<std::uint64_t>(row.fractured_junk_probability),
+        row.transitions.size(),
+    };
+    append(identity, row.exact_entry_identity);
+    append(identity, row.action_identity);
+    for (const RetentionCapacityFractureTransition& transition :
+         row.transitions) {
+        append(identity, transition.exact_successor_identity);
+        identity.push_back(transition.satisfied_goal_mask);
+        identity.push_back(transition.fractured_goal_mask);
+        identity.push_back(transition.fractured_junk_count);
+        identity.push_back(transition.fractured_crafted_junk_count);
+        identity.push_back(transition.fractured_metamod_flags);
+        identity.push_back(transition.prefix_count);
+        identity.push_back(transition.suffix_count);
+        identity.push_back(transition.terminal ? 1 : 0);
+        identity.push_back(
+            std::bit_cast<std::uint64_t>(transition.probability));
+        /* Dense ids are deliberately absent. A projection is a lookup aid,
+         * not semantic identity for the exact pushed-forward row. */
+    }
+    return identity;
+}
+
+RetentionCapacityFractureShadowRow
+build_retention_capacity_fracture_shadow_row(
+        CalcContext& exact,
+        const std::uint32_t exact_state,
+        const std::uint32_t primitive_action,
+        const double immediate_cost,
+        StableKey exact_entry_identity,
+        StableKey action_identity,
+        const RetentionCapacityCoarseProjector& project_to_coarse) {
+    const auto started = std::chrono::steady_clock::now();
+    RetentionCapacityFractureShadowRow row;
+    row.exact_entry_identity = std::move(exact_entry_identity);
+    row.action_identity = std::move(action_identity);
+    row.immediate_cost = immediate_cost;
+    const auto finish = [&](const RetentionCapacityFractureShadowStatus status) {
+        row.status = status;
+        row.semantic_identity =
+            retention_capacity_fracture_shadow_row_semantic_identity(row);
+        std::uint64_t transient = sizeof(row);
+        saturating_add(
+            transient,
+            row.exact_entry_identity.capacity() * sizeof(std::uint64_t));
+        saturating_add(
+            transient,
+            row.action_identity.capacity() * sizeof(std::uint64_t));
+        saturating_add(
+            transient,
+            row.semantic_identity.capacity() * sizeof(std::uint64_t));
+        saturating_add(
+            transient,
+            row.transitions.capacity() *
+                sizeof(RetentionCapacityFractureTransition));
+        for (const RetentionCapacityFractureTransition& transition :
+             row.transitions) {
+            saturating_add(
+                transient,
+                transition.exact_successor_identity.capacity() *
+                    sizeof(std::uint64_t));
+        }
+        row.retained_bytes = 0;
+        row.transient_bytes = transient;
+        row.build_ns = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - started)
+                .count());
+    };
+    if (exact_state >= exact.state_count() ||
+        primitive_action >= exact.registry().actions.size() ||
+        !std::isfinite(immediate_cost) || immediate_cost < 0.0 ||
+        row.exact_entry_identity.empty() || row.action_identity.empty() ||
+        !project_to_coarse) {
+        finish(RetentionCapacityFractureShadowStatus::InvalidRequest);
+        return row;
+    }
+    const ActionDescriptor& action =
+        exact.registry().actions.at(primitive_action);
+    if (action.synthetic || action.params.type != ActionType::Fracture) {
+        finish(RetentionCapacityFractureShadowStatus::NotApplicable);
+        return row;
+    }
+    const AbstractState& source = exact.state(exact_state);
+    for (std::uint32_t slot = 0;
+         slot < exact.layout().slots.size(); ++slot) {
+        if (source.slot_status[slot] ==
+            static_cast<std::uint8_t>(GoalSlotStatus::Satisfied)) {
+            row.source_satisfied_goal_mask |= std::uint32_t{1} << slot;
+        }
+    }
+    row.source_blocked_mask = source.blocked_mask;
+    row.source_prefix_count = source.prefix_count;
+    row.source_suffix_count = source.suffix_count;
+
+    const std::uint32_t states_before = exact.state_count();
+    const OutcomeDistribution& distribution = exact.outcomes(
+        exact_state, primitive_action, false);
+    row.strict_states_created = exact.state_count() - states_before;
+    if (!distribution.supported) {
+        finish(RetentionCapacityFractureShadowStatus::UnsupportedMechanic);
+        return row;
+    }
+    if (!distribution.applicable || distribution.entries.empty()) {
+        finish(RetentionCapacityFractureShadowStatus::Inapplicable);
+        return row;
+    }
+    if (!distribution.choice_groups.empty() ||
+        !distribution.choice_options.empty()) {
+        finish(RetentionCapacityFractureShadowStatus::IdentityFailure);
+        return row;
+    }
+    row.transitions.reserve(distribution.entries.size());
+    for (const OutcomeEntry& outcome : distribution.entries) {
+        if (outcome.state >= exact.state_count() ||
+            !std::isfinite(outcome.probability) ||
+            outcome.probability <= 0.0) {
+            finish(RetentionCapacityFractureShadowStatus::IncompleteMass);
+            return row;
+        }
+        const AbstractState& successor = exact.state(outcome.state);
+        RetentionCapacityFractureTransition transition;
+        transition.exact_successor_identity =
+            exact_state_key(successor, 0);
+        transition.projected_coarse_state =
+            project_to_coarse(outcome.state);
+        for (std::uint32_t slot = 0;
+             slot < exact.layout().slots.size(); ++slot) {
+            if (successor.slot_status[slot] ==
+                static_cast<std::uint8_t>(
+                    GoalSlotStatus::Satisfied)) {
+                transition.satisfied_goal_mask |=
+                    std::uint32_t{1} << slot;
+            }
+        }
+        transition.fractured_goal_mask =
+            successor.fractured_goal_mask;
+        for (const std::uint8_t count :
+             successor.fractured_junk_counts) {
+            transition.fractured_junk_count += count;
+        }
+        for (const std::uint8_t count :
+             successor.fractured_crafted_junk_counts) {
+            transition.fractured_crafted_junk_count += count;
+        }
+        transition.fractured_metamod_flags =
+            successor.fractured_metamod_flags;
+        transition.prefix_count = successor.prefix_count;
+        transition.suffix_count = successor.suffix_count;
+        transition.terminal = exact.is_goal_state(successor);
+        transition.probability = outcome.probability;
+        row.probability_mass += outcome.probability;
+        if (transition.fractured_goal_mask != 0) {
+            row.fractured_goal_probability += outcome.probability;
+        }
+        if (transition.fractured_junk_count != 0 ||
+            transition.fractured_metamod_flags != 0) {
+            row.fractured_junk_probability += outcome.probability;
+        }
+        row.transitions.push_back(std::move(transition));
+    }
+    std::sort(
+        row.transitions.begin(), row.transitions.end(),
+        [](const RetentionCapacityFractureTransition& left,
+           const RetentionCapacityFractureTransition& right) {
+            if (left.exact_successor_identity !=
+                    right.exact_successor_identity) {
+                return left.exact_successor_identity <
+                       right.exact_successor_identity;
+            }
+            return std::bit_cast<std::uint64_t>(left.probability) <
+                   std::bit_cast<std::uint64_t>(right.probability);
+        });
+    if (std::abs(row.probability_mass - 1.0) > 1e-12 ||
+        row.fractured_goal_probability < 0.0 ||
+        row.fractured_junk_probability < 0.0 ||
+        row.fractured_goal_probability +
+                row.fractured_junk_probability >
+            1.0 + 1e-12) {
+        finish(RetentionCapacityFractureShadowStatus::IncompleteMass);
+        return row;
+    }
+    finish(RetentionCapacityFractureShadowStatus::Complete);
+    return row;
+}
 
 void merge_refined_compile_strict_members(
         std::vector<std::uint32_t>& represented_members,
@@ -67,6 +272,350 @@ struct QuotientAlternativeDescriptor {
 #include "solver_policy_oracle_improve.inc"
 
 } // namespace
+
+solve_detail::CooperativeTask<VerifiedPolicyAlternativeShadowCensus>
+audit_verified_policy_alternative_shadow(
+        CalcContext& coarse,
+        const SolveResult& solved,
+        const pc_item_state& exact_start,
+        const std::unordered_map<std::string, double>& prices,
+        const SolveOptions& options,
+        const RetainedCompiledPolicyArtifact& artifact,
+        ExecutableContinuationAuthorityContext current_authority,
+        VerifiedPolicyAlternativeObserver observer) {
+    const auto started = std::chrono::steady_clock::now();
+    VerifiedPolicyAlternativeShadowCensus census;
+    const auto finish = [&](const VerifiedPolicyAlternativeShadowStatus status,
+                            std::string reason = {},
+                            std::string cap = {}) {
+        census.status = status;
+        census.failure_reason = std::move(reason);
+        census.resource_cap = std::move(cap);
+        census.retained_owned_bytes = sizeof(census) +
+            census.failure_reason.capacity() + 1 +
+            census.resource_cap.capacity() + 1;
+        census.peak_owned_bytes = std::max(
+            census.peak_owned_bytes, census.retained_owned_bytes);
+        census.build_ns = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - started)
+                .count());
+    };
+    const ExecutableContinuationUpperCertificate& certificate =
+        artifact.continuation_upper;
+    const StrategyPolicyEntryCertificate& entries =
+        certificate.policy_entries;
+    census.certificate_identity = entries.semantic_identity;
+    census.decisions_requested = entries.requested_decisions;
+    census.decisions_reached = entries.reached_decisions;
+    census.decisions_refused = entries.refused_decisions;
+    if (entries.semantic_identity == 0 ||
+        entries.semantic_identity !=
+            strategy_policy_entry_certificate_semantic_identity(entries)) {
+        finish(
+            VerifiedPolicyAlternativeShadowStatus::IdentityMismatch,
+            "verified-policy entry certificate semantic identity changed");
+        co_return census;
+    }
+
+    std::uint64_t attached_digest = 1469598103934665603ULL;
+    for (const unsigned char byte :
+         artifact.certification_strategy_json) {
+        attached_digest ^= byte;
+        attached_digest *= 1099511628211ULL;
+    }
+    attached_digest ^= artifact.certification_strategy_json.size();
+    attached_digest *= 1099511628211ULL;
+    const ExecutableContinuationReuseStatus reuse =
+        validate_executable_policy_entry_upper_reuse(
+            certificate, current_authority, attached_digest,
+            artifact.certification_strategy_json.size(), true);
+    if (reuse != ExecutableContinuationReuseStatus::Complete) {
+        finish(
+            reuse == ExecutableContinuationReuseStatus::
+                         IncompleteCertificate
+                ? VerifiedPolicyAlternativeShadowStatus::
+                      IncompleteCertificate
+                : VerifiedPolicyAlternativeShadowStatus::IdentityMismatch,
+            std::string{"verified-policy entry certificate reuse refused: "} +
+                executable_continuation_reuse_status_name(reuse));
+        co_return census;
+    }
+    if (!solved.policy_available || !solved.has_exact_start_item ||
+        entries.entries.empty() ||
+        artifact.policy_decision_bindings.empty()) {
+        finish(
+            VerifiedPolicyAlternativeShadowStatus::IncompleteCertificate,
+            "verified-policy shadow has no exact policy entries or compiler "
+            "decision bindings");
+        co_return census;
+    }
+
+    std::map<std::string, const CompiledPolicyDecisionBinding*>
+        binding_by_node;
+    for (const CompiledPolicyDecisionBinding& binding :
+         artifact.policy_decision_bindings) {
+        if (binding.compiled_node_id.empty() ||
+            !binding_by_node.emplace(
+                binding.compiled_node_id, &binding).second) {
+            finish(
+                VerifiedPolicyAlternativeShadowStatus::IdentityMismatch,
+                "verified-policy compiler decision bindings are not unique");
+            co_return census;
+        }
+    }
+
+    try {
+        const RefinementLimits limits =
+            default_limits(coarse, solved, options);
+        PolicyLiftAdapterTelemetry adapter;
+        ProductionPolicyOracle oracle(
+            coarse, solved, exact_start, prices, options, limits,
+            adapter, nullptr, false, true, true);
+        auto initialization = oracle.initialize_cooperatively();
+        while (!initialization.resume()) {
+            census.peak_owned_bytes = std::max(
+                census.peak_owned_bytes,
+                oracle.estimated_owned_bytes());
+            co_await solve_detail::CooperativeCheckpoint{
+                initialization.retained_bytes()};
+        }
+        (void)initialization.take_result();
+        census.peak_owned_bytes = std::max(
+            census.peak_owned_bytes,
+            oracle.estimated_owned_bytes());
+
+        for (const StrategyPolicyEntryResult& source : entries.entries) {
+            ++census.entries_examined;
+            const std::size_t source_status =
+                static_cast<std::size_t>(source.status);
+            if (source_status <
+                census.certificate_entry_status_counts.size()) {
+                ++census.certificate_entry_status_counts[source_status];
+            }
+            if (!source.available()) {
+                ++census.entries_refused;
+                continue;
+            }
+            const auto binding = binding_by_node.find(
+                source.compiled_node_id);
+            if (binding == binding_by_node.end() ||
+                binding->second->coarse_state != source.coarse_state ||
+                binding->second->selected_operator !=
+                    source.selected_operator ||
+                binding->second->coarse_state_identity !=
+                    source.coarse_state_identity ||
+                binding->second->selected_operator_identity !=
+                    source.selected_operator_identity ||
+                binding->second->fixed_observed_choice_policy !=
+                    source.fixed_observed_choice_policy ||
+                source.coarse_state >= coarse.state_count() ||
+                source.coarse_state >= solved.policy.size() ||
+                source.selected_operator >= coarse.operators().size() ||
+                solved.policy[source.coarse_state] == kNoId ||
+                solved.policy[source.coarse_state].index !=
+                    source.selected_operator ||
+                exact_abstract_state_key(
+                    coarse.state(source.coarse_state), 0) !=
+                    source.coarse_state_identity ||
+                planner_operator_semantic_key(
+                    coarse.operators().at(source.selected_operator)) !=
+                    source.selected_operator_identity) {
+                ++census.entries_refused;
+                ++census.binding_or_solve_identity_refusals;
+                continue;
+            }
+
+            auto [exact, strict_state] =
+                oracle.quotient_import_verified_policy_item(source.item);
+            if (exact.terminal) {
+                ++census.entries_refused;
+                ++census.strict_terminal_refusals;
+                oracle.quotient_release_carrier(exact.stable_key);
+                continue;
+            }
+            if (exact.coarse_state >= coarse.state_count() ||
+                exact.coarse_state >= solved.policy.size()) {
+                ++census.entries_refused;
+                ++census.strict_coarse_projection_refusals;
+                oracle.quotient_release_carrier(exact.stable_key);
+                continue;
+            }
+            const StableKey physical_coarse_state_identity =
+                exact_abstract_state_key(
+                    coarse.state(exact.coarse_state), 0);
+            const std::uint32_t selected_strict_operator =
+                oracle.quotient_strict_operator_for_coarse(
+                    source.selected_operator);
+            const PlannerOperator& selected_planner =
+                coarse.operators().at(source.selected_operator);
+            const bool selected_caller_authorized =
+                coarse.is_candidate_operator_admitted_for_state(
+                    exact.coarse_state, source.selected_operator);
+            const bool selected_exact_applicable =
+                selected_caller_authorized &&
+                oracle.quotient_alternative_operator_admitted(
+                    exact.coarse_state, strict_state,
+                    selected_strict_operator);
+            if (!selected_exact_applicable ||
+                planner_operator_semantic_key(selected_planner) !=
+                    source.selected_operator_identity) {
+                ++census.entries_refused;
+                ++census.selected_action_refusals;
+                oracle.quotient_release_carrier(exact.stable_key);
+                continue;
+            }
+            const SelectedAction selected_exact =
+                oracle.quotient_verified_policy_selected_action(
+                    exact, strict_state, source.coarse_state,
+                    selected_strict_operator,
+                    source.fixed_observed_choice_policy);
+            VerifiedPolicyStrictEntry strict_entry;
+            strict_entry.compiled_node_id = source.compiled_node_id;
+            strict_entry.exact_entry_identity =
+                source.exact_entry_identity;
+            strict_entry.strict_state_identity = exact.stable_key;
+            strict_entry.coarse_state_identity =
+                physical_coarse_state_identity;
+            strict_entry.represented_coarse_state_identity =
+                source.coarse_state_identity;
+            strict_entry.selected_operator_identity =
+                source.selected_operator_identity;
+            strict_entry.selected_exact_decision_identity =
+                selected_exact.semantic_key;
+            strict_entry.coarse_state = exact.coarse_state;
+            strict_entry.represented_coarse_state = source.coarse_state;
+            strict_entry.selected_operator = source.selected_operator;
+            strict_entry.exact_continuation_upper =
+                source.exact_continuation_upper;
+            strict_entry.fixed_observed_choice_policy =
+                source.fixed_observed_choice_policy;
+
+            bool selected_seen = false;
+            bool selected_valid = false;
+            for (const std::uint32_t strict_operator :
+                 oracle.quotient_complete_operator_vocabulary()) {
+                ++census.vocabulary_actions_examined;
+                VerifiedPolicyAlternativeAction action;
+                action.coarse_operator =
+                    oracle.quotient_coarse_operator_for_strict(
+                        strict_operator);
+                const PlannerOperator& planner =
+                    coarse.operators().at(action.coarse_operator);
+                action.operator_identity =
+                    planner_operator_semantic_key(planner);
+                action.operator_id = planner.id;
+                action.selected =
+                    strict_operator == selected_strict_operator;
+                action.caller_authorized =
+                    coarse.is_candidate_operator_admitted_for_state(
+                        exact.coarse_state, action.coarse_operator);
+                if (action.caller_authorized) {
+                    ++census.caller_authorized_actions;
+                    action.exact_applicable =
+                        oracle.quotient_alternative_operator_admitted(
+                            exact.coarse_state, strict_state,
+                            strict_operator);
+                    if (!action.exact_applicable) {
+                        ++census.exact_inapplicabilities;
+                    }
+                }
+                if (action.selected) {
+                    selected_seen = true;
+                    selected_valid = action.caller_authorized &&
+                        action.exact_applicable &&
+                        action.operator_identity ==
+                            source.selected_operator_identity &&
+                        selected_exact.action_id == strict_operator &&
+                        !selected_exact.semantic_key.empty();
+                    if (selected_valid) ++census.selected_actions;
+                } else if (action.caller_authorized &&
+                           action.exact_applicable) {
+                    ++census.alternative_obligations;
+                    action.retention_capacity_fracture =
+                        oracle
+                            .quotient_retention_capacity_fracture_shadow_row(
+                                exact, strict_state, strict_operator,
+                                source.exact_entry_identity,
+                                action.operator_identity);
+                    if (action.retention_capacity_fracture.has_value()) {
+                        ++census.retention_capacity_rows_examined;
+                        const RetentionCapacityFractureShadowRow& row =
+                            *action.retention_capacity_fracture;
+                        if (row.available()) {
+                            ++census.retention_capacity_rows_complete;
+                            saturating_add(
+                                census.retention_capacity_transitions,
+                                row.transitions.size());
+                        } else {
+                            ++census.retention_capacity_rows_refused;
+                        }
+                        saturating_add(
+                            census
+                                .retention_capacity_strict_states_created,
+                            row.strict_states_created);
+                        census.retention_capacity_peak_transient_bytes =
+                            std::max(
+                                census
+                                    .retention_capacity_peak_transient_bytes,
+                                row.transient_bytes);
+                        saturating_add(
+                            census.retention_capacity_build_ns,
+                            row.build_ns);
+                    }
+                }
+                if (observer) {
+                    observer(strict_entry, action);
+                    ++census.observer_calls;
+                }
+                census.peak_owned_bytes = std::max(
+                    census.peak_owned_bytes,
+                    oracle.estimated_owned_bytes());
+            }
+            oracle.quotient_release_carrier(exact.stable_key);
+            if (!selected_seen || !selected_valid) {
+                ++census.entries_refused;
+                ++census.selected_action_refusals;
+                continue;
+            }
+            ++census.entries_accepted;
+            /* The imported carrier vocabulary is caller-bounded (269 in the
+             * production clean-five profile) and retains no per-action row.
+             * Yield once per exact entry rather than turning each read-only
+             * comparison into an external solver step. */
+            co_await solve_detail::CooperativeCheckpoint{
+                oracle.estimated_owned_bytes()};
+        }
+        oracle.quotient_sync_resource_telemetry();
+        finish(
+            census.entries_refused == 0
+                ? VerifiedPolicyAlternativeShadowStatus::Complete
+                : VerifiedPolicyAlternativeShadowStatus::InvalidEntry,
+            census.entries_refused == 0
+                ? std::string{}
+                : "one or more verified strategy entries could not be "
+                  "translated into a complete strict selected-policy cell");
+    } catch (const AdapterFailure& error) {
+        finish(
+            error.status == PolicyExactLiftStatus::ResourceCap
+                ? VerifiedPolicyAlternativeShadowStatus::ResourceCap
+                : VerifiedPolicyAlternativeShadowStatus::AdapterFailure,
+            error.what(), error.cap);
+    } catch (const SolverResourceLimit& error) {
+        finish(
+            VerifiedPolicyAlternativeShadowStatus::ResourceCap,
+            error.what(), error.cap_name());
+    } catch (const std::length_error& error) {
+        finish(
+            VerifiedPolicyAlternativeShadowStatus::ResourceCap,
+            error.what(), resource_cap_from_message(error.what()));
+    } catch (const std::exception& error) {
+        finish(
+            VerifiedPolicyAlternativeShadowStatus::AdapterFailure,
+            error.what());
+    }
+    co_return census;
+}
 
 // Bounded test/debug oracle retained for structural comparisons only. The
 // production lift below never calls this materialized scaffold.

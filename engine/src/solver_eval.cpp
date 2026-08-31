@@ -239,6 +239,9 @@ struct StrategyEvalWork::Impl {
      * the pair handle is remapped through the proved behavioral quotient. */
     std::vector<std::uint32_t> continuation_entry_pairs;
     std::vector<refinement::StableKey> continuation_entry_keys;
+    /* Parallel to options.policy_decision_entries. kNoId retains a typed
+     * invalid/not-found refusal instead of guessing from a parser index. */
+    std::vector<std::uint32_t> policy_decision_nodes;
 
     std::vector<std::vector<std::uint32_t>> components;
     std::vector<std::uint32_t> component_by_pair;
@@ -565,6 +568,33 @@ struct StrategyEvalWork::Impl {
         return bytes;
     }
 
+    static std::uint64_t policy_entry_certificate_bytes(
+            const StrategyPolicyEntryCertificate& certificate) {
+        std::uint64_t bytes = sizeof(certificate);
+        bytes += certificate.decisions.capacity() *
+                 sizeof(StrategyPolicyDecisionCoverage);
+        for (const StrategyPolicyDecisionCoverage& decision :
+             certificate.decisions) {
+            bytes += decision.compiled_node_id.capacity() + 1;
+            bytes += decision.coarse_state_identity.capacity() *
+                     sizeof(std::uint64_t);
+            bytes += decision.selected_operator_identity.capacity() *
+                     sizeof(std::uint64_t);
+        }
+        bytes += certificate.entries.capacity() *
+                 sizeof(StrategyPolicyEntryResult);
+        for (const StrategyPolicyEntryResult& entry : certificate.entries) {
+            bytes += entry.compiled_node_id.capacity() + 1;
+            bytes += entry.coarse_state_identity.capacity() *
+                     sizeof(std::uint64_t);
+            bytes += entry.selected_operator_identity.capacity() *
+                     sizeof(std::uint64_t);
+            bytes += entry.exact_entry_identity.capacity() *
+                     sizeof(std::uint64_t);
+        }
+        return bytes;
+    }
+
     std::uint64_t output_owned_bytes() const {
         std::uint64_t bytes = sizeof(output);
         bytes += output.economy_id.capacity() + 1;
@@ -600,6 +630,8 @@ struct StrategyEvalWork::Impl {
         bytes += continuation_certificate_bytes(
                      output.continuation_upper) -
                  sizeof(output.continuation_upper);
+        bytes += policy_entry_certificate_bytes(output.policy_entries) -
+                 sizeof(output.policy_entries);
         bytes += output.action_totals.capacity() * sizeof(StrategyEvalActionTotal);
         for (const auto& action : output.action_totals) {
             bytes += action_total_bytes(action) - sizeof(action);
@@ -666,6 +698,16 @@ struct StrategyEvalWork::Impl {
         }
         bytes += options.continuation_entries.capacity() *
                  sizeof(StrategyContinuationEntryRequest);
+        bytes += options.policy_decision_entries.capacity() *
+                 sizeof(StrategyPolicyDecisionRequest);
+        for (const StrategyPolicyDecisionRequest& request :
+             options.policy_decision_entries) {
+            bytes += request.compiled_node_id.capacity() + 1;
+            bytes += request.coarse_state_identity.capacity() *
+                     sizeof(std::uint64_t);
+            bytes += request.selected_operator_identity.capacity() *
+                     sizeof(std::uint64_t);
+        }
         bytes += continuation_entry_pairs.capacity() *
                  sizeof(std::uint32_t);
         bytes += continuation_entry_keys.capacity() *
@@ -674,6 +716,7 @@ struct StrategyEvalWork::Impl {
              continuation_entry_keys) {
             bytes += key.capacity() * sizeof(std::uint64_t);
         }
+        bytes += policy_decision_nodes.capacity() * sizeof(std::uint32_t);
         bytes += pair_bucket_heads.capacity() * sizeof(std::uint32_t);
         bytes += pair_next.owned_bytes();
         bytes += pairs.owned_bytes();
@@ -863,6 +906,16 @@ struct StrategyEvalWork::Impl {
         bytes += review_payload_owned_bytes;
         bytes += options.continuation_entries.capacity() *
                  sizeof(StrategyContinuationEntryRequest);
+        bytes += options.policy_decision_entries.capacity() *
+                 sizeof(StrategyPolicyDecisionRequest);
+        for (const StrategyPolicyDecisionRequest& request :
+             options.policy_decision_entries) {
+            bytes += request.compiled_node_id.capacity() + 1;
+            bytes += request.coarse_state_identity.capacity() *
+                     sizeof(std::uint64_t);
+            bytes += request.selected_operator_identity.capacity() *
+                     sizeof(std::uint64_t);
+        }
         bytes += continuation_entry_pairs.capacity() *
                  sizeof(std::uint32_t);
         bytes += continuation_entry_keys.capacity() *
@@ -871,6 +924,7 @@ struct StrategyEvalWork::Impl {
              continuation_entry_keys) {
             bytes += key.capacity() * sizeof(std::uint64_t);
         }
+        bytes += policy_decision_nodes.capacity() * sizeof(std::uint32_t);
         bytes += pair_bucket_heads.capacity() * sizeof(std::uint32_t);
         bytes += pair_next.owned_bytes();
         bytes += pairs.owned_bytes();
@@ -1366,6 +1420,17 @@ struct StrategyEvalWork::Impl {
             options.continuation_entries.size());
         continuation_entry_keys.reserve(
             options.continuation_entries.size());
+        policy_decision_nodes.reserve(
+            options.policy_decision_entries.size());
+        for (const StrategyPolicyDecisionRequest& request :
+             options.policy_decision_entries) {
+            const auto found = strategy->node_by_id.find(
+                request.compiled_node_id);
+            policy_decision_nodes.push_back(
+                found == strategy->node_by_id.end()
+                    ? kNoId
+                    : found->second);
+        }
         if (strategy->nodes[strategy->start_node].kind ==
             StrategyNodeKind::Terminal) {
             terminal_mass[strategy->start_node] = 1.0;
@@ -1405,6 +1470,13 @@ struct StrategyEvalWork::Impl {
             static_cast<std::uint32_t>(
                 std::min<std::size_t>(
                     options.continuation_entries.size(),
+                    std::numeric_limits<std::uint32_t>::max()));
+        output.policy_entries.requested =
+            !options.policy_decision_entries.empty();
+        output.policy_entries.requested_decisions =
+            static_cast<std::uint32_t>(
+                std::min<std::size_t>(
+                    options.policy_decision_entries.size(),
                     std::numeric_limits<std::uint32_t>::max()));
         check_owned_cap();
     }
@@ -6580,12 +6652,21 @@ struct StrategyEvalWork::Impl {
     build_continuation_upper_certificate() {
         const Clock::time_point started = Clock::now();
         StrategyContinuationUpperCertificate certificate;
+        StrategyPolicyEntryCertificate policy_certificate;
         certificate.requested = !options.continuation_entries.empty();
         certificate.requested_members = static_cast<std::uint32_t>(
             std::min<std::size_t>(
                 options.continuation_entries.size(),
                 std::numeric_limits<std::uint32_t>::max()));
-        if (options.continuation_entries.empty()) {
+        policy_certificate.requested =
+            !options.policy_decision_entries.empty();
+        policy_certificate.requested_decisions =
+            static_cast<std::uint32_t>(
+                std::min<std::size_t>(
+                    options.policy_decision_entries.size(),
+                    std::numeric_limits<std::uint32_t>::max()));
+        if (options.continuation_entries.empty() &&
+            options.policy_decision_entries.empty()) {
             certificate.build_ns = static_cast<std::uint64_t>(
                 std::chrono::duration_cast<std::chrono::nanoseconds>(
                     Clock::now() - started)
@@ -6593,6 +6674,11 @@ struct StrategyEvalWork::Impl {
             certificate.retained_owned_bytes =
                 continuation_certificate_bytes(certificate);
             output.continuation_upper = std::move(certificate);
+            policy_certificate.build_ns =
+                output.continuation_upper.build_ns;
+            policy_certificate.retained_owned_bytes =
+                policy_entry_certificate_bytes(policy_certificate);
+            output.policy_entries = std::move(policy_certificate);
             co_return true;
         }
 
@@ -6602,6 +6688,11 @@ struct StrategyEvalWork::Impl {
                 options.continuation_entries.size()) {
             throw std::logic_error(
                 "strategy continuation entry sidecars are incomplete");
+        }
+        if (policy_decision_nodes.size() !=
+            options.policy_decision_entries.size()) {
+            throw std::logic_error(
+                "strategy policy-decision sidecars are incomplete");
         }
 
         const auto merge_status = [](
@@ -7284,6 +7375,234 @@ struct StrategyEvalWork::Impl {
                 ++certificate.refused_states;
             }
         }
+
+        const auto policy_status_from_continuation = [](
+                const StrategyContinuationEntryStatus status) {
+            switch (status) {
+            case StrategyContinuationEntryStatus::Complete:
+                return StrategyPolicyEntryStatus::Complete;
+            case StrategyContinuationEntryStatus::InvalidRequest:
+            case StrategyContinuationEntryStatus::
+                    IncompleteMemberCoverage:
+                return StrategyPolicyEntryStatus::InvalidRequest;
+            case StrategyContinuationEntryStatus::EntryNotRepresented:
+                return StrategyPolicyEntryStatus::EntryNotRepresented;
+            case StrategyContinuationEntryStatus::FailureReachable:
+                return StrategyPolicyEntryStatus::FailureReachable;
+            case StrategyContinuationEntryStatus::ImproperPolicy:
+                return StrategyPolicyEntryStatus::ImproperPolicy;
+            case StrategyContinuationEntryStatus::MissingPrice:
+                return StrategyPolicyEntryStatus::MissingPrice;
+            case StrategyContinuationEntryStatus::NonFiniteCost:
+                return StrategyPolicyEntryStatus::NonFiniteCost;
+            case StrategyContinuationEntryStatus::ResidualFailure:
+                return StrategyPolicyEntryStatus::ResidualFailure;
+            }
+            return StrategyPolicyEntryStatus::InvalidRequest;
+        };
+        policy_certificate.decisions.reserve(
+            options.policy_decision_entries.size());
+        std::vector<std::uint8_t> decision_valid(
+            options.policy_decision_entries.size(), 1);
+        std::map<std::uint32_t, std::size_t> request_by_node;
+        for (std::size_t index = 0;
+             index < options.policy_decision_entries.size(); ++index) {
+            const StrategyPolicyDecisionRequest& request =
+                options.policy_decision_entries[index];
+            StrategyPolicyDecisionCoverage decision;
+            decision.compiled_node_id = request.compiled_node_id;
+            decision.coarse_state = request.coarse_state;
+            decision.selected_operator = request.selected_operator;
+            decision.coarse_state_identity = request.coarse_state_identity;
+            decision.selected_operator_identity =
+                request.selected_operator_identity;
+            decision.fixed_observed_choice_policy =
+                request.fixed_observed_choice_policy;
+            if (decision.fixed_observed_choice_policy) {
+                ++policy_certificate.fixed_observed_choice_decisions;
+            }
+            const bool structurally_valid =
+                !request.compiled_node_id.empty() &&
+                request.coarse_state != kNoId &&
+                request.selected_operator != kNoId &&
+                !request.coarse_state_identity.empty() &&
+                !request.selected_operator_identity.empty();
+            if (!structurally_valid) {
+                decision_valid[index] = 0;
+                decision.status = StrategyPolicyEntryStatus::InvalidRequest;
+            } else if (policy_decision_nodes[index] == kNoId) {
+                decision_valid[index] = 0;
+                decision.status =
+                    StrategyPolicyEntryStatus::DecisionNodeNotFound;
+            } else {
+                const auto [found, inserted] = request_by_node.emplace(
+                    policy_decision_nodes[index], index);
+                if (!inserted) {
+                    decision_valid[index] = 0;
+                    decision_valid[found->second] = 0;
+                    decision.status =
+                        StrategyPolicyEntryStatus::InvalidRequest;
+                } else {
+                    decision.status =
+                        StrategyPolicyEntryStatus::DecisionNodeNotReached;
+                }
+            }
+            policy_certificate.decisions.push_back(std::move(decision));
+        }
+        for (std::size_t index = 0;
+             index < policy_certificate.decisions.size(); ++index) {
+            if (!decision_valid[index]) {
+                policy_certificate.decisions[index].status =
+                    policy_certificate.decisions[index].status ==
+                            StrategyPolicyEntryStatus::DecisionNodeNotReached
+                        ? StrategyPolicyEntryStatus::InvalidRequest
+                        : policy_certificate.decisions[index].status;
+            }
+        }
+
+        const solve_detail::SegmentedVector<EvalPair>& exact_pairs =
+            attribution_pairs.empty() ? pairs : attribution_pairs;
+        for (std::uint32_t exact_pair = 0;
+             exact_pair < exact_pairs.size(); ++exact_pair) {
+            const EvalPair& record = exact_pairs.at(exact_pair);
+            const auto requested = request_by_node.find(record.node);
+            if (requested == request_by_node.end() ||
+                !decision_valid[requested->second]) {
+                continue;
+            }
+            const std::size_t request_index = requested->second;
+            const StrategyPolicyDecisionRequest& request =
+                options.policy_decision_entries[request_index];
+            StrategyPolicyEntryResult entry;
+            entry.compiled_node_id = request.compiled_node_id;
+            entry.coarse_state = request.coarse_state;
+            entry.selected_operator = request.selected_operator;
+            entry.coarse_state_identity = request.coarse_state_identity;
+            entry.selected_operator_identity =
+                request.selected_operator_identity;
+            entry.fixed_observed_choice_policy =
+                request.fixed_observed_choice_policy;
+            entry.checkpoint_active = record.checkpoint_state != kNoId;
+            entry.observed_offer_active = record.unveil_offer != kNoId;
+            entry.exact_entry_identity = raw_pair_stable_key(record);
+            const std::uint32_t value_pair = attribution_pairs.empty()
+                ? exact_pair
+                : attribution_class_by_pair.at(exact_pair);
+            if (value_pair >= pair_status.size() ||
+                value_pair >= values.size() ||
+                value_pair >= residuals.size()) {
+                entry.status =
+                    StrategyPolicyEntryStatus::EntryNotRepresented;
+            } else {
+                entry.status = policy_status_from_continuation(
+                    pair_status[value_pair]);
+                if (entry.status == StrategyPolicyEntryStatus::Complete) {
+                    entry.exact_continuation_upper = values[value_pair];
+                    entry.bellman_residual = residuals[value_pair];
+                }
+            }
+            if (entry.status == StrategyPolicyEntryStatus::Complete &&
+                (entry.checkpoint_active || entry.observed_offer_active)) {
+                entry.status =
+                    StrategyPolicyEntryStatus::CheckpointOrOfferActive;
+                entry.exact_continuation_upper =
+                    std::numeric_limits<double>::infinity();
+                entry.bellman_residual =
+                    std::numeric_limits<double>::infinity();
+            }
+            if (!model.calc->materialize(record.state, entry.item)) {
+                entry.status =
+                    StrategyPolicyEntryStatus::MaterializationFailure;
+                entry.exact_continuation_upper =
+                    std::numeric_limits<double>::infinity();
+                entry.bellman_residual =
+                    std::numeric_limits<double>::infinity();
+            }
+            policy_certificate.entries.push_back(std::move(entry));
+            if ((exact_pair & 1023u) == 1023u) {
+                const std::uint64_t retained =
+                    policy_entry_certificate_bytes(policy_certificate);
+                observe_transient(retained);
+                co_await solve_detail::CooperativeCheckpoint{retained};
+            }
+        }
+        std::sort(
+            policy_certificate.entries.begin(),
+            policy_certificate.entries.end(),
+            [](const StrategyPolicyEntryResult& left,
+               const StrategyPolicyEntryResult& right) {
+                return std::tie(
+                           left.compiled_node_id,
+                           left.exact_entry_identity,
+                           left.coarse_state,
+                           left.selected_operator) <
+                       std::tie(
+                           right.compiled_node_id,
+                           right.exact_entry_identity,
+                           right.coarse_state,
+                           right.selected_operator);
+            });
+        policy_certificate.entries.erase(
+            std::unique(
+                policy_certificate.entries.begin(),
+                policy_certificate.entries.end(),
+                [](const StrategyPolicyEntryResult& left,
+                   const StrategyPolicyEntryResult& right) {
+                    return left.compiled_node_id == right.compiled_node_id &&
+                           left.exact_entry_identity ==
+                               right.exact_entry_identity;
+                }),
+            policy_certificate.entries.end());
+        policy_certificate.reached_entries =
+            static_cast<std::uint32_t>(std::min<std::size_t>(
+                policy_certificate.entries.size(),
+                std::numeric_limits<std::uint32_t>::max()));
+        for (const StrategyPolicyEntryResult& entry :
+             policy_certificate.entries) {
+            StrategyPolicyDecisionCoverage& decision =
+                policy_certificate.decisions.at(
+                    request_by_node.at(
+                        strategy->node_by_id.at(entry.compiled_node_id)));
+            ++decision.reached_entries;
+            if (entry.available()) {
+                ++decision.certified_entries;
+                ++policy_certificate.certified_entries;
+                policy_certificate.maximum_bellman_residual = std::max(
+                    policy_certificate.maximum_bellman_residual,
+                    entry.bellman_residual);
+            } else {
+                ++policy_certificate.refused_entries;
+                if (decision.status ==
+                    StrategyPolicyEntryStatus::DecisionNodeNotReached) {
+                    decision.status = entry.status;
+                }
+            }
+        }
+        for (std::size_t index = 0;
+             index < policy_certificate.decisions.size(); ++index) {
+            StrategyPolicyDecisionCoverage& decision =
+                policy_certificate.decisions[index];
+            if (!decision_valid[index]) {
+                ++policy_certificate.refused_decisions;
+                continue;
+            }
+            if (decision.reached_entries == 0) {
+                decision.status =
+                    StrategyPolicyEntryStatus::DecisionNodeNotReached;
+                ++policy_certificate.refused_decisions;
+            } else if (decision.certified_entries ==
+                       decision.reached_entries) {
+                decision.status = StrategyPolicyEntryStatus::Complete;
+                ++policy_certificate.reached_decisions;
+            } else {
+                ++policy_certificate.reached_decisions;
+                ++policy_certificate.refused_decisions;
+            }
+        }
+
+        policy_certificate.semantic_identity =
+            strategy_policy_entry_certificate_semantic_identity(
+                policy_certificate);
         certificate.build_ns = static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 Clock::now() - started)
@@ -7294,11 +7613,26 @@ struct StrategyEvalWork::Impl {
             peak_build_live > certificate.retained_owned_bytes
                 ? peak_build_live - certificate.retained_owned_bytes
                 : 0;
+        policy_certificate.build_ns = certificate.build_ns;
+        policy_certificate.retained_owned_bytes =
+            policy_entry_certificate_bytes(policy_certificate);
+        peak_build_live = std::max(
+            peak_build_live,
+            capped_add(
+                fast_estimated_owned_bytes(),
+                policy_certificate.retained_owned_bytes));
+        policy_certificate.transient_evaluator_bytes =
+            peak_build_live > policy_certificate.retained_owned_bytes
+                ? peak_build_live - policy_certificate.retained_owned_bytes
+                : 0;
         output.continuation_upper = std::move(certificate);
+        output.policy_entries = std::move(policy_certificate);
         continuation_entry_pairs.clear();
         continuation_entry_pairs.shrink_to_fit();
         continuation_entry_keys.clear();
         continuation_entry_keys.shrink_to_fit();
+        policy_decision_nodes.clear();
+        policy_decision_nodes.shrink_to_fit();
         check_owned_cap();
         co_return true;
     }
@@ -8651,6 +8985,54 @@ StrategyEvalResult evaluate_strategy_forward_reference_for_test(
         work.impl_->step(1);
     }
     return work.impl_->forward_reference();
+}
+
+std::uint64_t strategy_policy_entry_certificate_semantic_identity(
+        const StrategyPolicyEntryCertificate& certificate) {
+    std::uint64_t identity = 1469598103934665603ull;
+    const auto mix_word = [&](const std::uint64_t word) {
+        identity ^= word;
+        identity *= 1099511628211ull;
+    };
+    const auto mix_string = [&](const std::string& value) {
+        mix_word(value.size());
+        for (const unsigned char byte : value) mix_word(byte);
+    };
+    const auto mix_key = [&](const std::vector<std::uint64_t>& key) {
+        mix_word(key.size());
+        for (const std::uint64_t word : key) mix_word(word);
+    };
+    mix_word(certificate.schema_version);
+    mix_word(certificate.evaluator_version);
+    mix_word(certificate.requested_decisions);
+    for (const StrategyPolicyDecisionCoverage& decision :
+         certificate.decisions) {
+        mix_string(decision.compiled_node_id);
+        mix_word(decision.coarse_state);
+        mix_word(decision.selected_operator);
+        mix_key(decision.coarse_state_identity);
+        mix_key(decision.selected_operator_identity);
+        mix_word(decision.fixed_observed_choice_policy ? 1 : 0);
+        mix_word(static_cast<std::uint8_t>(decision.status));
+        mix_word(decision.reached_entries);
+        mix_word(decision.certified_entries);
+    }
+    for (const StrategyPolicyEntryResult& entry : certificate.entries) {
+        mix_string(entry.compiled_node_id);
+        mix_word(entry.coarse_state);
+        mix_word(entry.selected_operator);
+        mix_key(entry.coarse_state_identity);
+        mix_key(entry.selected_operator_identity);
+        mix_key(entry.exact_entry_identity);
+        mix_word(entry.fixed_observed_choice_policy ? 1 : 0);
+        mix_word(entry.checkpoint_active ? 1 : 0);
+        mix_word(entry.observed_offer_active ? 1 : 0);
+        mix_word(static_cast<std::uint8_t>(entry.status));
+        mix_word(std::bit_cast<std::uint64_t>(
+            entry.exact_continuation_upper));
+        mix_word(std::bit_cast<std::uint64_t>(entry.bellman_residual));
+    }
+    return identity;
 }
 
 

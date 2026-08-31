@@ -42,10 +42,15 @@ SolveWork::Impl::Impl(
                 "product solver does not plan mirrored or synthesised "
                 "carriers");
         }
-        if (options.full_evidence) {
+        if (options.full_evidence ||
+            options.verified_policy_alternative_shadow_diagnostic) {
             carrier_bound_attribution =
                 std::make_unique<CarrierBoundAttributionWork>();
             carrier_bound_attribution->started_at = setup_started;
+            carrier_bound_attribution->verified_policy_alternative_shadow
+                .requested =
+                    options
+                        .verified_policy_alternative_shadow_diagnostic;
         }
         options.max_expanded_states = std::min(
             options.max_expanded_states, options.max_states);

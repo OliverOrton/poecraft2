@@ -421,6 +421,10 @@ void run_continuation_upper_certificate_tests() {
         {104, 1041, 2, fail_closed},
         {105, 1050, 2, clean},
     };
+    options.policy_decision_entries = {
+        {"chaos", 200, 300, {2000, 2001}, {3000, 3001}, false},
+        {"not_a_compiled_node", 201, 301, {2010}, {3010}, false},
+    };
     const StrategyEvalResult exact = evaluate_strategy(*strategy, options);
     const StrategyContinuationUpperCertificate& certificate =
         exact.continuation_upper;
@@ -445,6 +449,34 @@ void run_continuation_upper_certificate_tests() {
     PC_CHECK(certificate.retained_owned_bytes > 0);
     PC_CHECK(certificate.transient_evaluator_bytes > 0);
     PC_CHECK(certificate.maximum_bellman_residual <= 1e-9);
+    const StrategyPolicyEntryCertificate& policy_entries =
+        exact.policy_entries;
+    PC_CHECK(policy_entries.requested);
+    PC_CHECK(policy_entries.requested_decisions == 2);
+    PC_CHECK(policy_entries.reached_decisions == 1);
+    PC_CHECK(policy_entries.refused_decisions == 1);
+    PC_CHECK(policy_entries.reached_entries > 0);
+    PC_CHECK(
+        policy_entries.certified_entries ==
+        policy_entries.reached_entries);
+    PC_CHECK(policy_entries.refused_entries == 0);
+    PC_CHECK(policy_entries.maximum_bellman_residual <= 1e-9);
+    PC_CHECK(policy_entries.semantic_identity != 0);
+    PC_CHECK(policy_entries.retained_owned_bytes > 0);
+    for (const StrategyPolicyEntryResult& entry : policy_entries.entries) {
+        PC_CHECK(entry.available());
+        PC_CHECK(entry.compiled_node_id == "chaos");
+        PC_CHECK(entry.coarse_state == 200);
+        PC_CHECK(entry.selected_operator == 300);
+        PC_CHECK(entry.coarse_state_identity ==
+                 std::vector<std::uint64_t>({2000, 2001}));
+        PC_CHECK(entry.selected_operator_identity ==
+                 std::vector<std::uint64_t>({3000, 3001}));
+        PC_CHECK(!entry.checkpoint_active);
+        PC_CHECK(!entry.observed_offer_active);
+        PC_CHECK(!entry.exact_entry_identity.empty());
+        PC_CHECK(entry.exact_continuation_upper > 0.0);
+    }
 
     const StrategyContinuationStateUpper* root =
         continuation_state(exact, 100);
@@ -532,6 +564,25 @@ void run_continuation_upper_certificate_tests() {
             left.exact_continuation_upper ==
             right.exact_continuation_upper);
     }
+    PC_CHECK(
+        repeated.policy_entries.semantic_identity ==
+        policy_entries.semantic_identity);
+    PC_CHECK(
+        repeated.policy_entries.entries.size() ==
+        policy_entries.entries.size());
+    for (std::size_t index = 0;
+         index < policy_entries.entries.size() &&
+         index < repeated.policy_entries.entries.size(); ++index) {
+        const StrategyPolicyEntryResult& left =
+            policy_entries.entries[index];
+        const StrategyPolicyEntryResult& right =
+            repeated.policy_entries.entries[index];
+        PC_CHECK(left.exact_entry_identity == right.exact_entry_identity);
+        PC_CHECK(left.status == right.status);
+        PC_CHECK(
+            left.exact_continuation_upper ==
+            right.exact_continuation_upper);
+    }
     for (std::size_t index = 0;
          index < certificate.states.size() &&
          index < repeated.continuation_upper.states.size(); ++index) {
@@ -559,6 +610,7 @@ void run_continuation_upper_certificate_tests() {
     bound.authority.action_vocabulary = {5};
     bound.authority.terminal_semantics = {6};
     bound.evaluation = certificate;
+    bound.policy_entries = policy_entries;
     bound.strategy_identity_digest = 700;
     bound.strategy_identity_bytes = 701;
     PC_CHECK(
@@ -569,6 +621,10 @@ void run_continuation_upper_certificate_tests() {
         validate_executable_continuation_upper_reuse(
             bound, bound.authority, 700, 701, false) ==
         ExecutableContinuationReuseStatus::StrategyMismatch);
+    PC_CHECK(
+        validate_executable_policy_entry_upper_reuse(
+            bound, bound.authority, 700, 701, true) ==
+        ExecutableContinuationReuseStatus::Complete);
     const auto expect_context_refusal = [&](const std::size_t component) {
         ExecutableContinuationAuthorityContext changed = bound.authority;
         std::vector<std::uint64_t>* identities[] = {
@@ -599,6 +655,11 @@ void run_continuation_upper_certificate_tests() {
     static_assert(!std::is_convertible_v<
         StrategyContinuationStateUpper,
         solve_detail::ProofLowerValue>);
+    static_assert(!std::is_convertible_v<
+        StrategyPolicyEntryResult,
+        solve_detail::ProofLowerValue>);
+    static_assert(!std::is_convertible_v<
+        StrategyPolicyEntryCertificate, double>);
 }
 
 std::string replace_once(

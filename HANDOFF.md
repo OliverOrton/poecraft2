@@ -1,64 +1,63 @@
 # Handoff
 
-**Status: no implementation boundary is active.** Oliver must select the next
-chunk before implementation resumes.
+**Status: no implementation boundary is active.** The selected
+[Clean-Five Verified-Policy Alternative-Proof and RC Consumer v1](docs/active/2026-08-31-clean-five-verified-policy-alternative-proof-rc-consumer-v1/README.md)
+is complete diagnosis-only. Oliver must select any next chunk.
 
 ## Completed Boundary
 
-[Early Executable Statewise Upper Certificate and PDR RC Consumer v1](docs/archive/2026-08-30-early-executable-statewise-upper-rc-consumer-v1/README.md)
-is complete diagnosis-only.
+The compiler and exact evaluator now expose an opt-in, identity-bound census
+of genuine verified-strategy decision entries. A benchmark-private bridge
+imports each exact physical entry into the existing `ProductionPolicyOracle`,
+preserves the compiler representative's fixed strategy action and observed
+choices, enumerates the complete caller-authorized alternative vocabulary,
+and compares typed statewise continuation uppers with existing typed lowers.
+It creates no strict rows/obligations and mutates no ordinary lifecycle.
 
-The exact evaluator now exposes an opt-in typed fixed-policy continuation
-certificate with arbitrary-entry properness, full member-coverage grouping,
-maximum-over-members publication, exact identity binding, Bellman residuals,
-and retained/transient memory accounting. The old operator-proof shadow no
-longer reads copied `BoundedPolicyIncumbent::values`; it is observational only
-and accepts only a bound certificate.
+The matched clean-five census accepted all `27,021` reached exact entries and
+enumerated `671,410` applicable alternatives. Every alternative had a finite
+existing lower, but zero retired. The closest population selected primitive
+Fracture on a full five-goal-plus-one-junk `3/3` carrier.
 
-## PDR Decision
+One proof-only RC shadow pushed forward the complete six-way Fracture kernel
+and composed its exact successors with existing admissible completion lowers.
+Nine rows completed with full mass, zero soundness failures, and only 0.1998%
+strict-state growth. The lower moved from `405.1` to `405.41175` against an
+approximately `69,141` continuation upper, so it retired nothing and covered
+only one semantic source/action shape. It is not production-qualified.
 
-The exact requested root is the only production entry currently bound safely.
-Its certified upper is `3758.124427255204`; one member/state is certified with
-zero refusals, zero spread, and residual `4.384418778790067e-13`.
+## Decision
 
-At comparison time the coarse ledger had 213,532 entries and zero queued/live
-entries. All 71 root entries with a finite existing lower remained
-competitive; the closest lower was `792.60165`. Strict lift again created zero
-alternative obligations and avoided 165,152 exact alternative rows through
-existing action accounting. There is no remaining consumer, so no RC,
-retirement, pruning, scheduling, or publication authority was added.
+Do not promote the verified-policy bridge or Fracture RC row into production
+retirement. The smallest missing contract is a retention-aware recovery lower
+for fractured non-goal affixes that soundly represents the real opposite-side
+lock plus Scour escape and subsequent goal reconstruction. A fractured junk
+branch is not dead; claiming infinity would be unsound. Exact one-step
+composition is too weak, and this result does not authorize a larger RCASSP or
+portfolio without a new selected boundary.
 
-This is combined Outcome C/D. The smallest missing contract for non-root use
-is a complete collision-safe mapping from each coarse/behavioral
-representative to every exact physical member and compiled route. Even with
-that mapping, the current lifecycle has already materialized the coarse ledger
-before the correct upper arrives. Do not fill either gap with coarse values or
-infer an RC follow-up.
+## Preserved Correctness and Evidence
 
-## Preserved Correctness And Evidence
-
-- Final exact PDR cost `3758.1244272552067`, success one, off-policy mass zero,
-  exact closure, unchanged caller scope and 1 GiB cap.
-- Policy identity `295084a8fcb0385a`, transition identity
-  `8479650a31b8c067`, and final strategy SHA-256
-  `02A1B5309F217AD5162CE19248B1BF6658A6D5643836EC070849299BE4BA5C46`
-  are unchanged from the prior qualified run.
-- Authoritative shadow report:
-  `build/qualification/early-executable-statewise-upper-rc-consumer-v1/pdr-statewise-shadow-r1/report.json`,
+- Final changed report:
+  `build/qualification/clean-five-verified-policy-alternative-proof-rc-consumer-v1/matched-shadow-r5/report.json`,
   SHA-256
-  `E7C5E068F91F4800EC9FB5451A7E9BB899E152F75D3D29961074B4D922AF8EED`.
-- Focused evaluator and solve checks: 15,880 and 86,357, zero failures.
-- No complete pipeline, no-consumer anchor, clean-five, WASM/web, or
-  standalone Simulator run is claimed because no production consumer or
-  runtime strategy change qualified.
+  `24EB0223C0037644FE485B56D6CB6401203CCACD006FCCA00301F4AB502BC8C5`.
+- Exact clean-five cost `85408.64362148782`, expected actions
+  `8259.46821052856`, success one, off-policy mass zero, complete pricing and
+  reconciliation, current lower `36.4885317287664`, unchanged caller scope and
+  1 GiB cap, zero shadow lifecycle mutations.
+- Strategy SHA-256
+  `EA59F23F770FF2A969774266FA34C58FB23CB16A6B2E46C25B6CAFA1B3C1FF1A`
+  is byte-identical across the existing-lower and changed RC shadows.
+- Focused solve suite: `86,537` checks, zero failures.
+- No production PDR/control, broad pipeline, WASM/web, or Simulator result is
+  claimed because no production consumer or runtime strategy change qualified.
 
 ## Repository State
 
 - Branch: `main`.
-- Starting `HEAD`, tracked `origin/main`, and live remote `main`:
-  `7600f2e02388530f704d06f51392115b6fddcb75`.
-- Retained source/test checkpoint:
-  `c2b6594935ea918e327144d5ace1473303387c98`.
+- Boundary starting `HEAD`, tracked `origin/main`, and live remote
+  `main`: `16561008fa24b7778f042d99f900274a026286bf`.
 - Protected untracked `0` is user state. It was not read, modified, staged,
   moved, cleaned, or deleted. Preserve it exactly.
 - Work is local-only. Do not push.

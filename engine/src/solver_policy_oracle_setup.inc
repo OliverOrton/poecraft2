@@ -346,6 +346,132 @@
         return state;
     }
 
+    std::pair<ExactState, std::uint32_t>
+    quotient_import_verified_policy_item(const pc_item_state& item) {
+        const std::uint32_t strict_state = strict_->intern_item(item);
+        auto [state, inserted] = intern_strict_state(strict_state);
+        (void)inserted;
+        return {std::move(state), strict_state};
+    }
+
+    std::uint32_t quotient_strict_operator_for_coarse(
+            const std::uint32_t coarse_operator) const {
+        return strict_operator_for(coarse_operator);
+    }
+
+    SelectedAction quotient_verified_policy_selected_action(
+            const ExactState& exact,
+            const std::uint32_t strict_state,
+            const std::uint32_t represented_coarse_state,
+            const std::uint32_t strict_operator,
+            const bool require_authored_choices) {
+        const auto known = known_.find(exact.stable_key);
+        if (exact.terminal || known == known_.end() ||
+            known->second.strict_state != strict_state ||
+            exact.coarse_state >= coarse_.state_count() ||
+            represented_coarse_state >= coarse_.state_count()) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::InvalidSolveState,
+                "verified-policy selection names an invalid exact carrier");
+        }
+        /* The compiled representative owns the fixed observed-choice order;
+         * authoritative strict mechanics instantiate that same order on the
+         * physical entry.  The physical coarse parent is used only to bind
+         * the resulting exact decision/recipe to this strict state. */
+        const ExactChoiceRecipe recipe = seeded_choice_recipe(
+            represented_coarse_state, *strict_, strict_state,
+            strict_operator, require_authored_choices);
+        return make_selected(
+            exact.coarse_state, strict_operator, strict_state, &recipe);
+    }
+
+    std::optional<RetentionCapacityFractureShadowRow>
+    quotient_retention_capacity_fracture_shadow_row(
+            const ExactState& exact,
+            const std::uint32_t strict_state,
+            const std::uint32_t strict_operator,
+            const StableKey& exact_entry_identity,
+            const StableKey& action_identity) {
+        const auto known = known_.find(exact.stable_key);
+        if (exact.terminal || known == known_.end() ||
+            known->second.strict_state != strict_state ||
+            strict_state >= strict_->state_count() ||
+            strict_operator >= strict_->operators().size()) {
+            return std::nullopt;
+        }
+        const PlannerOperator& planner =
+            strict_->operators().at(strict_operator);
+        if (planner.kind != PlannerOperatorKind::Primitive ||
+            planner.primitive_action >=
+                strict_->registry().actions.size() ||
+            strict_->registry().actions.at(planner.primitive_action)
+                    .params.type != ActionType::Fracture) {
+            return std::nullopt;
+        }
+        const AbstractState& carrier = strict_->state(strict_state);
+        const std::size_t goal_slots = strict_->layout().slots.size();
+        if (goal_slots == 0 || goal_slots >= 32 ||
+            strict_->goal().required_satisfied_slots() != goal_slots) {
+            return std::nullopt;
+        }
+        std::uint32_t satisfied = 0;
+        for (std::uint32_t slot = 0; slot < goal_slots; ++slot) {
+            if (carrier.slot_status[slot] ==
+                static_cast<std::uint8_t>(
+                    GoalSlotStatus::Satisfied)) {
+                satisfied |= std::uint32_t{1} << slot;
+            }
+        }
+        std::uint32_t junk = 0;
+        std::uint32_t fractured_junk = 0;
+        for (const std::uint8_t count : carrier.junk_counts) junk += count;
+        for (const std::uint8_t count :
+             carrier.fractured_junk_counts) {
+            fractured_junk += count;
+        }
+        const std::uint32_t all_goals =
+            (std::uint32_t{1} << goal_slots) - 1u;
+        /* Evidence-selected clean-five shape: all five exact goals plus one
+         * ordinary junk affix at full 3/3 capacity, before Fracture. Numeric
+         * coarse state ids are intentionally not part of selection. */
+        if (goal_slots != 5 || satisfied != all_goals || junk != 1 ||
+            carrier.prefix_count != PC_MAX_PREFIXES ||
+            carrier.suffix_count != PC_MAX_SUFFIXES ||
+            carrier.fractured_goal_mask != 0 || fractured_junk != 0 ||
+            carrier.fractured_metamod_flags != 0 ||
+            (carrier.flags & kProtectionFlags) != 0) {
+            return std::nullopt;
+        }
+        RetentionCapacityFractureShadowRow row =
+            build_retention_capacity_fracture_shadow_row(
+                *strict_, strict_state, planner.primitive_action,
+                primitive_action_cost(
+                    strict_->registry().actions.at(
+                        planner.primitive_action)),
+                exact_entry_identity, action_identity,
+                [&](const std::uint32_t successor) {
+                    return project_state_to_coarse(
+                        *strict_, successor, strict_state);
+                });
+        /* The row copied every exact feature/probability needed by the
+         * observer. Do not turn diagnostic Fracture rows into a retained
+         * parallel transition store. Interned exact successor identities are
+         * charged separately as RC-attributable strict-state growth. */
+        strict_->release_solve_transition_caches();
+        adapter_memory_cache_initialized_ = false;
+        return row;
+    }
+
+    std::uint32_t quotient_coarse_operator_for_strict(
+            const std::uint32_t strict_operator) const {
+        return coarse_operator_for(strict_operator);
+    }
+
+    const std::vector<std::uint32_t>&
+    quotient_complete_operator_vocabulary() const {
+        return admitted_operators_;
+    }
+
     std::vector<std::uint32_t> quotient_equivalent_locators(
             const StableKey& key) const {
         const auto known = known_.find(key);

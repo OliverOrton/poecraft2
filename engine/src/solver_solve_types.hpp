@@ -1792,6 +1792,131 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
             std::size_t largest_retirement_margin_count = 0;
         };
 
+        struct VerifiedPolicyAlternativeSample {
+            std::uint64_t exact_entry_identity = 0;
+            std::uint64_t strict_state_identity = 0;
+            std::uint64_t action_identity = 0;
+            std::uint32_t state = kNoId;
+            std::uint32_t operator_index = kNoId;
+            std::uint32_t satisfied_goal_mask = 0;
+            std::uint32_t blocked_mask = 0;
+            std::uint8_t prefix_count = 0;
+            std::uint8_t suffix_count = 0;
+            std::uint8_t unrelated_occupancy = 0;
+            double lower = kInfinity;
+            double upper = kInfinity;
+            double absolute_margin = kInfinity;
+            double retirement_margin = -kInfinity;
+        };
+
+        struct RetentionCapacityFractureSample {
+            std::uint64_t exact_entry_identity = 0;
+            std::uint64_t strict_state_identity = 0;
+            std::uint64_t action_identity = 0;
+            std::uint64_t row_identity = 0;
+            std::uint32_t state = kNoId;
+            std::uint32_t operator_index = kNoId;
+            std::uint32_t satisfied_goal_mask = 0;
+            std::uint8_t prefix_count = 0;
+            std::uint8_t suffix_count = 0;
+            std::uint32_t transition_count = 0;
+            std::uint32_t zero_fallback_successors = 0;
+            double probability_mass = 0.0;
+            double fractured_goal_probability = 0.0;
+            double fractured_junk_probability = 0.0;
+            double existing_lower = kInfinity;
+            double refined_lower = kInfinity;
+            double upper = kInfinity;
+            double retirement_margin = -kInfinity;
+        };
+
+        struct RetentionCapacityFractureShadow {
+            std::string pattern =
+                "fracture_exact_successor_composition_v1";
+            std::uint64_t rows_examined = 0;
+            std::uint64_t rows_complete = 0;
+            std::uint64_t rows_refused = 0;
+            std::uint64_t transitions = 0;
+            std::uint64_t projected_successors = 0;
+            std::uint64_t zero_fallback_successors = 0;
+            std::uint64_t existing_lower_fallback_actions = 0;
+            std::uint64_t strengthened = 0;
+            std::uint64_t would_retire = 0;
+            std::uint64_t distinct_exact_source_actions = 0;
+            std::uint64_t distinct_source_action_shapes = 0;
+            std::uint64_t bellman_subsolution_failures = 0;
+            std::uint64_t mass_failures = 0;
+            std::uint64_t identity_failures = 0;
+            std::uint64_t attributable_strict_states_created = 0;
+            std::uint64_t attributable_strict_state_growth_ppm = 0;
+            std::uint64_t retained_bytes = 0;
+            std::uint64_t peak_transient_bytes = 0;
+            std::uint64_t build_ns = 0;
+            double maximum_bellman_residual = 0.0;
+            double minimum_refined_lower = kInfinity;
+            double maximum_refined_lower = -kInfinity;
+            std::array<
+                RetentionCapacityFractureSample,
+                kOperatorShadowSampleLimit> closest_to_retirement{};
+            std::size_t closest_to_retirement_count = 0;
+        };
+
+        struct VerifiedPolicyAlternativeShadow {
+            bool requested = false;
+            std::string status = "not_run";
+            std::string failure_reason;
+            std::string resource_cap;
+            std::uint64_t certificate_identity = 0;
+            std::uint64_t decisions_requested = 0;
+            std::uint64_t decisions_reached = 0;
+            std::uint64_t decisions_refused = 0;
+            std::uint64_t entries_examined = 0;
+            std::uint64_t entries_accepted = 0;
+            std::uint64_t entries_refused = 0;
+            std::array<std::uint64_t, 12>
+                certificate_entry_status_counts{};
+            std::uint64_t binding_or_solve_identity_refusals = 0;
+            std::uint64_t strict_terminal_refusals = 0;
+            std::uint64_t strict_coarse_projection_refusals = 0;
+            std::uint64_t selected_action_refusals = 0;
+            std::uint64_t vocabulary_actions_examined = 0;
+            std::uint64_t caller_authorized_actions = 0;
+            std::uint64_t exact_inapplicabilities = 0;
+            std::uint64_t selected_actions = 0;
+            std::uint64_t alternative_obligations = 0;
+            std::uint64_t finite_existing_lowers = 0;
+            std::uint64_t comparable_alternatives = 0;
+            std::uint64_t would_retire = 0;
+            std::uint64_t still_competitive = 0;
+            std::uint64_t lifecycle_mutations = 0;
+            std::uint64_t comparison_available_wall_ns = 0;
+            std::uint64_t solver_rows_before_comparison = 0;
+            std::uint64_t ledger_transitions_before_comparison = 0;
+            std::uint64_t strict_rows_begun_before_comparison = 0;
+            std::uint64_t strict_alternative_rows_begun_before_comparison = 0;
+            std::uint64_t certificate_retained_bytes = 0;
+            std::uint64_t certificate_transient_bytes = 0;
+            std::uint64_t certificate_build_ns = 0;
+            std::uint64_t bridge_retained_bytes = 0;
+            std::uint64_t bridge_peak_bytes = 0;
+            std::uint64_t bridge_build_ns = 0;
+            std::array<std::uint64_t, kOperatorFamilyCount>
+                would_retire_by_family{};
+            std::array<std::uint64_t, kOperatorFamilyCount>
+                still_competitive_by_family{};
+            CarrierShapeHistogram comparable_shapes;
+            CarrierShapeHistogram would_retire_shapes;
+            std::array<
+                VerifiedPolicyAlternativeSample,
+                kOperatorShadowSampleLimit> closest_competitive{};
+            std::size_t closest_competitive_count = 0;
+            std::array<
+                VerifiedPolicyAlternativeSample,
+                kOperatorShadowSampleLimit> largest_retirement_margins{};
+            std::size_t largest_retirement_margin_count = 0;
+            RetentionCapacityFractureShadow retention_capacity_fracture;
+        };
+
         enum class OperatorLowerSkipReason : std::uint8_t {
             NoFiniteIncumbent = 0,
             Count,
@@ -1833,6 +1958,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         std::array<std::uint64_t, kOperatorFamilyCount>
             carrier_action_admissions_by_family{};
         VerifiedIncumbentOperatorShadow verified_incumbent_operator_shadow;
+        VerifiedPolicyAlternativeShadow verified_policy_alternative_shadow;
         UpperMilestone first_finite_upper;
         UpperMilestone first_verified_upper;
     };
@@ -2420,6 +2546,10 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         std::uint32_t operator_index);
 
     void audit_verified_incumbent_operator_proof_shadow(
+        const BoundedPolicyIncumbent& incumbent);
+
+    solve_detail::CooperativeTask<bool>
+    audit_verified_policy_alternative_shadow(
         const BoundedPolicyIncumbent& incumbent);
 
     void retire_certified_unmaterialized_obligations();

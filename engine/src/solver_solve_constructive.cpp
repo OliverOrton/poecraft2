@@ -1149,6 +1149,21 @@ std::uint64_t SolveWork::Impl::incumbent_owned_bytes(
             bytes += continuation_evaluation.retained_owned_bytes -
                 sizeof(StrategyContinuationUpperCertificate);
         }
+        if (continuation.policy_entries.retained_owned_bytes >=
+            sizeof(StrategyPolicyEntryCertificate)) {
+            bytes += continuation.policy_entries.retained_owned_bytes -
+                sizeof(StrategyPolicyEntryCertificate);
+        }
+        bytes += incumbent.compiled_artifact.policy_decision_bindings.capacity() *
+            sizeof(CompiledPolicyDecisionBinding);
+        for (const CompiledPolicyDecisionBinding& binding :
+             incumbent.compiled_artifact.policy_decision_bindings) {
+            bytes += binding.compiled_node_id.capacity() + 1;
+            bytes += binding.coarse_state_identity.capacity() *
+                sizeof(std::uint64_t);
+            bytes += binding.selected_operator_identity.capacity() *
+                sizeof(std::uint64_t);
+        }
         const auto add_identity = [&](const std::vector<std::uint64_t>& key) {
             bytes += key.capacity() * sizeof(std::uint64_t);
         };
@@ -3252,6 +3267,8 @@ bool SolveWork::Impl::certify_incumbent_for_fallback(
             compilation.primitive_region_nodes;
         incumbent.compiled_artifact.additional_recipe_nodes =
             compilation.additional_recipe_nodes;
+        incumbent.compiled_artifact.policy_decision_bindings =
+            compilation.policy_decision_bindings;
         incumbent.compiled_artifact.nodes = compilation.nodes;
         incumbent.compiled_artifact.edges = compilation.edges;
         incumbent.compiled_artifact.total_condition_bytes =

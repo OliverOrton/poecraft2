@@ -1046,6 +1046,295 @@ SolveWork::Impl::finalize_carrier_bound_attribution() {
             std::to_string(sample.unrelated_occupancy) + '}';
     }
     json += "]}";
+    const auto& policy_shadow = carrier_bound_attribution
+                                    ->verified_policy_alternative_shadow;
+    json += ",\"verified_policy_alternative_shadow\":{";
+    json += "\"authority\":\"observational_only\"";
+    json += ",\"requested\":" +
+        std::string(policy_shadow.requested ? "true" : "false");
+    json += ",\"status\":";
+    append_json_string(json, policy_shadow.status);
+    json += ",\"failure_reason\":";
+    if (policy_shadow.failure_reason.empty()) {
+        json += "null";
+    } else {
+        append_json_string(json, policy_shadow.failure_reason);
+    }
+    json += ",\"resource_cap\":";
+    if (policy_shadow.resource_cap.empty()) {
+        json += "null";
+    } else {
+        append_json_string(json, policy_shadow.resource_cap);
+    }
+    json += ",\"certificate_identity\":";
+    append_json_string(
+        json, std::to_string(policy_shadow.certificate_identity));
+    json += ",\"decisions\":{";
+    json += "\"requested\":" +
+        std::to_string(policy_shadow.decisions_requested);
+    json += ",\"reached\":" +
+        std::to_string(policy_shadow.decisions_reached);
+    json += ",\"refused\":" +
+        std::to_string(policy_shadow.decisions_refused) + '}';
+    json += ",\"entries\":{";
+    json += "\"examined\":" +
+        std::to_string(policy_shadow.entries_examined);
+    json += ",\"accepted\":" +
+        std::to_string(policy_shadow.entries_accepted);
+    json += ",\"refused\":" +
+        std::to_string(policy_shadow.entries_refused);
+    json += ",\"certificate_statuses\":{\"complete\":" +
+        std::to_string(policy_shadow.certificate_entry_status_counts[0]);
+    json += ",\"invalid_request\":" +
+        std::to_string(policy_shadow.certificate_entry_status_counts[1]);
+    json += ",\"decision_node_not_found\":" +
+        std::to_string(policy_shadow.certificate_entry_status_counts[2]);
+    json += ",\"decision_node_not_reached\":" +
+        std::to_string(policy_shadow.certificate_entry_status_counts[3]);
+    json += ",\"entry_not_represented\":" +
+        std::to_string(policy_shadow.certificate_entry_status_counts[4]);
+    json += ",\"checkpoint_or_offer_active\":" +
+        std::to_string(policy_shadow.certificate_entry_status_counts[5]);
+    json += ",\"failure_reachable\":" +
+        std::to_string(policy_shadow.certificate_entry_status_counts[6]);
+    json += ",\"improper_policy\":" +
+        std::to_string(policy_shadow.certificate_entry_status_counts[7]);
+    json += ",\"missing_price\":" +
+        std::to_string(policy_shadow.certificate_entry_status_counts[8]);
+    json += ",\"non_finite_cost\":" +
+        std::to_string(policy_shadow.certificate_entry_status_counts[9]);
+    json += ",\"residual_failure\":" +
+        std::to_string(policy_shadow.certificate_entry_status_counts[10]);
+    json += ",\"materialization_failure\":" +
+        std::to_string(policy_shadow.certificate_entry_status_counts[11]) +
+        '}';
+    json += ",\"translation_refusals\":{\"binding_or_solve_identity\":" +
+        std::to_string(
+            policy_shadow.binding_or_solve_identity_refusals);
+    json += ",\"strict_terminal\":" +
+        std::to_string(policy_shadow.strict_terminal_refusals);
+    json += ",\"strict_coarse_projection\":" +
+        std::to_string(
+            policy_shadow.strict_coarse_projection_refusals);
+    json += ",\"selected_action\":" +
+        std::to_string(policy_shadow.selected_action_refusals) + "}}";
+    json += ",\"actions\":{";
+    json += "\"vocabulary_examined\":" +
+        std::to_string(policy_shadow.vocabulary_actions_examined);
+    json += ",\"caller_authorized\":" +
+        std::to_string(policy_shadow.caller_authorized_actions);
+    json += ",\"exact_inapplicabilities\":" +
+        std::to_string(policy_shadow.exact_inapplicabilities);
+    json += ",\"selected\":" +
+        std::to_string(policy_shadow.selected_actions);
+    json += ",\"alternative_obligations\":" +
+        std::to_string(policy_shadow.alternative_obligations) + '}';
+    json += ",\"comparison\":{";
+    json += "\"finite_existing_lowers\":" +
+        std::to_string(policy_shadow.finite_existing_lowers);
+    json += ",\"comparable_alternatives\":" +
+        std::to_string(policy_shadow.comparable_alternatives);
+    json += ",\"would_retire\":" +
+        std::to_string(policy_shadow.would_retire);
+    json += ",\"still_competitive\":" +
+        std::to_string(policy_shadow.still_competitive) + '}';
+    json += ",\"lifecycle_mutations\":" +
+        std::to_string(policy_shadow.lifecycle_mutations);
+    json += ",\"comparison_available_wall_ns\":" +
+        std::to_string(policy_shadow.comparison_available_wall_ns);
+    json += ",\"work_before_comparison\":{";
+    json += "\"solver_rows\":" +
+        std::to_string(policy_shadow.solver_rows_before_comparison);
+    json += ",\"ledger_transitions\":" +
+        std::to_string(
+            policy_shadow.ledger_transitions_before_comparison);
+    json += ",\"strict_selected_rows_begun\":" +
+        std::to_string(
+            policy_shadow.strict_rows_begun_before_comparison);
+    json += ",\"strict_alternative_rows_begun\":" +
+        std::to_string(
+            policy_shadow.strict_alternative_rows_begun_before_comparison) +
+        '}';
+    json += ",\"memory\":{";
+    json += "\"certificate_retained_bytes\":" +
+        std::to_string(policy_shadow.certificate_retained_bytes);
+    json += ",\"certificate_transient_bytes\":" +
+        std::to_string(policy_shadow.certificate_transient_bytes);
+    json += ",\"certificate_build_ns\":" +
+        std::to_string(policy_shadow.certificate_build_ns);
+    json += ",\"bridge_retained_bytes\":" +
+        std::to_string(policy_shadow.bridge_retained_bytes);
+    json += ",\"bridge_peak_bytes\":" +
+        std::to_string(policy_shadow.bridge_peak_bytes);
+    json += ",\"bridge_build_ns\":" +
+        std::to_string(policy_shadow.bridge_build_ns) + '}';
+    json += ",\"families\":[";
+    first = true;
+    for (std::size_t family = 0;
+         family < Work::kOperatorFamilyCount; ++family) {
+        if (policy_shadow.would_retire_by_family[family] == 0 &&
+            policy_shadow.still_competitive_by_family[family] == 0) {
+            continue;
+        }
+        if (!first) json += ',';
+        first = false;
+        json += "{\"family\":";
+        append_json_string(json, operator_family_name(family));
+        json += ",\"would_retire\":" + std::to_string(
+            policy_shadow.would_retire_by_family[family]);
+        json += ",\"still_competitive\":" + std::to_string(
+            policy_shadow.still_competitive_by_family[family]) + '}';
+    }
+    json += "],\"comparable_carrier_shapes\":";
+    append_shape_histogram(json, policy_shadow.comparable_shapes);
+    json += ",\"would_retire_carrier_shapes\":";
+    append_shape_histogram(json, policy_shadow.would_retire_shapes);
+    const auto& rc = policy_shadow.retention_capacity_fracture;
+    json += ",\"retention_capacity_fracture\":{\"authority\":"
+            "\"observational_only\",\"pattern\":";
+    append_json_string(json, rc.pattern);
+    json += ",\"rows\":{\"examined\":" +
+        std::to_string(rc.rows_examined);
+    json += ",\"complete\":" + std::to_string(rc.rows_complete);
+    json += ",\"refused\":" + std::to_string(rc.rows_refused);
+    json += ",\"transitions\":" + std::to_string(rc.transitions) + '}';
+    json += ",\"coverage\":{\"projected_successors\":" +
+        std::to_string(rc.projected_successors);
+    json += ",\"zero_fallback_successors\":" +
+        std::to_string(rc.zero_fallback_successors);
+    json += ",\"existing_lower_fallback_actions\":" +
+        std::to_string(rc.existing_lower_fallback_actions);
+    json += ",\"distinct_exact_source_actions\":" +
+        std::to_string(rc.distinct_exact_source_actions);
+    json += ",\"distinct_source_action_shapes\":" +
+        std::to_string(rc.distinct_source_action_shapes) + '}';
+    json += ",\"comparison\":{\"strengthened\":" +
+        std::to_string(rc.strengthened);
+    json += ",\"would_retire\":" +
+        std::to_string(rc.would_retire);
+    json += ",\"minimum_refined_lower\":" +
+        finite_json(rc.minimum_refined_lower);
+    json += ",\"maximum_refined_lower\":" +
+        finite_json(rc.maximum_refined_lower) + '}';
+    json += ",\"validation\":{\"bellman_subsolution_failures\":" +
+        std::to_string(rc.bellman_subsolution_failures);
+    json += ",\"mass_failures\":" +
+        std::to_string(rc.mass_failures);
+    json += ",\"identity_failures\":" +
+        std::to_string(rc.identity_failures);
+    json += ",\"maximum_bellman_residual\":" +
+        finite_json(rc.maximum_bellman_residual) + '}';
+    json += ",\"memory\":{\"retained_bytes\":" +
+        std::to_string(rc.retained_bytes);
+    json += ",\"peak_transient_bytes\":" +
+        std::to_string(rc.peak_transient_bytes);
+    json += ",\"build_ns\":" + std::to_string(rc.build_ns);
+    json += ",\"attributable_strict_states_created\":" +
+        std::to_string(rc.attributable_strict_states_created);
+    json += ",\"attributable_strict_state_growth_ppm\":" +
+        std::to_string(rc.attributable_strict_state_growth_ppm) + '}';
+    json += ",\"closest_to_retirement\":[";
+    for (std::size_t index = 0;
+         index < rc.closest_to_retirement_count; ++index) {
+        if (index != 0) json += ',';
+        const auto& sample = rc.closest_to_retirement[index];
+        json += "{\"exact_entry_identity\":";
+        append_json_string(
+            json, std::to_string(sample.exact_entry_identity));
+        json += ",\"strict_state_identity\":";
+        append_json_string(
+            json, std::to_string(sample.strict_state_identity));
+        json += ",\"action_identity\":";
+        append_json_string(
+            json, std::to_string(sample.action_identity));
+        json += ",\"row_identity\":";
+        append_json_string(
+            json, std::to_string(sample.row_identity));
+        json += ",\"state\":" + std::to_string(sample.state);
+        json += ",\"operator_index\":" +
+            std::to_string(sample.operator_index);
+        json += ",\"action\":";
+        append_json_string(
+            json, calc.operators().at(sample.operator_index).id);
+        json += ",\"satisfied_goal_mask\":" +
+            std::to_string(sample.satisfied_goal_mask);
+        json += ",\"prefixes\":" +
+            std::to_string(sample.prefix_count);
+        json += ",\"suffixes\":" +
+            std::to_string(sample.suffix_count);
+        json += ",\"transition_count\":" +
+            std::to_string(sample.transition_count);
+        json += ",\"zero_fallback_successors\":" +
+            std::to_string(sample.zero_fallback_successors);
+        json += ",\"probability_mass\":" +
+            finite_json(sample.probability_mass);
+        json += ",\"fractured_goal_probability\":" +
+            finite_json(sample.fractured_goal_probability);
+        json += ",\"fractured_junk_probability\":" +
+            finite_json(sample.fractured_junk_probability);
+        json += ",\"existing_lower\":" +
+            finite_json(sample.existing_lower);
+        json += ",\"refined_lower\":" +
+            finite_json(sample.refined_lower);
+        json += ",\"upper\":" + finite_json(sample.upper);
+        json += ",\"retirement_margin\":" +
+            finite_json(sample.retirement_margin) + '}';
+    }
+    json += "]}";
+    const auto append_policy_samples = [&] (
+            const auto& samples, const std::size_t count) {
+        json += '[';
+        for (std::size_t index = 0; index < count; ++index) {
+            if (index != 0) json += ',';
+            const auto& sample = samples[index];
+            json += "{\"exact_entry_identity\":";
+            append_json_string(
+                json, std::to_string(sample.exact_entry_identity));
+            json += ",\"strict_state_identity\":";
+            append_json_string(
+                json, std::to_string(sample.strict_state_identity));
+            json += ",\"action_identity\":";
+            append_json_string(
+                json, std::to_string(sample.action_identity));
+            json += ",\"state\":" + std::to_string(sample.state);
+            json += ",\"operator_index\":" +
+                std::to_string(sample.operator_index);
+            json += ",\"action\":";
+            append_json_string(
+                json, calc.operators().at(sample.operator_index).id);
+            json += ",\"family\":";
+            append_json_string(
+                json,
+                operator_family_name(carrier_bound_operator_family(
+                    sample.operator_index)));
+            json += ",\"lower\":" + finite_json(sample.lower);
+            json += ",\"upper\":" + finite_json(sample.upper);
+            json += ",\"absolute_margin\":" +
+                finite_json(sample.absolute_margin);
+            json += ",\"retirement_margin\":" +
+                finite_json(sample.retirement_margin);
+            json += ",\"satisfied_goal_mask\":" +
+                std::to_string(sample.satisfied_goal_mask);
+            json += ",\"blocked_mask\":" +
+                std::to_string(sample.blocked_mask);
+            json += ",\"prefixes\":" +
+                std::to_string(sample.prefix_count);
+            json += ",\"suffixes\":" +
+                std::to_string(sample.suffix_count);
+            json += ",\"unrelated_occupancy\":" +
+                std::to_string(sample.unrelated_occupancy) + '}';
+        }
+        json += ']';
+    };
+    json += ",\"closest_competitive\":";
+    append_policy_samples(
+        policy_shadow.closest_competitive,
+        policy_shadow.closest_competitive_count);
+    json += ",\"largest_retirement_margins\":";
+    append_policy_samples(
+        policy_shadow.largest_retirement_margins,
+        policy_shadow.largest_retirement_margin_count);
+    json += '}';
     static constexpr std::array<const char*, Work::kScheduleStageCount>
         kScheduleNames{{
             "focused_candidates", "focused_admissions",
@@ -1228,6 +1517,11 @@ std::uint64_t continuation_upper_dynamic_owned_bytes(
         bytes += certificate.evaluation.retained_owned_bytes -
             sizeof(StrategyContinuationUpperCertificate);
     }
+    if (certificate.policy_entries.retained_owned_bytes >=
+        sizeof(StrategyPolicyEntryCertificate)) {
+        bytes += certificate.policy_entries.retained_owned_bytes -
+            sizeof(StrategyPolicyEntryCertificate);
+    }
     const auto add = [&](const std::vector<std::uint64_t>& key) {
         bytes += key.capacity() * sizeof(std::uint64_t);
     };
@@ -1237,6 +1531,20 @@ std::uint64_t continuation_upper_dynamic_owned_bytes(
     add(certificate.authority.caller_scope);
     add(certificate.authority.action_vocabulary);
     add(certificate.authority.terminal_semantics);
+    return bytes;
+}
+
+std::uint64_t compiled_policy_decision_bindings_owned_bytes(
+        const std::vector<CompiledPolicyDecisionBinding>& bindings) {
+    std::uint64_t bytes =
+        bindings.capacity() * sizeof(CompiledPolicyDecisionBinding);
+    for (const CompiledPolicyDecisionBinding& binding : bindings) {
+        bytes += binding.compiled_node_id.capacity() + 1;
+        bytes += binding.coarse_state_identity.capacity() *
+            sizeof(std::uint64_t);
+        bytes += binding.selected_operator_identity.capacity() *
+            sizeof(std::uint64_t);
+    }
     return bytes;
 }
 
@@ -1272,6 +1580,8 @@ std::uint64_t solve_result_owned_bytes(const SolveResult& result) {
                  .certification_strategy_json.capacity() + 1;
     bytes += continuation_upper_dynamic_owned_bytes(
         result.refined_policy_artifact.continuation_upper);
+    bytes += compiled_policy_decision_bindings_owned_bytes(
+        result.refined_policy_artifact.policy_decision_bindings);
     bytes += result.refined_policy_artifact
                  .policy_route_default_mode.capacity() + 1;
     bytes += result.refined_policy_artifact
@@ -1942,6 +2252,13 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
                  sizeof(std::uint32_t);
         if (carrier_bound_attribution) {
             bytes += sizeof(CarrierBoundAttributionWork);
+            const auto& shadow = carrier_bound_attribution
+                ->verified_policy_alternative_shadow;
+            bytes += shadow.status.capacity() + 1;
+            bytes += shadow.failure_reason.capacity() + 1;
+            bytes += shadow.resource_cap.capacity() + 1;
+            bytes += shadow.retention_capacity_fracture
+                         .pattern.capacity() + 1;
         }
         bytes += incremental_carriers.capacity() * sizeof(std::uint32_t);
         bytes += incremental_automatic_carrier_order.capacity() *
@@ -2125,6 +2442,8 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
                      .certification_strategy_json.capacity() + 1;
         bytes += continuation_upper_dynamic_owned_bytes(
             result.refined_policy_artifact.continuation_upper);
+        bytes += compiled_policy_decision_bindings_owned_bytes(
+            result.refined_policy_artifact.policy_decision_bindings);
         bytes += result.refined_policy_artifact
                      .policy_route_default_mode.capacity() + 1;
         bytes += result.refined_policy_artifact
@@ -2181,6 +2500,13 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
                  sizeof(std::uint32_t);
         if (carrier_bound_attribution) {
             bytes += sizeof(CarrierBoundAttributionWork);
+            const auto& shadow = carrier_bound_attribution
+                ->verified_policy_alternative_shadow;
+            bytes += shadow.status.capacity() + 1;
+            bytes += shadow.failure_reason.capacity() + 1;
+            bytes += shadow.resource_cap.capacity() + 1;
+            bytes += shadow.retention_capacity_fracture
+                         .pattern.capacity() + 1;
         }
         bytes += incremental_carriers.capacity() * sizeof(std::uint32_t);
         bytes += incremental_automatic_carrier_order.capacity() *
@@ -2383,6 +2709,8 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
                      .certification_strategy_json.capacity() + 1;
         bytes += continuation_upper_dynamic_owned_bytes(
             result.refined_policy_artifact.continuation_upper);
+        bytes += compiled_policy_decision_bindings_owned_bytes(
+            result.refined_policy_artifact.policy_decision_bindings);
         bytes += result.refined_policy_artifact
                      .policy_route_default_mode.capacity() + 1;
         bytes += result.refined_policy_artifact

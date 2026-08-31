@@ -2352,7 +2352,12 @@ SolveWork::Impl::run_publication_pipeline() {
                     proof_owned_bytes()};
                 refinement::CompiledPolicyAssertionWork assertion_work(
                     calc, proof, prices, *scoped,
-                    "retained publication candidate");
+                    "retained publication candidate", nullptr, nullptr,
+                    nullptr,
+                    options
+                        .verified_policy_alternative_shadow_diagnostic,
+                    options
+                        .verified_policy_alternative_shadow_diagnostic);
                 while (!assertion_work.progress().done) {
                     const auto verification_progress =
                         assertion_work.progress();
@@ -2401,9 +2406,55 @@ SolveWork::Impl::run_publication_pipeline() {
                     candidate.final_graph_verification_failure.clear();
                     candidate.compilation_provenance +=
                         "+independent_final_graph_evaluation_v1";
+                    if (options
+                            .verified_policy_alternative_shadow_diagnostic) {
+                        auto& artifact = candidate.compiled_artifact;
+                        artifact.strategy_json =
+                            std::move(assertion.strategy_json);
+                        artifact.certification_strategy_json =
+                            std::move(
+                                assertion.certification_strategy_json);
+                        artifact.continuation_upper.authority =
+                            executable_continuation_authority_context();
+                        artifact.continuation_upper.evaluation =
+                            std::move(
+                                assertion.evaluation.continuation_upper);
+                        artifact.continuation_upper.policy_entries =
+                            std::move(assertion.evaluation.policy_entries);
+                        artifact.policy_decision_bindings =
+                            assertion.compilation.policy_decision_bindings;
+                        if (!artifact.certification_strategy_json.empty() &&
+                            artifact.continuation_upper.evaluation
+                                .requested) {
+                            std::uint64_t identity =
+                                1469598103934665603ULL;
+                            identity_mix_string(
+                                identity,
+                                artifact.certification_strategy_json);
+                            artifact.continuation_upper
+                                .strategy_identity_digest = identity;
+                            artifact.continuation_upper
+                                .strategy_identity_bytes =
+                                    artifact.certification_strategy_json
+                                        .size();
+                        }
+                    }
                     candidate.retained_owned_bytes =
                         incumbent_owned_bytes(candidate);
                     incumbent_portfolio.observe_verified(candidate);
+                    if (options
+                            .verified_policy_alternative_shadow_diagnostic) {
+                        auto alternative_shadow =
+                            audit_verified_policy_alternative_shadow(
+                                candidate);
+                        while (!alternative_shadow.resume()) {
+                            co_await solve_detail::CooperativeCheckpoint{
+                                saturated_publication_add(
+                                    candidate.retained_owned_bytes,
+                                    alternative_shadow.retained_bytes())};
+                        }
+                        (void)alternative_shadow.take_result();
+                    }
                     if (options.carrier_ladder_exact_boundary_mode ==
                             CarrierLadderExactBoundaryMode::
                                 ResumableContinuation) {
@@ -2700,6 +2751,8 @@ SolveWork::Impl::run_publication_pipeline() {
                     executable_continuation_authority_context();
                 artifact.continuation_upper.evaluation =
                     std::move(assertion.evaluation.continuation_upper);
+                artifact.continuation_upper.policy_entries =
+                    std::move(assertion.evaluation.policy_entries);
                 if (!artifact.certification_strategy_json.empty() &&
                     artifact.continuation_upper.evaluation.requested) {
                     std::uint64_t identity = 1469598103934665603ULL;
@@ -2734,6 +2787,8 @@ SolveWork::Impl::run_publication_pipeline() {
                     assertion.compilation.primitive_region_nodes;
                 artifact.additional_recipe_nodes =
                     assertion.compilation.additional_recipe_nodes;
+                artifact.policy_decision_bindings =
+                    assertion.compilation.policy_decision_bindings;
                 artifact.nodes = assertion.compilation.nodes;
                 artifact.edges = assertion.compilation.edges;
                 artifact.total_condition_bytes =
@@ -3756,7 +3811,9 @@ SolveWork::Impl::run_publication_pipeline() {
                 refinement::CompiledPolicyAssertionWork assertion_work(
                     calc, result, prices, scoped_assertion_options,
                     "selected core policy", nullptr, nullptr, nullptr,
-                    true);
+                    true,
+                    options
+                        .verified_policy_alternative_shadow_diagnostic);
                 while (!assertion_work.progress().done) {
                     const auto assertion_progress =
                         assertion_work.progress();
@@ -4152,6 +4209,18 @@ SolveWork::Impl::run_publication_pipeline() {
                 candidate.portfolio_identity = identity;
                 candidate.retained_owned_bytes =
                     incumbent_owned_bytes(candidate);
+                if (options
+                        .verified_policy_alternative_shadow_diagnostic) {
+                    auto alternative_shadow =
+                        audit_verified_policy_alternative_shadow(candidate);
+                    while (!alternative_shadow.resume()) {
+                        co_await solve_detail::CooperativeCheckpoint{
+                            saturated_add(
+                                candidate.retained_owned_bytes,
+                                alternative_shadow.retained_bytes())};
+                    }
+                    (void)alternative_shadow.take_result();
+                }
                 record_candidate_sample(
                     candidate, "direct_certification",
                     "eligible_verified_candidate",
@@ -5145,6 +5214,9 @@ SolveWork::Impl::run_publication_pipeline() {
                 artifact.additional_recipe_nodes =
                     certificate.compiled.compilation
                         .additional_recipe_nodes;
+                artifact.policy_decision_bindings =
+                    certificate.compiled.compilation
+                        .policy_decision_bindings;
                 artifact.nodes =
                     certificate.compiled.compilation.nodes;
                 artifact.edges =

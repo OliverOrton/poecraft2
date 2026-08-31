@@ -13,6 +13,7 @@
 #include <array>
 #include <bit>
 #include <chrono>
+#include <cctype>
 #include <cmath>
 #include <cstdio>
 #include <deque>
@@ -1704,6 +1705,144 @@ std::uint32_t satisfied_goal_count(
                      GoalSlotStatus::Satisfied);
     }
     return count;
+}
+
+void run_retention_capacity_fracture_shadow_row_tests() {
+    auto session = make_solve_session();
+    ActionRegistry registry = build_action_registry(*session);
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    for (const std::uint32_t family :
+         {101u, 102u, 103u, 104u, 105u}) {
+        GoalSlot slot;
+        slot.family_id = family;
+        slot.min_tier = 1;
+        goal.slots.push_back(slot);
+    }
+    const std::uint32_t fracture =
+        registry.index_by_id.at("fracture");
+    const std::uint32_t annul = registry.index_by_id.at("annul");
+    pc_item_state full;
+    pc_item_clear(&full);
+    full.rarity = PC_RARITY_RARE;
+    for (const std::uint32_t mod : {2u, 3u, 4u}) {
+        PC_CHECK(
+            pc_item_add_mod(
+                &full, PC_SIDE_PREFIX, mod,
+                static_cast<std::uint16_t>(
+                    session->primary_group[mod]),
+                0, nullptr) == PC_RESULT_OK);
+    }
+    for (const std::uint32_t mod : {5u, 6u, 7u}) {
+        PC_CHECK(
+            pc_item_add_mod(
+                &full, PC_SIDE_SUFFIX, mod,
+                static_cast<std::uint16_t>(
+                    session->primary_group[mod]),
+                0, nullptr) == PC_RESULT_OK);
+    }
+    CalcContext parent(
+        session, goal, registry, {fracture, annul},
+        false, true, false, std::nullopt, {}, true);
+    std::vector<std::uint64_t> required_mods(session->words, 0);
+    for (const std::uint32_t mod : {2u, 3u, 4u, 5u, 6u, 7u}) {
+        pc_bitset_set(required_mods.data(), mod);
+    }
+    CalcContext calc(
+        session, goal, registry, {fracture, annul},
+        false, false, true, std::nullopt, {}, false, required_mods,
+        false, true, false, false, false, &parent.layout());
+    const std::uint32_t source = calc.intern_item(full);
+    pc_item_state materialized_source;
+    PC_CHECK(calc.materialize(source, materialized_source));
+    PC_CHECK(!calc.is_goal_state(calc.state(source)));
+    PC_CHECK(satisfied_goal_count(calc.state(source), goal) == 5);
+    const auto identity_projection = [](
+            const std::uint32_t state) { return state; };
+    const refinement::StableKey entry_identity{11, 12, 13};
+    const refinement::StableKey action_identity{21, 22, 23};
+    const auto first =
+        refinement::build_retention_capacity_fracture_shadow_row(
+            calc, source, fracture, 405.1,
+            entry_identity, action_identity, identity_projection);
+    PC_CHECK(first.available());
+    PC_CHECK(first.transitions.size() == 6);
+    PC_CHECK(near(first.probability_mass, 1.0, 1e-12));
+    PC_CHECK(near(
+        first.fractured_goal_probability, 5.0 / 6.0, 1e-12));
+    PC_CHECK(near(
+        first.fractured_junk_probability, 1.0 / 6.0, 1e-12));
+    PC_CHECK(first.strict_states_created == 6);
+    PC_CHECK(first.retained_bytes == 0);
+    PC_CHECK(first.transient_bytes < 16ull * 1024ull * 1024ull);
+    PC_CHECK(
+        refinement::retention_capacity_fracture_shadow_row_semantic_identity(
+            first) == first.semantic_identity);
+    for (const auto& transition : first.transitions) {
+        PC_CHECK(!transition.exact_successor_identity.empty());
+        PC_CHECK(transition.projected_coarse_state != kNoId);
+        PC_CHECK(!transition.terminal);
+        PC_CHECK(near(transition.probability, 1.0 / 6.0, 1e-12));
+    }
+
+    const auto repeat =
+        refinement::build_retention_capacity_fracture_shadow_row(
+            calc, source, fracture, 405.1,
+            entry_identity, action_identity, identity_projection);
+    PC_CHECK(repeat.available());
+    PC_CHECK(repeat.semantic_identity == first.semantic_identity);
+    PC_CHECK(repeat.transitions == first.transitions);
+    PC_CHECK(repeat.strict_states_created == 0);
+
+    const auto zero_projection = [](
+            const std::uint32_t) { return kNoId; };
+    const auto projected_fallback =
+        refinement::build_retention_capacity_fracture_shadow_row(
+            calc, source, fracture, 405.1,
+            entry_identity, action_identity, zero_projection);
+    PC_CHECK(projected_fallback.available());
+    PC_CHECK(
+        projected_fallback.semantic_identity == first.semantic_identity);
+    PC_CHECK(std::all_of(
+        projected_fallback.transitions.begin(),
+        projected_fallback.transitions.end(),
+        [](const auto& transition) {
+            return transition.projected_coarse_state == kNoId;
+        }));
+
+    const auto wrong_action =
+        refinement::build_retention_capacity_fracture_shadow_row(
+            calc, source, annul, 1.0,
+            entry_identity, action_identity, identity_projection);
+    PC_CHECK(
+        wrong_action.status == refinement::
+            RetentionCapacityFractureShadowStatus::NotApplicable);
+    const auto invalid_price =
+        refinement::build_retention_capacity_fracture_shadow_row(
+            calc, source, fracture, -1.0,
+            entry_identity, action_identity, identity_projection);
+    PC_CHECK(
+        invalid_price.status == refinement::
+            RetentionCapacityFractureShadowStatus::InvalidRequest);
+
+    std::vector<double> values(first.transitions.size() + 1, 0.0);
+    values[0] = first.immediate_cost;
+    std::vector<std::uint8_t> goals(values.size(), 0);
+    solve_detail::ProofPatternFixtureRow proof_row;
+    proof_row.owner = 0;
+    proof_row.immediate = first.immediate_cost;
+    for (std::size_t index = 0;
+         index < first.transitions.size(); ++index) {
+        solve_detail::ProofPatternFixtureTransition transition;
+        transition.successor = static_cast<std::uint32_t>(index + 1);
+        transition.probability = first.transitions[index].probability;
+        proof_row.transitions.push_back(transition);
+    }
+    PC_CHECK(solve_detail::validate_proof_pattern_subsolution_fixture(
+        values, goals, {proof_row}));
+    values[0] += 1.0;
+    PC_CHECK(!solve_detail::validate_proof_pattern_subsolution_fixture(
+        values, goals, {proof_row}));
 }
 
 std::vector<std::pair<std::size_t, std::uint64_t>>
@@ -4350,7 +4489,7 @@ void run_policy_guided_primitive_choice_reoptimization_tests() {
         refinement::CompiledPolicyAssertionWork work(
             calc, authored, prices, options,
             "focused fixed observed-choice continuation",
-            nullptr, nullptr, nullptr, true);
+            nullptr, nullptr, nullptr, true, true);
         while (!work.progress().done) work.step(4096);
         fixed_choice_assertion = work.take_result();
     }
@@ -4388,6 +4527,144 @@ void run_policy_guided_primitive_choice_reoptimization_tests() {
     PC_CHECK(fixed_mod0_position != std::string::npos);
     PC_CHECK(fixed_mod3_position != std::string::npos);
     PC_CHECK(fixed_mod3_position < fixed_mod0_position);
+
+    const StrategyPolicyEntryCertificate& policy_entries =
+        fixed_choice_assertion.evaluation.policy_entries;
+    PC_CHECK(policy_entries.requested);
+    PC_CHECK(policy_entries.certified_entries > 0);
+    PC_CHECK(policy_entries.refused_entries == 0);
+    PC_CHECK(policy_entries.fixed_observed_choice_decisions == 1);
+    PC_CHECK(
+        strategy_policy_entry_certificate_semantic_identity(
+            policy_entries) == policy_entries.semantic_identity);
+    PC_CHECK(
+        !fixed_choice_assertion.certification_compilation
+             .policy_decision_bindings.empty());
+    for (const CompiledPolicyDecisionBinding& binding :
+         fixed_choice_assertion.certification_compilation
+             .policy_decision_bindings) {
+        PC_CHECK(
+            binding.compiled_node_id.size() > 1 &&
+            binding.compiled_node_id.front() == 's' &&
+            std::all_of(
+                binding.compiled_node_id.begin() + 1,
+                binding.compiled_node_id.end(),
+                [](const unsigned char value) {
+                    return std::isdigit(value) != 0;
+                }));
+        PC_CHECK(binding.compiled_node_id.find("_obs") ==
+                 std::string::npos);
+        PC_CHECK(binding.compiled_node_id.find("_route") ==
+                 std::string::npos);
+        PC_CHECK(!binding.coarse_state_identity.empty());
+        PC_CHECK(!binding.selected_operator_identity.empty());
+    }
+
+    RetainedCompiledPolicyArtifact shadow_artifact;
+    shadow_artifact.certification_strategy_json =
+        fixed_choice_assertion.certification_strategy_json;
+    shadow_artifact.policy_decision_bindings =
+        fixed_choice_assertion.certification_compilation
+            .policy_decision_bindings;
+    auto& shadow_certificate = shadow_artifact.continuation_upper;
+    shadow_certificate.authority.goal = {1};
+    shadow_certificate.authority.economy = {2};
+    shadow_certificate.authority.mechanics_artifact = {3};
+    shadow_certificate.authority.caller_scope = {4};
+    shadow_certificate.authority.action_vocabulary = {5};
+    shadow_certificate.authority.terminal_semantics = {6};
+    shadow_certificate.policy_entries = policy_entries;
+    shadow_certificate.strategy_identity_bytes =
+        shadow_artifact.certification_strategy_json.size();
+    shadow_certificate.strategy_identity_digest =
+        1469598103934665603ULL;
+    for (const unsigned char byte :
+         shadow_artifact.certification_strategy_json) {
+        shadow_certificate.strategy_identity_digest ^= byte;
+        shadow_certificate.strategy_identity_digest *= 1099511628211ULL;
+    }
+    shadow_certificate.strategy_identity_digest ^=
+        shadow_artifact.certification_strategy_json.size();
+    shadow_certificate.strategy_identity_digest *= 1099511628211ULL;
+
+    const std::vector<PolicyOperatorRef> policy_before_shadow =
+        authored.policy;
+    const std::vector<double> values_before_shadow = authored.values;
+    std::uint64_t observed_actions = 0;
+    bool observed_choice_selected_seen = false;
+    auto shadow_work =
+        refinement::audit_verified_policy_alternative_shadow(
+            calc, authored, start, prices, options, shadow_artifact,
+            shadow_certificate.authority,
+            [&](const refinement::VerifiedPolicyStrictEntry& entry,
+                const refinement::VerifiedPolicyAlternativeAction& action) {
+                ++observed_actions;
+                PC_CHECK(!entry.compiled_node_id.empty());
+                PC_CHECK(!entry.exact_entry_identity.empty());
+                PC_CHECK(!entry.strict_state_identity.empty());
+                PC_CHECK(!entry.coarse_state_identity.empty());
+                PC_CHECK(!entry.represented_coarse_state_identity.empty());
+                PC_CHECK(!entry.selected_exact_decision_identity.empty());
+                PC_CHECK(std::isfinite(entry.exact_continuation_upper));
+                PC_CHECK(!action.operator_identity.empty());
+                PC_CHECK(!action.operator_id.empty());
+                if (action.selected) {
+                    PC_CHECK(
+                        action.coarse_operator ==
+                        entry.selected_operator);
+                    PC_CHECK(
+                        action.operator_identity ==
+                        entry.selected_operator_identity);
+                    if (entry.fixed_observed_choice_policy) {
+                        observed_choice_selected_seen = true;
+                        PC_CHECK(entry.coarse_state == start_state);
+                        PC_CHECK(
+                            entry.represented_coarse_state == start_state);
+                        PC_CHECK(
+                            entry.selected_operator == unveil);
+                    }
+                }
+            });
+    while (!shadow_work.resume()) {}
+    const refinement::VerifiedPolicyAlternativeShadowCensus
+        shadow_census = shadow_work.take_result();
+    PC_CHECK(
+        shadow_census.status ==
+        refinement::VerifiedPolicyAlternativeShadowStatus::Complete);
+    PC_CHECK(shadow_census.entries_examined ==
+             policy_entries.entries.size());
+    PC_CHECK(shadow_census.entries_accepted ==
+             shadow_census.entries_examined);
+    PC_CHECK(shadow_census.entries_refused == 0);
+    PC_CHECK(
+        shadow_census.certificate_entry_status_counts.at(
+            static_cast<std::size_t>(
+                StrategyPolicyEntryStatus::Complete)) ==
+        shadow_census.entries_examined);
+    PC_CHECK(shadow_census.binding_or_solve_identity_refusals == 0);
+    PC_CHECK(shadow_census.strict_terminal_refusals == 0);
+    PC_CHECK(shadow_census.strict_coarse_projection_refusals == 0);
+    PC_CHECK(shadow_census.selected_action_refusals == 0);
+    PC_CHECK(shadow_census.selected_actions ==
+             shadow_census.entries_accepted);
+    PC_CHECK(shadow_census.observer_calls == observed_actions);
+    PC_CHECK(shadow_census.lifecycle_mutations == 0);
+    PC_CHECK(observed_choice_selected_seen);
+    PC_CHECK(authored.policy == policy_before_shadow);
+    PC_CHECK(authored.values == values_before_shadow);
+
+    RetainedCompiledPolicyArtifact changed_entry = shadow_artifact;
+    changed_entry.continuation_upper.policy_entries.entries.front()
+        .selected_operator_identity.push_back(999);
+    auto refused_work =
+        refinement::audit_verified_policy_alternative_shadow(
+            calc, authored, start, prices, options, changed_entry,
+            shadow_certificate.authority);
+    while (!refused_work.resume()) {}
+    PC_CHECK(
+        refused_work.take_result().status ==
+        refinement::VerifiedPolicyAlternativeShadowStatus::
+            IdentityMismatch);
 
     /*
      * A valid authored prefix need not enumerate strict-only offers absent
@@ -11905,6 +12182,7 @@ void run_solver_policy_refinement_tests() {
     run_policy_guided_exalt_lift_tests();
     run_policy_guided_local_reoptimization_tests();
     run_candidate_induced_exact_subclass_tests();
+    run_retention_capacity_fracture_shadow_row_tests();
     run_policy_guided_primitive_choice_reoptimization_tests();
     run_future_observed_choice_finalization_tests();
     run_policy_guided_fixed_choice_reoptimization_tests();

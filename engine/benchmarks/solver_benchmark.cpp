@@ -59,6 +59,7 @@ struct Arguments {
     bool fragment_contract_rejection_probes = false;
     bool fragment_shadow_only = false;
     bool resumable_joint_policy_continuation_diagnostic = false;
+    bool verified_policy_alternative_shadow_diagnostic = false;
     bool skip_verification = false;
     bool emit_progress = false;
     bool goal_progress_gated_reforges = false;
@@ -3060,6 +3061,7 @@ CaseResult run_case(
     const bool exact_strategy_evaluation,
     const double exact_strategy_evaluation_time_limit_seconds,
     const bool resumable_joint_policy_continuation_diagnostic,
+    const bool verified_policy_alternative_shadow_diagnostic,
     const fs::path& development_checkpoint_save,
     const fs::path& development_checkpoint_load,
     const std::string& development_checkpoint_identity_prefix,
@@ -3269,6 +3271,15 @@ CaseResult run_case(
             solve_options.solver_flags |=
                 poecraft::solver::
                     kRawStrictReforgeOracleDiagnosticFlag;
+        }
+        if (verified_policy_alternative_shadow_diagnostic ||
+            optional_bool(
+                caps,
+                "verified_policy_alternative_shadow_diagnostic",
+                false)) {
+            solve_options.solver_flags |=
+                poecraft::solver::
+                    kVerifiedPolicyAlternativeShadowDiagnosticFlag;
         }
         const std::string development_checkpoint_identity =
             development_checkpoint_identity_prefix +
@@ -5463,6 +5474,10 @@ Arguments parse_arguments(int argc, char** argv) {
                  "--resumable-joint-policy-continuation-diagnostic") {
             args.resumable_joint_policy_continuation_diagnostic = true;
         }
+        else if (argument ==
+                 "--verified-policy-alternative-shadow-diagnostic") {
+            args.verified_policy_alternative_shadow_diagnostic = true;
+        }
         else if (argument == "--progress") args.emit_progress = true;
         else if (argument == "--goal-progress-gated-reforges") {
             args.goal_progress_gated_reforges = true;
@@ -5547,6 +5562,14 @@ Arguments parse_arguments(int argc, char** argv) {
          args.fragment_contract_rejection_probes)) {
         throw std::runtime_error(
             "--resumable-joint-policy-continuation-diagnostic requires one "
+            "ordinary selected --case");
+    }
+    if (args.verified_policy_alternative_shadow_diagnostic &&
+        (args.validate_only || args.case_id.empty() ||
+         args.fragment_shadow_only ||
+         args.fragment_contract_rejection_probes)) {
+        throw std::runtime_error(
+            "--verified-policy-alternative-shadow-diagnostic requires one "
             "ordinary selected --case");
     }
     if (!args.partial_output.empty() && args.case_id.empty()) {
@@ -5817,6 +5840,7 @@ int main(int argc, char** argv) {
                     args.exact_strategy_evaluation,
                     args.exact_strategy_evaluation_time_limit_seconds,
                     args.resumable_joint_policy_continuation_diagnostic,
+                    args.verified_policy_alternative_shadow_diagnostic,
                     args.development_checkpoint_save,
                     args.development_checkpoint_load,
                     development_checkpoint_identity_prefix,

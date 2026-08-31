@@ -76,6 +76,7 @@ std::string compile_policy_strategy_json(
     if (telemetry != nullptr) {
         telemetry->policy_route_default_mode =
             route_default_mode_name;
+        telemetry->policy_decision_bindings.clear();
     }
     const PolicyRefinementTelemetry& requested_refinement =
         result.diagnostics.policy_refinement;
@@ -126,6 +127,8 @@ std::string compile_policy_strategy_json(
                 result.refined_policy_artifact.primitive_region_nodes;
             telemetry->additional_recipe_nodes =
                 result.refined_policy_artifact.additional_recipe_nodes;
+            telemetry->policy_decision_bindings =
+                result.refined_policy_artifact.policy_decision_bindings;
             telemetry->nodes = result.refined_policy_artifact.nodes;
             telemetry->edges = result.refined_policy_artifact.edges;
             telemetry->strategy_json_bytes =
@@ -2944,6 +2947,29 @@ std::string compile_policy_strategy_json(
             refined_parent_router.at(coarse_state);
         json += ",{\"id\":\"" + router_id +
                 "\",\"kind\":\"router\"}";
+    }
+    if (telemetry != nullptr) {
+        telemetry->policy_decision_bindings.clear();
+        telemetry->policy_decision_bindings.reserve(
+            emitted_states.size());
+        for (const std::uint32_t state_id : emitted_states) {
+            if (state_id >= result.policy.size() ||
+                result.policy[state_id] == kNoId ||
+                result.policy[state_id].index >= calc.operators().size()) {
+                gap("emitted policy decision has no selected operator");
+            }
+            const PlannerOperator& planner =
+                calc.operators().at(result.policy[state_id]);
+            telemetry->policy_decision_bindings.push_back({
+                state_node(state_id),
+                state_id,
+                result.policy[state_id].index,
+                exact_abstract_state_key(calc.state(state_id), 0),
+                planner_operator_semantic_key(planner),
+                primitive_observes_modifier_offer(planner) ||
+                    option_observes_modifier_offer(planner),
+            });
+        }
     }
     for (std::uint32_t state_id : emitted_states) {
         const PlannerOperator& planner =

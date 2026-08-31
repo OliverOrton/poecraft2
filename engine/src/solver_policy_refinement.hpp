@@ -2,8 +2,10 @@
 
 #include "solver_refinement.hpp"
 #include "solver_solve_contracts.hpp"
+#include "solver_cooperative_task.hpp"
 
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <set>
@@ -289,6 +291,181 @@ struct CompiledPolicyAssertionProgress {
     StrategyEvalProgress evaluation;
 };
 
+enum class VerifiedPolicyAlternativeShadowStatus : std::uint8_t {
+    Complete = 0,
+    IncompleteCertificate,
+    IdentityMismatch,
+    InvalidEntry,
+    ResourceCap,
+    AdapterFailure,
+};
+
+struct VerifiedPolicyStrictEntry {
+    std::string compiled_node_id;
+    StableKey exact_entry_identity;
+    StableKey strict_state_identity;
+    /* The exact physical item can project to a different coarse parent than
+     * the behavioral representative whose compiled node selected the fixed
+     * strategy action.  Keep both identities: the physical parent owns
+     * action admission/lower lookup, while the representative remains
+     * compiler provenance only. */
+    StableKey coarse_state_identity;
+    StableKey represented_coarse_state_identity;
+    StableKey selected_operator_identity;
+    StableKey selected_exact_decision_identity;
+    std::uint32_t coarse_state = kNoId;
+    std::uint32_t represented_coarse_state = kNoId;
+    std::uint32_t selected_operator = kNoId;
+    double exact_continuation_upper =
+        std::numeric_limits<double>::infinity();
+    bool fixed_observed_choice_policy = false;
+};
+
+enum class RetentionCapacityFractureShadowStatus : std::uint8_t {
+    NotApplicable = 0,
+    Complete,
+    InvalidRequest,
+    UnsupportedMechanic,
+    Inapplicable,
+    IncompleteMass,
+    IdentityFailure,
+};
+
+struct RetentionCapacityFractureTransition {
+    StableKey exact_successor_identity;
+    std::uint32_t projected_coarse_state = kNoId;
+    std::uint32_t satisfied_goal_mask = 0;
+    std::uint32_t fractured_goal_mask = 0;
+    std::uint32_t fractured_junk_count = 0;
+    std::uint32_t fractured_crafted_junk_count = 0;
+    std::uint32_t fractured_metamod_flags = 0;
+    std::uint8_t prefix_count = 0;
+    std::uint8_t suffix_count = 0;
+    bool terminal = false;
+    double probability = 0.0;
+
+    bool operator==(const RetentionCapacityFractureTransition&) const =
+        default;
+};
+
+/* One exact, action-local pushed-forward Fracture row. It is proof-only
+ * input: the row owns neither a lower nor retirement authority. A consumer
+ * may combine its complete probabilities with independently admissible
+ * successor lowers. Missing coarse projections deliberately remain kNoId so
+ * that consumer can use the existing zero fallback without inventing a
+ * representative. */
+struct RetentionCapacityFractureShadowRow {
+    RetentionCapacityFractureShadowStatus status =
+        RetentionCapacityFractureShadowStatus::NotApplicable;
+    StableKey exact_entry_identity;
+    StableKey action_identity;
+    StableKey semantic_identity;
+    std::uint32_t source_satisfied_goal_mask = 0;
+    std::uint32_t source_blocked_mask = 0;
+    std::uint8_t source_prefix_count = 0;
+    std::uint8_t source_suffix_count = 0;
+    double immediate_cost = 0.0;
+    double probability_mass = 0.0;
+    double fractured_goal_probability = 0.0;
+    double fractured_junk_probability = 0.0;
+    std::uint64_t strict_states_created = 0;
+    std::uint64_t retained_bytes = 0;
+    std::uint64_t transient_bytes = 0;
+    std::uint64_t build_ns = 0;
+    std::vector<RetentionCapacityFractureTransition> transitions;
+
+    bool available() const {
+        return status ==
+               RetentionCapacityFractureShadowStatus::Complete;
+    }
+};
+
+using RetentionCapacityCoarseProjector =
+    std::function<std::uint32_t(std::uint32_t)>;
+
+StableKey retention_capacity_fracture_shadow_row_semantic_identity(
+    const RetentionCapacityFractureShadowRow& row);
+
+RetentionCapacityFractureShadowRow
+build_retention_capacity_fracture_shadow_row(
+    CalcContext& exact,
+    std::uint32_t exact_state,
+    std::uint32_t primitive_action,
+    double immediate_cost,
+    StableKey exact_entry_identity,
+    StableKey action_identity,
+    const RetentionCapacityCoarseProjector& project_to_coarse);
+
+struct VerifiedPolicyAlternativeAction {
+    std::uint32_t coarse_operator = kNoId;
+    StableKey operator_identity;
+    std::string operator_id;
+    bool selected = false;
+    bool caller_authorized = false;
+    bool exact_applicable = false;
+    std::optional<RetentionCapacityFractureShadowRow>
+        retention_capacity_fracture;
+};
+
+using VerifiedPolicyAlternativeObserver = std::function<void(
+    const VerifiedPolicyStrictEntry&,
+    const VerifiedPolicyAlternativeAction&)>;
+
+struct VerifiedPolicyAlternativeShadowCensus {
+    static constexpr std::size_t kEntryStatusCount = 12;
+
+    VerifiedPolicyAlternativeShadowStatus status =
+        VerifiedPolicyAlternativeShadowStatus::IncompleteCertificate;
+    std::string failure_reason;
+    std::string resource_cap;
+    std::uint64_t certificate_identity = 0;
+    std::uint64_t decisions_requested = 0;
+    std::uint64_t decisions_reached = 0;
+    std::uint64_t decisions_refused = 0;
+    std::uint64_t entries_examined = 0;
+    std::uint64_t entries_accepted = 0;
+    std::uint64_t entries_refused = 0;
+    std::array<std::uint64_t, kEntryStatusCount>
+        certificate_entry_status_counts{};
+    std::uint64_t binding_or_solve_identity_refusals = 0;
+    std::uint64_t strict_terminal_refusals = 0;
+    std::uint64_t strict_coarse_projection_refusals = 0;
+    std::uint64_t selected_action_refusals = 0;
+    std::uint64_t vocabulary_actions_examined = 0;
+    std::uint64_t caller_authorized_actions = 0;
+    std::uint64_t exact_inapplicabilities = 0;
+    std::uint64_t selected_actions = 0;
+    std::uint64_t alternative_obligations = 0;
+    std::uint64_t retention_capacity_rows_examined = 0;
+    std::uint64_t retention_capacity_rows_complete = 0;
+    std::uint64_t retention_capacity_rows_refused = 0;
+    std::uint64_t retention_capacity_transitions = 0;
+    std::uint64_t retention_capacity_strict_states_created = 0;
+    std::uint64_t retention_capacity_peak_transient_bytes = 0;
+    std::uint64_t retention_capacity_build_ns = 0;
+    std::uint64_t observer_calls = 0;
+    std::uint64_t lifecycle_mutations = 0;
+    std::uint64_t retained_owned_bytes = 0;
+    std::uint64_t peak_owned_bytes = 0;
+    std::uint64_t build_ns = 0;
+};
+
+/* Read-only bridge from evaluator-owned exact strategy entries into the
+ * existing strict policy oracle. It enumerates the complete caller-filtered
+ * operator vocabulary one exact entry at a time and never creates or
+ * transitions a quotient proof obligation. The observer must not retain
+ * references after it returns. */
+solve_detail::CooperativeTask<VerifiedPolicyAlternativeShadowCensus>
+audit_verified_policy_alternative_shadow(
+    CalcContext& coarse,
+    const SolveResult& solved,
+    const pc_item_state& exact_start,
+    const std::unordered_map<std::string, double>& prices,
+    const SolveOptions& options,
+    const RetainedCompiledPolicyArtifact& artifact,
+    ExecutableContinuationAuthorityContext current_authority,
+    VerifiedPolicyAlternativeObserver observer = {});
+
 /* Retained counterpart of assert_compiled_policy_exact(). Compilation and
  * parsing are bounded stages; exact graph evaluation advances through the
  * evaluator's existing one-work-item continuation. Borrowed inputs must
@@ -304,7 +481,8 @@ class CompiledPolicyAssertionWork {
         const RefinedPolicyCompileRouting* refined_routing = nullptr,
         const std::string* emitted_strategy_json = nullptr,
         const PolicyCompilationTelemetry* emitted_compilation = nullptr,
-        bool request_root_continuation_upper = false);
+        bool request_root_continuation_upper = false,
+        bool request_policy_decision_entries = false);
     ~CompiledPolicyAssertionWork();
     CompiledPolicyAssertionWork(CompiledPolicyAssertionWork&&) noexcept;
     CompiledPolicyAssertionWork& operator=(
