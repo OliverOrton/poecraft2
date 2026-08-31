@@ -585,12 +585,15 @@ struct StrategyEvalWork::Impl {
                  sizeof(StrategyPolicyEntryResult);
         for (const StrategyPolicyEntryResult& entry : certificate.entries) {
             bytes += entry.compiled_node_id.capacity() + 1;
+            bytes += entry.global_policy_target_node_id.capacity() + 1;
             bytes += entry.coarse_state_identity.capacity() *
-                     sizeof(std::uint64_t);
+                sizeof(std::uint64_t);
             bytes += entry.selected_operator_identity.capacity() *
-                     sizeof(std::uint64_t);
+                sizeof(std::uint64_t);
             bytes += entry.exact_entry_identity.capacity() *
-                     sizeof(std::uint64_t);
+                sizeof(std::uint64_t);
+            bytes += entry.exact_item_identity.capacity() *
+                sizeof(std::uint64_t);
         }
         return bytes;
     }
@@ -2421,6 +2424,33 @@ struct StrategyEvalWork::Impl {
             [&](const StrategyEdge& edge) {
                 return !edge.is_default && contains(edge.condition);
             });
+    }
+
+    std::pair<std::uint32_t, bool> resolve_global_policy_entry_target(
+            const std::uint32_t state) const {
+        std::uint32_t cursor = strategy->start_node;
+        for (std::size_t step = 0;
+             step <= strategy->nodes.size(); ++step) {
+            if (cursor >= strategy->nodes.size()) {
+                return {kNoId, false};
+            }
+            const StrategyNode& node = strategy->nodes[cursor];
+            if (node.kind != StrategyNodeKind::Start &&
+                node.kind != StrategyNodeKind::Router) {
+                return {cursor, true};
+            }
+            /* A raw exact item has no outstanding observed offer. Reaching
+             * an offer router here would hide decision memory and therefore
+             * cannot establish a reusable post-deviation policy entry. */
+            if (node.kind == StrategyNodeKind::Router &&
+                node_observes_modifier_offer(node)) {
+                return {cursor, false};
+            }
+            const StrategyEdge* edge = select_edge(node, state);
+            if (edge == nullptr) return {cursor, false};
+            cursor = edge->target;
+        }
+        return {cursor, false};
     }
 
     bool is_deterministic_route_authority(
@@ -7482,9 +7512,20 @@ struct StrategyEvalWork::Impl {
                 request.selected_operator_identity;
             entry.fixed_observed_choice_policy =
                 request.fixed_observed_choice_policy;
+            entry.evaluator_pair_index = exact_pair;
             entry.checkpoint_active = record.checkpoint_state != kNoId;
             entry.observed_offer_active = record.unveil_offer != kNoId;
             entry.exact_entry_identity = raw_pair_stable_key(record);
+            {
+                const auto [target, complete] =
+                    resolve_global_policy_entry_target(record.state);
+                if (target < strategy->nodes.size()) {
+                    entry.global_policy_target_node_id =
+                        strategy->nodes[target].id;
+                }
+                entry.global_policy_entry =
+                    complete && target == record.node;
+            }
             const std::uint32_t value_pair = attribution_pairs.empty()
                 ? exact_pair
                 : attribution_class_by_pair.at(exact_pair);
@@ -7517,6 +7558,9 @@ struct StrategyEvalWork::Impl {
                     std::numeric_limits<double>::infinity();
                 entry.bellman_residual =
                     std::numeric_limits<double>::infinity();
+            } else {
+                entry.exact_item_identity =
+                    exact_item_state_key(entry.item);
             }
             policy_certificate.entries.push_back(std::move(entry));
             if ((exact_pair & 1023u) == 1023u) {
@@ -7794,6 +7838,15 @@ struct StrategyEvalWork::Impl {
                     exact_no_matching_edge[node].value();
             }
             co_await solve_detail::CooperativeCheckpoint{};
+        }
+        for (StrategyPolicyEntryResult& entry :
+             output.policy_entries.entries) {
+            if (entry.evaluator_pair_index <
+                    exact_pair_visits->size()) {
+                entry.root_expected_visits =
+                    exact_pair_visits->at(
+                        entry.evaluator_pair_index);
+            }
         }
         CalcContext& calc = *model.calc;
         output.reforge_work =
@@ -9024,6 +9077,9 @@ std::uint64_t strategy_policy_entry_certificate_semantic_identity(
         mix_key(entry.coarse_state_identity);
         mix_key(entry.selected_operator_identity);
         mix_key(entry.exact_entry_identity);
+        mix_key(entry.exact_item_identity);
+        mix_string(entry.global_policy_target_node_id);
+        mix_word(entry.global_policy_entry ? 1 : 0);
         mix_word(entry.fixed_observed_choice_policy ? 1 : 0);
         mix_word(entry.checkpoint_active ? 1 : 0);
         mix_word(entry.observed_offer_active ? 1 : 0);

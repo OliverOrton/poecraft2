@@ -197,6 +197,16 @@ struct StrategyPolicyEntryResult {
     std::vector<std::uint64_t> coarse_state_identity;
     std::vector<std::uint64_t> selected_operator_identity;
     std::vector<std::uint64_t> exact_entry_identity;
+    /* Exact physical item identity independent of the compiled node. This is
+     * suitable only for collision-checked lookup inside the same bound
+     * strategy/request context. */
+    std::vector<std::uint64_t> exact_item_identity;
+    /* The deterministic global policy router's authored target for this
+     * exact item. A locally reached decision is not a reusable fixed-policy
+     * continuation after an arbitrary deviation unless this target equals
+     * compiled_node_id. */
+    std::string global_policy_target_node_id;
+    bool global_policy_entry = false;
     pc_item_state item{};
     bool fixed_observed_choice_policy = false;
     bool checkpoint_active = false;
@@ -207,6 +217,15 @@ struct StrategyPolicyEntryResult {
         std::numeric_limits<double>::infinity();
     double bellman_residual =
         std::numeric_limits<double>::infinity();
+    /* Root-run occupancy is diagnostic sampling evidence only. It is filled
+     * after the exact attribution solve and is deliberately excluded from
+     * the certificate semantic identity: continuation authority is bound by
+     * the entry/value/properness evidence above, not by how often the
+     * requested root happened to visit the entry. */
+    double root_expected_visits = 0.0;
+    /* Evaluator-local join token used only to attach the root occupancy
+     * solved later in finalization. It is never an identity or reuse key. */
+    std::uint32_t evaluator_pair_index = kNoId;
 
     bool available() const {
         return status == StrategyPolicyEntryStatus::Complete &&
@@ -214,8 +233,14 @@ struct StrategyPolicyEntryResult {
                !coarse_state_identity.empty() &&
                !selected_operator_identity.empty() &&
                !exact_entry_identity.empty() &&
+               !exact_item_identity.empty() &&
                std::isfinite(exact_continuation_upper) &&
                exact_continuation_upper >= 0.0;
+    }
+
+    bool globally_routable() const {
+        return available() && global_policy_entry &&
+               global_policy_target_node_id == compiled_node_id;
     }
 };
 

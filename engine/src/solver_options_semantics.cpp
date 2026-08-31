@@ -122,6 +122,68 @@ std::vector<std::uint64_t> exact_abstract_state_key(
     return key;
 }
 
+std::vector<std::uint64_t> exact_item_state_key(
+        const pc_item_state& item) {
+    std::vector<std::uint64_t> key{
+        0x70636974656d7631ull, /* "pcitemv1" */
+        1,
+        item.rarity,
+        item.quality,
+        item.item_flags,
+        item.generic_influence_bits,
+        item.searing_exarch_tier,
+        item.eater_of_worlds_tier,
+        item.socket_count,
+        item.link_mask,
+    };
+    key.push_back(item.socket_count);
+    for (std::uint32_t index = 0;
+         index < item.socket_count && index < PC_MAX_SOCKETS; ++index) {
+        key.push_back(item.socket_colors[index]);
+    }
+    const auto slot_key = [](const pc_mod_slot& slot) {
+        std::vector<std::uint64_t> value{
+            slot.mod_id,
+            slot.group_id,
+            slot.flags,
+            slot.roll_count,
+        };
+        for (std::uint32_t index = 0;
+             index < slot.roll_count && index < PC_MAX_ROLL_VALUES;
+             ++index) {
+            value.push_back(static_cast<std::uint32_t>(slot.rolls[index]));
+        }
+        value.push_back(slot.veiled_option_count);
+        for (std::uint32_t index = 0;
+             index < slot.veiled_option_count &&
+                 index < PC_MAX_VEILED_OPTIONS;
+             ++index) {
+            value.push_back(slot.veiled_option_mod_ids[index]);
+        }
+        value.push_back(slot.veiled_chosen_mod_id);
+        return value;
+    };
+    const auto append_slots = [&](const pc_mod_slot* slots,
+                                  const std::uint8_t count) {
+        std::vector<std::vector<std::uint64_t>> values;
+        values.reserve(count);
+        for (std::uint32_t index = 0; index < count; ++index) {
+            values.push_back(slot_key(slots[index]));
+        }
+        std::sort(values.begin(), values.end());
+        key.push_back(values.size());
+        for (const auto& value : values) {
+            key.push_back(value.size());
+            key.insert(key.end(), value.begin(), value.end());
+        }
+    };
+    append_slots(item.prefixes, item.prefix_count);
+    append_slots(item.suffixes, item.suffix_count);
+    append_slots(item.implicits, item.implicit_count);
+    append_slots(item.enchantments, item.enchantment_count);
+    return key;
+}
+
 std::vector<std::uint64_t> planner_operator_semantic_key(
     const PlannerOperator& planner) {
     std::vector<std::uint64_t> key;

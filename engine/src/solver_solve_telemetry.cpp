@@ -1281,6 +1281,192 @@ SolveWork::Impl::finalize_carrier_bound_attribution() {
             finite_json(sample.retirement_margin) + '}';
     }
     json += "]}";
+    const auto& bellman = policy_shadow.policy_potential_bellman;
+    json += ",\"policy_potential_bellman\":{\"authority\":";
+    append_json_string(json, bellman.authority);
+    json += ",\"status\":";
+    append_json_string(json, bellman.status);
+    json += ",\"strategy_identity_digest\":";
+    append_json_string(
+        json, std::to_string(bellman.strategy_identity_digest));
+    json += ",\"strategy_identity_bytes\":" +
+        std::to_string(bellman.strategy_identity_bytes);
+    json += ",\"policy_entry_certificate_identity\":";
+    append_json_string(
+        json,
+        std::to_string(
+            bellman.policy_entry_certificate_identity));
+    json += ",\"existing_lower_identity\":";
+    append_json_string(
+        json, std::to_string(bellman.existing_lower_identity));
+    json += ",\"domain\":{\"globally_routable_entries\":" +
+        std::to_string(bellman.globally_routable_entries);
+    json += ",\"ambiguous_item_entries\":" +
+        std::to_string(bellman.ambiguous_item_entries) + '}';
+    json += ",\"closure\":{\"action_complete\":" +
+        std::string(bellman.action_complete ? "true" : "false");
+    json += ",\"dependency_closed\":" +
+        std::string(bellman.dependency_closed ? "true" : "false");
+    json += ",\"exact_internal_constraints\":" +
+        std::to_string(bellman.exact_internal_constraints);
+    json += ",\"boundary_escape_constraints\":" +
+        std::to_string(bellman.boundary_escape_constraints);
+    json += ",\"policy_improving_deviations\":" +
+        std::to_string(bellman.policy_improving_deviations);
+    json += ",\"exact_bellman_closed_constraints\":" +
+        std::to_string(bellman.exact_bellman_closed_constraints);
+    json += ",\"unresolved_constraints\":" +
+        std::to_string(bellman.unresolved_constraints) + '}';
+    json += ",\"sampled_census\":{";
+    json += "\"rows_requested\":" +
+        std::to_string(bellman.sampled_rows_requested);
+    json += ",\"rows_examined\":" +
+        std::to_string(bellman.sampled_rows_examined);
+    json += ",\"rows_complete\":" +
+        std::to_string(bellman.sampled_rows_complete);
+    json += ",\"rows_refused\":" +
+        std::to_string(bellman.sampled_rows_refused);
+    json += ",\"transitions\":" +
+        std::to_string(bellman.sampled_transitions) + '}';
+    json += ",\"work\":{\"exact_rows\":" +
+        std::to_string(bellman.exact_row_work);
+    json += ",\"strict_states_created\":" +
+        std::to_string(bellman.strict_states_created);
+    json += ",\"retained_bytes\":" +
+        std::to_string(bellman.retained_bytes);
+    json += ",\"transient_bytes\":" +
+        std::to_string(bellman.transient_bytes);
+    json += ",\"build_ns\":" +
+        std::to_string(bellman.build_ns) + '}';
+    json += ",\"unresolved_by_family\": [";
+    first = true;
+    for (std::size_t family = 0;
+         family < Work::kOperatorFamilyCount; ++family) {
+        if (bellman.unresolved_by_family[family] == 0) continue;
+        if (!first) json += ',';
+        first = false;
+        json += "{\"family\":";
+        append_json_string(json, operator_family_name(family));
+        json += ",\"count\":" +
+            std::to_string(bellman.unresolved_by_family[family]) + '}';
+    }
+    json += "],\"constraints\":[";
+    for (std::size_t index = 0;
+         index < bellman.constraint_count; ++index) {
+        if (index != 0) json += ',';
+        const auto& constraint = bellman.constraints[index];
+        json += "{\"source_entry_identity\":";
+        append_json_string(
+            json, std::to_string(constraint.source_entry_identity));
+        json += ",\"source_item_identity\":";
+        append_json_string(
+            json, std::to_string(constraint.source_item_identity));
+        json += ",\"action_identity\":";
+        append_json_string(
+            json, std::to_string(constraint.action_identity));
+        json += ",\"state\":" + std::to_string(constraint.state);
+        json += ",\"operator_index\":" +
+            std::to_string(constraint.operator_index);
+        json += ",\"action\":";
+        if (constraint.operator_index < calc.operators().size()) {
+            append_json_string(
+                json,
+                calc.operators().at(constraint.operator_index).id);
+        } else {
+            json += "null";
+        }
+        json += ",\"constraint_status\":" +
+            std::to_string(constraint.status);
+        json += ",\"selected_action\":" +
+            std::string(constraint.selected_action ? "true" : "false");
+        json += ",\"selected_policy_equality\":" +
+            std::string(
+                constraint.selected_policy_equality ? "true" : "false");
+        json += ",\"selection_reasons\":" +
+            std::to_string(constraint.selection_reasons);
+        json += ",\"root_expected_visits\":" +
+            finite_json(constraint.root_expected_visits);
+        json += ",\"proof_work_proxy\":" +
+            std::to_string(constraint.proof_work_proxy);
+        json += ",\"exact_row_status\":" +
+            std::to_string(constraint.exact_row_status);
+        json += ",\"refusal_reason\":";
+        if (constraint.refusal_reason.empty()) {
+            json += "null";
+        } else {
+            append_json_string(json, constraint.refusal_reason);
+        }
+        json += ",\"source_policy_value\":" +
+            finite_json(constraint.source_policy_value);
+        json += ",\"source_policy_residual\":" +
+            finite_json(constraint.source_policy_residual);
+        json += ",\"action_cost\":" +
+            finite_json(constraint.action_cost);
+        json += ",\"shadow_rhs\":" +
+            finite_json(constraint.shadow_rhs);
+        json += ",\"bellman_deficit\":" +
+            finite_json(constraint.bellman_deficit);
+        json += ",\"exact_policy_deviation\":" +
+            finite_json(constraint.exact_policy_deviation);
+        json += ",\"boundary_probability_mass\":" +
+            finite_json(constraint.boundary_probability_mass);
+        json += ",\"internal_policy_successors\":" +
+            std::to_string(constraint.internal_policy_successors);
+        json += ",\"boundary_successors\":" +
+            std::to_string(constraint.boundary_successors);
+        json += ",\"exact_deviation_available\":" +
+            std::string(
+                constraint.exact_deviation_available ? "true" : "false");
+        json += ",\"policy_improving\":" +
+            std::string(constraint.policy_improving ? "true" : "false");
+        json += ",\"inequality_satisfied\":" +
+            std::string(
+                constraint.inequality_satisfied ? "true" : "false");
+        json += ",\"successors\":[";
+        for (std::size_t successor_index = 0;
+             successor_index < constraint.successor_count;
+             ++successor_index) {
+            if (successor_index != 0) json += ',';
+            const auto& successor =
+                constraint.successors[successor_index];
+            json += "{\"exact_item_identity\":";
+            append_json_string(
+                json, std::to_string(successor.exact_item_identity));
+            json += ",\"policy_entry_identity\":";
+            if (successor.policy_entry_identity == 0) {
+                json += "null";
+            } else {
+                append_json_string(
+                    json,
+                    std::to_string(successor.policy_entry_identity));
+            }
+            json += ",\"probability\":" +
+                finite_json(successor.probability);
+            json += ",\"policy_continuation\":" +
+                finite_json(successor.policy_continuation);
+            json += ",\"existing_lower\":" +
+                finite_json(successor.existing_lower);
+            json += ",\"applied_potential\":" +
+                finite_json(successor.applied_potential);
+            json += ",\"contribution\":" +
+                finite_json(successor.contribution);
+            json += ",\"required_lower_if_sole_closure\":" +
+                finite_json(
+                    successor.required_lower_if_sole_closure);
+            json += ",\"terminal\":" +
+                std::string(successor.terminal ? "true" : "false");
+            json += ",\"policy_domain\":" +
+                std::string(
+                    successor.policy_domain ? "true" : "false");
+            json += ",\"ambiguous_policy_entry\":" +
+                std::string(
+                    successor.ambiguous_policy_entry
+                        ? "true"
+                        : "false") + '}';
+        }
+        json += "]}";
+    }
+    json += "]}";
     const auto append_policy_samples = [&] (
             const auto& samples, const std::size_t count) {
         json += '[';
@@ -2259,6 +2445,17 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
             bytes += shadow.resource_cap.capacity() + 1;
             bytes += shadow.retention_capacity_fracture
                          .pattern.capacity() + 1;
+            bytes += shadow.policy_potential_bellman
+                         .authority.capacity() + 1;
+            bytes += shadow.policy_potential_bellman
+                         .status.capacity() + 1;
+            for (std::size_t index = 0;
+                 index < shadow.policy_potential_bellman.constraint_count;
+                 ++index) {
+                bytes += shadow.policy_potential_bellman
+                             .constraints[index].refusal_reason.capacity() +
+                    1;
+            }
         }
         bytes += incremental_carriers.capacity() * sizeof(std::uint32_t);
         bytes += incremental_automatic_carrier_order.capacity() *
@@ -2507,6 +2704,17 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
             bytes += shadow.resource_cap.capacity() + 1;
             bytes += shadow.retention_capacity_fracture
                          .pattern.capacity() + 1;
+            bytes += shadow.policy_potential_bellman
+                         .authority.capacity() + 1;
+            bytes += shadow.policy_potential_bellman
+                         .status.capacity() + 1;
+            for (std::size_t index = 0;
+                 index < shadow.policy_potential_bellman.constraint_count;
+                 ++index) {
+                bytes += shadow.policy_potential_bellman
+                             .constraints[index].refusal_reason.capacity() +
+                    1;
+            }
         }
         bytes += incremental_carriers.capacity() * sizeof(std::uint32_t);
         bytes += incremental_automatic_carrier_order.capacity() *

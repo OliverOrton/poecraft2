@@ -463,6 +463,9 @@ void run_continuation_upper_certificate_tests() {
     PC_CHECK(policy_entries.maximum_bellman_residual <= 1e-9);
     PC_CHECK(policy_entries.semantic_identity != 0);
     PC_CHECK(policy_entries.retained_owned_bytes > 0);
+    double retained_policy_occupancy = 0.0;
+    std::uint32_t globally_routed_entries = 0;
+    std::uint32_t locally_routed_entries = 0;
     for (const StrategyPolicyEntryResult& entry : policy_entries.entries) {
         PC_CHECK(entry.available());
         PC_CHECK(entry.compiled_node_id == "chaos");
@@ -475,8 +478,25 @@ void run_continuation_upper_certificate_tests() {
         PC_CHECK(!entry.checkpoint_active);
         PC_CHECK(!entry.observed_offer_active);
         PC_CHECK(!entry.exact_entry_identity.empty());
+        PC_CHECK(!entry.exact_item_identity.empty());
+        PC_CHECK(entry.exact_item_identity ==
+                 exact_item_state_key(entry.item));
+        PC_CHECK(!entry.global_policy_target_node_id.empty());
+        if (entry.global_policy_entry) {
+            ++globally_routed_entries;
+            PC_CHECK(entry.global_policy_target_node_id == "chaos");
+        } else {
+            ++locally_routed_entries;
+            PC_CHECK(entry.global_policy_target_node_id != "chaos");
+        }
         PC_CHECK(entry.exact_continuation_upper > 0.0);
+        PC_CHECK(std::isfinite(entry.root_expected_visits));
+        PC_CHECK(entry.root_expected_visits >= 0.0);
+        retained_policy_occupancy += entry.root_expected_visits;
     }
+    PC_CHECK(retained_policy_occupancy > 0.0);
+    PC_CHECK(globally_routed_entries > 0);
+    PC_CHECK(locally_routed_entries > 0);
 
     const StrategyContinuationStateUpper* root =
         continuation_state(exact, 100);
@@ -578,6 +598,14 @@ void run_continuation_upper_certificate_tests() {
         const StrategyPolicyEntryResult& right =
             repeated.policy_entries.entries[index];
         PC_CHECK(left.exact_entry_identity == right.exact_entry_identity);
+        PC_CHECK(left.exact_item_identity == right.exact_item_identity);
+        PC_CHECK(
+            left.global_policy_target_node_id ==
+            right.global_policy_target_node_id);
+        PC_CHECK(left.global_policy_entry == right.global_policy_entry);
+        PC_CHECK(
+            left.root_expected_visits ==
+            right.root_expected_visits);
         PC_CHECK(left.status == right.status);
         PC_CHECK(
             left.exact_continuation_upper ==

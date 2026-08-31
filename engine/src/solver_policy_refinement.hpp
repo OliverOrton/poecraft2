@@ -303,6 +303,7 @@ enum class VerifiedPolicyAlternativeShadowStatus : std::uint8_t {
 struct VerifiedPolicyStrictEntry {
     std::string compiled_node_id;
     StableKey exact_entry_identity;
+    StableKey exact_item_identity;
     StableKey strict_state_identity;
     /* The exact physical item can project to a different coarse parent than
      * the behavioral representative whose compiled node selected the fixed
@@ -318,6 +319,10 @@ struct VerifiedPolicyStrictEntry {
     std::uint32_t selected_operator = kNoId;
     double exact_continuation_upper =
         std::numeric_limits<double>::infinity();
+    double policy_bellman_residual =
+        std::numeric_limits<double>::infinity();
+    double root_expected_visits = 0.0;
+    bool global_policy_entry = false;
     bool fixed_observed_choice_policy = false;
 };
 
@@ -380,6 +385,193 @@ struct RetentionCapacityFractureShadowRow {
     }
 };
 
+enum class VerifiedPolicyExactRowStatus : std::uint8_t {
+    Complete = 0,
+    InvalidRequest,
+    UnsupportedObservedChoice,
+    Inapplicable,
+    IncompleteMass,
+    IdentityFailure,
+    AdapterFailure,
+};
+
+struct VerifiedPolicyExactRowTransition {
+    StableKey strict_state_identity;
+    StableKey exact_item_identity;
+    std::uint32_t projected_coarse_state = kNoId;
+    bool terminal = false;
+    double probability = 0.0;
+};
+
+/* Complete strict-kernel projection for one already identity-bound planner
+ * decision. It is diagnostic input only and deliberately carries no lower,
+ * pruning, retirement, or publication authority. */
+struct VerifiedPolicyExactActionRow {
+    VerifiedPolicyExactRowStatus status =
+        VerifiedPolicyExactRowStatus::InvalidRequest;
+    StableKey exact_entry_identity;
+    StableKey operator_identity;
+    StableKey exact_decision_identity;
+    std::string refusal_reason;
+    double action_cost = 0.0;
+    double probability_mass = 0.0;
+    std::uint64_t strict_states_created = 0;
+    std::uint64_t retained_bytes = 0;
+    std::uint64_t transient_bytes = 0;
+    std::uint64_t build_ns = 0;
+    std::vector<VerifiedPolicyExactRowTransition> transitions;
+
+    bool available() const {
+        return status == VerifiedPolicyExactRowStatus::Complete;
+    }
+};
+
+enum class VerifiedPolicyBellmanConstraintStatus : std::uint8_t {
+    Complete = 0,
+    SourceUnavailable,
+    ExactRowUnavailable,
+    AmbiguousPolicySuccessor,
+    InvalidLower,
+    IncompleteMass,
+    DependencyClosureOpen,
+    IdentityFailure,
+};
+
+struct VerifiedPolicyBellmanSuccessorEvidence {
+    StableKey exact_item_identity;
+    StableKey policy_entry_identity;
+    double probability = 0.0;
+    double policy_continuation =
+        std::numeric_limits<double>::infinity();
+    double existing_lower = 0.0;
+    double applied_potential = 0.0;
+    double contribution = 0.0;
+    double required_lower_if_sole_closure = 0.0;
+    bool terminal = false;
+    bool policy_domain = false;
+    bool ambiguous_policy_entry = false;
+};
+
+struct VerifiedPolicyPotentialLookupResult {
+    StableKey policy_entry_identity;
+    double continuation =
+        std::numeric_limits<double>::infinity();
+    bool available = false;
+    bool ambiguous = false;
+};
+
+struct VerifiedPolicyBellmanTransitionInput {
+    StableKey exact_item_identity;
+    std::uint32_t projected_coarse_state = kNoId;
+    bool terminal = false;
+    double probability = 0.0;
+};
+
+struct VerifiedPolicyBellmanConstraintRequest {
+    StableKey source_entry_identity;
+    StableKey source_item_identity;
+    StableKey action_identity;
+    std::string action_id;
+    std::uint32_t coarse_state = kNoId;
+    std::uint32_t coarse_operator = kNoId;
+    std::uint32_t action_family = 0;
+    bool selected_action = false;
+    bool selected_policy_equality_available = false;
+    bool source_policy_available = false;
+    bool exact_row_available = false;
+    double source_policy_value =
+        std::numeric_limits<double>::infinity();
+    double source_policy_residual =
+        std::numeric_limits<double>::infinity();
+    double action_cost = 0.0;
+    double probability_mass = 0.0;
+    double root_expected_visits = 0.0;
+    std::uint64_t proof_work_proxy = 0;
+    std::uint32_t selection_reasons = 0;
+    std::uint32_t exact_row_status = 0;
+    std::string refusal_reason;
+    double epsilon = 1e-12;
+    std::vector<VerifiedPolicyBellmanTransitionInput> transitions;
+};
+
+using VerifiedPolicyPotentialLookup = std::function<
+    VerifiedPolicyPotentialLookupResult(const StableKey&)>;
+using VerifiedPolicyExistingLowerLookup =
+    std::function<double(std::uint32_t)>;
+
+struct VerifiedPolicyBellmanConstraint;
+VerifiedPolicyBellmanConstraint
+evaluate_verified_policy_bellman_constraint(
+    VerifiedPolicyBellmanConstraintRequest request,
+    const VerifiedPolicyPotentialLookup& policy_lookup,
+    const VerifiedPolicyExistingLowerLookup& existing_lower_lookup);
+
+struct VerifiedPolicyBellmanConstraint {
+    VerifiedPolicyBellmanConstraintStatus status =
+        VerifiedPolicyBellmanConstraintStatus::SourceUnavailable;
+    StableKey source_entry_identity;
+    StableKey source_item_identity;
+    StableKey action_identity;
+    std::string action_id;
+    std::uint32_t coarse_state = kNoId;
+    std::uint32_t coarse_operator = kNoId;
+    std::uint32_t action_family = 0;
+    bool selected_action = false;
+    bool selected_policy_equality = false;
+    double source_policy_value =
+        std::numeric_limits<double>::infinity();
+    double source_policy_residual =
+        std::numeric_limits<double>::infinity();
+    double action_cost = 0.0;
+    double shadow_rhs = 0.0;
+    double bellman_deficit = 0.0;
+    double exact_policy_deviation =
+        std::numeric_limits<double>::infinity();
+    double boundary_probability_mass = 0.0;
+    double root_expected_visits = 0.0;
+    std::uint64_t proof_work_proxy = 0;
+    std::uint32_t selection_reasons = 0;
+    std::uint32_t exact_row_status = 0;
+    std::string refusal_reason;
+    std::uint32_t internal_policy_successors = 0;
+    std::uint32_t boundary_successors = 0;
+    bool exact_deviation_available = false;
+    bool policy_improving = false;
+    bool inequality_satisfied = false;
+    std::vector<VerifiedPolicyBellmanSuccessorEvidence> successors;
+};
+
+/* Typed no-authority result for the policy-potential experiment. Complete
+ * row constraints remain insufficient lower authority until action-complete
+ * dependency SCC closure is independently established. */
+struct VerifiedPolicyBellmanShadowCertificate {
+    static constexpr std::uint64_t kSchemaVersion = 1;
+
+    std::uint64_t schema_version = kSchemaVersion;
+    ExecutableContinuationAuthorityContext authority;
+    std::uint64_t strategy_identity_digest = 0;
+    std::uint64_t strategy_identity_bytes = 0;
+    std::uint64_t policy_entry_certificate_identity = 0;
+    StableKey existing_lower_identity;
+    bool requested = false;
+    bool action_complete = false;
+    bool dependency_closed = false;
+    std::uint64_t exact_internal_constraints = 0;
+    std::uint64_t boundary_escape_constraints = 0;
+    std::uint64_t policy_improving_deviations = 0;
+    std::uint64_t exact_bellman_closed_constraints = 0;
+    std::uint64_t unresolved_constraints = 0;
+    std::uint64_t exact_row_work = 0;
+    std::uint64_t strict_states_created = 0;
+    std::uint64_t retained_bytes = 0;
+    std::uint64_t transient_bytes = 0;
+    std::uint64_t build_ns = 0;
+    std::vector<VerifiedPolicyBellmanConstraint> constraints;
+
+    /* Intentionally no conversion or availability predicate. A future
+     * authority owner must validate closed SCCs and every legal action. */
+};
+
 using RetentionCapacityCoarseProjector =
     std::function<std::uint32_t(std::uint32_t)>;
 
@@ -405,11 +597,21 @@ struct VerifiedPolicyAlternativeAction {
     bool exact_applicable = false;
     std::optional<RetentionCapacityFractureShadowRow>
         retention_capacity_fracture;
+    std::optional<VerifiedPolicyExactActionRow> exact_action_row;
 };
 
 using VerifiedPolicyAlternativeObserver = std::function<void(
     const VerifiedPolicyStrictEntry&,
     const VerifiedPolicyAlternativeAction&)>;
+
+/* Optional bounded second-pass selector. A selected row is an exact
+ * diagnostic kernel only; selecting it cannot create a proof obligation or
+ * grant Bellman/lower authority. */
+using VerifiedPolicyExactRowSelector = std::function<bool(
+    const VerifiedPolicyStrictEntry&,
+    const VerifiedPolicyAlternativeAction&)>;
+using VerifiedPolicyEntrySelector = std::function<bool(
+    const StrategyPolicyEntryResult&)>;
 
 struct VerifiedPolicyAlternativeShadowCensus {
     static constexpr std::size_t kEntryStatusCount = 12;
@@ -443,6 +645,13 @@ struct VerifiedPolicyAlternativeShadowCensus {
     std::uint64_t retention_capacity_strict_states_created = 0;
     std::uint64_t retention_capacity_peak_transient_bytes = 0;
     std::uint64_t retention_capacity_build_ns = 0;
+    std::uint64_t sampled_exact_rows_examined = 0;
+    std::uint64_t sampled_exact_rows_complete = 0;
+    std::uint64_t sampled_exact_rows_refused = 0;
+    std::uint64_t sampled_exact_transitions = 0;
+    std::uint64_t sampled_exact_strict_states_created = 0;
+    std::uint64_t sampled_exact_peak_transient_bytes = 0;
+    std::uint64_t sampled_exact_build_ns = 0;
     std::uint64_t observer_calls = 0;
     std::uint64_t lifecycle_mutations = 0;
     std::uint64_t retained_owned_bytes = 0;
@@ -464,7 +673,9 @@ audit_verified_policy_alternative_shadow(
     const SolveOptions& options,
     const RetainedCompiledPolicyArtifact& artifact,
     ExecutableContinuationAuthorityContext current_authority,
-    VerifiedPolicyAlternativeObserver observer = {});
+    VerifiedPolicyAlternativeObserver observer = {},
+    VerifiedPolicyExactRowSelector exact_row_selector = {},
+    VerifiedPolicyEntrySelector entry_selector = {});
 
 /* Retained counterpart of assert_compiled_policy_exact(). Compilation and
  * parsing are bounded stages; exact graph evaluation advances through the

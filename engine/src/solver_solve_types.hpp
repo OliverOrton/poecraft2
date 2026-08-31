@@ -1861,6 +1861,87 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
             std::size_t closest_to_retirement_count = 0;
         };
 
+        static constexpr std::size_t kBellmanSuccessorSampleLimit = 16;
+        struct PolicyPotentialBellmanSuccessorSample {
+            std::uint64_t exact_item_identity = 0;
+            std::uint64_t policy_entry_identity = 0;
+            double probability = 0.0;
+            double policy_continuation = kInfinity;
+            double existing_lower = 0.0;
+            double applied_potential = 0.0;
+            double contribution = 0.0;
+            double required_lower_if_sole_closure = 0.0;
+            bool terminal = false;
+            bool policy_domain = false;
+            bool ambiguous_policy_entry = false;
+        };
+
+        struct PolicyPotentialBellmanConstraintSample {
+            std::uint64_t source_entry_identity = 0;
+            std::uint64_t source_item_identity = 0;
+            std::uint64_t action_identity = 0;
+            std::uint32_t state = kNoId;
+            std::uint32_t operator_index = kNoId;
+            std::uint32_t status = 0;
+            bool selected_action = false;
+            bool selected_policy_equality = false;
+            std::uint32_t selection_reasons = 0;
+            double root_expected_visits = 0.0;
+            std::uint64_t proof_work_proxy = 0;
+            std::uint32_t exact_row_status = 0;
+            std::string refusal_reason;
+            double source_policy_value = kInfinity;
+            double source_policy_residual = kInfinity;
+            double action_cost = 0.0;
+            double shadow_rhs = 0.0;
+            double bellman_deficit = 0.0;
+            double exact_policy_deviation = kInfinity;
+            double boundary_probability_mass = 0.0;
+            std::uint32_t internal_policy_successors = 0;
+            std::uint32_t boundary_successors = 0;
+            bool exact_deviation_available = false;
+            bool policy_improving = false;
+            bool inequality_satisfied = false;
+            std::array<
+                PolicyPotentialBellmanSuccessorSample,
+                kBellmanSuccessorSampleLimit> successors{};
+            std::size_t successor_count = 0;
+        };
+
+        struct PolicyPotentialBellmanShadow {
+            std::string authority = "observational_only";
+            std::string status = "not_run";
+            std::uint64_t strategy_identity_digest = 0;
+            std::uint64_t strategy_identity_bytes = 0;
+            std::uint64_t policy_entry_certificate_identity = 0;
+            std::uint64_t existing_lower_identity = 0;
+            std::uint64_t globally_routable_entries = 0;
+            std::uint64_t ambiguous_item_entries = 0;
+            bool action_complete = false;
+            bool dependency_closed = false;
+            std::uint64_t exact_internal_constraints = 0;
+            std::uint64_t boundary_escape_constraints = 0;
+            std::uint64_t policy_improving_deviations = 0;
+            std::uint64_t exact_bellman_closed_constraints = 0;
+            std::uint64_t unresolved_constraints = 0;
+            std::uint64_t sampled_rows_requested = 0;
+            std::uint64_t sampled_rows_examined = 0;
+            std::uint64_t sampled_rows_complete = 0;
+            std::uint64_t sampled_rows_refused = 0;
+            std::uint64_t sampled_transitions = 0;
+            std::uint64_t exact_row_work = 0;
+            std::uint64_t strict_states_created = 0;
+            std::uint64_t retained_bytes = 0;
+            std::uint64_t transient_bytes = 0;
+            std::uint64_t build_ns = 0;
+            std::array<std::uint64_t, kOperatorFamilyCount>
+                unresolved_by_family{};
+            std::array<
+                PolicyPotentialBellmanConstraintSample,
+                kOperatorShadowSampleLimit> constraints{};
+            std::size_t constraint_count = 0;
+        };
+
         struct VerifiedPolicyAlternativeShadow {
             bool requested = false;
             std::string status = "not_run";
@@ -1915,6 +1996,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
                 kOperatorShadowSampleLimit> largest_retirement_margins{};
             std::size_t largest_retirement_margin_count = 0;
             RetentionCapacityFractureShadow retention_capacity_fracture;
+            PolicyPotentialBellmanShadow policy_potential_bellman;
         };
 
         enum class OperatorLowerSkipReason : std::uint8_t {

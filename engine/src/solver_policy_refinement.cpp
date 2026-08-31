@@ -149,8 +149,13 @@ build_retention_capacity_fracture_shadow_row(
         }
         const AbstractState& successor = exact.state(outcome.state);
         RetentionCapacityFractureTransition transition;
+        pc_item_state successor_item{};
+        if (!exact.materialize(outcome.state, successor_item)) {
+            finish(RetentionCapacityFractureShadowStatus::IdentityFailure);
+            return row;
+        }
         transition.exact_successor_identity =
-            exact_state_key(successor, 0);
+            exact_item_state_key(successor_item);
         transition.projected_coarse_state =
             project_to_coarse(outcome.state);
         for (std::uint32_t slot = 0;
@@ -211,6 +216,181 @@ build_retention_capacity_fracture_shadow_row(
     }
     finish(RetentionCapacityFractureShadowStatus::Complete);
     return row;
+}
+
+VerifiedPolicyBellmanConstraint
+evaluate_verified_policy_bellman_constraint(
+        VerifiedPolicyBellmanConstraintRequest request,
+        const VerifiedPolicyPotentialLookup& policy_lookup,
+        const VerifiedPolicyExistingLowerLookup& existing_lower_lookup) {
+    VerifiedPolicyBellmanConstraint constraint;
+    constraint.source_entry_identity =
+        std::move(request.source_entry_identity);
+    constraint.source_item_identity =
+        std::move(request.source_item_identity);
+    constraint.action_identity = std::move(request.action_identity);
+    constraint.action_id = std::move(request.action_id);
+    constraint.coarse_state = request.coarse_state;
+    constraint.coarse_operator = request.coarse_operator;
+    constraint.action_family = request.action_family;
+    constraint.selected_action = request.selected_action;
+    constraint.selected_policy_equality =
+        request.selected_policy_equality_available;
+    constraint.source_policy_value = request.source_policy_value;
+    constraint.source_policy_residual = request.source_policy_residual;
+    constraint.root_expected_visits = request.root_expected_visits;
+    constraint.proof_work_proxy = request.proof_work_proxy;
+    constraint.selection_reasons = request.selection_reasons;
+    constraint.exact_row_status = request.exact_row_status;
+    constraint.refusal_reason = std::move(request.refusal_reason);
+    constraint.action_cost = request.action_cost;
+    constraint.shadow_rhs = request.action_cost;
+    constraint.exact_policy_deviation = request.action_cost;
+
+    if (!request.source_policy_available ||
+        constraint.source_entry_identity.empty() ||
+        constraint.source_item_identity.empty() ||
+        constraint.action_identity.empty() ||
+        !std::isfinite(constraint.source_policy_value) ||
+        constraint.source_policy_value < 0.0 ||
+        !std::isfinite(constraint.source_policy_residual) ||
+        constraint.source_policy_residual < 0.0) {
+        constraint.status =
+            VerifiedPolicyBellmanConstraintStatus::SourceUnavailable;
+        return constraint;
+    }
+    if (request.selected_action &&
+        request.selected_policy_equality_available) {
+        const double tolerance = request.epsilon * std::max(
+            1.0, std::abs(constraint.source_policy_value));
+        if (constraint.source_policy_residual > tolerance) {
+            constraint.status =
+                VerifiedPolicyBellmanConstraintStatus::ExactRowUnavailable;
+            return constraint;
+        }
+        /* The independent fixed-policy evaluator already solved the
+         * compiled selected-action graph, including route/checkpoint/offer
+         * nodes, and recorded this exact entry's Bellman residual. Reuse
+         * that equality as selected-action evidence without reconstructing
+         * a second strict kernel whose local action row would omit those
+         * compiled dependencies. */
+        constraint.action_cost = 0.0;
+        constraint.shadow_rhs = constraint.source_policy_value;
+        constraint.exact_policy_deviation =
+            constraint.source_policy_value;
+        constraint.exact_deviation_available = true;
+        constraint.inequality_satisfied = true;
+        constraint.status =
+            VerifiedPolicyBellmanConstraintStatus::Complete;
+        return constraint;
+    }
+    if (!request.exact_row_available ||
+        !std::isfinite(request.action_cost) ||
+        request.action_cost < 0.0 || request.transitions.empty() ||
+        !policy_lookup || !existing_lower_lookup) {
+        constraint.status =
+            VerifiedPolicyBellmanConstraintStatus::ExactRowUnavailable;
+        return constraint;
+    }
+    if (!std::isfinite(request.probability_mass) ||
+        std::abs(request.probability_mass - 1.0) > 1e-12) {
+        constraint.status =
+            VerifiedPolicyBellmanConstraintStatus::IncompleteMass;
+        return constraint;
+    }
+
+    bool exact_deviation_available = true;
+    constraint.successors.reserve(request.transitions.size());
+    for (VerifiedPolicyBellmanTransitionInput& transition :
+         request.transitions) {
+        VerifiedPolicyBellmanSuccessorEvidence successor;
+        successor.exact_item_identity =
+            std::move(transition.exact_item_identity);
+        successor.probability = transition.probability;
+        successor.terminal = transition.terminal;
+        if (successor.exact_item_identity.empty() ||
+            !std::isfinite(successor.probability) ||
+            successor.probability <= 0.0) {
+            constraint.status =
+                VerifiedPolicyBellmanConstraintStatus::IncompleteMass;
+            constraint.successors.clear();
+            return constraint;
+        }
+        if (successor.terminal) {
+            successor.policy_continuation = 0.0;
+        } else {
+            const VerifiedPolicyPotentialLookupResult policy =
+                policy_lookup(successor.exact_item_identity);
+            if (policy.available && !policy.ambiguous &&
+                !policy.policy_entry_identity.empty() &&
+                std::isfinite(policy.continuation) &&
+                policy.continuation >= 0.0) {
+                successor.policy_domain = true;
+                successor.policy_entry_identity =
+                    policy.policy_entry_identity;
+                successor.policy_continuation = policy.continuation;
+                successor.applied_potential = policy.continuation;
+                ++constraint.internal_policy_successors;
+            } else {
+                successor.ambiguous_policy_entry = policy.ambiguous;
+                successor.existing_lower = existing_lower_lookup(
+                    transition.projected_coarse_state);
+                successor.applied_potential = successor.existing_lower;
+                exact_deviation_available = false;
+                constraint.boundary_probability_mass +=
+                    successor.probability;
+                ++constraint.boundary_successors;
+            }
+        }
+        if (!std::isfinite(successor.applied_potential) ||
+            successor.applied_potential < 0.0) {
+            constraint.status =
+                VerifiedPolicyBellmanConstraintStatus::InvalidLower;
+            constraint.successors.clear();
+            return constraint;
+        }
+        successor.contribution = successor.probability *
+            successor.applied_potential;
+        constraint.shadow_rhs += successor.contribution;
+        if (exact_deviation_available) {
+            constraint.exact_policy_deviation +=
+                successor.probability *
+                successor.policy_continuation;
+        }
+        constraint.successors.push_back(std::move(successor));
+    }
+    if (!exact_deviation_available) {
+        constraint.exact_policy_deviation =
+            std::numeric_limits<double>::infinity();
+    }
+    constraint.exact_deviation_available = exact_deviation_available;
+    const double tolerance = request.epsilon * std::max({
+        1.0,
+        std::abs(constraint.source_policy_value),
+        std::abs(constraint.shadow_rhs),
+        exact_deviation_available
+            ? std::abs(constraint.exact_policy_deviation)
+            : 0.0});
+    constraint.bellman_deficit = std::max(
+        0.0,
+        constraint.source_policy_value - constraint.shadow_rhs);
+    constraint.inequality_satisfied =
+        constraint.source_policy_value <=
+        constraint.shadow_rhs + tolerance;
+    constraint.policy_improving = !constraint.selected_action &&
+        exact_deviation_available &&
+        constraint.exact_policy_deviation + tolerance <
+            constraint.source_policy_value;
+    for (VerifiedPolicyBellmanSuccessorEvidence& successor :
+         constraint.successors) {
+        if (!successor.terminal && !successor.policy_domain) {
+            successor.required_lower_if_sole_closure =
+                successor.existing_lower +
+                constraint.bellman_deficit / successor.probability;
+        }
+    }
+    constraint.status = VerifiedPolicyBellmanConstraintStatus::Complete;
+    return constraint;
 }
 
 void merge_refined_compile_strict_members(
@@ -282,7 +462,9 @@ audit_verified_policy_alternative_shadow(
         const SolveOptions& options,
         const RetainedCompiledPolicyArtifact& artifact,
         ExecutableContinuationAuthorityContext current_authority,
-        VerifiedPolicyAlternativeObserver observer) {
+        VerifiedPolicyAlternativeObserver observer,
+        VerifiedPolicyExactRowSelector exact_row_selector,
+        VerifiedPolicyEntrySelector entry_selector) {
     const auto started = std::chrono::steady_clock::now();
     VerifiedPolicyAlternativeShadowCensus census;
     const auto finish = [&](const VerifiedPolicyAlternativeShadowStatus status,
@@ -386,6 +568,7 @@ audit_verified_policy_alternative_shadow(
             oracle.estimated_owned_bytes());
 
         for (const StrategyPolicyEntryResult& source : entries.entries) {
+            if (entry_selector && !entry_selector(source)) continue;
             ++census.entries_examined;
             const std::size_t source_status =
                 static_cast<std::size_t>(source.status);
@@ -428,6 +611,13 @@ audit_verified_policy_alternative_shadow(
 
             auto [exact, strict_state] =
                 oracle.quotient_import_verified_policy_item(source.item);
+            pc_item_state imported_item{};
+            const bool imported_item_available =
+                oracle.quotient_export_item(strict_state, imported_item);
+            const StableKey imported_exact_item_identity =
+                imported_item_available
+                    ? exact_item_state_key(imported_item)
+                    : StableKey{};
             if (exact.terminal) {
                 ++census.entries_refused;
                 ++census.strict_terminal_refusals;
@@ -435,7 +625,11 @@ audit_verified_policy_alternative_shadow(
                 continue;
             }
             if (exact.coarse_state >= coarse.state_count() ||
-                exact.coarse_state >= solved.policy.size()) {
+                exact.coarse_state >= solved.policy.size() ||
+                !imported_item_available ||
+                source.exact_item_identity.empty() ||
+                imported_exact_item_identity !=
+                    source.exact_item_identity) {
                 ++census.entries_refused;
                 ++census.strict_coarse_projection_refusals;
                 oracle.quotient_release_carrier(exact.stable_key);
@@ -474,6 +668,8 @@ audit_verified_policy_alternative_shadow(
             strict_entry.compiled_node_id = source.compiled_node_id;
             strict_entry.exact_entry_identity =
                 source.exact_entry_identity;
+            strict_entry.exact_item_identity =
+                source.exact_item_identity;
             strict_entry.strict_state_identity = exact.stable_key;
             strict_entry.coarse_state_identity =
                 physical_coarse_state_identity;
@@ -488,6 +684,12 @@ audit_verified_policy_alternative_shadow(
             strict_entry.selected_operator = source.selected_operator;
             strict_entry.exact_continuation_upper =
                 source.exact_continuation_upper;
+            strict_entry.policy_bellman_residual =
+                source.bellman_residual;
+            strict_entry.root_expected_visits =
+                source.root_expected_visits;
+            strict_entry.global_policy_entry =
+                source.globally_routable();
             strict_entry.fixed_observed_choice_policy =
                 source.fixed_observed_choice_policy;
 
@@ -532,12 +734,14 @@ audit_verified_policy_alternative_shadow(
                 } else if (action.caller_authorized &&
                            action.exact_applicable) {
                     ++census.alternative_obligations;
-                    action.retention_capacity_fracture =
-                        oracle
-                            .quotient_retention_capacity_fracture_shadow_row(
-                                exact, strict_state, strict_operator,
-                                source.exact_entry_identity,
-                                action.operator_identity);
+                    if (!exact_row_selector) {
+                        action.retention_capacity_fracture =
+                            oracle
+                                .quotient_retention_capacity_fracture_shadow_row(
+                                    exact, strict_state, strict_operator,
+                                    source.exact_entry_identity,
+                                    action.operator_identity);
+                    }
                     if (action.retention_capacity_fracture.has_value()) {
                         ++census.retention_capacity_rows_examined;
                         const RetentionCapacityFractureShadowRow& row =
@@ -561,6 +765,36 @@ audit_verified_policy_alternative_shadow(
                                 row.transient_bytes);
                         saturating_add(
                             census.retention_capacity_build_ns,
+                            row.build_ns);
+                    }
+                    if (exact_row_selector &&
+                        exact_row_selector(strict_entry, action)) {
+                        action.exact_action_row =
+                            oracle
+                                .quotient_verified_policy_alternative_exact_row(
+                                    exact, strict_state, strict_operator,
+                                    source.exact_entry_identity,
+                                    action.operator_identity);
+                        ++census.sampled_exact_rows_examined;
+                        const VerifiedPolicyExactActionRow& row =
+                            *action.exact_action_row;
+                        if (row.available()) {
+                            ++census.sampled_exact_rows_complete;
+                            saturating_add(
+                                census.sampled_exact_transitions,
+                                row.transitions.size());
+                        } else {
+                            ++census.sampled_exact_rows_refused;
+                        }
+                        saturating_add(
+                            census.sampled_exact_strict_states_created,
+                            row.strict_states_created);
+                        census.sampled_exact_peak_transient_bytes =
+                            std::max(
+                                census.sampled_exact_peak_transient_bytes,
+                                row.transient_bytes);
+                        saturating_add(
+                            census.sampled_exact_build_ns,
                             row.build_ns);
                     }
                 }

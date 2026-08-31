@@ -160,6 +160,12 @@ std::vector<std::uint64_t> exact_abstract_state_key(
     const AbstractState& state,
     std::uint32_t coarse_parent);
 
+/* Collision-free semantic serialization of the live concrete item payload.
+ * Dense mod/group ids are valid only inside the separately bound session and
+ * artifact identity. Unused fixed-array storage is deliberately excluded. */
+std::vector<std::uint64_t> exact_item_state_key(
+    const pc_item_state& item);
+
 struct ExecutableFixedOptionChoice {
     std::uint32_t mod_id = kNoId;
     bool retry_local = false;

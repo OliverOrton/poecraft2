@@ -1757,6 +1757,12 @@ void run_retention_capacity_fracture_shadow_row_tests() {
     PC_CHECK(calc.materialize(source, materialized_source));
     PC_CHECK(!calc.is_goal_state(calc.state(source)));
     PC_CHECK(satisfied_goal_count(calc.state(source), goal) == 5);
+    pc_item_state permuted = full;
+    std::swap(permuted.prefixes[0], permuted.prefixes[2]);
+    std::swap(permuted.suffixes[0], permuted.suffixes[2]);
+    PC_CHECK(exact_item_state_key(permuted) == exact_item_state_key(full));
+    permuted.prefixes[0].flags ^= PC_MOD_SLOT_FRACTURED;
+    PC_CHECK(exact_item_state_key(permuted) != exact_item_state_key(full));
     const auto identity_projection = [](
             const std::uint32_t state) { return state; };
     const refinement::StableKey entry_identity{11, 12, 13};
@@ -1824,6 +1830,115 @@ void run_retention_capacity_fracture_shadow_row_tests() {
     PC_CHECK(
         invalid_price.status == refinement::
             RetentionCapacityFractureShadowStatus::InvalidRequest);
+
+    refinement::VerifiedPolicyBellmanConstraintRequest bellman_request;
+    bellman_request.source_entry_identity = {31};
+    bellman_request.source_item_identity = {32};
+    bellman_request.action_identity = {33};
+    bellman_request.action_id = "fixture_deviation";
+    bellman_request.coarse_state = 4;
+    bellman_request.coarse_operator = 5;
+    bellman_request.source_policy_available = true;
+    bellman_request.exact_row_available = true;
+    bellman_request.source_policy_value = 50.0;
+    bellman_request.source_policy_residual = 1e-13;
+    bellman_request.action_cost = 10.0;
+    bellman_request.probability_mass = 1.0;
+    bellman_request.transitions = {
+        {{41}, 6, false, 0.25},
+        {{42}, 7, false, 0.75},
+    };
+    const auto boundary_constraint =
+        refinement::evaluate_verified_policy_bellman_constraint(
+            bellman_request,
+            [](const refinement::StableKey& item) {
+                refinement::VerifiedPolicyPotentialLookupResult result;
+                if (item == refinement::StableKey{41}) {
+                    result.policy_entry_identity = {51};
+                    result.continuation = 20.0;
+                    result.available = true;
+                }
+                return result;
+            },
+            [](const std::uint32_t state) {
+                return state == 7 ? 5.0 : 0.0;
+            });
+    PC_CHECK(
+        boundary_constraint.status == refinement::
+            VerifiedPolicyBellmanConstraintStatus::Complete);
+    PC_CHECK(!boundary_constraint.exact_deviation_available);
+    PC_CHECK(boundary_constraint.internal_policy_successors == 1);
+    PC_CHECK(boundary_constraint.boundary_successors == 1);
+    PC_CHECK(near(
+        boundary_constraint.boundary_probability_mass, 0.75, 1e-12));
+    PC_CHECK(near(boundary_constraint.shadow_rhs, 18.75, 1e-12));
+    PC_CHECK(near(boundary_constraint.bellman_deficit, 31.25, 1e-12));
+    PC_CHECK(!boundary_constraint.inequality_satisfied);
+    PC_CHECK(near(
+        boundary_constraint.successors[1]
+            .required_lower_if_sole_closure,
+        5.0 + 31.25 / 0.75, 1e-12));
+
+    bellman_request.source_policy_value = 100.0;
+    const auto exact_deviation =
+        refinement::evaluate_verified_policy_bellman_constraint(
+            bellman_request,
+            [](const refinement::StableKey& item) {
+                refinement::VerifiedPolicyPotentialLookupResult result;
+                result.policy_entry_identity =
+                    item == refinement::StableKey{41}
+                        ? refinement::StableKey{51}
+                        : refinement::StableKey{52};
+                result.continuation =
+                    item == refinement::StableKey{41} ? 20.0 : 60.0;
+                result.available = true;
+                return result;
+            },
+            [](const std::uint32_t) { return 0.0; });
+    PC_CHECK(exact_deviation.exact_deviation_available);
+    PC_CHECK(near(exact_deviation.exact_policy_deviation, 60.0, 1e-12));
+    PC_CHECK(exact_deviation.policy_improving);
+    PC_CHECK(!exact_deviation.inequality_satisfied);
+
+    refinement::VerifiedPolicyBellmanConstraintRequest
+        selected_equality_request;
+    selected_equality_request.source_entry_identity = {61};
+    selected_equality_request.source_item_identity = {62};
+    selected_equality_request.action_identity = {63};
+    selected_equality_request.action_id = "fixed_policy_action";
+    selected_equality_request.selected_action = true;
+    selected_equality_request.selected_policy_equality_available = true;
+    selected_equality_request.source_policy_available = true;
+    selected_equality_request.source_policy_value = 42.0;
+    selected_equality_request.source_policy_residual = 1e-13;
+    selected_equality_request.root_expected_visits = 0.5;
+    selected_equality_request.selection_reasons = 4;
+    const auto selected_equality =
+        refinement::evaluate_verified_policy_bellman_constraint(
+            selected_equality_request, {}, {});
+    PC_CHECK(
+        selected_equality.status == refinement::
+            VerifiedPolicyBellmanConstraintStatus::Complete);
+    PC_CHECK(selected_equality.selected_policy_equality);
+    PC_CHECK(selected_equality.exact_deviation_available);
+    PC_CHECK(selected_equality.inequality_satisfied);
+    PC_CHECK(near(selected_equality.shadow_rhs, 42.0, 1e-12));
+    PC_CHECK(near(
+        selected_equality.exact_policy_deviation, 42.0, 1e-12));
+    PC_CHECK(near(
+        selected_equality.root_expected_visits, 0.5, 1e-12));
+    PC_CHECK(selected_equality.selection_reasons == 4);
+    selected_equality_request.source_policy_residual = 1e-3;
+    PC_CHECK(
+        refinement::evaluate_verified_policy_bellman_constraint(
+            selected_equality_request, {}, {}).status ==
+        refinement::VerifiedPolicyBellmanConstraintStatus::
+            ExactRowUnavailable);
+    static_assert(!std::is_convertible_v<
+        refinement::VerifiedPolicyBellmanShadowCertificate,
+        solve_detail::ProofLowerValue>);
+    static_assert(!std::is_convertible_v<
+        refinement::VerifiedPolicyBellmanConstraint, double>);
 
     std::vector<double> values(first.transitions.size() + 1, 0.0);
     values[0] = first.immediate_cost;
@@ -4591,6 +4706,8 @@ void run_policy_guided_primitive_choice_reoptimization_tests() {
         authored.policy;
     const std::vector<double> values_before_shadow = authored.values;
     std::uint64_t observed_actions = 0;
+    std::uint64_t globally_routable_actions = 0;
+    std::uint64_t locally_routed_actions = 0;
     bool observed_choice_selected_seen = false;
     auto shadow_work =
         refinement::audit_verified_policy_alternative_shadow(
@@ -4601,11 +4718,18 @@ void run_policy_guided_primitive_choice_reoptimization_tests() {
                 ++observed_actions;
                 PC_CHECK(!entry.compiled_node_id.empty());
                 PC_CHECK(!entry.exact_entry_identity.empty());
+                PC_CHECK(!entry.exact_item_identity.empty());
                 PC_CHECK(!entry.strict_state_identity.empty());
                 PC_CHECK(!entry.coarse_state_identity.empty());
                 PC_CHECK(!entry.represented_coarse_state_identity.empty());
                 PC_CHECK(!entry.selected_exact_decision_identity.empty());
                 PC_CHECK(std::isfinite(entry.exact_continuation_upper));
+                PC_CHECK(std::isfinite(entry.policy_bellman_residual));
+                if (entry.global_policy_entry) {
+                    ++globally_routable_actions;
+                } else {
+                    ++locally_routed_actions;
+                }
                 PC_CHECK(!action.operator_identity.empty());
                 PC_CHECK(!action.operator_id.empty());
                 if (action.selected) {
@@ -4649,7 +4773,57 @@ void run_policy_guided_primitive_choice_reoptimization_tests() {
              shadow_census.entries_accepted);
     PC_CHECK(shadow_census.observer_calls == observed_actions);
     PC_CHECK(shadow_census.lifecycle_mutations == 0);
+    PC_CHECK(globally_routable_actions > 0);
+    PC_CHECK(locally_routed_actions > 0);
     PC_CHECK(observed_choice_selected_seen);
+    PC_CHECK(authored.policy == policy_before_shadow);
+    PC_CHECK(authored.values == values_before_shadow);
+
+    std::uint64_t sampled_exact_rows = 0;
+    auto sampled_shadow_work =
+        refinement::audit_verified_policy_alternative_shadow(
+            calc, authored, start, prices, options, shadow_artifact,
+            shadow_certificate.authority,
+            [&](const refinement::VerifiedPolicyStrictEntry& entry,
+                const refinement::VerifiedPolicyAlternativeAction& action) {
+                if (!action.exact_action_row.has_value()) return;
+                ++sampled_exact_rows;
+                PC_CHECK(action.operator_id == "annul");
+                PC_CHECK(!action.selected);
+                PC_CHECK(entry.root_expected_visits >= 0.0);
+                PC_CHECK(action.exact_action_row->available());
+                PC_CHECK(
+                    action.exact_action_row->exact_entry_identity ==
+                    entry.exact_entry_identity);
+                PC_CHECK(
+                    action.exact_action_row->operator_identity ==
+                    action.operator_identity);
+                PC_CHECK(near(
+                    action.exact_action_row->probability_mass,
+                    1.0, 1e-12));
+            },
+            [](const refinement::VerifiedPolicyStrictEntry&,
+               const refinement::VerifiedPolicyAlternativeAction& action) {
+                return !action.selected &&
+                    action.operator_id == "annul";
+            });
+    while (!sampled_shadow_work.resume()) {}
+    const auto sampled_shadow_census =
+        sampled_shadow_work.take_result();
+    PC_CHECK(
+        sampled_shadow_census.status == refinement::
+            VerifiedPolicyAlternativeShadowStatus::Complete);
+    PC_CHECK(sampled_exact_rows > 0);
+    PC_CHECK(
+        sampled_shadow_census.sampled_exact_rows_examined ==
+        sampled_exact_rows);
+    PC_CHECK(
+        sampled_shadow_census.sampled_exact_rows_complete ==
+        sampled_exact_rows);
+    PC_CHECK(
+        sampled_shadow_census.sampled_exact_rows_refused == 0);
+    PC_CHECK(sampled_shadow_census.sampled_exact_transitions > 0);
+    PC_CHECK(sampled_shadow_census.lifecycle_mutations == 0);
     PC_CHECK(authored.policy == policy_before_shadow);
     PC_CHECK(authored.values == values_before_shadow);
 

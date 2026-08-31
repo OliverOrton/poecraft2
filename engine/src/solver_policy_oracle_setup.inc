@@ -385,6 +385,186 @@
             exact.coarse_state, strict_operator, strict_state, &recipe);
     }
 
+    VerifiedPolicyExactActionRow
+    quotient_verified_policy_selected_exact_row(
+            const ExactState& exact,
+            const std::uint32_t strict_state,
+            const SelectedAction& selected,
+            StableKey exact_entry_identity,
+            StableKey operator_identity) {
+        const auto started = std::chrono::steady_clock::now();
+        VerifiedPolicyExactActionRow row;
+        row.exact_entry_identity = std::move(exact_entry_identity);
+        row.operator_identity = std::move(operator_identity);
+        row.exact_decision_identity = selected.semantic_key;
+        const auto finish = [&](const VerifiedPolicyExactRowStatus status) {
+            row.status = status;
+            std::uint64_t transient = sizeof(row);
+            saturating_add(
+                transient,
+                row.exact_entry_identity.capacity() *
+                    sizeof(std::uint64_t));
+            saturating_add(
+                transient,
+                row.operator_identity.capacity() *
+                    sizeof(std::uint64_t));
+            saturating_add(
+                transient,
+                row.exact_decision_identity.capacity() *
+                    sizeof(std::uint64_t));
+            saturating_add(
+                transient, row.refusal_reason.capacity() + 1);
+            saturating_add(
+                transient,
+                row.transitions.capacity() *
+                    sizeof(VerifiedPolicyExactRowTransition));
+            for (const VerifiedPolicyExactRowTransition& transition :
+                 row.transitions) {
+                saturating_add(
+                    transient,
+                    transition.strict_state_identity.capacity() *
+                        sizeof(std::uint64_t));
+                saturating_add(
+                    transient,
+                    transition.exact_item_identity.capacity() *
+                        sizeof(std::uint64_t));
+            }
+            row.retained_bytes = 0;
+            row.transient_bytes = transient;
+            row.build_ns = static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - started)
+                    .count());
+        };
+        const auto known = known_.find(exact.stable_key);
+        if (exact.terminal || known == known_.end() ||
+            known->second.strict_state != strict_state ||
+            selected.action_id >= strict_->operators().size() ||
+            row.exact_entry_identity.empty() ||
+            row.operator_identity.empty() ||
+            row.exact_decision_identity.empty()) {
+            finish(VerifiedPolicyExactRowStatus::InvalidRequest);
+            return row;
+        }
+        const std::uint32_t states_before = strict_->state_count();
+        try {
+            ExactActionKernel kernel = exact_kernel(exact, selected);
+            row.action_cost = kernel.action_cost;
+            row.strict_states_created =
+                strict_->state_count() - states_before;
+            if (!std::isfinite(row.action_cost) ||
+                row.action_cost < 0.0 || kernel.transitions.empty()) {
+                finish(VerifiedPolicyExactRowStatus::Inapplicable);
+                return row;
+            }
+            row.transitions.reserve(kernel.transitions.size());
+            for (const ExactTransition& transition : kernel.transitions) {
+                if (!std::isfinite(transition.probability) ||
+                    transition.probability <= 0.0) {
+                    finish(VerifiedPolicyExactRowStatus::IncompleteMass);
+                    return row;
+                }
+                const auto successor = known_.find(
+                    transition.successor.stable_key);
+                if (successor == known_.end() ||
+                    successor->second.strict_state >=
+                        strict_->state_count()) {
+                    finish(VerifiedPolicyExactRowStatus::IdentityFailure);
+                    return row;
+                }
+                pc_item_state item{};
+                if (!strict_->materialize(
+                        successor->second.strict_state, item)) {
+                    finish(VerifiedPolicyExactRowStatus::IdentityFailure);
+                    return row;
+                }
+                row.transitions.push_back({
+                    transition.successor.stable_key,
+                    exact_item_state_key(item),
+                    transition.successor.coarse_state,
+                    transition.successor.terminal,
+                    transition.probability,
+                });
+                row.probability_mass += transition.probability;
+            }
+            std::sort(
+                row.transitions.begin(), row.transitions.end(),
+                [](const VerifiedPolicyExactRowTransition& left,
+                   const VerifiedPolicyExactRowTransition& right) {
+                    return std::tie(
+                               left.exact_item_identity,
+                               left.strict_state_identity,
+                               left.probability) <
+                           std::tie(
+                               right.exact_item_identity,
+                               right.strict_state_identity,
+                               right.probability);
+                });
+            if (std::abs(row.probability_mass - 1.0) > 1e-12) {
+                finish(VerifiedPolicyExactRowStatus::IncompleteMass);
+                return row;
+            }
+            finish(VerifiedPolicyExactRowStatus::Complete);
+            strict_->release_solve_transition_caches();
+            adapter_memory_cache_initialized_ = false;
+            return row;
+        } catch (const std::exception& error) {
+            row.strict_states_created =
+                strict_->state_count() - states_before;
+            row.refusal_reason = error.what();
+            finish(VerifiedPolicyExactRowStatus::AdapterFailure);
+            strict_->release_solve_transition_caches();
+            adapter_memory_cache_initialized_ = false;
+            return row;
+        }
+    }
+
+    VerifiedPolicyExactActionRow
+    quotient_verified_policy_alternative_exact_row(
+            const ExactState& exact,
+            const std::uint32_t strict_state,
+            const std::uint32_t strict_operator,
+            StableKey exact_entry_identity,
+            StableKey operator_identity) {
+        const auto started = std::chrono::steady_clock::now();
+        try {
+            const SelectedAction alternative = make_selected(
+                exact.coarse_state, strict_operator, strict_state);
+            const StableKey raw_key = exact_refinement_state_key(
+                strict_->state(strict_state), exact.coarse_state_key);
+            const PlannerOperator& planner =
+                strict_->operators().at(strict_operator);
+            if (raw_key != exact.stable_key &&
+                !has_proven_unobserved_primitive_recipe(
+                    strict_state, planner)) {
+                store_choice_recipe(
+                    exact.stable_key, alternative.semantic_key,
+                    choice_recipe(raw_key, alternative));
+            }
+            return quotient_verified_policy_selected_exact_row(
+                exact, strict_state, alternative,
+                std::move(exact_entry_identity),
+                std::move(operator_identity));
+        } catch (const std::exception& error) {
+            VerifiedPolicyExactActionRow row;
+            row.status = VerifiedPolicyExactRowStatus::AdapterFailure;
+            row.exact_entry_identity = std::move(exact_entry_identity);
+            row.operator_identity = std::move(operator_identity);
+            row.refusal_reason = error.what();
+            row.transient_bytes = sizeof(row) +
+                row.exact_entry_identity.capacity() *
+                    sizeof(std::uint64_t) +
+                row.operator_identity.capacity() *
+                    sizeof(std::uint64_t) +
+                row.refusal_reason.capacity() + 1;
+            row.build_ns = static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - started)
+                    .count());
+            return row;
+        }
+    }
+
     std::optional<RetentionCapacityFractureShadowRow>
     quotient_retention_capacity_fracture_shadow_row(
             const ExactState& exact,
