@@ -6,6 +6,42 @@ routes to them rather than duplicating complete reports.
 
 Parent: [Documentation map](README.md)
 
+## PDR Early Executable Closed-Domain Qualification
+
+The 2026-08-30
+[archived result](archive/2026-08-30-carrier-ladder-early-executable-closure-v1/README.md)
+attributes the direct core policy's former 97.1042% off-policy mass to omitted
+already-solved coarse carriers, not to a missing action, ladder service,
+fragment, retry basin, or publication defect. Assertion-only compilation now
+routes the fully closed exact coarse domain while keeping unmatched execution
+fail-closed.
+
+The authoritative r4 report is
+`build/qualification/carrier-ladder-early-executable-closure-v1/pdr-closed-domain-r4/report.json`,
+1,752,552 bytes, SHA-256
+`EA747D9E7651D0F2D67F0C2B6BD830FF83364E20E4CADA9131F9C731A63AC14B`.
+Direct candidate `2689760079114510069` / portfolio identity
+`2553f28a7ea59ef5` independently evaluates proper with success one, zero
+off-policy mass, complete pricing, and cost `3758.1244272552067`. Its compiled
+domain has 7,212 working representatives, 6,394 added representatives, 7,200
+physical routes, and 729 fail-closed defaults. It is retained before the
+subsequent 76.078-second strict lift.
+
+Strict candidate `12798937337675811455` independently returns the same exact
+cost and remains the publication authority. Transition hash
+`8479650a31b8c067`, policy hash `295084a8fcb0385a`, and all ordinary row,
+Bellman, transition, and extraction counts match the baseline; solve steps
+increase by one. The final strategy is 3,095,098 bytes with SHA-256
+`02A1B5309F217AD5162CE19248B1BF6658A6D5643836EC070849299BE4BA5C46`.
+
+The direct solver estimate is still `3770.7208497712586`, so its
+`12.596422516051916` absolute / `0.0033405873884342426` relative delta leaves
+`cost_reconciled=false`. This is an early verified bounded upper, not direct
+exact closure, and strict refinement must remain enabled. Focused native
+acceptance passed 612 compiler and 86,321 solver checks; release WASM rebuilt,
+28/28 WASM smoke checks and all remaining web tests passed, and TypeScript
+type-checking passed. No visual or additional sampled-Simulator claim is made.
+
 ## Online Continuation Lifecycle And Retry Cost
 
 The 2026-08-29

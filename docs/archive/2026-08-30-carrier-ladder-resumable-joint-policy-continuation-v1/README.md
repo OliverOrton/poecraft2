@@ -3,6 +3,8 @@
 **Status: stopped at Outcome B — benchmark-private resumability proved;
 production activation rejected and removed.**
 
+Parent: [Documentation archive](../README.md)
+
 ## Objective
 
 Retain and incrementally resume one exact ordinary joint-policy candidate when

@@ -3,7 +3,9 @@
 **Status: completed — Outcome A.** The narrow lifecycle repair and production
 activation qualified on 2026-08-30. Work is local-only and was not pushed.
 
-Parent: [Active work](../README.md)
+Parent: [Documentation archive](../README.md)
+
+Detailed chronology: [execution log](execution-log.md).
 
 ## Objective
 

@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-08-30
 
+- [Carrier-Ladder Early Executable Closure v1](2026-08-30-carrier-ladder-early-executable-closure-v1/README.md) —
+  compiles the exact closed coarse assertion domain into a proper zero-off-
+  policy PDR candidate at `3758.1244272552067`, retains it before strict lift,
+  preserves the exact final winner and ordinary work, and leaves strict
+  refinement mandatory because the coarse estimate remains unreconciled.
 - [PDR Retention-Capacity Operator-Proof Pilot v1](2026-08-30-pdr-retention-capacity-operator-proof-pilot-v1/README.md) —
   retains a bounded verified-incumbent operator-consumer audit, proves that the
   only aligned early executable upper is a 15.77-million-Chaos ladder
@@ -21,6 +26,14 @@ selected active work.
   terminal refusal, activates bounded candidate continuation in the existing
   production profile, reproduces exact PDR and clean-five winners, matches two
   current-main secondary controls, and passes affected native/WASM acceptance.
+- [Carrier-Ladder Resumable Joint-Policy Continuation v1](2026-08-30-carrier-ladder-resumable-joint-policy-continuation-v1/README.md) —
+  proves benchmark-private snapshot-pure continuation across three genuine
+  PDR missing states, then rejects and removes production activation because
+  the same preference destroys the matched clean-five executable upper.
+- [Carrier-Ladder Missing-Frontier Handoff Repair v1](2026-08-30-carrier-ladder-missing-frontier-handoff-repair-v1/README.md) —
+  isolates the PDR/clean-five scheduler conflict through matched factor runs,
+  retains no production source change, and selects candidate-local resumption
+  as its historical follow-up.
 - [Historical Five-Goal Quality Regression v1](2026-08-30-historical-five-goal-quality-regression-v1/README.md) —
   reproduces the byte-identical historical 87k strategy, isolates the first
   quality regression to missing-frontier/automatic-epoch scheduling in

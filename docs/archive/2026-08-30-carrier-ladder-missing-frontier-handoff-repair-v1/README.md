@@ -1,9 +1,10 @@
 # Carrier-Ladder Missing-Frontier Handoff Repair v1
 
-**Status: active; qualification classified Outcome C and production source is
-unchanged. The PDR retention-capacity pilot is blocked.**
+**Status: completed diagnosis-only on 2026-08-30 — Outcome C; production
+source is unchanged.** This is historical input to the later resumable-
+continuation boundary and owns no current sequencing.
 
-Parent: [Active work](../README.md)
+Parent: [Documentation archive](../README.md)
 
 ## Boundary
 
@@ -108,7 +109,7 @@ through enough automatic continuation work to construct a useful upper, but
 that ownership must not drain the unrelated frozen frontier. A fixed carrier
 count is not an adequate proof of that boundary.
 
-## Next implementation plan
+## Historical resulting direction
 
 1. Reuse the existing missing-frontier lineage and typed action-envelope
    lifecycle to name the automatic rows and newly retained carriers causally
@@ -134,5 +135,6 @@ count is not an adequate proof of that boundary.
    as a retained deliverable. Otherwise revert the experiment and stop with
    the failed factor evidence.
 
-Only after these gates pass may the PDR Retention-Capacity Operator-Proof Pilot
-v1 be reconsidered.
+Only after these gates passed could the PDR Retention-Capacity Operator-Proof
+Pilot v1 be reconsidered. Later archived boundaries own the resulting work;
+this document has no current sequencing authority.

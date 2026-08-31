@@ -20,6 +20,16 @@ propagation, but the required natural two-goal case stopped before its first
 closed-partition class at the unchanged 1 GiB cap. Release WASM and full
 cross-layer acceptance were not rerun.
 
+Closed-domain qualification addendum: verified against source on 2026-08-30
+@ `e95b189b8c118b66fdb20bc1f6e2f634203da3ed`. A fully closed, uncapped exact
+coarse result may compile all solved behavioral representatives for direct
+assertion instead of only the root-policy-reachable subset. The PDR control
+independently proves that artifact proper with success one, zero off-policy
+mass, and complete pricing before strict lift. Focused native checks, release
+WASM, nonvisual web acceptance, and TypeScript checking passed. The direct
+coarse/exact value mismatch remains explicit, so this addendum does not claim
+direct exact closure or permit strict refinement to be bypassed.
+
 The policy-guided refinement steps below define the retained native
 publication authority. Its reconstruct-then-merge production path stopped at
 the archived
@@ -216,6 +226,17 @@ The native stages are:
 9. publish the best certified retained artifact, preserving the core and
    direct-stage identities and reasons in telemetry even when strict repair
    wins or no candidate can be published.
+
+Direct assertion has one deliberately narrower compilation scope. When the
+core result is exact, its non-goal discovery and action envelope are closed,
+no state/resource cap fired, and no structured refined route owns the policy,
+the assertion compiler may include every expanded behavioral representative
+with a finite selected action. All physical members route through those
+representatives; semantic goals and gated retry basins remain outside policy
+routing, and every unmatched observation still reaches the certification
+fail-closed terminal. Certification and paired product assertions use the same
+topology. This is executable-domain materialization for an already solved
+policy, not new search, ladder service, retry, or publication authority.
 
 Terminal goal recognition is exact-item recognition: the requested rarity and
 slot threshold must hold, and the number of explicit affixes must equal the

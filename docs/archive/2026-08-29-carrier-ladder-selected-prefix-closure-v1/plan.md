@@ -23,7 +23,7 @@ defaults. It may never invent, reoptimize, or substitute an action.
 ## Starting Evidence
 
 The completed
-[Carrier-Ladder Exact Boundary Contract v1](../../../archive/2026-08-29-carrier-ladder-exact-boundary-contract-v1/result.md)
+[Carrier-Ladder Exact Boundary Contract v1](../2026-08-29-carrier-ladder-exact-boundary-contract-v1/result.md)
 proved matched `off` / `record` / `recover` ordinary behavior and retained a
 bounded private exact replay seam. The cumulative-10 witness stopped after
 214 private work items at non-goal coarse state 213, before the requested

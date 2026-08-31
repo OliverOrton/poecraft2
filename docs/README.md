@@ -31,10 +31,15 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[Carrier-Ladder Early Executable Closure v1](active/2026-08-30-carrier-ladder-early-executable-closure-v1/README.md)
-is active. It is tracing the single fail-closed router default that prevents a
-near-optimal PDR direct policy from becoming a proper executable candidate
-before terminal strict refinement.
+No implementation boundary is active. Oliver must select the next chunk before
+implementation resumes.
+
+The completed
+[Carrier-Ladder Early Executable Closure v1](archive/2026-08-30-carrier-ladder-early-executable-closure-v1/README.md)
+compiles the exact closed coarse assertion domain into a proper independently
+evaluated PDR candidate at `3758.1244272552067` before strict lift. Final exact
+quality and ordinary work are preserved. The direct coarse estimate remains
+unreconciled, so strict refinement retains exact publication authority.
 
 The completed diagnosis-only
 [PDR Retention-Capacity Operator-Proof Pilot v1](archive/2026-08-30-pdr-retention-capacity-operator-proof-pilot-v1/README.md)
@@ -42,8 +47,9 @@ retains a bounded observational audit over verified-incumbent operator
 consumers. It proves that the aligned early ladder candidate costs 15.77
 million Chaos, while a near-optimal 3,770-Chaos direct policy remains 97.1%
 off-policy until terminal strict closure produces the exact 3,758-Chaos
-winner. No retention/capacity abstraction was built; the recommended next
-question is ladder-side early executable-policy properness.
+winner. No retention/capacity abstraction was built. Its recommended ladder-
+side properness question is answered by the completed early-executable closure
+boundary above.
 
 The completed
 [Historical Five-Goal Quality Regression v1](archive/2026-08-30-historical-five-goal-quality-regression-v1/README.md)
