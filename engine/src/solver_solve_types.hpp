@@ -1954,6 +1954,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
             double source_bellman_deficit = kInfinity;
             double source_boundary_probability_mass = 0.0;
             std::uint32_t continuation_status = 0;
+            std::string continuation_status_name = "not_run";
             std::uint64_t continuation_exact_entry_identity = 0;
             std::uint64_t continuation_exact_item_identity = 0;
             double continuation_cost = kInfinity;

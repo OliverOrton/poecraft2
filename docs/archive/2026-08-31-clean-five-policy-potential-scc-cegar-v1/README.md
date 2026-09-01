@@ -1,10 +1,10 @@
 # Clean-Five Policy-Potential SCC CEGAR v1
 
-**Status: active shadow implementation.** No public lower, pruning,
+**Status: completed diagnosis-only on 2026-08-31.** No public lower, pruning,
 retirement, scheduling, incumbent, or publication authority is granted by
 this work.
 
-Parent: [Active work](../README.md)
+Parent: [Archive](../README.md)
 
 ## Objective and Starting Evidence
 
@@ -98,7 +98,81 @@ digests and local node/state numbers are lookup aids only.
 - 2026-08-31: archived the two completed clean-five predecessor boundaries as
   part of this first technical checkpoint. Protected untracked `0` remains
   untouched.
+- 2026-08-31: committed the typed evaluator/SCC shadow checkpoint as
+  `66836dbe84deb307a6bdbd73081c6bdfb869d7b8`. Rebuilt only the native
+  benchmark target needed for real evidence.
+- 2026-08-31: the first CLI attempt used the unchanged immutable revision but
+  correctly reported the diagnostic disabled: attempt
+  `attempt-107569c8-e189-4446-866b-9d6f5299a989`, report SHA-256
+  `510E3FAF391F41694407E50086FD39A9BAE413CB1511A06912B27C90D2CB27BC`.
+  It is retained as a clean control, not mislabeled shadow evidence. The CLI
+  authoring registry then refused a requested diagnostic-only case patch
+  before creating a revision. That registry was not broadened for this task.
+- 2026-08-31: ran the one actual Scour shadow through the rebuilt native
+  benchmark's existing diagnostic flag and the same immutable revision. It
+  completed naturally in `146953.5615` ms. Full output stays at
+  `build/qualification/clean-five-policy-potential-scc-cegar-v1/scour-shadow-r1/report.json`
+  (SHA-256
+  `86F50C586AA5355876310DB75A3471710BB5BD031D3722706AACADF0917F0156`).
+  The strategy is 426,180 bytes with SHA-256
+  `EA59F23F770FF2A969774266FA34C58FB23CB16A6B2E46C25B6CAFA1B3C1FF1A`,
+  byte-identical to r9.
+
+## Scour Oracle Evidence
+
+The retained r9 witness was rediscovered by full current-run validation:
+
+- source exact-entry digest `10753618678795409314`;
+- action digest `753596084770576979`;
+- canonical successor-item digest `10262648309111924158`;
+- source `J_policy = 85408.64362148767`;
+- root expected visits `3950.058981874641`;
+- deterministic boundary mass one and Bellman deficit
+  `85372.1550897589`.
+
+One arbitrary-entry request produced exact-entry digest
+`2971188823987951536` for the same canonical item, but status
+`failure_reachable` (`StrategyContinuationEntryStatus` value 4). The ordinary
+global-start fixed strategy therefore has reachable fail-closed/off-policy
+mass from this post-Scour item and supplies no proper finite continuation
+upper. The dependency request recorded one refused kernel, zero complete
+kernels, zero candidate entries, zero SCCs, and did not reach the fixed
+256-entry expansion bound.
+
+The refusal is a strategy-domain fact, not a coarse-value gap and not missing
+evaluator machinery. The evaluator completed the request in
+`3607030900` ns, with `131714112` live and `213481561` peak owned bytes for
+the expansion. Total native live/peak ownership was `306954189` /
+`476340635` bytes under the unchanged 1 GiB cap. The ordinary 16-entry bounded
+audit still examined 492 applicable alternatives, found finite existing
+lowers for all, retired zero, and recorded zero lifecycle mutations.
+
+Final exact evidence remains unchanged: cost `85408.64362148782`, expected
+actions `8259.46821052856`, success probability one, off-policy mass zero,
+complete pricing/reconciliation, public lower `36.48853172876641`, and the
+same 775-node/1,634-edge strategy. No Simulator qualification applies because
+the compiled strategy is byte-identical.
 
 ## Decision and Outcome
 
-Pending the focused kernel/SCC contracts and one real Scour closure attempt.
+**Diagnosis-only hard stop at the first oracle.** The Scour successor cannot
+enter Candidate because the current fixed strategy is not a proper executable
+continuation from that exact item. An upper-side refusal cannot be repaired by
+calling its value a lower, seeding the source decision directly, forcing a
+router edge, or building RCASSP. Consequently no action census, exact
+alternative rows, certified SCC, public lower change, or policy-improvement
+branch follows from this witness.
+
+The retained shadow architecture is sound and useful: it enforces global
+routing, exposes complete selected planner-operation kernels only after a
+proper arbitrary-entry continuation exists, validates simultaneous
+action-complete SCC closure, and identified the concrete strategy-domain
+refusal within 3.61 seconds of incremental evaluator work. Production
+authority remains unchanged.
+
+If Oliver selects a continuation, the smallest next experiment is the already
+measured five-entry internal temporary-bench/cannot-roll dependency set. Its
+alternative inequality passes locally and all five successors have policy
+entries, so it can exercise selected-kernel SCC closure without weakening the
+global routing rule or expanding the strategy to cover the refused Scour
+item. That is a new boundary, not implicit permission to modify the router.

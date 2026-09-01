@@ -8249,10 +8249,18 @@ struct StrategyEvalWork::Impl {
                 refused.status = StrategyPolicySelectedKernelStatus::
                     GlobalRouteRefused;
                 refused.source_item_identity = item_identity;
-                refused.refusal_reason = matches.empty()
-                    ? "arbitrary entry has no globally routed policy decision"
-                    : "arbitrary entry duplicates an already requested "
-                      "globally routed policy decision";
+                if (route_complete && target_node < strategy->nodes.size()) {
+                    refused.compiled_node_id =
+                        strategy->nodes[target_node].id;
+                }
+                refused.refusal_reason = !matches.empty()
+                    ? "arbitrary entry duplicates an already requested "
+                      "globally routed policy decision"
+                    : !route_complete
+                        ? "arbitrary entry ordinary global router refuses "
+                          "the exact item"
+                        : "arbitrary entry reaches a global decision but "
+                          "has no complete proper continuation there";
                 policy_certificate.selected_kernels.push_back(
                     std::move(refused));
                 ++policy_certificate.dependency_kernels_refused;
@@ -9715,8 +9723,17 @@ std::uint64_t strategy_policy_entry_certificate_semantic_identity(
     mix_word(certificate.schema_version);
     mix_word(certificate.evaluator_version);
     mix_word(certificate.requested_decisions);
-    mix_word(certificate.dependency_kernel_roots_requested);
-    mix_word(certificate.dependency_expansion_capped ? 1 : 0);
+    /* Preserve the established semantic identity of an ordinary entry
+     * certificate.  The opt-in dependency payload is a versioned extension
+     * and contributes only when a caller requested it. */
+    const bool dependency_extension_present =
+        certificate.dependency_kernel_roots_requested != 0 ||
+        !certificate.selected_kernels.empty();
+    if (dependency_extension_present) {
+        mix_word(0x73656c6465707831ull); /* "seldepx1" */
+        mix_word(certificate.dependency_kernel_roots_requested);
+        mix_word(certificate.dependency_expansion_capped ? 1 : 0);
+    }
     for (const StrategyPolicyDecisionCoverage& decision :
          certificate.decisions) {
         mix_string(decision.compiled_node_id);

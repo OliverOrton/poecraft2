@@ -1494,6 +1494,8 @@ SolveWork::Impl::finalize_carrier_bound_attribution() {
         finite_json(cegar.source_boundary_probability_mass) + '}';
     json += ",\"continuation\":{\"status\":" +
         std::to_string(cegar.continuation_status);
+    json += ",\"status_name\":";
+    append_json_string(json, cegar.continuation_status_name);
     json += ",\"exact_entry_identity\":";
     append_json_string(
         json, std::to_string(cegar.continuation_exact_entry_identity));
@@ -2546,6 +2548,8 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
             bytes += shadow.policy_potential_cegar.status.capacity() + 1;
             bytes += shadow.policy_potential_cegar.failure_reason.capacity() + 1;
             bytes += shadow.policy_potential_cegar
+                         .continuation_status_name.capacity() + 1;
+            bytes += shadow.policy_potential_cegar
                          .global_route_target.capacity() + 1;
             for (std::size_t index = 0;
                  index < shadow.policy_potential_bellman.constraint_count;
@@ -2809,6 +2813,8 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
             bytes += shadow.policy_potential_cegar.authority.capacity() + 1;
             bytes += shadow.policy_potential_cegar.status.capacity() + 1;
             bytes += shadow.policy_potential_cegar.failure_reason.capacity() + 1;
+            bytes += shadow.policy_potential_cegar
+                         .continuation_status_name.capacity() + 1;
             bytes += shadow.policy_potential_cegar
                          .global_route_target.capacity() + 1;
             for (std::size_t index = 0;

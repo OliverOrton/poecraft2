@@ -1787,6 +1787,9 @@ SolveWork::Impl::audit_verified_policy_alternative_shadow(
             if (continuation != nullptr) {
                 cegar.continuation_status =
                     static_cast<std::uint32_t>(continuation->status);
+                cegar.continuation_status_name =
+                    strategy_continuation_entry_status_name(
+                        continuation->status);
                 cegar.continuation_exact_entry_identity =
                     key_identity(continuation->exact_entry_identity);
                 cegar.continuation_exact_item_identity =
@@ -1909,9 +1912,9 @@ SolveWork::Impl::audit_verified_policy_alternative_shadow(
             if (continuation == nullptr || !continuation->available()) {
                 cegar.status = "continuation_refused";
                 if (cegar.failure_reason.empty()) {
-                    cegar.failure_reason =
-                        "Scour successor has no proper exact arbitrary-entry "
-                        "continuation certificate";
+                    cegar.failure_reason = "Scour successor arbitrary-entry "
+                        "continuation refused: " +
+                        cegar.continuation_status_name;
                 }
             } else if (expanded_entries.dependency_kernels_refused != 0) {
                 cegar.status = "selected_kernel_refused";
@@ -1946,6 +1949,7 @@ SolveWork::Impl::audit_verified_policy_alternative_shadow(
             cegar.authority.capacity() + 1 +
             cegar.status.capacity() + 1 +
             cegar.failure_reason.capacity() + 1 +
+            cegar.continuation_status_name.capacity() + 1 +
             cegar.global_route_target.capacity() + 1;
         cegar.transient_bytes = std::max(
             cegar.transient_bytes, cegar.retained_bytes);
