@@ -3,7 +3,7 @@
 **Status: completed diagnosis-only.** Work is local-only; do not push.
 Protected untracked `0` remained untouched.
 
-Parent: [Active work](../README.md)
+Parent: [Archive](../README.md)
 
 ## Objective and Authority
 

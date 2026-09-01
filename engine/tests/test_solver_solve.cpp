@@ -1960,6 +1960,268 @@ void run_retention_capacity_fracture_shadow_row_tests() {
         values, goals, {proof_row}));
 }
 
+void run_policy_potential_scc_cegar_tests() {
+    ExecutableContinuationAuthorityContext authority;
+    authority.goal = {1};
+    authority.economy = {2};
+    authority.mechanics_artifact = {3};
+    authority.caller_scope = {4};
+    authority.action_vocabulary = {5};
+    authority.terminal_semantics = {6};
+    const refinement::StableKey strategy{700, 701};
+
+    const auto context = [&](const std::uint64_t entry) {
+        refinement::PolicyPotentialIdentityContext result;
+        result.authority = authority;
+        result.strategy = strategy;
+        result.exact_entry = {entry, entry + 1000};
+        result.exact_item = {entry + 2000, entry + 3000};
+        return result;
+    };
+    const auto selected = [&] (
+            const refinement::PolicyPotentialIdentityContext& source,
+            const double cost,
+            std::vector<
+                refinement::PolicyPotentialSelectedTransition> transitions,
+            const std::uint64_t semantic = 900) {
+        refinement::PolicyPotentialSelectedKernel kernel;
+        kernel.status = refinement::
+            PolicyPotentialSelectedKernelStatus::Complete;
+        kernel.source = source;
+        kernel.selected_operator_identity = {800, source.exact_entry.front()};
+        kernel.semantic_identity = {semantic, source.exact_entry.front()};
+        kernel.mandatory_expected_cost = cost;
+        kernel.probability_mass = 0.0;
+        for (const auto& transition : transitions) {
+            kernel.probability_mass += transition.probability;
+        }
+        kernel.bellman_residual = 0.0;
+        kernel.transitions = std::move(transitions);
+        return kernel;
+    };
+    const auto lower_constraint = [&] (
+            const refinement::PolicyPotentialIdentityContext& source,
+            const std::uint64_t action,
+            const double rhs) {
+        refinement::PolicyPotentialActionConstraint constraint;
+        constraint.kind = refinement::
+            PolicyPotentialConstraintKind::ExistingTypedLower;
+        constraint.source = source;
+        constraint.action_identity = {action};
+        constraint.semantic_identity = {600, action};
+        constraint.existing_lower_identity = {601, action};
+        constraint.rhs = rhs;
+        constraint.complete = true;
+        return constraint;
+    };
+    const auto candidate = [&] (
+            const refinement::PolicyPotentialIdentityContext& identity,
+            const double value,
+            refinement::PolicyPotentialSelectedKernel kernel) {
+        refinement::PolicyPotentialCandidateEntry entry;
+        entry.identity = identity;
+        entry.policy_value = value;
+        entry.existing_lower = 1.0;
+        entry.caller_authorized_actions = 2;
+        entry.selected_kernel = std::move(kernel);
+        entry.action_constraints.push_back(
+            lower_constraint(identity, identity.exact_entry.front() + 5000,
+                             value));
+        return entry;
+    };
+
+    /* An acyclic arbitrary-entry successor certifies bottom-up. */
+    const auto a = context(10);
+    const auto b = context(20);
+    auto entry_b = candidate(
+        b, 10.0, selected(b, 10.0, {{{}, 1.0, true}}));
+    auto entry_a = candidate(
+        a, 15.0,
+        selected(a, 5.0, {{b.exact_entry, 1.0, false}}));
+    const auto acyclic =
+        refinement::certify_policy_potential_cegar_shadow(
+            authority, strategy, {entry_a, entry_b});
+    PC_CHECK(acyclic.failure_reason.empty());
+    PC_CHECK(acyclic.certified_entries == 2);
+    PC_CHECK(acyclic.certified_sccs == 2);
+    PC_CHECK(acyclic.constraints_closed_by_existing_lower == 2);
+    PC_CHECK(acyclic.exact_rows_examined == 0);
+    PC_CHECK(acyclic.lifecycle_mutations == 0);
+
+    /* A cyclic selected policy must close as one simultaneous SCC. */
+    const auto c = context(30);
+    const auto d = context(40);
+    auto entry_c = candidate(
+        c, 4.0,
+        selected(c, 1.0, {{d.exact_entry, 1.0, false}}));
+    auto entry_d = candidate(
+        d, 3.0,
+        selected(
+            d, 1.0,
+            {{{}, 0.5, true}, {c.exact_entry, 0.5, false}}));
+    const auto cyclic =
+        refinement::certify_policy_potential_cegar_shadow(
+            authority, strategy, {entry_c, entry_d});
+    PC_CHECK(cyclic.certified_entries == 2);
+    PC_CHECK(cyclic.certified_sccs == 1);
+    PC_CHECK(cyclic.certified.front().entry_identities.size() == 2);
+
+    /* Proper upper-side continuation alone is insufficient when its selected
+     * dependency is outside the requested candidate set. */
+    const auto e = context(50);
+    const auto missing = context(60);
+    auto escaping = candidate(
+        e, 2.0,
+        selected(e, 1.0, {{missing.exact_entry, 1.0, false}}));
+    const auto open = refinement::certify_policy_potential_cegar_shadow(
+        authority, strategy, {escaping});
+    PC_CHECK(open.certified_entries == 0);
+    PC_CHECK(
+        open.candidates.front().status == refinement::
+            PolicyPotentialCandidateStatus::DependencyOpen);
+
+    /* Mandatory internal option work and fixed observed-choice timing remain
+     * attached to the selected kernel; the SCC layer neither reconstructs
+     * nor discards them. */
+    auto fixed_option = entry_b;
+    fixed_option.identity = context(70);
+    fixed_option.policy_value = 12.0;
+    fixed_option.selected_kernel = selected(
+        fixed_option.identity, 12.0, {{{}, 1.0, true}}, 901);
+    fixed_option.selected_kernel.mandatory_operation_states = 3;
+    fixed_option.selected_kernel.route_states = 2;
+    fixed_option.selected_kernel.observed_choice_states = 1;
+    fixed_option.action_constraints = {
+        lower_constraint(fixed_option.identity, 5070, 12.0)};
+    const auto fixed = refinement::certify_policy_potential_cegar_shadow(
+        authority, strategy, {fixed_option});
+    PC_CHECK(fixed.certified_entries == 1);
+    PC_CHECK(fixed_option.selected_kernel.mandatory_operation_states == 3);
+    PC_CHECK(fixed_option.selected_kernel.observed_choice_states == 1);
+
+    /* A global-router refusal is a typed selected-kernel refusal. */
+    auto refused_route = fixed_option;
+    refused_route.identity = context(80);
+    refused_route.selected_kernel.source = refused_route.identity;
+    refused_route.selected_kernel.status = refinement::
+        PolicyPotentialSelectedKernelStatus::UnresolvedPath;
+    refused_route.action_constraints = {
+        lower_constraint(refused_route.identity, 5080, 12.0)};
+    const auto routed = refinement::certify_policy_potential_cegar_shadow(
+        authority, strategy, {refused_route});
+    PC_CHECK(routed.certified_entries == 0);
+    PC_CHECK(routed.candidates.front().status == refinement::
+        PolicyPotentialCandidateStatus::SelectedKernelUnavailable);
+
+    /* Equal digest prefixes do not alias unequal full exact identities. */
+    auto collision_left = context(90);
+    auto collision_right = context(91);
+    collision_left.exact_entry = {999, 1};
+    collision_right.exact_entry = {999, 2};
+    auto collision_b = candidate(
+        collision_right, 3.0,
+        selected(collision_right, 3.0, {{{}, 1.0, true}}));
+    auto collision_a = candidate(
+        collision_left, 4.0,
+        selected(
+            collision_left, 1.0,
+            {{collision_right.exact_entry, 1.0, false}}));
+    const auto collision =
+        refinement::certify_policy_potential_cegar_shadow(
+            authority, strategy, {collision_a, collision_b});
+    PC_CHECK(collision.certified_entries == 2);
+
+    /* Exact policy improvement stops lower certification. */
+    auto improving = fixed_option;
+    improving.identity = context(100);
+    improving.selected_kernel.source = improving.identity;
+    improving.action_constraints = {
+        lower_constraint(improving.identity, 5100, 12.0)};
+    improving.action_constraints.front().kind = refinement::
+        PolicyPotentialConstraintKind::ExactAlternativeRow;
+    improving.action_constraints.front().existing_lower_identity.clear();
+    improving.action_constraints.front().immediate_cost = 11.0;
+    improving.action_constraints.front().transitions = {
+        {{}, {}, 1.0, 0.0, true}};
+    const auto improvement =
+        refinement::certify_policy_potential_cegar_shadow(
+            authority, strategy, {improving});
+    PC_CHECK(improvement.policy_improvement);
+    PC_CHECK(improvement.certified_entries == 0);
+    PC_CHECK(improvement.candidates.front().status == refinement::
+        PolicyPotentialCandidateStatus::PolicyImprovement);
+
+    /* An unresolved exact alternative with incomplete mass never enters a
+     * dependency SCC. */
+    auto incomplete = fixed_option;
+    incomplete.identity = context(110);
+    incomplete.selected_kernel.source = incomplete.identity;
+    incomplete.action_constraints = {
+        lower_constraint(incomplete.identity, 5110, 12.0)};
+    incomplete.action_constraints.front().kind = refinement::
+        PolicyPotentialConstraintKind::ExactAlternativeRow;
+    incomplete.action_constraints.front().existing_lower_identity.clear();
+    incomplete.action_constraints.front().immediate_cost = 12.0;
+    incomplete.action_constraints.front().transitions = {
+        {{}, {}, 0.9, 0.0, true}};
+    const auto incomplete_result =
+        refinement::certify_policy_potential_cegar_shadow(
+            authority, strategy, {incomplete});
+    PC_CHECK(incomplete_result.certified_entries == 0);
+    PC_CHECK(incomplete_result.candidates.front().status == refinement::
+        PolicyPotentialCandidateStatus::ConstraintOpen);
+
+    /* Monotone extension closes the earlier escape and preserves every
+     * already certified exact entry. */
+    const auto extended = refinement::certify_policy_potential_cegar_shadow(
+        authority, strategy, {entry_a, entry_b, entry_c, entry_d},
+        1e-12, &acyclic);
+    PC_CHECK(extended.failure_reason.empty());
+    PC_CHECK(extended.certified_entries == 4);
+    const auto revocation = refinement::certify_policy_potential_cegar_shadow(
+        authority, strategy, {entry_b}, 1e-12, &acyclic);
+    PC_CHECK(!revocation.failure_reason.empty());
+    PC_CHECK(revocation.certified_entries == 0);
+
+    /* Every authority component and exact checkpoint/offer context is bound
+     * by full equality. */
+    for (std::size_t component = 0; component < 8; ++component) {
+        auto mismatched = fixed_option;
+        mismatched.identity = context(120 + component);
+        mismatched.selected_kernel.source = mismatched.identity;
+        switch (component) {
+        case 0: mismatched.identity.authority.goal.push_back(9); break;
+        case 1: mismatched.identity.authority.economy.push_back(9); break;
+        case 2:
+            mismatched.identity.authority.mechanics_artifact.push_back(9);
+            break;
+        case 3: mismatched.identity.authority.caller_scope.push_back(9); break;
+        case 4:
+            mismatched.identity.authority.action_vocabulary.push_back(9);
+            break;
+        case 5:
+            mismatched.identity.authority.terminal_semantics.push_back(9);
+            break;
+        case 6: mismatched.identity.checkpoint.push_back(9); break;
+        case 7: mismatched.identity.observed_offer.push_back(9); break;
+        }
+        mismatched.action_constraints = {
+            lower_constraint(mismatched.identity, 5200 + component, 12.0)};
+        const auto mismatch =
+            refinement::certify_policy_potential_cegar_shadow(
+                authority, strategy, {mismatched});
+        PC_CHECK(mismatch.certified_entries == 0);
+    }
+
+    static_assert(!std::is_convertible_v<
+        refinement::PolicyPotentialCegarShadowCertificate,
+        solve_detail::ProofLowerValue>);
+    static_assert(!std::is_convertible_v<
+        refinement::PolicyPotentialCandidateResult, double>);
+    static_assert(!std::is_convertible_v<
+        refinement::PolicyPotentialSelectedKernel, bool>);
+}
+
 std::vector<std::pair<std::size_t, std::uint64_t>>
 distribution_state_probability_bits(
     const CalcContext& calc,
@@ -12357,6 +12619,7 @@ void run_solver_policy_refinement_tests() {
     run_policy_guided_local_reoptimization_tests();
     run_candidate_induced_exact_subclass_tests();
     run_retention_capacity_fracture_shadow_row_tests();
+    run_policy_potential_scc_cegar_tests();
     run_policy_guided_primitive_choice_reoptimization_tests();
     run_future_observed_choice_finalization_tests();
     run_policy_guided_fixed_choice_reoptimization_tests();

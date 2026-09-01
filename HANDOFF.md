@@ -1,34 +1,37 @@
 # Handoff
 
-**Status: no implementation boundary active.** The selected clean-five
-Bellman-subsolution boundary completed diagnosis-only. Oliver must choose the
-next chunk before implementation resumes.
+**Status: Clean-Five Policy-Potential SCC CEGAR v1 is active.** The typed
+candidate/SCC validator and evaluator-owned selected planner-operation kernel
+are implemented in shadow only. No public lower, pruning, retirement,
+scheduling, incumbent, or publication authority has changed.
 
-## Completed Boundary
+## Current Boundary
 
-[Clean-Five Verified-Policy Bellman Subsolution and Deviation-Gap Census v1](docs/active/2026-08-31-clean-five-verified-policy-bellman-subsolution-deviation-gap-census-v1/README.md)
-proved that the fixed-policy potential is not an admissible Bellman
-subsolution on the current reached domain. Nine Fracture alternatives and a
-bounded cross-family sample expose 20 outside-domain constraints; no measured
-exact deviation improves the policy, and only one non-selected internal row
-satisfies its local inequality without closing its five-entry dependency set.
+[Clean-Five Policy-Potential SCC CEGAR v1](docs/active/2026-08-31-clean-five-policy-potential-scc-cegar-v1/README.md)
+begins from the accepted r9 Scour witness. The exact evaluator now has an
+opt-in bounded expansion that globally routes an arbitrary exact item and
+retains complete priced selected planner-operation macros through mandatory
+operations, routes, checkpoints, and fixed observed choices. A separate typed
+validator certifies only simultaneously closed, action-complete dependency
+SCCs and has no ordinary authority conversion.
 
-Do not promote the shadow to lower/pruning authority. Do not build a Fracture
-recovery micro-SSP or RCASSP: all six Fracture outcomes escape the policy
-domain, so fractured junk is not the isolated blocker.
+Focused SCC/refinement tests pass with 2,373 checks; focused evaluator tests
+pass with 16,517 checks. The evaluator target's pre-existing embedded
+10,000-draw Monte Carlo fixture ran incidentally once. Broad acceptance and a
+standalone Simulator were not run.
 
-## Recommended Next Boundary
+## Next Executable Step
 
-If Oliver selects it, write a consumer-driven policy-potential CEGAR boundary.
-Begin with the highest-occupancy deterministic Scour escape, request exact
-fixed-policy continuation certificates for its outside-domain successor, and
-attempt simultaneous dependency/SCC closure. Add another action family only
-from a measured failed constraint. Preserve the current exact strategy,
-caller scope, caps, strict exactness, and no-authority shadow separation.
+Finish reviewing the real Scour telemetry hook, then run exactly one matched
+clean-five shadow. Inspect only bounded `policy_potential_cegar` fields. If the
+selected dependency expansion reaches its fixed 256-entry diagnostic bound,
+stop with quantified broad-graph evidence. If it remains bounded, enumerate
+caller-authorized alternatives only for the required dependency entries,
+applying existing typed lowers before exact rows.
 
 ## Evidence and Repository State
 
-- Final report:
+- Accepted starting report:
   `build/qualification/clean-five-verified-policy-bellman-subsolution-deviation-gap-census-v1/matched-shadow-r9/report.json`
 - Report SHA-256:
   `4D47329437B5BF1D3FB6C633313553E974EEA1200AA0E04CCC0F2BB45A5C24A6`
@@ -36,10 +39,10 @@ caller scope, caps, strict exactness, and no-authority shadow separation.
   `EA59F23F770FF2A969774266FA34C58FB23CB16A6B2E46C25B6CAFA1B3C1FF1A`
 - Exact cost `85408.64362148782`, success one, off-policy mass zero, lower
   `36.4885317287664`, zero lifecycle mutations.
-- Focused solve `86,597/0`; focused evaluator `16,494/0`. Broad acceptance
-  and standalone clean-five Simulator were not run.
-- Branch `main`; starting local/remote checkpoint
-  `131f14909ad4742de6c41ac25ee32fd68ef3c9f0`.
+- New focused SCC/refinement `2,373/0`; evaluator `16,517/0`. Broad
+  acceptance and standalone clean-five Simulator were not run.
+- Branch `main`; selected starting local/remote checkpoint
+  `40416f78f7ec75a0b35fb8659fd96077ebf61b8b`.
 - Protected untracked `0` remains untouched. Do not read, stage, modify, move,
   clean, or delete it.
 - Changes are local-only. Do not push.

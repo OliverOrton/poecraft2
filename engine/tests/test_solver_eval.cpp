@@ -688,6 +688,76 @@ void run_continuation_upper_certificate_tests() {
         solve_detail::ProofLowerValue>);
     static_assert(!std::is_convertible_v<
         StrategyPolicyEntryCertificate, double>);
+    static_assert(!std::is_convertible_v<
+        StrategyPolicySelectedKernel, solve_detail::ProofLowerValue>);
+    static_assert(!std::is_convertible_v<
+        StrategyPolicySelectedKernel, bool>);
+}
+
+void run_selected_policy_kernel_tests() {
+    auto session = make_eval_session();
+    const auto strategy = compile(
+        session,
+        shell(
+            "selected deterministic Scour macro", "rare",
+            R"JSON({"id":"start","kind":"start"},
+{"id":"scour","kind":"operation","operation":{"type":"scour","params":{}}},
+{"id":"success","kind":"terminal","terminal":"success"})JSON",
+            R"JSON({"id":"done","from":"start","to":"success","priority":0,"condition":{"type":"rarity_is","rarity":"normal"}},
+{"id":"route_scour","from":"start","to":"scour","priority":999,"is_default":true},
+{"id":"after_scour","from":"scour","to":"start","priority":999,"is_default":true})JSON"));
+    pc_item_state rare;
+    pc_item_clear(&rare);
+    rare.rarity = PC_RARITY_RARE;
+
+    auto economy = std::make_shared<EconomyImpl>();
+    economy->id = "selected-kernel-prices";
+    economy->prices = {{"scour", 3.0}};
+    StrategyEvalOptions options;
+    options.epsilon = 1e-13;
+    options.economy = economy;
+    options.continuation_entries = {{900, 901, 1, rare, true}};
+    options.policy_decision_entries = {
+        {"scour", 902, 903, {904}, {905}, false},
+    };
+    const StrategyEvalResult first = evaluate_strategy(*strategy, options);
+    const StrategyPolicyEntryCertificate& entries = first.policy_entries;
+    PC_CHECK(entries.dependency_kernel_roots_requested == 1);
+    PC_CHECK(entries.dependency_kernels_complete == 1);
+    PC_CHECK(entries.dependency_kernels_refused == 0);
+    PC_CHECK(!entries.dependency_expansion_capped);
+    PC_CHECK(entries.selected_kernels.size() == 1);
+    if (!entries.selected_kernels.empty()) {
+        const StrategyPolicySelectedKernel& kernel =
+            entries.selected_kernels.front();
+        PC_CHECK(kernel.available());
+        PC_CHECK(kernel.compiled_node_id == "scour");
+        PC_CHECK(kernel.selected_operator_identity ==
+                 std::vector<std::uint64_t>({905}));
+        PC_CHECK(near(kernel.source_policy_value, 3.0, 1e-12));
+        PC_CHECK(near(kernel.mandatory_expected_cost, 3.0, 1e-12));
+        PC_CHECK(near(kernel.probability_mass, 1.0, 1e-12));
+        PC_CHECK(kernel.bellman_residual <= 1e-12);
+        PC_CHECK(kernel.mandatory_operation_states == 1);
+        PC_CHECK(kernel.route_states >= 1);
+        PC_CHECK(kernel.transitions.size() == 1);
+        PC_CHECK(kernel.transitions.front().terminal);
+        PC_CHECK(!kernel.transitions.front().exact_item_identity.empty());
+        PC_CHECK(!kernel.semantic_identity.empty());
+        PC_CHECK(kernel.retained_owned_bytes > 0);
+        PC_CHECK(kernel.transient_evaluator_bytes > 0);
+    }
+    const StrategyEvalResult repeated = evaluate_strategy(*strategy, options);
+    PC_CHECK(repeated.policy_entries.semantic_identity ==
+             entries.semantic_identity);
+    PC_CHECK(repeated.policy_entries.selected_kernels.size() == 1);
+    if (!entries.selected_kernels.empty() &&
+        !repeated.policy_entries.selected_kernels.empty()) {
+        PC_CHECK(
+            repeated.policy_entries.selected_kernels.front()
+                .semantic_identity ==
+            entries.selected_kernels.front().semantic_identity);
+    }
 }
 
 std::string replace_once(
@@ -3316,6 +3386,9 @@ void run_solver_eval_tests(const char* artifact_dir) {
     stage("closed form", [&] { run_closed_form_tests(); });
     stage("continuation upper certificate", [&] {
         run_continuation_upper_certificate_tests();
+    });
+    stage("selected policy kernel", [&] {
+        run_selected_policy_kernel_tests();
     });
     stage("modifier offer resolution", [&] {
         run_modifier_offer_resolution_tests();

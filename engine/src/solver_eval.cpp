@@ -595,6 +595,31 @@ struct StrategyEvalWork::Impl {
             bytes += entry.exact_item_identity.capacity() *
                 sizeof(std::uint64_t);
         }
+        bytes += certificate.selected_kernels.capacity() *
+            sizeof(StrategyPolicySelectedKernel);
+        for (const StrategyPolicySelectedKernel& kernel :
+             certificate.selected_kernels) {
+            bytes += kernel.source_entry_identity.capacity() *
+                    sizeof(std::uint64_t) +
+                kernel.source_item_identity.capacity() *
+                    sizeof(std::uint64_t) +
+                kernel.selected_operator_identity.capacity() *
+                    sizeof(std::uint64_t) +
+                kernel.semantic_identity.capacity() *
+                    sizeof(std::uint64_t) +
+                kernel.compiled_node_id.capacity() + 1 +
+                kernel.refusal_reason.capacity() + 1 +
+                kernel.transitions.capacity() *
+                    sizeof(StrategyPolicySelectedKernelTransition);
+            for (const StrategyPolicySelectedKernelTransition& transition :
+                 kernel.transitions) {
+                bytes += transition.exact_entry_identity.capacity() *
+                        sizeof(std::uint64_t) +
+                    transition.exact_item_identity.capacity() *
+                        sizeof(std::uint64_t) +
+                    transition.compiled_node_id.capacity() + 1;
+            }
+        }
         return bytes;
     }
 
@@ -7644,6 +7669,638 @@ struct StrategyEvalWork::Impl {
             }
         }
 
+        /* A selected planner-operation kernel is requested only for explicit
+         * arbitrary-entry CEGAR roots.  Reuse the evaluator's exact graph and
+         * stop at genuine compiler decision pairs; checkpoint/offer-bearing
+         * revisits remain mandatory internal fixed-program work.  This keeps
+         * the historical all-entry certificate compact. */
+        constexpr std::size_t kPolicyDependencyKernelLimit = 256;
+        const solve_detail::SegmentedVector<EvalPair>& kernel_pairs =
+            attribution_pairs.empty() ? pairs : attribution_pairs;
+        const std::vector<EvalRow>& kernel_rows =
+            attribution_pairs.empty() ? rows : attribution_rows;
+        std::vector<const StrategyPolicyEntryResult*> entry_by_pair(
+            kernel_pairs.size(), nullptr);
+        std::map<
+            std::vector<std::uint64_t>,
+            const StrategyPolicyEntryResult*> entry_by_exact_identity;
+        for (const StrategyPolicyEntryResult& entry :
+             policy_certificate.entries) {
+            entry_by_exact_identity.emplace(
+                entry.exact_entry_identity, &entry);
+            if (entry.evaluator_pair_index < entry_by_pair.size()) {
+                entry_by_pair[entry.evaluator_pair_index] = &entry;
+            }
+        }
+        for (std::uint32_t pair = 0; pair < kernel_pairs.size(); ++pair) {
+            if (entry_by_pair[pair] != nullptr) continue;
+            const auto found = entry_by_exact_identity.find(
+                raw_pair_stable_key(kernel_pairs.at(pair)));
+            if (found != entry_by_exact_identity.end()) {
+                entry_by_pair[pair] = found->second;
+            }
+        }
+        const auto kernel_value_pair = [&](const std::uint32_t pair) {
+            return attribution_pairs.empty()
+                ? pair
+                : attribution_class_by_pair.at(pair);
+        };
+        const auto pair_immediate_cost = [&]
+                (const std::uint32_t pair,
+                 StrategyPolicySelectedKernelStatus& status) {
+            const EvalPair& record = kernel_pairs.at(pair);
+            if (!record.consumes) return 0.0;
+            if (record.node >= strategy->nodes.size() ||
+                strategy->nodes[record.node].kind !=
+                    StrategyNodeKind::Operation ||
+                options.economy == nullptr) {
+                status = StrategyPolicySelectedKernelStatus::MissingPrice;
+                return std::numeric_limits<double>::infinity();
+            }
+            double cost = 0.0;
+            for (const std::string& key :
+                 strategy->nodes[record.node].price_keys) {
+                const auto price = options.economy->prices.find(key);
+                if (price == options.economy->prices.end() ||
+                    !std::isfinite(price->second) || price->second < 0.0) {
+                    status = StrategyPolicySelectedKernelStatus::MissingPrice;
+                    return std::numeric_limits<double>::infinity();
+                }
+                cost += price->second;
+            }
+            if (!std::isfinite(cost) || cost < 0.0) {
+                status = StrategyPolicySelectedKernelStatus::MissingPrice;
+            }
+            return cost;
+        };
+        const auto is_decision_boundary = [&](const std::uint32_t pair) {
+            if (pair >= kernel_pairs.size()) return false;
+            const EvalPair& record = kernel_pairs.at(pair);
+            return request_by_node.contains(record.node) &&
+                record.checkpoint_state == kNoId &&
+                record.unveil_offer == kNoId;
+        };
+        struct BuiltSelectedKernel {
+            StrategyPolicySelectedKernel kernel;
+            std::vector<std::uint32_t> successor_pairs;
+        };
+        const auto build_selected_kernel = [&](const std::uint32_t source) {
+            BuiltSelectedKernel built;
+            StrategyPolicySelectedKernel& kernel = built.kernel;
+            const auto refuse = [&](
+                    const StrategyPolicySelectedKernelStatus status,
+                    std::string reason) {
+                kernel.status = status;
+                kernel.refusal_reason = std::move(reason);
+            };
+            if (source >= kernel_pairs.size() ||
+                source >= entry_by_pair.size() ||
+                entry_by_pair[source] == nullptr ||
+                !entry_by_pair[source]->globally_routable()) {
+                refuse(
+                    StrategyPolicySelectedKernelStatus::GlobalRouteRefused,
+                    "selected kernel source is not a globally routed "
+                    "policy entry");
+                return built;
+            }
+            const StrategyPolicyEntryResult& source_entry =
+                *entry_by_pair[source];
+            kernel.source_entry_identity =
+                source_entry.exact_entry_identity;
+            kernel.source_item_identity = source_entry.exact_item_identity;
+            kernel.selected_operator_identity =
+                source_entry.selected_operator_identity;
+            kernel.compiled_node_id = source_entry.compiled_node_id;
+            kernel.source_policy_value =
+                source_entry.exact_continuation_upper;
+            kernel.status = StrategyPolicySelectedKernelStatus::Complete;
+
+            struct MacroEdge {
+                std::uint32_t internal_target = kNoId;
+                std::uint32_t boundary_pair = kNoId;
+                std::uint32_t terminal_state = kNoId;
+                double probability = 0.0;
+                double extra_cost = 0.0;
+                bool terminal = false;
+            };
+            std::vector<std::uint32_t> internal_pairs{source};
+            std::map<std::uint32_t, std::size_t> internal_by_pair{
+                {source, 0}};
+            std::vector<std::vector<MacroEdge>> edges(1);
+            std::set<std::uint32_t> counted_pairs;
+            const auto count_pair = [&](const std::uint32_t pair) {
+                if (pair >= kernel_pairs.size() ||
+                    !counted_pairs.insert(pair).second) {
+                    return;
+                }
+                const EvalPair& record = kernel_pairs.at(pair);
+                if (record.node < strategy->nodes.size()) {
+                    const StrategyNodeKind kind =
+                        strategy->nodes[record.node].kind;
+                    if (kind == StrategyNodeKind::Operation) {
+                        ++kernel.mandatory_operation_states;
+                    } else if (kind == StrategyNodeKind::Start ||
+                               kind == StrategyNodeKind::Router) {
+                        ++kernel.route_states;
+                    }
+                }
+                if (record.checkpoint_state != kNoId) {
+                    ++kernel.checkpoint_states;
+                }
+                if (record.unveil_offer != kNoId) {
+                    ++kernel.observed_choice_states;
+                }
+            };
+            for (std::size_t local = 0;
+                 local < internal_pairs.size(); ++local) {
+                const std::uint32_t pair = internal_pairs[local];
+                count_pair(pair);
+                if (pair >= kernel_pairs.size() ||
+                    kernel_pairs.at(pair).row >= kernel_rows.size()) {
+                    refuse(
+                        StrategyPolicySelectedKernelStatus::SourceUnavailable,
+                        "selected kernel exact evaluator row is missing");
+                    return built;
+                }
+                const EvalRow& row =
+                    kernel_rows.at(kernel_pairs.at(pair).row);
+                std::vector<EvalTransition> expanded_transitions;
+                std::vector<EvalAbsorption> expanded_absorptions;
+                expanded_transitions.reserve(
+                    row.replayable()
+                        ? row.replay_route_tokens.size()
+                        : row.transitions.size());
+                expanded_absorptions.reserve(
+                    row.replayable()
+                        ? row.replay_route_tokens.size()
+                        : row.absorptions.size());
+                visit_eval_row(
+                    row, kernel_pairs,
+                    [&](const EvalTransition& transition) {
+                        expanded_transitions.push_back(transition);
+                    },
+                    [&](const EvalAbsorption& absorption) {
+                        expanded_absorptions.push_back(absorption);
+                    });
+                solve_detail::WideFloat row_mass{0.0};
+                edges.resize(internal_pairs.size());
+                for (std::size_t transition_index = 0;
+                     transition_index < expanded_transitions.size();
+                     ++transition_index) {
+                    const EvalTransition& transition =
+                        expanded_transitions[transition_index];
+                    if (!std::isfinite(transition.probability) ||
+                        transition.probability <= 0.0 ||
+                        transition.target >= kernel_pairs.size()) {
+                        refuse(
+                            StrategyPolicySelectedKernelStatus::IncompleteMass,
+                            "selected kernel transition is invalid");
+                        return built;
+                    }
+                    row_mass += solve_detail::WideFloat{
+                        transition.probability};
+                    MacroEdge edge;
+                    edge.probability = transition.probability;
+                    edge.boundary_pair = transition.target;
+                    if (attribution_pairs.empty() && !row.replayable()) {
+                        const std::uint32_t via =
+                            transition_via(row, transition_index);
+                        if (via != kNoId) {
+                            std::uint32_t cursor = via;
+                            std::size_t steps = 0;
+                            while (cursor < pair_contracted.size() &&
+                                   pair_contracted[cursor]) {
+                                count_pair(cursor);
+                                StrategyPolicySelectedKernelStatus status =
+                                    kernel.status;
+                                edge.extra_cost += pair_immediate_cost(
+                                    cursor, status);
+                                if (status !=
+                                    StrategyPolicySelectedKernelStatus::
+                                        Complete) {
+                                    refuse(
+                                        status,
+                                        "selected deterministic route has "
+                                        "an unpriced operation");
+                                    return built;
+                                }
+                                cursor = chain_next.at(cursor);
+                                if (++steps > pair_contracted.size()) {
+                                    refuse(
+                                        StrategyPolicySelectedKernelStatus::
+                                            UnsupportedInternalCycle,
+                                        "selected deterministic route cycles");
+                                    return built;
+                                }
+                            }
+                            edge.boundary_pair = cursor;
+                        }
+                    }
+                    if (is_decision_boundary(edge.boundary_pair)) {
+                        edges[local].push_back(std::move(edge));
+                        continue;
+                    }
+                    const auto [found, inserted] =
+                        internal_by_pair.emplace(
+                            edge.boundary_pair,
+                            internal_pairs.size());
+                    if (inserted) {
+                        internal_pairs.push_back(edge.boundary_pair);
+                        edges.emplace_back();
+                    }
+                    edge.internal_target = static_cast<std::uint32_t>(
+                        found->second);
+                    edge.boundary_pair = kNoId;
+                    edges[local].push_back(std::move(edge));
+                }
+                for (const EvalAbsorption& absorption :
+                     expanded_absorptions) {
+                    if (!std::isfinite(absorption.probability) ||
+                        absorption.probability <= 0.0) {
+                        refuse(
+                            StrategyPolicySelectedKernelStatus::IncompleteMass,
+                            "selected kernel absorption is invalid");
+                        return built;
+                    }
+                    row_mass += solve_detail::WideFloat{
+                        absorption.probability};
+                    const bool success =
+                        absorption.kind == EvalAbsorptionKind::Terminal &&
+                        absorption.node < strategy->nodes.size() &&
+                        strategy->nodes[absorption.node].kind ==
+                            StrategyNodeKind::Terminal &&
+                        strategy->nodes[absorption.node].terminal_kind ==
+                            PC_TERMINAL_SUCCESS;
+                    if (!success) {
+                        refuse(
+                            StrategyPolicySelectedKernelStatus::
+                                FailureReachable,
+                            "selected planner operation reaches fail-closed, "
+                            "unresolved, or action-not-applied mass");
+                        return built;
+                    }
+                    MacroEdge edge;
+                    edge.probability = absorption.probability;
+                    edge.terminal_state = absorption.state;
+                    edge.terminal = true;
+                    edges[local].push_back(std::move(edge));
+                }
+                if (std::abs(row_mass.value() - 1.0) > 1e-12) {
+                    refuse(
+                        StrategyPolicySelectedKernelStatus::IncompleteMass,
+                        "selected planner-operation row does not normalize");
+                    return built;
+                }
+            }
+
+            std::vector<std::uint32_t> indegree(
+                internal_pairs.size(), 0);
+            for (const auto& row : edges) {
+                for (const MacroEdge& edge : row) {
+                    if (edge.internal_target != kNoId) {
+                        ++indegree.at(edge.internal_target);
+                    }
+                }
+            }
+            std::vector<std::uint32_t> ready;
+            ready.reserve(internal_pairs.size());
+            for (std::uint32_t local = 0;
+                 local < indegree.size(); ++local) {
+                if (indegree[local] == 0) ready.push_back(local);
+            }
+            std::vector<std::uint32_t> order;
+            order.reserve(internal_pairs.size());
+            for (std::size_t cursor = 0; cursor < ready.size(); ++cursor) {
+                const std::uint32_t local = ready[cursor];
+                order.push_back(local);
+                for (const MacroEdge& edge : edges[local]) {
+                    if (edge.internal_target != kNoId &&
+                        --indegree[edge.internal_target] == 0) {
+                        ready.push_back(edge.internal_target);
+                    }
+                }
+            }
+            if (order.size() != internal_pairs.size()) {
+                refuse(
+                    StrategyPolicySelectedKernelStatus::
+                        UnsupportedInternalCycle,
+                    "selected planner operation has an internal cycle that "
+                    "requires evaluator SCC projection");
+                return built;
+            }
+
+            struct BoundaryValue {
+                std::uint32_t pair = kNoId;
+                std::uint32_t terminal_state = kNoId;
+                double probability = 0.0;
+                bool terminal = false;
+            };
+            using BoundaryKey = std::pair<bool, std::vector<std::uint64_t>>;
+            std::map<BoundaryKey, BoundaryValue> boundary;
+            std::vector<double> inflow(internal_pairs.size(), 0.0);
+            inflow[0] = 1.0;
+            kernel.mandatory_expected_cost = 0.0;
+            for (const std::uint32_t local : order) {
+                const double visits = inflow[local];
+                StrategyPolicySelectedKernelStatus status = kernel.status;
+                kernel.mandatory_expected_cost += visits *
+                    pair_immediate_cost(internal_pairs[local], status);
+                if (status !=
+                    StrategyPolicySelectedKernelStatus::Complete) {
+                    refuse(status, "selected planner operation is unpriced");
+                    return built;
+                }
+                for (const MacroEdge& edge : edges[local]) {
+                    const double mass = visits * edge.probability;
+                    kernel.mandatory_expected_cost += mass * edge.extra_cost;
+                    if (edge.internal_target != kNoId) {
+                        inflow[edge.internal_target] += mass;
+                        continue;
+                    }
+                    pc_item_state item{};
+                    std::vector<std::uint64_t> item_identity;
+                    std::vector<std::uint64_t> entry_identity;
+                    if (edge.terminal) {
+                        if (edge.terminal_state == kNoId ||
+                            !model.calc->materialize(
+                                edge.terminal_state, item)) {
+                            refuse(
+                                StrategyPolicySelectedKernelStatus::
+                                    MaterializationFailure,
+                                "selected terminal item cannot be materialized");
+                            return built;
+                        }
+                        item_identity = exact_item_state_key(item);
+                    } else {
+                        if (edge.boundary_pair >= entry_by_pair.size() ||
+                            entry_by_pair[edge.boundary_pair] == nullptr ||
+                            !entry_by_pair[edge.boundary_pair]
+                                 ->globally_routable()) {
+                            std::ostringstream detail;
+                            detail << "selected successor is not an ordinary "
+                                      "globally routed policy entry (pair="
+                                   << edge.boundary_pair;
+                            if (edge.boundary_pair < kernel_pairs.size()) {
+                                const EvalPair& refused_pair =
+                                    kernel_pairs.at(edge.boundary_pair);
+                                detail << ", node=" << refused_pair.node
+                                       << ", state=" << refused_pair.state
+                                       << ", checkpoint="
+                                       << refused_pair.checkpoint_state
+                                       << ", offer="
+                                       << refused_pair.unveil_offer;
+                            }
+                            if (edge.boundary_pair < entry_by_pair.size() &&
+                                entry_by_pair[edge.boundary_pair] != nullptr) {
+                                detail << ", target="
+                                       << entry_by_pair[edge.boundary_pair]
+                                              ->global_policy_target_node_id
+                                       << ", entry_node="
+                                       << entry_by_pair[edge.boundary_pair]
+                                              ->compiled_node_id;
+                            }
+                            detail << ')';
+                            refuse(
+                                StrategyPolicySelectedKernelStatus::
+                                    GlobalRouteRefused,
+                                detail.str());
+                            return built;
+                        }
+                        const StrategyPolicyEntryResult& target =
+                            *entry_by_pair[edge.boundary_pair];
+                        item = target.item;
+                        item_identity = target.exact_item_identity;
+                        entry_identity = target.exact_entry_identity;
+                    }
+                    const BoundaryKey key{edge.terminal, entry_identity.empty()
+                        ? item_identity : entry_identity};
+                    auto& value = boundary[key];
+                    value.pair = edge.boundary_pair;
+                    value.terminal_state = edge.terminal_state;
+                    value.probability += mass;
+                    value.terminal = edge.terminal;
+                }
+            }
+            kernel.transitions.reserve(boundary.size());
+            solve_detail::WideFloat rhs{kernel.mandatory_expected_cost};
+            for (const auto& [unused_key, value] : boundary) {
+                (void)unused_key;
+                StrategyPolicySelectedKernelTransition transition;
+                transition.probability = value.probability;
+                transition.terminal = value.terminal;
+                if (value.terminal) {
+                    if (!model.calc->materialize(
+                            value.terminal_state, transition.item)) {
+                        refuse(
+                            StrategyPolicySelectedKernelStatus::
+                                MaterializationFailure,
+                            "selected terminal item cannot be retained");
+                        return built;
+                    }
+                    transition.exact_item_identity =
+                        exact_item_state_key(transition.item);
+                } else {
+                    const StrategyPolicyEntryResult& target =
+                        *entry_by_pair[value.pair];
+                    transition.exact_entry_identity =
+                        target.exact_entry_identity;
+                    transition.exact_item_identity =
+                        target.exact_item_identity;
+                    transition.compiled_node_id = target.compiled_node_id;
+                    transition.item = target.item;
+                    const std::uint32_t value_pair =
+                        kernel_value_pair(value.pair);
+                    if (value_pair >= pair_status.size() ||
+                        value_pair >= values.size() ||
+                        pair_status[value_pair] !=
+                            StrategyContinuationEntryStatus::Complete ||
+                        !std::isfinite(values[value_pair])) {
+                        refuse(
+                            StrategyPolicySelectedKernelStatus::
+                                SourceUnavailable,
+                            "selected successor has no exact continuation value");
+                        return built;
+                    }
+                    rhs += solve_detail::WideFloat{value.probability} *
+                        solve_detail::WideFloat{values[value_pair]};
+                    built.successor_pairs.push_back(value.pair);
+                }
+                kernel.probability_mass += value.probability;
+                kernel.transitions.push_back(std::move(transition));
+            }
+            if (std::abs(kernel.probability_mass - 1.0) > 1e-12) {
+                refuse(
+                    StrategyPolicySelectedKernelStatus::IncompleteMass,
+                    "selected decision-to-decision kernel does not normalize");
+                return built;
+            }
+            kernel.bellman_residual = std::abs(
+                (solve_detail::WideFloat{kernel.source_policy_value} - rhs)
+                    .value());
+            const double tolerance = kContinuationResidualTolerance *
+                std::max({1.0, std::abs(kernel.source_policy_value),
+                          std::abs(rhs.value())});
+            if (!std::isfinite(kernel.bellman_residual) ||
+                kernel.bellman_residual > tolerance) {
+                refuse(
+                    StrategyPolicySelectedKernelStatus::ResidualFailure,
+                    "selected decision-to-decision kernel fails its exact "
+                    "fixed-policy Bellman equality");
+                return built;
+            }
+            kernel.semantic_identity = {
+                0x73656c6b65726e31ull, 1,
+                static_cast<std::uint64_t>(kernel.status),
+                std::bit_cast<std::uint64_t>(kernel.source_policy_value),
+                std::bit_cast<std::uint64_t>(
+                    kernel.mandatory_expected_cost),
+                std::bit_cast<std::uint64_t>(kernel.probability_mass),
+                std::bit_cast<std::uint64_t>(kernel.bellman_residual),
+                kernel.mandatory_operation_states,
+                kernel.route_states,
+                kernel.checkpoint_states,
+                kernel.observed_choice_states,
+                kernel.transitions.size(),
+            };
+            const auto append = [&](const std::vector<std::uint64_t>& key) {
+                kernel.semantic_identity.push_back(key.size());
+                kernel.semantic_identity.insert(
+                    kernel.semantic_identity.end(), key.begin(), key.end());
+            };
+            append(kernel.source_entry_identity);
+            append(kernel.source_item_identity);
+            append(kernel.selected_operator_identity);
+            for (const auto& transition : kernel.transitions) {
+                append(transition.exact_entry_identity);
+                append(transition.exact_item_identity);
+                kernel.semantic_identity.push_back(
+                    std::bit_cast<std::uint64_t>(transition.probability));
+                kernel.semantic_identity.push_back(
+                    transition.terminal ? 1 : 0);
+            }
+            kernel.retained_owned_bytes = sizeof(kernel) +
+                kernel.source_entry_identity.capacity() *
+                    sizeof(std::uint64_t) +
+                kernel.source_item_identity.capacity() *
+                    sizeof(std::uint64_t) +
+                kernel.selected_operator_identity.capacity() *
+                    sizeof(std::uint64_t) +
+                kernel.semantic_identity.capacity() *
+                    sizeof(std::uint64_t) +
+                kernel.compiled_node_id.capacity() + 1 +
+                kernel.refusal_reason.capacity() + 1 +
+                kernel.transitions.capacity() *
+                    sizeof(StrategyPolicySelectedKernelTransition);
+            for (const auto& transition : kernel.transitions) {
+                kernel.retained_owned_bytes +=
+                    transition.exact_entry_identity.capacity() *
+                        sizeof(std::uint64_t) +
+                    transition.exact_item_identity.capacity() *
+                        sizeof(std::uint64_t) +
+                    transition.compiled_node_id.capacity() + 1;
+            }
+            kernel.transient_evaluator_bytes =
+                internal_pairs.capacity() * sizeof(std::uint32_t) +
+                edges.capacity() * sizeof(std::vector<MacroEdge>) +
+                inflow.capacity() * sizeof(double) +
+                indegree.capacity() * sizeof(std::uint32_t) +
+                order.capacity() * sizeof(std::uint32_t);
+            return built;
+        };
+
+        std::vector<std::uint32_t> dependency_queue;
+        std::set<std::vector<std::uint64_t>> queued_entries;
+        for (const StrategyContinuationEntryRequest& request :
+             options.continuation_entries) {
+            if (!request.request_policy_dependency_kernels) continue;
+            ++policy_certificate.dependency_kernel_roots_requested;
+            const std::vector<std::uint64_t> item_identity =
+                exact_item_state_key(request.item);
+            const std::uint32_t requested_state =
+                model.calc->intern_item(request.item);
+            const auto [target_node, route_complete] =
+                resolve_global_policy_entry_target(requested_state);
+            std::vector<std::uint32_t> matches;
+            if (route_complete) {
+                for (std::uint32_t pair = 0;
+                     pair < kernel_pairs.size(); ++pair) {
+                    const EvalPair& record = kernel_pairs.at(pair);
+                    if (record.node == target_node &&
+                        record.state == requested_state &&
+                        record.checkpoint_state == kNoId &&
+                        record.unveil_offer == kNoId &&
+                        pair < entry_by_pair.size() &&
+                        entry_by_pair[pair] != nullptr &&
+                        entry_by_pair[pair]->globally_routable()) {
+                        matches.push_back(pair);
+                    }
+                }
+            }
+            std::sort(matches.begin(), matches.end());
+            matches.erase(
+                std::unique(matches.begin(), matches.end()), matches.end());
+            if (!matches.empty() &&
+                queued_entries.insert(
+                    entry_by_pair[matches.front()]->exact_entry_identity)
+                    .second) {
+                dependency_queue.push_back(matches.front());
+            } else {
+                StrategyPolicySelectedKernel refused;
+                refused.status = StrategyPolicySelectedKernelStatus::
+                    GlobalRouteRefused;
+                refused.source_item_identity = item_identity;
+                refused.refusal_reason = matches.empty()
+                    ? "arbitrary entry has no globally routed policy decision"
+                    : "arbitrary entry duplicates an already requested "
+                      "globally routed policy decision";
+                policy_certificate.selected_kernels.push_back(
+                    std::move(refused));
+                ++policy_certificate.dependency_kernels_refused;
+            }
+        }
+        std::size_t dependency_cursor = 0;
+        for (;
+             dependency_cursor < dependency_queue.size() &&
+             dependency_cursor < kPolicyDependencyKernelLimit;
+             ++dependency_cursor) {
+            BuiltSelectedKernel built =
+                build_selected_kernel(
+                    dependency_queue[dependency_cursor]);
+            if (built.kernel.available()) {
+                ++policy_certificate.dependency_kernels_complete;
+                for (const std::uint32_t successor :
+                     built.successor_pairs) {
+                    if (successor < entry_by_pair.size() &&
+                        entry_by_pair[successor] != nullptr &&
+                        queued_entries.insert(
+                            entry_by_pair[successor]
+                                ->exact_entry_identity).second) {
+                        dependency_queue.push_back(successor);
+                    }
+                }
+            } else {
+                ++policy_certificate.dependency_kernels_refused;
+            }
+            policy_certificate.selected_kernels.push_back(
+                std::move(built.kernel));
+        }
+        policy_certificate.dependency_expansion_capped =
+            dependency_cursor < dependency_queue.size();
+        std::sort(
+            policy_certificate.selected_kernels.begin(),
+            policy_certificate.selected_kernels.end(),
+            [](const StrategyPolicySelectedKernel& left,
+               const StrategyPolicySelectedKernel& right) {
+                return std::tie(
+                           left.source_entry_identity,
+                           left.source_item_identity,
+                           left.compiled_node_id) <
+                    std::tie(
+                           right.source_entry_identity,
+                           right.source_item_identity,
+                           right.compiled_node_id);
+            });
+
         policy_certificate.semantic_identity =
             strategy_policy_entry_certificate_semantic_identity(
                 policy_certificate);
@@ -9058,6 +9715,8 @@ std::uint64_t strategy_policy_entry_certificate_semantic_identity(
     mix_word(certificate.schema_version);
     mix_word(certificate.evaluator_version);
     mix_word(certificate.requested_decisions);
+    mix_word(certificate.dependency_kernel_roots_requested);
+    mix_word(certificate.dependency_expansion_capped ? 1 : 0);
     for (const StrategyPolicyDecisionCoverage& decision :
          certificate.decisions) {
         mix_string(decision.compiled_node_id);
@@ -9087,6 +9746,32 @@ std::uint64_t strategy_policy_entry_certificate_semantic_identity(
         mix_word(std::bit_cast<std::uint64_t>(
             entry.exact_continuation_upper));
         mix_word(std::bit_cast<std::uint64_t>(entry.bellman_residual));
+    }
+    for (const StrategyPolicySelectedKernel& kernel :
+         certificate.selected_kernels) {
+        mix_word(static_cast<std::uint8_t>(kernel.status));
+        mix_key(kernel.source_entry_identity);
+        mix_key(kernel.source_item_identity);
+        mix_key(kernel.selected_operator_identity);
+        mix_string(kernel.compiled_node_id);
+        mix_string(kernel.refusal_reason);
+        mix_word(std::bit_cast<std::uint64_t>(kernel.source_policy_value));
+        mix_word(std::bit_cast<std::uint64_t>(
+            kernel.mandatory_expected_cost));
+        mix_word(std::bit_cast<std::uint64_t>(kernel.probability_mass));
+        mix_word(std::bit_cast<std::uint64_t>(kernel.bellman_residual));
+        mix_word(kernel.mandatory_operation_states);
+        mix_word(kernel.route_states);
+        mix_word(kernel.checkpoint_states);
+        mix_word(kernel.observed_choice_states);
+        for (const StrategyPolicySelectedKernelTransition& transition :
+             kernel.transitions) {
+            mix_key(transition.exact_entry_identity);
+            mix_key(transition.exact_item_identity);
+            mix_string(transition.compiled_node_id);
+            mix_word(std::bit_cast<std::uint64_t>(transition.probability));
+            mix_word(transition.terminal ? 1 : 0);
+        }
     }
     return identity;
 }

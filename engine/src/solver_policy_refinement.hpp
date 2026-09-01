@@ -398,6 +398,7 @@ enum class VerifiedPolicyExactRowStatus : std::uint8_t {
 struct VerifiedPolicyExactRowTransition {
     StableKey strict_state_identity;
     StableKey exact_item_identity;
+    pc_item_state exact_item{};
     std::uint32_t projected_coarse_state = kNoId;
     bool terminal = false;
     double probability = 0.0;
@@ -572,6 +573,177 @@ struct VerifiedPolicyBellmanShadowCertificate {
      * authority owner must validate closed SCCs and every legal action. */
 };
 
+/* Canonical identity carried by every policy-potential CEGAR object.  Hashes
+ * may index these records, but full equality is required before a value or
+ * dependency can be reused.  Checkpoint/offer words are part of the exact
+ * policy-entry identity rather than display telemetry. */
+struct PolicyPotentialIdentityContext {
+    ExecutableContinuationAuthorityContext authority;
+    StableKey strategy;
+    StableKey exact_entry;
+    StableKey exact_item;
+    StableKey checkpoint;
+    StableKey observed_offer;
+
+    bool complete() const {
+        return authority.complete() && !strategy.empty() &&
+            !exact_entry.empty() && !exact_item.empty();
+    }
+
+    bool operator==(const PolicyPotentialIdentityContext&) const = default;
+};
+
+enum class PolicyPotentialSelectedKernelStatus : std::uint8_t {
+    Complete = 0,
+    InvalidIdentity,
+    IncompleteMass,
+    UnresolvedPath,
+    FailureReachable,
+    UnsupportedInternalCycle,
+};
+
+struct PolicyPotentialSelectedTransition {
+    StableKey target_entry_identity;
+    double probability = 0.0;
+    bool terminal = false;
+
+    bool operator==(const PolicyPotentialSelectedTransition&) const = default;
+};
+
+/* Exact fixed selected planner-operation kernel.  This is still upper-side
+ * evaluator evidence: it becomes one constraint in an SCC certificate and
+ * has no independent lower authority. */
+struct PolicyPotentialSelectedKernel {
+    PolicyPotentialSelectedKernelStatus status =
+        PolicyPotentialSelectedKernelStatus::InvalidIdentity;
+    PolicyPotentialIdentityContext source;
+    StableKey selected_operator_identity;
+    StableKey semantic_identity;
+    double mandatory_expected_cost = 0.0;
+    double probability_mass = 0.0;
+    double bellman_residual = std::numeric_limits<double>::infinity();
+    std::uint64_t mandatory_operation_states = 0;
+    std::uint64_t route_states = 0;
+    std::uint64_t checkpoint_states = 0;
+    std::uint64_t observed_choice_states = 0;
+    std::uint64_t retained_bytes = 0;
+    std::uint64_t transient_bytes = 0;
+    std::vector<PolicyPotentialSelectedTransition> transitions;
+
+    bool available() const {
+        return status == PolicyPotentialSelectedKernelStatus::Complete &&
+            source.complete() && !selected_operator_identity.empty() &&
+            !semantic_identity.empty() &&
+            std::isfinite(mandatory_expected_cost) &&
+            mandatory_expected_cost >= 0.0 &&
+            std::isfinite(probability_mass) &&
+            std::abs(probability_mass - 1.0) <= 1e-12 &&
+            std::isfinite(bellman_residual) && bellman_residual >= 0.0;
+    }
+};
+
+enum class PolicyPotentialConstraintKind : std::uint8_t {
+    SelectedKernel = 0,
+    ExactAlternativeRow,
+    ExistingTypedLower,
+    ExactInapplicability,
+};
+
+struct PolicyPotentialAlternativeTransition {
+    StableKey target_entry_identity;
+    StableKey boundary_lower_identity;
+    double probability = 0.0;
+    double boundary_lower = 0.0;
+    bool terminal = false;
+};
+
+struct PolicyPotentialActionConstraint {
+    PolicyPotentialConstraintKind kind =
+        PolicyPotentialConstraintKind::ExactAlternativeRow;
+    PolicyPotentialIdentityContext source;
+    StableKey action_identity;
+    StableKey semantic_identity;
+    StableKey existing_lower_identity;
+    double immediate_cost = 0.0;
+    double rhs = 0.0;
+    bool complete = false;
+    std::string refusal_reason;
+    std::vector<PolicyPotentialAlternativeTransition> transitions;
+};
+
+struct PolicyPotentialCandidateEntry {
+    PolicyPotentialIdentityContext identity;
+    double policy_value = std::numeric_limits<double>::infinity();
+    double existing_lower = 0.0;
+    std::uint64_t caller_authorized_actions = 0;
+    PolicyPotentialSelectedKernel selected_kernel;
+    std::vector<PolicyPotentialActionConstraint> action_constraints;
+};
+
+enum class PolicyPotentialCandidateStatus : std::uint8_t {
+    Candidate = 0,
+    Certified,
+    InvalidIdentity,
+    InvalidValue,
+    SelectedKernelUnavailable,
+    ActionCoverageIncomplete,
+    ConstraintOpen,
+    DependencyOpen,
+    PolicyImprovement,
+};
+
+struct PolicyPotentialCandidateResult {
+    PolicyPotentialIdentityContext identity;
+    PolicyPotentialCandidateStatus status =
+        PolicyPotentialCandidateStatus::Candidate;
+    double policy_value = std::numeric_limits<double>::infinity();
+    double existing_lower = 0.0;
+    std::uint64_t dependency_scc = std::numeric_limits<std::uint64_t>::max();
+    std::string refusal_reason;
+    std::vector<StableKey> dependencies;
+};
+
+struct PolicyPotentialCertifiedScc {
+    std::uint64_t stable_order = 0;
+    std::vector<StableKey> entry_identities;
+};
+
+struct PolicyPotentialCegarShadowCertificate {
+    static constexpr std::uint64_t kSchemaVersion = 1;
+
+    std::uint64_t schema_version = kSchemaVersion;
+    ExecutableContinuationAuthorityContext authority;
+    StableKey strategy_identity;
+    bool requested = false;
+    bool policy_improvement = false;
+    std::uint64_t candidates_requested = 0;
+    std::uint64_t candidates_valid = 0;
+    std::uint64_t candidates_refused = 0;
+    std::uint64_t constraints_examined = 0;
+    std::uint64_t constraints_closed_by_existing_lower = 0;
+    std::uint64_t exact_rows_examined = 0;
+    std::uint64_t selected_dependency_states = 0;
+    std::uint64_t dependency_sccs = 0;
+    std::uint64_t certified_entries = 0;
+    std::uint64_t certified_sccs = 0;
+    std::uint64_t lifecycle_mutations = 0;
+    std::uint64_t retained_bytes = 0;
+    std::uint64_t transient_bytes = 0;
+    std::string failure_reason;
+    std::vector<PolicyPotentialCandidateResult> candidates;
+    std::vector<PolicyPotentialCertifiedScc> certified;
+
+    /* Deliberately no conversion or public-authority predicate. */
+};
+
+PolicyPotentialCegarShadowCertificate
+certify_policy_potential_cegar_shadow(
+    ExecutableContinuationAuthorityContext authority,
+    StableKey strategy_identity,
+    std::vector<PolicyPotentialCandidateEntry> candidates,
+    double epsilon = 1e-12,
+    const PolicyPotentialCegarShadowCertificate* prior = nullptr);
+
 using RetentionCapacityCoarseProjector =
     std::function<std::uint32_t(std::uint32_t)>;
 
@@ -693,7 +865,8 @@ class CompiledPolicyAssertionWork {
         const std::string* emitted_strategy_json = nullptr,
         const PolicyCompilationTelemetry* emitted_compilation = nullptr,
         bool request_root_continuation_upper = false,
-        bool request_policy_decision_entries = false);
+        bool request_policy_decision_entries = false,
+        bool request_policy_dependency_kernels = false);
     ~CompiledPolicyAssertionWork();
     CompiledPolicyAssertionWork(CompiledPolicyAssertionWork&&) noexcept;
     CompiledPolicyAssertionWork& operator=(

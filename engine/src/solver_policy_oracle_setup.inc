@@ -481,6 +481,7 @@
                 row.transitions.push_back({
                     transition.successor.stable_key,
                     exact_item_state_key(item),
+                    item,
                     transition.successor.coarse_state,
                     transition.successor.terminal,
                     transition.probability,

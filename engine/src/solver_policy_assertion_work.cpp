@@ -207,6 +207,7 @@ struct CompiledPolicyAssertionWork::Impl {
     const PolicyCompilationTelemetry* emitted_compilation = nullptr;
     bool request_root_continuation_upper = false;
     bool request_policy_decision_entries = false;
+    bool request_policy_dependency_kernels = false;
     CompiledPolicyAssertion result;
     Stage stage = Stage::Compiling;
     std::shared_ptr<StrategyImpl> parsed_strategy;
@@ -225,7 +226,8 @@ struct CompiledPolicyAssertionWork::Impl {
             const std::string* emitted_json,
             const PolicyCompilationTelemetry* emitted_telemetry,
             const bool request_root_upper,
-            const bool request_policy_entries)
+            const bool request_policy_entries,
+            const bool request_dependency_kernels)
         : coarse(coarse_value),
           solved(solved_value),
           prices(prices_value),
@@ -235,7 +237,8 @@ struct CompiledPolicyAssertionWork::Impl {
           emitted_strategy_json(emitted_json),
           emitted_compilation(emitted_telemetry),
           request_root_continuation_upper(request_root_upper),
-          request_policy_decision_entries(request_policy_entries) {
+          request_policy_decision_entries(request_policy_entries),
+          request_policy_dependency_kernels(request_dependency_kernels) {
         result.solver_cost = solved.evaluated_policy_cost;
     }
 
@@ -571,6 +574,7 @@ struct CompiledPolicyAssertionWork::Impl {
                     0,
                     1,
                     parsed_strategy->start_item,
+                    request_policy_dependency_kernels,
                 });
             }
             if (request_policy_decision_entries) {
@@ -861,12 +865,14 @@ CompiledPolicyAssertionWork::CompiledPolicyAssertionWork(
         const std::string* emitted_strategy_json,
         const PolicyCompilationTelemetry* emitted_compilation,
         const bool request_root_continuation_upper,
-        const bool request_policy_decision_entries)
+        const bool request_policy_decision_entries,
+        const bool request_policy_dependency_kernels)
     : impl_(std::make_unique<Impl>(
           coarse, solved, prices, options, std::move(strategy_name),
           refined_routing, emitted_strategy_json,
           emitted_compilation, request_root_continuation_upper,
-          request_policy_decision_entries)) {}
+          request_policy_decision_entries,
+          request_policy_dependency_kernels)) {}
 
 CompiledPolicyAssertionWork::~CompiledPolicyAssertionWork() = default;
 CompiledPolicyAssertionWork::CompiledPolicyAssertionWork(

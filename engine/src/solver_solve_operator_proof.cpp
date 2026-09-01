@@ -1,5 +1,6 @@
 #include "solver_solve_types.hpp"
 #include "solver_policy_refinement.hpp"
+#include "solver_policy_refinement_helpers.hpp"
 
 #include <bit>
 
@@ -889,6 +890,7 @@ SolveWork::Impl::audit_verified_policy_alternative_shadow(
         kBellmanSelectionHighestOccupancy = 1u << 2,
         kBellmanSelectionLargestWorkProxy = 1u << 3,
         kBellmanSelectionFanoutProbe = 1u << 4,
+        kBellmanSelectionRetainedScourWitness = 1u << 5,
     };
     struct DeviationCandidate {
         refinement::StableKey exact_entry_identity;
@@ -926,6 +928,7 @@ SolveWork::Impl::audit_verified_policy_alternative_shadow(
     std::vector<DeviationCandidate> work_candidates;
     std::array<std::optional<DeviationCandidate>,
                Work::kOperatorFamilyCount> family_probe_candidates{};
+    std::optional<DeviationCandidate> retained_scour_candidate;
     /* The retained matched shadow already owns the action-complete
      * 27,021-entry / 671,410-alternative census. Select only the semantic
      * Fracture witnesses plus bounded occupancy/identity probes before
@@ -944,6 +947,12 @@ SolveWork::Impl::audit_verified_policy_alternative_shadow(
             43846082436442759ull,
             4061487822869723425ull,
         };
+    static constexpr std::uint64_t
+        kRetainedHighestOccupancyScourEntryDigest =
+            10753618678795409314ull;
+    static constexpr std::uint64_t
+        kRetainedHighestOccupancyScourActionDigest =
+            753596084770576979ull;
     for (const StrategyPolicyEntryResult& entry :
          incumbent.compiled_artifact.continuation_upper
              .policy_entries.entries) {
@@ -985,6 +994,11 @@ SolveWork::Impl::audit_verified_policy_alternative_shadow(
                 kRetainedFractureWitnessEntryDigests.end(),
                 key_identity(entry.exact_entry_identity)) !=
             kRetainedFractureWitnessEntryDigests.end()) {
+            bounded_audit_entry_identities.insert(
+                entry.exact_entry_identity);
+        }
+        if (key_identity(entry.exact_entry_identity) ==
+            kRetainedHighestOccupancyScourEntryDigest) {
             bounded_audit_entry_identities.insert(
                 entry.exact_entry_identity);
         }
@@ -1104,6 +1118,18 @@ SolveWork::Impl::audit_verified_policy_alternative_shadow(
                 candidate.root_expected_visits =
                     entry.root_expected_visits;
                 candidate.proof_work_proxy = proof_work_proxy;
+
+                if (action.operator_id == "scour" &&
+                    key_identity(entry.exact_entry_identity) ==
+                        kRetainedHighestOccupancyScourEntryDigest &&
+                    key_identity(action.operator_identity) ==
+                        kRetainedHighestOccupancyScourActionDigest) {
+                    DeviationCandidate retained = candidate;
+                    retained.selection_reasons =
+                        kBellmanSelectionHighestOccupancy |
+                        kBellmanSelectionRetainedScourWitness;
+                    retained_scour_candidate = std::move(retained);
+                }
 
                 DeviationCandidate closest = candidate;
                 closest.selection_reasons =
@@ -1482,9 +1508,23 @@ SolveWork::Impl::audit_verified_policy_alternative_shadow(
             merge_candidate(std::move(*candidate));
         }
     }
+    if (retained_scour_candidate.has_value()) {
+        merge_candidate(std::move(*retained_scour_candidate));
+    }
 
     std::optional<refinement::VerifiedPolicyAlternativeShadowCensus>
         sampled_census;
+    struct ScourCegarSeed {
+        pc_item_state successor{};
+        refinement::StableKey source_entry_identity;
+        refinement::StableKey action_identity;
+        refinement::StableKey successor_item_identity;
+        double source_policy_value = kInfinity;
+        double root_expected_visits = 0.0;
+        double bellman_deficit = kInfinity;
+        double boundary_probability_mass = 0.0;
+    };
+    std::optional<ScourCegarSeed> scour_cegar_seed;
     if (!sampled_candidates.empty()) {
         std::set<refinement::StableKey> sampled_entry_identities;
         for (const auto& [key, unused] : sampled_candidates) {
@@ -1536,6 +1576,49 @@ SolveWork::Impl::audit_verified_policy_alternative_shadow(
                         requested->second.root_expected_visits,
                         requested->second.proof_work_proxy,
                         std::move(transitions));
+                    const PlannerOperator& measured_planner =
+                        calc.operators().at(action.coarse_operator);
+                    const bool deterministic_scour =
+                        measured_planner.kind ==
+                            PlannerOperatorKind::Primitive &&
+                        measured_planner.primitive_action <
+                            calc.registry().actions.size() &&
+                        calc.registry().actions.at(
+                            measured_planner.primitive_action)
+                                .params.type == ActionType::Scour &&
+                        (requested->second.selection_reasons &
+                         kBellmanSelectionRetainedScourWitness) != 0 &&
+                        row_bound && row.transitions.size() == 1 &&
+                        !row.transitions.front().terminal &&
+                        std::abs(
+                            row.transitions.front().probability - 1.0) <=
+                            1e-12;
+                    if (deterministic_scour &&
+                        (!scour_cegar_seed.has_value() ||
+                         requested->second.root_expected_visits >
+                             scour_cegar_seed->root_expected_visits)) {
+                        ScourCegarSeed seed;
+                        seed.successor =
+                            row.transitions.front().exact_item;
+                        seed.source_entry_identity =
+                            entry.exact_entry_identity;
+                        seed.action_identity = action.operator_identity;
+                        seed.successor_item_identity =
+                            row.transitions.front().exact_item_identity;
+                        seed.source_policy_value =
+                            entry.exact_continuation_upper;
+                        seed.root_expected_visits =
+                            requested->second.root_expected_visits;
+                        if (!bellman.constraints.empty()) {
+                            const auto& measured =
+                                bellman.constraints.back();
+                            seed.bellman_deficit =
+                                measured.bellman_deficit;
+                            seed.boundary_probability_mass =
+                                measured.boundary_probability_mass;
+                        }
+                        scour_cegar_seed = std::move(seed);
+                    }
                     bellman.strict_states_created +=
                         row.strict_states_created;
                     bellman.transient_bytes = std::max(
@@ -1568,6 +1651,308 @@ SolveWork::Impl::audit_verified_policy_alternative_shadow(
         bellman.transient_bytes = std::max(
             bellman.transient_bytes,
             sampled_census->sampled_exact_peak_transient_bytes);
+    }
+    auto& cegar = shadow.policy_potential_cegar;
+    cegar.status = "not_selected";
+    if (scour_cegar_seed.has_value()) {
+        const ScourCegarSeed& seed = *scour_cegar_seed;
+        cegar.status = "evaluating_arbitrary_entry";
+        cegar.source_entry_identity =
+            key_identity(seed.source_entry_identity);
+        cegar.action_identity = key_identity(seed.action_identity);
+        cegar.successor_item_identity =
+            key_identity(seed.successor_item_identity);
+        cegar.source_policy_value = seed.source_policy_value;
+        cegar.source_root_expected_visits = seed.root_expected_visits;
+        cegar.source_bellman_deficit = seed.bellman_deficit;
+        cegar.source_boundary_probability_mass =
+            seed.boundary_probability_mass;
+        const auto cegar_started = std::chrono::steady_clock::now();
+        std::shared_ptr<StrategyImpl> parsed_strategy;
+        std::shared_ptr<EconomyImpl> cegar_economy;
+        std::unique_ptr<StrategyEvalWork> cegar_work;
+        constexpr std::uint64_t kCegarEntryIdentity =
+            0x636567617273636full; /* "cegarsco" */
+        try {
+            const std::shared_ptr<const SessionImpl> session =
+                refinement::borrow_session(calc);
+            parsed_strategy = compile_strategy_json(
+                session,
+                incumbent.compiled_artifact.certification_strategy_json
+                    .data(),
+                incumbent.compiled_artifact.certification_strategy_json
+                    .size());
+            cegar_economy = std::make_shared<EconomyImpl>();
+            cegar_economy->id =
+                "policy-potential-cegar-arbitrary-entry";
+            cegar_economy->prices = prices;
+            const std::uint64_t retained_now =
+                audited_estimated_owned_bytes();
+            const std::uint64_t parsed_bytes =
+                refinement::strategy_impl_owned_bytes(*parsed_strategy);
+            const std::uint64_t economy_bytes = refinement::economy_owned_bytes(
+                cegar_economy->prices,
+                cegar_economy->id.capacity());
+            std::uint64_t reserved = retained_now;
+            refinement::saturating_add(reserved, parsed_bytes);
+            refinement::saturating_add(reserved, economy_bytes);
+            refinement::saturating_add(
+                reserved, bellman.transient_bytes);
+            if (reserved >= options.max_solver_owned_bytes) {
+                cegar.status = "resource_cap";
+                cegar.failure_reason =
+                    "no solver-owned memory remains for the arbitrary-entry "
+                    "policy evaluator";
+            } else {
+                StrategyEvalOptions evaluation_options;
+                evaluation_options.epsilon = 1e-12;
+                evaluation_options.max_sweeps =
+                    std::max<std::uint32_t>(1, options.max_sweeps);
+                evaluation_options.max_states =
+                    std::max<std::uint32_t>(
+                        1, options.max_discovered_states);
+                evaluation_options.max_pairs =
+                    static_cast<std::uint32_t>(std::max<std::uint64_t>(
+                        1, std::min<std::uint64_t>(
+                            options.max_state_action_rows,
+                            std::numeric_limits<std::uint32_t>::max())));
+                evaluation_options.max_transitions =
+                    static_cast<std::uint32_t>(std::max<std::uint64_t>(
+                        1, std::min<std::uint64_t>(
+                            options.max_transitions,
+                            std::numeric_limits<std::uint32_t>::max())));
+                evaluation_options.max_owned_bytes =
+                    options.max_solver_owned_bytes - reserved;
+                evaluation_options.max_output_json_bytes =
+                    options.max_strategy_json_bytes;
+                evaluation_options.max_reforge_work =
+                    options.max_reforge_work;
+                evaluation_options.economy = cegar_economy;
+                evaluation_options.continuation_entries.push_back({
+                    kCegarEntryIdentity, 1, 1, seed.successor, true});
+                evaluation_options.policy_decision_entries.reserve(
+                    incumbent.compiled_artifact
+                        .policy_decision_bindings.size());
+                for (const CompiledPolicyDecisionBinding& binding :
+                     incumbent.compiled_artifact
+                         .policy_decision_bindings) {
+                    evaluation_options.policy_decision_entries.push_back({
+                        binding.compiled_node_id,
+                        binding.coarse_state,
+                        binding.selected_operator,
+                        binding.coarse_state_identity,
+                        binding.selected_operator_identity,
+                        binding.fixed_observed_choice_policy,
+                    });
+                }
+                cegar_work = std::make_unique<StrategyEvalWork>(
+                    parsed_strategy, evaluation_options);
+            }
+        } catch (const std::exception& error) {
+            cegar.status = "setup_refused";
+            cegar.failure_reason = error.what();
+        }
+        bool evaluation_failed = false;
+        while (cegar_work != nullptr &&
+               !cegar_work->progress().done) {
+            try {
+                cegar_work->step(64);
+            } catch (const std::exception& error) {
+                cegar.status = "evaluation_refused";
+                cegar.failure_reason = error.what();
+                evaluation_failed = true;
+            }
+            cegar.evaluator_live_bytes = std::max(
+                cegar.evaluator_live_bytes,
+                cegar_work->live_owned_bytes());
+            cegar.evaluator_peak_bytes = std::max(
+                cegar.evaluator_peak_bytes,
+                cegar_work->peak_owned_bytes());
+            if (evaluation_failed || cegar_work->progress().done) break;
+            co_await solve_detail::CooperativeCheckpoint{
+                cegar_work->live_owned_bytes()};
+        }
+        if (cegar_work != nullptr && !evaluation_failed &&
+            cegar_work->progress().done) {
+            StrategyEvalResult expansion = cegar_work->take_result();
+            const StrategyContinuationMemberResult* continuation = nullptr;
+            for (const StrategyContinuationMemberResult& member :
+                 expansion.continuation_upper.members) {
+                if (member.represented_state_identity ==
+                    kCegarEntryIdentity) {
+                    continuation = &member;
+                    break;
+                }
+            }
+            if (continuation != nullptr) {
+                cegar.continuation_status =
+                    static_cast<std::uint32_t>(continuation->status);
+                cegar.continuation_exact_entry_identity =
+                    key_identity(continuation->exact_entry_identity);
+                cegar.continuation_exact_item_identity =
+                    key_identity(exact_item_state_key(
+                        continuation->item));
+                cegar.continuation_cost =
+                    continuation->exact_continuation_upper;
+                cegar.continuation_residual =
+                    continuation->bellman_residual;
+            }
+            const StrategyPolicyEntryCertificate& expanded_entries =
+                expansion.policy_entries;
+            cegar.dependency_certificate_identity =
+                expanded_entries.semantic_identity;
+            cegar.dependency_kernel_roots_requested =
+                expanded_entries.dependency_kernel_roots_requested;
+            cegar.dependency_kernels_complete =
+                expanded_entries.dependency_kernels_complete;
+            cegar.dependency_kernels_refused =
+                expanded_entries.dependency_kernels_refused;
+            cegar.dependency_expansion_capped =
+                expanded_entries.dependency_expansion_capped;
+            cegar.selected_dependency_entries =
+                expanded_entries.selected_kernels.size();
+            std::vector<refinement::PolicyPotentialCandidateEntry>
+                candidate_inputs;
+            candidate_inputs.reserve(
+                expanded_entries.selected_kernels.size());
+            const refinement::StableKey strategy_identity{
+                incumbent.compiled_artifact.continuation_upper
+                    .strategy_identity_digest,
+                incumbent.compiled_artifact.continuation_upper
+                    .strategy_identity_bytes,
+                expanded_entries.semantic_identity,
+            };
+            for (const StrategyPolicySelectedKernel& kernel :
+                 expanded_entries.selected_kernels) {
+                cegar.selected_dependency_transitions +=
+                    kernel.transitions.size();
+                cegar.selected_mandatory_operation_states +=
+                    kernel.mandatory_operation_states;
+                cegar.selected_route_states += kernel.route_states;
+                cegar.selected_checkpoint_states +=
+                    kernel.checkpoint_states;
+                cegar.selected_observed_choice_states +=
+                    kernel.observed_choice_states;
+                if (std::isfinite(kernel.bellman_residual)) {
+                    cegar.maximum_selected_kernel_residual = std::max(
+                        cegar.maximum_selected_kernel_residual,
+                        kernel.bellman_residual);
+                }
+                if (cegar.global_route_target.empty() &&
+                    !kernel.compiled_node_id.empty()) {
+                    cegar.global_route_target = kernel.compiled_node_id;
+                }
+                if (!kernel.available()) continue;
+                refinement::PolicyPotentialCandidateEntry candidate;
+                candidate.identity.authority =
+                    executable_continuation_authority_context();
+                candidate.identity.strategy = strategy_identity;
+                candidate.identity.exact_entry =
+                    kernel.source_entry_identity;
+                candidate.identity.exact_item =
+                    kernel.source_item_identity;
+                candidate.policy_value = kernel.source_policy_value;
+                candidate.existing_lower = 0.0;
+                /* The selected expansion deliberately does not pretend that
+                 * caller-action enumeration has happened. The typed SCC
+                 * validator must therefore refuse lower certification while
+                 * still reporting the exact dependency graph. */
+                candidate.caller_authorized_actions = 0;
+                candidate.selected_kernel.status = refinement::
+                    PolicyPotentialSelectedKernelStatus::Complete;
+                candidate.selected_kernel.source = candidate.identity;
+                candidate.selected_kernel.selected_operator_identity =
+                    kernel.selected_operator_identity;
+                candidate.selected_kernel.semantic_identity =
+                    kernel.semantic_identity;
+                candidate.selected_kernel.mandatory_expected_cost =
+                    kernel.mandatory_expected_cost;
+                candidate.selected_kernel.probability_mass =
+                    kernel.probability_mass;
+                candidate.selected_kernel.bellman_residual =
+                    kernel.bellman_residual;
+                candidate.selected_kernel.mandatory_operation_states =
+                    kernel.mandatory_operation_states;
+                candidate.selected_kernel.route_states =
+                    kernel.route_states;
+                candidate.selected_kernel.checkpoint_states =
+                    kernel.checkpoint_states;
+                candidate.selected_kernel.observed_choice_states =
+                    kernel.observed_choice_states;
+                for (const auto& transition : kernel.transitions) {
+                    candidate.selected_kernel.transitions.push_back({
+                        transition.exact_entry_identity,
+                        transition.probability,
+                        transition.terminal,
+                    });
+                }
+                candidate_inputs.push_back(std::move(candidate));
+            }
+            const refinement::PolicyPotentialCegarShadowCertificate
+                closure =
+                    refinement::certify_policy_potential_cegar_shadow(
+                        executable_continuation_authority_context(),
+                        strategy_identity, std::move(candidate_inputs));
+            cegar.candidate_entries = closure.candidates.size();
+            cegar.candidate_sccs = closure.dependency_sccs;
+            cegar.certified_entries = closure.certified_entries;
+            cegar.certified_sccs = closure.certified_sccs;
+            cegar.action_constraints_examined =
+                closure.constraints_examined;
+            cegar.actions_closed_by_existing_lower =
+                closure.constraints_closed_by_existing_lower;
+            cegar.exact_rows_built = closure.exact_rows_examined;
+            cegar.transient_bytes = std::max({
+                cegar.transient_bytes,
+                expansion.peak_owned_bytes_estimate,
+                closure.transient_bytes});
+            if (continuation == nullptr || !continuation->available()) {
+                cegar.status = "continuation_refused";
+                if (cegar.failure_reason.empty()) {
+                    cegar.failure_reason =
+                        "Scour successor has no proper exact arbitrary-entry "
+                        "continuation certificate";
+                }
+            } else if (expanded_entries.dependency_kernels_refused != 0) {
+                cegar.status = "selected_kernel_refused";
+                if (cegar.failure_reason.empty()) {
+                    const auto refused = std::find_if(
+                        expanded_entries.selected_kernels.begin(),
+                        expanded_entries.selected_kernels.end(),
+                        [](const StrategyPolicySelectedKernel& kernel) {
+                            return !kernel.available();
+                        });
+                    if (refused != expanded_entries.selected_kernels.end()) {
+                        cegar.failure_reason = refused->refusal_reason;
+                    }
+                }
+            } else if (expanded_entries.dependency_expansion_capped) {
+                cegar.status = "broad_dependency_expansion";
+                cegar.failure_reason =
+                    "selected-policy dependency expansion reached its "
+                    "fixed diagnostic bound before closure";
+            } else {
+                cegar.status = "action_census_required";
+                cegar.failure_reason =
+                    "selected dependencies are exact; caller-action "
+                    "constraints remain deliberately unenumerated";
+            }
+        }
+        cegar.evaluator_work_ns = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - cegar_started)
+                .count());
+        cegar.retained_bytes = sizeof(cegar) +
+            cegar.authority.capacity() + 1 +
+            cegar.status.capacity() + 1 +
+            cegar.failure_reason.capacity() + 1 +
+            cegar.global_route_target.capacity() + 1;
+        cegar.transient_bytes = std::max(
+            cegar.transient_bytes, cegar.retained_bytes);
+    } else {
+        cegar.failure_reason =
+            "bounded exact census did not retain the deterministic "
+            "highest-occupancy Scour row";
     }
     shadow.certificate_identity = census.certificate_identity;
     shadow.decisions_requested = census.decisions_requested;
@@ -1837,6 +2222,7 @@ SolveWork::Impl::audit_verified_policy_alternative_shadow(
             : 0;
     shadow.lifecycle_mutations += result.lower_bound != lower_before ? 1 : 0;
     shadow.lifecycle_mutations += result.upper_bound != upper_before ? 1 : 0;
+    cegar.lifecycle_mutations = shadow.lifecycle_mutations;
     if (shadow.lifecycle_mutations != 0) {
         shadow.status = "lifecycle_mutation";
         shadow.failure_reason =

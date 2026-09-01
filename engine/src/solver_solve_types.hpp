@@ -1942,6 +1942,50 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
             std::size_t constraint_count = 0;
         };
 
+        struct PolicyPotentialCegarShadow {
+            std::string authority = "observational_only";
+            std::string status = "not_run";
+            std::string failure_reason;
+            std::uint64_t source_entry_identity = 0;
+            std::uint64_t action_identity = 0;
+            std::uint64_t successor_item_identity = 0;
+            double source_policy_value = kInfinity;
+            double source_root_expected_visits = 0.0;
+            double source_bellman_deficit = kInfinity;
+            double source_boundary_probability_mass = 0.0;
+            std::uint32_t continuation_status = 0;
+            std::uint64_t continuation_exact_entry_identity = 0;
+            std::uint64_t continuation_exact_item_identity = 0;
+            double continuation_cost = kInfinity;
+            double continuation_residual = kInfinity;
+            std::string global_route_target;
+            std::uint64_t evaluator_live_bytes = 0;
+            std::uint64_t evaluator_peak_bytes = 0;
+            std::uint64_t evaluator_work_ns = 0;
+            std::uint64_t dependency_kernel_roots_requested = 0;
+            std::uint64_t dependency_certificate_identity = 0;
+            std::uint64_t dependency_kernels_complete = 0;
+            std::uint64_t dependency_kernels_refused = 0;
+            bool dependency_expansion_capped = false;
+            std::uint64_t selected_dependency_entries = 0;
+            std::uint64_t selected_dependency_transitions = 0;
+            std::uint64_t selected_mandatory_operation_states = 0;
+            std::uint64_t selected_route_states = 0;
+            std::uint64_t selected_checkpoint_states = 0;
+            std::uint64_t selected_observed_choice_states = 0;
+            double maximum_selected_kernel_residual = 0.0;
+            std::uint64_t candidate_entries = 0;
+            std::uint64_t candidate_sccs = 0;
+            std::uint64_t certified_entries = 0;
+            std::uint64_t certified_sccs = 0;
+            std::uint64_t action_constraints_examined = 0;
+            std::uint64_t actions_closed_by_existing_lower = 0;
+            std::uint64_t exact_rows_built = 0;
+            std::uint64_t lifecycle_mutations = 0;
+            std::uint64_t retained_bytes = 0;
+            std::uint64_t transient_bytes = 0;
+        };
+
         struct VerifiedPolicyAlternativeShadow {
             bool requested = false;
             std::string status = "not_run";
@@ -1997,6 +2041,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
             std::size_t largest_retirement_margin_count = 0;
             RetentionCapacityFractureShadow retention_capacity_fracture;
             PolicyPotentialBellmanShadow policy_potential_bellman;
+            PolicyPotentialCegarShadow policy_potential_cegar;
         };
 
         enum class OperatorLowerSkipReason : std::uint8_t {

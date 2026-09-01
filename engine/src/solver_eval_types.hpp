@@ -25,6 +25,10 @@ struct StrategyContinuationEntryRequest {
     std::uint64_t exact_member_identity = 0;
     std::uint32_t complete_member_count = 0;
     pc_item_state item{};
+    /* Shadow-only: after routing this exact item through the ordinary global
+     * strategy start, retain a bounded decision-to-decision selected-policy
+     * dependency expansion. False preserves historical evaluator output. */
+    bool request_policy_dependency_kernels = false;
 };
 
 enum class StrategyContinuationEntryStatus : std::uint8_t {
@@ -257,6 +261,69 @@ struct StrategyPolicyDecisionCoverage {
     std::uint32_t certified_entries = 0;
 };
 
+enum class StrategyPolicySelectedKernelStatus : std::uint8_t {
+    Complete = 0,
+    SourceUnavailable,
+    GlobalRouteRefused,
+    FailureReachable,
+    IncompleteMass,
+    MissingPrice,
+    ResidualFailure,
+    MaterializationFailure,
+    UnsupportedInternalCycle,
+};
+
+struct StrategyPolicySelectedKernelTransition {
+    std::vector<std::uint64_t> exact_entry_identity;
+    std::vector<std::uint64_t> exact_item_identity;
+    std::string compiled_node_id;
+    pc_item_state item{};
+    double probability = 0.0;
+    bool terminal = false;
+};
+
+/* Evaluator-owned exact fixed planner-operation macro. It starts at one
+ * genuine compiler decision, retains every mandatory internal operation,
+ * route, checkpoint and observed-choice state, and stops only at a globally
+ * routed next decision or exact success terminal. It is upper-side evidence
+ * and has no lower/public authority conversion. */
+struct StrategyPolicySelectedKernel {
+    StrategyPolicySelectedKernelStatus status =
+        StrategyPolicySelectedKernelStatus::SourceUnavailable;
+    std::vector<std::uint64_t> source_entry_identity;
+    std::vector<std::uint64_t> source_item_identity;
+    std::vector<std::uint64_t> selected_operator_identity;
+    std::vector<std::uint64_t> semantic_identity;
+    std::string compiled_node_id;
+    std::string refusal_reason;
+    double source_policy_value = std::numeric_limits<double>::infinity();
+    double mandatory_expected_cost = 0.0;
+    double probability_mass = 0.0;
+    double bellman_residual = std::numeric_limits<double>::infinity();
+    std::uint64_t mandatory_operation_states = 0;
+    std::uint64_t route_states = 0;
+    std::uint64_t checkpoint_states = 0;
+    std::uint64_t observed_choice_states = 0;
+    std::uint64_t retained_owned_bytes = 0;
+    std::uint64_t transient_evaluator_bytes = 0;
+    std::vector<StrategyPolicySelectedKernelTransition> transitions;
+
+    bool available() const {
+        return status == StrategyPolicySelectedKernelStatus::Complete &&
+            !source_entry_identity.empty() &&
+            !source_item_identity.empty() &&
+            !selected_operator_identity.empty() &&
+            !semantic_identity.empty() &&
+            std::isfinite(source_policy_value) &&
+            source_policy_value >= 0.0 &&
+            std::isfinite(mandatory_expected_cost) &&
+            mandatory_expected_cost >= 0.0 &&
+            std::isfinite(probability_mass) &&
+            std::abs(probability_mass - 1.0) <= 1e-12 &&
+            std::isfinite(bellman_residual) && bellman_residual >= 0.0;
+    }
+};
+
 struct StrategyPolicyEntryCertificate {
     static constexpr std::uint64_t kSchemaVersion = 1;
     static constexpr std::uint64_t kEvaluatorVersion = 1;
@@ -271,6 +338,10 @@ struct StrategyPolicyEntryCertificate {
     std::uint32_t certified_entries = 0;
     std::uint32_t refused_entries = 0;
     std::uint32_t fixed_observed_choice_decisions = 0;
+    std::uint32_t dependency_kernel_roots_requested = 0;
+    std::uint32_t dependency_kernels_complete = 0;
+    std::uint32_t dependency_kernels_refused = 0;
+    bool dependency_expansion_capped = false;
     double maximum_bellman_residual = 0.0;
     std::uint64_t semantic_identity = 0;
     std::uint64_t retained_owned_bytes = 0;
@@ -278,6 +349,7 @@ struct StrategyPolicyEntryCertificate {
     std::uint64_t build_ns = 0;
     std::vector<StrategyPolicyDecisionCoverage> decisions;
     std::vector<StrategyPolicyEntryResult> entries;
+    std::vector<StrategyPolicySelectedKernel> selected_kernels;
 };
 
 std::uint64_t strategy_policy_entry_certificate_semantic_identity(

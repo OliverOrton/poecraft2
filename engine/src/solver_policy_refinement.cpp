@@ -393,6 +393,520 @@ evaluate_verified_policy_bellman_constraint(
     return constraint;
 }
 
+PolicyPotentialCegarShadowCertificate
+certify_policy_potential_cegar_shadow(
+        ExecutableContinuationAuthorityContext authority,
+        StableKey strategy_identity,
+        std::vector<PolicyPotentialCandidateEntry> candidates,
+        const double epsilon,
+        const PolicyPotentialCegarShadowCertificate* prior) {
+    PolicyPotentialCegarShadowCertificate certificate;
+    certificate.requested = true;
+    certificate.authority = std::move(authority);
+    certificate.strategy_identity = std::move(strategy_identity);
+    certificate.candidates_requested = candidates.size();
+    std::uint64_t candidate_input_bytes =
+        candidates.capacity() * sizeof(PolicyPotentialCandidateEntry);
+    const auto add_key_bytes = [&](const StableKey& key) {
+        saturating_add(
+            candidate_input_bytes,
+            key.capacity() * sizeof(std::uint64_t));
+    };
+    const auto add_context_bytes = [&] (
+            const PolicyPotentialIdentityContext& context) {
+        add_key_bytes(context.strategy);
+        add_key_bytes(context.exact_entry);
+        add_key_bytes(context.exact_item);
+        add_key_bytes(context.checkpoint);
+        add_key_bytes(context.observed_offer);
+    };
+    for (const PolicyPotentialCandidateEntry& candidate : candidates) {
+        add_context_bytes(candidate.identity);
+        add_context_bytes(candidate.selected_kernel.source);
+        add_key_bytes(
+            candidate.selected_kernel.selected_operator_identity);
+        add_key_bytes(candidate.selected_kernel.semantic_identity);
+        saturating_add(
+            candidate_input_bytes,
+            candidate.selected_kernel.transitions.capacity() *
+                sizeof(PolicyPotentialSelectedTransition));
+        for (const PolicyPotentialSelectedTransition& transition :
+             candidate.selected_kernel.transitions) {
+            add_key_bytes(transition.target_entry_identity);
+        }
+        saturating_add(
+            candidate_input_bytes,
+            candidate.action_constraints.capacity() *
+                sizeof(PolicyPotentialActionConstraint));
+        for (const PolicyPotentialActionConstraint& constraint :
+             candidate.action_constraints) {
+            add_context_bytes(constraint.source);
+            add_key_bytes(constraint.action_identity);
+            add_key_bytes(constraint.semantic_identity);
+            add_key_bytes(constraint.existing_lower_identity);
+            saturating_add(
+                candidate_input_bytes,
+                constraint.refusal_reason.capacity() + 1);
+            saturating_add(
+                candidate_input_bytes,
+                constraint.transitions.capacity() *
+                    sizeof(PolicyPotentialAlternativeTransition));
+            for (const PolicyPotentialAlternativeTransition& transition :
+                 constraint.transitions) {
+                add_key_bytes(transition.target_entry_identity);
+                add_key_bytes(transition.boundary_lower_identity);
+            }
+        }
+    }
+
+    const auto retained_bytes = [&]() {
+        std::uint64_t bytes = sizeof(certificate) +
+            certificate.failure_reason.capacity() + 1 +
+            certificate.strategy_identity.capacity() *
+                sizeof(std::uint64_t) +
+            certificate.candidates.capacity() *
+                sizeof(PolicyPotentialCandidateResult) +
+            certificate.certified.capacity() *
+                sizeof(PolicyPotentialCertifiedScc);
+        const auto add_context = [&](
+                const PolicyPotentialIdentityContext& context) {
+            bytes += context.strategy.capacity() * sizeof(std::uint64_t) +
+                context.exact_entry.capacity() * sizeof(std::uint64_t) +
+                context.exact_item.capacity() * sizeof(std::uint64_t) +
+                context.checkpoint.capacity() * sizeof(std::uint64_t) +
+                context.observed_offer.capacity() * sizeof(std::uint64_t);
+        };
+        for (const PolicyPotentialCandidateResult& result :
+             certificate.candidates) {
+            add_context(result.identity);
+            bytes += result.refusal_reason.capacity() + 1 +
+                result.dependencies.capacity() * sizeof(StableKey);
+            for (const StableKey& dependency : result.dependencies) {
+                bytes += dependency.capacity() * sizeof(std::uint64_t);
+            }
+        }
+        for (const PolicyPotentialCertifiedScc& scc :
+             certificate.certified) {
+            bytes += scc.entry_identities.capacity() * sizeof(StableKey);
+            for (const StableKey& identity : scc.entry_identities) {
+                bytes += identity.capacity() * sizeof(std::uint64_t);
+            }
+        }
+        return bytes;
+    };
+    const auto refuse_all = [&](std::string reason) {
+        certificate.failure_reason = std::move(reason);
+        certificate.candidates_valid = 0;
+        certificate.candidates_refused = certificate.candidates_requested;
+        certificate.candidates.clear();
+        certificate.certified.clear();
+        certificate.certified_entries = 0;
+        certificate.certified_sccs = 0;
+        certificate.retained_bytes = retained_bytes();
+        certificate.transient_bytes = std::max(
+            certificate.transient_bytes, certificate.retained_bytes);
+        return certificate;
+    };
+    if (!certificate.authority.complete() ||
+        certificate.strategy_identity.empty() ||
+        !std::isfinite(epsilon) || epsilon <= 0.0) {
+        return refuse_all("policy-potential request identity is incomplete");
+    }
+
+    std::sort(
+        candidates.begin(), candidates.end(),
+        [](const PolicyPotentialCandidateEntry& left,
+           const PolicyPotentialCandidateEntry& right) {
+            return left.identity.exact_entry < right.identity.exact_entry;
+        });
+    for (std::size_t index = 1; index < candidates.size(); ++index) {
+        if (candidates[index - 1].identity.exact_entry ==
+            candidates[index].identity.exact_entry) {
+            return refuse_all(
+                "policy-potential candidate entries are not unique");
+        }
+    }
+
+    std::map<StableKey, std::size_t> candidate_by_entry;
+    for (std::size_t index = 0; index < candidates.size(); ++index) {
+        if (!candidates[index].identity.exact_entry.empty()) {
+            candidate_by_entry.emplace(
+                candidates[index].identity.exact_entry, index);
+        }
+    }
+    std::vector<std::vector<std::size_t>> graph(candidates.size());
+    std::vector<std::uint8_t> locally_valid(candidates.size(), 1);
+    std::vector<std::uint8_t> missing_dependency(candidates.size(), 0);
+    certificate.candidates.reserve(candidates.size());
+    for (std::size_t index = 0; index < candidates.size(); ++index) {
+        const PolicyPotentialCandidateEntry& input = candidates[index];
+        PolicyPotentialCandidateResult result;
+        result.identity = input.identity;
+        result.policy_value = input.policy_value;
+        result.existing_lower = input.existing_lower;
+        const auto refuse = [&](const PolicyPotentialCandidateStatus status,
+                                const char* reason) {
+            if (locally_valid[index]) {
+                result.status = status;
+                result.refusal_reason = reason;
+            }
+            locally_valid[index] = 0;
+        };
+        if (!input.identity.complete() ||
+            input.identity.authority != certificate.authority ||
+            input.identity.strategy != certificate.strategy_identity) {
+            refuse(
+                PolicyPotentialCandidateStatus::InvalidIdentity,
+                "candidate request identity does not match certificate");
+        }
+        if (!std::isfinite(input.policy_value) || input.policy_value < 0.0 ||
+            !std::isfinite(input.existing_lower) ||
+            input.existing_lower < 0.0 ||
+            input.policy_value + epsilon * std::max(
+                {1.0, std::abs(input.policy_value),
+                 std::abs(input.existing_lower)}) < input.existing_lower) {
+            refuse(
+                PolicyPotentialCandidateStatus::InvalidValue,
+                "candidate policy value is invalid or below its existing lower");
+        }
+        const PolicyPotentialSelectedKernel& selected =
+            input.selected_kernel;
+        if (!selected.available() ||
+            selected.source != input.identity) {
+            refuse(
+                PolicyPotentialCandidateStatus::SelectedKernelUnavailable,
+                "complete identity-bound selected kernel is unavailable");
+        }
+
+        std::vector<StableKey> dependencies;
+        double selected_rhs = selected.mandatory_expected_cost;
+        solve_detail::WideFloat selected_mass{0.0};
+        for (const PolicyPotentialSelectedTransition& transition :
+             selected.transitions) {
+            if (!std::isfinite(transition.probability) ||
+                transition.probability <= 0.0 ||
+                (!transition.terminal &&
+                 transition.target_entry_identity.empty()) ||
+                (transition.terminal &&
+                 !transition.target_entry_identity.empty())) {
+                refuse(
+                    PolicyPotentialCandidateStatus::SelectedKernelUnavailable,
+                    "selected kernel contains an invalid successor");
+                continue;
+            }
+            selected_mass += solve_detail::WideFloat{
+                transition.probability};
+            if (transition.terminal) continue;
+            dependencies.push_back(transition.target_entry_identity);
+            const auto found = candidate_by_entry.find(
+                transition.target_entry_identity);
+            if (found == candidate_by_entry.end()) {
+                missing_dependency[index] = 1;
+                continue;
+            }
+            graph[index].push_back(found->second);
+            selected_rhs += transition.probability *
+                candidates[found->second].policy_value;
+        }
+        const double selected_tolerance = epsilon * std::max(
+            {1.0, std::abs(input.policy_value),
+             std::abs(selected_rhs)});
+        if (std::abs(selected_mass.value() - 1.0) > 1e-12 ||
+            std::abs(
+                selected_mass.value() - selected.probability_mass) >
+                1e-12) {
+            refuse(
+                PolicyPotentialCandidateStatus::SelectedKernelUnavailable,
+                "selected kernel transition mass does not match its record");
+        } else if (!missing_dependency[index] &&
+            (!std::isfinite(selected_rhs) ||
+             std::abs(selected_rhs - input.policy_value) >
+                 selected_tolerance ||
+             selected.bellman_residual > selected_tolerance)) {
+            refuse(
+                PolicyPotentialCandidateStatus::SelectedKernelUnavailable,
+                "selected kernel does not reproduce the fixed-policy value");
+        }
+
+        ++certificate.constraints_examined; /* selected planner operation */
+        if (input.caller_authorized_actions !=
+            input.action_constraints.size() + 1) {
+            refuse(
+                PolicyPotentialCandidateStatus::ActionCoverageIncomplete,
+                "caller-authorized action coverage is incomplete");
+        }
+        for (const PolicyPotentialActionConstraint& constraint :
+             input.action_constraints) {
+            ++certificate.constraints_examined;
+            if (constraint.source != input.identity ||
+                constraint.action_identity.empty() ||
+                constraint.semantic_identity.empty()) {
+                refuse(
+                    PolicyPotentialCandidateStatus::InvalidIdentity,
+                    "action constraint identity does not match its source");
+                continue;
+            }
+            bool closed = constraint.complete;
+            double rhs = constraint.rhs;
+            if (constraint.kind ==
+                    PolicyPotentialConstraintKind::ExactAlternativeRow) {
+                ++certificate.exact_rows_examined;
+                solve_detail::WideFloat exact_rhs{
+                    constraint.immediate_cost};
+                solve_detail::WideFloat mass{0.0};
+                bool fixed_policy_deviation_available = true;
+                closed = closed &&
+                    std::isfinite(constraint.immediate_cost) &&
+                    constraint.immediate_cost >= 0.0 &&
+                    !constraint.transitions.empty();
+                for (const PolicyPotentialAlternativeTransition& transition :
+                     constraint.transitions) {
+                    if (!std::isfinite(transition.probability) ||
+                        transition.probability <= 0.0) {
+                        closed = false;
+                        continue;
+                    }
+                    mass += solve_detail::WideFloat{
+                        transition.probability};
+                    if (transition.terminal) {
+                        if (!transition.target_entry_identity.empty() ||
+                            !transition.boundary_lower_identity.empty()) {
+                            closed = false;
+                        }
+                        continue;
+                    }
+                    if (!transition.target_entry_identity.empty()) {
+                        if (!transition.boundary_lower_identity.empty()) {
+                            closed = false;
+                            continue;
+                        }
+                        dependencies.push_back(
+                            transition.target_entry_identity);
+                        const auto found = candidate_by_entry.find(
+                            transition.target_entry_identity);
+                        if (found == candidate_by_entry.end()) {
+                            missing_dependency[index] = 1;
+                            closed = false;
+                            continue;
+                        }
+                        graph[index].push_back(found->second);
+                        exact_rhs += solve_detail::WideFloat{
+                            transition.probability} *
+                            solve_detail::WideFloat{
+                                candidates[found->second].policy_value};
+                        continue;
+                    }
+                    fixed_policy_deviation_available = false;
+                    if (transition.boundary_lower_identity.empty() ||
+                        !std::isfinite(transition.boundary_lower) ||
+                        transition.boundary_lower < 0.0) {
+                        closed = false;
+                        continue;
+                    }
+                    exact_rhs += solve_detail::WideFloat{
+                        transition.probability} *
+                        solve_detail::WideFloat{
+                            transition.boundary_lower};
+                }
+                rhs = exact_rhs.value();
+                closed = closed &&
+                    std::abs(mass.value() - 1.0) <= 1e-12;
+                const double improvement_tolerance = epsilon * std::max(
+                    {1.0, std::abs(input.policy_value), std::abs(rhs)});
+                if (fixed_policy_deviation_available &&
+                    std::isfinite(rhs) &&
+                    rhs + improvement_tolerance < input.policy_value) {
+                    certificate.policy_improvement = true;
+                    refuse(
+                        PolicyPotentialCandidateStatus::PolicyImprovement,
+                        "an exact one-step deviation improves the fixed "
+                        "policy");
+                    continue;
+                }
+            } else if (constraint.kind ==
+                       PolicyPotentialConstraintKind::ExistingTypedLower) {
+                closed = closed &&
+                    !constraint.existing_lower_identity.empty();
+            }
+            if (constraint.kind !=
+                    PolicyPotentialConstraintKind::ExactInapplicability) {
+                const double tolerance = epsilon * std::max(
+                    {1.0, std::abs(input.policy_value),
+                     std::abs(rhs)});
+                closed = closed && std::isfinite(rhs) &&
+                    rhs + tolerance >= input.policy_value;
+            }
+            if (!closed) {
+                refuse(
+                    PolicyPotentialCandidateStatus::ConstraintOpen,
+                    "a caller-authorized Bellman action constraint is open");
+            } else if (constraint.kind ==
+                       PolicyPotentialConstraintKind::ExistingTypedLower) {
+                ++certificate.constraints_closed_by_existing_lower;
+            }
+        }
+        std::sort(dependencies.begin(), dependencies.end());
+        dependencies.erase(
+            std::unique(dependencies.begin(), dependencies.end()),
+            dependencies.end());
+        std::sort(graph[index].begin(), graph[index].end());
+        graph[index].erase(
+            std::unique(graph[index].begin(), graph[index].end()),
+            graph[index].end());
+        certificate.selected_dependency_states += dependencies.size();
+        result.dependencies = std::move(dependencies);
+        if (locally_valid[index] && missing_dependency[index]) {
+            result.status = PolicyPotentialCandidateStatus::DependencyOpen;
+            result.refusal_reason =
+                "a policy-potential dependency is outside the candidate set";
+        }
+        certificate.candidates.push_back(std::move(result));
+    }
+
+    /* Tarjan over full exact-entry identities.  SCCs are then ordered by
+     * their minimum stable key so result ordering is independent of DFS
+     * stack shape. */
+    std::vector<std::int64_t> discovery(candidates.size(), -1);
+    std::vector<std::int64_t> low(candidates.size(), -1);
+    std::vector<std::uint8_t> on_stack(candidates.size(), 0);
+    std::vector<std::size_t> stack;
+    std::vector<std::vector<std::size_t>> raw_sccs;
+    std::int64_t next_discovery = 0;
+    const std::function<void(std::size_t)> visit = [&](const std::size_t v) {
+        discovery[v] = low[v] = next_discovery++;
+        stack.push_back(v);
+        on_stack[v] = 1;
+        for (const std::size_t target : graph[v]) {
+            if (discovery[target] < 0) {
+                visit(target);
+                low[v] = std::min(low[v], low[target]);
+            } else if (on_stack[target]) {
+                low[v] = std::min(low[v], discovery[target]);
+            }
+        }
+        if (low[v] != discovery[v]) return;
+        std::vector<std::size_t> component;
+        for (;;) {
+            const std::size_t member = stack.back();
+            stack.pop_back();
+            on_stack[member] = 0;
+            component.push_back(member);
+            if (member == v) break;
+        }
+        std::sort(component.begin(), component.end());
+        raw_sccs.push_back(std::move(component));
+    };
+    for (std::size_t index = 0; index < candidates.size(); ++index) {
+        if (discovery[index] < 0) visit(index);
+    }
+    std::sort(
+        raw_sccs.begin(), raw_sccs.end(),
+        [&](const auto& left, const auto& right) {
+            return candidates[left.front()].identity.exact_entry <
+                candidates[right.front()].identity.exact_entry;
+        });
+    certificate.dependency_sccs = raw_sccs.size();
+    std::vector<std::size_t> scc_by_candidate(
+        candidates.size(), std::numeric_limits<std::size_t>::max());
+    for (std::size_t scc = 0; scc < raw_sccs.size(); ++scc) {
+        for (const std::size_t member : raw_sccs[scc]) {
+            scc_by_candidate[member] = scc;
+            certificate.candidates[member].dependency_scc = scc;
+        }
+    }
+    std::vector<std::set<std::size_t>> outgoing(raw_sccs.size());
+    std::vector<std::uint8_t> scc_locally_valid(raw_sccs.size(), 1);
+    for (std::size_t scc = 0; scc < raw_sccs.size(); ++scc) {
+        for (const std::size_t member : raw_sccs[scc]) {
+            if (!locally_valid[member] || missing_dependency[member]) {
+                scc_locally_valid[scc] = 0;
+            }
+            for (const std::size_t target : graph[member]) {
+                const std::size_t target_scc = scc_by_candidate[target];
+                if (target_scc != scc) outgoing[scc].insert(target_scc);
+            }
+        }
+    }
+    std::vector<std::uint8_t> scc_certified(raw_sccs.size(), 0);
+    bool changed = true;
+    while (changed) {
+        changed = false;
+        for (std::size_t scc = 0; scc < raw_sccs.size(); ++scc) {
+            if (scc_certified[scc] || !scc_locally_valid[scc]) continue;
+            const bool dependencies_closed = std::all_of(
+                outgoing[scc].begin(), outgoing[scc].end(),
+                [&](const std::size_t dependency) {
+                    return scc_certified[dependency] != 0;
+                });
+            if (!dependencies_closed) continue;
+            scc_certified[scc] = 1;
+            changed = true;
+        }
+    }
+    for (std::size_t scc = 0; scc < raw_sccs.size(); ++scc) {
+        if (!scc_certified[scc]) continue;
+        PolicyPotentialCertifiedScc output;
+        output.stable_order = certificate.certified.size();
+        output.entry_identities.reserve(raw_sccs[scc].size());
+        for (const std::size_t member : raw_sccs[scc]) {
+            certificate.candidates[member].status =
+                PolicyPotentialCandidateStatus::Certified;
+            certificate.candidates[member].refusal_reason.clear();
+            output.entry_identities.push_back(
+                candidates[member].identity.exact_entry);
+            ++certificate.certified_entries;
+        }
+        certificate.certified.push_back(std::move(output));
+    }
+    certificate.certified_sccs = certificate.certified.size();
+    for (std::size_t index = 0; index < candidates.size(); ++index) {
+        if (certificate.candidates[index].status ==
+                PolicyPotentialCandidateStatus::Certified) {
+            ++certificate.candidates_valid;
+        } else {
+            ++certificate.candidates_refused;
+            if (locally_valid[index] && !missing_dependency[index] &&
+                certificate.candidates[index].status ==
+                    PolicyPotentialCandidateStatus::Candidate) {
+                certificate.candidates[index].status =
+                    PolicyPotentialCandidateStatus::DependencyOpen;
+                certificate.candidates[index].refusal_reason =
+                    "dependency SCC does not belong to the certified subset";
+            }
+        }
+    }
+
+    if (prior != nullptr) {
+        if (prior->authority != certificate.authority ||
+            prior->strategy_identity != certificate.strategy_identity) {
+            return refuse_all(
+                "prior policy-potential certificate identity changed");
+        }
+        std::set<StableKey> now_certified;
+        for (const PolicyPotentialCertifiedScc& scc :
+             certificate.certified) {
+            now_certified.insert(
+                scc.entry_identities.begin(), scc.entry_identities.end());
+        }
+        for (const PolicyPotentialCertifiedScc& scc : prior->certified) {
+            for (const StableKey& entry : scc.entry_identities) {
+                if (!now_certified.contains(entry)) {
+                    return refuse_all(
+                        "extension would revoke a previously certified entry");
+                }
+            }
+        }
+    }
+    certificate.retained_bytes = retained_bytes();
+    certificate.transient_bytes = std::max(
+        certificate.transient_bytes,
+        certificate.retained_bytes +
+            candidate_input_bytes +
+            graph.capacity() * sizeof(std::vector<std::size_t>) +
+            stack.capacity() * sizeof(std::size_t));
+    return certificate;
+}
+
 void merge_refined_compile_strict_members(
         std::vector<std::uint32_t>& represented_members,
         const std::vector<std::uint32_t>& streamed_members) {

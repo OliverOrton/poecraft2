@@ -1467,6 +1467,99 @@ SolveWork::Impl::finalize_carrier_bound_attribution() {
         json += "]}";
     }
     json += "]}";
+    const auto& cegar = policy_shadow.policy_potential_cegar;
+    json += ",\"policy_potential_cegar\":{\"authority\":";
+    append_json_string(json, cegar.authority);
+    json += ",\"status\":";
+    append_json_string(json, cegar.status);
+    json += ",\"failure_reason\":";
+    if (cegar.failure_reason.empty()) {
+        json += "null";
+    } else {
+        append_json_string(json, cegar.failure_reason);
+    }
+    json += ",\"witness\":{\"source_entry_identity\":";
+    append_json_string(json, std::to_string(cegar.source_entry_identity));
+    json += ",\"action_identity\":";
+    append_json_string(json, std::to_string(cegar.action_identity));
+    json += ",\"successor_item_identity\":";
+    append_json_string(json, std::to_string(cegar.successor_item_identity));
+    json += ",\"source_policy_value\":" +
+        finite_json(cegar.source_policy_value);
+    json += ",\"root_expected_visits\":" +
+        finite_json(cegar.source_root_expected_visits);
+    json += ",\"bellman_deficit\":" +
+        finite_json(cegar.source_bellman_deficit);
+    json += ",\"boundary_probability_mass\":" +
+        finite_json(cegar.source_boundary_probability_mass) + '}';
+    json += ",\"continuation\":{\"status\":" +
+        std::to_string(cegar.continuation_status);
+    json += ",\"exact_entry_identity\":";
+    append_json_string(
+        json, std::to_string(cegar.continuation_exact_entry_identity));
+    json += ",\"exact_item_identity\":";
+    append_json_string(
+        json, std::to_string(cegar.continuation_exact_item_identity));
+    json += ",\"cost\":" + finite_json(cegar.continuation_cost);
+    json += ",\"residual\":" + finite_json(cegar.continuation_residual);
+    json += ",\"global_route_target\":";
+    if (cegar.global_route_target.empty()) {
+        json += "null";
+    } else {
+        append_json_string(json, cegar.global_route_target);
+    }
+    json += '}';
+    json += ",\"dependency_expansion\":{\"roots_requested\":" +
+        std::to_string(cegar.dependency_kernel_roots_requested);
+    json += ",\"certificate_identity\":";
+    append_json_string(
+        json, std::to_string(cegar.dependency_certificate_identity));
+    json += ",\"kernels_complete\":" +
+        std::to_string(cegar.dependency_kernels_complete);
+    json += ",\"kernels_refused\":" +
+        std::to_string(cegar.dependency_kernels_refused);
+    json += ",\"capped\":" + std::string(
+        cegar.dependency_expansion_capped ? "true" : "false");
+    json += ",\"entries\":" +
+        std::to_string(cegar.selected_dependency_entries);
+    json += ",\"transitions\":" +
+        std::to_string(cegar.selected_dependency_transitions);
+    json += ",\"mandatory_operation_states\":" +
+        std::to_string(cegar.selected_mandatory_operation_states);
+    json += ",\"route_states\":" +
+        std::to_string(cegar.selected_route_states);
+    json += ",\"checkpoint_states\":" +
+        std::to_string(cegar.selected_checkpoint_states);
+    json += ",\"observed_choice_states\":" +
+        std::to_string(cegar.selected_observed_choice_states);
+    json += ",\"maximum_kernel_residual\":" +
+        finite_json(cegar.maximum_selected_kernel_residual) + '}';
+    json += ",\"closure\":{\"candidate_entries\":" +
+        std::to_string(cegar.candidate_entries);
+    json += ",\"candidate_sccs\":" +
+        std::to_string(cegar.candidate_sccs);
+    json += ",\"certified_entries\":" +
+        std::to_string(cegar.certified_entries);
+    json += ",\"certified_sccs\":" +
+        std::to_string(cegar.certified_sccs);
+    json += ",\"action_constraints_examined\":" +
+        std::to_string(cegar.action_constraints_examined);
+    json += ",\"actions_closed_by_existing_lower\":" +
+        std::to_string(cegar.actions_closed_by_existing_lower);
+    json += ",\"exact_rows_built\":" +
+        std::to_string(cegar.exact_rows_built) + '}';
+    json += ",\"work\":{\"evaluator_live_bytes\":" +
+        std::to_string(cegar.evaluator_live_bytes);
+    json += ",\"evaluator_peak_bytes\":" +
+        std::to_string(cegar.evaluator_peak_bytes);
+    json += ",\"evaluator_work_ns\":" +
+        std::to_string(cegar.evaluator_work_ns);
+    json += ",\"retained_bytes\":" +
+        std::to_string(cegar.retained_bytes);
+    json += ",\"transient_bytes\":" +
+        std::to_string(cegar.transient_bytes);
+    json += ",\"lifecycle_mutations\":" +
+        std::to_string(cegar.lifecycle_mutations) + "}}";
     const auto append_policy_samples = [&] (
             const auto& samples, const std::size_t count) {
         json += '[';
@@ -2449,6 +2542,11 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
                          .authority.capacity() + 1;
             bytes += shadow.policy_potential_bellman
                          .status.capacity() + 1;
+            bytes += shadow.policy_potential_cegar.authority.capacity() + 1;
+            bytes += shadow.policy_potential_cegar.status.capacity() + 1;
+            bytes += shadow.policy_potential_cegar.failure_reason.capacity() + 1;
+            bytes += shadow.policy_potential_cegar
+                         .global_route_target.capacity() + 1;
             for (std::size_t index = 0;
                  index < shadow.policy_potential_bellman.constraint_count;
                  ++index) {
@@ -2708,6 +2806,11 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
                          .authority.capacity() + 1;
             bytes += shadow.policy_potential_bellman
                          .status.capacity() + 1;
+            bytes += shadow.policy_potential_cegar.authority.capacity() + 1;
+            bytes += shadow.policy_potential_cegar.status.capacity() + 1;
+            bytes += shadow.policy_potential_cegar.failure_reason.capacity() + 1;
+            bytes += shadow.policy_potential_cegar
+                         .global_route_target.capacity() + 1;
             for (std::size_t index = 0;
                  index < shadow.policy_potential_bellman.constraint_count;
                  ++index) {

@@ -5,7 +5,7 @@ alternative bridge and one evidence-selected Fracture RC shadow are retained;
 neither has production pruning, retirement, scheduling, incumbent, or
 publication authority. Work is local-only; do not push.
 
-Parent: [Active work](../README.md)
+Parent: [Archive](../README.md)
 
 ## Objective
 
