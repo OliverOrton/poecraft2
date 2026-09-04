@@ -1,0 +1,230 @@
+{
+  "evidence": "native-kernel research plus explicit rational reference; no production qualification",
+  "numeric_contract": "raw double coefficient sums preserved and audited; exact normalized rational model is separate and does not certify underlying integer/real probability derivation",
+  "maximum_raw_binary_mass_defect": "21/1152921504606846976",
+  "raw_binary_mass_defects": [
+    "0",
+    "21/1152921504606846976"
+  ],
+  "checked_action_set_obligations": 21,
+  "exact_inapplicabilities": 7,
+  "records": [
+    {
+      "name": "existing_lower_scalar_coverage",
+      "normalized_reference": true,
+      "values": {
+        "0": "4841369599423283/2251799813685248",
+        "1": "2476979795053773/1125899906842624",
+        "2": "2476979795053773/1125899906842624",
+        "3": "2476979795053773/1125899906842624",
+        "5": "2476979795053773/1125899906842624",
+        "6": "2476979795053773/1125899906842624",
+        "7": "3602879701896397/36028797018963968"
+      },
+      "root": 2.15,
+      "minimum_actions": {
+        "0": [
+          "transmute"
+        ],
+        "1": [
+          "alteration"
+        ],
+        "2": [
+          "alteration"
+        ],
+        "3": [
+          "alteration"
+        ],
+        "5": [
+          "alteration"
+        ],
+        "6": [
+          "alteration"
+        ],
+        "7": [
+          "alteration"
+        ]
+      },
+      "residual": "0",
+      "modeled_nonterminal_states": 7,
+      "rows": 14,
+      "coefficients": 14,
+      "simplex_pivots": 7,
+      "policy_candidates": 128,
+      "improper_rejected": 0,
+      "combined_reference_elapsed_ns": 101320200,
+      "arithmetic_retained_bytes": 16439,
+      "arithmetic_peak_bytes": 112519,
+      "exact_reference_oracle_gap": "203811543658069434802636126316011/9418278357581766098581125595136",
+      "gain_over_fresh_existing_lower": "0"
+    },
+    {
+      "name": "root_exact_outside_existing_boundary",
+      "normalized_reference": true,
+      "values": {
+        "0": "184726029422333786445881365982114765/83076749736557243569697416064008192"
+      },
+      "root": 2.2235586973264385,
+      "minimum_actions": {
+        "0": [
+          "transmute"
+        ]
+      },
+      "residual": "0",
+      "modeled_nonterminal_states": 1,
+      "rows": 2,
+      "coefficients": 8,
+      "simplex_pivots": 1,
+      "policy_candidates": 2,
+      "improper_rejected": 1,
+      "combined_reference_elapsed_ns": 399900,
+      "arithmetic_retained_bytes": 888,
+      "arithmetic_peak_bytes": 3376,
+      "exact_reference_oracle_gap": "29272496479107945882849439655110690418259384071023/1357316956853659188945118815754681779104014925824",
+      "gain_over_fresh_existing_lower": "6111017488735720149729550928317933/83076749736557243569697416064008192"
+    },
+    {
+      "name": "refine_goal_plus_junk_recovery",
+      "normalized_reference": true,
+      "values": {
+        "0": "184691981574081099047933976800979279/82395792771503495648550337510375424",
+        "7": "94405885606328137029527879672206801/41197896385751747824275168755187712"
+      },
+      "root": 2.2415219923456653,
+      "minimum_actions": {
+        "0": [
+          "transmute"
+        ],
+        "7": [
+          "alteration"
+        ]
+      },
+      "residual": "0",
+      "modeled_nonterminal_states": 2,
+      "rows": 4,
+      "coefficients": 16,
+      "simplex_pivots": 2,
+      "policy_candidates": 4,
+      "improper_rejected": 2,
+      "combined_reference_elapsed_ns": 1080200,
+      "arithmetic_retained_bytes": 1512,
+      "arithmetic_peak_bytes": 6032,
+      "exact_reference_oracle_gap": "14504187974981407890281464694902089519972220878489/673095704013494925477234711938956498118864011264",
+      "gain_over_fresh_existing_lower": "7541027115348590721767252526969775/82395792771503495648550337510375424"
+    },
+    {
+      "name": "full_free_value_reference",
+      "normalized_reference": true,
+      "values": {
+        "0": "224060842126870231078074387552267/9418278357581766098581125595136",
+        "1": "112265878022374659704572208772157/4709139178790883049290562797568",
+        "2": "112265878022374659704572208772157/4709139178790883049290562797568",
+        "3": "112265878022374659704572208772157/4709139178790883049290562797568",
+        "5": "112265878022374659704572208772157/4709139178790883049290562797568",
+        "6": "112265878022374659704572208772157/4709139178790883049290562797568",
+        "7": "112265878022374659704572208772157/4709139178790883049290562797568"
+      },
+      "root": 23.790000000000003,
+      "minimum_actions": {
+        "0": [
+          "transmute"
+        ],
+        "1": [
+          "alteration"
+        ],
+        "2": [
+          "alteration"
+        ],
+        "3": [
+          "alteration"
+        ],
+        "5": [
+          "alteration"
+        ],
+        "6": [
+          "alteration"
+        ],
+        "7": [
+          "alteration"
+        ]
+      },
+      "residual": "0",
+      "modeled_nonterminal_states": 7,
+      "rows": 14,
+      "coefficients": 56,
+      "simplex_pivots": 7,
+      "policy_candidates": 128,
+      "improper_rejected": 64,
+      "combined_reference_elapsed_ns": 184281700,
+      "arithmetic_retained_bytes": 6696,
+      "arithmetic_peak_bytes": 84008,
+      "exact_reference_oracle_gap": "0",
+      "gain_over_fresh_existing_lower": "203811543658069434802636126316011/9418278357581766098581125595136"
+    },
+    {
+      "name": "full_raw_binary_coefficient_algebra",
+      "normalized_reference": false,
+      "values": {
+        "0": "4145125579347099237114139299804771/174238149615261916219013425266688",
+        "1": "57646075230342352/2418040068386833",
+        "2": "57646075230342352/2418040068386833",
+        "3": "57646075230342352/2418040068386833",
+        "5": "57646075230342352/2418040068386833",
+        "6": "57646075230342352/2418040068386833",
+        "7": "57646075230342352/2418040068386833"
+      },
+      "root": 23.790000000000106,
+      "minimum_actions": {
+        "0": [
+          "transmute"
+        ],
+        "1": [
+          "alteration"
+        ],
+        "2": [
+          "alteration"
+        ],
+        "3": [
+          "alteration"
+        ],
+        "5": [
+          "alteration"
+        ],
+        "6": [
+          "alteration"
+        ],
+        "7": [
+          "alteration"
+        ]
+      },
+      "residual": "0",
+      "modeled_nonterminal_states": 7,
+      "rows": 14,
+      "coefficients": 56,
+      "simplex_pivots": 7,
+      "policy_candidates": null,
+      "improper_rejected": null,
+      "combined_reference_elapsed_ns": 10336600,
+      "arithmetic_retained_bytes": 2636,
+      "arithmetic_peak_bytes": 36132,
+      "exact_reference_oracle_gap": null,
+      "gain_over_fresh_existing_lower": null,
+      "cross_model_value_difference": "1173847123097203499421772877191155/11386887221926621442235813481395813233295622144"
+    }
+  ],
+  "fixed_J_complete_reference_pass": true,
+  "fixed_J_root_only_with_existing_boundary_pass": false,
+  "base_bellman_violations": {},
+  "native_failure_rows_exactly_equal": true,
+  "behaviorally_equal_failure_states": [
+    "1",
+    "2",
+    "3",
+    "5",
+    "6",
+    "7"
+  ],
+  "quotient_state_count_including_goal": 3,
+  "native_new_lower_authority": false,
+  "policy_routing_validation": "not rerun; fixed-J checks above are mathematical constraints on exported model, not strategy-entry API certification"
+}

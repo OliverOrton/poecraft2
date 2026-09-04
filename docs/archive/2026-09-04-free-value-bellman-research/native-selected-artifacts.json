@@ -1,0 +1,1242 @@
+{
+  "micro": {
+    "id": "oracle-real-one-mod",
+    "input": {
+      "comparison_profile": "native-wasm-solver-v1",
+      "watchdog_seconds": 60,
+      "session": {
+        "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+        "base_name": "Vaal Regalia",
+        "item_level": 86
+      },
+      "start": {
+        "rarity": "normal",
+        "with_implicits": false,
+        "mods": []
+      },
+      "goal": {
+        "version": "v1",
+        "rarity": "magic",
+        "min_satisfied_slots": 1,
+        "slots": [
+          {
+            "family_mod_key": "LocalIncreasedEnergyShield11",
+            "min_tier": 1
+          }
+        ],
+        "actions": [
+          "transmute",
+          "alteration",
+          "restart"
+        ]
+      },
+      "allowed_mechanic_families": [
+        "ordinary_currency",
+        "restart"
+      ],
+      "economy": {
+        "version": "v1",
+        "id": "solver-benchmark-frozen-v1",
+        "prices": {
+          "transmute": 0.05,
+          "alteration": 0.1,
+          "base": 5
+        }
+      },
+      "caps": {
+        "max_states": 10000,
+        "max_sweeps": 100000,
+        "solve_step_work_items": 256,
+        "max_discovered_states": 10000,
+        "max_expanded_states": 10000,
+        "max_state_action_rows": 100000,
+        "max_transitions": 1000000,
+        "max_reforge_work": 1000000,
+        "max_solver_owned_bytes": 268435456,
+        "max_compiled_nodes": 25000,
+        "max_compiled_edges": 100000,
+        "max_strategy_json_bytes": 16777216,
+        "worker_step_ms": 50,
+        "cancel_ack_ms": 250,
+        "goal_progress_gated_reforges": false,
+        "allow_economic_restart": true,
+        "high_impact_executable_uppers": true,
+        "consider_imprint_programs": false,
+        "full_evidence": true
+      },
+      "verification": {
+        "runs": 10000,
+        "seed": 2026071501,
+        "max_actions_per_run": 100000,
+        "mean_cost_absolute_tolerance": 0.5,
+        "minimum_success_rate": 0.995,
+        "exact_evaluation": true,
+        "exact_max_states": 1000000,
+        "exact_max_pairs": 5000000,
+        "exact_max_transitions": 20000000,
+        "exact_max_owned_bytes": 1073741824,
+        "exact_cost_absolute_tolerance": 1e-07,
+        "exact_cost_relative_tolerance": 1e-09
+      }
+    },
+    "solve_summary": {
+      "converged": true,
+      "start_state": 0,
+      "start_value": 23.78999999999971,
+      "expanded_states": 3,
+      "sweeps": 1,
+      "residual": 0,
+      "skipped_action_count": 0,
+      "policy_available": true,
+      "policy_status": "exact",
+      "termination": "exact_closed",
+      "stop_cause": "exact_closed",
+      "cap_hit_mask": 0,
+      "action_counts": {
+        "registry": 271,
+        "candidate": 3,
+        "evaluator_supported": 3,
+        "supported_priced": 3,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 0
+      },
+      "lower_bound": 23.78999999999971,
+      "upper_bound": 23.78999999999971,
+      "evaluated_policy_cost": 23.78999999999971,
+      "absolute_optimality_gap": 0,
+      "relative_optimality_gap": 0,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "work": {
+      "state_action_rows": 4,
+      "transition_entries": 3,
+      "outcome_entries": 56,
+      "choice_groups": 0,
+      "choice_successor_entries": 0,
+      "reforge_work": 5544,
+      "legacy_reforge_active_work": 3670,
+      "bellman_backups": 12,
+      "bellman_action_evaluations": 24,
+      "extraction_action_evaluations": 4,
+      "bellman_work_units": 1,
+      "max_bellman_unit_transitions": 0,
+      "algebraic_self_loops": 2,
+      "transition_bits_hash": "c1fcaaf7f43b5f29",
+      "policy_bits_hash": "3b1e260e47ca0f68"
+    },
+    "states": {
+      "discovered": 3,
+      "strict_discovered": 8,
+      "quotient": 3,
+      "expanded": 3,
+      "frontier": 0,
+      "goal": 1,
+      "policy_reachable": 3
+    },
+    "memory": {
+      "measurement_kind": "working_set_snapshots_not_peak",
+      "process_working_set_before_bytes": 55988224,
+      "process_working_set_after_bytes": 80801792,
+      "process_working_set_delta_bytes": 24813568,
+      "process_working_set_peak_bytes": null,
+      "wasm_heap_before_bytes": null,
+      "wasm_heap_after_bytes": null,
+      "wasm_heap_growth_bytes": null,
+      "native_live_owned_bytes": 2648965,
+      "native_peak_owned_bytes": 4257768,
+      "native_serialized_output_bytes": 45,
+      "solver_telemetry_json_bytes": 128992
+    },
+    "source_start_lower": {
+      "state": 0,
+      "expanded": true,
+      "policy_reachable": true,
+      "goal": false,
+      "satisfied_goal_mask": 0,
+      "rarity": 0,
+      "prefixes": 0,
+      "suffixes": 0,
+      "blocked_mask": 0,
+      "protection_flags": 0,
+      "fractured_goal_mask": 0,
+      "clean_eligible": true,
+      "clean_rejection_mask": 0,
+      "universal": 0.05,
+      "clean_mdp": 0,
+      "carrier_progress": 2.15,
+      "terminal_debt": 0.05,
+      "strict_clean": null,
+      "envelope_bellman": 2.240771812080537,
+      "selected_maximum": 2.240771812080537,
+      "owners": [
+        "envelope_bellman"
+      ]
+    },
+    "patterns": [
+      {
+        "id": "universal_cover",
+        "finite_projection": "exact_goal_mask",
+        "covered_action_shapes": "all priced goal-reaching primitive shapes",
+        "local_fallback": "zero on unknown coverage",
+        "immediate_price_authority": "descriptor resource cost",
+        "optimistic_successor_authority": "free setup, perfect preservation, deterministic subset",
+        "solution": "acyclic_dynamic_program",
+        "residual": 0,
+        "solution_sweeps": 1,
+        "converged": true,
+        "provenance": "probability_free_universal_goal_cover",
+        "minimizing_action": "transmute",
+        "fallback_reason": "complete_probability_free_cover",
+        "refinement_trace": null,
+        "optimistic_grants": "free setup, perfect preservation, deterministic subset",
+        "start_contribution": 0.05,
+        "selected_owner_calls": 2
+      },
+      {
+        "id": "clean_mdp",
+        "finite_projection": "rarity x exact goal mask x prefix/suffix occupancy",
+        "covered_action_shapes": "priced clean-carrier primitive shapes",
+        "local_fallback": "universal cover",
+        "immediate_price_authority": "descriptor or proved primitive wrapper price",
+        "optimistic_successor_authority": "optimistic pool probability and clairvoyant observation",
+        "solution": "monotone_subsolution",
+        "residual": null,
+        "solution_sweeps": 0,
+        "converged": false,
+        "provenance": "clean_goal_progress_relaxation",
+        "minimizing_action": null,
+        "fallback_reason": "not_prepared",
+        "refinement_trace": null,
+        "optimistic_grants": "optimistic pool probability and clairvoyant observation",
+        "start_contribution": null,
+        "selected_owner_calls": 2
+      },
+      {
+        "id": "identity_clean_mdp",
+        "finite_projection": "fixed exact identity x rarity x goal mask x occupancy",
+        "covered_action_shapes": "priced primitive shapes that preserve source identity",
+        "local_fallback": "carrier MDP when identity changes",
+        "immediate_price_authority": "descriptor or proved primitive wrapper price",
+        "optimistic_successor_authority": "free identity-preserving cleanup and perfect preservation",
+        "solution": "monotone_subsolution",
+        "residual": null,
+        "solution_sweeps": 0,
+        "converged": false,
+        "provenance": "fixed_identity_clean_goal_progress_relaxation",
+        "minimizing_action": null,
+        "fallback_reason": "generic_clean_projection_owns_state",
+        "refinement_trace": null,
+        "optimistic_grants": "free identity-preserving cleanup and perfect preservation",
+        "start_contribution": null,
+        "selected_owner_calls": 0
+      },
+      {
+        "id": "carrier_mdp",
+        "finite_projection": "rarity x exact goal mask",
+        "covered_action_shapes": "priced carrier-legal primitive shapes",
+        "local_fallback": "unavailable locally",
+        "immediate_price_authority": "descriptor or proved primitive wrapper price",
+        "optimistic_successor_authority": "perfect preservation/free cleanup progress envelope",
+        "solution": "monotone_subsolution",
+        "residual": 0,
+        "solution_sweeps": 4,
+        "converged": true,
+        "provenance": "carrier_persistent_progress_relaxation",
+        "minimizing_action": "transmute",
+        "fallback_reason": "complete_carrier_projection",
+        "refinement_trace": null,
+        "optimistic_grants": "perfect preservation/free cleanup progress envelope",
+        "start_contribution": 2.15,
+        "selected_owner_calls": 31
+      },
+      {
+        "id": "bounded_gain_mdp",
+        "finite_projection": "rarity x satisfied-goal count",
+        "covered_action_shapes": "priced carrier actions with bounded per-use goal gains",
+        "local_fallback": "carrier MDP",
+        "immediate_price_authority": "descriptor or proved primitive wrapper price",
+        "optimistic_successor_authority": "perfect preservation plus at most one goal per draw",
+        "solution": "monotone_subsolution",
+        "residual": 0,
+        "solution_sweeps": 4,
+        "converged": true,
+        "provenance": "bounded_per_action_goal_gain_relaxation",
+        "minimizing_action": "transmute",
+        "fallback_reason": "complete_bounded_gain_projection",
+        "refinement_trace": null,
+        "optimistic_grants": "perfect preservation plus at most one goal per draw",
+        "start_contribution": 2.15,
+        "selected_owner_calls": 0
+      },
+      {
+        "id": "terminal_debt",
+        "finite_projection": "exact carrier first-step legality",
+        "covered_action_shapes": "all priced executable first steps",
+        "local_fallback": "zero for unknown or free first step",
+        "immediate_price_authority": "minimum legal first-step price",
+        "optimistic_successor_authority": "free continuation and terminal completion",
+        "solution": "one_step_floor",
+        "residual": 0,
+        "solution_sweeps": 1,
+        "converged": true,
+        "provenance": "carrier_terminal_debt_floor",
+        "minimizing_action": "transmute",
+        "fallback_reason": "cheapest_legal_first_step",
+        "refinement_trace": null,
+        "optimistic_grants": "free continuation and terminal completion",
+        "start_contribution": 0.05,
+        "selected_owner_calls": 4
+      },
+      {
+        "id": "strict_clean",
+        "finite_projection": "strict clean states plus rare goal/occupancy projection",
+        "covered_action_shapes": "covered registry primitive rows",
+        "local_fallback": "clean MDP escape",
+        "immediate_price_authority": "descriptor price",
+        "optimistic_successor_authority": "exact covered kernels plus optimistic escape",
+        "solution": "monotone_subsolution",
+        "residual": null,
+        "solution_sweeps": 0,
+        "converged": false,
+        "provenance": "strict_clean_goal_progress_pattern",
+        "minimizing_action": null,
+        "fallback_reason": "not_prepared",
+        "refinement_trace": null,
+        "optimistic_grants": "exact covered kernels plus optimistic escape",
+        "start_contribution": null,
+        "selected_owner_calls": 0
+      },
+      {
+        "id": "envelope_bellman",
+        "finite_projection": "exact start carrier x complete priced operator envelope",
+        "covered_action_shapes": "materialized rows plus proved per-operator fallbacks",
+        "local_fallback": "zero when any priced operator lacks a finite fallback",
+        "immediate_price_authority": "exact row price or guaranteed first-step price",
+        "optimistic_successor_authority": "exact row successors over independent pattern lowers",
+        "solution": "exact_successor_composition",
+        "residual": 0,
+        "solution_sweeps": 2,
+        "converged": true,
+        "provenance": "complete_operator_minimum_of_row_and_fallback_lowers",
+        "minimizing_action": "transmute",
+        "fallback_reason": "complete_materialized_operator_envelope",
+        "refinement_trace": "start_rows=2,finite_rows=2,incomplete=;start_action=transmute,exact=2.2227390251952914;",
+        "optimistic_grants": "exact row successors over independent pattern lowers",
+        "start_contribution": 2.240771812080537,
+        "selected_owner_calls": 2
+      },
+      {
+        "id": "operator_lower",
+        "finite_projection": "exact source carrier x planner action shape",
+        "covered_action_shapes": "priced primitive and fixed-program operators",
+        "local_fallback": "carrier Bellman lower or negative infinity skip",
+        "immediate_price_authority": "guaranteed first step or exact option quantity",
+        "optimistic_successor_authority": "proved survivor union plus universal continuation",
+        "solution": "exact_successor_composition",
+        "residual": 0,
+        "solution_sweeps": 1,
+        "converged": true,
+        "provenance": "operator_immediate_plus_optimistic_successor",
+        "minimizing_action": null,
+        "fallback_reason": "state_local_only",
+        "refinement_trace": null,
+        "optimistic_grants": "proved survivor union plus universal continuation",
+        "start_contribution": null,
+        "selected_owner_calls": 0
+      }
+    ],
+    "ledger": {
+      "transitions": 373,
+      "entries": 289,
+      "states": {
+        "queued": 0,
+        "exact_row_complete": 14,
+        "exact_inapplicability_proved": 7,
+        "incumbent_dominated": 0,
+        "rolled_back_after_named_cap": 0,
+        "omitted_explicit_caller_scope": 268,
+        "unresolved_named_stop": 0
+      }
+    }
+  },
+  "medium": {
+    "id": "conquest-lamellar-allflame-partial-five-last-mile-current",
+    "input": {
+      "comparison_profile": "solver-anytime-proof-realignment-gate0-v1",
+      "watchdog_seconds": 180,
+      "requested_bounded_finish_seconds": 20,
+      "session": {
+        "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+        "base_name": "Conquest Lamellar",
+        "item_class_key": "Body Armour",
+        "item_level": 86,
+        "minimum_item_level": 86
+      },
+      "start": {
+        "rarity": "rare",
+        "with_implicits": false,
+        "mods": [
+          {
+            "key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+            "flags": []
+          },
+          {
+            "key": "LocalBaseArmourAndEvasionRating8",
+            "flags": []
+          },
+          {
+            "key": "LocalIncreasedArmourAndEvasion8",
+            "flags": []
+          },
+          {
+            "key": "ChanceToSuppressSpellsHigh5___",
+            "flags": [
+              "fractured"
+            ]
+          }
+        ]
+      },
+      "goal": {
+        "version": "v1",
+        "rarity": "rare",
+        "action_mode": "goal_relevant",
+        "min_satisfied_slots": 5,
+        "slots": [
+          {
+            "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "AdditionalPhysicalDamageReduction5_",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+            "min_tier": 1
+          }
+        ]
+      },
+      "product_action_envelope": {
+        "mode": "calculator_goal_relevant_priced_v1",
+        "envelope_goal": {
+          "version": "v1",
+          "rarity": "rare",
+          "action_mode": "goal_relevant",
+          "fossil_mode": "goal_relevant",
+          "requested_fossil_actions": [],
+          "min_satisfied_slots": 5,
+          "slots": [
+            {
+              "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "AdditionalPhysicalDamageReduction5_",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+              "min_tier": 1
+            }
+          ]
+        },
+        "pricing_filter": "all_declared_cost_keys_present",
+        "bench_goal_slots_forbidden": true
+      },
+      "allowed_mechanic_families": [
+        "calculator_goal_relevant_product_envelope"
+      ],
+      "bounded_best_policy_contract": {
+        "allow_exact": true,
+        "bounded_requires_named_stop": true,
+        "bounded_requires_strict_gap": true,
+        "bounded_requires_open_obligations": true,
+        "require_evaluated_upper": true,
+        "require_cheapest_independently_evaluated_incumbent": true
+      },
+      "economy": {
+        "version": "v1",
+        "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+        "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+        "league_key": "allflame",
+        "league_name": "Allflame",
+        "manual_overrides": {
+          "base": 5
+        },
+        "fallback_price": null,
+        "missing_price_decisions": {
+          "base": "owner_reconstructed_live_override_5_chaos"
+        }
+      },
+      "caps": {
+        "max_states": 200000,
+        "max_sweeps": 100000,
+        "solve_step_work_items": 1024,
+        "max_discovered_states": 200000,
+        "max_expanded_states": 200000,
+        "max_state_action_rows": 1215000,
+        "max_transitions": 10000000,
+        "max_reforge_work": 50000000,
+        "max_solver_owned_bytes": 1073741824,
+        "max_diagnostic_samples": 64,
+        "max_telemetry_json_bytes": 2097152,
+        "max_policy_refinement_states": 200000,
+        "max_compiled_nodes": 100000,
+        "max_compiled_edges": 400000,
+        "max_strategy_json_bytes": 67108864,
+        "worker_step_ms": 20000,
+        "cancel_ack_ms": 250,
+        "goal_progress_gated_reforges": true,
+        "allow_economic_restart": false,
+        "high_impact_executable_uppers": true,
+        "consider_imprint_programs": false,
+        "full_evidence": true
+      },
+      "verification": {
+        "runs": 0,
+        "seed": 20260825,
+        "max_actions_per_run": 100000,
+        "max_graph_steps_per_run": 4000000,
+        "exact_evaluation": true,
+        "exact_max_states": 1000000,
+        "exact_max_pairs": 5000000,
+        "exact_max_transitions": 20000000,
+        "exact_max_owned_bytes": 1073741824,
+        "exact_cost_absolute_tolerance": 1e-07,
+        "exact_cost_relative_tolerance": 1e-09
+      }
+    },
+    "solve_summary": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 2698.8747960143623,
+      "expanded_states": 6812,
+      "sweeps": 0,
+      "residual": 4.547473508864641e-13,
+      "skipped_action_count": 0,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "requested_bounded_finish",
+      "stop_cause": "requested_bounded_finish",
+      "cap_hit_mask": 0,
+      "action_counts": {
+        "registry": 186,
+        "candidate": 28,
+        "evaluator_supported": 28,
+        "supported_priced": 198,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 0
+      },
+      "lower_bound": 36.42861718910441,
+      "upper_bound": 2698.8747960143623,
+      "evaluated_policy_cost": 2698.8747960143623,
+      "absolute_optimality_gap": 2662.446178825258,
+      "relative_optimality_gap": 73.08666604071868,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "work": {
+      "state_action_rows": 40551,
+      "transition_entries": 119625,
+      "outcome_entries": 74514364,
+      "choice_groups": 0,
+      "choice_successor_entries": 0,
+      "reforge_work": 186866,
+      "legacy_reforge_active_work": 80318,
+      "bellman_backups": 7782,
+      "bellman_action_evaluations": 51345,
+      "extraction_action_evaluations": 0,
+      "bellman_work_units": 0,
+      "max_bellman_unit_transitions": 0,
+      "algebraic_self_loops": 550,
+      "transition_bits_hash": "93fd30d1576e7010",
+      "policy_bits_hash": "0651db94d0847a7d"
+    },
+    "states": {
+      "discovered": 6820,
+      "strict_discovered": 6820,
+      "quotient": 6820,
+      "expanded": 6812,
+      "frontier": 8,
+      "goal": 1,
+      "policy_reachable": 526
+    },
+    "memory": {
+      "measurement_kind": "working_set_snapshots_not_peak",
+      "process_working_set_before_bytes": 33718272,
+      "process_working_set_after_bytes": 120504320,
+      "process_working_set_delta_bytes": 86786048,
+      "process_working_set_peak_bytes": null,
+      "wasm_heap_before_bytes": null,
+      "wasm_heap_after_bytes": null,
+      "wasm_heap_growth_bytes": null,
+      "native_live_owned_bytes": 62809343,
+      "native_peak_owned_bytes": 99834010,
+      "native_serialized_output_bytes": 45,
+      "solver_telemetry_json_bytes": 900513
+    },
+    "source_start_lower": {
+      "state": 0,
+      "expanded": true,
+      "policy_reachable": true,
+      "goal": false,
+      "satisfied_goal_mask": 23,
+      "rarity": 2,
+      "prefixes": 3,
+      "suffixes": 1,
+      "blocked_mask": 0,
+      "protection_flags": 0,
+      "fractured_goal_mask": 16,
+      "clean_eligible": false,
+      "clean_rejection_mask": 4,
+      "universal": 0.01165,
+      "clean_mdp": null,
+      "carrier_progress": 3.4724500000000003,
+      "terminal_debt": 0.01165,
+      "strict_clean": null,
+      "envelope_bellman": 36.42861718910441,
+      "selected_maximum": 36.42861718910441,
+      "owners": [
+        "envelope_bellman"
+      ]
+    },
+    "patterns": [
+      {
+        "id": "universal_cover",
+        "finite_projection": "exact_goal_mask",
+        "covered_action_shapes": "all priced goal-reaching primitive shapes",
+        "local_fallback": "zero on unknown coverage",
+        "immediate_price_authority": "descriptor resource cost",
+        "optimistic_successor_authority": "free setup, perfect preservation, deterministic subset",
+        "solution": "acyclic_dynamic_program",
+        "residual": 0,
+        "solution_sweeps": 1,
+        "converged": true,
+        "provenance": "probability_free_universal_goal_cover",
+        "minimizing_action": "transmute",
+        "fallback_reason": "complete_probability_free_cover",
+        "refinement_trace": null,
+        "optimistic_grants": "free setup, perfect preservation, deterministic subset",
+        "start_contribution": 0.01165,
+        "selected_owner_calls": 18
+      },
+      {
+        "id": "clean_mdp",
+        "finite_projection": "rarity x exact goal mask x prefix/suffix occupancy",
+        "covered_action_shapes": "priced clean-carrier primitive shapes",
+        "local_fallback": "universal cover",
+        "immediate_price_authority": "descriptor or proved primitive wrapper price",
+        "optimistic_successor_authority": "optimistic pool probability and clairvoyant observation",
+        "solution": "monotone_subsolution",
+        "residual": 6.9469763275265e-11,
+        "solution_sweeps": 231,
+        "converged": true,
+        "provenance": "clean_goal_progress_relaxation",
+        "minimizing_action": null,
+        "fallback_reason": "start_identity_outside_clean_projection",
+        "refinement_trace": null,
+        "optimistic_grants": "optimistic pool probability and clairvoyant observation",
+        "start_contribution": null,
+        "selected_owner_calls": 5391537
+      },
+      {
+        "id": "identity_clean_mdp",
+        "finite_projection": "fixed exact identity x rarity x goal mask x occupancy",
+        "covered_action_shapes": "priced primitive shapes that preserve source identity",
+        "local_fallback": "carrier MDP when identity changes",
+        "immediate_price_authority": "descriptor or proved primitive wrapper price",
+        "optimistic_successor_authority": "free identity-preserving cleanup and perfect preservation",
+        "solution": "monotone_subsolution",
+        "residual": 6.9469763275265e-11,
+        "solution_sweeps": 231,
+        "converged": true,
+        "provenance": "fixed_identity_clean_goal_progress_relaxation",
+        "minimizing_action": "harvest_reforge:physical",
+        "fallback_reason": "fixed_source_identity",
+        "refinement_trace": null,
+        "optimistic_grants": "free identity-preserving cleanup and perfect preservation",
+        "start_contribution": 36.42861718910441,
+        "selected_owner_calls": 2310673
+      },
+      {
+        "id": "carrier_mdp",
+        "finite_projection": "rarity x exact goal mask",
+        "covered_action_shapes": "priced carrier-legal primitive shapes",
+        "local_fallback": "unavailable locally",
+        "immediate_price_authority": "descriptor or proved primitive wrapper price",
+        "optimistic_successor_authority": "perfect preservation/free cleanup progress envelope",
+        "solution": "monotone_subsolution",
+        "residual": 0,
+        "solution_sweeps": 24,
+        "converged": true,
+        "provenance": "carrier_persistent_progress_relaxation",
+        "minimizing_action": "scour",
+        "fallback_reason": "complete_carrier_projection",
+        "refinement_trace": null,
+        "optimistic_grants": "perfect preservation/free cleanup progress envelope",
+        "start_contribution": 3.4724500000000003,
+        "selected_owner_calls": 5063905
+      },
+      {
+        "id": "bounded_gain_mdp",
+        "finite_projection": "rarity x satisfied-goal count",
+        "covered_action_shapes": "priced carrier actions with bounded per-use goal gains",
+        "local_fallback": "carrier MDP",
+        "immediate_price_authority": "descriptor or proved primitive wrapper price",
+        "optimistic_successor_authority": "perfect preservation plus at most one goal per draw",
+        "solution": "monotone_subsolution",
+        "residual": 0,
+        "solution_sweeps": 9,
+        "converged": true,
+        "provenance": "bounded_per_action_goal_gain_relaxation",
+        "minimizing_action": "scour",
+        "fallback_reason": "complete_bounded_gain_projection",
+        "refinement_trace": null,
+        "optimistic_grants": "perfect preservation plus at most one goal per draw",
+        "start_contribution": 0.44572999999999996,
+        "selected_owner_calls": 0
+      },
+      {
+        "id": "terminal_debt",
+        "finite_projection": "exact carrier first-step legality",
+        "covered_action_shapes": "all priced executable first steps",
+        "local_fallback": "zero for unknown or free first step",
+        "immediate_price_authority": "minimum legal first-step price",
+        "optimistic_successor_authority": "free continuation and terminal completion",
+        "solution": "one_step_floor",
+        "residual": 0,
+        "solution_sweeps": 1,
+        "converged": true,
+        "provenance": "carrier_terminal_debt_floor",
+        "minimizing_action": "bench:HelenaMasterFireResist1",
+        "fallback_reason": "cheapest_legal_first_step",
+        "refinement_trace": null,
+        "optimistic_grants": "free continuation and terminal completion",
+        "start_contribution": 0.01165,
+        "selected_owner_calls": 23146
+      },
+      {
+        "id": "strict_clean",
+        "finite_projection": "strict clean states plus rare goal/occupancy projection",
+        "covered_action_shapes": "covered registry primitive rows",
+        "local_fallback": "clean MDP escape",
+        "immediate_price_authority": "descriptor price",
+        "optimistic_successor_authority": "exact covered kernels plus optimistic escape",
+        "solution": "monotone_subsolution",
+        "residual": null,
+        "solution_sweeps": 0,
+        "converged": false,
+        "provenance": "strict_clean_goal_progress_pattern",
+        "minimizing_action": null,
+        "fallback_reason": "not_prepared",
+        "refinement_trace": null,
+        "optimistic_grants": "exact covered kernels plus optimistic escape",
+        "start_contribution": null,
+        "selected_owner_calls": 0
+      },
+      {
+        "id": "envelope_bellman",
+        "finite_projection": "exact start carrier x complete priced operator envelope",
+        "covered_action_shapes": "materialized rows plus proved per-operator fallbacks",
+        "local_fallback": "zero when any priced operator lacks a finite fallback",
+        "immediate_price_authority": "exact row price or guaranteed first-step price",
+        "optimistic_successor_authority": "exact row successors over independent pattern lowers",
+        "solution": "exact_successor_composition",
+        "residual": 0,
+        "solution_sweeps": 3,
+        "converged": true,
+        "provenance": "complete_operator_minimum_of_row_and_fallback_lowers",
+        "minimizing_action": "option:eldritch_side_intent:suffix:eldritch_exalt:eldritch_ichor:1",
+        "fallback_reason": "complete_materialized_operator_envelope",
+        "refinement_trace": "start_rows=10,finite_rows=10,incomplete=;start_action=harvest_reforge:physical,exact=38.068615060362319;start_action=scour,exact=36.809254018621417;",
+        "optimistic_grants": "exact row successors over independent pattern lowers",
+        "start_contribution": 36.42861718910441,
+        "selected_owner_calls": 2
+      },
+      {
+        "id": "operator_lower",
+        "finite_projection": "exact source carrier x planner action shape",
+        "covered_action_shapes": "priced primitive and fixed-program operators",
+        "local_fallback": "carrier Bellman lower or negative infinity skip",
+        "immediate_price_authority": "guaranteed first step or exact option quantity",
+        "optimistic_successor_authority": "proved survivor union plus universal continuation",
+        "solution": "exact_successor_composition",
+        "residual": 0,
+        "solution_sweeps": 1,
+        "converged": true,
+        "provenance": "operator_immediate_plus_optimistic_successor",
+        "minimizing_action": null,
+        "fallback_reason": "state_local_only",
+        "refinement_trace": null,
+        "optimistic_grants": "proved survivor union plus universal continuation",
+        "start_contribution": null,
+        "selected_owner_calls": 1167
+      }
+    ],
+    "ledger": {
+      "transitions": 933657,
+      "entries": 193360,
+      "states": {
+        "queued": 0,
+        "exact_row_complete": 34518,
+        "exact_inapplicability_proved": 55928,
+        "incumbent_dominated": 79938,
+        "rolled_back_after_named_cap": 0,
+        "omitted_explicit_caller_scope": 0,
+        "unresolved_named_stop": 22976
+      }
+    }
+  },
+  "clean_five": {
+    "id": "conquest-lamellar-allflame-exact-zero-to-five-derived-b26569276798c665",
+    "input": {
+      "comparison_profile": "solver-lab-local-calculator-product-v1",
+      "watchdog_seconds": 180,
+      "requested_bounded_finish_seconds": 120,
+      "session": {
+        "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+        "base_name": "Conquest Lamellar",
+        "item_class_key": "Body Armour",
+        "item_level": 86,
+        "minimum_item_level": 86
+      },
+      "start": {
+        "mods": [],
+        "rarity": "rare",
+        "with_implicits": false
+      },
+      "goal": {
+        "action_mode": "goal_relevant",
+        "min_satisfied_slots": 5,
+        "rarity": "rare",
+        "slots": [
+          {
+            "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "AdditionalPhysicalDamageReduction5_",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+            "min_tier": 1
+          }
+        ],
+        "version": "v1"
+      },
+      "corpus": {
+        "goal_modifier_count": 5,
+        "product_worker_profile": "calculator_default_adaptive_max_8",
+        "start_goal_modifier_count": 0,
+        "stratum": "local_revision",
+        "tier": "solver-lab-local"
+      },
+      "product_action_envelope": {
+        "bench_goal_slots_forbidden": true,
+        "envelope_goal": {
+          "action_mode": "goal_relevant",
+          "fossil_mode": "goal_relevant",
+          "min_satisfied_slots": 5,
+          "rarity": "rare",
+          "requested_fossil_actions": [],
+          "slots": [
+            {
+              "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "AdditionalPhysicalDamageReduction5_",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+              "min_tier": 1
+            }
+          ],
+          "version": "v1"
+        },
+        "mode": "calculator_goal_relevant_priced_v1",
+        "pricing_filter": "all_declared_cost_keys_present"
+      },
+      "allowed_mechanic_families": [
+        "calculator_goal_relevant_product_envelope"
+      ],
+      "economy": {
+        "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "fallback_price": null,
+        "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "league_key": "allflame",
+        "league_name": "Allflame",
+        "manual_overrides": {
+          "base": 5
+        },
+        "missing_price_decisions": {
+          "base": "owner_reconstructed_live_override_5_chaos"
+        },
+        "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+        "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+        "version": "v1"
+      },
+      "caps": {
+        "allow_economic_restart": false,
+        "cancel_ack_ms": 250,
+        "consider_imprint_programs": false,
+        "full_evidence": true,
+        "goal_progress_gated_reforges": true,
+        "high_impact_executable_uppers": true,
+        "max_compiled_edges": 400000,
+        "max_compiled_nodes": 100000,
+        "max_diagnostic_samples": 64,
+        "max_discovered_states": 200000,
+        "max_expanded_states": 200000,
+        "max_policy_refinement_states": 200000,
+        "max_reforge_work": 50000000,
+        "max_solver_owned_bytes": 1073741824,
+        "max_state_action_rows": 1215000,
+        "max_states": 200000,
+        "max_strategy_json_bytes": 67108864,
+        "max_sweeps": 100000,
+        "max_telemetry_json_bytes": 2097152,
+        "max_transitions": 10000000,
+        "solve_profile": "calculator_product_v1",
+        "solve_step_work_items": 8,
+        "worker_step_ms": 20000
+      },
+      "verification": {
+        "exact_cost_absolute_tolerance": 1e-07,
+        "exact_cost_relative_tolerance": 1e-09,
+        "exact_evaluation": true,
+        "exact_max_owned_bytes": 1073741824,
+        "exact_max_pairs": 5000000,
+        "exact_max_states": 1000000,
+        "exact_max_transitions": 20000000,
+        "max_actions_per_run": 100000,
+        "max_graph_steps_per_run": 4000000,
+        "runs": 0,
+        "seed": 20260823
+      }
+    },
+    "solve_summary": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 85408.64362148782,
+      "expanded_states": 6329,
+      "sweeps": 2,
+      "residual": 1.6007106751203537e-10,
+      "skipped_action_count": 0,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "requested_bounded_finish",
+      "stop_cause": "requested_bounded_finish",
+      "cap_hit_mask": 0,
+      "action_counts": {
+        "registry": 186,
+        "candidate": 28,
+        "evaluator_supported": 28,
+        "supported_priced": 269,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 0
+      },
+      "lower_bound": 36.48853172876641,
+      "upper_bound": 85408.64362148782,
+      "evaluated_policy_cost": 85408.64362148782,
+      "absolute_optimality_gap": 85372.15508975905,
+      "relative_optimality_gap": 2339.698284501109,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "work": {
+      "state_action_rows": 79233,
+      "transition_entries": 375215,
+      "outcome_entries": 787453439,
+      "choice_groups": 0,
+      "choice_successor_entries": 0,
+      "reforge_work": 481576,
+      "legacy_reforge_active_work": 440618,
+      "bellman_backups": 28578,
+      "bellman_action_evaluations": 262314,
+      "extraction_action_evaluations": 0,
+      "bellman_work_units": 2,
+      "max_bellman_unit_transitions": 0,
+      "algebraic_self_loops": 0,
+      "transition_bits_hash": "bffb1f1b795eaa74",
+      "policy_bits_hash": "ed9a911d427f91a9"
+    },
+    "states": {
+      "discovered": 15563,
+      "strict_discovered": 15563,
+      "quotient": 15563,
+      "expanded": 6329,
+      "frontier": 9234,
+      "goal": 0,
+      "policy_reachable": 1999
+    },
+    "memory": {
+      "measurement_kind": "working_set_snapshots_not_peak",
+      "process_working_set_before_bytes": 33751040,
+      "process_working_set_after_bytes": 500502528,
+      "process_working_set_delta_bytes": 466751488,
+      "process_working_set_peak_bytes": null,
+      "wasm_heap_before_bytes": null,
+      "wasm_heap_after_bytes": null,
+      "wasm_heap_growth_bytes": null,
+      "native_live_owned_bytes": 306954109,
+      "native_peak_owned_bytes": 476337952,
+      "native_serialized_output_bytes": 45,
+      "solver_telemetry_json_bytes": 927503
+    },
+    "source_start_lower": {
+      "state": 0,
+      "expanded": true,
+      "policy_reachable": true,
+      "goal": false,
+      "satisfied_goal_mask": 0,
+      "rarity": 2,
+      "prefixes": 0,
+      "suffixes": 0,
+      "blocked_mask": 0,
+      "protection_flags": 0,
+      "fractured_goal_mask": 0,
+      "clean_eligible": true,
+      "clean_rejection_mask": 0,
+      "universal": 0.01165,
+      "clean_mdp": 36.4286171890906,
+      "carrier_progress": 0.44572999999999996,
+      "terminal_debt": 0.01165,
+      "strict_clean": null,
+      "envelope_bellman": 36.48853172876641,
+      "selected_maximum": 36.48853172876641,
+      "owners": [
+        "envelope_bellman"
+      ]
+    },
+    "patterns": [
+      {
+        "id": "universal_cover",
+        "finite_projection": "exact_goal_mask",
+        "covered_action_shapes": "all priced goal-reaching primitive shapes",
+        "local_fallback": "zero on unknown coverage",
+        "immediate_price_authority": "descriptor resource cost",
+        "optimistic_successor_authority": "free setup, perfect preservation, deterministic subset",
+        "solution": "acyclic_dynamic_program",
+        "residual": 0,
+        "solution_sweeps": 1,
+        "converged": true,
+        "provenance": "probability_free_universal_goal_cover",
+        "minimizing_action": "transmute",
+        "fallback_reason": "complete_probability_free_cover",
+        "refinement_trace": null,
+        "optimistic_grants": "free setup, perfect preservation, deterministic subset",
+        "start_contribution": 0.01165,
+        "selected_owner_calls": 9
+      },
+      {
+        "id": "clean_mdp",
+        "finite_projection": "rarity x exact goal mask x prefix/suffix occupancy",
+        "covered_action_shapes": "priced clean-carrier primitive shapes",
+        "local_fallback": "universal cover",
+        "immediate_price_authority": "descriptor or proved primitive wrapper price",
+        "optimistic_successor_authority": "optimistic pool probability and clairvoyant observation",
+        "solution": "monotone_subsolution",
+        "residual": 6.9469763275265e-11,
+        "solution_sweeps": 231,
+        "converged": true,
+        "provenance": "clean_goal_progress_relaxation",
+        "minimizing_action": "harvest_reforge:physical",
+        "fallback_reason": "complete_clean_projection",
+        "refinement_trace": null,
+        "optimistic_grants": "optimistic pool probability and clairvoyant observation",
+        "start_contribution": 36.4286171890906,
+        "selected_owner_calls": 22505
+      },
+      {
+        "id": "identity_clean_mdp",
+        "finite_projection": "fixed exact identity x rarity x goal mask x occupancy",
+        "covered_action_shapes": "priced primitive shapes that preserve source identity",
+        "local_fallback": "carrier MDP when identity changes",
+        "immediate_price_authority": "descriptor or proved primitive wrapper price",
+        "optimistic_successor_authority": "free identity-preserving cleanup and perfect preservation",
+        "solution": "monotone_subsolution",
+        "residual": 6.9469763275265e-11,
+        "solution_sweeps": 231,
+        "converged": true,
+        "provenance": "fixed_identity_clean_goal_progress_relaxation",
+        "minimizing_action": null,
+        "fallback_reason": "generic_clean_projection_owns_state",
+        "refinement_trace": null,
+        "optimistic_grants": "free identity-preserving cleanup and perfect preservation",
+        "start_contribution": null,
+        "selected_owner_calls": 0
+      },
+      {
+        "id": "carrier_mdp",
+        "finite_projection": "rarity x exact goal mask",
+        "covered_action_shapes": "priced carrier-legal primitive shapes",
+        "local_fallback": "unavailable locally",
+        "immediate_price_authority": "descriptor or proved primitive wrapper price",
+        "optimistic_successor_authority": "perfect preservation/free cleanup progress envelope",
+        "solution": "monotone_subsolution",
+        "residual": 0,
+        "solution_sweeps": 24,
+        "converged": true,
+        "provenance": "carrier_persistent_progress_relaxation",
+        "minimizing_action": "scour",
+        "fallback_reason": "complete_carrier_projection",
+        "refinement_trace": null,
+        "optimistic_grants": "perfect preservation/free cleanup progress envelope",
+        "start_contribution": 0.44572999999999996,
+        "selected_owner_calls": 214756
+      },
+      {
+        "id": "bounded_gain_mdp",
+        "finite_projection": "rarity x satisfied-goal count",
+        "covered_action_shapes": "priced carrier actions with bounded per-use goal gains",
+        "local_fallback": "carrier MDP",
+        "immediate_price_authority": "descriptor or proved primitive wrapper price",
+        "optimistic_successor_authority": "perfect preservation plus at most one goal per draw",
+        "solution": "monotone_subsolution",
+        "residual": 0,
+        "solution_sweeps": 9,
+        "converged": true,
+        "provenance": "bounded_per_action_goal_gain_relaxation",
+        "minimizing_action": "scour",
+        "fallback_reason": "complete_bounded_gain_projection",
+        "refinement_trace": null,
+        "optimistic_grants": "perfect preservation plus at most one goal per draw",
+        "start_contribution": 0.7476429203539823,
+        "selected_owner_calls": 0
+      },
+      {
+        "id": "terminal_debt",
+        "finite_projection": "exact carrier first-step legality",
+        "covered_action_shapes": "all priced executable first steps",
+        "local_fallback": "zero for unknown or free first step",
+        "immediate_price_authority": "minimum legal first-step price",
+        "optimistic_successor_authority": "free continuation and terminal completion",
+        "solution": "one_step_floor",
+        "residual": 0,
+        "solution_sweeps": 1,
+        "converged": true,
+        "provenance": "carrier_terminal_debt_floor",
+        "minimizing_action": "bench:HelenaMasterFireResist1",
+        "fallback_reason": "cheapest_legal_first_step",
+        "refinement_trace": null,
+        "optimistic_grants": "free continuation and terminal completion",
+        "start_contribution": 0.01165,
+        "selected_owner_calls": 503
+      },
+      {
+        "id": "strict_clean",
+        "finite_projection": "strict clean states plus rare goal/occupancy projection",
+        "covered_action_shapes": "covered registry primitive rows",
+        "local_fallback": "clean MDP escape",
+        "immediate_price_authority": "descriptor price",
+        "optimistic_successor_authority": "exact covered kernels plus optimistic escape",
+        "solution": "monotone_subsolution",
+        "residual": null,
+        "solution_sweeps": 0,
+        "converged": false,
+        "provenance": "strict_clean_goal_progress_pattern",
+        "minimizing_action": null,
+        "fallback_reason": "not_prepared",
+        "refinement_trace": null,
+        "optimistic_grants": "exact covered kernels plus optimistic escape",
+        "start_contribution": null,
+        "selected_owner_calls": 0
+      },
+      {
+        "id": "envelope_bellman",
+        "finite_projection": "exact start carrier x complete priced operator envelope",
+        "covered_action_shapes": "materialized rows plus proved per-operator fallbacks",
+        "local_fallback": "zero when any priced operator lacks a finite fallback",
+        "immediate_price_authority": "exact row price or guaranteed first-step price",
+        "optimistic_successor_authority": "exact row successors over independent pattern lowers",
+        "solution": "exact_successor_composition",
+        "residual": 0,
+        "solution_sweeps": 4,
+        "converged": true,
+        "provenance": "complete_operator_minimum_of_row_and_fallback_lowers",
+        "minimizing_action": "scour",
+        "fallback_reason": "complete_materialized_operator_envelope",
+        "refinement_trace": "start_rows=61,finite_rows=61,incomplete=;start_action=harvest_reforge:physical,exact=38.909043109189682;start_action=eldritch_exalt,exact=40.018617189091387;start_action=scour,exact=36.488531728766411;",
+        "optimistic_grants": "exact row successors over independent pattern lowers",
+        "start_contribution": 36.48853172876641,
+        "selected_owner_calls": 2
+      },
+      {
+        "id": "operator_lower",
+        "finite_projection": "exact source carrier x planner action shape",
+        "covered_action_shapes": "priced primitive and fixed-program operators",
+        "local_fallback": "carrier Bellman lower or negative infinity skip",
+        "immediate_price_authority": "guaranteed first step or exact option quantity",
+        "optimistic_successor_authority": "proved survivor union plus universal continuation",
+        "solution": "exact_successor_composition",
+        "residual": 0,
+        "solution_sweeps": 1,
+        "converged": true,
+        "provenance": "operator_immediate_plus_optimistic_successor",
+        "minimizing_action": null,
+        "fallback_reason": "state_local_only",
+        "refinement_trace": null,
+        "optimistic_grants": "proved survivor union plus universal continuation",
+        "start_contribution": null,
+        "selected_owner_calls": 0
+      }
+    ],
+    "ledger": {
+      "transitions": 5752578,
+      "entries": 224788,
+      "states": {
+        "queued": 0,
+        "exact_row_complete": 36814,
+        "exact_inapplicability_proved": 51930,
+        "incumbent_dominated": 0,
+        "rolled_back_after_named_cap": 0,
+        "omitted_explicit_caller_scope": 0,
+        "unresolved_named_stop": 136044
+      }
+    }
+  }
+}

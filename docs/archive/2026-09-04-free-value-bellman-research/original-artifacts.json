@@ -1,0 +1,96 @@
+{
+  "head": "c9530ac941b95e68a1e3d890caf00d53c9e6d774",
+  "authority": "research only; no production qualification",
+  "artifacts": [
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-research\\2026-09-04-free-value\\research-report.md",
+      "bytes": 55229,
+      "sha256": "312a859c646a6399cda5c09792218181987022c407cf0e9cb6e2eaef960d2354"
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-research\\2026-09-04-free-value\\free_value_fixtures.py",
+      "bytes": 16063,
+      "sha256": "6d231a9ed2ef4378240dc95d47a810665b9e0a3b2814a4f29aef53ce7655d0bb"
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-research\\2026-09-04-free-value\\synthetic-results.json",
+      "bytes": 17217,
+      "sha256": "903b03513021a6150b25faa706fb1c2f9ecc9acf9aa2abb5b3b4d8304d6e4265"
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-research\\2026-09-04-free-value\\native_model_comparison.py",
+      "bytes": 6522,
+      "sha256": "748b217a13398db8ab4bb4ca6c82512e1faf91e3187a2b662abc045e04b929d6"
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-research\\2026-09-04-free-value\\native-model-comparison.json",
+      "bytes": 7591,
+      "sha256": "4fb07769b0a9da32bf06620240d6c8b30422c75a90a03dc0cef1e96ac54c41a7"
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-research\\2026-09-04-free-value\\medium_model_comparison.py",
+      "bytes": 2397,
+      "sha256": "1e0d6200307850c3880af1baad06378bf285f5e422d38b622bd16eb022232df5"
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-research\\2026-09-04-free-value\\medium-model-comparison.json",
+      "bytes": 1647,
+      "sha256": "773c67303670ffed3b18af47bd1ba56dafd182c9ab348dba6d14ccdd6625a0ed"
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-research\\2026-09-04-free-value\\native-micro.json",
+      "bytes": 6779,
+      "sha256": "b1009707cc9d3a72e5fda98fae15e1802ae5d8f4afe71d49ee4f0222ea3e8b57"
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-research\\2026-09-04-free-value\\native-medium.json",
+      "bytes": 2361,
+      "sha256": "49d4463cab3425fbd0a03e123e7647ea756d355e41953f8b191b81597216057b"
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-research\\2026-09-04-free-value\\native-probe.json",
+      "bytes": 13856,
+      "sha256": "5919171ae0a2ea1d90c2817fe042c79ec9799577a7b809a603daaa92f944b7a7"
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-research\\2026-09-04-free-value\\native-identities.json",
+      "bytes": 274,
+      "sha256": "e05053c72928d017a51701586513f60baf7f9c1e0db1d78ed8b33e0f73968375"
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-research\\2026-09-04-free-value\\native-provenance.json",
+      "bytes": 4882,
+      "sha256": "851605d6c97669f3c454d323ea466663444ffdd10e3ed8f9e625bdc1846cef12"
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-research\\2026-09-04-free-value\\native-selected-artifacts.json",
+      "bytes": 49559,
+      "sha256": "ca9956153deddbc37d2c8e9da987834adbaf1243179762081c2f01e31efd72bd"
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-research\\2026-09-04-free-value\\ownership_probe.cpp",
+      "bytes": 3485,
+      "sha256": "c6bf5172443f0eb377cb077c6d7ce9ba8807488f4505de7550e7533d0b696e71"
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-research\\2026-09-04-free-value\\ownership_current_source_probe_result.txt",
+      "bytes": 247,
+      "sha256": "50314b3334f5851e2ed01b0baff2dbea18ec171bb4e16b3a3406d88021048b76"
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-research\\2026-09-04-free-value\\ownership.md",
+      "bytes": 27140,
+      "sha256": "55a44567f273b9f4e708da9408074677318e3111f788e91e20e5cafe026f9637"
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-research\\2026-09-04-free-value\\native-evidence.md",
+      "bytes": 19833,
+      "sha256": "c563a4372c1ebd03c288770c1e4971c5a78607cf519081dc0ce19e0f91eca1b3"
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-research\\2026-09-04-free-value\\papers.md",
+      "bytes": 28269,
+      "sha256": "d4a59520a0065aca739a058ab69f487debe8724ffc8f86bcca1b3527c4dd4777"
+    }
+  ]
+}

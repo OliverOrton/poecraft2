@@ -6,6 +6,17 @@ routes to them rather than duplicating complete reports.
 
 Parent: [Documentation map](README.md)
 
+## Free-Value Bellman Research
+
+The 2026-09-04
+[research archive](archive/2026-09-04-free-value-bellman-research/README.md)
+preserves the report, primary-source review, native probe sources and outputs,
+exact rational reference models, and a Pro review prompt. The medium projected
+program RHS changes from 7.1136 to 39.7739 after reanchoring an existing lower
+donor, but its uniform pushforward contract remains open and no global lower
+or pruning gain is certified. This is review evidence, not production
+qualification or a selected implementation boundary.
+
 ## PDR Early Executable Closed-Domain Qualification
 
 The 2026-08-30

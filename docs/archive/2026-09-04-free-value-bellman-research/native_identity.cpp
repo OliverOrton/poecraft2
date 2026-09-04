@@ -1,0 +1,6 @@
+#include "poecraft/api.h"
+#include "poecraft/session.h"
+#include "solver_solve_types.hpp"
+#include <iostream>
+namespace poecraft::solver {struct SolveWorkTestAccess{using Impl=SolveWork::Impl;};}
+int main(int argc,char**argv){using namespace poecraft::solver;pc_data_handle data{};pc_session_handle session{};pc_error_info error{};pc_error_info_init(&error);if(argc!=2)return 2;if(pc_data_load_file(argv[1],&data,&error)!=PC_RESULT_OK)return 3;pc_session_options so{};so.struct_size=sizeof(so);so.abi_version=PC_ABI_VERSION;so.base_metadata_path="Metadata/Items/Armours/BodyArmours/BodyStrDex20";so.item_level=86;if(pc_session_create(data,&so,&session,&error)!=PC_RESULT_OK)return 4;std::cout<<"[";for(int r:{2,0}){pc_item_state item{};pc_item_init_options io{};io.struct_size=sizeof(io);io.abi_version=PC_ABI_VERSION;io.rarity=r;io.with_implicits=0;if(pc_item_init(session,&io,&item,&error)!=PC_RESULT_OK)return 5;const auto key=exact_item_state_key(item);uint64_t digest=1469598103934665603ULL;SolveWorkTestAccess::Impl::identity_mix(digest,key.size());for(auto w:key)SolveWorkTestAccess::Impl::identity_mix(digest,w);if(r==0)std::cout<<",";std::cout<<"{\"rarity\":"<<r<<",\"digest\":\""<<digest<<"\",\"full_key\":[";for(size_t i=0;i<key.size();++i){if(i)std::cout<<",";std::cout<<"\""<<key[i]<<"\"";}std::cout<<"]}";}std::cout<<"]\n";}

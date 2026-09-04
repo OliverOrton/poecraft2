@@ -9,6 +9,14 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-09-04
+
+- [Free-Value Bellman Research](2026-09-04-free-value-bellman-research/README.md) —
+  archives the falsification-first theory/source review, exact micro reference,
+  bounded native probes and medium projected phase-donor result for Pro review.
+  Complete coverage, numerical and pushforward contracts remain required;
+  no implementation boundary or production authority is activated.
+
 ## 2026-08-30
 
 - [Early Executable Statewise Upper Certificate and PDR RC Consumer v1](2026-08-30-early-executable-statewise-upper-rc-consumer-v1/README.md) —

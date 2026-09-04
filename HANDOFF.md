@@ -19,6 +19,15 @@ pass with 16,517 checks. The evaluator target's pre-existing embedded
 10,000-draw Monte Carlo fixture ran incidentally once. Broad acceptance and a
 standalone Simulator were not run.
 
+## Research Awaiting Review
+
+Oliver requested repository archival of the
+[Free-Value Bellman Research](docs/archive/2026-09-04-free-value-bellman-research/README.md)
+for Pro review. It compares the fixed-policy SCC route with a free-value
+lower-only quotient consumer and a measured projected post-Ichor donor query.
+Its proposals are unselected; complete action coverage, numeric and uniform
+pushforward contracts remain open. No implementation boundary is activated.
+
 ## Recommended Next Boundary
 
 If Oliver selects it, probe the already measured five-entry internal

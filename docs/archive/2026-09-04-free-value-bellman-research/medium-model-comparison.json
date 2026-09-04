@@ -1,0 +1,33 @@
+{
+  "evidence": "conditional projected reference; full medium canonical action coverage and strict pushforward proof unestablished",
+  "normalization": "explicit exact division by sum of exported binary probability coefficients",
+  "raw_binary_mass_defect": "-223/576460752303423488",
+  "records": [
+    {
+      "version": "baseline",
+      "program_rhs": "1846801077927397762059814121980039/259614842926741280996253126098944",
+      "program_rhs_float": 7.113618994614003,
+      "covered_finite_model": "1846801077927397762059814121980039/259614842926741280996253126098944",
+      "covered_finite_model_float": 7.113618994614003,
+      "published_independent_portfolio_max": "5126872087452283/140737488355328",
+      "published_independent_portfolio_gain": "0",
+      "root_existing_lower_is_subsolution_for_this_model": false,
+      "simplex_pivots": 1
+    },
+    {
+      "version": "reanchored",
+      "program_rhs": "10325907743786023464339473030644247/259614842926741280996253126098944",
+      "program_rhs_float": 39.7739498534751,
+      "covered_finite_model": "5126872087452283/140737488355328",
+      "covered_finite_model_float": 36.42861718910441,
+      "published_independent_portfolio_max": "5126872087452283/140737488355328",
+      "published_independent_portfolio_gain": "0",
+      "root_existing_lower_is_subsolution_for_this_model": true,
+      "simplex_pivots": 1
+    }
+  ],
+  "checked_reference_RHS_gain": "529944166616164106392478681791513/16225927682921330062265820381184",
+  "exact_original_medium_oracle_gap": null,
+  "exact_native_policy_deviation_Q": null,
+  "production_authority": false
+}

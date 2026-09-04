@@ -1,0 +1,127 @@
+{
+  "source_head": "c9530ac941b95e68a1e3d890caf00d53c9e6d774",
+  "files": {
+    "build/engine/libpoecraft_engine.a": {
+      "sha256": "a00317cb1cfd9d1fdeb94ab4252b591e17c62e33be53c2f669a0e94ac951b5fe",
+      "bytes": 12853024
+    },
+    "data/compiled/current/manifest.json": {
+      "sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+      "bytes": 5810
+    },
+    "data/compiled/current/game-data.json": {
+      "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+      "bytes": 16439442
+    },
+    "data/compiled/current/strings.json": {
+      "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f",
+      "bytes": 6534428
+    },
+    "build/performance/native-solver-final-acceptance-cb26c29-v1.json": {
+      "sha256": "9f346bd26dc158fd808a3d3d75804ded4b0971922f9883fa9f9a96168f3a9c1e",
+      "bytes": 9681852
+    },
+    "build/performance/native-solver-gate8-operator-proof-attribution-case-conquest-lamellar-allflame-partial-five-last-mile-current-v1.json": {
+      "sha256": "f64c488514dedc9c626987b5d84f555d010746bcb26f0c92e70d2a0157b896bd",
+      "bytes": 1054497
+    },
+    "build/qualification/clean-five-verified-policy-bellman-subsolution-deviation-gap-census-v1/matched-shadow-r9/report.json": {
+      "sha256": "4d47329437b5bf1d3fb6c633313553e974eea1200aa0e04ccc0f2bb45a5c24a6",
+      "bytes": 1898226
+    },
+    "build/qualification/clean-five-policy-potential-scc-cegar-v1/scour-shadow-r1/report.json": {
+      "sha256": "86f50c586aa5355876310db75a3471710bb5bd031d3722706aacadf0917f0156",
+      "bytes": 1903170
+    }
+  },
+  "research_outputs": {
+    "native-economy.json": {
+      "sha256": "ca0bb782c7933fb2c72ddde3991c0aebf8c1d3e9c8dc5853796b54fffddf1992",
+      "bytes": 131287
+    },
+    "native-evidence.md": {
+      "sha256": "c563a4372c1ebd03c288770c1e4971c5a78607cf519081dc0ce19e0f91eca1b3",
+      "bytes": 19833
+    },
+    "native-goal.json": {
+      "sha256": "ab2c5420a403b71852bd84da629814f331e01babaea0401b17620296fb5da1aa",
+      "bytes": 2632
+    },
+    "native-identities.json": {
+      "sha256": "e05053c72928d017a51701586513f60baf7f9c1e0db1d78ed8b33e0f73968375",
+      "bytes": 274
+    },
+    "native-medium.json": {
+      "sha256": "49d4463cab3425fbd0a03e123e7647ea756d355e41953f8b191b81597216057b",
+      "bytes": 2361
+    },
+    "native-medium.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "native-micro-initial-refusal.stderr": {
+      "sha256": "02352d3101e54a532e5212dd10e96036c25986d48f9ef2627ef71d01f0a21986",
+      "bytes": 108
+    },
+    "native-micro.json": {
+      "sha256": "b1009707cc9d3a72e5fda98fae15e1802ae5d8f4afe71d49ee4f0222ea3e8b57",
+      "bytes": 6779
+    },
+    "native-micro.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "native-model-comparison.json": {
+      "sha256": "4fb07769b0a9da32bf06620240d6c8b30422c75a90a03dc0cef1e96ac54c41a7",
+      "bytes": 7591
+    },
+    "native-probe.json": {
+      "sha256": "5919171ae0a2ea1d90c2817fe042c79ec9799577a7b809a603daaa92f944b7a7",
+      "bytes": 13856
+    },
+    "native-probe.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "native-selected-artifacts.json": {
+      "sha256": "ca9956153deddbc37d2c8e9da987834adbaf1243179762081c2f01e31efd72bd",
+      "bytes": 49559
+    },
+    "native_identity.cpp": {
+      "sha256": "eaa0c13563091b4538d5a34a75030c25ba98b264fa6d8badd1960a84f4f43dbe",
+      "bytes": 1339
+    },
+    "native_identity.exe": {
+      "sha256": "0d3e9dc9a741c5fdd8d19abb49f13233cc77d0560a5d5a27aa7e7455c970b5c4",
+      "bytes": 11074682
+    },
+    "native_medium.cpp": {
+      "sha256": "1dd76f42f7f47d66afd4a0e0761a0a257358d64fbca84884d7d7e3c78c52d1cc",
+      "bytes": 7830
+    },
+    "native_medium.exe": {
+      "sha256": "41edb2d2ac175fd73379ac9099682388fa4409d38b5c26b7d1b7e6d23aaf1823",
+      "bytes": 11946232
+    },
+    "native_micro.cpp": {
+      "sha256": "5b304ca202cee204e3321c032f834a87667bef62eec75a81449ee0a69619490e",
+      "bytes": 5752
+    },
+    "native_micro.exe": {
+      "sha256": "36e3fedee19b102fc757f02c477038d92db51f41afcd4f60d2761b98812d35a1",
+      "bytes": 11942464
+    },
+    "native_model_comparison.py": {
+      "sha256": "748b217a13398db8ab4bb4ca6c82512e1faf91e3187a2b662abc045e04b929d6",
+      "bytes": 6522
+    },
+    "native_probe.cpp": {
+      "sha256": "3f3f62ce7bd3589d0bec2c8475d1587436cadc6e49ce73f0aeea1e4aec9ad264",
+      "bytes": 5638
+    },
+    "native_probe.exe": {
+      "sha256": "51ad7360e571d76736dbcf8b9a1d5c73d765c0c554779abfcffd64e5691abb18",
+      "bytes": 11940885
+    }
+  }
+}

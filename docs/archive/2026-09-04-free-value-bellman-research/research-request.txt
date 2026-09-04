@@ -1,0 +1,105 @@
+Perform a substantial, falsification-first research run for OliverOrton/poecraft2.
+Known remote baseline: c9530ac941b95e68a1e3d890caf00d53c9e6d774.
+Read current local state before assuming it matches that ref. Another session may have advanced it. Preserve all user work and the protected untracked 0. Follow current AGENTS, including mechanic authority and testing cadence. Do not research Path of Exile mechanics externally. Algorithm research is explicitly in scope.
+Research-only on the main worktree. No production edits, pushes, public actions, automatic activation of a successor milestone, or new broad test/simulator runs. Small mechanics-independent prototypes and necessary native probes may be run in isolated scratch/disposable worktrees; label them research evidence, not production qualification.
+Determine the most promising route to certified four/five-goal closure without assuming the current policy is already optimal.
+The latest Scour probe proves the existing compiled strategy cannot safely continue from that exact successor through its global router. It does not prove that the successor is unsolvable, that no useful lower exists, or that SCC reasoning is fundamentally wrong.
+Do not automatically implement another fixed-policy domain-expansion pass. Compare it against free-value, frontier-anchored Bellman proof and lower-policy-driven retention/capacity refinement.
+A fixed J_policy(s) is a useful candidate for an optimality certificate. It is not the only permitted value of a lower certificate. A lower-only state need not have an executable continuation in the incumbent's graph.
+Read the current versions of:
+- AGENTS.md, HANDOFF.md.
+- docs/archive/2026-08-31-clean-five-policy-potential-scc-cegar-v1/README.md.
+- The two preceding clean-five Bellman census / verified-policy alternative census archives.
+- docs/solver/lower-pruning.md, states-carriers.md, and the action-scope/exactness sections of flow.md and upper-authority.md.
+- engine/src/solver_solve_envelope_proof.cpp, especially refresh_envelope_bellman_pattern, refined_state_lower, and the zero successor-refinement-depth setting.
+- The current policy-potential types and validator in solver_policy_refinement.hpp/.cpp.
+- The typed proof manager, strict oracle, quotient and action-envelope ledger relevant to reuse.
+- The archaeology audit and the original rejection records for full strict reconstruction, early alternative materialization, generic lower descriptors, shared full reforge DAGs, and same-side/retention proof successes.
+Use the archived reports as evidence, not current sequencing commands.
+- Clean-five upper: 85408.64362148782; lower approximately 36.48853172876641.
+- Exact success one, off-policy mass zero.
+- Strategy SHA-256: EA59F23F770FF2A969774266FA34C58FB23CB16A6B2E46C25B6CAFA1B3C1FF1A.
+- 27,021 reached exact policy entries; 671,410 applicable alternatives; zero existing-lower retirements.
+- All six outcomes of the nine Fracture rows escape the policy-entry domain.
+- Highest-occupancy Scour arbitrary entry: failure_reachable; no candidate/SCC; not a 256-entry cap stop.
+- One internal temporary-bench/cannot-roll row has a passing inequality and five successor entries. Those five successors are not yet an action-complete SCC.
+Do not infer the exact Q-value of any deviation whose continuation evaluation refused.
+Investigate the following proposal, trying to break it before recommending implementation.
+For finite modeled domain R, candidate variables x and independently admissible outside boundary b, exact action rows impose:
+```
+x(s) <= c(s,a) + sum_inside P(t|s,a) x(t)
+                   + sum_outside P(t|s,a) b(t).
+```
+An unmaterialized action remains covered by a valid scalar or whole-kernel optimistic lower constraint. No legal action disappears. Optimize x without requiring x = J_policy.
+Compare:
+1. The current fixed-J simultaneous SCC checker.
+2. A finite-domain Bellman lower solved with existing DP/SCC machinery.
+3. An LP reference solution to the same finite-domain model.
+4. Candidate repair using J as an initial proposal but allowing values to decrease.
+5. Temporary action inactivity with reactivation/separation, distinct from permanent admissible retirement.
+Prove or refute:
+- boundary-lower soundness via the proper-policy/first-exit argument;
+- coverage with scalar action-lower placeholders;
+- monotonic extension/refinement conditions;
+- conditions needed for zero-cost end components and failure-as-infinite-cost semantics;
+- distinction between an admissible base lower and a Bellman-consistent base vector;
+- why a partial LP with missing constraints has no automatic lower authority;
+- whether primitive-level proof can summarize mandatory automatic programs without free setup or omitted decision points.
+Review these primary papers, emphasizing transfer limits rather than a literature list:
+- Schmalz & Trevizan, Efficient Constraint Generation for Stochastic Shortest Path Problems: AAAI 2024 and the superseding AI Journal 2026 version, DOI 10.1016/j.artint.2026.104505, arXiv 2604.01855.
+- Chatterjee et al., Fixed Point Certificates for Reachability and Expected Rewards in MDPs, TACAS 2025, DOI 10.1007/978-3-031-90653-4_7.
+- Klößner, Seipp & Steinmetz, probabilistic Cartesian CEGAR, ECAI 2023, DOI 10.3233/FAIA230405.
+- SSP cost partitioning, ICAPS 2022, DOI 10.1609/icaps.v32i1.19802.
+- Probabilistic merge-and-shrink with prune transformations, ECAI 2024.
+- Hartmanns, Correct Probabilistic Model Checking with Floating-Point Arithmetic, TACAS 2022.
+- Hartmanns et al., The Revised Practitioner's Guide to MDP Model Checking Algorithms, STTT 2026, DOI 10.1007/s10009-026-00848-y.
+- LRTDP, i-dual and occupation-measure work as established closest prior art, not proposed new features.
+Separate the standard theory from a potentially new repository integration. Do not claim novelty because familiar ingredients are combined.
+Identify the smallest existing owner for a persistent lower-only model. In particular:
+- Is the current envelope routine one-step/root-scoped because of a mathematical guard, an old performance rejection, or missing persistent dependency ownership?
+- Does another retained owner already implement the proposed free-value model? If so, identify its actual missing consumer rather than inventing a second implementation.
+- Can a canonical exact state be queried by the lower engine without entering the incumbent global router?
+- Which action families/programs have complete caller-scope coverage, and which need a conservative open-family placeholder?
+- Does action coverage compare canonical sets, or only counts? Require set-level evidence before any authority promotion.
+- Which state fields belong to the original Markov model, and which are compiled-controller provenance only?
+- Can the current sparse Bellman/SCC/Howard solver be reused on a relaxed finite domain?
+- What is the cost of updating violated/inactive constraints, including dependencies of not-yet-materialized actions? Do not assume CG-iLAO's bookkeeping is cheap for procedural kernels.
+- Can exact expected proof potential or a projected small kernel be computed without interning the full physical successor set?
+- Can mandatory program proofs be reused compositionally while retaining setup, phase, prices, and observation timing?
+Do not change kSuccessorRefinementDepth and call that the new architecture. Do not revive the rejected full shared reforge DAG or reconstruct-then-merge design.
+Start with exact mechanics-independent fixtures. Required counterexamples:
+- A proper incumbent costs 10, but an outside deviation yields a true optimum 5: frozen-J certification must fail while a free-value lower reaches 5.
+- A root-optimal policy costs 10 and has no route at outside t; a valid certificate uses h(root)=10 and h(t)=9, even though V*(t)=20.
+- A proper stochastic two-state cycle requiring simultaneous inequalities.
+- Missing action versus explicit optimistic placeholder; duplicate action constraints must not substitute for complete coverage.
+- A destructive cleanup/rebuild example in which free preservation understates recovery cost.
+- A zero-cost improper cycle distinguishing proper-policy and ordinary accumulated-cost semantics.
+- A small residual with a large value error under a long retry horizon.
+- An admissible but Bellman-inconsistent existing lower.
+Use the accompanying ssp_certificate_experiments.py as an independent reference, not production code or sufficient engine validation.
+Then use existing native artifacts to select ONE exact microproblem and ONE medium two-sided proof witness with nonempty unresolved alternatives. PDR may be an exact regression anchor but should not be chosen to demonstrate a consumer it no longer has.
+Before expensive exact rows, compute the lower ceiling imposed by still-unrefined scalar/family placeholders. Choose the minimum-owning optimistic action, not automatically the largest incumbent occupancy or closest-to-upper alternative.
+Compare the same models/scopes:
+- existing lower only;
+- fixed-J SCC attempt;
+- free-value model with explicit boundary and action placeholders;
+- one evidence-selected retention/capacity or program-phase refinement.
+Use a small exact LP as an oracle only if it helps distinguish an implementation error from weak modeling. Do not introduce a production optimization-library dependency during research.
+Record checked lower gain, exact oracle gap, minimum-owning constraints, exact rows built, transition/state growth, retained/transient memory, reactivation work and reuse across a second source shape. Do not invent a performance pass threshold before observing the comparable baseline.
+- Free-value proof gains useful strength with manageable exact/query work: propose the smallest extension of existing proof machinery.
+- Cheap placeholders pin it: name the exact false optimism and select one lower-policy counterexample refinement.
+- Exact row construction dominates before any useful bound: select the projected expectation/query problem, not more scheduler instrumentation.
+- The optimistic candidate reveals a real cheaper policy: use the existing upper search/compiler/evaluator path to construct and verify it; do not force proof of the old policy.
+- The internal five-entry control closes cheaply: keep it as an opportunistic SCC certificate. Do not infer broad clean-five feasibility from one passing row.
+- Every variant duplicates existing strict expansion with no reuse: stop with a concrete structural result and compare one representation alternative. Do not create another near-identical handoff milestone.
+Return one research report with:
+1. Current state and what has actually been measured.
+2. Ranked recommendation and strongest objection to it.
+3. Theory/precondition table and explicit counterexamples.
+4. Source reuse map and small changed invariant.
+5. Complete action/choice/identity/numeric certification contract.
+6. Minimal matched experiment results, separating native from synthetic evidence.
+7. One implementable next boundary, or a clear no-go with the missing contract.
+8. Concise prompt for the implementation session.
+Parallel read-only workstreams are suitable if the environment supports them. Share the pinned identities and do not let reviewers mutate an implementation worktree.
+Keep process lean: no activation-only commits, redundant status files, broad pipeline, simulator runs for proof-only work, or another full 671,410-alternative census. A new test or solve must answer a live uncertainty. Do not consume the research budget merely repeating accepted evidence.

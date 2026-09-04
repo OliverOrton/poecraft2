@@ -1,0 +1,751 @@
+{
+  "evidence": "research, exact rational, mechanics independent",
+  "records": [
+    {
+      "name": "cheaper_deviation_complete",
+      "values": {
+        "r": "5",
+        "t": "4"
+      },
+      "tight": [
+        [
+          "r",
+          "deviate"
+        ],
+        [
+          "t",
+          "finish"
+        ]
+      ],
+      "states": 2,
+      "rows": 3,
+      "transitions": 3,
+      "proper_policy_candidates": 2,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 10,
+      "simplex_pivots": 2,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 943700,
+      "python_retained_bytes": 3423,
+      "python_peak_bytes": 6503
+    },
+    {
+      "name": "cheaper_deviation_boundary0",
+      "values": {
+        "r": "1"
+      },
+      "tight": [
+        [
+          "r",
+          "deviate"
+        ]
+      ],
+      "states": 1,
+      "rows": 2,
+      "transitions": 2,
+      "proper_policy_candidates": 2,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 3,
+      "simplex_pivots": 1,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 276700,
+      "python_retained_bytes": 1328,
+      "python_peak_bytes": 3440
+    },
+    {
+      "name": "J_candidate_repair",
+      "before": {
+        "r": "10",
+        "t": "4"
+      },
+      "after": {
+        "r": "5",
+        "t": "4"
+      },
+      "bellman_sweeps": 1
+    },
+    {
+      "name": "no_incumbent_router_at_t",
+      "values": {
+        "r": "10"
+      },
+      "tight": [
+        [
+          "r",
+          "incumbent"
+        ],
+        [
+          "r",
+          "deviate"
+        ]
+      ],
+      "states": 1,
+      "rows": 2,
+      "transitions": 2,
+      "proper_policy_candidates": 2,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 3,
+      "simplex_pivots": 1,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 338200,
+      "python_retained_bytes": 1328,
+      "python_peak_bytes": 3440
+    },
+    {
+      "name": "no_incumbent_router_true_model",
+      "values": {
+        "r": "10",
+        "t": "20"
+      },
+      "tight": [
+        [
+          "r",
+          "incumbent"
+        ],
+        [
+          "t",
+          "finish"
+        ]
+      ],
+      "states": 2,
+      "rows": 3,
+      "transitions": 3,
+      "proper_policy_candidates": 2,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 10,
+      "simplex_pivots": 3,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 915400,
+      "python_retained_bytes": 1864,
+      "python_peak_bytes": 5000
+    },
+    {
+      "name": "proper_stochastic_SCC",
+      "values": {
+        "s": "16/7",
+        "t": "18/7"
+      },
+      "tight": [
+        [
+          "s",
+          "cycle"
+        ],
+        [
+          "t",
+          "cycle"
+        ]
+      ],
+      "states": 2,
+      "rows": 4,
+      "transitions": 6,
+      "proper_policy_candidates": 4,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 15,
+      "simplex_pivots": 2,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 1396800,
+      "python_retained_bytes": 2120,
+      "python_peak_bytes": 6136
+    },
+    {
+      "name": "SCC_one_state_boundary0",
+      "values": {
+        "s": "1"
+      },
+      "tight": [
+        [
+          "s",
+          "cycle"
+        ]
+      ],
+      "states": 1,
+      "rows": 2,
+      "transitions": 3,
+      "proper_policy_candidates": 2,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 3,
+      "simplex_pivots": 1,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 447800,
+      "python_retained_bytes": 1328,
+      "python_peak_bytes": 3440
+    },
+    {
+      "name": "missing_action_UNSOUND",
+      "values": {
+        "s": "10"
+      },
+      "tight": [
+        [
+          "s",
+          "safe"
+        ]
+      ],
+      "states": 1,
+      "rows": 1,
+      "transitions": 1,
+      "proper_policy_candidates": 1,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 2,
+      "simplex_pivots": 1,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 185300,
+      "python_retained_bytes": 1208,
+      "python_peak_bytes": 2848
+    },
+    {
+      "name": "duplicate_action_UNSOUND",
+      "values": {
+        "s": "10"
+      },
+      "tight": [
+        [
+          "s",
+          "safe"
+        ],
+        [
+          "s",
+          "safe"
+        ]
+      ],
+      "states": 1,
+      "rows": 2,
+      "transitions": 2,
+      "proper_policy_candidates": 2,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 3,
+      "simplex_pivots": 1,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 269300,
+      "python_retained_bytes": 1328,
+      "python_peak_bytes": 3440
+    },
+    {
+      "name": "covered_placeholder",
+      "values": {
+        "s": "2"
+      },
+      "tight": [
+        [
+          "s",
+          "cheap"
+        ]
+      ],
+      "states": 1,
+      "rows": 2,
+      "transitions": 2,
+      "proper_policy_candidates": 2,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 3,
+      "simplex_pivots": 1,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 260100,
+      "python_retained_bytes": 1328,
+      "python_peak_bytes": 3440
+    },
+    {
+      "name": "placeholder_refined",
+      "values": {
+        "s": "5"
+      },
+      "tight": [
+        [
+          "s",
+          "cheap"
+        ]
+      ],
+      "states": 1,
+      "rows": 2,
+      "transitions": 2,
+      "proper_policy_candidates": 2,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 3,
+      "simplex_pivots": 1,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 262000,
+      "python_retained_bytes": 1328,
+      "python_peak_bytes": 3440
+    },
+    {
+      "name": "temporary_inactivity",
+      "tentative_noncertificate": {
+        "s": "10"
+      },
+      "repaired": {
+        "s": "5"
+      },
+      "inactive_scans": 1,
+      "reactivations": 1,
+      "final_action_scans": 2,
+      "permanent_retirements": 0
+    },
+    {
+      "name": "cleanup_preserved_shape_A",
+      "values": {
+        "dirty": "2"
+      },
+      "tight": [
+        [
+          "dirty",
+          "cleanup_free_preservation"
+        ]
+      ],
+      "states": 1,
+      "rows": 2,
+      "transitions": 2,
+      "proper_policy_candidates": 2,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 3,
+      "simplex_pivots": 1,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 323100,
+      "python_retained_bytes": 1496,
+      "python_peak_bytes": 3664
+    },
+    {
+      "name": "cleanup_capacity_shape_A",
+      "values": {
+        "dirty": "10",
+        "empty": "8"
+      },
+      "tight": [
+        [
+          "dirty",
+          "cleanup"
+        ],
+        [
+          "empty",
+          "rebuild"
+        ]
+      ],
+      "states": 2,
+      "rows": 3,
+      "transitions": 3,
+      "proper_policy_candidates": 2,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 10,
+      "simplex_pivots": 2,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 830800,
+      "python_retained_bytes": 1864,
+      "python_peak_bytes": 5000
+    },
+    {
+      "name": "cleanup_preserved_shape_B",
+      "values": {
+        "dirty": "2"
+      },
+      "tight": [
+        [
+          "dirty",
+          "cleanup_free_preservation"
+        ]
+      ],
+      "states": 1,
+      "rows": 2,
+      "transitions": 2,
+      "proper_policy_candidates": 2,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 3,
+      "simplex_pivots": 1,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 268300,
+      "python_retained_bytes": 1328,
+      "python_peak_bytes": 3440
+    },
+    {
+      "name": "cleanup_capacity_shape_B",
+      "values": {
+        "dirty": "13",
+        "empty": "11"
+      },
+      "tight": [
+        [
+          "dirty",
+          "cleanup"
+        ],
+        [
+          "empty",
+          "rebuild"
+        ]
+      ],
+      "states": 2,
+      "rows": 3,
+      "transitions": 3,
+      "proper_policy_candidates": 2,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 10,
+      "simplex_pivots": 2,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 868000,
+      "python_retained_bytes": 1736,
+      "python_peak_bytes": 4872
+    },
+    {
+      "name": "zero_cost_improper_cycle_proper_objective",
+      "values": {
+        "s": "10"
+      },
+      "tight": [
+        [
+          "s",
+          "zero_loop"
+        ],
+        [
+          "s",
+          "exit"
+        ]
+      ],
+      "states": 1,
+      "rows": 2,
+      "transitions": 2,
+      "proper_policy_candidates": 1,
+      "rejected_improper": 1,
+      "lp_active_sets_attempted": 3,
+      "simplex_pivots": 1,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 239000,
+      "python_retained_bytes": 1264,
+      "python_peak_bytes": 3328
+    },
+    {
+      "name": "zero_cost_semantics",
+      "proper_policy_optimum": "10",
+      "ordinary_accumulated_cost_optimum": "0",
+      "bottom_VI_fixed_point": "0",
+      "max_LP_fixed_point": "10"
+    },
+    {
+      "name": "long_retry_horizon",
+      "values": {
+        "s": "100000000"
+      },
+      "tight": [
+        [
+          "s",
+          "retry"
+        ]
+      ],
+      "states": 1,
+      "rows": 1,
+      "transitions": 2,
+      "proper_policy_candidates": 1,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 2,
+      "simplex_pivots": 1,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 192600,
+      "python_retained_bytes": 1152,
+      "python_peak_bytes": 2792
+    },
+    {
+      "name": "small_residual_UNSOUND_tolerance",
+      "true_value": "100000000",
+      "candidate": "100000100",
+      "positive_inequality_defect": "1/1000000",
+      "value_overstatement": "100",
+      "expected_retry_horizon": "100000000"
+    },
+    {
+      "name": "admissible_inconsistent_finite_R",
+      "values": {
+        "s": "1"
+      },
+      "tight": [
+        [
+          "s",
+          "step"
+        ]
+      ],
+      "states": 1,
+      "rows": 1,
+      "transitions": 1,
+      "proper_policy_candidates": 1,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 2,
+      "simplex_pivots": 1,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 187200,
+      "python_retained_bytes": 1208,
+      "python_peak_bytes": 2848
+    },
+    {
+      "name": "admissible_inconsistent",
+      "base": {
+        "s": "6",
+        "t": "0"
+      },
+      "true_values": {
+        "s": "6",
+        "t": "5"
+      },
+      "base_bellman": {
+        "s": "1",
+        "t": "5"
+      },
+      "root_floor6_plus_boundary0_constraints": "infeasible",
+      "independent_max_remains_admissible": "6"
+    },
+    {
+      "name": "extension_old_boundary9",
+      "values": {
+        "s": "10"
+      },
+      "tight": [
+        [
+          "s",
+          "step"
+        ],
+        [
+          "s",
+          "exit"
+        ]
+      ],
+      "states": 1,
+      "rows": 2,
+      "transitions": 2,
+      "proper_policy_candidates": 2,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 3,
+      "simplex_pivots": 1,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 278700,
+      "python_retained_bytes": 1504,
+      "python_peak_bytes": 3616
+    },
+    {
+      "name": "extension_drops_boundary_NOT_monotone",
+      "values": {
+        "s": "2",
+        "t": "1"
+      },
+      "tight": [
+        [
+          "s",
+          "step"
+        ],
+        [
+          "t",
+          "weak_placeholder"
+        ]
+      ],
+      "states": 2,
+      "rows": 3,
+      "transitions": 3,
+      "proper_policy_candidates": 2,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 10,
+      "simplex_pivots": 2,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 814900,
+      "python_retained_bytes": 1992,
+      "python_peak_bytes": 5128
+    },
+    {
+      "name": "exact_extension_old_inconsistent_boundary",
+      "values": {
+        "r": "10"
+      },
+      "tight": [
+        [
+          "r",
+          "step"
+        ]
+      ],
+      "states": 1,
+      "rows": 1,
+      "transitions": 1,
+      "proper_policy_candidates": 1,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 2,
+      "simplex_pivots": 1,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 214100,
+      "python_retained_bytes": 1152,
+      "python_peak_bytes": 2792
+    },
+    {
+      "name": "exact_extension_new_inconsistent_boundary",
+      "values": {
+        "r": "0",
+        "t": "0"
+      },
+      "tight": [
+        [
+          "r",
+          "step"
+        ],
+        [
+          "t",
+          "step"
+        ]
+      ],
+      "states": 2,
+      "rows": 2,
+      "transitions": 2,
+      "proper_policy_candidates": 1,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 6,
+      "simplex_pivots": 2,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 590400,
+      "python_retained_bytes": 1696,
+      "python_peak_bytes": 4160
+    },
+    {
+      "name": "mandatory_program",
+      "setup": "3",
+      "primitive": "2",
+      "mandatory_program_cost": "5",
+      "free_setup_relaxation": "2",
+      "post_observation_choice_cost": "0",
+      "pre_observation_choice_cost": "5",
+      "observation_example": "two fair offers; costs (0,10) and (10,0)"
+    },
+    {
+      "name": "mandatory_program_phases",
+      "values": {
+        "entry": "5",
+        "phase": "2"
+      },
+      "tight": [
+        [
+          "entry",
+          "setup"
+        ],
+        [
+          "phase",
+          "mandatory_finish"
+        ]
+      ],
+      "states": 2,
+      "rows": 2,
+      "transitions": 2,
+      "proper_policy_candidates": 1,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 6,
+      "simplex_pivots": 2,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 527800,
+      "python_retained_bytes": 2000,
+      "python_peak_bytes": 4464
+    },
+    {
+      "name": "mandatory_program_macro",
+      "values": {
+        "entry": "5"
+      },
+      "tight": [
+        [
+          "entry",
+          "complete_macro"
+        ]
+      ],
+      "states": 1,
+      "rows": 1,
+      "transitions": 1,
+      "proper_policy_candidates": 1,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 2,
+      "simplex_pivots": 1,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 175400,
+      "python_retained_bytes": 1096,
+      "python_peak_bytes": 2792
+    },
+    {
+      "name": "observation_before_choice",
+      "values": {
+        "entry": "0",
+        "offerA": "0",
+        "offerB": "0"
+      },
+      "tight": [
+        [
+          "entry",
+          "observe"
+        ],
+        [
+          "offerA",
+          "left"
+        ],
+        [
+          "offerB",
+          "right"
+        ]
+      ],
+      "states": 3,
+      "rows": 5,
+      "transitions": 6,
+      "proper_policy_candidates": 4,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 56,
+      "simplex_pivots": 3,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 4791300,
+      "python_retained_bytes": 3080,
+      "python_peak_bytes": 8656
+    },
+    {
+      "name": "choice_before_observation",
+      "values": {
+        "entry": "5"
+      },
+      "tight": [
+        [
+          "entry",
+          "left_before_observation"
+        ],
+        [
+          "entry",
+          "right_before_observation"
+        ]
+      ],
+      "states": 1,
+      "rows": 2,
+      "transitions": 2,
+      "proper_policy_candidates": 2,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 3,
+      "simplex_pivots": 1,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 337800,
+      "python_retained_bytes": 1320,
+      "python_peak_bytes": 3432
+    },
+    {
+      "name": "observed_choice_self",
+      "values": {
+        "s": "2",
+        "t": "100"
+      },
+      "tight": [
+        [
+          "s",
+          "offer_select_self"
+        ],
+        [
+          "t",
+          "finish"
+        ]
+      ],
+      "states": 2,
+      "rows": 3,
+      "transitions": 5,
+      "proper_policy_candidates": 2,
+      "rejected_improper": 0,
+      "lp_active_sets_attempted": 10,
+      "simplex_pivots": 3,
+      "exact_rational_residual": "0",
+      "elapsed_ns": 873300,
+      "python_retained_bytes": 1800,
+      "python_peak_bytes": 4984
+    },
+    {
+      "name": "envelope_formula_self_choice_counterexample",
+      "shared_row_semantics": "2",
+      "ignore_self_when_alternate_finite": "51",
+      "native_reachability": "not established; mechanics-independent source counterexample"
+    }
+  ]
+}
