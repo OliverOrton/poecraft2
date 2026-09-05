@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-09-05
 
+- [Native Side-Retention and Boundary-Coupled Lower Closure v1](2026-09-05-native-side-retention-boundary-coupled-lower-v1/README.md) —
+  certifies Eldritch Chaos continuation and retains legal Restart. Both private
+  source portfolios reach 41.11443 within 16 MiB, then 47.85102 with a jointly
+  checked adjacent region under the labelled 32 MiB research budget. Ordinary
+  solving remains unchanged; an exact optimistic cleanup cycle supplies the ceiling.
 - [Native Joint-Goal Lower Refinement v1](2026-09-05-native-joint-goal-lower-refinement-v1/README.md) —
   derives joint caps from native conditional integer witnesses, reactivates
   limiting price shortcuts and checks every final event minimum. The full-scope

@@ -143,6 +143,8 @@ private:
     quotient::ScopedProofMemoryCharge charge_;
 };
 
+enum class PhaseContinuation : std::uint8_t { PriceOnly, SideRetention, CoupledFresh };
+
 struct PhasePotentialRelation {
     std::uint32_t cell = 0, action = 0;
     double cost = 0, rhs = 0;
@@ -152,9 +154,11 @@ struct PhasePotentialRelation {
     PhaseRelationReason reason = PhaseRelationReason::NativeEffect;
     struct Event { std::uint32_t mask = 0, minimum_cell = 0, capacity = 0; };
     std::vector<Event> events;
+    int phase_branch = -2; // -1 no dominance, 0 prefix, 1 suffix; -2 not split
 };
 
-/* Existing clean-table indexing, with an exact fractured carrier frame.
+/* Existing clean-table indexing, with an exact fractured carrier frame and
+ * an optional separately indexed unfractured continuation region.
  * This is a private checked potential, never an exact native transition row. */
 class PreparedPhasePotential {
 public:
@@ -170,6 +174,7 @@ public:
     const std::vector<PhaseJointEventWitness> joint_events;
     const std::vector<PhasePriceReactivation> reactivations;
     const bool joint_refinement;
+    const PhaseContinuation continuation;
     const std::vector<PhasePotentialRelation> relations;
     const std::uint32_t model_rounds;
     const std::uint64_t retained_reservation;
@@ -178,6 +183,7 @@ public:
     std::optional<double> lookup(const CalcContext&, const PhaseLowerPrices&, const pc_item_state&, bool consider_imprint) const;
     std::optional<quotient::QuotientLowerBoundary> whole_scope_source_lower(
         const CalcContext&, const PhaseLowerPrices&, const pc_item_state&, bool consider_imprint) const;
+    std::uint32_t projected_cell(const CalcContext&, const pc_item_state&) const;
     double projected_value(const CalcContext&, const pc_item_state&) const;
     quotient::ProofMemorySnapshot memory_snapshot() const;
     std::size_t draw_count() const;
@@ -190,7 +196,7 @@ private:
         std::vector<CalcContext::NativeGoalDrawBound>, std::vector<PhasePotentialRelation>,
         std::uint32_t rounds, std::uint64_t reservation, std::uint64_t peak, std::uint64_t action_relations,
         std::shared_ptr<const PreparedPhasePotential>, std::vector<PhaseJointEventWitness>,
-        std::vector<PhasePriceReactivation>, bool joint);
+        std::vector<PhasePriceReactivation>, bool joint, PhaseContinuation);
     std::shared_ptr<const PreparedPhaseLowerView> support_;
     quotient::ScopedProofMemoryCharge charge_;
 };
@@ -210,7 +216,8 @@ public:
         const PreparedPhaseRestartLower& restart_boundary,
         bool consider_imprint_programs, bool retain_scour,
         const quotient::QuotientLowerBudget& budget = {}, bool joint_refinement = false,
-        std::shared_ptr<const PreparedPhasePotential> reuse_draws = {});
+        std::shared_ptr<const PreparedPhasePotential> reuse_draws = {},
+        PhaseContinuation continuation = PhaseContinuation::PriceOnly);
     static PreparedPhaseRestartLower zero_restart_boundary(const PreparedPhaseLowerView&);
     static PhaseProgramLowerWitness compose(CalcContext&, const PhaseLowerPrices&,
         const pc_item_state&, const std::string&, const PreparedPhasePotential&,

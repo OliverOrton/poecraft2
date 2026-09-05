@@ -1,0 +1,39 @@
+{
+  "scope": "bounded development observations; final native.json and reference.json supersede candidates",
+  "request_source": {
+    "title": "Native Solver Research",
+    "thread_id": "6a90fbac-55e4-83e8-964e-f50cbad28987",
+    "retrieval": "latest report via read_thread, bounded to 20000 characters, together with Oliver explicit implementation request; generated attachment not exposed by reader"
+  },
+  "findings": [
+    {
+      "question": "does side retention alone remove the known price cap",
+      "answer": "yes, final 16 MiB treatment reaches the fixed Restart ceiling 41.11443172876641"
+    },
+    {
+      "question": "can standalone Restart be deleted",
+      "answer": "no: saved caller enables economic Restart and native admission installs it"
+    },
+    {
+      "question": "does the adjacent region fit the standard reservation",
+      "answer": "no; final coupled-phase-16 exits 2 before any certificate; requested 10012424, available arena 8887604 after live charges"
+    },
+    {
+      "question": "why did early cap failures abort",
+      "answer": "GDB located ProofMemoryLedger cap throw in append_row; moving the throwing append outside aggregate temporary construction makes the final refusal unwind cleanly"
+    },
+    {
+      "question": "can the permitted research treatment fit",
+      "answer": "yes after excluding proved infeasible graph storage and coalescing identical frozen numerical rows; 32415776 combined bytes with 6 MiB native transient reservation"
+    },
+    {
+      "question": "why did one native retention fixture fail",
+      "answer": "coarse materialization was compared to physical junk identities; exact modifier-identity enumeration passes"
+    },
+    {
+      "question": "what blocks further value in this model",
+      "answer": "22-state proper optimistic policy through Harvest Physical, Exalt and arbitrary-junk Remove Crafted Modifiers cleanup caps fractured value at 47.85101911999281"
+    }
+  ],
+  "production": "unchanged; no full solve, end-to-end speedup, or standard-16-MiB coupled qualification"
+}

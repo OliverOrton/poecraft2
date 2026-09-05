@@ -426,7 +426,7 @@ PhaseProgramLowerWitness PhaseLowerProducer::compose_impl(CalcContext& calc, con
                 satisfied >= calc.goal().required_satisfied_slots() &&
                 satisfied == exit.prefix_count + exit.suffix_count;
             if (potential) {
-                const auto cell = static_cast<std::uint32_t>(((exit.rarity*donor.values.size()+mask)*4+exit.prefix_count)*4+exit.suffix_count);
+                const auto cell = potential->projected_cell(calc, exit);
                 result.exits.push_back({weight, mask, cell, goal ? 0 : potential->projected_value(calc, exit), goal});
             }
             if (goal) {
@@ -452,7 +452,7 @@ PhaseProgramLowerWitness PhaseLowerProducer::compose_impl(CalcContext& calc, con
         for (const auto& [weight, value] : weighted_values)
             expectation = down(expectation + down(phase_weight_probability(weight, result.total_weight).lower * value));
         result.lower = down(result.cost_lower + expectation);
-        if (potential->reused_draw_owner) {
+        if (potential->reused_draw_owner && potential->reused_draw_owner->compatible(calc, prices, source, false)) {
             double prior = 0;
             for (const auto& exit : result.exits)
                 prior = down(prior + down(phase_weight_probability(exit.weight, result.total_weight).lower *

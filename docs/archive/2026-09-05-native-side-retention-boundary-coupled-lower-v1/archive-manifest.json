@@ -1,0 +1,55 @@
+{
+  "scope": "completed native side-retention and boundary-coupled lower closure; private source gains, 32 MiB research coupling only, ordinary production unchanged",
+  "files": [
+    {
+      "path": "acceptance-build.txt",
+      "bytes": 910,
+      "sha256": "de108ea1629f8f6c97af2d4fe2f94fc3e873edacaf3079c029fc0e47c3a940aa"
+    },
+    {
+      "path": "development-findings.json",
+      "bytes": 2066,
+      "sha256": "7c55c83eb72cb258b0c5797a408abf764cd714f6aacec6acdd83012fbec52ed9"
+    },
+    {
+      "path": "native.json",
+      "bytes": 4534931,
+      "sha256": "4e04f6681da9e59fd1373ca8322d160058e478b409bb5e5ec1615287b7050171"
+    },
+    {
+      "path": "phase-tests.txt",
+      "bytes": 49,
+      "sha256": "2d7eda70589d595fd82848108e103bbaaf53ad782276746bdfa0cbc4babc13b7"
+    },
+    {
+      "path": "provenance.json",
+      "bytes": 53487,
+      "sha256": "e88768c3c406b06aeff4b9d77e4ddc8d063639d7714a5558bc5bd715fe2911ca"
+    },
+    {
+      "path": "README.md",
+      "bytes": 13188,
+      "sha256": "0201e1cc60e05c6b051ddf93ccc76a30cb77a480fa55703d457a765b38e7f2d9"
+    },
+    {
+      "path": "reference.json",
+      "bytes": 38334,
+      "sha256": "dd8664627940368d207cd44eb49643a9a4d93cb3db3eeb2762e289b05829aa2d"
+    },
+    {
+      "path": "resource-refusal.txt",
+      "bytes": 106,
+      "sha256": "332f8f195c527437adefc4cbc8a5573f77716b4b55f2651895868aceaa323dcf"
+    },
+    {
+      "path": "side-native.json",
+      "bytes": 802668,
+      "sha256": "66f77ffcb2cfe03381cc5d243fd86aedf15bedbb75bfdf22598b60a72bf5678f"
+    },
+    {
+      "path": "side-reference.json",
+      "bytes": 17940,
+      "sha256": "cbf6c181bd597ac64be2fd0144b254ac4f7f7a92057aaea05b9a35252521db34"
+    }
+  ]
+}

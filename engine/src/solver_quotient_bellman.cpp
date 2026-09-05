@@ -107,10 +107,12 @@ const char* quotient_bellman_status_name(
 
 QuotientBellmanGraph::QuotientBellmanGraph(
         const std::uint64_t max_owned_bytes,
-        const QuotientBellmanMode mode) : mode_(mode) {
+        const QuotientBellmanMode mode, const std::uint64_t lower_memory_ceiling) : mode_(mode) {
+    if (lower_memory_ceiling > (32ull << 20))
+        throw std::invalid_argument("lower-only research memory ceiling exceeds 32 MiB");
     transition_cache_.quotient_proofs =
         std::make_shared<ProofStore>(mode == QuotientBellmanMode::LowerOnly
-            ? std::min<std::uint64_t>(max_owned_bytes, 16ull * 1024 * 1024)
+            ? std::min(max_owned_bytes, lower_memory_ceiling)
             : max_owned_bytes);
 }
 

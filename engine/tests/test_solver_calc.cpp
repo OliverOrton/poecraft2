@@ -3758,6 +3758,14 @@ void run_solver_phase_lower_tests() {
     PC_CHECK(std::abs(destructive.checked->values_by_state[1]-10) < 1e-10);
     PC_CHECK(preserve.checked && std::abs(preserve.checked->values_by_state[0]-6) < 1e-10);
     PC_CHECK(std::abs(preserve.checked->values_by_state[1]-4) < 1e-10);
+    // Boundary coupling is one simultaneous system, not independent use of
+    // a provisional neighbor. The exact review control is x=8, y=6.
+    const auto coupled_control = coefficient_model({row(0,1,{{0,.5},{1,.5}}), row(1,2,{{0,.5},{2,.5}})},2);
+    PC_CHECK(coupled_control.checked && std::abs(coupled_control.checked->values_by_state[0]-8)<1e-9);
+    PC_CHECK(std::abs(coupled_control.checked->values_by_state[1]-6)<1e-9);
+    const std::vector<double> unproved_neighbor{8,7,0};
+    PC_CHECK(!coefficient_model({row(0,1,{{0,.5},{1,.5}}),row(1,2,{{0,.5},{2,.5}})},2,&unproved_neighbor).checked);
+    rejects([] { QuotientBellmanGraph excessive(64ull<<20,QuotientBellmanMode::LowerOnly,64ull<<20); });
     auto observed = row(0, 1, {{2, .5}}); observed.choices = {{.5, true, {1}}};
     const auto self_choice = coefficient_model({observed, row(1, 10, {{2, 1}})}, 2);
     PC_CHECK(self_choice.checked && std::abs(self_choice.checked->values_by_state[0]-2) < 1e-10);
@@ -3922,7 +3930,8 @@ void run_solver_phase_lower_tests() {
         auto essence = joint_registry.actions.at(joint_registry.index_by_id.at("chaos"));
         essence.id = "fixture:forced-life"; essence.params.type=ActionType::Essence; essence.params.essence_index=0;
         joint_registry.index_by_id[essence.id] = joint_registry.actions.size(); joint_registry.actions.push_back(essence);
-        CalcContext joint_calc(joint_session, joint_goal, joint_registry, basic_indices(joint_registry));
+        CalcContext joint_calc(joint_session, joint_goal, joint_registry, basic_indices(joint_registry),
+            false,true,true,std::nullopt,{},false,{},true);
         pc_item_state frame{}; frame.rarity=PC_RARITY_RARE;
         place(&frame, PC_SIDE_SUFFIX, 5, 20, PC_MOD_SLOT_FRACTURED);
         auto phase_frame=frame; phase_frame.eater_of_worlds_tier=1;
@@ -3973,6 +3982,56 @@ void run_solver_phase_lower_tests() {
             all_blockers &= static_cast<long double>(hit)/total<=phase_weight_probability(w.target_weight,w.target_weight+other).upper;
         }
         PC_CHECK(all_blockers);
+        const auto coupled = PhaseLowerProducer::prepare_probabilistic(joint_calc,prices,phase_frame,
+            proposal,support,zero,false,true,{},true,joint,PhaseContinuation::CoupledFresh);
+        pc_item_state fresh_item{}; pc_item_clear(&fresh_item);
+        PC_CHECK(!joint->lookup(joint_calc,prices,fresh_item,false));
+        PC_CHECK(coupled->lookup(joint_calc,prices,fresh_item,false).has_value());
+        PC_CHECK(coupled->projected_cell(joint_calc,fresh_item)==770);
+        PC_CHECK(coupled->identity!=joint->identity);
+        PC_CHECK(coupled->values[769]==0); // unused old boundary is not authority
+        PC_CHECK(std::any_of(coupled->relations.begin(),coupled->relations.end(),[](const auto& r) { return r.cell>=770; }));
+        bool resets_coupled=true;
+        for (const auto& r : coupled->relations) if (joint_registry.actions[r.action].synthetic)
+            resets_coupled &= r.targets==std::vector<std::uint32_t>{770} && r.reason!=PhaseRelationReason::FixedIndependentBoundary;
+        PC_CHECK(resets_coupled);
+        // Exact native kernels on the small existing fixture, without sampling
+        // or Simulator. Include absent/tied dominance, both sides, retained
+        // junk blockers and the fracture. Rounded native probabilities are only
+        // test observations; certificate authority stays in integer witnesses.
+        bool native_retention=true, native_expectation=true;
+        std::uint64_t native_exits=0;
+        for (unsigned junk : {6u,7u}) for (unsigned phase_case=0;phase_case<4;++phase_case) {
+            auto carrier=frame; place(&carrier,PC_SIDE_PREFIX,0,joint_session->primary_group[0]);
+            place(&carrier,PC_SIDE_SUFFIX,junk,joint_session->primary_group[junk]);
+            carrier.searing_exarch_tier=phase_case==1 ? 1 : (phase_case==3 ? 2 : 0);
+            carrier.eater_of_worlds_tier=phase_case==2 ? 1 : (phase_case==3 ? 2 : 0);
+            const auto state=joint_calc.intern_item(carrier);
+            const auto& kernel=joint_calc.outcomes(state,joint_registry.index_by_id.at("eldritch_chaos"));
+            long double total=0, rhs=phase_price_lower(joint_registry.actions[joint_registry.index_by_id.at("eldritch_chaos")],prices);
+            native_retention &= kernel.supported && !kernel.entries.empty();
+            for (const auto& e : kernel.entries) {
+                pc_item_state exit{}; native_retention &= joint_calc.materialize(e.state,exit); ++native_exits;
+                total+=e.probability; rhs+=e.probability*coupled->projected_value(joint_calc,exit);
+                native_retention &= item_contains_mod(exit,5) && exit.prefix_count<=3 && exit.suffix_count<=3;
+                if (phase_case==1) native_retention &= exit.suffix_count==carrier.suffix_count && item_contains_mod(exit,junk);
+                if (phase_case==2) native_retention &= exit.prefix_count==carrier.prefix_count && item_contains_mod(exit,0);
+            }
+            native_expectation &= std::abs(total-1)<1e-12L && coupled->projected_value(joint_calc,carrier)<=rhs+1e-11L;
+        }
+        PC_CHECK(native_exits>0 && native_retention);
+        PC_CHECK(native_expectation);
+        auto influenced_fresh=fresh_item; influenced_fresh.generic_influence_bits=1;
+        PC_CHECK(!coupled->lookup(joint_calc,prices,influenced_fresh,false));
+        PC_CHECK(!coupled->lookup(joint_calc,prices,fresh_item,true));
+        PC_CHECK(!coupled->lookup(joint_calc,repriced,fresh_item,false));
+        const auto retained_coupled=support->memory_snapshot().total_bytes;
+        QuotientLowerBudget interrupted; unsigned seen=0; interrupted.cancelled=[&]{ return ++seen>80; };
+        rejects([&]{ PhaseLowerProducer::prepare_probabilistic(joint_calc,prices,phase_frame,proposal,support,zero,
+            false,true,interrupted,true,joint,PhaseContinuation::CoupledFresh); });
+        PC_CHECK(support->memory_snapshot().total_bytes==retained_coupled);
+        rejects([&]{ PhaseLowerProducer::prepare_probabilistic(joint_calc,prices,phase_frame,proposal,support,zero,
+            false,true,{},false,joint,PhaseContinuation::CoupledFresh); });
         // Same-side overlapping satisfying masks must refuse distinct-draw
         // multiplication. The current goal-layout owner already refuses them.
         joint_goal.slots[1]=joint_goal.slots[0];
@@ -4016,6 +4075,19 @@ void run_solver_phase_lower_tests() {
                 const auto& a = program_calc.registry().actions[r.action];
                 return a.synthetic || a.params.type != ActionType::Transmute;
             }));
+            // A program in the adjacent region must retain its region offset;
+            // an incompatible fractured control supplies no comparison value.
+            const auto coupled_program = PhaseLowerProducer::prepare_probabilistic(program_calc,prices,framed_post,
+                clean,program_donor,boundary,false,true,{},true,potential,PhaseContinuation::CoupledFresh);
+            const auto fresh_program = PhaseLowerProducer::compose(program_calc,prices,source,id,*coupled_program);
+            PC_CHECK(fresh_program.record.prior_potential_lower==0);
+            PC_CHECK(std::all_of(fresh_program.record.exits.begin(),fresh_program.record.exits.end(),[&](const auto& e) {
+                return e.cell>=194 && e.lower==(e.goal ? 0 : coupled_program->values.at(e.cell));
+            }));
+            long double fresh_expectation=fresh_program.record.cost_lower;
+            for (const auto& e : fresh_program.record.exits)
+                fresh_expectation+=static_cast<long double>(e.weight)/fresh_program.record.total_weight*e.lower;
+            PC_CHECK(fresh_program.record.lower<=fresh_expectation && fresh_expectation-fresh_program.record.lower<1e-10);
             auto changed_boundary = PhaseLowerProducer::zero_restart_boundary(*changed);
             rejects([&] { PhaseLowerProducer::prepare_probabilistic(program_calc, prices, framed_post, clean,
                 program_donor, changed_boundary, false, true); });

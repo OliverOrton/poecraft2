@@ -3,8 +3,9 @@
 **Status: no implementation boundary is active.**
 
 Parent: [documentation map](../README.md). [HANDOFF](../../HANDOFF.md) owns
-current sequencing. Oliver must select the next chunk before implementation.
+current sequencing. Oliver must select further implementation.
 
-The completed [Native Joint-Goal Lower Refinement v1](../archive/2026-09-05-native-joint-goal-lower-refinement-v1/README.md)
-records the private complete-envelope gain and remaining Eldritch Chaos
-continuation boundary. Ordinary solving remains unchanged.
+The completed [Native Side-Retention and Boundary-Coupled Lower Closure v1](../archive/2026-09-05-native-side-retention-boundary-coupled-lower-v1/README.md)
+records native side retention, legal-reset attribution and the jointly checked
+adjacent region. Its coupled result uses the labelled 32 MiB research budget;
+ordinary solving remains unchanged.

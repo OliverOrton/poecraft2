@@ -565,7 +565,8 @@ void emit_refusal(const PhaseProposalRefusal& r) {
     }
     std::cout << "]}";
 }
-void probabilistic_phase(CalcContext& calc, SolveWorkTestAccess::Impl& owner, const pc_item_state& start) {
+void probabilistic_phase(CalcContext& calc, SolveWorkTestAccess::Impl& owner, const pc_item_state& start,
+        PhaseContinuation continuation, std::uint64_t proof_cap) {
     const auto started = Clock::now();
     pc_item_state post = start; post.eater_of_worlds_tier = 1;
     const auto mask_proposal = owner.phase_lower_proposal(false);
@@ -575,7 +576,7 @@ void probabilistic_phase(CalcContext& calc, SolveWorkTestAccess::Impl& owner, co
     const auto adapter_ns = ns(started);
     const auto control_start = Clock::now();
     auto control = PhaseLowerProducer::prepare_probabilistic(calc, owner.prices, post,
-        clean_proposal, support, restart_boundary, owner.options.consider_imprint_programs, true);
+        clean_proposal, support, restart_boundary, owner.options.consider_imprint_programs, true, {}, true);
     const auto control_ns = ns(control_start);
     const auto control_lower = *control->lookup(calc, owner.prices, start, owner.options.consider_imprint_programs);
     std::cout << "\"proposal_adapter\":{\"role\":\"mask_completion_from_acquisition_any_k_union\",\"dimensions\":"
@@ -583,15 +584,19 @@ void probabilistic_phase(CalcContext& calc, SolveWorkTestAccess::Impl& owner, co
         << ",\"first_refusal\":"; emit_refusal(support->proposal_refusal);
     std::cout << ",\"values\":[";
     for (unsigned i = 0; i < mask_proposal.values.size(); ++i) { if (i) std::cout << ','; std::cout << mask_proposal.values[i]; }
-    std::cout << "]},\"marginal_control\":{\"lower\":" << control_lower << ",\"prepare_check_ns\":" << control_ns << ",\"values\":[";
+    std::cout << "]},\"joint_control\":{\"lower\":" << control_lower << ",\"prepare_check_ns\":" << control_ns << ",\"values\":[";
     for (unsigned i = 0; i < control->values.size(); ++i) { if (i) std::cout << ','; std::cout << control->values[i]; }
     std::cout << "]}";
     const auto treatment_start = Clock::now();
+    QuotientLowerBudget treatment_budget; treatment_budget.max_scratch_bytes = proof_cap;
     auto potential = PhaseLowerProducer::prepare_probabilistic(calc, owner.prices, post,
-        clean_proposal, support, restart_boundary, owner.options.consider_imprint_programs, true, {}, true, control);
+        clean_proposal, support, restart_boundary, owner.options.consider_imprint_programs, true, treatment_budget, true, control, continuation);
     const auto treatment_ns = ns(treatment_start);
-    std::cout << ",\"probabilistic_donor\":{\"role\":\"clean_completion_rarity_mask_prefix_suffix\",\"dimensions\":"
-        << potential->values.size() << ",\"restart_boundary_lower\":" << restart_boundary.record.lower << ",\"domain\":\"fixed_fractured_modifier_no_metamods_or_generic_influence_all_eldritch_phases\","
+    std::cout << ",\"probabilistic_donor\":{\"continuation\":" << static_cast<unsigned>(continuation)
+        << ",\"fresh_cell\":" << (3*support->values.size()*16+2)
+        << ",\"fixed_boundary_used\":" << (continuation == PhaseContinuation::CoupledFresh ? "false" : "true")
+        << ",\"role\":\"region_rarity_mask_prefix_suffix\",\"dimensions\":"
+        << potential->values.size() << ",\"restart_boundary_lower\":" << restart_boundary.record.lower << ",\"domain\":\"exact_fracture_or_explicit_unfractured_region_no_metamods_or_generic_influence_all_eldritch_phases\","
         << "\"fractured_mod\":" << potential->fractured_mod << ",\"fractured_mask\":" << potential->fractured_mask
         << ",\"semantic_acceptance\":true,\"coefficient_acceptance\":true,\"rounds\":" << potential->model_rounds
         << ",\"first_proposal_refusal\":"; emit_refusal(potential->proposal_refusal);
@@ -647,6 +652,7 @@ void probabilistic_phase(CalcContext& calc, SolveWorkTestAccess::Impl& owner, co
             << "\",\"cost\":" << r.cost << ",\"rhs\":" << r.rhs
             << ",\"probability_aware\":" << (r.probability_aware ? "true" : "false")
             << ",\"independent_price\":" << (r.independent_price ? "true" : "false")
+            << ",\"phase_branch\":" << r.phase_branch
             << ",\"reason\":\"" << phase_relation_reason(r.reason) << "\",\"events\":[";
         for (unsigned j = 0; j < r.events.size(); ++j) {
             if (j) std::cout << ',';
@@ -676,6 +682,8 @@ void probabilistic_phase(CalcContext& calc, SolveWorkTestAccess::Impl& owner, co
         const auto common = potential->whole_scope_source_lower(calc, owner.prices, item, local.options.consider_imprint_programs);
         if (!common || common->source_identity != exact_item_state_key(item)) throw std::runtime_error("no compatible whole-scope source floor");
         const auto donor = common->lower;
+        const auto old_common = control->whole_scope_source_lower(calc, owner.prices, item, local.options.consider_imprint_programs);
+        if (!old_common) throw std::runtime_error("prior whole-scope source floor missing");
         const auto query_start = Clock::now();
         const auto new_program = PhaseLowerProducer::compose(calc, owner.prices, item, program_id, *potential);
         const auto query_ns = ns(query_start);
@@ -683,11 +691,11 @@ void probabilistic_phase(CalcContext& calc, SolveWorkTestAccess::Impl& owner, co
         std::cout << ",\"independent_lower\":" << baseline << ",\"support_donor\":" << support->values[local.satisfied_goal_mask_for_state(root)]
             << ",\"probabilistic_donor\":" << donor << ",\"program_before\":{\"lower\":" << new_program.record.prior_potential_lower << '}';
         std::cout << ",\"program_after\":"; emit_phase_program(new_program);
-        std::cout << ",\"local_compatible_gain\":" << std::max({baseline, donor, new_program.record.lower})-std::max(baseline, new_program.record.prior_potential_lower)
+        std::cout << ",\"local_compatible_gain\":" << std::max({baseline, donor, new_program.record.lower})-std::max({baseline, old_common->lower, new_program.record.prior_potential_lower})
             << ",\"program_query_ns\":" << query_ns << ",\"second_preparation_ns\":" << second_prepare_ns << ",\"complete_models\":[";
         for (unsigned treatment = 0; treatment < 2; ++treatment) {
             if (treatment) std::cout << ',';
-            const auto lower = std::max(baseline, treatment ? donor : 0);
+            const auto lower = std::max(baseline, treatment ? donor : old_common->lower);
             QuotientBellmanGraph graph((16ull << 20)-potential->memory_snapshot().total_bytes, QuotientBellmanMode::LowerOnly);
             const auto source_key = exact_item_state_key(item);
             graph.install_cells({{0, 1, source_key, false}});
@@ -710,6 +718,14 @@ void probabilistic_phase(CalcContext& calc, SolveWorkTestAccess::Impl& owner, co
                 const auto existing = local.operator_proof_lower_value(root, priced.index, false);
                 if (std::isfinite(existing)) floor = std::max(floor, existing);
                 if (op.kind == PlannerOperatorKind::Primitive) floor = std::max(floor, local.prepared_primitive_lower_floor(op.primitive_action));
+                if (treatment && continuation == PhaseContinuation::CoupledFresh && op.kind == PlannerOperatorKind::Primitive &&
+                    calc.registry().actions[op.primitive_action].synthetic) {
+                    pc_item_state reset_item{}; pc_item_clear(&reset_item);
+                    const auto reset_lower = potential->whole_scope_source_lower(calc, owner.prices, reset_item, false);
+                    if (!reset_lower) throw std::runtime_error("coupled fresh proof missing after final acceptance");
+                    floor = std::max(floor, phase_two_exit_lower(phase_price_lower(calc.registry().actions[op.primitive_action],owner.prices),
+                        {1,1}, reset_lower->lower, 0));
+                }
                 source.constraints.push_back({{identity, false, {}}, illegal ? LowerConstraintKind::Inapplicable : LowerConstraintKind::Scalar,
                     UINT64_MAX, floor, {1}, illegal ? LowerEvidenceKind::ExactInapplicability : LowerEvidenceKind::IndependentLower});
             }
@@ -750,7 +766,7 @@ void probabilistic_phase(CalcContext& calc, SolveWorkTestAccess::Impl& owner, co
         }
         std::cout << "]}";
     }
-    std::cout << "],\"resources\":{\"adapter_support_ns\":" << adapter_ns << ",\"probability_treatment_ns\":" << treatment_ns
+    std::cout << "],\"resources\":{\"proof_budget_bytes\":" << proof_cap << ",\"adapter_support_ns\":" << adapter_ns << ",\"probability_treatment_ns\":" << treatment_ns
         << ",\"shared_control_bytes\":" << control->retained_reservation << ",\"reused_draw_witnesses\":" << control->draw_count()
         << ",\"new_draw_witnesses\":" << potential->draws.size()
         << ",\"retained_potential_bytes\":" << potential->retained_reservation << ",\"shared_support_bytes\":" << support->retained_reservation
@@ -767,7 +783,12 @@ int main(int argc, char** argv) {
         if (argc != 5) throw std::runtime_error("micro|medium-coverage artifact-directory goal economy required");
         const bool is_micro = std::string(argv[1]) == "micro";
         const bool is_phase = std::string(argv[1]) == "uniform-phase";
-        const bool is_probability = std::string(argv[1]) == "probabilistic-phase";
+        const std::string selector = argv[1];
+        const bool is_probability = selector == "probabilistic-phase" || selector == "side-retention-phase" ||
+            selector == "coupled-phase-16" || selector == "coupled-phase-32";
+        const auto continuation = selector == "side-retention-phase" ? PhaseContinuation::SideRetention :
+            (selector == "probabilistic-phase" ? PhaseContinuation::PriceOnly : PhaseContinuation::CoupledFresh);
+        const std::uint64_t proof_cap = selector == "coupled-phase-32" ? 32ull << 20 : 16ull << 20;
         if (!is_micro && !is_phase && !is_probability && std::string(argv[1]) != "medium-coverage") throw std::runtime_error("unknown bounded probe");
         const auto began = Clock::now();
         Handles h;
@@ -822,12 +843,12 @@ int main(int argc, char** argv) {
         const auto prepare_ns = ns(prepare);
         if (std::isfinite(owner.envelope_bellman_lower))
             throw std::runtime_error("probe must bypass envelope helper");
-        std::cout << std::setprecision(17) << "{\"pilot\":\"" << (is_probability ? "native-joint-goal-lower-v1" : (is_phase ? "uniform-phase-lower-v1" : "operator-complete-frontier-v2"))
+        std::cout << std::setprecision(17) << "{\"pilot\":\"" << (is_probability ? "native-side-boundary-lower-v1" : (is_phase ? "uniform-phase-lower-v1" : "operator-complete-frontier-v2"))
             << "\",\"solver_steps\":0,\"production_authority\":false,";
         if (is_micro) micro(calc, owner,
             key(goal + '\n' + economy + '\n' + read(manifest_path) + "\nlower-v2"), key(goal));
         else if (is_phase) uniform_phase(calc, owner, start, key(goal + '\n' + economy + '\n' + read(manifest_path)));
-        else if (is_probability) probabilistic_phase(calc, owner, start);
+        else if (is_probability) probabilistic_phase(calc, owner, start, continuation, proof_cap);
         else medium_coverage(calc, owner);
         std::cout << ",\"prepare_ns\":" << prepare_ns << ",\"elapsed_ns\":" << ns(began)
             << ",\"process_peak_working_set_bytes\":" << process_peak() << "}\n";

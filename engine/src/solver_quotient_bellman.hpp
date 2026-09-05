@@ -128,7 +128,8 @@ public:
     explicit QuotientBellmanGraph(
         std::uint64_t max_owned_bytes =
             std::numeric_limits<std::uint64_t>::max(),
-        QuotientBellmanMode mode = QuotientBellmanMode::Executable);
+        QuotientBellmanMode mode = QuotientBellmanMode::Executable,
+        std::uint64_t lower_memory_ceiling = 16ull * 1024 * 1024);
 
     void install_cells(std::vector<QuotientBellmanCellInput> cells);
     void supersede_cell(QuotientBellmanCellInput cell);

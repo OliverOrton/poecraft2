@@ -280,11 +280,22 @@ def verify_joint(path):
     """Exact coefficients/minimization audit; native C++ owns history semantics."""
     from itertools import permutations
     native = json.loads(Path(path).read_text(encoding="utf-8-sig"))
-    assert native["pilot"] == "native-joint-goal-lower-v1"
+    boundary = native["pilot"] == "native-side-boundary-lower-v1"
+    assert boundary or native["pilot"] == "native-joint-goal-lower-v1"
     assert native["solver_steps"] == 0 and not native["production_authority"]
     p = native["probabilistic_donor"]
-    values = list(map(F, p["values"])) + [F(0), F(p["restart_boundary_lower"])]
-    prior = list(map(F, native["marginal_control"]["values"]))
+    coupled = boundary and p["continuation"] == 2
+    values = list(map(F, p["values"]))
+    if not coupled: values += [F(0), F(p["restart_boundary_lower"])]
+    prior = list(map(F, native["joint_control" if boundary else "marginal_control"]["values"]))
+    if coupled:
+        assert not p["fixed_boundary_used"] and p["fresh_cell"] == 1538 and len(values) == 3074
+        assert values[1536] == values[1537] == 0
+        assert values[1538] > F(p["restart_boundary_lower"])
+        assert any(r["cell"] == 1538 for r in p["checked_relations"])
+        for r in p["checked_relations"]:
+            assert r["reason"] != "fixed_independent_boundary"
+            if r["action"] == "restart": assert r["exits"] == [[1538,1]]
     mass = 1 << 24
     draws = p["native_draw_witnesses"]
 
@@ -384,9 +395,14 @@ def verify_joint(path):
         assert all(F(r["lower"]) >= donor for r in after["ranked_constraints"])
         assert after["lower"] == s["probabilistic_donor"] and after["portfolio"] > before["portfolio"]
         limiting = min(by_source[root],key=lambda r:F(r["cost"])+sum(F(prob)*values[t] for t,prob in r["exits"]))
-        assert limiting["action"] == "eldritch_chaos" and limiting["reason"] == "unsupported_effect"
-        assert limiting["exits"] == [[1536,1]]
-        ceiling = F(limiting["cost"])
+        if not boundary:
+            assert limiting["action"] == "eldritch_chaos" and limiting["reason"] == "unsupported_effect"
+            assert limiting["exits"] == [[1536,1]]
+        elif coupled:
+            assert limiting["action"] == "harvest_reforge:physical" and limiting["reason"] == "probability_envelope"
+        else:
+            assert limiting["action"] == "restart" and limiting["reason"] == "fixed_independent_boundary"
+        ceiling = F(limiting["cost"])+sum(F(prob)*values[t] for t,prob in limiting["exits"])
         assert donor <= ceiling and ceiling-donor < F("1e-7")
         ranked = after["ranked_constraints"]
         sources.append(dict(second_source=s["second_source"], donor=float(donor),
@@ -397,17 +413,57 @@ def verify_joint(path):
             complete_model_before=before["lower"], complete_model_after=after["lower"],
             complete_model_gain=after["lower"]-before["lower"],
             portfolio_gain=after["portfolio"]-before["portfolio"],
-            exact_program=str(exact_new), exact_model_ceiling=str(ceiling),
+            exact_program=str(exact_new), **({"first_limiting_rhs_exact":str(ceiling)} if boundary else {"exact_model_ceiling":str(ceiling)}),
             limiting_relation=limiting["action"], limiting_reason=limiting["reason"],
             complete_model_ties=[r["id"] for r in ranked if r["lower"]==after["lower"]],
-            next_complete_ceiling=min(r["lower"] for r in ranked if r["lower"]>after["lower"])))
+            next_complete_ceiling=min((r["lower"] for r in ranked if r["lower"]>after["lower"]),default=None)))
     assert native["sources"][0]["source"] != native["sources"][1]["source"]
     assert [s["program_after"]["goal_weight"] for s in native["sources"]] == [500,0]
-    assert native["resources"]["reused_draw_witnesses"] == 78 and native["resources"]["new_draw_witnesses"] == 0
-    assert native["resources"]["combined_additional_peak_bytes"] <= 16 << 20
+    assert native["resources"]["reused_draw_witnesses"] == 78
+    if not boundary: assert native["resources"]["new_draw_witnesses"] == 0
+    budget = native["resources"].get("proof_budget_bytes",16<<20)
+    assert budget in (16<<20,32<<20) and native["resources"]["combined_additional_peak_bytes"] <= budget
     assert native["process_peak_working_set_bytes"] <= 1 << 30
+    policy_ceiling = None
+    if coupled:
+        policy = {c:min(rs,key=lambda r:F(r["cost"])+sum(F(q)*values[t] for t,q in r["exits"])) for c,rs in by_source.items()}
+        reachable, pending = set(), [1405,1369,1538]
+        while pending:
+            c=pending.pop()
+            if c in reachable or c not in policy: continue
+            reachable.add(c); pending.extend(t for t,q in policy[c]["exits"] if q)
+        ids=sorted(reachable); pos={c:i for i,c in enumerate(ids)}; n=len(ids)
+        assert n<=64, "ceiling control must stay small"
+        matrix=[[F(int(i==j)) for j in range(n)]+[F(policy[c]["cost"])] for i,c in enumerate(ids)]
+        for i,c in enumerate(ids):
+            for target,q in policy[c]["exits"]:
+                if target in pos: matrix[i][pos[target]]-=F(q)
+                else: matrix[i][-1]+=F(q)*values[target]
+        # Finite stochastic policy is proper iff every state has a path to a
+        # stopping boundary. This excludes closed nonterminal bottom SCCs.
+        proper={c for c in ids if any(q and target not in pos for target,q in policy[c]["exits"])}
+        while True:
+            expanded=proper|{c for c in ids if any(q and target in proper for target,q in policy[c]["exits"])}
+            if expanded==proper: break
+            proper=expanded
+        assert proper==set(ids)
+        for j in range(n):
+            pivot=next(i for i in range(j,n) if matrix[i][j])
+            matrix[j],matrix[pivot]=matrix[pivot],matrix[j]
+            scale=matrix[j][j]; matrix[j]=[x/scale for x in matrix[j]]
+            for i in range(n):
+                if i!=j and matrix[i][j]:
+                    scale=matrix[i][j]; matrix[i]=[a-scale*b for a,b in zip(matrix[i],matrix[j])]
+        solved={c:matrix[pos[c]][-1] for c in ids}
+        for c in ids:
+            assert solved[c]>=values[c]
+            assert solved[c]==F(policy[c]["cost"])+sum(F(q)*(solved[target] if target in solved else values[target]) for target,q in policy[c]["exits"])
+        policy_ceiling=dict(scope="proper fixed policy of the optimistic probability-box model only; no native upper authority",
+            states=n, values={str(c):str(solved[c]) for c in [1405,1369,1538]},
+            decimal_values={str(c):float(solved[c]) for c in [1405,1369,1538]},
+            actions={str(c):policy[c]["action"] for c in ids})
     return dict(evidence_scope="native C++ owns uniform conditional-history semantics; exact audit checks integer derivation, assignment bounds, complete box minima and finite inequalities",
-        joint_events=events, measured_prefix_event=measured,
+        optimistic_policy_ceiling=policy_ceiling, joint_events=events, measured_prefix_event=measured,
         old_prefix_capacity=3050403, old_prefix_probability_upper=3050403/mass,
         probability_cap_ratio=float(F(3050403,measured["capacity"])),
         optimizer_checks=optimizer_checks, checked_relations=len(p["checked_relations"]),
@@ -421,7 +477,7 @@ if __name__ == "__main__":
     pilot = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8-sig")).get("pilot")
     phase = pilot == "uniform-phase-lower-v1"
     probabilistic = pilot == "native-probabilistic-lower-v1"
-    joint = pilot == "native-joint-goal-lower-v1"
+    joint = pilot in ("native-joint-goal-lower-v1","native-side-boundary-lower-v1")
     result = verify_joint(sys.argv[1]) if joint else (verify_probability(sys.argv[1]) if probabilistic else (verify_phase(sys.argv[1]) if phase else verify(sys.argv[1])))
     Path(sys.argv[2]).write_bytes((json.dumps(result, indent=2) + "\n").encode("utf-8"))
     if phase or probabilistic or joint:

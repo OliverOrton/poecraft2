@@ -31,12 +31,12 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. The completed private
-[Native Joint-Goal Lower Refinement v1](archive/2026-09-05-native-joint-goal-lower-refinement-v1/README.md)
-uses native conditional-history joint caps, reopens limiting computational
-floors and consumes a full-scope source lower across complete action/family
-coverage. Both saved-source models and portfolios rise from 36.4286 to 39.21;
-ordinary solving/public bounds remain unchanged. Oliver must select the next chunk.
+No implementation boundary is active. The completed
+[Native Side-Retention and Boundary-Coupled Lower Closure v1](archive/2026-09-05-native-side-retention-boundary-coupled-lower-v1/README.md)
+raises both saved-source private models/portfolios from 39.21 to 41.11443 under
+16 MiB, then to 47.85102 with a jointly checked adjacent region under a labelled
+32 MiB research budget. Ordinary solving remains unchanged. Oliver must select
+further work; the retained optimistic junk-cleanup cycle is the next question.
 
 The completed private
 [Native Probabilistic Lower Repair v1](archive/2026-09-05-native-probabilistic-lower-repair-v1/README.md)
@@ -168,7 +168,7 @@ The completed
 boundary started from the completed GUI stabilization and hardened immutable
 dispatch identity, watchdog enforcement, atomic hashed terminal publication,
 orphan quarantine/recovery, evidence integrity, host headroom, and one
-MCP-plus-supervisor unattended path. Gates 0–5 and every non-soak acceptance
+MCP-plus-supervisor unattended path. Gates 0â€“5 and every non-soak acceptance
 check passed. Oliver explicitly waived its six-plus-hour soak; the result
 retains that limitation and does not claim overnight qualification. The
 completed fragment-core result preserves that wording.
@@ -258,7 +258,7 @@ automatic Imprint programs off, while dedicated controls opt in; the low-level
 engine retains its compatibility default. Exact terminal success permits only
 requested explicit affixes, ordinary Calculator solves disable voluntary
 economic Restart, and an open incremental action envelope publishes only an
-independently global proof lower—not its restricted-search value.
+independently global proof lowerâ€”not its restricted-search value.
 
 The current five-T1 product result is an independently evaluated proper
 `14454067.4260706`-Chaos policy with a certified `36.4885317287664` lower.
