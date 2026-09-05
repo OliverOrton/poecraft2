@@ -34,6 +34,30 @@ double phase_two_exit_lower(double cost, PhaseProbabilityInterval probability,
                             double success, double failure);
 double phase_price_lower(const ActionDescriptor&, const PhaseLowerPrices&);
 
+// Arithmetic only: callers must prove distinct goals and conditional-history
+// authority. Each row is one goal's upper at the three possible draw positions.
+double phase_joint_assignment_upper(const std::vector<std::array<double, 3>>& conditional,
+                                    unsigned positions);
+bool phase_price_shortcut_limiting(double cost, double value);
+std::vector<std::pair<unsigned, std::uint32_t>> phase_minimum_event_allocation(
+    const std::vector<double>& values, const std::vector<std::uint32_t>& capacities);
+
+enum class PhaseRelationReason {
+    ProbabilityEnvelope, NativeEffect, CandidatePriceShortcut,
+    NativeDomainEscape, UnsupportedEffect, FixedIndependentBoundary
+};
+const char* phase_relation_reason(PhaseRelationReason);
+struct PhaseJointEventWitness {
+    std::uint32_t action = 0, subset = 0, retained = 0, forced = 0;
+    unsigned side = 0, positions = 0, initial_same_side = 0, other_side_blockers = 0;
+    bool uniform_history = false;
+    std::vector<std::uint32_t> natural_draws, guaranteed_draws;
+    std::vector<std::array<double, 3>> conditional;
+    double marginal_upper = 1, joint_upper = 1;
+    std::uint32_t capacity = 0;
+};
+struct PhasePriceReactivation { std::uint32_t cell = 0, action = 0, round = 0; double cost = 0, value = 0, minimum_rhs = 0; };
+
 struct PhasePrimitiveWitness {
     std::string action_id;
     std::uint32_t reachable_goals = 0;
@@ -103,6 +127,7 @@ struct PhaseProgramLowerRecord {
     struct Exit { std::uint64_t weight; std::uint32_t mask, cell; double lower; bool goal; };
     std::vector<Exit> exits;
     double support_control_lower = 0;
+    double prior_potential_lower = 0;
 };
 
 class PhaseProgramLowerWitness {
@@ -124,6 +149,9 @@ struct PhasePotentialRelation {
     std::vector<std::uint32_t> targets;
     std::vector<double> probabilities;
     bool probability_aware = false, independent_price = false;
+    PhaseRelationReason reason = PhaseRelationReason::NativeEffect;
+    struct Event { std::uint32_t mask = 0, minimum_cell = 0, capacity = 0; };
+    std::vector<Event> events;
 };
 
 /* Existing clean-table indexing, with an exact fractured carrier frame.
@@ -138,21 +166,31 @@ public:
     const bool retained_scour;
     const double restart_boundary_lower;
     const std::vector<CalcContext::NativeGoalDrawBound> draws;
+    const std::shared_ptr<const PreparedPhasePotential> reused_draw_owner;
+    const std::vector<PhaseJointEventWitness> joint_events;
+    const std::vector<PhasePriceReactivation> reactivations;
+    const bool joint_refinement;
     const std::vector<PhasePotentialRelation> relations;
     const std::uint32_t model_rounds;
     const std::uint64_t retained_reservation;
     const std::uint64_t peak_additional_bytes, native_action_relations;
     bool compatible(const CalcContext&, const PhaseLowerPrices&, const pc_item_state&, bool consider_imprint) const;
     std::optional<double> lookup(const CalcContext&, const PhaseLowerPrices&, const pc_item_state&, bool consider_imprint) const;
+    std::optional<quotient::QuotientLowerBoundary> whole_scope_source_lower(
+        const CalcContext&, const PhaseLowerPrices&, const pc_item_state&, bool consider_imprint) const;
     double projected_value(const CalcContext&, const pc_item_state&) const;
     quotient::ProofMemorySnapshot memory_snapshot() const;
+    std::size_t draw_count() const;
+    const CalcContext::NativeGoalDrawBound& draw(std::size_t) const;
 private:
     friend class PhaseLowerProducer;
     PreparedPhasePotential(std::shared_ptr<const PreparedPhaseLowerView>,
         std::vector<double>, PhaseLowerProposal, PhaseProposalRefusal,
         std::uint32_t mod, std::uint32_t mask, bool retained, double restart_lower,
         std::vector<CalcContext::NativeGoalDrawBound>, std::vector<PhasePotentialRelation>,
-        std::uint32_t rounds, std::uint64_t reservation, std::uint64_t peak, std::uint64_t action_relations);
+        std::uint32_t rounds, std::uint64_t reservation, std::uint64_t peak, std::uint64_t action_relations,
+        std::shared_ptr<const PreparedPhasePotential>, std::vector<PhaseJointEventWitness>,
+        std::vector<PhasePriceReactivation>, bool joint);
     std::shared_ptr<const PreparedPhaseLowerView> support_;
     quotient::ScopedProofMemoryCharge charge_;
 };
@@ -171,7 +209,8 @@ public:
         const PhaseLowerProposal&, std::shared_ptr<const PreparedPhaseLowerView>,
         const PreparedPhaseRestartLower& restart_boundary,
         bool consider_imprint_programs, bool retain_scour,
-        const quotient::QuotientLowerBudget& budget = {});
+        const quotient::QuotientLowerBudget& budget = {}, bool joint_refinement = false,
+        std::shared_ptr<const PreparedPhasePotential> reuse_draws = {});
     static PreparedPhaseRestartLower zero_restart_boundary(const PreparedPhaseLowerView&);
     static PhaseProgramLowerWitness compose(CalcContext&, const PhaseLowerPrices&,
         const pc_item_state&, const std::string&, const PreparedPhasePotential&,

@@ -275,15 +275,156 @@ def verify_probability(path):
         exact_first_proposal_rhs=str(exact_refused_rhs), source_results=sources, production_authority=False)
 
 
+
+def verify_joint(path):
+    """Exact coefficients/minimization audit; native C++ owns history semantics."""
+    from itertools import permutations
+    native = json.loads(Path(path).read_text(encoding="utf-8-sig"))
+    assert native["pilot"] == "native-joint-goal-lower-v1"
+    assert native["solver_steps"] == 0 and not native["production_authority"]
+    p = native["probabilistic_donor"]
+    values = list(map(F, p["values"])) + [F(0), F(p["restart_boundary_lower"])]
+    prior = list(map(F, native["marginal_control"]["values"]))
+    mass = 1 << 24
+    draws = p["native_draw_witnesses"]
+
+    def conditional(w, same, other):
+        counts = (same, other) if w["side"] == 0 else (other, same)
+        remaining = w["other"]
+        for side in range(2):
+            for i in range(counts[side]):
+                remaining -= min(remaining, w["removal"][side][i])
+        return F(w["target"], w["target"] + remaining) if w["target"] else F(0)
+
+    events = []
+    for w in p["joint_events"]:
+        assert w["subset"] & (w["retained"] | w["forced"]) == 0
+        k, m = w["subset"].bit_count(), w["positions"]
+        assert k == len(w["conditional"]) <= 3 and m <= 3
+        assert len(w["natural_draws"]) == k
+        assert len(w["guaranteed_draws"]) in (0, k)
+        exact = []
+        slots = [i for i in range(5) if w["subset"] & (1 << i)]
+        for i, slot in enumerate(slots):
+            n = draws[w["natural_draws"][i]]
+            assert n["action"] == w["action"] and n["slot"] == slot and n["side"] == w["side"]
+            bounds = []
+            for j in range(m):
+                same = w["initial_same_side"] + (m-1 if w["uniform_history"] else j)
+                bound = conditional(n, same, w["other_side_blockers"])
+                if w["guaranteed_draws"]:
+                    g = draws[w["guaranteed_draws"][i]]
+                    assert g["action"] == w["action"] and g["slot"] == slot and g["guaranteed"]
+                    bound = max(bound, conditional(g, same, w["other_side_blockers"]))
+                assert bound <= F(w["conditional"][i][j]) <= bound + F("1e-14")
+                bounds.append(bound)
+            exact.append(bounds)
+        joint = sum((__import__("functools").reduce(lambda a,b:a*b,
+                     (exact[i][j] for i,j in enumerate(assignment)), F(1))
+                     for assignment in permutations(range(m), k)), F(0))
+        joint = min(F(1), joint)
+        assert joint <= F(w["joint_upper"]) <= joint + F("1e-13")
+        assert joint <= F(w["capacity"], mass)
+        assert w["capacity"] == -((-F(w["joint_upper"])*mass).numerator // (-F(w["joint_upper"])*mass).denominator)
+        events.append(dict(action=w["action"], subset=w["subset"], exact_conditional_union=str(joint),
+                           capacity=w["capacity"], probability_upper=float(F(w["capacity"],mass))))
+    measured = next(e for e in events if e["action"] == "harvest_reforge:physical" and e["subset"] == 7)
+    assert measured["exact_conditional_union"] == "16/55165" and measured["capacity"] == 4867
+
+    by_source = {}
+    optimizer_checks = 0
+    for r in p["checked_relations"]:
+        assert r["events"] and all(0 <= cap <= mass for _,_,cap in r["events"])
+        remaining = mass
+        minimum = F(0)
+        for _, target, cap in sorted(r["events"], key=lambda e: values[e[1]]):
+            take = min(cap, remaining)
+            minimum += F(take, mass)*values[target]
+            remaining -= take
+            if not remaining:
+                break
+        assert remaining == 0
+        actual = sum((F(prob)*values[t] for t,prob in r["exits"]),F(0))
+        assert sum(F(prob) for _,prob in r["exits"]) == 1
+        assert actual == minimum, ("nonminimal or stale event row",r["cell"],r["action"])
+        assert values[r["cell"]] <= F(r["cost"]) + minimum
+        by_source.setdefault(r["cell"], []).append(r)
+        optimizer_checks += 1
+    for cell, rows in by_source.items():
+        floor = min(F(r["cost"])+sum((F(prob)*values[t] for t,prob in r["exits"]),F(0)) for r in rows)
+        for r in rows:
+            if r["reason"] == "candidate_price_shortcut":
+                assert F(r["cost"]) > floor + F("1e-12"), ("limiting computational shortcut",cell,r["action"])
+    assert p["price_reactivations"]
+    assert any(r["cost"] != r["value"] for r in p["price_reactivations"])  # downward-repaired ties
+    for r in p["price_reactivations"]:
+        assert abs(r["cost"]-r["minimum_rhs"]) < 1e-10
+    assert any("CurrencyDelveCrafting" in r["action"] for r in p["price_reactivations"])
+    sources = []
+    for s, root in zip(native["sources"], [1405,1369]):
+        program = s["program_after"]
+        assert program["modifier_exits"] == len(program["weighted_exits"]) == 72
+        assert sum(e["weight"] for e in program["weighted_exits"]) == program["total_weight"] == 55700
+        assert sum(e["weight"] for e in program["weighted_exits"] if e["goal"]) == program["goal_weight"]
+        exact_new = exact_old = F(program["cost_lower"])
+        for e in program["weighted_exits"]:
+            assert F(e["lower"]) == (0 if e["goal"] else values[e["cell"]])
+            q = F(e["weight"],program["total_weight"])
+            exact_new += q*F(e["lower"])
+            exact_old += q*(0 if e["goal"] else prior[e["cell"]])
+        assert F(program["lower"]) <= exact_new < F(program["lower"])+F("1e-10")
+        assert F(s["program_before"]["lower"]) <= exact_old < F(s["program_before"]["lower"])+F("1e-10")
+        before, after = s["complete_models"]
+        for model in (before,after):
+            assert model["admitted"] == 28 and model["inapplicable"] == 6 and model["open_families"] == 8
+            assert model["eldritch_descriptions"] == (6 if s["second_source"] else 3) and model["imprint_scope_excluded"]
+            assert model["lower"] == min(r["lower"] for r in model["ranked_constraints"])
+        donor = F(s["probabilistic_donor"])
+        assert donor == values[root] and donor > F(s["independent_lower"])
+        assert all(F(r["lower"]) >= donor for r in after["ranked_constraints"])
+        assert after["lower"] == s["probabilistic_donor"] and after["portfolio"] > before["portfolio"]
+        limiting = min(by_source[root],key=lambda r:F(r["cost"])+sum(F(prob)*values[t] for t,prob in r["exits"]))
+        assert limiting["action"] == "eldritch_chaos" and limiting["reason"] == "unsupported_effect"
+        assert limiting["exits"] == [[1536,1]]
+        ceiling = F(limiting["cost"])
+        assert donor <= ceiling and ceiling-donor < F("1e-7")
+        ranked = after["ranked_constraints"]
+        sources.append(dict(second_source=s["second_source"], donor=float(donor),
+            prior_donor=float(prior[root]), donor_gain=float(donor-prior[root]),
+            program_before=s["program_before"]["lower"], program_after=program["lower"],
+            program_gain=program["lower"]-s["program_before"]["lower"],
+            compatible_action_gain=s["local_compatible_gain"],
+            complete_model_before=before["lower"], complete_model_after=after["lower"],
+            complete_model_gain=after["lower"]-before["lower"],
+            portfolio_gain=after["portfolio"]-before["portfolio"],
+            exact_program=str(exact_new), exact_model_ceiling=str(ceiling),
+            limiting_relation=limiting["action"], limiting_reason=limiting["reason"],
+            complete_model_ties=[r["id"] for r in ranked if r["lower"]==after["lower"]],
+            next_complete_ceiling=min(r["lower"] for r in ranked if r["lower"]>after["lower"])))
+    assert native["sources"][0]["source"] != native["sources"][1]["source"]
+    assert [s["program_after"]["goal_weight"] for s in native["sources"]] == [500,0]
+    assert native["resources"]["reused_draw_witnesses"] == 78 and native["resources"]["new_draw_witnesses"] == 0
+    assert native["resources"]["combined_additional_peak_bytes"] <= 16 << 20
+    assert native["process_peak_working_set_bytes"] <= 1 << 30
+    return dict(evidence_scope="native C++ owns uniform conditional-history semantics; exact audit checks integer derivation, assignment bounds, complete box minima and finite inequalities",
+        joint_events=events, measured_prefix_event=measured,
+        old_prefix_capacity=3050403, old_prefix_probability_upper=3050403/mass,
+        probability_cap_ratio=float(F(3050403,measured["capacity"])),
+        optimizer_checks=optimizer_checks, checked_relations=len(p["checked_relations"]),
+        reactivated_shortcuts=len(p["price_reactivations"]), source_results=sources,
+        production_authority=False)
+
+
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         raise SystemExit(__doc__)
     pilot = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8-sig")).get("pilot")
     phase = pilot == "uniform-phase-lower-v1"
     probabilistic = pilot == "native-probabilistic-lower-v1"
-    result = verify_probability(sys.argv[1]) if probabilistic else (verify_phase(sys.argv[1]) if phase else verify(sys.argv[1]))
+    joint = pilot == "native-joint-goal-lower-v1"
+    result = verify_joint(sys.argv[1]) if joint else (verify_probability(sys.argv[1]) if probabilistic else (verify_phase(sys.argv[1]) if phase else verify(sys.argv[1])))
     Path(sys.argv[2]).write_bytes((json.dumps(result, indent=2) + "\n").encode("utf-8"))
-    if phase or probabilistic:
+    if phase or probabilistic or joint:
         print(json.dumps(result))
     else:
         print(json.dumps({"checked_models": len(result["records"]),

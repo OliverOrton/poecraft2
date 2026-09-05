@@ -11,6 +11,12 @@ selected active work.
 
 ## 2026-09-05
 
+- [Native Joint-Goal Lower Refinement v1](2026-09-05-native-joint-goal-lower-refinement-v1/README.md) —
+  derives joint caps from native conditional integer witnesses, reactivates
+  limiting price shortcuts and checks every final event minimum. The full-scope
+  source lower lifts both private complete models/portfolios from 36.4286 to
+  39.21; ordinary solving remains unchanged. Eldritch Chaos's unsupported
+  continuation is the remaining model ceiling. No Simulator or broad suite.
 - [Native Probabilistic Lower Repair and Complete-Envelope Progress v1](2026-09-05-native-probabilistic-lower-repair-v1/README.md) —
   repairs acquisition/completion coordinates, certifies native conditional
   probability bounds and preserves the measured Scour fracture. Donor 13.717

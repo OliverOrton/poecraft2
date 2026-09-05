@@ -1,0 +1,6 @@
+[0/2] Re-checking globbed directories...
+[1/6] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_phase_probability.cpp.obj
+[2/6] Linking CXX static library libpoecraft_engine.a
+[3/6] Linking CXX executable poecraft_quotient_lower_probe.exe
+[4/6] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_calc.cpp.obj
+[5/6] Linking CXX executable poecraft_engine_tests.exe

@@ -104,6 +104,29 @@ Both complete models and independent portfolios remain 36.42861718910441.
 No product lower manager consumes this certificate; the old anchored eligibility
 guard and ordinary public bounds remain unchanged.
 
+The subsequent [joint-goal refinement](../archive/2026-09-05-native-joint-goal-lower-refinement-v1/README.md)
+tightens each exact-mask capacity using distinct-position assignments with
+native conditional integer probability bounds. Retained/forced goals, overlaps,
+same-side draw limits, interleaved other-side blockers and guaranteed pools
+have explicit ownership. No-op outcomes retain an optimistic observed self
+choice. Independent per-mask caps remain distinct from aggregate subset cuts.
+All value-dependent rows are reoptimized for the final potential, and exported
+event minima let the exact audit reject a merely feasible or stale distribution.
+
+Candidate-price shortcuts are computational deferrals, not semantic ceilings.
+Minimum-owning floors reactivate even at equality after numerical repair; the
+changed model must be solved before a feasible older value can stop refinement.
+Native domain escapes and unsupported-effect floors retain separate reasons.
+
+An identity-compatible state lower covering the whole unchanged caller scope
+bounds every legal action and residual family. The private source-floor issuer
+therefore permits their existing independent floors to take its maximum;
+restricted action/program certificates cannot make that inference. The joint
+boundary measures complete-model and portfolio increases to 39.209999996079
+on both saved sources. Its remaining ceiling is the unsupported Eldritch Chaos
+continuation at 39.21. This is opt-in proof-query consumption, with no ordinary
+solver/public-bound or end-to-end performance activation.
+
 Internal lowers drive operator pruning, fringe gap priority, constructive
 certificates, and gap targets. Telemetry should show which pattern supplied a
 bound and whether `state_incumbent_operator_lower` actually pruned rows. A

@@ -1,0 +1,40 @@
+{
+  "scope": "completed native joint-goal lower refinement; private complete-envelope and portfolio gain, ordinary production unchanged",
+  "files": [
+    {
+      "path": "acceptance-build.txt",
+      "bytes": 409,
+      "sha256": "13a82c14e7c51be5c3cca76a2c8da3585b6491eef6785ff8b62eb65585b7d6c4"
+    },
+    {
+      "path": "development-findings.json",
+      "bytes": 2716,
+      "sha256": "9ac84c37853770f08c9862d68416026471805715bb736f0bbeba890ea5496230"
+    },
+    {
+      "path": "native.json",
+      "bytes": 788333,
+      "sha256": "7569fc490d20b065db830afede45103aa92e3534f42d1104caf745a16a2e301b"
+    },
+    {
+      "path": "phase-tests.txt",
+      "bytes": 49,
+      "sha256": "3530d9f01e0148a5177ba390c79e936f5eb81b60469ead89e63f78e4f4679e34"
+    },
+    {
+      "path": "provenance.json",
+      "bytes": 51070,
+      "sha256": "0b86bedeb47b651c47caf935649923fc1e78485c8bcdce5d8acd44033e73b69a"
+    },
+    {
+      "path": "README.md",
+      "bytes": 13368,
+      "sha256": "b45a214bdda8f5f8f2cb2f59c2dbd7eb051406cd3a4baad156899e4217bfbd0f"
+    },
+    {
+      "path": "reference.json",
+      "bytes": 17080,
+      "sha256": "5e4c9a0e8fe00e9e33858a387f5c1f7b1ce40944bbaabbb02ea5b1003320e75d"
+    }
+  ]
+}

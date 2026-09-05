@@ -32,11 +32,18 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 ## Execution State
 
 No implementation boundary is active. The completed private
+[Native Joint-Goal Lower Refinement v1](archive/2026-09-05-native-joint-goal-lower-refinement-v1/README.md)
+uses native conditional-history joint caps, reopens limiting computational
+floors and consumes a full-scope source lower across complete action/family
+coverage. Both saved-source models and portfolios rise from 36.4286 to 39.21;
+ordinary solving/public bounds remain unchanged. Oliver must select the next chunk.
+
+The completed private
 [Native Probabilistic Lower Repair v1](archive/2026-09-05-native-probabilistic-lower-repair-v1/README.md)
 repairs proposal coordinates and certifies a 13.717 probability-aware donor on
 both saved sources. Program lowers improve, but complete-model and portfolio
 gain remain zero. Its retained Harvest Physical relaxation has a proved ceiling;
-production stays unchanged. Oliver must select the next chunk.
+production stays unchanged at that boundary.
 
 The completed opt-in
 [Uniform Phase-Scoped Lower Certificates v1](archive/2026-09-04-uniform-phase-lower-certificates-v1/README.md)

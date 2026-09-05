@@ -1,23 +1,22 @@
 # Handoff
 
 **Status: no implementation boundary is active.** Completed
-[Native Probabilistic Lower Repair and Complete-Envelope Progress v1](docs/archive/2026-09-05-native-probabilistic-lower-repair-v1/README.md)
-from reviewed main `cff38247cd1552386750f4e039e9884494c58805`.
+[Native Joint-Goal Lower Refinement v1](docs/archive/2026-09-05-native-joint-goal-lower-refinement-v1/README.md)
+from reviewed main `65f3d5dbb23e3f1cb01fbb2124d7414cd7e6ce8b`.
 
-The proposal coordinates are repaired. The private native probabilistic donor
-certifies 13.716999591201551 on both saved sources; mandatory-program lowers
-are 17.26620674029301 and 17.389339591201463. Strongest compatible action,
-complete-model and independent portfolio gains are all zero; the latter two
-remain 36.42861718910441. Production is unchanged.
+Native conditional-history joint caps and computational-floor reactivation
+raise the private donor to 39.209999996079 on both saved sources. Programs
+reach 42.53036513076388 and 42.792528498149. Complete models and independent
+portfolios rise from 36.42861718910441 to 39.209999996079 by using the checked
+full-scope source lower across every action and remaining family.
 
-The actual Scour minimum selected the sole retention refinement. The remaining
-Harvest Physical joint-event relaxation has a proved 13.717 ceiling. The next
-evidence-selected question is tightening its joint three-prefix completion
-bound using valid conditional histories. Oliver must select the next chunk
-before implementation resumes. Reuse the retained quotient, native weight
-witnesses and program stream; do not repeat the census or micro study.
+Ordinary solving/public bounds remain unchanged. The retained model ceiling
+is Eldritch Chaos's unsupported-effect continuation at price 39.21, after
+reopening its computational shortcut. The next evidence-selected action is
+certifying that continuation across its phase/side branches. Oliver must select
+the next chunk before implementation resumes; reuse this infrastructure.
 
-Acceptance: 82 focused proof checks and an exact audit of 1,281 inequalities
-plus both integer-weight program sums. The archive owns values, full coverage,
-resource costs and provenance. No Simulator or delegated session was used.
-Changes are local only; no push. Preserve protected `0` and immutable evidence.
+Acceptance: 110 focused proof checks, 52 exact joint-bound audits, 1,381 frozen
+event minima/inequalities and both integer-weight program sums. The archive
+owns complete scope, cost, memory and provenance. No agents, Simulator or broad
+suite was used. Local-only changes; no push. Preserve protected `0` and evidence.

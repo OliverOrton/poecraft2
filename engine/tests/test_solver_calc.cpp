@@ -3768,6 +3768,44 @@ void run_solver_phase_lower_tests() {
     CanonicalActionSet family{{81}, 1, true, {}, {{{82}, {{83}, {84}}, true}}};
     PC_CHECK(validate_canonical_action_coverage(family, {{{83}, false, {}}, {{82}, true, {{83}}}}).empty());
     PC_CHECK(!validate_canonical_action_coverage(family, {{{83}, false, {}}}).empty());
+    // Joint history arithmetic, not a native certificate from toy marginals.
+    const auto conditional = [](std::uint64_t n, std::uint64_t d) { return phase_weight_probability(n, d).upper; };
+    const std::array<double, 3> ordered{conditional(1, 7), conditional(1, 6), conditional(1, 5)};
+    const double ordered_bound = phase_joint_assignment_upper({ordered, ordered, ordered}, 3);
+    unsigned histories = 0, successes = 0;
+    for (unsigned a = 0; a < 7; ++a) for (unsigned b = 0; b < 7; ++b) for (unsigned c = 0; c < 7; ++c)
+        if (a != b && a != c && b != c) { ++histories; successes += a < 3 && b < 3 && c < 3; }
+    PC_CHECK(histories == 210 && successes == 6);
+    PC_CHECK(ordered_bound >= 1.0L/35 && ordered_bound < 1.0L/35+1e-14L);
+    const std::array<double, 3> uniform{conditional(1, 5), conditional(1, 5), conditional(1, 5)};
+    PC_CHECK(ordered_bound < phase_joint_assignment_upper({uniform, uniform, uniform}, 3));
+    // Equal unconditional marginals admit perfect correlation, so their
+    // product has no conditional-history authority and is not a valid cap.
+    PC_CHECK(.1*.1*.1 < .1);
+    static_assert(!std::is_constructible_v<PreparedPhasePotential, std::vector<double>>);
+    PC_CHECK(phase_joint_assignment_upper({ordered, ordered, ordered}, 2) == 0);
+    PC_CHECK(phase_joint_assignment_upper({{1e-300,1e-300,0},{1e-300,1e-300,0}},2)>0);
+    rejects([&] { phase_joint_assignment_upper({{1.01, 0, 0}}, 1); });
+    constexpr unsigned event_mass = 1u << 24;
+    const auto allocation = phase_minimum_event_allocation({0, 10, 100}, {event_mass/4, event_mass, event_mass});
+    PC_CHECK(allocation == (std::vector<std::pair<unsigned, unsigned>>{{0,event_mass/4},{1,3*event_mass/4}}));
+    const auto changed_allocation = phase_minimum_event_allocation({100, 10, 0}, {event_mass/4, event_mass, event_mass});
+    PC_CHECK(changed_allocation == (std::vector<std::pair<unsigned, unsigned>>{{2,event_mass}}));
+    // A normalized feasible allocation concentrated at 100 is not minimum;
+    // neither it nor the stale minimizer for the old vector may be certified.
+    PC_CHECK(100 > 7.5 && 25+7.5 > 0);
+    const auto tiny_event = phase_minimum_event_allocation({0, 10}, {1, event_mass});
+    PC_CHECK(tiny_event[0].second == 1 && tiny_event[1].second == event_mass-1);
+    // Two exact masks can each consume an event's cap under the box relaxation.
+    const auto boxes = phase_minimum_event_allocation({0, 0, 10}, {event_mass/4,event_mass/4,event_mass});
+    PC_CHECK(boxes[0].second+boxes[1].second == event_mass/2);
+    rejects([&] { phase_minimum_event_allocation({0,10}, {1,1}); });
+    PC_CHECK(phase_price_shortcut_limiting(10, 10));
+    PC_CHECK(!phase_price_shortcut_limiting(10, 9));
+    const auto capped = coefficient_model({row(0,10,{{1,1}}), row(0,100,{{1,1}})},1);
+    const auto reopened = coefficient_model({row(0,10,{{1,1}}),row(1,90,{{2,1}}),row(0,100,{{2,1}})},2);
+    PC_CHECK(capped.checked && capped.checked->values_by_state[0] == 10);
+    PC_CHECK(reopened.checked && reopened.checked->values_by_state[0] > 99.999999);
     for (const auto& [n, d] : std::vector<std::pair<std::uint64_t, std::uint64_t>>{
             {0, 7}, {1, 3}, {2, 3}, {7, 7}, {1, UINT64_MAX}, {UINT64_MAX-1, UINT64_MAX}}) {
         const auto p = phase_weight_probability(n, d);
@@ -3873,6 +3911,78 @@ void run_solver_phase_lower_tests() {
         PC_CHECK(other.record.lower <= 4);
     }
     PC_CHECK(program_donor->memory_snapshot().total_bytes == before);
+    {
+        auto joint_session = make_calc_session();
+        auto joint_registry = build_action_registry(*joint_session);
+        for (auto& a : joint_registry.actions) a.cost_keys = {"fixture:step"};
+        GoalSpec joint_goal; joint_goal.rarity = PC_RARITY_RARE;
+        for (auto family_id : {100u,102u,103u,104u}) { GoalSlot slot; slot.family_id=family_id; slot.min_tier=1; joint_goal.slots.push_back(slot); }
+        // A forced goal cannot be counted as one of the later random draws.
+        joint_session->essence_guaranteed_mod_ids = {0};
+        auto essence = joint_registry.actions.at(joint_registry.index_by_id.at("chaos"));
+        essence.id = "fixture:forced-life"; essence.params.type=ActionType::Essence; essence.params.essence_index=0;
+        joint_registry.index_by_id[essence.id] = joint_registry.actions.size(); joint_registry.actions.push_back(essence);
+        CalcContext joint_calc(joint_session, joint_goal, joint_registry, basic_indices(joint_registry));
+        pc_item_state frame{}; frame.rarity=PC_RARITY_RARE;
+        place(&frame, PC_SIDE_SUFFIX, 5, 20, PC_MOD_SLOT_FRACTURED);
+        auto phase_frame=frame; phase_frame.eater_of_worlds_tier=1;
+        const auto support = PhaseLowerProducer::prepare(joint_calc, prices, phase_frame,
+            {PhaseTableRole::MaskCompletion,16,4,std::vector<double>(16,0)});
+        const auto zero = PhaseLowerProducer::zero_restart_boundary(*support);
+        const PhaseLowerProposal proposal{PhaseTableRole::CleanCompletion,16,4,std::vector<double>(768,100)};
+        const auto joint = PhaseLowerProducer::prepare_probabilistic(joint_calc,prices,phase_frame,proposal,support,zero,false,true,{},true);
+        PC_CHECK(!joint->joint_events.empty());
+        const auto native = std::find_if(joint->joint_events.begin(),joint->joint_events.end(),[&](const auto& w) {
+            return w.action==joint_registry.index_by_id.at("chaos") && w.subset==7;
+        });
+        PC_CHECK(native!=joint->joint_events.end() && native->positions==3 && native->initial_same_side==0 && native->other_side_blockers==3);
+        const auto forced = std::find_if(joint->joint_events.begin(),joint->joint_events.end(),[&](const auto& w) {
+            return w.action==joint_registry.index_by_id.at(essence.id) && w.subset==6;
+        });
+        PC_CHECK(forced!=joint->joint_events.end() && forced->forced==1 && forced->uniform_history);
+        bool noop_covered=true;
+        for (const auto& r : joint->relations) if (r.probability_aware && action_transition_facts(joint_registry.actions[r.action].params.type).renewal) {
+            long double future=0;
+            for (unsigned i=0;i<r.targets.size();++i) future+=static_cast<long double>(r.probabilities[i])*joint->values[r.targets[i]];
+            noop_covered &= future<=joint->values[r.cell]+1e-12L;
+        }
+        PC_CHECK(noop_covered);
+        const auto common=joint->whole_scope_source_lower(joint_calc,prices,frame,false);
+        PC_CHECK(common && common->source_identity==exact_item_state_key(frame));
+        PC_CHECK(!joint->whole_scope_source_lower(joint_calc,prices,frame,true));
+        PC_CHECK(!joint->whole_scope_source_lower(joint_calc,repriced,frame,false));
+        // Full-scope native value is a common lower even for an unresolved
+        // family; a restricted numerical certificate cannot use this issuer.
+        PC_CHECK(std::max(1.0,common->lower)>=common->lower);
+        static_assert(!std::is_constructible_v<PreparedPhasePotential,QuotientLowerCertificate>);
+        // Test actual hidden blocker kernels against the native integer bound,
+        // including blockers deleting target weight and overlapping exclusions.
+        const auto a=joint_registry.index_by_id.at("eldritch_exalt");
+        const auto w=joint_calc.phase_goal_draw_bound(frame,a,0,false);
+        bool all_blockers=true;
+        for (unsigned mod : {0u,2u,3u,4u}) {
+            auto carrier=phase_frame; place(&carrier,PC_SIDE_PREFIX,mod,joint_session->primary_group[mod]);
+            carrier.searing_exarch_tier=1; carrier.eater_of_worlds_tier=0;
+            std::uint64_t hit=0;
+            const auto total=joint_calc.phase_lower_add_weights(carrier,a,[&](const auto& exit,std::uint64_t weight) {
+                if (exit.prefix_count>carrier.prefix_count && exit.prefixes[exit.prefix_count-1].mod_id==0) hit+=weight;
+            });
+            auto other=w.other_weight;
+            other-=std::min(other,w.strongest_other_removal[0][0]);
+            other-=std::min(other,w.strongest_other_removal[1][0]);
+            all_blockers &= static_cast<long double>(hit)/total<=phase_weight_probability(w.target_weight,w.target_weight+other).upper;
+        }
+        PC_CHECK(all_blockers);
+        // Same-side overlapping satisfying masks must refuse distinct-draw
+        // multiplication. The current goal-layout owner already refuses them.
+        joint_goal.slots[1]=joint_goal.slots[0];
+        rejects([&] { CalcContext overlap_calc(joint_session,joint_goal,joint_registry,basic_indices(joint_registry)); });
+        auto other_phase=frame; other_phase.searing_exarch_tier=1;
+        const auto other_support=PhaseLowerProducer::prepare(joint_calc,prices,other_phase,
+            {PhaseTableRole::MaskCompletion,16,4,std::vector<double>(16,0)});
+        const auto other_zero=PhaseLowerProducer::zero_restart_boundary(*other_support);
+        rejects([&] { PhaseLowerProducer::prepare_probabilistic(joint_calc,prices,other_phase,proposal,other_support,other_zero,false,true,{},true,joint); });
+    }
     {
         auto framed = source; framed.prefixes[0].flags |= PC_MOD_SLOT_FRACTURED;
         auto framed_post = framed; framed_post.eater_of_worlds_tier = 1;

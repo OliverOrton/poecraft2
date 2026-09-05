@@ -452,6 +452,13 @@ PhaseProgramLowerWitness PhaseLowerProducer::compose_impl(CalcContext& calc, con
         for (const auto& [weight, value] : weighted_values)
             expectation = down(expectation + down(phase_weight_probability(weight, result.total_weight).lower * value));
         result.lower = down(result.cost_lower + expectation);
+        if (potential->reused_draw_owner) {
+            double prior = 0;
+            for (const auto& exit : result.exits)
+                prior = down(prior + down(phase_weight_probability(exit.weight, result.total_weight).lower *
+                    (exit.goal ? 0 : potential->reused_draw_owner->values.at(exit.cell))));
+            result.prior_potential_lower = down(result.cost_lower + prior);
+        }
     }
     checkpoint(budget);
     return PhaseProgramLowerWitness(std::move(result), donor.store_);

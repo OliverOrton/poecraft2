@@ -9,7 +9,7 @@
 namespace poecraft::solver {
 using namespace quotient;
 namespace {
-constexpr std::uint64_t version = 0x50524f424c4f0001ull;
+constexpr std::uint64_t version = 0x50524f424c4f0002ull;
 constexpr std::uint32_t mass = 1u << 24;
 double down(double x) { return x == 0 ? 0 : std::max(0.0, std::nextafter(x, 0.0)); }
 void checkpoint(const QuotientLowerBudget& b) {
@@ -54,9 +54,9 @@ std::size_t index(std::uint32_t masks, unsigned rarity, unsigned mask, unsigned 
     return ((rarity*masks+mask)*4+p)*4+s;
 }
 StableKey potential_identity(const PreparedPhaseLowerView& support, const std::vector<double>& values,
-        std::uint32_t mod, bool retained, double restart_lower) {
+        std::uint32_t mod, bool retained, double restart_lower, bool joint) {
     auto key = support.identity;
-    key.insert(key.end(), {version, mod, retained, 0 /* unchanged Imprint exclusion */});
+    key.insert(key.end(), {version, mod, retained, joint, 0 /* unchanged Imprint exclusion */});
     key.push_back(std::bit_cast<std::uint64_t>(restart_lower));
     for (double x : values) key.push_back(std::bit_cast<std::uint64_t>(x));
     return key;
@@ -82,6 +82,67 @@ std::uint32_t capacity(double upper) {
 }
 } // namespace
 
+double phase_joint_assignment_upper(const std::vector<std::array<double, 3>>& conditional,
+        unsigned positions) {
+    if (positions > 3 || conditional.size() > 3)
+        throw std::invalid_argument("joint event exceeds native side capacity");
+    for (const auto& goal : conditional) for (unsigned j = 0; j < positions; ++j)
+        if (!(goal[j] >= 0 && goal[j] <= 1)) throw std::invalid_argument("invalid conditional upper");
+    if (conditional.size() > positions) return 0; // requires independently proved distinct draws
+    const auto up = [](double x) { return x == 0 ? 0 : std::nextafter(x, std::numeric_limits<double>::infinity()); };
+    double total = 0;
+    const auto visit = [&](auto&& self, unsigned goal, unsigned occupied, double product) -> void {
+        if (goal == conditional.size()) { total = up(total+product); return; }
+        for (unsigned j = 0; j < positions; ++j) if (!(occupied & (1u << j))) {
+            const double factor = conditional[goal][j];
+            // Preserve positive mass even if a generic arithmetic fixture
+            // underflows. Native uint64-ratio products (at most three factors)
+            // are far above this range, but zero must still mean exact zero.
+            const double next = product == 0 || factor == 0 ? 0 :
+                std::nextafter(product*factor, std::numeric_limits<double>::infinity());
+            self(self, goal+1, occupied | (1u << j), next);
+        }
+    };
+    visit(visit, 0, 0, 1);
+    return std::min(1.0, total);
+}
+bool phase_price_shortcut_limiting(double cost, double value) {
+    // This tolerance only schedules extra proof work; it grants no numerical
+    // authority. Include exact equality and the quotient's downward repair.
+    return cost <= value + 64*std::numeric_limits<double>::epsilon()*std::max(1.0, cost);
+}
+std::vector<std::pair<unsigned, std::uint32_t>> phase_minimum_event_allocation(
+        const std::vector<double>& values, const std::vector<std::uint32_t>& capacities) {
+    if (values.size() != capacities.size()) throw std::invalid_argument("event dimensions differ");
+    std::vector<unsigned> order(values.size()); std::iota(order.begin(), order.end(), 0);
+    for (unsigned i : order) if (!std::isfinite(values[i]) || values[i] < 0 || capacities[i] > mass)
+        throw std::invalid_argument("invalid frozen event");
+    std::stable_sort(order.begin(), order.end(), [&](auto a, auto b) { return values[a] < values[b]; });
+    std::vector<std::pair<unsigned, std::uint32_t>> result;
+    unsigned remaining = mass;
+    for (auto i : order) {
+        const auto take = std::min(remaining, capacities[i]);
+        if (take) result.emplace_back(i, take);
+        remaining -= take;
+        if (!remaining) break;
+    }
+    if (remaining) throw std::invalid_argument("native mask events do not cover complete probability mass");
+    // Exchange argument: moving mass from a dearer occupied event to a cheaper
+    // unsaturated event never increases expectation. Independent caps only.
+    return result;
+}
+const char* phase_relation_reason(PhaseRelationReason reason) {
+    switch (reason) {
+    case PhaseRelationReason::ProbabilityEnvelope: return "probability_envelope";
+    case PhaseRelationReason::NativeEffect: return "native_effect";
+    case PhaseRelationReason::CandidatePriceShortcut: return "candidate_price_shortcut";
+    case PhaseRelationReason::NativeDomainEscape: return "native_domain_escape";
+    case PhaseRelationReason::UnsupportedEffect: return "unsupported_effect";
+    case PhaseRelationReason::FixedIndependentBoundary: return "fixed_independent_boundary";
+    }
+    throw std::invalid_argument("unknown phase relation reason");
+}
+
 PreparedPhaseRestartLower::PreparedPhaseRestartLower(QuotientLowerBoundary value, const PreparedPhaseLowerView& support)
     : record(std::move(value)), store_(support.store_),
       charge_(store_->ledger(), ProofMemoryCategory::Certificate, sizeof(*this) + 256 +
@@ -98,10 +159,14 @@ PreparedPhasePotential::PreparedPhasePotential(std::shared_ptr<const PreparedPha
         std::vector<double> table, PhaseLowerProposal proposed, PhaseProposalRefusal refusal,
         std::uint32_t mod, std::uint32_t mask, bool retained, double restart_lower,
         std::vector<CalcContext::NativeGoalDrawBound> weights, std::vector<PhasePotentialRelation> rows,
-        std::uint32_t rounds, std::uint64_t reservation, std::uint64_t peak, std::uint64_t action_relations)
-    : identity(potential_identity(*support, table, mod, retained, restart_lower)), values(std::move(table)),
+        std::uint32_t rounds, std::uint64_t reservation, std::uint64_t peak, std::uint64_t action_relations,
+        std::shared_ptr<const PreparedPhasePotential> reused, std::vector<PhaseJointEventWitness> events,
+        std::vector<PhasePriceReactivation> reactivated, bool joint)
+    : identity(potential_identity(*support, table, mod, retained, restart_lower, joint)), values(std::move(table)),
       proposal(std::move(proposed)), proposal_refusal(std::move(refusal)), fractured_mod(mod),
-      fractured_mask(mask), retained_scour(retained), restart_boundary_lower(restart_lower), draws(std::move(weights)), relations(std::move(rows)),
+      fractured_mask(mask), retained_scour(retained), restart_boundary_lower(restart_lower), draws(std::move(weights)),
+      reused_draw_owner(std::move(reused)), joint_events(std::move(events)), reactivations(std::move(reactivated)),
+      joint_refinement(joint), relations(std::move(rows)),
       model_rounds(rounds), retained_reservation(reservation), peak_additional_bytes(peak),
       native_action_relations(action_relations), support_(std::move(support)),
       charge_(support_->store_->ledger(), ProofMemoryCategory::Certificate, reservation) {}
@@ -126,17 +191,35 @@ std::optional<double> PreparedPhasePotential::lookup(const CalcContext& calc, co
     if (!compatible(calc, prices, item, consider_imprint)) return std::nullopt;
     return projected_value(calc, item);
 }
+std::optional<QuotientLowerBoundary> PreparedPhasePotential::whole_scope_source_lower(
+        const CalcContext& calc, const PhaseLowerPrices& prices, const pc_item_state& item, bool consider_imprint) const {
+    const auto value = lookup(calc, prices, item, consider_imprint);
+    if (!value) return std::nullopt;
+    // Construction covers all priced primitives, the unchanged program grammar
+    // and first-exit boundaries. A restricted quotient/program certificate has
+    // no access to this issuer. This source lower bounds every legal Q/family.
+    return QuotientLowerBoundary{0, exact_item_state_key(item), identity, *value, LowerEvidenceKind::IndependentLower};
+}
 ProofMemorySnapshot PreparedPhasePotential::memory_snapshot() const { return support_->memory_snapshot(); }
+std::size_t PreparedPhasePotential::draw_count() const { return draws.size() + (reused_draw_owner ? reused_draw_owner->draw_count() : 0); }
+const CalcContext::NativeGoalDrawBound& PreparedPhasePotential::draw(std::size_t i) const {
+    const auto prior = reused_draw_owner ? reused_draw_owner->draw_count() : 0;
+    return i < prior ? reused_draw_owner->draw(i) : draws.at(i-prior);
+}
 
 std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probabilistic(
         CalcContext& calc, const PhaseLowerPrices& prices, const pc_item_state& anchor,
         const PhaseLowerProposal& proposal, std::shared_ptr<const PreparedPhaseLowerView> support,
         const PreparedPhaseRestartLower& issued_restart_boundary,
-        bool consider_imprint, bool retain_scour, const QuotientLowerBudget& budget) {
+        bool consider_imprint, bool retain_scour, const QuotientLowerBudget& budget,
+        bool joint_refinement, std::shared_ptr<const PreparedPhasePotential> reuse_draws) {
     checkpoint(budget);
     const auto& restart_boundary = issued_restart_boundary.record;
     if (!support || !support->compatible(calc, prices, anchor))
         throw std::invalid_argument("probabilistic phase support/context mismatch");
+    if (reuse_draws && (!reuse_draws->compatible(calc, prices, anchor, consider_imprint) ||
+        reuse_draws->support_.get() != support.get()))
+        throw std::invalid_argument("foreign shared native draw evidence");
     pc_item_state fresh{}; pc_item_clear(&fresh);
     auto expected_boundary_evidence = support->identity;
     expected_boundary_evidence.push_back(0x46524553484c4f57ull);
@@ -235,13 +318,21 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
     }
     std::vector<CalcContext::NativeGoalDrawBound> draws;
     std::map<std::tuple<unsigned, unsigned, bool>, unsigned> draw_cache;
+    const auto reused_count = reuse_draws ? reuse_draws->draw_count() : 0;
+    for (unsigned i = 0; i < reused_count; ++i) {
+        const auto& w = reuse_draws->draw(i);
+        draw_cache[{w.action, w.slot, w.guaranteed}] = i;
+    }
+    const auto draw_at = [&](unsigned i) -> const CalcContext::NativeGoalDrawBound& {
+        return i < reused_count ? reuse_draws->draw(i) : draws.at(i-reused_count);
+    };
     const auto get_draw = [&](unsigned a, unsigned slot, bool guaranteed) -> const auto& {
         const auto key = std::tuple{a, slot, guaranteed};
         const auto found = draw_cache.find(key);
-        if (found != draw_cache.end()) return draws[found->second];
+        if (found != draw_cache.end()) return draw_at(found->second);
         checkpoint(budget);
         auto result = calc.phase_goal_draw_bound(anchor, a, slot, guaranteed);
-        draw_cache[key] = static_cast<unsigned>(draws.size());
+        draw_cache[key] = static_cast<unsigned>(reused_count+draws.size());
         draws.push_back(std::move(result));
         return draws.back();
     };
@@ -258,10 +349,57 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         }
         return u == 0 || count == 0 ? 0 : std::min(1.0, std::nextafter(count*u, std::numeric_limits<double>::infinity()));
     };
+    std::vector<PhaseJointEventWitness> joint_events;
+    std::map<std::pair<unsigned, unsigned>, unsigned> joint_cache;
+    const auto joint_upper = [&](unsigned a, unsigned subset, unsigned side,
+            unsigned forced, bool has_forced, unsigned output_limit) {
+        // Same-side event only. Native hit masks must require DISTINCT draws;
+        // a multi-goal modifier refuses this shortcut, leaving marginal caps.
+        for (auto hit : mod_goals) if (std::popcount(hit & subset) > 1) return 1.0;
+        const auto key = std::pair{a, subset};
+        if (const auto found = joint_cache.find(key); found != joint_cache.end())
+            return joint_events[found->second].joint_upper;
+        PhaseJointEventWitness w;
+        w.action = a; w.subset = subset; w.retained = fm; w.forced = forced; w.side = side;
+        w.initial_same_side = fs == side; w.positions = output_limit-w.initial_same_side;
+        w.uniform_history = has_forced;
+        w.other_side_blockers = 3;
+        const auto type = calc.registry().actions[a].params.type;
+        for (unsigned slot = 0; slot < goal_side.size(); ++slot) if (subset & (1u << slot)) {
+            std::array<double, 3> position{};
+            for (unsigned j = 0; j < w.positions; ++j) {
+                // Applied ordinary renewal clears all non-fractured modifiers.
+                // Forced modifiers precede random draws; for those actions use
+                // the uniform worst-history count instead of a depth claim.
+                const unsigned same = has_forced ? output_limit-1 : w.initial_same_side+j;
+                const auto& natural = get_draw(a, slot, false);
+                probability_frame_escape |= natural.frame_escape;
+                position[j] = draw_upper(natural, side ? 3 : same, side ? same : 3);
+                if (type == ActionType::HarvestReforge) {
+                    const auto& guaranteed = get_draw(a, slot, true);
+                    probability_frame_escape |= guaranteed.frame_escape;
+                    position[j] = std::max(position[j], draw_upper(guaranteed, side ? 3 : same, side ? same : 3));
+                }
+            }
+            w.conditional.push_back(position);
+            w.natural_draws.push_back(draw_cache.at({a, slot, false}));
+            if (type == ActionType::HarvestReforge) w.guaranteed_draws.push_back(draw_cache.at({a, slot, true}));
+            w.marginal_upper = std::min(w.marginal_upper, upper(a, slot, side ? 3 : output_limit-1,
+                side ? output_limit-1 : 3, output_limit));
+        }
+        if (probability_frame_escape) return 1.0;
+        w.joint_upper = phase_joint_assignment_upper(w.conditional, w.positions);
+        w.capacity = capacity(w.joint_upper);
+        joint_cache[key] = static_cast<unsigned>(joint_events.size());
+        joint_events.push_back(std::move(w));
+        return joint_events.back().joint_upper;
+    };
     std::vector<PhasePotentialRelation> final_relations;
+    std::set<std::pair<unsigned, unsigned>> detailed;
+    std::vector<PhasePriceReactivation> reactivations;
     std::uint64_t combined_peak = support->memory_snapshot().peak_total_bytes, action_relations = 0;
     unsigned rounds = 0;
-    for (; rounds < 12; ++rounds) {
+    for (; rounds < 32; ++rounds) {
         checkpoint(budget);
         if (support->memory_snapshot().total_bytes >= cap)
             throw std::length_error("phase live evidence exhausts additional reservation");
@@ -280,12 +418,14 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         query.roots = {static_cast<std::uint32_t>(index(masks, anchor.rarity, item_mask(calc, anchor),
             anchor.prefix_count, anchor.suffix_count))};
         std::vector<PhasePotentialRelation> relations;
+        std::vector<PhasePriceReactivation> shortcuts;
         for (const auto& c : cells) {
             checkpoint(budget);
             QuotientLowerSource source{c.id, {version, c.id}, {query.caller_scope, 1, true, {}, {}}, {}};
             CanonicalActionSet native_scope{{version, c.id}, 1, true, {}, {}};
             std::vector<CanonicalActionCover> native_cover;
-            struct Row { double cost; unsigned action; std::vector<Group> groups; bool probability, price; };
+            struct Row { double cost; unsigned action; std::vector<Group> groups; bool probability, price; PhaseRelationReason reason;
+                std::vector<PhasePotentialRelation::Event> events; };
             std::map<StableKey, Row> rows;
             for (unsigned a = 0; a < calc.registry().actions.size(); ++a) {
                 const auto& action = calc.registry().actions[a];
@@ -313,7 +453,10 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                 if (action.legality.min_total_affixes > c.p+c.s) continue;
                 std::vector<Group> groups;
                 bool price_escape = false;
-                const auto escape = [&] { groups = {{0, mass, {grid}}}; price_escape = true; };
+                auto reason = PhaseRelationReason::NativeEffect;
+                const auto escape = [&](PhaseRelationReason why = PhaseRelationReason::UnsupportedEffect) {
+                    groups = {{0, mass, {grid}}}; price_escape = true; reason = why;
+                };
                 const auto add_group = [&](unsigned m, unsigned p, unsigned s, unsigned r) {
                     if (p > 3 || s > 3 || p < minimum[m][0] || s < minimum[m][1] || (m & fm) != fm) return;
                     const unsigned limit = r == PC_RARITY_MAGIC ? 1 : (r == PC_RARITY_RARE ? 3 : 0);
@@ -326,11 +469,16 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                 unsigned preserved = c.mask, draws_per_side = 1;
                 if (action.synthetic) {
                     groups = {{0, mass, {grid+1}}};
-                } else if (special_escape || cost >= candidate[c.id] || (action.sets_flags & kProtectionFlags) ||
-                    type == ActionType::InfluenceExalt || type == ActionType::VeiledExalt || type == ActionType::VeiledChaos ||
-                    type == ActionType::HarvestAugment || type == ActionType::HarvestResist) {
+                    reason = PhaseRelationReason::FixedIndependentBoundary;
+                } else if (special_escape || (action.sets_flags & kProtectionFlags) ||
+                    type == ActionType::InfluenceExalt || type == ActionType::VeiledExalt || type == ActionType::VeiledChaos) {
+                    escape(PhaseRelationReason::NativeDomainEscape);
+                } else if (cost >= candidate[c.id] && !detailed.contains({c.id, a})) {
                     // A priced escape has an independent immediate-cost floor.
                     // Evaluating it first avoids constructing unused relations.
+                    escape(PhaseRelationReason::CandidatePriceShortcut);
+                    shortcuts.push_back({c.id, a, rounds, cost, candidate[c.id]});
+                } else if (type == ActionType::HarvestAugment || type == ActionType::HarvestResist) {
                     escape();
                 } else if (type == ActionType::EldritchEmber || type == ActionType::EldritchIchor) {
                     add_group(c.mask, c.p, c.s, c.rarity);
@@ -381,6 +529,16 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                 } else { escape(); }
                 if (groups.empty()) continue; // impossible effect in the declared frame
                 probability_frame_escape = false;
+                unsigned forced = 0;
+                bool has_forced = false;
+                if (type == ActionType::Essence && action.params.essence_index < calc.session().essence_guaranteed_mod_ids.size()) {
+                    const auto mod = calc.session().essence_guaranteed_mod_ids[action.params.essence_index];
+                    if (mod < mod_goals.size()) { forced |= mod_goals[mod]; has_forced = true; }
+                }
+                if (type == ActionType::Fossil) for (auto fossil : action.params.fossil_indices)
+                    for (auto mod : calc.session().fossil_forced_mod_ids.at(fossil)) {
+                        forced |= mod_goals.at(mod); has_forced = true;
+                    }
                 for (auto& g : groups) {
                     std::sort(g.cells.begin(), g.cells.end());
                     g.cells.erase(std::unique(g.cells.begin(), g.cells.end()), g.cells.end());
@@ -389,14 +547,6 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                     for (unsigned slot = 0; slot < goal_side.size(); ++slot) {
                         const auto bit = 1u << slot;
                         if (!(g.mask & bit) || (preserved & bit)) continue;
-                        unsigned forced = 0;
-                        if (type == ActionType::Essence && action.params.essence_index < calc.session().essence_guaranteed_mod_ids.size()) {
-                            const auto mod = calc.session().essence_guaranteed_mod_ids[action.params.essence_index];
-                            if (mod < mod_goals.size()) forced |= mod_goals[mod];
-                        }
-                        if (type == ActionType::Fossil)
-                            for (auto fossil : action.params.fossil_indices)
-                                for (auto mod : calc.session().fossil_forced_mod_ids.at(fossil)) forced |= mod_goals.at(mod);
                         if (forced & bit) continue;
                         const unsigned side = goal_side[slot];
                         const unsigned p = renewal ? 3-(side == 0) : c.p;
@@ -405,11 +555,27 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                             ? 0 : upper(a, slot, p, s, draws_per_side);
                         event_upper = std::min(event_upper, u);
                     }
+                    if (joint_refinement && renewal) {
+                        for (unsigned side = 0; side < 2; ++side) {
+                            unsigned subset = 0;
+                            for (unsigned slot = 0; slot < goal_side.size(); ++slot)
+                                if (goal_side[slot] == side && (g.mask & ~preserved & ~forced & (1u << slot))) subset |= 1u << slot;
+                            if (std::popcount(subset) >= 2)
+                                event_upper = std::min(event_upper, joint_upper(a, subset, side, forced, has_forced, draws_per_side));
+                        }
+                        // Capacities describe APPLIED redraws. A failed/no-op
+                        // may retain every source goal: grant an observed self
+                        // choice on each outcome so either mode is covered.
+                        g.cells.push_back(c.id);
+                        std::sort(g.cells.begin(), g.cells.end());
+                        g.cells.erase(std::unique(g.cells.begin(), g.cells.end()), g.cells.end());
+                    }
                     // One exact-mask event entails every one of its new goals.
                     // min marginal bounds is valid under ANY joint dependence.
                     g.capacity = capacity(event_upper);
                 }
-                if (probability_frame_escape) escape();
+                if (probability_frame_escape) escape(PhaseRelationReason::NativeDomainEscape);
+                if (probabilistic && !price_escape) reason = PhaseRelationReason::ProbabilityEnvelope;
                 // Union of all exact-mask events is normalized. Greedily fill
                 // the cheapest frozen-value events up to their proved capacities.
                 const auto best_value = [&](const Group& g) {
@@ -417,25 +583,26 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                     for (auto id : g.cells) best = std::min(best, candidate[id]);
                     return best;
                 };
-                std::stable_sort(groups.begin(), groups.end(), [&](const auto& l, const auto& r) {
-                    return best_value(l) < best_value(r);
-                });
-                unsigned remaining = mass;
+                std::vector<double> event_values;
+                std::vector<std::uint32_t> event_caps;
+                std::vector<PhasePotentialRelation::Event> events;
+                for (const auto& g : groups) {
+                    event_values.push_back(best_value(g)); event_caps.push_back(g.capacity);
+                    const auto target = *std::min_element(g.cells.begin(), g.cells.end(),
+                        [&](auto a, auto b) { return candidate[a] < candidate[b]; });
+                    events.push_back({g.mask, target, g.capacity});
+                }
                 std::vector<Group> selected;
                 StableKey key;
-                for (auto& g : groups) {
-                    const auto probability = std::min(remaining, g.capacity);
-                    if (!probability) continue;
-                    g.capacity = probability; remaining -= probability;
+                for (auto [group_id, probability] : phase_minimum_event_allocation(event_values, event_caps)) {
+                    auto& g = groups[group_id]; g.capacity = probability;
                     key.push_back(probability); key.push_back(g.cells.size());
                     key.insert(key.end(), g.cells.begin(), g.cells.end());
                     selected.push_back(std::move(g));
-                    if (!remaining) break;
                 }
-                if (remaining) throw std::invalid_argument("native mask events do not cover complete probability mass");
                 const auto found = rows.find(key);
-                if (found == rows.end()) rows.emplace(std::move(key), Row{cost, a, std::move(selected), probabilistic && !price_escape, price_escape});
-                else if (cost < found->second.cost) found->second = {cost, a, std::move(selected), probabilistic && !price_escape, price_escape};
+                if (found == rows.end()) rows.emplace(std::move(key), Row{cost, a, std::move(selected), probabilistic && !price_escape, price_escape, reason, std::move(events)});
+                else if (cost < found->second.cost) found->second = {cost, a, std::move(selected), probabilistic && !price_escape, price_escape, reason, std::move(events)};
             }
             const auto coverage = validate_canonical_action_coverage(native_scope, native_cover);
             if (!coverage.empty()) throw std::invalid_argument(coverage);
@@ -448,6 +615,8 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                 input.source_cell_id = c.id; input.operator_index = row.action; input.cost = row.cost;
                 PhasePotentialRelation record{c.id, row.action, row.cost, row.cost, {}, {}};
                 record.probability_aware = row.probability; record.independent_price = row.price;
+                record.reason = row.reason;
+                record.events = row.events;
                 for (const auto& group : row.groups) {
                     const double p = std::ldexp(static_cast<double>(group.capacity), -24);
                     input.choices.push_back({p, false, group.cells});
@@ -486,32 +655,60 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                 }
             }
         }
-        if (checked.checked) {
+        bool reactivated = false;
+        std::vector<double> minimum_rhs(grid, std::numeric_limits<double>::infinity());
+        for (const auto& row : relations) minimum_rhs[row.cell] = std::min(minimum_rhs[row.cell], row.rhs);
+        if (joint_refinement) for (const auto& shortcut : shortcuts)
+            // Compare with the minimum raw RHS, not a globally shrunken
+            // repaired candidate (the quotient may lower it by 1e-10).
+            if (phase_price_shortcut_limiting(shortcut.cost, minimum_rhs[shortcut.cell])) {
+                detailed.insert({shortcut.cell, shortcut.action});
+                auto record = shortcut; record.minimum_rhs = minimum_rhs[shortcut.cell];
+                reactivations.push_back(record); reactivated = true;
+            }
+        if (checked.checked && !joint_refinement) {
             // Rows were rebuilt from THIS frozen vector, including cheap-price
             // partitions and event order. The quotient checks all simultaneous
             // dependencies; the rows are not promoted to all-vector kernels.
             final_relations = std::move(relations);
             break;
         }
+        if (reactivated) continue;
         auto repaired = graph.solve_lower(query, local_budget);
         combined_peak = std::max(combined_peak, graph.proof_store()->ledger().snapshot().peak_total_bytes + support->memory_snapshot().total_bytes);
         if (!repaired.checked) throw std::runtime_error("probabilistic quotient repair: "+repaired.reason);
+        if (checked.checked && joint_refinement) {
+            // Feasibility alone is insufficient after removing a temporary
+            // cap: the old, smaller candidate may still pass. Re-solve the
+            // reoptimized model and continue whenever it can improve a cell.
+            bool improves = false;
+            for (const auto& c : cells) {
+                const auto next = repaired.checked->values_by_state[c.id];
+                improves |= next > candidate[c.id] + 64*std::numeric_limits<double>::epsilon()*std::max(1.0, next);
+            }
+            if (!improves) { final_relations = std::move(relations); break; }
+        }
         candidate = repaired.checked->values_by_state;
     }
-    if (rounds == 12) throw std::runtime_error("probabilistic frozen-event repair did not close within twelve rounds");
+    if (rounds == 32) throw std::runtime_error("probabilistic joint/price refinement did not close within bounded rounds");
     candidate.resize(grid);
     checkpoint(budget);
     std::uint64_t bytes = 65536 + support->identity.capacity()*8 + candidate.capacity()*24 +
         proposal.values.capacity()*8 + draws.capacity()*sizeof(CalcContext::NativeGoalDrawBound) +
-        final_relations.capacity()*sizeof(PhasePotentialRelation);
-    for (const auto& row : final_relations) bytes += row.targets.capacity()*4 + row.probabilities.capacity()*8;
+        final_relations.capacity()*sizeof(PhasePotentialRelation) +
+        joint_events.capacity()*sizeof(PhaseJointEventWitness) + reactivations.capacity()*sizeof(PhasePriceReactivation);
+    for (const auto& event : joint_events) bytes += 4*(event.natural_draws.capacity()+event.guaranteed_draws.capacity()) +
+        sizeof(std::array<double, 3>)*event.conditional.capacity();
+    for (const auto& row : final_relations) bytes += row.targets.capacity()*4 + row.probabilities.capacity()*8 +
+        row.events.capacity()*sizeof(PhasePotentialRelation::Event);
     if (bytes > cap-support->memory_snapshot().total_bytes)
         throw std::length_error("phase retained evidence exceeds matched reservation");
     combined_peak = std::max(combined_peak, support->memory_snapshot().total_bytes+bytes);
     auto result = std::shared_ptr<const PreparedPhasePotential>(new PreparedPhasePotential(
         std::move(support), std::move(candidate), proposal, std::move(refusal), fracture, fm,
         retain_scour, restart_boundary.lower, std::move(draws), std::move(final_relations), rounds+1, bytes,
-        combined_peak, action_relations));
+        combined_peak, action_relations, std::move(reuse_draws), std::move(joint_events),
+        std::move(reactivations), joint_refinement));
     return result;
 }
 } // namespace poecraft::solver

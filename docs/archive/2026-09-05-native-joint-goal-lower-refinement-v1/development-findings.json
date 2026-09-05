@@ -1,0 +1,74 @@
+{
+  "scope": "bounded causal findings; superseded by final native and exact audit",
+  "findings": [
+    {
+      "finding": "feasible candidate accepted before solving the model after price reactivation",
+      "source_donor": 23.94247608150839,
+      "cell": 1410,
+      "cell_candidate": 21.454699999999992,
+      "minimum_raw_relation": {
+        "cell": 1410,
+        "action": "bench:HelenaMasterFireResist1",
+        "cost": 0.01165,
+        "rhs": 21.466349999999984,
+        "probability_aware": false,
+        "independent_price": false,
+        "reason": "native_effect",
+        "exits": [
+          [
+            1410,
+            1
+          ]
+        ]
+      },
+      "repair": "Solve the reoptimized model and continue while it can improve a represented cell."
+    },
+    {
+      "finding": "candidate-value comparison missed a price tie after global numerical repair",
+      "source_candidate": 39.209999996079,
+      "minimum_raw_relation": {
+        "cell": 1405,
+        "action": "eldritch_chaos",
+        "cost": 39.21,
+        "rhs": 39.209999999999994,
+        "probability_aware": false,
+        "independent_price": true,
+        "reason": "candidate_price_shortcut",
+        "exits": [
+          [
+            1536,
+            1
+          ]
+        ]
+      },
+      "repair": "Select computational reactivation using the minimum raw action RHS; retain exact acceptance checks."
+    },
+    {
+      "finding": "new hidden-blocker fixture used an unsupported ordinary-Exalt stream entry",
+      "exception": "native lower add requires legal Eldritch Exalt",
+      "repair": "Use the existing Eldritch Exalt stream with explicit prefix dominance."
+    },
+    {
+      "finding": "new overlap fixture reached the existing native goal-layout guard before probability construction",
+      "exception": "solver: goal slots 0 and 1 have overlapping members",
+      "repair": "Assert refusal at that existing authority boundary."
+    },
+    {
+      "finding": "generic positive subnormal products need upward mass preservation",
+      "repair": "Preserve positive underflow as a positive upward endpoint; native products of at most three uint64 ratios are outside this extreme range."
+    }
+  ],
+  "final_acceptance": "110 focused checks, 1381 exact minima/inequalities, 52 joint events and both complete program sums pass",
+  "prototype_capture_hashes": [
+    {
+      "path": "build/joint-first-native.json",
+      "bytes": 576199,
+      "sha256": "d50b664cd30060fe8e7818feec3eb97a3f9333b68f7db4da3bc205d443738bf0"
+    },
+    {
+      "path": "build/joint-reactivation-native.json",
+      "bytes": 565387,
+      "sha256": "14a451e629b5a2b44a8eed5b66168c1d669455753e85db8c497371b9f63c4f4b"
+    }
+  ]
+}
