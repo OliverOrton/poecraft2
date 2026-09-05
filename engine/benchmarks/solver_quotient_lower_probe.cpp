@@ -841,7 +841,7 @@ void ordinary_retention(SolveWorkTestAccess::Impl& owner, Clock::time_point bega
         auto& calc=owner.calc;
         const auto view=owner.native_retention_potential;
         std::vector<std::pair<std::string,pc_item_state>> held;
-        auto second=owner.exact_start_item; pc_item_remove_at(&second,PC_SIDE_PREFIX,1);
+        auto second=owner.exact_start_item; pc_item_remove_at(&second,PC_SIDE_PREFIX,0);
         held.emplace_back("distinct_prefix_removed",second);
         pc_item_state fresh{}; pc_item_clear(&fresh); held.emplace_back("unfractured_entry",fresh);
         const auto state=calc.intern_item(owner.exact_start_item);
@@ -872,9 +872,23 @@ void ordinary_retention(SolveWorkTestAccess::Impl& owner, Clock::time_point bega
             const auto& [label,item]=held[i]; const auto id=calc.intern_item(item);
             const auto exact=view->lookup(calc,owner.prices,item,false);
             const auto projected=owner.native_retention_lower_value(id);
-            if (!exact || projected!=*exact) throw std::runtime_error("native held-out uniform projection differs");
+            if (!exact || (projected>0 && projected!=*exact)) throw std::runtime_error("native held-out uniform projection differs");
+            // A coarse class may fail the conservative complete-member guard
+            // although this concrete native exit has a valid private value.
+            // That is a required fallback, never permission to broadcast it.
+            const auto& abstract=calc.state(id);
+            unsigned unsafe_slots=0,unsafe_junk=0;
+            for (unsigned slot=0;slot<calc.layout().slots.size();++slot)
+                unsafe_slots+=abstract.slot_status[slot]!=static_cast<unsigned>(GoalSlotStatus::Absent) && !owner.native_retention_slot_safe[slot];
+            for (unsigned c=0;c<calc.layout().junk_classes.size();++c)
+                unsafe_junk+=abstract.junk_counts[c] && !owner.native_retention_junk_safe[c];
             std::cout<<"{\"case\":"<<std::quoted(label)<<",\"source\":"; emit_key(exact_item_state_key(item));
-            std::cout<<",\"lower\":"<<projected<<",\"cell\":"<<view->projected_cell(calc,item)<<'}';
+            std::cout<<",\"lower\":"<<projected<<",\"physical_lower\":"<<*exact
+                <<",\"common_lower\":"<<owner.completion_proof_lower_value(id)
+                <<",\"uniform_projection_accepted\":"<<(projected>0)
+                <<",\"unsafe_goal_classes\":"<<unsafe_slots<<",\"unsafe_junk_classes\":"<<unsafe_junk
+                <<",\"abstract_identity\":"; emit_key(exact_abstract_state_key(abstract,0));
+            std::cout<<",\"cell\":"<<view->projected_cell(calc,item)<<'}';
         }
         std::cout<<"],\"held_out_validation_ns\":"<<ns(validation_start);
     }

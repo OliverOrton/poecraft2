@@ -1,0 +1,109 @@
+{
+  "reviewed_main": "f415707496a9ff9424d77a28d84b04f88459957a",
+  "implementation_checkpoint": "12e34254326160adcd743f48c52d412782998758",
+  "recorded_at_utc": "2026-09-05T23:37:02.665155+00:00",
+  "one_sequential_session": true,
+  "subagents_used": false,
+  "pushed": false,
+  "compiler": "MSYS2 UCRT64 GCC 14.2.0 Rev2",
+  "cmake_build_type": "Release",
+  "release_flags": "-O3 -DNDEBUG",
+  "source_sha256": {
+    "engine/benchmarks/solver_quotient_lower_probe.cpp": "b83ee7717a4810a77a92479fee218d63a68e91e57ea490f125d878e6dd7505d0",
+    "engine/benchmarks/verify_quotient_lower_probe.py": "596d93d89b2d7be76e4519c76ab58016ad847ec76078536897c82f0232e66a19",
+    "engine/src/actions_basic.cpp": "db5b8746e4b6f9a6a2efbf5a29725ed87e36a0297b8eb6ef2bc38dbe0497f283",
+    "engine/src/solver_abstract.cpp": "6979c88972ea0927dfb034ff74b68984450ce28051802cb2c35a50131d69706c",
+    "engine/src/solver_calc.cpp": "b764279a070de58b6cb57c56f33800a6b8b71ad395200bfb48c24c2a30cc42e9",
+    "engine/src/solver_options_temporary.cpp": "597cdf60fe15593db048dbbe11ed08a4de3f4ada9c5bd85a58139a26f71818ee",
+    "engine/src/solver_phase_lower.cpp": "e8ebc81e117a7cd45106b8f2c404bae0119740d3ca0b8ebfe754ae0b447fe279",
+    "engine/src/solver_phase_lower.hpp": "f1257472ac39879db98ae0ff923687cfd072e348e9588c844629cd814cf66f11",
+    "engine/src/solver_phase_probability.cpp": "6f7bd067f11656b841dd502c3caf1304391ef76377936c4e6708797941b89367",
+    "engine/src/solver_proof_pattern_manager.hpp": "2c832c18091279a54362e97c6599d2fc6480cf4b01b706aacbaa66e3797637ed",
+    "engine/src/solver_quotient_bellman.cpp": "a6c7ee86b15e1fc8b0567be8054937ba0351829f935587bcf4bbeae42a94e2a1",
+    "engine/src/solver_quotient_lower.cpp": "a62813b04c183fcbc435064def8273e731eadd7b63768d3a5961730a73dbb484",
+    "engine/src/solver_quotient_lower.hpp": "d4a9b2990fe277e0ab72618b2047fb3da1aed6bfba837c0d41a97de555066370",
+    "engine/src/solver_solve.cpp": "2c67a017327c80e24d91966c66bcf89f8ac52909273f167e1ad28c8847b2f366",
+    "engine/src/solver_solve_bounds.cpp": "0a4a81049bb6edecb068e5d0c0cbe1677dcea220ff0da4502ef707a8d0b0261c",
+    "engine/src/solver_solve_carrier_pattern.cpp": "e406659dbf3f727913fc42caf21da364a31161e7ddc21afddfb7ba73b3f2c625",
+    "engine/src/solver_solve_contracts.hpp": "ba4282778ae86d1ecdc66ee7b853cb9fcfb90344ceb12cb32edc2e6c128bae8a",
+    "engine/src/solver_solve_telemetry.cpp": "69b7428b17b350d94e45d2892484aa8daaacd8981c833b237ffadad0e06cf8c3",
+    "engine/src/solver_solve_types.hpp": "a7b362a44e12a5207efde04c4ccbda01614eea92baef876486dd65951a3cc10a",
+    "engine/tests/test_solver_calc.cpp": "a119e6615eff1fd9bc1db1bd55a439532cdb6eb318df2d757801672244f826ca",
+    "engine/tests/test_solver_quotient_lower.cpp": "20b2c2db0bb9c84a2e8a0904b98a4388c7d823e2ffa351a73dd5900115c81058"
+  },
+  "input_sha256": {
+    "docs/archive/2026-09-04-free-value-bellman-research/native-goal.json": "ab2c5420a403b71852bd84da629814f331e01babaea0401b17620296fb5da1aa",
+    "docs/archive/2026-09-04-free-value-bellman-research/native-economy.json": "ca0bb782c7933fb2c72ddde3991c0aebf8c1d3e9c8dc5853796b54fffddf1992",
+    "data/compiled/current/manifest.json": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb"
+  },
+  "binary_sha256": "368f73d581b4a469f9adeb982c39316292c64ae86ff8a47fe70c0bdd191fa795",
+  "test_binary_sha256": "021b82b0664872197727e7b0587f627e48d62e052343f17e2d446b17b403fff7",
+  "source_plan": "User request and complete Native Solver Research task report; older Downloads plan not substituted",
+  "research_task_id": "6a90fbac-55e4-83e8-964e-f50cbad28987",
+  "exact_caller_scope": {
+    "profile": "calculator_product_v1",
+    "goal_progress_gated_reforges": true,
+    "allow_economic_restart": false,
+    "consider_imprint_programs": false,
+    "high_impact_executable_uppers": true
+  },
+  "relaxation_scope": "all priced primitive registry and supported program grammar; extra conservative standalone Restart retained alongside recovery",
+  "primary_proof_budget_bytes": 33554432,
+  "total_process_cap_bytes": 1073741824,
+  "ordinary_end_to_end_budget_ns": 60000000000,
+  "labelled_64_mib_comparison": "craftedness development control only; no default changed",
+  "ordinary_order": "control then treatment, same executable, separate sequential processes",
+  "elapsed_includes": "artifact/session creation, ordinary and native preparation, stepping; post-observation held-out validation reported separately",
+  "tests": [
+    {
+      "selector": "--solver-phase-lower-only",
+      "checks": 157,
+      "failures": 0
+    },
+    {
+      "selector": "--solver-quotient-proof-only",
+      "checks": 700,
+      "failures": 0
+    },
+    {
+      "selector": "--solver-proof-pattern-only",
+      "checks": 334,
+      "failures": 0
+    }
+  ],
+  "simulator_runs": 0,
+  "previous_archives_modified": false,
+  "protected_0_accessed": false,
+  "artifact_sha256": {
+    "archive-validation.json": "4a39433fb090586dd058146de2d6d45d0c2cadb834bc352088957b5888c365c0",
+    "build.txt": "8901813e588145f5c93c3ea6a0b306dcd9cfebc44238a2575a5a8a660dbcdbc3",
+    "comparison.json": "6786603bd90e08de3cd261858cb1fe4e4d3f8f686883331debc380293f7b58e8",
+    "crafted64-development-native.json.gz": "13279b667f4e944b05802452f105cd700c5e5316550f8d9c62e7d69bec222fc3",
+    "crafted64-development-reference.json": "6c8159acc201cdcf0edf5df26ab1393601dabfefbce34c5b5abaa35bc79817d5",
+    "development-findings.json": "b1b065abb746488c8aebf5418107ab9e58284de7ab7ac56b3b455a9cb9370063",
+    "harness-build.txt": "af2eca874cd68361f773fcf70925ac6a554cd47079d5734ed0bb51ed0fc0ad6e",
+    "native.json": "b3a3270a33927de579380dae20c7533a1e8192974cdf890cd09d11fe3657481b",
+    "nonempty-development-native.json.gz": "4ed95def971637f5565a444d3828d372b12535deea9afb65badf8c07ef9d14a6",
+    "nonempty-development-reference.json": "11bb537f7a449aa82cdfaadb843f615562d58c0fc12767c071df8996d2eba2ae",
+    "ordinary-control.json": "821be890df559436cf8531f4f51064b2a5e7ee46d8881b298fa8646e4c145a71",
+    "ordinary-reference.json": "f60b0e9699426920267fb4143d1eb714e450865a00de9f2c1a93383c5ee7825c",
+    "ordinary-treatment.json": "38d46ffdf276fde12da1d55c1fe446f1c556a76ee97d714bb362b8e0dbaf83b5",
+    "phase-tests.txt": "d314f012d34df7b5d5f0988ff1a21aaf49bb7d466887c768374ba4bfb53a99e2",
+    "proof-pattern-tests.txt": "8b328a4ad86cb8766f942735e745d468bc7ab8ab9a82b5a642b3b71af1090c6e",
+    "quotient-tests.txt": "f58c8fb829bb5a9d97b45c899b5bbddf827a01a402f295d3dd225016f3f16a85",
+    "README.md": "cfc926531675cc5079c9c88fe797c72668fd46b5cd82e75643644520faed0cd4",
+    "reference.json": "b3a30f3baecd9d6893a62fa014cb2cedc4ed26e0cf73e62e5975ed2ce4d2fef8"
+  },
+  "final_focused_acceptance": "157 phase/consumer + 700 quotient + 334 proof-pattern checks, zero failures on the recorded final test executable",
+  "archive_text_normalization": "CRLF to LF only; native numeric/string lexemes preserved and parsed JSON equality checked before local archive commit",
+  "original_export_sha256_before_lf": {
+    "build.txt": "7e7b259f551a2ae71791f8a7e0abfa43b6281d13e1cba38de1f3f3c82ec89150",
+    "harness-build.txt": "42d2e5cf0067fbd69534a99c428144d2644b0b50bc3a3877d1e2f71e1240d7e1",
+    "native.json": "6e656586465b226251acd54020103b8fcbc9623c88e0b91879b4818b057daf84",
+    "ordinary-control.json": "61a5d8d1a5e3d7f3f5e1deda73a81e8fb8e9359e5e560ac2a2722a91c71eca42",
+    "ordinary-treatment.json": "fd9c4360e79984d59575a508106da2aa5f0c144d8db58c9684b87b6a11762441",
+    "phase-tests.txt": "32aa265271338f9e189fa209abf95144c673a48d23a4c8ad01fd854a145d16b0",
+    "proof-pattern-tests.txt": "8b1be77e58ae22016f64107b3a7f7a466637912333490ab2cde386116f274d87",
+    "quotient-tests.txt": "2de90e61d008ed3ae89d80109f69563c8a9231952433ee79d75bee4c616206f3"
+  }
+}

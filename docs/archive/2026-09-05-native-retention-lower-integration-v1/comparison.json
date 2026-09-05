@@ -1,0 +1,341 @@
+{
+  "probability_cap": {
+    "three_prefix_joint_capacity": 4867,
+    "total": 16777216,
+    "changed_in_this_boundary": false,
+    "native_probability_measurement": false
+  },
+  "sources": [
+    {
+      "source": [
+        "8098432503581079089",
+        "1",
+        "2",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "3",
+        "6",
+        "114",
+        "826",
+        "0",
+        "0",
+        "0",
+        "4294967295",
+        "6",
+        "132",
+        "1670",
+        "0",
+        "0",
+        "0",
+        "4294967295",
+        "6",
+        "138",
+        "1671",
+        "0",
+        "0",
+        "0",
+        "4294967295",
+        "1",
+        "6",
+        "28",
+        "1102",
+        "1",
+        "0",
+        "0",
+        "4294967295",
+        "0",
+        "0"
+      ],
+      "donor_before": 47.8510191152077,
+      "donor_after": 185.2722268607952,
+      "donor_gain": 137.4212077455875,
+      "program_before": 51.09381675331152,
+      "program_after": 188.05742423140026,
+      "program_gain": 136.96360747808873,
+      "complete_model_before": 47.8510191152077,
+      "complete_model_after": 185.2722268607952,
+      "complete_model_gain": 137.4212077455875,
+      "portfolio_before": 47.8510191152077,
+      "portfolio_after": 185.2722268607952,
+      "portfolio_gain": 137.4212077455875,
+      "exact_common_floor_ties": [
+        "annul",
+        "scour",
+        "chaos",
+        "harvest_reforge:physical",
+        "harvest_reforge:defences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "option:eldritch_side_intent:suffix:eldritch_annul:eldritch_ichor:1",
+        "option:eldritch_side_intent:suffix:eldritch_chaos:eldritch_ichor:1",
+        "residual_family_1",
+        "residual_family_2",
+        "residual_family_3",
+        "residual_family_4",
+        "residual_family_5",
+        "residual_family_7",
+        "residual_family_9",
+        "residual_family_10"
+      ],
+      "next_numerical_floor": 186.05523898037399,
+      "next_separated_floor": 186.05523898037399,
+      "separation_for_display_only": 1e-07
+    },
+    {
+      "source": [
+        "8098432503581079089",
+        "1",
+        "2",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "2",
+        "6",
+        "114",
+        "826",
+        "0",
+        "0",
+        "0",
+        "4294967295",
+        "6",
+        "132",
+        "1670",
+        "0",
+        "0",
+        "0",
+        "4294967295",
+        "1",
+        "6",
+        "28",
+        "1102",
+        "1",
+        "0",
+        "0",
+        "4294967295",
+        "0",
+        "0"
+      ],
+      "donor_before": 47.8510191152077,
+      "donor_after": 186.05523897987408,
+      "donor_gain": 138.20421986466638,
+      "program_before": 51.35598012069664,
+      "program_after": 189.63034205503584,
+      "program_gain": 138.2743619343392,
+      "complete_model_before": 47.8510191152077,
+      "complete_model_after": 186.05523897987408,
+      "complete_model_gain": 138.20421986466638,
+      "portfolio_before": 47.8510191152077,
+      "portfolio_after": 186.05523897987408,
+      "portfolio_gain": 138.20421986466638,
+      "exact_common_floor_ties": [
+        "annul",
+        "scour",
+        "chaos",
+        "exalt",
+        "harvest_reforge:physical",
+        "harvest_reforge:defences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "option:eldritch_side_intent:prefix:eldritch_annul:eldritch_ember:1",
+        "option:eldritch_side_intent:prefix:eldritch_chaos:eldritch_ember:1",
+        "option:eldritch_side_intent:prefix:eldritch_exalt:eldritch_ember:1",
+        "option:eldritch_side_intent:suffix:eldritch_annul:eldritch_ichor:1",
+        "option:eldritch_side_intent:suffix:eldritch_chaos:eldritch_ichor:1",
+        "residual_family_1",
+        "residual_family_2",
+        "residual_family_3",
+        "residual_family_4",
+        "residual_family_5",
+        "residual_family_7",
+        "residual_family_9",
+        "residual_family_10"
+      ],
+      "next_numerical_floor": 186.05523898037399,
+      "next_separated_floor": 189.63034205503584,
+      "separation_for_display_only": 1e-07
+    }
+  ],
+  "optimistic_policy_ceiling": {
+    "scope": "proper fixed policy of the optimistic probability-box model only; no native upper authority",
+    "states": 19,
+    "values": {
+      "1405": "280786081566492346757875352663195879/1515532502069957345891229747904512",
+      "1369": "201682635700170794582033186849/1083993317177265176218435584",
+      "1538": "196262669114284468700941008929/1083993317177265176218435584"
+    },
+    "decimal_values": {
+      "1405": 185.27222687932243,
+      "1369": 186.0552389984796,
+      "1538": 181.0552389984796
+    },
+    "actions": {
+      "1369": "restart",
+      "1405": "bench:HelenaMasterFireResist1",
+      "1538": "alchemy",
+      "2815": "bench:HelenaMasterFireResist1",
+      "2943": "bench:HelenaMasterFireResist1",
+      "3004": "exalt",
+      "3005": "scour",
+      "3036": "exalt",
+      "3037": "scour",
+      "3052": "exalt",
+      "3053": "scour",
+      "3149": "exalt",
+      "3150": "restart",
+      "3194": "remove_crafted_modifiers",
+      "3386": "exalt",
+      "3387": "scour",
+      "3462": "exalt",
+      "3463": "scour",
+      "3507": "remove_crafted_modifiers"
+    },
+    "coordinates": {
+      "1369": [
+        1369,
+        0,
+        0,
+        0
+      ],
+      "1405": [
+        1405,
+        0,
+        0,
+        0
+      ],
+      "1538": [
+        1538,
+        0,
+        0,
+        0
+      ],
+      "2815": [
+        2815,
+        0,
+        0,
+        0
+      ],
+      "2943": [
+        2943,
+        0,
+        0,
+        0
+      ],
+      "3004": [
+        3004,
+        0,
+        0,
+        0
+      ],
+      "3005": [
+        3005,
+        0,
+        0,
+        0
+      ],
+      "3036": [
+        3036,
+        0,
+        0,
+        0
+      ],
+      "3037": [
+        3037,
+        0,
+        0,
+        0
+      ],
+      "3052": [
+        3052,
+        0,
+        0,
+        0
+      ],
+      "3053": [
+        3053,
+        0,
+        0,
+        0
+      ],
+      "3149": [
+        1406,
+        0,
+        0,
+        1
+      ],
+      "3150": [
+        1407,
+        0,
+        0,
+        1
+      ],
+      "3194": [
+        1535,
+        0,
+        0,
+        1
+      ],
+      "3386": [
+        2816,
+        0,
+        0,
+        1
+      ],
+      "3387": [
+        2817,
+        0,
+        0,
+        1
+      ],
+      "3462": [
+        2944,
+        0,
+        0,
+        1
+      ],
+      "3463": [
+        2945,
+        0,
+        0,
+        1
+      ],
+      "3507": [
+        3073,
+        0,
+        0,
+        1
+      ]
+    }
+  },
+  "counts": {
+    "projected_entries": 3508,
+    "covered_nonterminal_cells": 798,
+    "final_relations": 14705,
+    "outer_rounds": 31
+  },
+  "default_enabled": false
+}

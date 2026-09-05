@@ -1,0 +1,30 @@
+{
+  "crafted64-development": {
+    "accepted": true,
+    "checked_relations": 13547,
+    "annul_integer_checks": 0,
+    "nonempty_integer_checks": 0,
+    "public_lower_gain": null
+  },
+  "nonempty-development": {
+    "accepted": true,
+    "checked_relations": 13446,
+    "annul_integer_checks": 0,
+    "nonempty_integer_checks": 54,
+    "public_lower_gain": null
+  },
+  "final": {
+    "accepted": true,
+    "checked_relations": 14705,
+    "annul_integer_checks": 1911,
+    "nonempty_integer_checks": 54,
+    "public_lower_gain": null
+  },
+  "ordinary": {
+    "accepted": true,
+    "checked_relations": null,
+    "annul_integer_checks": null,
+    "nonempty_integer_checks": null,
+    "public_lower_gain": 148.84360967169079
+  }
+}

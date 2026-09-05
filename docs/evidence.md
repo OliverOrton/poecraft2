@@ -6,6 +6,14 @@ routes to them rather than duplicating complete reports.
 
 Parent: [Documentation map](README.md)
 
+## Native Retention Lower Integration
+
+The [completed native retention integration](archive/2026-09-05-native-retention-lower-integration-v1/README.md)
+records separate donor/program/model/portfolio results, native integer and exact
+finite-model checks, and a matched ordinary opt-in experiment including all
+preparation. It also records conservative coarse-junk fallback. Default product
+behavior remains off; no end-to-end speedup or ordinary exact solve is claimed.
+
 ## Operator-Complete Frontier Bellman Lower Pilot v2
 
 The [completed native pilot](archive/2026-09-04-operator-complete-frontier-bellman-lower-pilot-v2/README.md)

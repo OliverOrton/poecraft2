@@ -1,6 +1,7 @@
 """Verify a saved micro, support-phase or probabilistic native export; no census.
 
-Usage: py -3 engine/benchmarks/verify_quotient_lower_probe.py native.json result.json
+Usage: py -3 engine/benchmarks/verify_quotient_lower_probe.py native.json[.gz] result.json
+   or: py -3 engine/benchmarks/verify_quotient_lower_probe.py --ordinary control.json treatment.json native.json result.json
 The archived rational LP is imported only in micro mode. Phase mode checks
 the retained support inequalities and integer-weight composition directly.
 """
@@ -9,15 +10,22 @@ import sys
 from collections import Counter
 from fractions import Fraction as F
 from pathlib import Path
+import gzip
 
 sys.dont_write_bytecode = True
 archive = Path(__file__).resolve().parents[2] / "docs/archive/2026-09-04-free-value-bellman-research"
 sys.path.insert(0, str(archive))
 
 
+def load_native(path):
+    raw=Path(path).read_bytes()
+    if str(path).endswith(".gz"): raw=gzip.decompress(raw)
+    return json.loads(raw.decode("utf-8-sig"))
+
+
 def verify(path):
     from free_value_fixtures import Row, lp_simplex, valid
-    native = json.loads(Path(path).read_text(encoding="utf-8-sig"))
+    native = load_native(path)
     old = json.loads((archive / "native-micro.json").read_text())
     states = {str(s["id"]): s for s in native["states"]}
     base = {s: F(v["lower"]) for s, v in states.items()}
@@ -102,7 +110,7 @@ def verify(path):
 
 def verify_phase(path):
     """Exact arithmetic audit; native source owners establish the semantic relation."""
-    native = json.loads(Path(path).read_text(encoding="utf-8-sig"))
+    native = load_native(path)
     assert native["pilot"] == "uniform-phase-lower-v1"
     assert native["solver_steps"] == 0 and not native["production_authority"]
     donor = native["native_donor"]
@@ -173,7 +181,7 @@ def verify_phase(path):
 
 
 def verify_probability(path):
-    native = json.loads(Path(path).read_text(encoding="utf-8-sig"))
+    native = load_native(path)
     donor = native["probabilistic_donor"]
     assert donor["semantic_acceptance"] and donor["coefficient_acceptance"]
     assert native["proposal_adapter"]["accepted_by_support_control"]
@@ -279,7 +287,7 @@ def verify_probability(path):
 def verify_joint(path):
     """Exact coefficients/minimization audit; native C++ owns history semantics."""
     from itertools import permutations
-    native = json.loads(Path(path).read_text(encoding="utf-8-sig"))
+    native = load_native(path)
     boundary = native["pilot"] == "native-side-boundary-lower-v1"
     assert boundary or native["pilot"] == "native-joint-goal-lower-v1"
     assert native["solver_steps"] == 0 and not native["production_authority"]
@@ -517,10 +525,64 @@ def verify_joint(path):
         production_authority=False)
 
 
+def verify_ordinary(control_path, treatment_path, native_path):
+    before,after,native=map(load_native,(control_path,treatment_path,native_path))
+    assert before["pilot"]==after["pilot"]=="native-retention-ordinary-v1"
+    assert before["source"]==after["source"]==native["sources"][0]["source"]
+    assert before["scope"]==after["scope"]==dict(profile="calculator_product_v1",
+        goal_progress_gated_reforges=1,allow_economic_restart=0,
+        consider_imprint_programs=0,high_impact_executable_uppers=1)
+    for run in (before,after):
+        assert run["budget_ns"]==60_000_000_000 and run["proof_cap_bytes"]==32<<20
+        assert run["total_cap_bytes"]==1<<30 and not run["default_enabled"]
+        assert run["native_peak_bytes"]<=run["proof_cap_bytes"]
+        assert max(run["process_peak_working_set_bytes"],run["peak_owned_bytes"],run["live_owned_bytes"])<=run["total_cap_bytes"]
+        assert run["elapsed_ns"]>=run["budget_ns"] or run["done"]
+        assert run["ordinary_setup_ns"]>=run["native_prepare_ns"]
+        assert run["stepping_ns"]+run["ordinary_setup_ns"]<=run["elapsed_ns"]
+        assert not run["refusal"]
+    assert not before["native_prepare_attempts"] and not before["native_prepared"]
+    assert after["native_prepare_attempts"]==1 and after["native_prepared"]
+    assert after["native_lookups"]>=after["native_hits"]>=after["native_selected_calls"]>0
+    assert after["public_lower"]==after["independent_root_floor"]==native["sources"][0]["probabilistic_donor"]
+    assert after["public_lower"]>before["public_lower"]
+    held={h["case"]:h for h in after["held_outs"]}
+    assert set(held)=={"distinct_prefix_removed","unfractured_entry","native_exalt_natural_junk","native_bench_crafted_junk"}
+    assert held["distinct_prefix_removed"]["source"]==native["sources"][1]["source"]
+    for h in held.values():
+        assert h["physical_lower"]==native["probabilistic_donor"]["values"][h["cell"]]
+        assert h["common_lower"]>=h["lower"]>=0
+        if h["uniform_projection_accepted"]:
+            assert h["lower"]==h["physical_lower"]
+        else:
+            assert h["lower"]==0 and h["unsafe_junk_classes"]>0
+    assert held["distinct_prefix_removed"]["uniform_projection_accepted"]
+    assert held["unfractured_entry"]["uniform_projection_accepted"]
+    # Actual native producers yield distinct natural/crafted coordinates. A
+    # physical member's value is never broadcast after a coarse guard refuses.
+    coords=native["probabilistic_donor"]["coordinates"]
+    natural=coords[held["native_exalt_natural_junk"]["cell"]]
+    crafted=coords[held["native_bench_crafted_junk"]["cell"]]
+    assert natural[0]==crafted[0] and natural[1:]==[0,0,0] and crafted[1:]==[0,0,1]
+    return dict(scope="one anchored ordinary request; read-only 60-second cooperative observations including all setup",
+        public_lower_before=before["public_lower"],public_lower_after=after["public_lower"],
+        public_lower_gain=after["public_lower"]-before["public_lower"],
+        native_preparation_seconds=after["native_prepare_ns"]/1e9,
+        native_selected_calls=after["native_selected_calls"],
+        rows_before=before["rows"],rows_after=after["rows"],
+        held_outs={name:{k:v for k,v in h.items() if k not in ("source","abstract_identity")} for name,h in held.items()},
+        ordinary_exact_result=False,verified_upper_available=after["verified_upper"] is not None,
+        speedup_established=False,default_enabled=False)
+
+
 if __name__ == "__main__":
+    if len(sys.argv)==6 and sys.argv[1]=="--ordinary":
+        result=verify_ordinary(*sys.argv[2:5])
+        Path(sys.argv[5]).write_bytes((json.dumps(result,indent=2)+"\n").encode("utf-8"))
+        print(json.dumps(result)); raise SystemExit(0)
     if len(sys.argv) != 3:
         raise SystemExit(__doc__)
-    pilot = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8-sig")).get("pilot")
+    pilot = load_native(sys.argv[1]).get("pilot")
     phase = pilot == "uniform-phase-lower-v1"
     probabilistic = pilot == "native-probabilistic-lower-v1"
     joint = pilot in ("native-joint-goal-lower-v1","native-side-boundary-lower-v1")

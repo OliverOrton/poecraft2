@@ -1,0 +1,39 @@
+{
+  "scope": "bounded development controls and diagnostic refusals; not matched ordinary performance",
+  "crafted64": {
+    "donor": 47.89550212982672,
+    "policy_ceiling": 47.895502134616265,
+    "annul_selected": false,
+    "selected_flaw": "Exalt no-affix failure despite positive residual native pool mass",
+    "budget_bytes": 67108864
+  },
+  "nonempty32": {
+    "donors": [
+      154.04977629622633,
+      154.39549824024914
+    ],
+    "annul_selected": true,
+    "selected_flaw": "favorable removal of junk from an unfractured full-goal-plus-junk cell"
+  },
+  "refinements": [
+    "native craftedness",
+    "one additional refinement: Exalt/Eldritch Exalt non-exhaustion",
+    "conditional uniform Annul loss"
+  ],
+  "native_refusals": [
+    "32 MiB transient arena growth peaks",
+    "unused ranked query diagnostics and oversized model-key capacity",
+    "32 outer rounds insufficient for nonempty intermediate; final combined model closes in 31 of 64 allowed rounds"
+  ],
+  "ordinary_refusals": [
+    "initial context-workspace guard counted borrowed mutable state arena; immutable-metadata reservation retained",
+    "held-out harness incorrectly demanded every coarse class accept its concrete representative; actual conservative junk-member fallback now reported"
+  ],
+  "focused_fixture_fixes": [
+    "Annul selected side may contain only a fracture: native self is required",
+    "constructor payload audit runs before incremental ledger initialization"
+  ],
+  "control_source_snapshot": "uncommitted development before 12e3425; exact control-binary hash was not captured",
+  "partial_outputs_grant_authority": false,
+  "simulator_runs": 0
+}

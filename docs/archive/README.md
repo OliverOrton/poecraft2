@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-09-05
 
+- [Native Retention-Aware Lower Refinement and Solver Integration v1](2026-09-05-native-retention-lower-integration-v1/README.md) —
+  preserves craftedness, certifies non-exhaustion and uniform Annul loss, and
+  qualifies an internal ordinary lower contribution with all preparation in
+  the matched experiment. Defaults remain off; no speedup or exact solve.
+
 - [Native Side-Retention and Boundary-Coupled Lower Closure v1](2026-09-05-native-side-retention-boundary-coupled-lower-v1/README.md) —
   certifies Eldritch Chaos continuation and retains legal Restart. Both private
   source portfolios reach 41.11443 within 16 MiB, then 47.85102 with a jointly

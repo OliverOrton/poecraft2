@@ -55,7 +55,7 @@ request/model snapshot and generations; independent prior evidence stays
 outside changed-model feasibility. Zero-cost components may return a weak
 finite lower, without any greatest-proper-policy or infinity claim.
 
-No current product manager consumes these private certificates. The
+No default product profile enables these private certificates. The
 [v2 pilot](../archive/2026-09-04-operator-complete-frontier-bellman-lower-pilot-v2/README.md)
 records native parity, focused acceptance and the conditional donor stop.
 
@@ -126,6 +126,33 @@ boundary measures complete-model and portfolio increases to 39.209999996079
 on both saved sources. Its remaining ceiling is the unsupported Eldritch Chaos
 continuation at 39.21. This is opt-in proof-query consumption, with no ordinary
 solver/public-bound or end-to-end performance activation.
+
+
+## Opt-in ordinary native retention lower
+
+`SolveOptions::native_retention_lower` defaults off and is not exposed by the
+public profiles or bindings. `SolveWork::Impl` prepares one compatible view in
+setup, reserving 32 MiB additional proof memory within the existing total cap.
+The existing quotient jointly checks the fractured and unfractured regions;
+current goal/occupancy and removable crafted categories survive every producing
+and consuming action. Native non-exhaustion witnesses constrain Exalt failures;
+Annul uses uniform eligible-affix categories with conservative dyadic event caps.
+Every final value-dependent row is reoptimized and checked simultaneously.
+
+The `NativeRetention` proof pattern contributes only by maximum. The ordinary
+consumer uses retained AbstractState fields and complete modifier member masks,
+not a materialized representative. Ambiguous fracture identity, unsupported
+member classes, restore memory or failed preparation keep the old lower.
+A compatible whole-state proof covers all explicit actions and remaining
+families. An open action envelope can publish this independent root floor
+without incumbent routing or a claim of exact closure. StrictClean's guard,
+action admission, scheduler and executable-upper ownership are unchanged.
+
+The [retention integration evidence](../archive/2026-09-05-native-retention-lower-integration-v1/README.md)
+separates private donor/program/model/portfolio results from the matched ordinary
+observation, including all construction cost and conservative junk-class fallbacks.
+This component establishes a bounded ordinary lower contribution, not a default
+product activation or an end-to-end speedup.
 
 Internal lowers drive operator pruning, fringe gap priority, constructive
 certificates, and gap targets. Telemetry should show which pattern supplied a
