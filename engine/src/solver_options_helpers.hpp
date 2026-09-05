@@ -400,9 +400,10 @@ AutomaticOptionSynthesis synthesize_automatic_options(
     CalcContext& calc,
     const std::uint32_t state_id,
     const pc_item_state& carrier,
-    const std::unordered_map<std::string, double>* prices) {
+    const std::unordered_map<std::string, double>* prices,
+    const GoalSpec* proof_selection = nullptr) {
     const SessionImpl& session = calc.session();
-    const GoalSpec& goal = calc.goal();
+    const GoalSpec& goal = proof_selection ? *proof_selection : calc.goal();
     const ActionRegistry& registry = calc.registry();
     const AbstractState& state = calc.state(state_id);
     AutomaticOptionSynthesis synthesis;

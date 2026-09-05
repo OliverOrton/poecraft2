@@ -58,6 +58,18 @@ No current product manager consumes these private certificates. The
 [v2 pilot](../archive/2026-09-04-operator-complete-frontier-bellman-lower-pilot-v2/README.md)
 records native parity, focused acceptance and the conditional donor stop.
 
+The opt-in [phase lower producer](../archive/2026-09-04-uniform-phase-lower-certificates-v1/README.md)
+adds a separate native support proof. Its existing reachability helper can omit
+fresh-base positivity to cover every item tag signature. A monotone frozen
+goal-mask potential is checked against all priced primitive support unions;
+the relation composes through the complete generated program grammar and all
+observed choices. Phase views bind exact Eldritch tiers without changing the
+old identity-clean guard. The native mandatory Ichor/Exalt composer streams
+complete integer weight mass, checks every failure exit and uses directed
+cost-plus-failure arithmetic. These are private validating constructors, not
+coefficient-only declarations or executable authority. The measured donor is
+0.01165 and program lower 3.683885; no production consumer or portfolio gain.
+
 Internal lowers drive operator pruning, fringe gap priority, constructive
 certificates, and gap targets. Telemetry should show which pattern supplied a
 bound and whether `state_incumbent_operator_lower` actually pruned rows. A

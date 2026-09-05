@@ -1,38 +1,45 @@
 # Handoff
 
-**Status: no implementation boundary active.** The
-[Operator-Complete Frontier Bellman Lower Pilot v2](docs/archive/2026-09-04-operator-complete-frontier-bellman-lower-pilot-v2/README.md)
-is complete as a benchmark-private capability. Oliver must select the next
-implementation chunk.
+**Status: no implementation boundary active.**
+[Uniform Phase-Scoped Lower Certificates and Program Consumption v1](docs/archive/2026-09-04-uniform-phase-lower-certificates-v1/README.md)
+is complete as an opt-in native proof capability. Oliver must select the next
+chunk. Started from reviewed main `d74a9eb8c5b6b80a48c19dbde2e2c7c5562ad87c`.
 
-`QuotientBellmanGraph::solve_lower/check_lower` reuses the existing sparse
-graph and ProofStore, with separate lower-only mode, exact coefficient
-inequality checks, immutable model evidence, canonical set/family coverage,
-and no executable or public lower authority. Fixed-J shadow count coverage
-is repaired. The production envelope self-choice shortcut remains unchanged
-and is bypassed by this pilot. Preserve the strict Eldritch guard.
+The new private producer exports existing preparation as a candidate, repairs
+it through the existing quotient checker, and validates a uniform native
+support/price relation. The support helper's opt-in mode covers all item tag
+signatures; ordinary behavior and the old Eldritch guard remain intact. No new
+graph owner, scheduler, global abstraction, strategy or production proof path.
 
-One fresh native micro export matches all archived kernels/member identities;
-reference-mode checked lowers are 2.15, 2.2235586971, 2.2415219921 and
-23.7899999976. All eight raw/reference comparisons pass exact rational checks.
-Raw coefficients still have a +21/2^60 row-mass defect; no native probability
-law certificate is inferred. Final focused quotient tests pass 698/0;
-fixed-J/refinement tests pass 2376/0. No broad suite, Simulator, WASM, web or
-rendered checks ran.
+The accepted donor is only **0.01165**. The mandatory Ichor/Exalt program has
+complete native integer goal mass **500/55700**, giving **3.683885421903051**.
+A second actual source with one goal prefix removed gives **3.68399** and zero
+true-goal mass. The same immutable donor matches fresh preparation on both
+sources. The old 39.77 remains conditional; it is not the certified result.
 
-The medium coverage/phase audit found 28 admitted actions (6 inapplicable) and
-10 open generated families. The scalar model is capped at 36.428617. Its
-uniform post-Ichor donor/program/coefficient contract remains unproved, so no
-new donor preparation, caching or production integration was retained.
-Archived conditional local action 7.11 -> 39.77 and model 7.11 -> 36.43 still
-produce **zero independent portfolio gain**. Cold/warm donor reuse is
-unmeasured. The next owner is the existing clean-MDP preparation's uniform
-post-phase certificate, followed by two distinct compatible-source queries.
-Do not repeat the clean-five census or known Scour route refusal.
+Strong prepared action floors preserve all 28 admitted actions (six native
+inapplicabilities) and ten open families. Annul, Harvest Physical and all ten
+residual families tie at **36.42861718910441**. Local compatible action,
+complete-model and independent portfolio gains are all **zero**. A single
+stronger program or Scour row cannot lift that tie set. Next candidate: a
+complete residual-family floor contract covering those limiting escapes.
+No further implementation is activated by this recommendation.
 
-Evidence and complete build/runtime hashes are bundled in the linked archive.
-Original free-value research files are unchanged. The living plan was archived
-only after retained native acceptance and the explicit conditional stop.
-Starting local HEAD was `2e756640665d08686237086ab22d49c112fd87d3`, branch `main`.
-All changes are local-only; do not push. Protected `0` was not read, modified,
-staged, moved or removed. Preserve it regardless of tracking state.
+Post-phase legacy preparation 4.222 s; repaired export/check 0.911 ms; warm
+identical/distinct queries 0.669/0.690 ms. Snapshot reservation 613,028 bytes;
+process peak 209.48 MiB under the matched 1 GiB total / 16 MiB additional budget.
+The repair does not depend on the expensive legacy candidate calculation;
+these measurements establish semantic reuse, not a useful solver cache speedup.
+
+Acceptance: 44 new proof checks and 5,632 independent rational inequalities
+pass, as do both program formulas and complete models. Existing Eldritch side
+fixtures pass 2,379 checks but also ran an embedded 1,000-trial Simulator block,
+exceeding the requested proof-only scope. The selector now warns about it;
+`--solver-phase-lower-only` does not simulate. The older combined Eldritch flag
+logs the same 33 failures and access violation on the reviewed baseline and
+this build; it did not pass. Evidence and exact scope are in the archive.
+
+No agents, push, micro/research replay, clean-five census, full pipeline,
+WASM/web suite or UI rendering. Existing archive contents are unchanged.
+Protected `0` was not accessed, staged, moved or removed. Preserve it regardless
+of tracking state. All changes and commits are local only.

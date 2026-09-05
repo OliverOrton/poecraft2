@@ -1,9 +1,19 @@
 #include "solver_solve_types.hpp"
+#include "solver_phase_lower.hpp"
 
 namespace poecraft {
 namespace solver {
 
 using namespace solve_detail;
+
+std::shared_ptr<const PreparedPhaseLowerView> SolveWork::Impl::prepare_phase_lower(
+        const quotient::QuotientLowerBudget& budget) {
+    prepare_goal_cover_cost();
+    pc_item_state phase{};
+    if (!calc.materialize(result.start_state, phase))
+        throw std::invalid_argument("phase lower anchor cannot be materialized");
+    return PhaseLowerProducer::prepare(calc, prices, phase, goal_cover_cost, budget);
+}
 
 bool SolveWork::Impl::ensure_priced_operator(const std::uint32_t index) {
         if (index >= priced_operator_position.size()) {

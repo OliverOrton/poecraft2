@@ -31,10 +31,14 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. The completed benchmark-private
+No implementation boundary is active. The completed opt-in
+[Uniform Phase-Scoped Lower Certificates v1](archive/2026-09-04-uniform-phase-lower-certificates-v1/README.md)
+adds a native-valid but weak donor and mandatory-program proof. Both semantic
+sources reuse the donor; local, complete-model and portfolio gains remain zero.
+Oliver must select the next chunk. The completed benchmark-private
 [Operator-Complete Frontier Bellman Lower Pilot v2](archive/2026-09-04-operator-complete-frontier-bellman-lower-pilot-v2/README.md)
 adds a checked lower-only quotient query. Its medium donor remains conditional;
-no production lower gain is claimed. Oliver must select the next chunk.
+no production lower gain is claimed.
 
 The completed diagnosis-only
 [Early Executable Statewise Upper Certificate and PDR RC Consumer v1](archive/2026-08-30-early-executable-statewise-upper-rc-consumer-v1/README.md)

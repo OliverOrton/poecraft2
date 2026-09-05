@@ -12635,6 +12635,10 @@ void run_solver_automatic_eldritch_tests() {
     run_automatic_eldritch_side_tests();
 }
 
+void run_solver_eldritch_side_fixture_tests() {
+    run_automatic_eldritch_side_tests();
+}
+
 void run_solver_policy_refinement_tests() {
     run_frontier_incumbent_epoch_skew_tests();
     run_shared_sparse_policy_kernel_tests();

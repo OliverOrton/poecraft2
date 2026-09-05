@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-09-04
 
+- [Uniform Phase-Scoped Lower Certificates and Program Consumption v1](2026-09-04-uniform-phase-lower-certificates-v1/README.md) —
+  implements a native all-member support certificate and integer-weight paid
+  program composition; the repaired donor is 0.01165, reuse passes on two
+  semantic sources, and complete-model/portfolio gain is zero. Production is
+  off; validation includes an explicitly disclosed embedded Simulator run.
 - [Operator-Complete Frontier Bellman Lower Pilot v2](2026-09-04-operator-complete-frontier-bellman-lower-pilot-v2/README.md) —
   implements the lower-only quotient consumer, canonical set/family coverage
   and exact coefficient checking; rebuilt micro parity passes. Medium donor

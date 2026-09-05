@@ -48,6 +48,11 @@ int main(int argc, char** argv) {
                     pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 && std::string(argv[1]) == "--solver-phase-lower-only") {
+        run_solver_phase_lower_tests();
+        std::printf("solver phase-lower tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 &&
         std::string(argv[1]) == "--solver-automatic-veiled-only") {
         run_solver_automatic_veiled_tests();
@@ -91,6 +96,13 @@ int main(int argc, char** argv) {
         std::printf(
             "solver proof-pattern tests: %d checks, %d failures\n",
             pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
+    // The existing side fixture includes a 1,000-trial policy simulation.
+    // Use --solver-phase-lower-only for the proof-only acceptance fixtures.
+    if (argc > 1 && std::string(argv[1]) == "--solver-eldritch-side-fixtures-only") {
+        run_solver_eldritch_side_fixture_tests();
+        std::printf("solver Eldritch side fixtures: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
     if (argc > 1 &&
@@ -200,6 +212,7 @@ int main(int argc, char** argv) {
     run_simulator_tests(artifact_dir);
     run_solver_abstract_tests(artifact_dir);
     run_solver_calc_tests(artifact_dir);
+    run_solver_phase_lower_tests();
     run_solver_solve_tests(artifact_dir);
     run_solver_compile_tests(artifact_dir);
     run_solver_eval_tests(artifact_dir);

@@ -167,9 +167,17 @@ ResolvedGoalSlot resolve_slot(const SessionImpl& session,
 void action_reachable_mask(const SessionImpl& session,
                            const ActionDescriptor& action,
                            std::vector<std::uint64_t>& scratch,
-                           std::vector<std::uint64_t>& out) {
+                           std::vector<std::uint64_t>& out,
+                           const bool all_item_tag_signatures = false) {
     if (session.words == 0) return;
     const auto normal_positive = [&]() {
+        if (all_item_tag_signatures) {
+            // Opt-in support witness: influence tag signatures can activate
+            // a modifier whose fresh-base spawn weight is zero. Omitting all
+            // positivity tests covers every signature without enumerating it.
+            mask_or_into(out, session.normal_random_roll_mask);
+            return;
+        }
         pc_bitset_and(scratch.data(), session.normal_random_roll_mask.data(),
                       session.positive_spawn_weight_mask.data(),
                       session.words);
@@ -250,6 +258,10 @@ void action_reachable_mask(const SessionImpl& session,
             action.params.target_tag_id < session.implicit_tag_masks.size() &&
             !session.implicit_tag_masks[action.params.target_tag_id]
                  .empty()) {
+            if (all_item_tag_signatures) {
+                mask_or_into(out, session.implicit_tag_masks[action.params.target_tag_id]);
+                break;
+            }
             pc_bitset_and(
                 scratch.data(),
                 session.implicit_tag_masks[action.params.target_tag_id]
@@ -326,10 +338,11 @@ void action_reachable_mask(const SessionImpl& session,
 
 std::vector<std::uint64_t> action_explicit_affix_reachable_mask(
     const SessionImpl& session,
-    const ActionDescriptor& action) {
+    const ActionDescriptor& action,
+    const bool all_item_tag_signatures) {
     std::vector<std::uint64_t> result(session.words, 0);
     std::vector<std::uint64_t> scratch(session.words, 0);
-    action_reachable_mask(session, action, scratch, result);
+    action_reachable_mask(session, action, scratch, result, all_item_tag_signatures);
     return result;
 }
 

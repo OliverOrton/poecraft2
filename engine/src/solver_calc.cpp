@@ -3163,6 +3163,47 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_unveil(
  * Returns false when no side is open or the pool is empty, which the engine
  * reports as an unapplied action.
  */
+std::uint64_t CalcContext::phase_lower_add_weights(
+        const pc_item_state& item, const std::uint32_t action,
+        const std::function<void(const pc_item_state&, std::uint64_t)>& visit) {
+    if (action >= registry_.actions.size() ||
+        registry_.actions[action].params.type != ActionType::EldritchExalt ||
+        !action_legal(*session_, registry_.actions[action], state(intern_item(item))))
+        throw std::invalid_argument("native lower add requires legal Eldritch Exalt");
+    PoolBuildRequest request;
+    request.side_filter = dominant_eldritch(item);
+    const auto cap = rarity_affix_cap(*session_, item.rarity);
+    const bool prefix_open = item.prefix_count < cap && request.side_filter != 1;
+    const bool suffix_open = item.suffix_count < cap && request.side_filter != 0;
+    if (!prefix_open && !suffix_open)
+        throw std::invalid_argument("native lower add has no open side");
+    request.side_filter = prefix_open && suffix_open ? -1 : (prefix_open ? 0 : 1);
+    const WeightedPool& pool = get_weighted_pool(context_, &item, request);
+    if (!pool.total_weight)
+        throw std::invalid_argument("native lower add cannot prove a paid step from an empty pool");
+    std::uint64_t sum = 0;
+    // Same pool and item-add operation as evaluate_pool_add. Reject instead
+    // of discarding a failed insertion or accepting overflow/partial mass.
+    for (const auto& entry : pool.entries) {
+        if (!entry.final_weight) continue;
+        if ((entry.gen_type != PC_SIDE_PREFIX && entry.gen_type != PC_SIDE_SUFFIX) ||
+            entry.session_mod_id >= session_->mod_count)
+            throw std::invalid_argument("native lower add has an invalid pool member");
+        if (entry.final_weight > std::numeric_limits<std::uint64_t>::max() - sum)
+            throw std::overflow_error("native lower weight sum overflow");
+        sum += entry.final_weight;
+        pc_item_state copy = item;
+        if (pc_item_add_mod(&copy, entry.gen_type == 0 ? PC_SIDE_PREFIX : PC_SIDE_SUFFIX,
+                entry.session_mod_id, static_cast<std::uint16_t>(entry.primary_group),
+                0, nullptr) != PC_RESULT_OK)
+            throw std::invalid_argument("native lower add contains an uncovered insertion");
+        visit(copy, entry.final_weight);
+    }
+    if (sum != pool.total_weight)
+        throw std::invalid_argument("native lower add does not conserve integer mass");
+    return sum;
+}
+
 bool CalcContext::evaluate_pool_add(
     const pc_item_state& item,
     const PoolBuildRequest& base_request,

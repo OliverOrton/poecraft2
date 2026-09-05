@@ -40,6 +40,7 @@ src/solver_quotient_proof.cpp
 src/solver_quotient_partition.cpp
 src/solver_quotient_bellman.cpp
 src/solver_quotient_lower.cpp
+src/solver_phase_lower.cpp
 src/solver_solve_finish.cpp
 src/solver_solve_telemetry.cpp
 src/solver_solve_telemetry_json.cpp

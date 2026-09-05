@@ -1,0 +1,33 @@
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8376: !result.converged
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8390: result.policy_status == SolvePolicyStatus::BoundedFeasible
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8392: result.termination == SolveTermination::RefusedResourceCap
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8394: result.lower_bound == 0.0
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8400: result.diagnostics.policy_refinement .direct_certification_proper
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8403: result.diagnostics.policy_refinement .direct_certification_zero_off_policy
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8406: result.diagnostics.policy_refinement .direct_certification_cost_reconciled
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8409: result.diagnostics.policy_refinement .bounded_publication_retained
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8412: result.diagnostics.policy_refinement .cheapest_independently_evaluated_selected
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8416: result.diagnostics.policy_reachable_states == 3
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8417: result.diagnostics.policy_reachable_states < result.diagnostics.expanded_states
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8438: std::find( scratch_cap_work.result.diagnostics.cap_hits.begin(), scratch_cap_work.result.diagnostics.cap_hits.end(), "max_expanded_states") != scratch_cap_work.result.diagnostics.cap_hits.end()
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8443: !scratch_cap_work.output_incumbent.has_value()
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8467: !scratch_cap_work.output_incumbent.has_value()
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8473: std::find( scratch_cap_work.result.diagnostics.cap_hits.begin(), scratch_cap_work.result.diagnostics.cap_hits.end(), "max_expanded_states") != scratch_cap_work.result.diagnostics.cap_hits.end()
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8487: !scratch_capped.policy_available
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8488: scratch_capped.policy_status == SolvePolicyStatus::None
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8489: scratch_capped.termination == SolveTermination::RefusedResourceCap
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8492: !std::isfinite(scratch_capped.upper_bound)
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8493: !std::isfinite(scratch_capped.evaluated_policy_cost)
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8494: std::find( scratch_capped.diagnostics.cap_hits.begin(), scratch_capped.diagnostics.cap_hits.end(), "max_solver_owned_bytes") != scratch_capped.diagnostics.cap_hits.end()
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8514: candidate_probe_work .try_install_reachable_incumbent(true)
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8522: candidate_construction_peak > probe_peak_before
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8543: !candidate_cap_work.output_incumbent.has_value()
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:8547: std::find( candidate_cap_work.result.diagnostics.cap_hits.begin(), candidate_cap_work.result.diagnostics.cap_hits.end(), "max_solver_owned_bytes") != candidate_cap_work.result.diagnostics.cap_hits.end()
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:9089: renewal_finish_batch.status == StateLocalAutomaticBatchStatus::Complete
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:9092: renewal_finish_batch.phases .imprint_price_bound_complete_carriers == 1
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:9095: renewal_finish_batch.phases.imprint_price_pruned_programs > 0
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:9097: renewal_finish_batch.phases.imprint_programs_evaluated == 0
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:9456: !focused_lower_terminal.first
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:9457: focused_lower_terminal.second == "max_imprint_program_depth"
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:9579: scheduled_work.transition_cache ->automatic_admission_phases .imprint_price_bound_complete_carriers > 0
+FAIL C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_solve.cpp:9589: scheduled.diagnostics.automatic_admission_phases .imprint_price_bound_complete_carriers > 0

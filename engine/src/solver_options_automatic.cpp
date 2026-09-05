@@ -3,6 +3,21 @@
 namespace poecraft {
 namespace solver {
 
+std::vector<PlannerOperator> CalcContext::phase_lower_eldritch_programs(
+        const pc_item_state& carrier,
+        const std::unordered_map<std::string, double>& prices) {
+    GoalSpec selection = goal_;
+    selection.automatic_candidate_kind_mask &=
+        automatic_candidate_kind_bit(AutomaticCandidateKind::EldritchSide);
+    const auto synthesis = synthesize_automatic_options(
+        *this, intern_item(carrier), carrier, &prices, &selection);
+    selection.automatic_candidates = false;
+    selection.fixed_options = synthesis.specs;
+    auto result = build_planner_operators(*session_, selection, registry_, candidates_);
+    result.erase(result.begin(), result.begin() + registry_.actions.size());
+    return result;
+}
+
 namespace {
 
 bool same_automatic_admission_limits(

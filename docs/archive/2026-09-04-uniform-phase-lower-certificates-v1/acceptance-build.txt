@@ -1,0 +1,7 @@
+[0/2] Re-checking globbed directories...
+[1/7] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_phase_lower.cpp.obj
+[2/7] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_calc.cpp.obj
+[3/7] Linking CXX static library libpoecraft_engine.a
+[4/7] Linking CXX executable poecraft_quotient_lower_probe.exe
+[5/7] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_calc.cpp.obj
+[6/7] Linking CXX executable poecraft_engine_tests.exe

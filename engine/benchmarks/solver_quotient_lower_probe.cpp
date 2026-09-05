@@ -7,6 +7,7 @@
 #include "solver_diagnostic_options.hpp"
 #include "solver_quotient_bellman.hpp"
 #include "solver_solve_types.hpp"
+#include "solver_phase_lower.hpp"
 
 #include <chrono>
 #include <fstream>
@@ -350,13 +351,207 @@ void medium_coverage(CalcContext& calc, SolveWorkTestAccess::Impl& owner) {
         << unobserved << ",\"largest_junk_class_members\":" << largest_class
         << ",\"uniform_donor_certificate\":false,\"strict_pushforward_certificate\":false}";
 }
+void emit_phase_program(const PhaseProgramLowerWitness& proof) {
+    const auto& r = proof.record;
+    std::cout << "{\"operator_id\":\"" << r.operator_id << "\",\"source\":";
+    emit_key(r.source); std::cout << ",\"post_phase\":"; emit_key(r.post_phase);
+    std::cout << ",\"operator_identity\":"; emit_key(r.operator_identity);
+    std::cout << ",\"cost_lower\":" << r.cost_lower << ",\"goal_weight\":" << r.goal_weight
+        << ",\"total_weight\":" << r.total_weight << ",\"goal_probability_upper\":" << r.goal_probability_upper
+        << ",\"modifier_exits\":" << r.physical_exits << ",\"failure_lower_min\":" << r.failure_lower_min
+        << ",\"failure_lower_max\":" << r.failure_lower_max << ",\"lower\":" << r.lower
+        << ",\"semantic_acceptance\":true,\"numeric_acceptance\":true}";
+}
+
+void uniform_phase(CalcContext& calc, SolveWorkTestAccess::Impl& owner,
+        const pc_item_state& start, const StableKey& request) {
+    const auto root = owner.result.start_state;
+    const double baseline = owner.completion_proof_lower_value(root);
+    const auto source_owned = owner.audited_estimated_owned_bytes();
+    const auto shared_calc_owned = calc.estimated_owned_bytes();
+    const std::string program_id = "option:eldritch_side_intent:suffix:eldritch_exalt:eldritch_ichor:1";
+    pc_item_state phase = start; phase.eater_of_worlds_tier = 1;
+    const auto post = calc.intern_item(phase);
+    const double old_post_lower = owner.completion_proof_lower_value(post);
+    const bool old_eligible = owner.identity_clean_goal_progress_eligible(post);
+
+    // Project strongest compatible floors before donor preparation. These are
+    // the same immutable prepared-stage arrays the existing owners consume.
+    struct Floor { StableKey identity; std::string id; double value, analytic, operator_lower; bool illegal; unsigned family; };
+    std::vector<Floor> floors;
+    for (const auto& priced : owner.operators) {
+        if (!calc.is_candidate_operator_admitted_for_state(root, priced.index)) continue;
+        const auto& op = calc.operators().at(priced.index);
+        const bool illegal = op.kind == PlannerOperatorKind::Primitive &&
+            !action_legal(calc.session(), calc.registry().actions.at(op.primitive_action), calc.state(root));
+        const double operator_lower = owner.operator_proof_lower_value(root, priced.index, false);
+        const double analytic = op.kind == PlannerOperatorKind::Primitive ?
+            owner.prepared_primitive_lower_floor(op.primitive_action) : 0;
+        double lower = std::max(baseline, analytic);
+        if (std::isfinite(operator_lower)) lower = std::max(lower, operator_lower);
+        floors.push_back({planner_operator_semantic_key(op), op.id, lower, analytic,
+            std::isfinite(operator_lower) ? operator_lower : 0, illegal, static_cast<unsigned>(op.automatic_kind)});
+    }
+    std::shared_ptr<const PreparedPhaseLowerView> donor;
+    std::uint64_t cold_prepare_ns, export_ns, cold_owner_bytes;
+    double legacy_post_anchor;
+    {
+        const auto cold = Clock::now();
+        SolveWorkTestAccess::Impl prepared(calc, phase, owner.prices, owner.options);
+        prepared.prepare_goal_cover_cost();
+        cold_prepare_ns = ns(cold);
+        legacy_post_anchor = prepared.completion_proof_lower_value(prepared.result.start_state);
+        cold_owner_bytes = prepared.audited_estimated_owned_bytes();
+        const auto began = Clock::now();
+        donor = prepared.prepare_phase_lower({});
+        export_ns = ns(began);
+    }
+    const auto cold_query = Clock::now();
+    const auto program = PhaseLowerProducer::compose(calc, owner.prices, start, program_id, *donor);
+    const auto cold_query_ns = ns(cold_query);
+    const auto warm_start = Clock::now();
+    const auto warm = PhaseLowerProducer::compose(calc, owner.prices, start, program_id, *donor);
+    const auto warm_ns = ns(warm_start);
+    if (program.record.lower != warm.record.lower || program.record.goal_weight != warm.record.goal_weight ||
+        program.record.total_weight != warm.record.total_weight)
+        throw std::runtime_error("identical native program reuse changed its result");
+
+    // A real goal-mask and occupancy change, with the same session/phase scope.
+    // No incumbent reachability assumption is needed for this valid native item.
+    pc_item_state second = start;
+    if (pc_item_remove_at(&second, PC_SIDE_PREFIX, 0) != PC_RESULT_OK)
+        throw std::runtime_error("cannot construct the second semantic source");
+    const auto second_query = Clock::now();
+    const auto second_program = PhaseLowerProducer::compose(calc, owner.prices, second, program_id, *donor);
+    const auto second_query_ns = ns(second_query);
+    pc_item_state second_phase = second; second_phase.eater_of_worlds_tier = 1;
+    std::uint64_t fresh_prepare_ns, fresh_export_ns, fresh_query_ns;
+    bool same_table = false;
+    {
+        const auto fresh = Clock::now();
+        SolveWorkTestAccess::Impl prepared(calc, second_phase, owner.prices, owner.options);
+        prepared.prepare_goal_cover_cost();
+        fresh_prepare_ns = ns(fresh);
+        const auto exported = Clock::now();
+        QuotientLowerBudget fresh_budget;
+        fresh_budget.max_scratch_bytes = (16ull << 20) - donor->memory_snapshot().total_bytes;
+        auto fresh_donor = prepared.prepare_phase_lower(fresh_budget);
+        fresh_export_ns = ns(exported);
+        same_table = donor->identity == fresh_donor->identity && donor->values == fresh_donor->values;
+        const auto queried = Clock::now();
+        auto fresh_program = PhaseLowerProducer::compose(calc, owner.prices, second, program_id, *fresh_donor);
+        fresh_query_ns = ns(queried);
+        if (!same_table || fresh_program.record.lower != second_program.record.lower ||
+            fresh_program.record.total_weight != second_program.record.total_weight ||
+            fresh_program.record.goal_weight != second_program.record.goal_weight)
+            throw std::runtime_error("fresh distinct-source preparation disagrees with reuse");
+    }
+    std::cout << "\"native_donor\":{\"semantic_acceptance\":true,\"numeric_acceptance\":true,"
+        << "\"candidate_component\":\"existing_universal_goal_cover\",\"candidate_accepted\":"
+        << (donor->original_candidate_accepted ? "true" : "false")
+        << ",\"repair\":\"complete_registry_pointwise_goal_acquisition\",\"phase_domain\":\"fixed_session_and_goal_all_native_members_at_exact_eldritch_tiers\","
+        << "\"searing\":" << unsigned(donor->searing) << ",\"eater\":" << unsigned(donor->eater)
+        << ",\"identity\":"; emit_key(donor->identity);
+    std::cout << ",\"values_by_goal_mask\":[";
+    for (std::size_t i = 0; i < donor->values.size(); ++i) { if (i) std::cout << ','; std::cout << donor->values[i]; }
+    std::cout << "],\"primitive_cover\":[";
+    for (std::size_t i = 0; i < donor->primitives.size(); ++i) {
+        if (i) std::cout << ',';
+        const auto& action = donor->primitives[i];
+        std::cout << "{\"id\":\"" << action.action_id << "\",\"reach\":" << action.reachable_goals
+            << ",\"price_lower\":" << action.price_lower << ",\"priced\":" << (action.priced ? "true" : "false") << '}';
+    }
+    std::cout << "],\"family_mask\":" << donor->family_mask << ",\"retained_reservation_bytes\":" << donor->retained_reservation << '}'
+        << ",\"baseline\":{\"independent_root\":" << baseline << ",\"old_post_eligible\":" << (old_eligible ? "true" : "false")
+        << ",\"old_post_lower\":" << old_post_lower << ",\"legacy_reanchored_lower\":" << legacy_post_anchor
+        << ",\"new_post_lower\":" << *donor->lookup(calc, owner.prices, phase)
+        << ",\"archived_conditional_program\":39.773949853475088,\"archived_local_before\":7.1136189946140025}"
+        << ",\"program\":";
+    emit_phase_program(program); std::cout << ",\"second_program\":"; emit_phase_program(second_program);
+    std::cout << ",\"reuse\":{\"cold_prepare_ns\":" << cold_prepare_ns << ",\"cold_export_check_ns\":" << export_ns
+        << ",\"cold_program_ns\":" << cold_query_ns << ",\"warm_identical_ns\":" << warm_ns
+        << ",\"different_source_ns\":" << second_query_ns << ",\"fresh_second_prepare_ns\":" << fresh_prepare_ns
+        << ",\"fresh_second_export_ns\":" << fresh_export_ns << ",\"fresh_second_query_ns\":" << fresh_query_ns
+        << ",\"fresh_table_and_output_equal\":true,\"source_owner_including_shared_calc_bytes\":" << source_owned
+        << ",\"cold_owner_including_shared_calc_bytes\":" << cold_owner_bytes << ",\"shared_calc_before_bytes\":" << shared_calc_owned
+        << ",\"snapshot_and_live_witness_bytes\":" << donor->memory_snapshot().total_bytes
+        << ",\"snapshot_ledger_peak_bytes\":" << donor->memory_snapshot().peak_total_bytes << '}'
+        << ",\"prepared_action_floors\":[";
+    for (std::size_t i = 0; i < floors.size(); ++i) {
+        if (i) std::cout << ',';
+        const auto& f = floors[i];
+        std::cout << "{\"id\":\"" << f.id << "\",\"lower\":" << f.value << ",\"analytic\":" << f.analytic
+            << ",\"operator_lower\":" << f.operator_lower << ",\"inapplicable\":" << (f.illegal ? "true" : "false") << '}';
+    }
+    std::cout << "],\"complete_models\":[";
+    for (bool refine : {false, true}) {
+        if (refine) std::cout << ',';
+        QuotientBellmanGraph graph((16ull << 20) - donor->memory_snapshot().total_bytes,
+            QuotientBellmanMode::LowerOnly);
+        ScopedProofMemoryCharge probe_workspace(graph.proof_store()->ledger(),
+            ProofMemoryCategory::Scratch, 1ull << 20);
+        const auto root_key = exact_item_state_key(start);
+        graph.install_cells({{0, 1, root_key, false}});
+        const StableKey scope{0x50484153454d4f44, 1};
+        QuotientLowerSource source{0, root_key, {scope, 1, true, {}, {}}, {}};
+        std::map<unsigned, std::vector<StableKey>> members;
+        std::map<StableKey, std::string> labels;
+        for (const auto& floor : floors) {
+            if (floor.family) members[floor.family].push_back(floor.identity);
+            else source.expected_actions.actions.push_back(floor.identity);
+            labels[floor.identity] = floor.id;
+            source.constraints.push_back({{floor.identity, false, {}},
+                floor.illegal ? LowerConstraintKind::Inapplicable : LowerConstraintKind::Scalar,
+                UINT64_MAX, floor.value, key("existing/prepared/"+floor.id),
+                floor.illegal ? LowerEvidenceKind::ExactInapplicability : LowerEvidenceKind::IndependentLower});
+        }
+        if (refine) {
+            const auto& r = program.record;
+            members[unsigned(AutomaticCandidateKind::EldritchSide)].push_back(r.operator_identity);
+            labels[r.operator_identity] = r.operator_id;
+            StableKey evidence = donor->identity;
+            evidence.insert(evidence.end(), r.source.begin(), r.source.end());
+            evidence.insert(evidence.end(), r.operator_identity.begin(), r.operator_identity.end());
+            source.constraints.push_back({{r.operator_identity, false, {}}, LowerConstraintKind::Scalar,
+                UINT64_MAX, std::max(baseline, r.lower), std::move(evidence), LowerEvidenceKind::IndependentLower});
+        }
+        unsigned families = 0;
+        for (unsigned kind = 1; kind <= unsigned(AutomaticCandidateKind::Veiled); ++kind) {
+            const bool open = calc.goal().automatic_candidates && (calc.goal().automatic_candidate_kind_mask & (1u << kind));
+            if (!open && members[kind].empty()) continue;
+            const StableKey identity{0x46414d494c59, kind};
+            source.expected_actions.families.push_back({identity, members[kind], open});
+            if (!open) continue;
+            ++families; labels[identity] = "residual_family_" + std::to_string(kind);
+            source.constraints.push_back({{identity, true, members[kind]}, LowerConstraintKind::Scalar,
+                UINT64_MAX, baseline, key("existing/complete_root_lower"), LowerEvidenceKind::IndependentLower});
+        }
+        QuotientLowerQuery query{request, scope, graph.model_revision(), LowerCoefficientModel::ExactBinaryModel,
+            {0}, {std::move(source)}, {}};
+        const auto query_start = Clock::now();
+        const auto result = graph.solve_lower(query);
+        if (!result.checked) throw std::runtime_error("complete phase lower model refused: " + result.reason);
+        const double lower = result.checked->values_by_state[0];
+        std::cout << "{\"refined_program\":" << (refine ? "true" : "false") << ",\"open_families\":" << families
+            << ",\"lower\":" << lower << ",\"portfolio\":" << std::max(baseline, lower)
+            << ",\"query_ns\":" << ns(query_start) << ",\"ranked_constraints\":[";
+        bool first = true;
+        for (const auto& ranked : result.ranked_constraints) {
+            if (!first) std::cout << ','; first = false;
+            std::cout << "{\"id\":\"" << labels.at(ranked.cover.identity) << "\",\"lower\":" << ranked.rhs_lower << '}';
+        }
+        std::cout << "]}";
+    }
+    std::cout << ']';
+}
 } // namespace
 
 int main(int argc, char** argv) {
     try {
         if (argc != 5) throw std::runtime_error("micro|medium-coverage artifact-directory goal economy required");
         const bool is_micro = std::string(argv[1]) == "micro";
-        if (!is_micro && std::string(argv[1]) != "medium-coverage") throw std::runtime_error("unknown bounded probe");
+        const bool is_phase = std::string(argv[1]) == "uniform-phase";
+        if (!is_micro && !is_phase && std::string(argv[1]) != "medium-coverage") throw std::runtime_error("unknown bounded probe");
         const auto began = Clock::now();
         Handles h;
         pc_error_info error{};
@@ -410,9 +605,11 @@ int main(int argc, char** argv) {
         const auto prepare_ns = ns(prepare);
         if (std::isfinite(owner.envelope_bellman_lower))
             throw std::runtime_error("probe must bypass envelope helper");
-        std::cout << std::setprecision(17) << "{\"pilot\":\"operator-complete-frontier-v2\",\"solver_steps\":0,\"production_authority\":false,";
+        std::cout << std::setprecision(17) << "{\"pilot\":\"" << (is_phase ? "uniform-phase-lower-v1" : "operator-complete-frontier-v2")
+            << "\",\"solver_steps\":0,\"production_authority\":false,";
         if (is_micro) micro(calc, owner,
             key(goal + '\n' + economy + '\n' + read(manifest_path) + "\nlower-v2"), key(goal));
+        else if (is_phase) uniform_phase(calc, owner, start, key(goal + '\n' + economy + '\n' + read(manifest_path)));
         else medium_coverage(calc, owner);
         std::cout << ",\"prepare_ns\":" << prepare_ns << ",\"elapsed_ns\":" << ns(began)
             << ",\"process_peak_working_set_bytes\":" << process_peak() << "}\n";

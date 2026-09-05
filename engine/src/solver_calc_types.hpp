@@ -2,6 +2,7 @@
 
 #include "solver_model.hpp"
 #include "solver_cooperative_task.hpp"
+#include <functional>
 
 namespace poecraft {
 namespace solver {
@@ -818,6 +819,13 @@ class CalcContext {
     }
     /* The configured slot threshold satisfied at the required rarity. */
     bool is_goal_state(const AbstractState& state) const;
+
+    /* Opt-in lower proof seams: existing family constructors and complete
+     * native integer-weight add law, without option-kernel expansion. */
+    std::vector<PlannerOperator> phase_lower_eldritch_programs(
+        const pc_item_state&, const std::unordered_map<std::string, double>&);
+    std::uint64_t phase_lower_add_weights(const pc_item_state&, std::uint32_t action,
+        const std::function<void(const pc_item_state&, std::uint64_t)>& visit);
 
     /* Interning gives stable dense ids; equal states share one id. */
     std::uint32_t intern_state(const AbstractState& state);

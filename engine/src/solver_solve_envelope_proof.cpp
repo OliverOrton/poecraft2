@@ -5,6 +5,29 @@ namespace solver {
 
 using namespace solve_detail;
 
+/* Read-only projection of already-prepared analytic action floors. This does
+ * not refresh the envelope, generate rows or synthesize automatic operators. */
+double SolveWork::Impl::prepared_primitive_lower_floor(std::uint32_t action) const {
+    const auto& start = calc.state(result.start_state);
+    const auto mask = satisfied_goal_mask_for_state(result.start_state);
+    const std::size_t actions = calc.registry().actions.size(), masks = goal_cover_cost.size();
+    double result_lower = 0;
+    const auto retain = [&](double value) {
+        if (std::isfinite(value) && value >= 0) result_lower = std::max(result_lower, value);
+    };
+    if ((clean_goal_cover_eligible(result.start_state) || identity_clean_goal_progress_eligible(result.start_state)) &&
+        action < clean_goal_start_action_floor.size()) retain(clean_goal_start_action_floor[action]);
+    if (carrier_goal_progress_eligible(result.start_state) && start.rarity < 3 && action < actions) {
+        if (mask < masks && carrier_goal_action_floor.size() == 3*masks*actions)
+            retain(carrier_goal_action_floor[(start.rarity*masks+mask)*actions+action]);
+        const auto required = calc.goal().required_satisfied_slots(), gains = required+1;
+        if (!bounded_gain_goal_progress_cost.empty() && bounded_gain_action_floor.size() == 3*gains*actions)
+            retain(bounded_gain_action_floor[(start.rarity*gains+
+                std::min<std::size_t>(required, std::popcount(mask)))*actions+action]);
+    }
+    return result_lower;
+}
+
 double SolveWork::Impl::refresh_envelope_bellman_pattern() {
     ProofPatternContract& pattern = contract(
         ProofPatternKind::EnvelopeBellman);

@@ -43,6 +43,7 @@ void run_solver_joint_policy_continuation_tests();
 void run_solver_carrier_bound_tests();
 void run_solver_proof_pattern_tests();
 void run_solver_automatic_eldritch_tests();
+void run_solver_eldritch_side_fixture_tests();
 void run_solver_policy_refinement_tests();
 void run_solver_compile_tests(const char* artifact_dir);
 void run_solver_imprint_tests(const char* artifact_dir);
@@ -57,5 +58,6 @@ void run_solver_quotient_proof_tests();
 void run_solver_quotient_partition_tests();
 void run_solver_quotient_bellman_tests();
 void run_solver_quotient_lower_tests();
+void run_solver_phase_lower_tests();
 
 #endif

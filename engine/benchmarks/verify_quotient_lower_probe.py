@@ -1,7 +1,8 @@
-"""Verify one saved current-source micro export; never runs the research census.
+"""Verify a saved micro or uniform-phase native export; never runs a census.
 
 Usage: py -3 engine/benchmarks/verify_quotient_lower_probe.py native.json result.json
-Uses the archived independent rational LP only for this retained native query.
+The archived rational LP is imported only in micro mode. Phase mode checks
+the retained support inequalities and integer-weight composition directly.
 """
 import json
 import sys
@@ -12,10 +13,10 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 archive = Path(__file__).resolve().parents[2] / "docs/archive/2026-09-04-free-value-bellman-research"
 sys.path.insert(0, str(archive))
-from free_value_fixtures import Row, lp_simplex, valid
 
 
 def verify(path):
+    from free_value_fixtures import Row, lp_simplex, valid
     native = json.loads(Path(path).read_text(encoding="utf-8-sig"))
     old = json.loads((archive / "native-micro.json").read_text())
     states = {str(s["id"]): s for s in native["states"]}
@@ -99,12 +100,88 @@ def verify(path):
         local_model_optimum_authority="independent rational reference only; native result is checked finite lower")
 
 
+def verify_phase(path):
+    """Exact arithmetic audit; native source owners establish the semantic relation."""
+    native = json.loads(Path(path).read_text(encoding="utf-8-sig"))
+    assert native["pilot"] == "uniform-phase-lower-v1"
+    assert native["solver_steps"] == 0 and not native["production_authority"]
+    donor = native["native_donor"]
+    assert donor["semantic_acceptance"] and donor["numeric_acceptance"]
+    assert donor["family_mask"] == (1 << 11) - 2
+    values = list(map(F, donor["values_by_goal_mask"]))
+    assert len(values) == 32 and values[-1] == 0 and min(values) >= 0
+    actions = donor["primitive_cover"]
+    assert len({a["id"] for a in actions}) == len(actions)
+    inequalities = 0
+    for mask, value in enumerate(values):
+        for bit in (1, 2, 4, 8, 16):
+            assert value >= values[mask | bit]
+        for action in actions:
+            if not action["priced"]:
+                continue
+            # This is the pointwise native support cover, not a claim that the
+            # deterministic optimistic row is any physical member's kernel.
+            assert value <= F(action["price_lower"]) + values[mask | action["reach"]]
+            inequalities += 1
+    economy = json.loads((archive / "native-economy.json").read_text(encoding="utf-8"))["prices"]
+    mandatory = F(economy["eldritch_ichor:1"]) + F(economy["eldritch_exalt"])
+    programs = []
+    for name in ("program", "second_program"):
+        r = native[name]
+        assert r["semantic_acceptance"] and r["numeric_acceptance"]
+        probability = F(r["goal_weight"], r["total_weight"])
+        assert 0 <= probability <= F(r["goal_probability_upper"]) <= 1
+        assert 0 <= F(r["cost_lower"]) <= mandatory
+        assert r["modifier_exits"] == 72
+        # Both measured sources have at most five affixes after add. For the
+        # first source all-five-goal exits are true goals; the second retains
+        # a missing prefix. The frozen table is constant on every other mask.
+        assert len(set(values[:-1])) == 1
+        assert F(r["failure_lower_min"]) == F(r["failure_lower_max"]) == values[0]
+        exact = mandatory + (1-probability)*values[0]
+        assert F(r["lower"]) <= exact
+        assert exact - F(r["lower"]) < F("0.000000000001")
+        programs.append(dict(source=name, exact_probability=str(probability),
+            exact_cost_plus_failure=str(exact), checked_lower=r["lower"],
+            directed_shortfall=str(exact-F(r["lower"]))))
+    assert native["program"]["source"] != native["second_program"]["source"]
+    assert native["second_program"]["goal_weight"] == 0
+    assert native["reuse"]["fresh_table_and_output_equal"]
+    old_cover = json.loads((archive.parent / "2026-09-04-operator-complete-frontier-bellman-lower-pilot-v2/medium-coverage.json").read_text(encoding="utf-8"))
+    floors = native["prepared_action_floors"]
+    assert {r["id"] for r in floors} == {r["id"] for r in old_cover["canonical_actions"]}
+    assert len(floors) == 28 and sum(r["inapplicable"] for r in floors) == 6
+    baseline = native["baseline"]["independent_root"]
+    assert all(r["lower"] >= baseline and r["lower"] >= r["analytic"] and r["lower"] >= r["operator_lower"] for r in floors)
+    for model in native["complete_models"]:
+        assert model["open_families"] == 10
+        ranks = model["ranked_constraints"]
+        ids = [r["id"] for r in ranks]
+        assert len(ids) == len(set(ids))
+        assert {"residual_family_"+str(i) for i in range(1, 11)} <= set(ids)
+        assert model["lower"] == min(r["lower"] for r in ranks)
+        assert model["portfolio"] == max(baseline, model["lower"])
+    before, after = native["complete_models"]
+    ties = [r["id"] for r in after["ranked_constraints"] if r["lower"] == after["lower"]]
+    return dict(native_relation="producer-owned pointwise support cover; verifier checks its finite arithmetic",
+        checked_donor_inequalities=inequalities, programs=programs,
+        donor_value=native["baseline"]["new_post_lower"],
+        compatible_local_action_gain=max(baseline, native["program"]["lower"])-baseline,
+        complete_model_gain=after["lower"]-before["lower"],
+        portfolio_gain=after["portfolio"]-before["portfolio"],
+        limiting_ties=ties, production_authority=False)
+
+
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         raise SystemExit(__doc__)
-    result = verify(sys.argv[1])
-    Path(sys.argv[2]).write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"checked_models": len(result["records"]),
-        "normalized_roots": [r["checked_native_root"] for r in result["records"]
-                             if r["coefficient_mode"] == "normalized_stored_reference"],
-        "raw_mass_defects": result["raw_mass_defects"]}))
+    phase = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8-sig")).get("pilot") == "uniform-phase-lower-v1"
+    result = verify_phase(sys.argv[1]) if phase else verify(sys.argv[1])
+    Path(sys.argv[2]).write_bytes((json.dumps(result, indent=2) + "\n").encode("utf-8"))
+    if phase:
+        print(json.dumps(result))
+    else:
+        print(json.dumps({"checked_models": len(result["records"]),
+            "normalized_roots": [r["checked_native_root"] for r in result["records"]
+                                 if r["coefficient_mode"] == "normalized_stored_reference"],
+            "raw_mass_defects": result["raw_mass_defects"]}))

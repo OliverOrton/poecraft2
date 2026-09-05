@@ -1,0 +1,40 @@
+{
+  "native_relation": "producer-owned pointwise support cover; verifier checks its finite arithmetic",
+  "checked_donor_inequalities": 5632,
+  "programs": [
+    {
+      "source": "program",
+      "exact_probability": "5/557",
+      "exact_cost_plus_failure": "73928359779524081579/20068039939562930176",
+      "checked_lower": 3.683885421903051,
+      "directed_shortfall": "22587/20068039939562930176"
+    },
+    {
+      "source": "second_program",
+      "exact_probability": "0",
+      "exact_cost_plus_failure": "530918911719572253/144115188075855872",
+      "checked_lower": 3.6839899999999988,
+      "directed_shortfall": "157/144115188075855872"
+    }
+  ],
+  "donor_value": 0.01165,
+  "compatible_local_action_gain": 0.0,
+  "complete_model_gain": 0.0,
+  "portfolio_gain": 0.0,
+  "limiting_ties": [
+    "annul",
+    "harvest_reforge:physical",
+    "option:eldritch_side_intent:suffix:eldritch_exalt:eldritch_ichor:1",
+    "residual_family_1",
+    "residual_family_2",
+    "residual_family_3",
+    "residual_family_4",
+    "residual_family_5",
+    "residual_family_6",
+    "residual_family_7",
+    "residual_family_8",
+    "residual_family_9",
+    "residual_family_10"
+  ],
+  "production_authority": false
+}

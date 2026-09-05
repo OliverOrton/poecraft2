@@ -1,0 +1,65 @@
+{
+  "scope": "completed opt-in uniform phase proof; no production authority or portfolio gain",
+  "files": [
+    {
+      "path": "acceptance-build.txt",
+      "bytes": 492,
+      "sha256": "9615d7631dd34daa1eaade80b08b9530e70277482dd9d713ffb087fef8e640a1"
+    },
+    {
+      "path": "baseline-regression.json",
+      "bytes": 677,
+      "sha256": "60db105719cb206ed63f8e3acc0d80b0b70fc1112e4edb17106f29e377b52f82"
+    },
+    {
+      "path": "combined-eldritch-baseline.txt",
+      "bytes": 5176,
+      "sha256": "43fbf13bc175c7108516e13313f7a8810f73fd2d483203d15398e080181683fb"
+    },
+    {
+      "path": "combined-eldritch-current.txt",
+      "bytes": 5176,
+      "sha256": "43fbf13bc175c7108516e13313f7a8810f73fd2d483203d15398e080181683fb"
+    },
+    {
+      "path": "development-superseded-native.json",
+      "bytes": 257988,
+      "sha256": "0f978c1ff36861ef4c5136890a62fee1be77389622ee23c60a2aa72d47869eec"
+    },
+    {
+      "path": "eldritch-side-fixtures.txt",
+      "bytes": 678,
+      "sha256": "f5dced73d88c0b07674c957170954d76a3a15d35647a31b2a2b3b8d02f3be7b3"
+    },
+    {
+      "path": "native.json",
+      "bytes": 257989,
+      "sha256": "7429e70d6b5099ab8a940d31f56a3b6878bc2526b1435958d830ae2779ff54a1"
+    },
+    {
+      "path": "phase-tests.txt",
+      "bytes": 48,
+      "sha256": "576d4f47c773c0dccdbeeb5b7b2c5d6c11ca6c6603f4b27309b333d95ad0f45b"
+    },
+    {
+      "path": "provenance.json",
+      "bytes": 43328,
+      "sha256": "a7eb388e0a9c757b7c6dbe742031dc0bd2a578a67123be97aeeeb10e510a54d0"
+    },
+    {
+      "path": "README.md",
+      "bytes": 14420,
+      "sha256": "da196ff2c6dfc5ce249da7e3de98a7767648b65e83eaaf636e4f32277e74f05b"
+    },
+    {
+      "path": "reference.json",
+      "bytes": 1213,
+      "sha256": "f7b7418e59582db95fbc784ed515fa4dcd36ceae645c4aea9af707928138bb59"
+    },
+    {
+      "path": "test-selector-build.txt",
+      "bytes": 2331,
+      "sha256": "e626faeb45dffba69814b0a1f19d7f4193a5ca6e34e2e36a02cc22b5a7fd921e"
+    }
+  ]
+}

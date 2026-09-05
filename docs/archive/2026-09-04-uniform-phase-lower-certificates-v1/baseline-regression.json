@@ -1,0 +1,15 @@
+{
+  "reviewed_head": "d74a9eb8c5b6b80a48c19dbde2e2c7c5562ad87c",
+  "reviewed_binary": {
+    "path": "build/qualification/operator-complete-frontier-v2/native/poecraft_engine_tests.exe",
+    "bytes": 15977094,
+    "sha256": "aec0d2762fa111daea3d73e7b907b3db37f7a355ffbef1e0066c7e60587217e1"
+  },
+  "archived_expected_sha256": "aec0d2762fa111daea3d73e7b907b3db37f7a355ffbef1e0066c7e60587217e1",
+  "flag": "--solver-automatic-eldritch-only",
+  "both_exit_codes": -1073741819,
+  "windows_exception": "0xC0000005",
+  "failure_logs_byte_identical": true,
+  "failure_lines_each": 33,
+  "conclusion": "pre-existing combined resource-stop/Imprint failure; combined flag did not pass"
+}

@@ -1098,7 +1098,8 @@ struct AbstractLayout {
  * that an action cannot directly satisfy a goal partition. */
 std::vector<std::uint64_t> action_explicit_affix_reachable_mask(
     const SessionImpl& session,
-    const ActionDescriptor& action);
+    const ActionDescriptor& action,
+    bool all_item_tag_signatures = false);
 
 /*
  * Derive the abstract state layout for (goal, candidate action subset).

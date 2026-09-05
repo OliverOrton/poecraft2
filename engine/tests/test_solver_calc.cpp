@@ -4,6 +4,7 @@
 #include "../src/solver_action_family_contract.hpp"
 #include "../src/solver_internal.hpp"
 #include "../src/solver_solve_types.hpp"
+#include "../src/solver_phase_lower.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
 
@@ -3691,4 +3692,122 @@ void run_solver_calc_tests(const char* artifact_dir) {
 void run_solver_calc_gated_equivalence_tests() {
     run_projected_reforge_frontier_equivalence_tests();
     run_harvest_targeted_natural_regression();
+}
+
+void run_solver_phase_lower_tests() {
+    using namespace poecraft::solver::quotient;
+    const auto rejects = [](const auto& operation) {
+        bool refused = false;
+        try { operation(); } catch (const std::exception&) { refused = true; }
+        PC_CHECK(refused);
+    };
+    for (const auto& [n, d] : std::vector<std::pair<std::uint64_t, std::uint64_t>>{
+            {0, 7}, {1, 3}, {2, 3}, {7, 7}, {1, UINT64_MAX}, {UINT64_MAX-1, UINT64_MAX}}) {
+        const auto p = phase_weight_probability(n, d);
+        const long double exact = static_cast<long double>(n) / static_cast<long double>(d);
+        PC_CHECK(p.lower <= exact && exact <= p.upper);
+    }
+    rejects([] { phase_weight_probability(2, 1); });
+    rejects([] { phase_weight_probability(0, 0); });
+    PC_CHECK(phase_two_exit_lower(0, {0.1, 0.3}, 0, 10) <= 7);
+    PC_CHECK(phase_two_exit_lower(0, {0.1, 0.3}, 0, 10) > 6.999);
+    PC_CHECK(phase_two_exit_lower(0, {0.1, 0.3}, 10, 0) <= 1);
+    PC_CHECK(phase_two_exit_lower(0, {0.1, 0.3}, 10, 0) > .999);
+    rejects([] { phase_two_exit_lower(0, {.8, .2}, 0, 10); });
+
+    auto session = make_calc_session();
+    auto registry = build_action_registry(*session);
+    // A complete fixture economy; even Unveil consumes one fixture unit.
+    for (auto& action : registry.actions) action.cost_keys = {"fixture:step"};
+    const PhaseLowerPrices prices{{"fixture:step", 2}};
+    // A fresh-base zero is not a uniform support exclusion: an influence
+    // signature can activate it. The ordinary helper retains its old result.
+    auto signature_session = make_calc_session();
+    pc_bitset_clear(signature_session->positive_spawn_weight_mask.data(), 0);
+    const auto& draw_descriptor = registry.actions.at(registry.index_by_id.at("exalt"));
+    const auto ordinary_support = action_explicit_affix_reachable_mask(*signature_session, draw_descriptor);
+    const auto uniform_support = action_explicit_affix_reachable_mask(*signature_session, draw_descriptor, true);
+    PC_CHECK(!pc_bitset_test(ordinary_support.data(), 0));
+    PC_CHECK(pc_bitset_test(uniform_support.data(), 0));
+    auto goal = family_goal_100(); goal.rarity = PC_RARITY_RARE;
+    CalcContext calc(session, goal, registry, basic_indices(registry));
+    pc_item_state blocked{}; blocked.rarity = PC_RARITY_RARE; blocked.searing_exarch_tier = 1;
+    place(&blocked, PC_SIDE_PREFIX, 2, 10);
+    pc_item_state open{}; open.rarity = PC_RARITY_RARE; open.searing_exarch_tier = 1;
+    place(&open, PC_SIDE_PREFIX, 3, 12);
+    auto donor = PhaseLowerProducer::prepare(calc, prices, blocked, {100, 0});
+    PC_CHECK(!donor->original_candidate_accepted);
+    PC_CHECK(donor->values[0] > 1.999 && donor->values[0] <= 2);
+    PC_CHECK(donor->lookup(calc, prices, blocked) == donor->lookup(calc, prices, open));
+    // Same goal/occupancy projection, genuinely different native kernels. The
+    // blocked representative accepts h=100, but its hidden open member refutes
+    // it. The all-member pointwise repair is valid for both.
+    const auto probability = [&](const pc_item_state& item) {
+        std::uint64_t hit = 0;
+        const auto total = calc.phase_lower_add_weights(item, registry.index_by_id.at("eldritch_exalt"),
+            [&](const pc_item_state& exit, std::uint64_t weight) {
+                if (item_contains_mod(exit, 0)) hit += weight;
+            });
+        return phase_weight_probability(hit, total);
+    };
+    const auto blocked_p = probability(blocked), open_p = probability(open);
+    PC_CHECK(blocked_p.upper == 0 && open_p.lower > .02);
+    PC_CHECK(2 + (1-blocked_p.upper)*100 >= 100);
+    PC_CHECK(2 + (1-open_p.lower)*100 < 100);
+    PC_CHECK(phase_two_exit_lower(2, blocked_p, 0, donor->values[0]) >= donor->values[0]);
+    PC_CHECK(phase_two_exit_lower(2, open_p, 0, donor->values[0]) >= donor->values[0]);
+    auto phase = open; phase.eater_of_worlds_tier = 1;
+    PC_CHECK(!donor->lookup(calc, prices, phase));
+    auto repriced = prices; repriced["fixture:step"] = 3;
+    PC_CHECK(!donor->lookup(calc, repriced, open));
+    auto fresh = PhaseLowerProducer::prepare(calc, prices, open, {100, 0});
+    PC_CHECK(fresh->identity == donor->identity && fresh->values == donor->values);
+    auto changed = PhaseLowerProducer::prepare(calc, repriced, open, {100, 0});
+    PC_CHECK(changed->identity != donor->identity && changed->values != donor->values);
+    auto new_phase = PhaseLowerProducer::prepare(calc, prices, phase, {100, 0});
+    PC_CHECK(new_phase->lookup(calc, prices, phase).has_value());
+    auto free_prices = prices; free_prices["fixture:step"] = 0;
+    auto zero_escape = PhaseLowerProducer::prepare(calc, free_prices, open, {100, 0});
+    PC_CHECK(zero_escape->values[0] == 0);
+    QuotientLowerBudget cancel; cancel.cancelled = [] { return true; };
+    rejects([&] { PhaseLowerProducer::prepare(calc, prices, open, {100, 0}, cancel); });
+    QuotientLowerBudget tiny; tiny.max_scratch_bytes = 64;
+    rejects([&] { PhaseLowerProducer::prepare(calc, prices, open, {100, 0}, tiny); });
+    auto unknown = goal; unknown.automatic_candidate_kind_mask |= 1u << 31;
+    CalcContext unknown_calc(session, unknown, registry, basic_indices(registry));
+    rejects([&] { PhaseLowerProducer::prepare(unknown_calc, prices, open, {100, 0}); });
+
+    GoalSlot suffix; suffix.family_id = 104; suffix.min_tier = 1;
+    goal.slots.push_back(suffix); goal.automatic_candidates = true;
+    goal.automatic_candidate_kind_mask = automatic_candidate_kind_bit(AutomaticCandidateKind::EldritchSide);
+    CalcContext program_calc(session, goal, registry, basic_indices(registry));
+    pc_item_state source{}; source.rarity = PC_RARITY_RARE;
+    place(&source, PC_SIDE_PREFIX, 0, 10);
+    auto post = source; post.eater_of_worlds_tier = 1;
+    auto program_donor = PhaseLowerProducer::prepare(program_calc, prices, post, {100, 100, 100, 0});
+    const std::string id = "option:eldritch_side_intent:suffix:eldritch_exalt:eldritch_ichor:1";
+    const auto before = program_donor->memory_snapshot().total_bytes;
+    {
+        const auto proof = PhaseLowerProducer::compose(program_calc, prices, source, id, *program_donor);
+        const auto& r = proof.record;
+        PC_CHECK(r.cost_lower <= 4 && r.cost_lower > 3.999);
+        PC_CHECK(r.goal_weight > 0 && r.goal_weight < r.total_weight);
+        const long double exact = 4 + (1-static_cast<long double>(r.goal_weight)/r.total_weight)*r.failure_lower_min;
+        PC_CHECK(r.lower <= exact && r.lower > exact-1e-10L);
+        PC_CHECK(r.physical_exits > 1);
+        auto second = source; place(&second, PC_SIDE_PREFIX, 3, 12);
+        const auto other = PhaseLowerProducer::compose(program_calc, prices, second, id, *program_donor);
+        PC_CHECK(other.record.source != r.source);
+        PC_CHECK(other.record.goal_weight == 0 && other.record.failure_lower_min == 0);
+        PC_CHECK(other.record.lower <= 4);
+    }
+    PC_CHECK(program_donor->memory_snapshot().total_bytes == before);
+    rejects([&] { PhaseLowerProducer::compose(program_calc, prices, source, id, *program_donor, cancel); });
+    rejects([&] { PhaseLowerProducer::compose(program_calc, prices, source, "missing internal choice", *program_donor); });
+    rejects([&] { PhaseLowerProducer::compose(program_calc, repriced, source, id, *program_donor); });
+    PC_CHECK(program_donor->memory_snapshot().total_bytes == before);
+    static_assert(!std::is_default_constructible_v<PreparedPhaseLowerView>);
+    static_assert(!std::is_default_constructible_v<PhaseProgramLowerWitness>);
+    static_assert(!std::is_constructible_v<PreparedPhaseLowerView, QuotientLowerCertificate>);
+    static_assert(!std::is_move_constructible_v<PhaseProgramLowerWitness>);
 }

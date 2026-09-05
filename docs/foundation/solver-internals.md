@@ -16,8 +16,9 @@ inventory, plus benchmark-private generated-envelope attribution.
 Final acceptance for a selected boundary is recorded in its result rather
 than implied by this source audit.
 
-2026-09-04 addendum: the benchmark-private lower-only quotient consumer is
-mapped below; its contract is in [Lower And Pruning Authority](../solver/lower-pruning.md).
+2026-09-04 addendum: the benchmark-private lower-only quotient consumer and
+opt-in native phase donor/program producer are mapped below; their contracts
+are in [Lower And Pruning Authority](../solver/lower-pruning.md).
 
 ## Execution Flow
 
@@ -296,6 +297,7 @@ core model edit is cheap.
 | Admissible carrier/operator bounds or public lower authority | `solver_solve_bounds.cpp`, `solver_solve_carrier_pattern.cpp`, `solver_solve_operator_proof.cpp`, and `solver_solve_envelope_proof.cpp`, then the consumer/publication boundary in `solver_solve_constructive.cpp` or `solver_solve_finish.cpp` |
 | Bellman values, properness, verified incumbents, or policy finalization | the matching `solver_solve_bellman.cpp`, `solver_solve_audit.cpp`, `solver_solve_constructive.cpp`, or `solver_solve_finish.cpp` owner |
 | Benchmark-private operator-complete lower queries | `solver_quotient_lower.*` on `QuotientBellmanGraph`/`ProofStore`, `solver_action_coverage.hpp`, shared `solver_sparse_policy.*`; no executable or product lower authority |
+| Opt-in uniform phase donor and paid program proof | `solver_phase_lower.*`, export from `solver_solve_bounds.cpp`, all-signature support in `solver_abstract.cpp`, native family and integer-pool seams in `solver_options_automatic.cpp` / `solver_calc.cpp`; no production activation |
 | Exact carrier discovery or canonicalization | `solver_refinement_graph_discovery.hpp` |
 | Observation projection or partition proof | `solver_refinement_observation.cpp`, `solver_refinement_features.cpp`, `solver_refinement_partition.cpp` |
 | Production exact-policy repair or improvement | the matching `solver_policy_oracle_*.inc` owner |

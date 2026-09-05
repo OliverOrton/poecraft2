@@ -1,0 +1,9 @@
+carrier-aware completion proof: states=175 rows=342 universal=10 carrier=10 protected=10
+successor lower chaos: survive=0 lower=100 exact_h=102.917316
+successor lower scour: survive=0 lower=11 exact_h=11
+successor lower annul: survive=7 lower=5 exact_h=7
+solver automatic Eldritch lower: seed=0.003000000 bellman_rows=3
+automatic admission continuation: resumes=7 suspensions=6 max_leaf_ms=0.180 final_owned=65961
+solver automatic Eldritch compiled policy: exact=11.005000 empirical=10.916956 runs=1000
+solver automatic Eldritch delta: closed=1 outside=187 states=338 expanded=338 admitted=1236 rejected=0 unresolved=0
+solver Eldritch constructor tests: 2379 checks, 0 failures
