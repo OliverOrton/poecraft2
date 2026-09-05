@@ -6,6 +6,16 @@ routes to them rather than duplicating complete reports.
 
 Parent: [Documentation map](README.md)
 
+## Operator-Complete Frontier Bellman Lower Pilot v2
+
+The [completed native pilot](archive/2026-09-04-operator-complete-frontier-bellman-lower-pilot-v2/README.md)
+retains canonical action/family coverage and a lower-only quotient consumer.
+One fresh native micro export matches the archived kernels; eight exact
+raw/reference checks reproduce the four model stages through approximately
+23.79. Focused quotient and fixed-J/refinement checks pass. The medium audit
+retains ten open families and a 36.428617 floor; its post-Ichor donor remains
+conditional, with zero portfolio gain and no demonstrated preparation reuse.
+
 ## Free-Value Bellman Research
 
 The 2026-09-04

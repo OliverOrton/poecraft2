@@ -36,6 +36,12 @@ struct CarrierLadderExactBoundaryDiagnosticConfig {
     CarrierLadderExactBoundaryLimits limits;
 };
 
+/* Native benchmark-only exact query seam. Borrows the actual calculator from
+ * an idle handle; no copied handle layout, solve/route prerequisite or C ABI.
+ * Caller must preserve handle lifetime and check caller scope plus native
+ * action_legal before asking for any kernel. */
+CalcContext& solver_lower_diagnostic_calculator(pc_solver_handle handle);
+
 /* Private benchmark construction hook. It retains the ordinary product
  * primitive registry and goal abstraction while allowing a finite subset of
  * generated AutomaticCandidateKind values. It is deliberately absent from

@@ -421,6 +421,17 @@ certify_policy_potential_cegar_shadow(
         add_key_bytes(context.observed_offer);
     };
     for (const PolicyPotentialCandidateEntry& candidate : candidates) {
+        add_key_bytes(candidate.expected_actions.scope_identity);
+        saturating_add(candidate_input_bytes,
+            candidate.expected_actions.actions.capacity() * sizeof(StableKey) +
+            candidate.expected_actions.families.capacity() * sizeof(CanonicalActionFamily));
+        for (const auto& key : candidate.expected_actions.actions) add_key_bytes(key);
+        for (const auto& family : candidate.expected_actions.families) {
+            add_key_bytes(family.identity);
+            saturating_add(candidate_input_bytes,
+                family.members.capacity() * sizeof(StableKey));
+            for (const auto& key : family.members) add_key_bytes(key);
+        }
         add_context_bytes(candidate.identity);
         add_context_bytes(candidate.selected_kernel.source);
         add_key_bytes(
@@ -629,8 +640,13 @@ certify_policy_potential_cegar_shadow(
         }
 
         ++certificate.constraints_examined; /* selected planner operation */
-        if (input.caller_authorized_actions !=
-            input.action_constraints.size() + 1) {
+        std::vector<CanonicalActionCover> action_cover{
+            {selected.selected_operator_identity, false, {}}};
+        for (const auto& constraint : input.action_constraints)
+            action_cover.push_back({constraint.action_identity, false, {}});
+        if (input.expected_actions.scope_identity != certificate.authority.caller_scope ||
+            !validate_canonical_action_coverage(
+                input.expected_actions, action_cover).empty()) {
             refuse(
                 PolicyPotentialCandidateStatus::ActionCoverageIncomplete,
                 "caller-authorized action coverage is incomplete");
@@ -646,7 +662,8 @@ certify_policy_potential_cegar_shadow(
                     "action constraint identity does not match its source");
                 continue;
             }
-            bool closed = constraint.complete;
+            bool closed = constraint.complete && constraint.kind !=
+                PolicyPotentialConstraintKind::SelectedKernel;
             double rhs = constraint.rhs;
             if (constraint.kind ==
                     PolicyPotentialConstraintKind::ExactAlternativeRow) {

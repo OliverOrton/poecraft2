@@ -594,6 +594,14 @@ struct pc_solver {
         carrier_ladder_exact_boundary_diagnostic;
 };
 
+namespace poecraft::solver {
+CalcContext& solver_lower_diagnostic_calculator(pc_solver_handle handle) {
+    if (handle == nullptr || !handle->calc || handle->solve_work || handle->solved)
+        throw std::invalid_argument("lower diagnostic requires an idle calculator handle");
+    return *handle->calc;
+}
+} // namespace poecraft::solver
+
 namespace {
 
 pc_result create_solver(

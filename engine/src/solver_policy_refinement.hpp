@@ -1,5 +1,7 @@
 #pragma once
 
+#include "solver_action_coverage.hpp"
+
 #include "solver_refinement.hpp"
 #include "solver_solve_contracts.hpp"
 #include "solver_cooperative_task.hpp"
@@ -675,7 +677,7 @@ struct PolicyPotentialCandidateEntry {
     PolicyPotentialIdentityContext identity;
     double policy_value = std::numeric_limits<double>::infinity();
     double existing_lower = 0.0;
-    std::uint64_t caller_authorized_actions = 0;
+    CanonicalActionSet expected_actions;
     PolicyPotentialSelectedKernel selected_kernel;
     std::vector<PolicyPotentialActionConstraint> action_constraints;
 };

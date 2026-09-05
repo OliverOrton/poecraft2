@@ -1,0 +1,33 @@
+--- a/engine/src/solver_quotient_bellman.cpp
++++ b/engine/src/solver_quotient_bellman.cpp
+@@ -324,0 +325,3 @@
++        if (choice.has_self && distinct_targets.insert(row.source_cell_id).second)
++            targets.push_back({row.source_cell_id,
++                cells_.at(row.source_cell_id).target_generation});
+--- a/engine/src/solver_quotient_lower.cpp
++++ b/engine/src/solver_quotient_lower.cpp
+@@ -247,0 +248,5 @@
++    if (candidate && candidate->size() != cell_by_state_.size()) {
++        refuse(QuotientLowerStatus::NumericInconclusive,
++            "candidate dimension does not match this graph");
++        return out;
++    }
+@@ -259,0 +265,4 @@
++            transition_cache_.rows.size() * sizeof(double) +
++            query.sources.capacity() * sizeof(QuotientLowerSource) +
++            query.boundaries.capacity() * sizeof(QuotientLowerBoundary) +
++            query.roots.capacity() * sizeof(std::uint32_t) +
+--- a/engine/benchmarks/solver_quotient_lower_probe.cpp
++++ b/engine/benchmarks/solver_quotient_lower_probe.cpp
+@@ -328 +328,2 @@
+-        phase_state.flags == old_state.flags &&
++        (phase_state.flags & solve_detail::kProtectionFlags) ==
++            (old_state.flags & solve_detail::kProtectionFlags) &&
+--- a/engine/tests/test_solver_quotient_lower.cpp
++++ b/engine/tests/test_solver_quotient_lower.cpp
+@@ -90,0 +91 @@
++    PC_CHECK(graph.check_lower(q, {}).status == QuotientLowerStatus::NumericInconclusive);
+@@ -164,0 +166,3 @@
++    graph.invalidate_target_split(0, 2);
++    q.model_revision = graph.model_revision();
++    PC_CHECK(graph.solve_lower(q).status == QuotientLowerStatus::StaleModel);

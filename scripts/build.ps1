@@ -130,7 +130,9 @@ toolchain is installed.
             "$Root/engine/benchmarks/solver_executable_fragment_engine.cpp",
             "$Root/engine/tests/test_solver_fragment.cpp",
             "$Root/engine/tests/test_solver_quotient_proof.cpp",
-            "$Root/engine/tests/test_solver_quotient_partition.cpp"
+            "$Root/engine/tests/test_solver_quotient_partition.cpp",
+            "$Root/engine/tests/test_solver_quotient_bellman.cpp",
+            "$Root/engine/tests/test_solver_quotient_lower.cpp"
         )
         # -static-libstdc++/-static-libgcc avoid a ld.bfd crash (exit 116) seen
         # in MSYS2 ucrt64 binutils when linking the shared C++ runtime against

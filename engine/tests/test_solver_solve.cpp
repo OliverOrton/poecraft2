@@ -2022,7 +2022,9 @@ void run_policy_potential_scc_cegar_tests() {
         entry.identity = identity;
         entry.policy_value = value;
         entry.existing_lower = 1.0;
-        entry.caller_authorized_actions = 2;
+        entry.expected_actions = {authority.caller_scope, 1, true,
+            {kernel.selected_operator_identity,
+             {identity.exact_entry.front() + 5000}}, {}};
         entry.selected_kernel = std::move(kernel);
         entry.action_constraints.push_back(
             lower_constraint(identity, identity.exact_entry.front() + 5000,
@@ -2047,6 +2049,22 @@ void run_policy_potential_scc_cegar_tests() {
     PC_CHECK(acyclic.constraints_closed_by_existing_lower == 2);
     PC_CHECK(acyclic.exact_rows_examined == 0);
     PC_CHECK(acyclic.lifecycle_mutations == 0);
+
+    /* The archived count-only counterexample: duplicate expensive action
+     * cannot stand in for an expected cheaper alternative. */
+    auto duplicate = entry_b;
+    duplicate.expected_actions.actions.push_back({5999});
+    duplicate.action_constraints.push_back(duplicate.action_constraints.front());
+    const auto duplicate_result =
+        refinement::certify_policy_potential_cegar_shadow(
+            authority, strategy, {duplicate});
+    PC_CHECK(duplicate_result.certified_entries == 0);
+    PC_CHECK(duplicate_result.candidates.front().status == refinement::
+        PolicyPotentialCandidateStatus::ActionCoverageIncomplete);
+    duplicate.action_constraints.back().action_identity =
+        duplicate.selected_kernel.selected_operator_identity;
+    PC_CHECK(refinement::certify_policy_potential_cegar_shadow(
+        authority, strategy, {duplicate}).certified_entries == 0);
 
     /* A cyclic selected policy must close as one simultaneous SCC. */
     const auto c = context(30);
@@ -2093,6 +2111,8 @@ void run_policy_potential_scc_cegar_tests() {
     fixed_option.selected_kernel.observed_choice_states = 1;
     fixed_option.action_constraints = {
         lower_constraint(fixed_option.identity, 5070, 12.0)};
+    fixed_option.expected_actions.actions = {
+        fixed_option.selected_kernel.selected_operator_identity, {5070}};
     const auto fixed = refinement::certify_policy_potential_cegar_shadow(
         authority, strategy, {fixed_option});
     PC_CHECK(fixed.certified_entries == 1);
@@ -2137,6 +2157,8 @@ void run_policy_potential_scc_cegar_tests() {
     improving.selected_kernel.source = improving.identity;
     improving.action_constraints = {
         lower_constraint(improving.identity, 5100, 12.0)};
+    improving.expected_actions.actions = {
+        improving.selected_kernel.selected_operator_identity, {5100}};
     improving.action_constraints.front().kind = refinement::
         PolicyPotentialConstraintKind::ExactAlternativeRow;
     improving.action_constraints.front().existing_lower_identity.clear();
@@ -2158,6 +2180,8 @@ void run_policy_potential_scc_cegar_tests() {
     incomplete.selected_kernel.source = incomplete.identity;
     incomplete.action_constraints = {
         lower_constraint(incomplete.identity, 5110, 12.0)};
+    incomplete.expected_actions.actions = {
+        incomplete.selected_kernel.selected_operator_identity, {5110}};
     incomplete.action_constraints.front().kind = refinement::
         PolicyPotentialConstraintKind::ExactAlternativeRow;
     incomplete.action_constraints.front().existing_lower_identity.clear();

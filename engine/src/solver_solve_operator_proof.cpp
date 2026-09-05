@@ -1860,7 +1860,7 @@ SolveWork::Impl::audit_verified_policy_alternative_shadow(
                  * caller-action enumeration has happened. The typed SCC
                  * validator must therefore refuse lower certification while
                  * still reporting the exact dependency graph. */
-                candidate.caller_authorized_actions = 0;
+                candidate.expected_actions.complete = false;
                 candidate.selected_kernel.status = refinement::
                     PolicyPotentialSelectedKernelStatus::Complete;
                 candidate.selected_kernel.source = candidate.identity;

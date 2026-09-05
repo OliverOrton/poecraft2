@@ -6,7 +6,8 @@ Parent: [Documentation map](../README.md)
 
 ## Current work
 
-None. Oliver must select the next implementation boundary before work resumes.
+The [Operator-Complete Frontier Bellman Lower Pilot v2](../archive/2026-09-04-operator-complete-frontier-bellman-lower-pilot-v2/README.md)
+completed benchmark-private. Oliver must select the next implementation chunk.
 The completed diagnosis-only statewise executable-continuation certificate
 result is preserved in the
 [documentation archive](../archive/2026-08-30-early-executable-statewise-upper-rc-consumer-v1/README.md).

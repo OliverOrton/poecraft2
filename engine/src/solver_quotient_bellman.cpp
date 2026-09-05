@@ -106,15 +106,23 @@ const char* quotient_bellman_status_name(
 }
 
 QuotientBellmanGraph::QuotientBellmanGraph(
-        const std::uint64_t max_owned_bytes) {
+        const std::uint64_t max_owned_bytes,
+        const QuotientBellmanMode mode) : mode_(mode) {
     transition_cache_.quotient_proofs =
-        std::make_shared<ProofStore>(max_owned_bytes);
+        std::make_shared<ProofStore>(mode == QuotientBellmanMode::LowerOnly
+            ? std::min<std::uint64_t>(max_owned_bytes, 16ull * 1024 * 1024)
+            : max_owned_bytes);
 }
 
 QuotientBellmanResult
 QuotientBellmanGraph::project_unique_certified_policy(
         const std::vector<std::uint32_t>& entry_cell_ids) const {
     QuotientBellmanResult out;
+    if (mode_ == QuotientBellmanMode::LowerOnly) {
+        out.status = QuotientBellmanStatus::InvalidRow;
+        out.failure_reason = "lower-only graph has no executable projection";
+        return out;
+    }
     out.selected_rows_by_state.assign(cell_by_state_.size(), kNoRow);
     std::set<std::uint32_t> pending;
     std::set<std::uint32_t> reachable;
@@ -186,6 +194,23 @@ void QuotientBellmanGraph::install_cells(
         [](const auto& left, const auto& right) {
             return left.cell_id < right.cell_id;
         });
+    std::uint64_t reservation_bytes = 0;
+    if (mode_ == QuotientBellmanMode::LowerOnly) {
+        reservation_bytes = 1024 + 4 *
+            proof_store()->ledger().snapshot().bytes[
+                static_cast<std::size_t>(ProofMemoryCategory::RowKernel)];
+        for (std::size_t i = 0; i < cells.size(); ++i) {
+            const auto& cell = cells[i];
+            const auto found = cells_.find(cell.cell_id);
+            if (cell.semantic_identity.empty() || cell.generation == 0 ||
+                (found != cells_.end() && found->second.cell != cell) ||
+                (i && cells[i - 1].cell_id == cell.cell_id && cells[i - 1] != cell))
+                throw std::invalid_argument("invalid lower cell batch");
+            reservation_bytes += 512 + 32 * cell.semantic_identity.capacity();
+        }
+    }
+    ScopedProofMemoryCharge reservation(proof_store()->ledger(),
+        ProofMemoryCategory::Scratch, reservation_bytes);
     for (QuotientBellmanCellInput& cell : cells) {
         if (cell.semantic_identity.empty() || cell.generation == 0) {
             throw std::invalid_argument(
@@ -210,12 +235,14 @@ void QuotientBellmanGraph::install_cells(
                 std::move(cell), state,
                 generation,
                 generation});
+        ++model_revision_;
         if (transition_cache_.state_rows.size() <= state) {
             transition_cache_.state_rows.resize(state + 1);
         }
     }
     transition_cache_.discovered_states =
         static_cast<std::uint32_t>(cell_by_state_.size());
+    reservation.reset();
     refresh_row_kernel_bytes();
 }
 
@@ -230,19 +257,26 @@ void QuotientBellmanGraph::supersede_cell(
     invalidate_source_split(cell.cell_id, cell.generation);
     invalidate_target_split(cell.cell_id, cell.generation);
     found->second.cell = std::move(cell);
+    ++model_revision_;
     refresh_row_kernel_bytes();
 }
 
 std::uint64_t QuotientBellmanGraph::append_row(
         QuotientBellmanRowInput row) {
+    const bool lower_only = mode_ == QuotientBellmanMode::LowerOnly;
+    if ((!lower_only && (row.lower_provenance || !row.choices.empty())) ||
+        (lower_only && (row.certified || row.proof_identity ||
+                       !row.lower_provenance)))
+        throw std::invalid_argument("row authority does not match graph mode");
     const std::optional<std::uint32_t> source =
         state_for_cell(row.source_cell_id);
     if (!source.has_value() || !std::isfinite(row.cost) || row.cost < 0.0) {
         throw std::invalid_argument(
             "quotient Bellman row has an invalid source or cost");
     }
-    row.transitions = canonical_transitions(std::move(row.transitions));
-    if (row.transitions.empty()) {
+    if (!lower_only)
+        row.transitions = canonical_transitions(std::move(row.transitions));
+    if (row.transitions.empty() && row.choices.empty()) {
         throw std::invalid_argument(
             "nonterminal quotient Bellman row has no transitions");
     }
@@ -254,7 +288,18 @@ std::uint64_t QuotientBellmanGraph::append_row(
     sparse.admitted = row.admitted;
     std::vector<TargetGenerationDependency> targets;
     std::set<std::uint32_t> distinct_targets;
+    if (lower_only) {
+        const auto& proof = *row.lower_provenance;
+        if (proof.kind != LowerEvidenceKind::ExactDeclaredKernel ||
+            proof.request_identity.empty() || proof.action_identity.empty() ||
+            proof.evidence_identity.empty() ||
+            proof.source_identity != cells_.at(row.source_cell_id)
+                                         .cell.semantic_identity.value())
+            throw std::invalid_argument("lower row lacks exact source provenance");
+    }
     for (const QuotientBellmanTransitionInput& transition : row.transitions) {
+        if (!valid_probability(transition.probability))
+            throw std::invalid_argument("invalid lower transition probability");
         const auto target = cells_.find(transition.target_cell_id);
         if (target == cells_.end()) {
             throw std::invalid_argument(
@@ -267,15 +312,28 @@ std::uint64_t QuotientBellmanGraph::append_row(
             targets.push_back({
                 transition.target_cell_id,
                 target->second.target_generation});
-            std::vector<std::uint32_t>& predecessors =
-                reverse_predecessors_.at(target->second.state);
-            if (std::find(
-                    predecessors.begin(), predecessors.end(), *source) ==
-                predecessors.end()) {
-                predecessors.push_back(*source);
-                std::sort(predecessors.begin(), predecessors.end());
-            }
         }
+    }
+    for (const auto& choice : row.choices) {
+        if (!valid_probability(choice.probability) ||
+            (!choice.has_self && choice.target_cell_ids.empty()))
+            throw std::invalid_argument("invalid lower observed choice");
+        probability_sum += WideFloat{choice.probability};
+        solve_detail::SparsePolicyChoiceInput input;
+        input.probability = choice.probability;
+        input.has_self = choice.has_self;
+        if (choice.has_self && distinct_targets.insert(row.source_cell_id).second)
+            targets.push_back({row.source_cell_id,
+                cells_.at(row.source_cell_id).target_generation});
+        for (const auto id : choice.target_cell_ids) {
+            const auto target = cells_.find(id);
+            if (target == cells_.end())
+                throw std::invalid_argument("unknown lower choice target");
+            input.successors.push_back(target->second.state);
+            if (distinct_targets.insert(id).second)
+                targets.push_back({id, target->second.target_generation});
+        }
+        sparse.choices.push_back(std::move(input));
     }
     if (std::fabs(probability_sum.value() - 1.0) > 1e-12) {
         throw std::invalid_argument(
@@ -328,6 +386,35 @@ std::uint64_t QuotientBellmanGraph::append_row(
         row.proof_identity = std::move(canonical);
     }
 
+    /* Lower rows are bounded and reserved before any graph mutation. A cap
+     * refusal leaves the old scalar/family snapshot usable and installs no
+     * fraction of a row. The conservative overlap includes arena growth. */
+    std::uint64_t lower_reservation_bytes = 0;
+    if (lower_only) {
+        lower_reservation_bytes = 4096 +
+            4 * transition_cache_.quotient_proofs->ledger().snapshot()
+                    .bytes[static_cast<std::size_t>(ProofMemoryCategory::RowKernel)] +
+            256 * (row.transitions.size() + row.choices.size() + targets.size());
+        for (const auto& choice : row.choices)
+            lower_reservation_bytes += 64 * choice.target_cell_ids.size();
+        const auto& proof = *row.lower_provenance;
+        lower_reservation_bytes += 32 * (proof.request_identity.size() +
+            proof.source_identity.size() + proof.action_identity.size() +
+            proof.evidence_identity.size());
+    }
+    ScopedProofMemoryCharge reservation(
+        transition_cache_.quotient_proofs->ledger(),
+        ProofMemoryCategory::Scratch, lower_reservation_bytes);
+    for (const auto& target : targets) {
+        auto& predecessors = reverse_predecessors_.at(
+            cells_.at(target.cell_id).state);
+        if (std::find(predecessors.begin(), predecessors.end(), *source) ==
+            predecessors.end()) {
+            predecessors.push_back(*source);
+            std::sort(predecessors.begin(), predecessors.end());
+        }
+    }
+
     std::uint64_t transition_hash = kTransitionHashOffset;
     hash_transition_token(transition_hash, sparse.transitions.size());
     for (const SparsePolicyTransitionInput& transition : sparse.transitions) {
@@ -364,6 +451,11 @@ std::uint64_t QuotientBellmanGraph::append_row(
         solve_detail::append_sparse_policy_row(
             transition_cache_, priced_rows_, sparse, shared_span);
     if (!shared_span.has_value()) transition_bucket.push_back(stable_row);
+    if (lower_only) {
+        lower_row_bindings_.push_back({std::move(*row.lower_provenance),
+            cells_.at(row.source_cell_id).source_generation, targets,
+            transition_cache_.quotient_proofs->price_generation()});
+    }
     if (row.certified) {
         auto [payload, inserted] =
             transition_cache_.quotient_proofs->intern_payload(
@@ -379,6 +471,8 @@ std::uint64_t QuotientBellmanGraph::append_row(
             admission_generation_);
         ++telemetry_.row_reprojections;
     }
+    ++model_revision_;
+    reservation.reset();
     refresh_row_kernel_bytes();
     return stable_row;
 }
@@ -393,6 +487,7 @@ std::uint64_t QuotientBellmanGraph::invalidate_source_split(
             "source split does not advance a known cell generation");
     }
     found->second.source_generation = replacement_generation;
+    ++model_revision_;
     ++telemetry_.source_splits;
     const std::uint64_t invalidated =
         transition_cache_.quotient_proofs->invalidate_source(
@@ -411,6 +506,7 @@ std::uint64_t QuotientBellmanGraph::invalidate_target_split(
             "target split does not advance a known cell generation");
     }
     found->second.target_generation = replacement_generation;
+    ++model_revision_;
     ++telemetry_.target_splits;
     const std::uint64_t invalidated =
         transition_cache_.quotient_proofs->invalidate_target(
@@ -426,9 +522,10 @@ void QuotientBellmanGraph::note_price_change(
             throw std::invalid_argument(
                 "price update names an invalid sparse row or cost");
         }
-        priced_rows_[row].cost = cost;
     }
+    for (const auto& [row, cost] : row_costs) priced_rows_[row].cost = cost;
     transition_cache_.quotient_proofs->note_price_change();
+    ++model_revision_;
 }
 
 bool QuotientBellmanGraph::row_certificate_current(
@@ -528,6 +625,16 @@ void QuotientBellmanGraph::refresh_row_kernel_bytes() {
             bytes,
             saturated_product(rows.capacity(), sizeof(std::uint64_t)));
     }
+    bytes += transition_cache_.choices.capacity() * sizeof(SparseChoiceGroup) +
+        transition_cache_.choice_successors.capacity() * sizeof(std::uint32_t) +
+        lower_row_bindings_.capacity() * sizeof(LowerRowBinding);
+    for (const auto& binding : lower_row_bindings_) {
+        const auto& p = binding.provenance;
+        bytes += (p.request_identity.capacity() + p.source_identity.capacity() +
+                  p.action_identity.capacity() + p.evidence_identity.capacity()) *
+                     sizeof(std::uint64_t) +
+            binding.targets.capacity() * sizeof(TargetGenerationDependency);
+    }
     transition_cache_.quotient_proofs->ledger().set_owned_bytes(
         ProofMemoryCategory::RowKernel, bytes);
     telemetry_.memory =
@@ -540,6 +647,11 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
         const std::uint32_t max_component_iterations,
         const double improvement_epsilon) {
     QuotientBellmanResult out;
+    if (mode_ == QuotientBellmanMode::LowerOnly) {
+        out.status = QuotientBellmanStatus::InvalidRow;
+        out.failure_reason = "lower-only graph cannot solve an executable policy";
+        return out;
+    }
     if (entry_cell_ids.empty() || cells_.empty()) {
         out.failure_reason = "quotient Bellman graph has no entries";
         return out;

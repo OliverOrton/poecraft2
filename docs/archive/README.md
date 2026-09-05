@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-09-04
 
+- [Operator-Complete Frontier Bellman Lower Pilot v2](2026-09-04-operator-complete-frontier-bellman-lower-pilot-v2/README.md) —
+  implements the lower-only quotient consumer, canonical set/family coverage
+  and exact coefficient checking; rebuilt micro parity passes. Medium donor
+  promotion stops at uniform-member/program/numeric coverage; portfolio gain
+  remains zero and preparation reuse is unmeasured.
 - [Free-Value Bellman Research](2026-09-04-free-value-bellman-research/README.md) —
   archives the falsification-first theory/source review, exact micro reference,
   bounded native probes and medium projected phase-donor result for Pro review.

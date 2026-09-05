@@ -279,4 +279,5 @@ void run_improper_and_determinism_tests() {
 void run_solver_quotient_bellman_tests() {
     run_bellman_projection_and_invalidation_tests();
     run_improper_and_determinism_tests();
+    run_solver_quotient_lower_tests();
 }

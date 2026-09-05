@@ -56,5 +56,6 @@ void run_solver_fragment_tests(const char* artifact_dir);
 void run_solver_quotient_proof_tests();
 void run_solver_quotient_partition_tests();
 void run_solver_quotient_bellman_tests();
+void run_solver_quotient_lower_tests();
 
 #endif

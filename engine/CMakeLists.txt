@@ -201,6 +201,15 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()
 
 include(CTest)
+add_executable(poecraft_quotient_lower_probe benchmarks/solver_quotient_lower_probe.cpp)
+target_include_directories(poecraft_quotient_lower_probe PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(poecraft_quotient_lower_probe PRIVATE poecraft_engine)
+if(WIN32)
+    target_link_libraries(poecraft_quotient_lower_probe PRIVATE Psapi)
+endif()
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_link_options(poecraft_quotient_lower_probe PRIVATE -static-libstdc++ -static-libgcc)
+endif()
 if(BUILD_TESTING)
     add_executable(poecraft_header_smoke tests/header_smoke.cpp)
     target_link_libraries(poecraft_header_smoke PRIVATE poecraft_headers)
@@ -231,6 +240,7 @@ if(BUILD_TESTING)
         tests/test_solver_quotient_proof.cpp
         tests/test_solver_quotient_partition.cpp
         tests/test_solver_quotient_bellman.cpp
+        tests/test_solver_quotient_lower.cpp
     )
     target_link_libraries(poecraft_engine_tests PRIVATE poecraft_engine)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

@@ -1,0 +1,50 @@
+{
+  "scope": "completed benchmark-private pilot; no native coefficient or donor publication authority",
+  "files": [
+    {
+      "path": "medium-coverage.json",
+      "bytes": 29828,
+      "sha256": "b26794d8a5b66581eded57fa8613389de6df4beaca1e69f5c9afa5264601b638"
+    },
+    {
+      "path": "micro-reference.json",
+      "bytes": 5243,
+      "sha256": "38155f476c513a27c85a91389e283a45f0cd5b99304ec6fe86d39fed2ab9f0e5"
+    },
+    {
+      "path": "native-micro.json",
+      "bytes": 9767,
+      "sha256": "75a79f57d58e7fdb52f683da7a51d0b0397c52e28992c5aa2a56d06617af1164"
+    },
+    {
+      "path": "native-provenance.json",
+      "bytes": 47642,
+      "sha256": "35b0c216d63f5d3f4b9d8d6f84b82c59b1af340e2950370a2d4cef1bf3d50cda"
+    },
+    {
+      "path": "policy-refinement-tests.txt",
+      "bytes": 56,
+      "sha256": "0505ec995245a505634bd9614d3ea6d4087c916b2ff0c073f4b7d2ad66e76ae0"
+    },
+    {
+      "path": "post-probe-adjustments.patch",
+      "bytes": 1634,
+      "sha256": "146ce771b06e97d821c8f7f2aa7b22d99cee576e878dffb72b54e844d7fba978"
+    },
+    {
+      "path": "quotient-tests-final.txt",
+      "bytes": 52,
+      "sha256": "66f893ccfc781b39e21b5a0f8e7640ee651ea479eae1e280c5dde25f1cd47f30"
+    },
+    {
+      "path": "quotient-tests.txt",
+      "bytes": 52,
+      "sha256": "11ab02a29b792e040c8c4b1ee025e8b2e922d75a64f8b7e4bf0d7b74fede493b"
+    },
+    {
+      "path": "README.md",
+      "bytes": 12653,
+      "sha256": "326ab03b220f98817c87fcbe0725c5dbb24e03fa9036b5b750c0383913bdec8b"
+    }
+  ]
+}

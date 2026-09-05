@@ -1,59 +1,38 @@
 # Handoff
 
-**Status: no implementation boundary active.** Clean-Five Policy-Potential
-SCC CEGAR v1 completed diagnosis-only. Oliver must choose the next chunk
-before implementation resumes.
+**Status: no implementation boundary active.** The
+[Operator-Complete Frontier Bellman Lower Pilot v2](docs/archive/2026-09-04-operator-complete-frontier-bellman-lower-pilot-v2/README.md)
+is complete as a benchmark-private capability. Oliver must select the next
+implementation chunk.
 
-## Completed Boundary
+`QuotientBellmanGraph::solve_lower/check_lower` reuses the existing sparse
+graph and ProofStore, with separate lower-only mode, exact coefficient
+inequality checks, immutable model evidence, canonical set/family coverage,
+and no executable or public lower authority. Fixed-J shadow count coverage
+is repaired. The production envelope self-choice shortcut remains unchanged
+and is bypassed by this pilot. Preserve the strict Eldritch guard.
 
-[Clean-Five Policy-Potential SCC CEGAR v1](docs/archive/2026-08-31-clean-five-policy-potential-scc-cegar-v1/README.md)
-retains an evaluator-owned selected planner-operation macro and a separate
-typed simultaneous SCC validator, both shadow-only. The first real oracle
-rediscovered the exact highest-occupancy deterministic Scour witness, but its
-canonical successor's ordinary global-start continuation is
-`failure_reachable`. It therefore has no proper finite `J_policy`, never enters
-Candidate, and creates no SCC or lower authority.
+One fresh native micro export matches all archived kernels/member identities;
+reference-mode checked lowers are 2.15, 2.2235586971, 2.2415219921 and
+23.7899999976. All eight raw/reference comparisons pass exact rational checks.
+Raw coefficients still have a +21/2^60 row-mass defect; no native probability
+law certificate is inferred. Final focused quotient tests pass 698/0;
+fixed-J/refinement tests pass 2376/0. No broad suite, Simulator, WASM, web or
+rendered checks ran.
 
-Focused SCC/refinement tests pass with 2,373 checks; focused evaluator tests
-pass with 16,517 checks. The evaluator target's pre-existing embedded
-10,000-draw Monte Carlo fixture ran incidentally once. Broad acceptance and a
-standalone Simulator were not run.
+The medium coverage/phase audit found 28 admitted actions (6 inapplicable) and
+10 open generated families. The scalar model is capped at 36.428617. Its
+uniform post-Ichor donor/program/coefficient contract remains unproved, so no
+new donor preparation, caching or production integration was retained.
+Archived conditional local action 7.11 -> 39.77 and model 7.11 -> 36.43 still
+produce **zero independent portfolio gain**. Cold/warm donor reuse is
+unmeasured. The next owner is the existing clean-MDP preparation's uniform
+post-phase certificate, followed by two distinct compatible-source queries.
+Do not repeat the clean-five census or known Scour route refusal.
 
-## Research Awaiting Review
-
-Oliver requested repository archival of the
-[Free-Value Bellman Research](docs/archive/2026-09-04-free-value-bellman-research/README.md)
-for Pro review. It compares the fixed-policy SCC route with a free-value
-lower-only quotient consumer and a measured projected post-Ichor donor query.
-Its proposals are unselected; complete action coverage, numeric and uniform
-pushforward contracts remain open. No implementation boundary is activated.
-
-## Recommended Next Boundary
-
-If Oliver selects it, probe the already measured five-entry internal
-temporary-bench/cannot-roll dependency set. Its alternative inequality passes
-locally and its successors have policy entries, so it can exercise genuine
-selected-kernel SCC closure without forcing the failed Scour item into the
-compiled router. Do not build RCASSP, weaken global routing, or promote the
-current shadow.
-
-## Evidence and Repository State
-
-- Final Scour report:
-  `build/qualification/clean-five-policy-potential-scc-cegar-v1/scour-shadow-r1/report.json`
-- Report SHA-256:
-  `86F50C586AA5355876310DB75A3471710BB5BD031D3722706AACADF0917F0156`
-- Byte-identical strategy SHA-256:
-  `EA59F23F770FF2A969774266FA34C58FB23CB16A6B2E46C25B6CAFA1B3C1FF1A`
-- Exact cost `85408.64362148782`, success one, off-policy mass zero, lower
-  `36.48853172876641`, zero lifecycle mutations. Scour arbitrary-entry status
-  is `failure_reachable`; dependency kernels complete/refused are `0/1`.
-- New focused SCC/refinement `2,373/0`; evaluator `16,517/0`. Broad
-  acceptance and standalone clean-five Simulator were not run.
-- Branch `main`; selected starting local/remote checkpoint
-  `40416f78f7ec75a0b35fb8659fd96077ebf61b8b`.
-- First implementation checkpoint
-  `66836dbe84deb307a6bdbd73081c6bdfb869d7b8`.
-- Protected untracked `0` remains untouched. Do not read, stage, modify, move,
-  clean, or delete it.
-- Changes are local-only. Do not push.
+Evidence and complete build/runtime hashes are bundled in the linked archive.
+Original free-value research files are unchanged. The living plan was archived
+only after retained native acceptance and the explicit conditional stop.
+Starting local HEAD was `2e756640665d08686237086ab22d49c112fd87d3`, branch `main`.
+All changes are local-only; do not push. Protected `0` was not read, modified,
+staged, moved or removed. Preserve it regardless of tracking state.

@@ -2,6 +2,7 @@
 
 #include "solver_quotient_partition.hpp"
 #include "solver_sparse_policy.hpp"
+#include "solver_quotient_lower.hpp"
 
 #include <cstdint>
 #include <limits>
@@ -34,8 +35,10 @@ struct QuotientBellmanTransitionInput {
 
 /*
  * Rows are append-only. `certified == false` is deliberately useful: the row
- * remains an admitted lower-relaxation alternative but can never support an
- * executable upper policy. A certified row must carry the full immutable
+ * remains an admitted legacy immediate-relaxation alternative but can never
+ * support an executable upper policy. This flag supplies no provenance to
+ * solve_lower; that path requires an isolated graph and an explicit complete
+ * declared kernel. A certified row must carry the full immutable
  * proof identity installed beside its stable sparse-row id.
  */
 struct QuotientBellmanRowInput {
@@ -46,6 +49,9 @@ struct QuotientBellmanRowInput {
     bool certified = false;
     std::optional<CertifiedRowIdentity> proof_identity;
     std::vector<QuotientBellmanTransitionInput> transitions;
+    /* Lower-only observed offers use the existing sparse choice arena. */
+    std::vector<QuotientBellmanChoiceInput> choices;
+    std::optional<QuotientLowerRowProvenance> lower_provenance;
 };
 
 enum class QuotientBellmanStatus : std::uint8_t {
@@ -121,7 +127,8 @@ class QuotientBellmanGraph {
 public:
     explicit QuotientBellmanGraph(
         std::uint64_t max_owned_bytes =
-            std::numeric_limits<std::uint64_t>::max());
+            std::numeric_limits<std::uint64_t>::max(),
+        QuotientBellmanMode mode = QuotientBellmanMode::Executable);
 
     void install_cells(std::vector<QuotientBellmanCellInput> cells);
     void supersede_cell(QuotientBellmanCellInput cell);
@@ -144,6 +151,18 @@ public:
         std::uint32_t max_policy_iterations = 1000,
         std::uint32_t max_component_iterations = 100000,
         double improvement_epsilon = 1e-12);
+
+    QuotientLowerResult solve_lower(
+        const QuotientLowerQuery& query,
+        const QuotientLowerBudget& budget = {}) const;
+    /* Independent raw inequality check; never self-loop-divided Q values. */
+    QuotientLowerResult check_lower(
+        const QuotientLowerQuery& query,
+        const std::vector<double>& values,
+        const QuotientLowerBudget& budget = {}) const;
+    std::uint64_t model_revision() const { return model_revision_; }
+    bool lower_certificate_current(const QuotientLowerCertificate& certificate,
+                                   const QuotientLowerQuery& query) const;
 
     /* Structural selected-policy projection only. This deliberately makes no
      * properness or executable claim; exact evaluation and compiled assertion
@@ -201,6 +220,20 @@ private:
     std::uint64_t admission_generation_ = 1;
     std::uint64_t external_row_kernel_bytes_ = 0;
     QuotientBellmanTelemetry telemetry_;
+    QuotientBellmanMode mode_ = QuotientBellmanMode::Executable;
+    std::uint64_t model_revision_ = 1;
+    struct LowerRowBinding {
+        QuotientLowerRowProvenance provenance;
+        std::uint64_t source_generation = 0;
+        std::vector<TargetGenerationDependency> targets;
+        std::uint64_t price_generation = 0;
+    };
+    std::vector<LowerRowBinding> lower_row_bindings_;
+
+    QuotientLowerResult run_lower(
+        const QuotientLowerQuery& query,
+        const QuotientLowerBudget& budget,
+        const std::vector<double>* candidate) const;
 
     std::optional<std::uint32_t> state_for_cell(std::uint32_t cell_id) const;
     bool row_certificate_current(std::uint64_t row) const;

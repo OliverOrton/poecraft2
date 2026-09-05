@@ -1,0 +1,1214 @@
+{
+  "base_head": "2e756640665d08686237086ab22d49c112fd87d3",
+  "build": "fresh separate CMake/Ninja Release, GNU 14.2.0, all 56 engine translation units rebuilt; no compiler cache",
+  "production_authority": false,
+  "sources": [
+    {
+      "path": "engine/CMakeLists.txt",
+      "bytes": 16213,
+      "sha256": "cd48641f9c781b361f51dff21bb8171500b6fefb70c86e0530809a06619c3b2e"
+    },
+    {
+      "path": "engine/CMakePresets.json",
+      "bytes": 1252,
+      "sha256": "9020316cd14f0d1dd194f67ec62b20f58f4f892459afc9cd395f7114e8eeaac3"
+    },
+    {
+      "path": "engine/benchmarks/solver_benchmark.cpp",
+      "bytes": 277487,
+      "sha256": "7a99b60c81701679cde33b7fe74cfd91bf954c8f2b05e3d3b1ba225e7eb43aa0"
+    },
+    {
+      "path": "engine/benchmarks/solver_executable_fragment.cpp",
+      "bytes": 83707,
+      "sha256": "94ea19ff24489022531ec6c930dff6c63abd2c02a51cff5e106f1d186d7a218c"
+    },
+    {
+      "path": "engine/benchmarks/solver_executable_fragment.hpp",
+      "bytes": 16837,
+      "sha256": "1a77eb9f4d413e537fa92f5c22a00f4984a8f3a9715310e55bb02d95689dd9cb"
+    },
+    {
+      "path": "engine/benchmarks/solver_executable_fragment_engine.cpp",
+      "bytes": 34571,
+      "sha256": "9f0b09ebda0fe8560278f3a4d9b664124cd00150daeae68505fcb44f595786c7"
+    },
+    {
+      "path": "engine/benchmarks/solver_executable_fragment_engine.hpp",
+      "bytes": 3821,
+      "sha256": "835b61245e1c5efc1bba024adacaa08a517ab6855edbcdf44c5b2b0c52bd0f8b"
+    },
+    {
+      "path": "engine/benchmarks/solver_quotient_lower_probe.cpp",
+      "bytes": 22446,
+      "sha256": "10e9031401465413ba81c91cd37f5e1196efd792cabdae659aa5334679779ea7"
+    },
+    {
+      "path": "engine/benchmarks/verify_quotient_lower_probe.py",
+      "bytes": 5690,
+      "sha256": "220f99b3e58d42b547f27e228035016a831463c2f96d6b76e6d96a90edb849b9"
+    },
+    {
+      "path": "engine/engine-sources.txt",
+      "bytes": 1717,
+      "sha256": "49afcc11481120a6a01998b755befeb394c5902d518b92713d71ba7e0b84854f"
+    },
+    {
+      "path": "engine/include/poecraft/api.h",
+      "bytes": 5308,
+      "sha256": "e06293bf55647d9cb6eb62d5bc3876bc2f310a0382ad4f25d339e4badb41305a"
+    },
+    {
+      "path": "engine/include/poecraft/bestiary.h",
+      "bytes": 5654,
+      "sha256": "0b27c22ba180d68f78076e5cdab38466f13c9377f65f43e65026a2c0f10a99ac"
+    },
+    {
+      "path": "engine/include/poecraft/bitset.h",
+      "bytes": 2806,
+      "sha256": "dd552973dfe02ccca7070b00c5f60f36f94c70593cfdbf21f9822bf000606d17"
+    },
+    {
+      "path": "engine/include/poecraft/item_state.h",
+      "bytes": 4751,
+      "sha256": "81e867eaf3557bd6291f44285edf9ebaff857a6db19312996f7a4edca72d722c"
+    },
+    {
+      "path": "engine/include/poecraft/result.h",
+      "bytes": 621,
+      "sha256": "592cba908d47fc359403bde5d5e184c4b500b99be379037557b1f409bf6a2f0e"
+    },
+    {
+      "path": "engine/include/poecraft/rng.h",
+      "bytes": 861,
+      "sha256": "cb3a79cbfb6aa83da09fb27c585baa01bd599fe930b522daa40b4aa8f9d5f0f9"
+    },
+    {
+      "path": "engine/include/poecraft/session.h",
+      "bytes": 18213,
+      "sha256": "ea6ed77bd16dbca6946523b5b3895d5a93840acdaaf32cd983a0490a987d5732"
+    },
+    {
+      "path": "engine/include/poecraft/simulator.h",
+      "bytes": 8603,
+      "sha256": "dc85d9fe3a3842de0e0ae6c2d180e229148d2abeec286c085b8d041b58aacc4b"
+    },
+    {
+      "path": "engine/include/poecraft/solver.h",
+      "bytes": 29539,
+      "sha256": "7137796ec4eba256446f62fe5e500b079462539eb889b666d7a4dca5e36e3617"
+    },
+    {
+      "path": "engine/src/actions_basic.cpp",
+      "bytes": 55002,
+      "sha256": "db5b8746e4b6f9a6a2efbf5a29725ed87e36a0297b8eb6ef2bc38dbe0497f283"
+    },
+    {
+      "path": "engine/src/actions_bestiary.cpp",
+      "bytes": 3448,
+      "sha256": "12978a41e87dd2fc79dedc787db306d132ac3af608a54cba191684f68066cf1f"
+    },
+    {
+      "path": "engine/src/api.cpp",
+      "bytes": 77449,
+      "sha256": "2701afeccec1b964de242cbc7ed5e239f952977177b88ed13c5c10c8d150d5d2"
+    },
+    {
+      "path": "engine/src/bestiary_api.cpp",
+      "bytes": 16175,
+      "sha256": "eb38df9d9b6a58a8097b8a082a2ff187b805b3d992672bdbc9445a69e00cd229"
+    },
+    {
+      "path": "engine/src/bitset.cpp",
+      "bytes": 1416,
+      "sha256": "173b5b86e6ec23cdbd3e6d08db21b071247042334cbca21d3a9db9307d61e425"
+    },
+    {
+      "path": "engine/src/data_loader.cpp",
+      "bytes": 32502,
+      "sha256": "58c9f52ea39e188e1a8c47e26a5b7dd15637cfdc45b58db2adf235151183d433"
+    },
+    {
+      "path": "engine/src/engine_internal.hpp",
+      "bytes": 41844,
+      "sha256": "f03f906269486a3e25ccdfe40c91f0484afa9b849210683031dea0f676b1ff34"
+    },
+    {
+      "path": "engine/src/handles_internal.hpp",
+      "bytes": 783,
+      "sha256": "1bb80e43746f2d7a61a53c089179be67d9669163bd0c68b8cb22bd4c79b5dc04"
+    },
+    {
+      "path": "engine/src/harvest_crafts.generated.hpp.in",
+      "bytes": 1003,
+      "sha256": "9ed432e2ce83e79b77a249c5545556a0638ca775cca466168b9630bfb33585c7"
+    },
+    {
+      "path": "engine/src/item_state.cpp",
+      "bytes": 6054,
+      "sha256": "8ae696389cb863762237ad284c0248023d33f7386a618fcf8e34e1ecedba45ce"
+    },
+    {
+      "path": "engine/src/json.hpp",
+      "bytes": 11091,
+      "sha256": "33713c356b1708d0ba5a9eff32f2812612e16b9d4c07e0f521f3f0ab6da868cd"
+    },
+    {
+      "path": "engine/src/rng.cpp",
+      "bytes": 2913,
+      "sha256": "00f82776a0b6c8d92dd30106c5e293c238d673d7af1c65ebb8a7bbac26c351cd"
+    },
+    {
+      "path": "engine/src/session_builder.cpp",
+      "bytes": 62921,
+      "sha256": "959d560cb5706b2e1c34e4044144f89305256931c4f3c6d59f695224075f1014"
+    },
+    {
+      "path": "engine/src/simulator.cpp",
+      "bytes": 116087,
+      "sha256": "48a23d513e537ce9fd916dd894a9b05f927d83bb5a326d61f3759fda0cde4cb8"
+    },
+    {
+      "path": "engine/src/solver_abstract.cpp",
+      "bytes": 47950,
+      "sha256": "7eba0da8dea44457852f2283f30e62072c878916626ea79b9cbb5f79dd0cd31a"
+    },
+    {
+      "path": "engine/src/solver_action_coverage.hpp",
+      "bytes": 3790,
+      "sha256": "880c701ba1ee467750e27b9fe02ccbec0df0fad90c9a40b3895d0e0327e9324a"
+    },
+    {
+      "path": "engine/src/solver_action_envelope_ledger.hpp",
+      "bytes": 13549,
+      "sha256": "42ad32e9c163dce2a56044449dd6548998ab0f552e20087f2985cfcddf77ccb3"
+    },
+    {
+      "path": "engine/src/solver_action_family_contract.hpp",
+      "bytes": 47135,
+      "sha256": "3fe0e35319e7b83ad8c1567a52c48e609569ad6b62b2ebdac5f6febd2a6ba40a"
+    },
+    {
+      "path": "engine/src/solver_anytime_scheduler.hpp",
+      "bytes": 8327,
+      "sha256": "d32439cc72f132494cbdeba2fab112746c12e43db21aab14d41a74c87d11b9ec"
+    },
+    {
+      "path": "engine/src/solver_api.cpp",
+      "bytes": 104392,
+      "sha256": "a4e0ef038ca2c35e32e279bf692675c5fd96928710c0e6c047663eb0b14cd9fa"
+    },
+    {
+      "path": "engine/src/solver_calc.cpp",
+      "bytes": 135939,
+      "sha256": "e540600973c8ea9ce0830ef5df324fa3fde4cca763661b3e6c26ed6962354423"
+    },
+    {
+      "path": "engine/src/solver_calc_types.hpp",
+      "bytes": 57285,
+      "sha256": "2617c81e8130be4ff33d7d3595b7b3e3cd8ae82286ecb56eebf45d9b1ef30ac5"
+    },
+    {
+      "path": "engine/src/solver_compile.cpp",
+      "bytes": 178270,
+      "sha256": "1614c9fc9235020174709b257919462d57aa843e40c314d134c2a3a7efa97acf"
+    },
+    {
+      "path": "engine/src/solver_compile_conditions.hpp",
+      "bytes": 36921,
+      "sha256": "86400ac6d82c23e21d84e538c1b473a858b3ff0116fbeac0b8ce9cd4fea82848"
+    },
+    {
+      "path": "engine/src/solver_compile_contracts.hpp",
+      "bytes": 1780,
+      "sha256": "b25223a3abd2cd0773cceaca4147bd3560476d482dc9d4fc9db8423faf9ef95a"
+    },
+    {
+      "path": "engine/src/solver_compile_serialization.hpp",
+      "bytes": 14460,
+      "sha256": "4234510a894d6ccf9e402cb5a26c6c664d2759efa91588f0d930b687122284ed"
+    },
+    {
+      "path": "engine/src/solver_condition_expr.hpp",
+      "bytes": 8037,
+      "sha256": "f82edb081eb01598a878bc2ead1a03fe8c1335dd7ff0c7d1928c202e85871569"
+    },
+    {
+      "path": "engine/src/solver_cooperative_task.hpp",
+      "bytes": 5725,
+      "sha256": "859bbd53b9697a06d3ebdb206aa10df773948d3025d746572c8416b8af17467d"
+    },
+    {
+      "path": "engine/src/solver_development_checkpoint.cpp",
+      "bytes": 44157,
+      "sha256": "f2b94299aad08c51e390ebe836919e1bac258b91779e8888ce12caa203a6e5ab"
+    },
+    {
+      "path": "engine/src/solver_diagnostic_options.hpp",
+      "bytes": 2899,
+      "sha256": "ecbbe7621a663d6ab9231360b27586eea8f84456cbb91130e5488de913751cf4"
+    },
+    {
+      "path": "engine/src/solver_eval.cpp",
+      "bytes": 455743,
+      "sha256": "0fc9f288b24c6ddbec744af8870d50e009f3813e5c4889983c42aea3811042c4"
+    },
+    {
+      "path": "engine/src/solver_eval_helpers.hpp",
+      "bytes": 67894,
+      "sha256": "0c0e9c2a9952e985fd74974c7fe33545cc10b21a85c55b46b39b2c1ccb163ba8"
+    },
+    {
+      "path": "engine/src/solver_eval_report.cpp",
+      "bytes": 32968,
+      "sha256": "590087abe88b1c04a0842619b88c79a2e3ee4cea1844406f10411437edec883b"
+    },
+    {
+      "path": "engine/src/solver_eval_resolve.cpp",
+      "bytes": 18602,
+      "sha256": "5e9d160556d8fc9bd5639d36d340b4f0ec74001217bf973cb987f65069f47d92"
+    },
+    {
+      "path": "engine/src/solver_eval_types.hpp",
+      "bytes": 32809,
+      "sha256": "24c15091e0e9bfad4d6362494c9c89bdbe3c1a66844d42269be0f76e9c5cf04b"
+    },
+    {
+      "path": "engine/src/solver_executable_carrier_planner.hpp",
+      "bytes": 6099,
+      "sha256": "0f6e21f5da7824433db3dacad772a935ec393b345ecb52c7d7c4fe02cb850b09"
+    },
+    {
+      "path": "engine/src/solver_internal.hpp",
+      "bytes": 136,
+      "sha256": "5b8404f73311dc8aea67a3a646102bef5ec1be35f876996360415a356852446b"
+    },
+    {
+      "path": "engine/src/solver_joint_policy_continuation.hpp",
+      "bytes": 28538,
+      "sha256": "37228aa06dd2d56f6496c9400bb3149cae8711b9fe9430f9e0ba68f44dff9968"
+    },
+    {
+      "path": "engine/src/solver_model.hpp",
+      "bytes": 55177,
+      "sha256": "60bc16f86b865d6d25e51ef7ec10db1f249e247b74292da537118ecdc4509ccd"
+    },
+    {
+      "path": "engine/src/solver_options.cpp",
+      "bytes": 58305,
+      "sha256": "2b8417fff3b7a02e372b02775a3fa3aa68ddb07d62d8653e45cfb6ea7069952f"
+    },
+    {
+      "path": "engine/src/solver_options_automatic.cpp",
+      "bytes": 124932,
+      "sha256": "42663f9645873b13590b2599e9159b69c1db091358459781947d4195b779fd48"
+    },
+    {
+      "path": "engine/src/solver_options_build.cpp",
+      "bytes": 27140,
+      "sha256": "83fe5cf99893e61e0d1df9f38378fa0bfa13d67a2d40ab8c6253b62fa80a0485"
+    },
+    {
+      "path": "engine/src/solver_options_helpers.hpp",
+      "bytes": 120249,
+      "sha256": "f2d5cf175751e23bae1a2f26d80368c52ca47563f500953232a2c7e0fa95d90d"
+    },
+    {
+      "path": "engine/src/solver_options_import.cpp",
+      "bytes": 6628,
+      "sha256": "95def5436017b9dec548ede166f6e3fb30536a84dde75787712bcd63e50cc435"
+    },
+    {
+      "path": "engine/src/solver_options_runtime_helpers.hpp",
+      "bytes": 17804,
+      "sha256": "4626e1527ca67c6ee92fc6a3167d5890ac15a2a803da0e1beb577050b1ed4438"
+    },
+    {
+      "path": "engine/src/solver_options_semantics.cpp",
+      "bytes": 38466,
+      "sha256": "79eede7d842d5180be8837d8d11a02d68369552e14918d12cd4b6c6cf33f54e6"
+    },
+    {
+      "path": "engine/src/solver_options_temporary.cpp",
+      "bytes": 19316,
+      "sha256": "36752adc6d14e19dd47aa5c91f77be54283b38d7d910eb4891611bf7ca515179"
+    },
+    {
+      "path": "engine/src/solver_policy_assertion.cpp",
+      "bytes": 22794,
+      "sha256": "3ffa6b9ddf43bb1104f2d364ae43a231354768076ebb2dee0b9bb711f6481bb6"
+    },
+    {
+      "path": "engine/src/solver_policy_assertion_work.cpp",
+      "bytes": 40779,
+      "sha256": "959890141880599616203c3425e4439af42f3f1ec8e03ca884f64c2c85c34132"
+    },
+    {
+      "path": "engine/src/solver_policy_oracle.hpp",
+      "bytes": 350,
+      "sha256": "f3728da87d38afbb39efb2ea7f3a4890d0fcf996534d432b86c9c66e9bc64bdb"
+    },
+    {
+      "path": "engine/src/solver_policy_oracle_choices.inc",
+      "bytes": 36400,
+      "sha256": "e0e350d0c46441a90b77cf382ec27fb66c477fdb6c9838256d895bf0d38ac640"
+    },
+    {
+      "path": "engine/src/solver_policy_oracle_evaluate.inc",
+      "bytes": 13207,
+      "sha256": "e372c92f286638813c355981cdb6bb36fa0b42d151618bed2be89440dd43da82"
+    },
+    {
+      "path": "engine/src/solver_policy_oracle_improve.inc",
+      "bytes": 51336,
+      "sha256": "2d791e4b361f96847fbc80b92510bb99cf9ee71d72771799b2923fdf6bbf540a"
+    },
+    {
+      "path": "engine/src/solver_policy_oracle_kernels.inc",
+      "bytes": 35660,
+      "sha256": "c8fcb05b9f1c56f98c5b019bd730cf9eb387360abd99291a38195952fbaf3b17"
+    },
+    {
+      "path": "engine/src/solver_policy_oracle_lift.inc",
+      "bytes": 28480,
+      "sha256": "b43b13f89467e732877246b6429586b7bb1a1ef1d8d6da7c176dc1e0229bb303"
+    },
+    {
+      "path": "engine/src/solver_policy_oracle_mapping.inc",
+      "bytes": 20030,
+      "sha256": "3e26b41e0ccff45e18ce9b1051ae30ba0f39fe91c940b1086cd56160bb7de64f"
+    },
+    {
+      "path": "engine/src/solver_policy_oracle_observations.inc",
+      "bytes": 26903,
+      "sha256": "3444c352f3069cef9524b5bb822e57cb458cec9c202d3076875c37eb7755fed7"
+    },
+    {
+      "path": "engine/src/solver_policy_oracle_resources.inc",
+      "bytes": 38824,
+      "sha256": "cfbb8e37bfdb9f21d58e869efc4ae94ed5762dc2b7617951981395b09c061321"
+    },
+    {
+      "path": "engine/src/solver_policy_oracle_setup.inc",
+      "bytes": 92999,
+      "sha256": "36226f04174c45329bf2dba36695867dadacace579531abd4db334f662e462a9"
+    },
+    {
+      "path": "engine/src/solver_policy_refinement.cpp",
+      "bytes": 331134,
+      "sha256": "332bd1f9b622cd626068a3a6ee7186c841a88d6a5465dfb96d0fff2822a54ec4"
+    },
+    {
+      "path": "engine/src/solver_policy_refinement.hpp",
+      "bytes": 44380,
+      "sha256": "bb92ef87df8917e3c370eaefebfe192d00804a85cadc7252072c963f80852acf"
+    },
+    {
+      "path": "engine/src/solver_policy_refinement_helpers.hpp",
+      "bytes": 33834,
+      "sha256": "bc9bf9f81ff251a041518d677b5b96bd00a86dea6ce152637cbef753994b935c"
+    },
+    {
+      "path": "engine/src/solver_policy_route.hpp",
+      "bytes": 9213,
+      "sha256": "42088dc16c5548348e202e3d26f46fb24257353b569fa26b4b5a962e9d73c6d1"
+    },
+    {
+      "path": "engine/src/solver_proof_pattern_manager.hpp",
+      "bytes": 12291,
+      "sha256": "f8b99f3d3e8583e29f48d8d601121cc4415e9ccc8ec8afc2dfc29c60e88897a9"
+    },
+    {
+      "path": "engine/src/solver_quotient_bellman.cpp",
+      "bytes": 64442,
+      "sha256": "0a55e52df6120502666780bda4a1c9d444c6676b268c8ceb98c14d6005666509"
+    },
+    {
+      "path": "engine/src/solver_quotient_bellman.hpp",
+      "bytes": 9063,
+      "sha256": "969548e3f3605aafa5fbf97fbf8cfa882579caeefca18f5f8916ec3f19dd4b63"
+    },
+    {
+      "path": "engine/src/solver_quotient_lower.cpp",
+      "bytes": 27552,
+      "sha256": "daa4a7e526bbbafc5b5e82efb4a2d0d442e18d7bd6a37380ade46c2f523aa878"
+    },
+    {
+      "path": "engine/src/solver_quotient_lower.hpp",
+      "bytes": 4719,
+      "sha256": "2d3d20b841024b88c3c50ffae05f3b5915a95cc1764ea81dee65b63b91c2dd26"
+    },
+    {
+      "path": "engine/src/solver_quotient_partition.cpp",
+      "bytes": 35041,
+      "sha256": "7462ad53a475d8e0abfa3383a8aa23c55eacffad9c4ebabd7980b21bc436d516"
+    },
+    {
+      "path": "engine/src/solver_quotient_partition.hpp",
+      "bytes": 6177,
+      "sha256": "79be01527740f5b943dd79db4afa717ebf01e8e430e6656257dc7f3e2c1c921b"
+    },
+    {
+      "path": "engine/src/solver_quotient_proof.cpp",
+      "bytes": 94600,
+      "sha256": "0d1cd89564ab1b7064355e1c0017c799098376651dc51683554e9967a7cd2157"
+    },
+    {
+      "path": "engine/src/solver_quotient_proof.hpp",
+      "bytes": 28190,
+      "sha256": "8623743faf4c7d69f7f2ed83e773b2583bf7af7b11def0231f25f38052ee4aac"
+    },
+    {
+      "path": "engine/src/solver_refinement.cpp",
+      "bytes": 12800,
+      "sha256": "ee7085db79fbe6043391494ec6e413f3fe37e0f9c9a7ca904f81f687b9373fe2"
+    },
+    {
+      "path": "engine/src/solver_refinement.hpp",
+      "bytes": 27432,
+      "sha256": "f9fa41b59f02a20399317a0327b4bb976c93eaa17da3242ff3b4e496d776694a"
+    },
+    {
+      "path": "engine/src/solver_refinement_eval.cpp",
+      "bytes": 35791,
+      "sha256": "41e882b54824487aaf7d7c0536470feca4533850fcc0b51437cbadc84ae3993c"
+    },
+    {
+      "path": "engine/src/solver_refinement_feature_helpers.hpp",
+      "bytes": 4561,
+      "sha256": "0a27997f807f19c60a1a0633ebd45cf5d95c2642c1e53c39573b7271dd000852"
+    },
+    {
+      "path": "engine/src/solver_refinement_features.cpp",
+      "bytes": 40806,
+      "sha256": "416ffd0ca85795ccff62a1338b7200b2d695d5c629d40c5c31617410e94e0089"
+    },
+    {
+      "path": "engine/src/solver_refinement_graph_core.hpp",
+      "bytes": 37524,
+      "sha256": "13f395a74d96ca9aadf427e203ee007eaf383bc09a855303ff38ef0e5050b84e"
+    },
+    {
+      "path": "engine/src/solver_refinement_graph_discovery.hpp",
+      "bytes": 36549,
+      "sha256": "c5d1701ff7d75075eaca6f8ea6f971894ec810bedf4571b10f7e3d1a4731be34"
+    },
+    {
+      "path": "engine/src/solver_refinement_graph_routing.hpp",
+      "bytes": 51181,
+      "sha256": "e6fbe1fb1415188b42f2c28382b1d971dd99186a3b355dafa22a2c07a0f8451e"
+    },
+    {
+      "path": "engine/src/solver_refinement_observation.cpp",
+      "bytes": 20331,
+      "sha256": "ac94f5239221601a0c3a310693514961b5994dced8af48f31cfc0ab5843b7abb"
+    },
+    {
+      "path": "engine/src/solver_refinement_observation_helpers.hpp",
+      "bytes": 21114,
+      "sha256": "3f8d72fc40e9487a0044f5c4c60850f19fd7a8b0061c0ba9fec784e9a60d220f"
+    },
+    {
+      "path": "engine/src/solver_refinement_partition.cpp",
+      "bytes": 53437,
+      "sha256": "0734e07d99a7ad154ecd6e54be695f7171feb059312a1478de29c81d0c1e3ce7"
+    },
+    {
+      "path": "engine/src/solver_refinement_partition_helpers.hpp",
+      "bytes": 13095,
+      "sha256": "ee1cc8794dd33bec89dddfe5eda2014957843829e069481f73f3263f46d51b1e"
+    },
+    {
+      "path": "engine/src/solver_reforge.cpp",
+      "bytes": 169235,
+      "sha256": "cd9f290f5518eec25a8d9c869d93b6cab0b9dd76f2790a51a42d83600729e2b4"
+    },
+    {
+      "path": "engine/src/solver_registry.cpp",
+      "bytes": 114187,
+      "sha256": "e1fb580d0a5cb6e189094237cc254a72e264a7c6ee116594ab691a1b53b386e2"
+    },
+    {
+      "path": "engine/src/solver_segmented_vector.hpp",
+      "bytes": 4966,
+      "sha256": "d6e3a803321d74f2b7135a9535ca7d5d4be97c348489869d9f98056c8be278c0"
+    },
+    {
+      "path": "engine/src/solver_solve.cpp",
+      "bytes": 31493,
+      "sha256": "b0ccecece78cacc395441ee1ac16a040f40f071fbdd833e2b9321ee14873ab9d"
+    },
+    {
+      "path": "engine/src/solver_solve_audit.cpp",
+      "bytes": 87609,
+      "sha256": "24a2df379120d0080f6d8e0b14858d1f9fcac88baf7388afb2f0fc2fe8005ab3"
+    },
+    {
+      "path": "engine/src/solver_solve_bellman.cpp",
+      "bytes": 111211,
+      "sha256": "79c4b73dd729079bb0677c3a0bf5a34ce275e210b66fbf5a904a00f92c3fa51f"
+    },
+    {
+      "path": "engine/src/solver_solve_bounds.cpp",
+      "bytes": 135402,
+      "sha256": "0d3541420bf0c7fa7f14f87aa3fb14b9c818a59f2e93554d5f19f93677ca3843"
+    },
+    {
+      "path": "engine/src/solver_solve_carrier_pattern.cpp",
+      "bytes": 12394,
+      "sha256": "e08a8bb15a798ea21d619e2ae88479afb377e2245653d49ed167b03e1716c909"
+    },
+    {
+      "path": "engine/src/solver_solve_constructive.cpp",
+      "bytes": 407055,
+      "sha256": "9b932552152fe89a0870546d750657023225bfc979ecd2a2b904831483cee47b"
+    },
+    {
+      "path": "engine/src/solver_solve_contracts.hpp",
+      "bytes": 73038,
+      "sha256": "c51c0b20dc32ae8685bcf270c6c8c9120f3ca320f00f449db82984dbfba119ae"
+    },
+    {
+      "path": "engine/src/solver_solve_envelope_proof.cpp",
+      "bytes": 30581,
+      "sha256": "5442cfb9449ea1928c73315b677fad282a4fbc67e2c818deab373373a5243b7e"
+    },
+    {
+      "path": "engine/src/solver_solve_expand.cpp",
+      "bytes": 208865,
+      "sha256": "907b00f4ac1dd806a8c645abb00fd9c2bffa61c3ca093cef534f98edd5c4cc27"
+    },
+    {
+      "path": "engine/src/solver_solve_finish.cpp",
+      "bytes": 321406,
+      "sha256": "2520d8da830a7f35737545ab3581e04b376351dd224a2cf99a88391d3ab0a774"
+    },
+    {
+      "path": "engine/src/solver_solve_focused.cpp",
+      "bytes": 73666,
+      "sha256": "8a49896c0463867ef2b5e0b24f6ad0fa896de3e48e7944529296943dca3f24c6"
+    },
+    {
+      "path": "engine/src/solver_solve_incremental.cpp",
+      "bytes": 170213,
+      "sha256": "14984f4cd7a13a0f24609fd72e14e9b7e5e1a8d6ca00c6e2d8a38ab259639df7"
+    },
+    {
+      "path": "engine/src/solver_solve_operator_proof.cpp",
+      "bytes": 110284,
+      "sha256": "ee5fd8d6daf039913e02b9925d83ce9181849481964b8e0d7771f0357df0fae4"
+    },
+    {
+      "path": "engine/src/solver_solve_priority.cpp",
+      "bytes": 16657,
+      "sha256": "530204f6e542de683d3e31950412b204b5688095ec02d5f98b30ab241c783608"
+    },
+    {
+      "path": "engine/src/solver_solve_quotient.cpp",
+      "bytes": 50776,
+      "sha256": "4fe9dbccc6e17814c7f8893a3b9dfee5f204e8248fd385461b25b9019e1d1321"
+    },
+    {
+      "path": "engine/src/solver_solve_strict_pattern.cpp",
+      "bytes": 35777,
+      "sha256": "dc27704b565f3dc28cc98967d15237d42d18f4bf3a7c04c10f367dcbe2438a93"
+    },
+    {
+      "path": "engine/src/solver_solve_telemetry.cpp",
+      "bytes": 147944,
+      "sha256": "7bc03cbff70fa987d83d6ce7bbff9e4364695e17880e8f2c7ece63d16b8fb691"
+    },
+    {
+      "path": "engine/src/solver_solve_telemetry_json.cpp",
+      "bytes": 203420,
+      "sha256": "39a0587823157d66c85c2d2d4d0ab238cb02294f4995c139cf35cc4e8367706d"
+    },
+    {
+      "path": "engine/src/solver_solve_types.hpp",
+      "bytes": 124662,
+      "sha256": "bb7c47b9f117dda8128d1af03d41e871a8ad32e4be77b33773611b9caf211fb0"
+    },
+    {
+      "path": "engine/src/solver_sparse_policy.cpp",
+      "bytes": 43090,
+      "sha256": "c3080dbe19b90126167652dae5465232d652e08677fc66dd29514db4b8100946"
+    },
+    {
+      "path": "engine/src/solver_sparse_policy.hpp",
+      "bytes": 8566,
+      "sha256": "ad001606ecba982d7e771dd439082966841dcfa30d187d2b3d11df34d98dfc34"
+    },
+    {
+      "path": "engine/tests/header_smoke.cpp",
+      "bytes": 458,
+      "sha256": "0545a7f66e573ba18ce5faa795bdb0470c9cf9254a9955fde063dd7ad8944cef"
+    },
+    {
+      "path": "engine/tests/test_actions.cpp",
+      "bytes": 39466,
+      "sha256": "34664325721a333dcb57616ea2d3f460462b48e8892d5f63d534f1d3be9796ed"
+    },
+    {
+      "path": "engine/tests/test_bestiary.cpp",
+      "bytes": 11216,
+      "sha256": "5da980e4ca543e25999c4083f2de6e3e84948c67537fb818e401d5d0c63eab85"
+    },
+    {
+      "path": "engine/tests/test_bitset.cpp",
+      "bytes": 2428,
+      "sha256": "669f971790f66b3f59bd3285a9897967684a2e9c7cb69041e1abdce9162fdfd6"
+    },
+    {
+      "path": "engine/tests/test_blocking.cpp",
+      "bytes": 3628,
+      "sha256": "96fbd6c4c60394201c1ca95c3a9c4ac19d3959f5da0687b332d4f889a90cdbd0"
+    },
+    {
+      "path": "engine/tests/test_data_loader.cpp",
+      "bytes": 14205,
+      "sha256": "a67d8436c0b7ec59913c4de8617395658c388b9e513830eba66e6353878bde87"
+    },
+    {
+      "path": "engine/tests/test_item_state.cpp",
+      "bytes": 4368,
+      "sha256": "b2b9da923d442fec88119725845dc6bdadbb43d7dd0ef5c912c87d12a72469ee"
+    },
+    {
+      "path": "engine/tests/test_main.cpp",
+      "bytes": 9356,
+      "sha256": "16f0c9a74440f3e52fbb982de731190301a1881485219ea83cbdfd9e37a4a925"
+    },
+    {
+      "path": "engine/tests/test_rng.cpp",
+      "bytes": 2245,
+      "sha256": "3325cb766afd2b7631775fa0014c661929a4fe6125dd8d3b1e92172691f46a55"
+    },
+    {
+      "path": "engine/tests/test_session_builder.cpp",
+      "bytes": 50159,
+      "sha256": "8ef8513da9518d780c1260a8680c3582c2334e47162940358daebacccb14eeae"
+    },
+    {
+      "path": "engine/tests/test_simulator.cpp",
+      "bytes": 29592,
+      "sha256": "2c6e02c16efa07fd0960f9d58db19208ff78e116f3e9bff7ebf36ad13dc70976"
+    },
+    {
+      "path": "engine/tests/test_solver_abstract.cpp",
+      "bytes": 75400,
+      "sha256": "11f42f20c5d1914b46288b40042c5d6830f3ca9c81139e48e8b7f84f87cc59d1"
+    },
+    {
+      "path": "engine/tests/test_solver_api.cpp",
+      "bytes": 138205,
+      "sha256": "cdef17232c5c36a5033317f3958ae39048796fcdf4ff4c3708fabada54e60c28"
+    },
+    {
+      "path": "engine/tests/test_solver_calc.cpp",
+      "bytes": 160305,
+      "sha256": "c7dc0db6983eabe6041226d74727e9431ec5f7544f56d35115e47ee805b02cae"
+    },
+    {
+      "path": "engine/tests/test_solver_compile.cpp",
+      "bytes": 125416,
+      "sha256": "369b01712680a269946e0fe658e0b721163a7b747b94567a35c5f7c8052df7a1"
+    },
+    {
+      "path": "engine/tests/test_solver_eval.cpp",
+      "bytes": 156513,
+      "sha256": "6f3a03e63524c76d190117002dfe8d3e87f7946f50b0cccb7242305bbd6e35c7"
+    },
+    {
+      "path": "engine/tests/test_solver_fragment.cpp",
+      "bytes": 52665,
+      "sha256": "ea68734d5b2efbc76e4f2eceaaf0192d77ed743cc68b1ad1cce189029da522c3"
+    },
+    {
+      "path": "engine/tests/test_solver_quotient_bellman.cpp",
+      "bytes": 11912,
+      "sha256": "48dd5d8f7f40bc5b464407ae6c5d80e6a2bc4171c413f48c39cf551060fcc6be"
+    },
+    {
+      "path": "engine/tests/test_solver_quotient_lower.cpp",
+      "bytes": 13705,
+      "sha256": "36bb397c42ce58c74f55cb9eea7fda56ed669ce9e33a7ead676d3331724b26de"
+    },
+    {
+      "path": "engine/tests/test_solver_quotient_partition.cpp",
+      "bytes": 28926,
+      "sha256": "1c154247d0879e16562f90322775e7a0969d0fa8357a4bf96405b2c9465b8490"
+    },
+    {
+      "path": "engine/tests/test_solver_quotient_proof.cpp",
+      "bytes": 49940,
+      "sha256": "2b90c18852950519d303588abebd6c1a62ecacb031195c81afffa1de681713a5"
+    },
+    {
+      "path": "engine/tests/test_solver_refinement.cpp",
+      "bytes": 100759,
+      "sha256": "1d5bfa1af1c68ab2361a10f6e89c5ea180bf636e99e87602ab4f630bad19192f"
+    },
+    {
+      "path": "engine/tests/test_solver_s8_3.cpp",
+      "bytes": 105798,
+      "sha256": "12f7464eadcd42cb571719041a8af3eee289ff0e3c4bbc32a928d89b5b0e0dda"
+    },
+    {
+      "path": "engine/tests/test_solver_solve.cpp",
+      "bytes": 561128,
+      "sha256": "a5369c30af96a135c485581d3b972facb6402a0baa95cf2138e2c8450d187616"
+    },
+    {
+      "path": "engine/tests/tests.hpp",
+      "bytes": 2062,
+      "sha256": "8979a2e3af219aa4f7f2486cc42931282e7cec8568b29948ee07262ae8c03784"
+    },
+    {
+      "path": "fixtures/economy/harvest-recipes-v1.json",
+      "bytes": 1627,
+      "sha256": "70400964895be6fde7687f226f651843650669cbb29e6a53cd243e0f19f1e6b1"
+    }
+  ],
+  "build_inputs": [
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeCache.txt",
+      "bytes": 19194,
+      "sha256": "8a8e63b326ce411c88b0da519ade74f885d845a249cd74fe101d780ad18709ee"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/compile_commands.json",
+      "bytes": 60609,
+      "sha256": "bd8b2c254de88590baf2f3ad72cf685f76ce1b1de2d09d036b150c8446fc55b1"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/build.ninja",
+      "bytes": 151533,
+      "sha256": "031b274a374af6470d4ef14d41bc801ae1bf39c07131142eda97be65cd1806e1"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/generated/harvest_crafts.generated.hpp",
+      "bytes": 1844,
+      "sha256": "1f092eb6c642a9ab8b727720b18cdad065944e1103f49f04c2daf2040e248722"
+    }
+  ],
+  "linked": [
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/libpoecraft_engine.a",
+      "bytes": 13003814,
+      "sha256": "95c8dde9eb3dd72d1edd749b6b42c1e7297a7c57967da6025fe319e4e15bfbb2"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/poecraft_quotient_lower_probe.exe",
+      "bytes": 12075880,
+      "sha256": "4e7406af7e2bc04565501b3d3e3ef2d3f17bf685e83e48d90748438771b0586f"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/poecraft_engine_tests.exe",
+      "bytes": 15974811,
+      "sha256": "0c5072f0f4ce61fd532391f9d51f8f910c33304966a1dd610f99e7915cca4436"
+    }
+  ],
+  "objects": [
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/actions_basic.cpp.obj",
+      "bytes": 59606,
+      "sha256": "981e3910aee8fcd944e399ca9d1b117c3e008ca4a3899b5d2b9502a2ffabe22f"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/actions_bestiary.cpp.obj",
+      "bytes": 5011,
+      "sha256": "a00435e640fc71a7eaaa5ab26b07e5d90c3a9725526d8dfc36abfc6af3aa86e4"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/api.cpp.obj",
+      "bytes": 138649,
+      "sha256": "2e6f2e529028e39de43f1db7634879a5d7ec5aa2c5145797c7b59f34b506bcef"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/bestiary_api.cpp.obj",
+      "bytes": 18971,
+      "sha256": "4e4a40be694111b06f6227ab86450d992c43aa42bf337718af8bb0f3afad506c"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/bitset.cpp.obj",
+      "bytes": 1806,
+      "sha256": "35708a45ce56e6b6ad2dd4763131009aeb60735f71f1cc95a1a83dc00d764845"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/data_loader.cpp.obj",
+      "bytes": 147059,
+      "sha256": "799387bd3224bca2ecdd6c39d26213d36ece1b0c3c44c33eccfa546d649e4242"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/item_state.cpp.obj",
+      "bytes": 3451,
+      "sha256": "33e432234dd10b26d569e7f110a893c166df7b43fe266f4c4fc8c619a093f3d4"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/rng.cpp.obj",
+      "bytes": 1863,
+      "sha256": "efb45dbef95e4208503eef57bb3910bc138da29612f3d83d21f80d294df7c693"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/session_builder.cpp.obj",
+      "bytes": 152133,
+      "sha256": "cdb51de5eb62a32612d1246281f6b0d2e573c1db152840f50a7368849d363834"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/simulator.cpp.obj",
+      "bytes": 357034,
+      "sha256": "69fa6067a588e65c08d1699c4ace2b981374d97ec957017959ff442cf9b1d629"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_abstract.cpp.obj",
+      "bytes": 93344,
+      "sha256": "149bc187c4f5544ce8726374b14f9810f39477ced623a347a8b82a84e68ae514"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_api.cpp.obj",
+      "bytes": 245155,
+      "sha256": "9c12ce67ccfa02138afc2feef083eac97d1f37351126869574941ebda854f982"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_calc.cpp.obj",
+      "bytes": 284617,
+      "sha256": "a8c0ff735f4f05cb2ff995ef189ee60d3d4765c0748e310d44d9184cba5f987f"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_compile.cpp.obj",
+      "bytes": 575228,
+      "sha256": "21f1f0b0f41b33e70ca3236be9e091e50fbc49b67b20bedb307e00c4882dcbca"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_development_checkpoint.cpp.obj",
+      "bytes": 191227,
+      "sha256": "c2ef8f6bafa61d048ce9cf341ead246cefc1bfbd7e3905f993f17c01ef7d3757"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_eval.cpp.obj",
+      "bytes": 1173394,
+      "sha256": "daa824b03b133943d62efe5c6eac6125f72043384f906a83c3bdcedb8cce91aa"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_eval_report.cpp.obj",
+      "bytes": 121122,
+      "sha256": "c80eefc48b94caef96e1e963d651a96a9ab293f8a98264a7fb962d910aa7a62d"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_eval_resolve.cpp.obj",
+      "bytes": 15829,
+      "sha256": "db133f1b6a58fcb01daa474b44eb2d52b859b96c33d7a50153577fe551cccca7"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_options.cpp.obj",
+      "bytes": 129566,
+      "sha256": "91ddd3b40b123dc2a3c03d865f470e0346759cfc85dd9b5a2a42c5e909fae264"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_options_automatic.cpp.obj",
+      "bytes": 515210,
+      "sha256": "82245315b2d10ec6b2b6e6782520c6f2d9b89960517713cbe389e835619dabbf"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_options_build.cpp.obj",
+      "bytes": 114520,
+      "sha256": "17bed6214d2bf5b3a0d271d28c4546493389edb5d606ab83237ed26ca7467a38"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_options_import.cpp.obj",
+      "bytes": 45669,
+      "sha256": "f9519ba83995a892d3422c437de81e78922dec90eda4dae206d59600a1e3a052"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_options_semantics.cpp.obj",
+      "bytes": 154118,
+      "sha256": "be0ab569ec44519866c5d1fed9345d55116bb8466a39f07667a7c52628b075ce"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_options_temporary.cpp.obj",
+      "bytes": 24165,
+      "sha256": "6a8f77512fda4aec62bfb2dcc6f7fa3cb38cc9f8badc605caf7bcb531246a84b"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_policy_assertion.cpp.obj",
+      "bytes": 25948,
+      "sha256": "60fae8f319dd6846bf5c04120e6a6385636181c039e6aaab578523b8f1942729"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_policy_assertion_work.cpp.obj",
+      "bytes": 179045,
+      "sha256": "2547cd43746b9b42f9cedc75c7a927347f6cf17059520154af05a7206f389e85"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_policy_refinement.cpp.obj",
+      "bytes": 1741034,
+      "sha256": "fd423c94e74e02e737b9bc6dd7ebe78e83b9f6222abe04e2c52963bfcf7d6588"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_quotient_bellman.cpp.obj",
+      "bytes": 217480,
+      "sha256": "a2993490f9ae3b8d849fb63bd53aa8691a21dd84ba89777368d5d5d621440f52"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_quotient_lower.cpp.obj",
+      "bytes": 108694,
+      "sha256": "d8613787bf50cb80f2206975029545e5de657b8d75fa171ce0129e006f8c48e4"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_quotient_partition.cpp.obj",
+      "bytes": 158865,
+      "sha256": "57c7b7fde407ca1c9906bb6c416319d86f3689c2d42d533c823e75a7fbc0bdd1"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_quotient_proof.cpp.obj",
+      "bytes": 231168,
+      "sha256": "b2cadd03013fd1114218fd6a1b2bc1c72d42707fb6d676955e5d185c336a2110"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_refinement.cpp.obj",
+      "bytes": 308932,
+      "sha256": "b75d547f42c47d8fa3c3a69a880bcb35fdec76e0c2051ccd4dcb2b5d9ac8d5fd"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_refinement_eval.cpp.obj",
+      "bytes": 45196,
+      "sha256": "30349faf78b44b322c6ec8216889152113ff5f68a1d4dd30e881b9602e8684ad"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_refinement_features.cpp.obj",
+      "bytes": 131683,
+      "sha256": "584187ea4686450e3ec2bde041788c663af43949f109792afdf178102e09a1bc"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_refinement_observation.cpp.obj",
+      "bytes": 153680,
+      "sha256": "50204c105230b6478e0ced563d048bc93f6a03d81aa765e6d135d79c3a4388b2"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_refinement_partition.cpp.obj",
+      "bytes": 128515,
+      "sha256": "ac7d5c338572d5fbb286be7421b78e1f794b731b957284d4f0a05cc9964c1a64"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_reforge.cpp.obj",
+      "bytes": 280750,
+      "sha256": "06f92c15c954d69139383ae462a620dd74e7345070386baf7aecb31f1fe75f03"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_registry.cpp.obj",
+      "bytes": 289564,
+      "sha256": "f027d9fbb9a9ca8bcab20e1e90b605f44225803d0e4453ed7901b299787040a7"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve.cpp.obj",
+      "bytes": 208543,
+      "sha256": "20b2539ac11bf20e5cba0245a6be223201afd9473a0af8bcf9d1e58126346ad6"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_audit.cpp.obj",
+      "bytes": 249687,
+      "sha256": "af736bbd9db19b196bc52546ed8c0253b2cb24736a89b3a71f8241b679a79116"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_bellman.cpp.obj",
+      "bytes": 148317,
+      "sha256": "9a4925e1849e6d0be8a0394e5b93c11a28c6fa9b892e9fb9f30408ca85f71030"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_bounds.cpp.obj",
+      "bytes": 146891,
+      "sha256": "483bc536ea40245b2d39a40ac7e04f1274619e4ec0dbf78cc1767d064094d150"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_carrier_pattern.cpp.obj",
+      "bytes": 13263,
+      "sha256": "9ab1b611d34ba90b9552d367db90736a0a457ea471db584f09987a0396e0089c"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_constructive.cpp.obj",
+      "bytes": 683983,
+      "sha256": "d812d44fb9c54bfe52f8e5fb429b668571ee6c8c4e93a377ecb45e23abe50cdf"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_envelope_proof.cpp.obj",
+      "bytes": 115066,
+      "sha256": "ce8bc564622ebed625759d3c4ca18c548dc64a3af8ac526f918694098c096bfd"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_expand.cpp.obj",
+      "bytes": 324928,
+      "sha256": "c30f4b55c7bbbdf562675996bf6866e11c41a2becc7c5b5efe8a832d2d38c5bc"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_finish.cpp.obj",
+      "bytes": 433553,
+      "sha256": "2cd555aa697b9b0d30a573917c3314ea9c3210a799df36ad483b6462d84c0826"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_focused.cpp.obj",
+      "bytes": 119802,
+      "sha256": "09af83fd184cb4c651bb35f4545790f6ec4445246125369873e989dcd49dcf77"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_incremental.cpp.obj",
+      "bytes": 301571,
+      "sha256": "6b5bf93055d342e5759f6d1b4f52b380dbc9019f54bdd60194db868667559b53"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_operator_proof.cpp.obj",
+      "bytes": 254654,
+      "sha256": "be0387e753b581c0f66a38dc133db4f3654fd80a29dc56cb42d31629f692b4fa"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_priority.cpp.obj",
+      "bytes": 61104,
+      "sha256": "af82b0e4f18e43bc17c510da7328d4a2764d6e7ab5bae9538dd1ff0f7308317b"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_quotient.cpp.obj",
+      "bytes": 163438,
+      "sha256": "47bc8969919d32f6d29a847aab3450a1252456d3517613dc8d8a3d4ec4eb13ca"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_strict_pattern.cpp.obj",
+      "bytes": 89764,
+      "sha256": "c8f0cc5640d74799f258840eee7ba1cb95c8ca5a6f42c051c0258358d64b6c00"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_telemetry.cpp.obj",
+      "bytes": 261356,
+      "sha256": "885c9ad65f08207d0b273fea6383b296139fcd63ceaf1adc996b833b2cf26b38"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_telemetry_json.cpp.obj",
+      "bytes": 403440,
+      "sha256": "a179d85a997aa04ed0c7da121f715bdb4c31fa25ffba291169c7e547487d0033"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native/CMakeFiles/poecraft_engine_objects.dir/src/solver_sparse_policy.cpp.obj",
+      "bytes": 62807,
+      "sha256": "c8b1133241efbaabeac4f35a7ecd11f3c59ac8755fd32364cf77aea52c7e9883"
+    }
+  ],
+  "compiler": {
+    "path": "C:\\msys64\\ucrt64\\bin\\g++.exe",
+    "bytes": 2917234,
+    "sha256": "8cd0aa578687e4182532222c8734439b3f34ac78b6ce23cba1071c5838025fc1"
+  },
+  "runtime_artifacts": [
+    {
+      "path": "data/compiled/current/manifest.json",
+      "bytes": 5810,
+      "sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb"
+    },
+    {
+      "path": "data/compiled/current/game-data.json",
+      "bytes": 16439442,
+      "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+    },
+    {
+      "path": "data/compiled/current/strings.json",
+      "bytes": 6534428,
+      "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+    }
+  ],
+  "inputs": [
+    {
+      "path": "docs/archive/2026-09-04-free-value-bellman-research/micro-goal.json",
+      "bytes": 191,
+      "sha256": "d107e5d6d3b24a5e93789df2e87b70bd849a1ef29c8d483ffe95edcc34420385"
+    },
+    {
+      "path": "docs/archive/2026-09-04-free-value-bellman-research/micro-economy.json",
+      "bytes": 114,
+      "sha256": "3eedb29a76593108ea20cf018d0fd22c13508fefbb2213223a2d91d3af77b926"
+    },
+    {
+      "path": "docs/archive/2026-09-04-free-value-bellman-research/native-goal.json",
+      "bytes": 2632,
+      "sha256": "ab2c5420a403b71852bd84da629814f331e01babaea0401b17620296fb5da1aa"
+    },
+    {
+      "path": "docs/archive/2026-09-04-free-value-bellman-research/native-economy.json",
+      "bytes": 131287,
+      "sha256": "ca0bb782c7933fb2c72ddde3991c0aebf8c1d3e9c8dc5853796b54fffddf1992"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/native-micro.json",
+      "bytes": 9768,
+      "sha256": "4209aef06576addaca6ffd16bcc71825b41ea3b347bb7c2e534a9470db1136ba"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/micro-reference.json",
+      "bytes": 5422,
+      "sha256": "b87294ccd49ce29eaac830d276cbeb1d1bb288eeee1dc0f4558a08f424663886"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/medium-coverage.json",
+      "bytes": 29829,
+      "sha256": "1c78f468b969649e444fe5d4e349c396b1105ea339acef86f5358abf517495a7"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/quotient-tests.txt",
+      "bytes": 53,
+      "sha256": "ceae9c5db7b8d927114840a0c920d7d54f08ae2700cd5038e26ff9a01bc2ef52"
+    },
+    {
+      "path": "build/qualification/operator-complete-frontier-v2/policy-refinement-tests.txt",
+      "bytes": 57,
+      "sha256": "d233ef9ef12a6bc6a50b4fea3198caa084fe271896ca35ad0332decfd37b7018"
+    }
+  ],
+  "engine_translation_units": 56,
+  "final_relink": {
+    "reason": "self-only choice target dependency; complete query accounting; dimension refusal before copying; probe protection-mask diagnostic corrected",
+    "linked": [
+      {
+        "path": "build/qualification/operator-complete-frontier-v2/native/libpoecraft_engine.a",
+        "bytes": 13002944,
+        "sha256": "8a6a6b26257461c0410de116940463689737442d12e5239735af0d7ca7aaf3ab"
+      },
+      {
+        "path": "build/qualification/operator-complete-frontier-v2/native/poecraft_quotient_lower_probe.exe",
+        "bytes": 12075349,
+        "sha256": "f67a78d0489b201afce688689e0dcf8abed0b4c90ca14d0556d115492fe63192"
+      },
+      {
+        "path": "build/qualification/operator-complete-frontier-v2/native/poecraft_engine_tests.exe",
+        "bytes": 15977094,
+        "sha256": "aec0d2762fa111daea3d73e7b907b3db37f7a355ffbef1e0066c7e60587217e1"
+      }
+    ],
+    "changed_sources": [
+      {
+        "path": "engine/src/solver_quotient_bellman.cpp",
+        "bytes": 64643,
+        "sha256": "6fea950074bb6ec2c487c2a12d5fb50478aecd8d81b9906508e46e48189aa849"
+      },
+      {
+        "path": "engine/src/solver_quotient_lower.cpp",
+        "bytes": 28029,
+        "sha256": "f93a24a025d69cfc847fa9e33fb4089f6c007ae2250ddddc6ec2f43ff85eeb65"
+      },
+      {
+        "path": "engine/benchmarks/solver_quotient_lower_probe.cpp",
+        "bytes": 22528,
+        "sha256": "c5785c2bbbaea7705c16531bb886ea684a77558dc4969b81d576541c1398e7ae"
+      },
+      {
+        "path": "engine/tests/test_solver_quotient_lower.cpp",
+        "bytes": 13962,
+        "sha256": "9e2493abf5567d3fdf5f1cb13c175ec261cb264e4844237a626056a73c194271"
+      }
+    ],
+    "focused_acceptance": {
+      "path": "build/qualification/operator-complete-frontier-v2/quotient-tests-final.txt",
+      "bytes": 53,
+      "sha256": "4a42894fadb0bc8e83c501bf19c66745ee3b26d6ad52305d1710a5d90d0752e7"
+    },
+    "native_reexport": false,
+    "micro_semantics": "No choices or invalid dimensions in the matched micro. Coefficients and checked arithmetic unchanged; retained native export reused."
+  }
+}
