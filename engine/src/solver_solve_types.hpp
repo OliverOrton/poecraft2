@@ -387,6 +387,7 @@ using namespace solve_detail;
 namespace quotient {
 class ProofStore;
 struct QuotientLowerBudget;
+struct QuotientLowerBoundary;
 }
 
 /* A completed reachable closure is independent of the economy. Equivalent
@@ -2408,6 +2409,8 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
 
     std::shared_ptr<const class PreparedPhaseLowerView> prepare_phase_lower(
         const quotient::QuotientLowerBudget& budget);
+    struct PhaseLowerProposal phase_lower_proposal(bool clean);
+    class PreparedPhaseRestartLower phase_restart_boundary(const class PreparedPhaseLowerView&);
     double prepared_primitive_lower_floor(std::uint32_t action) const;
 
     std::uint32_t satisfied_goal_mask_for_state(

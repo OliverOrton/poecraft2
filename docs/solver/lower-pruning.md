@@ -1,7 +1,8 @@
 # Lower And Pruning Authority
 
 Parent: [Solver](README.md) | Verified against current source: 2026-08-27;
-benchmark-private lower-query contract added 2026-09-04.
+benchmark-private lower-query contract added 2026-09-04; native probabilistic
+phase contract added 2026-09-05.
 
 ## Authority Rule
 
@@ -69,6 +70,39 @@ complete integer weight mass, checks every failure exit and uses directed
 cost-plus-failure arithmetic. These are private validating constructors, not
 coefficient-only declarations or executable authority. The measured donor is
 0.01165 and program lower 3.683885; no production consumer or portfolio gain.
+
+The private [probabilistic phase producer](../archive/2026-09-05-native-probabilistic-lower-repair-v1/README.md)
+keeps the clean projection's rarity/current-mask/prefix/suffix indexing. Proposal
+roles distinguish acquisition from completion: mask completion minimizes A[S]
+over all sets completing the current mask, including any-k requirements. The
+clean table is a separate candidate and records its first conservative refusal.
+
+The new native frame binds an exact goal fracture and caller scope. It permits
+ordinary hidden exclusions and all Eldritch phases through an explicit native
+pool/effect domination argument; generic influence, active metamods, additional
+fractures and veiled members remain outside. Unmodelled Imprint restore memory
+refuses the certificate rather than changing the caller's action scope.
+Native integer pool statistics bound conditional goal events, preserving full
+target weight and pessimistically reducing other weight by the strongest
+possible blockers. Union bounds and minimum marginal bounds preserve dependence.
+Normalized conservative event capacities minimize expectation for one frozen
+potential. The existing quotient checks every simultaneous relation after the
+events and observed choices are rebuilt for that vector; these are not exact
+native kernels valid for all vectors.
+
+Independent paid exits retain zero continuation. Positive exact-fresh Restart
+evidence is immutable and issued only by the existing preparation owner. Program
+composition charges mandatory setup once and streams every native integer exit;
+supported primitive relations telescope to a terminal or independent boundary.
+Canonical primitive and generated-family coverage remains complete. Open
+families retain valid floors even when a finite represented member is refined.
+
+The measured Scour refinement preserves its native fracture. The resulting
+13.717 donor improves the support-only control, but Harvest Physical's loose
+joint-completion event has a proved ceiling below program competitiveness.
+Both complete models and independent portfolios remain 36.42861718910441.
+No product lower manager consumes this certificate; the old anchored eligibility
+guard and ordinary public bounds remain unchanged.
 
 Internal lowers drive operator pruning, fringe gap priority, constructive
 certificates, and gap targets. Telemetry should show which pattern supplied a

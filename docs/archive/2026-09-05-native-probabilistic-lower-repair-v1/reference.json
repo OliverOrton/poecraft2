@@ -1,0 +1,72 @@
+{
+  "evidence_scope": "native producer owns uniform semantics; this audit checks exact finite coefficients and integer program mass",
+  "checked_relations": 1281,
+  "probability_relations": 555,
+  "exact_first_proposal_rhs": "171932786422861166302027/4722366482869645213696",
+  "source_results": [
+    {
+      "second_source": false,
+      "donor": 13.716999591201551,
+      "donor_gain": 13.705349591201552,
+      "program_before": 3.683885421903051,
+      "program_after": 17.26620674029301,
+      "program_gain": 13.58232131838996,
+      "compatible_action_gain": 0,
+      "complete_model_gain": 0.0,
+      "portfolio_gain": 0.0,
+      "exact_program": "346498926468952581713/20068039939562930176",
+      "exact_projection_ceiling": "5615988735331009/409418160144384",
+      "program_tie_donor": 33.052982598426006,
+      "limiting_relation": "harvest_reforge:physical",
+      "complete_model_ties": [
+        "annul",
+        "harvest_reforge:physical",
+        "option:eldritch_side_intent:suffix:eldritch_annul:eldritch_ichor:1",
+        "option:eldritch_side_intent:suffix:eldritch_chaos:eldritch_ichor:1",
+        "option:eldritch_side_intent:suffix:eldritch_exalt:eldritch_ichor:1",
+        "residual_family_1",
+        "residual_family_2",
+        "residual_family_3",
+        "residual_family_4",
+        "residual_family_5",
+        "residual_family_7",
+        "residual_family_9",
+        "residual_family_10"
+      ]
+    },
+    {
+      "second_source": true,
+      "donor": 13.716999591201551,
+      "donor_gain": 13.705349591201552,
+      "program_before": 3.6839899999999988,
+      "program_after": 17.389339591201463,
+      "program_gain": 13.705349591201465,
+      "compatible_action_gain": 0,
+      "complete_model_gain": 0.0,
+      "portfolio_gain": 0.0,
+      "exact_program": "626516986425234549/36028797018963968",
+      "exact_projection_ceiling": "5615988735331009/409418160144384",
+      "program_tie_donor": 32.75627718910441,
+      "limiting_relation": "harvest_reforge:physical",
+      "complete_model_ties": [
+        "annul",
+        "harvest_reforge:physical",
+        "option:eldritch_side_intent:prefix:eldritch_annul:eldritch_ember:1",
+        "option:eldritch_side_intent:prefix:eldritch_chaos:eldritch_ember:1",
+        "option:eldritch_side_intent:prefix:eldritch_exalt:eldritch_ember:1",
+        "option:eldritch_side_intent:suffix:eldritch_annul:eldritch_ichor:1",
+        "option:eldritch_side_intent:suffix:eldritch_chaos:eldritch_ichor:1",
+        "option:eldritch_side_intent:suffix:eldritch_exalt:eldritch_ichor:1",
+        "residual_family_1",
+        "residual_family_2",
+        "residual_family_3",
+        "residual_family_4",
+        "residual_family_5",
+        "residual_family_7",
+        "residual_family_9",
+        "residual_family_10"
+      ]
+    }
+  ],
+  "production_authority": false
+}

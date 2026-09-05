@@ -360,7 +360,18 @@ void emit_phase_program(const PhaseProgramLowerWitness& proof) {
         << ",\"total_weight\":" << r.total_weight << ",\"goal_probability_upper\":" << r.goal_probability_upper
         << ",\"modifier_exits\":" << r.physical_exits << ",\"failure_lower_min\":" << r.failure_lower_min
         << ",\"failure_lower_max\":" << r.failure_lower_max << ",\"lower\":" << r.lower
-        << ",\"semantic_acceptance\":true,\"numeric_acceptance\":true}";
+        << ",\"semantic_acceptance\":true,\"numeric_acceptance\":true";
+    if (!r.exits.empty()) {
+        std::cout << ",\"support_control_lower\":" << r.support_control_lower << ",\"weighted_exits\":[";
+        for (unsigned i = 0; i < r.exits.size(); ++i) {
+            if (i) std::cout << ',';
+            const auto& e = r.exits[i];
+            std::cout << "{\"weight\":" << e.weight << ",\"mask\":" << e.mask << ",\"cell\":" << e.cell
+                << ",\"lower\":" << e.lower << ",\"goal\":" << (e.goal ? "true" : "false") << '}';
+        }
+        std::cout << ']';
+    }
+    std::cout << '}';
 }
 
 void uniform_phase(CalcContext& calc, SolveWorkTestAccess::Impl& owner,
@@ -544,6 +555,182 @@ void uniform_phase(CalcContext& calc, SolveWorkTestAccess::Impl& owner,
     }
     std::cout << ']';
 }
+void emit_refusal(const PhaseProposalRefusal& r) {
+    std::cout << "{\"kind\":\"" << r.kind << "\",\"detail\":\"" << r.detail
+        << "\",\"cell\":" << r.cell << ",\"action\":" << r.action << ",\"successor\":" << r.successor
+        << ",\"lhs\":" << r.lhs << ",\"cost\":" << r.cost << ",\"continuation\":" << r.continuation << ",\"exits\":[";
+    for (unsigned i = 0; i < r.targets.size(); ++i) {
+        if (i) std::cout << ',';
+        std::cout << '[' << r.targets[i] << ',' << r.probabilities[i] << ']';
+    }
+    std::cout << "]}";
+}
+void probabilistic_phase(CalcContext& calc, SolveWorkTestAccess::Impl& owner, const pc_item_state& start) {
+    const auto started = Clock::now();
+    pc_item_state post = start; post.eater_of_worlds_tier = 1;
+    const auto mask_proposal = owner.phase_lower_proposal(false);
+    const auto clean_proposal = owner.phase_lower_proposal(true);
+    auto support = PhaseLowerProducer::prepare(calc, owner.prices, post, mask_proposal);
+    const auto restart_boundary = owner.phase_restart_boundary(*support);
+    const auto adapter_ns = ns(started);
+    const auto control_start = Clock::now();
+    auto control = PhaseLowerProducer::prepare_probabilistic(calc, owner.prices, post,
+        clean_proposal, support, restart_boundary, owner.options.consider_imprint_programs, false);
+    const auto control_ns = ns(control_start);
+    const auto control_lower = *control->lookup(calc, owner.prices, start, owner.options.consider_imprint_programs);
+    const auto root_index = ((start.rarity*support->values.size()+owner.satisfied_goal_mask_for_state(owner.result.start_state))*4+start.prefix_count)*4+start.suffix_count;
+    bool scour_limits = false;
+    for (const auto& row : control->relations)
+        if (row.cell == root_index && calc.registry().actions[row.action].params.type == ActionType::Scour &&
+            row.rhs <= control_lower+1e-10) scour_limits = true;
+    if (!scour_limits) throw std::runtime_error("measured minimum did not select the proposed Scour retention refinement");
+    std::cout << "\"proposal_adapter\":{\"role\":\"mask_completion_from_acquisition_any_k_union\",\"dimensions\":"
+        << mask_proposal.values.size() << ",\"accepted_by_support_control\":" << (support->original_candidate_accepted ? "true" : "false")
+        << ",\"first_refusal\":"; emit_refusal(support->proposal_refusal);
+    std::cout << ",\"values\":[";
+    for (unsigned i = 0; i < mask_proposal.values.size(); ++i) { if (i) std::cout << ','; std::cout << mask_proposal.values[i]; }
+    std::cout << "]},\"retention_control\":{\"lower\":" << control_lower << ",\"relation\":\"scour_grants_fracture_loss_and_zero_outside_boundary\","
+        << "\"selected_from_root_minimum\":true,\"predicted_remaining_restart_ceiling\":" << (5+restart_boundary.record.lower) << ",\"prepare_check_ns\":" << control_ns << '}';
+    // Release the unrefined graph evidence before the matched treatment.
+    control.reset();
+    const auto treatment_start = Clock::now();
+    auto potential = PhaseLowerProducer::prepare_probabilistic(calc, owner.prices, post,
+        clean_proposal, support, restart_boundary, owner.options.consider_imprint_programs, true);
+    const auto treatment_ns = ns(treatment_start);
+    std::cout << ",\"probabilistic_donor\":{\"role\":\"clean_completion_rarity_mask_prefix_suffix\",\"dimensions\":"
+        << potential->values.size() << ",\"restart_boundary_lower\":" << restart_boundary.record.lower << ",\"domain\":\"fixed_fractured_modifier_no_metamods_or_generic_influence_all_eldritch_phases\","
+        << "\"fractured_mod\":" << potential->fractured_mod << ",\"fractured_mask\":" << potential->fractured_mask
+        << ",\"semantic_acceptance\":true,\"coefficient_acceptance\":true,\"rounds\":" << potential->model_rounds
+        << ",\"first_proposal_refusal\":"; emit_refusal(potential->proposal_refusal);
+    std::cout << ",\"values\":[";
+    for (unsigned i = 0; i < potential->values.size(); ++i) { if (i) std::cout << ','; std::cout << potential->values[i]; }
+    std::cout << "],\"proposal_values\":[";
+    for (unsigned i = 0; i < potential->proposal.values.size(); ++i) { if (i) std::cout << ','; std::cout << potential->proposal.values[i]; }
+    std::cout << "],\"native_draw_witnesses\":[";
+    for (unsigned i = 0; i < potential->draws.size(); ++i) {
+        if (i) std::cout << ',';
+        const auto& w = potential->draws[i];
+        std::cout << "{\"action\":\"" << calc.registry().actions[w.action].id << "\",\"slot\":" << w.slot
+            << ",\"side\":" << int(w.side) << ",\"guaranteed\":" << (w.guaranteed ? "true" : "false")
+            << ",\"target\":" << w.target_weight << ",\"other\":" << w.other_weight << ",\"entries\":" << w.entries << ",\"removal\":[";
+        for (unsigned side = 0; side < 2; ++side) {
+            if (side) std::cout << ','; std::cout << '[';
+            for (unsigned j = 0; j < 3; ++j) { if (j) std::cout << ','; std::cout << w.strongest_other_removal[side][j]; }
+            std::cout << ']';
+        }
+        std::cout << "]}";
+    }
+    std::cout << "],\"checked_relations\":[";
+    for (unsigned i = 0; i < potential->relations.size(); ++i) {
+        if (i) std::cout << ',';
+        const auto& r = potential->relations[i];
+        std::cout << "{\"cell\":" << r.cell << ",\"action\":\"" << calc.registry().actions[r.action].id
+            << "\",\"cost\":" << r.cost << ",\"rhs\":" << r.rhs
+            << ",\"probability_aware\":" << (r.probability_aware ? "true" : "false")
+            << ",\"independent_price\":" << (r.independent_price ? "true" : "false") << ",\"exits\":[";
+        for (unsigned j = 0; j < r.targets.size(); ++j) {
+            if (j) std::cout << ',';
+            std::cout << '[' << r.targets[j] << ',' << r.probabilities[j] << ']';
+        }
+        std::cout << "]}";
+    }
+    std::cout << "]},\"sources\":[";
+    pc_item_state second = start;
+    if (pc_item_remove_at(&second, PC_SIDE_PREFIX, 0) != PC_RESULT_OK) throw std::runtime_error("saved second source failed");
+    const std::string program_id = "option:eldritch_side_intent:suffix:eldritch_exalt:eldritch_ichor:1";
+    for (unsigned which = 0; which < 2; ++which) {
+        if (which) std::cout << ',';
+        const auto& item = which ? second : start;
+        const auto prep_start = Clock::now();
+        std::unique_ptr<SolveWorkTestAccess::Impl> fresh;
+        if (which) { fresh = std::make_unique<SolveWorkTestAccess::Impl>(calc, item, owner.prices, owner.options); fresh->prepare_goal_cover_cost(); }
+        auto& local = which ? *fresh : owner;
+        const auto second_prepare_ns = which ? ns(prep_start) : 0;
+        const auto root = local.result.start_state;
+        const auto baseline = local.completion_proof_lower_value(root);
+        const auto donor = *potential->lookup(calc, owner.prices, item, local.options.consider_imprint_programs);
+        const auto query_start = Clock::now();
+        const auto new_program = PhaseLowerProducer::compose(calc, owner.prices, item, program_id, *potential);
+        const auto query_ns = ns(query_start);
+        std::cout << "{\"second_source\":" << (which ? "true" : "false") << ",\"source\":"; emit_key(exact_item_state_key(item));
+        std::cout << ",\"independent_lower\":" << baseline << ",\"support_donor\":" << support->values[local.satisfied_goal_mask_for_state(root)]
+            << ",\"probabilistic_donor\":" << donor << ",\"program_before\":{\"lower\":" << new_program.record.support_control_lower << '}';
+        std::cout << ",\"program_after\":"; emit_phase_program(new_program);
+        std::cout << ",\"local_compatible_gain\":" << std::max(baseline, new_program.record.lower)-std::max(baseline, new_program.record.support_control_lower)
+            << ",\"program_query_ns\":" << query_ns << ",\"second_preparation_ns\":" << second_prepare_ns << ",\"complete_models\":[";
+        for (unsigned treatment = 0; treatment < 2; ++treatment) {
+            if (treatment) std::cout << ',';
+            const auto lower = std::max(baseline, treatment ? donor : 0);
+            QuotientBellmanGraph graph((16ull << 20)-potential->memory_snapshot().total_bytes, QuotientBellmanMode::LowerOnly);
+            const auto source_key = exact_item_state_key(item);
+            graph.install_cells({{0, 1, source_key, false}});
+            const StableKey scope{0x50524f42454e56, which};
+            QuotientLowerSource source{0, source_key, {scope, 1, true, {}, {}}, {}};
+            std::map<unsigned, std::vector<StableKey>> members;
+            std::map<StableKey, std::string> labels;
+            std::set<StableKey> inserted;
+            unsigned admitted = 0, illegal_count = 0;
+            for (const auto& priced : local.operators) {
+                if (!calc.is_candidate_operator_admitted_for_state(root, priced.index)) continue;
+                const auto& op = calc.operators()[priced.index];
+                auto identity = planner_operator_semantic_key(op); inserted.insert(identity); labels[identity] = op.id;
+                if (op.automatic_kind == AutomaticCandidateKind::None) source.expected_actions.actions.push_back(identity);
+                else members[unsigned(op.automatic_kind)].push_back(identity);
+                const bool illegal = op.kind == PlannerOperatorKind::Primitive &&
+                    !action_legal(calc.session(), calc.registry().actions[op.primitive_action], calc.state(root));
+                ++admitted; illegal_count += illegal;
+                double floor = lower;
+                const auto existing = local.operator_proof_lower_value(root, priced.index, false);
+                if (std::isfinite(existing)) floor = std::max(floor, existing);
+                if (op.kind == PlannerOperatorKind::Primitive) floor = std::max(floor, local.prepared_primitive_lower_floor(op.primitive_action));
+                source.constraints.push_back({{identity, false, {}}, illegal ? LowerConstraintKind::Inapplicable : LowerConstraintKind::Scalar,
+                    UINT64_MAX, floor, {1}, illegal ? LowerEvidenceKind::ExactInapplicability : LowerEvidenceKind::IndependentLower});
+            }
+            // Complete description synthesis for this small family, without
+            // materializing any kernels. Other open families retain their floor.
+            const auto side_programs = calc.phase_lower_eldritch_programs(item, owner.prices);
+            for (const auto& op : side_programs) {
+                auto identity = planner_operator_semantic_key(op);
+                if (!inserted.insert(identity).second) continue;
+                members[unsigned(AutomaticCandidateKind::EldritchSide)].push_back(identity); labels[identity] = op.id;
+                double floor = lower;
+                if (op.id == program_id) floor = std::max(floor, treatment ? new_program.record.lower : new_program.record.support_control_lower);
+                source.constraints.push_back({{identity, false, {}}, LowerConstraintKind::Scalar, UINT64_MAX, floor, {2}, LowerEvidenceKind::IndependentLower});
+            }
+            unsigned open = 0;
+            for (unsigned kind = 1; kind <= 10; ++kind) {
+                const bool enabled = calc.goal().automatic_candidates && (calc.goal().automatic_candidate_kind_mask & (1u << kind));
+                const bool is_open = enabled && kind != unsigned(AutomaticCandidateKind::Imprint) && kind != unsigned(AutomaticCandidateKind::EldritchSide);
+                const StableKey identity{0x46414d494c59, kind};
+                source.expected_actions.families.push_back({identity, members[kind], is_open});
+                if (!is_open) continue;
+                ++open; labels[identity] = "residual_family_"+std::to_string(kind);
+                source.constraints.push_back({{identity, true, members[kind]}, LowerConstraintKind::Scalar, UINT64_MAX, lower, {3}, LowerEvidenceKind::IndependentLower});
+            }
+            QuotientLowerQuery query{{0x50524f42454e56, which, treatment}, scope, graph.model_revision(), LowerCoefficientModel::ExactBinaryModel, {0}, {std::move(source)}, {}};
+            auto result = graph.solve_lower(query);
+            if (!result.checked) throw std::runtime_error("complete probability envelope: "+result.reason);
+            const auto model = result.checked->values_by_state[0];
+            std::cout << "{\"treatment\":" << treatment << ",\"admitted\":" << admitted << ",\"inapplicable\":" << illegal_count
+                << ",\"open_families\":" << open << ",\"eldritch_descriptions\":" << side_programs.size()
+                << ",\"imprint_scope_excluded\":true,\"lower\":" << model << ",\"portfolio\":" << std::max(baseline, model) << ",\"ranked_constraints\":[";
+            bool first = true;
+            for (const auto& r : result.ranked_constraints) {
+                if (!first) std::cout << ','; first = false;
+                std::cout << "{\"id\":\"" << labels.at(r.cover.identity) << "\",\"lower\":" << r.rhs_lower << '}';
+            }
+            std::cout << "]}";
+        }
+        std::cout << "]}";
+    }
+    std::cout << "],\"resources\":{\"adapter_support_ns\":" << adapter_ns << ",\"probability_treatment_ns\":" << treatment_ns
+        << ",\"retained_potential_bytes\":" << potential->retained_reservation << ",\"shared_support_bytes\":" << support->retained_reservation
+        << ",\"proof_ledger_peak_bytes\":" << potential->memory_snapshot().peak_total_bytes
+        << ",\"combined_additional_peak_bytes\":" << potential->peak_additional_bytes
+        << ",\"native_projected_action_checks\":" << potential->native_action_relations
+        << ",\"shared_calculator_bytes\":" << calc.estimated_owned_bytes() << ",\"source_owner_including_shared_calculator_bytes\":"
+        << owner.audited_estimated_owned_bytes() << "}";
+}
 } // namespace
 
 int main(int argc, char** argv) {
@@ -551,7 +738,8 @@ int main(int argc, char** argv) {
         if (argc != 5) throw std::runtime_error("micro|medium-coverage artifact-directory goal economy required");
         const bool is_micro = std::string(argv[1]) == "micro";
         const bool is_phase = std::string(argv[1]) == "uniform-phase";
-        if (!is_micro && !is_phase && std::string(argv[1]) != "medium-coverage") throw std::runtime_error("unknown bounded probe");
+        const bool is_probability = std::string(argv[1]) == "probabilistic-phase";
+        if (!is_micro && !is_phase && !is_probability && std::string(argv[1]) != "medium-coverage") throw std::runtime_error("unknown bounded probe");
         const auto began = Clock::now();
         Handles h;
         pc_error_info error{};
@@ -605,11 +793,12 @@ int main(int argc, char** argv) {
         const auto prepare_ns = ns(prepare);
         if (std::isfinite(owner.envelope_bellman_lower))
             throw std::runtime_error("probe must bypass envelope helper");
-        std::cout << std::setprecision(17) << "{\"pilot\":\"" << (is_phase ? "uniform-phase-lower-v1" : "operator-complete-frontier-v2")
+        std::cout << std::setprecision(17) << "{\"pilot\":\"" << (is_probability ? "native-probabilistic-lower-v1" : (is_phase ? "uniform-phase-lower-v1" : "operator-complete-frontier-v2"))
             << "\",\"solver_steps\":0,\"production_authority\":false,";
         if (is_micro) micro(calc, owner,
             key(goal + '\n' + economy + '\n' + read(manifest_path) + "\nlower-v2"), key(goal));
         else if (is_phase) uniform_phase(calc, owner, start, key(goal + '\n' + economy + '\n' + read(manifest_path)));
+        else if (is_probability) probabilistic_phase(calc, owner, start);
         else medium_coverage(calc, owner);
         std::cout << ",\"prepare_ns\":" << prepare_ns << ",\"elapsed_ns\":" << ns(began)
             << ",\"process_peak_working_set_bytes\":" << process_peak() << "}\n";

@@ -1,0 +1,40 @@
+{
+  "scope": "completed private native probabilistic lower; stronger donor/program, zero complete-model or portfolio gain, no production authority",
+  "files": [
+    {
+      "path": "acceptance-build.txt",
+      "bytes": 4805,
+      "sha256": "e509b9d39a35f12f9238e26314bc08e578e005e1ab342cc71741f81db2eb2fed"
+    },
+    {
+      "path": "fixture-build.txt",
+      "bytes": 190,
+      "sha256": "9d771ceb6c0a76c006fbb4dc12a105618aeb13af4ea487be726ccebdea4bf677"
+    },
+    {
+      "path": "native.json",
+      "bytes": 319761,
+      "sha256": "47b1539464403da165ead9123c870e270383aceec285b99d658a31303796d936"
+    },
+    {
+      "path": "phase-tests.txt",
+      "bytes": 48,
+      "sha256": "ed0a99650d172bbdb52d66e9407862439bb800c9d33ab7f21a66b4edd41fe36a"
+    },
+    {
+      "path": "provenance.json",
+      "bytes": 51129,
+      "sha256": "d6e7a94383b9aed61ea87951f51e5fe3c2deb3439eef5a39683a19ed483c1636"
+    },
+    {
+      "path": "README.md",
+      "bytes": 13911,
+      "sha256": "7dc6c00ad352c6e065ba1cc2973684490962d2baa4ce511876f41f60052fc787"
+    },
+    {
+      "path": "reference.json",
+      "bytes": 2847,
+      "sha256": "80c085a09097ee14bb5836a78cc9e5d9888c4ffcb2a8ad6e5c5d52987c90ca77"
+    }
+  ]
+}

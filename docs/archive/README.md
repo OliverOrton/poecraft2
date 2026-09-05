@@ -9,6 +9,15 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-09-05
+
+- [Native Probabilistic Lower Repair and Complete-Envelope Progress v1](2026-09-05-native-probabilistic-lower-repair-v1/README.md) —
+  repairs acquisition/completion coordinates, certifies native conditional
+  probability bounds and preserves the measured Scour fracture. Donor 13.717
+  and stronger mandatory-program lowers pass on both saved sources; complete
+  model and portfolio gain remain zero. Harvest Physical's retained joint-event
+  relaxation supplies the stopping ceiling. No production activation or Simulator.
+
 ## 2026-09-04
 
 - [Uniform Phase-Scoped Lower Certificates and Program Consumption v1](2026-09-04-uniform-phase-lower-certificates-v1/README.md) —

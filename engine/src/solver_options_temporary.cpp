@@ -252,6 +252,75 @@ std::vector<std::uint64_t> CalcContext::temporary_followup_eligible_mask(
     return result;
 }
 
+CalcContext::NativeGoalDrawBound CalcContext::phase_goal_draw_bound(
+        const pc_item_state& anchor, std::uint32_t action_index,
+        std::uint32_t goal_slot, bool guaranteed) {
+    const auto& action = registry_.actions.at(action_index);
+    const auto& target = layout_.slots.at(goal_slot).satisfying_mask;
+    NativeGoalDrawBound result;
+    result.action = action_index; result.slot = goal_slot; result.guaranteed = guaranteed;
+    for (std::uint32_t mod = 0; mod < session_->mod_count; ++mod) {
+        if (!pc_bitset_test(target.data(), mod)) continue;
+        const auto side = session_->gen_type[mod];
+        if (side != PC_SIDE_PREFIX && side != PC_SIDE_SUFFIX)
+            throw std::invalid_argument("phase probability needs explicit goal affixes");
+        if (result.side >= 0 && result.side != side)
+            throw std::invalid_argument("phase probability needs single-side goal events");
+        result.side = side;
+    }
+    if (result.side < 0) throw std::invalid_argument("phase probability empty goal event");
+    pc_item_state carrier = anchor;
+    pc_item_clear_side(&carrier, PC_SIDE_PREFIX);
+    pc_item_clear_side(&carrier, PC_SIDE_SUFFIX);
+    carrier.rarity = PC_RARITY_RARE;
+    PoolBuildRequest request;
+    request.side_filter = result.side;
+    if (action.params.type == ActionType::Fossil) {
+        request.weight_kind = PoolWeightKind::Fossil;
+        request.fossil_indices = action.params.fossil_indices;
+    } else if (guaranteed) {
+        if (action.params.type != ActionType::HarvestReforge &&
+            action.params.type != ActionType::HarvestAugment)
+            throw std::invalid_argument("phase probability unknown guaranteed pool");
+        request.weight_kind = PoolWeightKind::TargetedNatural;
+        request.target_tag_id = action.params.target_tag_id;
+    }
+    const auto& pool = get_weighted_pool(context_, &carrier, request);
+    const auto add = [](std::uint64_t& sum, std::uint64_t x) {
+        if (x > UINT64_MAX-sum) throw std::overflow_error("phase native weight overflow");
+        sum += x;
+    };
+    for (const auto& entry : pool.entries) {
+        if (!entry.final_weight) continue;
+        if (entry.session_mod_id >= session_->mod_count)
+            throw std::invalid_argument("phase native pool contains foreign modifier");
+        ++result.entries;
+        result.frame_escape |= session_->metamod_type.at(entry.session_mod_id) >= 0;
+        add(pc_bitset_test(target.data(), entry.session_mod_id) ? result.target_weight :
+            result.other_weight, entry.final_weight);
+    }
+    if (result.target_weight > UINT64_MAX-result.other_weight ||
+        result.target_weight+result.other_weight != pool.total_weight)
+        throw std::invalid_argument("phase native pool mass incomplete");
+    // Do NOT union hypothetical satisfying members and delete their target
+    // weight. For each real blocker, bound only its non-target exclusion mass.
+    // If N' <= N and B' >= B-D then N'/(N'+B') <= N/(N+max(0,B-D)).
+    // Sum the strongest distinct effects, counting overlaps repeatedly. Every
+    // legal group-exclusive physical history uses no more blockers than this.
+    for (std::uint32_t blocker = 0; blocker < session_->mod_count; ++blocker) {
+        const int side = session_->gen_type[blocker];
+        if (side != PC_SIDE_PREFIX && side != PC_SIDE_SUFFIX) continue;
+        std::uint64_t removed = 0;
+        for (const auto& entry : pool.entries) {
+            if (pc_bitset_test(target.data(), entry.session_mod_id)) continue;
+            if (mods_conflict(*session_, blocker, entry.session_mod_id)) add(removed, entry.final_weight);
+        }
+        auto& top = result.strongest_other_removal[side];
+        for (auto& value : top) if (removed > value) std::swap(removed, value);
+    }
+    return result;
+}
+
 double CalcContext::optimistic_goal_draw_probability(
     const std::uint32_t carrier_state,
     const std::uint32_t action_index,

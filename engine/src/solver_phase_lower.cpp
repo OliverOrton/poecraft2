@@ -141,6 +141,21 @@ void grammar_coverage(const CalcContext& calc) {
 }
 } // namespace
 
+PhaseLowerProposal phase_completion_proposal(const std::vector<double>& acquisition,
+        std::uint32_t required) {
+    if (acquisition.empty() || !std::has_single_bit(acquisition.size()) ||
+        required > std::countr_zero(acquisition.size()))
+        throw std::invalid_argument("invalid acquisition projection");
+    PhaseLowerProposal result{PhaseTableRole::MaskCompletion,
+        static_cast<std::uint32_t>(acquisition.size()), required,
+        std::vector<double>(acquisition.size(), std::numeric_limits<double>::infinity())};
+    for (std::uint32_t mask = 0; mask < acquisition.size(); ++mask)
+        for (std::uint32_t produced = 0; produced < acquisition.size(); ++produced)
+            if (std::popcount(mask | produced) >= required)
+                result.values[mask] = std::min(result.values[mask], acquisition[produced]);
+    return result;
+}
+
 PhaseProbabilityInterval phase_weight_probability(std::uint64_t part, std::uint64_t total) {
     numeric_mode();
     if (!total || part > total) throw std::invalid_argument("invalid complete integer mass");
@@ -175,11 +190,13 @@ double phase_price_lower(const ActionDescriptor& action, const PhaseLowerPrices&
 PreparedPhaseLowerView::PreparedPhaseLowerView(StableKey context, std::vector<double> table,
         std::vector<PhasePrimitiveWitness> actions, std::uint32_t families,
         std::uint8_t exarch, std::uint8_t worlds, bool original,
+        PhaseLowerProposal proposed, PhaseProposalRefusal refusal,
         std::shared_ptr<const SessionImpl> session, std::shared_ptr<ProofStore> store,
         std::uint64_t reservation)
     : identity(table_identity(context, exarch, worlds, table)), values(std::move(table)),
       primitives(std::move(actions)), family_mask(families), searing(exarch), eater(worlds),
-      original_candidate_accepted(original), retained_reservation(reservation),
+      original_candidate_accepted(original), proposal(std::move(proposed)),
+      proposal_refusal(std::move(refusal)), retained_reservation(reservation),
       session_(std::move(session)), context_(std::move(context)), store_(std::move(store)),
       charge_(store_->ledger(), ProofMemoryCategory::Certificate, reservation) {}
 
@@ -199,7 +216,7 @@ std::optional<double> PreparedPhaseLowerView::lookup(const CalcContext& calc,
 
 std::shared_ptr<const PreparedPhaseLowerView> PhaseLowerProducer::prepare(
         CalcContext& calc, const PhaseLowerPrices& prices, const pc_item_state& phase,
-        const std::vector<double>& candidate, const QuotientLowerBudget& budget) {
+        const PhaseLowerProposal& proposal, const QuotientLowerBudget& budget) {
     numeric_mode(); checkpoint(budget);
     for (const auto& [key, value] : prices) {
         (void)key;
@@ -255,6 +272,7 @@ std::shared_ptr<const PreparedPhaseLowerView> PhaseLowerProducer::prepare(
     if (cheapest.empty()) throw std::invalid_argument("phase lower has no priced primitive cover");
     std::vector<double> table;
     bool original = false;
+    PhaseProposalRefusal proposal_refusal;
     {
         QuotientBellmanGraph graph(cap/2, QuotientBellmanMode::LowerOnly);
         std::vector<QuotientBellmanCellInput> cells;
@@ -286,8 +304,40 @@ std::shared_ptr<const PreparedPhaseLowerView> PhaseLowerProducer::prepare(
             query.sources.push_back(std::move(source));
         }
         query.model_revision = graph.model_revision();
+        const auto& candidate = proposal.values;
         auto checked = graph.check_lower(query, candidate, budget);
+        PhaseProposalRefusal refusal;
+        if (proposal.role != PhaseTableRole::MaskCompletion || proposal.mask_count != size ||
+            proposal.required != calc.goal().required_satisfied_slots() || candidate.size() != size)
+            refusal.kind = "wrong_table_role_or_dimensions";
+        else for (std::uint32_t mask = 0; mask < size && refusal.kind.empty(); ++mask) {
+            if (!std::isfinite(candidate[mask]) || candidate[mask] < 0) {
+                refusal.kind = "numeric_inconclusive"; refusal.cell = mask;
+            } else if (std::popcount(mask) >= proposal.required && candidate[mask] != 0) {
+                refusal.kind = "nonzero_terminal"; refusal.cell = mask; refusal.lhs = candidate[mask];
+            }
+        }
+        if (refusal.kind.empty() && !checked.checked) {
+            refusal.kind = "numeric_inconclusive";
+            // Probability-one relation: subtraction is exact under Sterbenz
+            // when comparable. Retain operands, not a rounded residual claim.
+            for (std::uint32_t mask = 0; mask < size; ++mask) {
+                for (std::uint32_t a = 0; a < witnesses.size(); ++a) {
+                    const auto& w = witnesses[a];
+                    if (w.priced && candidate[mask] > up(w.price_lower+candidate[mask | w.reachable_goals])) {
+                        refusal = {"violated_inequality", "support-only probability-one union edge",
+                            mask, a, mask | w.reachable_goals, candidate[mask], w.price_lower,
+                            candidate[mask | w.reachable_goals]};
+                        break;
+                    }
+                }
+                if (refusal.kind == "violated_inequality") break;
+            }
+        }
+        refusal.detail += checked.reason;
         original = bool(checked.checked) && monotone(candidate);
+        original &= refusal.kind.empty();
+        proposal_refusal = std::move(refusal);
         if (!original) checked = graph.solve_lower(query, budget);
         if (!checked.checked || !monotone(checked.checked->values_by_state))
             throw std::runtime_error("phase lower finite checker refused: " + checked.reason);
@@ -296,13 +346,14 @@ std::shared_ptr<const PreparedPhaseLowerView> PhaseLowerProducer::prepare(
     checkpoint(budget);
     std::uint64_t bytes = sizeof(PreparedPhaseLowerView) + 2048 +
         3 * context.capacity() * sizeof(std::uint64_t) + table.capacity() * sizeof(double) +
-        witnesses.capacity() * sizeof(PhasePrimitiveWitness);
+        witnesses.capacity() * sizeof(PhasePrimitiveWitness) + proposal.values.size() * sizeof(double) +
+        proposal_refusal.kind.size() + proposal_refusal.detail.size() + 256;
     for (const auto& action : witnesses) bytes += action.action_id.capacity() + 1;
     if (bytes > cap/2) throw std::length_error("phase lower retained snapshot exceeds reservation");
     auto result = std::shared_ptr<const PreparedPhaseLowerView>(new PreparedPhaseLowerView(
         std::move(context), std::move(table), std::move(witnesses),
         calc.goal().automatic_candidates ? calc.goal().automatic_candidate_kind_mask : 0,
-        phase.searing_exarch_tier, phase.eater_of_worlds_tier, original,
+        phase.searing_exarch_tier, phase.eater_of_worlds_tier, original, proposal, std::move(proposal_refusal),
         calc.shared_session(), std::move(store), bytes));
     workspace.reset();
     return result;
@@ -314,11 +365,23 @@ PhaseProgramLowerWitness::PhaseProgramLowerWitness(PhaseProgramLowerRecord value
       charge_(store_->ledger(), ProofMemoryCategory::Certificate, sizeof(*this) +
         record.operator_id.capacity() + 1 + sizeof(std::uint64_t) *
         (record.source.capacity() + record.post_phase.capacity() +
-         record.operator_identity.capacity() + record.donor_identity.capacity())) {}
+         record.operator_identity.capacity() + record.donor_identity.capacity()) +
+        record.exits.capacity()*sizeof(PhaseProgramLowerRecord::Exit)) {}
 
 PhaseProgramLowerWitness PhaseLowerProducer::compose(CalcContext& calc, const PhaseLowerPrices& prices,
         const pc_item_state& source, const std::string& operator_id,
         const PreparedPhaseLowerView& donor, const QuotientLowerBudget& budget) {
+    return compose_impl(calc, prices, source, operator_id, donor, nullptr, budget);
+}
+PhaseProgramLowerWitness PhaseLowerProducer::compose(CalcContext& calc, const PhaseLowerPrices& prices,
+        const pc_item_state& source, const std::string& operator_id,
+        const PreparedPhasePotential& donor, const QuotientLowerBudget& budget) {
+    return compose_impl(calc, prices, source, operator_id, *donor.support_, &donor, budget);
+}
+PhaseProgramLowerWitness PhaseLowerProducer::compose_impl(CalcContext& calc, const PhaseLowerPrices& prices,
+        const pc_item_state& source, const std::string& operator_id,
+        const PreparedPhaseLowerView& donor, const PreparedPhasePotential* potential,
+        const QuotientLowerBudget& budget) {
     checkpoint(budget); numeric_mode();
     // Account query work in the same retained snapshot budget; never cache a
     // SolveWork or a physical successor graph. Native entries are streamed.
@@ -340,13 +403,16 @@ PhaseProgramLowerWitness PhaseLowerProducer::compose(CalcContext& calc, const Ph
         throw std::invalid_argument("phase composition setup is not legal Ichor/Exalt");
     pc_item_state phase = source;
     phase.eater_of_worlds_tier = static_cast<std::uint8_t>(setup.params.tier);
-    if (!donor.compatible(calc, prices, phase)) throw std::invalid_argument("incompatible phase donor");
+    if (!(potential ? potential->compatible(calc, prices, phase, false) : donor.compatible(calc, prices, phase)))
+        throw std::invalid_argument("incompatible phase donor");
     PhaseProgramLowerRecord result;
     result.source = exact_item_state_key(source); result.post_phase = exact_item_state_key(phase);
     result.operator_identity = planner_operator_semantic_key(*found);
-    result.operator_id = found->id; result.donor_identity = donor.identity;
+    result.operator_id = found->id; result.donor_identity = potential ? potential->identity : donor.identity;
     result.cost_lower = down(phase_price_lower(setup, prices) + phase_price_lower(draw, prices));
     result.failure_lower_min = std::numeric_limits<double>::infinity();
+    std::vector<std::pair<std::uint64_t, double>> weighted_values;
+    double control_failure = std::numeric_limits<double>::infinity();
     result.total_weight = calc.phase_lower_add_weights(phase, path[1].action,
         [&](const pc_item_state& exit, std::uint64_t weight) {
             checkpoint(budget); ++result.physical_exits;
@@ -359,20 +425,34 @@ PhaseProgramLowerWitness PhaseLowerProducer::compose(CalcContext& calc, const Ph
             const bool goal = exit.rarity == calc.goal().rarity &&
                 satisfied >= calc.goal().required_satisfied_slots() &&
                 satisfied == exit.prefix_count + exit.suffix_count;
+            if (potential) {
+                const auto cell = static_cast<std::uint32_t>(((exit.rarity*donor.values.size()+mask)*4+exit.prefix_count)*4+exit.suffix_count);
+                result.exits.push_back({weight, mask, cell, goal ? 0 : potential->projected_value(calc, exit), goal});
+            }
             if (goal) {
                 if (weight > std::numeric_limits<std::uint64_t>::max() - result.goal_weight)
                     throw std::overflow_error("program goal mass overflow");
                 result.goal_weight += weight;
             } else {
-                const double value = donor.values.at(mask);
+                const double value = potential ? potential->projected_value(calc, exit) : donor.values.at(mask);
+                control_failure = std::min(control_failure, donor.values.at(mask));
                 result.failure_lower_min = std::min(result.failure_lower_min, value);
                 result.failure_lower_max = std::max(result.failure_lower_max, value);
+                if (potential) weighted_values.emplace_back(weight, value);
             }
         });
     if (result.goal_weight == result.total_weight) result.failure_lower_min = 0;
     const auto probability = phase_weight_probability(result.goal_weight, result.total_weight);
     result.goal_probability_upper = probability.upper;
     result.lower = phase_two_exit_lower(result.cost_lower, probability, 0, result.failure_lower_min);
+    result.support_control_lower = phase_two_exit_lower(result.cost_lower, probability, 0,
+        result.goal_weight == result.total_weight ? 0 : control_failure);
+    if (potential) {
+        double expectation = 0;
+        for (const auto& [weight, value] : weighted_values)
+            expectation = down(expectation + down(phase_weight_probability(weight, result.total_weight).lower * value));
+        result.lower = down(result.cost_lower + expectation);
+    }
     checkpoint(budget);
     return PhaseProgramLowerWitness(std::move(result), donor.store_);
 }

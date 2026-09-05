@@ -31,11 +31,18 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. The completed opt-in
+No implementation boundary is active. The completed private
+[Native Probabilistic Lower Repair v1](archive/2026-09-05-native-probabilistic-lower-repair-v1/README.md)
+repairs proposal coordinates and certifies a 13.717 probability-aware donor on
+both saved sources. Program lowers improve, but complete-model and portfolio
+gain remain zero. Its retained Harvest Physical relaxation has a proved ceiling;
+production stays unchanged. Oliver must select the next chunk.
+
+The completed opt-in
 [Uniform Phase-Scoped Lower Certificates v1](archive/2026-09-04-uniform-phase-lower-certificates-v1/README.md)
 adds a native-valid but weak donor and mandatory-program proof. Both semantic
 sources reuse the donor; local, complete-model and portfolio gains remain zero.
-Oliver must select the next chunk. The completed benchmark-private
+The completed benchmark-private
 [Operator-Complete Frontier Bellman Lower Pilot v2](archive/2026-09-04-operator-complete-frontier-bellman-lower-pilot-v2/README.md)
 adds a checked lower-only quotient query. Its medium donor remains conditional;
 no production lower gain is claimed.

@@ -775,6 +775,19 @@ class CalcContext {
     std::vector<std::uint64_t> temporary_followup_eligible_mask(
         const pc_item_state& carrier,
         std::uint32_t followup_action);
+    /* Native conditional-event evidence keeps full satisfying weight and
+     * bounds only non-target weight removed by possible physical blockers.
+     * The phase producer binds this payload to its uniform source frame. */
+    struct NativeGoalDrawBound {
+        std::uint32_t action = 0, slot = 0;
+        bool guaranteed = false;
+        bool frame_escape = false;
+        std::int8_t side = -1;
+        std::uint64_t target_weight = 0, other_weight = 0, entries = 0;
+        std::array<std::array<std::uint64_t, 3>, 2> strongest_other_removal{};
+    };
+    NativeGoalDrawBound phase_goal_draw_bound(const pc_item_state& anchor,
+        std::uint32_t action, std::uint32_t goal_slot, bool guaranteed);
     /* A collision-free analytical ceiling for drawing a satisfying member of
      * one goal slot. Existing satisfied goal families are treated as exact
      * group blockers; each additional junk blocker receives the strongest

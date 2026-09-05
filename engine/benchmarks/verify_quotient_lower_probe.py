@@ -1,4 +1,4 @@
-"""Verify a saved micro or uniform-phase native export; never runs a census.
+"""Verify a saved micro, support-phase or probabilistic native export; no census.
 
 Usage: py -3 engine/benchmarks/verify_quotient_lower_probe.py native.json result.json
 The archived rational LP is imported only in micro mode. Phase mode checks
@@ -172,13 +172,118 @@ def verify_phase(path):
         limiting_ties=ties, production_authority=False)
 
 
+def verify_probability(path):
+    native = json.loads(Path(path).read_text(encoding="utf-8-sig"))
+    donor = native["probabilistic_donor"]
+    assert donor["semantic_acceptance"] and donor["coefficient_acceptance"]
+    assert native["proposal_adapter"]["accepted_by_support_control"]
+    assert native["proposal_adapter"]["values"] == [0.01165]*31+[0]
+    values = list(map(F, donor["values"])) + [F(0), F(donor["restart_boundary_lower"])]
+    assert len(values) == 1538 and all(v >= 0 for v in values)
+    proposal = list(map(F, donor["proposal_values"])) + values[-2:]
+    refusal = donor["first_proposal_refusal"]
+    assert refusal["kind"] == "violated_inequality"
+    exact_refused_rhs = F(refusal["cost"]) + sum(F(p)*proposal[t] for t, p in refusal["exits"])
+    assert F(refusal["lhs"]) > exact_refused_rhs
+    assert F(refusal["cost"]) + F(refusal["continuation"]) >= exact_refused_rhs
+    stochastic = 0
+    for row in donor["checked_relations"]:
+        assert sum(F(p) for _, p in row["exits"]) == 1
+        rhs = F(row["cost"]) + sum(F(p)*values[t] for t, p in row["exits"])
+        assert values[row["cell"]] <= rhs, row
+        assert F(row["rhs"]) <= rhs
+        if row["probability_aware"]:
+            stochastic += 1
+            source_mask = row["cell"]//16 % 32
+            if row["action"] in ("augment", "regal", "exalt", "eldritch_exalt"):
+                for target, probability in row["exits"]:
+                    assert target < 1536 and probability >= 0
+                    target_mask = target//16 % 32
+                    # The saved medium has five disjoint native goal slots.
+                    assert (target_mask & source_mask) == source_mask
+                    assert (target_mask & ~source_mask).bit_count() <= 1
+        assert row["action"] != "transmute"  # native fractured frame has no Normal member
+    assert stochastic > 0
+    assert native["retention_control"]["selected_from_root_minimum"]
+    assert native["retention_control"]["lower"] == .3741
+    economy = json.loads((archive / "native-economy.json").read_text(encoding="utf-8"))["prices"]
+    mandatory = F(economy["eldritch_ichor:1"]) + F(economy["eldritch_exalt"])
+    sources = []
+    expected_residuals = {f"residual_family_{k}" for k in (1, 2, 3, 4, 5, 7, 9, 10)}
+    for source in native["sources"]:
+        p = source["program_after"]
+        assert p["modifier_exits"] == len(p["weighted_exits"]) == 72
+        assert sum(e["weight"] for e in p["weighted_exits"]) == p["total_weight"]
+        assert sum(e["weight"] for e in p["weighted_exits"] if e["goal"]) == p["goal_weight"]
+        expectation = F(0)
+        for e in p["weighted_exits"]:
+            assert F(e["lower"]) == (0 if e["goal"] else values[e["cell"]])
+            expectation += F(e["weight"], p["total_weight"])*F(e["lower"])
+        assert F(p["cost_lower"]) <= mandatory
+        exact_program = mandatory+expectation
+        assert F(p["lower"]) <= exact_program
+        assert exact_program-F(p["lower"]) < F("1e-10")
+        support_exact = mandatory + (1-F(p["goal_weight"], p["total_weight"]))*F(.01165)
+        assert F(source["program_before"]["lower"]) <= support_exact
+        assert support_exact-F(source["program_before"]["lower"]) < F("1e-12")
+        baseline = source["independent_lower"]
+        for model in source["complete_models"]:
+            assert (model["admitted"], model["inapplicable"], model["open_families"]) == (28, 6, 8)
+            assert model["eldritch_descriptions"] == (6 if source["second_source"] else 3)
+            assert model["imprint_scope_excluded"]
+            ranks = model["ranked_constraints"]
+            assert {r["id"] for r in ranks if r["id"].startswith("residual_family_")} == expected_residuals
+            assert len({r["id"] for r in ranks}) == len(ranks)
+            assert model["lower"] == min(r["lower"] for r in ranks)
+            assert model["portfolio"] == max(baseline, model["lower"])
+        before, after = source["complete_models"]
+        mask = 21 if source["second_source"] else 23
+        prefixes = 2 if source["second_source"] else 3
+        root = ((2*32+mask)*4+prefixes)*4+1
+        limiting = min((r for r in donor["checked_relations"] if r["cell"] == root), key=lambda r: r["rhs"])
+        assert limiting["action"] == "harvest_reforge:physical"
+        # This fixed admissible distribution is in the conservative event
+        # capacity model for every vector: full goal or the fractured-only
+        # state. That state has the same row, yielding a geometric ceiling.
+        hit = sum(F(p) for t, p in limiting["exits"] if values[t] == 0)
+        failures = [t for t, _ in limiting["exits"] if values[t] != 0]
+        assert len(failures) == 1
+        recurrence = next(r for r in donor["checked_relations"]
+                          if r["cell"] == failures[0] and r["action"] == limiting["action"])
+        assert recurrence["exits"] == limiting["exits"]
+        ceiling = F(limiting["cost"])/hit
+        assert values[root] <= ceiling and ceiling-values[root] < F("1e-10")
+        probability = F(p["goal_weight"], p["total_weight"])
+        tie_donor = (F(baseline)-mandatory)/(1-probability)
+        assert ceiling < tie_donor
+        sources.append(dict(second_source=source["second_source"], donor=source["probabilistic_donor"],
+            donor_gain=source["probabilistic_donor"]-source["support_donor"],
+            program_before=source["program_before"]["lower"], program_after=p["lower"],
+            program_gain=p["lower"]-source["program_before"]["lower"],
+            compatible_action_gain=source["local_compatible_gain"],
+            complete_model_gain=after["lower"]-before["lower"], portfolio_gain=after["portfolio"]-before["portfolio"],
+            exact_program=str(exact_program), exact_projection_ceiling=str(ceiling),
+            program_tie_donor=float(tie_donor), limiting_relation=limiting["action"],
+            complete_model_ties=[r["id"] for r in after["ranked_constraints"] if r["lower"] == after["lower"]]))
+    assert native["sources"][0]["source"] != native["sources"][1]["source"]
+    assert native["sources"][0]["program_after"]["goal_weight"] == 500
+    assert native["sources"][1]["program_after"]["goal_weight"] == 0
+    assert native["resources"]["combined_additional_peak_bytes"] <= 16 << 20
+    assert native["process_peak_working_set_bytes"] <= 1 << 30
+    return dict(evidence_scope="native producer owns uniform semantics; this audit checks exact finite coefficients and integer program mass",
+        checked_relations=len(donor["checked_relations"]), probability_relations=stochastic,
+        exact_first_proposal_rhs=str(exact_refused_rhs), source_results=sources, production_authority=False)
+
+
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         raise SystemExit(__doc__)
-    phase = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8-sig")).get("pilot") == "uniform-phase-lower-v1"
-    result = verify_phase(sys.argv[1]) if phase else verify(sys.argv[1])
+    pilot = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8-sig")).get("pilot")
+    phase = pilot == "uniform-phase-lower-v1"
+    probabilistic = pilot == "native-probabilistic-lower-v1"
+    result = verify_probability(sys.argv[1]) if probabilistic else (verify_phase(sys.argv[1]) if phase else verify(sys.argv[1]))
     Path(sys.argv[2]).write_bytes((json.dumps(result, indent=2) + "\n").encode("utf-8"))
-    if phase:
+    if phase or probabilistic:
         print(json.dumps(result))
     else:
         print(json.dumps({"checked_models": len(result["records"]),

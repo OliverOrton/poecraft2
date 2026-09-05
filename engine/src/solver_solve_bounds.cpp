@@ -12,7 +12,33 @@ std::shared_ptr<const PreparedPhaseLowerView> SolveWork::Impl::prepare_phase_low
     pc_item_state phase{};
     if (!calc.materialize(result.start_state, phase))
         throw std::invalid_argument("phase lower anchor cannot be materialized");
-    return PhaseLowerProducer::prepare(calc, prices, phase, goal_cover_cost, budget);
+    return PhaseLowerProducer::prepare(calc, prices, phase, phase_lower_proposal(false), budget);
+}
+
+PhaseLowerProposal SolveWork::Impl::phase_lower_proposal(bool clean) {
+    prepare_goal_cover_cost();
+    if (clean) return {PhaseTableRole::CleanCompletion,
+        static_cast<std::uint32_t>(goal_cover_cost.size()),
+        static_cast<std::uint32_t>(calc.goal().required_satisfied_slots()), clean_goal_cover_cost};
+    // Same any-k union conversion as optimistic_completion_cost(mask), rather
+    // than the generally incorrect acquisition[full ^ mask].
+    return phase_completion_proposal(goal_cover_cost, calc.goal().required_satisfied_slots());
+}
+
+PreparedPhaseRestartLower SolveWork::Impl::phase_restart_boundary(const PreparedPhaseLowerView& scope) {
+    pc_item_state fresh{};
+    pc_item_clear(&fresh);
+    auto context_item = fresh;
+    context_item.searing_exarch_tier = scope.searing;
+    context_item.eater_of_worlds_tier = scope.eater;
+    if (!scope.compatible(calc, prices, context_item))
+        throw std::invalid_argument("restart boundary context mismatch");
+    const double lower = completion_proof_lower_value(calc.intern_item(fresh));
+    auto evidence = scope.identity;
+    evidence.push_back(0x46524553484c4f57ull);
+    evidence.push_back(std::bit_cast<std::uint64_t>(lower));
+    return PreparedPhaseRestartLower({0, exact_item_state_key(fresh), std::move(evidence), lower,
+        quotient::LowerEvidenceKind::IndependentLower}, scope);
 }
 
 bool SolveWork::Impl::ensure_priced_operator(const std::uint32_t index) {

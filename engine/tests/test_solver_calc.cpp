@@ -5,6 +5,7 @@
 #include "../src/solver_internal.hpp"
 #include "../src/solver_solve_types.hpp"
 #include "../src/solver_phase_lower.hpp"
+#include "../src/solver_quotient_bellman.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
 
@@ -3701,6 +3702,72 @@ void run_solver_phase_lower_tests() {
         try { operation(); } catch (const std::exception&) { refused = true; }
         PC_CHECK(refused);
     };
+    const auto converted = phase_completion_proposal({0, 3, 5, 8}, 2);
+    PC_CHECK(converted.role == PhaseTableRole::MaskCompletion);
+    PC_CHECK(converted.values == std::vector<double>({8, 5, 3, 0}));
+    PC_CHECK(phase_completion_proposal({0, 3, 5, 8}, 1).values == std::vector<double>({3, 0, 0, 0}));
+    rejects([] { phase_completion_proposal({0, 3, 5}, 2); });
+    // Tiny declared-coefficient models exercise the retained checker; they
+    // are algebra controls, not a replay of the native micro qualification.
+    const auto coefficient_model = [&](std::vector<QuotientBellmanRowInput> rows,
+            std::uint32_t terminal, const std::vector<double>* proposed = nullptr) {
+        QuotientBellmanGraph graph(4ull << 20, QuotientBellmanMode::LowerOnly);
+        std::vector<QuotientBellmanCellInput> cells;
+        for (unsigned i = 0; i <= terminal; ++i) cells.push_back({i, 1, {77, i}, i == terminal});
+        graph.install_cells(cells);
+        QuotientLowerQuery query; query.request_identity = {77}; query.caller_scope = {78};
+        query.coefficients = LowerCoefficientModel::ExactBinaryModel; query.roots = {0};
+        for (unsigned i = 0; i < terminal; ++i) query.sources.push_back({i, {77, i}, {{78}, 1, true, {}, {}}, {}});
+        unsigned serial = 0;
+        for (auto& row : rows) {
+            auto& source = query.sources.at(row.source_cell_id);
+            const StableKey a{79, serial++}, evidence{80, serial};
+            source.expected_actions.actions.push_back(a);
+            row.lower_provenance = QuotientLowerRowProvenance{{77}, source.source_identity, a, evidence, LowerEvidenceKind::ExactDeclaredKernel};
+            source.constraints.push_back({{a, false, {}}, LowerConstraintKind::Row, graph.append_row(std::move(row)),
+                0, evidence, LowerEvidenceKind::ExactDeclaredKernel});
+        }
+        query.model_revision = graph.model_revision();
+        return proposed ? graph.check_lower(query, *proposed) : graph.solve_lower(query);
+    };
+    const auto row = [](unsigned from, double cost, std::vector<std::pair<unsigned, double>> exits) {
+        QuotientBellmanRowInput r; r.source_cell_id = from; r.cost = cost;
+        for (auto [to, p] : exits) r.transitions.push_back({{to}, to, p});
+        return r;
+    };
+    std::vector<QuotientBellmanRowInput> acquisition_rows;
+    for (unsigned m = 0; m < 3; ++m) {
+        acquisition_rows.push_back(row(m, 3, {{m | 1, 1}}));
+        acquisition_rows.push_back(row(m, 5, {{m | 2, 1}}));
+    }
+    PC_CHECK(coefficient_model(acquisition_rows, 3, &converted.values).checked != nullptr);
+    const std::vector<double> raw{0, 3, 5, 8};
+    PC_CHECK(coefficient_model(acquisition_rows, 3, &raw).checked == nullptr);
+    for (unsigned m = 0; m < 3; ++m) acquisition_rows.push_back(row(m, .01165, {{3, 1}}));
+    const auto support_cap = coefficient_model(acquisition_rows, 3);
+    PC_CHECK(support_cap.checked && support_cap.checked->values_by_state[0] <= .01165);
+    PC_CHECK(!coefficient_model(acquisition_rows, 3, &converted.values).checked);
+    const auto retry = coefficient_model({row(0, 100.0/128, {{1, 1.0/128}, {0, 127.0/128}})}, 1);
+    PC_CHECK(retry.checked && retry.checked->values_by_state[0] > 99.999999);
+    // Same expectation equation as cost 1 and success 1/100; exact binary
+    // coefficients avoid presenting a rounded 1/100 as native authority.
+    PC_CHECK(1+99.0/100*100 == 100 && 1+0 < 100);
+    const auto destructive = coefficient_model({row(0, 2, {{1, 1}}), row(1, 1, {{2, .25}, {0, .75}})}, 2);
+    const auto preserve = coefficient_model({row(0, 2, {{1, 1}}), row(1, 1, {{2, .25}, {1, .75}})}, 2);
+    PC_CHECK(destructive.checked && std::abs(destructive.checked->values_by_state[0]-12) < 1e-10);
+    PC_CHECK(std::abs(destructive.checked->values_by_state[1]-10) < 1e-10);
+    PC_CHECK(preserve.checked && std::abs(preserve.checked->values_by_state[0]-6) < 1e-10);
+    PC_CHECK(std::abs(preserve.checked->values_by_state[1]-4) < 1e-10);
+    auto observed = row(0, 1, {{2, .5}}); observed.choices = {{.5, true, {1}}};
+    const auto self_choice = coefficient_model({observed, row(1, 10, {{2, 1}})}, 2);
+    PC_CHECK(self_choice.checked && std::abs(self_choice.checked->values_by_state[0]-2) < 1e-10);
+    const std::array<double, 4> together{.5, 0, 0, .5}, exclusive{0, .5, .5, 0};
+    PC_CHECK(together[1]+together[3] == exclusive[1]+exclusive[3]);
+    PC_CHECK(together[2]+together[3] == exclusive[2]+exclusive[3]);
+    PC_CHECK(together[3] == .5 && exclusive[3] == 0); // joint completion is not product of marginals
+    CanonicalActionSet family{{81}, 1, true, {}, {{{82}, {{83}, {84}}, true}}};
+    PC_CHECK(validate_canonical_action_coverage(family, {{{83}, false, {}}, {{82}, true, {{83}}}}).empty());
+    PC_CHECK(!validate_canonical_action_coverage(family, {{{83}, false, {}}}).empty());
     for (const auto& [n, d] : std::vector<std::pair<std::uint64_t, std::uint64_t>>{
             {0, 7}, {1, 3}, {2, 3}, {7, 7}, {1, UINT64_MAX}, {UINT64_MAX-1, UINT64_MAX}}) {
         const auto p = phase_weight_probability(n, d);
@@ -3735,7 +3802,11 @@ void run_solver_phase_lower_tests() {
     place(&blocked, PC_SIDE_PREFIX, 2, 10);
     pc_item_state open{}; open.rarity = PC_RARITY_RARE; open.searing_exarch_tier = 1;
     place(&open, PC_SIDE_PREFIX, 3, 12);
-    auto donor = PhaseLowerProducer::prepare(calc, prices, blocked, {100, 0});
+    auto donor = PhaseLowerProducer::prepare(calc, prices, blocked, {PhaseTableRole::MaskCompletion, 2, 1, {100, 0}});
+    const auto wrong_role = PhaseLowerProducer::prepare(calc, prices, blocked, {PhaseTableRole::Acquisition, 2, 1, {0, 100}});
+    PC_CHECK(wrong_role->proposal_refusal.kind == "wrong_table_role_or_dimensions");
+    const auto bad_terminal = PhaseLowerProducer::prepare(calc, prices, blocked, {PhaseTableRole::MaskCompletion, 2, 1, {0, 100}});
+    PC_CHECK(bad_terminal->proposal_refusal.kind == "nonzero_terminal");
     PC_CHECK(!donor->original_candidate_accepted);
     PC_CHECK(donor->values[0] > 1.999 && donor->values[0] <= 2);
     PC_CHECK(donor->lookup(calc, prices, blocked) == donor->lookup(calc, prices, open));
@@ -3760,22 +3831,22 @@ void run_solver_phase_lower_tests() {
     PC_CHECK(!donor->lookup(calc, prices, phase));
     auto repriced = prices; repriced["fixture:step"] = 3;
     PC_CHECK(!donor->lookup(calc, repriced, open));
-    auto fresh = PhaseLowerProducer::prepare(calc, prices, open, {100, 0});
+    auto fresh = PhaseLowerProducer::prepare(calc, prices, open, {PhaseTableRole::MaskCompletion, 2, 1, {100, 0}});
     PC_CHECK(fresh->identity == donor->identity && fresh->values == donor->values);
-    auto changed = PhaseLowerProducer::prepare(calc, repriced, open, {100, 0});
+    auto changed = PhaseLowerProducer::prepare(calc, repriced, open, {PhaseTableRole::MaskCompletion, 2, 1, {100, 0}});
     PC_CHECK(changed->identity != donor->identity && changed->values != donor->values);
-    auto new_phase = PhaseLowerProducer::prepare(calc, prices, phase, {100, 0});
+    auto new_phase = PhaseLowerProducer::prepare(calc, prices, phase, {PhaseTableRole::MaskCompletion, 2, 1, {100, 0}});
     PC_CHECK(new_phase->lookup(calc, prices, phase).has_value());
     auto free_prices = prices; free_prices["fixture:step"] = 0;
-    auto zero_escape = PhaseLowerProducer::prepare(calc, free_prices, open, {100, 0});
+    auto zero_escape = PhaseLowerProducer::prepare(calc, free_prices, open, {PhaseTableRole::MaskCompletion, 2, 1, {100, 0}});
     PC_CHECK(zero_escape->values[0] == 0);
     QuotientLowerBudget cancel; cancel.cancelled = [] { return true; };
-    rejects([&] { PhaseLowerProducer::prepare(calc, prices, open, {100, 0}, cancel); });
+    rejects([&] { PhaseLowerProducer::prepare(calc, prices, open, {PhaseTableRole::MaskCompletion, 2, 1, {100, 0}}, cancel); });
     QuotientLowerBudget tiny; tiny.max_scratch_bytes = 64;
-    rejects([&] { PhaseLowerProducer::prepare(calc, prices, open, {100, 0}, tiny); });
+    rejects([&] { PhaseLowerProducer::prepare(calc, prices, open, {PhaseTableRole::MaskCompletion, 2, 1, {100, 0}}, tiny); });
     auto unknown = goal; unknown.automatic_candidate_kind_mask |= 1u << 31;
     CalcContext unknown_calc(session, unknown, registry, basic_indices(registry));
-    rejects([&] { PhaseLowerProducer::prepare(unknown_calc, prices, open, {100, 0}); });
+    rejects([&] { PhaseLowerProducer::prepare(unknown_calc, prices, open, {PhaseTableRole::MaskCompletion, 2, 1, {100, 0}}); });
 
     GoalSlot suffix; suffix.family_id = 104; suffix.min_tier = 1;
     goal.slots.push_back(suffix); goal.automatic_candidates = true;
@@ -3784,7 +3855,7 @@ void run_solver_phase_lower_tests() {
     pc_item_state source{}; source.rarity = PC_RARITY_RARE;
     place(&source, PC_SIDE_PREFIX, 0, 10);
     auto post = source; post.eater_of_worlds_tier = 1;
-    auto program_donor = PhaseLowerProducer::prepare(program_calc, prices, post, {100, 100, 100, 0});
+    auto program_donor = PhaseLowerProducer::prepare(program_calc, prices, post, {PhaseTableRole::MaskCompletion, 4, 2, {100, 100, 100, 0}});
     const std::string id = "option:eldritch_side_intent:suffix:eldritch_exalt:eldritch_ichor:1";
     const auto before = program_donor->memory_snapshot().total_bytes;
     {
@@ -3802,10 +3873,58 @@ void run_solver_phase_lower_tests() {
         PC_CHECK(other.record.lower <= 4);
     }
     PC_CHECK(program_donor->memory_snapshot().total_bytes == before);
+    {
+        auto framed = source; framed.prefixes[0].flags |= PC_MOD_SLOT_FRACTURED;
+        auto framed_post = framed; framed_post.eater_of_worlds_tier = 1;
+        PhaseLowerProposal clean{PhaseTableRole::CleanCompletion, 4, 2, std::vector<double>(3*4*16, 100)};
+        clean.values[((2*4+3)*4+1)*4+1] = 0;
+        const auto boundary = PhaseLowerProducer::zero_restart_boundary(*program_donor);
+        const auto retained_before = program_donor->memory_snapshot().total_bytes;
+        {
+            const auto potential = PhaseLowerProducer::prepare_probabilistic(program_calc, prices, framed_post,
+                clean, program_donor, boundary, false, true);
+            PC_CHECK(potential->lookup(program_calc, prices, framed, false).value() > 0);
+            PC_CHECK(!potential->lookup(program_calc, prices, framed, true));
+            PC_CHECK(!potential->lookup(program_calc, repriced, framed, false));
+            auto foreign = framed; foreign.generic_influence_bits = 1;
+            PC_CHECK(!potential->lookup(program_calc, prices, foreign, false));
+            foreign = framed; foreign.prefixes[0].flags |= PC_MOD_SLOT_VEILED;
+            PC_CHECK(!potential->lookup(program_calc, prices, foreign, false));
+            PC_CHECK(!potential->lookup(program_calc, prices, source, false));
+            auto distinct = framed; place(&distinct, PC_SIDE_PREFIX, 3, 12);
+            PC_CHECK(potential->lookup(program_calc, prices, distinct, false).has_value());
+            const auto proof = PhaseLowerProducer::compose(program_calc, prices, framed, id, *potential);
+            PC_CHECK(proof.record.cost_lower > 3.999 && proof.record.cost_lower <= 4);
+            std::uint64_t total = 0; long double expectation = proof.record.cost_lower;
+            for (const auto& e : proof.record.exits) {
+                total += e.weight;
+                expectation += static_cast<long double>(e.weight)/proof.record.total_weight*e.lower;
+            }
+            PC_CHECK(total == proof.record.total_weight && proof.record.lower <= expectation);
+            PC_CHECK(proof.record.lower > expectation-1e-10);
+            PC_CHECK(std::all_of(potential->relations.begin(), potential->relations.end(), [&](const auto& r) {
+                const auto& a = program_calc.registry().actions[r.action];
+                return a.synthetic || a.params.type != ActionType::Transmute;
+            }));
+            auto changed_boundary = PhaseLowerProducer::zero_restart_boundary(*changed);
+            rejects([&] { PhaseLowerProducer::prepare_probabilistic(program_calc, prices, framed_post, clean,
+                program_donor, changed_boundary, false, true); });
+            rejects([&] { PhaseLowerProducer::prepare_probabilistic(program_calc, prices, framed_post, clean,
+                program_donor, boundary, true, true); });
+        }
+        PC_CHECK(program_donor->memory_snapshot().total_bytes == retained_before);
+        unsigned checkpoints = 0; QuotientLowerBudget partial;
+        partial.cancelled = [&] { return ++checkpoints > 20; };
+        rejects([&] { PhaseLowerProducer::prepare_probabilistic(program_calc, prices, framed_post, clean,
+            program_donor, boundary, false, true, partial); });
+        PC_CHECK(program_donor->memory_snapshot().total_bytes == retained_before);
+    }
     rejects([&] { PhaseLowerProducer::compose(program_calc, prices, source, id, *program_donor, cancel); });
     rejects([&] { PhaseLowerProducer::compose(program_calc, prices, source, "missing internal choice", *program_donor); });
     rejects([&] { PhaseLowerProducer::compose(program_calc, repriced, source, id, *program_donor); });
     PC_CHECK(program_donor->memory_snapshot().total_bytes == before);
+    static_assert(!std::is_constructible_v<PreparedPhaseRestartLower, QuotientLowerBoundary>);
+    static_assert(!std::is_copy_constructible_v<PreparedPhaseRestartLower>);
     static_assert(!std::is_default_constructible_v<PreparedPhaseLowerView>);
     static_assert(!std::is_default_constructible_v<PhaseProgramLowerWitness>);
     static_assert(!std::is_constructible_v<PreparedPhaseLowerView, QuotientLowerCertificate>);
