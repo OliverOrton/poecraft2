@@ -36,18 +36,40 @@ void append(StableKey& key, const StableKey& other) {
     key.push_back(other.size()); key.insert(key.end(), other.begin(), other.end());
 }
 std::uint64_t context_workspace(const CalcContext& calc, const PhaseLowerPrices& prices) {
-    // Deliberately conservative: charge even the borrowed calculator once as
-    // scratch here to bound deep runtime-contract copies and mask temporaries.
-    // It is still shared storage in the native owner/process accounting.
-    std::uint64_t bytes = calc.estimated_owned_bytes();
-    if (bytes > maximum/3) throw std::length_error("phase lower context exceeds bounded proof workspace");
-    bytes = 3*bytes + 65536;
-    for (const auto& [key, value] : prices) {
-        (void)value;
-        if (key.size() > maximum || bytes > maximum-std::min<std::uint64_t>(maximum, 256+8*key.size()))
-            throw std::length_error("phase lower price evidence exceeds bounded workspace");
-        bytes += 256+8*key.size();
+    // Only immutable request/registry metadata is copied by context_key and
+    // grammar checking. The calculator's mutable state arena is borrowed and
+    // already counted once by SolveWork; its capacity is not proof workspace.
+    std::uint64_t bytes=65536;
+    const auto add=[&](std::uint64_t count,std::uint64_t each) {
+        if (count>maximum/each || count*each>maximum-bytes)
+            throw std::length_error("phase lower immutable context exceeds bounded proof workspace");
+        bytes+=count*each;
+    };
+    // Affix support bitsets and native effect temporaries, including growth.
+    add(calc.session().mod_count,1024);
+    for (const auto& slot:calc.layout().slots) add(slot.satisfying_mask.size(),64);
+    const auto text=[&](const std::string& value) { add(value.size()+1,16); };
+    for (const auto& action:calc.registry().actions) {
+        add(1,2048); text(action.id); add(action.params.fossil_indices.size(),64);
+        for (const auto& key:action.cost_keys) text(key);
     }
+    add(calc.candidates().size(),32);
+    std::uint64_t longest=0;
+    for (std::size_t i=0;i<calc.static_candidate_operator_count();++i) {
+        const auto& op=calc.operators().at(calc.candidate_operators().at(i));
+        add(1,2048); add(op.exit_goal_slots.size(),32);
+        for (const auto* value:{&op.primitive_action_id,&op.conditional_action_id,&op.bestiary_create_action_id,
+                &op.bestiary_restore_action_id,&op.setup_action_id,&op.followup_action_id,
+                &op.cleanup_action_id,&op.constructive_finish_action_id}) text(*value);
+        for (const auto& action:op.primitive_program_action_ids) { add(1,32); text(action); }
+        for (const auto& [key,quantity]:op.resource_quantities) { (void)quantity; add(1,32); text(key); }
+        longest=std::max<std::uint64_t>(longest,op.primitive_program.size());
+    }
+    // At most one runtime program expansion is live. Prefix/choice copies
+    // grow quadratically with its bounded primitive sequence, not state count.
+    if (longest>maximum/1024) throw std::length_error("phase lower program workspace extent");
+    add((longest+8)*(longest+8),256);
+    for (const auto& [key,value]:prices) { (void)value; add(1,256); text(key); }
     return bytes;
 }
 std::uint32_t mask_for_item(const CalcContext& calc, const pc_item_state& item) {
@@ -412,6 +434,9 @@ PhaseProgramLowerWitness PhaseLowerProducer::compose_impl(CalcContext& calc, con
     result.cost_lower = down(phase_price_lower(setup, prices) + phase_price_lower(draw, prices));
     result.failure_lower_min = std::numeric_limits<double>::infinity();
     std::vector<std::pair<std::uint64_t, double>> weighted_values;
+    std::vector<std::pair<std::uint64_t, double>> prior_values;
+    const auto* prior_owner = potential && potential->reused_draw_owner ? potential->reused_draw_owner.get() : nullptr;
+    bool prior_covered = prior_owner && prior_owner->compatible(calc, prices, source, false);
     double control_failure = std::numeric_limits<double>::infinity();
     result.total_weight = calc.phase_lower_add_weights(phase, path[1].action,
         [&](const pc_item_state& exit, std::uint64_t weight) {
@@ -428,6 +453,11 @@ PhaseProgramLowerWitness PhaseLowerProducer::compose_impl(CalcContext& calc, con
             if (potential) {
                 const auto cell = potential->projected_cell(calc, exit);
                 result.exits.push_back({weight, mask, cell, goal ? 0 : potential->projected_value(calc, exit), goal});
+            }
+            if (prior_covered) {
+                const auto prior = prior_owner->lookup(calc, prices, exit, false);
+                prior_covered = prior.has_value();
+                if (prior) prior_values.emplace_back(weight, goal ? 0 : *prior);
             }
             if (goal) {
                 if (weight > std::numeric_limits<std::uint64_t>::max() - result.goal_weight)
@@ -452,11 +482,10 @@ PhaseProgramLowerWitness PhaseLowerProducer::compose_impl(CalcContext& calc, con
         for (const auto& [weight, value] : weighted_values)
             expectation = down(expectation + down(phase_weight_probability(weight, result.total_weight).lower * value));
         result.lower = down(result.cost_lower + expectation);
-        if (potential->reused_draw_owner && potential->reused_draw_owner->compatible(calc, prices, source, false)) {
+        if (prior_covered) {
             double prior = 0;
-            for (const auto& exit : result.exits)
-                prior = down(prior + down(phase_weight_probability(exit.weight, result.total_weight).lower *
-                    (exit.goal ? 0 : potential->reused_draw_owner->values.at(exit.cell))));
+            for (const auto& [weight, value] : prior_values)
+                prior = down(prior + down(phase_weight_probability(weight, result.total_weight).lower * value));
             result.prior_potential_lower = down(result.cost_lower + prior);
         }
     }

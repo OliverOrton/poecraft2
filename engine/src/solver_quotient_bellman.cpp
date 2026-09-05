@@ -108,7 +108,7 @@ const char* quotient_bellman_status_name(
 QuotientBellmanGraph::QuotientBellmanGraph(
         const std::uint64_t max_owned_bytes,
         const QuotientBellmanMode mode, const std::uint64_t lower_memory_ceiling) : mode_(mode) {
-    if (lower_memory_ceiling > (32ull << 20))
+    if (lower_memory_ceiling > (64ull << 20))
         throw std::invalid_argument("lower-only research memory ceiling exceeds 32 MiB");
     transition_cache_.quotient_proofs =
         std::make_shared<ProofStore>(mode == QuotientBellmanMode::LowerOnly
@@ -388,35 +388,6 @@ std::uint64_t QuotientBellmanGraph::append_row(
         row.proof_identity = std::move(canonical);
     }
 
-    /* Lower rows are bounded and reserved before any graph mutation. A cap
-     * refusal leaves the old scalar/family snapshot usable and installs no
-     * fraction of a row. The conservative overlap includes arena growth. */
-    std::uint64_t lower_reservation_bytes = 0;
-    if (lower_only) {
-        lower_reservation_bytes = 4096 +
-            4 * transition_cache_.quotient_proofs->ledger().snapshot()
-                    .bytes[static_cast<std::size_t>(ProofMemoryCategory::RowKernel)] +
-            256 * (row.transitions.size() + row.choices.size() + targets.size());
-        for (const auto& choice : row.choices)
-            lower_reservation_bytes += 64 * choice.target_cell_ids.size();
-        const auto& proof = *row.lower_provenance;
-        lower_reservation_bytes += 32 * (proof.request_identity.size() +
-            proof.source_identity.size() + proof.action_identity.size() +
-            proof.evidence_identity.size());
-    }
-    ScopedProofMemoryCharge reservation(
-        transition_cache_.quotient_proofs->ledger(),
-        ProofMemoryCategory::Scratch, lower_reservation_bytes);
-    for (const auto& target : targets) {
-        auto& predecessors = reverse_predecessors_.at(
-            cells_.at(target.cell_id).state);
-        if (std::find(predecessors.begin(), predecessors.end(), *source) ==
-            predecessors.end()) {
-            predecessors.push_back(*source);
-            std::sort(predecessors.begin(), predecessors.end());
-        }
-    }
-
     std::uint64_t transition_hash = kTransitionHashOffset;
     hash_transition_token(transition_hash, sparse.transitions.size());
     for (const SparsePolicyTransitionInput& transition : sparse.transitions) {
@@ -426,8 +397,10 @@ std::uint64_t QuotientBellmanGraph::append_row(
             std::bit_cast<std::uint64_t>(transition.probability));
     }
     std::optional<solve_detail::SharedSparseTransitionSpan> shared_span;
-    auto& transition_bucket = transition_span_buckets_[transition_hash];
-    for (const std::uint64_t candidate_id : transition_bucket) {
+    const std::vector<std::uint64_t> empty_bucket;
+    const auto found_bucket = transition_span_buckets_.find(transition_hash);
+    const auto& existing_bucket = found_bucket == transition_span_buckets_.end() ? empty_bucket : found_bucket->second;
+    for (const std::uint64_t candidate_id : existing_bucket) {
         const SparseRow& candidate = transition_cache_.rows.at(candidate_id);
         if (candidate.transition_count != sparse.transitions.size()) continue;
         bool equal = true;
@@ -449,6 +422,74 @@ std::uint64_t QuotientBellmanGraph::append_row(
             break;
         }
     }
+    /* Lower rows are bounded and reserved before any graph mutation. A cap
+     * refusal leaves the old scalar/family snapshot usable and installs no
+     * fraction of a row. The conservative overlap includes arena growth. */
+    std::uint64_t lower_reservation_bytes = 0;
+    if (lower_only) {
+        lower_reservation_bytes = 4096 +
+            256 * (row.transitions.size() + row.choices.size() + targets.size());
+        for (const auto& choice : row.choices)
+            lower_reservation_bytes += 64 * choice.target_cell_ids.size();
+        const auto& proof = *row.lower_provenance;
+        lower_reservation_bytes += 32 * (proof.request_identity.size() +
+            proof.source_identity.size() + proof.action_identity.size() +
+            proof.evidence_identity.size());
+    }
+    // Existing row storage is already charged. Reserve only allocations
+    // which this append can grow, instead of reserving four copies of every
+    // retained row on every append. Explicit reserve fixes each growth target.
+    const auto growth_capacity = [](const auto& vector, std::size_t added) {
+        if (added > vector.max_size()-vector.size()) throw std::length_error("lower arena extent overflow");
+        const auto need=vector.size()+added;
+        if (need<=vector.capacity()) return std::size_t{0};
+        // A large doubled arena made bounded lower models refuse at a
+        // transient growth peak. Quarter growth keeps spare storage bounded;
+        // numerical rows, action coverage and the reservation cap are unchanged.
+        const auto extra=std::max<std::size_t>(1,vector.capacity()/4);
+        return std::max(need, extra>vector.max_size()-vector.capacity() ? need : vector.capacity()+extra);
+    };
+    const auto charge_growth = [&](const auto& vector, std::size_t added) {
+        using Value = typename std::decay_t<decltype(vector)>::value_type;
+        lower_reservation_bytes=saturated_add(lower_reservation_bytes,
+            saturated_product(growth_capacity(vector,added),2*sizeof(Value)));
+    };
+    const auto reserve_growth = [&](auto& vector, std::size_t added) {
+        const auto capacity=growth_capacity(vector,added);
+        if (!capacity) return;
+        vector.reserve(capacity);
+        if (vector.capacity()>2*capacity) throw std::length_error("unexpected lower arena reserve growth");
+    };
+    std::size_t choice_targets=0;
+    for (const auto& choice : sparse.choices) choice_targets+=choice.successors.size();
+    const auto each_growth = [&](const auto& apply) {
+        apply(transition_cache_.rows,1); apply(priced_rows_,1); apply(lower_row_bindings_,1);
+        apply(transition_cache_.successors,shared_span ? 0 : sparse.transitions.size());
+        apply(transition_cache_.probabilities,shared_span ? 0 : sparse.transitions.size());
+        apply(transition_cache_.choices,sparse.choices.size());
+        apply(transition_cache_.choice_successors,choice_targets);
+        for (const auto& target : targets) {
+            auto& predecessors=reverse_predecessors_.at(cells_.at(target.cell_id).state);
+            if (std::find(predecessors.begin(),predecessors.end(),*source)==predecessors.end()) apply(predecessors,1);
+        }
+        if (!shared_span && found_bucket!=transition_span_buckets_.end()) apply(found_bucket->second,1);
+    };
+    if (lower_only) each_growth(charge_growth);
+    ScopedProofMemoryCharge reservation(
+        transition_cache_.quotient_proofs->ledger(),
+        ProofMemoryCategory::Scratch, lower_reservation_bytes);
+    if (lower_only) each_growth(reserve_growth);
+    auto& transition_bucket = transition_span_buckets_[transition_hash];
+    for (const auto& target : targets) {
+        auto& predecessors = reverse_predecessors_.at(
+            cells_.at(target.cell_id).state);
+        if (std::find(predecessors.begin(), predecessors.end(), *source) ==
+            predecessors.end()) {
+            predecessors.push_back(*source);
+            std::sort(predecessors.begin(), predecessors.end());
+        }
+    }
+
     const std::uint64_t stable_row =
         solve_detail::append_sparse_policy_row(
             transition_cache_, priced_rows_, sparse, shared_span);

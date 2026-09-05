@@ -2069,6 +2069,11 @@ SolveProgress SolveWork::Impl::progress() const {
                 value.lower_bound = value.start_value_bound;
             }
         }
+        if (options.native_retention_lower) {
+            value.lower_bound=globally_certified_action_envelope_lower_bound(value.lower_bound,
+                incremental_action_generation,incremental_envelope_closed,
+                result.diagnostics.independent_goal_cover_lower_bound);
+        }
         if (std::isfinite(value.lower_bound) &&
             std::isfinite(value.upper_bound)) {
             value.absolute_optimality_gap = std::max(
@@ -2518,6 +2523,8 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
             kUpperPolicyProvenanceAccountingOffset -
             kIncumbentPortfolioAliasAccountingOffset +
             calc_bytes;
+        bytes += native_retention_live_bytes + native_retention_junk_safe.capacity();
+        bytes += native_retention_refusal.capacity()+1;
         bytes += prices.bucket_count() * sizeof(void*);
         bytes += prices.size() *
                  (sizeof(std::pair<const std::string, double>) +
@@ -2774,6 +2781,8 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
             kUpperPolicyProvenanceAccountingOffset -
             kIncumbentPortfolioAliasAccountingOffset +
             calc_bytes;
+        bytes += native_retention_live_bytes + native_retention_junk_safe.capacity();
+        bytes += native_retention_refusal.capacity()+1;
         bytes += prices.bucket_count() * sizeof(void*);
         bytes += prices.size() *
                  (sizeof(std::pair<const std::string, double>) +

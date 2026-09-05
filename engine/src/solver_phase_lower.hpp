@@ -144,6 +144,12 @@ private:
 };
 
 enum class PhaseContinuation : std::uint8_t { PriceOnly, SideRetention, CoupledFresh };
+enum class PhaseRetention : std::uint8_t { None, Crafted, Annul, CraftedNonempty, AnnulNonempty };
+struct PhaseNonemptyWitness {
+    unsigned action = 0, prefixes = 0, suffixes = 0, draw = 0;
+    int phase = -1;
+    std::uint64_t remaining_other = 0;
+};
 
 struct PhasePotentialRelation {
     std::uint32_t cell = 0, action = 0;
@@ -154,6 +160,7 @@ struct PhasePotentialRelation {
     PhaseRelationReason reason = PhaseRelationReason::NativeEffect;
     struct Event { std::uint32_t mask = 0, minimum_cell = 0, capacity = 0; };
     std::vector<Event> events;
+    unsigned removable_affixes = 0; // uniform integer native Annul denominator; zero for other relations
     int phase_branch = -2; // -1 no dominance, 0 prefix, 1 suffix; -2 not split
 };
 
@@ -175,6 +182,14 @@ public:
     const std::vector<PhasePriceReactivation> reactivations;
     const bool joint_refinement;
     const PhaseContinuation continuation;
+    const PhaseRetention retention;
+    // Sparse refined coordinates: low 32 bits are the legacy region cell;
+    // high bits retain removable crafted goals and crafted junk counts.
+    // UINT64_MAX is an infeasible legacy coordinate, never a native member.
+    const std::vector<std::uint64_t> coordinates;
+    const std::uint32_t crafted_goal_domain;
+    const unsigned crafted_count_limit;
+    const std::vector<PhaseNonemptyWitness> nonempty_witnesses;
     const std::vector<PhasePotentialRelation> relations;
     const std::uint32_t model_rounds;
     const std::uint64_t retained_reservation;
@@ -190,13 +205,21 @@ public:
     const CalcContext::NativeGoalDrawBound& draw(std::size_t) const;
 private:
     friend class PhaseLowerProducer;
+    friend class SolveWork;
     PreparedPhasePotential(std::shared_ptr<const PreparedPhaseLowerView>,
         std::vector<double>, PhaseLowerProposal, PhaseProposalRefusal,
         std::uint32_t mod, std::uint32_t mask, bool retained, double restart_lower,
         std::vector<CalcContext::NativeGoalDrawBound>, std::vector<PhasePotentialRelation>,
         std::uint32_t rounds, std::uint64_t reservation, std::uint64_t peak, std::uint64_t action_relations,
         std::shared_ptr<const PreparedPhasePotential>, std::vector<PhaseJointEventWitness>,
-        std::vector<PhasePriceReactivation>, bool joint, PhaseContinuation);
+        std::vector<PhasePriceReactivation>, bool joint, PhaseContinuation,
+        PhaseRetention, std::vector<std::uint64_t>, std::uint32_t crafted_goal_domain, unsigned crafted_count_limit,
+        std::vector<PhaseNonemptyWitness>);
+    std::unordered_map<std::uint64_t, std::uint32_t> coordinate_index_;
+    // Geometry only. SolveWork first binds this view to its immutable request
+    // and proves the AbstractState fields determine every represented member.
+    std::optional<double> projected_summary_value(unsigned rarity, unsigned mask,
+        unsigned p, unsigned s, bool fresh, unsigned crafted, unsigned jp, unsigned js) const;
     std::shared_ptr<const PreparedPhaseLowerView> support_;
     quotient::ScopedProofMemoryCharge charge_;
 };
@@ -217,7 +240,8 @@ public:
         bool consider_imprint_programs, bool retain_scour,
         const quotient::QuotientLowerBudget& budget = {}, bool joint_refinement = false,
         std::shared_ptr<const PreparedPhasePotential> reuse_draws = {},
-        PhaseContinuation continuation = PhaseContinuation::PriceOnly);
+        PhaseContinuation continuation = PhaseContinuation::PriceOnly,
+        PhaseRetention retention = PhaseRetention::None, bool retain_diagnostics = true);
     static PreparedPhaseRestartLower zero_restart_boundary(const PreparedPhaseLowerView&);
     static PhaseProgramLowerWitness compose(CalcContext&, const PhaseLowerPrices&,
         const pc_item_state&, const std::string&, const PreparedPhasePotential&,

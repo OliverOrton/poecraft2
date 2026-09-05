@@ -756,6 +756,14 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     SolveOptions options;
     std::unordered_map<std::string, double> prices;
     SolveResult result;
+    std::shared_ptr<const class PreparedPhasePotential> native_retention_potential;
+    bool native_retention_attempted = false;
+    std::array<std::uint8_t, kMaxGoalSlots> native_retention_slot_side{};
+    std::array<bool, kMaxGoalSlots> native_retention_slot_safe{};
+    std::vector<std::uint8_t> native_retention_junk_safe;
+    std::uint64_t native_retention_prepare_ns = 0, native_retention_live_bytes = 0, native_retention_peak_bytes = 0;
+    std::uint64_t native_retention_lookups = 0, native_retention_hits = 0, native_retention_improvements = 0;
+    std::string native_retention_refusal;
     std::vector<PricedOperator> operators;
     std::vector<std::uint32_t> static_operator_indices;
     std::vector<std::uint32_t> delayed_operator_indices;
@@ -2406,6 +2414,8 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         const std::uint32_t operator_index);
 
     void prepare_goal_cover_cost();
+    void prepare_native_retention_lower();
+    double native_retention_lower_value(std::uint32_t state);
 
     std::shared_ptr<const class PreparedPhaseLowerView> prepare_phase_lower(
         const quotient::QuotientLowerBudget& budget);

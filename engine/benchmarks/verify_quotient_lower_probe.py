@@ -285,11 +285,13 @@ def verify_joint(path):
     assert native["solver_steps"] == 0 and not native["production_authority"]
     p = native["probabilistic_donor"]
     coupled = boundary and p["continuation"] == 2
+    retention = p.get("retention",0)
+    coordinates = p.get("coordinates",[])
     values = list(map(F, p["values"]))
     if not coupled: values += [F(0), F(p["restart_boundary_lower"])]
     prior = list(map(F, native["joint_control" if boundary else "marginal_control"]["values"]))
     if coupled:
-        assert not p["fixed_boundary_used"] and p["fresh_cell"] == 1538 and len(values) == 3074
+        assert not p["fixed_boundary_used"] and p["fresh_cell"] == 1538 and (len(values) >= 3074 if retention else len(values) == 3074)
         assert values[1536] == values[1537] == 0
         assert values[1538] > F(p["restart_boundary_lower"])
         assert any(r["cell"] == 1538 for r in p["checked_relations"])
@@ -306,6 +308,21 @@ def verify_joint(path):
             for i in range(counts[side]):
                 remaining -= min(remaining, w["removal"][side][i])
         return F(w["target"], w["target"] + remaining) if w["target"] else F(0)
+
+    nonempty = p.get("nonempty_witnesses", [])
+    for w in nonempty:
+        draw = draws[w["draw"]]
+        assert draw["action"] == w["action"] and not draw["guaranteed"]
+        assert w["action"] in ("exalt", "eldritch_exalt")
+        assert (w["prefixes"],w["suffixes"])[draw["side"]] < 3
+        assert w["phase"] < 0 or w["phase"] == draw["side"]
+        remaining = draw["other"]
+        for side,count in enumerate((w["prefixes"],w["suffixes"])):
+            for removed in draw["removal"][side][:count]: remaining -= min(remaining, removed)
+        assert remaining == w["remaining_other"] > 0
+    if retention in (3,4): assert nonempty
+    annul_checks = 0
+    side_masks=[sum(1<<slot for slot in range(5) if next(d["side"] for d in draws if d["slot"]==slot)==side) for side in range(2)]
 
     events = []
     for w in p["joint_events"]:
@@ -355,6 +372,33 @@ def verify_joint(path):
             if not remaining:
                 break
         assert remaining == 0
+        if r.get("removable_affixes",0):
+            annul_checks += 1
+            n = r["removable_affixes"]
+            assert r["action"] in ("annul","eldritch_annul") and 0<n<=6
+            assert len(r["events"]) == n
+            assert all(cap == (mass+n-1)//n for _,_,cap in r["events"])
+            base,cm,jp,js = coordinates[r["cell"]]
+            offset=1538 if base>=1538 else 0
+            local=base-offset
+            rarity,mask,prefixes,suffixes=local//512,(local//16)%32,(local//4)%4,local%4
+            frame=0 if offset else p["fractured_mask"]
+            phase=r["phase_branch"] if r["action"]=="eldritch_annul" else -1
+            expected=[]
+            def target(m,ps,ss,c,cp,cs): return (offset+((rarity*32+m)*4+ps)*4+ss,c,cp,cs)
+            for slot in range(5):
+                bit=1<<slot; side=int(bool(side_masks[1]&bit))
+                if mask&bit and not frame&bit and (phase<0 or phase==side):
+                    expected.append(target(mask&~bit,prefixes-(side==0),suffixes-(side==1),cm&~bit,jp,js))
+            for side in range(2):
+                if phase>=0 and phase!=side: continue
+                junk=(prefixes,suffixes)[side]-(mask&side_masks[side]).bit_count()
+                crafted=(jp,js)[side]
+                expected += [target(mask,prefixes-(side==0),suffixes-(side==1),cm,jp,js)]*(junk-crafted)
+                expected += [target(mask,prefixes-(side==0),suffixes-(side==1),cm,jp-(side==0),js-(side==1))]*crafted
+            assert sorted(tuple(coordinates[t]) for _,t,_ in r["events"])==sorted(expected)
+            exact_uniform=sum((values[t] for _,t,_ in r["events"]),F(0))/n
+            assert minimum<=exact_uniform
         actual = sum((F(prob)*values[t] for t,prob in r["exits"]),F(0))
         assert sum(F(prob) for _,prob in r["exits"]) == 1
         assert actual == minimum, ("nonminimal or stale event row",r["cell"],r["action"])
@@ -382,7 +426,7 @@ def verify_joint(path):
             assert F(e["lower"]) == (0 if e["goal"] else values[e["cell"]])
             q = F(e["weight"],program["total_weight"])
             exact_new += q*F(e["lower"])
-            exact_old += q*(0 if e["goal"] else prior[e["cell"]])
+            exact_old += q*(0 if e["goal"] else prior[coordinates[e["cell"]][0] if retention else e["cell"]])
         assert F(program["lower"]) <= exact_new < F(program["lower"])+F("1e-10")
         assert F(s["program_before"]["lower"]) <= exact_old < F(s["program_before"]["lower"])+F("1e-10")
         before, after = s["complete_models"]
@@ -398,9 +442,9 @@ def verify_joint(path):
         if not boundary:
             assert limiting["action"] == "eldritch_chaos" and limiting["reason"] == "unsupported_effect"
             assert limiting["exits"] == [[1536,1]]
-        elif coupled:
+        elif coupled and not retention:
             assert limiting["action"] == "harvest_reforge:physical" and limiting["reason"] == "probability_envelope"
-        else:
+        elif not coupled:
             assert limiting["action"] == "restart" and limiting["reason"] == "fixed_independent_boundary"
         ceiling = F(limiting["cost"])+sum(F(prob)*values[t] for t,prob in limiting["exits"])
         assert donor <= ceiling and ceiling-donor < F("1e-7")
@@ -419,10 +463,10 @@ def verify_joint(path):
             next_complete_ceiling=min((r["lower"] for r in ranked if r["lower"]>after["lower"]),default=None)))
     assert native["sources"][0]["source"] != native["sources"][1]["source"]
     assert [s["program_after"]["goal_weight"] for s in native["sources"]] == [500,0]
-    assert native["resources"]["reused_draw_witnesses"] == 78
+    assert native["resources"]["reused_draw_witnesses"] == (115 if retention else 78)
     if not boundary: assert native["resources"]["new_draw_witnesses"] == 0
     budget = native["resources"].get("proof_budget_bytes",16<<20)
-    assert budget in (16<<20,32<<20) and native["resources"]["combined_additional_peak_bytes"] <= budget
+    assert budget in (16<<20,32<<20,64<<20) and native["resources"]["combined_additional_peak_bytes"] <= budget
     assert native["process_peak_working_set_bytes"] <= 1 << 30
     policy_ceiling = None
     if coupled:
@@ -433,7 +477,7 @@ def verify_joint(path):
             if c in reachable or c not in policy: continue
             reachable.add(c); pending.extend(t for t,q in policy[c]["exits"] if q)
         ids=sorted(reachable); pos={c:i for i,c in enumerate(ids)}; n=len(ids)
-        assert n<=64, "ceiling control must stay small"
+        assert n<=128, "ceiling control must stay small"
         matrix=[[F(int(i==j)) for j in range(n)]+[F(policy[c]["cost"])] for i,c in enumerate(ids)]
         for i,c in enumerate(ids):
             for target,q in policy[c]["exits"]:
@@ -461,12 +505,14 @@ def verify_joint(path):
         policy_ceiling=dict(scope="proper fixed policy of the optimistic probability-box model only; no native upper authority",
             states=n, values={str(c):str(solved[c]) for c in [1405,1369,1538]},
             decimal_values={str(c):float(solved[c]) for c in [1405,1369,1538]},
-            actions={str(c):policy[c]["action"] for c in ids})
+            actions={str(c):policy[c]["action"] for c in ids},
+            coordinates={str(c):coordinates[c] for c in ids} if retention else {})
     return dict(evidence_scope="native C++ owns uniform conditional-history semantics; exact audit checks integer derivation, assignment bounds, complete box minima and finite inequalities",
         optimistic_policy_ceiling=policy_ceiling, joint_events=events, measured_prefix_event=measured,
         old_prefix_capacity=3050403, old_prefix_probability_upper=3050403/mass,
         probability_cap_ratio=float(F(3050403,measured["capacity"])),
         optimizer_checks=optimizer_checks, checked_relations=len(p["checked_relations"]),
+        nonempty_integer_checks=len(nonempty), annul_integer_checks=annul_checks,
         reactivated_shortcuts=len(p["price_reactivations"]), source_results=sources,
         production_authority=False)
 

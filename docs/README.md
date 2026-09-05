@@ -31,7 +31,9 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. The completed
+The active boundary is [Native Retention-Aware Lower Refinement and Solver Integration v1](active/native-retention-lower-integration-v1/README.md).
+It continues native retention refinement through an opt-in ordinary consumer.
+The completed
 [Native Side-Retention and Boundary-Coupled Lower Closure v1](archive/2026-09-05-native-side-retention-boundary-coupled-lower-v1/README.md)
 raises both saved-source private models/portfolios from 39.21 to 41.11443 under
 16 MiB, then to 47.85102 with a jointly checked adjacent region under a labelled

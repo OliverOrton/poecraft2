@@ -78,6 +78,7 @@ struct QuotientLowerQuery {
 };
 
 struct QuotientLowerBudget {
+    bool retain_ranked_constraints = true; // diagnostics only; acceptance still checks every constraint
     std::uint32_t max_sweeps = 10000;
     std::uint64_t max_scratch_bytes = 16ull * 1024 * 1024;
     std::function<bool()> cancelled;

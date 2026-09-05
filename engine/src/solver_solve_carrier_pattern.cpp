@@ -229,6 +229,7 @@ double SolveWork::Impl::completion_proof_lower_value(
             identity_clean_goal_progress_lower_value(state);
         const double terminal_debt =
             carrier_terminal_debt_lower_value(state);
+        const double native_retention = native_retention_lower_value(state);
         /* The universal goal cover is independently admissible for every
          * carrier shape. A clean/strict specialization may strengthen it but
          * must never replace it with a weaker value; exact successor Bellman
@@ -256,6 +257,7 @@ double SolveWork::Impl::completion_proof_lower_value(
             {ProofPatternKind::StrictClean, {strict}, strict_available},
             {ProofPatternKind::EnvelopeBellman,
              {envelope_bellman_lower}, envelope_available},
+            {ProofPatternKind::NativeRetention, {native_retention}, native_retention>0},
         }, kValueCeiling);
         /*
          * An infinite abstract value means the finite relaxation omitted a
@@ -264,6 +266,7 @@ double SolveWork::Impl::completion_proof_lower_value(
          * lower rather than turning abstraction coverage into a false
          * non-improvement certificate.
          */
+        if (selected.owner_mask & (std::uint32_t{1} << static_cast<unsigned>(ProofPatternKind::NativeRetention))) ++native_retention_improvements;
         return selected.lower.value;
     }
 

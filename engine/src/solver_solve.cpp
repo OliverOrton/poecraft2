@@ -568,6 +568,7 @@ SolveWork::Impl::Impl(
                     limit.cap_name(), limit.limit());
             }
         }
+        if (options.native_retention_lower) prepare_native_retention_lower();
         result.diagnostics.solve_setup_ns = static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - setup_started)

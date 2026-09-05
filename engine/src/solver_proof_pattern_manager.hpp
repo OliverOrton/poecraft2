@@ -33,6 +33,7 @@ enum class ProofPatternKind : std::uint8_t {
     StrictClean,
     EnvelopeBellman,
     OperatorLower,
+    NativeRetention,
     Count,
 };
 
@@ -209,6 +210,15 @@ class ProofPatternManager {
                "proved survivor union plus universal continuation",
                ProofPatternSolution::ExactSuccessorComposition,
                "operator_immediate_plus_optimistic_successor"},
+              {ProofPatternKind::NativeRetention,
+               "native_retention",
+               "paired regions x rarity x exact goals x occupancy x removable crafted categories",
+               "all priced primitives and caller programs with checked first-exit coverage",
+               "existing independent maximum on incompatible members or refused preparation",
+               "native descriptor prices with downward arithmetic",
+               "native integer event bounds and simultaneously checked projected dependencies",
+               ProofPatternSolution::MonotoneSubsolution,
+               "opt_in_uniform_native_retention_potential"},
           }} {
         ProofPatternContract& operator_contract = contract(
             ProofPatternKind::OperatorLower);

@@ -139,54 +139,63 @@ QuotientLowerCertificate::QuotientLowerCertificate(
               values_by_state.capacity() * sizeof(double)) {}
 
 StableKey quotient_lower_model_identity(const QuotientLowerQuery& query) {
-    StableKey key{1, query.model_revision,
-        static_cast<std::uint64_t>(query.coefficients)};
+    // Count this exact existing encoding before allocating. Growing the large
+    // immutable key geometrically retained a second unused block of proof
+    // memory; no identity field, numerical contract or acceptance is omitted.
+    const auto encode = [&](const auto& emit) {
+    emit(1); emit(query.model_revision);
+    emit(static_cast<std::uint64_t>(query.coefficients));
     const auto append = [&](const StableKey& part) {
-        key.push_back(part.size());
-        key.insert(key.end(), part.begin(), part.end());
+        emit(part.size());
+        for (auto word:part) emit(word);
     };
     append(query.request_identity);
     append(query.caller_scope);
-    key.push_back(query.roots.size());
-    for (auto root : query.roots) key.push_back(root);
-    key.push_back(query.sources.size());
+    emit(query.roots.size());
+    for (auto root : query.roots) emit(root);
+    emit(query.sources.size());
     for (const auto& source : query.sources) {
-        key.push_back(source.cell_id);
+        emit(source.cell_id);
         append(source.source_identity);
         const auto& set = source.expected_actions;
         append(set.scope_identity);
-        key.push_back(set.generation);
-        key.push_back(set.complete);
-        key.push_back(set.actions.size());
+        emit(set.generation);
+        emit(set.complete);
+        emit(set.actions.size());
         for (const auto& action : set.actions) append(action);
-        key.push_back(set.families.size());
+        emit(set.families.size());
         for (const auto& family : set.families) {
             append(family.identity);
-            key.push_back(family.open);
-            key.push_back(family.members.size());
+            emit(family.open);
+            emit(family.members.size());
             for (const auto& member : family.members) append(member);
         }
-        key.push_back(source.constraints.size());
+        emit(source.constraints.size());
         for (const auto& constraint : source.constraints) {
             append(constraint.cover.identity);
-            key.push_back(constraint.cover.family);
-            key.push_back(constraint.cover.excluded_members.size());
+            emit(constraint.cover.family);
+            emit(constraint.cover.excluded_members.size());
             for (const auto& member : constraint.cover.excluded_members) append(member);
-            key.push_back(static_cast<std::uint64_t>(constraint.kind));
-            key.push_back(constraint.row);
-            key.push_back(std::bit_cast<std::uint64_t>(constraint.lower));
+            emit(static_cast<std::uint64_t>(constraint.kind));
+            emit(constraint.row);
+            emit(std::bit_cast<std::uint64_t>(constraint.lower));
             append(constraint.evidence_identity);
-            key.push_back(static_cast<std::uint64_t>(constraint.evidence));
+            emit(static_cast<std::uint64_t>(constraint.evidence));
         }
     }
-    key.push_back(query.boundaries.size());
+    emit(query.boundaries.size());
     for (const auto& boundary : query.boundaries) {
-        key.push_back(boundary.cell_id);
+        emit(boundary.cell_id);
         append(boundary.source_identity);
         append(boundary.evidence_identity);
-        key.push_back(std::bit_cast<std::uint64_t>(boundary.lower));
-        key.push_back(static_cast<std::uint64_t>(boundary.evidence));
+        emit(std::bit_cast<std::uint64_t>(boundary.lower));
+        emit(static_cast<std::uint64_t>(boundary.evidence));
     }
+    };
+    std::size_t words=0;
+    encode([&](std::uint64_t) { if (words==std::numeric_limits<std::size_t>::max()) throw std::length_error("lower identity extent overflow"); ++words; });
+    StableKey key; key.reserve(words);
+    encode([&](std::uint64_t word) { key.push_back(word); });
     return key;
 }
 
@@ -278,7 +287,11 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
                     bytes += 256 + 4 * key_bytes(member);
             }
             for (const auto& constraint : source.constraints) {
-                bytes += 512 + 4 * key_bytes(constraint.cover.identity) +
+                // The base reservation includes geometrically grown ranking
+                // storage. A value-only request allocates none of that storage;
+                // retain the borrowed snapshot, partition and identity allowance.
+                bytes += 512 - (budget.retain_ranked_constraints ? 0 :
+                    2*sizeof(QuotientLowerLimitingConstraint)) + 4 * key_bytes(constraint.cover.identity) +
                     key_bytes(constraint.evidence_identity);
                 for (const auto& member : constraint.cover.excluded_members)
                     bytes += 256 + 4 * key_bytes(member);
@@ -560,7 +573,7 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
                 QuotientLowerStatus::StaleModel, "query changed before acceptance");
             return out;
         }
-        for (const auto& source : query.sources)
+        if (budget.retain_ranked_constraints) for (const auto& source : query.sources)
             for (const auto& constraint : source.constraints)
                 if (constraint.kind != LowerConstraintKind::Inapplicable)
                     out.ranked_constraints.push_back({source.cell_id,
@@ -570,17 +583,30 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
                 return std::tie(a.cell_id, a.rhs_lower, a.cover.identity) <
                     std::tie(b.cell_id, b.rhs_lower, b.cover.identity);
             });
-        out.storage_charge = std::make_shared<ResultStorageCharge>(proof_store(),
-            bytes); // Conservative bound on diagnostics, retained by copies.
+        // The query/sources are borrowed and remain in the scratch reservation.
+        // Retaining that entire reservation a second time as result storage
+        // charges a nonexistent second snapshot. Count the actual result-owned
+        // buffers (the immutable certificate has its own separate charge).
+        std::uint64_t retained = 256 + out.reason.capacity()+1 +
+            out.candidate_values_by_state.capacity()*sizeof(double) +
+            out.ranked_constraints.capacity()*sizeof(QuotientLowerLimitingConstraint);
+        for (const auto& ranked : out.ranked_constraints) {
+            retained += ranked.cover.identity.capacity()*sizeof(std::uint64_t) +
+                ranked.cover.excluded_members.capacity()*sizeof(StableKey);
+            for (const auto& member : ranked.cover.excluded_members)
+                retained += member.capacity()*sizeof(std::uint64_t);
+        }
+        out.storage_charge = std::make_shared<ResultStorageCharge>(proof_store(),retained);
         out.checked.reset(new QuotientLowerCertificate(
             proof_store(), query.request_identity, quotient_lower_model_identity(query),
             model_revision_, query.coefficients, std::move(accepted)));
         out.status = QuotientLowerStatus::CheckedFiniteLower;
         return out;
-    } catch (const ProofMemoryLimit&) {
+    } catch (const ProofMemoryLimit& error) {
         release_diagnostics();
         out.checked.reset();
-        refuse(QuotientLowerStatus::ResourceCap, "proof memory reservation refused");
+        refuse(QuotientLowerStatus::ResourceCap, "proof memory reservation refused: ");
+        out.reason += error.what();
         return out;
     }
 }

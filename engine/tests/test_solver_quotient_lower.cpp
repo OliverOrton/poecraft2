@@ -80,6 +80,11 @@ void cyclic_and_revisions() {
     auto q = query(graph, {source(0, {10, 11}, {a, scalar(11, 20)}),
                            source(1, {20}, {b})});
     const auto result = graph.solve_lower(q);
+    QuotientLowerBudget compact; compact.retain_ranked_constraints=false;
+    const auto without_ranking=graph.solve_lower(q,compact);
+    PC_CHECK(without_ranking.checked && without_ranking.ranked_constraints.empty() &&
+        without_ranking.checked->values_by_state==result.checked->values_by_state);
+    PC_CHECK(graph.lower_certificate_current(*without_ranking.checked,q));
     PC_CHECK(std::abs(root(result) - 16.0 / 7) < 1e-8);
     PC_CHECK(std::abs(result.checked->values_by_state[1] - 18.0 / 7) < 1e-8);
     // Smaller than an independently proper but suboptimal 20-cost incumbent.

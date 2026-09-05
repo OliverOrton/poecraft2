@@ -6,6 +6,129 @@ namespace solver {
 
 using namespace solve_detail;
 
+void SolveWork::Impl::prepare_native_retention_lower() {
+    if (!options.native_retention_lower || native_retention_attempted) return;
+    native_retention_attempted = true;
+    const auto began = std::chrono::steady_clock::now();
+    try {
+        if (options.consider_imprint_programs) throw std::invalid_argument("unmodelled Imprint scope");
+        unsigned fractures = 0;
+        for (unsigned i=0;i<exact_start_item.prefix_count;++i) fractures += !!(exact_start_item.prefixes[i].flags&PC_MOD_SLOT_FRACTURED);
+        for (unsigned i=0;i<exact_start_item.suffix_count;++i) fractures += !!(exact_start_item.suffixes[i].flags&PC_MOD_SLOT_FRACTURED);
+        if (fractures != 1) throw std::invalid_argument("native retention requires a natural anchored request");
+        const auto cap = options.native_retention_proof_bytes;
+        if (cap != (32ull<<20) && cap != (64ull<<20)) throw std::invalid_argument("native retention proof budget must be labelled 32 or 64 MiB");
+        const auto live = estimated_owned_bytes_with_calc(calc.audited_estimated_owned_bytes());
+        if (live >= options.max_solver_owned_bytes || cap > options.max_solver_owned_bytes-live)
+            throw std::length_error("native retention total reservation refused");
+        native_retention_live_bytes = cap; // reserve before construction
+        quotient::QuotientLowerBudget budget; budget.max_scratch_bytes = cap;
+        const auto mask_proposal = phase_lower_proposal(false);
+        const auto proposal = phase_lower_proposal(true);
+        auto support = PhaseLowerProducer::prepare(calc,prices,exact_start_item,mask_proposal,budget);
+        // A coupled region is solved jointly; zero is a valid unused initial
+        // boundary. Never recursively prepare through completion lookup.
+        const auto zero = PhaseLowerProducer::zero_restart_boundary(*support);
+        auto prepared = PhaseLowerProducer::prepare_probabilistic(calc,prices,exact_start_item,
+            proposal,support,zero,false,true,budget,true,{},PhaseContinuation::CoupledFresh,
+            PhaseRetention::AnnulNonempty,false);
+        const auto safe_member = [&](unsigned mod) {
+            return session.metamod_type.at(mod)<0 && !modifier_is_veiled_template(session,mod);
+        };
+        for (unsigned slot=0;slot<calc.layout().slots.size();++slot) {
+            int side=-1; bool safe=true;
+            const auto& members=calc.layout().slots[slot].member_mask;
+            for (unsigned mod=0;mod<session.mod_count;++mod) if (pc_bitset_test(members.data(),mod)) {
+                const auto current=session.gen_type[mod];
+                if (side<0) side=current;
+                safe &= current==side && safe_member(mod);
+            }
+            native_retention_slot_safe[slot]=safe && side>=0 && side<=1;
+            native_retention_slot_side[slot]=static_cast<std::uint8_t>(side);
+        }
+        native_retention_junk_safe.assign(calc.layout().junk_classes.size(),true);
+        for (unsigned c=0;c<calc.layout().junk_classes.size();++c) {
+            const auto& group=calc.layout().junk_classes[c];
+            bool safe=group.gen_type>=0 && group.gen_type<=1;
+            for (unsigned mod=0;mod<session.mod_count;++mod)
+                if (pc_bitset_test(group.member_mask.data(),mod)) safe &= safe_member(mod);
+            native_retention_junk_safe[c]=safe;
+        }
+        native_retention_peak_bytes=prepared->peak_additional_bytes;
+        // The regular owner ledger is initialized after constructor setup.
+        // Audit the shared calculator once and retain this construction peak.
+        peak_owned_bytes=std::max(peak_owned_bytes,estimated_owned_bytes_with_calc(calc.audited_estimated_owned_bytes())-cap+native_retention_peak_bytes);
+        native_retention_live_bytes=prepared->memory_snapshot().total_bytes;
+        native_retention_potential=std::move(prepared); // only after full checking
+        auto& entry=contract(ProofPatternKind::NativeRetention);
+        entry.converged=true; entry.residual=0; entry.fallback_reason.clear();
+        entry.solution_sweeps=native_retention_potential->model_rounds;
+        entry.start_contribution=native_retention_lower_value(result.start_state);
+        // This existing field carries the maximum of independent start-state
+        // patterns (including the envelope pattern), despite its historic name.
+        result.diagnostics.independent_goal_cover_lower_bound=std::max(
+            result.diagnostics.independent_goal_cover_lower_bound,completion_proof_lower_value(result.start_state));
+    } catch (const std::exception& e) {
+        native_retention_potential.reset(); native_retention_live_bytes=0;
+        native_retention_refusal=e.what();
+        contract(ProofPatternKind::NativeRetention).fallback_reason=native_retention_refusal;
+    }
+    native_retention_prepare_ns=static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now()-began).count());
+}
+
+double SolveWork::Impl::native_retention_lower_value(std::uint32_t state_id) {
+    if (!native_retention_potential || state_id>=calc.state_count()) return 0;
+    ++native_retention_lookups;
+    const auto& state=calc.state(state_id);
+    // Uniformity is proved from retained fields and complete member masks.
+    // No materialized representative is used to broadcast a stronger value.
+    if (state.flags & ~(kFlagFractured|kFlagCraftedMod|kFlagEldritchImplicit) || state.influence_bits ||
+        state.veiled_side>=0 || state.goal_progress_retry_basin || state.fractured_metamod_flags) return 0;
+    unsigned mask=0,crafted=0,jp=0,js=0,fractures=0;
+    std::array<unsigned,2> occupied{};
+    for (unsigned slot=0;slot<calc.layout().slots.size();++slot) {
+        const auto status=static_cast<GoalSlotStatus>(state.slot_status[slot]);
+        if (status==GoalSlotStatus::Absent) continue;
+        if (!native_retention_slot_safe[slot]) return 0;
+        const unsigned side=native_retention_slot_side[slot], bit=1u<<slot;
+        ++occupied[side];
+        if (status==GoalSlotStatus::Satisfied) mask|=bit;
+        const bool fractured=state.fractured_goal_mask&bit;
+        if (fractured) {
+            ++fractures;
+            if (status!=GoalSlotStatus::Satisfied || !(native_retention_potential->fractured_mask&bit)) return 0;
+            const auto& goal=calc.layout().slots[slot];
+            const auto token=state.goal_member_class_tokens[slot];
+            if (token>goal.member_classes.size()) return 0;
+            const auto& members=token ? goal.member_classes[token-1].member_mask : goal.satisfying_mask;
+            unsigned count=0;
+            for (auto word:members) count+=std::popcount(word);
+            if (count!=1 || !pc_bitset_test(members.data(),native_retention_potential->fractured_mod)) return 0;
+        }
+        if ((state.crafted_goal_mask&bit) && !fractured) {
+            if (status==GoalSlotStatus::Satisfied) crafted|=bit;
+            else ++(side ? js : jp);
+        }
+    }
+    for (unsigned c=0;c<calc.layout().junk_classes.size();++c) {
+        const unsigned count=state.junk_counts[c];
+        if (!count) continue;
+        if (!native_retention_junk_safe[c] || state.fractured_junk_counts[c]) return 0;
+        const unsigned side=calc.layout().junk_classes[c].gen_type;
+        occupied[side]+=count;
+        if (state.crafted_junk_counts[c]>count) return 0;
+        (side ? js : jp)+=state.crafted_junk_counts[c];
+    }
+    if (fractures>1 || bool(state.flags&kFlagFractured)!=bool(fractures) ||
+        occupied[0]!=state.prefix_count || occupied[1]!=state.suffix_count) return 0;
+    const auto value=native_retention_potential->projected_summary_value(state.rarity,mask,state.prefix_count,
+        state.suffix_count,fractures==0,crafted,jp,js);
+    if (!value) return 0;
+    ++native_retention_hits;
+    return *value;
+}
+
 std::shared_ptr<const PreparedPhaseLowerView> SolveWork::Impl::prepare_phase_lower(
         const quotient::QuotientLowerBudget& budget) {
     prepare_goal_cover_cost();

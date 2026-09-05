@@ -9,7 +9,7 @@
 namespace poecraft::solver {
 using namespace quotient;
 namespace {
-constexpr std::uint64_t version = 0x50524f424c4f0003ull;
+constexpr std::uint64_t version = 0x50524f424c4f0004ull;
 constexpr std::uint32_t mass = 1u << 24;
 double down(double x) { return x == 0 ? 0 : std::max(0.0, std::nextafter(x, 0.0)); }
 void checkpoint(const QuotientLowerBudget& b) {
@@ -53,16 +53,40 @@ bool in_frame(const CalcContext& calc, const pc_item_state& item, std::uint32_t 
 std::size_t index(std::uint32_t masks, unsigned rarity, unsigned mask, unsigned p, unsigned s) {
     return ((rarity*masks+mask)*4+p)*4+s;
 }
+std::uint64_t coordinate(unsigned base, unsigned crafted, unsigned jp, unsigned js) {
+    return base | (std::uint64_t(crafted | (jp << 5) | (js << 7)) << 32);
+}
+struct CraftedObservation { unsigned goals = 0, jp = 0, js = 0; bool distinct = true; };
+CraftedObservation crafted_observation(const CalcContext& calc, const pc_item_state& item) {
+    CraftedObservation result;
+    unsigned seen = 0;
+    for (unsigned side = 0; side < 2; ++side) {
+        const auto* slots = side ? item.suffixes : item.prefixes;
+        for (unsigned i = 0; i < (side ? item.suffix_count : item.prefix_count); ++i) {
+            const auto hit = mod_mask(calc, slots[i].mod_id);
+            result.distinct &= std::popcount(hit) <= 1 && !(seen & hit);
+            seen |= hit;
+            if (!(slots[i].flags & PC_MOD_SLOT_CRAFTED) || (slots[i].flags & PC_MOD_SLOT_FRACTURED)) continue;
+            if (hit) result.goals |= hit;
+            else ++(side ? result.js : result.jp);
+        }
+    }
+    return result;
+}
 StableKey potential_identity(const PreparedPhaseLowerView& support, const std::vector<double>& values,
-        std::uint32_t mod, bool retained, double restart_lower, bool joint, PhaseContinuation continuation) {
+        std::uint32_t mod, bool retained, double restart_lower, bool joint, PhaseContinuation continuation,
+        PhaseRetention retention, const std::vector<std::uint64_t>& coordinates, unsigned crafted_domain, unsigned crafted_limit) {
     auto key = support.identity;
     key.insert(key.end(), {version, mod, retained, joint, 0 /* unchanged Imprint exclusion */});
     key.push_back(static_cast<unsigned>(continuation));
+    key.insert(key.end(), {static_cast<unsigned>(retention), crafted_domain, crafted_limit});
+    key.insert(key.end(), coordinates.begin(), coordinates.end());
     key.push_back(std::bit_cast<std::uint64_t>(restart_lower));
     for (double x : values) key.push_back(std::bit_cast<std::uint64_t>(x));
     return key;
 }
-struct Cell { unsigned rarity, mask, p, s; std::uint32_t id; bool goal; };
+struct Cell { unsigned rarity, mask, p, s; std::uint32_t id; bool goal;
+    unsigned base = 0, crafted = 0, jp = 0, js = 0; };
 struct Group { unsigned mask; std::uint32_t capacity = mass; std::vector<std::uint32_t> cells; };
 
 // Every conditional history has at most p/s blockers. No target mass is
@@ -162,18 +186,30 @@ PreparedPhasePotential::PreparedPhasePotential(std::shared_ptr<const PreparedPha
         std::vector<CalcContext::NativeGoalDrawBound> weights, std::vector<PhasePotentialRelation> rows,
         std::uint32_t rounds, std::uint64_t reservation, std::uint64_t peak, std::uint64_t action_relations,
         std::shared_ptr<const PreparedPhasePotential> reused, std::vector<PhaseJointEventWitness> events,
-        std::vector<PhasePriceReactivation> reactivated, bool joint, PhaseContinuation mode)
-    : identity(potential_identity(*support, table, mod, retained, restart_lower, joint, mode)), values(std::move(table)),
+        std::vector<PhasePriceReactivation> reactivated, bool joint, PhaseContinuation mode,
+        PhaseRetention refinement, std::vector<std::uint64_t> projection, unsigned crafted_domain, unsigned crafted_limit,
+        std::vector<PhaseNonemptyWitness> nonempty)
+    : identity(potential_identity(*support, table, mod, retained, restart_lower, joint, mode, refinement, projection, crafted_domain, crafted_limit)), values(std::move(table)),
       proposal(std::move(proposed)), proposal_refusal(std::move(refusal)), fractured_mod(mod),
       fractured_mask(mask), retained_scour(retained), restart_boundary_lower(restart_lower), draws(std::move(weights)),
       reused_draw_owner(std::move(reused)), joint_events(std::move(events)), reactivations(std::move(reactivated)),
-      joint_refinement(joint), continuation(mode), relations(std::move(rows)),
+      joint_refinement(joint), continuation(mode), retention(refinement), coordinates(std::move(projection)),
+      crafted_goal_domain(crafted_domain), crafted_count_limit(crafted_limit), nonempty_witnesses(std::move(nonempty)), relations(std::move(rows)),
       model_rounds(rounds), retained_reservation(reservation), peak_additional_bytes(peak),
       native_action_relations(action_relations), support_(std::move(support)),
-      charge_(support_->store_->ledger(), ProofMemoryCategory::Certificate, reservation) {}
+      charge_(support_->store_->ledger(), ProofMemoryCategory::Certificate, reservation) {
+    for (unsigned i = 0; i < coordinates.size(); ++i)
+        if (coordinates[i] != UINT64_MAX) coordinate_index_.emplace(coordinates[i], i);
+}
 bool PreparedPhasePotential::compatible(const CalcContext& calc, const PhaseLowerPrices& prices,
         const pc_item_state& item, bool consider_imprint) const {
-    if (consider_imprint) return false;
+    if (consider_imprint || !(in_frame(calc,item,fractured_mod) ||
+        (continuation == PhaseContinuation::CoupledFresh && in_frame(calc,item,kNoId)))) return false;
+    if (retention != PhaseRetention::None) {
+        const auto crafted = crafted_observation(calc, item);
+        if (!crafted.distinct || (crafted.goals & ~crafted_goal_domain) ||
+            std::popcount(crafted.goals)+crafted.jp+crafted.js > crafted_count_limit) return false;
+    }
     auto context_item = item;
     context_item.searing_exarch_tier = support_->searing;
     context_item.eater_of_worlds_tier = support_->eater;
@@ -187,11 +223,26 @@ std::uint32_t PreparedPhasePotential::projected_cell(const CalcContext& calc, co
     if (!framed && (continuation != PhaseContinuation::CoupledFresh || !in_frame(calc, item, kNoId)))
         throw std::invalid_argument("program exit outside certified probability regions");
     const auto offset = framed ? 0 : 3*support_->values.size()*16+2;
-    return static_cast<std::uint32_t>(offset+index(support_->values.size(), item.rarity, item_mask(calc, item),
+    const auto base = static_cast<std::uint32_t>(offset+index(support_->values.size(), item.rarity, item_mask(calc, item),
         item.prefix_count, item.suffix_count));
+    if (retention == PhaseRetention::None) return base;
+    const auto crafted = crafted_observation(calc, item);
+    if (!crafted.distinct || (crafted.goals & ~crafted_goal_domain))
+        throw std::invalid_argument("program exit outside crafted goal domain");
+    return coordinate_index_.at(coordinate(base, crafted.goals, crafted.jp, crafted.js));
 }
 double PreparedPhasePotential::projected_value(const CalcContext& calc, const pc_item_state& item) const {
     return values.at(projected_cell(calc, item));
+}
+std::optional<double> PreparedPhasePotential::projected_summary_value(unsigned rarity, unsigned mask,
+        unsigned p, unsigned s, bool fresh, unsigned crafted, unsigned jp, unsigned js) const {
+    if (rarity > PC_RARITY_RARE || p > 3 || s > 3 || jp > 3 || js > 3 ||
+        mask >= support_->values.size() || (crafted & ~crafted_goal_domain) ||
+        std::popcount(crafted)+jp+js > crafted_count_limit) return std::nullopt;
+    const auto offset = fresh ? 3*support_->values.size()*16+2 : 0;
+    const auto key = coordinate(static_cast<unsigned>(offset+index(support_->values.size(),rarity,mask,p,s)),crafted,jp,js);
+    const auto found = coordinate_index_.find(key);
+    return found == coordinate_index_.end() ? std::nullopt : std::optional<double>(values[found->second]);
 }
 std::optional<double> PreparedPhasePotential::lookup(const CalcContext& calc, const PhaseLowerPrices& prices,
         const pc_item_state& item, bool consider_imprint) const {
@@ -219,10 +270,13 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         const PhaseLowerProposal& proposal, std::shared_ptr<const PreparedPhaseLowerView> support,
         const PreparedPhaseRestartLower& issued_restart_boundary,
         bool consider_imprint, bool retain_scour, const QuotientLowerBudget& budget,
-        bool joint_refinement, std::shared_ptr<const PreparedPhasePotential> reuse_draws, PhaseContinuation continuation) {
+        bool joint_refinement, std::shared_ptr<const PreparedPhasePotential> reuse_draws, PhaseContinuation continuation,
+        PhaseRetention retention, bool retain_diagnostics) {
     checkpoint(budget);
     if (continuation != PhaseContinuation::PriceOnly && (!joint_refinement || !retain_scour))
         throw std::invalid_argument("native continuation requires joint/no-op and retention coverage");
+    if (retention != PhaseRetention::None && continuation != PhaseContinuation::CoupledFresh)
+        throw std::invalid_argument("crafted retention requires both checked regions");
     const auto& restart_boundary = issued_restart_boundary.record;
     if (!support || !support->compatible(calc, prices, anchor))
         throw std::invalid_argument("probabilistic phase support/context mismatch");
@@ -259,17 +313,45 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
     const auto grid = 3*masks*16;
     const bool coupled = continuation == PhaseContinuation::CoupledFresh;
     const unsigned fresh_offset = grid+2;
-    const unsigned extent = coupled ? fresh_offset+grid : grid+2;
-    auto cap = std::min<std::uint64_t>(32ull << 20, budget.max_scratch_bytes);
+    unsigned extent = coupled ? fresh_offset+grid : grid+2;
+    const auto maximum_cap = retention == PhaseRetention::None ? 32ull << 20 : 64ull << 20;
+    auto cap = std::min<std::uint64_t>(maximum_cap, budget.max_scratch_bytes);
     // Coupling retains both regions' diagnostic rows and event caps while
     // checking. Reserve their overlap before native generation.
-    const std::uint64_t native_scratch = (coupled ? 6ull : 2ull) << 20;
+    const std::uint64_t native_scratch = (retention != PhaseRetention::None ? 8ull : (coupled ? 6ull : 2ull)) << 20;
     if (cap < (6ull << 20)) throw std::length_error("phase probability reservation refused");
     ScopedProofMemoryCharge scratch(support->store_->ledger(), ProofMemoryCategory::Scratch, native_scratch);
     std::vector<std::array<unsigned, 2>> minimum(masks, {99, 99});
     std::vector<unsigned> mod_goals(calc.session().mod_count);
     std::vector<unsigned> goal_side(calc.layout().slots.size(), 99);
     for (unsigned mod = 0; mod < calc.session().mod_count; ++mod) mod_goals[mod] = mod_mask(calc, mod);
+    unsigned crafted_domain = 0, crafted_limit = 0;
+    if (retention != PhaseRetention::None) {
+        const auto observation = crafted_observation(calc, anchor);
+        if (!observation.distinct) throw std::invalid_argument("crafted projection needs distinct satisfying affixes");
+        crafted_domain = observation.goals;
+        // Explicit initial-domain bound plus native induction, NOT an inference
+        // from missing multimod alone. In-frame Bench requires zero existing
+        // crafted affixes and creates one. Other in-frame producers create no
+        // crafted slots; losses/renewals only preserve or remove them. Multimod
+        // setup is still a covered first exit. Inputs beyond this bound fall back.
+        crafted_limit = std::max(1u, unsigned(std::popcount(observation.goals))+observation.jp+observation.js);
+        for (unsigned mod = 0; mod < mod_goals.size(); ++mod) {
+            if (std::popcount(mod_goals[mod]) > 1)
+                throw std::invalid_argument("overlapping goals need a richer removal category");
+            if (!mod_goals[mod]) continue;
+            // Same-goal members must exclude one another. This proves that
+            // a goal bit is one eligible affix for loss arithmetic, uniformly.
+            const auto exclusion = modifier_exclusion_effect_signature(calc.session(), mod);
+            for (unsigned other = 0; other < mod_goals.size(); ++other)
+                if ((mod_goals[other] & mod_goals[mod]) && !pc_bitset_test(exclusion.data(), other))
+                    throw std::invalid_argument("duplicate satisfying carriers need a richer removal category");
+        }
+        for (const auto& action : calc.registry().actions)
+            if (action.params.type == ActionType::Bench && action.params.mod_id < mod_goals.size() &&
+                calc.session().metamod_type[action.params.mod_id] < 0)
+                crafted_domain |= mod_goals[action.params.mod_id];
+    }
     for (unsigned side = 0; side < 2; ++side) {
         std::vector<unsigned> costs(masks, 99); costs[0] = 0;
         unsigned side_mask = 0;
@@ -301,7 +383,7 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                 p >= minimum[m][0] && s >= minimum[m][1] && (fs ? s : p) >= 1;
             const bool goal = r == calc.goal().rarity && std::popcount(m) >= calc.goal().required_satisfied_slots() &&
                 p+s == std::popcount(m);
-            if (feasible) graph_cells.push_back({id, 1, {version, id}, goal});
+            if (feasible) graph_cells.push_back({id, 1, {id}, goal});
             if (feasible && !goal) cells.push_back({r, m, p, s, id, false});
         }
     graph_cells.push_back({grid, 1, {version, grid}, true}); // other outside-frame zero
@@ -315,9 +397,37 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
             const bool feasible = p <= limit && s <= limit && p >= minimum[m][0] && s >= minimum[m][1];
             const bool goal = r == calc.goal().rarity && std::popcount(m) >= calc.goal().required_satisfied_slots() &&
                 p+s == std::popcount(m);
-            if (feasible) graph_cells.push_back({id, 1, {version, id}, goal});
+            if (feasible) graph_cells.push_back({id, 1, {id}, goal});
             if (feasible && !goal) cells.push_back({r, m, p, s, id, false});
         }
+    std::vector<std::uint64_t> coordinates;
+    std::unordered_map<std::uint64_t, unsigned> coordinate_index;
+    for (auto& c : cells) c.base = c.id;
+    if (retention != PhaseRetention::None) {
+        coordinates.resize(extent, UINT64_MAX);
+        const auto old_graph = graph_cells;
+        // Keep the old base-cell IDs for zero crafted coordinates. Additional
+        // cells are sparse feasible categories, not another physical graph.
+        for (const auto& g : old_graph) {
+            if (g.cell_id == grid || g.cell_id == grid+1) continue;
+            const auto base = g.cell_id;
+            const auto local = base >= fresh_offset ? base-fresh_offset : base;
+            const unsigned r = local/(masks*16), m = (local/16)%masks, p = (local/4)%4, s = local%4;
+            const unsigned allowed = m & crafted_domain & (base >= fresh_offset ? ~0u : ~fm);
+            for (unsigned cm = 0; cm < masks; ++cm) if ((cm & ~allowed) == 0)
+                for (unsigned jp = 0; jp <= p-minimum[m][0]; ++jp)
+                    for (unsigned js = 0; js <= s-minimum[m][1]; ++js) {
+                        if (std::popcount(cm)+jp+js > crafted_limit) continue;
+                        const auto key = coordinate(base, cm, jp, js);
+                        const unsigned id = cm || jp || js ? extent++ : base;
+                        if (id >= coordinates.size()) coordinates.resize(id+1, UINT64_MAX);
+                        coordinates[id] = key; coordinate_index.emplace(key, id);
+                        if (id == base) continue;
+                        graph_cells.push_back({id, 1, {id}, g.terminal});
+                        if (!g.terminal) cells.push_back({r,m,p,s,id,false,base,cm,jp,js});
+                    }
+        }
+    }
     std::vector<double> candidate(extent, 0);
     if (!coupled) candidate[grid+1] = restart_boundary.lower;
     PhaseProposalRefusal refusal;
@@ -337,7 +447,7 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         }
     }
     if (proposal.values.size() == grid) for (const auto& c : cells) {
-        const auto value = proposal.values[c.id >= fresh_offset ? c.id-fresh_offset : c.id];
+        const auto value = proposal.values[c.base >= fresh_offset ? c.base-fresh_offset : c.base];
         if (!std::isfinite(value) || value < 0) {
             if (refusal.kind.empty()) refusal = {"numeric_inconclusive", "clean proposal value", c.id};
         } else candidate[c.id] = value;
@@ -363,6 +473,32 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         return draws.back();
     };
     bool probability_frame_escape = false;
+    std::vector<PhaseNonemptyWitness> nonempty_witnesses;
+    std::map<std::tuple<unsigned,unsigned,unsigned,int>,bool> nonempty_cache;
+    const bool uniform_annul = retention == PhaseRetention::Annul || retention == PhaseRetention::AnnulNonempty;
+    const bool prove_nonempty = retention == PhaseRetention::CraftedNonempty || retention == PhaseRetention::AnnulNonempty;
+    const auto nonempty_add = [&](unsigned a,unsigned p,unsigned s,int phase) {
+        const auto key=std::tuple{a,p,s,phase};
+        if (const auto found=nonempty_cache.find(key);found!=nonempty_cache.end()) return found->second;
+        for (unsigned slot=0;slot<goal_side.size();++slot) {
+            const unsigned side=goal_side[slot];
+            if ((phase>=0 && side!=unsigned(phase)) || (side ? s : p)>=3) continue;
+            const auto& w=get_draw(a,slot,false);
+            if (w.frame_escape) continue;
+            auto remaining=w.other_weight;
+            for (unsigned blocker_side=0;blocker_side<2;++blocker_side)
+                for (unsigned i=0;i<(blocker_side ? s : p);++i)
+                    remaining-=std::min(remaining,w.strongest_other_removal[blocker_side][i]);
+            // A positive residual of NON-target mass proves an available
+            // native draw even if every target modifier has been excluded.
+            // Integer totals and every possible source blocker are covered.
+            if (remaining) {
+                nonempty_witnesses.push_back({a,p,s,draw_cache.at({a,slot,false}),phase,remaining});
+                nonempty_cache.emplace(key,true); return true;
+            }
+        }
+        nonempty_cache.emplace(key,false); return false;
+    };
     const auto upper = [&](unsigned a, unsigned slot, unsigned p, unsigned s, unsigned count) {
         const auto& natural = get_draw(a, slot, false);
         probability_frame_escape |= natural.frame_escape;
@@ -425,7 +561,9 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
     std::vector<PhasePriceReactivation> reactivations;
     std::uint64_t combined_peak = support->memory_snapshot().peak_total_bytes, action_relations = 0;
     unsigned rounds = 0;
-    for (; rounds < 32; ++rounds) {
+    const unsigned max_rounds=retention==PhaseRetention::None ? 32 : 64;
+    bool last_checked=false; double last_improvement=0;
+    for (; rounds < max_rounds; ++rounds) {
         checkpoint(budget);
         if (support->memory_snapshot().total_bytes >= cap)
             throw std::length_error("phase live evidence exhausts additional reservation");
@@ -433,7 +571,7 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         QuotientBellmanGraph graph(graph_cap, QuotientBellmanMode::LowerOnly, cap);
         graph.install_cells(graph_cells);
         QuotientLowerQuery query;
-        query.request_identity = {version, rounds, retain_scour}; query.caller_scope = {version, 1};
+        query.request_identity = {version}; query.caller_scope = {version};
         query.coefficients = LowerCoefficientModel::ExactBinaryModel;
         auto boundary = restart_boundary;
         boundary.cell_id = grid+1;
@@ -447,13 +585,13 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         std::vector<PhasePriceReactivation> shortcuts;
         for (const auto& c : cells) {
             checkpoint(budget);
-            const unsigned offset = c.id >= fresh_offset ? fresh_offset : 0;
+            const unsigned offset = c.base >= fresh_offset ? fresh_offset : 0;
             const unsigned frame_mask = offset ? 0 : fm, frame_side = offset ? 2 : fs;
-            QuotientLowerSource source{c.id, {version, c.id}, {query.caller_scope, 1, true, {}, {}}, {}};
+            QuotientLowerSource source{c.id, {c.id}, {query.caller_scope, 1, true, {}, {}}, {}};
             CanonicalActionSet native_scope{{version, c.id}, 1, true, {}, {}};
             std::vector<CanonicalActionCover> native_cover;
             struct Row { double cost; unsigned action; std::vector<Group> groups; bool probability, price; PhaseRelationReason reason;
-                std::vector<PhasePotentialRelation::Event> events; int phase_branch; };
+                std::vector<PhasePotentialRelation::Event> events; int phase_branch; unsigned removable; };
             std::map<StableKey, Row> rows;
             for (unsigned a = 0; a < calc.registry().actions.size(); ++a) {
                 const auto& action = calc.registry().actions[a];
@@ -481,22 +619,35 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                 if (action.legality.min_total_affixes > c.p+c.s) continue;
                 // Phase is hidden in this uniform view. Cover each legal native
                 // branch by a separate optimistic choice, never average phases.
-                const bool split_phase = type == ActionType::EldritchChaos &&
-                    continuation != PhaseContinuation::PriceOnly;
+                const bool split_phase = (type == ActionType::EldritchChaos &&
+                    continuation != PhaseContinuation::PriceOnly) || (prove_nonempty && type == ActionType::EldritchExalt) ||
+                    (uniform_annul && type == ActionType::EldritchAnnul);
                 for (int phase = -1; phase < (split_phase ? 2 : 0); ++phase) {
                     std::vector<Group> groups;
+                    const bool loss_law = uniform_annul && (type == ActionType::Annul || type == ActionType::EldritchAnnul);
+                    unsigned removable = 0;
                     bool price_escape = false;
                     auto reason = PhaseRelationReason::NativeEffect;
                     const auto escape = [&](PhaseRelationReason why = PhaseRelationReason::UnsupportedEffect) {
                         groups = {{0, mass, {grid}}}; price_escape = true; reason = why;
                     };
-                    const auto add_group = [&](unsigned m, unsigned p, unsigned s, unsigned r) {
+                    const auto add_typed_group = [&](unsigned m, unsigned p, unsigned s, unsigned r,
+                            unsigned cm, unsigned jp, unsigned js) {
                         if (p > 3 || s > 3 || p < minimum[m][0] || s < minimum[m][1] || (m & frame_mask) != frame_mask) return;
                         const unsigned limit = r == PC_RARITY_MAGIC ? 1 : (r == PC_RARITY_RARE ? 3 : 0);
                         if (p > limit || s > limit) return;
+                        auto target = static_cast<std::uint32_t>(offset+index(masks, r, m, p, s));
+                        if (retention != PhaseRetention::None) {
+                            const auto found = coordinate_index.find(coordinate(target, cm, jp, js));
+                            if (found == coordinate_index.end()) return; // proved infeasible category
+                            target = found->second;
+                        }
                         auto found = std::find_if(groups.begin(), groups.end(), [&](const auto& g) { return g.mask == m; });
-                        if (found == groups.end()) { groups.push_back({m, mass, {}}); found = std::prev(groups.end()); }
-                        found->cells.push_back(static_cast<std::uint32_t>(offset+index(masks, r, m, p, s)));
+                        if (found == groups.end() || loss_law) { groups.push_back({m, mass, {}}); found = std::prev(groups.end()); }
+                        found->cells.push_back(target);
+                    };
+                    const auto add_group = [&](unsigned m, unsigned p, unsigned s, unsigned r) {
+                        add_typed_group(m,p,s,r,c.crafted,c.jp,c.js);
                     };
                     bool probabilistic = false, renewal = false;
                     unsigned preserved = c.mask, draws_per_side = 1;
@@ -517,20 +668,70 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                         add_group(c.mask, c.p, c.s, c.rarity);
                     } else if (type == ActionType::Scour) {
                         if (!retain_scour) escape(); // old clean projection's explicitly free fracture loss
-                        else add_group(frame_mask, frame_side == 0, frame_side == 1, frame_mask ? PC_RARITY_MAGIC : PC_RARITY_NORMAL);
+                        else add_typed_group(frame_mask, frame_side == 0, frame_side == 1,
+                            frame_mask ? PC_RARITY_MAGIC : PC_RARITY_NORMAL, 0,0,0);
                     } else if (type == ActionType::Annul || type == ActionType::EldritchAnnul ||
                                type == ActionType::RemoveCraftedModifiers) {
-                        // Grant the best legal loss/cleanup. Keep the exact fracture.
-                        for (unsigned m = 0; m < masks; ++m) if ((m | c.mask) == c.mask)
-                            for (unsigned p = 0; p <= c.p; ++p) for (unsigned s = 0; s <= c.s; ++s)
-                                if (type == ActionType::RemoveCraftedModifiers || p+s+1 == c.p+c.s)
-                                    add_group(m, p, s, c.rarity);
-                        add_group(c.mask, c.p, c.s, c.rarity); // failed native call
+                        if (retention == PhaseRetention::None) {
+                            // Explicit predecessor control: favorable deletion.
+                            for (unsigned m = 0; m < masks; ++m) if ((m | c.mask) == c.mask)
+                                for (unsigned p = 0; p <= c.p; ++p) for (unsigned s = 0; s <= c.s; ++s)
+                                    if (type == ActionType::RemoveCraftedModifiers || p+s+1 == c.p+c.s)
+                                        add_group(m, p, s, c.rarity);
+                            add_group(c.mask, c.p, c.s, c.rarity);
+                        } else if (type == ActionType::RemoveCraftedModifiers) {
+                            unsigned lost_p = c.jp, lost_s = c.js;
+                            for (unsigned slot = 0; slot < goal_side.size(); ++slot)
+                                if (c.crafted & (1u << slot)) ++(goal_side[slot] ? lost_s : lost_p);
+                            // Native cleanup removes all and only unfractured
+                            // crafted affixes, including their satisfying goals.
+                            add_typed_group(c.mask & ~c.crafted, c.p-lost_p, c.s-lost_s, c.rarity, 0,0,0);
+                        } else {
+                            for (unsigned slot = 0; slot < goal_side.size(); ++slot) {
+                                const auto bit = 1u << slot;
+                                if (!(c.mask & bit) || (frame_mask & bit)) continue;
+                                const auto side = goal_side[slot];
+                                if (loss_law && phase>=0 && side!=static_cast<unsigned>(phase)) continue;
+                                add_typed_group(c.mask & ~bit, c.p-(side == 0), c.s-(side == 1),
+                                    c.rarity, c.crafted & ~bit, c.jp, c.js);
+                            }
+                            for (unsigned side = 0; side < 2; ++side) {
+                                if (loss_law && phase>=0 && side!=static_cast<unsigned>(phase)) continue;
+                                const unsigned junk = (side ? c.s : c.p)-minimum[c.mask][side];
+                                const unsigned crafted = side ? c.js : c.jp;
+                                for (unsigned j=0; j<(loss_law ? junk-crafted : unsigned(junk>crafted)); ++j)
+                                    add_group(c.mask, c.p-(side == 0), c.s-(side == 1), c.rarity);
+                                for (unsigned j=0; j<(loss_law ? crafted : unsigned(crafted>0)); ++j) add_typed_group(c.mask, c.p-(side == 0), c.s-(side == 1),
+                                    c.rarity, c.crafted, c.jp-(side == 0), c.js-(side == 1));
+                            }
+                            if (loss_law) {
+                                // Native do_annul / exact_outcomes: next_below(N)
+                                // chooses uniformly among nonfractured affixes on
+                                // the selected side(s). In-frame metamod locks are
+                                // absent. Distinct, mutually excluding goal bits
+                                // are single affixes; each junk occurrence is one
+                                // further category, including crafted junk.
+                                removable = (phase<0 ? c.p+c.s : (phase==0 ? c.p : c.s)) -
+                                    unsigned(frame_mask && (phase<0 || frame_side==static_cast<unsigned>(phase)));
+                                if (groups.size()!=removable) throw std::invalid_argument("incomplete native Annul categories");
+                                if (removable) for (auto& g:groups) g.capacity=(mass+removable-1)/removable;
+                                probabilistic = removable>0;
+                            }
+                            if (groups.empty()) add_group(c.mask,c.p,c.s,c.rarity);
+                        }
                     } else if (type == ActionType::Bench) {
                         if (action.params.mod_id >= mod_goals.size()) { escape(); }
                         else {
                             const auto side = calc.session().gen_type[action.params.mod_id];
-                            add_group(c.mask | mod_goals[action.params.mod_id], c.p+(side == 0), c.s+(side == 1), c.rarity);
+                            const auto hit = mod_goals[action.params.mod_id];
+                            if (retention == PhaseRetention::None) add_group(c.mask | hit, c.p+(side == 0), c.s+(side == 1), c.rarity);
+                            else if (!(hit & c.mask) && !c.crafted && !c.jp && !c.js) {
+                                // No metamods in-frame. Existing crafted counts
+                                // forbid another bench; fractured crafted flags
+                                // may further forbid it, so allowing it is weaker.
+                                add_typed_group(c.mask | hit, c.p+(side == 0), c.s+(side == 1), c.rarity,
+                                    c.crafted | hit, c.jp+(!hit && side == 0), c.js+(!hit && side == 1));
+                            }
                             add_group(c.mask, c.p, c.s, c.rarity);
                         }
                     } else if (type == ActionType::Augment || type == ActionType::Regal ||
@@ -540,9 +741,13 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                         for (unsigned mod = 0; mod < mod_goals.size(); ++mod) {
                             const auto side = calc.session().gen_type[mod];
                             if (side < 0 || side > 1) continue;
+                            if (prove_nonempty && type == ActionType::EldritchExalt && phase>=0 && side!=phase) continue;
+                            if (retention != PhaseRetention::None && (mod_goals[mod] & c.mask)) continue;
                             add_group(c.mask | mod_goals[mod], c.p+(side == 0), c.s+(side == 1), r);
                         }
-                        add_group(c.mask, c.p, c.s, r); // empty pool / failed application remains covered
+                        const bool certainly_adds = prove_nonempty &&
+                            (type == ActionType::Exalt || type == ActionType::EldritchExalt) && nonempty_add(a,c.p,c.s,phase);
+                        if (!certainly_adds) add_group(c.mask, c.p, c.s, r); // preserve genuine/unknown empty-pool calls
                     } else if (action_transition_facts(type).renewal) {
                         probabilistic = renewal = true;
                         preserved = frame_mask;
@@ -564,7 +769,8 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                                     if ((m & unchanged_mask) != (c.mask & unchanged_mask)) continue;
                                     for (unsigned p = 0; p <= 3; ++p) for (unsigned s = 0; s <= 3; ++s) {
                                         if ((phase == 0 && s != c.s) || (phase == 1 && p != c.p)) continue;
-                                        add_group(m, p, s, r);
+                                        add_typed_group(m,p,s,r,c.crafted & unchanged_mask,
+                                            phase == 1 ? c.jp : 0, phase == 0 ? c.js : 0);
                                     }
                                 }
                                 add_group(c.mask, c.p, c.s, c.rarity);
@@ -572,7 +778,7 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                         } else {
                             for (unsigned m = 0; m < masks; ++m)
                                 for (unsigned p = 0; p <= draws_per_side; ++p)
-                                    for (unsigned s = 0; s <= draws_per_side; ++s) add_group(m, p, s, r);
+                                    for (unsigned s = 0; s <= draws_per_side; ++s) add_typed_group(m,p,s,r,0,0,0);
                             // Failed no-op and pathological empty-pool histories.
                             add_group(c.mask, c.p, c.s, c.rarity);
                         }
@@ -592,7 +798,7 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                     for (auto& g : groups) {
                         std::sort(g.cells.begin(), g.cells.end());
                         g.cells.erase(std::unique(g.cells.begin(), g.cells.end()), g.cells.end());
-                        if (!probabilistic) continue;
+                        if (!probabilistic || loss_law) continue;
                         double event_upper = 1;
                         for (unsigned slot = 0; slot < goal_side.size(); ++slot) {
                             const auto bit = 1u << slot;
@@ -655,8 +861,8 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                         selected.push_back({0, probability, {target}});
                     }
                     const auto found = rows.find(key);
-                    if (found == rows.end()) rows.emplace(std::move(key), Row{cost, a, std::move(selected), probabilistic && !price_escape, price_escape, reason, std::move(events), split_phase ? phase : -2});
-                    else if (cost < found->second.cost) found->second = {cost, a, std::move(selected), probabilistic && !price_escape, price_escape, reason, std::move(events), split_phase ? phase : -2};
+                    if (found == rows.end()) rows.emplace(std::move(key), Row{cost, a, std::move(selected), probabilistic && !price_escape, price_escape, reason, std::move(events), split_phase ? phase : -2, removable});
+                    else if (cost < found->second.cost) found->second = {cost, a, std::move(selected), probabilistic && !price_escape, price_escape, reason, std::move(events), split_phase ? phase : -2, removable};
                 }
             } // complete registry actions and native phase branches
             const auto coverage = validate_canonical_action_coverage(native_scope, native_cover);
@@ -672,7 +878,7 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                 input.source_cell_id = c.id; input.operator_index = row.action; input.cost = row.cost;
                 PhasePotentialRelation record{c.id, row.action, row.cost, row.cost, {}, {}};
                 record.probability_aware = row.probability; record.independent_price = row.price;
-                record.reason = row.reason; record.phase_branch = row.phase_branch;
+                record.reason = row.reason; record.phase_branch = row.phase_branch; record.removable_affixes = row.removable;
                 record.events = row.events;
                 for (const auto& group : row.groups) {
                     const double p = std::ldexp(static_cast<double>(group.capacity), -24);
@@ -682,7 +888,10 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                     // its minimum only; every candidate change reconstructs all
                     // event/occupancy/self minima before simultaneous checking.
                     // The selected row is not an all-vector native kernel.
-                    input.choices.push_back({p, false, {target}});
+                    // The observed minimum has already been selected for this
+                    // frozen vector. A singleton choice is an ordinary weighted
+                    // transition; reuse the quotient's shared transition spans.
+                    input.transitions.push_back({{}, target, p});
                     record.targets.push_back(target); record.probabilities.push_back(p);
                     record.rhs = down(record.rhs+down(p*candidate[target]));
                 }
@@ -690,7 +899,10 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                     source.source_identity, action_key, evidence, LowerEvidenceKind::ExactDeclaredKernel};
                 // Keep the potentially throwing arena reservation outside
                 // aggregate temporary construction (including unwind cleanup).
-                const auto row_id = graph.append_row(std::move(input));
+                std::uint64_t row_id;
+                try { row_id = graph.append_row(std::move(input)); }
+                catch (const std::length_error& error) { throw std::length_error(std::string(error.what())+
+                    "; round="+std::to_string(rounds)+" source="+std::to_string(c.id)+" rows="+std::to_string(relations.size())); }
                 source.constraints.push_back({{action_key, false, {}}, LowerConstraintKind::Row,
                     row_id, 0, evidence, LowerEvidenceKind::ExactDeclaredKernel});
                 relations.push_back(std::move(record));
@@ -699,10 +911,17 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         }
         query.model_revision = graph.model_revision();
         auto local_budget = budget; local_budget.max_scratch_bytes = graph_cap;
+        local_budget.retain_ranked_constraints = false; // this owner retains its native relation diagnostics
         std::vector<double> dense_candidate;
         dense_candidate.reserve(graph_cells.size());
         for (const auto& cell : graph_cells) dense_candidate.push_back(candidate[cell.cell_id]);
-        auto checked = graph.check_lower(query, dense_candidate, local_budget);
+        const auto resource_context = [&](const std::exception& e) {
+            return std::string(e.what())+"; cells="+std::to_string(cells.size())+
+                " rows="+std::to_string(relations.size())+" round="+std::to_string(rounds);
+        };
+        QuotientLowerResult checked;
+        try { checked = graph.check_lower(query, dense_candidate, local_budget); }
+        catch (const std::length_error& e) { throw std::length_error(resource_context(e)); }
         combined_peak = std::max(combined_peak, graph.proof_store()->ledger().snapshot().peak_total_bytes + support->memory_snapshot().total_bytes);
         if (rounds == 0 && !checked.checked && refusal.kind.empty()) {
             refusal = {"numeric_inconclusive", checked.reason};
@@ -741,32 +960,50 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
             break;
         }
         if (reactivated) continue;
-        auto repaired = graph.solve_lower(query, local_budget);
+        const bool candidate_checked = static_cast<bool>(checked.checked);
+        last_checked=candidate_checked; last_improvement=0;
+        // The feasibility report/certificate is no longer queried. Keeping
+        // its ranked constraints alive while solving duplicates proof scratch.
+        checked = {};
+        QuotientLowerResult repaired;
+        try { repaired = graph.solve_lower(query, local_budget); }
+        catch (const std::length_error& e) { throw std::length_error(resource_context(e)); }
         combined_peak = std::max(combined_peak, graph.proof_store()->ledger().snapshot().peak_total_bytes + support->memory_snapshot().total_bytes);
         if (!repaired.checked) throw std::runtime_error("probabilistic quotient repair: "+repaired.reason);
         std::vector<double> repaired_projection(extent, 0);
         for (unsigned i = 0; i < graph_cells.size(); ++i)
             repaired_projection[graph_cells[i].cell_id] = repaired.checked->values_by_state.at(i);
-        if (checked.checked && joint_refinement) {
+        if (candidate_checked && joint_refinement) {
             // Feasibility alone is insufficient after removing a temporary
             // cap: the old, smaller candidate may still pass. Re-solve the
             // reoptimized model and continue whenever it can improve a cell.
             bool improves = false;
             for (const auto& c : cells) {
                 const auto next = repaired_projection[c.id];
+                last_improvement=std::max(last_improvement,next-candidate[c.id]);
                 improves |= next > candidate[c.id] + 64*std::numeric_limits<double>::epsilon()*std::max(1.0, next);
             }
             if (!improves) { final_relations = std::move(relations); break; }
         }
         candidate = std::move(repaired_projection);
     }
-    if (rounds == 32) throw std::runtime_error("probabilistic joint/price refinement did not close within bounded rounds");
+    if (rounds == max_rounds) throw std::runtime_error("probabilistic joint/price refinement did not close within bounded rounds; checked="+
+        std::to_string(last_checked)+" improvement="+std::to_string(last_improvement));
     if (!coupled) candidate.resize(grid);
     checkpoint(budget);
+    if (!retain_diagnostics) {
+        // Acceptance has finished. Ordinary consumers and reusable controls
+        // retain checked values/identity and native pool evidence, not reports.
+        std::vector<PhasePotentialRelation>().swap(final_relations);
+        std::vector<PhaseJointEventWitness>().swap(joint_events);
+        std::vector<PhasePriceReactivation>().swap(reactivations);
+        std::vector<PhaseNonemptyWitness>().swap(nonempty_witnesses);
+    }
     std::uint64_t bytes = 65536 + support->identity.capacity()*8 + candidate.capacity()*24 +
-        proposal.values.capacity()*8 + draws.capacity()*sizeof(CalcContext::NativeGoalDrawBound) +
+        proposal.values.capacity()*8 + coordinates.capacity()*56 + draws.capacity()*sizeof(CalcContext::NativeGoalDrawBound) +
         final_relations.capacity()*sizeof(PhasePotentialRelation) +
-        joint_events.capacity()*sizeof(PhaseJointEventWitness) + reactivations.capacity()*sizeof(PhasePriceReactivation);
+        joint_events.capacity()*sizeof(PhaseJointEventWitness) + reactivations.capacity()*sizeof(PhasePriceReactivation) +
+        nonempty_witnesses.capacity()*sizeof(PhaseNonemptyWitness);
     for (const auto& event : joint_events) bytes += 4*(event.natural_draws.capacity()+event.guaranteed_draws.capacity()) +
         sizeof(std::array<double, 3>)*event.conditional.capacity();
     for (const auto& row : final_relations) bytes += row.targets.capacity()*4 + row.probabilities.capacity()*8 +
@@ -778,7 +1015,8 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         std::move(support), std::move(candidate), proposal, std::move(refusal), fracture, fm,
         retain_scour, restart_boundary.lower, std::move(draws), std::move(final_relations), rounds+1, bytes,
         combined_peak, action_relations, std::move(reuse_draws), std::move(joint_events),
-        std::move(reactivations), joint_refinement, continuation));
+        std::move(reactivations), joint_refinement, continuation, retention, std::move(coordinates), crafted_domain, crafted_limit,
+        std::move(nonempty_witnesses)));
     return result;
 }
 } // namespace poecraft::solver

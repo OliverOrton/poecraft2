@@ -84,6 +84,10 @@ struct SolveOptions {
      * state certificate. Certified partial transition graphs are never
      * retained as price-independent re-solve caches. */
     bool state_certificate_control = true;
+    /* Internal opt-in native lower treatment. No public profile/binding enables
+     * it. Prepare once per solve; 32 MiB is the primary proof reservation. */
+    bool native_retention_lower = false;
+    std::uint64_t native_retention_proof_bytes = 32ull << 20;
     /* White-box parity switch for the versioned successful fallback
      * properness-proof cache. Product/API solves keep reuse enabled. */
     bool fallback_properness_reuse_control = true;

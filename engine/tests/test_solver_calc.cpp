@@ -26,6 +26,10 @@
 using namespace poecraft;
 using namespace poecraft::solver;
 
+namespace poecraft::solver {
+struct SolveWorkTestAccess { using Impl = SolveWork::Impl; };
+}
+
 namespace {
 
 constexpr std::uint32_t kTagFire = 3;
@@ -3765,7 +3769,7 @@ void run_solver_phase_lower_tests() {
     PC_CHECK(std::abs(coupled_control.checked->values_by_state[1]-6)<1e-9);
     const std::vector<double> unproved_neighbor{8,7,0};
     PC_CHECK(!coefficient_model({row(0,1,{{0,.5},{1,.5}}),row(1,2,{{0,.5},{2,.5}})},2,&unproved_neighbor).checked);
-    rejects([] { QuotientBellmanGraph excessive(64ull<<20,QuotientBellmanMode::LowerOnly,64ull<<20); });
+    rejects([] { QuotientBellmanGraph excessive(65ull<<20,QuotientBellmanMode::LowerOnly,65ull<<20); });
     auto observed = row(0, 1, {{2, .5}}); observed.choices = {{.5, true, {1}}};
     const auto self_choice = coefficient_model({observed, row(1, 10, {{2, 1}})}, 2);
     PC_CHECK(self_choice.checked && std::abs(self_choice.checked->values_by_state[0]-2) < 1e-10);
@@ -4105,6 +4109,171 @@ void run_solver_phase_lower_tests() {
     rejects([&] { PhaseLowerProducer::compose(program_calc, prices, source, "missing internal choice", *program_donor); });
     rejects([&] { PhaseLowerProducer::compose(program_calc, repriced, source, id, *program_donor); });
     PC_CHECK(program_donor->memory_snapshot().total_bytes == before);
+    {
+        auto typed_session = make_calc_session();
+        auto typed_data = std::const_pointer_cast<DataImpl>(typed_session->data);
+        for (unsigned mod=0;mod<typed_session->mod_count;++mod) {
+            typed_data->mod_key_sid.push_back(typed_data->strings.size());
+            typed_data->strings.push_back("typed-fixture-"+std::to_string(mod));
+        }
+        typed_session->bench_mod_ids = {3,5};
+        typed_session->flags[3] |= 1 << 1; typed_session->flags[5] |= 1 << 1;
+        auto typed_registry = build_action_registry(*typed_session);
+        PhaseLowerPrices typed_prices{{"fixture:step",100},{"fixture:add",1},{"fixture:loss",2},{"fixture:cleanup",0.1}};
+        for (auto& a : typed_registry.actions) a.cost_keys = {"fixture:step"};
+        typed_registry.actions[typed_registry.index_by_id.at("exalt")].cost_keys={"fixture:add"};
+        typed_registry.actions[typed_registry.index_by_id.at("annul")].cost_keys={"fixture:loss"};
+        typed_registry.actions[typed_registry.index_by_id.at("eldritch_annul")].cost_keys={"fixture:loss"};
+        typed_registry.actions[typed_registry.index_by_id.at("remove_crafted_modifiers")].cost_keys={"fixture:cleanup"};
+        CalcContext typed_calc(typed_session,goal,typed_registry,basic_indices(typed_registry),
+            false,true,true,std::nullopt,{},false,{},true);
+        auto anchor=source; anchor.prefixes[0].flags=PC_MOD_SLOT_FRACTURED;
+        auto phase=anchor; phase.eater_of_worlds_tier=1;
+        auto support=PhaseLowerProducer::prepare(typed_calc,typed_prices,phase,
+            {PhaseTableRole::MaskCompletion,4,2,std::vector<double>(4,0)});
+        const auto zero=PhaseLowerProducer::zero_restart_boundary(*support);
+        QuotientLowerBudget budget; budget.max_scratch_bytes=32ull<<20;
+        const auto refined=PhaseLowerProducer::prepare_probabilistic(typed_calc,typed_prices,phase,
+            {PhaseTableRole::CleanCompletion,4,2,std::vector<double>(192,100)},support,zero,
+            false,true,budget,true,{},PhaseContinuation::CoupledFresh,PhaseRetention::AnnulNonempty);
+        PC_CHECK(refined->crafted_goal_domain==2);
+        auto natural=anchor; place(&natural,PC_SIDE_PREFIX,3,12);
+        auto crafted=natural; crafted.prefixes[1].flags=PC_MOD_SLOT_CRAFTED;
+        PC_CHECK(refined->projected_cell(typed_calc,natural)!=refined->projected_cell(typed_calc,crafted));
+        bool cleanup_preserved=true, expectation_checked=true;
+        for (auto item : {natural,crafted}) for (bool unfractured : {false,true}) {
+            if (unfractured) item.prefixes[0].flags=0;
+            const auto& kernel=typed_calc.outcomes(typed_calc.intern_item(item),typed_registry.index_by_id.at("remove_crafted_modifiers"));
+            long double rhs=0.1L;
+            for (const auto& e : kernel.entries) {
+                pc_item_state exit{}; cleanup_preserved &= typed_calc.materialize(e.state,exit);
+                cleanup_preserved &= item_contains_mod(exit,3)==!(item.prefixes[1].flags&PC_MOD_SLOT_CRAFTED);
+                rhs+=e.probability*refined->projected_value(typed_calc,exit);
+            }
+            expectation_checked &= refined->projected_value(typed_calc,item)<=rhs+1e-10L;
+        }
+        PC_CHECK(cleanup_preserved && expectation_checked);
+        auto crafted_goal=natural; place(&crafted_goal,PC_SIDE_SUFFIX,5,20,PC_MOD_SLOT_CRAFTED);
+        const auto& removed=typed_calc.outcomes(typed_calc.intern_item(crafted_goal),typed_registry.index_by_id.at("remove_crafted_modifiers"));
+        bool loses_crafted_goal=true;
+        for (const auto& e : removed.entries) {
+            pc_item_state exit{}; typed_calc.materialize(e.state,exit);
+            loses_crafted_goal &= !item_contains_mod(exit,5) && item_contains_mod(exit,3);
+            loses_crafted_goal &= refined->projected_cell(typed_calc,exit)==refined->projected_cell(typed_calc,natural);
+        }
+        PC_CHECK(loses_crafted_goal);
+        bool loss_checked=true, native_category_mass=true;
+        unsigned loss_exits=0, probabilistic_loss_rows=0;
+        for (auto item : {natural,crafted,crafted_goal}) for (bool fresh : {false,true})
+            for (int phase_case=-1;phase_case<2;++phase_case) for (const auto* action_id : {"annul","eldritch_annul"}) {
+                if (fresh) item.prefixes[0].flags=0;
+                item.searing_exarch_tier=phase_case==0;
+                item.eater_of_worlds_tier=phase_case==1;
+                const auto a=typed_registry.index_by_id.at(action_id);
+                const auto& kernel=typed_calc.outcomes(typed_calc.intern_item(item),a);
+                long double rhs=2, total=0;
+                unsigned eligible=0;
+                for (unsigned side=0;side<2;++side) {
+                    if (std::string(action_id)=="eldritch_annul" && phase_case>=0 && side!=static_cast<unsigned>(phase_case)) continue;
+                    const auto* slots=side ? item.suffixes : item.prefixes;
+                    for (unsigned i=0;i<(side ? item.suffix_count : item.prefix_count);++i)
+                        eligible+=!(slots[i].flags&PC_MOD_SLOT_FRACTURED);
+                }
+                native_category_mass &= kernel.supported && !kernel.entries.empty();
+                for (const auto& e:kernel.entries) {
+                    pc_item_state exit{}; native_category_mass &= typed_calc.materialize(e.state,exit);
+                    native_category_mass &= exit.prefix_count+exit.suffix_count+unsigned(eligible>0)==item.prefix_count+item.suffix_count;
+                    if (!fresh) native_category_mass &= item_contains_mod(exit,0);
+                    if (std::string(action_id)=="eldritch_annul" && phase_case==0) native_category_mass &= exit.suffix_count==item.suffix_count;
+                    if (std::string(action_id)=="eldritch_annul" && phase_case==1) native_category_mass &= exit.prefix_count==item.prefix_count;
+                    rhs+=e.probability*refined->projected_value(typed_calc,exit); total+=e.probability; ++loss_exits;
+                }
+                loss_checked &= refined->projected_value(typed_calc,item)<=rhs+1e-10L;
+                native_category_mass &= std::abs(total-1)<1e-14L;
+            }
+        for (const auto& row:refined->relations) if (row.removable_affixes) {
+            ++probabilistic_loss_rows;
+            native_category_mass &= row.events.size()==row.removable_affixes && row.removable_affixes<=6;
+            for (const auto& event:row.events)
+                native_category_mass &= event.capacity==((1u<<24)+row.removable_affixes-1)/row.removable_affixes;
+        }
+        PC_CHECK(loss_exits>0 && probabilistic_loss_rows>0);
+        PC_CHECK(loss_checked);
+        PC_CHECK(native_category_mass);
+        bool integer_nonempty=!refined->nonempty_witnesses.empty();
+        for (const auto& w:refined->nonempty_witnesses) {
+            const auto& draw=refined->draw(w.draw); auto remaining=draw.other_weight;
+            for (unsigned side=0;side<2;++side) for (unsigned i=0;i<(side ? w.suffixes : w.prefixes);++i)
+                remaining-=std::min(remaining,draw.strongest_other_removal[side][i]);
+            integer_nonempty &= remaining && remaining==w.remaining_other && !draw.frame_escape;
+        }
+        PC_CHECK(integer_nonempty);
+        const auto before_cancel=support->memory_snapshot().total_bytes;
+        auto interrupted=budget; unsigned native_checkpoints=0;
+        interrupted.cancelled=[&] {return ++native_checkpoints>20;};
+        rejects([&] { PhaseLowerProducer::prepare_probabilistic(typed_calc,typed_prices,phase,
+            {PhaseTableRole::CleanCompletion,4,2,std::vector<double>(192,100)},support,zero,
+            false,true,interrupted,true,{},PhaseContinuation::CoupledFresh,PhaseRetention::AnnulNonempty); });
+        PC_CHECK(support->memory_snapshot().total_bytes==before_cancel);
+
+        auto protected_craft=natural; protected_craft.prefixes[0].flags|=PC_MOD_SLOT_CRAFTED;
+        PC_CHECK(refined->projected_cell(typed_calc,protected_craft)==refined->projected_cell(typed_calc,natural));
+        auto multiple=crafted; place(&multiple,PC_SIDE_SUFFIX,6,21,PC_MOD_SLOT_CRAFTED);
+        PC_CHECK(!refined->lookup(typed_calc,typed_prices,multiple,false));
+        // A multiple-crafted initial input needs its own explicitly broader
+        // domain. Missing multimod alone never proves a count of at most one.
+        multiple.eater_of_worlds_tier=1;
+        const auto broader=PhaseLowerProducer::prepare_probabilistic(typed_calc,typed_prices,multiple,
+            {PhaseTableRole::CleanCompletion,4,2,std::vector<double>(192,100)},support,zero,
+            false,true,budget,true,{},PhaseContinuation::CoupledFresh,PhaseRetention::Crafted);
+        PC_CHECK(broader->crafted_count_limit==2 && broader->lookup(typed_calc,typed_prices,multiple,false).has_value());
+        const auto streamed=PhaseLowerProducer::compose(typed_calc,typed_prices,crafted,id,*refined);
+        PC_CHECK(streamed.record.physical_exits>0 && streamed.record.failure_lower_min>=0);
+        SolveOptions options; options.consider_imprint_programs=false;
+        options.max_states=options.max_discovered_states=options.max_expanded_states=256;
+        SolveWorkTestAccess::Impl off(typed_calc,anchor,typed_prices,options);
+        PC_CHECK(!off.native_retention_attempted && !off.native_retention_potential);
+        options.native_retention_lower=true;
+        SolveWorkTestAccess::Impl on(typed_calc,anchor,typed_prices,options);
+        if (!on.native_retention_potential) std::fprintf(stderr,"native retention fixture refusal: %s\n",on.native_retention_refusal.c_str());
+        PC_CHECK(on.native_retention_potential && on.native_retention_refusal.empty());
+        if (!on.native_retention_potential) return;
+        const auto saved=on.native_retention_potential;
+        const auto time=on.native_retention_prepare_ns;
+        on.prepare_native_retention_lower();
+        PC_CHECK(on.native_retention_potential==saved && on.native_retention_prepare_ns==time);
+        PC_CHECK(on.progress().lower_bound>=on.native_retention_lower_value(on.result.start_state));
+        bool uniform=true,maximum=true;
+        for (auto item : {anchor,natural,crafted,crafted_goal,protected_craft}) for (bool fresh : {false,true}) {
+            if (fresh) item.prefixes[0].flags=0;
+            const auto state=typed_calc.intern_item(item);
+            const auto exact=saved->lookup(typed_calc,typed_prices,item,false);
+            const auto from_state=on.native_retention_lower_value(state);
+            uniform &= exact && *exact==from_state;
+            on.native_retention_potential.reset();
+            const auto before=on.completion_proof_lower_value(state);
+            on.native_retention_potential=saved;
+            maximum &= on.completion_proof_lower_value(state)>=std::max(before,from_state);
+        }
+        PC_CHECK(uniform && maximum && on.native_retention_hits>1);
+        auto wrong_fracture=anchor; wrong_fracture.prefixes[0].mod_id=1;
+        PC_CHECK(on.native_retention_lower_value(typed_calc.intern_item(wrong_fracture))==0);
+        auto influenced=anchor; influenced.generic_influence_bits=1;
+        PC_CHECK(on.native_retention_lower_value(typed_calc.intern_item(influenced))==0);
+        options.max_solver_owned_bytes=1ull<<20;
+        SolveWorkTestAccess::Impl refused(typed_calc,anchor,typed_prices,options);
+        PC_CHECK(refused.native_retention_attempted && !refused.native_retention_potential && refused.native_retention_live_bytes==0);
+        options.max_solver_owned_bytes=1ull<<30;
+        options.max_states=options.max_discovered_states=options.max_expanded_states=200000;
+        SolveWorkTestAccess::Impl ordinary_capacity(typed_calc,anchor,typed_prices,options);
+        PC_CHECK(ordinary_capacity.native_retention_potential && ordinary_capacity.native_retention_refusal.empty());
+        auto ambiguous_goal=goal; ambiguous_goal.slots[0].min_tier=2;
+        CalcContext ambiguous_calc(typed_session,ambiguous_goal,typed_registry,basic_indices(typed_registry));
+        options.max_solver_owned_bytes=1ull<<30;
+        SolveWorkTestAccess::Impl ambiguous(ambiguous_calc,anchor,typed_prices,options);
+        PC_CHECK(ambiguous.native_retention_potential && ambiguous.native_retention_lower_value(ambiguous.result.start_state)==0);
+        PC_CHECK(ambiguous.native_retention_potential->lookup(ambiguous_calc,typed_prices,anchor,false).value()>0);
+    }
     static_assert(!std::is_constructible_v<PreparedPhaseRestartLower, QuotientLowerBoundary>);
     static_assert(!std::is_copy_constructible_v<PreparedPhaseRestartLower>);
     static_assert(!std::is_default_constructible_v<PreparedPhaseLowerView>);
