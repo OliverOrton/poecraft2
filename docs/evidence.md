@@ -6,6 +6,15 @@ routes to them rather than duplicating complete reports.
 
 Parent: [Documentation map](README.md)
 
+## Native Metamod First-Exit Closure
+
+The [completed filter-continuation boundary](archive/2026-09-05-native-metamod-first-exit-v1/README.md)
+records native Bench legality, actual filtered pools, crafted loss/removal and
+joint region checking. Both saved portfolios rise; the matched ordinary opt-in
+includes 40.244 seconds of native preparation. A lookup-cache experiment was
+removed after the current-model comparison failed its cost criterion. Full
+checking and conservative junk fallback remain; defaults stay off.
+
 ## Native Applied-Reforge Progress and Preparation
 
 The [completed applied-reforge boundary](archive/2026-09-05-native-applied-reforge-preparation-v1/README.md)

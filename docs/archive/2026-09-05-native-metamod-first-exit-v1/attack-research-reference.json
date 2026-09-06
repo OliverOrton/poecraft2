@@ -1,0 +1,1278 @@
+{
+  "evidence_scope": "native C++ owns uniform conditional-history semantics; exact audit checks integer derivation, assignment bounds, complete box minima and finite inequalities",
+  "optimistic_policy_ceiling": {
+    "scope": "proper fixed policy of the optimistic probability-box model only; no native upper authority",
+    "states": 21,
+    "values": {
+      "1405": "30441100533659089241/144115188075855872",
+      "1369": "212",
+      "1538": "256128726549112239646977387/1208234098979421785423872"
+    },
+    "decimal_values": {
+      "1405": 211.22756692123414,
+      "1369": 212.0,
+      "1538": 211.98601062944718
+    },
+    "actions": {
+      "1369": "bench:StrDexMasterItemGenerationCannotRollCasterAffixes",
+      "1405": "bench:HelenaMasterFireResist1",
+      "1406": "bench:StrDexMasterItemGenerationCannotRollCasterAffixes",
+      "1538": "alchemy",
+      "2572": "bench:StrDexMasterItemGenerationCannotRollCasterAffixes",
+      "2815": "bench:HelenaMasterFireResist1",
+      "2943": "bench:HelenaMasterFireResist1",
+      "3004": "exalt",
+      "3008": "bench:StrDexMasterItemGenerationCannotRollCasterAffixes",
+      "3036": "exalt",
+      "3040": "bench:StrDexMasterItemGenerationCannotRollCasterAffixes",
+      "3052": "exalt",
+      "3056": "bench:StrDexMasterItemGenerationCannotRollCasterAffixes",
+      "3149": "exalt",
+      "3150": "remove_crafted_modifiers",
+      "3194": "remove_crafted_modifiers",
+      "3386": "exalt",
+      "3387": "scour",
+      "3462": "exalt",
+      "3463": "scour",
+      "3507": "remove_crafted_modifiers"
+    },
+    "coordinates": {
+      "1369": [
+        1369,
+        0,
+        0,
+        0,
+        0
+      ],
+      "1405": [
+        1405,
+        0,
+        0,
+        0,
+        0
+      ],
+      "1406": [
+        1406,
+        0,
+        0,
+        0,
+        0
+      ],
+      "1538": [
+        1538,
+        0,
+        0,
+        0,
+        0
+      ],
+      "2572": [
+        2572,
+        0,
+        0,
+        0,
+        0
+      ],
+      "2815": [
+        2815,
+        0,
+        0,
+        0,
+        0
+      ],
+      "2943": [
+        2943,
+        0,
+        0,
+        0,
+        0
+      ],
+      "3004": [
+        3004,
+        0,
+        0,
+        0,
+        0
+      ],
+      "3008": [
+        3008,
+        0,
+        0,
+        0,
+        0
+      ],
+      "3036": [
+        3036,
+        0,
+        0,
+        0,
+        0
+      ],
+      "3040": [
+        3040,
+        0,
+        0,
+        0,
+        0
+      ],
+      "3052": [
+        3052,
+        0,
+        0,
+        0,
+        0
+      ],
+      "3056": [
+        3056,
+        0,
+        0,
+        0,
+        0
+      ],
+      "3149": [
+        1406,
+        0,
+        0,
+        1,
+        0
+      ],
+      "3150": [
+        1407,
+        0,
+        0,
+        1,
+        0
+      ],
+      "3194": [
+        1535,
+        0,
+        0,
+        1,
+        0
+      ],
+      "3386": [
+        2816,
+        0,
+        0,
+        1,
+        0
+      ],
+      "3387": [
+        2817,
+        0,
+        0,
+        1,
+        0
+      ],
+      "3462": [
+        2944,
+        0,
+        0,
+        1,
+        0
+      ],
+      "3463": [
+        2945,
+        0,
+        0,
+        1,
+        0
+      ],
+      "3507": [
+        3073,
+        0,
+        0,
+        1,
+        0
+      ]
+    }
+  },
+  "joint_events": [
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison",
+      "subset": 3,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison",
+      "subset": 5,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison",
+      "subset": 6,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison",
+      "subset": 7,
+      "exact_conditional_union": "16/55165",
+      "capacity": 4867,
+      "probability_upper": 0.00029009580612182617
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "subset": 3,
+      "exact_conditional_union": "75/1792",
+      "capacity": 702172,
+      "probability_upper": 0.041852712631225586
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "subset": 5,
+      "exact_conditional_union": "75/1792",
+      "capacity": 702172,
+      "probability_upper": 0.041852712631225586
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "subset": 6,
+      "exact_conditional_union": "75/1792",
+      "capacity": 702172,
+      "probability_upper": 0.041852712631225586
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "subset": 7,
+      "exact_conditional_union": "125/43008",
+      "capacity": 48762,
+      "probability_upper": 0.0029064416885375977
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+      "subset": 3,
+      "exact_conditional_union": "75/1792",
+      "capacity": 702172,
+      "probability_upper": 0.041852712631225586
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+      "subset": 5,
+      "exact_conditional_union": "75/1792",
+      "capacity": 702172,
+      "probability_upper": 0.041852712631225586
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+      "subset": 6,
+      "exact_conditional_union": "75/1792",
+      "capacity": 702172,
+      "probability_upper": 0.041852712631225586
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+      "subset": 7,
+      "exact_conditional_union": "125/43008",
+      "capacity": 48762,
+      "probability_upper": 0.0029064416885375977
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "subset": 3,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "subset": 5,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "subset": 6,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "subset": 7,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 3,
+      "exact_conditional_union": "3/130",
+      "capacity": 387167,
+      "probability_upper": 0.023076951503753662
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 5,
+      "exact_conditional_union": "3/130",
+      "capacity": 387167,
+      "probability_upper": 0.023076951503753662
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 6,
+      "exact_conditional_union": "3/130",
+      "capacity": 387167,
+      "probability_upper": 0.023076951503753662
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 7,
+      "exact_conditional_union": "1/780",
+      "capacity": 21510,
+      "probability_upper": 0.0012820959091186523
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 3,
+      "exact_conditional_union": "944/12089",
+      "capacity": 1310092,
+      "probability_upper": 0.07808756828308105
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 5,
+      "exact_conditional_union": "944/12089",
+      "capacity": 1310092,
+      "probability_upper": 0.07808756828308105
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 6,
+      "exact_conditional_union": "944/12089",
+      "capacity": 1310092,
+      "probability_upper": 0.07808756828308105
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 7,
+      "exact_conditional_union": "24/12089",
+      "capacity": 33308,
+      "probability_upper": 0.001985311508178711
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "subset": 3,
+      "exact_conditional_union": "75/1792",
+      "capacity": 702172,
+      "probability_upper": 0.041852712631225586
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "subset": 5,
+      "exact_conditional_union": "75/1792",
+      "capacity": 702172,
+      "probability_upper": 0.041852712631225586
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "subset": 6,
+      "exact_conditional_union": "75/1792",
+      "capacity": 702172,
+      "probability_upper": 0.041852712631225586
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "subset": 7,
+      "exact_conditional_union": "125/43008",
+      "capacity": 48762,
+      "probability_upper": 0.0029064416885375977
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "subset": 3,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "subset": 5,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "subset": 6,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "subset": 7,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 3,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 5,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 6,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 7,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 3,
+      "exact_conditional_union": "944/12089",
+      "capacity": 1310092,
+      "probability_upper": 0.07808756828308105
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 5,
+      "exact_conditional_union": "944/12089",
+      "capacity": 1310092,
+      "probability_upper": 0.07808756828308105
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 6,
+      "exact_conditional_union": "944/12089",
+      "capacity": 1310092,
+      "probability_upper": 0.07808756828308105
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 7,
+      "exact_conditional_union": "24/12089",
+      "capacity": 33308,
+      "probability_upper": 0.001985311508178711
+    },
+    {
+      "action": "chaos",
+      "subset": 3,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "chaos",
+      "subset": 5,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "chaos",
+      "subset": 6,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "chaos",
+      "subset": 7,
+      "exact_conditional_union": "16/55165",
+      "capacity": 4867,
+      "probability_upper": 0.00029009580612182617
+    },
+    {
+      "action": "harvest_reforge:defences",
+      "subset": 3,
+      "exact_conditional_union": "8/323",
+      "capacity": 415535,
+      "probability_upper": 0.024767816066741943
+    },
+    {
+      "action": "harvest_reforge:defences",
+      "subset": 5,
+      "exact_conditional_union": "8/323",
+      "capacity": 415535,
+      "probability_upper": 0.024767816066741943
+    },
+    {
+      "action": "harvest_reforge:defences",
+      "subset": 6,
+      "exact_conditional_union": "8/323",
+      "capacity": 415535,
+      "probability_upper": 0.024767816066741943
+    },
+    {
+      "action": "harvest_reforge:defences",
+      "subset": 7,
+      "exact_conditional_union": "16/11305",
+      "capacity": 23745,
+      "probability_upper": 0.0014153122901916504
+    },
+    {
+      "action": "harvest_reforge:physical",
+      "subset": 3,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "harvest_reforge:physical",
+      "subset": 5,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "harvest_reforge:physical",
+      "subset": 6,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "harvest_reforge:physical",
+      "subset": 7,
+      "exact_conditional_union": "16/55165",
+      "capacity": 4867,
+      "probability_upper": 0.00029009580612182617
+    },
+    {
+      "action": "alchemy",
+      "subset": 3,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "alchemy",
+      "subset": 5,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "alchemy",
+      "subset": 6,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "alchemy",
+      "subset": 7,
+      "exact_conditional_union": "16/55165",
+      "capacity": 4867,
+      "probability_upper": 0.00029009580612182617
+    },
+    {
+      "action": "alchemy",
+      "subset": 24,
+      "exact_conditional_union": "25/35114",
+      "capacity": 11945,
+      "probability_upper": 0.000711977481842041
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison",
+      "subset": 3,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison",
+      "subset": 5,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison",
+      "subset": 6,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison",
+      "subset": 7,
+      "exact_conditional_union": "16/55165",
+      "capacity": 4867,
+      "probability_upper": 0.00029009580612182617
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison",
+      "subset": 24,
+      "exact_conditional_union": "25/6954",
+      "capacity": 60315,
+      "probability_upper": 0.0035950541496276855
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "subset": 3,
+      "exact_conditional_union": "75/1792",
+      "capacity": 702172,
+      "probability_upper": 0.041852712631225586
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "subset": 5,
+      "exact_conditional_union": "75/1792",
+      "capacity": 702172,
+      "probability_upper": 0.041852712631225586
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "subset": 6,
+      "exact_conditional_union": "75/1792",
+      "capacity": 702172,
+      "probability_upper": 0.041852712631225586
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "subset": 7,
+      "exact_conditional_union": "125/43008",
+      "capacity": 48762,
+      "probability_upper": 0.0029064416885375977
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "subset": 24,
+      "exact_conditional_union": "75/6032",
+      "capacity": 208603,
+      "probability_upper": 0.01243370771408081
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+      "subset": 3,
+      "exact_conditional_union": "75/1792",
+      "capacity": 702172,
+      "probability_upper": 0.041852712631225586
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+      "subset": 5,
+      "exact_conditional_union": "75/1792",
+      "capacity": 702172,
+      "probability_upper": 0.041852712631225586
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+      "subset": 6,
+      "exact_conditional_union": "75/1792",
+      "capacity": 702172,
+      "probability_upper": 0.041852712631225586
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+      "subset": 7,
+      "exact_conditional_union": "125/43008",
+      "capacity": 48762,
+      "probability_upper": 0.0029064416885375977
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+      "subset": 24,
+      "exact_conditional_union": "75/1562",
+      "capacity": 805565,
+      "probability_upper": 0.04801541566848755
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "subset": 3,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "subset": 5,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "subset": 6,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "subset": 7,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "subset": 24,
+      "exact_conditional_union": "75/6032",
+      "capacity": 208603,
+      "probability_upper": 0.01243370771408081
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 3,
+      "exact_conditional_union": "3/130",
+      "capacity": 387167,
+      "probability_upper": 0.023076951503753662
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 5,
+      "exact_conditional_union": "3/130",
+      "capacity": 387167,
+      "probability_upper": 0.023076951503753662
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 6,
+      "exact_conditional_union": "3/130",
+      "capacity": 387167,
+      "probability_upper": 0.023076951503753662
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 7,
+      "exact_conditional_union": "1/780",
+      "capacity": 21510,
+      "probability_upper": 0.0012820959091186523
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 24,
+      "exact_conditional_union": "310085/855712",
+      "capacity": 6079573,
+      "probability_upper": 0.3623707890510559
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 3,
+      "exact_conditional_union": "944/12089",
+      "capacity": 1310092,
+      "probability_upper": 0.07808756828308105
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 5,
+      "exact_conditional_union": "944/12089",
+      "capacity": 1310092,
+      "probability_upper": 0.07808756828308105
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 6,
+      "exact_conditional_union": "944/12089",
+      "capacity": 1310092,
+      "probability_upper": 0.07808756828308105
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 7,
+      "exact_conditional_union": "24/12089",
+      "capacity": 33308,
+      "probability_upper": 0.001985311508178711
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 24,
+      "exact_conditional_union": "40558625/1207826048",
+      "capacity": 563377,
+      "probability_upper": 0.033579885959625244
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "subset": 3,
+      "exact_conditional_union": "75/1792",
+      "capacity": 702172,
+      "probability_upper": 0.041852712631225586
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "subset": 5,
+      "exact_conditional_union": "75/1792",
+      "capacity": 702172,
+      "probability_upper": 0.041852712631225586
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "subset": 6,
+      "exact_conditional_union": "75/1792",
+      "capacity": 702172,
+      "probability_upper": 0.041852712631225586
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "subset": 7,
+      "exact_conditional_union": "125/43008",
+      "capacity": 48762,
+      "probability_upper": 0.0029064416885375977
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "subset": 24,
+      "exact_conditional_union": "75/68912",
+      "capacity": 18260,
+      "probability_upper": 0.0010883808135986328
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "subset": 3,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "subset": 5,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "subset": 6,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "subset": 7,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "subset": 24,
+      "exact_conditional_union": "75/68912",
+      "capacity": 18260,
+      "probability_upper": 0.0010883808135986328
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 3,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 5,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 6,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 7,
+      "exact_conditional_union": "0",
+      "capacity": 0,
+      "probability_upper": 0.0
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 24,
+      "exact_conditional_union": "2237795375/227764312776",
+      "capacity": 164837,
+      "probability_upper": 0.009825050830841064
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 3,
+      "exact_conditional_union": "944/12089",
+      "capacity": 1310092,
+      "probability_upper": 0.07808756828308105
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 5,
+      "exact_conditional_union": "944/12089",
+      "capacity": 1310092,
+      "probability_upper": 0.07808756828308105
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 6,
+      "exact_conditional_union": "944/12089",
+      "capacity": 1310092,
+      "probability_upper": 0.07808756828308105
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 7,
+      "exact_conditional_union": "24/12089",
+      "capacity": 33308,
+      "probability_upper": 0.001985311508178711
+    },
+    {
+      "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "subset": 24,
+      "exact_conditional_union": "142025375/25250071616",
+      "capacity": 94368,
+      "probability_upper": 0.0056247711181640625
+    },
+    {
+      "action": "chaos",
+      "subset": 3,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "chaos",
+      "subset": 5,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "chaos",
+      "subset": 6,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "chaos",
+      "subset": 7,
+      "exact_conditional_union": "16/55165",
+      "capacity": 4867,
+      "probability_upper": 0.00029009580612182617
+    },
+    {
+      "action": "chaos",
+      "subset": 24,
+      "exact_conditional_union": "25/35114",
+      "capacity": 11945,
+      "probability_upper": 0.000711977481842041
+    },
+    {
+      "action": "harvest_reforge:defences",
+      "subset": 3,
+      "exact_conditional_union": "8/323",
+      "capacity": 415535,
+      "probability_upper": 0.024767816066741943
+    },
+    {
+      "action": "harvest_reforge:defences",
+      "subset": 5,
+      "exact_conditional_union": "8/323",
+      "capacity": 415535,
+      "probability_upper": 0.024767816066741943
+    },
+    {
+      "action": "harvest_reforge:defences",
+      "subset": 6,
+      "exact_conditional_union": "8/323",
+      "capacity": 415535,
+      "probability_upper": 0.024767816066741943
+    },
+    {
+      "action": "harvest_reforge:defences",
+      "subset": 7,
+      "exact_conditional_union": "16/11305",
+      "capacity": 23745,
+      "probability_upper": 0.0014153122901916504
+    },
+    {
+      "action": "harvest_reforge:defences",
+      "subset": 24,
+      "exact_conditional_union": "25/35114",
+      "capacity": 11945,
+      "probability_upper": 0.000711977481842041
+    },
+    {
+      "action": "harvest_reforge:physical",
+      "subset": 3,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "harvest_reforge:physical",
+      "subset": 5,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "harvest_reforge:physical",
+      "subset": 6,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "harvest_reforge:physical",
+      "subset": 7,
+      "exact_conditional_union": "16/55165",
+      "capacity": 4867,
+      "probability_upper": 0.00029009580612182617
+    },
+    {
+      "action": "harvest_reforge:physical",
+      "subset": 24,
+      "exact_conditional_union": "577621/12430356",
+      "capacity": 779614,
+      "probability_upper": 0.04646861553192139
+    },
+    {
+      "action": "eldritch_chaos",
+      "subset": 3,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "eldritch_chaos",
+      "subset": 5,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "eldritch_chaos",
+      "subset": 6,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "eldritch_chaos",
+      "subset": 7,
+      "exact_conditional_union": "16/55165",
+      "capacity": 4867,
+      "probability_upper": 0.00029009580612182617
+    },
+    {
+      "action": "eldritch_chaos",
+      "subset": 24,
+      "exact_conditional_union": "25/35114",
+      "capacity": 11945,
+      "probability_upper": 0.000711977481842041
+    },
+    {
+      "action": "eldritch_chaos",
+      "subset": 3,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "eldritch_chaos",
+      "subset": 5,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "eldritch_chaos",
+      "subset": 6,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "eldritch_chaos",
+      "subset": 7,
+      "exact_conditional_union": "16/55165",
+      "capacity": 4867,
+      "probability_upper": 0.00029009580612182617
+    },
+    {
+      "action": "eldritch_chaos",
+      "subset": 3,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "eldritch_chaos",
+      "subset": 5,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "eldritch_chaos",
+      "subset": 6,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "eldritch_chaos",
+      "subset": 7,
+      "exact_conditional_union": "16/55165",
+      "capacity": 4867,
+      "probability_upper": 0.00029009580612182617
+    },
+    {
+      "action": "eldritch_chaos",
+      "subset": 3,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "eldritch_chaos",
+      "subset": 5,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "eldritch_chaos",
+      "subset": 6,
+      "exact_conditional_union": "8/935",
+      "capacity": 143549,
+      "probability_upper": 0.008556187152862549
+    },
+    {
+      "action": "eldritch_chaos",
+      "subset": 7,
+      "exact_conditional_union": "16/55165",
+      "capacity": 4867,
+      "probability_upper": 0.00029009580612182617
+    }
+  ],
+  "measured_prefix_event": {
+    "action": "harvest_reforge:physical",
+    "subset": 7,
+    "exact_conditional_union": "16/55165",
+    "capacity": 4867,
+    "probability_upper": 0.00029009580612182617
+  },
+  "old_prefix_capacity": 3050403,
+  "old_prefix_probability_upper": 0.1818181872367859,
+  "probability_cap_ratio": 626.7522087528251,
+  "optimizer_checks": 19019,
+  "checked_relations": 19019,
+  "nonempty_integer_checks": 103,
+  "refill_history_checks": 1,
+  "annul_integer_checks": 2487,
+  "reactivated_shortcuts": 9661,
+  "source_results": [
+    {
+      "second_source": false,
+      "donor": 211.22756690011138,
+      "prior_donor": null,
+      "donor_gain": null,
+      "program_before": 3.683885421903051,
+      "program_after": 213.7692879143572,
+      "program_gain": 210.08540249245414,
+      "compatible_action_gain": 177.34067072525278,
+      "complete_model_before": 36.42861718910441,
+      "complete_model_after": 211.22756690011138,
+      "complete_model_gain": 174.79894971100697,
+      "portfolio_gain": 174.79894971100697,
+      "exact_program": "134060331491164698037/627126248111341568",
+      "first_limiting_rhs_exact": "30441100530615148105/144115188075855872",
+      "limiting_relation": "bench:HelenaMasterFireResist1",
+      "limiting_reason": "native_effect",
+      "complete_model_ties": [
+        "annul",
+        "scour",
+        "chaos",
+        "exalt",
+        "harvest_reforge:physical",
+        "harvest_reforge:defences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "option:eldritch_side_intent:suffix:eldritch_annul:eldritch_ichor:1",
+        "option:eldritch_side_intent:suffix:eldritch_chaos:eldritch_ichor:1",
+        "residual_family_1",
+        "residual_family_2",
+        "residual_family_3",
+        "residual_family_4",
+        "residual_family_5",
+        "residual_family_7",
+        "residual_family_9",
+        "residual_family_10"
+      ],
+      "next_complete_ceiling": 213.7692879143572
+    },
+    {
+      "second_source": true,
+      "donor": 211.9999999788,
+      "prior_donor": null,
+      "donor_gain": null,
+      "program_before": 3.6839899999999988,
+      "program_after": 215.5585598885688,
+      "program_gain": 211.8745698885688,
+      "compatible_action_gain": 179.12994269946438,
+      "complete_model_before": 36.42861718910441,
+      "complete_model_after": 211.9999999788,
+      "complete_model_gain": 175.57138278969558,
+      "portfolio_gain": 175.57138278969558,
+      "exact_program": "135182430911202792437/627126248111341568",
+      "first_limiting_rhs_exact": "212",
+      "limiting_relation": "bench:StrDexMasterItemGenerationCannotRollCasterAffixes",
+      "limiting_reason": "native_domain_escape",
+      "complete_model_ties": [
+        "annul",
+        "scour",
+        "chaos",
+        "exalt",
+        "harvest_reforge:physical",
+        "harvest_reforge:defences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "option:eldritch_side_intent:prefix:eldritch_annul:eldritch_ember:1",
+        "option:eldritch_side_intent:prefix:eldritch_chaos:eldritch_ember:1",
+        "option:eldritch_side_intent:prefix:eldritch_exalt:eldritch_ember:1",
+        "option:eldritch_side_intent:suffix:eldritch_annul:eldritch_ichor:1",
+        "option:eldritch_side_intent:suffix:eldritch_chaos:eldritch_ichor:1",
+        "residual_family_1",
+        "residual_family_2",
+        "residual_family_3",
+        "residual_family_4",
+        "residual_family_5",
+        "residual_family_7",
+        "residual_family_9",
+        "residual_family_10"
+      ],
+      "next_complete_ceiling": 215.5585598885688
+    }
+  ],
+  "production_authority": false
+}

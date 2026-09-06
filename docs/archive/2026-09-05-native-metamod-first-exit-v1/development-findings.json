@@ -1,0 +1,201 @@
+{
+  "retained_policy": "No lookup-result cache; frozen one-second attribution criterion fails on the completed current model",
+  "frozen_cache_criterion": "sampled attribution > one second of matched 60-second ordinary observation; at most 1 MiB",
+  "profile_predecessor_domain": {
+    "public_lower": 211.22756690011138,
+    "native_prepare_ns": 11866973300,
+    "ordinary_setup_ns": 16287811500,
+    "stepping_ns": 43467167300,
+    "elapsed_ns": 60037708200,
+    "rows": 52562,
+    "states": 9622,
+    "native_lookups": 52568362,
+    "native_hits": 8477033,
+    "native_selected_calls": 8477031,
+    "lookup_sample_ns": 4278100,
+    "lookup_samples": 51336,
+    "extrapolated_lookup_ns": 4380799233.913822
+  },
+  "cached_current_comparison": {
+    "public_lower": 352.31017033879505,
+    "native_prepare_ns": 40357665800,
+    "ordinary_setup_ns": 44509247500,
+    "stepping_ns": 15237789300,
+    "elapsed_ns": 60010338300,
+    "rows": 40199,
+    "states": 7193,
+    "native_lookups": 7399,
+    "native_hits": 1176,
+    "native_selected_calls": 1174,
+    "lookup_sample_ns": 500,
+    "lookup_samples": 7,
+    "projection_checks": 7011,
+    "projection_cache_hits": 388,
+    "projection_cache_bytes": 1048576,
+    "extrapolated_lookup_ns": 528500.0
+  },
+  "uncached_current_comparison": {
+    "public_lower": 352.31017033879505,
+    "native_prepare_ns": 40243927900,
+    "ordinary_setup_ns": 44409710500,
+    "stepping_ns": 15361477500,
+    "elapsed_ns": 60033177900,
+    "rows": 40289,
+    "states": 7241,
+    "native_lookups": 7399,
+    "native_hits": 1176,
+    "native_selected_calls": 1174,
+    "lookup_sample_ns": 600,
+    "lookup_samples": 7,
+    "projection_checks": 7399,
+    "projection_cache_hits": 0,
+    "projection_cache_bytes": 0,
+    "extrapolated_lookup_ns": 634200.0
+  },
+  "timing_limit": "seven periodic samples on current model do not establish precise submillisecond timing; call volume and matching cache-off observation refute useful cache cost here",
+  "attack_only_research": {
+    "budget_bytes": 67108864,
+    "label": "single authorized 64 MiB research comparison; initial publication refusal followed by transfer fix",
+    "donors": [
+      211.22756690011138,
+      211.9999999788
+    ],
+    "programs": [
+      213.7692879143572,
+      215.5585598885688
+    ],
+    "next_boundary": "native legal Cannot Roll Caster, cost 212 at both saved sources",
+    "bench_audit": [
+      {
+        "action": "bench:StrMasterItemGenerationCannotChangePrefixes",
+        "mod": 353,
+        "side": 1,
+        "metamod_code": 3,
+        "cost": 424,
+        "sources": [
+          {
+            "applied": 1,
+            "prefixes": 3,
+            "suffixes": 2,
+            "covered": 0,
+            "continuation": 0
+          },
+          {
+            "applied": 1,
+            "prefixes": 2,
+            "suffixes": 2,
+            "covered": 0,
+            "continuation": 0
+          }
+        ]
+      },
+      {
+        "action": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+        "mod": 354,
+        "side": 0,
+        "metamod_code": 4,
+        "cost": 424,
+        "sources": [
+          {
+            "applied": 0,
+            "prefixes": 3,
+            "suffixes": 1,
+            "covered": 1,
+            "continuation": 211.22756690011138
+          },
+          {
+            "applied": 1,
+            "prefixes": 3,
+            "suffixes": 1,
+            "covered": 0,
+            "continuation": 0
+          }
+        ]
+      },
+      {
+        "action": "bench:IntMasterItemGenerationCannotRollAttackAffixes",
+        "mod": 356,
+        "side": 1,
+        "metamod_code": 1,
+        "cost": 212,
+        "sources": [
+          {
+            "applied": 1,
+            "prefixes": 3,
+            "suffixes": 2,
+            "covered": 1,
+            "continuation": 211.21591690011255
+          },
+          {
+            "applied": 1,
+            "prefixes": 2,
+            "suffixes": 2,
+            "covered": 1,
+            "continuation": 212.3740999787626
+          }
+        ]
+      },
+      {
+        "action": "bench:StrDexMasterItemGenerationCannotRollCasterAffixes",
+        "mod": 357,
+        "side": 1,
+        "metamod_code": 2,
+        "cost": 212,
+        "sources": [
+          {
+            "applied": 1,
+            "prefixes": 3,
+            "suffixes": 2,
+            "covered": 0,
+            "continuation": 0
+          },
+          {
+            "applied": 1,
+            "prefixes": 2,
+            "suffixes": 2,
+            "covered": 0,
+            "continuation": 0
+          }
+        ]
+      }
+    ],
+    "resources": {
+      "proof_budget_bytes": 67108864,
+      "adapter_support_ns": 1369300,
+      "probability_treatment_ns": 14883556300,
+      "shared_control_bytes": 0,
+      "reused_draw_witnesses": 0,
+      "new_draw_witnesses": 136,
+      "retained_potential_bytes": 9838604,
+      "shared_support_bytes": 613732,
+      "proof_ledger_peak_bytes": 15938752,
+      "combined_additional_peak_bytes": 34060396,
+      "native_projected_action_checks": 5761536,
+      "shared_calculator_bytes": 852941,
+      "source_owner_including_shared_calculator_bytes": 1250361
+    },
+    "resource_limit": "pre-export-separation report accounting; peak figure is diagnostic only and not 32 MiB qualification. Final both-filter accounting supersedes it.",
+    "exact_audit": "attack-research-reference.json"
+  },
+  "resource_refusals": {
+    "attack-compact-error.txt": "probabilistic quotient repair: proof memory reservation refused: proof memory cap exceeded: requested=24400188 cap=24174908",
+    "attack-error.txt": "probabilistic quotient repair: proof memory reservation refused: proof memory cap exceeded: requested=24936360 cap=24174908",
+    "attack-final-error.txt": "probabilistic quotient repair: proof memory reservation refused: proof memory cap exceeded: requested=24670024 cap=24174908",
+    "attack-research-64-error.txt": "proof memory cap exceeded: requested=19218128 cap=16777216",
+    "both-capacity-error.txt": "proof memory cap exceeded: requested=24266248 cap=24222524; round=17 source=3869 rows=24580",
+    "both-eighth-error.txt": "proof memory cap exceeded: requested=24205616 cap=24174908; round=16 source=3943 rows=24728",
+    "both-error.txt": "proof memory cap exceeded: requested=26884488 cap=24174908",
+    "both-fixed-error.txt": "proof memory cap exceeded: requested=25494264 cap=24282248; round=25 source=3950 rows=24742",
+    "both-growth-error.txt": "proof memory cap exceeded: requested=24900476 cap=24174908",
+    "both-qualified-error.txt": "proof memory cap exceeded: requested=16807412 cap=16777216"
+  },
+  "superseded_native_report": "build/metamod-v1/native.json has the accepted values but overlapping enlarged diagnostics outgrew native scratch; native-final.json qualifies separated report ownership",
+  "focused_fixture_development": [
+    "Initial full-suffix test placed only two suffixes: corrected to fill all three native slots.",
+    "Mandatory Ichor/Exalt fixture already had the desired tier; cleared the source tier so native synthesis actually admits the mandatory setup program.",
+    "Final-report reservation initially used the full query cap on smaller fixture support stores; changed to final measured relation payload plus existing native workspace."
+  ],
+  "no_simulator": true,
+  "no_census": true,
+  "no_push": true
+}

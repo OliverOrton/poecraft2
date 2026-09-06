@@ -11,6 +11,12 @@ selected active work.
 
 ## 2026-09-05
 
+- [Native Metamod First-Exit Closure and Useful Retention Consumption v1](2026-09-05-native-metamod-first-exit-v1/README.md) —
+  retains native Cannot Roll Attack/Caster continuations in both checked regions,
+  raises both saved portfolios and ordinary opt-in lower within 32 MiB, and
+  measures then removes unneeded lookup caching. Defaults remain off; preparation
+  cost and remaining relaxation ceilings are explicit.
+
 - [Native Applied-Reforge Progress and Efficient Retention Preparation v1](2026-09-05-native-applied-reforge-preparation-v1/README.md) —
   certifies applied Alchemy rarity and conditional occupancy, reduces compact
   preparation by 3.18x with unchanged checking, and qualifies stronger ordinary

@@ -1,0 +1,56 @@
+{
+  "scope": "one anchored ordinary request; read-only 60-second cooperative observations including all setup",
+  "public_lower_before": 36.42861718910441,
+  "public_lower_after": 352.31017033879505,
+  "public_lower_gain": 315.88155314969066,
+  "native_preparation_seconds": 40.2439279,
+  "native_selected_calls": 1174,
+  "rows_before": 64914,
+  "rows_after": 40289,
+  "held_outs": {
+    "distinct_prefix_removed": {
+      "case": "distinct_prefix_removed",
+      "lower": 355.43265454362336,
+      "physical_lower": 355.43265454362336,
+      "common_lower": 355.43265454362336,
+      "uniform_projection_accepted": 1,
+      "unsafe_goal_classes": 0,
+      "unsafe_junk_classes": 0,
+      "cell": 1369
+    },
+    "unfractured_entry": {
+      "case": "unfractured_entry",
+      "lower": 404.9953021063773,
+      "physical_lower": 404.9953021063773,
+      "common_lower": 404.9953021063773,
+      "uniform_projection_accepted": 1,
+      "unsafe_goal_classes": 0,
+      "unsafe_junk_classes": 0,
+      "cell": 1538
+    },
+    "native_exalt_natural_junk": {
+      "case": "native_exalt_natural_junk",
+      "lower": 0,
+      "physical_lower": 355.3069435311967,
+      "common_lower": 36.42861718910441,
+      "uniform_projection_accepted": 0,
+      "unsafe_goal_classes": 0,
+      "unsafe_junk_classes": 1,
+      "cell": 1406
+    },
+    "native_bench_crafted_junk": {
+      "case": "native_bench_crafted_junk",
+      "lower": 0,
+      "physical_lower": 352.29852033879627,
+      "common_lower": 36.42861718910441,
+      "uniform_projection_accepted": 0,
+      "unsafe_goal_classes": 0,
+      "unsafe_junk_classes": 1,
+      "cell": 3149
+    }
+  },
+  "ordinary_exact_result": false,
+  "verified_upper_available": false,
+  "speedup_established": false,
+  "default_enabled": false
+}

@@ -155,6 +155,19 @@ changed nested capacities under the existing preallocation reservation; full
 recounts remain available and are covered by regression checks. No numerical
 warm-start or new graph owner is introduced.
 
+Selected Cannot Roll Attack/Caster continuations retain an actual crafted-junk
+slot and exact filter identity in both regions. Native Bench legality precedes
+its first-exit floor. The draw witness explicitly restores only the filter still
+present at pool construction: ordinary renewal clears it; Eldritch Chaos can
+retain it on the opposite side. All affected native witness/reuse keys bind that
+context. Annul, cleanup and renewal preserve or remove the correct occurrence;
+other legal unmodeled metamods retain conservative boundary floors.
+
+Complete final diagnostics are exported only after the numerical graph is gone,
+under a reservation for their measured payload and native workspace. Borrowed
+query capacity remains charged while temporary canonical partitions are counted
+by their per-source peak. Numerical shortcuts do not remove native coverage.
+
 The `NativeRetention` proof pattern contributes only by maximum. The ordinary
 consumer uses retained AbstractState fields and complete modifier member masks,
 not a materialized representative. Ambiguous fracture identity, unsupported
@@ -172,6 +185,10 @@ product activation or an end-to-end speedup.
 The subsequent [applied-reforge evidence](../archive/2026-09-05-native-applied-reforge-preparation-v1/README.md)
 qualifies the native applied-rarity/occupancy contract and faster preparation
 through that same opt-in, retaining complete checking and conservative fallback.
+The [metamod continuation evidence](../archive/2026-09-05-native-metamod-first-exit-v1/README.md)
+qualifies the selected filter domain. It also measures ordinary projection cost:
+a result cache was removed because the completed current model did not justify
+its memory. Uniform member guards remain, with no cached accepted/refused results.
 
 Internal lowers drive operator pruning, fringe gap priority, constructive
 certificates, and gap targets. Telemetry should show which pattern supplied a

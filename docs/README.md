@@ -31,10 +31,15 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active boundary is [Native Metamod First-Exit Closure and Useful Retention Consumption v1](active/native-metamod-first-exit-v1/README.md). The completed [Native Applied-Reforge
-Progress and Efficient Retention Preparation v1](archive/2026-09-05-native-applied-reforge-preparation-v1/README.md)
-qualifies a stronger ordinary opt-in lower with cheaper preparation, keeping
-conservative member coverage and default-off behavior.
+No implementation boundary is active. The completed [Native Metamod First-Exit
+Closure and Useful Retention Consumption v1](archive/2026-09-05-native-metamod-first-exit-v1/README.md)
+qualifies native filter continuations and stronger ordinary opt-in bounds under
+32 MiB. Preparation remains costly; lookup caching was measured and removed.
+Defaults remain off. [HANDOFF](../HANDOFF.md) records the next question.
+
+The completed [Native Applied-Reforge Progress and Efficient Retention
+Preparation v1](archive/2026-09-05-native-applied-reforge-preparation-v1/README.md)
+remains the immutable predecessor for the current comparison.
 
 The completed
 [Native Retention-Aware Lower Refinement and Solver Integration v1](archive/2026-09-05-native-retention-lower-integration-v1/README.md)

@@ -1,0 +1,77 @@
+{
+  "reviewed_main": "f3e7c0fa7bd827064a41c48a53c4db372840cf0f",
+  "implementation_checkpoint": "81a8b5e5922be7bca4841a7dea3d358656d4e34a",
+  "retained_checkpoint": "5d2fb50160e427f9a7da073ef2cb45d0978e0709",
+  "captured_utc": "2026-09-06T05:16:45.087369+00:00",
+  "native_compact_note": "Final compact probe precedes 81a8b5e only by its ordinary opt-in selection/profile changes and a source comment; the checked filter producer, graph accounting and exported certificate are the retained implementation.",
+  "ordinary_note": "Same executable for control/cached/cache-off comparisons at 81a8b5e. Retained 5d2fb50 removes the experimentally disabled cache branch and validates affected phase checks; no further native construction was needed for dead-cache removal.",
+  "plan_source": "Oliver current request and Native Solver Research thread 6a90fbac-55e4-83e8-964e-f50cbad28987; stale Downloads plans not substituted",
+  "inputs_sha256": {
+    "docs/archive/2026-09-04-free-value-bellman-research/native-goal.json": "ab2c5420a403b71852bd84da629814f331e01babaea0401b17620296fb5da1aa",
+    "docs/archive/2026-09-04-free-value-bellman-research/native-economy.json": "ca0bb782c7933fb2c72ddde3991c0aebf8c1d3e9c8dc5853796b54fffddf1992",
+    "data/compiled/current/manifest.json": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb"
+  },
+  "source_sha256": {
+    "engine/src/solver_phase_probability.cpp": "bf45460b5b025ed570360a11a8cf8541433c84222ab1001d80611eaf03f7c182",
+    "engine/src/solver_options_temporary.cpp": "79e80dc75d127291591710a3efaec53a916e338416470c7b00f43311ee545092",
+    "engine/src/solver_quotient_bellman.cpp": "b10a52a7b90626624655753539954f74caef082d0de378085f2f0414a8b378ae",
+    "engine/src/solver_quotient_lower.cpp": "edb1725a4791bfafb25b1333101aeea43ddc15119ab4d912be460242a103f288",
+    "engine/src/solver_solve_bounds.cpp": "796eaf783ae9d0536de442e00c6a98828b96f179f791d4036aa2da853180e108",
+    "engine/benchmarks/solver_quotient_lower_probe.cpp": "9fe652be4036756447c0e8a540802eba2b229f9baed75cc326cc89c18274d3fc",
+    "engine/benchmarks/verify_quotient_lower_probe.py": "208a2f6e6c8b589ce0a53195e13bf11495c8f6d2a5271a334eaf4ee717258626"
+  },
+  "retained_native_executable_sha256": "6ba6574cc724f5a698b97e06603218dd1d0a31b84b0c9725031b90965247578e",
+  "artifacts_sha256": {
+    "attack-research-64.json.gz": "8fb0dfe3af029dc949f687d56248f0a04587f71a0d74914e23b8b52ea1ee2e27",
+    "attack-research-reference.json": "5e5526d154a535d55ccd16d6dfd6b7a5566f4ea30d4e3ae363041cdb466c5e7a",
+    "comparison.json": "faa12bdcfa3891d0c0e31f3c26a5b96a78efceae0a145c86118055d74f7287bf",
+    "development-findings.json": "6dfb4a7bfe449e39f29b914902e431402780c9ec30388e849134ea0ca879098b",
+    "lookup-cached-comparison.json": "d456885a57ba5e0422b1e4f11cfbc47d22b3ee1357712b035c1f7bf125c05a12",
+    "lookup-predecessor-profile.json": "7704e782026bc8b78b84e48fafaf0dd33de90595836f1d5b48f303ec6b933cbf",
+    "native-shared-build.txt": "aa00facd995c2d0df8ed245a837764cf27504b9217b6b8e12200c390421e24f6",
+    "native.json": "1ab31426155eafc8c062723057ffc46f963bad5eee0878e05ae7dd9270e76fc4",
+    "ordinary-control.json": "d7a41674b4aebb013b799e083d2920884a258054c3daa2a6d015549f3023315e",
+    "ordinary-reference.json": "0e3389df70622849707d8fdc70bed70911881035741617ac4688562be07f471d",
+    "ordinary-treatment.json": "8fa39764f37a9509d0bd01123b4391900481671fd99617079e1b1c143f2c328c",
+    "phase-tests.txt": "ed3c748507f3c8bc8493ff4df2dbb71f73dc988937ef533c17010aeb933073fd",
+    "quotient-tests.txt": "087b19fcc5c16a8832686ff5a152dc785a743c6a7b8f4794261ffb5e89d708b7",
+    "README.md": "d894d8d5e069eeaa2e2694cfe4d6aa9e21de8cea0678e2ca7ee3340be5548313",
+    "reference.json": "1c7e5a5c3f55884ae8e21bd6a268ee7c61090e519e3e170e38b6db81616327a0",
+    "wasm-build.txt": "6071552caab1624e2774f28d8bbe1f0c4833a3c59857aa165610d4c2939d6fb7",
+    "wasm-smoke.txt": "2238579c20db56643bac943194b3d60041b8f70683d88371481496c2967c61ba"
+  },
+  "commands": [
+    "poecraft_quotient_lower_probe filter-both-32 <artifact> <saved-goal> <saved-prices>",
+    "verify_quotient_lower_probe.py native.json reference.json",
+    "poecraft_quotient_lower_probe ordinary-retention-control <artifact> <saved-goal> <saved-prices>",
+    "poecraft_quotient_lower_probe ordinary-retention-treatment <artifact> <saved-goal> <saved-prices> [cached experiment]",
+    "poecraft_quotient_lower_probe ordinary-retention-profile <artifact> <saved-goal> <saved-prices> [cache off, retained result]",
+    "verify_quotient_lower_probe.py --ordinary ordinary-control.json ordinary-treatment.json native.json ordinary-reference.json",
+    "poecraft_engine_tests --solver-phase-lower-only",
+    "poecraft_engine_tests --solver-quotient-proof-only"
+  ],
+  "constraints": {
+    "proof_bytes": 33554432,
+    "total_bytes": 1073741824,
+    "sequential_session": true,
+    "delegation": false,
+    "default_enabled": false,
+    "protected_0_touched": false
+  },
+  "wasm": {
+    "source_checkpoint": "5d2fb50160e427f9a7da073ef2cb45d0978e0709",
+    "rebuilt_local": "2026-09-05 22:19 PDT",
+    "wasm_sha256": "60317e374c84fc388b4b056955bd1267079409a736a0a3787e665670f946c60d",
+    "wrapper_sha256": "92bc2b9d61c465b35c2b80c71f8b3ee125155755275e8d66cdc649792ab9f4ce",
+    "wrapper_byte_identical": true,
+    "build_command": "powershell -File scripts/build-wasm.ps1",
+    "acceptance_command": "apps/web/node_modules/.bin/tsx.cmd build/wasm/rebuild-smoke.mts (from repo root, equivalent relative invocation from apps/web)",
+    "selected_checks": 8,
+    "simulator": false,
+    "existing_warnings_in_unchanged_files": true
+  },
+  "native_shared_library": {
+    "command": "cmake --build build/engine --target poecraft_engine_shared --parallel 8",
+    "sha256": "566add5f8d8001d88046f2b2f0292b34f4ee24f194f625bf613a31ed1d4087a1"
+  }
+}
