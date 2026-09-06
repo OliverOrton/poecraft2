@@ -1,10 +1,10 @@
-# Evidence
+# Historical Evidence Index
 
-**Status: authoritative index of pinned cases and measured history.** Raw
-fixtures and archived reports remain the evidence; this page summarizes and
-routes to them rather than duplicating complete reports.
-
-Parent: [Documentation map](README.md)
+Historical observations and original artifacts remain below at their existing
+anchors. Older “current” and “next” statements describe their recorded time.
+Use [research](solver/research.md) for questions, [claims](solver/claims.md) for
+propositions, and [HANDOFF](../HANDOFF.md) for actual continuation. Do not append
+routine status narratives here.
 
 ## Native Metamod First-Exit Closure
 

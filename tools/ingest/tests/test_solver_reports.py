@@ -10,8 +10,11 @@ from poecraft_ingest.bounded_policy_workflow import (
 )
 from poecraft_ingest.solver_reports import (
     build_report,
+    build_research_report,
     compare_runs,
+    exact_closure_profile,
     load_run,
+    research_markdown,
 )
 
 
@@ -157,6 +160,115 @@ def _run(cases: list[dict[str, object]]) -> tuple[dict[str, object], list[dict[s
         },
         cases,
     )
+
+
+def test_declared_exact_cohort_keeps_missing_and_refuses_bare_status() -> None:
+    exact = _case("certified", wall_ms=100, memory=500, policy="exact")
+    exact["solve_summary"].update(termination="exact_closed", converged=True,
+                                  lower_bound=100, evaluated_policy_cost=100)
+    exact["solver_telemetry"] = {"policy_refinement": {"strict_lift": {"global_lower_bound_closed": True}}}
+    exact["exact_strategy_evaluation"].update(completed=True, status="matched", converged=True,
+        cost_complete=True, zero_off_policy_mass=True, cost_reconciled=True)
+    bare = _case("bare", wall_ms=20, memory=100, policy="exact")
+    ledger, cases = _run([exact, bare])
+    ledger["cases"]["missing"] = {"status": "crash"}
+    profile = {"kind": "native_exact_closure_v1", "case_ids": ["certified", "bare", "missing"],
+               "budget_ms": 150, "memory_bytes": 1000}
+    result = exact_closure_profile(ledger, cases, profile)
+    assert result["planned"] == 3 and result["closed"] == 1
+    assert result["completion_profile"][-1] == {"elapsed_ms": 150.0, "closed": 1, "planned": 3}
+    assert result["cases"][2]["reasons"] == ["missing_report"]
+    assert "native_complete_proof_required" in result["cases"][1]["reasons"]
+    for changed in ("cost_reconciled", "zero_off_policy_mass", "cost_complete"):
+        bad = copy.deepcopy(exact)
+        bad["exact_strategy_evaluation"][changed] = False
+        assert exact_closure_profile(ledger, [bad, bare], profile)["closed"] == 0
+    for field, value in (("budget_ms", 50), ("memory_bytes", 400)):
+        assert exact_closure_profile(ledger, cases, {**profile, field: value})["closed"] == 0
+    assert build_report({"candidate": (ledger, cases)}, outcome_profile=profile)["analytics_boundary"]["primary_comparison_metric_selected"] is True
+    # Legacy reports keep their original schema/measurement interpretation.
+    assert "exact_closure" not in build_report({"candidate": (ledger, cases)})
+
+
+def test_research_series_uses_original_predecessor_and_available_states() -> None:
+    root = Path(__file__).resolve().parents[3]
+    report = build_research_report(root, Path("experiments/solver-research/backbone-pilot-v1.json"))
+    filtered = next(row for row in report["observations"] if row["id"] == "filtered-continuation")
+    source = filtered["sources"][0]
+    assert source["donor_comparison"]["before"] == 211.22756690011138
+    assert source["portfolio_comparison"]["gain"] == 141.08260343868366
+    assert source["program"] == 355.789813661076
+    support = report["observations"][0]["sources"][0]
+    assert support["portfolio"] is None and support["reported_portfolio_gain"] == 0
+    pair = report["ordinary_comparisons"][0]
+    assert pair["status"] == "compatible_archived_observation"
+    assert set(pair["integrity"].values()) == {"matched original digest"}
+    assert pair["treatment"]["native_prepare_ns"] == 40243927900
+    assert "unavailable" in pair["exact_closure"]
+    text = research_markdown(report)
+    assert "not saved proof work" in text and "unavailable" in text
+
+
+def test_research_metadata_missing_evidence_mismatch_and_reference_kinds(tmp_path: Path) -> None:
+    import pytest
+    def write(name, value):
+        p = tmp_path / name
+        p.write_text(json.dumps(value), encoding="utf-8")
+    write("input.json", {})
+    write("validation.json", {})
+    write("value.json", {"value": 4})
+    model = {"semantic_version": "v1", "property": "proper cost", "coefficient_semantics": "rational",
+             "scope": "tiny", "input_references": ["input.json"]}
+    row = {"id": "a", "model": "tiny", "kind": "finite_model_optimum", "producer": "rational oracle",
+           "validation": "validation.json", "evidence": "value.json", "pointer": "/value",
+           "role": "development", "treatment": "reference"}
+    series = {"schema_version": "solver_research_series_v1", "question": "RQ-001", "models": {"tiny": model},
+              "comparison_profiles": {"primary": "declared exact cohort"}, "observations": [row]}
+    write("series.json", series)
+    assert build_research_report(tmp_path, Path("series.json"))["observations"][0]["value"] == 4
+    for kind in ("native_exact_closure", "verified_policy_upper", "certified_native_lower",
+                 "optimistic_model_policy_ceiling", "conditional_observation"):
+        row["kind"] = kind
+        write("series.json", series)
+        assert build_research_report(tmp_path, Path("series.json"))["observations"][0]["kind"] == kind
+    row["kind"] = "unsupported"
+    write("series.json", series)
+    with pytest.raises(ValueError, match="reference kind"):
+        build_research_report(tmp_path, Path("series.json"))
+    row["kind"] = "conditional_observation"
+    row["evidence"] = "missing.json"
+    write("series.json", series)
+    assert build_research_report(tmp_path, Path("series.json"))["observations"][0]["availability"] == "unavailable"
+    left = {"pilot": "p", "source": [1], "scope": {"imprint": False}, "budget_ns": 10,
+            "total_cap_bytes": 100, "proof_cap_bytes": 20, "public_lower": 1}
+    write("left.json", left)
+    write("right.json", {**left, "source": [2]})
+    write("provenance.json", {})
+    series["ordinary_pairs"] = [{"id": "pair", "control": "left.json", "treatment": "right.json", "provenance": "provenance.json"}]
+    write("series.json", series)
+    pair = build_research_report(tmp_path, Path("series.json"))["ordinary_comparisons"][0]
+    assert pair["status"] == "incompatible" and pair["mismatches"] == ["source"]
+    write("right.json", left)
+    write("provenance.json", {"artifacts_sha256": {"right.json": "stale"}})
+    pair = build_research_report(tmp_path, Path("series.json"))["ordinary_comparisons"][0]
+    assert pair["mismatches"] == ["treatment.evidence_hash"]
+    row["evidence"] = "../outside.json"
+    write("series.json", series)
+    with pytest.raises(ValueError, match="invalid research evidence path"):
+        build_research_report(tmp_path, Path("series.json"))
+
+
+def test_missing_report_remains_in_declared_profile_without_changing_legacy_loader(tmp_path: Path) -> None:
+    import pytest
+    ledger = {"cases": {"lost": {"status": "completed", "report_path": str(tmp_path / "lost.json")}}}
+    (tmp_path / "ledger.json").write_text(json.dumps(ledger), encoding="utf-8")
+    with pytest.raises(FileNotFoundError):
+        load_run(tmp_path)
+    loaded, cases = load_run(tmp_path, allow_missing_reports=True)
+    result = exact_closure_profile(loaded, cases, {"kind": "native_exact_closure_v1",
+        "case_ids": ["lost"], "budget_ms": 100, "memory_bytes": 1000})
+    assert result["planned"] == 1 and result["closed"] == 0
+    assert result["cases"][0]["availability_detail"] == "recorded report file is missing"
 
 
 def test_stratified_report_includes_rates_work_actions_and_outliers() -> None:

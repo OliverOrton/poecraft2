@@ -142,6 +142,8 @@ unsigned phase_refill_minimum(unsigned prefixes, unsigned suffixes, unsigned tar
 
 double phase_joint_assignment_upper(const std::vector<std::array<double, 3>>& conditional,
         unsigned positions) {
+    // math: obligation CLM-0015 — Caller establishes uniform conditional histories,
+    // distinct goal draws, retained/forced goals and native side limits.
     if (positions > 3 || conditional.size() > 3)
         throw std::invalid_argument("joint event exceeds native side capacity");
     for (const auto& goal : conditional) for (unsigned j = 0; j < positions; ++j)
@@ -171,6 +173,8 @@ bool phase_price_shortcut_limiting(double cost, double value) {
 }
 std::vector<std::pair<unsigned, std::uint32_t>> phase_minimum_event_allocation(
         const std::vector<double>& values, const std::vector<std::uint32_t>& capacities) {
+    // math: uses CLM-0014 — Independent caps only; caller proves complete native
+    // event coverage. Recompute this minimum for every changed potential.
     if (values.size() != capacities.size()) throw std::invalid_argument("event dimensions differ");
     std::vector<unsigned> order(values.size()); std::iota(order.begin(), order.end(), 0);
     for (unsigned i : order) if (!std::isfinite(values[i]) || values[i] < 0 || capacities[i] > mass)

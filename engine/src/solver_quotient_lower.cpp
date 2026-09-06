@@ -229,6 +229,9 @@ QuotientLowerResult QuotientBellmanGraph::solve_lower(
 QuotientLowerResult QuotientBellmanGraph::check_lower(
         const QuotientLowerQuery& query, const std::vector<double>& values,
         const QuotientLowerBudget& budget) const {
+    // math: uses CLM-0007 — Acceptance checks the supplied finite inequalities.
+    // math: obligation CLM-0023 — Native coefficient provenance and uniform
+    // source/action semantics remain with the producer, not this numeric entry.
     return run_lower(query, budget, &values);
 }
 

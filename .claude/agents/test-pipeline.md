@@ -1,31 +1,25 @@
 ---
 name: test-pipeline
-description: Use this agent to run the poecraft2 test pipeline (full or a targeted layer) and report results. It knows the layer order, environment setup, and known skips, and returns a concise pass/fail summary with failure details instead of flooding the caller with raw output. Use it after engine, ingest, binding, or web changes, or when the user asks "do the tests pass".
+description: Optional execution of explicitly selected test layers with bounded logs and honest result classification. Use only when validation is requested or needed, not automatically after each phase.
 tools: Bash, PowerShell, Read, Grep, Glob
 ---
 
-You run and interpret the poecraft2 test pipeline. Your job is to execute the requested test layers, then return a short structured report: which layers ran, which passed, and for each failure the failing test name, the relevant error excerpt (not the full log), and the most likely responsible file. Do not attempt to fix anything unless the prompt explicitly asks you to.
+Follow `AGENTS.md` and the caller's selected validation scope. Do not spawn other agents or broaden a no-subagent task. Do not fix source unless explicitly authorized.
 
-## Repository facts
+## Select the actual check
 
-- Repo root: `C:\Users\Oliver\Documents\poecraft2`. All paths below are relative to it.
-- Full pipeline: `powershell -File scripts/test.ps1` (PowerShell). It chains, in order:
-  1. Ingest unit tests: `python -m unittest discover -s tools/ingest/tests -t tools/ingest` (needs `PYTHONPATH=tools/ingest;bindings/python`)
-  2. Canonical DB validation: `python -m poecraft_ingest.cli validate --database data/sqlite/poecraft.db`
-  3. Spec fixture validation: `python tools/ingest/validate_spec_fixtures.py --database data/sqlite/poecraft.db --fixtures fixtures/spec`
-  4. Artifact compile + validate: `python tools/ingest/compile_engine_data.py compile|validate --database data/sqlite/poecraft.db --output|--artifact data/compiled/current`
-  5. Python binding tests: `python -m unittest discover -s bindings/python/tests`
-  6. C++ engine tests: CTest in `build/engine` if CMakeCache exists, else `build/engine/poecraft_engine_tests.exe <artifact> <fixtures>`
-  7. Web tests: `npm test` in `apps/web` (tsx smoke tests), only if `bindings/wasm/dist/poecraft_engine.mjs` exists
-- Python is invoked via `py -3` when available. Set `PYTHONPATH` as above when running Python layers directly.
-- The full pipeline recompiles the data artifact, which is slow. When the caller names the changed layer, run only that layer plus layers downstream of it (e.g. an engine change needs steps 6–7 but not 1–5 unless data changed).
+Determine the working repository from the provided checkout; do not assume a user-specific absolute path. Inspect the current command/selector when its effects are uncertain. Some selectors can run simulations or regenerate data in addition to the named unit checks.
 
-## Constraints
+Use a focused test when it resolves a live uncertainty or validates a retained change. The full `scripts/test.ps1` pipeline remains available when requested or justified by the complete change impact. Its actual script owns the layer sequence; do not maintain a second historical copy here.
 
-- The engine WASM module is prebuilt and committed; emcc is NOT installed. Never run `scripts/build-wasm.ps1`. If the WASM module is missing, report that web tests were skipped for that reason — do not try to rebuild it.
-- If `build/engine` binaries are missing, report it and suggest `scripts/build.ps1`; only run the build if the prompt asked you to.
-- Use a generous timeout (10 minutes) for the full pipeline.
+Python setup and normal build commands are in `AGENTS.md`. Missing or stale binaries are a validation prerequisite, not a passed test. Build only within the caller's authority and report any necessary unmet prerequisite.
 
-## Report format
+## Native/WASM and sampling
 
-Return: one line per layer (`layer — pass/fail/skipped(reason)`), then a "Failures" section only if there were any, with per-failure: test id, trimmed error excerpt, suspected source file. End with a one-sentence overall verdict.
+Do not assume Emscripten is absent because `emcc` is missing from a fresh shell. The repository's `scripts/build-wasm.ps1` activates the configured SDK. Use the build path when the actual source/artifact change and caller authorization require it; otherwise name the limitation rather than claiming browser parity with stale bytes.
+
+Simulator use follows the owner-approved shared policy and the actual artifact change. A proof-only or documentation task does not acquire a simulation requirement by invoking this helper. Do not rerun identical already-qualified strategies for ceremony.
+
+## Return
+
+Report commands/targets actually run, their source/artifact context, exit/result, and bounded failure excerpts. Distinguish passed, failed, skipped, unavailable, canceled, and incomplete. Keep full logs on disk at the caller's existing evidence location. Suspected causes are hypotheses unless demonstrated; no estimated pass count or fabricated independent qualification.

@@ -1,0 +1,220 @@
+{
+  "schema_version": "solver_research_series_v1",
+  "question": "RQ-002",
+  "models": {
+    "saved-anchored-v1": {
+      "semantic_version": "native anchored target as retained in the phase lineage; auxiliary relations vary by treatment",
+      "property": "minimum expected cost of a permitted proper completion; lowers only unless separately evaluated",
+      "coefficient_semantics": "native integer-weight witnesses; directed event capacities and exact binary finite checks; auxiliary rational ceilings labelled separately",
+      "scope": "saved medium goal-fractured source and its distinct prefix-removed source, caller product scope; coupled fresh cells are internal to this anchored certificate",
+      "input_references": [
+        "docs/archive/2026-09-04-free-value-bellman-research/native-goal.json",
+        "docs/archive/2026-09-04-free-value-bellman-research/native-economy.json",
+        "docs/archive/2026-09-04-free-value-bellman-research/native-identities.json"
+      ],
+      "source_binding": "exact source identities and caller flags remain in original native/provenance reports, including ordinary-control.json; aliases do not replace them"
+    }
+  },
+  "comparison_profiles": {
+    "primary": "valid native exact closure for every predeclared eligible case under a fixed total time/memory envelope; unavailable when original proof/evaluation records are absent",
+    "lower_development": "checked donor, mandatory program, complete model and independent portfolio separately; no universal score",
+    "resource": "include native preparation and checking in end-to-end observation; same-target unequal-resource experiments are scaling evidence only"
+  },
+  "observations": [
+    {
+      "id": "support",
+      "model": "saved-anchored-v1",
+      "kind": "certified_native_lower",
+      "producer": "original native phase producer, with separate exact coefficient/program audit",
+      "validation": "docs/archive/2026-09-04-uniform-phase-lower-certificates-v1/README.md",
+      "evidence": "docs/archive/2026-09-04-uniform-phase-lower-certificates-v1/reference.json",
+      "adapter": "archived_phase_v1",
+      "role": "development; repeatedly inspected and tuned, not unseen validation",
+      "treatment": "support",
+      "limitations": [
+        "Original native/checker qualification is retained, not rerun by reporting."
+      ]
+    },
+    {
+      "id": "probabilistic",
+      "model": "saved-anchored-v1",
+      "kind": "certified_native_lower",
+      "producer": "original native phase producer, with separate exact coefficient/program audit",
+      "validation": "docs/archive/2026-09-05-native-probabilistic-lower-repair-v1/README.md",
+      "evidence": "docs/archive/2026-09-05-native-probabilistic-lower-repair-v1/reference.json",
+      "adapter": "archived_phase_v1",
+      "role": "development; repeatedly inspected and tuned, not unseen validation",
+      "treatment": "probabilistic",
+      "limitations": [
+        "Original native/checker qualification is retained, not rerun by reporting."
+      ]
+    },
+    {
+      "id": "joint-goal",
+      "model": "saved-anchored-v1",
+      "kind": "certified_native_lower",
+      "producer": "original native phase producer, with separate exact coefficient/program audit",
+      "validation": "docs/archive/2026-09-05-native-joint-goal-lower-refinement-v1/README.md",
+      "evidence": "docs/archive/2026-09-05-native-joint-goal-lower-refinement-v1/reference.json",
+      "adapter": "archived_phase_v1",
+      "role": "development; repeatedly inspected and tuned, not unseen validation",
+      "treatment": "joint-goal",
+      "limitations": [
+        "Original native/checker qualification is retained, not rerun by reporting."
+      ]
+    },
+    {
+      "id": "coupled-side",
+      "model": "saved-anchored-v1",
+      "kind": "certified_native_lower",
+      "producer": "original native phase producer, with separate exact coefficient/program audit",
+      "validation": "docs/archive/2026-09-05-native-side-retention-boundary-coupled-lower-v1/README.md",
+      "evidence": "docs/archive/2026-09-05-native-side-retention-boundary-coupled-lower-v1/reference.json",
+      "adapter": "archived_phase_v1",
+      "role": "development; repeatedly inspected and tuned, not unseen validation",
+      "treatment": "coupled-side",
+      "limitations": [
+        "Original native/checker qualification is retained, not rerun by reporting."
+      ]
+    },
+    {
+      "id": "retention",
+      "model": "saved-anchored-v1",
+      "kind": "certified_native_lower",
+      "producer": "original native phase producer, with separate exact coefficient/program audit",
+      "validation": "docs/archive/2026-09-05-native-retention-lower-integration-v1/README.md",
+      "evidence": "docs/archive/2026-09-05-native-retention-lower-integration-v1/reference.json",
+      "adapter": "archived_phase_v1",
+      "role": "development; repeatedly inspected and tuned, not unseen validation",
+      "treatment": "retention",
+      "limitations": [
+        "Original native/checker qualification is retained, not rerun by reporting.",
+        "Legacy comparison source order is explicitly mapped from its original two-source report; raw exact source keys remain there."
+      ],
+      "comparison": "docs/archive/2026-09-05-native-retention-lower-integration-v1/comparison.json",
+      "comparison_source_order": [
+        "primary",
+        "prefix_removed"
+      ]
+    },
+    {
+      "id": "retention-development-controls",
+      "model": "saved-anchored-v1",
+      "kind": "conditional_observation",
+      "producer": "original bounded sequential development controls",
+      "validation": "docs/archive/2026-09-05-native-retention-lower-integration-v1/README.md",
+      "evidence": "docs/archive/2026-09-05-native-retention-lower-integration-v1/development-findings.json",
+      "role": "development, including refusals/null treatments",
+      "treatment": "staged refinements and preparation controls",
+      "limitations": [
+        "Uncommitted intermediate states or missing executable hashes do not establish matched speedups."
+      ]
+    },
+    {
+      "id": "retention-model-ceiling",
+      "model": "saved-anchored-v1",
+      "kind": "optimistic_model_policy_ceiling",
+      "producer": "exact rational fixed-policy audit of the optimistic box model",
+      "validation": "docs/archive/2026-09-05-native-retention-lower-integration-v1/README.md",
+      "evidence": "docs/archive/2026-09-05-native-retention-lower-integration-v1/reference.json",
+      "pointer": "/optimistic_policy_ceiling",
+      "role": "development auxiliary model",
+      "treatment": "retention",
+      "limitations": [
+        "No native executable upper or general empty-start lower."
+      ]
+    },
+    {
+      "id": "applied-reforge",
+      "model": "saved-anchored-v1",
+      "kind": "certified_native_lower",
+      "producer": "original native phase producer, with separate exact coefficient/program audit",
+      "validation": "docs/archive/2026-09-05-native-applied-reforge-preparation-v1/README.md",
+      "evidence": "docs/archive/2026-09-05-native-applied-reforge-preparation-v1/reference.json",
+      "adapter": "archived_phase_v1",
+      "role": "development; repeatedly inspected and tuned, not unseen validation",
+      "treatment": "applied-reforge",
+      "limitations": [
+        "Original native/checker qualification is retained, not rerun by reporting."
+      ],
+      "comparison": "docs/archive/2026-09-05-native-applied-reforge-preparation-v1/comparison.json"
+    },
+    {
+      "id": "applied-reforge-development-controls",
+      "model": "saved-anchored-v1",
+      "kind": "conditional_observation",
+      "producer": "original bounded sequential development controls",
+      "validation": "docs/archive/2026-09-05-native-applied-reforge-preparation-v1/README.md",
+      "evidence": "docs/archive/2026-09-05-native-applied-reforge-preparation-v1/development-findings.json",
+      "role": "development, including refusals/null treatments",
+      "treatment": "staged refinements and preparation controls",
+      "limitations": [
+        "Uncommitted intermediate states or missing executable hashes do not establish matched speedups."
+      ]
+    },
+    {
+      "id": "applied-reforge-model-ceiling",
+      "model": "saved-anchored-v1",
+      "kind": "optimistic_model_policy_ceiling",
+      "producer": "exact rational fixed-policy audit of the optimistic box model",
+      "validation": "docs/archive/2026-09-05-native-applied-reforge-preparation-v1/README.md",
+      "evidence": "docs/archive/2026-09-05-native-applied-reforge-preparation-v1/reference.json",
+      "pointer": "/optimistic_policy_ceiling",
+      "role": "development auxiliary model",
+      "treatment": "applied-reforge",
+      "limitations": [
+        "No native executable upper or general empty-start lower."
+      ]
+    },
+    {
+      "id": "filtered-continuation",
+      "model": "saved-anchored-v1",
+      "kind": "certified_native_lower",
+      "producer": "original native phase producer, with separate exact coefficient/program audit",
+      "validation": "docs/archive/2026-09-05-native-metamod-first-exit-v1/README.md",
+      "evidence": "docs/archive/2026-09-05-native-metamod-first-exit-v1/reference.json",
+      "adapter": "archived_phase_v1",
+      "role": "development; repeatedly inspected and tuned, not unseen validation",
+      "treatment": "filtered-continuation",
+      "limitations": [
+        "Original native/checker qualification is retained, not rerun by reporting."
+      ],
+      "comparison": "docs/archive/2026-09-05-native-metamod-first-exit-v1/comparison.json"
+    },
+    {
+      "id": "filtered-continuation-development-controls",
+      "model": "saved-anchored-v1",
+      "kind": "conditional_observation",
+      "producer": "original bounded sequential development controls",
+      "validation": "docs/archive/2026-09-05-native-metamod-first-exit-v1/README.md",
+      "evidence": "docs/archive/2026-09-05-native-metamod-first-exit-v1/development-findings.json",
+      "role": "development, including refusals/null treatments",
+      "treatment": "staged refinements and preparation controls",
+      "limitations": [
+        "Uncommitted intermediate states or missing executable hashes do not establish matched speedups."
+      ]
+    },
+    {
+      "id": "filtered-continuation-model-ceiling",
+      "model": "saved-anchored-v1",
+      "kind": "optimistic_model_policy_ceiling",
+      "producer": "exact rational fixed-policy audit of the optimistic box model",
+      "validation": "docs/archive/2026-09-05-native-metamod-first-exit-v1/README.md",
+      "evidence": "docs/archive/2026-09-05-native-metamod-first-exit-v1/reference.json",
+      "pointer": "/optimistic_policy_ceiling",
+      "role": "development auxiliary model",
+      "treatment": "filtered-continuation",
+      "limitations": [
+        "No native executable upper or general empty-start lower."
+      ]
+    }
+  ],
+  "ordinary_pairs": [
+    {
+      "id": "filtered-ordinary-off-on-60s",
+      "control": "docs/archive/2026-09-05-native-metamod-first-exit-v1/ordinary-control.json",
+      "treatment": "docs/archive/2026-09-05-native-metamod-first-exit-v1/ordinary-treatment.json",
+      "provenance": "docs/archive/2026-09-05-native-metamod-first-exit-v1/provenance.json"
+    }
+  ]
+}

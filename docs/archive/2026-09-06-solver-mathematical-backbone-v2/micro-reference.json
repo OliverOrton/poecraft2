@@ -1,0 +1,179 @@
+{
+  "evidence": "rebuilt native query plus exact rational comparison on identical declared coefficients",
+  "production_authority": false,
+  "underlying_native_probability_law_certified": false,
+  "canonical_action_obligations": 21,
+  "native_inapplicabilities": 7,
+  "archived_kernel_and_exact_member_identity_parity": true,
+  "raw_mass_defects": [
+    "0",
+    "21/1152921504606846976"
+  ],
+  "records": [
+    {
+      "stage": 0,
+      "coefficient_mode": "coefficient_model_only",
+      "checked_native_root": 2.15,
+      "exact_reference_root": "4841369599423283/2251799813685248",
+      "reference_root": 2.15,
+      "exact_shortfall": "0",
+      "all_raw_inequalities_pass": true,
+      "simplex_pivots": 1,
+      "limiting_actions": {
+        "0": [
+          "transmute"
+        ]
+      }
+    },
+    {
+      "stage": 1,
+      "coefficient_mode": "coefficient_model_only",
+      "checked_native_root": 2.223558697104083,
+      "exact_reference_root": "46181507355583446592555223060572607/20769187434139310514121985316880384",
+      "reference_root": 2.223558697326439,
+      "exact_shortfall": "4618147648329743678040511/20769187434139310514121985316880384",
+      "all_raw_inequalities_pass": true,
+      "simplex_pivots": 1,
+      "limiting_actions": {
+        "0": [
+          "transmute"
+        ]
+      }
+    },
+    {
+      "stage": 2,
+      "coefficient_mode": "coefficient_model_only",
+      "checked_native_root": 2.2415219921215135,
+      "exact_reference_root": "92345990787040549486136751530577471/41197896385751747067670431356944384",
+      "reference_root": 2.2415219923456657,
+      "exact_shortfall": "9234593032714425544014591/41197896385751747067670431356944384",
+      "all_raw_inequalities_pass": true,
+      "simplex_pivots": 2,
+      "limiting_actions": {
+        "0": [
+          "transmute"
+        ],
+        "7": [
+          "alteration"
+        ]
+      }
+    },
+    {
+      "stage": 3,
+      "coefficient_mode": "coefficient_model_only",
+      "checked_native_root": 23.78999999762045,
+      "exact_reference_root": "4145125579347099237114139299804771/174238149615261916219013425266688",
+      "reference_root": 23.790000000000106,
+      "exact_shortfall": "414626923414279792239715/174238149615261916219013425266688",
+      "all_raw_inequalities_pass": true,
+      "simplex_pivots": 7,
+      "limiting_actions": {
+        "0": [
+          "transmute"
+        ],
+        "1": [
+          "alteration"
+        ],
+        "2": [
+          "alteration"
+        ],
+        "3": [
+          "alteration"
+        ],
+        "5": [
+          "alteration"
+        ],
+        "6": [
+          "alteration"
+        ],
+        "7": [
+          "alteration"
+        ]
+      }
+    },
+    {
+      "stage": 0,
+      "coefficient_mode": "normalized_stored_reference",
+      "checked_native_root": 2.15,
+      "exact_reference_root": "4841369599423283/2251799813685248",
+      "reference_root": 2.15,
+      "exact_shortfall": "0",
+      "all_raw_inequalities_pass": true,
+      "simplex_pivots": 1,
+      "limiting_actions": {
+        "0": [
+          "transmute"
+        ]
+      }
+    },
+    {
+      "stage": 1,
+      "coefficient_mode": "normalized_stored_reference",
+      "checked_native_root": 2.223558697104083,
+      "exact_reference_root": "184726029422333786445881365982114765/83076749736557243569697416064008192",
+      "reference_root": 2.2235586973264385,
+      "exact_shortfall": "18472587304269360227956717/83076749736557243569697416064008192",
+      "all_raw_inequalities_pass": true,
+      "simplex_pivots": 1,
+      "limiting_actions": {
+        "0": [
+          "transmute"
+        ]
+      }
+    },
+    {
+      "stage": 2,
+      "coefficient_mode": "normalized_stored_reference",
+      "checked_native_root": 2.2415219921215135,
+      "exact_reference_root": "184691981574081099047933976800979279/82395792771503495648550337510375424",
+      "reference_root": 2.2415219923456653,
+      "exact_shortfall": "18469182749197008384883599/82395792771503495648550337510375424",
+      "all_raw_inequalities_pass": true,
+      "simplex_pivots": 2,
+      "limiting_actions": {
+        "0": [
+          "transmute"
+        ],
+        "7": [
+          "alteration"
+        ]
+      }
+    },
+    {
+      "stage": 3,
+      "coefficient_mode": "normalized_stored_reference",
+      "checked_native_root": 23.78999999762045,
+      "exact_reference_root": "224060842126870231078074387552267/9418278357581766098581125595136",
+      "reference_root": 23.790000000000003,
+      "exact_shortfall": "22411295222584635585035/9418278357581766098581125595136",
+      "all_raw_inequalities_pass": true,
+      "simplex_pivots": 7,
+      "limiting_actions": {
+        "0": [
+          "transmute"
+        ],
+        "1": [
+          "alteration"
+        ],
+        "2": [
+          "alteration"
+        ],
+        "3": [
+          "alteration"
+        ],
+        "5": [
+          "alteration"
+        ],
+        "6": [
+          "alteration"
+        ],
+        "7": [
+          "alteration"
+        ]
+      }
+    }
+  ],
+  "fixed_J_complete_normalized_control": true,
+  "fixed_J_root_with_independent_frontier_control": false,
+  "local_model_optimum_authority": "independent rational reference only; native result is checked finite lower"
+}

@@ -1,0 +1,414 @@
+{
+  "scope": "Exact synthetic arithmetic and counterexample checks only",
+  "native_solver_runs": 0,
+  "simulator_runs": 0,
+  "independent_reference_tool_run": false,
+  "checks": 33,
+  "passed": 33,
+  "results": [
+    {
+      "name": "zero_cost_loop_vs_proper_finish",
+      "claims": [
+        "CLM-0001",
+        "CLM-0007"
+      ],
+      "passed": true,
+      "values": {
+        "proper_cost": "5",
+        "raw_loop_cost": "0"
+      }
+    },
+    {
+      "name": "transient_fixed_policy_equation",
+      "claims": [
+        "CLM-0002"
+      ],
+      "passed": true,
+      "values": {
+        "value": "12"
+      }
+    },
+    {
+      "name": "root_proper_does_not_cover_other_entry",
+      "claims": [
+        "CLM-0002"
+      ],
+      "passed": true,
+      "values": {
+        "root": "1",
+        "other_entry": "improper"
+      }
+    },
+    {
+      "name": "locally_terminating_options_globally_cycle",
+      "claims": [
+        "CLM-0004"
+      ],
+      "passed": true,
+      "values": {
+        "global_result": "improper"
+      }
+    },
+    {
+      "name": "observation_timing",
+      "claims": [
+        "CLM-0003"
+      ],
+      "passed": true,
+      "values": {
+        "before": "5",
+        "after": "0"
+      }
+    },
+    {
+      "name": "conditioning_away_failure_changes_model",
+      "claims": [
+        "CLM-0004"
+      ],
+      "passed": true,
+      "values": {
+        "real_success": "9/10",
+        "renormalized": "1"
+      }
+    },
+    {
+      "name": "member_aggregation_quantifiers",
+      "claims": [
+        "CLM-0006"
+      ],
+      "passed": true,
+      "values": {
+        "class_lower": "2",
+        "class_scalar_upper": "110"
+      }
+    },
+    {
+      "name": "omitted_cheap_action",
+      "claims": [
+        "CLM-0008",
+        "CLM-0009"
+      ],
+      "passed": true,
+      "values": {
+        "full": "1",
+        "restricted": "10"
+      }
+    },
+    {
+      "name": "counts_do_not_establish_action_set",
+      "claims": [
+        "CLM-0008"
+      ],
+      "passed": true,
+      "values": {
+        "duplicated": [
+          "A",
+          "A"
+        ],
+        "needed": [
+          "A",
+          "B"
+        ]
+      }
+    },
+    {
+      "name": "maximum_not_unallocated_sum",
+      "claims": [
+        "CLM-0010"
+      ],
+      "passed": true,
+      "values": {
+        "maximum": "5",
+        "invalid_sum": "10"
+      }
+    },
+    {
+      "name": "state_lower_is_common_action_floor",
+      "claims": [
+        "CLM-0011"
+      ],
+      "passed": true,
+      "values": {
+        "common": "4"
+      }
+    },
+    {
+      "name": "root_proof_without_outside_incumbent",
+      "claims": [
+        "CLM-0012"
+      ],
+      "passed": true,
+      "values": {
+        "root": "10",
+        "outside_lower": "9",
+        "outside_true": "20"
+      }
+    },
+    {
+      "name": "simultaneous_coupled_region",
+      "claims": [
+        "CLM-0012"
+      ],
+      "passed": true,
+      "values": {
+        "values": [
+          "8/3",
+          "10/3"
+        ]
+      }
+    },
+    {
+      "name": "native_admissible_but_local_infeasible",
+      "claims": [
+        "CLM-0013"
+      ],
+      "passed": true,
+      "values": {
+        "old_lower": "10",
+        "truncated_ceiling": "1"
+      }
+    },
+    {
+      "name": "stale_minimum_expectation",
+      "claims": [
+        "CLM-0014"
+      ],
+      "passed": true,
+      "values": {
+        "first": "4",
+        "new": "4",
+        "stale": "6",
+        "first_allocation": [
+          "3/5",
+          "2/5"
+        ],
+        "correct_new_allocation": [
+          "2/5",
+          "3/5"
+        ]
+      }
+    },
+    {
+      "name": "infeasible_probability_box_refuses",
+      "claims": [
+        "CLM-0014"
+      ],
+      "passed": true,
+      "values": {
+        "cap_sum": "4/5"
+      }
+    },
+    {
+      "name": "capacity_rounding_direction",
+      "claims": [
+        "CLM-0014",
+        "CLM-0023"
+      ],
+      "passed": true,
+      "values": {
+        "true": "20/3",
+        "rounded_up": "25/4",
+        "rounded_down": "15/2"
+      }
+    },
+    {
+      "name": "unconditional_marginal_product_counterexample",
+      "claims": [
+        "CLM-0015"
+      ],
+      "passed": true,
+      "values": {
+        "joint": "1/10",
+        "false_product": "1/1000"
+      }
+    },
+    {
+      "name": "conditional_assignment_arithmetic",
+      "claims": [
+        "CLM-0015"
+      ],
+      "passed": true,
+      "values": {
+        "constant": "16/11979",
+        "history": "16/55165",
+        "qualification": "Arithmetic only; native history premises not checked here"
+      }
+    },
+    {
+      "name": "overlapping_goals_break_distinct_draw_assumption",
+      "claims": [
+        "CLM-0015"
+      ],
+      "passed": true,
+      "values": {
+        "distinct_assignments": 0,
+        "possible_single_draw_joint_event": "1/2"
+      }
+    },
+    {
+      "name": "acquisition_to_completion_coordinates",
+      "claims": [
+        "CLM-0016"
+      ],
+      "passed": true,
+      "values": {
+        "acquisition": [
+          "0",
+          "3",
+          "5",
+          "8"
+        ],
+        "all_two": [
+          "8",
+          "5",
+          "3",
+          "0"
+        ],
+        "any_one": [
+          "3",
+          "0",
+          "0",
+          "0"
+        ]
+      }
+    },
+    {
+      "name": "initial_nonempty_does_not_prove_second_draw",
+      "claims": [
+        "CLM-0017"
+      ],
+      "passed": true,
+      "values": {
+        "initial_count": 2,
+        "after_first_count": 0,
+        "qualification": "Synthetic exclusion set, not a native pool"
+      }
+    },
+    {
+      "name": "paid_failure_vs_free_rollback",
+      "claims": [
+        "CLM-0017",
+        "CLM-0018"
+      ],
+      "passed": true,
+      "values": {
+        "free": "128",
+        "paid": "382"
+      }
+    },
+    {
+      "name": "deterministic_relaxation_exit_ceiling",
+      "claims": [
+        "CLM-0018"
+      ],
+      "passed": true,
+      "values": {
+        "ceiling": "233/20000",
+        "qualification": "Synthetic inequality illustrating a documented kind of ceiling"
+      }
+    },
+    {
+      "name": "tied_constraints_mask_single_refinement",
+      "claims": [
+        "CLM-0019"
+      ],
+      "passed": true,
+      "values": {
+        "baseline": 10,
+        "one_refined": 10,
+        "both_refined": 50
+      }
+    },
+    {
+      "name": "computational_price_floor_not_semantic_ceiling",
+      "claims": [
+        "CLM-0019"
+      ],
+      "passed": true,
+      "values": {
+        "shortcut": "10",
+        "full_rhs": "100"
+      }
+    },
+    {
+      "name": "self_choice_must_remain_in_raw_equation",
+      "claims": [
+        "CLM-0023"
+      ],
+      "passed": true,
+      "values": {
+        "valid": "2",
+        "invalid": "51"
+      }
+    },
+    {
+      "name": "residual_amplification",
+      "claims": [
+        "CLM-0023"
+      ],
+      "passed": true,
+      "values": {
+        "residual": "1/1000000",
+        "value_error": "1"
+      }
+    },
+    {
+      "name": "dropping_filter_is_not_lower_transfer",
+      "claims": [
+        "CLM-0025"
+      ],
+      "passed": true,
+      "values": {
+        "unfiltered": "100",
+        "filtered_policy": "4"
+      }
+    },
+    {
+      "name": "strict_local_dominance_not_equality",
+      "claims": [
+        "CLM-0020"
+      ],
+      "passed": true,
+      "values": {
+        "upper": "5",
+        "retired_lower": "6"
+      }
+    },
+    {
+      "name": "price_changes_invalidate_old_value_use",
+      "claims": [
+        "CLM-0021"
+      ],
+      "passed": true,
+      "values": {
+        "old_value": "5",
+        "lower_price_true": "1",
+        "higher_price_true": "10"
+      }
+    },
+    {
+      "name": "formatted_zero_gap_is_not_equality",
+      "claims": [
+        "CLM-0024"
+      ],
+      "passed": true,
+      "values": {
+        "lower": "4999/1000",
+        "upper": "5",
+        "true_gap": "1/1000"
+      }
+    },
+    {
+      "name": "fixed_policy_exact_evaluation_not_optimality",
+      "claims": [
+        "CLM-0002",
+        "CLM-0024"
+      ],
+      "passed": true,
+      "values": {
+        "incumbent": "10",
+        "optimum_in_example": "5"
+      }
+    }
+  ]
+}

@@ -8,6 +8,8 @@ using namespace poecraft::solver;
 using namespace poecraft::solver::quotient;
 
 namespace {
+// math: tests CLM-0008 — Canonical coverage fixtures are finite checks, not a
+// universal proof that every native producer covers its physical member domain.
 constexpr std::uint64_t cap = 16ull * 1024 * 1024;
 const StableKey request{100, 200, 300, 400, 500};
 const StableKey scope{400};

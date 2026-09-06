@@ -96,6 +96,8 @@ double SolveWork::Impl::native_retention_lower_value(std::uint32_t state_id) {
 }
 
 std::optional<double> SolveWork::Impl::project_native_retention_lower(std::uint32_t state_id) const {
+    // math: obligation CLM-0006 — These complete member guards establish the
+    // supported class domain; a representative hit cannot replace them.
     const auto& state=calc.state(state_id);
     // Uniformity is proved from retained fields and complete member masks.
     // No materialized representative is used to broadcast a stronger value.

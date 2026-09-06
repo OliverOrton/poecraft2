@@ -1,19 +1,11 @@
 # Documentation Tooling
 
-**Status: future placeholder only.** No documentation lint, sorting command,
-or silently passing executable exists in this phase.
+Claim/reference lint, bounded research context and the existing reporter's
+archived series view are implemented. See [commands and limits](../solver/benchmarking.md#research-series)
+and [research workflow](../solver/research.md). These checks establish traceability,
+not theorem truth or runtime authority.
 
-Parent: [Future work](README.md)
-
-A later, explicitly selected tooling chunk may automate checks that were run
-manually during the 2026-07-19 cleanup:
-
-- repository-relative Markdown links resolve;
-- non-template documents are reachable from `docs/README.md`;
-- each area README owns every document in its folder; and
-- stable references carry meaningful code-verification stamps.
-
-Any implementation must report real failures, document its exemptions, and be
-reviewed before joining the product test pipeline. Notes classification remains
-manual unless Oliver separately chooses a repository-neutral workflow; no
-Claude-only or Codex-only sorter is planned here.
+The earlier universal sorting, restamping, area-ownership and reachability proposals
+are superseded by this narrower implementation. Additional checks require a
+specific maintenance need. Prose changes do not require a full-product build or
+routine simulation. The original proposal remains in Git history.

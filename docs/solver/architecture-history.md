@@ -1,10 +1,9 @@
-# Solver Architecture History
+# Historical Solver Architecture
 
-**Status: retained historical reference.** The current compositional contract
-starts at [Solver](README.md). Dated measurements and implementation addenda
-below preserve prior evidence and do not control current sequencing.
-
-Parent: [Documentation index](../README.md)
+This preserves earlier explanations and dated investigations. For current owners
+use [Solver internals](../foundation/solver-internals.md), for arguments use
+[mathematics](mathematics/README.md), and for proposition histories use
+[claims](claims.md). Older “current” or “next” entries do not own present sequencing.
 
 Current-contract audit: verified against source on 2026-08-25 @ `cb26c29`.
 The goal/terminal, product action-scope, delayed-envelope lower authority,

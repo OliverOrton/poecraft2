@@ -1,110 +1,41 @@
-# Project Direction
+# Project direction
 
-**Status: current orientation, not an execution plan.** The complete knowledge
-map is [Documentation](README.md). [HANDOFF](../HANDOFF.md) records whether an
-implementation boundary is selected and the exact stopping point.
+poecraft2 is a Path of Exile crafting simulator and expected-cost planner. One
+native engine owns crafting behavior. Ingested canonical data becomes a compiled
+runtime artifact; Python and WASM bindings expose the engine to native workflows
+and the web product.
 
-## Vision
+## Solver objective
 
-poecraft2 is a fast, trustworthy Path of Exile 1 crafting simulator that runs
-client-side, paired with an exact planner for minimum expected-cost crafting
-strategies. One native engine owns crafting behavior across manual crafting,
-simulation, exact calculation, strategy compilation, and solver search.
+The research objective is to extend **certified exact closure as far as
+practically achievable**. Strong executable policies, admissible lowers, faster
+preparation, and lower memory use are useful intermediate results. They are not
+automatically evidence of wider exact closure.
 
-```text
-Python ingest -> canonical SQLite -> compiled runtime data
-              -> C++20 engine/C ABI -> Python and WASM bindings
-              -> Vite + TypeScript + Web Components product
-```
+Keep fixed semantic cohorts and resource envelopes for honest comparisons, while
+expanding a separately labelled development frontier. The target model,
+properties, and reference evidence remain useful when an algorithm is replaced.
 
-The solver plans over engine-owned transitions. Its policies compile to the
-same editable strategy vocabulary that the simulator executes; the frontend
-does not reimplement crafting rules.
+The [mathematical model](solver/mathematical-model.md) defines the optimization
+question. [Mathematics](solver/mathematics/README.md) explains the arguments.
+[Solver mechanisms](solver/README.md) and the [source map](foundation/solver-internals.md)
+explain the implementation. [Research](solver/research.md) connects findings to
+questions rather than technique-specific chronology.
 
-## Current Posture
+## Product and authority
 
-- Canonical RePoE ingest, SQLite validation, compiled engine data, the native
-  C ABI, Python bindings, and a rebuildable WASM module are implemented.
-- Ordinary non-cluster item sessions share the implemented action vocabulary
-  documented in [Mechanics](mechanics/README.md), including the 26 serialized
-  action kinds plus Bestiary Imprint checkpoint/restore behavior.
-- The browser product provides Emulator, Calculator, Strategy Builder and
-  Simulator, Stash, saved workspaces, and league-aware economy inputs.
-- The exact solver, compiled simulation, accounting, automatic candidates,
-  all-actions state scaling, shared policy compilation, exact compiled-policy
-  evaluation, bounded executable-policy results, natural-T1 corpus generation,
-  benchmark orchestration and analytics, and non-visual product integration
-  are implemented. Remaining delivery boundaries are preserved without
-  scheduling them in the [solver roadmap](future/solver-roadmap.md).
-- Economy ingest, immutable snapshots, league selection, overrides, and cost
-  identities exist. The checked-in Allflame publication includes required
-  Beast pricing for Craicic Croaker plus the explicit generic rare-beast owner
-  default. Production activation remains external; see
-  [Economy](economy/README.md).
-- Accounts and publishing, recombinator planning, additional mechanics, and ML
-  planning remain deferred in [Future](future/README.md).
+Native and browser surfaces are interfaces to the same mechanics authority.
+Canonical SQLite and derived runtime data retain their existing ownership.
+Oliver decides ambiguous crafting mechanics. A useful bounded policy is not
+labelled optimal merely because it compiles or its value was evaluated.
 
-The
-[mechanical solver split](archive/2026-07-22-mechanical-solver-split/README.md)
-is complete. It was a token-equivalent internal restructuring with no behavior
-or test additions; exact hashes, native counts, and measured fast-case
-performance passed its acceptance gates. The subsequent
-[focused-round performance investigation](archive/2026-07-23-focused-round-performance/README.md)
-accepted diagnostic attribution and no scheduling-default change: larger
-batches reduced repeated whole-graph work, but every tuple failed the fixed
-worker-step responsiveness gate. The bounded policy results and
-benchmarking milestone is complete in its
-[dated archive](archive/2026-07-22-bounded-policy-and-benchmarking/README.md).
-It preserves exact mechanics and action scope while making certified executable
-incumbents useful before exact closure, and adds a seeded natural-T1 corpus and
-stratified solver evidence. The subsequent
-[Solver Goal Realignment milestone](archive/2026-08-09-solver-goal-realignment/README.md)
-qualifies the goal-relevant native/release-WASM product path, including the
-five-minute four-goal target and every ordinary base. [Active work](active/README.md)
-and [HANDOFF](../HANDOFF.md) record whether Oliver has selected another chunk.
-Exact solver action/state pruning is complete and preserved in its
-[dated archive](archive/2026-07-21-solver-action-state-pruning/README.md).
-Exact solver state scaling is preserved in its
-[dated archive](archive/2026-07-20-solver-state-scaling/README.md). Historical
-target misses, scaling measurements, waivers, and final gates remain
-discoverable through [Evidence](evidence.md) and the
-[archive](archive/README.md); they are not silently converted into current
-acceptance claims.
+Native experimentation can use a different execution resource envelope from the
+browser when that difference is explicit. Neither a larger budget nor a product
+restriction silently changes the meaning of a comparison.
 
-## Direction Of Travel
-
-These are durable product directions, not a selected order:
-
-- Preserve engine-owned mechanic correctness and auditable data authority.
-- Finish practical solver/product delivery only through a newly selected plan;
-  the known boundaries are summarized in the
-  [solver roadmap](future/solver-roadmap.md).
-- Add exact two-item recombinator outcomes before automatic recombinator
-  planning.
-- Continue workspace and economy fluency where it supports real crafting use.
-- Keep accounts, publishing, and ML downstream of their explicit prerequisites.
-
-## Non-Negotiable Boundaries
-
-- SQLite is canonical; compiled runtime data is derived and never hand-edited.
-- The native engine owns pools, weights, item transitions, and crafting rules.
-- Ambiguous Path of Exile mechanics require Oliver's ruling; agents do not
-  research or guess them.
-- Minimum expected cost remains the solver objective unless Oliver explicitly
-  changes it.
-- Compiled-strategy verification uses 10,000 simulator runs when verification
-  is required, unless Oliver specifies otherwise.
-- Browser memory, responsiveness, and exactness limitations are disclosed, not
-  hidden by raising caps or weakening claims.
-
-## Read Next
-
-- [Foundation](foundation/README.md) for system boundaries
-- [Mechanics](mechanics/README.md) for implemented behavior
-- [Engine](engine/README.md), [Solver](solver/README.md),
-  [Product](product/README.md), and [Economy](economy/README.md) for subsystem
-  references
-- [Decisions](decisions.md), [evidence](evidence.md), and
-  [glossary](glossary.md) for cross-cutting knowledge
-- [Future](future/README.md) and [Archive](archive/README.md) for deferred and
-  historical material
+The web product, economy pipeline, and other deferred features keep their
+existing contracts. This orientation selects no new implementation boundary.
+Use [HANDOFF](../HANDOFF.md) for actual active work, [AGENTS](../AGENTS.md) for
+shared operating policy, and the [documentation map](README.md) only when an
+owner needs locating. Detailed milestones and historical measurements remain in
+the [archive](archive/README.md), not in this direction page.

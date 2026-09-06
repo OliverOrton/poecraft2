@@ -166,3 +166,5 @@ Commands and testing cadence are maintained in the repository `AGENTS.md`.
 Before changing a cross-layer contract, use the
 [Change Impact Map](change-impact.md) to identify downstream bindings,
 generated artifacts, documentation, and final verification.
+
+For the mathematical target and correctness arguments, use [Solver mathematics](../solver/mathematics/README.md); [Solver internals](solver-internals.md) owns current source correspondence.

@@ -1,71 +1,44 @@
 # Solver
 
-**Status: current architecture index.** Verified against current source on
-2026-08-28. Historical measurements and superseded implementation narratives
-live in [Architecture History](architecture-history.md) and the dated archive.
+The solver takes a native item, a goal, an action/program scope, and prices, then
+attempts to produce a certified result and an executable strategy. Native
+mechanics remain authoritative.
 
-Parent: [Documentation](../README.md) | Private source map:
-[Solver Internals](../foundation/solver-internals.md)
+Use the mathematical route for **why a transformation or result is valid** and
+the mechanism route for **how the current source implements it**. Neither is a
+mandatory whole-library read.
 
-The solver turns a native item, an exact item goal, an action envelope, and an
-economy into an executable strategy. Mechanics remain native engine authority;
-the web app only describes a request and presents native results.
+## Mathematical route
 
-## Current Contract Pages
+| Question | Reference |
+|---|---|
+| What problem and policy class are being optimized? | [Mathematical model](mathematical-model.md) |
+| How do the arguments compose across the solver? | [Mathematical reading guide](mathematics/README.md) |
+| What are the exact preconditions and known counterexamples? | [Claim ledger](claims.md) |
+| What has research established, and what remains open? | [Research questions](research.md) |
 
-| Question | Authority |
-| --- | --- |
-| Which actions and restrictions are in this solve? | [Request And Action Scope](request-action-scope.md) |
-| What is a solver state and what carrier facts remain exact? | [States And Carriers](states-carriers.md) |
-| How are stochastic action rows built and charged? | [Transitions And Reforge Work](transitions-reforge.md) |
-| How are states expanded and policies solved? | [Scheduling And Bellman Search](scheduling-bellman.md) |
-| Where can an executable upper come from? | [Executable Upper Authority](upper-authority.md) |
-| What may prune work or become a public lower? | [Lower And Pruning Authority](lower-pruning.md) |
-| What turns a coarse policy into an exact proof? | [Strict Closure](strict-closure.md) |
-| What is required before a strategy is returned? | [Publication, Compilation, And Evaluation](publication.md) |
-| Which caps, resumable tasks, and replay boundaries exist? | [Resources, Resume, And Replay](resources-resume-replay.md) |
-| Which progress and diagnostic fields should I inspect? | [Telemetry](telemetry.md) |
+## Current mechanism route
 
-Supporting references:
+| Responsibility | Reference |
+|---|---|
+| Requests, restrictions, and action admission | [Request and action scope](request-action-scope.md) |
+| State fields and carrier representation | [States and carriers](states-carriers.md) |
+| Kernels, probability, and reforge work | [Transitions and reforge work](transitions-reforge.md) |
+| Expansion and numerical work | [Scheduling and Bellman search](scheduling-bellman.md) |
+| Executable candidate authority | [Upper authority](upper-authority.md) |
+| Admissible patterns and retirement | [Lower and pruning authority](lower-pruning.md) |
+| Exact alternative closure | [Strict closure](strict-closure.md) |
+| Returned strategy and evaluation | [Publication](publication.md) |
+| Limits, lifetime, and replay | [Resources, resume, and replay](resources-resume-replay.md) |
+| Diagnostic fields | [Telemetry](telemetry.md) |
+| Complete flow and source ownership | [Flow](flow.md) and [solver internals](../foundation/solver-internals.md) |
+| Measurements and comparison semantics | [Benchmarking](benchmarking.md) |
 
-- [End-to-end solver flow](flow.md) retains the detailed sequence diagrams.
-- [Solver Internals](../foundation/solver-internals.md#benchmark-private-verified-leaf-fragments)
-  owns the benchmark-private verified leaf-fragment authority, exact verifier,
-  flattening, independent-evaluation, and shadow-isolation contract.
-- [Benchmarking](benchmarking.md) defines corpus and harness practice.
-- [Solver notes](NOTES.md) contains observations that have not become stable
-  contract.
-- [Architecture history](architecture-history.md) preserves the former
-  monolithic reference and its dated addenda; it is evidence, not current
-  sequencing authority.
+Lower, upper, ordering, and exactness evidence are separate. A finite partial
+row or estimate does not acquire authority through its type name. A useful
+policy may be returned while proof remains open, and a completed auxiliary
+model need not solve the native request.
 
-## Authority Ladder
-
-```text
-mechanics + request scope
-  -> native transition rows
-  -> reachable sparse graph and Bellman policy
-  -> independently executable upper candidate
-  -> strict carrier/action accounting
-  -> compiled graph and exact graph evaluation
-  -> bounded or exact public result
-```
-
-An upper, a lower, and exactness are separate authorities. A useful compiled
-policy may be returned while the lower remains weak. A restricted action
-envelope may have an exact value within that envelope without proving anything
-about disabled actions. A partial row, frontier, checkpoint, heuristic score,
-or sampled simulation never gains proof authority by being finite.
-
-## Failure Vocabulary
-
-- `no_executable_policy`: no proper fully priced policy was retained.
-- `refused_resource_cap`: useful bounded evidence may exist, but a named work,
-  state, transition, memory, compilation, or evaluation limit stopped proof.
-- `requested_bounded_finish`: the caller requested publication at a cooperative
-  boundary; this is not an exactness claim.
-- `target_gap`: a certified lower and executable upper met the requested gap.
-- `exact_closed`: the requested action envelope and strict proof obligations
-  closed and the selected compiled strategy reconciled exactly.
-- `numerical_stability`: a policy equation or reconciliation check could not
-  establish its required numerical contract.
+Current work is owned by [HANDOFF](../../HANDOFF.md). [Architecture history](architecture-history.md),
+[notes](NOTES.md), and the [archive](../archive/README.md) answer particular
+historical questions; they are not the routine startup path.

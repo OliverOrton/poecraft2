@@ -1,546 +1,126 @@
 # End-To-End Solver Flow
 
-**Status: stable implemented cross-layer flow reference.** This page describes
-the current product and runtime sequence. It does not schedule deferred solver
-work or define crafting mechanics.
+**Integrated reference.** Authored from the repository contracts at `f3e7c0fa7bd827064a41c48a53c4db372840cf0f`. Reconciled with local `215654f`; importing this mechanism reference supplies no new runtime authority.
 
-Parent: [Solver](README.md)
-
-Current-contract audit: verified against source on 2026-08-25 @ `cb26c29`.
-Scope: Calculator request defaults, worker/WASM/C ABI lifecycle, native solve
-authorities and cooperative phases, public lower and verified-upper authority,
-policy compilation, exact graph evaluation, and sampled verification. Native
-owner, release-WASM responsiveness, final native/WASM corpus, and nonvisual
-cross-layer acceptance passed and are recorded in the archived milestone
-evidence. No rendered review or mechanic ruling was performed.
-
-Qualification addendum: source inspection and focused native tests on
-2026-07-31 verified the shared publication steps through observation
-propagation, but the required natural two-goal case stopped before its first
-closed-partition class at the unchanged 1 GiB cap. Release WASM and full
-cross-layer acceptance were not rerun.
-
-Closed-domain qualification addendum: verified against source on 2026-08-30
-@ `e95b189b8c118b66fdb20bc1f6e2f634203da3ed`. A fully closed, uncapped exact
-coarse result may compile all solved behavioral representatives for direct
-assertion instead of only the root-policy-reachable subset. The PDR control
-independently proves that artifact proper with success one, zero off-policy
-mass, and complete pricing before strict lift. Focused native checks, release
-WASM, nonvisual web acceptance, and TypeScript checking passed. The direct
-coarse/exact value mismatch remains explicit, so this addendum does not claim
-direct exact closure or permit strict refinement to be bypassed.
-
-The policy-guided refinement steps below define the retained native
-publication authority. Its reconstruct-then-merge production path stopped at
-the archived
-[two-goal 1 GiB qualification gate](../archive/2026-07-31-policy-guided-exact-refinement/README.md),
-so this page does not claim broad availability or changed refusal counts. The
-subsequent
-[proof-carrying quotient milestone](../archive/2026-08-01-proof-carrying-quotient-refinement/README.md)
-integrates the same authority during solving and retains its focused and medium
-implementation. Its binding two-goal case exhausted candidate-certification
-work before partition initialization, so the core remains unqualified.
+This page maps requests, work, and ownership across native and product surfaces. General proofs live in [mathematics](mathematics/README.md); file ownership lives in [Solver internals](../foundation/solver-internals.md). Neither this flow nor an old milestone chooses the next implementation.
 
 ## Purpose
 
-The [Solver reference](README.md) owns the planning abstraction, exact
-transition model, optimization, and output contracts. This page owns the
-sequence across product and runtime boundaries: which object calls which
-surface, what is retained, where cancellation is observed, and when a result
-becomes an editable strategy.
+Both native experimentation and the browser use the same native mechanic, solver, compiler, and evaluation authorities:
 
 ```text
-Calculator / Strategy Builder
-  -> EngineClient request with an opaque worker handle
-  -> engine-worker dispatch and cooperative stepping
-  -> EngineBindings JSON call into the WASM facade
-  -> pcw_* handle registry and JSON translation
-  -> pc_* C ABI
-  -> native CalcContext / SolveWork / policy compiler / evaluator
-  -> JSON summaries or transferable strategy bytes back through the worker
-  -> product validation, presentation, and workspace handoff
+native case / Lab request ──────────────┐
+                                     v
+browser request → worker → WASM/C ABI → native solve
+                                     → evaluated ordinary strategy
+                                     → bounded or exact result
 ```
 
-The native engine owns action legality, outcome probabilities, abstract state,
-cost optimization, and graph execution. TypeScript owns input selection,
-economy pinning, request lifetime, progress presentation, and validation of the
-returned editable document.
+The native engine owns legality, transition probabilities, state semantics, pricing calculations, and strategy execution. Orchestration owns input selection, lifetime, pinned evidence, and presentation—not a second set of crafting rules.
 
 ## Shared Inputs And Identities
 
-All solver-related flows begin from these values:
+A request binds compiled game data, session/base/item level, concrete item, resolved goal, declared action/program scope, prices, and computational limits. Goal slots use stable group/family and tier identities with the native minimum-satisfaction semantics.
 
-| Input | Owner and role |
-| --- | --- |
-| Compiled game data | One worker-local data handle opened by the shared engine service |
-| Session | Immutable base metadata path and item level; owns dense session-local mod IDs |
-| Concrete item | Worker-local item handle containing the Calculator input state |
-| Goal | V1 rarity, one to eight stable group/family slots, tier thresholds, and `min_satisfied_slots` |
-| Action scope | Full registry for one-action odds or a bounded `goal_relevant` product envelope for Solve |
-| Economy | Immutable price snapshot pinned for one solve, evaluation, or simulation |
+Worker handles and session-local numeric IDs are not persisted semantic identities. Saved items, goals, economies, and strategies use their stable document identities. A new source executable is not evidence that old local handles retain meaning.
 
-Integer handles are meaningful only inside the worker and its WASM module.
-Persisted items, goals, economies, and strategies use stable string identities;
-they do not persist session-local IDs or native handles.
+## Native CLI And Lab Path
+
+The direct benchmark validates a native case and invokes the public native solver/evaluator. The Lab wraps that benchmark in an immutable job/attempt with process supervision, artifact integrity, and compact CLI reads. The GUI is optional; no MCP transport is required.
+
+Use the existing Lab/corpus identity and result contracts. The Lab catalogue is not the canonical game-data database, and it does not certify a lower or policy. See [Solver Lab](../foundation/solver-lab.md) and [benchmarking](benchmarking.md).
 
 ## Calculator Setup And Handle Roles
 
-When a Calculator document opens, `pc-calculator` obtains the shared
-`EngineClient` and data handle, opens a session and action context, and imports
-or creates its input item. A goal with at least one slot opens an ordinary
-solver handle. That handle supplies the action picker and exact one-action odds;
-it is separate from the product Solve handle so Solve can use a narrower priced
-scope without removing actions from the Calculator.
+Calculator creates or imports an item under a data/session/action context. Its persistent ordinary solver supplies the current registry and exact one-action odds. Each Solve creates a separate short-lived priced scope.
 
-The Calculator owns one persistent solver field and opens a separate scoped
-solver inside each Solve invocation:
+Goal edits clear the old result and replace the ordinary solver as required. Base/item-level changes replace the relevant session, context, item, and solver handles. Stable drafts do not persist these handles.
 
-| Handle | Current purpose | Lifetime |
-| --- | --- | --- |
-| `solver` | Full/current-goal registry and one-action exact outcomes | Reopened when the goal or session changes; closed with the Calculator |
-| Scoped Solve solver | Priced `goal_relevant` solve scope, transition closure, and latest result | Opened fresh for one Solve; closed after summary, telemetry, and compiled strategy transfer or any terminal failure |
-
-Goal edits clear result state, replace the ordinary solver, and refresh the
-available action descriptors. Base or item-level changes also replace the
-session, context, item, and ordinary solver handles. Draft persistence stores
-stable state, not these runtime objects.
-
-Code authority:
-`apps/web/src/app/components/pc-calculator.ts`,
-`apps/web/src/app/solve-workspace.ts`, and
-`apps/web/src/app/workspace/persistence.ts`.
+The persistent odds solver and the scoped Solve solver are different objects. Narrowing the priced Solve request must not silently remove one-action mechanics from the ordinary Calculator picker.
 
 ## Exact One-Action Odds
 
-The ordinary Calculator path answers “what can this selected action do to this
-exact item?” without mutating the item:
+The client sends the ordinary solver, item, and canonical action ID through the worker/facade to `pc_calc_action_outcomes`. Native calculation returns the supported/legal result and complete successor/goal-probability information without mutating the source.
 
-1. Calculator selects a canonical action ID from the current solver registry.
-2. `EngineClient.solverCalc` sends `solver`, `item`, and action ID in a worker
-   request.
-3. The worker calls `EngineBindings.solverCalc`; the WASM facade resolves the
-   action ID and invokes `pc_calc_action_outcomes`.
-4. Native `CalcContext` projects the concrete item to its abstract state and
-   returns the cached or newly constructed exact sparse successor distribution.
-5. The result returns supported/legal state, successor probabilities,
-   per-goal-slot marginal satisfaction, and combined goal success probability.
-6. Calculator presents the native probabilities and performs only labelled
-   display arithmetic such as failure probability and action-cost-per-success.
-
-There is no sampled fallback in this path. Bestiary Imprint/restore uses its
-dedicated exact compound-state API because the state includes an optional
-checkpoint; it returns beside registry action results but does not pass through
-`pc_calc_action_outcomes`.
-
-Prices do not change exact one-action probabilities. The product may update
-displayed cost arithmetic when the shared economy changes.
-
-Code authority:
-`apps/web/src/app/components/pc-calculator.ts`,
-`apps/web/src/app/engine-client.ts`,
-`apps/web/src/app/engine-worker.ts`,
-`apps/web/src/app/engine-wasm.ts`,
-`bindings/wasm/wasm_api.cpp`, and
-`engine/src/solver_api.cpp`.
+There is no sampled fallback for unsupported exact vocabulary. Imprint/restore uses its dedicated compound-state path because a checkpoint is part of the semantic state. Prices change displayed cost calculations, not the underlying native probabilities.
 
 ## Solve Preparation
 
-Pressing Solve creates a scoped, priced request before native optimization:
+Calculator pins its effective economy, requests native goal-relevant candidate descriptors, and selects candidates with complete price vectors. Fracture recovery requires its native base/recovery cost where applicable. Missing prices are not free actions.
 
-1. Calculator pins the effective workspace economy and its provenance for the
-   currently known solver action keys and Imprint creation key.
-2. Product readiness checks require an input item, at least one goal slot, and
-   at least one priced action. A priced Fracture action also requires `base`
-   pricing because miss recovery uses Restart.
-3. Calculator opens a short-lived `action_mode: "goal_relevant"` envelope
-   solver and reads its native candidate descriptors. The native registry also
-   retains engine-declared automatic dependencies, but
-   `pc_solver_candidates` never returns those dependency-only primitives.
-4. TypeScript keeps only candidate descriptors whose complete cost-key vectors
-   resolve in the pinned economy. Missing prices exclude a candidate; they
-   never make it free. Dependencies remain native and are price-checked when a
-   carrier-local option tries to materialize them.
-5. The envelope solver closes. Calculator builds a second goal containing the
-   priced action IDs.
-6. Calculator opens a fresh scoped solver for that priced goal. It is not
-   retained for later repricing or Solve invocations.
-7. The pinned economy is loaded into a short-lived native economy handle for
-   this solve invocation.
-8. Positive absolute-chaos and relative-percent product targets are converted
-   to the optional native gap fields. Disabled inputs omit those fields.
+The temporary envelope solver closes, and the product opens a fresh solver for the selected priced goal and loads the pinned economy. Candidate/dependency roles and state-local automatic synthesis remain native-owned. Gap targets are passed only when enabled.
 
-Candidate generation and descriptors remain native. TypeScript filters by
-price completeness but does not decide mechanic legality or synthesize planner
-operators.
-
-Within each native goal-relevant registry, every action has one deterministic
-role and reason: candidate, automatic dependency, or filtered. The parent
-abstract layout contains candidates plus dependencies of fixed options already
-present. Automatic admission creates a local exact carrier context and adds
-only the dependencies used by the option it materializes; retaining a possible
-dependency does not widen every state. Role/family/reason counts, parent layout
-width, and materialized dependency counts are reported in solver telemetry.
-
-Code authority:
-`apps/web/src/app/components/pc-calculator.ts`,
-`apps/web/src/app/solve-workspace.ts`, and
-`engine/src/solver_registry.cpp`.
+Native profiles resolve product defaults. Goal-progress gating, automatic Imprint scope, and voluntary Restart restrictions must remain visible; they are not implementation details that can be omitted from an exactness comparison.
 
 ## Cooperative Native Solve
 
-`EngineClient.solverSolve` assigns one request ID and passes an `AbortSignal`
-plus a progress callback to the worker. The worker drives the stateful native
-surface:
+The stepped interface is:
 
 ```text
-pcw_solver_solve_begin
-  -> pc_solver_solve_begin
-  -> repeated pcw_solver_solve_step / pc_solver_solve_step
-  -> pcw_solver_solve_finish / pc_solver_solve_finish
+pcw_solver_solve_begin → pc_solver_solve_begin
+repeated pcw_solver_solve_step → pc_solver_solve_step
+pcw_solver_solve_finish → pc_solver_solve_finish
 ```
 
-The native stages are:
+Native work constructs action contracts and layout, admits source-local operators, builds completed rows, prices them, and alternates search/Bellman/policy work. It retains candidates and independent lower evidence under their own authorities.
 
-1. derive, canonicalize, and validate the one engine-owned
-   observation/preservation/destruction contract for every candidate action;
-   reject incomplete descriptors before admission, then project the concrete
-   start item and expand reachable abstract states;
-2. admit state-local primitive and automatic operators, resolve each automatic
-   program's declared dependency-only primitives, and build exact sparse
-   transition rows within configured work/memory/output caps;
-3. price operators against the pinned economy;
-4. optimize cyclic components using SCC-based policy iteration with the
-   documented fallback;
-5. freeze the core-selected policy, reachable closure, values, bounds,
-   identities, transition/policy hashes, and owned memory before publication
-   work can mutate or revoke it;
-6. keep a numerically stopped selected policy in a distinct unverified wrapper
-   while preserving the already certified fallback; the coarse selected value
-   may prioritize work but has no publication authority;
-7. compile and exact-assert that retained candidate directly, requiring parse,
-   proper absorption, complete exact pricing, zero off-policy mass, and cost
-   reconciliation, while charging its work to the shared unchanged caps;
-8. only when that direct assertion demonstrates an incompatibility, improper
-   component, or mismatch, lift the affected policy region through native
-   policy-guided exact refinement and prove selected-kernel lumpability; and
-9. publish the best certified retained artifact, preserving the core and
-   direct-stage identities and reasons in telemetry even when strict repair
-   wins or no candidate can be published.
+Publication work is also cooperative: direct assertion, optional strict repair, evaluation, and classification occur before the final result transfer. A numerical candidate remains unverified until it passes the relevant executable checks. A previously verified incumbent is not replaced by a promising estimate.
 
-Direct assertion has one deliberately narrower compilation scope. When the
-core result is exact, its non-goal discovery and action envelope are closed,
-no state/resource cap fired, and no structured refined route owns the policy,
-the assertion compiler may include every expanded behavioral representative
-with a finite selected action. All physical members route through those
-representatives; semantic goals and gated retry basins remain outside policy
-routing, and every unmatched observation still reaches the certification
-fail-closed terminal. Certification and paired product assertions use the same
-topology. This is executable-domain materialization for an already solved
-policy, not new search, ladder service, retry, or publication authority.
+The current closed-domain assertion has narrow exact-coarse/closed/uncapped preconditions. It can make already-solved representatives executable while unmatched routes stay fail-closed. Independently evaluated bounded publication does not erase a source estimate mismatch or remove the need for strict exactness.
 
-Terminal goal recognition is exact-item recognition: the requested rarity and
-slot threshold must hold, and the number of explicit affixes must equal the
-number of satisfied requested slots. Junk remains legal during planning but is
-not accepted at success.
+Goal-progress-gated rows can use a documented zero-progress retry basin only within that restricted scope. Partial-progress items retain their ordinary exact action-relevant state. A repeat-reforge incumbent additionally needs its complete action-local renewal witness; `cost / success_probability` alone is not enough.
 
-Steps 5-9 are owned by the retained `PublicationPipeline` and remain inside
-repeated native solve steps. Progress names retained `refining`, `compiling`,
-and `certifying` work before `Done`; the subsequent finish call is result
-transfer only. Cancellation abandons the retained work without promoting a
-partial or unverified candidate. The pipeline competes candidates through the
-`IncumbentPortfolio`; only independently evaluated executable artifacts can
-lower its verified upper.
+An incremental delayed envelope can improve a restricted policy before all alternatives finish. An open envelope blocks unrestricted exactness, while independent global lower evidence and a verified artifact may still be returned. Proof retirement closes only its named carrier/operator obligation and creates no executable transition.
 
-Callers may opt into `goal_progress_gated_reforges`. In that scope, primitive
-reforge rows fold goal outcomes to one terminal exit and zero-goal-progress
-outcomes to a virtual retry basin while retaining every partial-progress item
-exactly. Basin expansion permits only legal destructive reforges independent
-of the discarded affixes; ordinary partial states retain the normal complete
-action envelope. A completed result is labelled exact only within that
-zero-progress-reroll restriction. Omitting the option preserves the
-unrestricted globally optimal solve contract.
-
-Automatic Imprint discovery has an independent caller scope. Calculator and
-general benchmark callers default it off; dedicated correctness controls and
-other explicit callers opt in with `consider_imprint_programs: true`. The
-low-level engine option retains its historical default for compatibility.
-Disabling the scope bypasses only generated Imprint checkpoint/retry programs,
-keeps the remaining automatic admission pipeline active, invalidates
-incompatible retained transition/admission caches, and records the exclusion
-in telemetry and compiled-strategy provenance. Any exact result is exact only
-within that reduced action scope.
-
-If requested Imprint discovery reaches its depth/work boundary, its staged
-carrier transaction rolls back and the Imprint family remains open. Solve
-replays that carrier without Imprint, drains the other automatic/delayed
-families, and can publish its verified incumbent as bounded; it never converts
-the unfinished grammar into a reduced-scope exact result.
-
-Post-solve direct certification and strict lift are optional attempts to
-improve or strengthen publication after an executable fallback is already
-verified. `max_policy_refinement_states` bounds those attempts independently
-of main discovery. Exhausting a nonzero direct-certification budget publishes
-the verified fallback without launching a second strict-lift attempt against
-the same exhausted allowance. Under a nonzero product allowance, a direct
-graph that independently proves proper, zero-off-policy, completely priced
-execution and improves the verified portfolio publishes its exact evaluated
-cost as a bounded upper without strict lift; any solver-cost mismatch remains
-explicit and blocks exactness. Zero inherits the main discovered-state cap.
-
-When a completed gated root destructive-reforge row has positive terminal
-mass and every non-goal exit proves the same legal exact action-local kernel,
-Solve immediately records the executable fixed policy “repeat that reforge
-until goal” at value `cost / terminal_probability`. It retains the entire
-competing action envelope and continues discovery, so a cap-stopped result is
-bounded within the gated restriction rather than exact. The compiler
-independently revalidates the witness and emits a compact goal-or-repeat loop;
-it does not enumerate one strategy node per retained partial state.
-
-Goal-progress-gated solves also use a Chaos-anchored incremental action
-envelope. A completed Chaos row releases and queues its exact partial
-successors before filtered Fossil, corrected Harvest reforge, and
-goal-relevant Essence alternatives finish. Bellman may optimize the admitted
-subset, then exact delayed Q rows are admitted and reoptimized, proved
-non-improving, or retained as unresolved. Compatible outcomes use ordinary
-Chaos-created state IDs rather than a stored cross-action structural DAG.
-Support-delta states are queued and expanded before the action can be
-classified. The envelope is applied at every reached compatible carrier, and
-an open or resource-limited envelope blocks an exact result.
-
-Before materializing a queued primitive or automatic row, Solve may retire
-that exact carrier/operator obligation as incumbent-dominated. This requires
-an exactly optimized proper restricted-policy upper for the carrier and a
-strictly larger lower composed from the action's complete immediate price and
-proved survivor/reach successor pattern. The proof is recorded in the typed
-`ActionEnvelopeLedger` and mirrored into the compatibility scheduler's
-completed-pair view. Admissible values belong to `ProofPatternManager`, while
-lane service belongs to `SolveScheduler`; neither an ordering score nor a
-scheduler verdict can become proof. Retirement creates no executable row and
-closes no other unknown obligation. Authored conditional programs do not use
-this path while their retained operator lower prices only the guaranteed first
-step.
-
-The worker starts from the requested/default work count, adapts each step to a
-roughly 12 ms slice, and clamps Solve to one through four native work items.
-Native Solve independently treats the request as a ceiling and processes at
-most 32 logical units. Dynamic automatic preparation, state-local automatic
-admission, focused proof initialization, post-upper proof/classification,
-focused policy work, and each publication resume return at their retained
-continuation boundary instead of folding a large caller batch into one step.
-High-impact anytime mode charges the shared universal/clean proof model to
-solve setup before the first public step. Default mode retains lazy proof
-construction so a root-row cap reached before proof work keeps its established
-attribution. The worker rebases to one item at phase changes, emits
-progress at phase boundaries or roughly every 100 ms, and yields after bounded
-accumulated work so incoming messages can run. The first yield and at least one
-yield per 100 ms of native work use a timer task to prevent incoming-message
-starvation; intervening continuations use the lower-latency MessageChannel
-queue.
-
-Cancellation is cooperative, not preemptive. `EngineClient` posts a cancel
-message with the same request ID. The worker can observe it only after the
-current native step returns and the event loop services that message. If a
-solve began but does not finish, worker cleanup calls
-`pcw_solver_solve_abandon`; native code discards partial work while retaining
-bounded abandoned telemetry for diagnosis.
-
-Resource exhaustion, unsupported input, or a native error is surfaced as a
-boundary/error. Termination and policy quality are separate: an exact close is
-`exact` only with a globally closed lower bound and a certified artifact; a
-cap or open gap can retain `bounded_feasible`, and an enabled post-round gap
-can return `bounded_near_optimal`. A finite certified upper always names its
-retained executable witness. Equal certified bounds without certified strategy
-JSON are rejected as a publication-invariant failure. Compilation is allowed
-only when `policy_available` and returns the already asserted artifact; a
-non-converged result without an executable proper candidate is not compiled.
-
-Calculator renders the returned policy's exact evaluated cost separately from
-the optimal-cost lower bound and certified upper bound. It also shows absolute
-and multiplicative certificates, policy quality, termination/cap detail,
-requested and fired targets, economy identity, and the admitted priced action
-IDs. A bounded result uses certificate wording (“within 1.10x” / “at most 10%
-more expensive”) and never calls its policy or upper bound exact.
-
-Code authority:
-`apps/web/src/app/engine-client.ts`,
-`apps/web/src/app/engine-worker.ts`,
-`apps/web/src/app/engine-wasm.ts`,
-`bindings/wasm/wasm_api.cpp`,
-`engine/include/poecraft/solver.h`,
-`engine/src/solver_api.cpp`, and
-the native `engine/src/solver_solve*.cpp` phase family with its private
-`solver_solve_types.hpp` declarations.
-
-Policy-guided refinement stays entirely inside the native solve. It starts
-from the concrete item, visits only policy-reachable strict refinements, and
-derives routing features from the admitted action contracts. Distinguishing
-predicates are local to the exact policy classes that select different
-decisions; they are not one graph-wide feature union. Cyclic observation
-propagation and successor-class partitioning run to a deterministic fixed
-point. States merge only when selected action, immediate cost, and exact
-probability into every successor class agree. A mismatch is a native
-counterexample for witness-local Bellman re-optimization; it is not a signal
-for TypeScript to select a recipe or fallback.
-
-Observed-choice fixed programs retain the exact pre-choice carrier on each
-choice group. Preference lookup, refinement, and compiled routing require that
-observation identity to match; an equal offered modifier or projected
-successor from another observation carrier cannot satisfy the branch.
-
-When an action destroys every source feature needed by downstream routing, the
-native refinement collapses that path back to the coarse parent. Preserving
-actions retain only their declared side/lock/fracture scope, and modifier IDs
-with equal exclusion-effect signatures remain merged. Named refinement caps
-and bounded counterexample/refusal telemetry cross the ABI as diagnostics.
-The publication ledger distinguishes cumulative strict materialization/kernel
-work from final retained states and classes, records contract-driven collapse
-separately from state/cache reuse, and exposes the fixed-point, lumpability,
-class-policy properness, and compiled exact-cost assertions. Its memory fields
-distinguish live phase estimates, peak, declared limit, and the retained exact
-strategy payload. Feature masks and count arrays use native
-`RefinementFeature` bit/declaration order. Separate counters expose locally
-scheduled/evaluated state-action rows and accepted policy/value changes. The
-frontend gains no observation, preservation, exclusion, or lumpability logic.
+The worker adapts native work and yields to its event loop. Cancellation is cooperative: a queued cancel message is observed after native work returns. Unfinished work is abandoned through the existing handle lifecycle rather than promoted.
 
 ## Policy To Editable Strategy
 
-After a solve with `policy_available`:
+When `policy_available` holds, the compile interface returns the already asserted ordinary strategy. Fixed-program choice routes preserve their exact observation carrier. The strategy retains its concrete start and the documented presentation/accounting annotations.
 
-1. `pc_solver_compile_strategy` expands the exact refined primitive and
-   automatic policy classes into ordinary V1 start, router, operation, and
-   terminal nodes. Router predicates come from the shared native observation
-   vocabulary, not action-name compiler cases. Fixed-program observed-choice
-   routers remain scoped to the exact observation carrier that produced the
-   offer.
-2. The WASM facade exposes the compiled JSON response as raw bytes plus native
-   result status and length. `EngineBindings` slices those bytes from linear
-   memory, clears the reusable native response string, and transfers the
-   resulting `ArrayBuffer` from worker to main thread.
-3. `EngineClient` decodes and parses the document once.
-   `prepareSolverStrategy` adopts that uniquely transferred object, checks its
-   V1 shape, assigns missing board positions, and runs product validation.
-4. Calculator attaches the pinned economy identity and retains an unsaved
-   JavaScript strategy document.
-5. “Open strategy” clones that document into Strategy Builder as an unsaved
-   copy. The editable graph, not the solver's internal operator representation,
-   becomes the execution document.
+The WASM facade exposes bytes, status, and length. Bindings copy the bytes out of linear memory, clear the reusable response, and transfer the buffer from worker to main thread. The client parses once; `prepareSolverStrategy` validates/adopts the uniquely transferred document and supplies missing board positions. Opening a separate editor copy is the point at which a new document owner is created.
 
-The graph preserves the concrete solve start item and native `expected_cost`
-and accounting-role annotations. Compilation fails rather than inventing a
-second execution vocabulary when the policy cannot be represented or output
-caps are exceeded.
-
-Code authority:
-`engine/src/solver_compile.cpp`,
-`bindings/wasm/wasm_api.cpp`,
-`apps/web/src/app/engine-wasm.ts`,
-`apps/web/src/app/solve-workspace.ts`, and
-`apps/web/src/app/components/pc-calculator.ts`.
+Output caps or unrepresentable vocabulary refuse compilation rather than invent another execution format. Browser display metadata is not numerical proof authority.
 
 ## Current Repricing And Lifetime
 
-Price changes rerender Calculator cost/readiness information; they do not
-change mechanic outcomes and do not automatically rerun Solve. A later Solve
-invocation pins the then-current economy, creates a new short-lived economy
-handle, and opens a fresh scoped solver. After Calculator has obtained the
-summary, telemetry, and compiled strategy bytes, terminal cleanup closes the
-scoped solver, envelope solver, and economy handle. The transition closure and
-latest native result therefore do not remain live merely to support a possible
-reprice.
+A price change updates displayed costs/readiness; it does not automatically rerun Solve. A later invocation pins a new economy and creates a fresh scoped solver. After summary, telemetry, and strategy transfer, the scoped solver, envelope solver, and economy handles close.
 
-[Browser Repricing Uses Rebuild By Default](../decisions.md#2026-07-18--browser-repricing-uses-rebuild-by-default)
-records this implemented owner choice. A retained-cache product mode remains
-deferred until it has an enforced live-memory budget.
+The browser therefore does not promise a live native transition cache for cheap in-place repricing. See the existing [repricing decision](../decisions.md#2026-07-18--browser-repricing-uses-rebuild-by-default). Native development replay has a separate, narrower contract.
 
 ## Exact Whole-Graph Evaluation
 
-Strategy Builder's Calculator mode is related to solving but does not reuse the
-solver handle or solved policy state:
+Strategy Builder evaluation is distinct from solving. A graph edit supersedes the previous request; product validation checks shape, the client transfers encoded graph bytes, and the worker steps native discovery, SCC/equation work, and finalization.
 
-1. A graph edit schedules a debounced evaluation and aborts the superseded
-   request.
-2. Product validation rejects malformed graphs before native work.
-3. The editor opens a session for the strategy base/item level, pins the
-   economy, and calls `EngineClient.strategyEvaluate`. The client encodes the
-   graph once and transfers its byte buffer to the worker.
-4. The worker compiles those bytes, optionally loads the economy, opens a
-   stateful evaluation, and steps discovery, SCC solving, fallback, and
-   finalization with progress and event-loop yields.
-5. Worker cleanup always closes evaluation, economy, and compiled-strategy
-   handles; the editor closes its session.
-6. The product accepts the result only if the request version still matches the
-   current graph and exposes convergence, terminal mass, expected work,
-   accounting, and graph flow.
+The result is accepted only for the current request version. Evaluation, economy, compiled-strategy, and session lifetimes are closed by their appropriate owners. Unsupported action or condition vocabulary is refused, not sampled.
 
-Evaluation refuses unsupported action/condition vocabulary rather than using
-sampling. Its exact state is `(strategy node, abstract item state)`, distinct
-from the solver's action-selection policy state. The evaluator derives which
-source features can cross an operation from the same admitted action contract
-used by solving and compilation; it does not maintain an independent list of
-full versus side-preserving rerolls.
-
-Code authority:
-`apps/web/src/app/components/pc-strategy-editor.ts`,
-`apps/web/src/app/engine-client.ts`,
-`apps/web/src/app/engine-worker.ts`,
-`engine/src/solver_eval.cpp`, and
-`engine/src/solver_api.cpp`.
+The evaluator's state is the strategy-operation/item product with required observation/checkpoint information. It evaluates the supplied control graph; it does not search all alternative crafting policies. Exact graph evaluation therefore supplies policy evidence, not optimality on its own.
 
 ## Sampled Verification
 
-Calculator's current “Verify 10,000 runs” path is separate sampled evidence:
+The reviewed browser source displays a `Verify 10,000 runs` button. It samples the returned graph with the pinned economy and compares available aggregate cost evidence with the evaluated policy cost. This existing product behavior is separate from the engineering validation cadence in `AGENTS.md`; a documentation edit does not change the UI batch size.
 
-1. load the solve's pinned economy;
-2. compile the returned strategy through the ordinary simulator compiler;
-3. create a native simulator;
-4. run 10,000 bounded Monte Carlo invocations with progress; and
-5. compare mean known cost with the solver's exact `evaluated_policy_cost`
-   after the current completion and cost-status checks.
-
-Simulator, strategy, and economy handles close in `finally`. The button uses
-the repository's required verification sample count but is not by itself the
-compiled-strategy acceptance gate: it does not yet enforce complete
-terminal/off-policy truth or a one-sided confidence check; see
-[Calculator](../product/calculator.md#current-verification-button). Exact
-evaluation, solver value, and sampled simulation must remain labelled as three
-different evidence sources.
+The button is not the complete acceptance gate. Preserve its documented limitations concerning terminal/off-policy truth and statistical comparison in [Calculator](../product/calculator.md#current-verification-button). Keep sampled simulation, fixed-policy graph evaluation, and optimality evidence explicitly different.
 
 ## Failure And Ownership Checklist
 
-| Boundary | Required behavior |
-| --- | --- |
-| Unknown/unpriced action | Exclude or diagnose; never assign zero cost silently |
-| Unsupported exact vocabulary | Refuse exact calculation/evaluation; never sample silently |
-| Coarse selected-policy incompatibility | Feed the native observation witness into exact refinement/local re-optimization; withhold publication only for a named refinement cap or separately named unsupported exact vocabulary. Incomplete action contracts fail admission before search |
-| Cap or incomplete solve | Report termination and bounds; compile only an independently certified executable incumbent |
-| Stale product request | Ignore its result using request/version checks |
-| Cancelled stepped work | Yield, observe cancellation, abandon/destroy native work, and return bounded progress |
-| Document/session change | Close solver handles before replacing their owning session |
-| Strategy handoff | Transfer bytes, parse once, and validate/adopt the uniquely owned ordinary V1 graph; clone only when creating a separate document owner |
-| Mechanic ambiguity | Stop for Oliver's ruling; this flow has no mechanic authority |
+| Boundary | Required interpretation |
+|---|---|
+| Unknown/unpriced action | Exclude or qualify its scope; never price it as free |
+| Unsupported exact vocabulary | Named refusal, not silent Monte Carlo |
+| Open graph or cap | Preserve only evidence actually certified; no fabricated success/frontier closure |
+| Stale product request | Ignore its result through request/version checks |
+| Cancellation | Observe cooperatively, abandon unpublished work, release owning handles |
+| Document/session change | Release dependent handles before replacing their owner |
+| Strategy handoff | Transfer and validate the already evaluated artifact |
+| Mechanic ambiguity | Refer to Oliver, not a guessed product fallback |
 
 ## Code And Evidence Map
 
-| Layer | Primary files |
-| --- | --- |
-| Calculator orchestration | `apps/web/src/app/components/pc-calculator.ts`, `solve-workspace.ts` |
-| Strategy evaluation/simulation | `apps/web/src/app/components/pc-strategy-editor.ts` |
-| Main-thread RPC | `apps/web/src/app/engine-client.ts`, `engine-protocol.ts` |
-| Worker stepping | `apps/web/src/app/engine-worker.ts` |
-| WASM calls | `apps/web/src/app/engine-wasm.ts`, `bindings/wasm/wasm_api.cpp` |
-| Transfer ownership tests | `apps/web/test/engine-client-transfer.test.ts`, `engine-smoke.test.ts` |
-| Public native contract | `engine/include/poecraft/solver.h` |
-| Native API/lifetime | `engine/src/solver_api.cpp` |
-| Solve shared types and entry | `engine/src/solver_solve_types.hpp`, `solver_solve.cpp` |
-| Action observation/refinement contract | `engine/src/solver_model.hpp`, `solver_refinement.hpp`, `solver_registry.cpp`, and the `solver_refinement*` owners |
-| Expansion, delayed-envelope, and Bellman stepping | `engine/src/solver_solve_expand.cpp`, `solver_solve_incremental.cpp`, `solver_sparse_policy.cpp`, `solver_solve_bellman.cpp` |
-| Focused, constructive, bound, carrier-priority, and audit phases | `engine/src/solver_solve_focused.cpp`, `solver_solve_constructive.cpp`, `solver_solve_bounds.cpp`, `solver_solve_priority.cpp`, `solver_solve_audit.cpp` |
-| Quotient, finish, and telemetry phases | `engine/src/solver_solve_quotient.cpp`, `solver_solve_finish.cpp`, `solver_solve_telemetry.cpp` |
-| Policy compilation | `engine/src/solver_compile.cpp` |
-| Exact graph evaluation | `engine/src/solver_eval.cpp`, `solver_eval_resolve.cpp`, `solver_eval_report.cpp` |
-| Focused web checks | `apps/web/test/solve-workspace.test.ts`, `strategy-calculator-mode.test.ts`, `engine-smoke.test.ts` |
-| Native checks | `engine/tests/test_solver_api.cpp`, `test_solver_solve.cpp`, `test_solver_compile.cpp`, `test_solver_eval.cpp` |
+Browser orchestration lives in `pc-calculator.ts`, `solve-workspace.ts`, `engine-client.ts`, `engine-worker.ts`, and `engine-wasm.ts`. Strategy evaluation lives in `pc-strategy-editor.ts` and the shared client/worker path. `bindings/wasm/wasm_api.cpp` adapts the public C ABI in `engine/include/poecraft/solver.h`.
 
-When these paths change, use the repository-wide
-[change-impact map](../foundation/change-impact.md) to identify downstream
-bindings, generated WASM, documentation, and final verification obligations.
+Native phase ownership is listed once in [Solver internals](../foundation/solver-internals.md). Use [change impact](../foundation/change-impact.md) when an edit crosses a handle, vocabulary, result, or binding boundary. Read the linked mechanism relevant to the task; the entire flow is not mandatory startup for a local fix.
+
+## Source basis
+
+This rewrite uses the [preceding reference](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/flow.md) and [solver-lab.md](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/foundation/solver-lab.md), [solver-result-presentation.ts](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/apps/web/src/app/solver-result-presentation.ts), [calculator.md](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/product/calculator.md). Mathematical links refer to the companion draft chapters and provisional claim IDs; they do not declare those claims accepted. Local implementation correspondence must be reconciled during integration.

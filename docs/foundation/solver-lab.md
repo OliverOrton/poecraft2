@@ -1,382 +1,123 @@
 # Native Solver Lab
 
-**Status: stable local orchestration and research-tool reference.** The Lab
-wraps the native benchmark; it does not own crafting mechanics, solver policy,
-proof authority, or strategy evaluation.
+**Integrated reference.** Authored from the repository contracts at `f3e7c0fa7bd827064a41c48a53c4db372840cf0f`. Reconciled with local `215654f`; importing this mechanism reference supplies no new runtime authority.
 
-Parent: [Foundation](README.md)
+The Lab is the existing local native experiment workbench. It wraps the benchmark and owns orchestration, identities, resource supervision, and evidence integrity. It does not own mechanics, policy search, proof values, or strategy evaluation.
 
-Verified against the implemented Lab surface: 2026-08-29 @ `22c00f5`.
-Checked owners include `solver_lab_catalog.py`,
-`solver_lab_service.py`, `solver_lab_supervisor.py`, `solver_lab.py`, and
-`solver_lab_unattended_qualification.py` plus their focused contract, CLI,
-supervisor, nonvisual-GUI, corpus-runner, and parity tests.
+This is a task-directed operating reference. Do not launch qualification runs simply because their commands are documented here.
 
 ## Purpose And Authority
 
-The Native Solver Lab is a local Windows research workbench for repeatable
-native solver experiments. A persistent SQLite catalog, resource-aware
-supervisor, PySide6 GUI, and JSON CLI all call the same typed Python service.
-Every solve still runs in its own
-`poecraft_solver_benchmark.exe` process through the shared corpus-worker
-adapter.
+The structured CLI, optional PySide6 GUI, persistent SQLite catalogue, and supervisor use the same typed service. Each solve runs in a separate native benchmark process through the corpus-worker adapter. No repository-specific MCP adapter is required; that transport was removed while the existing service/CLI/evidence contracts were retained.
 
-The native engine remains authoritative for case validity, mechanics, action
-legality, probabilities, Bellman values, bounds, policy compilation,
-properness, and independent exact evaluation. The Lab owns only request
-identity, durable orchestration, process/resource supervision, bounded reads,
-and immutable artifact indexing.
+The Lab catalogue is separate from canonical game SQLite. Neither it nor an immutable attempt artifact should be edited directly to repair or retry a job. Use the service/CLI lifecycle.
 
 ## Install And Launch
 
-Build the engine first if `build/engine/poecraft_solver_benchmark.exe` is not
-current:
-
-```powershell
-powershell -File scripts/build.ps1
-```
-
-Install the optional Lab dependencies into the active Python environment:
-
-```powershell
-py -3 -m pip install -e "tools/ingest[solver-lab]"
-```
-
-The reliable repository-local launch does not depend on Python's Scripts
-directory being on `PATH`:
+Use the repository's normal native build when the benchmark is missing or stale. Install optional GUI dependencies only when that surface is needed. The documented local module invocation avoids dependence on the console-script directory being on PATH:
 
 ```powershell
 $env:PYTHONPATH = "tools/ingest;bindings/python"
-py -3 -m poecraft_ingest.solver_lab --root . gui
+py -3 -m poecraft_ingest.solver_lab --root . --help
 ```
 
-If the Python Scripts directory is on `PATH`, the shorter installed-console
-command is equivalent:
+An installed console entry is `poecraft-solver-lab`. Optional GUI setup uses the existing `tools/ingest[solver-lab]` extra, and the GUI command is `... solver_lab --root . gui`.
 
-```powershell
-poecraft-solver-lab --root . gui
-```
-
-Installing the package creates that executable but does not necessarily add
-its Scripts directory to PowerShell's `PATH`.
-
-By default the catalog is `build/solver-lab/catalog.sqlite3`, attempts are
-under `build/solver-lab/attempts/`, and investigation bundles are under
-`build/solver-lab/bundles/`. Resolved matrix manifests are under
-`build/solver-lab/matrices/`. These paths are ignored build evidence,
-separate from canonical game SQLite and the compiled runtime artifact.
+Default ignored work locations are `build/solver-lab/catalog.sqlite3`, `attempts/`, `cases/`, `matrices/`, and `bundles/` under that root. They are working evidence, not new canonical mechanic data.
 
 ## Locked v0 Profile
 
-`native_allflame_no_imprint_v1` binds the exact profile and economy recorded in
-every job:
+`native_allflame_no_imprint_v1` records the pinned Allflame economy, native `calculator_product_v1`, generated Imprints off, voluntary/economic Restart off, native paid Fracture-miss recovery retained, goal-progress gating, junk-free success, and independent native strategy evaluation.
 
-- frozen Allflame economy identity;
-- native `calculator_product_v1`;
-- automatic Imprint programs disabled;
-- voluntary/economic Restart disabled;
-- native mechanic-owned paid Fracture miss replacement retained;
-- goal-progress-gated reforges enabled;
-- exact junk-free terminal success;
-- complete native Calculator goal-relevant action-family scope; and
-- native independent exact strategy evaluation enabled.
-
-Simulator verification is opt-in. Whenever it is required, the repository
-acceptance count is 10,000 runs. The profile resolves worker flags through the
-typed service; the GUI and CLI do not reproduce those controls.
+Profile and resolved request identity are authoritative for a particular run. A diagnostic override creates a different visible request; it does not silently redefine every frozen case. Simulator is opt-in and follows the current owner-approved policy in `AGENTS.md` when genuinely required.
 
 ## Case Authoring And Revision Identity
 
-Frozen repository cases remain read-only. Local authoring has three explicit
-states:
+Frozen cases are read-only. A local draft can be edited, natively validated with the benchmark's genuine `--validate-only`, and saved as an immutable content-addressed revision. Queued jobs bind the revision and canonical request, not the subsequent editable draft. Unchanged saves reuse the revision; changed content creates a new one.
 
-1. an editable draft stored in the Lab catalog;
-2. a native-validated, content-addressed immutable revision under
-   `build/solver-lab/cases/`; and
-3. a queued job whose request identity records the revision ID, canonical case
-   digest, snapshot paths, corpus digest, profile, and effective native
-   command.
+`derive-case` clones a frozen/revision source and applies registered bounded JSON-Pointer replacements. Unknown, overlapping, duplicate, or oversized edits are refused. Goal edits preserve the native envelope controls; deriving a case is not permission to rebuild a broader action catalogue.
 
-Editing a draft after a save cannot change the saved revision or any existing
-job. Saving unchanged content reuses its existing revision; changed content
-creates the next ordinal. Draft deletion retains saved revisions. Before a
-revision can be saved, the service checks the bounded document shape, locks it
-to the selected Lab profile, and invokes the native benchmark's genuine
-`--validate-only` path. The Lab never infers mechanic validity itself.
+Calculator's Copy Lab case bridge exports its concrete start, goal, and pinned economy. Unsupported flags/checkpoint state are refused rather than dropped. The Lab does not become another graphical modifier editor or mechanic validator.
 
-`derive-case` is the bounded terminal authoring adapter. It clones one frozen
-case or immutable revision, applies a registered set of JSON-Pointer
-replacements, optionally invokes native validation, and optionally saves the
-content-addressed revision. Registered paths cover watchdog/bounded finish,
-disabled action families, minimum goal satisfaction, goal slots or slot tiers,
-and approved solver caps. Registered diagnostic paths also include the
-complete versioned `carrier_ladder_exact_boundary_v1` object and its finite
-caps; this remains benchmark-private and cannot change product defaults.
-Unknown, malformed, duplicate, overlapping, or oversized patches are rejected
-before mutation. Derivation synchronizes goal
-edits into the existing product action envelope while retaining native
-envelope controls such as fossil mode and requested fossil actions; it must
-not reconstruct or broaden the action catalogue.
-
-Execution request v4 discloses the action-envelope identity through separate
-components for explicit Imprint scope, the effective disabled native action
-families, allowed mechanic families, the product action envelope, and the goal
-action list. Disabled families are validated against the native public family
-vocabulary and canonicalized as a sorted unique list before hashing, matching
-the engine's order-independent bit-mask interpretation. The Lab does not assign
-actions to families; that remains native authority. A profile's Imprint scope
-therefore cannot be mistaken for the goal's effective disabled-family list.
-
-The browser Calculator owns graphical item and goal authoring. Its **Copy Lab
-case** action exports the current concrete affixes, crafted/fractured/veiled
-slot flags, influence and Eldritch state, product goal, diagnostic family
-exclusions, pinned Allflame prices, and supported solve targets. The exporter
-refuses active Imprint checkpoints and special item flags that the benchmark
-start format cannot preserve. It fixes automatic Imprints and voluntary
-Restart off to match the current Lab profile.
-
-## GUI Workflow
-
-The GUI has five persistent surfaces:
-
-1. **Cases** browses frozen cases, editable drafts, and immutable revisions.
-   It can create from the local template, clone, import the Calculator
-   clipboard envelope, edit JSON plus the common watchdog/bounded-finish/
-   memory controls, validate, save a revision, copy an export, and submit.
-2. **Queue & Run** submits a frozen case or local revision and shows priority, attempt, host
-   reservation, phase, bounds, stop reason, artifacts, events, work, and
-   memory. It can cancel, retry, clone, reprioritize, and pause/resume new
-   dispatch.
-3. **Compare** filters immutable attempts and compares two to twenty request
-   identities, outcomes, deterministic work, memory, and strategy summaries.
-4. **Strategy** shows bounded graph/action/evaluation evidence and exports a
-   controlled investigation bundle.
-5. **Matrix** previews and submits a canonical frozen-case-by-replicate product.
-   Re-submitting the displayed batch is idempotent; **Submit new replicate
-   batch** deliberately assigns a new batch identity.
-
-The GUI polls durable state every 1.5 seconds and never performs a solve,
-catalog aggregation, report parse, native case validation, or mutation on its
-UI thread. Attempt summaries are cached by artifact identity and terminal
-summaries are not reopened; selected detail refresh is separate, overlapping
-refresh is suppressed, unchanged table rows do not reset the model, and job
-selection is preserved by stable ID.
-
-Every visible action has an explicit valid/busy state and explanation. Accepted
-and rejected operations append to the persistent **Activity & Errors** dock
-with affected identities and state transitions. Complete tracebacks and the
-same activity stream are retained in `build/solver-lab/gui-activity.log`;
-ordinary health refresh never clears this history.
-
-Live Cancel changes the durable job to `canceling`, lets the worker observe the
-request, then uses the supervisor's verified Windows process-tree termination
-fallback when graceful completion does not arrive. The final `canceled` state
-is not displayed until the process is gone, the attempt and job are terminal,
-and the lease and host reservation are released.
+Execution identity separates actual disabled native families from the profile's explicit Imprint setting, and binds allowed families, product envelope, goal action list, artifact, prices, executable, and other declared dispatch controls. Those components must not be conflated.
 
 ## JSON CLI
 
-All commands accept the common `--root`, `--catalog`, `--attempts`,
-`--executable`, `--artifact`, `--corpus`, and `--profile` overrides before the
-operation name. Examples:
+Existing focused commands include:
 
 ```powershell
-poecraft-solver-lab --root . profiles
-poecraft-solver-lab --root . cases
-poecraft-solver-lab --root . create-case-draft --name local-three-prefix --source-case-id CASE_ID --idempotency-key create-local-three
-poecraft-solver-lab --root . validate-case-draft DRAFT_ID
-poecraft-solver-lab --root . save-case-revision DRAFT_ID --idempotency-key save-local-three-v1
-poecraft-solver-lab --root . derive-case --source-case-id CASE_ID --name no-fossil --set-json '/goal/disabled_action_families=["fossil"]' --set /watchdog_seconds=600 --validate --save --idempotency-key derive-no-fossil-v1
-poecraft-solver-lab --root . submit LOCAL_CASE_ID --revision-id REVISION_ID --idempotency-key run-local-three-v1
-poecraft-solver-lab --root . run --revision-id REVISION_ID --wait --summary-fields status,phase,lower,upper,states,rows,memory
-poecraft-solver-lab --root . submit CASE_ID --idempotency-key study-a-case-1
-poecraft-solver-lab --root . submit-matrix --include-role fast_exact_three_prefix --replicates 2 --idempotency-key study-a
-poecraft-solver-lab --root . run-matrix-file experiments/solver-lab/native-cli-workflow-v1-smoke.json --wait
-poecraft-solver-lab --root . run-until-idle --max-workers 1
-poecraft-solver-lab --root . supervise --max-workers 1
-poecraft-solver-lab --root . attempts
-poecraft-solver-lab --root . strategy-summary --attempt-id ATTEMPT_ID
-poecraft-solver-lab --root . export-bundle --attempt-id ATTEMPT_ID --idempotency-key export-ATTEMPT_ID
+py -3 -m poecraft_ingest.solver_lab --root . profiles
+py -3 -m poecraft_ingest.solver_lab --root . cases
+py -3 -m poecraft_ingest.solver_lab --root . attempts
+py -3 -m poecraft_ingest.solver_lab --root . run --revision-id REVISION_ID --wait --summary-fields status,phase,lower,upper,states,rows,memory
+py -3 -m poecraft_ingest.solver_lab --root . strategy-summary --attempt-id ATTEMPT_ID
+py -3 -m poecraft_ingest.solver_lab --root . export-bundle --attempt-id ATTEMPT_ID --idempotency-key EXPORT_KEY
 ```
 
-Low-level mutating operations require an idempotency key and accept
-`--dry-run`. `derive-case` requires a complete idempotency key; `run` derives
-one from the complete dry-resolved execution request unless supplied.
-`run --wait` emits changed status to stderr and one compact structured result
-to stdout. It starts a supervisor filtered to its submitted job when it can
-own dispatch, or observes only that durable job when another legitimate owner
-already exists.
+Place common root/catalogue/attempt/executable/artifact/corpus/profile overrides before the operation. Inspect operation help when needed rather than guessing flags. These are the existing JSON operations, not a newly implemented human-table/`--json` interface.
 
-`solver_lab_matrix_v1` files contain one frozen/revision base, ordered
-JSON-Pointer axes, replicates, and priority. Expansion is capped at eight
-axes, 20 values per axis, 100 coordinates, and 1,000 jobs. The service derives
-and native-validates every coordinate, resolves complete execution identities,
-writes one immutable `solver_lab_resolved_matrix_v1` manifest before any job
-is submitted, and then creates deterministic experiment and job IDs. The
-manifest binds definition, source, executable, artifact, profile, economy,
-base, patch coordinate, revision, request, job, and replicate identities.
-Unchanged replay returns the same file/revisions/jobs; changed definition or
-resolved execution input produces a new visible matrix identity.
+Low-level mutations use canonical-request idempotency and accept the documented dry-run path. `run` derives its key from the complete resolved request when one is not supplied. With `--wait`, changed status goes to stderr and one compact structured result goes to stdout. It either owns a supervisor restricted to the submitted job or observes the legitimate existing dispatcher.
 
-Legacy matrix includes are the union of explicit case IDs and roles,
-exclusions apply last, and empty programmatic includes mean the full frozen
-corpus. Expansion order is sorted case ID followed by replicate ordinal.
-Limits are 100 cases, 100 replicates, 1,000 listed attempts, 20 compared
-attempts, and 256 returned bound samples.
+Use targeted job/summary/compare/bundle reads. Full raw reports stay in immutable artifacts; do not dump the entire historical catalogue into a model's context.
 
-The parity command separates immutable request identity, strict native
-semantics, runner classification, and clock-positioned observations:
+## Matrices
 
-```powershell
-poecraft-solver-lab-parity `
-  --direct-ledger build/solver-lab/direct/ledger.json `
-  --lab-catalog build/solver-lab/catalog.sqlite3 `
-  --direct-wall-seconds 1.0 --lab-wall-seconds 1.0 `
-  --output build/solver-lab/qualification.json
-```
+`solver_lab_matrix_v1` definitions use one frozen/revision base, ordered pointer axes, replicates, and priority. The current bounds are eight axes, 20 values per axis, 100 coordinates, and 1,000 jobs. Every coordinate is natively validated. One immutable resolved manifest is written before submissions and binds definition, source, executable, artifact, profile/economy, patches, revision, request, job, and replicate identities.
+
+Replaying an unchanged resolved request is idempotent. A changed definition or execution input creates a new visible identity. Legacy matrix includes union explicit IDs and roles, exclusions apply last, and an empty programmatic include selects the full frozen corpus; it is not an empty experiment.
+
+Existing response limits include bounded attempt, comparison, and trajectory samples. The source contract records 1,000 listed attempts, 20 compared attempts, and 256 returned bound samples. Truncated reads do not establish a complete historical population.
 
 ## CLI Automation And Supervision
 
-Use `supervise` for a durable headless dispatcher, or `run-until-idle` for a
-bounded batch that exits when the queue drains. Other terminal processes can
-submit, inspect, compare, cancel, and export through the same CLI while the
-supervisor owns dispatch. No GUI needs to be open.
+`supervise` runs a durable dispatcher; `run-until-idle` handles a batch and exits when it drains. Other clients can submit, inspect, compare, cancel, and export without a GUI.
 
-The CLI exposes a finite operation vocabulary, including the complete
-draft/validation/revision lifecycle. It has no arbitrary shell, SQL,
-unrestricted path-write, benchmark argument bag, mechanics override, or remote
-worker authority. Mutations use complete canonical-request idempotency, and
-every response uses the structured `solver_lab_operation_result_v1` JSON
-envelope. Detailed native output remains in immutable attempt artifacts rather
-than being truncated into another transport protocol.
+Only one durable dispatcher owns a catalogue. Another verified-live dispatcher remains the owner; a second client does not multiply the worker limit. Replacement requires proving the old process identity absent and reconciling its attempts before new dispatch. Target-filtered one-shot dispatch keeps the same ownership, preflight, watchdog, and lease rules.
 
-`get_run_summary` preserves the bounded native attribution surfaces needed
-to diagnose completed and partial work: `action_control`,
-`automatic_candidates`, `incremental_action_envelope`,
-`action_envelope_ledger`, `operator_lineage`,
-`cooperative_scheduler`, `carrier_ladder`, and `missing_frontier`.
-These are reads of native evidence, not orchestration authority. Retrying an
-immutable terminal job revalidates its complete dispatch identity; if source,
-executable, artifact, or another dispatch component no longer matches, the
-job becomes `dispatch_refused` without creating a worker or attempt. Clone
-or submit a new immutable revision when a new identity is intended.
+Retrying a terminal immutable job revalidates dispatch identity. A changed executable or artifact can yield `dispatch_refused` without starting a worker. Use a new revision/job when a new treatment is intended; do not mutate the old one to make it run.
 
-For private observation qualification, execution request v4 includes the
-complete diagnostic setting in `full_request_identity` but excludes it from
-`core_solve_identity_v1`. Local revision/corpus path spelling is normalized so
-off/record/recover revisions with otherwise equal inputs compare as the same
-core solve. `ordinary_finalization` is captured before the diagnostic and
-provides nine separately hashed ordinary-result components. A valid matched
-comparison therefore requires unequal full requests, equal core components,
-and equal ordinary components; only the bounded private diagnostic may differ.
-
-The catalog has one durable dispatcher owner. A second `supervise` process
-detects a verified-live owner, remains control-only, reports the existing
-owner, and exits; it cannot multiply the catalog's worker limit. A successor
-may replace ownership only after proving that the recorded dispatcher process
-identity is absent, and it reconciles the replaced owner's running/finalizing
-attempts before new dispatch. `--poll-seconds`, `--max-workers`,
-`--memory-budget-bytes`, `--worker-headroom-bytes`, and
-`--global-safety-reserve-bytes` are the dispatcher/resource launch options.
-Target-filtered one-shot supervisors retain the same singleton ownership,
-preflight, watchdog, cancellation, finalization, and lease contracts but may
-claim only their declared job IDs. `supervisor-status` includes currently held
-lease IDs and total reserved host bytes so terminal automation can verify
-release without direct catalog access.
+A private observational control can have unequal full request identities while requiring equal declared core-solve components and ordinary-result components. That special comparison must be explicit; it is not a general exemption from experiment identity matching.
 
 ## Statuses, Resources, And Recovery
 
-- `queued`: durable work awaiting dispatch.
-- `blocked`: host-memory admission or exclusive-drain requirement currently
-  prevents dispatch; this is not a solver proof result.
-- `running` / `canceling`: one owned native process and lease are live.
-- `finalizing`: files are being validated and hashed before atomic terminal
-  publication; its reservation remains owned.
-- `dispatch_refused`: complete dispatch-time identity no longer matches the
-  immutable submitted request; no preclaim worker was started.
-- `orphan_quarantined`: the original worker is verified live or cannot yet be
-  proved absent. Its lease/reservation is retained and retry/clone-as-retry is
-  blocked.
-- `completed`: the worker produced its final report. This can contain an exact,
-  bounded, state-cap, or solver-owned resource-cap result.
-- `partial`: a watchdog/orphan path retained a valid partial observation.
-- `canceled`: verified process-tree cancellation completed.
-- `failed`: runner error, crash, OS-like OOM, or another terminal failure.
+| Status | Meaning |
+|---|---|
+| `queued` / `blocked` | Awaiting dispatch or host admission; no solver proof result implied |
+| `running` / `canceling` | Live owned process and reservation |
+| `finalizing` | Evidence validation/hashing and terminal transaction are pending |
+| `dispatch_refused` | Submitted identity no longer matches; no new worker |
+| `orphan_quarantined` | Worker is live or absence cannot be proved; reservation remains |
+| `completed` | Final worker report, possibly exact, bounded, or native-capped |
+| `partial` | Valid partial observation under its retained failure/watchdog history |
+| `canceled` | Process-tree cancellation and terminal accounting completed |
+| `failed` | Explicit runner/process failure |
 
-Host accounting exposes the native `max_solver_owned_bytes` cap, per-worker
-host headroom (512 MiB by default), their total worker reservation, and the
-global safety reserve separately. Only the native cap is solver/bound/proof
-authority. Queue pause stops new dispatch only; running pause is intentionally
-unavailable.
+Native `max_solver_owned_bytes`, host headroom, worker reservation, and global safety reserve remain separate. The source default host headroom is 512 MiB; only the native cap constrains solver proof ownership. Queue pause prevents new dispatch, not live numerical work.
 
-On restart, the supervisor reconciles stale ownership, sessions, and leases and
-verifies PID creation identity before changing attempt state. A proved-absent
-worker with a valid final report is truthfully recovered as completed. A
-verified-live or possible-live worker is quarantined without releasing its
-reservation; periodic reconciliation publishes only after absence is proved.
-Retry creates a new attempt ordinal and directory. Do not delete or edit
-catalog rows or attempt artifacts to retry work.
+Recovery checks PID creation identity and evidence integrity. A proved-absent worker with a valid final report can be recovered as completed. Possible-live workers remain quarantined; their reservation is not released merely to permit a retry. Retry creates a new attempt ordinal and directory.
 
-Closing the GUI or interrupting `supervise` normally stops new dispatch and
-does not cancel live work; the non-daemon supervisor drains each worker within
-its immutable watchdog. For a shorter bounded shutdown, first pause the queue,
-cancel any selected live job through the CLI, wait for terminal
-acknowledgment and released reservation, then close the client. For maintenance,
-copy the catalog and its `-wal`/`-shm` siblings together only after dispatcher
-ownership reports released.
+Closing the GUI or interrupting normal supervision stops new dispatch but is not automatic cancellation. For a shorter shutdown, pause dispatch, cancel the selected live work through the service, verify terminal acknowledgment and released reservation, then close. Copy the catalogue and its WAL/SHM siblings only after dispatcher ownership is released.
+
+## GUI Workflow
+
+The optional surfaces are Cases, Queue & Run, Compare, Strategy, and Matrix. They use the same service and preserve stable identities and selection. Cached report aggregation and parsing remain off the Qt UI thread. Activity & Errors retains identity context and tracebacks.
+
+The final canceled state is displayed only after the worker is gone and the reservation is released. The GUI's absence does not disable queue automation. Source activity alone cannot establish whether Oliver still uses the GUI, so this document does not select its deletion.
 
 ## Unattended Qualification
 
-The repository-owned qualification harness writes each run to a new immutable,
-ignored directory below `build/solver-lab/unattended-hardening/`. The
-accelerated mode covers the deterministic crash, idempotency, dispatch,
-watchdog, terminal-publication, integrity, quarantine, cancel/retry,
-dispatcher-death, and dual-owner matrix in ordinary test time:
+The retained qualification harness has accelerated lifecycle checks and a separately declared low-duty soak. They test orchestration, identity, recovery, and cleanup—not solver optimality. They are not ordinary preflight or a recurring requirement for research imports.
 
-```powershell
-$env:PYTHONPATH = "tools/ingest;bindings/python"
-py -3 -m poecraft_ingest.solver_lab_unattended_qualification `
-  --root . `
-  --output-root build/solver-lab/unattended-hardening `
-  --accelerated
-```
-
-The low-duty soak links that accelerated result, exercises the isolated
-catalog lifecycle plus one real native control, reacquires and releases a
-no-work dispatcher at every audit interval, and rechecks provenance, artifact
-hashes, process survivors, duplicate attempts, and lease/reservation state:
-
-```powershell
-py -3 -m poecraft_ingest.solver_lab_unattended_qualification `
-  --root . `
-  --output-root build/solver-lab/unattended-hardening `
-  --soak `
-  --duration-seconds 21600 `
-  --interval-seconds 600 `
-  --accelerated-evidence <accelerated-result.json>
-```
-
-The soak enforces at least 21,600 seconds of wall time. An interrupted or
-short rehearsal ledger remains useful integration evidence but cannot set
-`passed: true` and is not overnight qualification. Bulky catalogs, attempt
-artifacts, logs, and bundles remain ignored; only the harness, bounded tests,
-and summarized execution evidence are committed.
+The soak contract requires at least 21,600 elapsed seconds. An interrupted or owner-waived soak is not a pass. Earlier owner-waived evidence remains labelled that way; no new soak qualification is implied by this rewrite. Use the harness's current help and existing archive only when that behavior is the actual question.
 
 ## Artifacts And Limitations
 
-Each attempt directory may contain `report.json`, `partial.json`,
-`worker.log`, `supervisor-error.json`, and a `strategies/` directory, depending
-on its outcome. The controlled Lab root also owns `gui-activity.log`. The
-supervisor validates and hashes the required evidence before one catalog
-transaction indexes artifacts, terminalizes attempt/job, emits events, and
-releases the lease. Every terminal consumer rechecks owned path, size, and
-SHA-256 before parsing or export; legacy unindexed terminals are disclosed but
-not trusted. Investigation bundles contain bounded summaries, hashes, events,
-reproduction argv, and a bounded log tail; they do not copy arbitrary files or
-full telemetry.
+Attempts retain the available final/partial report, worker/error logs, strategy files, and indexed hashes. The supervisor verifies required files before atomic terminal publication and lease release. Terminal readers check owned path, size, and hash; legacy unindexed records remain disclosed rather than trusted by assumption.
 
-The Lab does not provide a second graphical modifier editor, live solve checkpoint/resume, running pause, remote or
-multi-machine workers, authentication, cloud execution, learned guidance,
-full strategy-graph rendering, automatic cap tuning, or another evaluator
-backend. It also does not make the PDR control exact: that case remains a
-truthful solver-owned resource-cap control.
+Bundles provide bounded summaries, identities, events, reproduction arguments, and log tails. They do not copy arbitrary local files. Keep new research reports in the existing evidence/intake workflow; do not add a second catalogue.
+
+The Lab does not itself provide live strict-solver checkpoint/resume, running pause, remote workers, automatic cap tuning, or an alternative numerical backend. Nor does it determine whether PDR or another case is currently exact: that is a versioned solver result under the specific native request, not a permanent Lab limitation.
+
+## Source basis
+
+This rewrite uses the [preceding reference](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/foundation/solver-lab.md) and [2026-08-29-native-solver-lab-cli-first-mcp-removal-v1](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-08-29-native-solver-lab-cli-first-mcp-removal-v1/README.md), [2026-08-29-native-solver-cli-workflow-v1](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-08-29-native-solver-cli-workflow-v1/README.md), [AGENTS.md](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/AGENTS.md). Mathematical links refer to the companion draft chapters and provisional claim IDs; they do not declare those claims accepted. Local implementation correspondence must be reconciled during integration.

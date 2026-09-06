@@ -1,197 +1,107 @@
 # Lower And Pruning Authority
 
-Parent: [Solver](README.md) | Verified against current source: 2026-08-27;
-benchmark-private lower-query contract added 2026-09-04; native probabilistic
-phase contract added 2026-09-05.
+**Integrated reference.** Authored from the repository contracts at `f3e7c0fa7bd827064a41c48a53c4db372840cf0f`. Reconciled with local `215654f`; importing this mechanism reference supplies no new runtime authority.
+
+This page owns current lower producers, their eligibility, and the consumers allowed to use them. [Lower-bound mathematics](mathematics/lower-bounds.md) owns the derivations; [numerical closure](mathematics/numerical-closure.md) owns coefficient and endpoint distinctions. Historical numeric progress belongs to the original experiments and question-linked reports, not this mechanism page.
 
 ## Authority Rule
 
-A lower bound may guide pruning, certify a gap, or support exact closure only
-when every relaxation is proved optimistic for the requested action envelope.
-Ordering scores and restricted-envelope Bellman values remain separate types.
+A contribution may raise a public lower, justify retirement, or support a gap only when its optimistic relation covers the actual requested action scope and source domain. An ordering value, restricted-envelope optimum, or numerically checked relation with no native bridge remains a different object.
 
-Primary owners: `solver_proof_pattern_manager.hpp`,
-`solver_solve_bounds.cpp`, `solver_solve_carrier_pattern.cpp`,
-`solver_solve_operator_proof.cpp`, `solver_solve_envelope_proof.cpp`,
-`solver_solve_heuristics.cpp`, and the publication classifier in
-`solver_solve_constructive.cpp`.
+The implemented proof manager composes compatible independently valid patterns by maximum. Addition requires a separate cost/decomposition argument. [CLM-0010](claims.md#clm-0010) explains the distinction.
+
+Primary owners are `solver_proof_pattern_manager.hpp`, `solver_solve_bounds.cpp`, `solver_solve_carrier_pattern.cpp`, `solver_solve_operator_proof.cpp`, `solver_solve_envelope_proof.cpp`, `solver_solve_heuristics.cpp`, and the publication classifier.
 
 ## Current Patterns
 
-The independent goal-cover floor grants optimistic action reach and combines
-independently admissible patterns by maximum. Clean-carrier refinement adds
-rarity, goal subset, side occupancy, capacity, junk-free terminal debt, tags,
-weights, and destructive replacement where its eligibility proof applies.
-Operator lowers first apply the action's proved survival/destruction contract,
-then add optimistic successor completion cost.
+| Component | Information and current role |
+|---|---|
+| Independent goal-cover floor | Optimistic action reach and completion cost; usable without a complete restricted search graph |
+| Clean-carrier refinement | Rarity, goal subset, occupancy/capacity, terminal debt, tags/weights, and destructive effects where its eligibility proof applies |
+| Operator lower | Proved action cost and survival/destruction relation followed by an optimistic compatible continuation |
+| Envelope Bellman pattern | Uses completed action evidence under its coverage contract; unfinished computation retains independent fallback |
+| Lower-only quotient | A private finite-model numerical consumer/checker on existing graph and ProofStore ownership |
+| Native phase/retention producer | Supplies a native validity bridge for its declared domain, including the current default-off ordinary retention consumer |
 
-If incremental action generation is open, the public lower falls back to an
-independent global floor. The restricted graph value remains useful for
-internal scheduling but is not global proof.
+Acquisition tables and continuation potentials use different coordinates. The proposal adapter must preserve that role; a coordinate conversion alone is not an admissibility proof. See [CLM-0016](claims.md#clm-0016).
+
+## Coverage And Lower-Only Queries
+
+`QuotientBellmanGraph::solve_lower/check_lower` uses the existing sparse rows, observed choices, dependencies, and memory owner. `LowerOnly` mode cannot issue an executable solve/projection. An ordinary uncertified row does not become valid lower evidence just because it is numerically available.
+
+The query supplies canonical expected actions and a disjoint complete partition of explicit constraints and residual families. An action is represented by a complete declared row, a compatible independent scalar/family lower, or proved inapplicability. Unknown family members cannot disappear when one finite member is refined. Equal constraint counts do not establish equal action sets.
+
+Independent boundary values remain distinct from jointly checked internal variables. A lower-only query does not require the incumbent's router to accept a frontier item. It requires the native lower relation and appropriate stopping assumptions. See [CLM-0012](claims.md#clm-0012).
+
+A prior native lower need not be feasible inside a changed truncated model. Preserve it as independent evidence at maximum composition; do not force it into an incompatible candidate vector. See [CLM-0013](claims.md#clm-0013).
+
+## Numerical acceptance and native validity
+
+Candidate generation uses the shared sparse arithmetic. Acceptance checks finite nonnegative values against every raw represented inequality with exact binary dot products. The query records raw stored coefficients, an explicitly normalized reference, or an exact-binary model separately.
+
+That acceptance establishes the declared numerical relation. A native producer must also establish coefficient provenance, terminal inclusion, action coverage, and validity across every represented native member. A certificate binds its complete request/model snapshot and relevant generations.
+
+Zero-cost components may yield a weak checked finite lower. The result does not assert greatest-proper-policy convergence, infinity, or native exact closure. [CLM-0023](claims.md#clm-0023) and the numerical chapter explain why neither a small residual nor a familiar certificate type supplies missing premises.
 
 ## Conservative Slack
 
-Probability lowers use upper bounds on success probability. Clearing carrier
-sides, granting strong blocker exclusions, atomizing setup-bearing programs,
-or returning zero outside a represented carrier class is deliberately cheap
-and capable; it weakens pruning but preserves correctness. Tightening any of
-these must retain the admissibility proof.
+Unsupported effects and outside-domain continuations can use deliberately favorable fallbacks. Extra optimistic recovery, early cleanup, broader reach, or weaker blocker constraints can preserve lower validity while reducing usefulness. Removing a native alternative has the opposite direction unless it is independently retired.
+
+A price-only relation needs a reason. An independent outside exit is a semantic relaxation; a candidate-price shortcut may merely defer expensive construction. Minimum-owning computational floors reactivate even at equality, and the changed model is solved before an older feasible vector ends refinement. [CLM-0019](claims.md#clm-0019) explains why a temporary floor is not necessarily a permanent ceiling.
+
+## Native probabilistic relations
+
+The support-only phase producer remains distinct from the probability-aware producer. A support-union model can intentionally grant all potentially introduced goals together and therefore be extremely weak; that limitation does not refute a richer stochastic lower.
+
+The probability-aware producer preserves the clean projection's rarity, current goal mask, side occupancy, and the supported retention/crafted categories. Native integer pool statistics bound conditional events using satisfying weight and conservative blocker effects. Joint-goal caps use complete distinct-position assignments only when the retained/forced-goal, overlap, side-limit, and history premises hold.
+
+Per-mask capacities are not automatically aggregate subset constraints. The final continuation values determine event minima and the distribution minimizing expectation. The producer rebuilds observed choices, successor minima, allocations, and relevant rows for the final potential, then checks the simultaneous system. A merely feasible or stale allocation can overstate the lower expectation. See [CLM-0014](claims.md#clm-0014) and [CLM-0015](claims.md#clm-0015).
+
+Only value-independent geometry and compatible exact-mask event caps are reused within a preparation. This does not make them exact native kernels reusable for every value vector or a cross-request cache.
+
+## Opt-In Ordinary Native Retention Lower
+
+`SolveOptions::native_retention_lower` defaults off and is not exposed through the public product profiles or bindings at this snapshot. `SolveWork::Impl` prepares one compatible view in setup and reserves the additional proof budget within the total solver cap. `NativeRetention` contributes through the existing maximum-composition path.
+
+The qualified frame is anchored by an exact goal fracture and couples the relevant unfractured region. Its reported scope covers the recorded side/goal domain and all Eldritch phases, with conservative handling of hidden exclusions. Generic influence, unmodeled metamods, additional fractures, veiled state, and unsupported restore memory remain outside its validated frame. Selected Cannot Roll Attack/Caster continuations are included as described below. Do not generalize its domain from the name “phase lower.”
+
+Current retained facts include Scour's fracture preservation; side-specific Eldritch effects; removable crafted categories; Exalt non-exhaustion evidence; uniform Annul loss categories; and Alchemy's applied rarity distinct from its separately proved minimum refill occupancy. Unknown refill histories keep underfilled Rare outcomes instead of undoing the native application.
+
+The ordinary lookup uses retained `AbstractState` observations and complete modifier-member masks, not one materialized representative. Ambiguous fracture identity, unsupported class members, failed preparation, or incompatible memory preserve the previous lower. A coupled fresh entry inside an anchored certificate is not automatically a general empty-start request certificate.
+
+An identity-compatible whole-state lower for the full unchanged scope also lower-bounds every legal action and residual family. That supports compatible maximum consumption even while incremental generation remains open. [CLM-0011](claims.md#clm-0011) states the required premise; a restricted-program value cannot be used this way.
+
+## Filter continuations and final diagnostic ownership
+
+Selected Cannot Roll Attack/Caster continuations retain the actual crafted-junk
+slot and exact filter identity in both regions. Native Bench legality precedes
+its first-exit floor. The draw witness restores only a filter still present at
+pool construction: ordinary renewal clears it; Eldritch Chaos can retain it on
+the opposite side. Native witness and support-reuse keys bind that context.
+Annul, cleanup and renewal preserve or remove the correct occurrence; other
+legal unmodeled metamods retain conservative boundary floors.
+
+Complete final diagnostics are exported after the numerical graph is released,
+under a separate measured payload/native-workspace reservation. Borrowed query
+capacity remains charged; temporary canonical partitions use their source peak.
+The [filter-closure evidence](../archive/2026-09-05-native-metamod-first-exit-v1/README.md)
+qualifies this extension. Its measured lookup cache was removed; uniform member
+guards and the narrow projection profiler remain, without result caching.
+
+## Program composition and boundary evidence
+
+The native mandatory-program composer charges setup once and streams complete integer exit weight. Every failure continuation needs compatible evidence. Primitive relations telescope through the supported program grammar with the correct observation and restore memory; an unsupported restore contract refuses rather than silently changing the request.
+
+Positive exact-fresh recovery evidence is immutable and comes from its existing preparation owner. Internal regions may instead be checked jointly. A paid outside exit with zero continuation is a relaxation, not a native success or executable upper.
 
 ## Consumers And Failure
 
-The benchmark-private `QuotientBellmanGraph::solve_lower/check_lower` consumer
-owns no second graph or scheduler. `LowerOnly` graph mode uses the existing
-sparse rows, observed choices, reverse dependencies and ProofStore accounting,
-and refuses executable solve/projection. Canonical expected action sets and
-residual-family exclusions must form a disjoint complete cover. An uncertified
-ordinary row alone is not lower provenance.
+A local action retirement requires a valid action lower and a compatible proper executable upper at the same source/class, using the actual strict comparison and tie contract. A cheap root upper cannot stand in for an uncovered successor upper. Retirement creates no executable row and closes no other unknown action.
 
-Candidates use shared sparse arithmetic; acceptance checks finite nonnegative
-values against every raw Bellman inequality with exact binary dot products.
-Raw stored coefficients, explicitly normalized reference coefficients, and
-exact binary model declarations remain separate. Arithmetic feasibility is
-not native coefficient or uniform-class authority. Certificates bind the full
-request/model snapshot and generations; independent prior evidence stays
-outside changed-model feasibility. Zero-cost components may return a weak
-finite lower, without any greatest-proper-policy or infinity claim.
+Public lower fallback for an open incremental graph uses independently valid patterns, including an eligible ordinary retention contribution. It never republishes the restricted graph value merely because that value is larger.
 
-No default product profile enables these private certificates. The
-[v2 pilot](../archive/2026-09-04-operator-complete-frontier-bellman-lower-pilot-v2/README.md)
-records native parity, focused acceptance and the conditional donor stop.
+Inspect lower provenance, eligibility/refusal reasons, complete action coverage, preparation cost, consumer selections, and actual retired obligations. Keep component gain, whole-model gain, portfolio gain, ordinary consumption, and end-to-end exact-closure outcome separate. See [benchmarking](benchmarking.md).
 
-The opt-in [phase lower producer](../archive/2026-09-04-uniform-phase-lower-certificates-v1/README.md)
-adds a separate native support proof. Its existing reachability helper can omit
-fresh-base positivity to cover every item tag signature. A monotone frozen
-goal-mask potential is checked against all priced primitive support unions;
-the relation composes through the complete generated program grammar and all
-observed choices. Phase views bind exact Eldritch tiers without changing the
-old identity-clean guard. The native mandatory Ichor/Exalt composer streams
-complete integer weight mass, checks every failure exit and uses directed
-cost-plus-failure arithmetic. These are private validating constructors, not
-coefficient-only declarations or executable authority. The measured donor is
-0.01165 and program lower 3.683885; no production consumer or portfolio gain.
+## Source basis
 
-The private [probabilistic phase producer](../archive/2026-09-05-native-probabilistic-lower-repair-v1/README.md)
-keeps the clean projection's rarity/current-mask/prefix/suffix indexing. Proposal
-roles distinguish acquisition from completion: mask completion minimizes A[S]
-over all sets completing the current mask, including any-k requirements. The
-clean table is a separate candidate and records its first conservative refusal.
-
-The new native frame binds an exact goal fracture and caller scope. It permits
-ordinary hidden exclusions and all Eldritch phases through an explicit native
-pool/effect domination argument; generic influence, active metamods, additional
-fractures and veiled members remain outside. Unmodelled Imprint restore memory
-refuses the certificate rather than changing the caller's action scope.
-Native integer pool statistics bound conditional goal events, preserving full
-target weight and pessimistically reducing other weight by the strongest
-possible blockers. Union bounds and minimum marginal bounds preserve dependence.
-Normalized conservative event capacities minimize expectation for one frozen
-potential. The existing quotient checks every simultaneous relation after the
-events and observed choices are rebuilt for that vector; these are not exact
-native kernels valid for all vectors.
-
-Independent paid exits retain zero continuation. Positive exact-fresh Restart
-evidence is immutable and issued only by the existing preparation owner. Program
-composition charges mandatory setup once and streams every native integer exit;
-supported primitive relations telescope to a terminal or independent boundary.
-Canonical primitive and generated-family coverage remains complete. Open
-families retain valid floors even when a finite represented member is refined.
-
-The measured Scour refinement preserves its native fracture. The resulting
-13.717 donor improves the support-only control, but Harvest Physical's loose
-joint-completion event has a proved ceiling below program competitiveness.
-Both complete models and independent portfolios remain 36.42861718910441.
-No product lower manager consumes this certificate; the old anchored eligibility
-guard and ordinary public bounds remain unchanged.
-
-The subsequent [joint-goal refinement](../archive/2026-09-05-native-joint-goal-lower-refinement-v1/README.md)
-tightens each exact-mask capacity using distinct-position assignments with
-native conditional integer probability bounds. Retained/forced goals, overlaps,
-same-side draw limits, interleaved other-side blockers and guaranteed pools
-have explicit ownership. No-op outcomes retain an optimistic observed self
-choice. Independent per-mask caps remain distinct from aggregate subset cuts.
-All value-dependent rows are reoptimized for the final potential, and exported
-event minima let the exact audit reject a merely feasible or stale distribution.
-
-Candidate-price shortcuts are computational deferrals, not semantic ceilings.
-Minimum-owning floors reactivate even at equality after numerical repair; the
-changed model must be solved before a feasible older value can stop refinement.
-Native domain escapes and unsupported-effect floors retain separate reasons.
-
-An identity-compatible state lower covering the whole unchanged caller scope
-bounds every legal action and residual family. The private source-floor issuer
-therefore permits their existing independent floors to take its maximum;
-restricted action/program certificates cannot make that inference. The joint
-boundary measures complete-model and portfolio increases to 39.209999996079
-on both saved sources. Its remaining ceiling is the unsupported Eldritch Chaos
-continuation at 39.21. This is opt-in proof-query consumption, with no ordinary
-solver/public-bound or end-to-end performance activation.
-
-
-## Opt-in ordinary native retention lower
-
-`SolveOptions::native_retention_lower` defaults off and is not exposed by the
-public profiles or bindings. `SolveWork::Impl` prepares one compatible view in
-setup, reserving 32 MiB additional proof memory within the existing total cap.
-The existing quotient jointly checks the fractured and unfractured regions;
-current goal/occupancy and removable crafted categories survive every producing
-and consuming action. Native non-exhaustion witnesses constrain Exalt failures;
-Annul uses uniform eligible-affix categories with conservative dyadic event caps.
-Every final value-dependent row is reoptimized and checked simultaneously.
-
-Legal Alchemy's applied-rarity postcondition is independent of refill success:
-an exhausted pool leaves a Rare result. The lower projection removes Normal
-rollback from both ordinary renewal support and per-event observed choices.
-Minimum occupancy is a separate conditional proof: every pre-target occupancy
-history must retain positive eligible non-target integer weight on an open side.
-Unknown histories retain underfilled Rare outcomes; they never undo application.
-
-Preparation reuses only value-independent renewal geometry and exact-mask event
-caps inside the same immutable request/domain. Side-dependent Eldritch events
-keep their existing construction. Every candidate still rebuilds observed choices,
-successor minima and normalized minimizing allocations, and receives complete
-canonical and exact numerical checks. Lower-row memory accounting updates the
-changed nested capacities under the existing preallocation reservation; full
-recounts remain available and are covered by regression checks. No numerical
-warm-start or new graph owner is introduced.
-
-Selected Cannot Roll Attack/Caster continuations retain an actual crafted-junk
-slot and exact filter identity in both regions. Native Bench legality precedes
-its first-exit floor. The draw witness explicitly restores only the filter still
-present at pool construction: ordinary renewal clears it; Eldritch Chaos can
-retain it on the opposite side. All affected native witness/reuse keys bind that
-context. Annul, cleanup and renewal preserve or remove the correct occurrence;
-other legal unmodeled metamods retain conservative boundary floors.
-
-Complete final diagnostics are exported only after the numerical graph is gone,
-under a reservation for their measured payload and native workspace. Borrowed
-query capacity remains charged while temporary canonical partitions are counted
-by their per-source peak. Numerical shortcuts do not remove native coverage.
-
-The `NativeRetention` proof pattern contributes only by maximum. The ordinary
-consumer uses retained AbstractState fields and complete modifier member masks,
-not a materialized representative. Ambiguous fracture identity, unsupported
-member classes, restore memory or failed preparation keep the old lower.
-A compatible whole-state proof covers all explicit actions and remaining
-families. An open action envelope can publish this independent root floor
-without incumbent routing or a claim of exact closure. StrictClean's guard,
-action admission, scheduler and executable-upper ownership are unchanged.
-
-The [retention integration evidence](../archive/2026-09-05-native-retention-lower-integration-v1/README.md)
-separates private donor/program/model/portfolio results from the matched ordinary
-observation, including all construction cost and conservative junk-class fallbacks.
-This component establishes a bounded ordinary lower contribution, not a default
-product activation or an end-to-end speedup.
-The subsequent [applied-reforge evidence](../archive/2026-09-05-native-applied-reforge-preparation-v1/README.md)
-qualifies the native applied-rarity/occupancy contract and faster preparation
-through that same opt-in, retaining complete checking and conservative fallback.
-The [metamod continuation evidence](../archive/2026-09-05-native-metamod-first-exit-v1/README.md)
-qualifies the selected filter domain. It also measures ordinary projection cost:
-a result cache was removed because the completed current model did not justify
-its memory. Uniform member guards remain, with no cached accepted/refused results.
-
-Internal lowers drive operator pruning, fringe gap priority, constructive
-certificates, and gap targets. Telemetry should show which pattern supplied a
-bound and whether `state_incumbent_operator_lower` actually pruned rows. A
-larger displayed number without a measured proof consumer is not accepted as
-an improvement.
+This rewrite uses the [preceding reference](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/lower-pruning.md) and [solver_quotient_lower.hpp](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/engine/src/solver_quotient_lower.hpp), [2026-09-05-native-applied-reforge-preparation-v1](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-09-05-native-applied-reforge-preparation-v1/README.md), [2026-09-05-native-retention-lower-integration-v1](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-09-05-native-retention-lower-integration-v1/README.md). Mathematical links refer to the companion draft chapters and provisional claim IDs; they do not declare those claims accepted. Local implementation correspondence must be reconciled during integration.

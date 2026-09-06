@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from collections import defaultdict
 import copy
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -570,7 +571,7 @@ def _outliers(cases: Sequence[dict[str, Any]], limit: int = 20) -> dict[str, Any
     }
 
 
-def load_run(run_directory: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+def load_run(run_directory: Path, *, allow_missing_reports: bool = False) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     run_directory = run_directory.resolve()
     ledger_path = run_directory / "ledger.json"
     ledger = _read_json(ledger_path)
@@ -615,7 +616,13 @@ def load_run(run_directory: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]
         else:
             continue
         if not isinstance(path_value, str):
+            if allow_missing_reports:
+                record["analysis_report_unavailable"] = "analyzable case has no report path"
+                continue
             raise ValueError(f"analyzable case {case_id} has no report path")
+        if allow_missing_reports and not Path(path_value).is_file():
+            record["analysis_report_unavailable"] = "recorded report file is missing"
+            continue
         report = _read_json(Path(path_value))
         report_cases = report.get("cases")
         if not isinstance(report_cases, list) or len(report_cases) != 1:
@@ -904,6 +911,7 @@ def compare_runs(
 def build_report(
     runs: dict[str, tuple[dict[str, Any], list[dict[str, Any]]]],
     pairs: Sequence[tuple[str, str]] = (),
+    *, outcome_profile: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     report = {
         "schema_version": REPORT_VERSION,
@@ -935,7 +943,285 @@ def build_report(
                 runs[candidate][1],
             )
         )
+    if outcome_profile is not None:
+        report["analytics_boundary"]["primary_comparison_metric_selected"] = True
+        report["outcome_profile"] = copy.deepcopy(outcome_profile)
+        report["exact_closure"] = {
+            label: exact_closure_profile(ledger, cases, outcome_profile)
+            for label, (ledger, cases) in runs.items()
+        }
     return report
+
+
+def exact_closure_profile(ledger: dict[str, Any], cases: Sequence[dict[str, Any]],
+                          profile: dict[str, Any]) -> dict[str, Any]:
+    """Conservative final-observation closure, using the existing native contract.
+
+    This is combinatorial native closure with recorded numerical reconciliation,
+    not symbolic equality or a new real-number enclosure certificate.
+    """
+    if profile.get("kind") != "native_exact_closure_v1":
+        raise ValueError("unknown exact-closure outcome profile")
+    cohort = profile.get("case_ids")
+    horizon, cap = profile.get("budget_ms"), profile.get("memory_bytes")
+    if (not isinstance(cohort, list) or not cohort
+            or not all(isinstance(cid, str) for cid in cohort) or len(set(cohort)) != len(cohort)
+            or isinstance(horizon, bool) or _finite_number(horizon) is None or horizon <= 0
+            or isinstance(cap, bool) or _finite_number(cap) is None or cap <= 0):
+        raise ValueError("declare unique planned case IDs and a positive total resource envelope")
+    by_id = {case["id"]: case for case in cases}
+    if len(by_id) != len(cases):
+        raise ValueError("duplicate case reports")
+    rows = []
+    for cid in cohort:
+        case = by_id.get(cid)
+        status = _nested(ledger, "cases", cid, "status", default="missing")
+        row = {"id": cid, "runner_status": status, "qualified": False,
+               "closure_observed_ms": None, "stratum": "unavailable", "reasons": []}
+        if case is None:
+            row["reasons"].append("missing_report")
+            row["availability_detail"] = _nested(ledger, "cases", cid, "analysis_report_unavailable")
+            rows.append(row)
+            continue
+        row["stratum"] = _case_dimensions(case).get("class", "unknown")
+        summary = case.get("solve_summary") or {}
+        evaluation = case.get("exact_strategy_evaluation") or {}
+        total = _finite_number(_nested(case, "phase_wall_ms", "total"))
+        memory = _finite_number(_nested(case, "memory", "native_peak_owned_bytes"))
+        proof_closed = _nested(case, "solver_telemetry", "policy_refinement", "strict_lift", "global_lower_bound_closed")
+        # math: obligation CLM-0024 — these fields report the existing native
+        # proof/evaluation contract, not a new mathematical endpoint proof.
+        predicates = {
+            "completed_report_required": status == "completed",
+            "native_complete_proof_required": proof_closed is True,
+            "native_exact_classification_required": summary.get("policy_status") == "exact"
+                and summary.get("termination") == "exact_closed" and summary.get("converged") is True,
+            "evaluated_artifact_required": evaluation.get("completed") is True
+                and evaluation.get("status") == "matched"
+                and all(evaluation.get(k) is True for k in
+                        ("converged", "cost_complete", "zero_off_policy_mass", "cost_reconciled")),
+            "no_correctness_errors": not case.get("errors"),
+            "total_time_within_envelope": total is not None and 0 <= total <= horizon,
+            "memory_within_envelope": memory is not None and 0 <= memory <= cap,
+            "declared_memory_control_matches": _nested(case, "input", "caps", "max_solver_owned_bytes") == cap,
+            "finite_compatible_bounds": all(_finite_number(summary.get(k)) is not None
+                for k in ("lower_bound", "upper_bound", "evaluated_policy_cost")),
+        }
+        if predicates["finite_compatible_bounds"]:
+            predicates["finite_compatible_bounds"] = (0 <= summary["lower_bound"] <= summary["upper_bound"]
+                and summary["evaluated_policy_cost"] >= 0
+                and summary["lower_bound"] == summary["upper_bound"] == summary["evaluated_policy_cost"])
+        row["reasons"] = [name for name, passed in predicates.items() if not passed]
+        row["qualified"] = not row["reasons"]
+        if row["qualified"]:
+            # A final report proves closure by this observation, not at an
+            # invented earlier point inside an unobserved cooperative step.
+            row["closure_observed_ms"] = total
+        rows.append(row)
+
+    def curve(group):
+        times = sorted({0.0, float(horizon)} | {r["closure_observed_ms"] for r in group if r["qualified"]})
+        return [{"elapsed_ms": t, "closed": sum(r["qualified"] and r["closure_observed_ms"] <= t for r in group),
+                 "planned": len(group)} for t in times]
+
+    return {"predicate": "native strict closure + actual compiled evaluation + recorded numerical reconciliation",
+            "coefficient_claim": "native numerical contract, not symbolic exact arithmetic",
+            "planned": len(rows), "closed": sum(r["qualified"] for r in rows),
+            "cases": rows, "completion_profile": curve(rows),
+            "strata": {s: curve([r for r in rows if r["stratum"] == s]) for s in sorted({r["stratum"] for r in rows})},
+            "outside_declared_cohort": sorted(set(by_id) - set(cohort))}
+
+
+REFERENCE_KINDS = {"finite_model_optimum", "native_exact_closure", "verified_policy_upper",
+                   "certified_native_lower", "optimistic_model_policy_ceiling", "conditional_observation"}
+
+
+def _research_path(root: Path, name: str) -> Path:
+    path = (root / name).resolve()
+    if not path.is_relative_to(root.resolve()) or path == (root / "0").resolve():
+        raise ValueError(f"invalid research evidence path {name}")
+    return path
+
+
+def _pointer(value: Any, pointer: str) -> Any:
+    if not pointer:
+        return value
+    if not pointer.startswith("/"):
+        raise ValueError("evidence pointer must be an absolute JSON pointer")
+    for part in pointer[1:].split("/"):
+        part = part.replace("~1", "/").replace("~0", "~")
+        try:
+            value = value[int(part)] if isinstance(value, list) else value[part]
+        except (KeyError, IndexError, TypeError, ValueError):
+            raise ValueError(f"missing evidence pointer {pointer}") from None
+    return value
+
+
+def _archived_phase_summary(reference: dict, comparison: dict | None,
+                            source_order: list[str] | None = None) -> list[dict]:
+    """Only the two saved phase sources; do not fabricate a benchmark ledger."""
+    records = reference.get("source_results")
+    if records is None and "programs" in reference:
+        return [{"source": "primary" if i == 0 else "prefix_removed",
+                 "donor": reference.get("donor_value"), "program": p.get("checked_lower"),
+                 "complete_model": None, "portfolio": None,
+                 "reported_portfolio_gain": reference.get("portfolio_gain"),
+                 "limiter": reference.get("limiting_ties"),
+                 "comparison_basis": "support control; absolute complete-model value unavailable in this artifact"}
+                for i, p in enumerate(reference["programs"])]
+    if not isinstance(records, list):
+        raise ValueError("unrecognized archived phase reference")
+    result = []
+    for item in records:
+        row = {"source": "prefix_removed" if item["second_source"] else "primary",
+               "donor": item.get("donor"), "program": item.get("program_after"),
+               "complete_model": item.get("complete_model_after"), "portfolio": None,
+               "reported_portfolio_gain": item.get("portfolio_gain"),
+               "limiter": item.get("limiting_relation"),
+               "comparison_basis": "reference's stated baseline; not necessarily preceding milestone"}
+        if comparison:
+            comparison_sources = comparison.get("sources", [])
+            if source_order is not None:
+                if (set(source_order) != {"primary", "prefix_removed"} or
+                        len(source_order) != len(comparison_sources) or len(source_order) != 2):
+                    raise ValueError("invalid declared legacy source order")
+                match = [comparison_sources[source_order.index(row["source"])]]
+            else:
+                match = [s for s in comparison_sources if s.get("second_source") == item["second_source"]]
+            if len(match) != 1:
+                raise ValueError("comparison lacks an unambiguous saved semantic source")
+            matched = match[0]
+            # Newer comparison files, unlike support-control diagnostics,
+            # own the explicit predecessor before/after/gain attribution.
+            for key in ("donor", "program", "complete_model", "portfolio"):
+                evidence = matched.get(key)
+                if key + "_after" in matched:
+                    evidence = {field: matched.get(key + "_" + field) for field in ("before", "after", "gain")}
+                if isinstance(evidence, dict) and "after" in evidence:
+                    if key == "donor" and evidence["after"] != row["donor"]:
+                        raise ValueError("comparison source donor differs from reference")
+                    row[key] = evidence["after"]
+                    row[key + "_comparison"] = evidence
+            row["comparison_basis"] = comparison.get("baseline", comparison.get("scope", "explicit archived comparison"))
+        result.append(row)
+    return result
+
+
+def build_research_report(root: Path, series_path: Path) -> dict[str, Any]:
+    """Read declared archived references, preserving missing and limited evidence."""
+    root = root.resolve()
+    series = _read_json(series_path if series_path.is_absolute() else _research_path(root, str(series_path)))
+    if series.get("schema_version") != "solver_research_series_v1":
+        raise ValueError("unsupported research series schema")
+    for field in ("question", "models", "observations", "comparison_profiles"):
+        if not series.get(field):
+            raise ValueError(f"series missing {field}")
+    models = series["models"]
+    for key, model in models.items():
+        for field in ("semantic_version", "property", "coefficient_semantics", "scope", "input_references"):
+            if not model.get(field):
+                raise ValueError(f"model {key} missing {field}")
+        for name in model["input_references"]:
+            if not _research_path(root, name).is_file():
+                raise ValueError(f"model {key} missing input {name}")
+    ids, observations = set(), []
+    for entry in series["observations"]:
+        for field in ("id", "model", "kind", "producer", "validation", "evidence", "role", "treatment"):
+            if not entry.get(field):
+                raise ValueError(f"observation missing {field}")
+        if entry["id"] in ids or entry["kind"] not in REFERENCE_KINDS or entry["model"] not in models:
+            raise ValueError("duplicate observation, unknown reference kind or model")
+        ids.add(entry["id"])
+        row = copy.deepcopy(entry)
+        row["availability"] = "available"
+        for field in ("evidence", "validation"):
+            if not _research_path(root, entry[field]).is_file():
+                row["availability"] = "unavailable"
+                row.setdefault("limitations", []).append(f"missing {field}: {entry[field]}")
+        if row["availability"] == "available":
+            evidence = _read_json(_research_path(root, entry["evidence"]))
+            if entry.get("adapter") == "archived_phase_v1":
+                comparison = _read_json(_research_path(root, entry["comparison"])) if entry.get("comparison") else None
+                row["sources"] = _archived_phase_summary(evidence, comparison, entry.get("comparison_source_order"))
+                row["native_validation_basis"] = evidence.get("evidence_scope", evidence.get("native_relation"))
+                row["auxiliary_policy_ceiling"] = evidence.get("optimistic_policy_ceiling")
+                row["checked_relations"] = evidence.get("checked_relations", evidence.get("checked_donor_inequalities"))
+            else:
+                row["value"] = _pointer(evidence, entry.get("pointer", ""))
+        observations.append(row)
+    matched = []
+    for pair in series.get("ordinary_pairs", []):
+        left = _read_json(_research_path(root, pair["control"]))
+        right = _read_json(_research_path(root, pair["treatment"]))
+        provenance = _read_json(_research_path(root, pair["provenance"]))
+        control_fields = ("pilot", "source", "scope", "budget_ns", "total_cap_bytes", "proof_cap_bytes")
+        mismatch = [f for f in control_fields if left.get(f) is None or left.get(f) != right.get(f)]
+        digests = provenance.get("artifacts_sha256", {})
+        integrity = {}
+        for field in ("control", "treatment"):
+            path = _research_path(root, pair[field])
+            expected = digests.get(path.name)
+            if expected is None:
+                integrity[field] = "unavailable in original provenance"
+            else:
+                same = hashlib.sha256(path.read_bytes()).hexdigest() == expected
+                integrity[field] = "matched original digest" if same else "digest mismatch"
+                if not same:
+                    mismatch.append(field + ".evidence_hash")
+        result = {"id": pair["id"], "inputs": pair, "mismatches": mismatch,
+                  "integrity": integrity,
+                  "runtime_claim": "single saved sequential observation; no independent machine replication or speedup established",
+                  "provenance": provenance.get("ordinary_note", provenance.get("ordinary_order", "see original provenance"))}
+        if mismatch:
+            result["status"] = "incompatible"
+        else:
+            result["status"] = "compatible_archived_observation"
+            result["public_lower"] = {"before": left["public_lower"], "after": right["public_lower"],
+                                      "gain": right["public_lower"]-left["public_lower"]}
+            fields = ("elapsed_ns", "ordinary_setup_ns", "native_prepare_ns", "rows", "reforge_work",
+                      "native_lookups", "native_hits", "native_selected_calls", "native_peak_bytes",
+                      "peak_owned_bytes", "verified_upper", "done")
+            result["control"] = {f: left.get(f) for f in fields}
+            result["treatment"] = {f: right.get(f) for f in fields}
+            result["exact_closure"] = "unavailable: compact observations are not complete benchmark proof/evaluation records"
+        matched.append(result)
+    return {"schema_version": "solver_research_view_v1", "question": series["question"],
+            "inputs": str(series_path).replace("\\", "/"), "models": models,
+            "comparison_profiles": series["comparison_profiles"], "observations": observations,
+            "ordinary_comparisons": matched, "errors": [],
+            "limits": ["archived reports are not rerun native qualification", "no fabricated trajectories or exact optimum",
+                       "historical development exposure is retained", "anchored and empty clean-five bounds never form a gap"]}
+
+
+def research_markdown(report: dict[str, Any]) -> str:
+    def number(value):
+        return "unavailable" if value is None else f"{value:.12g}" if isinstance(value, (int, float)) else str(value)
+    lines = ["# Generated solver research state", "", f"Input: `{report['inputs']}`. Question: {report['question']}.",
+             "Regenerate with the series command in [benchmarking](benchmarking.md#research-series). This view does not run or qualify native work.",
+             "", "| Observation / source | Kind | Donor | Program | Complete model | Portfolio | Limiter |",
+             "|---|---|---:|---:|---:|---:|---|"]
+    for row in report["observations"]:
+        link = "../../" + row["evidence"]
+        for source in row.get("sources", []):
+            lines.append(f"| [{row['id']}]({link}) / {source['source']} | {row['kind']} | " +
+                         " | ".join(number(source.get(k)) for k in ("donor", "program", "complete_model", "portfolio")) +
+                         f" | {str(source.get('limiter', 'unavailable')).replace('|', '/')} |")
+    lines += ["", "An unavailable absolute portfolio is not inferred from a reported gain. Each source record retains its original comparison basis in the JSON view.", ""]
+    for row in report["observations"]:
+        lines += [f"- [{row['id']}](../../{row['evidence']}): {row['availability']}; {row['kind']}; {row['role']}. " +
+                  " ".join(row.get("limitations", []))]
+    for pair in report["ordinary_comparisons"]:
+        lines += ["", f"## Ordinary comparison: {pair['id']}", "", f"Status: {pair['status']}. {pair['runtime_claim']}."]
+        if pair.get("public_lower"):
+            lower = pair["public_lower"]
+            treatment = pair["treatment"]
+            lines += [f"Public lower: {number(lower['before'])} → {number(lower['after'])}; gain {number(lower['gain'])}.",
+                      f"Preparation: {number(treatment['native_prepare_ns'])} ns; total setup {number(treatment['ordinary_setup_ns'])} ns; elapsed {number(treatment['elapsed_ns'])} ns.",
+                      f"Rows: {pair['control']['rows']} → {treatment['rows']}; calls are not unique coverage and fewer rows before timeout are not saved proof work.",
+                      pair["exact_closure"] + ".",
+                      f"[Original provenance](../../{pair['inputs']['provenance']})."]
+    lines += ["", "Limitations: " + "; ".join(report["limits"]) + ".", ""]
+    return "\n".join(lines)
 
 
 def _parse_run(value: str) -> tuple[str, Path]:
@@ -954,16 +1240,34 @@ def _parse_pair(value: str) -> tuple[str, str]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--run", action="append", type=_parse_run, required=True)
+    parser.add_argument("--run", action="append", type=_parse_run, default=[])
     parser.add_argument("--pair", action="append", type=_parse_pair, default=[])
+    parser.add_argument("--outcome-profile", type=Path)
+    parser.add_argument("--research-series", type=Path)
+    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[3])
+    parser.add_argument("--markdown", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
+    if args.research_series:
+        if args.run or args.pair or args.outcome_profile:
+            parser.error("research series and legacy run reports are separate views")
+        report = build_research_report(args.root, args.research_series)
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_bytes((json.dumps(report, indent=2, sort_keys=True) + "\n").encode())
+        if args.markdown:
+            args.markdown.parent.mkdir(parents=True, exist_ok=True)
+            args.markdown.write_bytes(research_markdown(report).encode())
+        print(f"wrote {len(report['observations'])} archived observations to {args.output}")
+        return 0
+    if not args.run or args.markdown:
+        parser.error("legacy reports require --run; --markdown requires --research-series")
     runs: dict[str, tuple[dict[str, Any], list[dict[str, Any]]]] = {}
     for label, path in args.run:
         if label in runs:
             raise SystemExit(f"duplicate run label: {label}")
-        runs[label] = load_run(path)
-    report = build_report(runs, args.pair)
+        runs[label] = load_run(path, allow_missing_reports=args.outcome_profile is not None)
+    report = build_report(runs, args.pair,
+                          outcome_profile=_read_json(args.outcome_profile) if args.outcome_profile else None)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
         json.dumps(report, indent=2, sort_keys=True) + "\n",
@@ -974,3 +1278,7 @@ def main(argv: list[str] | None = None) -> int:
         f"{len(report['comparisons'])} paired comparisons to {args.output}"
     )
     return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

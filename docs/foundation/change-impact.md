@@ -1,257 +1,118 @@
 # Change Impact Map
 
-**Status: stable repository process reference.** This page maps implementation
-changes to downstream code, generated artifacts, documentation, and final
-verification. It does not select work or replace the testing cadence in
-`AGENTS.md`.
+**Integrated reference.** Authored from the repository contracts at `f3e7c0fa7bd827064a41c48a53c4db372840cf0f`. Reconciled with local `215654f`; importing this mechanism reference supplies no new runtime authority.
 
-Parent: [Foundation](README.md)
-
-Verified against repository: 2026-07-20 @ 8f6ea61. Scope: build/test scripts,
-native CMake targets, public headers, Python/WASM bindings, web protocol and
-package scripts, data/economy schemas and tooling, checked workflows, and
-documentation lifecycle rules. No build or test suite was run.
-
-Solver-plan preflight addendum: rechecked 2026-08-25 @ `a1449fa` for the
-current native solve source inventory, WASM rebuild boundary, worker protocol,
-and documentation lifecycle. The broader ingest, economy, packaging, and
-deployment rows retain the earlier verification stamp.
+Use this map when an edit crosses an actual boundary. It is not universal startup reading or a requirement to run every downstream suite. The shared operating and validation policy has one owner: `AGENTS.md`.
 
 ## Purpose
 
-poecraft2 has several deliberate derivation and binding boundaries. A local
-edit can compile in one layer while leaving a committed WASM module, a parser,
-a type union, a fixture, or a stable reference stale. Use this map before
-implementation to identify the complete change surface, then use it again at
-acceptance to confirm that every required downstream artifact was refreshed.
+A local change can leave a derived artifact, parser, binding, fixture, or documented contract inconsistent. Identify what consumes the changed contract and validate that path. Do not turn a mathematical documentation update into a new native acceptance milestone, and do not call a native semantic change documentation-only because the ABI stayed stable.
 
-This document answers “what else changes if I change this?” It does not decide
-Path of Exile behavior. Any ambiguous mechanic rule still requires Oliver's
-ruling before implementation or documentation.
+Mechanics remain native/owner-defined. A disagreement between code and a mathematical argument creates an explicit discrepancy; neither is silently rewritten to hide it.
 
 ## Dependency Overview
 
-Game data:
-
 ```text
-source snapshot and normalization
-  -> schemas/sqlite + canonical poecraft.db
-  -> compile_engine_data.py
-  -> data/compiled/current
-  -> native file loader or web poecraft-data.json bundle
-  -> immutable data/session handles
+ingest/schema → canonical game SQLite → compiled runtime artifact
+             → native loader/session → engine and bindings
+
+native source/public C ABI → Python subset and WASM facade
+                         → worker/client → browser product
+
+economy inputs → validated immutable snapshot → pinned native prices
 ```
 
-Runtime and product:
-
-```text
-engine/src + engine/include/poecraft
-  -> native static/shared libraries and C ABI
-  -> Python ctypes subset
-  -> WASM JSON facade + generated poecraft_engine.mjs/.wasm
-  -> EngineBindings -> engine-worker -> EngineClient
-  -> Emulator / Calculator / Strategy Builder / Simulator / Stash
-```
-
-Economy:
-
-```text
-provider adapter + economy schema/catalogs
-  -> canonical economy SQLite
-  -> immutable league snapshots + league index
-  -> browser cache, overrides, and fallback
-  -> pinned economy JSON
-  -> native solve/evaluation/simulation pricing
-```
+The mathematical reference records assumptions and arguments. It does not replace these data and execution boundaries.
 
 ## Rules Before Editing
 
-1. Identify the authority. Mechanics belong to
-   [Mechanics](../mechanics/README.md); runtime representation belongs to
-   [Engine](../engine/README.md); solver contracts belong to
-   [Solver](../solver/README.md); product behavior belongs to
-   [Product](../product/README.md); and prices belong to
-   [Economy](../economy/README.md).
-2. Distinguish canonical input from derived output. Never hand-edit canonical
-   SQLite or the compiled runtime artifact; regenerate both through their
-   owning tools. Generated WASM is rebuildable output but is tracked and must
-   match the engine source used by the web product.
-3. Check every exposed surface. Python wraps a subset of the C ABI; WASM wraps
-   a different, broader product subset. Update a binding only when it exposes
-   the changed contract, but never assume a native change is invisible to WASM
-   merely because the facade function name stayed the same.
-4. Preserve authority boundaries. TypeScript may validate request shape and
-   present native results, but it must not acquire pool, weight, transition, or
-   mechanic authority.
-5. Plan one final acceptance gate. Intermediate implementation phases are not
-   routine test gates. Use a narrow test only to diagnose a failure, then run
-   the appropriate complete suite once after the selected work is complete.
+Start at the actual owner. Preserve canonical versus derived distinctions, relevant local work, and the existing semantic scope. Inspect only applicable bindings: Python and WASM expose different subsets.
+
+A focused check is useful when it resolves uncertainty or validates a retained change. Intermediate phases are not routine test gates. Final validation is selected by actual impact; no universal simulation or full-pipeline requirement is introduced here.
 
 ## Change Matrix
 
-| Change | Authority to edit first | Downstream surfaces to inspect or update | Derived output / final verification |
-| --- | --- | --- | --- |
-| Documentation only | Owning stable area, note, future page, decision, or archive | Area README, parent/back-links, verification stamp, glossary/evidence if terms or results changed | One-off Markdown link/reachability audit; no product suite merely for prose |
-| RePoE source normalization or ingest behavior | `tools/ingest/poecraft_ingest/`, ingest fixtures | Canonical schema assumptions, validation reports, compiled-data projection, engine loader/session fixtures, engine/data docs | Regenerate canonical SQLite and compiled artifact through tools; ingest tests, DB validation, fixture parity, then downstream binding/engine/web checks as affected |
-| Canonical game-data schema | `schemas/sqlite/001_initial.sql`, writer and validation code | Queries, normalizers, compiled-data serializer, fixture validators, economy joins using game data, engine data loader | Rebuild SQLite and `data/compiled/current`; validate both before engine consumers |
-| Compiled runtime artifact shape | `tools/ingest/poecraft_ingest/compiled_data.py`, compiler/validator | `engine/src/data_loader.cpp`, public summaries if exposed, web data-bundle builder, fixture and loader tests, `docs/engine/data.md` | Recompile/validate artifact; rebuild web data bundle through its npm pre-script; run loader and downstream consumer acceptance |
-| Internal native engine behavior with unchanged ABI | Owning `engine/src/*.cpp` implementation and private header | Native tests, mechanic/engine/solver stable reference, WASM behavior, Python behavior if its exposed call reaches the changed code | Native build; rebuild WASM before browser acceptance whenever browser semantics changed; run affected native/binding/web layers at final gate |
-| Public C ABI symbol, struct, enum, or lifetime | `engine/include/poecraft/*.h` plus owning `engine/src` facade | Header smoke, ABI validation, every exposing binding, native call sites/benchmarks, WASM facade/export list, web protocol/types, stable docs | Native build and binding tests; mandatory WASM rebuild for browser-exposed changes; web/WASM acceptance after rebuild |
-| Primitive action enum or mechanic request shape | `session.h`, `engine_internal.hpp`, native parser/action implementation after Oliver's ruling | Simulator parser, solver registry/exact evaluator, Bestiary boundary if relevant, WASM request parser, `CraftAction`, product pickers/panels, mechanic coverage matrix | Native build, mandatory WASM rebuild, complete changed-layer acceptance; update the owning mechanic page and `mechanics/README.md` completeness table |
-| Mechanic legality or transition behavior | Owning action/session/pool implementation after a recorded Oliver ruling | Exact calculation, sampled action path, strategy simulator, solver operators, Python/WASM exposure, all relevant product surfaces and fixtures | Validate native/exact/sampled parity as appropriate; rebuild WASM; record ruling provenance and explicit unsupported boundaries |
-| Strategy JSON operation or condition vocabulary | `engine/src/simulator.cpp` and public simulator contract; `strategy-model.ts` for authored shape | Solver compiler, exact graph evaluator, Python strategy compiler/evaluator, WASM parser, worker protocol, Strategy Builder authoring/validation, persistence and fixtures | Native build, mandatory WASM rebuild, binding/web acceptance; update `docs/product/strategies.md`, solver flow/boundaries, and mechanics vocabulary when applicable |
-| Solver goal, option, result, cap, or telemetry contract | `engine/include/poecraft/solver.h`, the owning private phase header in [Solver internals](solver-internals.md), and its implementation | `solver_api.cpp`, WASM facade, `engine-wasm.ts`, `engine-protocol.ts`, worker/client, Calculator/solve helpers, native and web fixtures, solver docs | Native build and solver tests; rebuild WASM; run Node worker/WASM and product-model acceptance at final gate |
-| Solver algorithm with stable request/output | Owning `solver_*.cpp` files | Exact transition assumptions, policy compiler/evaluator, telemetry/evidence, native benchmark corpus, browser work-step behavior and caps | Native build; use focused diagnostics only when needed; rebuild WASM before web acceptance; run required 1,000-run compiled-strategy verification only when the selected acceptance plan requires it and the identical artifact is not already qualified |
-| WASM facade, exports, memory, or marshalling | `bindings/wasm/wasm_api.cpp`, `scripts/build-wasm.ps1` | `engine-wasm.ts`, worker/client protocol, generated release wrapper, engine smoke test, `docs/engine/wasm.md` | Mandatory `scripts/build-wasm.ps1`; inspect generated `.mjs/.wasm` diff; run web/WASM acceptance at final gate |
-| Python binding exposure | `bindings/python/poecraft_engine/_binding.py` and high-level package API | ctypes signatures/structs, owning C ABI lifetime, package data/build, binding tests, foundation capability statement | Native shared-library build, Python binding tests, package smoke/build when release scope requires it |
-| Worker RPC or structured-clone type | `engine-protocol.ts`, `engine-worker.ts`, `engine-client.ts`, `engine-wasm.ts` as applicable | Every component caller, progress/cancel handling, Node worker bootstrap and smoke tests, solver/WASM flow docs | Typecheck plus web/WASM tests at final gate; rebuild WASM only if native/facade code also changed |
-| Workspace persistence or saved strategy/item shape | `workspace/persistence.ts`, strategy/item models | Draft recovery, Stash records, handoffs, legacy parsing/migration, affected components and model tests, product docs | Web typecheck/tests at final gate; rendered review belongs to Oliver and runs only when explicitly requested |
-| Economy schema, provider, price catalog, or snapshot envelope | `schemas/economy/`, `tools/economy/`, checked catalogs/fixtures | Refresh workflow, publication/retention/checkpoint code, browser economy service, native economy parser and solver/simulator pricing if envelope changed, economy docs | Economy tests and validation/publish checks; native/WASM rebuild only when their parsed envelope or pricing contract changed |
-| Checked workflow or packaging | `.github/workflows/`, `scripts/package-*`, build scripts | Required secrets/resources, artifact inputs, cache headers, output manifests, deployment docs | Exercise the narrow packaging/workflow validation available locally; full product tests only when implementation inputs changed |
+| Change | Consumers and evidence to inspect | Appropriate validation scope |
+|---|---|---|
+| Prose/navigation only | Changed links, canonical owner, incoming historical anchors | Edited-link/diff review; claim lint when installed; no native build |
+| Mathematical claim or premise | Referenced argument, affected native producer/checker/consumer, counterexample | Substantive review and the smallest useful proof/example check; no automatic whole-repository reread |
+| Research/report tooling | Existing CLI compatibility, input schemas, identity/failure semantics, generated outputs | Focused parser/report fixtures and deterministic output checks |
+| Ingest or canonical schema | Writers/queries, validators, compiled projection, loader and fixture expectations | Regenerate through owning tools when authorized; validate affected canonical and derived data |
+| Compiled artifact format | Compiler/validator, native loader, web data-bundle generator | Artifact/loader and actual downstream consumers |
+| Internal native semantics | Exact and sampled mechanics, solver/evaluator, exposing bindings | Focused native contracts; rebuild affected release artifact before claiming browser parity |
+| Public C ABI or lifetime | Header smoke, native clients, exposing Python/WASM bindings, worker types | Relevant ABI/binding and downstream lifetime checks |
+| Primitive action or request shape | Owner ruling, enum/parser, registry, Simulator, exact evaluator, product pickers | Native/exact/sampled parity as applicable; regenerate affected WASM |
+| Strategy vocabulary | Native parser/simulator, compiler, exact evaluator, authored shape, persistence | Complete changed-vocabulary path; sampled qualification only when genuinely required |
+| Solver algorithm, stable I/O | Scope/proof assumptions, policy/evaluation, benchmark identities, cooperative behavior | Affected focused proof/behavior controls and justified matched experiment |
+| Solver result/progress field | Typed owner, collection/serialization, C ABI/facade, worker/client and presentation | Field semantics, missing/non-finite handling, and exposed consumers |
+| WASM facade/export/marshalling | Native declaration, export inventory, generated module, bindings and worker | Rebuild affected module and exercise matching interface/transfer checks |
+| Python binding | Actual exposed C ABI subset, ctypes/lifetime, package assumptions | Shared-library and binding checks |
+| Worker RPC or persistence | Message/structured-clone types, cancellation, request versions, document migrations | Typecheck and focused nonvisual web tests; native rebuild only when its input changed |
+| Economy schema/pricing envelope | Provider/validation, snapshots, browser cache, native price parser | Affected economy and price-consumer checks; do not change game data unnecessarily |
+| Source removal/build isolation | All consumers, inventories, optional oracle/reproduction role | Smallest affected compile/test; keep old evidence retrievable |
+| Workflow/packaging | Actual source inputs, required-check behavior, manifests | Narrow workflow/packaging checks; skipped work must remain honestly labelled |
 
 ## Rebuild Triggers
 
 ### Native engine
 
-Run `powershell -File scripts/build.ps1` after native source/header changes.
-The script compiles the ingest and economy Python packages, regenerates the
-Harvest allowlist header, discovers CMake, Ninja, and UCRT64 C/C++ compilers
-from task-specific environment overrides, `PATH`, portable local locations,
-or a dynamically discovered Visual Studio installation, then passes the
-resolved paths into the path-agnostic UCRT64 GCC Release preset. Hosted Windows
-CI provisions the same tool classes through MSYS2 UCRT64. CMake builds the
-object library, static/shared engines, tests, and solver benchmark. A prominent
-direct-g++ fallback remains for portability, but it recompiles all sources and
-is not the development path.
+`scripts/build.ps1` is the normal repository build entry. `scripts/dev-engine.ps1` exposes narrower development workflows; inspect its current help/selector before running it. Do not substitute a direct full recompile for an available incremental target without a reason.
 
-Build-portability verification addendum (2026-08-28): rechecked from active
-planning checkpoint `77627b2`. The preset contains no developer-installation
-paths; both PowerShell entry points resolve and inject CMake, Ninja, GCC, and
-G++; local configure and native test-target build completed through the
-canonical preset. Hosted completion still requires observing a run after these
-workflow changes are pushed.
-
-Low-cap C ABI addendum (2026-08-29): the solver summary's existing
-`start_value` field now explicitly represents a missing Bellman row as
-positive infinity; no symbol, layout, enum, facade export, or binding shape
-changed. Native API and solver suites are the narrow source checks. Because
-the WASM JSON surface converts non-finite numbers to `null`, the release WASM
-rebuild and downstream web checks remain required once at the active plan's
-final acceptance gate rather than at this intermediate checkpoint.
-
-Native and WASM source discovery has one owner:
-`engine/engine-sources.txt`. CMake, `scripts/build.ps1`, and
-`scripts/build-wasm.ps1` consume that inventory and reject missing, duplicate,
-or unlisted translation units. Add, move, or remove an engine translation unit
-there once. `scripts/dev-engine.ps1` exposes incremental engine-only,
-tests-only, benchmark-only, selected-suite, parallel native CTest,
-benchmark-validation, rerun-failed, and explicit clean-rebuild workflows.
+`engine/engine-sources.txt` is the shared native translation-unit inventory consumed by the builds. Add, move, or remove an engine translation unit there once and validate the inventory. Private headers and benchmark-only sources have different build ownership.
 
 ### Compiled game data
 
-`data/sqlite/poecraft.db` is canonical and `data/compiled/current` is derived.
-Use `tools/ingest/compile_engine_data.py` to compile and validate the artifact;
-never edit either output manually. Changes to the artifact shape must be
-coordinated with the native loader and `scripts/build-data-bundle.mjs` used by
-the web build.
+Canonical SQLite and compiled data are regenerated through their owning tools, never hand-edited. A data-format change also affects `data_loader.cpp` and the web data-bundle generator. Timestamps can suggest what to inspect; identity/content validation establishes compatibility.
 
 ### WASM
 
-`scripts/build-wasm.ps1` compiles every `engine/src/*.cpp` file plus
-`bindings/wasm/wasm_api.cpp` and rewrites the tracked release module. Rebuild
-before web acceptance whenever native behavior visible in the browser changes.
-It is mandatory after engine C ABI or strategy-vocabulary changes. A fresh
-shell does not have `emcc` on `PATH`; the script activates the SDK from
-`$env:EMSDK` or `C:\emsdk`.
+`scripts/build-wasm.ps1` owns the committed release module. It activates the configured Emscripten environment; a fresh shell without `emcc` does not establish that rebuilding is impossible.
 
-After adding or renaming a public facade export, check all three inventories:
+Rebuild before browser acceptance when browser-visible native semantics or the facade changes. C ABI and strategy-vocabulary changes require the corresponding binding/export review. Inspect the actual shared export inventory and native/facade call sites rather than copying a stale list from this page.
 
-- `EMSCRIPTEN_KEEPALIVE` declarations in `wasm_api.cpp`;
-- `$Exported` in `scripts/build-wasm.ps1`; and
-- calls/bindings in `engine-wasm.ts` plus the generated release wrapper.
+A genuinely native-only private option or benchmark-only change does not imply a changed public feature. State which source/artifact was validated and which was not; do not call an old release module current by assumption.
 
 ### Web and public artifacts
 
-The web `predev` and `prebuild` hooks run `npm run build:data`. `npm run build`
-type-checks before Vite builds; `npm test` uses `tsx` and therefore does not
-replace `npx tsc --noEmit`. Public packaging requires current native/WASM,
-compiled-data, web, and economy inputs; use
-`scripts/package-public-artifacts.mjs` only when packaging is in the selected
-scope.
+`npm test` does not replace TypeScript checking. Use `npx tsc --noEmit` for affected TypeScript contracts; use the existing product build/data hooks when packaging is in scope. Rendered review belongs to Oliver unless explicitly requested.
 
 ## Verification Selection
 
-The full pipeline is `powershell -File scripts/test.ps1`, in this order:
+The full `scripts/test.ps1` pipeline remains available for a finished change whose impact warrants it. Read the actual script for current phases; do not maintain a second brittle copy of its ordering here.
 
-1. ingest unit tests;
-2. economy unit tests;
-3. canonical database validation when the local database exists;
-4. spec fixture parity;
-5. compiled artifact compile and validation;
-6. Python binding tests;
-7. native CTest or fallback engine tests and solver-corpus validation; and
-8. web/WASM tests when npm and the generated module are available.
+A documentation or metadata edit needs no Simulator. A source removal may need a narrow compile. A changed executable strategy may need fresh sampled qualification under `AGENTS.md`, but an identical already-qualified artifact does not require another sample for ceremony.
 
-Use that complete pipeline when the finished change crosses most layers. For a
-narrow change, run the changed layer and everything downstream that consumes
-its contract. Do not run routine suites after every intermediate checkpoint.
-
-Additional acceptance rules from `AGENTS.md` remain binding:
-
-- rebuild release WASM before web tests when its source inputs changed;
-- run both `npm test` and `npx tsc --noEmit` for a completed web change;
-- compiled-strategy verification uses 1,000 simulator runs when genuinely
-  required, and none for an identical already-qualified artifact; and
-- Oliver owns rendered/visual UI review, so agents do not perform it unless he
-  explicitly asks.
-
-Documentation-only changes require a proportional one-off Markdown link and
-reachability audit, not the product pipeline.
+Do not execute a test selector solely because its name sounds proof-only: inspect whether it also launches costly simulation or downstream work. Preserve failed, unrun, skipped, and unavailable results separately.
 
 ## Documentation Consequences
 
-| Change introduces or alters | Documentation destination |
-| --- | --- |
-| Implemented mechanic behavior or surface coverage | Owning `docs/mechanics/*.md` family and coverage index |
-| Stable runtime/solver/product/economy contract | Owning area reference with a fresh verification stamp |
-| Cross-layer flow or lifetime | Existing flow page; avoid duplicating the same lifecycle in several areas |
-| Durable owner-approved engineering choice | `docs/decisions.md`, clearly labelled implemented or deferred |
-| Measurement, fixture, target, pass, miss, or stopped gate | `docs/evidence.md` and linked raw evidence |
-| Unselected possibility | `docs/future/` or area `NOTES.md`; never stable current sequencing |
-| Completed execution plan | Extract durable knowledge, then move it with final evidence to a dated archive |
+| What changed | Canonical destination |
+|---|---|
+| Mathematical proposition or counterexample | Relevant mathematics chapter and claim history |
+| Implementation correspondence | Owning mechanism page and selected source references |
+| Native mechanic/ruling | Existing mechanics page and ruling owner |
+| Source/lifetime structure | Existing source/flow map |
+| Owner engineering decision | Append or supersede in `docs/decisions.md` |
+| Experiment | Existing immutable evidence plus relevant research question/series |
+| Current sequencing | HANDOFF only, when continuation needs it |
+| Substantive external research | Original report once; canonical dispositions and ordinary final-response receipt |
 
-If a document describes code-dependent behavior, verify the relevant paths and
-update its date/commit/scope stamp. If the code was not checked, mark the claim
-unverified rather than copying a stale plan assertion.
+Do not mirror every change into the documentation map, evidence index, active index, and HANDOFF. Historical numeric narratives remain at their existing addresses. Claim/reference tools and generated research views are only described as available after their implementation is integrated.
 
 ## Worked Change Traces
 
-### Add a primitive action kind
+### A lower producer changes
 
-1. Obtain and record Oliver's mechanic ruling.
-2. Update the public/internal enum and native action implementation.
-3. Update request/simulator parsers, exact calculation, solver registry, WASM
-   parsing, TypeScript action union, and each intended product surface.
-4. Update the mechanic family page and complete-coverage matrix.
-5. Build native, rebuild WASM, and run the appropriate final downstream suite.
+Follow its model/scope claim, native probability/projection evidence, numerical checker, and actual public/pruning consumers. Validate the changed relations with the smallest relevant fixture. Report local bound gain separately from complete-model and end-to-end performance. Do not widen a member-domain guard because one representative passes.
 
-### Add a solver telemetry field
+### A telemetry field changes
 
-1. Update native telemetry ownership/serialization and its cap accounting.
-   State explicitly whether retained diagnostic storage consumes the solver
-   cap or is a post-authority observational projection bounded only at public
-   telemetry serialization. An observational join must never become an input
-   to mechanics, admission, scheduling, proof, or publication.
-2. Update the WASM JSON facade, TypeScript protocol type, and any product
-   presentation or diagnostic parser.
-3. Update native/API fixtures and worker/WASM checks.
-4. Build native, rebuild WASM, and run the final solver plus web/WASM acceptance
-   selected for the chunk.
+Define unit, population, ownership, and whether diagnostics are inside the solver cap. Update the actual collection/serialization and exposed bindings. A post-authority diagnostic must not become an input to scheduling or proof.
 
-### Restructure documentation only
+### Documentation is reorganized
 
-1. Preserve authority and history; update area indexes and parent links.
-2. Move completed plans only after extracting decisions, evidence, glossary
-   terms, stable contracts, deferred work, and open notes.
-3. Run the one-off Markdown target, area-index, and reachability audit.
-4. Do not run engine, ingest, binding, or web tests merely because prose moved.
+Preserve historical evidence and anchors. Move arguments to their canonical chapter, not merely to another chronological file. Validate the changed links and claim references when tools are available. No standing requirement for a whole-repository link audit, fresh verification stamps, or a product suite is created by prose edits.
+
+## Source basis
+
+This rewrite uses the [preceding reference](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/foundation/change-impact.md) and [AGENTS.md](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/AGENTS.md), [CMakeLists.txt](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/engine/CMakeLists.txt), [benchmarking.md](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/benchmarking.md). Mathematical links refer to the companion draft chapters and provisional claim IDs; they do not declare those claims accepted. Local implementation correspondence must be reconciled during integration.

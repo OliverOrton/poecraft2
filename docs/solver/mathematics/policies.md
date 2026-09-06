@@ -1,0 +1,175 @@
+# Executable policies, properness, and upper bounds
+
+**Authored September 6, 2026; integrated against `215654f`.** The original research reviewed `f3e7c0f`. Claim IDs are registered in the local ledger; status follows each history. Native/source obligations remain explicit.
+
+
+A policy upper is a witness of what can actually be executed. It is not a promise that the action sequence is optimal, and it is not the value of a convenient projection unless that projection has been connected to native execution.
+
+<a id="fixed-policy"></a>
+## 1. Fixed-policy evaluation
+
+Fix a deterministic policy on a finite semantic graph, including any controller memory. Let \(N\) be the nonterminal states reachable from the entry under that policy. Let \(Q\) be the transition matrix restricted to \(N\), and let \(r\) be the expected immediate cost vector. Goal transitions are not included in \(Q\), so it is substochastic.
+
+If the policy reaches the goal almost surely, the nonterminal chain is transient and
+
+\[
+Q^n\to0,\qquad
+(I-Q)^{-1}=\sum_{n\ge0}Q^n.
+\]
+
+Its expected remaining cost is
+
+\[
+J_\pi=(I-Q)^{-1}r,
+\quad\text{equivalently}\quad
+J_\pi=r+QJ_\pi.
+\]
+
+The series explanation is useful: \(Q^nr\) is the expected cost paid at the \(n\)-th nonterminal step. Nonnegative costs allow the expected sum to be taken term by term. Finiteness follows from finite transient \(Q\) and finite immediate costs.
+
+The same inverse gives expected visits and resource uses. If \(e_s\) selects the start, the row vector \(e_s^\top(I-Q)^{-1}\) records expected visits to nonterminal states. Multiplying by per-visit resource expectations yields totals whose price-weighted sum should reconcile with monetary cost. That is a consistency check, not an optimality proof.
+
+Because \(\pi\) is one allowed proper policy,
+
+\[
+V^*(s)\le J_\pi(s).
+\]
+
+This subset argument is the entire reason a fixed-policy evaluation supplies an upper. No greediness premise is required. [CLM-0002](../claims.md#clm-0002).
+
+### Why an equation solution is insufficient
+
+For a zero-cost non-goal self-loop, the equation is \(J=J\). Every finite number solves it, but the controller never finishes. Algebra does not establish properness. A numerical solver returning a finite vector cannot turn this into an executable upper.
+
+The implementation must check support and absorption separately. The current publication contract specifies properness, complete pricing, off-policy accounting, and exact evaluation of the actual compiled graph. [Publication and Evaluation](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/publication.md).
+
+<a id="properness"></a>
+## 2. Properness is an entry-scoped support property
+
+In a finite fixed-policy graph, a non-goal bottom strongly connected component reachable with positive probability traps some execution mass. Such a component makes goal absorption fail. Conversely, if every reachable bottom component is an absorbing goal component, a finite chain reaches a goal almost surely.
+
+The graph used here must contain **all positive-probability outcomes**. A missing low-probability edge may be the only edge to a failure component. A default route or evaluator refusal is not an absorbing success.
+
+The entry qualifier matters. A compiled graph may contain an improper component unreachable from its original root. Root evaluation can still be proper. Asking for a continuation upper at an entry inside that component requires a new entry-specific argument and should fail.
+
+A simple graph demonstrates the distinction: root \(r\) goes to the goal for cost 1; a separate node \(z\) loops forever. The policy is proper from \(r\), not from \(z\). The existence of both nodes in one serialized strategy does not extend root authority to \(z\).
+
+Likewise, the fact that a strategy router refuses an off-policy item establishes a limitation of *that strategy*. It does not establish the native item's infeasibility and does not forbid lower-only analysis at the item. [Lower-only frontier proof](lower-bounds.md#frontier).
+
+<a id="choices"></a>
+## 3. Respect when a choice becomes available
+
+Suppose a random observation \(O\) is revealed before an allowed decision \(a\). Optimizing that decision has the form
+
+\[
+\mathbb E_O\!\left[\min_{a\in A(O)}q(O,a)\right].
+\]
+
+If the decision must instead be committed before observing \(O\), the corresponding expression is
+
+\[
+\min_a\mathbb E_O[q(O,a)].
+\]
+
+In the simple common-action case, the first is no larger than the second. Extra information cannot worsen an optimal minimization decision.
+
+For equiprobable observations, let action A have costs \((0,10)\) and B have costs \((10,0)\). Choosing after observation costs zero; choosing beforehand costs five. Moving a minimum through an expectation changes the problem.
+
+A lower may grant extra information deliberately, with an optimism argument. An upper must use the actual compiled decision rule and the information available at that point. If newer solver values would choose another offer, evaluating the old fixed strategy must still follow the old rule. Otherwise the evaluator has silently constructed a different policy. [CLM-0003](../claims.md#clm-0003).
+
+The exact evaluator's documented product includes choice and checkpoint state. Its observed-choice representation should be mapped to this timing contract rather than inferred from a grouped row's appearance. [Publication and Evaluation](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/publication.md); [GAP-03](../research.md#gap-03).
+
+<a id="programs"></a>
+## 4. Programs and options: a stopped-process equation
+
+Let an allowed mandatory program \(o\) start at \(s\), execute primitive work, and stop at the next legitimate decision boundary at time \(\tau\). Its exit distribution and expected internal cost are
+
+\[
+P_o(t\mid s)=\Pr_s(S_\tau=t),
+\qquad
+C_o(s)=\mathbb E_s\!\left[\sum_{n<\tau}C_n\right].
+\]
+
+If \(\tau<\infty\) almost surely and the expected internal cost is finite, then for a fixed compatible continuation \(\pi\),
+
+\[
+J_{o;\pi}(s)=C_o(s)+\sum_tP_o(t\mid s)J_\pi(t).
+\]
+
+This is the law of total expectation, not a new crafting action. Internal resource use must include repeated setup when retries actually reapply it. Every positive-probability exit needs the corresponding continuation. Exit-specific cost/resource correlations must remain consistent with whatever accounting the compiler and evaluator check.
+
+The stop boundary cannot skip a decision the native caller is entitled to take. It may summarize mandatory internal operations of one allowed operator. It must not turn an optional cleanup into a forced one merely to obtain a convenient continuation law.
+
+### Proper options do not imply a proper composition
+
+Option 1 moves \(s\) to \(t\) in one step; option 2 moves \(t\) back to \(s\) in one step. Each option terminates, but alternating them never reaches the goal. Composition needs a proper **global option policy**, not just local exit proofs.
+
+For a finite option graph, complete normalized exit kernels, proper absorption at the goal, and finite expected internal cost per visited option suffice to evaluate the composed policy. An independent flattened primitive evaluation checks the actual artifact rather than trusting informal multiplication of local summaries. [CLM-0004](../claims.md#clm-0004).
+
+### Failed mass cannot be normalized away
+
+Suppose an attempted macro exits to success with probability \(0.9\) and enters a non-goal trap with probability \(0.1\). Dividing the successful exits by \(0.9\) proves something about a conditional execution, not the original program. Neither a finite local estimate nor a label such as “verified fragment” repairs that lost mass.
+
+The benchmark-private fragment work has its own restricted verification and flattening boundary. This chapter states the mathematical obligation for any composition; it does not activate that subsystem or recommend a permanent recipe library. [Source map](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/foundation/solver-internals.md).
+
+<a id="retry"></a>
+## 5. A retry equation must pay for failure
+
+For independent identical trials with cost \(c\), success probability \(p>0\), and an immediate retry after failure,
+
+\[
+J=c+(1-p)J=c/p.
+\]
+
+If failure first incurs a mandatory recovery cost \(d\), the equation becomes
+
+\[
+J=c+(1-p)(d+J)
+=\frac{c+(1-p)d}{p}.
+\]
+
+The assumptions are substantial: every failure must really reach the same priced retry state after recovery, the trial law must remain the same, and every required branch must be proper. A destructive action whose failure changes blockers, rarity, or retained progress is not an identical retry until that state change is represented or reset at its actual cost.
+
+With \(c=1\), \(p=1/128\), and \(d=2\), free rollback gives 128 while paid recovery gives 382. This is an exact synthetic example, not a native price prediction. The applied-reforge archive uses this kind of distinction to test its lower relation. [Applied-reforge evidence](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-09-05-native-applied-reforge-preparation-v1/README.md).
+
+A retry formula may also describe a proper policy of an *optimistic lower model*. Its result is then an upper on that auxiliary optimum, not an executable native upper. The model label travels with the number.
+
+<a id="compilation"></a>
+## 6. Why the emitted strategy is the artifact that must be evaluated
+
+A solver policy and its compiled router can disagree in ways that a policy-value equation will not catch. The router might omit a physical member, merge distinct conditions, choose a different default, or lose checkpoint/offer information.
+
+Therefore the certificate chain has two separate obligations:
+
+1. The abstract or strict policy used for proof has the stated semantics and value.
+2. The **actual emitted strategy** follows that policy over every execution state reached from the certified entry, with the same priced primitive actions and terminal predicate.
+
+The existing pipeline compiles, parses, and independently evaluates the returned graph. The documented output is the evaluated artifact, not a new recompilation of an older policy after the check. [Publication and Evaluation](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/publication.md).
+
+Strict proof can establish an optimum while a bad router fails to execute it. Conversely, a beautifully executable policy may be suboptimal. Both directions must be tested at their own boundary.
+
+Exact evaluation also does not imply that its decimal rendering is an exact rational answer. The [numerical chapter](numerical-closure.md#layers) separates graph-level completeness from arithmetic representation.
+
+<a id="improvement"></a>
+## 7. A local deviation is a proposal until its full policy is checked
+
+When compatible fixed-policy continuations are available at every successor, one can evaluate
+
+\[
+Q_\pi(s,a)=c(s,a)+\mathbb E[J_\pi(S')].
+\]
+
+If this is below \(J_\pi(s)\), it identifies a potentially useful deviation. Replacing decisions in a cyclic policy can change visits and recurrence. The new controller still needs an allowed observation/memory interpretation, complete routes, properness, and independent evaluation. A one-time deviation can require an extra “already deviated” memory bit; it is not necessarily the same as choosing \(a\) on every future visit.
+
+If a successor has no compatible fixed-policy route, \(Q_\pi\) has not been established. That is not evidence that \(a\) is worse. An executable continuation can be sought independently, or a lower can reason about the successor without an incumbent route.
+
+Any new qualified strategy changes policy-tied entry values and certificate identities. Old optimality arguments about \(J_\pi\) cannot silently become arguments about \(J_{\pi'}\).
+
+<a id="mapping"></a>
+## 8. Correspondence and limits
+
+`IncumbentPortfolio` separates estimates from executable candidates. The compiler, policy assertion, and evaluator establish different parts of the upper chain. The source contract binds target, economy, action scope, graph identity, and relevant generations. [Executable Upper Authority](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/upper-authority.md).
+
+The candidate-continuation lifecycle can retain partial construction work without granting it upper authority. The archive of released-candidate reclamation records a case where a refused candidate retained memory and suppressed ordinary work; fixing that lifecycle restored useful policy discovery. That is a progress/performance finding, not a different upper theorem. [Reclamation evidence](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-08-30-carrier-ladder-released-candidate-reclamation-v1/README.md).
+
+[CLM-0002](../claims.md#clm-0002), [CLM-0003](../claims.md#clm-0003), and [CLM-0004](../claims.md#clm-0004) hold the reusable statements. [GAP-03](../research.md#gap-03) and [GAP-05](../research.md#gap-05) retain the missing native correspondence and numerical reconciliation work. This draft has not independently re-evaluated any repository strategy.

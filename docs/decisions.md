@@ -560,3 +560,47 @@ default envelope on automatic Imprint grammar search. Results must disclose
 the scope, and an exact result is exact only within that caller-selected
 envelope. Enabling Imprint remains a supported, tested opt-in rather than a
 hidden global removal.
+
+## 2026-09-06 — Solver-Wide Mathematical Knowledge And Task-Directed Reading
+
+**Decision:** Maintain one connected mathematical description of the solver, a prose claim ledger with preconditions/dependencies/falsifications, and current implementation correspondence. Organize arguments by logical dependency rather than the dates or names of attempted techniques.
+
+**Status:** Owner-approved direction. Integration of documents, source references, lint, and generated views is a separate implementation result.
+
+**Context:** The pinned lean-operation v2 programme separates mathematical arguments, current mechanisms, original research evidence, and experiment interpretation. A failed implementation may leave a valid theorem; a passing test does not prove an unrestricted mathematical claim.
+
+**Consequences:** Shared instructions remain short and task-directed. The documentation map locates owners rather than imposing a reading chain. Links provide available evidence; they do not require recursive reading. Correctness-affecting changes still require the relevant statement, assumptions, and sufficient argument. Small fixes need no new claim, plan, research packet, or archive.
+
+**Ownership:** The mathematical model and chapters own definitions/arguments; `claims.md` owns proposition identity and history; mechanism pages own current code correspondence; existing archives own original observations. Claim lint checks traceability, not mathematical truth or runtime proof authority. This supersedes the universal-startup and catch-all-current-evidence parts of the July documentation lifecycle, without rewriting that history.
+
+## 2026-09-06 — Exact Closure And Durable Research Questions
+
+**Decision:** The primary solver research objective is to extend certified exact closure as far as practical. Use fixed, predeclared comparison cohorts and end-to-end resource envelopes for interpretable results while continuing to expand a separate development frontier.
+
+**Status:** Owner-approved objective. New question-linked report fields and commands are not considered implemented until their actual integration is qualified.
+
+**Consequences:** Lower strength, upper quality, preparation time, and local retirement remain useful intermediate measures but are not renamed exact closure. Preserve the existing benchmark, Lab/corpus identities, role assignments, trajectory semantics, and failure accounting. Extend existing reporting around questions instead of building another runner or data store.
+
+Results retain their type: native lower, verified policy upper, native closure, auxiliary-model optimum/ceiling, or conditional observation. Different target scopes do not form one gap. Failed/missing planned cases do not disappear from the project outcome denominator. A best-known policy is not an unchallengeable optimum.
+
+The prior rejection of adaptive accumulated-gap racing remains unchanged. There is no universal weighted performance score.
+
+## 2026-09-06 — Research Intake And Evidence-Preserving Retirement
+
+**Decision:** Preserve substantive external research once, including the actual argument and counterexamples, then record the material findings' dispositions and canonical destinations. Use the ordinary final response as the receipt; do not require a separate receipt file or a report about every report.
+
+**Status:** Owner-approved workflow. No live thread or unpushed local access is assumed between research and repository-writing sessions.
+
+**Consequences:** Imported proposals are reviewed inputs, not automatically accepted claims. A rejected proposal retains its useful falsification. A future reopening identifies the changed premise. A routine refactor does not require research intake.
+
+Verified no-consumer machinery may be removed or made research-only after a complete local consumer/build/reference check and preservation of its useful knowledge. Default-off features and independent oracles are not dead merely because they are not product defaults. Preserve the measurement layer, active proof owners, source history, and original evidence identities. GUI removal is not inferred from source activity.
+
+One small optional development-only independent reference method is permitted. It does not become a production dependency or a requirement to translate the entire implicit crafting model.
+
+## 2026-09-06 — One Owner For Engineering Validation Policy
+
+**Decision:** Current shared `AGENTS.md` owns the engineering validation cadence and any fresh-strategy sample requirement. Other live references link to it rather than repeat independent policy numbers or per-phase suite rules.
+
+**Context:** The reviewed shared policy uses 1,000 trials only when fresh compiled-strategy qualification is genuinely required and skips an identical already-qualified artifact. This records the current owner policy; it does not relabel historical 10,000-run evidence or change the browser's implemented verification button.
+
+**Consequences:** The older verification-count clause is superseded as current engineering policy. Proportional focused checks remain appropriate when they resolve uncertainty or validate retained changes. Documentation and proof-only work acquire no automatic Simulator requirement. Skipped, incomplete, failed, and unrun checks remain distinct.

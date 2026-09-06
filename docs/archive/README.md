@@ -9,6 +9,13 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-09-06 — Solver Mathematical Backbone, Lean Operation v2
+
+[Original authored inputs, integration and checks](2026-09-06-solver-mathematical-backbone-v2/README.md):
+connected arguments/claims, lean working rules, narrow traceability tools, declared
+cumulative reports, independent finite references and audited carrier-vocabulary
+retirement. No solver default, native-mechanics or exactness-policy change.
+
 ## 2026-09-05
 
 - [Native Metamod First-Exit Closure and Useful Retention Consumption v1](2026-09-05-native-metamod-first-exit-v1/README.md) —

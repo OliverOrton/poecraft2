@@ -1,68 +1,54 @@
-# poecraft2 — agent instructions
+# poecraft2 — shared working rules
 
-Path of Exile 1 crafting simulator: Python ingest → canonical SQLite →
-compiled runtime artifact → native C++20 engine (C ABI) → Python/WASM
-bindings → Vite + TypeScript + Web Components app (no React).
+The native C++ engine owns crafting mechanics. Python owns ingest; SQLite is
+canonical and the runtime artifact is derived. Bindings and the web UI adapt the
+engine. Solver development aims to extend certified exact closure.
 
-Start here, in order:
+## Start with the task
 
-1. [docs/README.md](docs/README.md) — the primary knowledge map and document
-   lifecycle policy. This repo's docs are load-bearing specs.
-2. [docs/direction.md](docs/direction.md) — short product orientation and
-   durable direction, not an execution plan.
-3. [HANDOFF.md](HANDOFF.md) — the exact current implementation boundary when
-   one exists. If it says no boundary is active, Oliver must choose the next
-   chunk before implementation resumes. Keep it current at every handoff.
+Follow applicable instructions already supplied. Do not reread an identical
+file just to log compliance; read it when its contents or freshness are uncertain.
+Before editing, inspect relevant local changes and applicable directory rules.
+Use HANDOFF when active work or continuation needs clarification. An explicit
+request from Oliver selects that task; do not invent the next implementation.
 
-Before editing a contract that crosses layers, use
-[docs/foundation/change-impact.md](docs/foundation/change-impact.md) to map the
-downstream bindings, generated artifacts, documentation, and final checks.
+Read the relevant source/contract directly. Use docs/README.md only to locate an
+owner; docs/direction.md is orientation, not universal preflight. Mathematical
+changes require the relevant claim, preconditions and enough of its argument to
+check them. Links do not require recursive reading of every linked document.
+Historical archives answer specific unresolved questions, not routine startup.
 
-## Commands
+## Preserve authority and user work
 
-- Full test pipeline: `powershell -File scripts/test.ps1` (ingest tests →
-  DB validate → fixture parity → artifact compile/validate → binding tests
-  → engine CTest → web tests). Slow; prefer running only the changed layer
-  and what's downstream of it.
-- Engine build: `powershell -File scripts/build.ps1`
-- Web: `npm test` and `npx tsc --noEmit` in `apps/web` (tsx does not
-  type-check); dev server `npm run dev` in `apps/web`.
-- Python layers need `PYTHONPATH=tools/ingest;bindings/python`; invoke via
-  `py -3`.
+Do not hand-edit canonical SQLite or derived compiled data. Do not duplicate
+crafting rules in the frontend. Oliver decides ambiguous PoE mechanics; do not
+research or invent them. Keep lower, upper, ordering and exactness authorities
+separate; retain full scope, identity, probability and pricing obligations.
 
-## Hard constraints
+Preserve unrelated work and owner-protected path `0`, including its contents.
+Do not inspect, stage, change or delete that file. Avoid destructive resets and
+cleaning. Commits stay local unless Oliver asks to push; use the agent co-author
+trailer. Work sequentially without subagents for the selected programme.
 
-- The engine WASM module (`bindings/wasm/dist/poecraft_engine.mjs`) is
-  rebuildable: `scripts/build-wasm.ps1` self-activates the Emscripten SDK
-  from `C:\emsdk` (emcc is not on PATH in a fresh shell). Rebuild after
-  engine C ABI or strategy-vocabulary changes. Run web tests only under the
-  testing cadence below.
-- SQLite (`data/sqlite/poecraft.db`) is canonical, the compiled artifact
-  (`data/compiled/current`) is derived — never hand-edit either; recompile
-  via `tools/ingest/compile_engine_data.py`.
-- The frontend has no crafting-rule authority; it asks the engine. Don't
-  reimplement pool/weight rules in TypeScript.
+## Validate proportionately
 
-## Mechanic rules
+Use a focused test when it resolves uncertainty or validates a retained change.
+No routine suite at each phase. Select final checks by actual changed layer and
+downstream impact. Rebuild WASM when ABI or strategy-vocabulary changes require
+it; scripts/build-wasm.ps1 self-activates the SDK from C:\emsdk. No Simulator for unchanged strategies; when fresh qualification is genuinely
+required, use the current owner-approved 1,000 trials. Report unrun/failed checks
+honestly. Rendered UI review belongs to Oliver unless explicitly requested.
 
-Path of Exile mechanic questions (how a craft behaves, rules, edge cases)
-are decided by Oliver. When a rule is ambiguous, ask him directly — do not
-research online or guess. Implemented behavior and unresolved rulings are
-indexed from [docs/mechanics/README.md](docs/mechanics/README.md).
+## Navigation and commands
 
-## Conventions
+- Architecture/cross-layer edits: docs/foundation/change-impact.md.
+- Solver contracts and mathematics: docs/solver/README.md and its relevant links.
+- Substantive research import: docs/solver/research.md; preserve the argument once,
+  update affected canonical knowledge, and include disposition in the usual reply.
+- Native build: powershell -File scripts/build.ps1.
+- Full acceptance only when justified: powershell -File scripts/test.ps1.
+- Python: PYTHONPATH=tools/ingest;bindings/python with py -3.
+- Web: npm test and npx tsc --noEmit in apps/web when that layer is affected.
 
-- Single big commits per milestone are fine. Intermediate plan phases are
-  implementation checkpoints, not test gates.
-- Do not run routine test suites at the end of each intermediate phase. Run a
-  narrowly relevant test only when something is broken and the test is needed
-  to diagnose or fix it. Run the appropriate complete acceptance suite once at
-  the end of the full plan, unless Oliver explicitly asks for an earlier run.
-- Oliver owns rendered and visual UI review. Do not perform browser visual
-  checks, screenshots, or rendered UI smoke unless Oliver explicitly asks.
-  Non-visual automated web tests follow the same testing cadence above.
-- Compiled-strategy verification uses 1,000 simulator runs whenever
-  verification is genuinely required. Skip simulation when the identical
-  artifact is already qualified under the same request and runtime semantics.
-- Commits are local-only unless Oliver says to push.
-- End commit messages with your agent's co-author line.
+A small fix needs no new plan, claim, research packet or archive. For substantive
+work, use one living record and a short HANDOFF; do not repeat status across maps.
