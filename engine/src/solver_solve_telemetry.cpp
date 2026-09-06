@@ -2524,7 +2524,6 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
             kIncumbentPortfolioAliasAccountingOffset +
             calc_bytes;
         bytes += native_retention_live_bytes + native_retention_junk_safe.capacity();
-        bytes += native_retention_projection_cache.capacity()*sizeof(double);
         bytes += native_retention_refusal.capacity()+1;
         bytes += prices.bucket_count() * sizeof(void*);
         bytes += prices.size() *
@@ -2783,7 +2782,6 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
             kIncumbentPortfolioAliasAccountingOffset +
             calc_bytes;
         bytes += native_retention_live_bytes + native_retention_junk_safe.capacity();
-        bytes += native_retention_projection_cache.capacity()*sizeof(double);
         bytes += native_retention_refusal.capacity()+1;
         bytes += prices.bucket_count() * sizeof(void*);
         bytes += prices.size() *

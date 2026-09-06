@@ -48,10 +48,19 @@ lowers 352.31017033879505 / 355.43265454362336, 26,259 checked relations, 56 rou
 final diagnostic export prevents the enlarged report from overlapping numerical
 storage. Earlier nominal memory results with overlapping reports are superseded.
 
-241 focused phase/consumer and 716 quotient checks pass. Lookup profiling met the
-frozen criterion (4.38 s extrapolated from periodic samples); accepted/refused
-results use a 1 MiB cache bound to immutable calculator members and the installed
-certificate instance. Ordinary off/on observations and WASM acceptance remain.
-The exact 51-state optimistic policy now caps the two sources at
+Final retained checks: 217 phase/consumer and 716 quotient checks pass. The
+initial old-domain lookup profile met the frozen criterion (4.38 s extrapolated),
+but the complete current-model comparison falsified cache usefulness: only 7,399
+calls, 388 cache hits and about 0.0006 s uncached sampled attribution. The 1 MiB
+cache was removed; the narrow profiler remains. No stale result is reused.
+
+Ordinary off/current opt-in: 36.42861718910441 / 352.31017033879505 public lower,
+64,914 / 40,289 rows in matched 60-second observations. Opt-in native preparation
+is 40.244 s within 44.410 s total setup. Both have no verified upper or exact
+completion. No speedup claim or default activation. Both required junk held-outs
+continue to use 36.42861718910441 despite stronger physical-member values.
+
+The exact 51-state optimistic policy caps the two sources at
 352.3101703740 / 355.4326545792; its first actions are Fire Resistance Bench and
 Harvest Defences. These are relaxation ceilings, not native upper bounds.
+WASM rebuild and evidence/documentation closeout remain.

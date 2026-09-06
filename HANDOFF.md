@@ -15,9 +15,12 @@ quotient audit under 32 MiB. Source lowers are 352.31017033879505 and
 bytes. Attack-only 64 MiB research established the tied Caster boundary; no
 product cap changed. Diagnostic export is separated from numerical storage.
 
-241 phase/consumer and 716 quotient checks pass. A measured 4.38 s repeated-lookup
-attribution qualified the bounded immutable-member/certificate cache. The
-ordinary off/on comparison and release-WASM acceptance are in progress.
+217 retained phase/consumer and 716 quotient checks pass. Both ordinary
+comparisons accept the stronger public lower with all preparation included.
+The current model's lookup cost is too small to justify caching, so the measured
+1 MiB cache experiment was removed. Native preparation is 40.244 s; total setup
+44.410 s of the 60-second observation. No speedup or exact solve is established.
+Release-WASM acceptance and evidence/documentation closeout remain.
 
 Keep defaults off, coarse-junk fallback and extra Restart. No Simulator,
 full census, delegation or push. Protected `0` and unrelated work remain intact.

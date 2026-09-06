@@ -60,12 +60,6 @@ void SolveWork::Impl::prepare_native_retention_lower() {
         peak_owned_bytes=std::max(peak_owned_bytes,estimated_owned_bytes_with_calc(calc.audited_estimated_owned_bytes())-cap+native_retention_peak_bytes);
         native_retention_live_bytes=prepared->memory_snapshot().total_bytes;
         native_retention_potential=std::move(prepared); // only after full checking
-        if (options.native_retention_lookup_reuse) {
-            // The still-live construction reservation includes this bounded
-            // allocation. Actual retained bytes enter the regular owner ledger.
-            native_retention_projection_cache.assign((1u<<20)/sizeof(double),-1.0);
-            native_retention_cache_owner=native_retention_potential;
-        }
         auto& entry=contract(ProofPatternKind::NativeRetention);
         entry.converged=true; entry.residual=0; entry.fallback_reason.clear();
         entry.solution_sweeps=native_retention_potential->model_rounds;
@@ -76,7 +70,6 @@ void SolveWork::Impl::prepare_native_retention_lower() {
             result.diagnostics.independent_goal_cover_lower_bound,completion_proof_lower_value(result.start_state));
     } catch (const std::exception& e) {
         native_retention_potential.reset(); native_retention_live_bytes=0;
-        std::vector<double>().swap(native_retention_projection_cache); native_retention_cache_owner=nullptr;
         native_retention_refusal=e.what();
         contract(ProofPatternKind::NativeRetention).fallback_reason=native_retention_refusal;
     }
@@ -96,20 +89,8 @@ double SolveWork::Impl::native_retention_lower_value(std::uint32_t state_id) {
         } }
     } sample{*this,options.native_retention_profile && native_retention_lookups%1024==0,{}};
     if (sample.active) sample.began=std::chrono::steady_clock::now();
-    if (native_retention_cache_owner!=native_retention_potential) {
-        std::fill(native_retention_projection_cache.begin(),native_retention_projection_cache.end(),-1.0);
-        native_retention_cache_owner=native_retention_potential;
-    }
-    const bool cached=options.native_retention_lookup_reuse && state_id<native_retention_projection_cache.size();
-    if (cached && native_retention_projection_cache[state_id]!=-1.0) {
-        ++native_retention_cache_hits;
-        const auto value=native_retention_projection_cache[state_id];
-        if (value>=0) { ++native_retention_hits; return value; }
-        return 0; // -2 is a cached complete-member refusal, never a zero proof
-    }
     ++native_retention_projection_checks;
     const auto value=project_native_retention_lower(state_id);
-    if (cached) native_retention_projection_cache[state_id]=value.value_or(-2.0);
     if (value) ++native_retention_hits;
     return value.value_or(0);
 }

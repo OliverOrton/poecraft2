@@ -764,12 +764,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     std::uint64_t native_retention_prepare_ns = 0, native_retention_live_bytes = 0, native_retention_peak_bytes = 0;
     std::uint64_t native_retention_lookups = 0, native_retention_hits = 0, native_retention_improvements = 0;
     std::uint64_t native_retention_sample_ns = 0, native_retention_samples = 0;
-    // Fixed 1 MiB upper bound, owned by this solve. Interned AbstractStates and
-    // this CalcContext's member layout never mutate. The immutable certificate
-    // instance binds remaining goal/price/domain/numeric identity.
-    std::vector<double> native_retention_projection_cache;
-    std::shared_ptr<const PreparedPhasePotential> native_retention_cache_owner;
-    std::uint64_t native_retention_cache_hits = 0, native_retention_projection_checks = 0;
+    std::uint64_t native_retention_projection_checks = 0;
     std::string native_retention_refusal;
     std::vector<PricedOperator> operators;
     std::vector<std::uint32_t> static_operator_indices;

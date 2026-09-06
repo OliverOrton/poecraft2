@@ -4307,17 +4307,6 @@ void run_solver_phase_lower_tests() {
         PC_CHECK(on.native_retention_lower_value(typed_calc.intern_item(wrong_fracture))==0);
         auto influenced=anchor; influenced.generic_influence_bits=1;
         PC_CHECK(on.native_retention_lower_value(typed_calc.intern_item(influenced))==0);
-        const auto checked_before=on.native_retention_projection_checks;
-        for (unsigned i=0;i<10;++i) {
-            PC_CHECK(on.native_retention_lower_value(on.result.start_state)==on.project_native_retention_lower(on.result.start_state).value());
-            PC_CHECK(on.native_retention_lower_value(typed_calc.intern_item(influenced))==0);
-        }
-        PC_CHECK(on.native_retention_projection_checks==checked_before && on.native_retention_cache_hits>=20);
-        PC_CHECK(on.native_retention_projection_cache.capacity()*sizeof(double)<=(1u<<20));
-        on.native_retention_potential=refined; // a new immutable certificate namespace
-        PC_CHECK(on.native_retention_lower_value(on.result.start_state)==refined->projected_value(typed_calc,anchor));
-        PC_CHECK(on.native_retention_projection_checks==checked_before+1 && on.native_retention_cache_owner==refined);
-        on.native_retention_potential=saved;
         options.max_solver_owned_bytes=1ull<<20;
         SolveWorkTestAccess::Impl refused(typed_calc,anchor,typed_prices,options);
         PC_CHECK(refused.native_retention_attempted && !refused.native_retention_potential && refused.native_retention_live_bytes==0);

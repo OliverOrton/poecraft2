@@ -88,7 +88,6 @@ struct SolveOptions {
      * it. Prepare once per solve; 32 MiB is the primary proof reservation. */
     bool native_retention_lower = false;
     bool native_retention_profile = false; // sampled internal attribution only
-    bool native_retention_lookup_reuse = true;
     std::uint64_t native_retention_proof_bytes = 32ull << 20;
     /* White-box parity switch for the versioned successful fallback
      * properness-proof cache. Product/API solves keep reuse enabled. */

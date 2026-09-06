@@ -880,8 +880,7 @@ void ordinary_retention(SolveWorkTestAccess::Impl& owner, Clock::time_point bega
         <<",\"native_lookups\":"<<owner.native_retention_lookups<<",\"native_hits\":"<<owner.native_retention_hits
         <<",\"native_selected_calls\":"<<owner.native_retention_improvements
         <<",\"lookup_sample_ns\":"<<owner.native_retention_sample_ns<<",\"lookup_samples\":"<<owner.native_retention_samples
-        <<",\"projection_checks\":"<<owner.native_retention_projection_checks<<",\"projection_cache_hits\":"<<owner.native_retention_cache_hits
-        <<",\"projection_cache_bytes\":"<<owner.native_retention_projection_cache.capacity()*sizeof(double)
+        <<",\"projection_checks\":"<<owner.native_retention_projection_checks
         <<",\"refusal\":"<<std::quoted(owner.native_retention_refusal)<<",\"default_enabled\":false";
     if (treatment && owner.native_retention_potential) {
         const auto& prep=owner.native_retention_potential->preparation_stats;
@@ -1021,7 +1020,6 @@ int main(int argc, char** argv) {
         }
         options.native_retention_lower=is_ordinary && selector!="ordinary-retention-control";
         options.native_retention_profile=is_ordinary && selector!="ordinary-retention-control";
-        options.native_retention_lookup_reuse=selector!="ordinary-retention-profile";
         options.max_solver_owned_bytes = 1ull << 30;
         const auto prepare = Clock::now();
         SolveWorkTestAccess::Impl owner(calc, start, h.economy->impl->prices, options);
