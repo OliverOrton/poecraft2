@@ -444,21 +444,35 @@ std::uint64_t QuotientBellmanGraph::append_row(
         const auto need=vector.size()+added;
         if (need<=vector.capacity()) return std::size_t{0};
         // A large doubled arena made bounded lower models refuse at a
-        // transient growth peak. Quarter growth keeps spare storage bounded;
+        // transient growth peak. Eighth growth keeps spare storage bounded;
         // numerical rows, action coverage and the reservation cap are unchanged.
-        const auto extra=std::max<std::size_t>(1,vector.capacity()/4);
+        const auto extra=std::max<std::size_t>(1,vector.capacity()/8);
         return std::max(need, extra>vector.max_size()-vector.capacity() ? need : vector.capacity()+extra);
     };
+    std::uint64_t growth_increase=0, largest_replaced_buffer=0;
+    // Qualified C++20 libstdc++/libc++ reserve(n) allocates exactly n with
+    // these default allocators (not geometric push_back growth). Keep the
+    // conservative allowance on other library/language configurations and
+    // verify the observed capacity after every explicit reserve.
+#if __cplusplus == 202002L && (defined(__GLIBCXX__) || defined(_LIBCPP_VERSION))
+    constexpr std::size_t reserve_capacity_factor=1;
+#else
+    constexpr std::size_t reserve_capacity_factor=2;
+#endif
     const auto charge_growth = [&](const auto& vector, std::size_t added) {
         using Value = typename std::decay_t<decltype(vector)>::value_type;
-        lower_reservation_bytes=saturated_add(lower_reservation_bytes,
-            saturated_product(growth_capacity(vector,added),2*sizeof(Value)));
+        const auto next=growth_capacity(vector,added);
+        if (!next) return;
+        const auto old=saturated_product(vector.capacity(),sizeof(Value));
+        const auto bound=saturated_product(next,reserve_capacity_factor*sizeof(Value));
+        growth_increase=saturated_add(growth_increase,bound-old);
+        largest_replaced_buffer=std::max(largest_replaced_buffer,old);
     };
     const auto reserve_growth = [&](auto& vector, std::size_t added) {
         const auto capacity=growth_capacity(vector,added);
         if (!capacity) return;
         vector.reserve(capacity);
-        if (vector.capacity()>2*capacity) throw std::length_error("unexpected lower arena reserve growth");
+        if (vector.capacity()>reserve_capacity_factor*capacity) throw std::length_error("unexpected lower arena reserve growth");
     };
     std::size_t choice_targets=0;
     for (const auto& choice : sparse.choices) choice_targets+=choice.successors.size();
@@ -475,6 +489,11 @@ std::uint64_t QuotientBellmanGraph::append_row(
         if (!shared_span && found_bucket!=transition_span_buckets_.end()) apply(found_bucket->second,1);
     };
     if (lower_only) each_growth(charge_growth);
+    // reserve_growth runs sequentially: each replaced buffer is freed before
+    // the next reserve. Retain every possible capacity increase plus ONE old
+    // buffer overlap, rather than overlapping every old/new pair at once.
+    lower_reservation_bytes=saturated_add(lower_reservation_bytes,
+        saturated_add(growth_increase,largest_replaced_buffer));
     ScopedProofMemoryCharge reservation(
         transition_cache_.quotient_proofs->ledger(),
         ProofMemoryCategory::Scratch, lower_reservation_bytes);

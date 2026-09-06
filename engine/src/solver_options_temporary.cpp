@@ -254,11 +254,12 @@ std::vector<std::uint64_t> CalcContext::temporary_followup_eligible_mask(
 
 CalcContext::NativeGoalDrawBound CalcContext::phase_goal_draw_bound(
         const pc_item_state& anchor, std::uint32_t action_index,
-        std::uint32_t goal_slot, bool guaranteed) {
+        std::uint32_t goal_slot, bool guaranteed, std::uint32_t pool_filter_mod) {
     const auto& action = registry_.actions.at(action_index);
     const auto& target = layout_.slots.at(goal_slot).satisfying_mask;
     NativeGoalDrawBound result;
     result.action = action_index; result.slot = goal_slot; result.guaranteed = guaranteed;
+    result.pool_filter_mod = pool_filter_mod;
     for (std::uint32_t mod = 0; mod < session_->mod_count; ++mod) {
         if (!pc_bitset_test(target.data(), mod)) continue;
         const auto side = session_->gen_type[mod];
@@ -273,8 +274,20 @@ CalcContext::NativeGoalDrawBound CalcContext::phase_goal_draw_bound(
     pc_item_clear_side(&carrier, PC_SIDE_PREFIX);
     pc_item_clear_side(&carrier, PC_SIDE_SUFFIX);
     carrier.rarity = PC_RARITY_RARE;
+    if (pool_filter_mod != kNoId) {
+        if (pool_filter_mod >= session_->mod_count ||
+            (session_->metamod_type[pool_filter_mod] != session_->data->metamod_no_attack_code &&
+             session_->metamod_type[pool_filter_mod] != session_->data->metamod_no_caster_code) ||
+            session_->metamod_type[pool_filter_mod] < 0)
+            throw std::invalid_argument("unknown phase pool filter identity");
+        if (pc_item_add_mod(&carrier, session_->gen_type[pool_filter_mod], pool_filter_mod,
+                session_->primary_group[pool_filter_mod], PC_MOD_SLOT_CRAFTED, nullptr) != PC_RESULT_OK)
+            throw std::invalid_argument("phase pool filter placement failed");
+    }
     PoolBuildRequest request;
     request.side_filter = result.side;
+    if (action_transition_facts(action.params.type).renewal)
+        request.respects_metamod_pool_blocks = action_transition_facts(action.params.type).respects_metamod_pool_blocks;
     if (action.params.type == ActionType::Fossil) {
         request.weight_kind = PoolWeightKind::Fossil;
         request.fossil_indices = action.params.fossil_indices;

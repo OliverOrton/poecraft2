@@ -276,30 +276,46 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
             query.boundaries.capacity() * sizeof(QuotientLowerBoundary) +
             query.roots.capacity() * sizeof(std::uint32_t) +
             key_bytes(query.request_identity) + key_bytes(query.caller_scope);
+        std::uint64_t peak_partition = 0;
         for (const auto& source : query.sources) {
-            bytes += 512 + key_bytes(source.source_identity) +
-                key_bytes(source.expected_actions.scope_identity);
-            for (const auto& action : source.expected_actions.actions)
-                bytes += 256 + 4 * key_bytes(action);
-            for (const auto& family : source.expected_actions.families) {
-                bytes += 256 + 4 * key_bytes(family.identity);
-                for (const auto& member : family.members)
-                    bytes += 256 + 4 * key_bytes(member);
+            // Borrowed query buffers remain live for the full check/solve.
+            // Coverage copies and tree partitions exist for ONE source at a
+            // time. Count actual borrowed capacities plus that temporary peak.
+            const auto& expected=source.expected_actions;
+            bytes += key_bytes(source.source_identity)+key_bytes(expected.scope_identity)+
+                expected.actions.capacity()*sizeof(StableKey)+
+                expected.families.capacity()*sizeof(CanonicalActionFamily)+
+                source.constraints.capacity()*sizeof(QuotientLowerConstraint);
+            std::uint64_t partition=4096;
+            for (const auto& action:expected.actions) {
+                bytes+=key_bytes(action);
+                partition+=512+4*key_bytes(action);
             }
-            for (const auto& constraint : source.constraints) {
-                // The base reservation includes geometrically grown ranking
-                // storage. A value-only request allocates none of that storage;
-                // retain the borrowed snapshot, partition and identity allowance.
-                bytes += 512 - (budget.retain_ranked_constraints ? 0 :
-                    2*sizeof(QuotientLowerLimitingConstraint)) + 4 * key_bytes(constraint.cover.identity) +
-                    key_bytes(constraint.evidence_identity);
-                for (const auto& member : constraint.cover.excluded_members)
-                    bytes += 256 + 4 * key_bytes(member);
+            for (const auto& family:expected.families) {
+                bytes+=key_bytes(family.identity)+family.members.capacity()*sizeof(StableKey);
+                partition+=512+4*key_bytes(family.identity);
+                for (const auto& member:family.members) {
+                    bytes+=key_bytes(member); partition+=512+4*key_bytes(member);
+                }
             }
+            for (const auto& constraint:source.constraints) {
+                const auto& cover=constraint.cover;
+                const auto nested=key_bytes(cover.identity)+cover.excluded_members.capacity()*sizeof(StableKey);
+                bytes+=nested+key_bytes(constraint.evidence_identity);
+                partition+=512+4*nested;
+                // Ranking, when requested, is global and can grow geometrically.
+                if (budget.retain_ranked_constraints)
+                    bytes+=2*sizeof(QuotientLowerLimitingConstraint)+2*nested;
+                for (const auto& member:cover.excluded_members) {
+                    bytes+=key_bytes(member); partition+=512+4*key_bytes(member);
+                    if (budget.retain_ranked_constraints) bytes+=2*key_bytes(member);
+                }
+            }
+            peak_partition=std::max(peak_partition,partition);
         }
-        for (const auto& boundary : query.boundaries)
-            bytes += 128 + key_bytes(boundary.source_identity) +
-                key_bytes(boundary.evidence_identity);
+        bytes+=peak_partition;
+        for (const auto& boundary:query.boundaries)
+            bytes+=key_bytes(boundary.source_identity)+key_bytes(boundary.evidence_identity);
         out.scratch_bytes = bytes;
         if (bytes > budget.max_scratch_bytes)
             throw ProofMemoryLimit(bytes, budget.max_scratch_bytes);

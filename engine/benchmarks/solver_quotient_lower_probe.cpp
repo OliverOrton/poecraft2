@@ -566,16 +566,17 @@ void emit_refusal(const PhaseProposalRefusal& r) {
     std::cout << "]}";
 }
 void probabilistic_phase(CalcContext& calc, SolveWorkTestAccess::Impl& owner, const pc_item_state& start,
-        PhaseContinuation continuation, std::uint64_t proof_cap, PhaseRetention retention = PhaseRetention::None, PhasePreparationOptions prep_options = {}) {
+        PhaseContinuation continuation, std::uint64_t proof_cap, PhaseRetention retention, PhasePreparationOptions prep_options,
+        const std::shared_ptr<SessionImpl>& native_session) {
     const auto started = Clock::now();
     pc_item_state post = start; post.eater_of_worlds_tier = 1;
     const auto mask_proposal = owner.phase_lower_proposal(false);
     const auto clean_proposal = owner.phase_lower_proposal(true);
-    auto support = PhaseLowerProducer::prepare(calc, owner.prices, post, mask_proposal);
+    QuotientLowerBudget treatment_budget; treatment_budget.max_scratch_bytes = proof_cap;
+    auto support = PhaseLowerProducer::prepare(calc, owner.prices, post, mask_proposal,treatment_budget);
     const auto restart_boundary = owner.phase_restart_boundary(*support);
     const auto adapter_ns = ns(started);
     const auto control_start = Clock::now();
-    QuotientLowerBudget treatment_budget; treatment_budget.max_scratch_bytes = proof_cap;
     std::shared_ptr<const PreparedPhasePotential> control;
     if (retention == PhaseRetention::None) control = PhaseLowerProducer::prepare_probabilistic(calc, owner.prices, post,
         clean_proposal, support, restart_boundary, owner.options.consider_imprint_programs, true, treatment_budget, true, {},
@@ -595,14 +596,36 @@ void probabilistic_phase(CalcContext& calc, SolveWorkTestAccess::Impl& owner, co
     auto potential = PhaseLowerProducer::prepare_probabilistic(calc, owner.prices, post,
         clean_proposal, support, restart_boundary, owner.options.consider_imprint_programs, true, treatment_budget, true, control, continuation, retention, true, prep_options);
     const auto treatment_ns = ns(treatment_start);
+    std::cout << ",\"bench_audit\":[";
+    bool first_bench=true;
+    ActionContextImpl native{1}; native.session=native_session;
+    for (const auto& action:calc.registry().actions) {
+        if (action.params.type!=ActionType::Bench || action.params.mod_id>=calc.session().mod_count ||
+            calc.session().metamod_type[action.params.mod_id]<0) continue;
+        if (!first_bench) std::cout<<','; first_bench=false;
+        const auto mod=action.params.mod_id;
+        std::cout << "{\"action\":"<<std::quoted(action.id)<<",\"mod\":"<<mod<<",\"side\":"<<int(calc.session().gen_type[mod])
+            <<",\"metamod_code\":"<<calc.session().metamod_type[mod]<<",\"cost\":"<<phase_price_lower(action,owner.prices)<<",\"sources\":[";
+        for (unsigned second=0;second<2;++second) {
+            if (second) std::cout<<',';
+            auto item=start; if (second) pc_item_remove_at(&item,PC_SIDE_PREFIX,0);
+            const auto result=apply_action(native,&item,action.params);
+            const auto value=potential->lookup(calc,owner.prices,item,false);
+            std::cout<<"{\"applied\":"<<result.applied<<",\"prefixes\":"<<unsigned(item.prefix_count)<<",\"suffixes\":"<<unsigned(item.suffix_count)
+                <<",\"covered\":"<<bool(value)<<",\"continuation\":"<<value.value_or(0)<<'}';
+        }
+        std::cout<<"]}";
+    }
+    std::cout<<']';
     std::cout << ",\"probabilistic_donor\":{\"continuation\":" << static_cast<unsigned>(continuation)
         << ",\"fresh_cell\":" << (3*support->values.size()*16+2)
         << ",\"fixed_boundary_used\":" << (continuation == PhaseContinuation::CoupledFresh ? "false" : "true")
         << ",\"role\":\"region_rarity_mask_prefix_suffix\",\"dimensions\":"
-        << potential->values.size() << ",\"restart_boundary_lower\":" << restart_boundary.record.lower << ",\"domain\":\"exact_fracture_or_explicit_unfractured_region_no_metamods_or_generic_influence_all_eldritch_phases\","
+        << potential->values.size() << ",\"restart_boundary_lower\":" << restart_boundary.record.lower << ",\"domain\":\"exact_fracture_or_explicit_unfractured_region_selected_filters_no_other_metamods_or_generic_influence_all_eldritch_phases\","
         << "\"retention\":" << static_cast<unsigned>(potential->retention) << ",\"crafted_goal_domain\":" << potential->crafted_goal_domain
         << ",\"applied_alchemy\":true,\"minimum_reforge_occupancy\":" << potential->preparation_options.minimum_reforge_occupancy
         << ",\"crafted_count_limit\":" << potential->crafted_count_limit << ','
+        << "\"filter_modes\":" << potential->preparation_options.filter_modes << ",\"filter_mods\":[" << potential->filter_mods[0] << ',' << potential->filter_mods[1] << "],"
         << "\"fractured_mod\":" << potential->fractured_mod << ",\"fractured_mask\":" << potential->fractured_mask
         << ",\"semantic_acceptance\":true,\"coefficient_acceptance\":true,\"rounds\":" << potential->model_rounds
         << ",\"first_proposal_refusal\":"; emit_refusal(potential->proposal_refusal);
@@ -613,7 +636,7 @@ void probabilistic_phase(CalcContext& calc, SolveWorkTestAccess::Impl& owner, co
         if (i) std::cout << ',';
         const auto k = potential->coordinates[i];
         if (k == UINT64_MAX) std::cout << "null";
-        else std::cout << '[' << unsigned(k) << ',' << ((k >> 32)&31) << ',' << ((k >> 37)&3) << ',' << ((k >> 39)&3) << ']';
+        else std::cout << '[' << unsigned(k) << ',' << ((k >> 32)&31) << ',' << ((k >> 37)&3) << ',' << ((k >> 39)&3) << ',' << ((k >> 41)&3) << ']';
     }
     std::cout << "],\"nonempty_witnesses\":[";
     for (unsigned i=0;i<potential->nonempty_witnesses.size();++i) {
@@ -637,6 +660,7 @@ void probabilistic_phase(CalcContext& calc, SolveWorkTestAccess::Impl& owner, co
         if (i) std::cout << ',';
         const auto& w = potential->draw(i);
         std::cout << "{\"action\":\"" << calc.registry().actions[w.action].id << "\",\"slot\":" << w.slot
+            << ",\"pool_filter_mod\":" << w.pool_filter_mod
             << ",\"side\":" << int(w.side) << ",\"guaranteed\":" << (w.guaranteed ? "true" : "false")
             << ",\"target\":" << w.target_weight << ",\"other\":" << w.other_weight << ",\"entries\":" << w.entries << ",\"removal\":[";
         for (unsigned side = 0; side < 2; ++side) {
@@ -798,6 +822,7 @@ void probabilistic_phase(CalcContext& calc, SolveWorkTestAccess::Impl& owner, co
     const auto& prep=potential->preparation_stats;
     std::cout << "],\"preparation_profile\":{\"total_ns\":" << prep.total_ns
         << ",\"projection_ns\":" << prep.projection_ns << ",\"relations_ns\":" << prep.relation_ns
+        << ",\"diagnostic_export_ns\":" << prep.diagnostic_export_ns
         << ",\"support_ns\":" << prep.support_ns << ",\"allocation_ns\":" << prep.allocation_ns
         << ",\"native_weights_ns\":" << prep.native_weight_ns << ",\"check_ns\":" << prep.check_ns
         << ",\"geometry_hits\":" << prep.geometry_hits << ",\"geometry_templates\":" << prep.geometry_templates
@@ -854,6 +879,9 @@ void ordinary_retention(SolveWorkTestAccess::Impl& owner, Clock::time_point bega
         <<",\"native_peak_bytes\":"<<owner.native_retention_peak_bytes
         <<",\"native_lookups\":"<<owner.native_retention_lookups<<",\"native_hits\":"<<owner.native_retention_hits
         <<",\"native_selected_calls\":"<<owner.native_retention_improvements
+        <<",\"lookup_sample_ns\":"<<owner.native_retention_sample_ns<<",\"lookup_samples\":"<<owner.native_retention_samples
+        <<",\"projection_checks\":"<<owner.native_retention_projection_checks<<",\"projection_cache_hits\":"<<owner.native_retention_cache_hits
+        <<",\"projection_cache_bytes\":"<<owner.native_retention_projection_cache.capacity()*sizeof(double)
         <<",\"refusal\":"<<std::quoted(owner.native_retention_refusal)<<",\"default_enabled\":false";
     if (treatment && owner.native_retention_potential) {
         const auto& prep=owner.native_retention_potential->preparation_stats;
@@ -929,8 +957,9 @@ int main(int argc, char** argv) {
         const bool is_micro = std::string(argv[1]) == "micro";
         const bool is_phase = std::string(argv[1]) == "uniform-phase";
         const std::string selector = argv[1];
-        const bool is_ordinary = selector=="ordinary-retention-control" || selector=="ordinary-retention-treatment";
-        const bool is_reforge = selector == "reforge-rarity-32" || selector == "reforge-occupancy-32";
+        const bool is_ordinary = selector=="ordinary-retention-control" || selector=="ordinary-retention-treatment" || selector=="ordinary-retention-profile";
+        const bool is_filter = selector == "filter-attack-32" || selector == "filter-both-32" || selector == "filter-attack-64";
+        const bool is_reforge = is_filter || selector == "reforge-rarity-32" || selector == "reforge-occupancy-32";
         const bool is_probability = is_reforge || selector == "probabilistic-phase" || selector == "side-retention-phase" ||
             selector == "coupled-phase-16" || selector == "coupled-phase-32" || selector == "crafted-phase-32" || selector == "crafted-phase-64" ||
             selector == "nonempty-phase-32" || selector == "nonempty-phase-64" || selector == "retention-phase-32";
@@ -939,7 +968,7 @@ int main(int argc, char** argv) {
             (selector == "crafted-phase-32" || selector == "crafted-phase-64" ? PhaseRetention::Crafted : PhaseRetention::None);
         const auto continuation = selector == "side-retention-phase" ? PhaseContinuation::SideRetention :
             (selector == "probabilistic-phase" ? PhaseContinuation::PriceOnly : PhaseContinuation::CoupledFresh);
-        const std::uint64_t proof_cap = selector == "crafted-phase-64" || selector == "nonempty-phase-64" ? 64ull << 20 :
+        const std::uint64_t proof_cap = selector == "crafted-phase-64" || selector == "nonempty-phase-64" || selector=="filter-attack-64" ? 64ull << 20 :
             (selector == "coupled-phase-32" || retention != PhaseRetention::None ? 32ull << 20 : 16ull << 20);
         if (!is_micro && !is_phase && !is_probability && !is_ordinary && std::string(argv[1]) != "medium-coverage") throw std::runtime_error("unknown bounded probe");
         const auto began = Clock::now();
@@ -990,7 +1019,9 @@ int main(int argc, char** argv) {
         options.max_transitions = is_micro ? 56 : 1000;
         options.max_reforge_work = is_micro ? 20000 : 1000;
         }
-        options.native_retention_lower=selector=="ordinary-retention-treatment";
+        options.native_retention_lower=is_ordinary && selector!="ordinary-retention-control";
+        options.native_retention_profile=is_ordinary && selector!="ordinary-retention-control";
+        options.native_retention_lookup_reuse=selector!="ordinary-retention-profile";
         options.max_solver_owned_bytes = 1ull << 30;
         const auto prepare = Clock::now();
         SolveWorkTestAccess::Impl owner(calc, start, h.economy->impl->prices, options);
@@ -1004,7 +1035,8 @@ int main(int argc, char** argv) {
         if (is_micro) micro(calc, owner,
             key(goal + '\n' + economy + '\n' + read(manifest_path) + "\nlower-v2"), key(goal));
         else if (is_phase) uniform_phase(calc, owner, start, key(goal + '\n' + economy + '\n' + read(manifest_path)));
-        else if (is_probability) probabilistic_phase(calc, owner, start, continuation, proof_cap, retention, {selector != "reforge-rarity-32"});
+        else if (is_probability) probabilistic_phase(calc, owner, start, continuation, proof_cap, retention,
+            {selector != "reforge-rarity-32",true,is_filter ? (selector=="filter-both-32" ? 3u : 1u) : 0u},h.session->impl);
         else medium_coverage(calc, owner);
         std::cout << ",\"prepare_ns\":" << prepare_ns << ",\"elapsed_ns\":" << ns(began)
             << ",\"process_peak_working_set_bytes\":" << process_peak() << "}\n";

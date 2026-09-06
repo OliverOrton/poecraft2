@@ -780,6 +780,9 @@ class CalcContext {
      * The phase producer binds this payload to its uniform source frame. */
     struct NativeGoalDrawBound {
         std::uint32_t action = 0, slot = 0;
+        // Exact retained filter in the pool AT DRAW TIME, not the pre-action
+        // item's filter. Renewals may already have removed it.
+        std::uint32_t pool_filter_mod = kNoId;
         bool guaranteed = false;
         bool frame_escape = false;
         std::int8_t side = -1;
@@ -787,7 +790,8 @@ class CalcContext {
         std::array<std::array<std::uint64_t, 3>, 2> strongest_other_removal{};
     };
     NativeGoalDrawBound phase_goal_draw_bound(const pc_item_state& anchor,
-        std::uint32_t action, std::uint32_t goal_slot, bool guaranteed);
+        std::uint32_t action, std::uint32_t goal_slot, bool guaranteed,
+        std::uint32_t pool_filter_mod = kNoId);
     /* A collision-free analytical ceiling for drawing a satisfying member of
      * one goal slot. Existing satisfied goal families are treated as exact
      * group blockers; each additional junk blocker receives the strongest

@@ -148,9 +148,11 @@ enum class PhaseRetention : std::uint8_t { None, Crafted, Annul, CraftedNonempty
 struct PhasePreparationOptions {
     bool minimum_reforge_occupancy = true;
     bool reuse_renewal_support = true;
+    unsigned filter_modes = 0; // bit 0 Cannot Roll Attack, bit 1 Cannot Roll Caster
 };
 struct PhasePreparationStats {
     std::uint64_t total_ns = 0, projection_ns = 0, relation_ns = 0;
+    std::uint64_t diagnostic_export_ns = 0; // included in relation_ns; no numerical graph alive
     // Support and allocation are subsets of relation_ns; native weights are
     // a subset of support_ns. These diagnostic times grant no authority.
     std::uint64_t support_ns = 0, allocation_ns = 0, native_weight_ns = 0;
@@ -208,11 +210,13 @@ public:
     const PhasePreparationOptions preparation_options;
     const PhasePreparationStats preparation_stats;
     // Sparse refined coordinates: low 32 bits are the legacy region cell;
-    // high bits retain removable crafted goals and crafted junk counts.
+    // high bits retain removable crafted goals, crafted junk counts and a
+    // selected filter kind (one of the actual crafted-junk occurrences).
     // UINT64_MAX is an infeasible legacy coordinate, never a native member.
     const std::vector<std::uint64_t> coordinates;
     const std::uint32_t crafted_goal_domain;
     const unsigned crafted_count_limit;
+    const std::array<std::uint32_t, 2> filter_mods;
     const std::vector<PhaseNonemptyWitness> nonempty_witnesses;
     const std::vector<PhaseRefillWitness> refill_witnesses;
     const std::vector<PhasePotentialRelation> relations;
@@ -239,6 +243,7 @@ private:
         std::shared_ptr<const PreparedPhasePotential>, std::vector<PhaseJointEventWitness>,
         std::vector<PhasePriceReactivation>, bool joint, PhaseContinuation,
         PhaseRetention, std::vector<std::uint64_t>, std::uint32_t crafted_goal_domain, unsigned crafted_count_limit,
+        std::array<std::uint32_t, 2> filter_mods,
         std::vector<PhaseNonemptyWitness>, std::vector<PhaseRefillWitness>, PhasePreparationOptions, PhasePreparationStats);
     std::unordered_map<std::uint64_t, std::uint32_t> coordinate_index_;
     // Geometry only. SolveWork first binds this view to its immutable request

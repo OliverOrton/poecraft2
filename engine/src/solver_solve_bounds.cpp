@@ -31,7 +31,7 @@ void SolveWork::Impl::prepare_native_retention_lower() {
         const auto zero = PhaseLowerProducer::zero_restart_boundary(*support);
         auto prepared = PhaseLowerProducer::prepare_probabilistic(calc,prices,exact_start_item,
             proposal,support,zero,false,true,budget,true,{},PhaseContinuation::CoupledFresh,
-            PhaseRetention::AnnulNonempty,false);
+            PhaseRetention::AnnulNonempty,false,{true,true,3});
         const auto safe_member = [&](unsigned mod) {
             return session.metamod_type.at(mod)<0 && !modifier_is_veiled_template(session,mod);
         };
@@ -60,6 +60,12 @@ void SolveWork::Impl::prepare_native_retention_lower() {
         peak_owned_bytes=std::max(peak_owned_bytes,estimated_owned_bytes_with_calc(calc.audited_estimated_owned_bytes())-cap+native_retention_peak_bytes);
         native_retention_live_bytes=prepared->memory_snapshot().total_bytes;
         native_retention_potential=std::move(prepared); // only after full checking
+        if (options.native_retention_lookup_reuse) {
+            // The still-live construction reservation includes this bounded
+            // allocation. Actual retained bytes enter the regular owner ledger.
+            native_retention_projection_cache.assign((1u<<20)/sizeof(double),-1.0);
+            native_retention_cache_owner=native_retention_potential;
+        }
         auto& entry=contract(ProofPatternKind::NativeRetention);
         entry.converged=true; entry.residual=0; entry.fallback_reason.clear();
         entry.solution_sweeps=native_retention_potential->model_rounds;
@@ -70,6 +76,7 @@ void SolveWork::Impl::prepare_native_retention_lower() {
             result.diagnostics.independent_goal_cover_lower_bound,completion_proof_lower_value(result.start_state));
     } catch (const std::exception& e) {
         native_retention_potential.reset(); native_retention_live_bytes=0;
+        std::vector<double>().swap(native_retention_projection_cache); native_retention_cache_owner=nullptr;
         native_retention_refusal=e.what();
         contract(ProofPatternKind::NativeRetention).fallback_reason=native_retention_refusal;
     }
@@ -80,31 +87,59 @@ void SolveWork::Impl::prepare_native_retention_lower() {
 double SolveWork::Impl::native_retention_lower_value(std::uint32_t state_id) {
     if (!native_retention_potential || state_id>=calc.state_count()) return 0;
     ++native_retention_lookups;
+    struct Sample {
+        Impl& owner; bool active;
+        std::chrono::steady_clock::time_point began;
+        ~Sample() { if (active) {
+            owner.native_retention_sample_ns+=std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now()-began).count();
+            ++owner.native_retention_samples;
+        } }
+    } sample{*this,options.native_retention_profile && native_retention_lookups%1024==0,{}};
+    if (sample.active) sample.began=std::chrono::steady_clock::now();
+    if (native_retention_cache_owner!=native_retention_potential) {
+        std::fill(native_retention_projection_cache.begin(),native_retention_projection_cache.end(),-1.0);
+        native_retention_cache_owner=native_retention_potential;
+    }
+    const bool cached=options.native_retention_lookup_reuse && state_id<native_retention_projection_cache.size();
+    if (cached && native_retention_projection_cache[state_id]!=-1.0) {
+        ++native_retention_cache_hits;
+        const auto value=native_retention_projection_cache[state_id];
+        if (value>=0) { ++native_retention_hits; return value; }
+        return 0; // -2 is a cached complete-member refusal, never a zero proof
+    }
+    ++native_retention_projection_checks;
+    const auto value=project_native_retention_lower(state_id);
+    if (cached) native_retention_projection_cache[state_id]=value.value_or(-2.0);
+    if (value) ++native_retention_hits;
+    return value.value_or(0);
+}
+
+std::optional<double> SolveWork::Impl::project_native_retention_lower(std::uint32_t state_id) const {
     const auto& state=calc.state(state_id);
     // Uniformity is proved from retained fields and complete member masks.
     // No materialized representative is used to broadcast a stronger value.
     if (state.flags & ~(kFlagFractured|kFlagCraftedMod|kFlagEldritchImplicit) || state.influence_bits ||
-        state.veiled_side>=0 || state.goal_progress_retry_basin || state.fractured_metamod_flags) return 0;
+        state.veiled_side>=0 || state.goal_progress_retry_basin || state.fractured_metamod_flags) return std::nullopt;
     unsigned mask=0,crafted=0,jp=0,js=0,fractures=0;
     std::array<unsigned,2> occupied{};
     for (unsigned slot=0;slot<calc.layout().slots.size();++slot) {
         const auto status=static_cast<GoalSlotStatus>(state.slot_status[slot]);
         if (status==GoalSlotStatus::Absent) continue;
-        if (!native_retention_slot_safe[slot]) return 0;
+        if (!native_retention_slot_safe[slot]) return std::nullopt;
         const unsigned side=native_retention_slot_side[slot], bit=1u<<slot;
         ++occupied[side];
         if (status==GoalSlotStatus::Satisfied) mask|=bit;
         const bool fractured=state.fractured_goal_mask&bit;
         if (fractured) {
             ++fractures;
-            if (status!=GoalSlotStatus::Satisfied || !(native_retention_potential->fractured_mask&bit)) return 0;
+            if (status!=GoalSlotStatus::Satisfied || !(native_retention_potential->fractured_mask&bit)) return std::nullopt;
             const auto& goal=calc.layout().slots[slot];
             const auto token=state.goal_member_class_tokens[slot];
-            if (token>goal.member_classes.size()) return 0;
+            if (token>goal.member_classes.size()) return std::nullopt;
             const auto& members=token ? goal.member_classes[token-1].member_mask : goal.satisfying_mask;
             unsigned count=0;
             for (auto word:members) count+=std::popcount(word);
-            if (count!=1 || !pc_bitset_test(members.data(),native_retention_potential->fractured_mod)) return 0;
+            if (count!=1 || !pc_bitset_test(members.data(),native_retention_potential->fractured_mod)) return std::nullopt;
         }
         if ((state.crafted_goal_mask&bit) && !fractured) {
             if (status==GoalSlotStatus::Satisfied) crafted|=bit;
@@ -114,18 +149,17 @@ double SolveWork::Impl::native_retention_lower_value(std::uint32_t state_id) {
     for (unsigned c=0;c<calc.layout().junk_classes.size();++c) {
         const unsigned count=state.junk_counts[c];
         if (!count) continue;
-        if (!native_retention_junk_safe[c] || state.fractured_junk_counts[c]) return 0;
+        if (!native_retention_junk_safe[c] || state.fractured_junk_counts[c]) return std::nullopt;
         const unsigned side=calc.layout().junk_classes[c].gen_type;
         occupied[side]+=count;
-        if (state.crafted_junk_counts[c]>count) return 0;
+        if (state.crafted_junk_counts[c]>count) return std::nullopt;
         (side ? js : jp)+=state.crafted_junk_counts[c];
     }
     if (fractures>1 || bool(state.flags&kFlagFractured)!=bool(fractures) ||
-        occupied[0]!=state.prefix_count || occupied[1]!=state.suffix_count) return 0;
+        occupied[0]!=state.prefix_count || occupied[1]!=state.suffix_count) return std::nullopt;
     const auto value=native_retention_potential->projected_summary_value(state.rarity,mask,state.prefix_count,
         state.suffix_count,fractures==0,crafted,jp,js);
-    if (!value) return 0;
-    ++native_retention_hits;
+    if (!value) return std::nullopt;
     return *value;
 }
 

@@ -294,7 +294,9 @@ def verify_joint(path):
     p = native["probabilistic_donor"]
     coupled = boundary and p["continuation"] == 2
     retention = p.get("retention",0)
-    coordinates = p.get("coordinates",[])
+    coordinates = [c+[0]*(5-len(c)) if c is not None else None for c in p.get("coordinates",[])]
+    filter_sides = {i+1:next(b["side"] for b in native.get("bench_audit",[]) if b["mod"]==mod)
+                    for i,mod in enumerate(p.get("filter_mods",[])) if mod != 2**32-1}
     values = list(map(F, p["values"]))
     if not coupled: values += [F(0), F(p["restart_boundary_lower"])]
     prior = list(map(F, native["joint_control" if boundary else "marginal_control"]["values"]))
@@ -308,6 +310,15 @@ def verify_joint(path):
             if r["action"] == "restart": assert r["exits"] == [[1538,1]]
     mass = 1 << 24
     draws = p["native_draw_witnesses"]
+    assert len({(w["action"],w["slot"],w["guaranteed"],w.get("pool_filter_mod",2**32-1)) for w in draws})==len(draws)
+    for w in draws:
+        assert w.get("pool_filter_mod",2**32-1) in [2**32-1]+p.get("filter_mods",[])
+    if p.get("filter_modes"):
+        assert filter_sides and any(w.get("pool_filter_mod",2**32-1)!=2**32-1 for w in draws)
+        for i,c in enumerate(coordinates):
+            if c is None or not c[4]: continue
+            assert c[4] in filter_sides and c[2+filter_sides[c[4]]] >= 1
+            assert values[i]>0 # occupied non-goal filter never silently becomes terminal
 
     def conditional(w, same, other):
         counts = (same, other) if w["side"] == 0 else (other, same)
@@ -412,14 +423,14 @@ def verify_joint(path):
             assert r["action"] in ("annul","eldritch_annul") and 0<n<=6
             assert len(r["events"]) == n
             assert all(cap == (mass+n-1)//n for _,_,cap in r["events"])
-            base,cm,jp,js = coordinates[r["cell"]]
+            base,cm,jp,js,filter_mode = coordinates[r["cell"]]
             offset=1538 if base>=1538 else 0
             local=base-offset
             rarity,mask,prefixes,suffixes=local//512,(local//16)%32,(local//4)%4,local%4
             frame=0 if offset else p["fractured_mask"]
             phase=r["phase_branch"] if r["action"]=="eldritch_annul" else -1
             expected=[]
-            def target(m,ps,ss,c,cp,cs): return (offset+((rarity*32+m)*4+ps)*4+ss,c,cp,cs)
+            def target(m,ps,ss,c,cp,cs,f=filter_mode): return (offset+((rarity*32+m)*4+ps)*4+ss,c,cp,cs,f)
             for slot in range(5):
                 bit=1<<slot; side=int(bool(side_masks[1]&bit))
                 if mask&bit and not frame&bit and (phase<0 or phase==side):
@@ -429,7 +440,9 @@ def verify_joint(path):
                 junk=(prefixes,suffixes)[side]-(mask&side_masks[side]).bit_count()
                 crafted=(jp,js)[side]
                 expected += [target(mask,prefixes-(side==0),suffixes-(side==1),cm,jp,js)]*(junk-crafted)
-                expected += [target(mask,prefixes-(side==0),suffixes-(side==1),cm,jp-(side==0),js-(side==1))]*crafted
+                filtered=int(bool(filter_mode and filter_sides[filter_mode]==side))
+                expected += [target(mask,prefixes-(side==0),suffixes-(side==1),cm,jp-(side==0),js-(side==1))]*(crafted-filtered)
+                expected += [target(mask,prefixes-(side==0),suffixes-(side==1),cm,jp-(side==0),js-(side==1),0)]*filtered
             assert sorted(tuple(coordinates[t]) for _,t,_ in r["events"])==sorted(expected)
             exact_uniform=sum((values[t] for _,t,_ in r["events"]),F(0))/n
             assert minimum<=exact_uniform
@@ -589,7 +602,7 @@ def verify_ordinary(control_path, treatment_path, native_path):
     coords=native["probabilistic_donor"]["coordinates"]
     natural=coords[held["native_exalt_natural_junk"]["cell"]]
     crafted=coords[held["native_bench_crafted_junk"]["cell"]]
-    assert natural[0]==crafted[0] and natural[1:]==[0,0,0] and crafted[1:]==[0,0,1]
+    assert natural[0]==crafted[0] and natural[1:4]==[0,0,0] and crafted[1:4]==[0,0,1]
     return dict(scope="one anchored ordinary request; read-only 60-second cooperative observations including all setup",
         public_lower_before=before["public_lower"],public_lower_after=after["public_lower"],
         public_lower_gain=after["public_lower"]-before["public_lower"],

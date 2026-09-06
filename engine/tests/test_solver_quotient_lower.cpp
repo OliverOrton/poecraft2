@@ -249,6 +249,29 @@ void incremental_lower_memory() {
     PC_CHECK(graph.proof_store()->ledger().snapshot().total_bytes==incremental);
 }
 
+void borrowed_query_capacity() {
+    QuotientBellmanGraph graph(cap,QuotientBellmanMode::LowerOnly);
+    graph.install_cells({cell(0),cell(1)});
+    auto q=query(graph,{source(0,{10},{scalar(10,7)}),source(1,{20},{scalar(20,9)})});
+    QuotientLowerBudget budget; budget.retain_ranked_constraints=false;
+    auto compact=graph.solve_lower(q,budget);
+    PC_CHECK(compact.checked && compact.checked->values_by_state[0]>6.99);
+    const auto compact_bytes=compact.scratch_bytes;
+    compact={};
+    // Unused capacity is still live borrowed storage. A value-only query may
+    // omit global ranking, but cannot hide a caller's oversized buffers.
+    q.sources[1].constraints.reserve(4096);
+    const auto retained=graph.proof_store()->ledger().snapshot().total_bytes;
+    budget.max_scratch_bytes=compact_bytes;
+    auto refused=graph.solve_lower(q,budget);
+    PC_CHECK(refused.status==QuotientLowerStatus::ResourceCap && !refused.checked);
+    PC_CHECK(graph.proof_store()->ledger().snapshot().total_bytes==retained);
+    budget.max_scratch_bytes=cap;
+    auto expanded=graph.solve_lower(q,budget);
+    PC_CHECK(expanded.checked && expanded.checked->values_by_state[0]>6.99);
+    PC_CHECK(expanded.scratch_bytes>compact_bytes+4090*sizeof(QuotientLowerConstraint));
+}
+
 void numerical_and_memory() {
     QuotientBellmanGraph graph(cap, QuotientBellmanMode::LowerOnly);
     graph.install_cells({cell(0), cell(1), cell(2, true)});
@@ -306,6 +329,7 @@ void run_solver_quotient_lower_tests() {
     inconsistent_bounds_and_zero_cost();
     numerical_and_memory();
     incremental_lower_memory();
+    borrowed_query_capacity();
     static_assert(!std::is_convertible_v<QuotientLowerResult, QuotientBellmanResult>);
     static_assert(!std::is_convertible_v<QuotientLowerCertificate, double>);
 }

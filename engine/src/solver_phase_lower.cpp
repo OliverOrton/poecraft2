@@ -248,7 +248,10 @@ std::shared_ptr<const PreparedPhaseLowerView> PhaseLowerProducer::prepare(
         throw std::invalid_argument("phase lower finite projection cap is eight goals");
     const auto cap = std::min(maximum, budget.max_scratch_bytes);
     if (cap < (2ull << 20)) throw std::length_error("phase lower reservation refused");
-    auto store = std::make_shared<ProofStore>(cap);
+    // This store also owns a later coupled potential and its compatibility
+    // checks. Honor the explicit whole-query reservation; the support-only
+    // construction itself keeps its existing smaller cap above.
+    auto store = std::make_shared<ProofStore>(std::min<std::uint64_t>(64ull<<20,budget.max_scratch_bytes));
     // Reserve native evidence, identity, candidate and checker workspace before
     // allocation. The other half is the existing transient quotient owner.
     ScopedProofMemoryCharge workspace(store->ledger(), ProofMemoryCategory::Scratch, cap/2);

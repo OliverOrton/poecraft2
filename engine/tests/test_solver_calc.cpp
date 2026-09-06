@@ -4307,6 +4307,17 @@ void run_solver_phase_lower_tests() {
         PC_CHECK(on.native_retention_lower_value(typed_calc.intern_item(wrong_fracture))==0);
         auto influenced=anchor; influenced.generic_influence_bits=1;
         PC_CHECK(on.native_retention_lower_value(typed_calc.intern_item(influenced))==0);
+        const auto checked_before=on.native_retention_projection_checks;
+        for (unsigned i=0;i<10;++i) {
+            PC_CHECK(on.native_retention_lower_value(on.result.start_state)==on.project_native_retention_lower(on.result.start_state).value());
+            PC_CHECK(on.native_retention_lower_value(typed_calc.intern_item(influenced))==0);
+        }
+        PC_CHECK(on.native_retention_projection_checks==checked_before && on.native_retention_cache_hits>=20);
+        PC_CHECK(on.native_retention_projection_cache.capacity()*sizeof(double)<=(1u<<20));
+        on.native_retention_potential=refined; // a new immutable certificate namespace
+        PC_CHECK(on.native_retention_lower_value(on.result.start_state)==refined->projected_value(typed_calc,anchor));
+        PC_CHECK(on.native_retention_projection_checks==checked_before+1 && on.native_retention_cache_owner==refined);
+        on.native_retention_potential=saved;
         options.max_solver_owned_bytes=1ull<<20;
         SolveWorkTestAccess::Impl refused(typed_calc,anchor,typed_prices,options);
         PC_CHECK(refused.native_retention_attempted && !refused.native_retention_potential && refused.native_retention_live_bytes==0);
@@ -4320,6 +4331,90 @@ void run_solver_phase_lower_tests() {
         SolveWorkTestAccess::Impl ambiguous(ambiguous_calc,anchor,typed_prices,options);
         PC_CHECK(ambiguous.native_retention_potential && ambiguous.native_retention_lower_value(ambiguous.result.start_state)==0);
         PC_CHECK(ambiguous.native_retention_potential->lookup(ambiguous_calc,typed_prices,anchor,false).value()>0);
+    }
+    for (unsigned filter_kind=0;filter_kind<2;++filter_kind) {
+        auto fs=make_calc_session();
+        auto data=std::const_pointer_cast<DataImpl>(fs->data);
+        data->metamod_no_attack_code=0; data->metamod_no_caster_code=1; data->metamod_multimod_code=2;
+        data->tag_id_by_name["attack"]=1; data->tag_id_by_name["caster"]=2;
+        for (unsigned mod=0;mod<fs->mod_count;++mod) {
+            data->mod_key_sid.push_back(data->strings.size()); data->strings.push_back("filter-fixture-"+std::to_string(mod));
+        }
+        fs->metamod_type[7]=filter_kind; fs->flags[7]|=1<<1; fs->flags[3]|=1<<1;
+        fs->bench_mod_ids={3,7};
+        pc_bitset_clear(fs->normal_random_roll_mask.data(),7);
+        auto registry=build_action_registry(*fs);
+        PhaseLowerPrices prices{{"step",10},{"filter",2},{"loss",1}};
+        for (auto& a:registry.actions) a.cost_keys={"step"};
+        const auto bench=registry.index_by_id.at("bench:filter-fixture-7");
+        registry.actions[bench].cost_keys={"filter"};
+        registry.actions[registry.index_by_id.at("remove_crafted_modifiers")].cost_keys={"loss"};
+        CalcContext fc(fs,goal,registry,basic_indices(registry),false,true,true,std::nullopt,{},false,{},true);
+        auto frame=source; frame.prefixes[0].flags=PC_MOD_SLOT_FRACTURED; frame.eater_of_worlds_tier=1;
+        auto support=PhaseLowerProducer::prepare(fc,prices,frame,{PhaseTableRole::MaskCompletion,4,2,std::vector<double>(4,0)});
+        const auto zero=PhaseLowerProducer::zero_restart_boundary(*support);
+        const PhaseLowerProposal proposal{PhaseTableRole::CleanCompletion,4,2,std::vector<double>(192,100)};
+        const auto view=PhaseLowerProducer::prepare_probabilistic(fc,prices,frame,proposal,support,zero,false,true,{},true,{},
+            PhaseContinuation::CoupledFresh,PhaseRetention::AnnulNonempty,true,{true,true,1u<<filter_kind});
+        ActionContextImpl native{1}; native.session=fs;
+        auto filtered=frame;
+        PC_CHECK(apply_action(native,&filtered,registry.actions[bench].params).applied);
+        PC_CHECK(filtered.suffix_count==frame.suffix_count+1 && (filtered.suffixes[filtered.suffix_count-1].flags&PC_MOD_SLOT_CRAFTED));
+        auto blocked=frame; place(&blocked,PC_SIDE_PREFIX,3,12,PC_MOD_SLOT_CRAFTED);
+        const auto before=exact_item_state_key(blocked);
+        PC_CHECK(!apply_action(native,&blocked,registry.actions[bench].params).applied && exact_item_state_key(blocked)==before);
+        auto full=frame; place(&full,PC_SIDE_SUFFIX,5,20); place(&full,PC_SIDE_SUFFIX,6,21); place(&full,PC_SIDE_SUFFIX,9,31);
+        PC_CHECK(!apply_action(native,&full,registry.actions[bench].params).applied);
+        const auto unfiltered_draw=fc.phase_goal_draw_bound(frame,registry.index_by_id.at("exalt"),0,false);
+        const auto filtered_draw=fc.phase_goal_draw_bound(filtered,registry.index_by_id.at("exalt"),0,false,7);
+        PC_CHECK(filtered_draw.pool_filter_mod==7 && filtered_draw.target_weight==unfiltered_draw.target_weight && filtered_draw.other_weight<unfiltered_draw.other_weight);
+        rejects([&]{fc.phase_goal_draw_bound(frame,registry.index_by_id.at("exalt"),0,false,3);});
+        auto plain=filtered; plain.suffixes[plain.suffix_count-1].mod_id=6; plain.suffixes[plain.suffix_count-1].group_id=21;
+        PC_CHECK(view->projected_cell(fc,plain)!=view->projected_cell(fc,filtered));
+        PC_CHECK(!fc.is_goal_state(fc.state(fc.intern_item(filtered))));
+        auto goals_and_filter=filtered; place(&goals_and_filter,PC_SIDE_SUFFIX,5,20);
+        PC_CHECK(!fc.is_goal_state(fc.state(fc.intern_item(goals_and_filter))) && view->projected_value(fc,goals_and_filter)>0);
+        PC_CHECK(view->lookup(fc,prices,filtered,false).has_value());
+        auto program_source=filtered; program_source.eater_of_worlds_tier=0;
+        const auto filtered_program=PhaseLowerProducer::compose(fc,prices,program_source,id,*view);
+        PC_CHECK(filtered_program.record.goal_weight==0 && filtered_program.record.physical_exits>0);
+        PC_CHECK(filtered_program.record.lower>=filtered_program.record.cost_lower);
+        auto uncrafted=filtered; uncrafted.suffixes[uncrafted.suffix_count-1].flags=0;
+        PC_CHECK(!view->lookup(fc,prices,uncrafted,false));
+        auto fracture_filter=filtered; fracture_filter.suffixes[fracture_filter.suffix_count-1].flags|=PC_MOD_SLOT_FRACTURED;
+        PC_CHECK(!view->lookup(fc,prices,fracture_filter,false));
+        bool complete=true, expectation=true, side_retention=true; unsigned exits=0;
+        for (bool fresh:{false,true}) for (int phase=-1;phase<2;++phase) for (bool blocker:{false,true})
+            for (const char* id:{"exalt","annul","remove_crafted_modifiers","scour","chaos","eldritch_chaos","eldritch_annul"}) {
+                auto item=filtered; if (fresh) item.prefixes[0].flags=0;
+                if (blocker) place(&item,PC_SIDE_PREFIX,3,12);
+                item.searing_exarch_tier=phase==0; item.eater_of_worlds_tier=phase==1;
+                const auto a=registry.index_by_id.at(id);
+                const auto& kernel=fc.outcomes(fc.intern_item(item),a);
+                long double total=0,rhs=phase_price_lower(registry.actions[a],prices);
+                complete &= kernel.supported && !kernel.entries.empty();
+                for (const auto& e:kernel.entries) {
+                    pc_item_state exit{}; complete &= fc.materialize(e.state,exit); ++exits;
+                    const auto lower=view->lookup(fc,prices,exit,false); complete &= lower.has_value();
+                    rhs+=e.probability*lower.value_or(0); total+=e.probability;
+                    if (std::string(id)=="eldritch_chaos") side_retention &= item_contains_mod(exit,7)==(phase==0);
+                    if (std::string(id)=="chaos" || std::string(id)=="scour" || std::string(id)=="remove_crafted_modifiers")
+                        side_retention &= !item_contains_mod(exit,7);
+                }
+                complete &= std::abs(total-1)<1e-12L;
+                expectation &= view->projected_value(fc,item)<=rhs+1e-10L;
+            }
+        PC_CHECK(exits>0 && complete && side_retention);
+        PC_CHECK(expectation);
+        PC_CHECK(std::any_of(view->draws.begin(),view->draws.end(),[](const auto& w){return w.pool_filter_mod==7;}));
+        auto repriced=prices; repriced["filter"]=1;
+        PC_CHECK(!view->lookup(fc,repriced,filtered,false));
+        PC_CHECK(!view->lookup(fc,prices,filtered,true));
+        const auto retained=support->memory_snapshot().total_bytes;
+        QuotientLowerBudget cancel; unsigned n=0; cancel.cancelled=[&]{return ++n>100;};
+        rejects([&]{PhaseLowerProducer::prepare_probabilistic(fc,prices,frame,proposal,support,zero,false,true,cancel,true,{},
+            PhaseContinuation::CoupledFresh,PhaseRetention::AnnulNonempty,true,{true,true,1u<<filter_kind});});
+        PC_CHECK(retained==support->memory_snapshot().total_bytes);
     }
     static_assert(!std::is_constructible_v<PreparedPhaseRestartLower, QuotientLowerBoundary>);
     static_assert(!std::is_copy_constructible_v<PreparedPhaseRestartLower>);

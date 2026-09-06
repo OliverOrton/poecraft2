@@ -1,6 +1,6 @@
 # Active Work
 
-**Status: no active implementation boundary.** Oliver must select the next chunk.
+**Status: active implementation.** [Native Metamod First-Exit Closure and Useful Retention Consumption v1](native-metamod-first-exit-v1/README.md) is selected by Oliver.
 
 Parent: [documentation map](../README.md). [HANDOFF](../../HANDOFF.md) records
 closeout and the evidence-selected next question.

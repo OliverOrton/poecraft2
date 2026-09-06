@@ -31,7 +31,7 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-There is no active implementation boundary. The completed [Native Applied-Reforge
+The active boundary is [Native Metamod First-Exit Closure and Useful Retention Consumption v1](active/native-metamod-first-exit-v1/README.md). The completed [Native Applied-Reforge
 Progress and Efficient Retention Preparation v1](archive/2026-09-05-native-applied-reforge-preparation-v1/README.md)
 qualifies a stronger ordinary opt-in lower with cheaper preparation, keeping
 conservative member coverage and default-off behavior.
