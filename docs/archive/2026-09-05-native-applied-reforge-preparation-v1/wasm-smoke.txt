@@ -1,0 +1,10 @@
+  ok - API shape: ABI version is current
+  ok - load data through the memory bundle path
+  ok - create a session and an item
+  ok - emulator editing can add and remove an exact explicit mod
+  ok - Fracturing Orb fractures one random explicit modifier
+  ok - catalog exposes mod groups, essences, and fossils as usable keys
+  ok - WASM Fossil and Essence transitions ignore metamods but keep fractures
+  ok - calculator picker: full-registry solver, filtered actions, fossil combos
+
+8/8 passed

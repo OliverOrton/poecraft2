@@ -1,0 +1,109 @@
+{
+  "scope": "Sequential development-stage measurements; uncommitted intermediate source states and no preserved intermediate executables. Not a same-executable ordinary comparison.",
+  "prior_program_diagnostic": "The first rarity and occupancy exports retain a zero prior-program diagnostic when no predecessor donor was prepared. It is not used to claim program gain; final exports use the actual support fallback, and predecessor comparisons below use immutable saved evidence.",
+  "stages": [
+    {
+      "stage": "rarity",
+      "file": "rarity-development-native.json.gz",
+      "profile": {
+        "total_ns": 37755658700,
+        "projection_ns": 436200,
+        "relations_ns": 33619321100,
+        "support_ns": 13738399900,
+        "allocation_ns": 1742874800,
+        "native_weights_ns": 4624000,
+        "check_ns": 760984500,
+        "solve_ns": 3265302100,
+        "numerical_sweeps": 6187
+      },
+      "sources": [
+        211.22756690011138,
+        211.9999999788
+      ],
+      "fresh": 211.98601060824856,
+      "proof_peak": 32454792,
+      "same_final_values": true,
+      "same_final_relations": false
+    },
+    {
+      "stage": "occupancy",
+      "file": "occupancy-development-native.json.gz",
+      "profile": {
+        "total_ns": 36801949500,
+        "projection_ns": 451800,
+        "relations_ns": 32706104000,
+        "support_ns": 13451202000,
+        "allocation_ns": 1685438400,
+        "native_weights_ns": 4640800,
+        "check_ns": 754771400,
+        "coverage_ns": 1084134200,
+        "quotient_rows_ns": 15198266500,
+        "solve_ns": 3228670900,
+        "numerical_sweeps": 6172
+      },
+      "sources": [
+        211.22756690011138,
+        211.9999999788
+      ],
+      "fresh": 211.98601060824856,
+      "proof_peak": 32454096,
+      "same_final_values": true,
+      "same_final_relations": true
+    },
+    {
+      "stage": "accounting",
+      "file": "accounting-development-native.json.gz",
+      "profile": {
+        "total_ns": 22493831000,
+        "projection_ns": 445700,
+        "relations_ns": 18469920500,
+        "support_ns": 13165172200,
+        "allocation_ns": 1615102700,
+        "native_weights_ns": 4643600,
+        "check_ns": 727475500,
+        "coverage_ns": 1042938700,
+        "quotient_rows_ns": 1490893100,
+        "solve_ns": 3189523600,
+        "numerical_sweeps": 6172
+      },
+      "sources": [
+        211.22756690011138,
+        211.9999999788
+      ],
+      "fresh": 211.98601060824856,
+      "proof_peak": 32454096,
+      "same_final_values": true,
+      "same_final_relations": true
+    },
+    {
+      "stage": "geometry",
+      "file": "geometry-development-native.json.gz",
+      "profile": {
+        "total_ns": 21366056800,
+        "projection_ns": 499800,
+        "relations_ns": 17269142300,
+        "support_ns": 11936569700,
+        "allocation_ns": 1614501800,
+        "native_weights_ns": 4609100,
+        "check_ns": 744774100,
+        "geometry_hits": 309914,
+        "geometry_templates": 5,
+        "geometry_bytes": 5812,
+        "coverage_ns": 1045423500,
+        "quotient_rows_ns": 1494534200,
+        "solve_ns": 3241135800,
+        "numerical_sweeps": 6172
+      },
+      "sources": [
+        211.22756690011138,
+        211.9999999788
+      ],
+      "fresh": 211.98601060824856,
+      "proof_peak": 32519632,
+      "same_final_values": true,
+      "same_final_relations": true
+    }
+  ],
+  "warm_start_decision": "solve_lower zero-initialization accounted for 3.23 s of the 36.80 s occupancy baseline. Reusing prior vectors would require identity and feasibility qualification; no such change was necessary to exceed the 2x preparation target.",
+  "geometry_capacity_scope": "Only value-independent geometry/native integer event caps are reused inside one prepared domain. Every frozen minimum/allocation is rebuilt and exact-checked."
+}

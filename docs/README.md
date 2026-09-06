@@ -31,8 +31,11 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active boundary is [Native Applied-Reforge Progress and Efficient Retention
-Preparation v1](active/native-applied-reforge-preparation-v1/README.md).
+There is no active implementation boundary. The completed [Native Applied-Reforge
+Progress and Efficient Retention Preparation v1](archive/2026-09-05-native-applied-reforge-preparation-v1/README.md)
+qualifies a stronger ordinary opt-in lower with cheaper preparation, keeping
+conservative member coverage and default-off behavior.
+
 The completed
 [Native Retention-Aware Lower Refinement and Solver Integration v1](archive/2026-09-05-native-retention-lower-integration-v1/README.md)
 implements native retention/loss bounds and an opt-in ordinary consumer with

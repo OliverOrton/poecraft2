@@ -1,44 +1,37 @@
 # Handoff
 
-**Status: active implementation.** Oliver selected [Native Applied-Reforge
-Progress and Efficient Retention Preparation v1](docs/active/native-applied-reforge-preparation-v1/README.md)
-from reviewed `caa8c9e`; local start `c621ce5` preserves the WASM rebuild.
-Implement applied rarity, independently proved occupancy, measured preparation
-reuse and the matched ordinary opt-in comparison. Defaults stay off.
+**Status: no active implementation boundary.** Completed
+[Native Applied-Reforge Progress and Efficient Retention Preparation v1](docs/archive/2026-09-05-native-applied-reforge-preparation-v1/README.md)
+from reviewed `caa8c9e94acbb2423264f87016d61f8b77aff52d`, preserving local WASM
+checkpoint `c621ce5`. Implementation checkpoint: `2feea90`.
 
-Completed predecessor:
-[Native Retention-Aware Lower Refinement and Solver Integration v1](docs/archive/2026-09-05-native-retention-lower-integration-v1/README.md)
-from reviewed main `f415707496a9ff9424d77a28d84b04f88459957a`.
+Legal Alchemy now preserves its applied Rare postcondition in both lower-model
+rollback paths. Conditional native integer-pool evidence proves minimum occupancy
+four on the saved fresh region. Rarity repair raises donor/model/portfolio to
+211.2275669001 / 211.9999999788; programs reach 213.7692879144 / 215.5573217499.
+The occupancy guarantee adds zero numerical gain under the remaining boundaries.
+All actions, programs, residual families and extra conservative Restart remain.
 
-Native craftedness, Exalt non-exhaustion and conditional uniform Annul loss now
-cover both jointly checked regions. Donor/model/portfolio reach 185.2722268608 /
-186.0552389799; programs 188.0574242314 / 189.6303420550. The 32 MiB native
-acceptance and exact audits pass. All explicit actions and remaining families
-keep complete coverage and strongest compatible floors.
+Measured preparation reuse updates actual nested storage capacities and reuses
+only native value-independent geometry/event caps. Every candidate still rebuilds
+minima and allocations and passes complete checking. Compact preparation falls
+36.802 -> 11.590 seconds with bit-identical values and all 14,721 frozen relations.
+No numerical warm-start or general graph/cache owner was introduced.
 
-The ordinary internal opt-in prepares once and raises the anchored request's
-public lower from 36.4286171891 to 185.2722268608 in the matched 60-second
-observation, including 37.1563 seconds of added preparation. No verified upper
-or exact completion occurs; fewer ordinary rows are not a speedup. Native
-natural/crafted junk coarse classes explicitly retain the old common floor.
-Default profiles/bindings remain off. Acceptance: 157 phase/consumer, 700
-quotient and 334 proof-pattern checks, zero failures; 14,705 exact final relations.
+The matched ordinary off/on experiment includes all preparation: public lower
+36.4286171891 -> 211.2275669001; added preparation 12.044 seconds, versus archived
+37.156 seconds for 185.2722. Consumer acceptance is 16.13% of calls; coarse natural
+and crafted junk retain their old common floor. Ordinary rows are 62,258 / 54,930
+in 60 seconds; neither run has a verified upper or exact completion. No end-to-end
+speedup or empty clean-five lower is claimed. Defaults remain off.
 
-The selected evidence-based question is native Alchemy failure occupancy/no-op
-coverage in the fresh region: its optimistic self mass is 0.9969937801. The
-proper finite-model ceilings are 185.2722268793 / 186.0552389985, not native
-upper bounds. Resolve it under the living plan; no fresh clean-five solve or
-default activation is selected.
+Acceptance: 175 phase/consumer and 711 quotient checks, exact audits and eight
+selected release-WASM/worker checks pass. WASM was rebuilt from `2feea90` on
+2026-09-05. Additional proof peak is 31.10 MiB within the primary 32 MiB / 1 GiB
+matched budgets. No Simulator, broad census, visual review, delegation or push.
+Protected `0`, unrelated work and all predecessor evidence are preserved.
 
-The predecessor archive remains immutable. Its medium-caller Restart attribution
-was wrong: CalculatorProductV1 sets economic Restart off. The private lower
-retains an extra conservative Restart and program recovery, preserving scope.
-
-WASM maintenance completed 2026-09-05 at 19:23 PDT: release artifacts rebuilt
-from `caa8c9e` with `scripts/build-wasm.ps1`, replacing the August 30 build.
-The wrapper is byte-identical; the binary includes the current native changes.
-Eight selected existing WASM/worker checks passed (ABI, data/session/item,
-native actions and Calculator bindings), with no Simulator or broad suite.
-The native retention consumer remains off by default.
-
-One sequential session; no agents, Simulator or push. Protected `0` preserved.
+The next evidence-selected question is a native-valid continuation for the
+212-cost Cannot Roll Attack metamod first exit. Its current price-only boundary
+caps the optimistic model at 211.2275669212 / 212; these are not native upper
+bounds. Oliver must select further implementation or any default activation.

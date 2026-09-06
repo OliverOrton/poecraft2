@@ -1,0 +1,49 @@
+{
+  "reviewed_main": "caa8c9e94acbb2423264f87016d61f8b77aff52d",
+  "local_start": "c621ce5",
+  "implementation_checkpoint": "2feea90b55c06e7affdf7ecd7f72077da75e91cc",
+  "recorded_at_utc": "2026-09-06T03:21:14.406597+00:00",
+  "source_plan": "User request and latest Native Solver Research thread report; older Downloads plan not substituted",
+  "research_thread": "6a90fbac-55e4-83e8-964e-f50cbad28987",
+  "source_sha256": {
+    "engine/src/engine_internal.hpp": "0f3b0eb8de6d18bc61c516387d4fa984d2569a64fe676b92ecfc48db3326064e",
+    "engine/src/solver_phase_lower.hpp": "46ec96d15f9926560e504d2d4c3ed06cc6a8488b85efe5e5df703dc7dde0fe9c",
+    "engine/src/solver_phase_probability.cpp": "a2a9c8d6a0c9688d9feb0f6d38ffb86677709b7d1104d827510297f41a00e2b2",
+    "engine/src/solver_quotient_bellman.hpp": "4a9a654b9265d2595bdcbfcce2b121dd9606d0e7b7ef83cefd7ba569c1a9d45a",
+    "engine/src/solver_quotient_bellman.cpp": "e9cd4ba0cbf9bf0068e41f7df2e15fe2ee54f5355474f600309031bf2bffbb40",
+    "engine/benchmarks/solver_quotient_lower_probe.cpp": "4e78110266f899989bcd5357b8c769cda54a81aa9c76dec3ff20e813da912fa9",
+    "engine/benchmarks/verify_quotient_lower_probe.py": "b4e8ede47706291d00299d54cae09eb378c66ea3f62379244f744d938df2b0ab",
+    "engine/tests/test_solver_calc.cpp": "e45ab898439a606d9e811bf73a236b235c3cf7ccc1e3b4ae1d3fa3db845da806",
+    "engine/tests/test_solver_quotient_lower.cpp": "43388affb5595ca0f32988bdeeada0fcece1dd9fdbd1fdea41ebc3a5f30a6fb1"
+  },
+  "input_sha256": {
+    "docs/archive/2026-09-04-free-value-bellman-research/native-goal.json": "ab2c5420a403b71852bd84da629814f331e01babaea0401b17620296fb5da1aa",
+    "docs/archive/2026-09-04-free-value-bellman-research/native-economy.json": "ca0bb782c7933fb2c72ddde3991c0aebf8c1d3e9c8dc5853796b54fffddf1992",
+    "data/compiled/current/manifest.json": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb"
+  },
+  "native_executable_sha256": "7e65bf19a2705799bbdceaab260020bf2192695f31affbadffad137c0b0bd9d9",
+  "test_executable_sha256": "57b802d0f179578b4229461af12fca375dcc0d77323e3a02ffd1069f5d56ef75",
+  "compiler": "MSYS2 UCRT64 GCC 14.2.0; Release -O3 -DNDEBUG",
+  "ordinary_order": [
+    "control",
+    "treatment"
+  ],
+  "ordinary_budget_ns": 60000000000,
+  "proof_budget_bytes": 33554432,
+  "total_process_cap_bytes": 1073741824,
+  "one_sequential_session": true,
+  "subagents": false,
+  "simulator": false,
+  "push": false,
+  "protected_zero_preserved": true,
+  "wasm": {
+    "build": "scripts/build-wasm.ps1 release",
+    "source_checkpoint": "2feea90b55c06e7affdf7ecd7f72077da75e91cc",
+    "module_sha256": "92bc2b9d61c465b35c2b80c71f8b3ee125155755275e8d66cdc649792ab9f4ce",
+    "wasm_sha256": "cc56313520339ab3d9204727c95985c46e5359c2234feecb48ade21fbae8c033",
+    "wasm_bytes": 7622434,
+    "selected_existing_checks": 8,
+    "simulator": false,
+    "visual_checks": false
+  }
+}

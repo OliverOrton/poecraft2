@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-09-05
 
+- [Native Applied-Reforge Progress and Efficient Retention Preparation v1](2026-09-05-native-applied-reforge-preparation-v1/README.md) —
+  certifies applied Alchemy rarity and conditional occupancy, reduces compact
+  preparation by 3.18x with unchanged checking, and qualifies stronger ordinary
+  opt-in bounds with all preparation included. Defaults remain off.
+
 - [Native Retention-Aware Lower Refinement and Solver Integration v1](2026-09-05-native-retention-lower-integration-v1/README.md) —
   preserves craftedness, certifies non-exhaustion and uniform Annul loss, and
   qualifies an internal ordinary lower contribution with all preparation in

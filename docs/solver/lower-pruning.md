@@ -139,6 +139,22 @@ and consuming action. Native non-exhaustion witnesses constrain Exalt failures;
 Annul uses uniform eligible-affix categories with conservative dyadic event caps.
 Every final value-dependent row is reoptimized and checked simultaneously.
 
+Legal Alchemy's applied-rarity postcondition is independent of refill success:
+an exhausted pool leaves a Rare result. The lower projection removes Normal
+rollback from both ordinary renewal support and per-event observed choices.
+Minimum occupancy is a separate conditional proof: every pre-target occupancy
+history must retain positive eligible non-target integer weight on an open side.
+Unknown histories retain underfilled Rare outcomes; they never undo application.
+
+Preparation reuses only value-independent renewal geometry and exact-mask event
+caps inside the same immutable request/domain. Side-dependent Eldritch events
+keep their existing construction. Every candidate still rebuilds observed choices,
+successor minima and normalized minimizing allocations, and receives complete
+canonical and exact numerical checks. Lower-row memory accounting updates the
+changed nested capacities under the existing preallocation reservation; full
+recounts remain available and are covered by regression checks. No numerical
+warm-start or new graph owner is introduced.
+
 The `NativeRetention` proof pattern contributes only by maximum. The ordinary
 consumer uses retained AbstractState fields and complete modifier member masks,
 not a materialized representative. Ambiguous fracture identity, unsupported
@@ -153,6 +169,9 @@ separates private donor/program/model/portfolio results from the matched ordinar
 observation, including all construction cost and conservative junk-class fallbacks.
 This component establishes a bounded ordinary lower contribution, not a default
 product activation or an end-to-end speedup.
+The subsequent [applied-reforge evidence](../archive/2026-09-05-native-applied-reforge-preparation-v1/README.md)
+qualifies the native applied-rarity/occupancy contract and faster preparation
+through that same opt-in, retaining complete checking and conservative fallback.
 
 Internal lowers drive operator pruning, fringe gap priority, constructive
 certificates, and gap targets. Telemetry should show which pattern supplied a

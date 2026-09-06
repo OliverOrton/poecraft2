@@ -6,6 +6,15 @@ routes to them rather than duplicating complete reports.
 
 Parent: [Documentation map](README.md)
 
+## Native Applied-Reforge Progress and Preparation
+
+The [completed applied-reforge boundary](archive/2026-09-05-native-applied-reforge-preparation-v1/README.md)
+records the rarity-only gain, independently proved occupancy with no extra gain,
+profile-selected preparation reuse and complete retained checking. Both saved
+source portfolios rise; ordinary opt-in preparation is 12.044 seconds including
+all work. Consumer fallback, ordinary work and model ceilings are reported
+separately. No default activation or end-to-end solving speedup is claimed.
+
 ## Native Retention Lower Integration
 
 The [completed native retention integration](archive/2026-09-05-native-retention-lower-integration-v1/README.md)

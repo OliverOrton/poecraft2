@@ -1,0 +1,69 @@
+{
+  "scope": "Same saved semantic sources; predecessor results are immutable archived evidence, not replayed. Current ordinary off/on use one executable, sequentially, 60 seconds each including preparation.",
+  "sources": [
+    {
+      "second_source": false,
+      "donor_before": 185.2722268607952,
+      "donor_after": 211.22756690011138,
+      "donor_gain": 25.955340039316184,
+      "program_before": 188.05742423140026,
+      "program_after": 213.7692879143572,
+      "program_gain": 25.71186368295693,
+      "complete_model_before": 185.2722268607952,
+      "complete_model_after": 211.22756690011138,
+      "complete_model_gain": 25.955340039316184,
+      "portfolio_before": 185.2722268607952,
+      "portfolio_after": 211.22756690011138,
+      "portfolio_gain": 25.955340039316184
+    },
+    {
+      "second_source": true,
+      "donor_before": 186.05523897987408,
+      "donor_after": 211.9999999788,
+      "donor_gain": 25.944760998925915,
+      "program_before": 189.63034205503584,
+      "program_after": 215.55732174988302,
+      "program_gain": 25.926979694847176,
+      "complete_model_before": 186.05523897987408,
+      "complete_model_after": 211.9999999788,
+      "complete_model_gain": 25.944760998925915,
+      "portfolio_before": 186.05523897987408,
+      "portfolio_after": 211.9999999788,
+      "portfolio_gain": 25.944760998925915
+    }
+  ],
+  "fresh": {
+    "before": 181.05523898037407,
+    "after": 211.98601060824856,
+    "ordinary_empty_request_authority": false
+  },
+  "probability_caps_changed": false,
+  "occupancy_bound_gain": 0,
+  "compact_preparation": {
+    "occupancy_seconds": 36.8019495,
+    "optimized_seconds": 11.5896895,
+    "reduction_factor": 3.175404267732971,
+    "same_values_and_relations": true
+  },
+  "ordinary": {
+    "archived_opt_in_lower": 185.2722268607952,
+    "archived_opt_in_prepare_seconds": 37.1562638,
+    "current_control_lower": 36.42861718910441,
+    "current_opt_in_lower": 211.22756690011138,
+    "current_opt_in_prepare_seconds": 12.0441413,
+    "prepare_reduction_factor_vs_archive": 3.0850072972823726,
+    "lookup_calls": 75329578,
+    "accepted_calls": 12147433,
+    "accepted_fraction": 0.16125714921700476,
+    "selected_calls": 12147431,
+    "calls_are_not_unique_states": true,
+    "control_rows": 62258,
+    "treatment_rows": 54930,
+    "control_reforge_work": 4544662,
+    "treatment_reforge_work": 4061875,
+    "verified_upper": null,
+    "exact_complete": false,
+    "end_to_end_speedup_established": false,
+    "default_enabled": false
+  }
+}
