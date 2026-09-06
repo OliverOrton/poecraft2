@@ -226,7 +226,8 @@ def check(root: Path, *, source_paths: list[str] | None = None,
 def export_context(root: Path, ids: list[str], *, question: str | None = None,
                    max_chars: int = 20000) -> str:
     claims = parse_claims((root / LEDGER).read_text(encoding="utf-8"))
-    parts = ["# Selected solver research context\n\nTraceability is not native proof authority.\n"]
+    parts = ["# Selected solver research context\n\nTraceability is not native proof authority.\n"
+             "Local links use docs/solver as their base; claim history remains in claims.md.\n"]
     if question:
         if not re.fullmatch(r"RQ-\d{3}", question):
             raise ValueError("invalid question ID")
@@ -256,7 +257,8 @@ def export_context(root: Path, ids: list[str], *, question: str | None = None,
             if claims[dep].status != "accepted":
                 parts.append(f"Premise warning: {dep} is {claims[dep].status}; its complete preconditions: {claims[dep].fields['Preconditions']}\n")
             pending.extend(claims[dep].dependencies - seen)
-    result = "\n".join(parts)
+    # A selected export does not contain the entire ledger's anchor namespace.
+    result = "\n".join(parts).replace("](\u0023clm-", "](claims.md#clm-")
     if len(result) > max_chars:
         raise ValueError(f"complete context needs {len(result)} characters; raise --max-chars or select fewer claims (nothing truncated)")
     return result

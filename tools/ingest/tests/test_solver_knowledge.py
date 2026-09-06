@@ -90,10 +90,11 @@ class KnowledgeTest(unittest.TestCase):
         self.assertEqual(reviewed["changes"][0]["kind"], "declared_editorial_review")
 
     def test_export_preserves_complete_premises_or_refuses(self):
-        self.ledger.write_text(claim(status="accepted", deps="CLM-0002") + claim("CLM-0002", "superseded"), encoding="utf-8")
+        self.ledger.write_text(claim(status="accepted", deps="[CLM-0002](#clm-0002)") + claim("CLM-0002", "superseded"), encoding="utf-8")
         text = export_context(self.root, [], question="RQ-001")
         self.assertIn("Proper policy, complete scope, bounded tail.", text)
         self.assertIn("CLM-0002 is superseded", text)
+        self.assertIn("(claims.md#clm-0002)", text)
         with self.assertRaisesRegex(ValueError, "nothing truncated"):
             export_context(self.root, ["CLM-0001"], max_chars=20)
         with self.assertRaisesRegex(ValueError, "unknown claim"):
