@@ -28,4 +28,11 @@ The predecessor archive remains immutable. Its medium-caller Restart attribution
 was wrong: CalculatorProductV1 sets economic Restart off. The private lower
 retains an extra conservative Restart and program recovery, preserving scope.
 
+WASM maintenance completed 2026-09-05 at 19:23 PDT: release artifacts rebuilt
+from `caa8c9e` with `scripts/build-wasm.ps1`, replacing the August 30 build.
+The wrapper is byte-identical; the binary includes the current native changes.
+Eight selected existing WASM/worker checks passed (ABI, data/session/item,
+native actions and Calculator bindings), with no Simulator or broad suite.
+The native retention consumer remains off by default.
+
 One sequential session; no agents, Simulator or push. Protected `0` preserved.
