@@ -3706,6 +3706,28 @@ void run_solver_phase_lower_tests() {
         try { operation(); } catch (const std::exception&) { refused = true; }
         PC_CHECK(refused);
     };
+    const auto alchemy_facts=action_transition_facts(ActionType::Alchemy);
+    PC_CHECK(alchemy_facts.applied_rarity==PC_RARITY_RARE && alchemy_facts.minimum_refill_target==4);
+    PC_CHECK(action_transition_facts(ActionType::Annul).applied_rarity==255);
+    PC_CHECK(phase_refill_minimum(0,0,4,[](unsigned,unsigned){return true;})==4);
+    PC_CHECK(phase_refill_minimum(0,0,4,[](unsigned p,unsigned s){return p+s==0;})==1);
+    PC_CHECK(phase_refill_minimum(0,0,4,[](unsigned p,unsigned s){return p!=1 || s!=0;})==1);
+    PC_CHECK(phase_refill_minimum(0,1,4,[](unsigned p,unsigned s){return p+s<3;})==3);
+    rejects([] {phase_refill_minimum(4,0,4,[](unsigned,unsigned){return true;});});
+    for (bool singleton : {false,true}) {
+        auto exhausted=make_calc_session();
+        exhausted->normal_random_roll_mask.assign(exhausted->words,0);
+        if (singleton) pc_bitset_set(exhausted->normal_random_roll_mask.data(),0);
+        ActionContextImpl application(1); application.session=exhausted;
+        pc_item_state normal{}; pc_item_clear(&normal);
+        ActionParameters alchemy; alchemy.type=ActionType::Alchemy;
+        const auto outcome=apply_action(application,&normal,alchemy);
+        PC_CHECK(outcome.applied && normal.rarity==PC_RARITY_RARE);
+        PC_CHECK(normal.prefix_count+normal.suffix_count==unsigned(singleton));
+        const auto before=exact_item_state_key(normal);
+        PC_CHECK(!apply_action(application,&normal,alchemy).applied);
+        PC_CHECK(exact_item_state_key(normal)==before);
+    }
     const auto converted = phase_completion_proposal({0, 3, 5, 8}, 2);
     PC_CHECK(converted.role == PhaseTableRole::MaskCompletion);
     PC_CHECK(converted.values == std::vector<double>({8, 5, 3, 0}));
@@ -3753,6 +3775,8 @@ void run_solver_phase_lower_tests() {
     PC_CHECK(!coefficient_model(acquisition_rows, 3, &converted.values).checked);
     const auto retry = coefficient_model({row(0, 100.0/128, {{1, 1.0/128}, {0, 127.0/128}})}, 1);
     PC_CHECK(retry.checked && retry.checked->values_by_state[0] > 99.999999);
+    const auto paid_failure=coefficient_model({row(0,1,{{2,1.0/128},{1,127.0/128}}),row(1,2,{{0,1}})},2);
+    PC_CHECK(paid_failure.checked && std::abs(paid_failure.checked->values_by_state[0]-382)<1e-6);
     // Same expectation equation as cost 1 and success 1/100; exact binary
     // coefficients avoid presenting a rounded 1/100 as native authority.
     PC_CHECK(1+99.0/100*100 == 100 && 1+0 < 100);
@@ -4136,6 +4160,29 @@ void run_solver_phase_lower_tests() {
         const auto refined=PhaseLowerProducer::prepare_probabilistic(typed_calc,typed_prices,phase,
             {PhaseTableRole::CleanCompletion,4,2,std::vector<double>(192,100)},support,zero,
             false,true,budget,true,{},PhaseContinuation::CoupledFresh,PhaseRetention::AnnulNonempty);
+        bool alchemy_applied=true; unsigned alchemy_rows=0;
+        for (const auto& r:refined->relations) if (typed_registry.actions[r.action].params.type==ActionType::Alchemy && !r.independent_price) {
+            ++alchemy_rows;
+            for (const auto& event:r.events) {
+                const auto base=static_cast<unsigned>(refined->coordinates[event.minimum_cell]);
+                const auto local=base>=194 ? base-194 : base;
+                alchemy_applied &= local/(4*16)==PC_RARITY_RARE;
+            }
+        }
+        PC_CHECK(alchemy_rows && alchemy_applied);
+        const auto uncached=PhaseLowerProducer::prepare_probabilistic(typed_calc,typed_prices,phase,
+            {PhaseTableRole::CleanCompletion,4,2,std::vector<double>(192,100)},support,zero,
+            false,true,budget,true,{},PhaseContinuation::CoupledFresh,PhaseRetention::AnnulNonempty,true,{true,false});
+        bool same_relations=refined->values==uncached->values && refined->relations.size()==uncached->relations.size();
+        for (unsigned i=0;same_relations && i<refined->relations.size();++i) {
+            const auto& a=refined->relations[i]; const auto& b=uncached->relations[i];
+            same_relations &= std::tie(a.cell,a.action,a.cost,a.targets,a.probabilities,a.phase_branch)==
+                std::tie(b.cell,b.action,b.cost,b.targets,b.probabilities,b.phase_branch) && a.events.size()==b.events.size();
+            for (unsigned j=0;same_relations && j<a.events.size();++j)
+                same_relations &= std::tie(a.events[j].mask,a.events[j].minimum_cell,a.events[j].capacity)==
+                    std::tie(b.events[j].mask,b.events[j].minimum_cell,b.events[j].capacity);
+        }
+        PC_CHECK(same_relations);
         PC_CHECK(refined->crafted_goal_domain==2);
         auto natural=anchor; place(&natural,PC_SIDE_PREFIX,3,12);
         auto crafted=natural; crafted.prefixes[1].flags=PC_MOD_SLOT_CRAFTED;

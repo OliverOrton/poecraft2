@@ -145,6 +145,28 @@ private:
 
 enum class PhaseContinuation : std::uint8_t { PriceOnly, SideRetention, CoupledFresh };
 enum class PhaseRetention : std::uint8_t { None, Crafted, Annul, CraftedNonempty, AnnulNonempty };
+struct PhasePreparationOptions {
+    bool minimum_reforge_occupancy = true;
+    bool reuse_renewal_support = true;
+};
+struct PhasePreparationStats {
+    std::uint64_t total_ns = 0, projection_ns = 0, relation_ns = 0;
+    // Support and allocation are subsets of relation_ns; native weights are
+    // a subset of support_ns. These diagnostic times grant no authority.
+    std::uint64_t support_ns = 0, allocation_ns = 0, native_weight_ns = 0;
+    std::uint64_t check_ns = 0, solve_ns = 0, numerical_sweeps = 0;
+    std::uint64_t coverage_ns = 0, quotient_rows_ns = 0;
+    std::uint64_t geometry_hits = 0, geometry_templates = 0, geometry_bytes = 0;
+    std::uint64_t event_cap_hits = 0, event_cap_bytes = 0;
+};
+// The callback proves a draw at EVERY native history in this occupancy cell.
+// An unknown cell stops the guarantee; reaching the native target is separate
+// from application. No conditional probability multiplication is involved.
+unsigned phase_refill_minimum(unsigned prefixes, unsigned suffixes, unsigned target,
+    const std::function<bool(unsigned, unsigned)>& uniformly_nonempty);
+struct PhaseRefillWitness {
+    unsigned action = 0, prefixes = 0, suffixes = 0, target = 0, minimum = 0;
+};
 struct PhaseNonemptyWitness {
     unsigned action = 0, prefixes = 0, suffixes = 0, draw = 0;
     int phase = -1;
@@ -183,6 +205,8 @@ public:
     const bool joint_refinement;
     const PhaseContinuation continuation;
     const PhaseRetention retention;
+    const PhasePreparationOptions preparation_options;
+    const PhasePreparationStats preparation_stats;
     // Sparse refined coordinates: low 32 bits are the legacy region cell;
     // high bits retain removable crafted goals and crafted junk counts.
     // UINT64_MAX is an infeasible legacy coordinate, never a native member.
@@ -190,6 +214,7 @@ public:
     const std::uint32_t crafted_goal_domain;
     const unsigned crafted_count_limit;
     const std::vector<PhaseNonemptyWitness> nonempty_witnesses;
+    const std::vector<PhaseRefillWitness> refill_witnesses;
     const std::vector<PhasePotentialRelation> relations;
     const std::uint32_t model_rounds;
     const std::uint64_t retained_reservation;
@@ -214,7 +239,7 @@ private:
         std::shared_ptr<const PreparedPhasePotential>, std::vector<PhaseJointEventWitness>,
         std::vector<PhasePriceReactivation>, bool joint, PhaseContinuation,
         PhaseRetention, std::vector<std::uint64_t>, std::uint32_t crafted_goal_domain, unsigned crafted_count_limit,
-        std::vector<PhaseNonemptyWitness>);
+        std::vector<PhaseNonemptyWitness>, std::vector<PhaseRefillWitness>, PhasePreparationOptions, PhasePreparationStats);
     std::unordered_map<std::uint64_t, std::uint32_t> coordinate_index_;
     // Geometry only. SolveWork first binds this view to its immutable request
     // and proves the AbstractState fields determine every represented member.
@@ -241,7 +266,8 @@ public:
         const quotient::QuotientLowerBudget& budget = {}, bool joint_refinement = false,
         std::shared_ptr<const PreparedPhasePotential> reuse_draws = {},
         PhaseContinuation continuation = PhaseContinuation::PriceOnly,
-        PhaseRetention retention = PhaseRetention::None, bool retain_diagnostics = true);
+        PhaseRetention retention = PhaseRetention::None, bool retain_diagnostics = true,
+        PhasePreparationOptions preparation_options = {});
     static PreparedPhaseRestartLower zero_restart_boundary(const PreparedPhaseLowerView&);
     static PhaseProgramLowerWitness compose(CalcContext&, const PhaseLowerPrices&,
         const pc_item_state&, const std::string&, const PreparedPhasePotential&,

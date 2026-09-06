@@ -228,6 +228,27 @@ void inconsistent_bounds_and_zero_cost() {
     PC_CHECK(root(zero.solve_lower(zq)) == 0); // finite weak; no infinity claim
 }
 
+void incremental_lower_memory() {
+    QuotientBellmanGraph graph(cap,QuotientBellmanMode::LowerOnly);
+    graph.install_cells({cell(0),cell(1),cell(2,true)});
+    for (unsigned i=0;i<96;++i) {
+        const unsigned source=i%2;
+        row(graph,source,100+i,1,{{{1},1,.25},{{2},2,.75}});
+        if (i%11==0 || i==95) {
+            const auto incremental=graph.proof_store()->ledger().snapshot().total_bytes;
+            // This existing entry point performs an independent full recount
+            // of every nested capacity; shared spans and growth are exercised.
+            graph.set_external_row_kernel_bytes(0);
+            PC_CHECK(graph.proof_store()->ledger().snapshot().total_bytes==incremental);
+        }
+    }
+    auto newer=cell(1); newer.generation=2; graph.supersede_cell(newer);
+    row(graph,0,1000,1,{{{2},2,1}});
+    const auto incremental=graph.proof_store()->ledger().snapshot().total_bytes;
+    graph.set_external_row_kernel_bytes(0);
+    PC_CHECK(graph.proof_store()->ledger().snapshot().total_bytes==incremental);
+}
+
 void numerical_and_memory() {
     QuotientBellmanGraph graph(cap, QuotientBellmanMode::LowerOnly);
     graph.install_cells({cell(0), cell(1), cell(2, true)});
@@ -284,6 +305,7 @@ void run_solver_quotient_lower_tests() {
     choices_and_programs();
     inconsistent_bounds_and_zero_cost();
     numerical_and_memory();
+    incremental_lower_memory();
     static_assert(!std::is_convertible_v<QuotientLowerResult, QuotientBellmanResult>);
     static_assert(!std::is_convertible_v<QuotientLowerCertificate, double>);
 }

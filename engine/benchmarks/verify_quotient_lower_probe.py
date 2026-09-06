@@ -321,7 +321,7 @@ def verify_joint(path):
     for w in nonempty:
         draw = draws[w["draw"]]
         assert draw["action"] == w["action"] and not draw["guaranteed"]
-        assert w["action"] in ("exalt", "eldritch_exalt")
+        assert w["action"] in ("exalt", "eldritch_exalt", "alchemy")
         assert (w["prefixes"],w["suffixes"])[draw["side"]] < 3
         assert w["phase"] < 0 or w["phase"] == draw["side"]
         remaining = draw["other"]
@@ -329,6 +329,32 @@ def verify_joint(path):
             for removed in draw["removal"][side][:count]: remaining -= min(remaining, removed)
         assert remaining == w["remaining_other"] > 0
     if retention in (3,4): assert nonempty
+    refills=p.get("refill_witnesses",[])
+    for w in refills:
+        assert w["action"]=="alchemy" and w["target"]==4
+        assert 0<=w["prefixes"]<=3 and 0<=w["suffixes"]<=3
+        assert w["prefixes"]+w["suffixes"]<=w["minimum"]<=max(w["target"],w["prefixes"]+w["suffixes"])
+        for pp in range(w["prefixes"],4):
+            for ss in range(w["suffixes"],4):
+                if pp+ss>=w["minimum"]: continue
+                assert any(n["action"]==w["action"] and n["prefixes"]==pp and n["suffixes"]==ss and n["phase"]==-1 for n in nonempty), ("unproved conditional refill",w,pp,ss)
+    if p.get("minimum_reforge_occupancy"):
+        assert refills and any(w["minimum"]==4 and w["prefixes"]==w["suffixes"]==0 for w in refills)
+    if p.get("applied_alchemy"):
+        minimum=max((w["minimum"] for w in refills if w["action"]=="alchemy" and w["prefixes"]==w["suffixes"]==0),default=0)
+        alchemy_rows=0
+        for r in p["checked_relations"]:
+            if r["action"]!="alchemy" or r["independent_price"]: continue
+            alchemy_rows+=1
+            for event in r["events"]:
+                # Existing export is [mask, minimum-cell, capacity]. It must
+                # not smuggle the Normal source into a failed observed event.
+                target=event[1]
+                base=coordinates[target][0]
+                local=base-p["fresh_cell"] if base>=p["fresh_cell"] else base
+                assert local//(32*16)==2 and (local//4)%4+local%4>=minimum
+                assert (local//16)%32==event[0]
+        assert alchemy_rows
     annul_checks = 0
     side_masks=[sum(1<<slot for slot in range(5) if next(d["side"] for d in draws if d["slot"]==slot)==side) for side in range(2)]
 
@@ -434,7 +460,7 @@ def verify_joint(path):
             assert F(e["lower"]) == (0 if e["goal"] else values[e["cell"]])
             q = F(e["weight"],program["total_weight"])
             exact_new += q*F(e["lower"])
-            exact_old += q*(0 if e["goal"] else prior[coordinates[e["cell"]][0] if retention else e["cell"]])
+            exact_old += q*(0 if e["goal"] else (prior[coordinates[e["cell"]][0] if retention else e["cell"]] if prior else F(s["support_donor"])))
         assert F(program["lower"]) <= exact_new < F(program["lower"])+F("1e-10")
         assert F(s["program_before"]["lower"]) <= exact_old < F(s["program_before"]["lower"])+F("1e-10")
         before, after = s["complete_models"]
@@ -458,7 +484,7 @@ def verify_joint(path):
         assert donor <= ceiling and ceiling-donor < F("1e-7")
         ranked = after["ranked_constraints"]
         sources.append(dict(second_source=s["second_source"], donor=float(donor),
-            prior_donor=float(prior[root]), donor_gain=float(donor-prior[root]),
+            prior_donor=float(prior[root]) if prior else None, donor_gain=float(donor-prior[root]) if prior else None,
             program_before=s["program_before"]["lower"], program_after=program["lower"],
             program_gain=program["lower"]-s["program_before"]["lower"],
             compatible_action_gain=s["local_compatible_gain"],
@@ -471,7 +497,7 @@ def verify_joint(path):
             next_complete_ceiling=min((r["lower"] for r in ranked if r["lower"]>after["lower"]),default=None)))
     assert native["sources"][0]["source"] != native["sources"][1]["source"]
     assert [s["program_after"]["goal_weight"] for s in native["sources"]] == [500,0]
-    assert native["resources"]["reused_draw_witnesses"] == (115 if retention else 78)
+    assert native["resources"]["reused_draw_witnesses"] == ((115 if retention else 78) if prior else 0)
     if not boundary: assert native["resources"]["new_draw_witnesses"] == 0
     budget = native["resources"].get("proof_budget_bytes",16<<20)
     assert budget in (16<<20,32<<20,64<<20) and native["resources"]["combined_additional_peak_bytes"] <= budget
@@ -520,7 +546,7 @@ def verify_joint(path):
         old_prefix_capacity=3050403, old_prefix_probability_upper=3050403/mass,
         probability_cap_ratio=float(F(3050403,measured["capacity"])),
         optimizer_checks=optimizer_checks, checked_relations=len(p["checked_relations"]),
-        nonempty_integer_checks=len(nonempty), annul_integer_checks=annul_checks,
+        nonempty_integer_checks=len(nonempty), refill_history_checks=len(refills), annul_integer_checks=annul_checks,
         reactivated_shortcuts=len(p["price_reactivations"]), source_results=sources,
         production_authority=False)
 

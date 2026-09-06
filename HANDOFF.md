@@ -1,6 +1,12 @@
 # Handoff
 
-**Status: no active implementation boundary.** Completed
+**Status: active implementation.** Oliver selected [Native Applied-Reforge
+Progress and Efficient Retention Preparation v1](docs/active/native-applied-reforge-preparation-v1/README.md)
+from reviewed `caa8c9e`; local start `c621ce5` preserves the WASM rebuild.
+Implement applied rarity, independently proved occupancy, measured preparation
+reuse and the matched ordinary opt-in comparison. Defaults stay off.
+
+Completed predecessor:
 [Native Retention-Aware Lower Refinement and Solver Integration v1](docs/archive/2026-09-05-native-retention-lower-integration-v1/README.md)
 from reviewed main `f415707496a9ff9424d77a28d84b04f88459957a`.
 
@@ -18,11 +24,11 @@ natural/crafted junk coarse classes explicitly retain the old common floor.
 Default profiles/bindings remain off. Acceptance: 157 phase/consumer, 700
 quotient and 334 proof-pattern checks, zero failures; 14,705 exact final relations.
 
-The next evidence-selected question is native Alchemy failure occupancy/no-op
+The selected evidence-based question is native Alchemy failure occupancy/no-op
 coverage in the fresh region: its optimistic self mass is 0.9969937801. The
 proper finite-model ceilings are 185.2722268793 / 186.0552389985, not native
-upper bounds. Oliver must select the next chunk; do not resume refinement,
-run a fresh clean-five solve, or enable defaults from this recommendation.
+upper bounds. Resolve it under the living plan; no fresh clean-five solve or
+default activation is selected.
 
 The predecessor archive remains immutable. Its medium-caller Restart attribution
 was wrong: CalculatorProductV1 sets economic Restart off. The private lower

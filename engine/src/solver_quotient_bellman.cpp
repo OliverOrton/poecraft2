@@ -478,6 +478,17 @@ std::uint64_t QuotientBellmanGraph::append_row(
     ScopedProofMemoryCharge reservation(
         transition_cache_.quotient_proofs->ledger(),
         ProofMemoryCategory::Scratch, lower_reservation_bytes);
+    const bool incremental_memory = lower_only && nested_row_kernel_current_;
+    const auto predecessor_bytes = [&] {
+        std::uint64_t bytes=0;
+        for (const auto& target : targets)
+            bytes+=reverse_predecessors_.at(cells_.at(target.cell_id).state).capacity()*sizeof(std::uint32_t);
+        return bytes;
+    };
+    const auto previous_nested = incremental_memory ? predecessor_bytes()+
+        (found_bucket==transition_span_buckets_.end() ? 0 : found_bucket->second.capacity()*sizeof(std::uint64_t)) : 0;
+    nested_row_kernel_current_=false;
+    try {
     if (lower_only) each_growth(reserve_growth);
     auto& transition_bucket = transition_span_buckets_[transition_hash];
     for (const auto& target : targets) {
@@ -515,9 +526,27 @@ std::uint64_t QuotientBellmanGraph::append_row(
         ++telemetry_.row_reprojections;
     }
     ++model_revision_;
+    if (incremental_memory) {
+        const auto& binding=lower_row_bindings_.back();
+        const auto& p=binding.provenance;
+        const auto next_nested=predecessor_bytes()+transition_bucket.capacity()*sizeof(std::uint64_t)+
+            (p.request_identity.capacity()+p.source_identity.capacity()+p.action_identity.capacity()+
+             p.evidence_identity.capacity())*sizeof(std::uint64_t)+binding.targets.capacity()*sizeof(TargetGenerationDependency);
+        // Only these nested buffers can change during a successful append.
+        // Use actual returned capacities, retaining all preallocation charges.
+        nested_row_kernel_bytes_=saturated_add(nested_row_kernel_bytes_,next_nested-previous_nested);
+        nested_row_kernel_current_=true;
+    }
     reservation.reset();
-    refresh_row_kernel_bytes();
+    refresh_row_kernel_bytes(incremental_memory);
     return stable_row;
+    } catch (...) {
+        // A failed allocation may have grown an earlier buffer. Recount that
+        // real storage; no failed append can leave a reusable stale total.
+        reservation.reset();
+        refresh_row_kernel_bytes();
+        throw;
+    }
 }
 
 std::uint64_t QuotientBellmanGraph::invalidate_source_split(
@@ -601,7 +630,27 @@ bool QuotientBellmanGraph::row_certificate_current(
                row, expected, context) == ProofValidationStatus::Current;
 }
 
-void QuotientBellmanGraph::refresh_row_kernel_bytes() {
+void QuotientBellmanGraph::refresh_row_kernel_bytes(bool reuse_nested) {
+    if (!reuse_nested || !nested_row_kernel_current_) {
+        std::uint64_t nested = 0;
+        for (const auto& [id,record] : cells_) {
+            (void)id;
+            nested = saturated_add(nested, saturated_product(record.cell.semantic_identity.capacity(),sizeof(std::uint64_t)));
+        }
+        for (const auto& predecessors : reverse_predecessors_)
+            nested = saturated_add(nested,saturated_product(predecessors.capacity(),sizeof(std::uint32_t)));
+        for (const auto& [hash,rows] : transition_span_buckets_) {
+            (void)hash;
+            nested = saturated_add(nested,saturated_product(rows.capacity(),sizeof(std::uint64_t)));
+        }
+        for (const auto& binding : lower_row_bindings_) {
+            const auto& p=binding.provenance;
+            nested = saturated_add(nested,(p.request_identity.capacity()+p.source_identity.capacity()+
+                p.action_identity.capacity()+p.evidence_identity.capacity())*sizeof(std::uint64_t)+
+                binding.targets.capacity()*sizeof(TargetGenerationDependency));
+        }
+        nested_row_kernel_bytes_=nested; nested_row_kernel_current_=true;
+    }
     std::uint64_t bytes = saturated_add(
         external_row_kernel_bytes_,
         saturated_product(
@@ -634,26 +683,11 @@ void QuotientBellmanGraph::refresh_row_kernel_bytes() {
             sizeof(std::pair<const std::uint32_t, CellRecord>) +
                 3 * sizeof(void*) + sizeof(StableKey) +
                 2 * sizeof(void*)));
-    for (const auto& [cell_id, record] : cells_) {
-        (void)cell_id;
-        bytes = saturated_add(
-            bytes,
-            saturated_product(
-                record.cell.semantic_identity.capacity(),
-                sizeof(std::uint64_t)));
-    }
     bytes = saturated_add(
         bytes,
         saturated_product(
             reverse_predecessors_.capacity(),
             sizeof(std::vector<std::uint32_t>)));
-    for (const std::vector<std::uint32_t>& predecessors :
-         reverse_predecessors_) {
-        bytes = saturated_add(
-            bytes,
-            saturated_product(
-                predecessors.capacity(), sizeof(std::uint32_t)));
-    }
     bytes = saturated_add(
         bytes,
         saturated_product(
@@ -662,22 +696,10 @@ void QuotientBellmanGraph::refresh_row_kernel_bytes() {
                 const std::uint64_t,
                 std::vector<std::uint64_t>>) +
                 3 * sizeof(void*)));
-    for (const auto& [hash, rows] : transition_span_buckets_) {
-        (void)hash;
-        bytes = saturated_add(
-            bytes,
-            saturated_product(rows.capacity(), sizeof(std::uint64_t)));
-    }
     bytes += transition_cache_.choices.capacity() * sizeof(SparseChoiceGroup) +
         transition_cache_.choice_successors.capacity() * sizeof(std::uint32_t) +
         lower_row_bindings_.capacity() * sizeof(LowerRowBinding);
-    for (const auto& binding : lower_row_bindings_) {
-        const auto& p = binding.provenance;
-        bytes += (p.request_identity.capacity() + p.source_identity.capacity() +
-                  p.action_identity.capacity() + p.evidence_identity.capacity()) *
-                     sizeof(std::uint64_t) +
-            binding.targets.capacity() * sizeof(TargetGenerationDependency);
-    }
+    bytes = saturated_add(bytes,nested_row_kernel_bytes_);
     transition_cache_.quotient_proofs->ledger().set_owned_bytes(
         ProofMemoryCategory::RowKernel, bytes);
     telemetry_.memory =

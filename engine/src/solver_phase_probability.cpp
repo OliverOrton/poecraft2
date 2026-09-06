@@ -4,12 +4,17 @@
 
 #include <bit>
 #include <cmath>
+#include <chrono>
 #include <numeric>
 
 namespace poecraft::solver {
 using namespace quotient;
 namespace {
-constexpr std::uint64_t version = 0x50524f424c4f0004ull;
+constexpr std::uint64_t version = 0x50524f424c4f0005ull;
+using PreparationClock = std::chrono::steady_clock;
+std::uint64_t elapsed_ns(PreparationClock::time_point start) {
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(PreparationClock::now()-start).count();
+}
 constexpr std::uint32_t mass = 1u << 24;
 double down(double x) { return x == 0 ? 0 : std::max(0.0, std::nextafter(x, 0.0)); }
 void checkpoint(const QuotientLowerBudget& b) {
@@ -75,11 +80,11 @@ CraftedObservation crafted_observation(const CalcContext& calc, const pc_item_st
 }
 StableKey potential_identity(const PreparedPhaseLowerView& support, const std::vector<double>& values,
         std::uint32_t mod, bool retained, double restart_lower, bool joint, PhaseContinuation continuation,
-        PhaseRetention retention, const std::vector<std::uint64_t>& coordinates, unsigned crafted_domain, unsigned crafted_limit) {
+        PhaseRetention retention, const std::vector<std::uint64_t>& coordinates, unsigned crafted_domain, unsigned crafted_limit, PhasePreparationOptions options) {
     auto key = support.identity;
     key.insert(key.end(), {version, mod, retained, joint, 0 /* unchanged Imprint exclusion */});
     key.push_back(static_cast<unsigned>(continuation));
-    key.insert(key.end(), {static_cast<unsigned>(retention), crafted_domain, crafted_limit});
+    key.insert(key.end(), {static_cast<unsigned>(retention), crafted_domain, crafted_limit, options.minimum_reforge_occupancy});
     key.insert(key.end(), coordinates.begin(), coordinates.end());
     key.push_back(std::bit_cast<std::uint64_t>(restart_lower));
     for (double x : values) key.push_back(std::bit_cast<std::uint64_t>(x));
@@ -106,6 +111,18 @@ std::uint32_t capacity(double upper) {
     return static_cast<std::uint32_t>(std::min<double>(mass, std::ceil(std::ldexp(upper, 24))));
 }
 } // namespace
+
+unsigned phase_refill_minimum(unsigned prefixes, unsigned suffixes, unsigned target,
+        const std::function<bool(unsigned, unsigned)>& uniformly_nonempty) {
+    if (prefixes > 3 || suffixes > 3 || target > 6 || !uniformly_nonempty)
+        throw std::invalid_argument("invalid native refill occupancy domain");
+    for (unsigned total = prefixes+suffixes; total < target; ++total)
+        for (unsigned p = prefixes; p <= 3; ++p) {
+            if (p > total || total-p < suffixes || total-p > 3) continue;
+            if (!uniformly_nonempty(p,total-p)) return total;
+        }
+    return std::max(prefixes+suffixes,target);
+}
 
 double phase_joint_assignment_upper(const std::vector<std::array<double, 3>>& conditional,
         unsigned positions) {
@@ -188,13 +205,13 @@ PreparedPhasePotential::PreparedPhasePotential(std::shared_ptr<const PreparedPha
         std::shared_ptr<const PreparedPhasePotential> reused, std::vector<PhaseJointEventWitness> events,
         std::vector<PhasePriceReactivation> reactivated, bool joint, PhaseContinuation mode,
         PhaseRetention refinement, std::vector<std::uint64_t> projection, unsigned crafted_domain, unsigned crafted_limit,
-        std::vector<PhaseNonemptyWitness> nonempty)
-    : identity(potential_identity(*support, table, mod, retained, restart_lower, joint, mode, refinement, projection, crafted_domain, crafted_limit)), values(std::move(table)),
+        std::vector<PhaseNonemptyWitness> nonempty, std::vector<PhaseRefillWitness> refills, PhasePreparationOptions options, PhasePreparationStats stats)
+    : identity(potential_identity(*support, table, mod, retained, restart_lower, joint, mode, refinement, projection, crafted_domain, crafted_limit, options)), values(std::move(table)),
       proposal(std::move(proposed)), proposal_refusal(std::move(refusal)), fractured_mod(mod),
       fractured_mask(mask), retained_scour(retained), restart_boundary_lower(restart_lower), draws(std::move(weights)),
       reused_draw_owner(std::move(reused)), joint_events(std::move(events)), reactivations(std::move(reactivated)),
-      joint_refinement(joint), continuation(mode), retention(refinement), coordinates(std::move(projection)),
-      crafted_goal_domain(crafted_domain), crafted_count_limit(crafted_limit), nonempty_witnesses(std::move(nonempty)), relations(std::move(rows)),
+      joint_refinement(joint), continuation(mode), retention(refinement), preparation_options(options), preparation_stats(stats), coordinates(std::move(projection)),
+      crafted_goal_domain(crafted_domain), crafted_count_limit(crafted_limit), nonempty_witnesses(std::move(nonempty)), refill_witnesses(std::move(refills)), relations(std::move(rows)),
       model_rounds(rounds), retained_reservation(reservation), peak_additional_bytes(peak),
       native_action_relations(action_relations), support_(std::move(support)),
       charge_(support_->store_->ledger(), ProofMemoryCategory::Certificate, reservation) {
@@ -271,7 +288,9 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         const PreparedPhaseRestartLower& issued_restart_boundary,
         bool consider_imprint, bool retain_scour, const QuotientLowerBudget& budget,
         bool joint_refinement, std::shared_ptr<const PreparedPhasePotential> reuse_draws, PhaseContinuation continuation,
-        PhaseRetention retention, bool retain_diagnostics) {
+        PhaseRetention retention, bool retain_diagnostics, PhasePreparationOptions preparation_options) {
+    const auto preparation_start = PreparationClock::now();
+    PhasePreparationStats stats;
     checkpoint(budget);
     if (continuation != PhaseContinuation::PriceOnly && (!joint_refinement || !retain_scour))
         throw std::invalid_argument("native continuation requires joint/no-op and retention coverage");
@@ -467,13 +486,17 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         const auto found = draw_cache.find(key);
         if (found != draw_cache.end()) return draw_at(found->second);
         checkpoint(budget);
+        const auto weight_start = PreparationClock::now();
         auto result = calc.phase_goal_draw_bound(anchor, a, slot, guaranteed);
+        stats.native_weight_ns += elapsed_ns(weight_start);
         draw_cache[key] = static_cast<unsigned>(reused_count+draws.size());
         draws.push_back(std::move(result));
         return draws.back();
     };
     bool probability_frame_escape = false;
     std::vector<PhaseNonemptyWitness> nonempty_witnesses;
+    std::vector<PhaseRefillWitness> refill_witnesses;
+    std::map<std::tuple<unsigned,unsigned,unsigned>,unsigned> refill_cache;
     std::map<std::tuple<unsigned,unsigned,unsigned,int>,bool> nonempty_cache;
     const bool uniform_annul = retention == PhaseRetention::Annul || retention == PhaseRetention::AnnulNonempty;
     const bool prove_nonempty = retention == PhaseRetention::CraftedNonempty || retention == PhaseRetention::AnnulNonempty;
@@ -498,6 +521,19 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
             }
         }
         nonempty_cache.emplace(key,false); return false;
+    };
+    const auto refill_minimum = [&](unsigned a, unsigned p, unsigned s) {
+        const auto key=std::tuple{a,p,s};
+        if (const auto found=refill_cache.find(key);found!=refill_cache.end()) return found->second;
+        const auto facts=action_transition_facts(calc.registry().actions[a].params.type);
+        // Alchemy has no forced draw, tag-changing affix or metamod in frame.
+        // Its natural Rare pool and insertion rules match get_draw. Every
+        // previous draw is a blocker in nonempty_add, including hidden members;
+        // its residual excludes target mass and never assumes a target survives.
+        const auto result=phase_refill_minimum(p,s,facts.minimum_refill_target,
+            [&](unsigned pp,unsigned ss) { return nonempty_add(a,pp,ss,-1); });
+        refill_witnesses.push_back({a,p,s,facts.minimum_refill_target,result});
+        refill_cache.emplace(key,result); return result;
     };
     const auto upper = [&](unsigned a, unsigned slot, unsigned p, unsigned s, unsigned count) {
         const auto& natural = get_draw(a, slot, false);
@@ -556,6 +592,24 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         joint_events.push_back(std::move(w));
         return joint_events.back().joint_upper;
     };
+    // At most two rarities x two regions plus one Alchemy occupancy cutoff.
+    // Reserve bounded geometry storage before generating any template. This
+    // cache lives only inside this compatible preparation; it contains neither
+    // event probabilities nor selected minima, allocations or scalar values.
+    constexpr std::uint64_t geometry_reservation=64ull<<10;
+    ScopedProofMemoryCharge geometry_charge(support->store_->ledger(),ProofMemoryCategory::Scratch,
+        preparation_options.reuse_renewal_support ? geometry_reservation : 0);
+    std::map<std::tuple<unsigned,unsigned,unsigned>,std::vector<Group>> renewal_geometry;
+    const auto cap_entries=preparation_options.reuse_renewal_support ? 2ull*masks*calc.registry().actions.size() : 0;
+    // Exact-mask caps depend on native integer weights, action/forced draws
+    // and retained region; never on the current value vector. Keep their
+    // frame-refusal bit as well. Eldritch side-dependent events are excluded.
+    if (cap_entries*sizeof(std::uint32_t)>cap/16) throw std::length_error("renewal capacity workspace exceeds bounded reservation");
+    ScopedProofMemoryCharge capacity_charge(support->store_->ledger(),ProofMemoryCategory::Scratch,
+        cap_entries*2*sizeof(std::uint32_t));
+    std::vector<std::uint32_t> renewal_capacities(cap_entries,UINT32_MAX);
+    stats.event_cap_bytes=renewal_capacities.capacity()*sizeof(std::uint32_t);
+    if (stats.event_cap_bytes>cap_entries*2*sizeof(std::uint32_t)) throw std::length_error("unexpected renewal capacity allocation");
     std::vector<PhasePotentialRelation> final_relations;
     std::set<std::pair<unsigned, unsigned>> detailed;
     std::vector<PhasePriceReactivation> reactivations;
@@ -563,7 +617,9 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
     unsigned rounds = 0;
     const unsigned max_rounds=retention==PhaseRetention::None ? 32 : 64;
     bool last_checked=false; double last_improvement=0;
+    stats.projection_ns = elapsed_ns(preparation_start);
     for (; rounds < max_rounds; ++rounds) {
+        const auto relation_start = PreparationClock::now();
         checkpoint(budget);
         if (support->memory_snapshot().total_bytes >= cap)
             throw std::length_error("phase live evidence exhausts additional reservation");
@@ -623,6 +679,9 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                     continuation != PhaseContinuation::PriceOnly) || (prove_nonempty && type == ActionType::EldritchExalt) ||
                     (uniform_annul && type == ActionType::EldritchAnnul);
                 for (int phase = -1; phase < (split_phase ? 2 : 0); ++phase) {
+                    const auto support_start = PreparationClock::now();
+                    const auto facts = action_transition_facts(type);
+                    const bool applied_reforge = facts.applied_rarity != 255;
                     std::vector<Group> groups;
                     const bool loss_law = uniform_annul && (type == ActionType::Annul || type == ActionType::EldritchAnnul);
                     unsigned removable = 0;
@@ -776,14 +835,36 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                                 add_group(c.mask, c.p, c.s, c.rarity);
                             }
                         } else {
-                            for (unsigned m = 0; m < masks; ++m)
-                                for (unsigned p = 0; p <= draws_per_side; ++p)
-                                    for (unsigned s = 0; s <= draws_per_side; ++s) add_typed_group(m,p,s,r,0,0,0);
-                            // Failed no-op and pathological empty-pool histories.
-                            add_group(c.mask, c.p, c.s, c.rarity);
+                            const auto minimum_total = applied_reforge && preparation_options.minimum_reforge_occupancy ?
+                                refill_minimum(a,frame_side==0,frame_side==1) : 0;
+                            const auto geometry_key=std::tuple{offset,unsigned(r),minimum_total};
+                            const auto cached=renewal_geometry.find(geometry_key);
+                            if (preparation_options.reuse_renewal_support && cached!=renewal_geometry.end()) {
+                                groups=cached->second; ++stats.geometry_hits;
+                            } else {
+                                for (unsigned m = 0; m < masks; ++m)
+                                    for (unsigned p = 0; p <= draws_per_side; ++p)
+                                        for (unsigned s = 0; s <= draws_per_side; ++s)
+                                            if (p+s >= minimum_total) add_typed_group(m,p,s,r,0,0,0);
+                                if (preparation_options.reuse_renewal_support) {
+                                    // Group insertion uses only region, native rarity/capacity,
+                                    // overlap-aware feasibility and zero removable crafts.
+                                    // Caller source, forced events and no-op alternatives
+                                    // are deliberately applied AFTER taking this copy.
+                                    if (renewal_geometry.size()>=5) throw std::length_error("renewal geometry scope exceeds reservation");
+                                    auto& saved=renewal_geometry[geometry_key]; saved=groups;
+                                    std::uint64_t bytes=128+saved.capacity()*sizeof(Group);
+                                    for (const auto& g:saved) bytes+=g.cells.capacity()*sizeof(std::uint32_t);
+                                    stats.geometry_bytes+=bytes; ++stats.geometry_templates;
+                                    if (stats.geometry_bytes>geometry_reservation) throw std::length_error("renewal geometry exceeds reservation");
+                                }
+                            }
+                            // Refill exhaustion does not undo an applied rarity change.
+                            // Unknown application contracts retain their old relaxation.
+                            if (!applied_reforge) add_group(c.mask, c.p, c.s, c.rarity);
                         }
                     } else { escape(); }
-                    if (groups.empty()) continue; // impossible effect in the declared frame
+                    if (groups.empty()) { stats.support_ns += elapsed_ns(support_start); continue; } // impossible effect in the declared frame
                     probability_frame_escape = false;
                     unsigned forced = 0;
                     bool has_forced = false;
@@ -799,6 +880,16 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                         std::sort(g.cells.begin(), g.cells.end());
                         g.cells.erase(std::unique(g.cells.begin(), g.cells.end()), g.cells.end());
                         if (!probabilistic || loss_law) continue;
+                        const bool reuse_cap=preparation_options.reuse_renewal_support && renewal && type!=ActionType::EldritchChaos;
+                        const auto cap_index=((offset ? calc.registry().actions.size() : 0)+a)*masks+g.mask;
+                        if (reuse_cap && renewal_capacities[cap_index]!=UINT32_MAX) {
+                            const auto entry=renewal_capacities[cap_index];
+                            g.capacity=entry & ((1u<<25)-1);
+                            probability_frame_escape |= bool(entry & (1u<<31));
+                            ++stats.event_cap_hits;
+                        } else {
+                        const bool earlier_escape=probability_frame_escape;
+                        probability_frame_escape=false;
                         double event_upper = 1;
                         for (unsigned slot = 0; slot < goal_side.size(); ++slot) {
                             const auto bit = 1u << slot;
@@ -819,19 +910,27 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                                 if (std::popcount(subset) >= 2)
                                     event_upper = std::min(event_upper, joint_upper(a, subset, side, forced, has_forced, draws_per_side, frame_mask, frame_side));
                             }
-                            // Capacities describe APPLIED redraws. A failed/no-op
-                            // may retain every source goal: grant an observed self
-                            // choice on each outcome so either mode is covered.
-                            g.cells.push_back(c.id);
-                            std::sort(g.cells.begin(), g.cells.end());
-                            g.cells.erase(std::unique(g.cells.begin(), g.cells.end()), g.cells.end());
                         }
                         // One exact-mask event entails every one of its new goals.
                         // min marginal bounds is valid under ANY joint dependence.
                         g.capacity = capacity(event_upper);
+                        if (reuse_cap) renewal_capacities[cap_index]=g.capacity |
+                            (probability_frame_escape ? 1u<<31 : 0);
+                        probability_frame_escape |= earlier_escape;
+                        }
+                        // Reused caps contain no observed choice. Rebuild the
+                        // legal/unknown no-op alternative on every source and
+                        // every candidate; applied Alchemy cannot roll back.
+                        if (joint_refinement && renewal && !applied_reforge) {
+                            g.cells.push_back(c.id);
+                            std::sort(g.cells.begin(),g.cells.end());
+                            g.cells.erase(std::unique(g.cells.begin(),g.cells.end()),g.cells.end());
+                        }
                     }
                     if (probability_frame_escape) escape(PhaseRelationReason::NativeDomainEscape);
                     if (probabilistic && !price_escape) reason = PhaseRelationReason::ProbabilityEnvelope;
+                    stats.support_ns += elapsed_ns(support_start);
+                    const auto allocation_start = PreparationClock::now();
                     // Union of all exact-mask events is normalized. Greedily fill
                     // the cheapest frozen-value events up to their proved capacities.
                     const auto best_value = [&](const Group& g) {
@@ -863,9 +962,13 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                     const auto found = rows.find(key);
                     if (found == rows.end()) rows.emplace(std::move(key), Row{cost, a, std::move(selected), probabilistic && !price_escape, price_escape, reason, std::move(events), split_phase ? phase : -2, removable});
                     else if (cost < found->second.cost) found->second = {cost, a, std::move(selected), probabilistic && !price_escape, price_escape, reason, std::move(events), split_phase ? phase : -2, removable};
+                    stats.allocation_ns += elapsed_ns(allocation_start);
                 }
             } // complete registry actions and native phase branches
+            const auto coverage_start = PreparationClock::now();
             const auto coverage = validate_canonical_action_coverage(native_scope, native_cover);
+            stats.coverage_ns += elapsed_ns(coverage_start);
+            const auto quotient_rows_start = PreparationClock::now();
             if (!coverage.empty()) throw std::invalid_argument(coverage);
             unsigned n = 0;
             for (const auto& [pattern, row] : rows) {
@@ -908,7 +1011,9 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                 relations.push_back(std::move(record));
             }
             query.sources.push_back(std::move(source));
+            stats.quotient_rows_ns += elapsed_ns(quotient_rows_start);
         }
+        stats.relation_ns += elapsed_ns(relation_start);
         query.model_revision = graph.model_revision();
         auto local_budget = budget; local_budget.max_scratch_bytes = graph_cap;
         local_budget.retain_ranked_constraints = false; // this owner retains its native relation diagnostics
@@ -920,9 +1025,11 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                 " rows="+std::to_string(relations.size())+" round="+std::to_string(rounds);
         };
         QuotientLowerResult checked;
+        const auto check_start = PreparationClock::now();
         try { checked = graph.check_lower(query, dense_candidate, local_budget); }
         catch (const std::length_error& e) { throw std::length_error(resource_context(e)); }
         combined_peak = std::max(combined_peak, graph.proof_store()->ledger().snapshot().peak_total_bytes + support->memory_snapshot().total_bytes);
+        stats.check_ns += elapsed_ns(check_start);
         if (rounds == 0 && !checked.checked && refusal.kind.empty()) {
             refusal = {"numeric_inconclusive", checked.reason};
             for (const auto& row : relations) {
@@ -966,9 +1073,12 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         // its ranked constraints alive while solving duplicates proof scratch.
         checked = {};
         QuotientLowerResult repaired;
+        const auto solve_start = PreparationClock::now();
         try { repaired = graph.solve_lower(query, local_budget); }
         catch (const std::length_error& e) { throw std::length_error(resource_context(e)); }
         combined_peak = std::max(combined_peak, graph.proof_store()->ledger().snapshot().peak_total_bytes + support->memory_snapshot().total_bytes);
+        stats.solve_ns += elapsed_ns(solve_start);
+        stats.numerical_sweeps += repaired.sweeps;
         if (!repaired.checked) throw std::runtime_error("probabilistic quotient repair: "+repaired.reason);
         std::vector<double> repaired_projection(extent, 0);
         for (unsigned i = 0; i < graph_cells.size(); ++i)
@@ -998,12 +1108,13 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         std::vector<PhaseJointEventWitness>().swap(joint_events);
         std::vector<PhasePriceReactivation>().swap(reactivations);
         std::vector<PhaseNonemptyWitness>().swap(nonempty_witnesses);
+        std::vector<PhaseRefillWitness>().swap(refill_witnesses);
     }
     std::uint64_t bytes = 65536 + support->identity.capacity()*8 + candidate.capacity()*24 +
         proposal.values.capacity()*8 + coordinates.capacity()*56 + draws.capacity()*sizeof(CalcContext::NativeGoalDrawBound) +
         final_relations.capacity()*sizeof(PhasePotentialRelation) +
         joint_events.capacity()*sizeof(PhaseJointEventWitness) + reactivations.capacity()*sizeof(PhasePriceReactivation) +
-        nonempty_witnesses.capacity()*sizeof(PhaseNonemptyWitness);
+        nonempty_witnesses.capacity()*sizeof(PhaseNonemptyWitness) + refill_witnesses.capacity()*sizeof(PhaseRefillWitness);
     for (const auto& event : joint_events) bytes += 4*(event.natural_draws.capacity()+event.guaranteed_draws.capacity()) +
         sizeof(std::array<double, 3>)*event.conditional.capacity();
     for (const auto& row : final_relations) bytes += row.targets.capacity()*4 + row.probabilities.capacity()*8 +
@@ -1011,12 +1122,13 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
     if (bytes > cap-support->memory_snapshot().total_bytes)
         throw std::length_error("phase retained evidence exceeds matched reservation");
     combined_peak = std::max(combined_peak, support->memory_snapshot().total_bytes+bytes);
+    stats.total_ns = elapsed_ns(preparation_start);
     auto result = std::shared_ptr<const PreparedPhasePotential>(new PreparedPhasePotential(
         std::move(support), std::move(candidate), proposal, std::move(refusal), fracture, fm,
         retain_scour, restart_boundary.lower, std::move(draws), std::move(final_relations), rounds+1, bytes,
         combined_peak, action_relations, std::move(reuse_draws), std::move(joint_events),
         std::move(reactivations), joint_refinement, continuation, retention, std::move(coordinates), crafted_domain, crafted_limit,
-        std::move(nonempty_witnesses)));
+        std::move(nonempty_witnesses), std::move(refill_witnesses), preparation_options, stats));
     return result;
 }
 } // namespace poecraft::solver

@@ -1,6 +1,7 @@
 # Active Work
 
-**Status: no active implementation boundary.** Oliver must select the next chunk.
+**Status: active implementation.** [Native Applied-Reforge Progress and Efficient
+Retention Preparation v1](native-applied-reforge-preparation-v1/README.md) is selected.
 
 Parent: [documentation map](../README.md). [HANDOFF](../../HANDOFF.md) records
 closeout and the evidence-selected next question.

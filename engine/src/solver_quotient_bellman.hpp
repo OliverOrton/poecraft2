@@ -220,6 +220,10 @@ private:
     std::uint64_t action_generation_ = 1;
     std::uint64_t admission_generation_ = 1;
     std::uint64_t external_row_kernel_bytes_ = 0;
+    // Cached capacities of nested immutable/append-only lower-row storage.
+    // Outer vector/map capacities are still read on every accounting update.
+    std::uint64_t nested_row_kernel_bytes_ = 0;
+    bool nested_row_kernel_current_ = false;
     QuotientBellmanTelemetry telemetry_;
     QuotientBellmanMode mode_ = QuotientBellmanMode::Executable;
     std::uint64_t model_revision_ = 1;
@@ -238,7 +242,7 @@ private:
 
     std::optional<std::uint32_t> state_for_cell(std::uint32_t cell_id) const;
     bool row_certificate_current(std::uint64_t row) const;
-    void refresh_row_kernel_bytes();
+    void refresh_row_kernel_bytes(bool reuse_nested = false);
 };
 
 const char* quotient_bellman_status_name(QuotientBellmanStatus status);
