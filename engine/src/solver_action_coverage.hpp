@@ -42,6 +42,23 @@ inline std::string validate_canonical_action_coverage(
     using Key = refinement::StableKey;
     if (!expected.complete || expected.scope_identity.empty() ||
         expected.generation == 0) return "action scope is not complete";
+    // The native producer commonly supplies the same ordered explicit set on
+    // both sides. Strict full-key ordering proves uniqueness; pointwise full-key
+    // equality then proves the complete disjoint cover without allocating trees.
+    // Unsorted sets and every family still use the general partition checker.
+    if (expected.families.empty() && expected.actions.size() == actual.size()) {
+        bool ordered_cover = true;
+        for (std::size_t i = 0; i < expected.actions.size(); ++i) {
+            const auto& action = expected.actions[i];
+            const auto& cover = actual[i];
+            if (action.empty() || (i && !(expected.actions[i-1] < action)) ||
+                cover.family || !cover.excluded_members.empty() || cover.identity != action) {
+                ordered_cover = false;
+                break;
+            }
+        }
+        if (ordered_cover) return {};
+    }
     std::set<Key> universe;
     for (const Key& action : expected.actions) {
         if (action.empty() || !universe.insert(action).second)

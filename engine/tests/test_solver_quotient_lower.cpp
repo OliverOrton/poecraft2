@@ -246,6 +246,46 @@ void cyclic_and_revisions() {
 }
 
 void action_and_family_coverage() {
+    // Ordered explicit coverage is a fast path, not a new caller restriction.
+    // Shared key prefixes ensure that matching counts or partial identities
+    // cannot conceal a missing action, and permutations exercise the fallback.
+    CanonicalActionSet expected{{1}, 1, true, {{10,1}, {10,2}}, {}};
+    std::vector<CanonicalActionCover> actual{{{10,1},false,{}}, {{10,2},false,{}}};
+    PC_CHECK(validate_canonical_action_coverage(expected, actual).empty());
+    std::swap(actual[0], actual[1]);
+    PC_CHECK(validate_canonical_action_coverage(expected, actual).empty());
+    std::swap(expected.actions[0], expected.actions[1]);
+    PC_CHECK(validate_canonical_action_coverage(expected, actual).empty());
+    std::swap(actual[0], actual[1]);
+    PC_CHECK(validate_canonical_action_coverage(expected, actual).empty());
+    std::swap(expected.actions[0], expected.actions[1]);
+    const auto reject_expected = [&](CanonicalActionSet bad) {
+        PC_CHECK(!validate_canonical_action_coverage(bad, actual).empty());
+    };
+    auto bad_expected = expected;
+    bad_expected.actions[1] = bad_expected.actions[0]; reject_expected(bad_expected);
+    bad_expected = expected; bad_expected.actions[0].clear(); reject_expected(bad_expected);
+    bad_expected = expected; bad_expected.complete = false; reject_expected(bad_expected);
+    bad_expected = expected; bad_expected.scope_identity.clear(); reject_expected(bad_expected);
+    bad_expected = expected; bad_expected.generation = 0; reject_expected(bad_expected);
+    const auto reject_actual = [&](std::vector<CanonicalActionCover> bad) {
+        PC_CHECK(!validate_canonical_action_coverage(expected, bad).empty());
+    };
+    auto bad_actual = actual;
+    bad_actual[1] = bad_actual[0]; reject_actual(bad_actual);
+    bad_expected = expected; bad_expected.actions[1] = bad_expected.actions[0];
+    PC_CHECK(!validate_canonical_action_coverage(bad_expected, bad_actual).empty());
+    bad_expected = expected; bad_expected.actions[0].clear();
+    bad_actual = actual; bad_actual[0].identity.clear();
+    PC_CHECK(!validate_canonical_action_coverage(bad_expected, bad_actual).empty());
+    bad_actual = actual; bad_actual[1].identity = {10,3}; reject_actual(bad_actual);
+    bad_actual = actual; bad_actual[0].identity.clear(); reject_actual(bad_actual);
+    bad_actual = actual; bad_actual[0].family = true; reject_actual(bad_actual);
+    bad_actual = actual; bad_actual[0].excluded_members = {{10,2}}; reject_actual(bad_actual);
+    bad_actual = actual; bad_actual.pop_back(); reject_actual(bad_actual);
+    expected.actions.clear(); actual.clear();
+    PC_CHECK(validate_canonical_action_coverage(expected, actual).empty());
+
     QuotientBellmanGraph graph(cap, QuotientBellmanMode::LowerOnly);
     graph.install_cells({cell(0), cell(1, true)});
     auto q = query(graph, {source(0, {10, 11}, {scalar(10, 8), scalar(10, 8)})});
