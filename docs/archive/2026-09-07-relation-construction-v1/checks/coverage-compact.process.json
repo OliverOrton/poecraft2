@@ -1,0 +1,22 @@
+{
+  "exit_code": 0,
+  "timed_out": false,
+  "canceled": false,
+  "cancellation_mode": null,
+  "cancellation_ack_ms": null,
+  "process_id": 31416,
+  "process_identity_token": "31416:134332899519046806",
+  "survivor": false,
+  "survivor_check": "process_group_kill_then_parent_poll",
+  "wall_ms": 35009.00009996258,
+  "command": [
+    "build/engine/poecraft_quotient_lower_probe.exe",
+    "filter-both-proposal-32",
+    "data/compiled/current",
+    "docs/archive/2026-09-04-free-value-bellman-research/native-goal.json",
+    "docs/archive/2026-09-04-free-value-bellman-research/native-economy.json"
+  ],
+  "started_utc": "2026-09-07T21:25:51.755070+00:00",
+  "ended_utc": "2026-09-07T21:26:26.785382+00:00",
+  "timeout_seconds": 90.0
+}

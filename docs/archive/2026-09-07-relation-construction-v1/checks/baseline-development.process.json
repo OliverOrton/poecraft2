@@ -1,0 +1,30 @@
+{
+  "exit_code": 0,
+  "timed_out": false,
+  "canceled": false,
+  "cancellation_mode": null,
+  "cancellation_ack_ms": null,
+  "process_id": 31484,
+  "process_identity_token": "31484:134332898108856381",
+  "survivor": false,
+  "survivor_check": "process_group_kill_then_parent_poll",
+  "wall_ms": 34416.94190003909,
+  "command": [
+    "out/2026-09-07-relation-construction/baseline-bin/poecraft_solver_benchmark.exe",
+    "--artifact",
+    "data/compiled/current",
+    "--corpus",
+    "fixtures/solver-quality-ladder/v1/manifest.json",
+    "--case",
+    "conquest-lamellar-allflame-fractured-4-to-5-product8",
+    "--native-retention-diagnostic",
+    "reuse",
+    "--output",
+    "out/2026-09-07-relation-construction/baseline-development.json",
+    "--partial-output",
+    "out/2026-09-07-relation-construction/baseline-development-partial.json"
+  ],
+  "started_utc": "2026-09-07T21:23:30.689768+00:00",
+  "ended_utc": "2026-09-07T21:24:05.107811+00:00",
+  "timeout_seconds": 60.0
+}

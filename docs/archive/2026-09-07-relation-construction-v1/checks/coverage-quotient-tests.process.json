@@ -1,0 +1,19 @@
+{
+  "exit_code": 0,
+  "timed_out": false,
+  "canceled": false,
+  "cancellation_mode": null,
+  "cancellation_ack_ms": null,
+  "process_id": 68232,
+  "process_identity_token": "68232:134332899431566255",
+  "survivor": false,
+  "survivor_check": "process_group_kill_then_parent_poll",
+  "wall_ms": 258.34350008517504,
+  "command": [
+    "build/engine/poecraft_engine_tests.exe",
+    "--solver-quotient-proof-only"
+  ],
+  "started_utc": "2026-09-07T21:25:42.924946+00:00",
+  "ended_utc": "2026-09-07T21:25:43.184193+00:00",
+  "timeout_seconds": 120.0
+}

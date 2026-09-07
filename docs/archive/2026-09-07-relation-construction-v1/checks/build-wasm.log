@@ -1,0 +1,26 @@
+Compiling cooperative finalization WASM object...
+Compiling poecraft engine to WebAssembly...
+C:\Users\Oliver\Documents\poecraft2\engine\src\solver_options_automatic.cpp:636:27: warning: result of comparison of constant 4611686018427387903 with expression of type 'const std::size_t' (aka 'const unsigned long') is always false [-Wtautological-constant-out-of-range-compare]
+  636 |                     upper >
+      |                     ~~~~~ ^
+  637 |                             std::numeric_limits<std::uint64_t>::max() /
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  638 |                                 sizeof(void*)
+      |                                 ~~~~~~~~~~~~~
+C:\Users\Oliver\Documents\poecraft2\engine\src\solver_options_automatic.cpp:782:35: warning: result of comparison of constant 4611686018427387903 with expression of type 'const std::size_t' (aka 'const unsigned long') is always false [-Wtautological-constant-out-of-range-compare]
+  782 |             cached_capacity_upper >
+      |             ~~~~~~~~~~~~~~~~~~~~~ ^
+  783 |                     std::numeric_limits<std::uint64_t>::max() /
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  784 |                         sizeof(std::uint32_t)
+      |                         ~~~~~~~~~~~~~~~~~~~~~
+2 warnings generated.
+C:\Users\Oliver\Documents\poecraft2\engine\src\solver_solve_bellman.cpp:1542:34: warning: result of comparison of constant 2049638230412172401 with expression of type 'size_type' (aka 'unsigned long') is always false [-Wtautological-constant-out-of-range-compare]
+ 1542 |             result.values.size() >
+      |             ~~~~~~~~~~~~~~~~~~~~ ^
+ 1543 |                     std::numeric_limits<std::uint64_t>::max() /
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1544 |                         (sizeof(std::uint8_t) + sizeof(double))
+      |                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1 warning generated.
+WASM engine written to C:\Users\Oliver\Documents\poecraft2\bindings\wasm\dist\poecraft_engine.mjs

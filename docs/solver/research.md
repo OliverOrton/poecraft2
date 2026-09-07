@@ -59,14 +59,24 @@ lower remained unchanged without an upper. The existing fractured four-to-five
 development case also finished sooner, but both runs missed the preselected
 verified-upper target and returned the same policy/gap. This justifies retaining
 optional numerical reuse, not default activation. The next measured question is
-whether the remaining relation-construction cost can be reduced enough to leave
-ordinary discovery time before that unchanged 30-second finish request, while
-preserving final value-dependent minimization and complete coverage.
+whether preparation leaves ordinary discovery time before the unchanged
+30-second finish request.
+
+[Relation-construction work](../archive/2026-09-07-relation-construction-v1/README.md)
+retained a linear full-key check for ordered explicit action coverage, with the
+general partition checker preserved for other inputs. Current compact preparation
+fell from 29.636 to 25.661 seconds (13.41%); relation construction fell from 21.138
+to 17.538 seconds (17.03%). All 26,259 final relations, both source values, existing
+numerical reuse, final value-dependent minimization and the proof-memory peak
+remain unchanged. The same 30-second development request still needed 30.224
+seconds of setup and expanded only the root; its verified policy and missed
+preselected target were unchanged. Setup still exceeded the finish budget,
+leaving no measured discovery gain.
 
 Dependencies: [CLM-0007](claims.md#clm-0007), [CLM-0008](claims.md#clm-0008),
 [CLM-0013](claims.md#clm-0013), [CLM-0014](claims.md#clm-0014),
 [CLM-0018](claims.md#clm-0018), [CLM-0019](claims.md#clm-0019).
-The measured gain is preparation cost only; no new native exact closure,
+The measured gains are preparation cost only; no new native exact closure,
 empty clean-five lower or improved development target is established.
 
 <a id="rq-003"></a>

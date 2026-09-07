@@ -1,0 +1,22 @@
+{
+  "exit_code": 0,
+  "timed_out": false,
+  "canceled": false,
+  "cancellation_mode": null,
+  "cancellation_ack_ms": null,
+  "process_id": 39988,
+  "process_identity_token": "39988:134332900441893969",
+  "survivor": false,
+  "survivor_check": "process_group_kill_then_parent_poll",
+  "wall_ms": 2442.926499992609,
+  "command": [
+    "py",
+    "-3",
+    "engine/benchmarks/verify_quotient_lower_probe.py",
+    "out/2026-09-07-relation-construction/coverage-compact.stdout.txt",
+    "out/2026-09-07-relation-construction/coverage-exact.json"
+  ],
+  "started_utc": "2026-09-07T21:27:24.160651+00:00",
+  "ended_utc": "2026-09-07T21:27:26.604775+00:00",
+  "timeout_seconds": 120.0
+}

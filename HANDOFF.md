@@ -1,24 +1,23 @@
 # Handoff
 
-Completed Oliver's Checked Numerical Reuse, Trustworthy Research Views, and
-Documentation Closeout plan from reviewed `c77422c`. The
-[receipt, original Pro package and matched evidence](docs/archive/2026-09-07-checked-numerical-reuse-v1/README.md)
-own this boundary. Checked/untrusted numerical reuse reduces compact preparation
-43.183 to 31.314 seconds with identical native bounds and complete checking.
-Ordinary and the saved development case show no improved gap, target attainment
-or exact closure. Native/C ABI lower consumption and numerical reuse stay default off. Oliver subsequently
-requested browser testing: WASM solver creation now selects both through the
-existing private hook. The 32 MiB proof cap, eligibility and fallback guards remain.
-Release WASM was rebuilt with `scripts/build-wasm.ps1`. The focused WASM check
-confirmed lower 352.31017033879505 on the saved fractured source and no issued
-retention certificate on its unfractured counterpart; TypeScript checking passed.
-Reload the local app to start a worker using the rebuilt module.
+Retained the measured [relation-construction checkpoint](docs/archive/2026-09-07-relation-construction-v1/README.md)
+from reviewed `14eec9a`; engine commit `3d8093d`. Full-key ordered action coverage
+avoids temporary trees while preserving the general checker. Compact preparation
+falls 29.636 to 25.661 s; unchanged development setup still takes 30.224 s, expands
+only the root and misses the same target. No discovery, policy or closure gain.
 
-Authored documentation is reconciled; generated research views, committed-context
-provenance, exact-profile evidence classification and conservative documentation
-CI are implemented. General correspondence gaps retain their existing scope.
-New work remains local; no push, subagents, Simulator or protected `0` changes.
+WASM's existing retention/numerical reuse activation is preserved. Native/C ABI
+defaults, complete action coverage, exact checks, 32 MiB proof and 1 GiB total caps
+remain. Release WASM was rebuilt; both focused retention/fallback cases and handle
+cleanup pass. Native checks: 822 quotient, 217 phase, exact audit of 26,259 relations;
+complete compact semantics, memory and numerical reuse match. Canonical knowledge,
+matched evidence and next-closure analysis are integrated in the receipt.
 
-One proposed next question is reducing the measured remaining relation-construction
-cost enough to leave discovery time before the unchanged 30-second development
-finish request. Oliver selects the next substantive boundary; no work on it is active.
+The full generated plan/companion were unavailable through Native Solver Research;
+only its summary and Oliver's explicit request were recovered. Unread acceptance
+criteria are not claimed complete. No further implementation is active.
+
+All three nonrecursive helpers completed before 14:31 Vancouver; all run-owned
+timed runs ended by 14:36:29. No Simulator, push, unrelated or protected `0` work.
+The deadline remains September 7, 18:00 Vancouver (September 8, 01:00 UTC), with
+final handoff before 17:58 and no automatic restart after a usage limit/reset.

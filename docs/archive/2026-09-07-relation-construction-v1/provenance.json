@@ -1,0 +1,72 @@
+{
+  "reviewed_head": "14eec9a353240c6bf4a16a8a98a9675ed1b7368a",
+  "engine_checkpoint": "3d8093de9675ceb2be9195d0facc065bb1f8e724",
+  "baseline_note": "Preserved executables match final native hashes in preceding archive; no native source changed between that acceptance and reviewed HEAD.",
+  "source_sha256": {
+    "engine/src/solver_action_coverage.hpp": "18a97587e9a0e53b2a499df0d7f3a5faf6a23237e753c22b399f653d8f9349a6",
+    "engine/tests/test_solver_quotient_lower.cpp": "3a0dc95058ae5cbd89461ac1ff824dfa30d3c6e15a2d81626ca4cf8229a82e22",
+    "bindings/wasm/wasm_api.cpp": "82d24abbaadc241383f0afc4433824126a1eb144b594af2708008b7db6694a46"
+  },
+  "baseline_executable_sha256": {
+    "poecraft_quotient_lower_probe.exe": "4e61f988cf8db3846b26c983cb1ee2e424239bba4eae5de7af6df694a031e78f",
+    "poecraft_solver_benchmark.exe": "129c1cf11dd01c3e1000f90eab51d1577c860ee7d03f22c0c9b12f061c9a0cb8"
+  },
+  "candidate_executable_sha256": {
+    "poecraft_quotient_lower_probe.exe": "a145a437b27ecd370b5d5fdcd6796f06b4ec14c2cacf3add00de6bbb50e7b447",
+    "poecraft_solver_benchmark.exe": "30b77de9afade4929d6421df63632f8f3f5b9ed27ad2510ccbc17223f8a35905",
+    "poecraft_engine_tests.exe": "5cf73add98a78f145d8269336d6a5b2973cd5078379bd161258c75a28f7ea66d"
+  },
+  "artifact_manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+  "native_input_sha256": {
+    "native-goal.json": "ab2c5420a403b71852bd84da629814f331e01babaea0401b17620296fb5da1aa",
+    "native-economy.json": "ca0bb782c7933fb2c72ddde3991c0aebf8c1d3e9c8dc5853796b54fffddf1992"
+  },
+  "development_case": "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-fractured-4-to-5-product8.json",
+  "development_case_sha256": "a4b0be81a91ae13ed1109630022147b952777035c1e1145efb9eea6fdd47a2d2",
+  "fixed_upper_target": 2698.87479601436,
+  "target_absolute_tolerance": 1e-07,
+  "numerical_reuse": "checked and untrusted in both builds",
+  "proof_bytes": 33554432,
+  "total_bytes": 1073741824,
+  "run_start_utc": "2026-09-07T21:19:18Z",
+  "hard_stop_utc": "2026-09-08T01:00:00Z",
+  "experiment_cutoff_utc": "2026-09-08T00:50:00Z",
+  "helpers_completed_before_utc": "2026-09-07T21:31:00Z",
+  "timed_processes_completed_utc": "2026-09-07T21:36:28.911965Z",
+  "full_plan_attachment_retrieved": false,
+  "source_thread": {
+    "title": "Native Solver Research",
+    "id": "6a90fbac-55e4-83e8-964e-f50cbad28987",
+    "latest_turn": "5e075e3b-29f6-4a78-8eed-814bdd37312e"
+  },
+  "evidence_sha256": {
+    "baseline-development.json": "c7168a926ab52173f6317bff7e1acad28cd1e1010081d7a16b24234e37e6766b",
+    "compact-raw.zip": "a70b0c1cc36bedd924efa03eae3f89f28dca8153b4f3113c2dfa852f204ec957",
+    "compare.py": "089bc476a19b72316e6d1c04407ad2479152d8b8b66ab6e010309506174522d5",
+    "comparison.json": "b58fbf36875e7cbf1536515cfff756ddc4b1553e16acf121ea255fbdf442aca1",
+    "coverage-development.json": "a7132b28743bc27d3d4761ff6fa3d276b669582f28f16dd23a906face6eda46f",
+    "coverage-exact.json": "1c7e5a5c3f55884ae8e21bd6a268ee7c61090e519e3e170e38b6db81616327a0",
+    "run.py": "9b777b8888c91cb92dbb972a168b1172c0cd5c84c4bae9cf048782b37d6cb5a9",
+    "checks/baseline-compact.process.json": "3e2c933b82667724cf14d0d911649a6237703a2de1a53849ba8ee231bb047a5a",
+    "checks/baseline-development.process.json": "498792825f2a163ae94bf0f1084a1f40351469a44b0d1c354f3dbf6ccd788896",
+    "checks/build-coverage.process.json": "9ec644d29906f850338a568d292d9a9c33226e0c2c2601190f7b805b0ad4f00f",
+    "checks/build-native.log": "ded62951362a735bfb864e405bf67d7fa34013e7ff6260ce5316ca90cad9fe3e",
+    "checks/build-wasm.log": "44e5391698c39926fce42def13d0b116e7ceeceb6bed732cb2613babeacfdb99",
+    "checks/build-wasm.process.json": "8f39cadc9f93ede8da63bef1ace97c1dce96a1fcbf9768b1560909a3bb37c1cc",
+    "checks/coverage-compact.process.json": "eef8461aa69154d22767a3aa42325b3786eebf463f6f0f6ecf88d26f1550d333",
+    "checks/coverage-development.process.json": "a033eca82b09a4d59830e5e7716e4f86c78b6c46751ac505fc1ae68e7b3fd8ab",
+    "checks/coverage-exact-audit.process.json": "03e449f071dc0ba8bebcad99d685719faf1c29987a5663170031662b6c33fda7",
+    "checks/coverage-phase-tests.process.json": "ae6fbf4c39bdae1ae1be15a281caaf1b19220c1cc0eea1b30de588adb78423ee",
+    "checks/coverage-quotient-tests.process.json": "47d2bdcdf45ba3c4cfae0ca09eb53f3122d7652596f2a20fe6eda6358a48dca2",
+    "checks/knowledge-lint.json": "412bc1f8c25d7d19b452c186e8510b8f919268897f772218fa25416ea856d183",
+    "checks/phase.log": "3c6c96450de1920df9499e6b9ced8912df7b8fccb516aace501f3d9fe3838569",
+    "checks/quotient.log": "5adb397eb544c77ddc8a60001a7d204e0a487b2a587d1594e87dda304d5fcbeb",
+    "checks/receipt-validation.json": "038731b5a48fc83ebb2ec2815e0237b0f3db9e2c69f9ba2988be5d12aa16e4e2",
+    "checks/wasm-retention.log": "eb7f4ab232c27a2e82f8ac002910ce892f94060691379f87b2b9bc19ccc8c5e6",
+    "checks/wasm-retention.process.json": "e35cdca994ca348b876ac80951718e1ba07a7dbdebc35ea061957c4913c87cd5"
+  },
+  "wasm_sha256": {
+    "poecraft_engine.mjs": "92bc2b9d61c465b35c2b80c71f8b3ee125155755275e8d66cdc649792ab9f4ce",
+    "poecraft_engine.wasm": "2efa6cc66c4743d59a9b01f7e0f27786649b1bab1515ac6542ef2b0227965075"
+  }
+}

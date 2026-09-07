@@ -31,6 +31,16 @@ Acquisition tables and continuation potentials use different coordinates. The pr
 
 The query supplies canonical expected actions and a disjoint complete partition of explicit constraints and residual families. An action is represented by a complete declared row, a compatible independent scalar/family lower, or proved inapplicability. Unknown family members cannot disappear when one finite member is refined. Equal constraint counts do not establish equal action sets.
 
+The shared coverage validator checks strictly ordered explicit sets by scanning
+their full keys. Nonempty, strictly increasing expected keys establish uniqueness;
+pointwise equality to actual entries without family or exclusion payload proves
+the complete partition without temporary tree allocations. Scope identity,
+generation and completeness guards still run on every call. Families and all
+other input shapes use the existing general partition checker, including valid
+unordered explicit sets. This optimization changes neither action admission nor
+the required complete cover. The [relation-construction evidence](../archive/2026-09-07-relation-construction-v1/README.md)
+records the checks and matched comparison.
+
 Independent boundary values remain distinct from jointly checked internal variables. A lower-only query does not require the incumbent's router to accept a frontier item. It requires the native lower relation and appropriate stopping assumptions. See [CLM-0012](claims.md#clm-0012).
 
 A prior native lower need not be feasible inside a changed truncated model. Preserve it as independent evidence at maximum composition; do not force it into an incompatible candidate vector. See [CLM-0013](claims.md#clm-0013).

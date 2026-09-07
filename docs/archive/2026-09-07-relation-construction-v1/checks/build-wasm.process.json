@@ -1,0 +1,21 @@
+{
+  "exit_code": 0,
+  "timed_out": false,
+  "canceled": false,
+  "cancellation_mode": null,
+  "cancellation_ack_ms": null,
+  "process_id": 71812,
+  "process_identity_token": "71812:134332901403702076",
+  "survivor": false,
+  "survivor_check": "process_group_kill_then_parent_poll",
+  "wall_ms": 333159.4673001673,
+  "command": [
+    "powershell",
+    "-NoProfile",
+    "-File",
+    "scripts/build-wasm.ps1"
+  ],
+  "started_utc": "2026-09-07T21:29:00.367073+00:00",
+  "ended_utc": "2026-09-07T21:34:33.528126+00:00",
+  "timeout_seconds": 600.0
+}

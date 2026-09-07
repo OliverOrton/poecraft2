@@ -1,0 +1,75 @@
+{
+  "scope": "traceability only; no mathematical or runtime certification",
+  "claims": 25,
+  "errors": [],
+  "warnings": [
+    "CLM-0004: open",
+    "CLM-0005: open",
+    "CLM-0006: open",
+    "CLM-0013: open",
+    "CLM-0015: open",
+    "CLM-0016: open",
+    "CLM-0017: open",
+    "CLM-0018: open",
+    "CLM-0019: open",
+    "CLM-0019: prerequisite CLM-0018 is open",
+    "CLM-0020: open",
+    "CLM-0020: prerequisite CLM-0006 is open",
+    "CLM-0021: open",
+    "CLM-0021: prerequisite CLM-0006 is open",
+    "CLM-0022: open",
+    "CLM-0023: open",
+    "CLM-0024: open",
+    "CLM-0024: prerequisite CLM-0020 is open",
+    "CLM-0024: prerequisite CLM-0023 is open",
+    "CLM-0025: open",
+    "CLM-0025: prerequisite CLM-0006 is open",
+    "engine/src/solver_phase_probability.cpp:145 obligation: CLM-0015 is open; review its premises",
+    "engine/src/solver_quotient_lower.cpp:250 obligation: CLM-0023 is open; review its premises",
+    "engine/src/solver_solve_bounds.cpp:100 obligation: CLM-0006 is open; review its premises",
+    "tools/ingest/poecraft_ingest/solver_reports.py:995 obligation: CLM-0024 is open; review its premises"
+  ],
+  "changes": [],
+  "uses": {
+    "CLM-0001": [],
+    "CLM-0002": [],
+    "CLM-0003": [],
+    "CLM-0004": [],
+    "CLM-0005": [],
+    "CLM-0006": [
+      "engine/src/solver_solve_bounds.cpp:100 obligation"
+    ],
+    "CLM-0007": [
+      "engine/src/solver_quotient_lower.cpp:249 uses"
+    ],
+    "CLM-0008": [
+      "engine/tests/test_solver_quotient_lower.cpp:11 tests"
+    ],
+    "CLM-0009": [],
+    "CLM-0010": [],
+    "CLM-0011": [],
+    "CLM-0012": [],
+    "CLM-0013": [],
+    "CLM-0014": [
+      "engine/src/solver_phase_probability.cpp:176 uses",
+      "engine/src/solver_quotient_lower.cpp:605 uses"
+    ],
+    "CLM-0015": [
+      "engine/src/solver_phase_probability.cpp:145 obligation"
+    ],
+    "CLM-0016": [],
+    "CLM-0017": [],
+    "CLM-0018": [],
+    "CLM-0019": [],
+    "CLM-0020": [],
+    "CLM-0021": [],
+    "CLM-0022": [],
+    "CLM-0023": [
+      "engine/src/solver_quotient_lower.cpp:250 obligation"
+    ],
+    "CLM-0024": [
+      "tools/ingest/poecraft_ingest/solver_reports.py:995 obligation"
+    ],
+    "CLM-0025": []
+  }
+}
