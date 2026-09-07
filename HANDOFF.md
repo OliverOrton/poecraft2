@@ -1,17 +1,18 @@
 # Handoff
 
-No implementation boundary is active. The owner-selected solver mathematical
-backbone, lean operation v2 programme is complete.
+Completed Oliver's Checked Numerical Reuse, Trustworthy Research Views, and
+Documentation Closeout plan from reviewed `c77422c`. The
+[receipt, original Pro package and matched evidence](docs/archive/2026-09-07-checked-numerical-reuse-v1/README.md)
+own this boundary. Checked/untrusted numerical reuse reduces compact preparation
+43.183 to 31.314 seconds with identical native bounds and complete checking.
+Ordinary and the saved development case show no improved gap, target attainment
+or exact closure. Both lower consumption and numerical reuse stay default off.
 
-[Closeout, original Pro package, unchanged plan and actual checks](docs/archive/2026-09-06-solver-mathematical-backbone-v2/README.md)
-own the integration evidence. [Research state](docs/solver/research-state.md) is
-reproduced from the declared retained series; [commands](docs/solver/benchmarking.md#research-series)
-provide lint, selected context and reporting. Native behavior/defaults are unchanged.
+Authored documentation is reconciled; generated research views, committed-context
+provenance, exact-profile evidence classification and conservative documentation
+CI are implemented. General correspondence gaps retain their existing scope.
+New work remains local; no push, subagents, Simulator or protected `0` changes.
 
-The remaining mathematical/native correspondence obligations are explicit in
-[research](docs/solver/research.md#open-obligations). One proposed next question is
-GAP-01: reconcile proper finite-cost/nontermination semantics across native public
-modes. This is a recommendation, not authorization for another boundary.
-
-Work is local only, with no subagents, Simulator or push. Protected `0`, original
-archives and unrelated work remain preserved. Oliver selects the next substantive task.
+One proposed next question is reducing the measured remaining relation-construction
+cost enough to leave discovery time before the unchanged 30-second development
+finish request. Oliver selects the next substantive boundary; no work on it is active.

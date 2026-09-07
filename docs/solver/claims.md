@@ -5,7 +5,7 @@
 
 This ledger gives durable identities to propositions, not to attempted techniques. The mathematical chapters own the full arguments. A failed implementation does not automatically refute a theorem; a successful finite test does not prove a universal native relation.
 
-**Integration convention.** `CLM-0001` through `CLM-0025` are registered without collision in the local ledger. The unchanged authored packet is preserved in the active programme; original history events remain intact. Every initial history below is `open`: the argument is supplied, but no independent or repository acceptance review is being invented. This is a drafted ledger, not a machine-checked proof catalogue.
+**Integration convention.** `CLM-0001` through `CLM-0025` are registered without collision in the local ledger. The unchanged authored packet is preserved in the [completed programme archive](../archive/2026-09-06-solver-mathematical-backbone-v2/README.md); original history events remain intact. Initial draft events are `open`, and later events record the actual responsible review. Read the final event of each claim for its status. Conditional mathematical self-review does not establish every native application, and this ledger is not a machine-checked proof catalogue.
 
 An actual acceptance event must name the responsible author/reviewer and its basis: a mathematical derivation, native correspondence under a pinned domain, or scoped empirical evidence. Conditional mathematics and the validity of one native application are separate questions.
 
@@ -283,6 +283,7 @@ For a small fix, this ledger need not change. For a mathematical change, follow 
 
 **History:**
 - 2026-09-06 — `open` — Drafted by ChatGPT as source-linked research input. Explicit argument/counterexample supplied; local correspondence and repository acceptance remain to be reviewed. No independent reviewer or native rerun is claimed.
+- 2026-09-07 — `open` — Codex self-review, selected numerical-reuse application only: current-query identity, changed-query refusal, final native re-minimization and complete exact inequalities retained; [focused fixtures and matched evidence](../archive/2026-09-07-checked-numerical-reuse-v1/README.md). No broader closure or convergence claim.
 
 <a id="clm-0014"></a>
 ## CLM-0014 — A minimum-expectation witness is value-specific
@@ -304,6 +305,7 @@ For a small fix, this ledger need not change. For a mathematical change, follow 
 **History:**
 - 2026-09-06 — `open` — Drafted by ChatGPT as source-linked research input. Explicit argument/counterexample supplied; local correspondence and repository acceptance remain to be reviewed. No independent reviewer or native rerun is claimed.
 - 2026-09-06 — `accepted` — Codex, responsible integration self-review: conditional mathematical argument accepted on the normalized native-covering probability box, exchange minimization and explicit stale-allocation counterexample. Statement and preconditions unchanged; no independent reviewer or blanket native correspondence is claimed. Native applications still require the named GAP obligations.
+- 2026-09-07 — `accepted` — Codex self-review, selected numerical-reuse application only: current-query identity, changed-query refusal, final native re-minimization and complete exact inequalities retained; [focused fixtures and matched evidence](../archive/2026-09-07-checked-numerical-reuse-v1/README.md). No broader closure or convergence claim.
 
 <a id="clm-0015"></a>
 ## CLM-0015 — Joint-goal products require conditional-history bounds

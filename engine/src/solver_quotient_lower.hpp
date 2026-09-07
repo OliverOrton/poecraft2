@@ -124,6 +124,10 @@ struct QuotientLowerResult {
     std::shared_ptr<const QuotientLowerCertificate> checked;
     std::vector<QuotientLowerLimitingConstraint> ranked_constraints;
     std::uint32_t sweeps = 0;
+    std::uint64_t numerical_transition_work = 0;
+    bool initializer_used = false, initializer_refused = false;
+    bool untrusted_initializer_used = false, proposal_zero_fallback = false;
+    const char* initializer_reason = "not_requested"; // static diagnostic label, no authority
     bool candidate_stable = false;
     /* No claim of greatest proper-policy solution, even at a zero-loop fixed
      * point. Candidate residuals are diagnostic, never acceptance tolerances. */

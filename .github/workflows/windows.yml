@@ -9,10 +9,24 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Classify required validation
+        id: changes
+        shell: pwsh
+        env:
+          CHANGE_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          PYTHONPATH: tools/ingest
+        run: python -m poecraft_ingest.ci_changes --base "$env:CHANGE_BASE" --output "$env:GITHUB_OUTPUT"
+      - name: Native validation not applicable
+        if: steps.changes.outputs.native_required == 'false'
+        shell: pwsh
+        run: Write-Output 'Only known documentation paths changed. Solver knowledge checks validate the affected layer; native build/test is not applicable.'
       - uses: msys2/setup-msys2@v2
+        if: steps.changes.outputs.native_required == 'true'
         id: msys2
         with:
           msystem: UCRT64
@@ -22,6 +36,7 @@ jobs:
             mingw-w64-ucrt-x86_64-cmake
             mingw-w64-ucrt-x86_64-ninja
       - name: Configure UCRT64 tool paths
+        if: steps.changes.outputs.native_required == 'true'
         shell: pwsh
         run: |
           $bin = Join-Path '${{ steps.msys2.outputs.msys2-location }}' 'ucrt64/bin'
@@ -31,8 +46,10 @@ jobs:
           "POECRAFT_CXX=$(Join-Path $bin 'g++.exe')" >> $env:GITHUB_ENV
           $bin >> $env:GITHUB_PATH
       - name: Build
+        if: steps.changes.outputs.native_required == 'true'
         shell: pwsh
         run: ./scripts/build.ps1
       - name: Test
+        if: steps.changes.outputs.native_required == 'true'
         shell: pwsh
         run: ./scripts/test.ps1

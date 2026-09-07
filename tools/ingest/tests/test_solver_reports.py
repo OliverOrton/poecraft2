@@ -169,6 +169,7 @@ def test_declared_exact_cohort_keeps_missing_and_refuses_bare_status() -> None:
     exact["solver_telemetry"] = {"policy_refinement": {"strict_lift": {"global_lower_bound_closed": True}}}
     exact["exact_strategy_evaluation"].update(completed=True, status="matched", converged=True,
         cost_complete=True, zero_off_policy_mass=True, cost_reconciled=True)
+    exact["input"]["corpus"]={"stratum":"declared_two_sided"}
     bare = _case("bare", wall_ms=20, memory=100, policy="exact")
     ledger, cases = _run([exact, bare])
     ledger["cases"]["missing"] = {"status": "crash"}
@@ -179,6 +180,22 @@ def test_declared_exact_cohort_keeps_missing_and_refuses_bare_status() -> None:
     assert result["completion_profile"][-1] == {"elapsed_ms": 150.0, "closed": 1, "planned": 3}
     assert result["cases"][2]["reasons"] == ["missing_report"]
     assert "native_complete_proof_required" in result["cases"][1]["reasons"]
+    assert result["cases"][1]["evidence_coverage"] == "unsupported_proof_source"
+    assert result["cases"][0]["item_class"] == result["cases"][0]["stratum"] == "Helmet"
+    assert result["cases"][0]["corpus_stratum"] == "declared_two_sided"
+    assert result["by_corpus_stratum"]["declared_two_sided"][-1]["closed"] == 1
+    assert result["by_item_class"] == result["strata"]
+    unfinished=copy.deepcopy(exact)
+    unfinished["solver_telemetry"]["policy_refinement"]["strict_lift"]["global_lower_bound_closed"]=False
+    unfinished["solve_summary"]["policy_status"]="bounded_feasible"
+    assert exact_closure_profile(ledger,[unfinished],profile)["cases"][0]["evidence_coverage"] == "unqualified_supported_source"
+    mismatch=copy.deepcopy(exact)
+    mismatch["exact_strategy_evaluation"]["status"]="mismatch"
+    assert exact_closure_profile(ledger,[mismatch],profile)["cases"][0]["evidence_coverage"] == "contradicted_evidence"
+    unequal=copy.deepcopy(exact)
+    unequal["solve_summary"]["lower_bound"]-=1e-9
+    classified=exact_closure_profile(ledger,[unequal],profile)
+    assert classified["closed"]==0 and classified["cases"][0]["evidence_coverage"]=="unsupported_endpoint_shape"
     for changed in ("cost_reconciled", "zero_off_policy_mass", "cost_complete"):
         bad = copy.deepcopy(exact)
         bad["exact_strategy_evaluation"][changed] = False
@@ -207,6 +224,15 @@ def test_research_series_uses_original_predecessor_and_available_states() -> Non
     assert "unavailable" in pair["exact_closure"]
     text = research_markdown(report)
     assert "not saved proof work" in text and "unavailable" in text
+    assert "First selected action" in text and "Proved ceiling evidence" in text
+    assert "['annul'" not in text
+    assert source["first_selected_action"]=="bench:HelenaMasterFireResist1"
+    assert source["complete_model_ties"] and filtered["auxiliary_policy_ceiling"]
+    assert filtered["preparation_profile"]["total_ns"] > 0
+    refs=report["exact_reference_availability"]
+    assert len(refs)>=4 and all(r["fresh_qualification"] is False for r in refs)
+    assert any(r["kind"]=="verified_policy_upper" for r in refs)
+    assert "RQ-001: retained exact references" in text
 
 
 def test_research_metadata_missing_evidence_mismatch_and_reference_kinds(tmp_path: Path) -> None:

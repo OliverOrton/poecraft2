@@ -9,6 +9,15 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-09-07 — Checked Numerical Reuse and Research Closeout
+
+[Authored intake, implementation, matched evidence and disposition](2026-09-07-checked-numerical-reuse-v1/README.md):
+checked/untrusted numerical reuse reduces preparation with identical complete native
+lowers. Ordinary and the fixed development target show no gap or closure gain.
+Default-off behavior, original arguments and historical evidence are retained;
+context provenance, generated views, profile classification and documentation CI
+receive the selected fixes.
+
 ## 2026-09-06 — Solver Mathematical Backbone, Lean Operation v2
 
 [Original authored inputs, integration and checks](2026-09-06-solver-mathematical-backbone-v2/README.md):

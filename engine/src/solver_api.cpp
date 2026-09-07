@@ -592,6 +592,7 @@ struct pc_solver {
     std::uint64_t peak_owned_bytes = 0;
     std::optional<solver::CarrierLadderExactBoundaryDiagnosticConfig>
         carrier_ladder_exact_boundary_diagnostic;
+    solver::NativeRetentionDiagnosticMode native_retention_diagnostic = solver::NativeRetentionDiagnosticMode::Off;
 };
 
 namespace poecraft::solver {
@@ -829,6 +830,8 @@ solver::SolveOptions solve_options(
         const pc_solver& holder,
         const pc_solve_options* options) {
     solver::SolveOptions value = solve_options(options);
+    value.native_retention_lower = holder.native_retention_diagnostic != solver::NativeRetentionDiagnosticMode::Off;
+    value.native_retention_numerical_reuse = holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::Reuse;
     if (holder.carrier_ladder_exact_boundary_diagnostic.has_value()) {
         value.carrier_ladder_exact_boundary_mode =
             holder.carrier_ladder_exact_boundary_diagnostic->mode;
@@ -1154,6 +1157,18 @@ pc_result solver::create_solver_with_automatic_candidate_diagnostic(
     return create_solver(
         session, goal_json, goal_json_size,
         automatic_candidate_kind_mask, out_solver, out_error);
+}
+
+pc_result solver::configure_solver_native_retention_diagnostic(
+        pc_solver_handle handle, NativeRetentionDiagnosticMode mode, pc_error_info* out_error) {
+    if (!handle || handle->solve_work || handle->solved.has_value() ||
+        (mode!=NativeRetentionDiagnosticMode::Off && mode!=NativeRetentionDiagnosticMode::Cold && mode!=NativeRetentionDiagnosticMode::Reuse)) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "native retention diagnostic requires an idle unsolved handle and known mode");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    handle->native_retention_diagnostic=mode;
+    clear_error(out_error);
+    return PC_RESULT_OK;
 }
 
 pc_result solver::configure_solver_carrier_ladder_exact_boundary_diagnostic(

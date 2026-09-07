@@ -3,7 +3,7 @@
 **Authored September 6, 2026; integrated against `215654f`.** The original research reviewed `f3e7c0f`. Claim IDs are registered in the local ledger; status follows each history. Native/source obligations remain explicit.
 
 
-This page defines the problem whose answer the solver tries to certify. It does not prescribe an algorithm. For the reasoning from this problem to an output certificate, use the [mathematical reading guide](mathematics/README.md). The current request fields and their implementation owners remain in [Request and Action Scope](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/request-action-scope.md).
+This page defines the problem whose answer the solver tries to certify. It does not prescribe an algorithm. For the reasoning from this problem to an output certificate, use the [mathematical reading guide](mathematics/README.md). The current request fields and their implementation owners remain in [Request and Action Scope](request-action-scope.md).
 
 <a id="target"></a>
 ## 1. One target, several representations
@@ -69,7 +69,7 @@ A mask containing all required goal bits is not sufficient when extra junk remai
 
 \(A_\theta(s)\) is what the request permits, not the rows currently in memory. An enabled but unevaluated action remains a proof obligation. A disabled action is outside this particular target; a missing price must retain the source's explicit scope qualification rather than becoming a fictitious free action.
 
-The reviewed product contract disables generated Imprint programs and voluntary economic Restart, enables goal-progress-gated reforges, and requires junk-free success. Generated programs must be covered by exact enumeration, suitable dominance, or a proved positive-price argument; a construction-depth cutoff alone does not close their envelope. [Request and Action Scope](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/request-action-scope.md).
+The reviewed product contract disables generated Imprint programs and voluntary economic Restart, enables goal-progress-gated reforges, and requires junk-free success. Generated programs must be covered by exact enumeration, suitable dominance, or a proved positive-price argument; a construction-depth cutoff alone does not close their envelope. [Request and Action Scope](request-action-scope.md).
 
 These settings must be disclosed when saying “optimal.” They do not prove optimality over every physically possible crafting policy. In particular:
 

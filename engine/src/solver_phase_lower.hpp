@@ -149,6 +149,8 @@ struct PhasePreparationOptions {
     bool minimum_reforge_occupancy = true;
     bool reuse_renewal_support = true;
     unsigned filter_modes = 0; // bit 0 Cannot Roll Attack, bit 1 Cannot Roll Caster
+    bool checked_numerical_reuse = false; // internal experiment; cold remains the default
+    bool untrusted_numerical_reuse = false;
 };
 struct PhasePreparationStats {
     std::uint64_t total_ns = 0, projection_ns = 0, relation_ns = 0;
@@ -157,6 +159,14 @@ struct PhasePreparationStats {
     // a subset of support_ns. These diagnostic times grant no authority.
     std::uint64_t support_ns = 0, allocation_ns = 0, native_weight_ns = 0;
     std::uint64_t check_ns = 0, solve_ns = 0, numerical_sweeps = 0;
+    std::uint64_t candidate_pass_rounds = 0, candidate_fail_rounds = 0;
+    std::uint64_t eligible_solve_rounds = 0, refused_solve_rounds = 0;
+    std::uint64_t eligible_solve_ns = 0, refused_solve_ns = 0;
+    std::uint64_t eligible_sweeps = 0, refused_sweeps = 0;
+    std::uint64_t eligible_work = 0, refused_work = 0;
+    std::uint64_t seeded_rounds = 0, seed_refusals = 0, cold_solve_rounds = 0;
+    std::uint64_t untrusted_rounds = 0, zero_fallbacks = 0;
+    const char* first_seed_refusal = "none";
     std::uint64_t coverage_ns = 0, quotient_rows_ns = 0;
     std::uint64_t geometry_hits = 0, geometry_templates = 0, geometry_bytes = 0;
     std::uint64_t event_cap_hits = 0, event_cap_bytes = 0;

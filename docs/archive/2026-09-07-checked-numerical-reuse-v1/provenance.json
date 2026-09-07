@@ -1,0 +1,74 @@
+{
+  "reviewed_main": "c77422c0cdfaf5f9caa57b52755841cadc91ac8a",
+  "compact_executable_sha256": "c36e1ce28303420f3535c0bafc560944e1b2ba75f9c6955f203c0076c1be3d17",
+  "matched_compact": [
+    "proposal-cold.json",
+    "proposal-warm.json"
+  ],
+  "criteria": {
+    "minimum_total_preparation_reduction": 0.15,
+    "comparison_absolute_tolerance": 1e-08,
+    "proof_bytes": 33554432,
+    "total_bytes": 1073741824
+  },
+  "ordinary_executable_sha256": "197eb38aaf34d703a38b236a09fa105bdbc23e880c53a23e5a9e65010c552512",
+  "development_executable_sha256": "5649510d1392b429a78deb4054904f6b39b91c306b4a3aef1ff31583182262f9",
+  "development_case": {
+    "path": "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-fractured-4-to-5-product8.json",
+    "verified_upper_target": 2698.87479601436,
+    "target_absolute_tolerance": 1e-07,
+    "bounded_finish_seconds": 30,
+    "watchdog_seconds": 60,
+    "proof_bytes": 33554432,
+    "total_bytes": 1073741824
+  },
+  "native-goal.json_sha256": "ab2c5420a403b71852bd84da629814f331e01babaea0401b17620296fb5da1aa",
+  "native-economy.json_sha256": "ca0bb782c7933fb2c72ddde3991c0aebf8c1d3e9c8dc5853796b54fffddf1992",
+  "artifact_manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+  "ordinary_note": "Sequential cold then reuse, same executable; all construction and checking included. Default off. Calls are not unique coverage.",
+  "final_acceptance_note": "After matched runs, added static refusal labels and accounted the already charged checked-seed vector in per-query scratch-limit diagnostics. Focused final tests validate those changes; matched timings are from the recorded earlier binaries.",
+  "artifacts_sha256": {
+    "eligibility-cold.json": "c4d259fc2da4cedc79e892f4a6ee155ed0b61c2bf12a9fbdf7d2729816b732b4",
+    "checked-cold.json": "22ff608c4400e87788b524e34e597e1df8ab2a23d34f72e14c6f4e6bd0e5ecec",
+    "checked-warm.json": "f2a0d5f0ccc1016416c41d7cd704c70b8f1a1b9ee51e8200d71fbb562a9834de",
+    "proposal-cold.json": "6e8fa07654db05f9a1fdba3e0c377f82beba131b11fd39e252a0ebc3009ec7eb",
+    "proposal-warm.json": "ecefc56132d3f7bdc45bd3cdb9b957d42071ce6c0f21584db968e49204283522",
+    "ordinary-cold.json": "a41abd8795ccacd532ede768df4927d2f706726b33c23524b6237d44b4e232b5",
+    "ordinary-warm.json": "e4f9f54f1f401f02df57171153e95b73d7c90c5318aee4fc90761a7c2e24a3f5",
+    "development-cold.json": "e647219821adf5927d0410ea419103b64e853fcfc9a75ba83e2b5c3e8991efc4",
+    "development-warm.json": "a7fd89eea141b1f7178c0547e4ff78cdd548503ad8a2e5d63e9b5150a5e55d5c",
+    "reference.json": "1c7e5a5c3f55884ae8e21bd6a268ee7c61090e519e3e170e38b6db81616327a0",
+    "comparison.json": "86ccd2b0a3935f914efed49d44e63044af1312034caa9b48004d369281b23c2b",
+    "development-profile.json": "f257e91ee6203514771d912a4c0aceb3dfbfd2605b69658aed3e3985cb3c9d3e"
+  },
+  "final_executables_sha256": {
+    "poecraft_engine_tests": "91cc7dcbeb80a7d2fa7a2056aa12ad3f8223594adc2d90ad77e3ba02a2a9f48f",
+    "poecraft_quotient_lower_probe": "4e61f988cf8db3846b26c983cb1ee2e424239bba4eae5de7af6df694a031e78f",
+    "poecraft_solver_benchmark": "129c1cf11dd01c3e1000f90eab51d1577c860ee7d03f22c0c9b12f061c9a0cb8"
+  },
+  "compact_raw_zip_sha256": "b3e1e687e7a1f6d09079096257ca3f4fe17ed5bad1aaf9a02ba22c89b0098f7f",
+  "package_sha256": "0d7cc9b9bd266e534add7b377fedce00a4b94697efee49a53be76b0d2bbbd734",
+  "final_source_sha256": {
+    ".github/workflows/solver-knowledge.yml": "e02c5d260b7973dde8df8fa0f2feb30f38c047225bc1b2e14027c876082150eb",
+    ".github/workflows/windows.yml": "0f55d8b723dbb608b42f8a7d209ccdd95116b3e0016537d26eed8040f657da6f",
+    "engine/benchmarks/solver_benchmark.cpp": "067fbe0181d66e1df42ac793654f00542c61a59c52dcf8a01cab36180c711156",
+    "engine/benchmarks/solver_quotient_lower_probe.cpp": "ae7eb4d6c1dae8950ffd05c500109b1482b149719e437e0fd908d2b97b760c7d",
+    "engine/benchmarks/verify_quotient_lower_probe.py": "ace3bf06584f5a090365810cf006cf82c169e7aa9e23cbe1904d97a5fa095651",
+    "engine/src/solver_api.cpp": "822cde62ec9eb101c9e75778d5d7abc9568997a90a6907f63b3871fdc462da04",
+    "engine/src/solver_diagnostic_options.hpp": "84cdebc180a651c4614c1730c24d25b3f50d30d82c5f7374fc88c54e9d4f7bbb",
+    "engine/src/solver_phase_lower.hpp": "14843d2f9581f01c5f9b3798636809e956b2e84a363207e692759e83e50e7ce5",
+    "engine/src/solver_phase_probability.cpp": "fccf24d2d8b234a245af37eb44068a015699e870b1c33e5182a78980f7e8f8be",
+    "engine/src/solver_quotient_bellman.hpp": "efcb35d5979e139dfd321967103570f08d7e5658aef2c54a8e0ff219fd386738",
+    "engine/src/solver_quotient_lower.cpp": "f301d4fa1ae45212007a4585be4f547e2a9bd9b911d4f3f21aeea43941e1399d",
+    "engine/src/solver_quotient_lower.hpp": "6c9fa7786675e7ef375ea4e9a5bc17136cd51d0e59341ed7cba2fb86b7cf1eea",
+    "engine/src/solver_solve_bounds.cpp": "2f6b68115ca43efd03bae124a41d106f6c04b5015a9e794a6de0e31acb6a5a52",
+    "engine/src/solver_solve_contracts.hpp": "766723961771e3c5cb110fa091854a6de90a9994388a98984eefff1fc2181e08",
+    "engine/tests/test_solver_quotient_lower.cpp": "1b78973784fd2b1f7a4043d2ae3ffe2c06d32646000c23082ea87531f63328c4",
+    "tools/ingest/poecraft_ingest/solver_knowledge.py": "9a2134b30067d60148adc4267cbc25a683864e7ce7d7cb58c5c086e1df98252b",
+    "tools/ingest/poecraft_ingest/solver_reports.py": "d34767adca4a98abd35d3b077c8982dbe2e8635996fa6226fa2721f6cb336704",
+    "tools/ingest/tests/test_solver_knowledge.py": "d494ac9832213b513db9498331b05297072200440fe8383460f628ecdb47b5ea",
+    "tools/ingest/tests/test_solver_reports.py": "6169336dbbb8d53213bae810c6f48eca6fa0c9f4536f2f2cb16dc55f9215cc6f",
+    "tools/ingest/poecraft_ingest/ci_changes.py": "069b5794c1a58957cc4bf3a3eb798684afd2d8c6a565832f486fd34862c0ae2f",
+    "tools/ingest/tests/test_ci_changes.py": "7c573a7bae5818a8065e6b6a9bd727eb5fe90d1c905f55d61a916c6cdf3ee75a"
+  }
+}

@@ -43,6 +43,33 @@ That acceptance establishes the declared numerical relation. A native producer m
 
 Zero-cost components may yield a weak checked finite lower. The result does not assert greatest-proper-policy convergence, infinity, or native exact closure. [CLM-0023](claims.md#clm-0023) and the numerical chapter explain why neither a small residual nor a familiar certificate type supplies missing premises.
 
+## Numerical reuse within one preparation
+
+`QuotientBellmanGraph::solve_lower` accepts an optional current-query certificate
+or a current-coordinate untrusted numerical proposal. Checked reuse binds the
+same ProofStore, graph revision, complete canonical query encoding and price
+generation before transferring the vector. Untrusted reuse binds every ordered
+semantic coordinate, request/scope/coefficient descriptor and current terminal or
+boundary value. Wrong identity, dimensions or values refuse to the cold route.
+Neither input changes the complete query, adds an old-lower constraint, or grants
+authority to a provisional iterate.
+
+The shared sparse evaluator still generates a bounded numerical proposal. The
+existing finite/nonnegative and exact-dot checker accepts it, repairs it, or
+checks the zero fallback within the original budget. Final native event minima,
+observed choices and probability allocations are rebuilt at the accepted vector;
+price shortcuts reactivate including equality cases. Seed eligibility is not a
+termination condition. All borrowed storage, the transferred vector, failed
+attempts and checking remain accounted; a retained certificate reader keeps its
+own memory charge.
+
+`SolveOptions::native_retention_numerical_reuse` also defaults false. It enables
+both paths only within the existing once-per-compatible-solve preparation when
+the ordinary retention lower is separately selected. The private benchmark hook
+supports the saved development comparison; no public ABI, strategy vocabulary,
+consumer scope or default changes. The [matched evidence](../archive/2026-09-07-checked-numerical-reuse-v1/README.md)
+records reduced preparation with unchanged bounds and no target/closure gain.
+
 ## Conservative Slack
 
 Unsupported effects and outside-domain continuations can use deliberately favorable fallbacks. Extra optimistic recovery, early cleanup, broader reach, or weaker blocker constraints can preserve lower validity while reducing usefulness. Removing a native alternative has the opposite direction unless it is independently retired.
@@ -104,4 +131,4 @@ Inspect lower provenance, eligibility/refusal reasons, complete action coverage,
 
 ## Source basis
 
-This rewrite uses the [preceding reference](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/lower-pruning.md) and [solver_quotient_lower.hpp](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/engine/src/solver_quotient_lower.hpp), [2026-09-05-native-applied-reforge-preparation-v1](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-09-05-native-applied-reforge-preparation-v1/README.md), [2026-09-05-native-retention-lower-integration-v1](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-09-05-native-retention-lower-integration-v1/README.md). Mathematical links refer to the companion draft chapters and provisional claim IDs; they do not declare those claims accepted. Local implementation correspondence must be reconciled during integration.
+This rewrite uses the [preceding reference](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/lower-pruning.md) and [solver_quotient_lower.hpp](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/engine/src/solver_quotient_lower.hpp), [2026-09-05-native-applied-reforge-preparation-v1](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-09-05-native-applied-reforge-preparation-v1/README.md), [2026-09-05-native-retention-lower-integration-v1](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-09-05-native-retention-lower-integration-v1/README.md). Claim IDs are registered in [the ledger](claims.md); each history states its acceptance basis. The [backbone integration](../archive/2026-09-06-solver-mathematical-backbone-v2/README.md) is complete. Remaining native correspondence is scoped in [research](research.md#open-obligations); an argument link does not confer runtime authority.

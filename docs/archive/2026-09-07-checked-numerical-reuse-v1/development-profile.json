@@ -1,0 +1,160 @@
+{
+  "development-cold": {
+    "predicate": "native strict closure + actual compiled evaluation + recorded numerical reconciliation",
+    "coefficient_claim": "native numerical contract, not symbolic exact arithmetic",
+    "planned": 1,
+    "closed": 0,
+    "cases": [
+      {
+        "id": "conquest-lamellar-allflame-fractured-4-to-5-product8",
+        "runner_status": "completed",
+        "qualified": false,
+        "closure_observed_ms": null,
+        "stratum": "Body Armour",
+        "item_class": "Body Armour",
+        "corpus_stratum": "conquest_lamellar_fractured_four_to_five_owner",
+        "evidence_coverage": "unqualified_supported_source",
+        "reasons": [
+          "native_complete_proof_required",
+          "native_exact_classification_required",
+          "finite_compatible_bounds"
+        ]
+      }
+    ],
+    "completion_profile": [
+      {
+        "elapsed_ms": 0.0,
+        "closed": 0,
+        "planned": 1
+      },
+      {
+        "elapsed_ms": 60000.0,
+        "closed": 0,
+        "planned": 1
+      }
+    ],
+    "strata": {
+      "Body Armour": [
+        {
+          "elapsed_ms": 0.0,
+          "closed": 0,
+          "planned": 1
+        },
+        {
+          "elapsed_ms": 60000.0,
+          "closed": 0,
+          "planned": 1
+        }
+      ]
+    },
+    "grouping": "v1 strata/stratum are legacy item-class aliases; corpus strata are separate",
+    "by_item_class": {
+      "Body Armour": [
+        {
+          "elapsed_ms": 0.0,
+          "closed": 0,
+          "planned": 1
+        },
+        {
+          "elapsed_ms": 60000.0,
+          "closed": 0,
+          "planned": 1
+        }
+      ]
+    },
+    "by_corpus_stratum": {
+      "conquest_lamellar_fractured_four_to_five_owner": [
+        {
+          "elapsed_ms": 0.0,
+          "closed": 0,
+          "planned": 1
+        },
+        {
+          "elapsed_ms": 60000.0,
+          "closed": 0,
+          "planned": 1
+        }
+      ]
+    },
+    "outside_declared_cohort": []
+  },
+  "development-warm": {
+    "predicate": "native strict closure + actual compiled evaluation + recorded numerical reconciliation",
+    "coefficient_claim": "native numerical contract, not symbolic exact arithmetic",
+    "planned": 1,
+    "closed": 0,
+    "cases": [
+      {
+        "id": "conquest-lamellar-allflame-fractured-4-to-5-product8",
+        "runner_status": "completed",
+        "qualified": false,
+        "closure_observed_ms": null,
+        "stratum": "Body Armour",
+        "item_class": "Body Armour",
+        "corpus_stratum": "conquest_lamellar_fractured_four_to_five_owner",
+        "evidence_coverage": "unqualified_supported_source",
+        "reasons": [
+          "native_complete_proof_required",
+          "native_exact_classification_required",
+          "finite_compatible_bounds"
+        ]
+      }
+    ],
+    "completion_profile": [
+      {
+        "elapsed_ms": 0.0,
+        "closed": 0,
+        "planned": 1
+      },
+      {
+        "elapsed_ms": 60000.0,
+        "closed": 0,
+        "planned": 1
+      }
+    ],
+    "strata": {
+      "Body Armour": [
+        {
+          "elapsed_ms": 0.0,
+          "closed": 0,
+          "planned": 1
+        },
+        {
+          "elapsed_ms": 60000.0,
+          "closed": 0,
+          "planned": 1
+        }
+      ]
+    },
+    "grouping": "v1 strata/stratum are legacy item-class aliases; corpus strata are separate",
+    "by_item_class": {
+      "Body Armour": [
+        {
+          "elapsed_ms": 0.0,
+          "closed": 0,
+          "planned": 1
+        },
+        {
+          "elapsed_ms": 60000.0,
+          "closed": 0,
+          "planned": 1
+        }
+      ]
+    },
+    "by_corpus_stratum": {
+      "conquest_lamellar_fractured_four_to_five_owner": [
+        {
+          "elapsed_ms": 0.0,
+          "closed": 0,
+          "planned": 1
+        },
+        {
+          "elapsed_ms": 60000.0,
+          "closed": 0,
+          "planned": 1
+        }
+      ]
+    },
+    "outside_declared_cohort": []
+  }
+}

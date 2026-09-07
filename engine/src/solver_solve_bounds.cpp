@@ -31,7 +31,8 @@ void SolveWork::Impl::prepare_native_retention_lower() {
         const auto zero = PhaseLowerProducer::zero_restart_boundary(*support);
         auto prepared = PhaseLowerProducer::prepare_probabilistic(calc,prices,exact_start_item,
             proposal,support,zero,false,true,budget,true,{},PhaseContinuation::CoupledFresh,
-            PhaseRetention::AnnulNonempty,false,{true,true,3});
+            PhaseRetention::AnnulNonempty,false,{true,true,3,
+                options.native_retention_numerical_reuse,options.native_retention_numerical_reuse});
         const auto safe_member = [&](unsigned mod) {
             return session.metamod_type.at(mod)<0 && !modifier_is_veiled_template(session,mod);
         };

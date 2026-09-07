@@ -1189,6 +1189,8 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         catch (const std::length_error& e) { throw std::length_error(resource_context(e)); }
         combined_peak = std::max(combined_peak, graph.proof_store()->ledger().snapshot().peak_total_bytes + support->memory_snapshot().total_bytes);
         stats.check_ns += elapsed_ns(check_start);
+        if (checked.checked) ++stats.candidate_pass_rounds;
+        else ++stats.candidate_fail_rounds;
         if (rounds == 0 && !checked.checked && refusal.kind.empty())
             refusal=first_violation.kind.empty() ? PhaseProposalRefusal{"numeric_inconclusive",checked.reason} : std::move(first_violation);
         bool reactivated = false;
@@ -1215,14 +1217,37 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         last_checked=candidate_checked; last_improvement=0;
         // The feasibility report/certificate is no longer queried. Keeping
         // its ranked constraints alive while solving duplicates proof scratch.
+        auto initializer = preparation_options.checked_numerical_reuse ? std::move(checked.checked) : nullptr;
         checked = {};
+        std::optional<QuotientLowerProposal> numerical_proposal;
+        if (!initializer && preparation_options.untrusted_numerical_reuse)
+            numerical_proposal.emplace(QuotientLowerProposal{query.request_identity,query.caller_scope,
+                query.model_revision,graph.proof_store()->price_generation(),query.coefficients,&graph_cells,&dense_candidate});
         QuotientLowerResult repaired;
         const auto solve_start = PreparationClock::now();
-        try { repaired = graph.solve_lower(query, local_budget); }
+        try { repaired = graph.solve_lower(query, local_budget, std::move(initializer), numerical_proposal ? &*numerical_proposal : nullptr); }
         catch (const std::length_error& e) { throw std::length_error(resource_context(e)); }
         combined_peak = std::max(combined_peak, graph.proof_store()->ledger().snapshot().peak_total_bytes + support->memory_snapshot().total_bytes);
-        stats.solve_ns += elapsed_ns(solve_start);
+        const auto numerical_ns = elapsed_ns(solve_start);
+        stats.solve_ns += numerical_ns;
         stats.numerical_sweeps += repaired.sweeps;
+        stats.seeded_rounds += repaired.initializer_used;
+        if (repaired.initializer_refused && !stats.seed_refusals) stats.first_seed_refusal=repaired.initializer_reason;
+        stats.seed_refusals += repaired.initializer_refused;
+        stats.untrusted_rounds += repaired.untrusted_initializer_used;
+        stats.zero_fallbacks += repaired.proposal_zero_fallback;
+        stats.cold_solve_rounds += !repaired.initializer_used && !repaired.untrusted_initializer_used;
+        if (candidate_checked) {
+            ++stats.eligible_solve_rounds;
+            stats.eligible_solve_ns += numerical_ns;
+            stats.eligible_sweeps += repaired.sweeps;
+            stats.eligible_work += repaired.numerical_transition_work;
+        } else {
+            ++stats.refused_solve_rounds;
+            stats.refused_solve_ns += numerical_ns;
+            stats.refused_sweeps += repaired.sweeps;
+            stats.refused_work += repaired.numerical_transition_work;
+        }
         if (!repaired.checked) throw std::runtime_error("probabilistic quotient repair: "+repaired.reason);
         std::vector<double> repaired_projection(extent, 0);
         for (unsigned i = 0; i < graph_cells.size(); ++i)

@@ -977,13 +977,16 @@ def exact_closure_profile(ledger: dict[str, Any], cases: Sequence[dict[str, Any]
         case = by_id.get(cid)
         status = _nested(ledger, "cases", cid, "status", default="missing")
         row = {"id": cid, "runner_status": status, "qualified": False,
-               "closure_observed_ms": None, "stratum": "unavailable", "reasons": []}
+               "closure_observed_ms": None, "stratum": "unavailable", "item_class": "unavailable",
+               "corpus_stratum": "unavailable", "evidence_coverage": "missing_report", "reasons": []}
         if case is None:
             row["reasons"].append("missing_report")
             row["availability_detail"] = _nested(ledger, "cases", cid, "analysis_report_unavailable")
             rows.append(row)
             continue
         row["stratum"] = _case_dimensions(case).get("class", "unknown")
+        row["item_class"] = row["stratum"]  # retain the v1 legacy alias, label it honestly
+        row["corpus_stratum"] = _nested(case, "input", "corpus", "stratum", default="unavailable")
         summary = case.get("solve_summary") or {}
         evaluation = case.get("exact_strategy_evaluation") or {}
         total = _finite_number(_nested(case, "phase_wall_ms", "total"))
@@ -1013,6 +1016,11 @@ def exact_closure_profile(ledger: dict[str, Any], cases: Sequence[dict[str, Any]
                 and summary["lower_bound"] == summary["upper_bound"] == summary["evaluated_policy_cost"])
         row["reasons"] = [name for name, passed in predicates.items() if not passed]
         row["qualified"] = not row["reasons"]
+        row["evidence_coverage"] = ("qualified_strict_lift_v1" if row["qualified"] else
+            "contradicted_evidence" if case.get("errors") or evaluation.get("status") == "mismatch" else
+            "unsupported_proof_source" if not isinstance(proof_closed, bool) else
+            "unsupported_endpoint_shape" if predicates["native_exact_classification_required"] and predicates["evaluated_artifact_required"] and
+                not predicates["finite_compatible_bounds"] else "unqualified_supported_source")
         if row["qualified"]:
             # A final report proves closure by this observation, not at an
             # invented earlier point inside an unobserved cooperative step.
@@ -1029,6 +1037,9 @@ def exact_closure_profile(ledger: dict[str, Any], cases: Sequence[dict[str, Any]
             "planned": len(rows), "closed": sum(r["qualified"] for r in rows),
             "cases": rows, "completion_profile": curve(rows),
             "strata": {s: curve([r for r in rows if r["stratum"] == s]) for s in sorted({r["stratum"] for r in rows})},
+            "grouping": "v1 strata/stratum are legacy item-class aliases; corpus strata are separate",
+            "by_item_class": {s: curve([r for r in rows if r["item_class"] == s]) for s in sorted({r["item_class"] for r in rows})},
+            "by_corpus_stratum": {s: curve([r for r in rows if r["corpus_stratum"] == s]) for s in sorted({r["corpus_stratum"] for r in rows})},
             "outside_declared_cohort": sorted(set(by_id) - set(cohort))}
 
 
@@ -1067,6 +1078,8 @@ def _archived_phase_summary(reference: dict, comparison: dict | None,
                  "complete_model": None, "portfolio": None,
                  "reported_portfolio_gain": reference.get("portfolio_gain"),
                  "limiter": reference.get("limiting_ties"),
+                 "first_selected_action": None, "complete_model_ties": reference.get("limiting_ties"),
+                 "proved_ceiling": None,
                  "comparison_basis": "support control; absolute complete-model value unavailable in this artifact"}
                 for i, p in enumerate(reference["programs"])]
     if not isinstance(records, list):
@@ -1078,6 +1091,10 @@ def _archived_phase_summary(reference: dict, comparison: dict | None,
                "complete_model": item.get("complete_model_after"), "portfolio": None,
                "reported_portfolio_gain": item.get("portfolio_gain"),
                "limiter": item.get("limiting_relation"),
+               "first_selected_action": item.get("limiting_relation"),
+               "complete_model_ties": item.get("complete_model_ties"),
+               "recorded_relation_reason": item.get("limiting_reason"),
+               "proved_ceiling": item.get("exact_model_ceiling", item.get("exact_projection_ceiling")),
                "comparison_basis": "reference's stated baseline; not necessarily preceding milestone"}
         if comparison:
             comparison_sources = comparison.get("sources", [])
@@ -1146,6 +1163,11 @@ def build_research_report(root: Path, series_path: Path) -> dict[str, Any]:
                 row["native_validation_basis"] = evidence.get("evidence_scope", evidence.get("native_relation"))
                 row["auxiliary_policy_ceiling"] = evidence.get("optimistic_policy_ceiling")
                 row["checked_relations"] = evidence.get("checked_relations", evidence.get("checked_donor_inequalities"))
+                row["causal_attribution"] = "selected action does not alone prove a bottleneck; explicit ceilings/ties retain their stated model scope"
+                if entry.get("preparation_evidence"):
+                    prepared=_read_json(_research_path(root,entry["preparation_evidence"]))
+                    row["preparation_profile"] = prepared.get("preparation_profile")
+                row["end_to_end_improvement"] = "not established by this lower-history observation"
             else:
                 row["value"] = _pointer(evidence, entry.get("pointer", ""))
         observations.append(row)
@@ -1185,10 +1207,20 @@ def build_research_report(root: Path, series_path: Path) -> dict[str, Any]:
             result["treatment"] = {f: right.get(f) for f in fields}
             result["exact_closure"] = "unavailable: compact observations are not complete benchmark proof/evaluation records"
         matched.append(result)
+    references=[]
+    for entry in series.get("exact_reference_availability", []):
+        if entry.get("kind") not in {"native_exact_closure", "verified_policy_upper"}:
+            raise ValueError("availability view requires an explicitly scoped reference kind")
+        path=_research_path(root,entry["evidence"])
+        references.append({**entry, "availability": "documented_historical_reference" if path.is_file() else "unavailable",
+            "evidence_sha256": hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None,
+            "matched_performance": "unavailable; narrative evidence is not a complete matched benchmark report",
+            "fresh_qualification": False})
     return {"schema_version": "solver_research_view_v1", "question": series["question"],
             "inputs": str(series_path).replace("\\", "/"), "models": models,
             "comparison_profiles": series["comparison_profiles"], "observations": observations,
             "ordinary_comparisons": matched, "errors": [],
+            "exact_reference_availability": references,
             "limits": ["archived reports are not rerun native qualification", "no fabricated trajectories or exact optimum",
                        "historical development exposure is retained", "anchored and empty clean-five bounds never form a gap"]}
 
@@ -1198,18 +1230,33 @@ def research_markdown(report: dict[str, Any]) -> str:
         return "unavailable" if value is None else f"{value:.12g}" if isinstance(value, (int, float)) else str(value)
     lines = ["# Generated solver research state", "", f"Input: `{report['inputs']}`. Question: {report['question']}.",
              "Regenerate with the series command in [benchmarking](benchmarking.md#research-series). This view does not run or qualify native work.",
-             "", "| Observation / source | Kind | Donor | Program | Complete model | Portfolio | Limiter |",
-             "|---|---|---:|---:|---:|---:|---|"]
+             "", "| Observation / source | Kind | Donor | Program | Complete model | Portfolio | First selected action | Proved ceiling evidence |",
+             "|---|---|---:|---:|---:|---:|---|---|"]
     for row in report["observations"]:
         link = "../../" + row["evidence"]
         for source in row.get("sources", []):
             lines.append(f"| [{row['id']}]({link}) / {source['source']} | {row['kind']} | " +
                          " | ".join(number(source.get(k)) for k in ("donor", "program", "complete_model", "portfolio")) +
-                         f" | {str(source.get('limiter', 'unavailable')).replace('|', '/')} |")
+                         f" | {source.get('first_selected_action') or 'unavailable'} | " +
+                         ("explicit finite constraint" if source.get('proved_ceiling') is not None else
+                          "proper auxiliary policy" if row.get('auxiliary_policy_ceiling') else 'unavailable') + " |")
     lines += ["", "An unavailable absolute portfolio is not inferred from a reported gain. Each source record retains its original comparison basis in the JSON view.", ""]
     for row in report["observations"]:
         lines += [f"- [{row['id']}](../../{row['evidence']}): {row['availability']}; {row['kind']}; {row['role']}. " +
                   " ".join(row.get("limitations", []))]
+        if row.get("preparation_profile"):
+            p=row["preparation_profile"]
+            lines.append("  Recorded preparation (seconds): " + "; ".join(
+                f"{label}={number(p.get(key)/1e9 if p.get(key) is not None else None)}" for label,key in
+                (("total","total_ns"),("relations","relations_ns"),("numerical","solve_ns"),("checking","check_ns"),("export (within relations)","diagnostic_export_ns"))) +
+                ". End-to-end improvement is not established by this observation.")
+    lines += ["", "Selected actions are observations, not causal proofs. Complete-model tied families and exact auxiliary ceiling values remain in the detailed JSON and linked evidence."]
+    if report.get("exact_reference_availability"):
+        lines += ["", "## RQ-001: retained exact references and availability", "",
+                  "Historical documented results only; no fresh certification or matched performance is inferred.", "",
+                  "| Reference | Authority | Recorded value | Availability / scope |", "|---|---|---:|---|"]
+        for r in report["exact_reference_availability"]:
+            lines.append(f"| [{r['id']}](../../{r['evidence']}) | {r['kind']} | {number(r.get('recorded_value'))} | {r['availability']}; {r['scope']}; matched performance unavailable |")
     for pair in report["ordinary_comparisons"]:
         lines += ["", f"## Ordinary comparison: {pair['id']}", "", f"Status: {pair['status']}. {pair['runtime_claim']}."]
         if pair.get("public_lower"):

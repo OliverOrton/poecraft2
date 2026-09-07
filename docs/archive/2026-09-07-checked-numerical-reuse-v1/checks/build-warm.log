@@ -1,0 +1,57 @@
+[0/2] Re-checking globbed directories...
+[1/14] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_quotient_lower.cpp.obj
+[2/14] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_phase_lower.cpp.obj
+[3/14] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_quotient_bellman.cpp.obj
+[4/14] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_lower.cpp.obj
+FAILED: CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_lower.cpp.obj 
+C:\msys64\ucrt64\bin\ccache.exe C:\msys64\ucrt64\bin\g++.exe  -IC:/Users/Oliver/Documents/poecraft2/engine/include -O3 -DNDEBUG -std=gnu++20 -MD -MT CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_lower.cpp.obj -MF CMakeFiles\poecraft_engine_tests.dir\tests\test_solver_quotient_lower.cpp.obj.d -o CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_lower.cpp.obj -c C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_quotient_lower.cpp
+In file included from C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_quotient_lower.cpp:1:
+C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_quotient_lower.cpp: In function 'void {anonymous}::checked_numerical_initializer()':
+C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_quotient_lower.cpp:84:19: error: cannot convert 'std::shared_ptr<const poecraft::solver::quotient::QuotientLowerCertificate>' to 'bool'
+   84 |     PC_CHECK(seed.checked);
+C:/Users/Oliver/Documents/poecraft2/engine/tests/tests.hpp:22:41: note: in definition of macro 'PC_CHECK'
+   22 | #define PC_CHECK(cond) ::pctest::check((cond), __FILE__, __LINE__, #cond)
+      |                                         ^~~~
+C:/Users/Oliver/Documents/poecraft2/engine/tests/tests.hpp:11:24: note:   initializing argument 1 of 'void pctest::check(bool, const char*, int, const char*)'
+   11 | inline void check(bool condition, const char* file, int line, const char* expr) {
+      |                   ~~~~~^~~~~~~~~
+In file included from C:/msys64/ucrt64/include/c++/14.2.0/bits/shared_ptr.h:53,
+                 from C:/msys64/ucrt64/include/c++/14.2.0/memory:80,
+                 from C:/Users/Oliver/Documents/poecraft2/engine/src/solver_model.hpp:7,
+                 from C:/Users/Oliver/Documents/poecraft2/engine/src/solver_refinement.hpp:3,
+                 from C:/Users/Oliver/Documents/poecraft2/engine/src/solver_quotient_proof.hpp:3,
+                 from C:/Users/Oliver/Documents/poecraft2/engine/src/solver_quotient_partition.hpp:3,
+                 from C:/Users/Oliver/Documents/poecraft2/engine/src/solver_quotient_bellman.hpp:3,
+                 from C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_quotient_lower.cpp:2:
+C:/msys64/ucrt64/include/c++/14.2.0/bits/shared_ptr_base.h:1670:16: note: explicit conversion function was not considered
+ 1670 |       explicit operator bool() const noexcept
+      |                ^~~~~~~~
+C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_quotient_lower.cpp:90:65: error: cannot convert 'std::shared_ptr<const poecraft::solver::quotient::QuotientLowerCertificate>' to 'bool'
+   90 |     PC_CHECK(graph.check_lower(q,warm.checked->values_by_state).checked);
+C:/Users/Oliver/Documents/poecraft2/engine/tests/tests.hpp:22:41: note: in definition of macro 'PC_CHECK'
+   22 | #define PC_CHECK(cond) ::pctest::check((cond), __FILE__, __LINE__, #cond)
+      |                                         ^~~~
+C:/Users/Oliver/Documents/poecraft2/engine/tests/tests.hpp:11:24: note:   initializing argument 1 of 'void pctest::check(bool, const char*, int, const char*)'
+   11 | inline void check(bool condition, const char* file, int line, const char* expr) {
+      |                   ~~~~~^~~~~~~~~
+C:/msys64/ucrt64/include/c++/14.2.0/bits/shared_ptr_base.h:1670:16: note: explicit conversion function was not considered
+ 1670 |       explicit operator bool() const noexcept
+      |                ^~~~~~~~
+C:/Users/Oliver/Documents/poecraft2/engine/tests/test_solver_quotient_lower.cpp:102:18: error: cannot convert 'std::shared_ptr<const poecraft::solver::quotient::QuotientLowerCertificate>' to 'bool'
+  102 |     PC_CHECK(ten.checked);
+C:/Users/Oliver/Documents/poecraft2/engine/tests/tests.hpp:22:41: note: in definition of macro 'PC_CHECK'
+   22 | #define PC_CHECK(cond) ::pctest::check((cond), __FILE__, __LINE__, #cond)
+      |                                         ^~~~
+C:/Users/Oliver/Documents/poecraft2/engine/tests/tests.hpp:11:24: note:   initializing argument 1 of 'void pctest::check(bool, const char*, int, const char*)'
+   11 | inline void check(bool condition, const char* file, int line, const char* expr) {
+      |                   ~~~~~^~~~~~~~~
+C:/msys64/ucrt64/include/c++/14.2.0/bits/shared_ptr_base.h:1670:16: note: explicit conversion function was not considered
+ 1670 |       explicit operator bool() const noexcept
+      |                ^~~~~~~~
+[5/14] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_bounds.cpp.obj
+[6/14] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_bellman.cpp.obj
+[7/14] Building CXX object CMakeFiles/poecraft_quotient_lower_probe.dir/benchmarks/solver_quotient_lower_probe.cpp.obj
+[8/14] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_phase_probability.cpp.obj
+[9/14] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_calc.cpp.obj
+[10/14] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_policy_refinement.cpp.obj
+ninja: build stopped: subcommand failed.

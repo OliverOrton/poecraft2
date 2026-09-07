@@ -1,119 +1,160 @@
-# Solver Benchmark Trajectories
+# Solver benchmarks and cumulative research
 
-**Integrated reference.** Authored from the repository contracts at `f3e7c0fa7bd827064a41c48a53c4db372840cf0f`. Reconciled with local `215654f`; importing this mechanism reference supplies no new runtime authority.
+The native benchmark and existing corpus/Lab/reporting code are the measurement
+owners. The mathematical-backbone reporting and context tools are implemented;
+[the integration record](../archive/2026-09-06-solver-mathematical-backbone-v2/README.md)
+records their actual validation. This page distinguishes implemented views from
+unimplemented analysis and from runtime proof authority.
 
-The native benchmark and existing corpus/Lab reporting remain the measurement owners. This page preserves their observation, identity, and failure semantics while recording the owner's exact-closure research objective. New question-linked views belong to the pinned backbone implementation; this document does not claim those tools have already landed.
+## Observation contract
 
-## Observation Contract
+A run is an anytime trajectory, not only a final status. Observable samples after
+complete `pc_solver_solve_step` calls include time/phase, bounds and incumbent kind,
+states/frontier, rows/transitions/logical reforge work and owned memory. Round,
+incumbent, bounded-interval and completion samples follow the native contract.
+A long blocking step does not contain invented internal observations.
 
-A run is an anytime trajectory, not only a terminal label. After complete `pc_solver_solve_step` calls, the native benchmark records elapsed time and phase, root bounds/gaps and incumbent kind, state/frontier counts, rows/transitions/logical reforge work, owned memory, and diagnostic changes to lower/upper values.
+Lower decreases and upper increases are diagnostics, not violations of an assumed
+monotonicity guarantee. Compare upper values only when compatible executable
+incumbents exist. A finite implementation ceiling is not an incumbent.
 
-Samples are step-boundary observations. A long blocking step has no implied internal checkpoint. Samples also occur at the documented round/incumbent changes, bounded wall intervals, and completion. Do not fabricate sub-step timing from an aggregate phase duration.
+The progress/cap `reforge_work` field is the `logical_work_v1` envelope.
+V1/V2/V3 physical effort is explanatory, version-specific work, not a universal
+runtime score. Strict-row comparisons default to V3; the existing
+`raw_strict_reforge_oracle_diagnostic` and
+`projected_reforge_frontier_diagnostic` select V1 and V2 respectively.
+`factored_terminal_reforge_diagnostic` preserves explicit V3 selection for
+historical evidence. These do not change the coarse V1 evaluator.
 
-Lower decreases and upper increases are diagnostics, not violated monotonicity assumptions by definition. Compare upper values only when compatible executable incumbents exist. A finite implementation ceiling is not an incumbent.
+## Primary outcome and intermediate questions
 
-`reforge_work` in progress/cap samples is the `logical_work_v1` envelope. Legacy active work and V1/V2/V3 physical effort are explanatory, version-specific counters. Keep them separate from wall time, memory, and maximum cooperative step latency.
+The project outcome is expanding valid certified exact closure. Use a predeclared
+cohort and resource envelope for comparison, and a separately labelled growing
+development frontier. For N planned eligible cases, report qualifying closures
+by observed time over N, with failures, unavailable evidence and strata visible.
+A formatted zero gap or status string alone is not proof.
 
-For strict-row comparisons, omitted evaluator controls select V3. `raw_strict_reforge_oracle_diagnostic` selects the V1 oracle/rollback and `projected_reforge_frontier_diagnostic` selects V2. `factored_terminal_reforge_diagnostic` retains explicit V3 selection for older evidence. These do not change the coarse V1 evaluator.
+An exactness profile is an interpretation of existing evidence, not another native
+checker. Its supported schema must be explicit. Unsupported evidence must not be
+reported as a mathematical refutation or silently discarded from N.
 
-## Primary Outcome And Comparison Profiles
+Lower research can instead select a checked lower at a fixed total preparation
+budget, time to an unchanged compatible target, or memory at a proof milestone.
+Upper research can select a verified policy target. These are intermediate
+outcomes, not exact solves. There is no weighted universal score.
 
-The owner-approved project objective is to extend certified exact closure as far as practical. A fixed cohort and end-to-end time/memory envelope provide a comparison, while the separate development frontier can keep expanding.
+The legacy reporter retains its original rates and
+`primary_comparison_metric_selected: false` unless an explicit outcome profile
+is supplied. The optional profile does not retrospectively change legacy report
+semantics.
 
-For the project profile, report valid exact completion over **all planned eligible cases**, by stratum and against time. The exactness predicate includes compatible proof/evaluation and the declared numerical contract; a rounded zero gap or label alone is insufficient. Missing reports and correctness failures remain visible and cannot improve the score by disappearing from its denominator.
+## Gap and trajectory semantics
 
-Lower-development questions may instead specify a checked lower at a fixed total preparation budget, or time to a fixed lower/gap target. Upper-development questions can specify a verified policy target. Those are intermediate research outcomes, not substitutes for exact closure. Do not combine them into a weighted universal score.
-
-**Implementation state:** legacy `solver_reports.py` calls preserve `primary_comparison_metric_selected: false` and their original denominators. An explicit `--outcome-profile` adds the predeclared cohort view with complete-proof, evaluated-artifact and numerical-reconciliation predicates; the default legacy statistics are not retrospectively relabelled. `--research-series` is the separate read-only archived-evidence view described below.
-
-## Frozen Future Metric Semantics
-
-When normalized gap is reported, use the existing nonnegative-cost contract:
+For nonnegative costs the defined normalized gap is:
 
 ```text
 g(t) = (U(t) - L(t)) / max(U(t), 1 cost unit)
 ```
 
-Clamp only numerical noise into `[0,1]`; an actually invalid bound is a correctness failure. Before an executable incumbent exists, gap is one even if a finite upper-like field is present. `incumbent_kind != none`, with the associated valid evidence, distinguishes an incumbent from an implementation ceiling.
+Clamp only numerical noise. An actually invalid bound is a correctness failure.
+Before a valid executable incumbent exists, gap is one. Incumbent kind and its
+supporting evidence matter, not `isfinite(U)` alone.
 
-The defined integral uses a right-continuous, piecewise-constant recorded trajectory, with `g(0)=1`. A sample becomes known at its timestamp. At a common horizon:
+The defined integral uses a right-continuous, piecewise-constant trajectory with
+g(0)=1. A sample applies from its timestamp; do not smooth a lower decrease.
+At a common horizon, exact completion extends at zero gap; completed cap/target
+measurements extend with their last certified gap. A watchdog is right-censored
+only with a usable atomic partial trajectory. Crashes, OOM, cancellation, invalid
+bounds, memory refusal, runner failure and watchdog without a usable trajectory
+remain distinct failures.
 
-- exact completion continues with zero gap;
-- a completed cap or product-target result retains its last certified gap;
-- watchdog expiry is right-censored only when a valid atomic partial trajectory exists;
-- crashes, OS OOM, invalid bounds, cancellation, memory refusal, runner errors, and watchdogs with no usable trajectory remain distinct failures.
+Relative-target time uses U/L - 1 only for positive L and a compatible incumbent.
+Exact-target time needs its actual proof/evaluation status. These definitions do
+not claim every integral or survival estimator is implemented. No adaptive
+accumulated-gap racing is implemented or authorized by this research profile.
 
-Relative-target time uses `U/L - 1` only for positive L and a compatible executable incumbent. Exact-target time requires the actual exact policy/termination evidence, not floating-point equality alone.
+## Durable partial reports
 
-These definitions do not assert that every integral, survival estimate, or profile is already implemented. They also do not authorize adaptive accumulated-gap racing, which can preferentially discard runs slow to find their first incumbent rather than identify the best eventual exact solver.
+The runner supplies a unique sidecar path, atomically replaced by the benchmark
+after observable steps. After watchdog process-tree cleanup, a partial observation
+is analyzable only if it contains the selected case and at least one bound sample.
+The ledger remains `watchdog_expired`, not completed. A pre-first-step timeout
+has no censored trajectory; setup duration does not manufacture one.
 
-## Durable Partial Reports
+Native exits 0 or 2 with final reports are completed measurements. Exit 2 can
+record a native resource-cap expectation miss. A completed measurement is not
+necessarily a completed solve. Preserve known and unknown process failures
+rather than coercing them into one timeout category.
 
-The corpus runner gives each attempt a unique partial-result sidecar. Native observable steps atomically replace it. After watchdog cleanup and the no-survivor check, a partial observation is analyzable only if it contains the selected case and at least one bound sample.
+## Experiment identity and comparability
 
-The ledger stays `watchdog_expired`; a partial report is never relabelled a completed solve. A timeout before the first completed step has no censored trajectory. No missing first-step observation is invented from setup timing.
+Existing ledgers pin source and dirty paths, executable path/hash, corpus and
+generator/schema identity, native artifact/data/string identity, machine/OS/
+processor/Python context, concurrency, memory, evaluation/role settings and each
+selected case's inputs, prices, action scope and resolved actions.
 
-Native exits 0 or 2 with a final report are completed measurements; exit 2 preserves expectation misses such as a native resource cap. Known abnormal/OOM statuses and unknown failures remain separately classified. A completed measurement need not have found a policy or solved exactly.
+Calculator-quality requests pin `calculator_product_v1`. Profile-owned controls
+stay with that native owner; labelled overrides remain visible. Resume refuses
+incompatible prior output directories. A comparison can declare executable hashes
+as its treatment without dropping the other identity checks.
 
-## Experiment Identity
+A solver-only change normally leaves the target unchanged. A native transition,
+price, terminal or scope change can alter the target despite unchanged JSON.
+Label that semantic change or establish an explicit compatibility argument.
 
-The existing ledger pins source commit and dirty paths; executable path/hash; corpus identity/schema/generator hash; compiled-artifact manifest and data/string identities; machine/OS/processor/Python context; worker/memory/evaluation/role settings; and complete selected case inputs, prices, action scope, generation metadata, and resolved actions.
+Paired performance requires compatible target, budget, machine/build/load and
+clock origin, apart from declared treatments. Different resources can support a
+labelled scaling study, not an unqualified speedup. Different starts/goals/prices
+cannot be pooled as one raw Chaos value. Different auxiliary models can be
+compared as native lower producers only with their valid native bridges.
 
-Calculator-quality requests pin `calculator_product_v1`; profile-owned low-level controls stay with the native profile unless a labelled override is intended. Telemetry records the actual override mask.
+A derived cross-run interval may combine independently compatible certificates
+for the same target. It is not one run's trajectory or time-to-gap achievement.
+Preparation and verification costs must be included, without adding them twice
+when the native total already includes them.
 
-Resume refuses an existing run directory when required executable, corpus, artifact, machine, or configuration identity differs. Executable identity is part of an observation. In a declared baseline/candidate comparison, executable hashes can be the treatment while all other applicable controls must match.
+## Corpus roles and result kinds
 
-Code can change target semantics even if the JSON is identical. Distinguish a solver implementation change from a native transition, terminal, or scope correction. A semantic correction requires the corresponding reviewed target/property version or an explicit compatibility argument.
+Keep original development/validation/frozen-test strata and acceptance tiers.
+Record actual exposure: repeatedly tuned cases are not unseen evaluation simply
+because an old filename or role contains `frozen`. Treatments and reused artifacts
+are not independent replications. Keep all planned eligible cases in project
+profiles, even when legacy summaries analyze only completed reports.
 
-## Corpus Roles And Planned Populations
-
-The natural-T1 corpus assigns whole strata to development, validation, or `frozen_test`; acceptance tiers remain separate. Preserve the original role manifest and record actual exposure. Repeated use to select implementations cannot be described as untouched generalization evidence merely because the file is called frozen.
-
-A series identifies its planned cases and attempts before results are summarized. Existing legacy rates may be conditional on completed/analyzable cases; keep those labelled and add the project-level all-planned denominator instead of silently changing the old interpretation.
-
-Variant implementations are treatments, not independent replicas of the same stochastic experiment. Repeated reports or reused immutable artifacts are not additional samples.
-
-## Evidence Interpretation
-
-| Evidence kind | What it can establish |
+| Result kind | Interpretation |
 |---|---|
-| Declared finite-model optimum | Exact answer for the explicitly identified auxiliary/coefficient model |
-| Native exact-closure result | Native result under its scope and stated numerical proof contract |
-| Verified fixed-policy value | Executable upper from the evaluated entry |
-| Certified native lower | Lower over its documented source/member domain |
-| Optimistic-model policy ceiling | Limit of that particular relaxation, not a native executable upper |
-| Conditional or empirical observation | Only its explicitly supported proposition and limitations |
+| Finite-model optimum | Answer under its declared model/property/coefficient semantics |
+| Native exact closure | Complete native proof and evaluated artifact under its recorded contract |
+| Verified policy value | Entry-scoped executable upper, not optimum |
+| Certified native lower | Source/domain/scope-qualified lower |
+| Optimistic policy ceiling | Limit of an auxiliary model, not a native upper |
+| Conditional/empirical observation | Only the stated evidence and assumptions |
 
-Do not combine a lower from an anchored source with an empty-item upper. A coupled fresh state inside a special anchored proof is not automatically a new empty-request certificate. The latest retention evidence is a useful example, not a permanent benchmark target selected by this page.
+Distinguish donor, action/program, complete-model, portfolio and public lower.
+A stronger component may not change the complete minimum. A coupled unfractured
+entry of an anchored certificate is not automatically an ordinary empty-start
+certificate. Calls are not unique states. Fewer rows in a fixed-time run do not
+prove work avoided. Diagnostic export and preparation costs remain explicit.
 
-A local action-bound gain can leave the complete minimum unchanged. Complete-model and portfolio gain can occur without actual pruning. Faster preparation can help the ordinary budget without proving faster exact closure. Calls are not unique-state coverage, and fewer rows at timeout are not necessarily rows avoided.
+## Existing reporting
 
-Performance comparisons need matching target, budget, machine/build context, concurrency/load conditions, and observation semantics. Same-target results with different resources can be labelled mathematical or scaling evidence; unrelated tasks cannot be pooled into a raw Chaos average. Report failures and censored observations rather than selecting only cases both methods solved.
-
-## Existing Reporting And Cumulative Research
-
-`solver_reports.py` already loads run ledgers, summarizes strata, and compares compatible pairs. The current interface remains usable:
+Legacy commands remain supported:
 
 ```text
 python -m poecraft_ingest.solver_reports \
-  --run baseline=PATH_TO_RUN --run candidate=PATH_TO_RUN \
-  --pair baseline:candidate --output PATH_TO_REPORT
+  --run baseline=PATH --run candidate=PATH \
+  --pair baseline:candidate --output OUTPUT
 ```
 
-Use the repository's Python environment and launcher from `AGENTS.md`. A run directory is an existing ledger/artifact collection, not an arbitrary JSON result relabelled as a run.
-
-The pinned programme extends that same owner with question/series references, typed historical probe adapters, and generated current views. The index stores references, not a second set of case documents or manually copied raw numbers. Missing archived identity or trajectories remain unavailable; an adapter must not manufacture them.
-
-[Research](research.md) supplies the human question and interpretation. Original artifacts remain the evidence. Existing reports can demonstrate the cumulative view without new native solves simply to test the reporting code.
-
-## Source basis
-
-This rewrite uses the [preceding reference](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/benchmarking.md) and [solver_reports.py](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/tools/ingest/poecraft_ingest/solver_reports.py), [evaluation-roles.json](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/fixtures/solver-natural-t1/v1/evaluation-roles.json), [2026-09-05-native-applied-reforge-preparation-v1](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-09-05-native-applied-reforge-preparation-v1/README.md). Mathematical links refer to the companion draft chapters and provisional claim IDs; they do not declare those claims accepted. Local implementation correspondence must be reconciled during integration.
+A run directory is the runner's ledger/artifact collection, not arbitrary JSON
+relabeled as a run. `compare_runs` retains its input mismatch exclusions. The
+research-series adapter reads declared historical artifacts without inventing
+missing trajectories or rerunning a solver.
 
 <a id="research-series"></a>
 ## Research series and selected context commands
 
-From the repository root, set `PYTHONPATH=tools/ingest` and use:
+From the repository root, set `PYTHONPATH=tools/ingest`:
 
 ```powershell
 py -3 -m poecraft_ingest.solver_knowledge lint
@@ -122,25 +163,87 @@ py -3 -m poecraft_ingest.solver_knowledge check-metadata experiments/solver-rese
 py -3 -m poecraft_ingest.solver_reports --research-series experiments/solver-research/backbone-pilot-v1.json --output build/research-state.json --markdown docs/solver/research-state.md
 ```
 
-[The generated view](research-state.md) reads original archive references, preserves
-missing values, and separates scoped native lowers from auxiliary policy ceilings
-and conditional development controls. Explicit predecessor comparisons take
-precedence over support-control diagnostics. The two saved source aliases retain
-their original exact-source keys in the linked reports. They are not fresh unseen
-validation or a general empty-start request.
+`lint --base REVISION` checks original statements/preconditions and append-only
+history against that base. An appended responsible `Editorial:` event declares a
+nonsemantic correction; lint does not verify that declaration's truth. Missing
+base evidence is not a passed comparison. Current lint checks the syntax and
+references it implements, not mathematical truth, exhaustive source correspondence
+or a machine proof of a prose premise.
 
-`solver_knowledge lint --base <revision>` checks statement/precondition identity,
-append-only history and affected source uses. An appended responsible `Editorial:` history event declares a typo/format correction without a new ID; lint reports that declaration, but cannot verify its truth. Context export refuses an undersized
-`--max-chars` budget instead of truncating premises. Lint warns about open or
-superseded prerequisites and fails active reliance on refuted/withdrawn claims;
-it does not verify mathematical truth. `check-metadata` is a dry-run with no solve.
+Selected context preserves requested statements and preconditions and refuses an
+undersized character budget. The export records actual HEAD and a canonical
+repository link base. Selected and directly linked working-copy files must match
+committed bytes; dirty/untracked content refuses with its source name. Current
+relative links become HEAD-pinned links; historical pins and external sources
+remain intact. Visibility comes from locally recorded remote refs, with explicit
+absence of network verification. A local-only commit's links may be unavailable
+to an external reviewer; the command does not fetch or push.
 
-For existing `--run LABEL=PATH` reports, optional `--outcome-profile FILE` accepts
-`kind: native_exact_closure_v1`, explicit unique `case_ids`, `budget_ms`, and
-`memory_bytes`. The denominator is all declared cases, including missing/failed
-reports. Closure requires native `policy_refinement.strict_lift.global_lower_bound_closed`,
-`exact_closed`/converged classification and matched complete compiled evaluation.
-The time is the recorded final observation, not an invented earlier internal
-checkpoint. This reports the native numerical reconciliation contract; it does
-not assert symbolic equality. Unsupported historical records remain unqualified.
-Existing paired identity rejection and trajectory/gap formulas are unchanged.
+[Generated research state](research-state.md) reads declared saved observations.
+An unavailable absolute portfolio is not inferred from a gain. Original source
+aliases, comparison attribution and evidence digests stay in the detailed JSON.
+The existing series is a retention/lower history, not a fresh exact-closure corpus
+measurement. It now separates first selected actions, explicit finite constraints
+and auxiliary policy ceilings; full ties/families remain in JSON. Available
+preparation stages and absence of end-to-end gain are explicit. RQ-001's small
+availability table links historical exact references and policy uppers without
+inventing fresh qualification or matched benchmark evidence. Regenerate this
+file; the knowledge CI job compares its bytes with a fresh generation.
+
+## Implemented exact-closure profile: coverage and limitations
+
+`--outcome-profile FILE` currently accepts `kind: native_exact_closure_v1`, unique
+`case_ids`, positive `budget_ms` and `memory_bytes`.
+
+The implementation requires a completed report, the recorded
+`policy_refinement.strict_lift.global_lower_bound_closed` flag, exact/converged
+policy and termination status, complete matched compiled evaluation with zero
+off-policy mass and reconciled cost, no reported errors, finite nonnegative
+bounds, matching memory control and measured time/memory within the envelope.
+It currently additionally requires equality of the three parsed reported numbers
+`lower_bound`, `upper_bound` and `evaluated_policy_cost`.
+
+This is a **conservative profile for that supported strict-lift report shape**.
+It is not an exhaustive adapter for every native proof path. Missing strict-lift
+evidence or differing endpoint fields can leave a record unqualified even when
+another documented native path could justify it. Such records require evidence
+classification, not a silently relaxed equality test. The profile does not issue
+new numerical or native correctness certificates.
+
+Closure time is the final recorded observation, not an earlier guessed step.
+All planned cases remain in the denominator. `by_item_class` and
+`by_corpus_stratum` are distinct; the latter reads `input.corpus.stratum` or reports
+unavailable. Legacy `stratum`/`strata` retain their item-class meaning. Additive
+`evidence_coverage` separates supported qualification, unsupported proof source,
+unsupported endpoint shape and contradicted evidence; reasons remain explicit.
+The early exact finish and strict compiled-lift issuers, plus the saved PDR
+reclamation report, were inspected for this selected coverage review. Native
+benchmark reconciliation has absolute/relative controls, while v1 deliberately
+retains its stronger three-field equality requirement. No v2 adapter or broader
+native acceptance was added.
+
+## Bounded native comparison and documentation CI
+
+The native benchmark's internal `--native-retention-diagnostic cold|reuse`
+selects a single ordinary case with the optional lower on in both runs. It
+rejects checkpoint, validation-only and other diagnostic combinations. The
+public product options remain unchanged and off. Use the saved case's original
+caps and exact evaluator; this flag does not authorize Simulator or a new corpus.
+The [numerical-reuse receipt](../archive/2026-09-07-checked-numerical-reuse-v1/README.md)
+records the matched compact, ordinary and development observations.
+
+Windows keeps the existing `build-and-test` check identity. A tested conservative
+classifier skips native steps only for known root/documentation Markdown paths;
+unknown, mixed, C++, build/data, unavailable or empty changes retain validation.
+C++ comment-only changes are not inferred from filenames. The knowledge job still
+runs, and the Windows check says when native work is not applicable. Local
+classifier tests do not claim a hosted workflow run or branch-protection change.
+
+## Current sources
+
+Current code: `solver_benchmark.cpp`, `solver_corpus_runner.py`,
+`solver_reports.py`, `solver_knowledge.py` and their focused tests. The historical
+[benchmark contract](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/benchmarking.md)
+records the original observation semantics. Current mathematical status and gaps
+are owned by [claims](claims.md) and [research](research.md#open-obligations), not
+by the age of a verification stamp.

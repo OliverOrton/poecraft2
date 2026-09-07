@@ -1,0 +1,15 @@
+[0/2] Re-checking globbed directories...
+[1/15] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_quotient_lower.cpp.obj
+[2/15] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_phase_lower.cpp.obj
+[3/15] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_quotient_bellman.cpp.obj
+[4/15] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_bounds.cpp.obj
+[5/15] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_bellman.cpp.obj
+[6/15] Building CXX object CMakeFiles/poecraft_quotient_lower_probe.dir/benchmarks/solver_quotient_lower_probe.cpp.obj
+[7/15] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_lower.cpp.obj
+[8/15] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_phase_probability.cpp.obj
+[9/15] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_calc.cpp.obj
+[10/15] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_policy_refinement.cpp.obj
+[11/15] Linking CXX static library libpoecraft_engine.a
+[12/15] Linking CXX executable poecraft_quotient_lower_probe.exe
+[13/15] Linking CXX executable poecraft_solver_benchmark.exe
+[14/15] Linking CXX executable poecraft_engine_tests.exe

@@ -1,173 +1,241 @@
 # Research questions and cumulative knowledge
 
-**Authored September 6, 2026; integrated against `215654f`.** The original research reviewed `f3e7c0f`. Claim IDs are registered in the local ledger; status follows each history. Native/source obligations remain explicit.
+The mathematical-backbone programme is implemented. Its
+[closeout](../archive/2026-09-06-solver-mathematical-backbone-v2/README.md) records
+self-review, reference calculations, tooling, and actual cleanup. Individual
+claims retain their own status; integration is not exhaustive native verification.
 
-
-The project objective is to push certified exact closure as far as practical. The model, questions, arguments, and reference evidence should survive replacement of an algorithm. This page routes that work; it is not a new solver plan and does not override HANDOFF's current sequencing.
-
-A routine fix needs no new question, packet, claim, or archive. Read only the material needed by the task. Mathematical changes preserve their substantive knowledge; ordinary implementation changes do not acquire a fixed paperwork cost.
+The objective is to push certified exact closure further. Models, questions,
+arguments and counterexamples outlive individual algorithms. This page owns
+questions and the exchange workflow; HANDOFF alone owns active sequencing.
+A routine fix needs no new question, packet, claim or archive.
 
 <a id="questions"></a>
-## 1. Questions that survive technique changes
+## 1. Durable questions
 
 <a id="rq-001"></a>
 ### RQ-001 — How far can the declared native scope be closed exactly?
 
-The target is the versioned native problem in [mathematical-model.md](mathematical-model.md), not merely a good executable policy. Compare treatments on fixed semantic cohorts and budgets, while expanding a separately labelled development frontier.
+Use the target and policy class in [the mathematical model](mathematical-model.md).
+Keep fixed comparison cohorts and resource envelopes alongside an explicitly
+expanding development frontier. Same-side anchors, two-sided goals, fractured
+partial items and empty-start requests are different tasks; goal count alone is
+not identity.
 
-Evidence must distinguish same-side anchors, two-sided tasks, anchored partial items, and empty-start requests. “Five goals” does not identify one mathematical problem. The first useful answer is broader valid exact closure under comparable conditions, not the number of new techniques or passing assertions.
+Primary outcome: valid exact closure for all planned eligible cases, with actual
+failures, unavailable evidence, total elapsed time and memory shown. A stronger
+lower or evaluated policy is intermediate evidence, not a new exact solve.
 
-Dependencies: [CLM-0001](claims.md#clm-0001), [CLM-0008](claims.md#clm-0008), [CLM-0024](claims.md#clm-0024). Existing owners: native benchmark, immutable cases and corpus roles, publication/evaluation, and paired reporting.
+Dependencies: [CLM-0001](claims.md#clm-0001), [CLM-0008](claims.md#clm-0008),
+[CLM-0024](claims.md#clm-0024). The native benchmark, immutable cases, corpus roles,
+publication and exact evaluation remain the measurement/authority owners.
+The currently implemented outcome profile has the narrower evidence coverage
+documented in [benchmarking](benchmarking.md#research-series); do not count a
+missing supported proof field as evidence that a native result was incorrect.
 
 <a id="rq-002"></a>
 ### RQ-002 — Which optimistic assumptions limit useful lower proofs?
 
-A lower refinement can improve one branch while leaving the full minimum unchanged. Identify the currently limiting action/exit set, its native-valid refinement, and total preparation/consumption cost. Distinguish a stronger auxiliary model from a checked native contribution and from saved exact-proof work.
+Identify the constraints making the complete optimistic model cheap, not just a
+promising isolated action. Separate auxiliary-model strength, native validity,
+complete-model/portfolio gain, ordinary consumption and end-to-end outcome.
+[Generated research state](research-state.md) reads the declared historical series.
 
-The retention lineage is the first cumulative series. The applied-reforge record separately reports stronger anchored bounds, unchanged final relations under preparation reuse, conservative member fallback, and no exact completion in its matched observation. It also identifies a 212-cost auxiliary-model ceiling. Preserve those classifications; do not pair its anchored lower with an unrelated empty clean-five upper. [Original evidence](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-09-05-native-applied-reforge-preparation-v1/README.md).
+The applied-reforge milestone's 212 boundary remains a valid historical statement
+about that auxiliary model. [Filter continuation](../archive/2026-09-05-native-metamod-first-exit-v1/README.md)
+subsequently raised its checked lower and replaced that limiting optimistic policy.
+It retained extra conservative Restart, coarse-junk fallback and default-off
+consumption. It did not demonstrate a new exact completion or end-to-end speedup.
 
-The subsequent [native filter closure](../archive/2026-09-05-native-metamod-first-exit-v1/README.md) supersedes the 212 boundary as a current limiter while preserving its historical result. It retains the extra Restart and coarse-junk fallback, defaults off, and no exact-completion or speedup claim.
+[Numerical reuse](../archive/2026-09-07-checked-numerical-reuse-v1/README.md) measured
+12 eligible checked solves out of 29. Checked-only reuse missed the fixed 15%
+preparation gate; the bounded untrusted-proposal follow-through passed at 27.48%
+(43.183 to 31.314 seconds). Complete native checking, both source values and the
+51-state auxiliary ceiling remain unchanged. The removed lookup cache stays out.
+A prior native lower still need not be feasible for a newly rebuilt query.
 
-Dependencies: [CLM-0007](claims.md#clm-0007), [CLM-0008](claims.md#clm-0008), [CLM-0014](claims.md#clm-0014), [CLM-0018](claims.md#clm-0018), [CLM-0019](claims.md#clm-0019). The mechanism under investigation may change; the question remains.
+Ordinary preparation fell from 41.326 to 28.393 seconds; the 60-second public
+lower remained unchanged without an upper. The existing fractured four-to-five
+development case also finished sooner, but both runs missed the preselected
+verified-upper target and returned the same policy/gap. This justifies retaining
+optional numerical reuse, not default activation. The next measured question is
+whether the remaining relation-construction cost can be reduced enough to leave
+ordinary discovery time before that unchanged 30-second finish request, while
+preserving final value-dependent minimization and complete coverage.
+
+Dependencies: [CLM-0007](claims.md#clm-0007), [CLM-0008](claims.md#clm-0008),
+[CLM-0013](claims.md#clm-0013), [CLM-0014](claims.md#clm-0014),
+[CLM-0018](claims.md#clm-0018), [CLM-0019](claims.md#clm-0019).
+The measured gain is preparation cost only; no new native exact closure,
+empty clean-five lower or improved development target is established.
 
 <a id="rq-003"></a>
 ### RQ-003 — Can executable-policy quality be preserved while proof work scales?
 
-Strong upper witnesses help quantify gaps and retire alternatives, but they must remain proper and independently evaluated. Investigate continuation coverage, candidate reuse, and proof/upper budget interaction without treating a scheduling preference as proof.
+A compatible proper executable policy supplies an upper witness. Study its
+continuation coverage and the interaction of proof preparation with useful
+ordinary work, without turning search preferences into proof or sacrificing
+upper quality merely to improve a displayed lower.
 
-The reclamation archive demonstrates why a production regression can come from retained ownership after refusal rather than a mathematical inability to combine PDR and clean-five work. Preserve that distinction after the specific candidate implementation changes. [Original evidence](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-08-30-carrier-ladder-released-candidate-reclamation-v1/README.md).
+The [released-candidate repair](../archive/2026-08-30-carrier-ladder-released-candidate-reclamation-v1/README.md)
+shows why a measured scheduling conflict may come from lifecycle ownership,
+not mathematical impossibility. Keep the causal distinction after replacing its
+implementation.
 
-Dependencies: [CLM-0002](claims.md#clm-0002), [CLM-0004](claims.md#clm-0004), [CLM-0020](claims.md#clm-0020), [CLM-0021](claims.md#clm-0021), [CLM-0022](claims.md#clm-0022).
-
-RQ-001 through RQ-003 are registered question aliases; no previous local series owns these identities. They do not replace native experiment or case identities.
+Dependencies: [CLM-0002](claims.md#clm-0002), [CLM-0004](claims.md#clm-0004),
+[CLM-0020](claims.md#clm-0020), [CLM-0021](claims.md#clm-0021),
+[CLM-0022](claims.md#clm-0022).
 
 <a id="open-obligations"></a>
-## 2. Precise integration obligations
+## 2. Correspondence obligations
 
-These are gaps in this draft's proof-to-code reconciliation, not a list of newly proven defects. Do not mark all claims accepted merely to avoid displaying them. Resolve only the obligations relevant to a change; none is a universal startup checklist.
+These identify missing reconciliations, not automatically new defects. Address
+only those on a changed authority path. Do not promote an open claim to suppress
+a warning or require every task to reopen all five.
 
 <a id="gap-01"></a>
 ### GAP-01 — Proper-policy and nontermination semantics
 
-**Needed:** reconcile the working proper-policy objective with all relevant native/public caller modes, particularly zero-cost cycles, allowed recovery, and finite-cost versus almost-sure termination. **Affected arguments:** CLM-0001, CLM-0002, CLM-0007, CLM-0024. **Resolution:** attach current source/owner decisions and precise finite-model counterexamples; ask Oliver only if a genuine semantic discrepancy requires a decision. Do not silently borrow PRISM's property definition.
+Reconcile the working proper finite-cost objective with relevant native/public
+modes, zero-cost cycles and permitted recovery. A finite lower checker and a
+proper executable-policy checker answer different questions. Scope any resolution
+by entry point and numerical method; an all-public-modes conclusion needs its own
+evidence. The numerical-reuse application keeps every iterate untrusted until the
+complete finite lower check; zero-cost fixtures preserve the distinction from
+proper-policy optimality. This resolves its selected initialization obligation,
+not all public modes. Ask Oliver only for a genuine conflict in intended semantics. Affected: CLM-0001, 0002, 0007 and 0024.
 
 <a id="gap-02"></a>
-### GAP-02 — Native terminal, exact identity, and uniform-member correspondence
+### GAP-02 — Native terminal, identity and uniform-member correspondence
 
-**Needed:** show how each selected producer/consumer establishes the complete represented domain, goal overlap/count semantics, collision-safe identities, and required equivalence or domination relation. **Affected arguments:** CLM-0005, CLM-0006, CLM-0007. **Resolution:** map relevant constructors, validators, and existing decisive fixtures. A successful representative query is insufficient. A precise unsupported domain is an acceptable declared limit, not permission to broadcast its value.
+For each relevant application, establish the actual terminal/overlap semantics,
+collision-safe key and complete member-domain equivalence or domination. A
+successful representative lookup is not uniform validity. Retain explicit
+unsupported domains. Affected: CLM-0005, 0006 and 0007.
 
 <a id="gap-03"></a>
-### GAP-03 — Complete program grammar and observed-choice scope
+### GAP-03 — Complete program grammar and observed choices
 
-**Needed:** connect the declared caller action set to primitives, dependency-only actions, delayed families, mandatory programs, restore memory, and actual observation timing. **Affected arguments:** CLM-0003, CLM-0004, CLM-0008, CLM-0011. **Resolution:** identify the native enumeration/family contract and how each proof relation covers its members. Do not create a second registry or expand scope to make a theorem easier to state.
+Connect caller scope to primitive/dependency actions, delayed families, mandatory
+programs, restore memory and decision timing. Cover every relevant member through
+the existing native family contract; do not create another registry or broaden
+the request to simplify a proof. Affected: CLM-0003, 0004, 0008 and 0011.
 
 <a id="gap-04"></a>
 ### GAP-04 — Eventual progress versus bounded scheduling evidence
 
-**Needed:** state which requests have a justified finite-work/fairness argument, and which only have bounded empirical evidence. **Affected argument:** CLM-0022. **Resolution:** document the necessary finiteness and service premises and whether the current owners enforce them. Do not invent an all-requests convergence guarantee or reclassify a timeout as a mathematical disproof.
+State the exact finite-work/fairness assumptions and which source owners enforce
+them. Bounded experiments neither establish an all-requests convergence theorem
+nor refute mathematical soundness when they time out. Affected: CLM-0022.
 
 <a id="gap-05"></a>
 ### GAP-05 — Numerical endpoints and public exactness
 
-**Needed:** map each reported lower/upper and exactness classifier to native coefficient provenance, directed numerical checking or the actual reconciliation tolerance. **Affected arguments:** CLM-0023 and CLM-0024. **Resolution:** distinguish exact graph structure, exact fixed-policy evaluation, mathematical enclosures, and numerical approximations. Existing checkers stay authoritative; this document is not a runtime check.
+Map a reported endpoint and exactness path to native coefficient provenance,
+checking and actual reconciliation tolerances. Separate structural closure,
+fixed-policy evaluation, mathematical enclosures and numerical estimates. The
+reporter's supported evidence schema must be explicit; neither raw floating-point
+equality nor a permissive tolerance invents missing proof. Affected: CLM-0023/0024.
 
 <a id="gap-06"></a>
-### GAP-06 — Draft claims, current implementations, and independent references
+### GAP-06 — Integration and independent references
 
-**Integration completed:** IDs CLM-0001–CLM-0025 and RQ-001–RQ-003 are registered without collisions; original histories and authored arguments are preserved. Conditional mathematical acceptance records identify Codex self-review. The [programme record](../archive/2026-09-06-solver-mathematical-backbone-v2/README.md) binds the unchanged package, local source reconciliation, selected annotations, reference checks and retirement audit. This is not exhaustive native conformance; GAP-01 through GAP-05 remain scoped obligations.
+The initial integration is complete: CLM-0001–0025 and RQ-001–003 are registered,
+original histories are preserved, and conditional acceptances identify Codex
+self-review. The [backbone archive](../archive/2026-09-06-solver-mathematical-backbone-v2/README.md)
+records 33 synthetic exact examples and eight saved micro coefficient/reference
+checks. Neither is whole-engine validation. GAP-01 through GAP-05 retain their
+independent scoped obligations.
 
 <a id="outcomes"></a>
-## 3. Outcomes and valid comparisons
+## 3. Outcomes and comparisons
 
-The project-level primary outcome is valid exact closure under the complete declared scope. For a fixed eligible cohort of \(N\) planned cases, a simple profile at time \(t\) is
+For a declared cohort of N planned eligible cases, the completion profile is
+E(t) = (number with a qualifying native exact result observed by t) / N.
+Keep missing/failed cases in N; display incorrect results separately. Preserve
+original strata, resource envelope and model semantics. Repeatedly tuned cases
+are development evidence even if the historical filename says frozen.
 
-\[
-E(t)=\frac1N\sum_{i=1}^N
-\mathbf1\{\text{case }i\text{ has a valid exact result by }t\}.
-\]
+When hard cases all remain open, use a subordinate predeclared research measure:
+checked lower at total preparation budget, time to a compatible bound/gap target,
+or memory at the same proof milestone. Do not rename these exact solves.
 
-Keep every planned case in the denominator. Failures and missing results do not vanish because only completed files were parsed. Report correctness failures separately; they cannot be compensated by fast answers elsewhere. Preserve strata, resource envelope, and target semantics. Broaden the development frontier explicitly rather than changing the evaluation cohort after seeing results.
-
-A flat zero-exactness profile can coexist with useful lower research. Give that research its own predeclared outcome, such as checked lower at total preparation budget, time to a compatible bound/gap target, or memory at the same proof milestone. Do not relabel it a new solve.
-
-A result has one of several different authority levels:
-
-| Result type | What it establishes |
+| Result kind | Meaning |
 |---|---|
-| Declared finite-model optimum | Optimality in that exact model/property/coefficient interpretation |
-| Native exact closure | The native proof and executable evidence satisfy the recorded closure contract |
-| Verified policy value | A proper executable witness, not necessarily an optimum |
-| Certified native lower | A lower for the stated source/domain/scope |
-| Optimistic-model policy ceiling | An upper on an auxiliary optimum, not a native executable cost |
-| Conditional/empirical observation | Limited evidence, with no implied new proof authority |
+| Finite-model optimum | Answer to the declared model/property/coefficient problem |
+| Native exact closure | Complete native proof and executable evidence under its numerical contract |
+| Verified policy value | Proper executable upper, not necessarily optimum |
+| Certified native lower | Lower for the stated source, domain and scope |
+| Optimistic-model policy ceiling | Bound on an auxiliary optimum, not a native upper |
+| Conditional/empirical result | Only the stated evidence and limitations |
 
-These types should be carried into the existing reporting extension, not inferred from the word “exact” in a filename.
+[Benchmarking](benchmarking.md) owns identity, gap, trajectory, censoring and
+failure semantics. No incumbent means normalized gap one, not a finite guessed
+upper. Never pair an anchored lower with an empty-item upper. Calls are not unique
+states, fewer rows before timeout are not work avoided, and reused artifacts are
+not new independent trials. Current cost includes preparation and required
+validation without double-counting clock origins.
 
-The [benchmark contract](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/benchmarking.md) already specifies identities, step-boundary trajectories, and gap semantics. Reuse
-
-\[
-g(t)=\frac{U(t)-L(t)}{\max(U(t),1\text{ cost unit})}
-\]
-
-with its numerical-noise handling and pre-incumbent value one. A finite ceiling is not an incumbent. Samples are right-continuous observations after completed steps, not invented internal checkpoints. Do not smooth a reported lower decrease or assume scopes remain compatible merely because the values are finite.
-
-At a common horizon, use the benchmark's actual completed/censored/failure rules. A watchdog with a usable atomic partial trajectory remains censored, not completed; a crash or cancellation is a different failure class. Do not extrapolate a missing trajectory or compute a fabricated full-horizon area. Gap area, when implemented, is descriptive and does not revive accumulated-gap racing.
-
-A performance comparison needs compatible target, budget, hardware/build context, and measurement contract. A same-target numerical bound from another machine may remain mathematical evidence but not a paired speedup. Different starts, prices, scope, or terminal semantics are different tasks. Different auxiliary models can be compared as native lower producers only when their transfer arguments are valid.
-
-Counts also need their unit: calls are not unique states, technique variants are not independent replicates, and fewer rows before timeout are not saved proof work. Repeatedly tuned cases remain development evidence even if their historical filename says frozen. Preserve original role metadata and disclose the exposure.
+A source's first optimistic policy action is not necessarily the mathematical
+bottleneck. Report the selected action, a justified limiting constraint or ceiling,
+and the attribution separately. Missing attribution stays missing.
 
 <a id="handoff"></a>
 ## 4. Research outside the checkout, integration inside it
 
-A research session may read a pushed snapshot and create reports or code attachments without seeing unpushed files or the live Codex thread. A repository-writing session can incorporate them. Neither capability implies independent verification.
+Read-only research may create reports and code attachments without changing the
+local repository. Neither a sandbox path nor a live chat is a durable repository
+reference. The [handoff template](../_templates/solver-research-handoff.md) is a
+convenience, not a required wrapper around an already adequate report.
 
-**Before research:** send one question-specific brief containing the available revision, actual target, relevant claims and full preconditions, compatible references, earlier counterexamples, and the decision to be made. Link long arguments instead of pasting the whole monograph. Expand only when needed.
+Before research, supply the actual available source revision, target question,
+relevant claims and their full preconditions, compatible reference results,
+previous counterexamples and the decision to inform. Do not imply access to
+unpushed local work. A context export must identify its source and link base;
+current relative links and pinned historical evidence have different purposes.
 
-**Research return:** an adequate report or pasted finding is enough. Preserve the actual derivation, scope, sources, checks performed, limitations, and implementation consequence. Small scripts are optional. A proposal is not evidence of performance, and a toy calculation is not a native run. Do not rewrite an adequate report solely to match a form. The [short template](../_templates/solver-research-handoff.md) is a convenience.
+The research return preserves its argument, scope, sources, falsification attempts,
+checks actually run, limitations and implementation consequences. Label synthetic
+calculations as synthetic. Never infer a native speedup from a proposed algorithm.
 
-**Codex intake:** retain the useful original once, inspect attachments before running them, and compare relevant local changes with the reported baseline. Reuse existing claims. For each material finding, record its disposition—incorporated, open, refuted, duplicate, out of scope, or blocked—and its canonical destination. One sentence can handle an obvious finding; a table is useful only for several. Keep the derivation in its mathematical owner, not just the implementation prompt.
+Codex retains the useful original once, inspects scripts before running them,
+reconciles the reported baseline with actual local changes, and gives every
+material finding a disposition: incorporated, open, refuted, duplicate, out of
+scope or blocked. Put accepted reasoning in its canonical mathematical owner,
+not only in an implementation prompt. Preserve original reports and claim history.
 
-**Return receipt:** the ordinary final response names the imported report, actual changes/claim links, remaining uncertainty, validation actually performed, and source/push status. No separate receipt file or intake-only session is required. Until a result is pushed, provide an explicit attachment or compact snapshot rather than implying the next researcher can see the local tree.
-
-An external assistant's convincing proof begins as candidate evidence. Repetition across several plans does not strengthen it. If code and argument disagree, preserve the discrepancy instead of silently editing the mathematics to fit the implementation.
+The normal completion message is the receipt: imported path, canonical claims and
+sections, changes, disagreements, actual validation, local commit and real push
+status. No separate receipt file is required. Research recommendations remain
+candidate evidence; repetition in multiple plans is not independent corroboration.
 
 <a id="knowledge"></a>
-## 5. Keep knowledge when techniques are removed
+## 5. Knowledge outlives machinery
 
-The argument chapter owns the proof. The ledger owns immutable proposition identity and history. The original archive owns what was tried and measured. The current source map owns implementation correspondence. Generated result views own the current quantitative presentation once the tooling exists.
+Chapters own arguments, the ledger owns propositions/history, original archives
+own past evidence, and mechanism pages own current implementation behavior.
+Generated result views already exist and own their derived quantitative display.
+Do not replace this arrangement with another database, queue or status document.
 
-Do not delete a reusable counterexample because the rejected technique is gone. Do not keep a no-consumer implementation merely because its mathematical lesson is valuable. Preserve the lesson and reproduction reference, then audit actual code/build/test consumers before removing or isolating machinery.
-
-Existing native measurement, checkers, quotient, Lab service/CLI/catalogue, and useful independent oracles are not replaced by this workflow. A source file's default-off status or absence from a winning strategy does not establish that it is unused.
-
-This separation takes inspiration from QVBS's explicit models, properties, versions, and tool results. The project is not adopting QVBS's file format or a new model-checking service. [QVBS conventions](https://qcomp.org/benchmarks/contributing.html).
+Retire verified no-consumer machinery only after preserving its useful claim,
+counterexample and reproduction source. Default-off and absence from a winning
+policy do not establish non-use. Keep the native measurement system and genuinely
+independent oracles. Do not rerun the completed dead-header removal.
 
 <a id="tool-status"></a>
-## 6. Implemented traceability and reporting
+## 6. Implemented tools and their limits
 
-[Commands and limits](benchmarking.md#research-series) cover claim/reference lint,
-bounded question/claim context, metadata dry-run and the existing reporter's series
-extension. [Research state](research-state.md) is generated from declared archived
-inputs; unavailable evidence remains explicit. The cheap independent CI job checks
-these tools without changing native required-check names or treating skipped work
-as passed.
+[Commands](benchmarking.md#research-series) cover traceability lint, selected
+context, metadata dry-run and the existing reporter's series extension.
+[Research state](research-state.md) is generated; never repair it by hand.
+The cheap knowledge CI job does not certify native behavior or mathematical truth.
 
-Selected source correspondence: `solver_phase_probability.cpp` owns conditional
-joint caps, final-vector event minimization and complete canonical coverage;
-`solver_solve_bounds.cpp::project_native_retention_lower` checks complete member
-masks and preserves refusal. `solver_phase_lower.cpp::compose` owns mandatory
-integer-weight exits; unsupported restore memory remains excluded by caller scope.
-`solver_quotient_lower.cpp::check_lower` checks represented coefficient inequalities.
-`solver_solve_finish.cpp` combines closed global lower evidence with compiled cost
-reconciliation; `solver_benchmark.cpp::inspect_exact_strategy_evaluation` separately
-records convergence, complete pricing, off-policy mass and configured tolerances.
-These owners map GAP-02/03/05; they do not settle every native application.
+Selected current correspondence includes the phase producer's native conditional
+caps and final-vector minimization, the retention projection's complete member
+guard, the mandatory integer-exit composer, the quotient's represented inequality
+checker and publication/evaluation owners. Detailed locations stay in
+[Solver Internals](../foundation/solver-internals.md).
 
-GAP-01 remains a reconciliation question across public caller modes; the accepted
-zero-cycle theorem does not choose an engine nontermination convention. GAP-04
-remains open: bounded scheduling observations are not an all-requests fairness or
-finite-work theorem. No runtime behavior was changed to make the prose agree.
-
-No claim status controls runtime authority. Small fixes need no report, simulation,
-new claim or archive. Read the relevant premises when a correctness boundary changes.
+Lint checks its documented syntax and references. Unimplemented checks, unavailable
+base revisions and unresolved native premises must remain explicit. Routine code
+edits do not require a new claim. No documentation status enables runtime authority.

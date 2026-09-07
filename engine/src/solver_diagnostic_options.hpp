@@ -42,6 +42,11 @@ struct CarrierLadderExactBoundaryDiagnosticConfig {
  * action_legal before asking for any kernel. */
 CalcContext& solver_lower_diagnostic_calculator(pc_solver_handle handle);
 
+enum class NativeRetentionDiagnosticMode { Off, Cold, Reuse };
+// Same ordinary consumer, native benchmark only. No public ABI/profile flag.
+pc_result configure_solver_native_retention_diagnostic(pc_solver_handle handle,
+    NativeRetentionDiagnosticMode mode, pc_error_info* out_error);
+
 /* Private benchmark construction hook. It retains the ordinary product
  * primitive registry and goal abstraction while allowing a finite subset of
  * generated AutomaticCandidateKind values. It is deliberately absent from

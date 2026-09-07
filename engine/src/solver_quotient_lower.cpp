@@ -138,11 +138,12 @@ QuotientLowerCertificate::QuotientLowerCertificate(
           sizeof(*this) + key_bytes(request_identity) + key_bytes(model_identity) +
               values_by_state.capacity() * sizeof(double)) {}
 
-StableKey quotient_lower_model_identity(const QuotientLowerQuery& query) {
+namespace {
+template <class Emit>
+void encode_lower_identity(const QuotientLowerQuery& query, const Emit& emit) {
     // Count this exact existing encoding before allocating. Growing the large
     // immutable key geometrically retained a second unused block of proof
     // memory; no identity field, numerical contract or acceptance is omitted.
-    const auto encode = [&](const auto& emit) {
     emit(1); emit(query.model_revision);
     emit(static_cast<std::uint64_t>(query.coefficients));
     const auto append = [&](const StableKey& part) {
@@ -191,21 +192,35 @@ StableKey quotient_lower_model_identity(const QuotientLowerQuery& query) {
         emit(std::bit_cast<std::uint64_t>(boundary.lower));
         emit(static_cast<std::uint64_t>(boundary.evidence));
     }
-    };
+}
+} // namespace
+
+StableKey quotient_lower_model_identity(const QuotientLowerQuery& query) {
     std::size_t words=0;
-    encode([&](std::uint64_t) { if (words==std::numeric_limits<std::size_t>::max()) throw std::length_error("lower identity extent overflow"); ++words; });
+    encode_lower_identity(query, [&](std::uint64_t) { if (words==std::numeric_limits<std::size_t>::max()) throw std::length_error("lower identity extent overflow"); ++words; });
     StableKey key; key.reserve(words);
-    encode([&](std::uint64_t word) { key.push_back(word); });
+    encode_lower_identity(query, [&](std::uint64_t word) { key.push_back(word); });
     return key;
 }
 
 bool QuotientBellmanGraph::lower_certificate_current(
         const QuotientLowerCertificate& certificate,
         const QuotientLowerQuery& query) const {
-    return certificate.owner_ == proof_store() &&
-        certificate.price_generation == proof_store()->price_generation() &&
-        query.model_revision == model_revision_ &&
-        certificate.model_identity == quotient_lower_model_identity(query);
+    if (certificate.owner_ != proof_store() ||
+        certificate.price_generation != proof_store()->price_generation() ||
+        certificate.model_revision != model_revision_ ||
+        query.model_revision != model_revision_) return false;
+    // Compare the full canonical encoding without allocating another large key.
+    // This store belongs to this graph; its revision binds dense cell order and
+    // every source/target mutation. Query encoding binds scope, prices, evidence,
+    // boundary values, coefficients and canonical action/family partition.
+    std::size_t at=0;
+    bool equal=true;
+    encode_lower_identity(query, [&](std::uint64_t word) {
+        if (at >= certificate.model_identity.size() || certificate.model_identity[at] != word) equal=false;
+        ++at;
+    });
+    return equal && at == certificate.model_identity.size();
 }
 
 const char* quotient_lower_status_name(QuotientLowerStatus status) {
@@ -222,8 +237,10 @@ const char* quotient_lower_status_name(QuotientLowerStatus status) {
 
 QuotientLowerResult QuotientBellmanGraph::solve_lower(
         const QuotientLowerQuery& query,
-        const QuotientLowerBudget& budget) const {
-    return run_lower(query, budget, nullptr);
+        const QuotientLowerBudget& budget,
+        std::shared_ptr<const QuotientLowerCertificate> initializer,
+        const QuotientLowerProposal* numerical_proposal) const {
+    return run_lower(query, budget, nullptr, std::move(initializer), numerical_proposal);
 }
 
 QuotientLowerResult QuotientBellmanGraph::check_lower(
@@ -237,7 +254,9 @@ QuotientLowerResult QuotientBellmanGraph::check_lower(
 
 QuotientLowerResult QuotientBellmanGraph::run_lower(
         const QuotientLowerQuery& query, const QuotientLowerBudget& budget,
-        const std::vector<double>* candidate) const {
+        const std::vector<double>* candidate,
+        std::shared_ptr<const QuotientLowerCertificate> initializer,
+        const QuotientLowerProposal* numerical_proposal) const {
     QuotientLowerResult out;
     const auto release_diagnostics = [&] {
         std::vector<double>().swap(out.candidate_values_by_state);
@@ -271,6 +290,24 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
     }
     try {
         const auto count = cell_by_state_.size();
+        std::vector<double> initial_values;
+        std::optional<ScopedProofMemoryCharge> initial_charge;
+        if (initializer) {
+            out.initializer_used = lower_certificate_current(*initializer, query) &&
+                initializer->values_by_state.size() == count;
+            out.initializer_refused = !out.initializer_used;
+            out.initializer_reason=out.initializer_used ? "checked_current_query" : "checked_identity_mismatch";
+            if (out.initializer_used) {
+                const auto seed_bytes=count*sizeof(double);
+                if (seed_bytes > budget.max_scratch_bytes)
+                    throw ProofMemoryLimit(seed_bytes, budget.max_scratch_bytes);
+                initial_charge.emplace(proof_store()->ledger(), ProofMemoryCategory::Scratch, seed_bytes);
+                initial_values=initializer->values_by_state;
+            }
+            // Release transferred certificate/key before reserving the query.
+            // A caller retaining another reader still pays its existing charge.
+            initializer.reset();
+        }
         /* Include borrowed snapshot and peak temporary partition/ranking
          * storage in this query reservation; they are not uncharged sinks. */
         std::uint64_t bytes = 4096 + count * 128 +
@@ -279,6 +316,15 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
             query.boundaries.capacity() * sizeof(QuotientLowerBoundary) +
             query.roots.capacity() * sizeof(std::uint32_t) +
             key_bytes(query.request_identity) + key_bytes(query.caller_scope);
+        if (numerical_proposal) {
+            bytes += sizeof(QuotientLowerProposal)+key_bytes(numerical_proposal->request_identity)+
+                key_bytes(numerical_proposal->caller_scope);
+            if (numerical_proposal->values) bytes += numerical_proposal->values->capacity()*sizeof(double);
+            if (numerical_proposal->coordinates) {
+                bytes += numerical_proposal->coordinates->capacity()*sizeof(QuotientBellmanCellInput);
+                for (const auto& c:*numerical_proposal->coordinates) bytes += key_bytes(c.semantic_identity.value());
+            }
+        }
         std::uint64_t peak_partition = 0;
         for (const auto& source : query.sources) {
             // Borrowed query buffers remain live for the full check/solve.
@@ -319,9 +365,9 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
         bytes+=peak_partition;
         for (const auto& boundary:query.boundaries)
             bytes+=key_bytes(boundary.source_identity)+key_bytes(boundary.evidence_identity);
-        out.scratch_bytes = bytes;
-        if (bytes > budget.max_scratch_bytes)
-            throw ProofMemoryLimit(bytes, budget.max_scratch_bytes);
+        out.scratch_bytes = bytes + initial_values.capacity() * sizeof(double);
+        if (out.scratch_bytes > budget.max_scratch_bytes)
+            throw ProofMemoryLimit(out.scratch_bytes, budget.max_scratch_bytes);
         ScopedProofMemoryCharge scratch(proof_store()->ledger(),
             ProofMemoryCategory::Scratch, bytes);
         std::vector<const QuotientLowerSource*> sources(count, nullptr);
@@ -532,10 +578,34 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
             }
             return true;
         };
+        if (numerical_proposal && !candidate && !out.initializer_used) {
+            const auto& seed=*numerical_proposal;
+            out.initializer_reason="untrusted_identity_or_dimension_mismatch";
+            bool compatible=seed.coordinates && seed.values &&
+                seed.coordinates->size()==count && seed.values->size()==count &&
+                seed.request_identity==query.request_identity && seed.caller_scope==query.caller_scope &&
+                seed.model_revision==model_revision_ && seed.price_generation==proof_store()->price_generation() &&
+                seed.coefficients==query.coefficients;
+            if (compatible) for (std::size_t state=0; state<count; ++state) {
+                const auto& coordinate=seed.coordinates->at(state);
+                const auto& current=cells_.at(cell_by_state_[state]).cell;
+                const auto value=seed.values->at(state);
+                if (coordinate!=current) { compatible=false; out.initializer_reason="untrusted_coordinate_mismatch"; break; }
+                if (!std::isfinite(value) || value<0) { compatible=false; out.initializer_reason="untrusted_nonfinite_or_negative"; break; }
+                if (!sources[state] && value!=values[state]) { compatible=false; out.initializer_reason="untrusted_terminal_or_boundary_mismatch"; break; }
+            }
+            out.initializer_refused=!compatible;
+            out.untrusted_initializer_used=compatible;
+            if (compatible) out.initializer_reason="untrusted_current_coordinates";
+            if (compatible) initial_values=*seed.values; // within the query scratch reservation
+        }
         if (candidate) {
             out.candidate_values_by_state = *candidate;
         } else {
-            auto proposal = values; // Zero on modeled states; no x >= L0.
+            // math: uses CLM-0014 — Frozen rows are numerical proposals only;
+            // the phase producer rebuilds their native minima at final values.
+            // No x >= old lower constraint and no seed-based early termination.
+            auto proposal = out.initializer_used || out.untrusted_initializer_used ? std::move(initial_values) : values;
             for (std::uint32_t sweep = 0; sweep < budget.max_sweeps; ++sweep) {
                 if (cancelled()) {
                     refuse(QuotientLowerStatus::Cancelled, "cancelled between complete sweeps");
@@ -552,6 +622,7 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
                             value = solve_detail::evaluate_sparse_policy_row(
                                 transition_cache_, priced_rows_, proposal,
                                 constraint.row, work);
+                            out.numerical_transition_work += work;
                         } else value = rhs(constraint, proposal);
                         best = std::min(best, value);
                     }
@@ -575,6 +646,7 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
             checked = feasible(accepted);
             if (!checked) {
                 accepted = values;
+                out.proposal_zero_fallback = true;
                 checked = feasible(accepted);
                 out.reason = "proposal refused; checked zero modeled-state fallback";
             }

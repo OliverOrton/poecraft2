@@ -33,6 +33,18 @@ struct QuotientBellmanTransitionInput {
     bool operator==(const QuotientBellmanTransitionInput&) const = default;
 };
 
+/* Untrusted numerical input only. Coordinates/values are borrowed for one call;
+ * neither an old feasibility result nor a frozen probability allocation travels
+ * with them. Current complete coverage and final exact inequalities still own
+ * acceptance. Nonmodeled values must match the current boundary exactly. */
+struct QuotientLowerProposal {
+    StableKey request_identity, caller_scope;
+    std::uint64_t model_revision = 0, price_generation = 0;
+    LowerCoefficientModel coefficients = LowerCoefficientModel::RawStoredCoefficients;
+    const std::vector<QuotientBellmanCellInput>* coordinates = nullptr;
+    const std::vector<double>* values = nullptr;
+};
+
 /*
  * Rows are append-only. `certified == false` is deliberately useful: the row
  * remains an admitted legacy immediate-relaxation alternative but can never
@@ -155,7 +167,9 @@ public:
 
     QuotientLowerResult solve_lower(
         const QuotientLowerQuery& query,
-        const QuotientLowerBudget& budget = {}) const;
+        const QuotientLowerBudget& budget = {},
+        std::shared_ptr<const QuotientLowerCertificate> initializer = {},
+        const QuotientLowerProposal* proposal = nullptr) const;
     /* Independent raw inequality check; never self-loop-divided Q values. */
     QuotientLowerResult check_lower(
         const QuotientLowerQuery& query,
@@ -238,7 +252,9 @@ private:
     QuotientLowerResult run_lower(
         const QuotientLowerQuery& query,
         const QuotientLowerBudget& budget,
-        const std::vector<double>* candidate) const;
+        const std::vector<double>* candidate,
+        std::shared_ptr<const QuotientLowerCertificate> initializer = {},
+        const QuotientLowerProposal* proposal = nullptr) const;
 
     std::optional<std::uint32_t> state_for_cell(std::uint32_t cell_id) const;
     bool row_certificate_current(std::uint64_t row) const;

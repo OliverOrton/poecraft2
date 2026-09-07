@@ -5,7 +5,7 @@
 
 A lower is a statement about every allowed proper solution, not just the current policy or the current sparse graph. Its value is useful only after the native scope and the relation supplying the inequality have been established.
 
-This chapter gives explicit sufficient arguments. It does not claim that every native producer already proves every premise. The corresponding current mechanisms are in [Lower and Pruning Authority](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/lower-pruning.md).
+This chapter gives explicit sufficient arguments. It does not claim that every native producer already proves every premise. The corresponding current mechanisms are in [Lower and Pruning Authority](../lower-pruning.md).
 
 <a id="subsolution"></a>
 ## 1. A finite subsolution is a lower: the stopping argument
@@ -62,7 +62,7 @@ There are three safe ways to account for an unbuilt action:
 
 In the scalar case, impose \(x(s)\le\ell(s,a)\). It may be very weak, but the action has not vanished. A residual-family floor must hold for **every** member of the unresolved family. A sample, count, or finite generated prefix does not prove that universal property. [CLM-0008](../claims.md#clm-0008).
 
-Complete canonical sets or a proved disjoint family partition establish coverage. Two duplicate action constraints cannot replace a missing different action just because the counts match. The current lower-only quotient and repaired coverage mechanisms are documented as checking that distinction. [Lower and Pruning Authority](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/lower-pruning.md).
+Complete canonical sets or a proved disjoint family partition establish coverage. Two duplicate action constraints cannot replace a missing different action just because the counts match. The current lower-only quotient and repaired coverage mechanisms are documented as checking that distinction. [Lower and Pruning Authority](../lower-pruning.md).
 
 When a cheap placeholder is replaced by a complete row, keep the native action represented once in the model's intended relaxation. Leaving an old, cheaper fictitious escape alongside the refined row is safe as a lower but may permanently hide the benefit. Deleting a still-required unresolved action is unsafe. Those are opposite mistakes.
 
@@ -215,7 +215,7 @@ A useful weight inequality is
 
 when \(N'\le N\), \(B'\ge\max(0,B-D)\), and denominators are handled correctly. Here \(N\) bounds satisfying weight, \(B\) is baseline other weight, and \(D\) bounds its possible exclusion. Overcounting exclusion overlap is conservative for an upper probability. The native producer still has to prove the history-specific values and correctly handle empty pools.
 
-The reviewed implementation uses native integer statistics and conditional assignment bounds. That does not authorize using its witness in a changed filtered pool; the context identity and all-member argument remain premises. [Lower and Pruning Authority](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/lower-pruning.md).
+The reviewed implementation uses native integer statistics and conditional assignment bounds. That does not authorize using its witness in a changed filtered pool; the context identity and all-member argument remain premises. [Lower and Pruning Authority](../lower-pruning.md).
 
 <a id="coordinates"></a>
 ## 8. Acquisition tables and continuation potentials have different coordinates
@@ -263,8 +263,71 @@ Separate a genuine semantic exit from a temporary immediate-price shortcut. An a
 <a id="mapping"></a>
 ## 11. Source correspondence and unresolved guarantees
 
-The lower-only quotient owns numerical candidate/checking work; the native phase producer owns the physical domination argument; `ProofPatternManager` and the ordinary retention lookup own compatible consumption. These are separate premises. A coefficient checker cannot establish the native relation, and a native relation cannot turn an arbitrary numerical iterate into a lower. [Lower and Pruning Authority](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/lower-pruning.md).
+The lower-only quotient owns numerical candidate/checking work; the native phase producer owns the physical domination argument; `ProofPatternManager` and the ordinary retention lookup own compatible consumption. These are separate premises. A coefficient checker cannot establish the native relation, and a native relation cannot turn an arbitrary numerical iterate into a lower. [Lower and Pruning Authority](../lower-pruning.md).
 
 This draft does not add a producer, a new abstraction, or a runtime authority. It supplies the arguments those owners need to cite. [GAP-02](../research.md#gap-02), [GAP-03](../research.md#gap-03), and [GAP-05](../research.md#gap-05) name the class, action/program, and numerical bridges that still need current-source correspondence review.
 
 A result should be reported at the level it establishes: a stronger local relation, a stronger complete model, a valid native lower, a consumed public lower, or reduced exact-proof work. Those are different achievements. [Research interpretation](../research.md#outcomes).
+
+<a id="current-query-warm-start"></a>
+## Current-query numerical reuse is not certificate reuse
+
+The existing lower query now optionally reuses a current-query checked vector or
+a compatible untrusted numerical proposal. Its sparse in-place/self-choice
+updates remain candidate generation: this implementation does not rely on their
+being synchronous or monotone. Every result still passes the existing complete
+exact inequality check, followed by native re-minimization at the final vector.
+The [implementation and matched evidence](../../archive/2026-09-07-checked-numerical-reuse-v1/README.md)
+qualify this selected application, without changing the general claim statuses.
+
+Let T be the Bellman operator of one fixed finite, action-complete lower query,
+with fixed boundary values. If h is nonnegative, has the required terminal and
+boundary values, and h <= T(h), monotonicity gives
+
+    h <= T(h) <= T(T(h)) <= ... .
+
+For synchronous exact Bellman updates this proves a monotone sequence of
+subsolutions. It does not prove finite termination, uniqueness, attainment of the
+proper-policy optimum, or correctness of an arbitrary numerical update. An
+in-place update or algebraic self-loop elimination needs its own corresponding
+premises, or its result must remain an untrusted proposal until checked.
+
+The identity of the current query is essential. A native-admissible value may
+fail a more optimistic truncated query, as explained in
+[initialization](#initialization). A vector with the right length but the wrong
+coordinate order is not the same potential. Prices, boundaries, action cover,
+coefficient interpretation and relevant source/model generations must agree.
+
+The phase producer also has a second distinction. Let F_y be the frozen quotient
+constructed by choosing event/occupancy minima using vector y. Its selected
+coefficients need not minimize expectation for another vector x. Therefore
+
+    x <= F_y(x)
+
+does not alone establish the native probability-envelope inequalities at x.
+They must be reconstructed/minimized for x and checked with complete native
+coverage. Numerical reuse must not reuse the previous outcome selection as native
+authority. See [CLM-0014](../claims.md#clm-0014).
+
+A current-query checked vector is the simplest eligible numerical seed. If most
+outer-round vectors fail the rebuilt query, that optimization may save little.
+Measure eligible rounds and their numerical cost before predicting its benefit.
+A rejected vector may be used only as an explicitly untrusted numerical proposal
+when the update method supports it; it cannot bypass checking. A bounded cold
+fallback remains available, and its time/work counts toward the treatment.
+
+Seed acceptance is not a stopping criterion. When a scalar floor of 10 has been
+replaced by a complete relation allowing 100, the old value 10 can remain feasible.
+The numerical query must still attempt the improvement. Zero-cost loops provide
+another warning: with T(x)=min(x,5), every x in [0,5] is a fixed point, while the
+proper-policy value is 5. Do not make a convergence guarantee by changing only
+the initializer.
+
+The implementation remains the existing lower query and phase producer. Focused
+native tests cover proper cyclic models, stale identities, changed boundaries,
+self/observed choices, zero-cost components, capped untrusted proposals and
+cancellation. They establish neither a convergence theorem nor exact closure.
+The reference arguments are [CLM-0007](../claims.md#clm-0007),
+[CLM-0013](../claims.md#clm-0013), [CLM-0014](../claims.md#clm-0014), and
+[CLM-0023](../claims.md#clm-0023). The imported propositions reuse these identities;
+no immutable statement or open general obligation is rewritten.

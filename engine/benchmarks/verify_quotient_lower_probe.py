@@ -614,7 +614,110 @@ def verify_ordinary(control_path, treatment_path, native_path):
         speedup_established=False,default_enabled=False)
 
 
+def verify_numerical_reuse(directory):
+    """Matched numerical treatment; the existing native verifier owns semantics.
+
+    Run the ordinary native verifier on proposal-warm.json to produce reference.json
+    first. This comparison does not manufacture a second native certificate.
+    """
+    directory=Path(directory)
+    read=lambda name: load_native(directory / (name + ".json"))
+    cold,warm=read("proposal-cold"),read("proposal-warm")
+    reference=read("reference")
+    provenance=read("probe-provenance")
+    def semantic(value):
+        if isinstance(value,dict):
+            return {k:semantic(v) for k,v in value.items() if not k.endswith("_ns")}
+        if isinstance(value,list): return [semantic(v) for v in value]
+        return value
+    assert cold["pilot"]==warm["pilot"] and not warm["production_authority"]
+    assert cold["probabilistic_donor"]==warm["probabilistic_donor"]
+    assert semantic(cold["sources"])==semantic(warm["sources"])
+    assert reference["checked_relations"]==len(warm["probabilistic_donor"]["checked_relations"])
+    for run in (cold,warm):
+        assert run["resources"]["proof_budget_bytes"]==32<<20
+        assert run["resources"]["combined_additional_peak_bytes"]<=32<<20
+        assert run["process_peak_working_set_bytes"]<=1<<30
+    cp,wp=cold["preparation_profile"],warm["preparation_profile"]
+    assert cp["cold_solve_rounds"]==29 and not cp["seeded_rounds"]
+    assert wp["seeded_rounds"]==12 and wp["untrusted_rounds"]==17
+    assert not any(wp[k] for k in ("cold_solve_rounds","seed_refusals","zero_fallbacks"))
+    sources=[]
+    for source in warm["sources"]:
+        after=next(model for model in source["complete_models"] if model["treatment"])
+        sources.append(dict(second_source=source["second_source"],
+            donor_before=source["probabilistic_donor"],donor_after=source["probabilistic_donor"],donor_gain=0,
+            program_before=source["program_after"]["lower"],program_after=source["program_after"]["lower"],program_gain=0,
+            complete_model_before=after["lower"],complete_model_after=after["lower"],complete_model_gain=0,
+            portfolio_before=after["portfolio"],portfolio_after=after["portfolio"],portfolio_gain=0))
+    before,after=read("ordinary-cold"),read("ordinary-warm")
+    for field in ("pilot","source","scope","budget_ns","total_cap_bytes","proof_cap_bytes","held_outs"):
+        assert before[field]==after[field],field
+    assert before["source"]==warm["sources"][0]["source"]
+    for run in (before,after):
+        assert run["treatment"] and not run["default_enabled"] and not run["refusal"]
+        assert run["native_prepare_attempts"]==1 and run["native_prepared"]
+        assert run["budget_ns"]==60_000_000_000 and run["proof_cap_bytes"]==32<<20
+        assert run["total_cap_bytes"]==1<<30 and run["native_peak_bytes"]<=32<<20
+        assert max(run["peak_owned_bytes"],run["process_peak_working_set_bytes"])<=1<<30
+        assert run["public_lower"]==sources[0]["donor_after"]
+        for held in run["held_outs"]:
+            assert held["physical_lower"]==warm["probabilistic_donor"]["values"][held["cell"]]
+            assert held["lower"]==(held["physical_lower"] if held["uniform_projection_accepted"] else 0)
+    assert not before["numerical_reuse"] and after["numerical_reuse"]
+    dc,dw=read("development-cold"),read("development-warm")
+    assert dc["artifact"]==dw["artifact"]
+    dc,dw=dc["cases"][0],dw["cases"][0]
+    assert dc["id"]==dw["id"]=="conquest-lamellar-allflame-fractured-4-to-5-product8"
+    assert {k:v for k,v in dc["input"].items() if k!="native_retention_diagnostic"}=={
+        k:v for k,v in dw["input"].items() if k!="native_retention_diagnostic"}
+    dev=[]
+    for case,mode in ((dc,"cold"),(dw,"reuse")):
+        assert case["input"]["native_retention_diagnostic"]==mode
+        assert not case["errors"] and case["cap_checks"]["all_passed"]
+        assert case["input"]["verification"]["runs"]==0 and case["verification"] is None
+        assert case["input"]["caps"]["max_solver_owned_bytes"]==1<<30
+        evaluation=case["exact_strategy_evaluation"]
+        assert evaluation["completed"] and evaluation["status"]=="matched"
+        assert evaluation["cost_complete"] and evaluation["zero_off_policy_mass"] and evaluation["cost_reconciled"]
+        assert evaluation["success_probability"]==1 and evaluation["off_policy_mass"]==0
+        summary=case["solve_summary"]
+        assert summary["upper_bound"]==summary["evaluated_policy_cost"]==evaluation["total_expected_cost"]
+        assert case["phase_wall_ms"]["total"]<=60_000 and not case["execution"]["watchdog_expired"]
+        target=provenance["development_case"]["verified_upper_target"]
+        dev.append(dict(mode=mode,total_seconds=case["phase_wall_ms"]["total"]/1000,
+            lower=summary["lower_bound"],verified_upper=summary["upper_bound"],
+            absolute_gap=summary["absolute_optimality_gap"],expanded_states=summary["expanded_states"],
+            native_peak_owned_bytes=case["memory"]["native_peak_owned_bytes"],
+            verified_upper_target=target,target_met=summary["upper_bound"]<=target+provenance["development_case"]["target_absolute_tolerance"],
+            exact_closure=summary["converged"] and summary["policy_status"]=="exact",
+            stop=summary["termination"]))
+    fields=("elapsed_ns","native_prepare_ns","ordinary_setup_ns","rows","native_hits","native_selected_calls",
+            "peak_owned_bytes","native_peak_bytes","verified_upper","done")
+    reduction=1-wp["total_ns"]/cp["total_ns"]
+    return dict(baseline="same-executable cold numerical initialization; same native model and complete scope",
+        sources=sources,probability_cap_gain=0,checked_relations=reference["checked_relations"],
+        compact=dict(cold=cp,reuse=wp,total_preparation_reduction=reduction,
+            fixed_gate=provenance["criteria"]["minimum_total_preparation_reduction"],
+            gate_passed=reduction>=provenance["criteria"]["minimum_total_preparation_reduction"],
+            peak_bytes_before=cold["resources"]["combined_additional_peak_bytes"],
+            peak_bytes_after=warm["resources"]["combined_additional_peak_bytes"],
+            optimistic_policy_ceiling=reference["optimistic_policy_ceiling"]),
+        ordinary=dict(control={k:before[k] for k in fields},treatment={k:after[k] for k in fields},
+            public_lower_gain=after["public_lower"]-before["public_lower"],
+            scope=after["scope"],held_out_coverage_unchanged=True),development=dev,
+        exact_closure_gain=int(dev[1]["exact_closure"])-int(dev[0]["exact_closure"]),
+        development_gap_reduction=dev[0]["absolute_gap"]-dev[1]["absolute_gap"],
+        development_target_gain=int(dev[1]["target_met"])-int(dev[0]["target_met"]),default_enabled=False,
+        outcome="preparation reduction only; no improved gap, target attainment or exact closure; single sequential matched observations")
+
+
 if __name__ == "__main__":
+    if len(sys.argv)==4 and sys.argv[1]=="--numerical-reuse":
+        result=verify_numerical_reuse(sys.argv[2])
+        Path(sys.argv[3]).write_bytes((json.dumps(result,indent=2)+"\n").encode("utf-8"))
+        print("matched numerical reuse checks passed"); raise SystemExit(0)
+
     if len(sys.argv)==6 and sys.argv[1]=="--ordinary":
         result=verify_ordinary(*sys.argv[2:5])
         Path(sys.argv[5]).write_bytes((json.dumps(result,indent=2)+"\n").encode("utf-8"))

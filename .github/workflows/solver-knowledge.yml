@@ -27,5 +27,7 @@ jobs:
             echo 'No previous claim ledger is available; append-only comparison is not applicable.'
           fi
           python -m unittest discover -s tools/ingest/tests -p test_solver_knowledge.py
-          python -m pytest tools/ingest/tests/test_solver_reports.py -q
+          python -m pytest tools/ingest/tests/test_solver_reports.py tools/ingest/tests/test_ci_changes.py -q
           python -m poecraft_ingest.solver_knowledge check-metadata experiments/solver-research/backbone-pilot-v1.json
+          python -m poecraft_ingest.solver_reports --research-series experiments/solver-research/backbone-pilot-v1.json --output /tmp/solver-research-state.json --markdown /tmp/solver-research-state.md
+          cmp docs/solver/research-state.md /tmp/solver-research-state.md

@@ -1,6 +1,7 @@
 from pathlib import Path
 import tempfile
 import unittest
+import subprocess
 
 from poecraft_ingest.solver_knowledge import check, export_context, parse_claims
 
@@ -91,14 +92,38 @@ class KnowledgeTest(unittest.TestCase):
 
     def test_export_preserves_complete_premises_or_refuses(self):
         self.ledger.write_text(claim(status="accepted", deps="[CLM-0002](#clm-0002)") + claim("CLM-0002", "superseded"), encoding="utf-8")
+        (self.docs / "research.md").write_text("### RQ-001 — Target\n\nCLM-0001 [local](#rq-001)\n", encoding="utf-8")
+        self.commit_context()
         text = export_context(self.root, [], question="RQ-001")
         self.assertIn("Proper policy, complete scope, bounded tail.", text)
         self.assertIn("CLM-0002 is superseded", text)
-        self.assertIn("(claims.md#clm-0002)", text)
+        self.assertIn("/docs/solver/claims.md#clm-0002)", text)
+        self.assertIn("/docs/solver/research.md#rq-001)", text)
+        self.assertIn("Source revision:", text)
+        self.assertIn("not observed in local remote refs", text)
         with self.assertRaisesRegex(ValueError, "nothing truncated"):
             export_context(self.root, ["CLM-0001"], max_chars=20)
         with self.assertRaisesRegex(ValueError, "unknown claim"):
             export_context(self.root, ["CLM-9999"])
+
+    def commit_context(self):
+        for args in (["init", "-q"], ["add", "docs/solver"],
+                     ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "context fixture"]):
+            subprocess.run(["git", *args], cwd=self.root, check=True, capture_output=True)
+
+    def test_context_refuses_dirty_linked_content_and_preserves_historical_pins(self):
+        self.ledger.write_text(claim().replace("Preserve the zero-cost cycle.",
+            "[Historical](https://example.com/old#proof)."), encoding="utf-8")
+        self.commit_context()
+        text=export_context(self.root,["CLM-0001"])
+        self.assertIn("(https://example.com/old#proof)",text)
+        self.assertIn("/docs/solver/argument.md#proof)",text)
+        (self.docs/"argument.md").write_text("# Changed\n",encoding="utf-8")
+        with self.assertRaisesRegex(ValueError,"uncommitted context source docs/solver/argument.md"):
+            export_context(self.root,["CLM-0001"])
+        self.ledger.write_text(claim()+"\n",encoding="utf-8")
+        with self.assertRaisesRegex(ValueError,"uncommitted context source docs/solver/claims.md"):
+            export_context(self.root,["CLM-0001"])
 
 
 if __name__ == "__main__":

@@ -1,0 +1,31 @@
+{
+  "scope": "edited current solver, mathematics, foundation, HANDOFF, archive index and new receipt only; no blanket historical or product freshness claim",
+  "paths": [
+    "HANDOFF.md",
+    "docs/archive/README.md",
+    "docs/foundation/change-impact.md",
+    "docs/foundation/solver-internals.md",
+    "docs/foundation/solver-lab.md",
+    "docs/solver/benchmarking.md",
+    "docs/solver/claims.md",
+    "docs/solver/flow.md",
+    "docs/solver/lower-pruning.md",
+    "docs/solver/mathematical-model.md",
+    "docs/solver/mathematics/README.md",
+    "docs/solver/mathematics/lower-bounds.md",
+    "docs/solver/mathematics/numerical-closure.md",
+    "docs/solver/publication.md",
+    "docs/solver/request-action-scope.md",
+    "docs/solver/research-state.md",
+    "docs/solver/research.md",
+    "docs/solver/resources-resume-replay.md",
+    "docs/solver/scheduling-bellman.md",
+    "docs/solver/states-carriers.md",
+    "docs/solver/strict-closure.md",
+    "docs/solver/telemetry.md",
+    "docs/solver/transitions-reforge.md",
+    "docs/solver/upper-authority.md",
+    "docs/archive/2026-09-07-checked-numerical-reuse-v1/README.md"
+  ],
+  "errors": []
+}

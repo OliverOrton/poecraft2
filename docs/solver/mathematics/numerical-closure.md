@@ -17,7 +17,7 @@
 
 For example, computing an exact dot product of stored binary floats proves an exact statement about those represented numbers. It does not convert a rounded probability into an exact native rational. A normalized rational reference is a useful different model when explicitly labelled; normalization is not automatically an admissibility-preserving correction.
 
-The current lower-only quotient separates coefficient declarations, native evidence, and exact binary inequality checking. Preserve that separation. [Lower and Pruning Authority](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/lower-pruning.md); [CLM-0023](../claims.md#clm-0023).
+The current lower-only quotient separates coefficient declarations, native evidence, and exact binary inequality checking. Preserve that separation. [Lower and Pruning Authority](../lower-pruning.md); [CLM-0023](../claims.md#clm-0023).
 
 The fixed-point certificate literature independently emphasizes producing checkable witnesses rather than trusting a numerical algorithm merely because it is sophisticated. The paper by Chatterjee and colleagues formalizes certificates for finite MDP reachability and reward properties; its checker does not automatically verify poecraft2's implicit action or member-domain bridge. [Chatterjee et al., TACAS 2025](https://arxiv.org/abs/2501.11467).
 
@@ -100,7 +100,7 @@ The implementation can name a policy `exact` after its complete strict proof and
 
 This does **not** require materializing the entire native state space. An independently valid action lower can discharge an unmaterialized alternative. It does require that every omitted part has an actual proof owner or remains visibly unresolved.
 
-The reviewed strict-closure contract requires a proper selected policy, complete action accounting, competitive alternatives certified or carrier-wide dominated at the current generation, closed frontiers/envelopes, and a compiled evaluation that reconciles with the strict value. [Strict Closure](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/strict-closure.md).
+The reviewed strict-closure contract requires a proper selected policy, complete action accounting, competitive alternatives certified or carrier-wide dominated at the current generation, closed frontiers/envelopes, and a compiled evaluation that reconciles with the strict value. [Strict Closure](../strict-closure.md).
 
 ### Why policy-reachable inequalities alone are insufficient
 
@@ -113,7 +113,7 @@ Conversely, a full valid root lower can meet a root policy upper without certify
 
 A requested bounded finish, memory stop, watchdog, absent incumbent, numerical refusal, and exact closure are different events. A finite internal estimate does not establish an incumbent. A coarse graph completing does not automatically establish strict optimality. A policy returned after a cap can still be a valid bounded upper.
 
-Publication's documented duty is to classify compatible evidence, compile the chosen policy, and evaluate the artifact actually returned. [Publication and Evaluation](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/publication.md).
+Publication's documented duty is to classify compatible evidence, compile the chosen policy, and evaluate the artifact actually returned. [Publication and Evaluation](../publication.md).
 
 The reader should be able to recover the following from a result:
 
@@ -141,7 +141,7 @@ Reference records should identify:
 * whether the value is an optimum, a policy upper, a lower, or an auxiliary ceiling;
 * any challenge or discrepancy.
 
-The draft's companion arithmetic checks are deliberately smaller: they exercise exact examples and counterexamples appearing in these chapters. They do not run the native solver, verify every theorem, or replace the planned independent reference slice.
+The [completed backbone reference slice](../../archive/2026-09-06-solver-mathematical-backbone-v2/README.md) records 33 exact synthetic examples and eight saved native-micro coefficient/reference checks. Its normalized reference and raw mass defect remain separately labelled. These checks are implemented evidence, not a new native solve, universal theorem verification, or proof that a shared export represents the native process.
 
 A result that disagrees with a reference should preserve both pieces of evidence until the difference is attributed. Editing an expected number to make a test pass is not reconciliation.
 
@@ -152,4 +152,4 @@ Numerical proposal generation can change without changing the proof theorem, if 
 
 A prose claim's `accepted` status never authorizes a runtime bound. The existing native constructors and validators still have to run where required. Conversely, a comment-only change to a claim reference should not trigger a solver simulation solely because the word “proof” appears in the file.
 
-Use [research.md](../research.md) to preserve a new mathematical argument or discrepancy once. Routine implementation work does not need a new ledger entry. The open numerical correspondence is [GAP-05](../research.md#gap-05); the whole-solver source bridge is [GAP-06](../research.md#gap-06).
+Use [research.md](../research.md) to preserve a new mathematical argument or discrepancy once. Routine implementation work does not need a new ledger entry. Numerical correspondence remains [GAP-05](../research.md#gap-05); the relevant native representation and program obligations remain [GAP-02](../research.md#gap-02) and [GAP-03](../research.md#gap-03). [GAP-06](../research.md#gap-06) records completed integration, not a pending whole-solver proof.

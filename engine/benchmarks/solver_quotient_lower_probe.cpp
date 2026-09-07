@@ -830,6 +830,22 @@ void probabilistic_phase(CalcContext& calc, SolveWorkTestAccess::Impl& owner, co
         << ",\"geometry_bytes\":" << prep.geometry_bytes
         << ",\"coverage_ns\":" << prep.coverage_ns << ",\"quotient_rows_ns\":" << prep.quotient_rows_ns
         << ",\"solve_ns\":" << prep.solve_ns << ",\"numerical_sweeps\":" << prep.numerical_sweeps
+        << ",\"candidate_pass_rounds\":" << prep.candidate_pass_rounds
+        << ",\"candidate_fail_rounds\":" << prep.candidate_fail_rounds
+        << ",\"eligible_solve_rounds\":" << prep.eligible_solve_rounds
+        << ",\"refused_solve_rounds\":" << prep.refused_solve_rounds
+        << ",\"eligible_solve_ns\":" << prep.eligible_solve_ns
+        << ",\"refused_solve_ns\":" << prep.refused_solve_ns
+        << ",\"eligible_sweeps\":" << prep.eligible_sweeps
+        << ",\"refused_sweeps\":" << prep.refused_sweeps
+        << ",\"eligible_work\":" << prep.eligible_work
+        << ",\"refused_work\":" << prep.refused_work
+        << ",\"seeded_rounds\":" << prep.seeded_rounds
+        << ",\"seed_refusals\":" << prep.seed_refusals
+        << ",\"first_seed_refusal\":" << std::quoted(prep.first_seed_refusal)
+        << ",\"cold_solve_rounds\":" << prep.cold_solve_rounds
+        << ",\"untrusted_rounds\":" << prep.untrusted_rounds
+        << ",\"zero_fallbacks\":" << prep.zero_fallbacks
         << "},\"resources\":{\"proof_budget_bytes\":" << proof_cap << ",\"adapter_support_ns\":" << adapter_ns << ",\"probability_treatment_ns\":" << treatment_ns
         << ",\"shared_control_bytes\":" << (control ? control->retained_reservation : 0) << ",\"reused_draw_witnesses\":" << (control ? control->draw_count() : 0)
         << ",\"new_draw_witnesses\":" << potential->draws.size()
@@ -872,6 +888,7 @@ void ordinary_retention(SolveWorkTestAccess::Impl& owner, Clock::time_point bega
         <<",\"reforge_work\":"<<progress.reforge_work<<",\"live_owned_bytes\":"<<owner.audited_estimated_owned_bytes()
         <<",\"peak_owned_bytes\":"<<std::max(progress.peak_owned_bytes,owner.native_retention_peak_bytes)
         <<",\"process_peak_working_set_bytes\":"<<process_peak()
+        <<",\"numerical_reuse\":"<<owner.options.native_retention_numerical_reuse
         <<",\"native_prepare_attempts\":"<<unsigned(owner.native_retention_attempted)
         <<",\"native_prepared\":"<<bool(owner.native_retention_potential)
         <<",\"native_prepare_ns\":"<<owner.native_retention_prepare_ns
@@ -888,6 +905,22 @@ void ordinary_retention(SolveWorkTestAccess::Impl& owner, Clock::time_point bega
             << ",\"relations_ns\":" << prep.relation_ns << ",\"support_ns\":" << prep.support_ns
             << ",\"quotient_rows_ns\":" << prep.quotient_rows_ns << ",\"check_ns\":" << prep.check_ns
             << ",\"solve_ns\":" << prep.solve_ns << ",\"numerical_sweeps\":" << prep.numerical_sweeps
+        << ",\"candidate_pass_rounds\":" << prep.candidate_pass_rounds
+        << ",\"candidate_fail_rounds\":" << prep.candidate_fail_rounds
+        << ",\"eligible_solve_rounds\":" << prep.eligible_solve_rounds
+        << ",\"refused_solve_rounds\":" << prep.refused_solve_rounds
+        << ",\"eligible_solve_ns\":" << prep.eligible_solve_ns
+        << ",\"refused_solve_ns\":" << prep.refused_solve_ns
+        << ",\"eligible_sweeps\":" << prep.eligible_sweeps
+        << ",\"refused_sweeps\":" << prep.refused_sweeps
+        << ",\"eligible_work\":" << prep.eligible_work
+        << ",\"refused_work\":" << prep.refused_work
+        << ",\"seeded_rounds\":" << prep.seeded_rounds
+        << ",\"seed_refusals\":" << prep.seed_refusals
+        << ",\"first_seed_refusal\":" << std::quoted(prep.first_seed_refusal)
+        << ",\"cold_solve_rounds\":" << prep.cold_solve_rounds
+        << ",\"untrusted_rounds\":" << prep.untrusted_rounds
+        << ",\"zero_fallbacks\":" << prep.zero_fallbacks
             << ",\"geometry_hits\":" << prep.geometry_hits << ",\"geometry_templates\":" << prep.geometry_templates
             << ",\"event_cap_hits\":" << prep.event_cap_hits << ",\"event_cap_bytes\":" << prep.event_cap_bytes
         << ",\"geometry_bytes\":" << prep.geometry_bytes << '}';
@@ -955,7 +988,12 @@ int main(int argc, char** argv) {
         if (argc != 5) throw std::runtime_error("micro|medium-coverage artifact-directory goal economy required");
         const bool is_micro = std::string(argv[1]) == "micro";
         const bool is_phase = std::string(argv[1]) == "uniform-phase";
-        const std::string selector = argv[1];
+        std::string selector = argv[1];
+        const bool ordinary_reuse=selector=="ordinary-retention-reuse";
+        if (ordinary_reuse) selector="ordinary-retention-profile";
+        const bool untrusted = selector == "filter-both-proposal-32";
+        const bool warm = untrusted || selector == "filter-both-warm-32";
+        if (warm) selector = "filter-both-32";
         const bool is_ordinary = selector=="ordinary-retention-control" || selector=="ordinary-retention-treatment" || selector=="ordinary-retention-profile";
         const bool is_filter = selector == "filter-attack-32" || selector == "filter-both-32" || selector == "filter-attack-64";
         const bool is_reforge = is_filter || selector == "reforge-rarity-32" || selector == "reforge-occupancy-32";
@@ -1019,6 +1057,7 @@ int main(int argc, char** argv) {
         options.max_reforge_work = is_micro ? 20000 : 1000;
         }
         options.native_retention_lower=is_ordinary && selector!="ordinary-retention-control";
+        options.native_retention_numerical_reuse=ordinary_reuse;
         options.native_retention_profile=is_ordinary && selector!="ordinary-retention-control";
         options.max_solver_owned_bytes = 1ull << 30;
         const auto prepare = Clock::now();
@@ -1034,7 +1073,7 @@ int main(int argc, char** argv) {
             key(goal + '\n' + economy + '\n' + read(manifest_path) + "\nlower-v2"), key(goal));
         else if (is_phase) uniform_phase(calc, owner, start, key(goal + '\n' + economy + '\n' + read(manifest_path)));
         else if (is_probability) probabilistic_phase(calc, owner, start, continuation, proof_cap, retention,
-            {selector != "reforge-rarity-32",true,is_filter ? (selector=="filter-both-32" ? 3u : 1u) : 0u},h.session->impl);
+            {selector != "reforge-rarity-32",true,is_filter ? (selector=="filter-both-32" ? 3u : 1u) : 0u,warm,untrusted},h.session->impl);
         else medium_coverage(calc, owner);
         std::cout << ",\"prepare_ns\":" << prepare_ns << ",\"elapsed_ns\":" << ns(began)
             << ",\"process_peak_working_set_bytes\":" << process_peak() << "}\n";

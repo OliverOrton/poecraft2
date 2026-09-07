@@ -13,6 +13,16 @@
         "docs/archive/2026-09-04-free-value-bellman-research/native-identities.json"
       ],
       "source_binding": "exact source identities and caller flags remain in original native/provenance reports, including ordinary-control.json; aliases do not replace them"
+    },
+    "fractured-development-product8-v1": {
+      "semantic_version": "existing native quality-ladder product8 fixture, unchanged",
+      "property": "proper executable upper and full native exact-closure outcome at 30-second bounded finish / 60-second watchdog",
+      "coefficient_semantics": "native solver and independent compiled strategy evaluation under the fixture numerical reconciliation",
+      "scope": "Conquest Lamellar fractured four-to-five native product envelope; its base price and ordered goal differ from the compact input",
+      "input_references": [
+        "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-fractured-4-to-5-product8.json"
+      ],
+      "source_binding": "full input and selected internal diagnostic mode retained in both original benchmark reports"
     }
   },
   "comparison_profiles": {
@@ -137,7 +147,8 @@
       "limitations": [
         "Original native/checker qualification is retained, not rerun by reporting."
       ],
-      "comparison": "docs/archive/2026-09-05-native-applied-reforge-preparation-v1/comparison.json"
+      "comparison": "docs/archive/2026-09-05-native-applied-reforge-preparation-v1/comparison.json",
+      "preparation_evidence": "docs/archive/2026-09-05-native-applied-reforge-preparation-v1/native.json"
     },
     {
       "id": "applied-reforge-development-controls",
@@ -179,7 +190,8 @@
       "limitations": [
         "Original native/checker qualification is retained, not rerun by reporting."
       ],
-      "comparison": "docs/archive/2026-09-05-native-metamod-first-exit-v1/comparison.json"
+      "comparison": "docs/archive/2026-09-05-native-metamod-first-exit-v1/comparison.json",
+      "preparation_evidence": "docs/archive/2026-09-05-native-metamod-first-exit-v1/native.json"
     },
     {
       "id": "filtered-continuation-development-controls",
@@ -207,6 +219,36 @@
       "limitations": [
         "No native executable upper or general empty-start lower."
       ]
+    },
+    {
+      "id": "checked-numerical-reuse",
+      "model": "saved-anchored-v1",
+      "kind": "certified_native_lower",
+      "producer": "native phase producer with checked/untrusted numerical initialization; existing exact native relation audit",
+      "validation": "docs/archive/2026-09-07-checked-numerical-reuse-v1/README.md",
+      "evidence": "docs/archive/2026-09-07-checked-numerical-reuse-v1/reference.json",
+      "adapter": "archived_phase_v1",
+      "role": "development; single sequential matched pair, not independent replication",
+      "treatment": "checked and untrusted numerical reuse",
+      "comparison": "docs/archive/2026-09-07-checked-numerical-reuse-v1/comparison.json",
+      "preparation_evidence": "docs/archive/2026-09-07-checked-numerical-reuse-v1/preparation.json",
+      "limitations": [
+        "Same final native model and values; measured preparation reduction does not establish target/gap/exact-closure improvement."
+      ]
+    },
+    {
+      "id": "numerical-reuse-development-product8",
+      "model": "fractured-development-product8-v1",
+      "kind": "conditional_observation",
+      "producer": "existing native benchmark with exact compiled evaluation, zero Simulator trials",
+      "validation": "docs/archive/2026-09-07-checked-numerical-reuse-v1/README.md",
+      "evidence": "docs/archive/2026-09-07-checked-numerical-reuse-v1/comparison.json",
+      "pointer": "/development",
+      "role": "existing development case; one fixed-target matched pair",
+      "treatment": "cold versus numerical reuse, optional lower on in both",
+      "limitations": [
+        "Both miss the predeclared upper target; same verified upper and gap; no exact closure."
+      ]
     }
   ],
   "ordinary_pairs": [
@@ -215,6 +257,49 @@
       "control": "docs/archive/2026-09-05-native-metamod-first-exit-v1/ordinary-control.json",
       "treatment": "docs/archive/2026-09-05-native-metamod-first-exit-v1/ordinary-treatment.json",
       "provenance": "docs/archive/2026-09-05-native-metamod-first-exit-v1/provenance.json"
+    },
+    {
+      "id": "numerical-reuse-ordinary-cold-reuse-60s",
+      "control": "docs/archive/2026-09-07-checked-numerical-reuse-v1/ordinary-cold.json",
+      "treatment": "docs/archive/2026-09-07-checked-numerical-reuse-v1/ordinary-warm.json",
+      "provenance": "docs/archive/2026-09-07-checked-numerical-reuse-v1/provenance.json"
+    }
+  ],
+  "exact_reference_availability": [
+    {
+      "id": "same-side-prefix-20260827",
+      "kind": "native_exact_closure",
+      "recorded_value": 1618.2138946963837,
+      "evidence": "docs/archive/2026-08-26-exact-same-side-closure/result.md",
+      "scope": "historical empty clean three-prefix Calculator target; outside anchored two-sided donor domain"
+    },
+    {
+      "id": "same-side-suffix-20260827",
+      "kind": "native_exact_closure",
+      "recorded_value": 1101.15648683309,
+      "evidence": "docs/archive/2026-08-26-exact-same-side-closure/result.md",
+      "scope": "historical empty clean three-suffix Calculator target; outside anchored two-sided donor domain"
+    },
+    {
+      "id": "pdr-reclamation-20260830",
+      "kind": "native_exact_closure",
+      "recorded_value": 3758.12442725521,
+      "evidence": "docs/archive/2026-08-30-carrier-ladder-released-candidate-reclamation-v1/README.md",
+      "scope": "historical empty four-goal PDR target; no initial fractured goal"
+    },
+    {
+      "id": "clean-five-policy-20260830",
+      "kind": "verified_policy_upper",
+      "recorded_value": 85408.64362148782,
+      "evidence": "docs/archive/2026-08-30-carrier-ladder-released-candidate-reclamation-v1/README.md",
+      "scope": "historical empty clean-five executable policy; not optimality or an anchored gap"
+    },
+    {
+      "id": "fractured-four-to-five-gate2-20260826",
+      "kind": "verified_policy_upper",
+      "recorded_value": 2698.8747960143623,
+      "evidence": "docs/archive/2026-08-26-solver-quality-debt-retirement/gate2-evidence.md",
+      "scope": "historical fractured four-to-five product8 policy, used only to predeclare this development target"
     }
   ]
 }

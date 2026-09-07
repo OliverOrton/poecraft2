@@ -1,0 +1,606 @@
+{
+  "baseline": "same-executable cold numerical initialization; same native model and complete scope",
+  "sources": [
+    {
+      "second_source": false,
+      "donor_before": 352.31017033879505,
+      "donor_after": 352.31017033879505,
+      "donor_gain": 0,
+      "program_before": 355.789813661076,
+      "program_after": 355.789813661076,
+      "program_gain": 0,
+      "complete_model_before": 352.31017033879505,
+      "complete_model_after": 352.31017033879505,
+      "complete_model_gain": 0,
+      "portfolio_before": 352.31017033879505,
+      "portfolio_after": 352.31017033879505,
+      "portfolio_gain": 0
+    },
+    {
+      "second_source": true,
+      "donor_before": 355.43265454362336,
+      "donor_after": 355.43265454362336,
+      "donor_gain": 0,
+      "program_before": 358.87229571369824,
+      "program_after": 358.87229571369824,
+      "program_gain": 0,
+      "complete_model_before": 355.43265454362336,
+      "complete_model_after": 355.43265454362336,
+      "complete_model_gain": 0,
+      "portfolio_before": 355.43265454362336,
+      "portfolio_after": 355.43265454362336,
+      "portfolio_gain": 0
+    }
+  ],
+  "probability_cap_gain": 0,
+  "checked_relations": 26259,
+  "compact": {
+    "cold": {
+      "total_ns": 43182811400,
+      "projection_ns": 628900,
+      "relations_ns": 21923012400,
+      "diagnostic_export_ns": 303350800,
+      "support_ns": 7045677800,
+      "allocation_ns": 3216512900,
+      "native_weights_ns": 7545700,
+      "check_ns": 1872815800,
+      "geometry_hits": 989683,
+      "geometry_templates": 5,
+      "event_cap_hits": 27451804,
+      "event_cap_bytes": 47616,
+      "geometry_bytes": 5812,
+      "coverage_ns": 2980157000,
+      "quotient_rows_ns": 5734472100,
+      "solve_ns": 19189174200,
+      "numerical_sweeps": 24836,
+      "candidate_pass_rounds": 23,
+      "candidate_fail_rounds": 33,
+      "eligible_solve_rounds": 12,
+      "refused_solve_rounds": 17,
+      "eligible_solve_ns": 7686733800,
+      "refused_solve_ns": 11502440400,
+      "eligible_sweeps": 9822,
+      "refused_sweeps": 15014,
+      "eligible_work": 1255256218,
+      "refused_work": 1945147688,
+      "seeded_rounds": 0,
+      "seed_refusals": 0,
+      "cold_solve_rounds": 29,
+      "untrusted_rounds": 0,
+      "zero_fallbacks": 0
+    },
+    "reuse": {
+      "total_ns": 31314394000,
+      "projection_ns": 502700,
+      "relations_ns": 22407299600,
+      "diagnostic_export_ns": 308613100,
+      "support_ns": 7205420500,
+      "allocation_ns": 3315033200,
+      "native_weights_ns": 7087300,
+      "check_ns": 1895730600,
+      "geometry_hits": 989683,
+      "geometry_templates": 5,
+      "event_cap_hits": 27451804,
+      "event_cap_bytes": 47616,
+      "geometry_bytes": 5812,
+      "coverage_ns": 3012825100,
+      "quotient_rows_ns": 5820516000,
+      "solve_ns": 6806939600,
+      "numerical_sweeps": 6985,
+      "candidate_pass_rounds": 23,
+      "candidate_fail_rounds": 33,
+      "eligible_solve_rounds": 12,
+      "refused_solve_rounds": 17,
+      "eligible_solve_ns": 3368291500,
+      "refused_solve_ns": 3438648100,
+      "eligible_sweeps": 3636,
+      "refused_sweeps": 3349,
+      "eligible_work": 467062852,
+      "refused_work": 437705365,
+      "seeded_rounds": 12,
+      "seed_refusals": 0,
+      "cold_solve_rounds": 0,
+      "untrusted_rounds": 17,
+      "zero_fallbacks": 0
+    },
+    "total_preparation_reduction": 0.274841239262157,
+    "fixed_gate": 0.15,
+    "gate_passed": true,
+    "peak_bytes_before": 31578332,
+    "peak_bytes_after": 31680508,
+    "optimistic_policy_ceiling": {
+      "scope": "proper fixed policy of the optimistic probability-box model only; no native upper authority",
+      "states": 51,
+      "values": {
+        "1405": "938830417085642432439715996698881185009176972460823/2664783750321311603409250368552626568617078554624",
+        "1369": "84681912862313016937064437868431858054579841/238250233261702502078644964267548313911296",
+        "1538": "141120266246553514985217949148930734183133205/348449143727040986586495598010130648530944"
+      },
+      "decimal_values": {
+        "1405": 352.31017037402796,
+        "1369": 355.43265457916846,
+        "1538": 404.99530214687695
+      },
+      "actions": {
+        "1281": "harvest_reforge:defences",
+        "1369": "harvest_reforge:defences",
+        "1405": "bench:HelenaMasterFireResist1",
+        "1406": "exalt",
+        "1407": "harvest_reforge:defences",
+        "1430": "bench:EinharMasterArmourPercent1_",
+        "1446": "bench:EinharMasterArmourPercent1_",
+        "1466": "exalt",
+        "1467": "exalt",
+        "1471": "harvest_reforge:defences",
+        "1478": "bench:EinharMasterArmourPercent1_",
+        "1498": "exalt",
+        "1499": "exalt",
+        "1503": "harvest_reforge:defences",
+        "1514": "exalt",
+        "1515": "exalt",
+        "1519": "harvest_reforge:defences",
+        "1535": "eldritch_annul",
+        "1538": "alchemy",
+        "2569": "fracture",
+        "2815": "bench:HelenaMasterFireResist1",
+        "2816": "fracture",
+        "2943": "bench:HelenaMasterFireResist1",
+        "2944": "fracture",
+        "3004": "exalt",
+        "3005": "exalt",
+        "3009": "fracture",
+        "3036": "exalt",
+        "3037": "exalt",
+        "3041": "fracture",
+        "3052": "exalt",
+        "3053": "exalt",
+        "3057": "fracture",
+        "3073": "eldritch_annul",
+        "3149": "exalt",
+        "3150": "harvest_reforge:defences",
+        "3162": "exalt",
+        "3164": "harvest_reforge:defences",
+        "3169": "exalt",
+        "3171": "harvest_reforge:defences",
+        "3176": "remove_crafted_modifiers",
+        "3180": "exalt",
+        "3182": "harvest_reforge:defences",
+        "3187": "remove_crafted_modifiers",
+        "3191": "remove_crafted_modifiers",
+        "3194": "remove_crafted_modifiers",
+        "3386": "exalt",
+        "3387": "fracture",
+        "3462": "exalt",
+        "3463": "fracture",
+        "3507": "remove_crafted_modifiers"
+      },
+      "coordinates": {
+        "1281": [
+          1281,
+          0,
+          0,
+          0,
+          0
+        ],
+        "1369": [
+          1369,
+          0,
+          0,
+          0,
+          0
+        ],
+        "1405": [
+          1405,
+          0,
+          0,
+          0,
+          0
+        ],
+        "1406": [
+          1406,
+          0,
+          0,
+          0,
+          0
+        ],
+        "1407": [
+          1407,
+          0,
+          0,
+          0,
+          0
+        ],
+        "1430": [
+          1430,
+          0,
+          0,
+          0,
+          0
+        ],
+        "1446": [
+          1446,
+          0,
+          0,
+          0,
+          0
+        ],
+        "1466": [
+          1466,
+          0,
+          0,
+          0,
+          0
+        ],
+        "1467": [
+          1467,
+          0,
+          0,
+          0,
+          0
+        ],
+        "1471": [
+          1471,
+          0,
+          0,
+          0,
+          0
+        ],
+        "1478": [
+          1478,
+          0,
+          0,
+          0,
+          0
+        ],
+        "1498": [
+          1498,
+          0,
+          0,
+          0,
+          0
+        ],
+        "1499": [
+          1499,
+          0,
+          0,
+          0,
+          0
+        ],
+        "1503": [
+          1503,
+          0,
+          0,
+          0,
+          0
+        ],
+        "1514": [
+          1514,
+          0,
+          0,
+          0,
+          0
+        ],
+        "1515": [
+          1515,
+          0,
+          0,
+          0,
+          0
+        ],
+        "1519": [
+          1519,
+          0,
+          0,
+          0,
+          0
+        ],
+        "1535": [
+          1535,
+          0,
+          0,
+          0,
+          0
+        ],
+        "1538": [
+          1538,
+          0,
+          0,
+          0,
+          0
+        ],
+        "2569": [
+          2569,
+          0,
+          0,
+          0,
+          0
+        ],
+        "2815": [
+          2815,
+          0,
+          0,
+          0,
+          0
+        ],
+        "2816": [
+          2816,
+          0,
+          0,
+          0,
+          0
+        ],
+        "2943": [
+          2943,
+          0,
+          0,
+          0,
+          0
+        ],
+        "2944": [
+          2944,
+          0,
+          0,
+          0,
+          0
+        ],
+        "3004": [
+          3004,
+          0,
+          0,
+          0,
+          0
+        ],
+        "3005": [
+          3005,
+          0,
+          0,
+          0,
+          0
+        ],
+        "3009": [
+          3009,
+          0,
+          0,
+          0,
+          0
+        ],
+        "3036": [
+          3036,
+          0,
+          0,
+          0,
+          0
+        ],
+        "3037": [
+          3037,
+          0,
+          0,
+          0,
+          0
+        ],
+        "3041": [
+          3041,
+          0,
+          0,
+          0,
+          0
+        ],
+        "3052": [
+          3052,
+          0,
+          0,
+          0,
+          0
+        ],
+        "3053": [
+          3053,
+          0,
+          0,
+          0,
+          0
+        ],
+        "3057": [
+          3057,
+          0,
+          0,
+          0,
+          0
+        ],
+        "3073": [
+          3073,
+          0,
+          0,
+          0,
+          0
+        ],
+        "3149": [
+          1406,
+          0,
+          0,
+          1,
+          0
+        ],
+        "3150": [
+          1407,
+          0,
+          0,
+          1,
+          0
+        ],
+        "3162": [
+          1434,
+          0,
+          1,
+          0,
+          0
+        ],
+        "3164": [
+          1435,
+          0,
+          1,
+          0,
+          0
+        ],
+        "3169": [
+          1450,
+          0,
+          1,
+          0,
+          0
+        ],
+        "3171": [
+          1451,
+          0,
+          1,
+          0,
+          0
+        ],
+        "3176": [
+          1470,
+          0,
+          1,
+          0,
+          0
+        ],
+        "3180": [
+          1482,
+          0,
+          1,
+          0,
+          0
+        ],
+        "3182": [
+          1483,
+          0,
+          1,
+          0,
+          0
+        ],
+        "3187": [
+          1502,
+          0,
+          1,
+          0,
+          0
+        ],
+        "3191": [
+          1518,
+          0,
+          1,
+          0,
+          0
+        ],
+        "3194": [
+          1535,
+          0,
+          0,
+          1,
+          0
+        ],
+        "3386": [
+          2816,
+          0,
+          0,
+          1,
+          0
+        ],
+        "3387": [
+          2817,
+          0,
+          0,
+          1,
+          0
+        ],
+        "3462": [
+          2944,
+          0,
+          0,
+          1,
+          0
+        ],
+        "3463": [
+          2945,
+          0,
+          0,
+          1,
+          0
+        ],
+        "3507": [
+          3073,
+          0,
+          0,
+          1,
+          0
+        ]
+      }
+    }
+  },
+  "ordinary": {
+    "control": {
+      "elapsed_ns": 60015762100,
+      "native_prepare_ns": 41325617200,
+      "ordinary_setup_ns": 45656304800,
+      "rows": 38540,
+      "native_hits": 1158,
+      "native_selected_calls": 1156,
+      "peak_owned_bytes": 134545578,
+      "native_peak_bytes": 31578332,
+      "verified_upper": null,
+      "done": 0
+    },
+    "treatment": {
+      "elapsed_ns": 60013409700,
+      "native_prepare_ns": 28392706800,
+      "ordinary_setup_ns": 32635751100,
+      "rows": 49490,
+      "native_hits": 3715433,
+      "native_selected_calls": 3715431,
+      "peak_owned_bytes": 201514083,
+      "native_peak_bytes": 31680508,
+      "verified_upper": null,
+      "done": 0
+    },
+    "public_lower_gain": 0.0,
+    "scope": {
+      "profile": "calculator_product_v1",
+      "goal_progress_gated_reforges": 1,
+      "allow_economic_restart": 0,
+      "consider_imprint_programs": 0,
+      "high_impact_executable_uppers": 1
+    },
+    "held_out_coverage_unchanged": true
+  },
+  "development": [
+    {
+      "mode": "cold",
+      "total_seconds": 45.3974496,
+      "lower": 352.31017033879505,
+      "verified_upper": 10401458.65388722,
+      "absolute_gap": 10401106.34371688,
+      "expanded_states": 1,
+      "native_peak_owned_bytes": 45348077,
+      "verified_upper_target": 2698.87479601436,
+      "target_met": false,
+      "exact_closure": false,
+      "stop": "requested_bounded_finish"
+    },
+    {
+      "mode": "reuse",
+      "total_seconds": 34.2260896,
+      "lower": 352.31017033879505,
+      "verified_upper": 10401458.65388722,
+      "absolute_gap": 10401106.34371688,
+      "expanded_states": 1,
+      "native_peak_owned_bytes": 45450253,
+      "verified_upper_target": 2698.87479601436,
+      "target_met": false,
+      "exact_closure": false,
+      "stop": "requested_bounded_finish"
+    }
+  ],
+  "exact_closure_gain": 0,
+  "development_gap_reduction": 0.0,
+  "development_target_gain": 0,
+  "default_enabled": false,
+  "outcome": "preparation reduction only; no improved gap, target attainment or exact closure; single sequential matched observations"
+}

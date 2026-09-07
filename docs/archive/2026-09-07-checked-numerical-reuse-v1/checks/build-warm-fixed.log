@@ -1,0 +1,5 @@
+[0/2] Re-checking globbed directories...
+[1/5] Linking CXX static library libpoecraft_engine.a
+[2/5] Linking CXX executable poecraft_quotient_lower_probe.exe
+[3/5] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_lower.cpp.obj
+[4/5] Linking CXX executable poecraft_engine_tests.exe

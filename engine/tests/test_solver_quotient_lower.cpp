@@ -74,6 +74,133 @@ double root(const QuotientLowerResult& result) {
     return result.checked ? result.checked->values_by_state.at(0) : -1.0;
 }
 
+void checked_numerical_initializer() {
+    QuotientBellmanGraph graph(cap, QuotientBellmanMode::LowerOnly);
+    graph.install_cells({cell(0), cell(1), cell(2, true)});
+    auto a=row(graph,0,10,1,{{{1},1,.5},{{2},2,.5}});
+    auto b=row(graph,1,20,2,{{{1},0,.25},{{2},2,.75}});
+    auto q=query(graph,{source(0,{10},{a}),source(1,{20},{b})});
+    auto seed=graph.check_lower(q,{2,2,0});
+    PC_CHECK(seed.checked != nullptr);
+    auto cold=graph.solve_lower(q);
+    auto warm=graph.solve_lower(q,{},seed.checked);
+    PC_CHECK(warm.initializer_used && !warm.initializer_refused);
+    PC_CHECK(std::abs(root(warm)-root(cold))<1e-8);
+    PC_CHECK(warm.sweeps>0 && warm.numerical_transition_work>0);
+    PC_CHECK(graph.check_lower(q,warm.checked->values_by_state).checked != nullptr);
+    auto seed_budget=QuotientLowerBudget{};
+    seed_budget.max_scratch_bytes=cold.scratch_bytes;
+    PC_CHECK(warm.scratch_bytes==cold.scratch_bytes+3*sizeof(double));
+    PC_CHECK(graph.solve_lower(q,seed_budget,seed.checked).status==QuotientLowerStatus::ResourceCap);
+
+    // Same dimension across another graph is not the same semantic mapping.
+    QuotientBellmanGraph reordered(cap,QuotientBellmanMode::LowerOnly);
+    reordered.install_cells({cell(1),cell(0),cell(2,true)});
+    auto rq=query(reordered,{source(0,{10},{scalar(10,1)}),source(1,{20},{scalar(20,3)})});
+    auto other=reordered.solve_lower(rq,{},seed.checked);
+    PC_CHECK(other.initializer_refused && !other.initializer_used && other.checked);
+
+    // No seed acceptance shortcut after a temporary cap is removed.
+    auto full=query(graph,{source(0,{10},{scalar(10,100)}),source(1,{20},{scalar(20,100)})});
+    auto ten=graph.check_lower(full,{10,10,0});
+    PC_CHECK(ten.checked != nullptr);
+    PC_CHECK(root(graph.solve_lower(full,{},ten.checked))==100);
+    for (unsigned mutation=0;mutation<5;++mutation) {
+        auto changed=full;
+        if (mutation==0) changed.sources[0].constraints[0].lower=1;
+        if (mutation==1) changed.request_identity.push_back(77);
+        if (mutation==2) changed.coefficients=LowerCoefficientModel::RawStoredCoefficients;
+        if (mutation==3) {
+            changed.caller_scope.push_back(77);
+            for(auto& s:changed.sources) s.expected_actions.scope_identity=changed.caller_scope;
+        }
+        if (mutation==4) {
+            changed.sources[0].expected_actions.actions.push_back({30});
+            changed.sources[0].constraints.push_back(scalar(30,1));
+        }
+        auto fallback=graph.solve_lower(changed,{},ten.checked);
+        PC_CHECK(fallback.initializer_refused && !fallback.initializer_used && fallback.checked);
+        PC_CHECK(root(fallback)==root(graph.solve_lower(changed)));
+    }
+    auto boundary=query(graph,{source(0,{10},{scalar(10,100)})});
+    boundary.boundaries={{1,{9000,1},{99},9,LowerEvidenceKind::IndependentLower}};
+    auto bounded=graph.check_lower(boundary,{10,9,0});
+    boundary.boundaries[0].lower=0;
+    PC_CHECK(graph.solve_lower(boundary,{},bounded.checked).initializer_refused);
+    graph.note_price_change({});
+    full.model_revision=graph.model_revision();
+    PC_CHECK(graph.solve_lower(full,{},ten.checked).initializer_refused);
+
+    QuotientBellmanGraph choices(cap,QuotientBellmanMode::LowerOnly);
+    choices.install_cells({cell(0),cell(1),cell(2,true)});
+    auto offer=row(choices,0,10,1,{{{1},2,.5}},{{.5,true,{1}}});
+    auto cq=query(choices,{source(0,{10},{offer})});
+    cq.boundaries={{1,{9000,1},{99},100,LowerEvidenceKind::IndependentLower}};
+    auto cs=choices.check_lower(cq,{1,100,0});
+    PC_CHECK(root(choices.solve_lower(cq,{},cs.checked))==2);
+    auto loop=row(choices,0,11,0,{{{1},0,1}});
+    auto zq=query(choices,{source(0,{11,12},{loop,scalar(12,5)})});
+    auto zs=choices.check_lower(zq,{3,0,0});
+    PC_CHECK(zs.checked && root(choices.solve_lower(zq,{},zs.checked))==5);
+    zq.sources[0]=source(0,{11},{loop});
+    auto only_loop=choices.check_lower(zq,{3,0,0});
+    PC_CHECK(only_loop.checked && root(choices.solve_lower(zq,{},only_loop.checked))==0);
+    // A lower/fixed point is not an assertion of proper-policy optimality.
+    auto capped=QuotientLowerBudget{}; capped.max_scratch_bytes=1;
+    const auto before=choices.proof_store()->ledger().snapshot().total_bytes;
+    PC_CHECK(choices.solve_lower(zq,capped,only_loop.checked).status==QuotientLowerStatus::ResourceCap);
+    auto cancelled=QuotientLowerBudget{}; unsigned calls=0;
+    cancelled.cancelled=[&]{return ++calls==2;};
+    PC_CHECK(choices.solve_lower(zq,cancelled,only_loop.checked).status==QuotientLowerStatus::Cancelled);
+    PC_CHECK(choices.proof_store()->ledger().snapshot().total_bytes==before);
+}
+
+void untrusted_numerical_initializer() {
+    QuotientBellmanGraph graph(cap,QuotientBellmanMode::LowerOnly);
+    std::vector<QuotientBellmanCellInput> coordinates{cell(0),cell(1),cell(2,true)};
+    graph.install_cells(coordinates);
+    auto a=row(graph,0,10,1,{{{1},1,.5},{{2},2,.5}});
+    auto b=row(graph,1,20,2,{{{1},0,.25},{{2},2,.75}});
+    auto q=query(graph,{source(0,{10},{a}),source(1,{20},{b})});
+    std::vector<double> prior{100,100,0};
+    PC_CHECK(!graph.check_lower(q,prior).checked);
+    QuotientLowerProposal proposal{q.request_identity,q.caller_scope,q.model_revision,
+        graph.proof_store()->price_generation(),q.coefficients,&coordinates,&prior};
+    auto result=graph.solve_lower(q,{}, {},&proposal);
+    PC_CHECK(result.untrusted_initializer_used && !result.initializer_used && result.checked);
+    PC_CHECK(std::abs(root(result)-root(graph.solve_lower(q)))<1e-8);
+    PC_CHECK(graph.check_lower(q,result.checked->values_by_state).checked!=nullptr);
+    for(unsigned change=0;change<6;++change) {
+        auto stale=proposal;
+        if(change==0) ++stale.model_revision;
+        if(change==1) ++stale.price_generation;
+        if(change==2) stale.request_identity.push_back(99);
+        if(change==3) stale.caller_scope.push_back(99);
+        if(change==4) stale.coefficients=LowerCoefficientModel::RawStoredCoefficients;
+        if(change==5) std::swap(coordinates[0],coordinates[1]);
+        auto fallback=graph.solve_lower(q,{}, {},&stale);
+        PC_CHECK(fallback.initializer_refused && !fallback.untrusted_initializer_used);
+        PC_CHECK(std::string(fallback.initializer_reason).find("mismatch")!=std::string::npos);
+        PC_CHECK(root(fallback)==root(graph.solve_lower(q)));
+        if(change==5) std::swap(coordinates[0],coordinates[1]);
+    }
+    for(auto value:{-1.0,std::numeric_limits<double>::infinity(),std::numeric_limits<double>::quiet_NaN()}) {
+        prior[0]=value;
+        PC_CHECK(graph.solve_lower(q,{}, {},&proposal).initializer_refused);
+    }
+    prior={100,100,1};
+    PC_CHECK(graph.solve_lower(q,{}, {},&proposal).initializer_refused);
+    prior={100,100,0};
+    auto bounded=QuotientLowerBudget{}; bounded.max_sweeps=1;
+    auto incomplete=graph.solve_lower(q,bounded,{},&proposal);
+    PC_CHECK(incomplete.sweeps==1 && incomplete.proposal_zero_fallback && root(incomplete)==0);
+    const auto before=graph.proof_store()->ledger().snapshot().total_bytes;
+    auto cancelled=QuotientLowerBudget{}; unsigned calls=0;
+    cancelled.cancelled=[&]{return ++calls==2;};
+    PC_CHECK(graph.solve_lower(q,cancelled,{},&proposal).status==QuotientLowerStatus::Cancelled);
+    PC_CHECK(graph.proof_store()->ledger().snapshot().total_bytes==before);
+}
+
 void cyclic_and_revisions() {
     QuotientBellmanGraph graph(cap, QuotientBellmanMode::LowerOnly);
     graph.install_cells({cell(0), cell(1), cell(2, true)});
@@ -325,6 +452,8 @@ void numerical_and_memory() {
 } // namespace
 
 void run_solver_quotient_lower_tests() {
+    checked_numerical_initializer();
+    untrusted_numerical_initializer();
     cyclic_and_revisions();
     action_and_family_coverage();
     choices_and_programs();

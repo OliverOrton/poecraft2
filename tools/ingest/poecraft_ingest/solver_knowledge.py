@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 import re
 import subprocess
-from urllib.parse import unquote
+from urllib.parse import unquote, quote, urlsplit
 
 
 STATUSES = {"open", "accepted", "refuted", "superseded", "withdrawn"}
@@ -225,17 +225,44 @@ def check(root: Path, *, source_paths: list[str] | None = None,
 
 def export_context(root: Path, ids: list[str], *, question: str | None = None,
                    max_chars: int = 20000) -> str:
+    # Read local Git evidence only. Remote tracking refs are observations, not a
+    # fresh visibility check; no fetch/push or unrelated dirty-path disclosure.
+    revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+    repository = "https://github.com/OliverOrton/poecraft2"
+    link_base = f"{repository}/blob/{revision}/"
+    remote_refs = subprocess.check_output(
+        ["git", "for-each-ref", "--contains", revision, "--format=%(refname)", "refs/remotes"],
+        cwd=root, text=True).splitlines()
+    verified: set[str] = set()
+
+    def require_committed(relative: str) -> None:
+        if relative in verified:
+            return
+        path = local_path(root, relative)
+        try:
+            committed = subprocess.check_output(["git", "show", f"{revision}:{relative}"],
+                                                 cwd=root, stderr=subprocess.DEVNULL)
+        except subprocess.CalledProcessError as error:
+            raise ValueError(f"uncommitted context source {relative}; no pinned link contains this view") from error
+        if path.read_bytes().replace(b"\r\n", b"\n") != committed.replace(b"\r\n", b"\n"):
+            raise ValueError(f"uncommitted context source {relative}; commit the selected source or export a committed checkout (nothing truncated)")
+        verified.add(relative)
+
+    require_committed(LEDGER.as_posix())
     claims = parse_claims((root / LEDGER).read_text(encoding="utf-8"))
     parts = ["# Selected solver research context\n\nTraceability is not native proof authority.\n"
-             "Local links use docs/solver as their base; claim history remains in claims.md.\n"]
+             f"Source revision: `{revision}`. Selected working-copy sources match committed bytes.\n"
+             f"Repository link base: {link_base}\n"
+             f"Visibility: {'present in locally recorded remote refs' if remote_refs else 'not observed in local remote refs; links may be unavailable externally'}; no network verification.\n"]
     if question:
+        require_committed("docs/solver/research.md")
         if not re.fullmatch(r"RQ-\d{3}", question):
             raise ValueError("invalid question ID")
         text = (root / "docs/solver/research.md").read_text(encoding="utf-8")
         match = re.search(rf"^### {question} — .+?(?=^<a id=|^## |\Z)", text, re.M | re.S)
         if not match:
             raise ValueError(f"unknown question {question}")
-        parts.append(match[0])
+        parts.append(re.sub(r"\]\(#(?!clm-)", "](research.md#", match[0]))
         ids = ids + re.findall(CLAIM_ID, match[0])
     if not ids:
         raise ValueError("select a question or claim")
@@ -258,7 +285,16 @@ def export_context(root: Path, ids: list[str], *, question: str | None = None,
                 parts.append(f"Premise warning: {dep} is {claims[dep].status}; its complete preconditions: {claims[dep].fields['Preconditions']}\n")
             pending.extend(claims[dep].dependencies - seen)
     # A selected export does not contain the entire ledger's anchor namespace.
-    result = "\n".join(parts).replace("](\u0023clm-", "](claims.md#clm-")
+    result = "\n".join(parts).replace("](#", "](claims.md#")
+    def portable(match: re.Match) -> str:
+        target = match[2]
+        if urlsplit(target).scheme:
+            return match[0]  # Historical pins and external sources stay intact.
+        path, sep, anchor = target.partition("#")
+        relative = (root / "docs/solver" / unquote(path)).resolve().relative_to(root.resolve()).as_posix()
+        require_committed(relative)
+        return f"[{match[1]}]({link_base}{quote(relative, safe='/')}{sep}{anchor})"
+    result = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", portable, result)
     if len(result) > max_chars:
         raise ValueError(f"complete context needs {len(result)} characters; raise --max-chars or select fewer claims (nothing truncated)")
     return result
