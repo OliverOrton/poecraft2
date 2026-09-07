@@ -1,0 +1,10 @@
+{
+  "source_revision": "a7a4a9a81aa38b7fcb0380d72cbef47d1f2cbefc",
+  "export_sha256": "10dbd241f0d47d51dc2500b249efb06fc5f8b9914331c6e36a81141934d036bb",
+  "utf8_math_preserved": true,
+  "visibility": "not observed in local remote refs; no network verification",
+  "source_hashes": {
+    "tools/ingest/poecraft_ingest/solver_knowledge.py": "1ff37bf5c7fe6dd918e8ff5a61a581a04d242265550fcd250215852cf9edbbf1",
+    "tools/ingest/tests/test_solver_knowledge.py": "245f0d04a981b22ed7aaaca2935c774b9fed21094aeab495396005d44bb0dd84"
+  }
+}

@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 import re
 import subprocess
+import sys
 from urllib.parse import unquote, quote, urlsplit
 
 
@@ -316,6 +317,10 @@ def main(argv: list[str] | None = None) -> int:
     root = args.root.resolve()
     try:
         if args.command == "context":
+            # Portable Markdown must also survive Windows redirected stdout;
+            # the local ANSI code page cannot encode all authored mathematics.
+            if hasattr(sys.stdout, "reconfigure"):
+                sys.stdout.reconfigure(encoding="utf-8")
             print(export_context(root, args.claim, question=args.question, max_chars=args.max_chars))
             return 0
         if args.command == "check-metadata":

@@ -2,6 +2,8 @@ from pathlib import Path
 import tempfile
 import unittest
 import subprocess
+import os
+import sys
 
 from poecraft_ingest.solver_knowledge import check, export_context, parse_claims
 
@@ -110,6 +112,15 @@ class KnowledgeTest(unittest.TestCase):
         for args in (["init", "-q"], ["add", "docs/solver"],
                      ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "context fixture"]):
             subprocess.run(["git", *args], cwd=self.root, check=True, capture_output=True)
+
+    def test_redirected_context_is_utf8_under_ansi_code_page(self):
+        self.ledger.write_text(claim().replace("bounded potential", "bounded potential → lower"), encoding="utf-8")
+        self.commit_context()
+        command=Path(__file__).resolve().parents[1] / "poecraft_ingest/solver_knowledge.py"
+        result=subprocess.run([sys.executable,str(command),"--root",str(self.root),"context","--claim","CLM-0001"],
+            capture_output=True,env={**os.environ,"PYTHONIOENCODING":"cp1252","PYTHONUTF8":"0"})
+        self.assertEqual(result.returncode,0,result.stderr)
+        self.assertIn("potential → lower",result.stdout.decode("utf-8"))
 
     def test_context_refuses_dirty_linked_content_and_preserves_historical_pins(self):
         self.ledger.write_text(claim().replace("Preserve the zero-cost cycle.",

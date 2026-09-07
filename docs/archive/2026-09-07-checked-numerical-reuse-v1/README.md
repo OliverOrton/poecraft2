@@ -193,3 +193,18 @@ The first command reads the compact native file; give its actual path when outsi
 the evidence directory. The second checks matched identities and reports gains;
 it does not issue native authority itself. Canonical reporting commands remain in
 [benchmarking](../../solver/benchmarking.md#research-series).
+
+## Final committed-context acceptance
+
+The main implementation checkpoint is `a7a4a9a81aa38b7fcb0380d72cbef47d1f2cbefc`.
+Its first real redirected context export exposed Windows ANSI output's inability
+to encode an authored arrow. A narrow follow-up explicitly writes context as
+UTF-8; the focused CLI regression forces cp1252 and verifies the complete Unicode
+text. All **8 context tests** pass after this fix (superseding the earlier seven).
+The actual RQ-002 export succeeds against committed sources and reports that its
+local revision is not observed in remote refs. This adds no solver change or new
+native measurement. The implementation and this follow-up remain local, unpushed.
+
+Source diff checks passed. The raw failed-build log deliberately preserves its
+compiler-emitted trailing space and Windows line endings; evidence was not edited
+to make a whitespace check pass. Hosted CI remains unrun.
