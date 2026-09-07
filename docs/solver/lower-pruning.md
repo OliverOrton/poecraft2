@@ -21,7 +21,7 @@ Primary owners are `solver_proof_pattern_manager.hpp`, `solver_solve_bounds.cpp`
 | Operator lower | Proved action cost and survival/destruction relation followed by an optimistic compatible continuation |
 | Envelope Bellman pattern | Uses completed action evidence under its coverage contract; unfinished computation retains independent fallback |
 | Lower-only quotient | A private finite-model numerical consumer/checker on existing graph and ProofStore ownership |
-| Native phase/retention producer | Supplies a native validity bridge for its declared domain, including the current default-off ordinary retention consumer |
+| Native phase/retention producer | Supplies a native validity bridge for its declared domain, including the ordinary retention consumer selected for WASM testing |
 
 Acquisition tables and continuation potentials use different coordinates. The proposal adapter must preserve that role; a coordinate conversion alone is not an admissibility proof. See [CLM-0016](claims.md#clm-0016).
 
@@ -66,8 +66,9 @@ own memory charge.
 `SolveOptions::native_retention_numerical_reuse` also defaults false. It enables
 both paths only within the existing once-per-compatible-solve preparation when
 the ordinary retention lower is separately selected. The private benchmark hook
-supports the saved development comparison; no public ABI, strategy vocabulary,
-consumer scope or default changes. The [matched evidence](../archive/2026-09-07-checked-numerical-reuse-v1/README.md)
+supports the saved development comparison. WASM now selects this same reuse mode
+on each new solver handle for Oliver's browser testing; native/C ABI defaults,
+strategy vocabulary and the certified consumer scope remain unchanged. The [matched evidence](../archive/2026-09-07-checked-numerical-reuse-v1/README.md)
 records reduced preparation with unchanged bounds and no target/closure gain.
 
 ## Conservative Slack
@@ -88,7 +89,7 @@ Only value-independent geometry and compatible exact-mask event caps are reused 
 
 ## Opt-In Ordinary Native Retention Lower
 
-`SolveOptions::native_retention_lower` defaults off and is not exposed through the public product profiles or bindings at this snapshot. `SolveWork::Impl` prepares one compatible view in setup and reserves the additional proof budget within the total solver cap. `NativeRetention` contributes through the existing maximum-composition path.
+`SolveOptions::native_retention_lower` defaults off for native/C ABI callers. At Oliver's request, the WASM facade selects it with numerical reuse on each newly opened solver, so normal Calculator solves exercise it without a new UI setting. This browser-testing activation is not a claim that the earlier performance gate established exact-closure improvement. `SolveWork::Impl` prepares one compatible view in setup and reserves the existing 32 MiB additional proof budget within the total solver cap. `NativeRetention` contributes through the existing maximum-composition path; unsupported sources and caller scopes retain their previous lower.
 
 The qualified frame is anchored by an exact goal fracture and couples the relevant unfractured region. Its reported scope covers the recorded side/goal domain and all Eldritch phases, with conservative handling of hidden exclusions. Generic influence, unmodeled metamods, additional fractures, veiled state, and unsupported restore memory remain outside its validated frame. Selected Cannot Roll Attack/Caster continuations are included as described below. Do not generalize its domain from the name “phase lower.”
 

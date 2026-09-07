@@ -227,7 +227,9 @@ native acceptance was added.
 The native benchmark's internal `--native-retention-diagnostic cold|reuse`
 selects a single ordinary case with the optional lower on in both runs. It
 rejects checkpoint, validation-only and other diagnostic combinations. The
-public product options remain unchanged and off. Use the saved case's original
+native/C ABI defaults remain unchanged and off. WASM separately selects reuse for
+[Oliver's browser testing](lower-pruning.md#opt-in-ordinary-native-retention-lower).
+Use the saved case's original
 caps and exact evaluator; this flag does not authorize Simulator or a new corpus.
 The [numerical-reuse receipt](../archive/2026-09-07-checked-numerical-reuse-v1/README.md)
 records the matched compact, ordinary and development observations.

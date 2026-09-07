@@ -2536,6 +2536,16 @@ const char* pcw_solver_open(uint32_t session_id, const char* goal_json) {
     pc_result rc = pc_solver_create(
         *session, goal_json, std::strlen(goal_json), &solver, &error);
     if (rc != PC_RESULT_OK) return fail(error);
+    // Oliver enabled the checked retention lower for browser testing. Configure
+    // once on the fresh handle so both synchronous and cooperative solves use
+    // numerical reuse; native eligibility, scope and resource guards still own
+    // whether the lower contributes. Native/C ABI defaults remain unchanged.
+    rc = poecraft::solver::configure_solver_native_retention_diagnostic(
+        solver, poecraft::solver::NativeRetentionDiagnosticMode::Reuse, &error);
+    if (rc != PC_RESULT_OK) {
+        pc_solver_destroy(solver);
+        return fail(error);
+    }
     std::uint32_t id = g_next_id++;
     g_solvers[id] = solver;
     std::string out = "{\"ok\":true,\"solver\":";
