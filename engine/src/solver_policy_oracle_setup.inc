@@ -1329,8 +1329,15 @@
     quotient_selected_compact_row_cooperatively(
             const ExactState& state) {
         if (!state.terminal && !quotient_requires_bootstrap(state)) {
-            const std::optional<SelectedAction> current =
-                selected_action(state);
+            std::optional<SelectedAction> current;
+            try {
+                current = selected_action(state);
+            } catch (const AdapterFailure& error) {
+                if (error.status == PolicyExactLiftStatus::ResourceCap) throw;
+                // A strict successor may have no selected coarse operator.
+                // Let the synchronous builder certify an admitted alternative,
+                // just as it does when called without cooperative preparation.
+            }
             if (current.has_value()) {
                 ScopedReforgeRowProvenance provenance(
                     *strict_, ReforgeRowOwner::StrictSelected);

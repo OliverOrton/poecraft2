@@ -151,8 +151,15 @@ struct PhasePreparationOptions {
     unsigned filter_modes = 0; // bit 0 Cannot Roll Attack, bit 1 Cannot Roll Caster
     bool checked_numerical_reuse = false; // internal experiment; cold remains the default
     bool untrusted_numerical_reuse = false;
+    bool accept_checked_subsolution = false; // diagnostic endpoint; no auxiliary-optimum claim
+    double minimum_checked_source_lower = 0; // stopping target, never a Bellman constraint
 };
 struct PhasePreparationStats {
+    bool accepted_early_subsolution = false;
+    // Bounded diagnostic history; values are marked only after complete
+    // current-vector checking and with no pending price reactivation.
+    std::array<double, 64> checked_source_lowers{};
+    std::array<std::uint64_t, 64> checked_source_ns{};
     std::uint64_t total_ns = 0, projection_ns = 0, relation_ns = 0;
     std::uint64_t diagnostic_export_ns = 0; // included in relation_ns; no numerical graph alive
     // Support and allocation are subsets of relation_ns; native weights are

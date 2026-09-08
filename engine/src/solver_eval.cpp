@@ -264,6 +264,7 @@ struct StrategyEvalWork::Impl {
     std::unique_ptr<FallbackState> fallback;
     std::uint64_t fallback_sweeps = 0;
     bool hard_unresolved = false;
+    bool exact_attribution_has_recurrent_input = false;
 
     std::vector<double> terminal_mass;
     std::vector<double> action_not_applied;
@@ -5829,13 +5830,12 @@ struct StrategyEvalWork::Impl {
                 }
                 ++raw_pairs_by_class[class_id];
             }
-            /* The quotient solve has already proved each behavioral class's
-             * exact total visits. Distribute that total deterministically
+            /* Distribute preliminary quotient visit estimates deterministically
              * across its raw members, then aggregate by shared exact row.
              * This is only the Krylov/Gauss-Seidel initial iterate: the row
              * equations, reconstructed raw equations, and quotient equations
-             * below remain the acceptance authority. Seeding the already
-             * solved aggregate modes avoids relearning a near-renewal visit
+             * below remain the acceptance authority. Seeding resolved
+             * aggregate modes avoids relearning a near-renewal visit
              * total through millions of repeated raw transitions. */
             for (std::uint32_t raw = 0; raw < count; ++raw) {
                 const std::uint32_t class_id =
@@ -5939,6 +5939,7 @@ struct StrategyEvalWork::Impl {
                     }
                 }
                 if (!has_exit) {
+                    exact_attribution_has_recurrent_input = true;
                     for (std::size_t local = 0;
                          local < members.size(); ++local) {
                         row_visits[members[local]] +=
@@ -6444,6 +6445,7 @@ struct StrategyEvalWork::Impl {
                 }
             }
             if (!has_exit) {
+                exact_attribution_has_recurrent_input = true;
                 for (std::size_t local = 0; local < members.size(); ++local) {
                     exact_visits[members[local]] += rhs[local];
                 }
@@ -8369,6 +8371,7 @@ struct StrategyEvalWork::Impl {
         const std::vector<double>* exact_pair_visits = &pair_visits;
         const solve_detail::SegmentedVector<EvalPair>* exact_pairs = &pairs;
         if (!attribution_pairs.empty()) {
+            exact_attribution_has_recurrent_input = false;
             auto exact_attribution = solve_exact_attribution();
             while (!exact_attribution.resume()) {
                 co_await solve_detail::CooperativeCheckpoint{
@@ -8378,6 +8381,17 @@ struct StrategyEvalWork::Impl {
                 exact_attribution.take_result();
             exact_pair_visits = &exact_pair_visits_owned;
             exact_pairs = &attribution_pairs;
+            // The completed raw solve replaces preliminary quotient flow. A
+            // positive-input recurrent class only has an entry snapshot and
+            // cannot discharge that earlier unresolved mass.
+            if (!exact_attribution_has_recurrent_input) {
+                std::fill(unresolved_pair.begin(), unresolved_pair.end(), 0.0);
+                hard_unresolved = false;
+            }
+            // Raw attribution predates pass-through contraction, so it owns
+            // those edges too. Downstream compressed router traces are rebuilt
+            // separately below; do not retain partial quotient edge counts.
+            std::fill(edge_traversals.begin(), edge_traversals.end(), 0.0);
             for (auto& incoming : terminal_incoming) incoming.clear();
             for (auto& incoming : compressed_policy_incoming) {
                 incoming.clear();
@@ -8449,6 +8463,9 @@ struct StrategyEvalWork::Impl {
                 visit_eval_row(
                     row, attribution_pairs,
                     [&](const EvalTransition& transition) {
+                        if (transition.edge != kNoId)
+                            edge_traversals.at(transition.edge) +=
+                                (wide_visits * solve_detail::WideFloat{transition.probability}).value();
                         add_compressed_policy_incoming(
                             transition.policy_route,
                             transition.policy_state,
@@ -8460,6 +8477,8 @@ struct StrategyEvalWork::Impl {
                             solve_detail::WideFloat{
                                 absorption.probability};
                         const double mass = wide_mass.value();
+                        if (absorption.edge != kNoId)
+                            edge_traversals.at(absorption.edge) += mass;
                         add_compressed_policy_incoming(
                             absorption.policy_route,
                             absorption.state, mass);
@@ -9361,8 +9380,18 @@ struct StrategyEvalWork::Impl {
         output.max_mass_conservation_error = std::max(
             output.max_mass_conservation_error, conservation_error);
         if (conservation_error > 1e-8) {
-            throw std::runtime_error(
-                "strategy evaluation mass conservation failed");
+            std::ostringstream detail;
+            detail << std::setprecision(17)
+                << "strategy evaluation mass conservation failed; absorbed="
+                << absorbed_probability(output)
+                << ", residual=" << output.residual_mass
+                << ", signed_defect="
+                << absorbed_probability(output) + output.residual_mass - 1.0
+                << ", expected_actions=" << output.expected_actions
+                << ", hard_unresolved=" << hard_unresolved
+                << ", raw_pairs=" << output.raw_pairs_discovered
+                << ", refined_pairs=" << pairs.size();
+            throw std::runtime_error(detail.str());
         }
         check_owned_cap();
         phase = StrategyEvalPhase::Done;

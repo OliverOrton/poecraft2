@@ -53,6 +53,21 @@ int main(int argc, char** argv) {
         std::printf("solver phase-lower tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 && std::string(argv[1]) == "--solver-selected-fallback-only") {
+        run_solver_selected_fallback_tests();
+        std::printf("solver selected-fallback tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
+    if (argc > 1 && std::string(argv[1]) == "--solver-attribution-recovery-only") {
+        run_solver_attribution_recovery_tests();
+        std::printf("solver attribution-recovery tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
+    if (argc > 1 && std::string(argv[1]) == "--solver-protected-setup-only") {
+        run_solver_protected_setup_tests();
+        std::printf("solver protected-setup tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 &&
         std::string(argv[1]) == "--solver-automatic-veiled-only") {
         run_solver_automatic_veiled_tests();

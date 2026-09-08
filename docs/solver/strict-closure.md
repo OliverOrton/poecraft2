@@ -18,6 +18,13 @@ A source or target split invalidates affected evidence through its generation co
 
 Selected policy rows are materialized first. Other admitted semantic actions at reachable cells become carrier-wide rows or explicit lower-only obligations. An immediate-price lower is valid but may be weak. Partial alternative evaluation is not a completed proof row.
 
+When a strict successor has no selected coarse operator, cooperative selected-row
+preparation reaches the synchronous builder's existing admitted-alternative
+certification. Each replacement still needs its native row and continuation
+checks; the absent coarse selection is not itself an infeasibility proof.
+Resource-cap exceptions propagate through both routes. The [campaign evidence](../active/2026-09-07-continuous-bounds/README.md)
+records the successor regression and refusal controls.
+
 When an alternative reaches outside the current closed partition, the frontier returns to the grow/repartition owner before unrelated old-generation obligations are replayed. That ordering avoids treating a known missing dependency as if it were already part of the closed proof.
 
 ## Observation and row obligations

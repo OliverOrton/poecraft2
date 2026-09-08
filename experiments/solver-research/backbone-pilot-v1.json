@@ -249,6 +249,47 @@
       "limitations": [
         "Both miss the predeclared upper target; same verified upper and gap; no exact closure."
       ]
+    },
+    {
+      "id": "retained-fracture-slot-cap",
+      "model": "saved-anchored-v1",
+      "kind": "certified_native_lower",
+      "producer": "native complete probability producer and exact final-vector coefficient audit",
+      "validation": "docs/active/2026-09-07-continuous-bounds/README.md",
+      "evidence": "docs/active/2026-09-07-continuous-bounds/reference.json",
+      "adapter": "archived_phase_v1",
+      "role": "development; complete scoped anchored controls",
+      "treatment": "count the physical retained fracture slot in ordinary renewal singleton acquisition caps",
+      "limitations": [
+        "Stronger anchored lowers only; the internal fresh ceiling is not a general empty-start lower or native upper."
+      ]
+    },
+    {
+      "id": "early-checked-retention-subsolution",
+      "model": "saved-anchored-v1",
+      "kind": "conditional_observation",
+      "producer": "complete native checking followed by explicit checked-subsolution audit",
+      "validation": "docs/active/2026-09-07-continuous-bounds/README.md",
+      "evidence": "docs/active/2026-09-07-continuous-bounds/checked-subsolution-reference.json",
+      "role": "private diagnostic stop target, full native consumer scope preserved",
+      "treatment": "stop at the first fully checked source lower at least 280",
+      "limitations": [
+        "No auxiliary tightness or optimistic policy ceiling assertion; not enabled in WASM or native/C ABI defaults."
+      ]
+    },
+    {
+      "id": "continuous-bounds-development-product8",
+      "model": "fractured-development-product8-v1",
+      "kind": "conditional_observation",
+      "producer": "existing native benchmark, compiled exact evaluation and process receipts",
+      "validation": "docs/active/2026-09-07-continuous-bounds/README.md",
+      "evidence": "docs/active/2026-09-07-continuous-bounds/comparison.json",
+      "pointer": "/development",
+      "role": "fixed 30-second finish and 60-second watchdog, failed full-retention finalization preserved",
+      "treatment": "additive support, selected fallback parity, exact attribution recovery, slot caps and setup rejection",
+      "limitations": [
+        "One observation per treatment, including an explicitly resumed post-limit session; no timing distribution, target attainment or exact closure."
+      ]
     }
   ],
   "ordinary_pairs": [

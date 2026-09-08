@@ -2368,6 +2368,38 @@ void run_destructive_refinement_cycle_test() {
 
     check_reference_parity(*strategy, exact, options);
 
+    /* Stop the existing forward-wave reference before its transient tail is
+     * absorbed. Finalization must replace that real unresolved quotient mass
+     * with the completed raw attribution, including every direct graph edge.
+     * No injected failure or alternate transition model is needed. */
+    StrategyEvalOptions truncated_options = options;
+    truncated_options.max_sweeps = 16;
+    const StrategyEvalResult recovered =
+        evaluate_strategy_forward_reference_for_test(
+            *strategy, truncated_options);
+    PC_CHECK(recovered.sweeps == truncated_options.max_sweeps);
+    PC_CHECK(recovered.converged);
+    PC_CHECK(recovered.raw_pairs_discovered == 76);
+    PC_CHECK(recovered.refined_pairs == 57);
+    PC_CHECK(near(recovered.success_probability, 1.0, 1e-10));
+    PC_CHECK(recovered.residual_mass == 0.0);
+    PC_CHECK(recovered.unresolved_probability == 0.0);
+    PC_CHECK(recovered.unresolved_by_node.empty());
+    PC_CHECK(recovered.max_mass_conservation_error < 1e-10);
+    PC_CHECK(near(recovered.expected_actions, exact.expected_actions));
+    PC_CHECK(near(recovered.total_expected_cost, exact.total_expected_cost));
+    PC_CHECK(recovered.expected_consumption.size() ==
+             exact.expected_consumption.size());
+    for (const auto& [key, quantity] : exact.expected_consumption) {
+        PC_CHECK(near(recovered.expected_consumption.at(key), quantity));
+    }
+    PC_CHECK(recovered.edges.size() == exact.edges.size());
+    PC_CHECK(near(edge_value(recovered, "begin"), 1.0));
+    for (const StrategyEvalEdge& edge : exact.edges) {
+        PC_CHECK(near(
+            edge_value(recovered, edge.id), edge.expected_traversals));
+    }
+
     StrategyEvalOptions quotient_guard = options;
     quotient_guard.max_pairs = 56;
     bool quotient_cap_failed = false;
@@ -2413,6 +2445,38 @@ void run_destructive_refinement_cycle_test() {
         }
         PC_CHECK(observation_memory_cap_failed);
     }
+
+    /* A reachable closed native component has only a finite entry snapshot,
+     * never solved transient occupancies. It cannot discharge unresolved mass.
+     * Distinct conditional edges retain the observation and its raw carriers. */
+    const auto recurrent = compile(
+        session,
+        shell(
+            "recurrent raw chaos attribution", "rare",
+            R"JSON({"id":"start","kind":"start"},
+{"id":"chaos","kind":"operation","operation":{"type":"chaos","params":{}}})JSON",
+            R"JSON({"id":"enter","from":"start","to":"chaos","priority":0,"condition":{"type":"always"}},
+{"id":"hit_loop","from":"chaos","to":"chaos","priority":0,"condition":{"type":"has_mod_family","family_mod_key":"mod0","min_tier":1}},
+{"id":"miss_loop","from":"chaos","to":"chaos","priority":999,"is_default":true})JSON"));
+    StrategyEvalWork recurrent_work(recurrent, options);
+    bool recurrent_rejected = false;
+    try {
+        while (!recurrent_work.progress().done) recurrent_work.step(1024);
+        const auto& result = recurrent_work.result();
+        recurrent_rejected = !result.converged &&
+            near(result.residual_mass, 1.0) &&
+            near(result.success_probability, 0.0);
+    } catch (const std::runtime_error& error) {
+        const std::string message = error.what();
+        recurrent_rejected =
+            message.find("exact attribution") != std::string::npos &&
+            message.find("residual") != std::string::npos;
+    }
+    PC_CHECK(recurrent_rejected);
+    const auto& recurrent_diagnostic = recurrent_work.diagnostic_result();
+    PC_CHECK(recurrent_diagnostic.raw_pairs_discovered >
+             recurrent_diagnostic.refined_pairs);
+    PC_CHECK(!recurrent_diagnostic.converged);
 }
 
 void run_observation_partition_delayed_split_tests() {
@@ -3372,6 +3436,16 @@ void run_artifact_and_registry_tests(const char* artifact_dir) {
 }
 
 } // namespace
+
+void run_solver_attribution_recovery_tests() {
+    try {
+        run_refusal_and_unresolved_tests();
+        run_destructive_refinement_cycle_test();
+    } catch (const std::exception& ex) {
+        std::printf("solver attribution recovery: %s\n", ex.what());
+        PC_CHECK(false);
+    }
+}
 
 void run_solver_eval_tests(const char* artifact_dir) {
     const auto stage = [](const char* name, const auto& fn) {

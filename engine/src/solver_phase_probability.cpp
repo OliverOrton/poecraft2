@@ -366,6 +366,21 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
     std::vector<unsigned> mod_goals(calc.session().mod_count);
     std::vector<unsigned> goal_side(calc.layout().slots.size(), 99);
     for (unsigned mod = 0; mod < calc.session().mod_count; ++mod) mod_goals[mod] = mod_mask(calc, mod);
+    // Additive support observes only side and the full goal-hit mask. Preserve
+    // first occurrence order; native pool weights and loss multiplicities still
+    // use the complete modifier population. The frame above has at most 5 goals.
+    std::array<std::pair<int, unsigned>, 64> additive_support{};
+    std::array<std::uint32_t, 2> additive_seen{};
+    unsigned additive_count = 0;
+    for (unsigned mod = 0; mod < mod_goals.size(); ++mod) {
+        const auto side = calc.session().gen_type[mod];
+        if (side < 0 || side > 1) continue;
+        const auto hit = mod_goals[mod];
+        const auto bit = std::uint32_t{1} << hit;
+        if (additive_seen[side] & bit) continue;
+        additive_seen[side] |= bit;
+        additive_support[additive_count++] = {side, hit};
+    }
     unsigned crafted_domain = 0, crafted_limit = 0;
     std::array<std::uint32_t,2> filter_mods{kNoId,kNoId};
     for (const auto& action : calc.registry().actions) if (action.params.type==ActionType::Bench && action.params.mod_id<calc.session().mod_count) {
@@ -671,6 +686,13 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
     unsigned accepted_rounds = 0;
     std::uint64_t accepted_relation_count = 0, accepted_report_bytes = 0, export_reservation = 0;
     const unsigned max_rounds=retention==PhaseRetention::None ? 32 : 64;
+    unsigned anchor_cell = static_cast<unsigned>(index(masks, anchor.rarity,
+        item_mask(calc, anchor), anchor.prefix_count, anchor.suffix_count));
+    if (retention != PhaseRetention::None) {
+        const auto crafted = crafted_observation(calc, anchor);
+        anchor_cell = coordinate_index.at(coordinate(anchor_cell, crafted.goals,
+            crafted.jp, crafted.js, filter_observation(anchor, filter_mods)));
+    }
     bool last_checked=false; double last_improvement=0;
     stats.projection_ns = elapsed_ns(preparation_start);
     for (; rounds < max_rounds || exporting; ++rounds) {
@@ -933,12 +955,11 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                                type == ActionType::Exalt || type == ActionType::EldritchExalt) {
                         probabilistic = true;
                         const auto r = type == ActionType::Regal ? PC_RARITY_RARE : c.rarity;
-                        for (unsigned mod = 0; mod < mod_goals.size(); ++mod) {
-                            const auto side = calc.session().gen_type[mod];
-                            if (side < 0 || side > 1) continue;
+                        for (unsigned signature = 0; signature < additive_count; ++signature) {
+                            const auto [side, hit] = additive_support[signature];
                             if (prove_nonempty && type == ActionType::EldritchExalt && phase>=0 && side!=phase) continue;
-                            if (retention != PhaseRetention::None && (mod_goals[mod] & c.mask)) continue;
-                            add_group(c.mask | mod_goals[mod], c.p+(side == 0), c.s+(side == 1), r);
+                            if (retention != PhaseRetention::None && (hit & c.mask)) continue;
+                            add_group(c.mask | hit, c.p+(side == 0), c.s+(side == 1), r);
                         }
                         const bool certainly_adds = prove_nonempty &&
                             (type == ActionType::Exalt || type == ActionType::EldritchExalt) && nonempty_add(a,c.p,c.s,phase,pool_filter);
@@ -1035,8 +1056,14 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                             const unsigned side = goal_side[slot];
                             const unsigned p = renewal ? 3-(side == 0) : c.p;
                             const unsigned s = renewal ? 3-(side == 1) : c.s;
+                            // One retained fracture occupies one output slot,
+                            // even if its modifier hits several goal bits. The
+                            // existing history-uniform draw upper also covers
+                            // Harvest's guaranteed draw within those slots.
+                            const unsigned draw_count = draws_per_side -
+                                unsigned(renewal && type != ActionType::EldritchChaos && frame_side == side);
                             const auto u = (side ? s : p) >= (renewal ? 3u : (type == ActionType::Regal ? 3u : lim))
-                                ? 0 : upper(a, slot, p, s, draws_per_side,pool_filter);
+                                ? 0 : upper(a, slot, p, s, draw_count,pool_filter);
                             event_upper = std::min(event_upper, u);
                         }
                         if (joint_refinement && renewal) {
@@ -1213,6 +1240,23 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
             break;
         }
         if (reactivated) continue;
+        if (checked.checked) {
+            stats.checked_source_lowers[rounds] = candidate[anchor_cell];
+            stats.checked_source_ns[rounds] = elapsed_ns(preparation_start);
+        }
+        if (checked.checked && preparation_options.accept_checked_subsolution &&
+            stats.eligible_solve_rounds + stats.refused_solve_rounds > 0 &&
+            candidate[anchor_cell] >= preparation_options.minimum_checked_source_lower) {
+            // Every native minimum was rebuilt at this candidate and checked.
+            // This endpoint promises a subsolution, not refinement optimality;
+            // never publish the repaired vector against the old frozen rows.
+            accepted_rounds=rounds+1;
+            accepted_relation_count=relation_count;
+            accepted_report_bytes=relation_payload_bytes;
+            stats.accepted_early_subsolution=true;
+            if (retain_diagnostics) { exporting=true; continue; }
+            break;
+        }
         const bool candidate_checked = static_cast<bool>(checked.checked);
         last_checked=candidate_checked; last_improvement=0;
         // The feasibility report/certificate is no longer queried. Keeping

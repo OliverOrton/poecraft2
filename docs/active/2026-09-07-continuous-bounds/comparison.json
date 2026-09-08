@@ -1,0 +1,476 @@
+{
+  "baseline": "a1b85956d4c438ab3ea92ea114a3f1138c505467",
+  "scope": "two anchored compact controls and unchanged fractured four-to-five product8 request; no empty clean-five lower",
+  "compact": {
+    "control": {
+      "source_lowers": [
+        352.31017033879505,
+        355.43265454362336
+      ],
+      "preparation_seconds": 25.6612006,
+      "relation_seconds": 17.5377853,
+      "support_seconds": 6.6484783,
+      "resources": {
+        "proof_budget_bytes": 33554432,
+        "adapter_support_ns": 1196600,
+        "probability_treatment_ns": 25661274800,
+        "shared_control_bytes": 0,
+        "reused_draw_witnesses": 0,
+        "new_draw_witnesses": 172,
+        "retained_potential_bytes": 12075408,
+        "shared_support_bytes": 613732,
+        "proof_ledger_peak_bytes": 19882908,
+        "combined_additional_peak_bytes": 31680508,
+        "native_projected_action_checks": 12519936,
+        "shared_calculator_bytes": 852941,
+        "source_owner_including_shared_calculator_bytes": 1250313
+      }
+    },
+    "additive_support": {
+      "source_lowers": [
+        352.31017033879505,
+        355.43265454362336
+      ],
+      "preparation_seconds": 24.8354724,
+      "relation_seconds": 16.6475398,
+      "support_seconds": 5.7725964,
+      "resources": {
+        "proof_budget_bytes": 33554432,
+        "adapter_support_ns": 1183500,
+        "probability_treatment_ns": 24835560700,
+        "shared_control_bytes": 0,
+        "reused_draw_witnesses": 0,
+        "new_draw_witnesses": 172,
+        "retained_potential_bytes": 12075408,
+        "shared_support_bytes": 613732,
+        "proof_ledger_peak_bytes": 19882908,
+        "combined_additional_peak_bytes": 31680508,
+        "native_projected_action_checks": 12519936,
+        "shared_calculator_bytes": 852941,
+        "source_owner_including_shared_calculator_bytes": 1250313
+      }
+    },
+    "retained_slot": {
+      "source_lowers": [
+        358.14570884078455,
+        361.3499234545634
+      ],
+      "preparation_seconds": 25.8387983,
+      "relation_seconds": 17.7984232,
+      "support_seconds": 6.081459,
+      "resources": {
+        "proof_budget_bytes": 33554432,
+        "adapter_support_ns": 1256200,
+        "probability_treatment_ns": 25838897100,
+        "shared_control_bytes": 0,
+        "reused_draw_witnesses": 0,
+        "new_draw_witnesses": 172,
+        "retained_potential_bytes": 12236724,
+        "shared_support_bytes": 613732,
+        "proof_ledger_peak_bytes": 20044224,
+        "combined_additional_peak_bytes": 31807660,
+        "native_projected_action_checks": 12519936,
+        "shared_calculator_bytes": 852941,
+        "source_owner_including_shared_calculator_bytes": 1250337
+      }
+    }
+  },
+  "singleton_caps": [
+    695189,
+    463460
+  ],
+  "development": [
+    {
+      "run": "control/coverage-development",
+      "status": "bounded_feasible",
+      "expectation_met": true,
+      "setup_seconds": 30.2236184,
+      "total_seconds": 30.766809700000003,
+      "lower": 352.31017033879505,
+      "upper": 10401458.65388722,
+      "absolute_gap": 10401106.34371688,
+      "expanded": 1,
+      "stop": "requested_bounded_finish",
+      "evaluation": "matched",
+      "target_met": false,
+      "bench": {
+        "requests": 0,
+        "cache_hits": 0,
+        "rows": 0,
+        "raw_outcomes": 0,
+        "transitions": 0,
+        "time_ns": 0,
+        "row_time_ns": 0,
+        "selected_bytes": 0
+      },
+      "cap_checks": {
+        "all_passed": true,
+        "checks": {
+          "max_discovered_states": true,
+          "max_expanded_states": true,
+          "max_state_action_rows": true,
+          "max_transitions": true,
+          "max_reforge_work": true,
+          "max_solver_owned_bytes": true,
+          "max_compiled_nodes": true,
+          "max_compiled_edges": true,
+          "max_strategy_json_bytes": true
+        }
+      },
+      "errors": []
+    },
+    {
+      "run": "off-development",
+      "status": "bounded_feasible",
+      "expectation_met": true,
+      "setup_seconds": 4.2384882,
+      "total_seconds": 51.6828416,
+      "lower": 36.80925401863837,
+      "upper": 14048002.568560576,
+      "absolute_gap": 14047965.759306557,
+      "expanded": 2690,
+      "stop": "requested_bounded_finish",
+      "evaluation": "matched",
+      "target_met": false,
+      "bench": {
+        "requests": 4263332,
+        "cache_hits": 3535943,
+        "rows": 727389,
+        "raw_outcomes": 722166,
+        "transitions": 722166,
+        "time_ns": 982412800,
+        "row_time_ns": 0,
+        "selected_bytes": 162851568
+      },
+      "cap_checks": {
+        "all_passed": true,
+        "checks": {
+          "max_discovered_states": true,
+          "max_expanded_states": true,
+          "max_state_action_rows": true,
+          "max_transitions": true,
+          "max_reforge_work": true,
+          "max_solver_owned_bytes": true,
+          "max_compiled_nodes": true,
+          "max_compiled_edges": true,
+          "max_strategy_json_bytes": true
+        }
+      },
+      "errors": []
+    },
+    {
+      "run": "support-development",
+      "status": "bounded_feasible",
+      "expectation_met": true,
+      "setup_seconds": 28.520905,
+      "total_seconds": 32.6429712,
+      "lower": 352.31017033879505,
+      "upper": 59810.953776974464,
+      "absolute_gap": 59458.64360663567,
+      "expanded": 386,
+      "stop": "requested_bounded_finish",
+      "evaluation": "matched",
+      "target_met": false,
+      "bench": {
+        "requests": 397439,
+        "cache_hits": 329924,
+        "rows": 67515,
+        "raw_outcomes": 67365,
+        "transitions": 67365,
+        "time_ns": 92958100,
+        "row_time_ns": 0,
+        "selected_bytes": 15120960
+      },
+      "cap_checks": {
+        "all_passed": true,
+        "checks": {
+          "max_discovered_states": true,
+          "max_expanded_states": true,
+          "max_state_action_rows": true,
+          "max_transitions": true,
+          "max_reforge_work": true,
+          "max_solver_owned_bytes": true,
+          "max_compiled_nodes": true,
+          "max_compiled_edges": true,
+          "max_strategy_json_bytes": true
+        }
+      },
+      "errors": []
+    },
+    {
+      "run": "route-off-development",
+      "status": "bounded_feasible",
+      "expectation_met": true,
+      "setup_seconds": 4.3385452,
+      "total_seconds": 54.487466999999995,
+      "lower": 36.80925401863837,
+      "upper": 14048002.568560576,
+      "absolute_gap": 14047965.759306557,
+      "expanded": 2690,
+      "stop": "requested_bounded_finish",
+      "evaluation": "matched",
+      "target_met": false,
+      "bench": {
+        "requests": 4263332,
+        "cache_hits": 3535943,
+        "rows": 727389,
+        "raw_outcomes": 722166,
+        "transitions": 722166,
+        "time_ns": 959319800,
+        "row_time_ns": 0,
+        "selected_bytes": 162851568
+      },
+      "cap_checks": {
+        "all_passed": true,
+        "checks": {
+          "max_discovered_states": true,
+          "max_expanded_states": true,
+          "max_state_action_rows": true,
+          "max_transitions": true,
+          "max_reforge_work": true,
+          "max_solver_owned_bytes": true,
+          "max_compiled_nodes": true,
+          "max_compiled_edges": true,
+          "max_strategy_json_bytes": true
+        }
+      },
+      "errors": []
+    },
+    {
+      "run": "checked280-development",
+      "status": "bounded_feasible",
+      "expectation_met": true,
+      "setup_seconds": 18.30401,
+      "total_seconds": 53.362115700000004,
+      "lower": 288.36999997116294,
+      "upper": 14048002.568560576,
+      "absolute_gap": 14047714.198560605,
+      "expanded": 1411,
+      "stop": "requested_bounded_finish",
+      "evaluation": "matched",
+      "target_met": false,
+      "bench": {
+        "requests": 2519533,
+        "cache_hits": 2120514,
+        "rows": 399019,
+        "raw_outcomes": 395772,
+        "transitions": 395772,
+        "time_ns": 538060900,
+        "row_time_ns": 0,
+        "selected_bytes": 89328304
+      },
+      "cap_checks": {
+        "all_passed": true,
+        "checks": {
+          "max_discovered_states": true,
+          "max_expanded_states": true,
+          "max_state_action_rows": true,
+          "max_transitions": true,
+          "max_reforge_work": true,
+          "max_solver_owned_bytes": true,
+          "max_compiled_nodes": true,
+          "max_compiled_edges": true,
+          "max_strategy_json_bytes": true
+        }
+      },
+      "errors": []
+    },
+    {
+      "run": "recovery-verified-off-development",
+      "status": "bounded_feasible",
+      "expectation_met": true,
+      "setup_seconds": 4.3219049,
+      "total_seconds": 55.6522824,
+      "lower": 36.80925401863837,
+      "upper": 12124.91520896616,
+      "absolute_gap": 12088.105954947521,
+      "expanded": 2690,
+      "stop": "requested_bounded_finish",
+      "evaluation": "matched",
+      "target_met": false,
+      "bench": {
+        "requests": 4263332,
+        "cache_hits": 3535943,
+        "rows": 727389,
+        "raw_outcomes": 722166,
+        "transitions": 722166,
+        "time_ns": 951602700,
+        "row_time_ns": 0,
+        "selected_bytes": 162851568
+      },
+      "cap_checks": {
+        "all_passed": true,
+        "checks": {
+          "max_discovered_states": true,
+          "max_expanded_states": true,
+          "max_state_action_rows": true,
+          "max_transitions": true,
+          "max_reforge_work": true,
+          "max_solver_owned_bytes": true,
+          "max_compiled_nodes": true,
+          "max_compiled_edges": true,
+          "max_strategy_json_bytes": true
+        }
+      },
+      "errors": []
+    },
+    {
+      "run": "recovery-checked280-development",
+      "status": "bounded_feasible",
+      "expectation_met": true,
+      "setup_seconds": 18.1296364,
+      "total_seconds": 55.178351799999994,
+      "lower": 288.36999997116294,
+      "upper": 12124.91520896616,
+      "absolute_gap": 11836.545208994998,
+      "expanded": 1538,
+      "stop": "requested_bounded_finish",
+      "evaluation": "matched",
+      "target_met": false,
+      "bench": {
+        "requests": 2552901,
+        "cache_hits": 2145993,
+        "rows": 406908,
+        "raw_outcomes": 403570,
+        "transitions": 403570,
+        "time_ns": 537036300,
+        "row_time_ns": 0,
+        "selected_bytes": 91093984
+      },
+      "cap_checks": {
+        "all_passed": true,
+        "checks": {
+          "max_discovered_states": true,
+          "max_expanded_states": true,
+          "max_state_action_rows": true,
+          "max_transitions": true,
+          "max_reforge_work": true,
+          "max_solver_owned_bytes": true,
+          "max_compiled_nodes": true,
+          "max_compiled_edges": true,
+          "max_strategy_json_bytes": true
+        }
+      },
+      "errors": []
+    },
+    {
+      "run": "bench-capacity-off-development",
+      "status": "bounded_feasible",
+      "expectation_met": true,
+      "setup_seconds": 4.4878037,
+      "total_seconds": 57.1069973,
+      "lower": 36.80925401863837,
+      "upper": 12124.91520896616,
+      "absolute_gap": 12088.105954947521,
+      "expanded": 2690,
+      "stop": "requested_bounded_finish",
+      "evaluation": "matched",
+      "target_met": false,
+      "bench": {
+        "requests": 3813746,
+        "cache_hits": 3219938,
+        "rows": 593808,
+        "raw_outcomes": 589373,
+        "transitions": 589373,
+        "time_ns": 838634800,
+        "row_time_ns": 0,
+        "selected_bytes": 132942032
+      },
+      "cap_checks": {
+        "all_passed": true,
+        "checks": {
+          "max_discovered_states": true,
+          "max_expanded_states": true,
+          "max_state_action_rows": true,
+          "max_transitions": true,
+          "max_reforge_work": true,
+          "max_solver_owned_bytes": true,
+          "max_compiled_nodes": true,
+          "max_compiled_edges": true,
+          "max_strategy_json_bytes": true
+        }
+      },
+      "errors": []
+    },
+    {
+      "run": "final-reuse-development",
+      "status": "watchdog_expired",
+      "expectation_met": false,
+      "setup_seconds": 29.903812,
+      "total_seconds": 60.0168442,
+      "lower": null,
+      "upper": null,
+      "absolute_gap": null,
+      "expanded": null,
+      "stop": null,
+      "evaluation": "not_requested",
+      "target_met": null,
+      "bench": {
+        "requests": 1632,
+        "cache_hits": 1151,
+        "rows": 481,
+        "raw_outcomes": 481,
+        "transitions": 481,
+        "time_ns": 721500,
+        "row_time_ns": 0,
+        "selected_bytes": 107744
+      },
+      "cap_checks": {
+        "all_passed": true,
+        "checks": {
+          "max_discovered_states": true,
+          "max_expanded_states": true,
+          "max_state_action_rows": true,
+          "max_transitions": true,
+          "max_reforge_work": true,
+          "max_solver_owned_bytes": true
+        }
+      },
+      "errors": [
+        "bounded best-policy contract failed: the solve did not publish an executable policy"
+      ]
+    },
+    {
+      "run": "final-checked280-development",
+      "status": "bounded_feasible",
+      "expectation_met": true,
+      "setup_seconds": 19.1978673,
+      "total_seconds": 56.0449751,
+      "lower": 288.36999997116294,
+      "upper": 12124.91520896616,
+      "absolute_gap": 11836.545208994998,
+      "expanded": 1282,
+      "stop": "requested_bounded_finish",
+      "evaluation": "matched",
+      "target_met": false,
+      "bench": {
+        "requests": 2075269,
+        "cache_hits": 1774810,
+        "rows": 300459,
+        "raw_outcomes": 298554,
+        "transitions": 298554,
+        "time_ns": 427712300,
+        "row_time_ns": 0,
+        "selected_bytes": 67272336
+      },
+      "cap_checks": {
+        "all_passed": true,
+        "checks": {
+          "max_discovered_states": true,
+          "max_expanded_states": true,
+          "max_state_action_rows": true,
+          "max_transitions": true,
+          "max_reforge_work": true,
+          "max_solver_owned_bytes": true,
+          "max_compiled_nodes": true,
+          "max_compiled_edges": true,
+          "max_strategy_json_bytes": true
+        }
+      },
+      "errors": []
+    }
+  ],
+  "exact_closure": false,
+  "historical_verified_target": 2698.87479601436,
+  "timing_limitations": "Single sequential observations, including a post-limit resumed treatment; no timing distribution. Finalization is included; watchdog failures remain failures."
+}

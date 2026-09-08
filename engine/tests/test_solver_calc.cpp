@@ -4183,6 +4183,26 @@ void run_solver_phase_lower_tests() {
                     std::tie(b.events[j].mask,b.events[j].minimum_cell,b.events[j].capacity);
         }
         PC_CHECK(same_relations);
+        const auto early=PhaseLowerProducer::prepare_probabilistic(typed_calc,typed_prices,phase,
+            {PhaseTableRole::CleanCompletion,4,2,std::vector<double>(192,100)},support,zero,
+            false,true,budget,true,{},PhaseContinuation::CoupledFresh,PhaseRetention::AnnulNonempty,
+            true,{true,true,0,false,false,true});
+        PC_CHECK(early->preparation_stats.accepted_early_subsolution);
+        PC_CHECK(early->model_rounds<=refined->model_rounds);
+        PC_CHECK(early->lookup(typed_calc,typed_prices,phase,false).has_value());
+        // This two-goal fixture reaches its final vector at the first checked
+        // endpoint; the compact five-goal control exercises a strictly weaker
+        // endpoint. A high target must still retain full refinement below.
+        PC_CHECK(early->values==refined->values);
+        PC_CHECK(std::all_of(early->relations.begin(),early->relations.end(),[&](const auto& row) {
+            return early->values[row.cell]<=row.rhs+1e-10;
+        }));
+        const auto unmet_target=PhaseLowerProducer::prepare_probabilistic(typed_calc,typed_prices,phase,
+            {PhaseTableRole::CleanCompletion,4,2,std::vector<double>(192,100)},support,zero,
+            false,true,budget,true,{},PhaseContinuation::CoupledFresh,PhaseRetention::AnnulNonempty,
+            true,{true,true,0,false,false,true,1e9});
+        PC_CHECK(!unmet_target->preparation_stats.accepted_early_subsolution);
+        PC_CHECK(unmet_target->values==refined->values);
         PC_CHECK(refined->crafted_goal_domain==2);
         auto natural=anchor; place(&natural,PC_SIDE_PREFIX,3,12);
         auto crafted=natural; crafted.prefixes[1].flags=PC_MOD_SLOT_CRAFTED;

@@ -1,6 +1,7 @@
 """Verify a saved micro, support-phase or probabilistic native export; no census.
 
 Usage: py -3 engine/benchmarks/verify_quotient_lower_probe.py native.json[.gz] result.json
+   or: py -3 engine/benchmarks/verify_quotient_lower_probe.py --checked-subsolution native.json[.gz] result.json
    or: py -3 engine/benchmarks/verify_quotient_lower_probe.py --ordinary control.json treatment.json native.json result.json
 The archived rational LP is imported only in micro mode. Phase mode checks
 the retained support inequalities and integer-weight composition directly.
@@ -284,7 +285,7 @@ def verify_probability(path):
 
 
 
-def verify_joint(path):
+def verify_joint(path, *, checked_subsolution=False):
     """Exact coefficients/minimization audit; native C++ owns history semantics."""
     from itertools import permutations
     native = load_native(path)
@@ -292,6 +293,8 @@ def verify_joint(path):
     assert boundary or native["pilot"] == "native-joint-goal-lower-v1"
     assert native["solver_steps"] == 0 and not native["production_authority"]
     p = native["probabilistic_donor"]
+    if checked_subsolution:
+        assert native["preparation_profile"]["accepted_early_subsolution"] == 1
     coupled = boundary and p["continuation"] == 2
     retention = p.get("retention",0)
     coordinates = [c+[0]*(5-len(c)) if c is not None else None for c in p.get("coordinates",[])]
@@ -494,7 +497,12 @@ def verify_joint(path):
         elif not coupled:
             assert limiting["action"] == "restart" and limiting["reason"] == "fixed_independent_boundary"
         ceiling = F(limiting["cost"])+sum(F(prob)*values[t] for t,prob in limiting["exits"])
-        assert donor <= ceiling and ceiling-donor < F("1e-7")
+        assert donor <= ceiling
+        # A checked subsolution may stop before auxiliary refinement closes.
+        # Keep every feasibility/minimization/consumer check above; only the
+        # default full-refinement audit requires this quality condition.
+        if not checked_subsolution:
+            assert ceiling-donor < F("1e-7")
         ranked = after["ranked_constraints"]
         sources.append(dict(second_source=s["second_source"], donor=float(donor),
             prior_donor=float(prior[root]) if prior else None, donor_gain=float(donor-prior[root]) if prior else None,
@@ -506,6 +514,7 @@ def verify_joint(path):
             portfolio_gain=after["portfolio"]-before["portfolio"],
             exact_program=str(exact_new), **({"first_limiting_rhs_exact":str(ceiling)} if boundary else {"exact_model_ceiling":str(ceiling)}),
             limiting_relation=limiting["action"], limiting_reason=limiting["reason"],
+            limiting_row_slack_exact=str(ceiling-donor),
             complete_model_ties=[r["id"] for r in ranked if r["lower"]==after["lower"]],
             next_complete_ceiling=min((r["lower"] for r in ranked if r["lower"]>after["lower"]),default=None)))
     assert native["sources"][0]["source"] != native["sources"][1]["source"]
@@ -516,7 +525,7 @@ def verify_joint(path):
     assert budget in (16<<20,32<<20,64<<20) and native["resources"]["combined_additional_peak_bytes"] <= budget
     assert native["process_peak_working_set_bytes"] <= 1 << 30
     policy_ceiling = None
-    if coupled:
+    if coupled and not checked_subsolution:
         policy = {c:min(rs,key=lambda r:F(r["cost"])+sum(F(q)*values[t] for t,q in r["exits"])) for c,rs in by_source.items()}
         reachable, pending = set(), [1405,1369,1538]
         while pending:
@@ -555,6 +564,8 @@ def verify_joint(path):
             actions={str(c):policy[c]["action"] for c in ids},
             coordinates={str(c):coordinates[c] for c in ids} if retention else {})
     return dict(evidence_scope="native C++ owns uniform conditional-history semantics; exact audit checks integer derivation, assignment bounds, complete box minima and finite inequalities",
+        audit_mode="checked_subsolution" if checked_subsolution else "full_refinement",
+        auxiliary_tightness_checked=not checked_subsolution,
         optimistic_policy_ceiling=policy_ceiling, joint_events=events, measured_prefix_event=measured,
         old_prefix_capacity=3050403, old_prefix_probability_upper=3050403/mass,
         probability_cap_ratio=float(F(3050403,measured["capacity"])),
@@ -713,6 +724,12 @@ def verify_numerical_reuse(directory):
 
 
 if __name__ == "__main__":
+    if len(sys.argv)==4 and sys.argv[1]=="--checked-subsolution":
+        result=verify_joint(sys.argv[2], checked_subsolution=True)
+        Path(sys.argv[3]).write_bytes((json.dumps(result,indent=2)+"\n").encode("utf-8"))
+        print("complete checked-subsolution audit passed; auxiliary tightness not asserted")
+        raise SystemExit(0)
+
     if len(sys.argv)==4 and sys.argv[1]=="--numerical-reuse":
         result=verify_numerical_reuse(sys.argv[2])
         Path(sys.argv[3]).write_bytes((json.dumps(result,indent=2)+"\n").encode("utf-8"))

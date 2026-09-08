@@ -36,6 +36,18 @@ Exact evaluation constructs the reachable product of strategy operation, item st
 
 “Exact evaluation” means graph-based native evaluation rather than Monte Carlo estimation. Its arithmetic and reconciliation contract still matters. The phrase alone does not assert rational coefficients or zero numerical error.
 
+Final accounting can replace an incomplete quotient calculation with the retained
+raw/shared flow only after its occupancy, disaggregation and quotient checks
+complete, with no positive-input closed component. That completed flow clears
+the preliminary unresolved mass and hard unresolved flag; a recurrent entry snapshot
+does not. Direct transition and absorption edges are rebuilt from raw occupancy,
+including edges retained before pass-through contraction. Compressed router
+traces are then reconstructed through their existing owner. Raw-attribution caps
+and failed acceptance checks still refuse; numerical thresholds are unchanged. The
+[flow argument](mathematics/numerical-closure.md#flow-accounting) explains the
+replacement; the [campaign evidence](../active/2026-09-07-continuous-bounds/README.md)
+records its qualification.
+
 Properness from one start does not prove properness at every operation entry present in the document. Arbitrary-entry continuation certificates request and validate their entries explicitly. A default failure, unsupported route, or incomplete member domain refuses the corresponding upper.
 
 The success calculation and off-policy accounting answer different questions. Preserve both. A strategy with mass on an unmatched route is not rescued by renormalizing the mass that reached a known goal.

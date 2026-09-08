@@ -207,6 +207,28 @@ then the probability of the corresponding ordered conjunction is at most \(\prod
 
 The native premises include which goals are already retained or forced, whether one draw may satisfy several requirements, how many draws can occur on each side, intervening blockers on either side, guaranteed pools, and active filters. A factor derived before conditioning on an earlier pool-changing action may not apply afterward.
 
+For a single new goal, a history-uniform per-draw upper \(q\) gives
+\(\Pr(\text{acquire goal})\le\min(1,mq)\) when at most \(m\) eligible draws
+can occur. A retained fracture occupies one physical output slot, even when it
+satisfies several goal bits. In the qualified ordinary renewal frame, the native
+side limit therefore leaves at most two Rare draws (zero Magic draws) on its
+side. Harvest's guaranteed draw is included in that count, using the existing
+maximum of natural and guaranteed conditional bounds. Already retained and
+forced goals are excluded from this acquisition event. Forced insertions and
+pool exhaustion can only reduce the available positions. Fresh regions and the
+opposite side retain their original count; the separate Eldritch Chaos path is
+unchanged. Exclusion budgets still cover every earlier history on both sides.
+The same region/action identity binds reused capacities, and every final row is
+minimized again at the checked vector.
+
+The [campaign control](../../active/2026-09-07-continuous-bounds/README.md) exposes
+a limiting suffix event with target weight 500 and conservative remaining other
+weight 35,700. Its integer cap falls from
+\(\lceil2^{24}(3\cdot500/36200)\rceil=695189\) to
+\(\lceil2^{24}(2\cdot500/36200)\rceil=463460\).
+This strengthens the complete checked anchored model; it does not establish an
+empty-start lower or a native executable upper.
+
 A useful weight inequality is
 
 \[

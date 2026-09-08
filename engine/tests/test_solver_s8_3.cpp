@@ -8,6 +8,7 @@
 #include <cmath>
 #include <algorithm>
 #include <limits>
+#include <map>
 #include <memory>
 #include <numeric>
 #include <string>
@@ -1352,6 +1353,253 @@ void run_multimod_finish_price_flip() {
         }));
 }
 
+void run_protected_setup_capacity() {
+    auto session = make_automatic_session();
+    const ActionRegistry registry = build_action_registry(*session);
+    const std::uint32_t scour = registry.index_by_id.at("scour");
+    std::vector<std::uint64_t> carrier_mods(session->words, 0);
+    for (std::uint32_t mod = 0; mod < session->mod_count; ++mod) {
+        pc_bitset_set(carrier_mods.data(), mod);
+    }
+
+    /* A side lock occupies the other side. Compare complete fixed-option
+     * behavior with native execution, including the case where generic
+     * open-affix legality still holds but the actual Bench side is full. */
+    for (const std::uint8_t rarity :
+         {std::uint8_t{PC_RARITY_MAGIC}, std::uint8_t{PC_RARITY_RARE}}) {
+        for (const std::int8_t protected_side :
+             {std::int8_t{PC_SIDE_PREFIX}, std::int8_t{PC_SIDE_SUFFIX}}) {
+            for (const bool full : {false, true}) {
+                GoalSpec goal = automatic_goal(true, true);
+                goal.automatic_candidates = false;
+                FixedOptionSpec spec;
+                spec.kind = FixedOptionKind::ProtectedSide;
+                spec.side = protected_side;
+                spec.action_id = "scour";
+                goal.fixed_options.push_back(spec);
+                /* These authored carriers contain existing affixes that
+                 * Scour cannot create. Supply their concrete identity scope
+                 * explicitly, as a strict native execution reference does. */
+                CalcContext calc(
+                    session, goal, registry, {scour}, false, true, true,
+                    std::nullopt, {}, false, carrier_mods, true);
+                const std::uint32_t option = operator_by_fragment(
+                    calc, "option:protected_side:");
+                PC_CHECK(option != kNoId);
+                if (option == kNoId) return;
+                const PlannerOperator& planner = calc.operators().at(option);
+                PC_CHECK(planner.primitive_program.size() == 2);
+
+                pc_item_state start;
+                pc_item_clear(&start);
+                start.rarity = rarity;
+                const std::uint8_t cap =
+                    rarity == PC_RARITY_MAGIC ? 1 : session->rare_affix_cap;
+                const std::vector<std::uint32_t> setup_side_mods =
+                    protected_side == PC_SIDE_PREFIX
+                        ? std::vector<std::uint32_t>{
+                              kGoalSuffix, kSuffixCompetitor, kSuffixJunk}
+                        : std::vector<std::uint32_t>{
+                              kGoalPrefix, kPrefixJunkA, kPrefixJunkB};
+                const std::uint8_t count = full ? cap : cap - 1;
+                for (std::uint8_t index = 0; index < count; ++index) {
+                    add_mod(start, *session, setup_side_mods[index],
+                            full && index == 0 ? PC_MOD_SLOT_FRACTURED : 0);
+                }
+                /* A full Magic target leaves the other side empty. The
+                 * spare-capacity control preserves one affix through Scour. */
+                if (rarity == PC_RARITY_RARE || !full) {
+                    add_mod(start, *session,
+                            protected_side == PC_SIDE_PREFIX
+                                ? kGoalPrefix
+                                : kGoalSuffix);
+                }
+                const std::uint32_t entry = calc.intern_item(start);
+                pc_item_state represented;
+                const bool materialized = calc.materialize(entry, represented);
+                if (!materialized) {
+                    std::printf(
+                        "protected setup fixture materialization: rarity=%u "
+                        "protected_side=%d full=%d\n",
+                        static_cast<unsigned>(rarity),
+                        static_cast<int>(protected_side), full ? 1 : 0);
+                }
+                PC_CHECK(materialized);
+                if (!materialized) continue;
+                PC_CHECK(action_legal(
+                    *session, registry.actions.at(planner.setup_action),
+                    calc.state(entry)));
+
+                ActionContextImpl native(1);
+                native.session = session;
+                pc_item_state native_exit = start;
+                const ActionOutcome setup = apply_action(
+                    native, &native_exit,
+                    registry.actions.at(planner.setup_action).params);
+                PC_CHECK(setup.applied == !full);
+                PC_CHECK(setup.added == (full ? 0 : 1));
+                PC_CHECK(setup.removed == 0);
+                const std::uint32_t setup_exit = calc.intern_item(native_exit);
+
+                const OptionKernel& kernel = calc.option_kernel(entry, option);
+                if (kernel.legal != !full) {
+                    std::printf(
+                        "protected setup fixture kernel: rarity=%u "
+                        "protected_side=%d full=%d reason=%s\n",
+                        static_cast<unsigned>(rarity),
+                        static_cast<int>(protected_side), full ? 1 : 0,
+                        kernel.automatic.reason.c_str());
+                }
+                PC_CHECK(kernel.supported);
+                PC_CHECK(kernel.legal == !full);
+                PC_CHECK(kernel.terminates_almost_surely == !full);
+                PC_CHECK(kernel.observation_choice_groups.empty());
+                PC_CHECK(kernel.observation_choice_options.empty());
+                PC_CHECK(kernel.retry_states.empty());
+                PC_CHECK(kernel.continuation_states.empty());
+                if (full) {
+                    PC_CHECK(setup_exit == entry);
+                    PC_CHECK(kernel.exits.empty());
+                    PC_CHECK(kernel.expected_resources.empty());
+                    PC_CHECK(kernel.expected_primitive_actions == 0.0);
+                } else {
+                    PC_CHECK(setup_exit != entry);
+                    const ActionOutcome finish = apply_action(
+                        native, &native_exit,
+                        registry.actions.at(scour).params);
+                    PC_CHECK(finish.applied);
+                    const std::uint32_t expected = calc.intern_item(native_exit);
+                    PC_CHECK(kernel.exits ==
+                             std::vector<OutcomeEntry>({{expected, 1.0}}));
+                    PC_CHECK(kernel.expected_primitive_actions == 2.0);
+                    std::map<std::string, double> resources;
+                    for (const std::uint32_t primitive :
+                         planner.primitive_program) {
+                        for (const std::string& key :
+                             registry.actions.at(primitive).cost_keys) {
+                            resources[key] += 1.0;
+                        }
+                    }
+                    PC_CHECK(kernel.expected_resources ==
+                             (std::vector<std::pair<std::string, double>>(
+                                 resources.begin(), resources.end())));
+                }
+
+                /* Primitive Bench retains its existing projected no-op
+                 * contract; only fixed-option setup admission rejects it. */
+                const OutcomeDistribution& primitive =
+                    calc.outcomes(entry, planner.setup_action);
+                PC_CHECK(primitive.supported);
+                PC_CHECK(primitive.entries ==
+                         std::vector<OutcomeEntry>({{setup_exit, 1.0}}));
+                check_owned_byte_ledger(calc);
+            }
+        }
+    }
+}
+
+void run_protected_setup_after_cleanup() {
+    auto session = make_automatic_session();
+    const ActionRegistry registry = build_action_registry(*session);
+    GoalSpec goal = automatic_goal(false, true);
+    goal.automatic_candidates = false;
+    for (const std::uint32_t mod :
+         {kGoalPrefix, kPrefixJunkA, kPrefixJunkB}) {
+        GoalSlot retained;
+        retained.family_id = session->family_id[mod];
+        goal.slots.push_back(retained);
+    }
+    FixedOptionSpec spec;
+    spec.kind = FixedOptionKind::TemporaryBenchRepeat;
+    spec.setup_action_ids = {"bench:s83_mod_8"};
+    spec.program_action_ids = {"remove_crafted_modifiers"};
+    spec.action_id = "exalt";
+    spec.exit_goal_slots = {0};
+    spec.exit_min_satisfied = 1;
+    spec.relevant_goal_mask = 1;
+    goal.fixed_options.push_back(spec);
+    std::vector<std::uint64_t> carrier_mods(session->words, 0);
+    for (std::uint32_t mod = 0; mod < session->mod_count; ++mod) {
+        pc_bitset_set(carrier_mods.data(), mod);
+    }
+    CalcContext calc(
+        session, goal, registry, {registry.index_by_id.at("exalt")},
+        false, true, true, std::nullopt, {}, false, carrier_mods, true);
+    const std::uint32_t option = operator_by_fragment(
+        calc, "option:temporary_bench_repeat:");
+    PC_CHECK(option != kNoId);
+    if (option == kNoId) return;
+    const PlannerOperator& planner = calc.operators().at(option);
+    PC_CHECK(planner.primitive_program.size() == 4);
+    PC_CHECK(planner.primitive_program.front() == planner.cleanup_action);
+    PC_CHECK(planner.primitive_program.back() == planner.cleanup_action);
+
+    /* This is a valid full rare: Multimod permits the other two crafts.
+     * Cleanup creates the slot before setup. Rejecting against the original
+     * carrier's capacity would incorrectly remove the complete option. */
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    for (const std::uint32_t mod :
+         {kGoalPrefix, kPrefixJunkA, kPrefixJunkB}) {
+        add_mod(start, *session, mod);
+    }
+    for (const std::uint32_t mod :
+         {kMultimod, kBenchNeutral, kBenchTemporary}) {
+        add_mod(start, *session, mod, PC_MOD_SLOT_CRAFTED);
+    }
+    const std::uint32_t entry = calc.intern_item(start);
+    pc_item_state represented;
+    const bool materialized = calc.materialize(entry, represented);
+    PC_CHECK(materialized);
+    if (!materialized) return;
+    ActionContextImpl native(1);
+    native.session = session;
+    pc_item_state native_exit = start;
+    PC_CHECK(!apply_action(
+        native, &native_exit,
+        registry.actions.at(planner.setup_action).params).applied);
+    PC_CHECK(calc.intern_item(native_exit) == entry);
+
+    std::map<std::string, double> resources;
+    std::uint32_t exact = entry;
+    for (const std::uint32_t primitive : planner.primitive_program) {
+        const ActionDescriptor& action = registry.actions.at(primitive);
+        const ActionOutcome applied = apply_action(
+            native, &native_exit, action.params);
+        PC_CHECK(applied.applied);
+        const std::uint32_t expected = calc.intern_item(native_exit);
+        const OutcomeDistribution& distribution = calc.outcomes(exact, primitive);
+        PC_CHECK(distribution.supported);
+        PC_CHECK(distribution.choice_groups.empty());
+        PC_CHECK(distribution.entries ==
+                 std::vector<OutcomeEntry>({{expected, 1.0}}));
+        exact = expected;
+        for (const std::string& key : action.cost_keys) resources[key] += 1.0;
+    }
+    const OptionKernel& kernel = calc.option_kernel(entry, option);
+    if (!kernel.supported || !kernel.legal) {
+        std::printf(
+            "protected setup cleanup fixture: supported=%d legal=%d reason=%s\n",
+            kernel.supported ? 1 : 0, kernel.legal ? 1 : 0,
+            kernel.automatic.reason.c_str());
+    }
+    PC_CHECK(kernel.supported);
+    PC_CHECK(kernel.legal);
+    PC_CHECK(kernel.terminates_almost_surely);
+    PC_CHECK(kernel.automatic.setup_complete);
+    PC_CHECK(kernel.automatic.cleanup_complete);
+    PC_CHECK(kernel.automatic.kernel_changed);
+    PC_CHECK(kernel.exits == std::vector<OutcomeEntry>({{exact, 1.0}}));
+    PC_CHECK(kernel.retry_states.empty());
+    PC_CHECK(kernel.expected_primitive_actions == 4.0);
+    PC_CHECK(kernel.expected_resources ==
+             (std::vector<std::pair<std::string, double>>(
+                 resources.begin(), resources.end())));
+    PC_CHECK(calc.is_goal_state(calc.state(exact)));
+    check_owned_byte_ledger(calc);
+}
+
 void run_protected_price_flip() {
     auto session = make_automatic_session();
     ActionRegistry registry = build_action_registry(*session);
@@ -2506,11 +2754,17 @@ void run_solver_automatic_veiled_tests() {
     run_automatic_veiled_program();
 }
 
+void run_solver_protected_setup_tests() {
+    run_protected_setup_capacity();
+    run_protected_setup_after_cleanup();
+}
+
 void run_solver_s8_3_tests() {
     run_automatic_veiled_program();
     run_temporary_blocker_price_flip();
     run_cannot_roll_price_flip();
     run_multimod_finish_price_flip();
+    run_solver_protected_setup_tests();
     run_protected_price_flip();
     run_protected_producibility_filter();
     run_fracture_price_flip();

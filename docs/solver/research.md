@@ -73,11 +73,36 @@ seconds of setup and expanded only the root; its verified policy and missed
 preselected target were unchanged. Setup still exceeded the finish budget,
 leaving no measured discovery gain.
 
+The [continuous campaign](../active/2026-09-07-continuous-bounds/README.md) then
+removed duplicate additive support enumeration by exact side/goal-mask identity.
+One matched compact pair reduced preparation from 25.661 to 24.835 seconds
+(3.2%), relation construction from 17.538 to 16.648 seconds, and support work
+from 6.648 to 5.773 seconds. Complete native payloads, numerical work and proof
+peak were unchanged. This pair establishes a preparation-cost improvement.
+
+The next limiting singleton acquisition cap had allowed three new draws on a
+side already occupied by the retained fracture. Counting the two physical free
+Rare slots raises the complete anchored source lowers to 358.14571 / 361.34992;
+the final probability minima and all 26,586 inequalities pass exact auditing.
+Preparation was 25.839 seconds in the final compact, so this is a strength gain,
+not a further preparation speedup. The fresh optimistic policy ceiling remains
+404.99530 and has no general empty-start or native upper authority.
+
+A first checked source value of 25.22 is below the independent 36.43 and has no
+source consumer gain. A private stop target of 280 reaches a completely checked
+288.37 subsolution and feeds the existing ordinary consumer. Final development
+setup is 19.198 seconds with 1,282 expanded states and verified upper 12,124.915;
+complete time is 56.045 seconds. Full refinement on the final engine instead
+uses 29.904 seconds of setup and hits the original 60-second watchdog during
+finalization. These results preserve the failure and do not justify changing
+browser activation to the experimental endpoint.
+
 Dependencies: [CLM-0007](claims.md#clm-0007), [CLM-0008](claims.md#clm-0008),
 [CLM-0013](claims.md#clm-0013), [CLM-0014](claims.md#clm-0014),
 [CLM-0018](claims.md#clm-0018), [CLM-0019](claims.md#clm-0019).
-The measured gains are preparation cost only; no new native exact closure,
-empty clean-five lower or improved development target is established.
+The campaign establishes preparation savings, stronger scoped lowers and
+verified-policy recovery. No new native exact closure, empty clean-five lower
+or attainment of the historical development target is established.
 
 <a id="rq-003"></a>
 ### RQ-003 — Can executable-policy quality be preserved while proof work scales?
@@ -91,6 +116,28 @@ The [released-candidate repair](../archive/2026-08-30-carrier-ladder-released-ca
 shows why a measured scheduling conflict may come from lifecycle ownership,
 not mathematical impossibility. Keep the causal distinction after replacing its
 implementation.
+
+The [continuous campaign](../active/2026-09-07-continuous-bounds/README.md) repaired
+stale quotient accounting after completed raw policy evaluation. On the same
+30-second development finish request with retention preparation disabled, the
+returned verified upper improved from 14,048,002.569 to 12,124.915; the lower was
+36.809. Setup took 4.322 seconds and the complete run, including final checking,
+took 55.652 seconds. Exact final evaluation matched the returned cost, with
+success probability one and zero off-policy mass. The coarse estimate of
+12,197.277 still reported a cost mismatch, the fixed 2,698.875 target was missed,
+and strict lift did not run. This is a verified-policy improvement with exact
+closure still open; it does not establish a retention-mode speedup.
+
+Protected setup admission also rejects an already full Bench target side before
+building its deterministic no-op row. The guard applies at the actual setup
+state, preserving cleanup-first programs and native primitive semantics. Matched
+OFF controls retain the same 2,690 expansions and policy while Bench rows fall
+727,389 to 593,808. Total time rises 55.652 to 57.107 seconds in this pair: avoided
+row work is established, an end-to-end speedup is not. The unresolved strict-lift
+failure names an existing coarse parent outside the restored incumbent policy's
+extent. Preserve that complete selected snapshot and its memory accounting as
+the next focused exact-closure task; no larger graph or weaker identity check is
+justified by the observed failure.
 
 Dependencies: [CLM-0002](claims.md#clm-0002), [CLM-0004](claims.md#clm-0004),
 [CLM-0020](claims.md#clm-0020), [CLM-0021](claims.md#clm-0021),

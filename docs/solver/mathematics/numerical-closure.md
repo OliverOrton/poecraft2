@@ -61,6 +61,33 @@ That is not an argument against floating point. It is an argument against equati
 
 The example also explains why a selected-policy numerical residual cannot, by itself, certify every alternative Bellman inequality.
 
+<a id="flow-accounting"></a>
+### Complete occupancy replaces preliminary accounting
+
+For the same finite fixed-policy chain, let \(\alpha\) be its initial mass and
+\(d\) its expected nonterminal visit vector. Complete flow satisfies
+
+\[
+d=\alpha+Q^T d.
+\]
+
+When the reachable chain is transient, this has one finite nonnegative solution.
+Each edge carries \(d_iQ_{ij}\), and terminal and reward totals follow from the
+same occupancies. Unresolved mass from a preliminary computation is a remainder
+of that same initial mass. Adding it to a completed flow counts that remainder
+twice; a completed, qualified reconstruction replaces the preliminary accounting.
+
+A reachable closed component is different. If positive mass \(m\) enters a
+closed component \(C\), summing its flow equations would give
+\(\sum_{i\in C}d_i=m+\sum_{i\in C}d_i\), impossible for finite occupancies.
+A finite entry snapshot for that component cannot discharge unresolved mass.
+
+The native application requires completed raw/shared occupancy, disaggregation
+and quotient-flow checks, and no positive-input closed component. Its existing
+numerical acceptance contract remains in force; this argument supplies neither
+a new error bound nor native optimality. See [CLM-0002](../claims.md#clm-0002)
+and the [evaluation mechanism](../publication.md#evaluation-contract).
+
 <a id="probability"></a>
 ## 4. Probability coefficients and minimizing relations
 

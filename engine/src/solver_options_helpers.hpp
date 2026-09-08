@@ -2708,6 +2708,19 @@ bool setup_applies_exactly(
             calc.state(state_id))) {
         return false;
     }
+    const auto& descriptor = calc.registry().actions.at(setup_action);
+    const auto& state = calc.state(state_id);
+    if (!descriptor.synthetic && descriptor.params.type == ActionType::Bench &&
+        descriptor.params.mod_id < calc.session().mod_count &&
+        (state.rarity == PC_RARITY_MAGIC || state.rarity == PC_RARITY_RARE)) {
+        const int side = calc.session().gen_type[descriptor.params.mod_id];
+        const unsigned cap = state.rarity == PC_RARITY_MAGIC ? 1u : calc.session().rare_affix_cap;
+        // Native Bench only adds: add_direct_mod refuses a full target side.
+        // Keep this local setup rejection; primitive Bench still owns its
+        // historical no-op row and every other setup uses the exact kernel.
+        if ((side == 0 && state.prefix_count >= cap) ||
+            (side == 1 && state.suffix_count >= cap)) return false;
+    }
     const OutcomeDistribution& setup = calc.outcomes(state_id, setup_action);
     if (!setup.supported || !setup.choice_groups.empty() ||
         setup.entries.empty()) {

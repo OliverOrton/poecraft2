@@ -32,7 +32,8 @@ void SolveWork::Impl::prepare_native_retention_lower() {
         auto prepared = PhaseLowerProducer::prepare_probabilistic(calc,prices,exact_start_item,
             proposal,support,zero,false,true,budget,true,{},PhaseContinuation::CoupledFresh,
             PhaseRetention::AnnulNonempty,false,{true,true,3,
-                options.native_retention_numerical_reuse,options.native_retention_numerical_reuse});
+                options.native_retention_numerical_reuse,options.native_retention_numerical_reuse,
+                options.native_retention_checked_target>0,options.native_retention_checked_target});
         const auto safe_member = [&](unsigned mod) {
             return session.metamod_type.at(mod)<0 && !modifier_is_veiled_template(session,mod);
         };
@@ -62,7 +63,11 @@ void SolveWork::Impl::prepare_native_retention_lower() {
         native_retention_live_bytes=prepared->memory_snapshot().total_bytes;
         native_retention_potential=std::move(prepared); // only after full checking
         auto& entry=contract(ProofPatternKind::NativeRetention);
-        entry.converged=true; entry.residual=0; entry.fallback_reason.clear();
+        const bool early=native_retention_potential->preparation_stats.accepted_early_subsolution;
+        entry.converged=!early;
+        entry.residual=early ? std::numeric_limits<double>::infinity() : 0;
+        entry.fallback_reason.clear();
+        if (early) entry.refinement_trace="checked_native_subsolution; stopped_before_auxiliary_refinement_close";
         entry.solution_sweeps=native_retention_potential->model_rounds;
         entry.start_contribution=native_retention_lower_value(result.start_state);
         // This existing field carries the maximum of independent start-state

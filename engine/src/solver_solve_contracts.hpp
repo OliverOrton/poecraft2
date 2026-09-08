@@ -89,6 +89,7 @@ struct SolveOptions {
     bool native_retention_lower = false;
     bool native_retention_profile = false; // sampled internal attribution only
     bool native_retention_numerical_reuse = false; // private matched experiment; no public activation
+    double native_retention_checked_target = 0; // private checked-subsolution stopping experiment
     std::uint64_t native_retention_proof_bytes = 32ull << 20;
     /* White-box parity switch for the versioned successful fallback
      * properness-proof cache. Product/API solves keep reuse enabled. */

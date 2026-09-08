@@ -97,6 +97,16 @@ Per-mask capacities are not automatically aggregate subset constraints. The fina
 
 Only value-independent geometry and compatible exact-mask event caps are reused within a preparation. This does not make them exact native kernels reusable for every value vector or a cross-request cache.
 
+Augment, Regal, Exalt and Eldritch Exalt enumerate each distinct pair of side and
+complete goal-hit mask once per preparation. Their source predicates and
+successor coordinates depend only on that pair and the fixed source/action
+context; support canonicalization already removes repeated target cells.
+Preserving first-occurrence order therefore produces the same canonical groups
+for current-value minimization. The existing five-goal frame bounds the fixed
+storage to 64 pairs. Native pool weights, nonempty witnesses and Annul occurrence
+multiplicities still use their complete populations. The [campaign evidence](../active/2026-09-07-continuous-bounds/README.md)
+records the exact-payload comparison and measured preparation effect.
+
 ## Opt-In Ordinary Native Retention Lower
 
 `SolveOptions::native_retention_lower` defaults off for native/C ABI callers. At Oliver's request, the WASM facade selects it with numerical reuse on each newly opened solver, so normal Calculator solves exercise it without a new UI setting. This browser-testing activation is not a claim that the earlier performance gate established exact-closure improvement. `SolveWork::Impl` prepares one compatible view in setup and reserves the existing 32 MiB additional proof budget within the total solver cap. `NativeRetention` contributes through the existing maximum-composition path; unsupported sources and caller scopes retain their previous lower.
@@ -106,6 +116,24 @@ The qualified frame is anchored by an exact goal fracture and couples the releva
 Current retained facts include Scour's fracture preservation; side-specific Eldritch effects; removable crafted categories; Exalt non-exhaustion evidence; uniform Annul loss categories; and Alchemy's applied rarity distinct from its separately proved minimum refill occupancy. Unknown refill histories keep underfilled Rare outcomes instead of undoing the native application.
 
 The ordinary lookup uses retained `AbstractState` observations and complete modifier-member masks, not one materialized representative. Ambiguous fracture identity, unsupported class members, failed preparation, or incompatible memory preserve the previous lower. A coupled fresh entry inside an anchored certificate is not automatically a general empty-start request certificate.
+
+The private native benchmark's `checked` mode accepts a positive source stop
+target. It may consume an earlier vector only after complete action coverage,
+current-vector event minimization, simultaneous checking and shortcut
+reactivation have finished. The target is never a lower constraint. An accepted
+early endpoint is marked as a checked subsolution with auxiliary convergence
+false; ordinary maximum consumption still requires the same compatible native
+certificate. Native/C ABI defaults and WASM's full-refinement reuse mode remain
+unchanged. The explicit `--checked-subsolution` coefficient audit preserves
+feasibility and consumer checks while omitting auxiliary tightness and policy
+ceiling claims; the default audit still requires its original tightness checks.
+
+Ordinary renewal singleton acquisition caps now count the physical slot occupied
+by the retained fracture, as the joint-goal cap already did. The
+[conditional-history argument](mathematics/lower-bounds.md#conditional) records
+the side, guaranteed-draw and forced-goal premises. Complete native source
+lowers are 358.14570884078455 and 361.3499234545634 in the recorded two anchored
+controls, with unchanged action and resource scope.
 
 An identity-compatible whole-state lower for the full unchanged scope also lower-bounds every legal action and residual family. That supports compatible maximum consumption even while incremental generation remains open. [CLM-0011](claims.md#clm-0011) states the required premise; a restricted-program value cannot be used this way.
 

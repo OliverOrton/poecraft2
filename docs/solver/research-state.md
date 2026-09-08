@@ -21,6 +21,8 @@ Regenerate with the series command in [benchmarking](benchmarking.md#research-se
 | [filtered-continuation](../../docs/archive/2026-09-05-native-metamod-first-exit-v1/reference.json) / prefix_removed | certified_native_lower | 355.432654544 | 358.872295714 | 355.432654544 | 355.432654544 | harvest_reforge:defences | proper auxiliary policy |
 | [checked-numerical-reuse](../../docs/archive/2026-09-07-checked-numerical-reuse-v1/reference.json) / primary | certified_native_lower | 352.310170339 | 355.789813661 | 352.310170339 | 352.310170339 | bench:HelenaMasterFireResist1 | proper auxiliary policy |
 | [checked-numerical-reuse](../../docs/archive/2026-09-07-checked-numerical-reuse-v1/reference.json) / prefix_removed | certified_native_lower | 355.432654544 | 358.872295714 | 355.432654544 | 355.432654544 | harvest_reforge:defences | proper auxiliary policy |
+| [retained-fracture-slot-cap](../../docs/active/2026-09-07-continuous-bounds/reference.json) / primary | certified_native_lower | 358.145708841 | 361.613185255 | 358.145708841 | unavailable | bench:HelenaMasterFireResist1 | proper auxiliary policy |
+| [retained-fracture-slot-cap](../../docs/active/2026-09-07-continuous-bounds/reference.json) / prefix_removed | certified_native_lower | 361.349923455 | 364.784822815 | 361.349923455 | unavailable | harvest_reforge:defences | proper auxiliary policy |
 
 An unavailable absolute portfolio is not inferred from a reported gain. Each source record retains its original comparison basis in the JSON view.
 
@@ -42,6 +44,9 @@ An unavailable absolute portfolio is not inferred from a reported gain. Each sou
 - [checked-numerical-reuse](../../docs/archive/2026-09-07-checked-numerical-reuse-v1/reference.json): available; certified_native_lower; development; single sequential matched pair, not independent replication. Same final native model and values; measured preparation reduction does not establish target/gap/exact-closure improvement.
   Recorded preparation (seconds): total=31.314394; relations=22.4072996; numerical=6.8069396; checking=1.8957306; export (within relations)=0.3086131. End-to-end improvement is not established by this observation.
 - [numerical-reuse-development-product8](../../docs/archive/2026-09-07-checked-numerical-reuse-v1/comparison.json): available; conditional_observation; existing development case; one fixed-target matched pair. Both miss the predeclared upper target; same verified upper and gap; no exact closure.
+- [retained-fracture-slot-cap](../../docs/active/2026-09-07-continuous-bounds/reference.json): available; certified_native_lower; development; complete scoped anchored controls. Stronger anchored lowers only; the internal fresh ceiling is not a general empty-start lower or native upper.
+- [early-checked-retention-subsolution](../../docs/active/2026-09-07-continuous-bounds/checked-subsolution-reference.json): available; conditional_observation; private diagnostic stop target, full native consumer scope preserved. No auxiliary tightness or optimistic policy ceiling assertion; not enabled in WASM or native/C ABI defaults.
+- [continuous-bounds-development-product8](../../docs/active/2026-09-07-continuous-bounds/comparison.json): available; conditional_observation; fixed 30-second finish and 60-second watchdog, failed full-retention finalization preserved. One observation per treatment, including an explicitly resumed post-limit session; no timing distribution, target attainment or exact closure.
 
 Selected actions are observations, not causal proofs. Complete-model tied families and exact auxiliary ceiling values remain in the detailed JSON and linked evidence.
 

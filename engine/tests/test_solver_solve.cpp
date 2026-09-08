@@ -3293,6 +3293,137 @@ void report_solve_issue(
     }
 }
 
+void run_selected_fallback_successor_tests() {
+    auto session = make_solve_session();
+    ActionRegistry registry = build_action_registry(*session);
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    for (const std::uint32_t family : {100u, 102u, 104u, 106u}) {
+        GoalSlot slot;
+        slot.family_id = family;
+        slot.min_tier = 1;
+        goal.slots.push_back(slot);
+    }
+    const std::uint32_t chaos = registry.index_by_id.at("chaos");
+    const std::uint32_t scour = registry.index_by_id.at("scour");
+    const std::uint32_t transmute = registry.index_by_id.at("transmute");
+    const std::uint32_t regal = registry.index_by_id.at("regal");
+    const std::vector<std::uint32_t> candidates{
+        chaos, scour, transmute, regal};
+    CalcContext calc(
+        session, goal, registry, candidates,
+        false, true, false, std::nullopt, {}, true);
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    const std::uint32_t start_state = calc.intern_item(start);
+
+    /* Retain the complete coarse graph, but author only the proper rare
+     * Chaos policy. Scour introduces a normal frontier seed; Transmute is
+     * its only legal action and discovers magic successors without policy
+     * actions. Those successors are not frontier seeds themselves, and must
+     * reach the same certified Regal fallback through cooperative lookup. */
+    for (std::uint32_t state = 0; state < calc.state_count(); ++state) {
+        if (calc.is_goal_state(calc.state(state))) continue;
+        if (calc.state(state).rarity == PC_RARITY_NORMAL) {
+            for (const std::uint32_t action : candidates) {
+                PC_CHECK(action_legal(
+                    *session, registry.actions.at(action), calc.state(state)) ==
+                    (action == transmute));
+            }
+        }
+        for (const std::uint32_t action : candidates) {
+            (void)calc.outcomes(state, action, false);
+        }
+        PC_CHECK(calc.state_count() < 5000);
+        if (calc.state_count() >= 5000) return;
+    }
+    const OutcomeDistribution& chaos_row =
+        calc.outcomes(start_state, chaos, false);
+    double goal_probability = 0.0;
+    std::set<std::uint32_t> selected_coarse_closure{start_state};
+    for (const OutcomeEntry& entry : chaos_row.entries) {
+        selected_coarse_closure.insert(entry.state);
+        if (calc.is_goal_state(calc.state(entry.state))) {
+            goal_probability += entry.probability;
+        }
+    }
+    PC_CHECK(goal_probability > 0.0);
+    if (!(goal_probability > 0.0)) return;
+    const std::unordered_map<std::string, double> prices{
+        {"chaos", 100.0}, {"scour", 0.01},
+        {"transmute", 0.01}, {"regal", 0.01}};
+    const double authored_cost = 100.0 / goal_probability;
+    SolveOptions options;
+    SolveResult authored;
+    authored.policy_available = true;
+    authored.policy_status = SolvePolicyStatus::BoundedFeasible;
+    authored.start_state = start_state;
+    authored.has_exact_start_item = true;
+    authored.exact_start_item = start;
+    authored.upper_bound = authored_cost;
+    authored.evaluated_policy_cost = authored_cost;
+    authored.options = options;
+    const std::uint32_t state_count = calc.state_count();
+    authored.values.assign(state_count, 0.0);
+    authored.policy.assign(state_count, PolicyOperatorRef{});
+    authored.expanded.assign(state_count, 0);
+    authored.goal_states.assign(state_count, 0);
+    authored.policy_reachable.assign(state_count, 0);
+    authored.unveil_preferences.resize(state_count);
+    authored.option_unveil_preferences.resize(state_count);
+    std::uint32_t unselected_magic = 0;
+    for (std::uint32_t state = 0; state < state_count; ++state) {
+        if (calc.is_goal_state(calc.state(state))) {
+            authored.goal_states[state] = 1;
+        } else if (calc.state(state).rarity == PC_RARITY_RARE) {
+            authored.policy[state] = PolicyOperatorRef{
+                PlannerOperatorKind::Primitive, chaos};
+            authored.values[state] = authored_cost;
+            authored.expanded[state] = 1;
+            authored.policy_reachable[state] = 1;
+        } else if (calc.state(state).rarity == PC_RARITY_MAGIC) {
+            ++unselected_magic;
+        }
+    }
+    PC_CHECK(unselected_magic > 0);
+
+    const refinement::PolicyExactLiftCertificate lifted =
+        refinement::lift_policy_quotient(
+            calc, authored, start, prices, options,
+            "cooperative selected-row successor fallback");
+    report_lift_failure("Selected successor fallback", lifted);
+    PC_CHECK(lifted.status == refinement::PolicyExactLiftStatus::Complete);
+    PC_CHECK(lifted.adapter.strict_frontier_states_inserted > 0);
+    PC_CHECK(lifted.adapter.local_state_action_rows_evaluated > 0);
+    PC_CHECK(lifted.executable);
+    PC_CHECK(lifted.compiled.proper);
+    PC_CHECK(lifted.compiled.zero_off_policy);
+    PC_CHECK(lifted.compiled.cost_reconciled);
+    PC_CHECK(lifted.compiled.evaluation.cost_complete);
+    PC_CHECK(lifted.compiled.evaluation.success_probability >= 1.0 - 1e-10);
+    /* Beyond the original Chaos closure and one normal Scour seed, only
+     * Transmute can introduce a new parent. The proper final policy may still
+     * prefer Chaos, so its minimized published classes need not retain these
+     * successfully checked magic fallback carriers. */
+    PC_CHECK(lifted.adapter.coarse_policy_states >
+             selected_coarse_closure.size() + 1);
+
+    /* A row-cap failure remains a refusal, with no executable promotion. */
+    refinement::RefinementLimits capped_limits;
+    capped_limits.max_exact_kernels = 0;
+    capped_limits.max_estimated_memory_bytes = options.max_solver_owned_bytes;
+    const refinement::PolicyExactLiftCertificate capped =
+        refinement::lift_policy_quotient(
+            calc, authored, start, prices, options,
+            "capped cooperative selected-row successor fallback",
+            &capped_limits);
+    PC_CHECK(capped.status == refinement::PolicyExactLiftStatus::ResourceCap);
+    PC_CHECK(!capped.resource_cap.empty());
+    PC_CHECK(!capped.executable);
+    PC_CHECK(!capped.global_lower_bound_closed);
+}
+
 void run_policy_guided_exact_lift_tests() {
     std::uint32_t unresolved_rounds = 0;
     PC_CHECK(!advance_unreconciled_stable_policy_latch(
@@ -12575,6 +12706,7 @@ void run_solver_eldritch_side_fixture_tests() {
 }
 
 void run_solver_policy_refinement_tests() {
+    run_selected_fallback_successor_tests();
     run_frontier_incumbent_epoch_skew_tests();
     run_shared_sparse_policy_kernel_tests();
     run_policy_guided_exact_lift_tests();
@@ -12588,6 +12720,10 @@ void run_solver_policy_refinement_tests() {
     run_policy_guided_fixed_choice_reoptimization_tests();
     run_policy_guided_improper_cycle_repair_tests();
     run_mixed_side_rare_cap_reporting_regression();
+}
+
+void run_solver_selected_fallback_tests() {
+    run_selected_fallback_successor_tests();
 }
 
 void run_solver_solve_tests(const char* artifact_dir) {

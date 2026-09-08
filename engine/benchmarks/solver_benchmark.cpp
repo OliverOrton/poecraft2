@@ -56,6 +56,7 @@ struct Arguments {
     fs::path development_checkpoint_load;
     std::string case_id;
     std::string native_retention_diagnostic;
+    double native_retention_target_lower = 0;
     bool validate_only = false;
     bool fragment_contract_rejection_probes = false;
     bool fragment_shadow_only = false;
@@ -93,6 +94,7 @@ struct NativeHandles {
 
 struct CaseResult {
     std::string native_retention_diagnostic;
+    double native_retention_target_lower = 0;
     struct CompiledOperationContractResult {
         std::string type;
         std::vector<std::pair<std::string, std::string>> string_parameters;
@@ -3055,6 +3057,7 @@ CaseResult run_case(
     pc_data_handle data, const Value& specification,
     const bool skip_verification, const fs::path& strategy_output,
     const std::string& native_retention_diagnostic,
+    const double native_retention_target_lower,
     const bool emit_progress, const std::uint64_t verification_runs_override,
     const std::uint64_t verification_seed_override,
     const std::uint32_t verification_chunk_runs,
@@ -3071,6 +3074,7 @@ CaseResult run_case(
     const std::function<void(const CaseResult&)>& checkpoint) {
     CaseResult report;
     report.native_retention_diagnostic=native_retention_diagnostic;
+    report.native_retention_target_lower=native_retention_target_lower;
     report.verification_skipped = skip_verification;
     report.max_discovered_states_override =
         max_discovered_states_override;
@@ -3298,9 +3302,10 @@ CaseResult run_case(
         pc_error_info error;
         pc_error_info_init(&error);
         if (!native_retention_diagnostic.empty()) {
-            const auto mode=native_retention_diagnostic=="reuse" ? poecraft::solver::NativeRetentionDiagnosticMode::Reuse :
+            const auto mode=native_retention_diagnostic=="checked" ? poecraft::solver::NativeRetentionDiagnosticMode::CheckedTarget :
+                native_retention_diagnostic=="reuse" ? poecraft::solver::NativeRetentionDiagnosticMode::Reuse :
                 poecraft::solver::NativeRetentionDiagnosticMode::Cold;
-            const auto configured=poecraft::solver::configure_solver_native_retention_diagnostic(handles.solver,mode,&error);
+            const auto configured=poecraft::solver::configure_solver_native_retention_diagnostic(handles.solver,mode,&error,native_retention_target_lower);
             if(configured!=PC_RESULT_OK) throw std::runtime_error(api_error("configure native retention",configured,error));
         }
         auto boundary_config =
@@ -4393,6 +4398,8 @@ void append_case_report(
     bool first_input = true;
     if (!result.native_retention_diagnostic.empty())
     out << "  \"native_retention_diagnostic\":" << escape_json(result.native_retention_diagnostic) << ",\n";
+    if (result.native_retention_target_lower>0)
+    out << "  \"native_retention_target_lower\":" << result.native_retention_target_lower << ",\n";
     for (const char* key : {"comparison_profile", "watchdog_seconds", "requested_bounded_finish_seconds", "session", "start", "goal", "corpus", "feasibility", "generation", "product_action_envelope", "allowed_mechanic_families", "planner_envelope_diagnostic_v1", "carrier_ladder_exact_boundary_v1", "mechanic_family_control", "compiled_operation_contract", "compiled_operation_contracts", "material_ratio_contract", "market_price_override_contracts", "forced_winner_contract", "bounded_best_policy_contract", "economy", "caps", "verification"}) {
         const Value* value = specification.find(key);
         if (value == nullptr) continue;
@@ -5476,6 +5483,7 @@ Arguments parse_arguments(int argc, char** argv) {
         }
         else if (argument == "--case") args.case_id = value("--case");
         else if (argument == "--native-retention-diagnostic") args.native_retention_diagnostic=value("--native-retention-diagnostic");
+        else if (argument == "--native-retention-target-lower") args.native_retention_target_lower=std::stod(value("--native-retention-target-lower"));
         else if (argument == "--validate-only") args.validate_only = true;
         else if (argument == "--fragment-contract-rejection-probes") {
             args.fragment_contract_rejection_probes = true;
@@ -5544,11 +5552,14 @@ Arguments parse_arguments(int argc, char** argv) {
         else throw std::runtime_error("unknown argument: " + argument);
     }
     if (!args.native_retention_diagnostic.empty() &&
-        ((args.native_retention_diagnostic!="cold" && args.native_retention_diagnostic!="reuse") ||
+        ((args.native_retention_diagnostic!="cold" && args.native_retention_diagnostic!="reuse" && args.native_retention_diagnostic!="checked") ||
          args.case_id.empty() || args.validate_only || args.fragment_shadow_only ||
          args.resumable_joint_policy_continuation_diagnostic || args.verified_policy_alternative_shadow_diagnostic ||
          !args.development_checkpoint_save.empty() || !args.development_checkpoint_load.empty()))
-        throw std::runtime_error("native retention diagnostic requires cold|reuse, one ordinary case, no checkpoint or other diagnostic");
+        throw std::runtime_error("native retention diagnostic requires cold|reuse|checked, one ordinary case, no checkpoint or other diagnostic");
+    if (!std::isfinite(args.native_retention_target_lower) || args.native_retention_target_lower<0 ||
+        ((args.native_retention_diagnostic=="checked") != (args.native_retention_target_lower>0)))
+        throw std::runtime_error("checked retention requires a finite positive --native-retention-target-lower; other modes require zero");
     if (args.artifact.empty()) throw std::runtime_error("--artifact is required");
     if (args.corpus.empty()) throw std::runtime_error("--corpus is required");
     if (!args.validate_only && args.output.empty()) {
@@ -5850,7 +5861,7 @@ int main(int argc, char** argv) {
                           };
                 const CaseResult result = run_case(
                     data, specification, args.skip_verification,
-                    args.strategy_output, args.native_retention_diagnostic, args.emit_progress,
+                    args.strategy_output, args.native_retention_diagnostic, args.native_retention_target_lower, args.emit_progress,
                     args.verification_runs, args.verification_seed,
                     args.verification_chunk_runs,
                     args.verification_time_limit_seconds,

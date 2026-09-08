@@ -59,8 +59,8 @@ try {
                 assert.equal(pattern.converged, true, pattern.fallback_reason);
                 assert.equal(pattern.fallback_reason, "");
                 assert.ok(pattern.start_contribution !== null);
-                assert.ok(Math.abs(pattern.start_contribution - 352.31017033879505) < 1e-8);
-                assert.ok(Math.abs((summary.lower_bound ?? 0) - 352.31017033879505) < 1e-8);
+                assert.ok(Math.abs(pattern.start_contribution - 358.14570884078455) < 1e-8);
+                assert.ok(Math.abs((summary.lower_bound ?? 0) - 358.14570884078455) < 1e-8);
                 assert.ok(pattern.solution_sweeps > 0);
             } else {
                 assert.equal(pattern.converged, false);

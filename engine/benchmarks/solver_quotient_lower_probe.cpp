@@ -820,7 +820,16 @@ void probabilistic_phase(CalcContext& calc, SolveWorkTestAccess::Impl& owner, co
         std::cout << "]}";
     }
     const auto& prep=potential->preparation_stats;
-    std::cout << "],\"preparation_profile\":{\"total_ns\":" << prep.total_ns
+    std::cout << "],\"checked_source_progress\":[";
+    bool first_progress=true;
+    for (unsigned round=0;round<prep.checked_source_ns.size();++round) if (prep.checked_source_ns[round]) {
+        if (!first_progress) std::cout << ',';
+        first_progress=false;
+        std::cout << "{\"round\":" << round+1 << ",\"lower\":" << prep.checked_source_lowers[round]
+            << ",\"elapsed_ns\":" << prep.checked_source_ns[round] << '}';
+    }
+    std::cout << "],\"preparation_profile\":{\"accepted_early_subsolution\":" << prep.accepted_early_subsolution
+        << ",\"total_ns\":" << prep.total_ns
         << ",\"projection_ns\":" << prep.projection_ns << ",\"relations_ns\":" << prep.relation_ns
         << ",\"diagnostic_export_ns\":" << prep.diagnostic_export_ns
         << ",\"support_ns\":" << prep.support_ns << ",\"allocation_ns\":" << prep.allocation_ns
@@ -985,13 +994,17 @@ void ordinary_retention(SolveWorkTestAccess::Impl& owner, Clock::time_point bega
 
 int main(int argc, char** argv) {
     try {
-        if (argc != 5) throw std::runtime_error("micro|medium-coverage artifact-directory goal economy required");
+        if (argc != 5 && argc != 6) throw std::runtime_error("probe artifact-directory goal economy [checked-source-target] required");
         const bool is_micro = std::string(argv[1]) == "micro";
         const bool is_phase = std::string(argv[1]) == "uniform-phase";
         std::string selector = argv[1];
         const bool ordinary_reuse=selector=="ordinary-retention-reuse";
         if (ordinary_reuse) selector="ordinary-retention-profile";
-        const bool untrusted = selector == "filter-both-proposal-32";
+        const bool early = selector == "filter-both-early-32";
+        const double checked_target = argc==6 ? std::stod(argv[5]) : 0;
+        if (argc==6 && (!early || !std::isfinite(checked_target) || checked_target<=0))
+            throw std::runtime_error("checked-source-target requires early probe and a finite positive lower target");
+        const bool untrusted = early || selector == "filter-both-proposal-32";
         const bool warm = untrusted || selector == "filter-both-warm-32";
         if (warm) selector = "filter-both-32";
         const bool is_ordinary = selector=="ordinary-retention-control" || selector=="ordinary-retention-treatment" || selector=="ordinary-retention-profile";
@@ -1073,7 +1086,7 @@ int main(int argc, char** argv) {
             key(goal + '\n' + economy + '\n' + read(manifest_path) + "\nlower-v2"), key(goal));
         else if (is_phase) uniform_phase(calc, owner, start, key(goal + '\n' + economy + '\n' + read(manifest_path)));
         else if (is_probability) probabilistic_phase(calc, owner, start, continuation, proof_cap, retention,
-            {selector != "reforge-rarity-32",true,is_filter ? (selector=="filter-both-32" ? 3u : 1u) : 0u,warm,untrusted},h.session->impl);
+            {selector != "reforge-rarity-32",true,is_filter ? (selector=="filter-both-32" ? 3u : 1u) : 0u,warm,untrusted,early,checked_target},h.session->impl);
         else medium_coverage(calc, owner);
         std::cout << ",\"prepare_ns\":" << prepare_ns << ",\"elapsed_ns\":" << ns(began)
             << ",\"process_peak_working_set_bytes\":" << process_peak() << "}\n";

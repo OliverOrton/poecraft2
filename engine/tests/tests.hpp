@@ -59,5 +59,8 @@ void run_solver_quotient_partition_tests();
 void run_solver_quotient_bellman_tests();
 void run_solver_quotient_lower_tests();
 void run_solver_phase_lower_tests();
+void run_solver_selected_fallback_tests();
+void run_solver_attribution_recovery_tests();
+void run_solver_protected_setup_tests();
 
 #endif

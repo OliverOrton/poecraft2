@@ -246,11 +246,25 @@
                 abstract_state_key(parent_state));
         if (parent == coarse_state_by_key_.end() ||
             parent->second >= solved_.policy.size()) {
+            std::uint32_t current_parent = kNoId;
+            for (std::uint32_t id = 0; id < coarse_.state_count(); ++id) {
+                if (coarse_.state(id) == parent_state) {
+                    current_parent = id;
+                    break;
+                }
+            }
             throw AdapterFailure(
                 PolicyExactLiftStatus::CoarseMappingFailure,
                 "strict carrier " +
                     std::to_string(strict_state) +
-                    " maps outside the solved coarse graph");
+                    " maps outside the solved coarse graph; indexed_parent=" +
+                    (parent == coarse_state_by_key_.end() ? std::string("absent") : std::to_string(parent->second)) +
+                    ", current_parent=" + std::to_string(current_parent) +
+                    ", indexed_states=" + std::to_string(coarse_state_by_key_.size()) +
+                    ", current_states=" + std::to_string(coarse_.state_count()) +
+                    ", policy_states=" + std::to_string(solved_.policy.size()) +
+                    ", strict_goal=" + std::to_string(strict_->is_goal_state(strict_->state(strict_state))) +
+                    ", coarse_goal=" + std::to_string(coarse_.is_goal_state(parent_state)));
         }
         return parent->second;
     }
