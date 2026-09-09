@@ -637,6 +637,16 @@ void SolveWork::request_bounded_finish() {
             : impl_->transition_cache->rows.size();
 }
 
+void SolveWork::request_proof_handoff() {
+    if (impl_->requested_bounded_finish ||
+        (impl_->phase != SolvePhase::Expanding &&
+         impl_->phase != SolvePhase::Iterating)) {
+        return;
+    }
+    impl_->proof_handoff_requested = true;
+    impl_->result.diagnostics.policy_refinement.proof_handoff_requested = true;
+}
+
 SolveProgress SolveWork::progress() const {
     return impl_->progress();
 }

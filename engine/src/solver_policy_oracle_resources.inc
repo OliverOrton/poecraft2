@@ -636,6 +636,16 @@ ProductionPolicyOracle::candidate_selection(
          */
         selected.routing_observes = {};
         return selected;
+    } catch (const SolverResourceLimit& error) {
+        throw AdapterFailure(
+            PolicyExactLiftStatus::ResourceCap,
+            std::string(error.what()) +
+                " during demanded candidate: planner=" +
+                strict_->operators().at(operator_index).id +
+                ", coarse_state=" + std::to_string(known->second.coarse_state) +
+                ", strict_state=" + std::to_string(known->second.strict_state) +
+                ", policy_states=" + std::to_string(solved_.policy.size()),
+            adapter_resource_cap_name(error.cap_name()));
     } catch (const AdapterFailure& error) {
         if (error.status ==
             PolicyExactLiftStatus::ResourceCap) {

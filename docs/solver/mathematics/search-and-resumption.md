@@ -74,6 +74,25 @@ A safe implementation can freeze a candidate's selection snapshot, allow only co
 
 This is a sufficient snapshot discipline, not a claim that all mixed-time candidate construction is inherently invalid. Any completed policy may be independently evaluated from scratch. The risk is **reusing cached evidence** whose dependency contract no longer holds.
 
+### A proof handoff is distinct from requested delivery
+
+Stopping discovery at a completed restricted-iteration checkpoint can preserve
+its selected rows and allow an existing exact-proof owner to check them. The
+remaining action envelope stays open: numerical convergence of that restricted
+iteration does not prove global closure. If ordinary discovery is suspended,
+it must not silently restart underneath a borrowed policy or proof session.
+If work is interleaved instead, every retained reference and generation must
+remain valid under the snapshot contract above.
+
+A later bounded-finish request is independent. It can release unfinished optional
+proof while retaining the cheapest compatible independently evaluated artifact;
+a previously verified cheaper strict candidate must remain eligible for delivery.
+No unverified estimate justifies delaying that request. Moving the handoff earlier
+therefore changes a work allocation, not the validity of the existing lower,
+upper or exactness contracts. Its efficiency and candidate-readiness premises
+require same-budget measurements, as emphasized in the
+[proof-time review](../../active/2026-09-09-empty-start-partial-continuation/research-inputs/useful-proof-time-review.md).
+
 ### Releasing logical ownership also matters
 
 The reclamation archive records a candidate marked released while its large traversal payload and wrapper remained engaged, and its call site still suppressed ordinary assembly. That was a lifecycle defect with performance/progress consequences, not a refutation of resumable construction. [Recorded finding](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-08-30-carrier-ladder-released-candidate-reclamation-v1/README.md).

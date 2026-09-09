@@ -785,6 +785,8 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     bool incremental_action_generation = false;
     bool incremental_envelope_closed = false;
     bool requested_bounded_finish = false;
+    bool proof_handoff_requested = false;
+    bool proof_handoff_started = false;
     bool incremental_restricted_values_ready = false;
     /* Exactly optimized values of a closed restricted action graph. They are
      * feasible per-carrier uppers after later actions are added; never use
@@ -2688,6 +2690,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     void capture_initial_incremental_selected_policy();
 
     bool continue_open_incremental_envelope();
+    bool try_begin_candidate_proof_handoff();
 
     bool retire_unmaterialized_by_operator_proof(
         std::uint32_t state,

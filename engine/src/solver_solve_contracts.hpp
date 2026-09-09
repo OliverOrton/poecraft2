@@ -307,6 +307,15 @@ struct PolicyBroadRowAttribution {
 };
 
 struct PolicyRefinementTelemetry {
+    /* Benchmark-only request to stop at an existing restricted-convergence
+     * checkpoint and spend the remaining solve window in the normal proof
+     * owner. Neither bit supplies closure or a requested-finish authority. */
+    bool proof_handoff_requested = false;
+    bool proof_handoff_started = false;
+    std::uint32_t proof_handoff_expanded_states = 0;
+    std::uint64_t proof_handoff_rows = 0;
+    double proof_handoff_candidate_estimate =
+        std::numeric_limits<double>::infinity();
     struct SuppressedStrictImprovementSample {
         std::uint32_t state = kNoId;
         std::uint64_t retained_row =
@@ -599,6 +608,14 @@ struct PolicyRefinementTelemetry {
     std::uint64_t local_reoptimization_rounds = 0;
     std::uint64_t local_state_action_rows_scheduled = 0;
     std::uint64_t local_state_action_rows_evaluated = 0;
+    std::uint64_t new_candidate_parents = 0;
+    std::uint64_t new_candidate_registered_parents = 0;
+    std::uint64_t new_candidate_rows = 0;
+    std::uint64_t new_candidate_transitions = 0;
+    std::uint64_t completion_lower_carriers_checked = 0;
+    std::uint64_t completion_lower_positive_carriers = 0;
+    std::uint64_t completion_lower_obligations_strengthened = 0;
+    std::uint64_t completion_lower_ns = 0;
     std::uint64_t local_reoptimizations = 0;
     std::uint64_t local_policy_changes = 0;
     std::uint64_t local_value_changes = 0;
@@ -1443,6 +1460,10 @@ class SolveWork {
      * Ordinary abandon remains the
      * prompt cancellation path and does not publish partial work. */
     void request_bounded_finish();
+    /* Private diagnostic: retain ordinary discovery until its next stable
+     * candidate checkpoint, then run the existing publication/proof owner.
+     * This never clears or substitutes for a real bounded-finish request. */
+    void request_proof_handoff();
     SolveProgress progress() const;
     SolveTelemetrySnapshot telemetry_snapshot(bool abandoned = false) const;
     SolveResult finish();

@@ -1842,6 +1842,18 @@ pc_result pc_solver_solve_request_bounded_finish(
     }
 }
 
+pc_result solver::request_solver_proof_handoff(
+    pc_solver_handle handle, pc_error_info* out_error) {
+    if (handle == nullptr || !handle->solve_work) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+                  "proof handoff requires an active stepped solve");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    handle->solve_work->request_proof_handoff();
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
 pc_result pc_solver_solve_finish(
     pc_solver_handle solver,
     pc_solve_summary* out_summary,

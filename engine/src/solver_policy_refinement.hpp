@@ -5,6 +5,7 @@
 #include "solver_refinement.hpp"
 #include "solver_solve_contracts.hpp"
 #include "solver_cooperative_task.hpp"
+#include "solver_proof_pattern_manager.hpp"
 
 #include <cstdint>
 #include <functional>
@@ -34,6 +35,14 @@ struct PolicyLiftAdapterTelemetry {
     std::uint64_t strict_cells_created = 0;
     std::uint64_t strict_cells_superseded = 0;
     std::uint32_t coarse_policy_states = 0;
+    std::uint64_t new_candidate_parents = 0;
+    std::uint64_t new_candidate_registered_parents = 0;
+    std::uint64_t new_candidate_rows = 0;
+    std::uint64_t new_candidate_transitions = 0;
+    std::uint64_t completion_lower_carriers_checked = 0;
+    std::uint64_t completion_lower_positive_carriers = 0;
+    std::uint64_t completion_lower_obligations_strengthened = 0;
+    std::uint64_t completion_lower_ns = 0;
     std::uint64_t coarse_policy_edges = 0;
     std::uint32_t strict_states_discovered = 0;
     std::uint32_t strict_carriers_materialized = 0;
@@ -964,6 +973,16 @@ struct PolicyExactLiftRollbackUpper {
     double exact_cost = std::numeric_limits<double>::infinity();
 };
 
+/* Non-owning, typed native lower access for this exact calculator and the
+ * caller's unchanged goal/action/price scope. The owner must outlive the work.
+ * Each value covers every physical member of its coarse carrier. Zero is the
+ * unsupported-domain fallback; this interface supplies no executable value. */
+struct PolicyExactLiftCompletionLower {
+    const CalcContext* source = nullptr;
+    void* context = nullptr;
+    solve_detail::ProofLowerValue (*lookup)(void*, std::uint32_t) = nullptr;
+};
+
 class PolicyExactLiftWork {
   public:
     PolicyExactLiftWork(
@@ -974,7 +993,8 @@ class PolicyExactLiftWork {
         const SolveOptions& options,
         std::string strategy_name,
         const RefinementLimits* limits_override = nullptr,
-        const PolicyExactLiftRollbackUpper* rollback_upper = nullptr);
+        const PolicyExactLiftRollbackUpper* rollback_upper = nullptr,
+        const PolicyExactLiftCompletionLower* completion_lower = nullptr);
     ~PolicyExactLiftWork();
     PolicyExactLiftWork(PolicyExactLiftWork&&) noexcept;
     PolicyExactLiftWork& operator=(PolicyExactLiftWork&&) noexcept;

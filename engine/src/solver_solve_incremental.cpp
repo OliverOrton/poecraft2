@@ -1430,6 +1430,31 @@ void SolveWork::Impl::capture_initial_incremental_selected_policy() {
     unverified_selected_policy_candidate = std::move(selected);
 }
 
+bool SolveWork::Impl::try_begin_candidate_proof_handoff() {
+    if (!proof_handoff_requested || proof_handoff_started ||
+        requested_bounded_finish || result.diagnostics.resource_cap_hit ||
+        incremental_upper_policy_pass || !incremental_restricted_values_ready ||
+        !output_incumbent.has_value() ||
+        !(optimization_converged() || numerical_stability_stop)) {
+        return false;
+    }
+    /* The caller owns a completed restricted iteration. Drop only
+     * transaction-local discovery scratch; selected rows,
+     * candidate observations and the retained incumbent keep their ordinary
+     * publication provenance. No delayed action is declared closed here. */
+    proof_handoff_started = true;
+    PolicyRefinementTelemetry& proof = result.diagnostics.policy_refinement;
+    proof.proof_handoff_started = true;
+    proof.proof_handoff_expanded_states = expanded_count;
+    proof.proof_handoff_rows = transition_cache->rows.size();
+    proof.proof_handoff_candidate_estimate =
+        output_incumbent->certified_upper_bound;
+    prepare_requested_bounded_finish();
+    numerical_stability_stop = true;
+    phase = SolvePhase::Done;
+    return true;
+}
+
 bool SolveWork::Impl::continue_open_incremental_envelope() {
     if (!incremental_action_generation || incremental_envelope_closed ||
         requested_bounded_finish || result.diagnostics.resource_cap_hit) {
@@ -1445,6 +1470,7 @@ bool SolveWork::Impl::continue_open_incremental_envelope() {
     focus_optimizing = false;
     focused_lower_mode = false;
     incremental_restricted_values_ready = true;
+    if (try_begin_candidate_proof_handoff()) return false;
     if (begin_incremental_upper_policy_pass()) return true;
     if (classify_incremental_alternatives()) {
         restart_incremental_optimization();

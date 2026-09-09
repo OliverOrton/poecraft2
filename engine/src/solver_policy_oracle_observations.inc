@@ -86,7 +86,8 @@
                 "max_coarse_states",
                 "max_coarse_states");
         }
-        if (state >= solved_.policy.size()) {
+        const bool outside_selected_snapshot = state >= solved_.policy.size();
+        if (outside_selected_snapshot && !enable_quotient_bootstrap_) {
             throw AdapterFailure(
                 PolicyExactLiftStatus::CoarseMappingFailure,
                 "local exact successor maps outside the solved policy "
@@ -95,7 +96,12 @@
         CoarsePolicyNode node;
         if (!coarse_.is_goal_state(coarse_.state(state)) &&
             !observation_boundaries_.contains(state)) {
-            if (solved_.policy[state].index == kNoId) {
+            /* A structural parent is not a saved policy decision. Only the
+             * new-candidate quotient owner may leave this node unselected
+             * and request a native row. It inherits no value or action from
+             * the immutable snapshot, and retains full carrier observations
+             * until the new row's observation contract is known. */
+            if (outside_selected_snapshot || solved_.policy[state].index == kNoId) {
                 if (!enable_local_reoptimization_ &&
                     !enable_quotient_bootstrap_) {
                     (void)coarse_operator(state);
@@ -131,6 +137,9 @@
             }
         }
         coarse_policy_.emplace(state, std::move(node));
+        if (outside_selected_snapshot) {
+            ++telemetry_.new_candidate_parents;
+        }
         telemetry_.coarse_policy_states =
             static_cast<std::uint32_t>(coarse_policy_.size());
         require_local_memory(
@@ -241,11 +250,42 @@
             const std::uint32_t strict_state) {
         const AbstractState parent_state =
             coarsen(strict_->state(strict_state));
+        const StableKey parent_key = abstract_state_key(parent_state);
         const auto parent =
-            coarse_state_by_key_.find(
-                abstract_state_key(parent_state));
+            coarse_state_by_key_.find(parent_key);
+        if (parent == coarse_state_by_key_.end() &&
+            enable_quotient_bootstrap_ &&
+            !parent_state.goal_progress_retry_basin) {
+            /* This exact native successor has a complete projection through
+             * the validated goal-member and junk-class maps above. Register
+             * only that projected state, under the ordinary calculator caps.
+             * No old selected decision/value or state-local automatic
+             * admission is inferred for it. Synthetic retry coordinates do
+             * not acquire a physical continuation by this route. */
+            if (coarse_.state_count() >= limits_.max_coarse_states) {
+                throw AdapterFailure(
+                    PolicyExactLiftStatus::ResourceCap,
+                    "new continuation parent reached max_coarse_states",
+                    "max_coarse_states");
+            }
+            if (coarse_.is_goal_state(parent_state) !=
+                strict_->is_goal_state(strict_->state(strict_state))) {
+                throw AdapterFailure(
+                    PolicyExactLiftStatus::CoarseMappingFailure,
+                    "new continuation parent changed goal classification");
+            }
+            require_local_memory(
+                stable_key_bytes(parent_key) + sizeof(AbstractState),
+                "new continuation parent registration");
+            const std::uint32_t registered = coarse_.intern_state(parent_state);
+            coarse_state_by_key_.emplace(parent_key, registered);
+            ++telemetry_.new_candidate_registered_parents;
+            require_local_memory(0, "new continuation parent registration");
+            return registered;
+        }
         if (parent == coarse_state_by_key_.end() ||
-            parent->second >= solved_.policy.size()) {
+            (parent->second >= solved_.policy.size() &&
+             !enable_quotient_bootstrap_)) {
             std::uint32_t current_parent = kNoId;
             for (std::uint32_t id = 0; id < coarse_.state_count(); ++id) {
                 if (coarse_.state(id) == parent_state) {

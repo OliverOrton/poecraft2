@@ -2256,6 +2256,7 @@ std::uint64_t persistent_published_rows_bytes(
 
 struct PersistentQuotientSession {
     RefinementLimits limits;
+    PolicyExactLiftCompletionLower completion_lower;
     PolicyLiftAdapterTelemetry telemetry;
     ReoptimizationSeed seed;
     ProductionPolicyOracle oracle;
@@ -2274,13 +2275,21 @@ struct PersistentQuotientSession {
             const pc_item_state& exact_start,
             const std::unordered_map<std::string, double>& prices,
             const SolveOptions& options,
-            RefinementLimits limits_value)
+            RefinementLimits limits_value,
+            const PolicyExactLiftCompletionLower* lower = nullptr)
         : limits(std::move(limits_value)),
+          completion_lower(lower == nullptr ? PolicyExactLiftCompletionLower{} : *lower),
           seed(quotient_reoptimization_seed(solved)),
           oracle(
               coarse, solved, exact_start, prices, options, limits,
               telemetry, nullptr, false, true, true),
-          bellman(limits.max_estimated_memory_bytes) {}
+          bellman(limits.max_estimated_memory_bytes) {
+        if (lower != nullptr &&
+            (lower->source != &coarse || lower->lookup == nullptr)) {
+            throw std::invalid_argument(
+                "strict completion lower has an incompatible calculator");
+        }
+    }
 };
 
 solve_detail::CooperativeTask<QuotientPassResult>
@@ -3353,6 +3362,16 @@ lift_policy_quotient_pass_task(
             std::make_move_iterator(newly_published_rows.end()));
         std::vector<PublishedRow>& published_rows =
             session.published_rows;
+        std::vector<std::uint32_t> completion_parent_by_ordinal;
+        if (session.completion_lower.lookup != nullptr) {
+            completion_parent_by_ordinal.reserve(cached_partition_states.size());
+            for (const ExactState& state : cached_partition_states) {
+                completion_parent_by_ordinal.push_back(state.coarse_state);
+            }
+        }
+        quotient::ScopedProofMemoryCharge completion_parent_charge(
+            ledger, quotient::ProofMemoryCategory::Scratch,
+            completion_parent_by_ordinal.capacity() * sizeof(std::uint32_t));
         std::vector<ExactState>{}.swap(cached_partition_states);
         cached_partition_state_bytes = 0;
         const auto refresh_external_row_kernel_bytes = [&] {
@@ -3371,6 +3390,7 @@ lift_policy_quotient_pass_task(
         double retained_lower_delta = kInfinity;
         double retained_lower_relative = kInfinity;
         const bool retained_global_lower_authority =
+            !oracle.quotient_action_scope_extended() &&
             solved.converged &&
             solved.policy_status == SolvePolicyStatus::Exact &&
             std::isfinite(solved.lower_bound) &&
@@ -3455,6 +3475,33 @@ lift_policy_quotient_pass_task(
                 selected->sparse_row,
                 std::nullopt});
             if (retained_global_lower_authority) return true;
+            double completion_lower = 0.0;
+            if (session.completion_lower.lookup != nullptr) {
+                const auto lower_started = std::chrono::steady_clock::now();
+                double member_minimum = kInfinity;
+                std::uint64_t members = 0;
+                for (const quotient::CoverageRange& range : cell.coverage.ranges) {
+                    for (std::uint64_t ordinal = range.begin;
+                         ordinal < range.begin + range.count; ++ordinal) {
+                        const double lower = session.completion_lower.lookup(
+                            session.completion_lower.context,
+                            completion_parent_by_ordinal.at(ordinal)).value;
+                        if (!std::isfinite(lower) || lower < 0.0) {
+                            throw AdapterFailure(
+                                PolicyExactLiftStatus::InvalidSolveState,
+                                "strict completion lower is not finite and nonnegative");
+                        }
+                        member_minimum = std::min(member_minimum, lower);
+                        ++members;
+                        ++telemetry.completion_lower_carriers_checked;
+                        if (lower > 0.0) ++telemetry.completion_lower_positive_carriers;
+                    }
+                }
+                if (members != 0) completion_lower = member_minimum;
+                telemetry.completion_lower_ns += static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() - lower_started).count());
+            }
             const quotient::SharedObservationRequirement
                 shared_observation_requirement{
                     cell.observation_requirement};
@@ -3483,15 +3530,19 @@ lift_policy_quotient_pass_task(
                 const double immediate_cost_lower =
                     oracle.quotient_operator_immediate_cost_lower(
                         operator_index);
+                // h(s) <= V*(s) <= Q*(s,a). The minimum across the complete
+                // cell covers every member; combine independent floors by max.
+                const double lower_q = std::max(immediate_cost_lower, completion_lower);
                 identity.optimistic_lower =
                     quotient::certify_uniform_carrier_wide_lower_q(
                         shared_cell_identity, cell.coverage,
-                        {0x706371707269636cull,
+                        {0x7063716e61746c31ull,
                          operator_index,
                          std::bit_cast<std::uint64_t>(
                              immediate_cost_lower),
+                         std::bit_cast<std::uint64_t>(completion_lower),
                          1},
-                        immediate_cost_lower);
+                        lower_q);
                 identity.scheduling_priority = 0.0;
                 identity.resumable_work_identity =
                     descriptor.resumable_work_identity;
@@ -3500,6 +3551,9 @@ lift_policy_quotient_pass_task(
                         ->intern_alternative_obligation(
                             std::move(identity));
                 if (!obligation_reused) {
+                    if (lower_q > immediate_cost_lower) {
+                        ++telemetry.completion_lower_obligations_strengthened;
+                    }
                     bellman.proof_store()
                         ->transition_alternative_obligation(
                             obligation_id,
@@ -4733,6 +4787,7 @@ lift_policy_quotient_pass_task(
         double global_lower_delta = kInfinity;
         double global_lower_relative = kInfinity;
         certificate.global_lower_bound_closed =
+            !oracle.quotient_action_scope_extended() &&
             solved.converged &&
             solved.policy_status == SolvePolicyStatus::Exact &&
             std::isfinite(solved.lower_bound) &&
@@ -5534,6 +5589,7 @@ lift_policy_quotient_pass_task(
                 publication_q_absolute_delta,
                 publication_q_relative_delta);
         const bool exact_alternative_envelope_closed =
+            !oracle.quotient_action_scope_extended() &&
             final_action_audit.exact_alternative_envelope_closed &&
             !publication_blocked_after_improvement &&
             (publication_reconciles_current_q ||
@@ -5551,8 +5607,9 @@ lift_policy_quotient_pass_task(
          * quotient cells were never materialized into obligations.
          */
         certificate.global_lower_bound_closed =
-            certificate.global_lower_bound_closed ||
-            exact_alternative_envelope_closed;
+            !oracle.quotient_action_scope_extended() &&
+            (certificate.global_lower_bound_closed ||
+             exact_alternative_envelope_closed);
         telemetry.global_lower_bound_closed =
             certificate.global_lower_bound_closed;
         telemetry.unresolved_alternative_obligations =
@@ -5700,7 +5757,8 @@ struct PolicyExactLiftWork::Impl {
             const SolveOptions& options_value,
             std::string strategy_name_value,
             const RefinementLimits* limits_override,
-            const PolicyExactLiftRollbackUpper* rollback_upper)
+            const PolicyExactLiftRollbackUpper* rollback_upper,
+            const PolicyExactLiftCompletionLower* completion_lower)
         : coarse(coarse_value),
           solved(solved_value),
           exact_start(exact_start_value),
@@ -5712,7 +5770,8 @@ struct PolicyExactLiftWork::Impl {
                   ? default_limits(coarse, solved, options)
                   : *limits_override),
           session(std::make_unique<PersistentQuotientSession>(
-              coarse, solved, exact_start, prices, options, limits)) {
+              coarse, solved, exact_start, prices, options, limits,
+              completion_lower)) {
         if (rollback_upper != nullptr &&
             std::isfinite(rollback_upper->exact_cost) &&
             rollback_upper->exact_cost >= 0.0) {
@@ -5969,10 +6028,12 @@ PolicyExactLiftWork::PolicyExactLiftWork(
         const SolveOptions& options,
         std::string strategy_name,
         const RefinementLimits* limits_override,
-        const PolicyExactLiftRollbackUpper* rollback_upper)
+        const PolicyExactLiftRollbackUpper* rollback_upper,
+        const PolicyExactLiftCompletionLower* completion_lower)
     : impl_(std::make_unique<Impl>(
           coarse, solved, exact_start, prices, options,
-          std::move(strategy_name), limits_override, rollback_upper)) {}
+          std::move(strategy_name), limits_override, rollback_upper,
+          completion_lower)) {}
 
 PolicyExactLiftWork::~PolicyExactLiftWork() = default;
 PolicyExactLiftWork::PolicyExactLiftWork(

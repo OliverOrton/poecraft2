@@ -47,6 +47,11 @@ enum class NativeRetentionDiagnosticMode { Off, Cold, Reuse, CheckedTarget, Reus
 pc_result configure_solver_native_retention_diagnostic(pc_solver_handle handle,
     NativeRetentionDiagnosticMode mode, pc_error_info* out_error, double checked_target = 0);
 
+/* One benchmark-only handoff to the existing stable-candidate proof path.
+ * It does not request delivery or change any target/resource setting. */
+pc_result request_solver_proof_handoff(
+    pc_solver_handle handle, pc_error_info* out_error);
+
 /* Private benchmark construction hook. It retains the ordinary product
  * primitive registry and goal abstraction while allowing a finite subset of
  * generated AutomaticCandidateKind values. It is deliberately absent from

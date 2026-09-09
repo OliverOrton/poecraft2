@@ -3323,6 +3323,8 @@ void run_selected_fallback_successor_tests() {
      * its only legal action and discovers magic successors without policy
      * actions. Those successors are not frontier seeds themselves, and must
      * reach the same certified Regal fallback through cooperative lookup. */
+    (void)calc.outcomes(start_state, chaos, false);
+    const std::uint32_t selected_policy_extent = calc.state_count();
     for (std::uint32_t state = 0; state < calc.state_count(); ++state) {
         if (calc.is_goal_state(calc.state(state))) continue;
         if (calc.state(state).rarity == PC_RARITY_NORMAL) {
@@ -3409,19 +3411,251 @@ void run_selected_fallback_successor_tests() {
     PC_CHECK(lifted.adapter.coarse_policy_states >
              selected_coarse_closure.size() + 1);
 
+    // The saved candidate predates the alternative-only normal/magic parents.
+    // Complete those dependencies as new rows, without widening the old table.
+    SolveResult earlier = authored;
+    earlier.values.resize(selected_policy_extent);
+    earlier.policy.resize(selected_policy_extent);
+    earlier.expanded.resize(selected_policy_extent);
+    earlier.goal_states.resize(selected_policy_extent);
+    earlier.policy_reachable.resize(selected_policy_extent);
+    earlier.unveil_preferences.resize(selected_policy_extent);
+    earlier.option_unveil_preferences.resize(selected_policy_extent);
+    const auto saved_values = earlier.values;
+    const auto saved_policy = earlier.policy;
+    PC_CHECK(selected_policy_extent < state_count);
+    const auto completed = refinement::lift_policy_quotient(
+        calc, earlier, start, prices, options,
+        "new continuation beyond retained policy extent");
+    report_lift_failure("New-candidate successor", completed);
+    PC_CHECK(completed.status == refinement::PolicyExactLiftStatus::Complete);
+    PC_CHECK(completed.executable && completed.compiled.proper &&
+             completed.compiled.zero_off_policy &&
+             completed.compiled.cost_reconciled);
+    PC_CHECK(completed.compiled.evaluation.cost_complete);
+    PC_CHECK(completed.compiled.evaluation.success_probability >= 1.0 - 1e-10);
+    PC_CHECK(completed.adapter.new_candidate_parents > 0);
+    PC_CHECK(completed.adapter.new_candidate_rows > 0);
+    PC_CHECK(completed.adapter.new_candidate_transitions > 0);
+    PC_CHECK(earlier.values == saved_values);
+    PC_CHECK(earlier.policy.size() == saved_policy.size());
+    for (std::size_t i = 0; i < saved_policy.size(); ++i) {
+        PC_CHECK(earlier.policy[i].kind == saved_policy[i].kind);
+        PC_CHECK(earlier.policy[i].index == saved_policy[i].index);
+    }
+
+    // A narrower calculator has never interned the normal/magic parents.
+    // Its exact successors must register their checked coarse projection,
+    // then obtain new primitive rows without changing the selected snapshot.
+    CalcContext sparse_calc(
+        session, goal, registry, candidates,
+        false, true, false, std::nullopt, {}, true);
+    const std::uint32_t sparse_start = sparse_calc.intern_item(start);
+    (void)sparse_calc.outcomes(sparse_start, chaos, false);
+    PC_CHECK(sparse_start == start_state);
+    PC_CHECK(sparse_calc.state_count() == selected_policy_extent);
+    for (std::uint32_t i = 0; i < selected_policy_extent; ++i) {
+        PC_CHECK(sparse_calc.state(i) == calc.state(i));
+    }
+    const auto grown = refinement::lift_policy_quotient(
+        sparse_calc, earlier, start, prices, options,
+        "new native continuation parent");
+    report_lift_failure("New projected parent", grown);
+    PC_CHECK(grown.status == refinement::PolicyExactLiftStatus::Complete);
+    PC_CHECK(grown.adapter.new_candidate_registered_parents > 0);
+    PC_CHECK(!grown.global_lower_bound_closed);
+    PC_CHECK(grown.adapter.new_candidate_rows > 0);
+    PC_CHECK(sparse_calc.state_count() > selected_policy_extent);
+    PC_CHECK(grown.executable && grown.compiled.proper &&
+             grown.compiled.zero_off_policy && grown.compiled.cost_reconciled);
+    PC_CHECK(grown.compiled.evaluation.cost_complete);
+    PC_CHECK(grown.compiled.evaluation.success_probability >= 1.0 - 1e-10);
+    PC_CHECK(near(grown.compiled.evaluation.total_expected_cost,
+                  completed.compiled.evaluation.total_expected_cost, 1e-7));
+    PC_CHECK(earlier.values == saved_values);
+    PC_CHECK(earlier.policy == saved_policy);
+
+    // In this four-primitive scope, Normal must pay for Transmute and Regal
+    // before a Rare goal is possible; every other nongoal costs at least 0.01.
+    // Feed that independent native floor through the strict consumer and
+    // compare its complete executable result with the no-heuristic reference.
+    refinement::PolicyExactLiftCompletionLower lower;
+    lower.source = &calc;
+    lower.context = &calc;
+    lower.lookup = [](void* context, std::uint32_t state) {
+        const auto& model = *static_cast<CalcContext*>(context);
+        const auto& carrier = model.state(state);
+        return solve_detail::ProofLowerValue{
+            model.is_goal_state(carrier) ? 0.0 :
+            carrier.rarity == PC_RARITY_NORMAL ? 0.02 : 0.01};
+    };
+    refinement::PolicyExactLiftWork with_lower(
+        calc, earlier, start, prices, options,
+        "complete-member continuation lower", nullptr, nullptr, &lower);
+    std::uint32_t lower_steps = 0;
+    while (!with_lower.progress().done && lower_steps++ < 10000) {
+        with_lower.step(32);
+    }
+    PC_CHECK(with_lower.progress().done);
+    if (with_lower.progress().done) {
+        const auto checked = with_lower.take_result();
+        report_lift_failure("Continuation lower consumer", checked);
+        PC_CHECK(checked.status == refinement::PolicyExactLiftStatus::Complete);
+        PC_CHECK(checked.executable && checked.compiled.proper &&
+                 checked.compiled.zero_off_policy);
+        PC_CHECK(checked.adapter.completion_lower_carriers_checked > 0);
+        PC_CHECK(checked.adapter.completion_lower_obligations_strengthened > 0);
+        PC_CHECK(near(checked.compiled.evaluation.total_expected_cost,
+                      completed.compiled.evaluation.total_expected_cost, 1e-7));
+    }
+    lower.source = &sparse_calc;
+    bool wrong_source_refused = false;
+    try {
+        refinement::PolicyExactLiftWork wrong_source(
+            calc, earlier, start, prices, options,
+            "mismatched lower namespace", nullptr, nullptr, &lower);
+    } catch (const std::invalid_argument&) {
+        wrong_source_refused = true;
+    }
+    PC_CHECK(wrong_source_refused);
+
+    // A fixed-policy claim that selects Scour at the root lacks the normal
+    // successor's decision. Its structurally known parent is still refused.
+    SolveResult fixed_missing = earlier;
+    fixed_missing.policy[start_state] = PolicyOperatorRef{
+        PlannerOperatorKind::Primitive, scour};
+    const auto refused = refinement::lift_policy_exact(
+        calc, fixed_missing, start, prices, options,
+        "fixed candidate does not own its successor");
+    PC_CHECK(refused.status == refinement::PolicyExactLiftStatus::InvalidSolveState);
+    PC_CHECK(refused.failure_reason.find(
+        "coarse primitive kernel escapes the solved policy table") !=
+        std::string::npos);
+    PC_CHECK(!refused.executable);
+    PC_CHECK(refused.adapter.new_candidate_parents == 0);
+
     /* A row-cap failure remains a refusal, with no executable promotion. */
     refinement::RefinementLimits capped_limits;
     capped_limits.max_exact_kernels = 0;
     capped_limits.max_estimated_memory_bytes = options.max_solver_owned_bytes;
     const refinement::PolicyExactLiftCertificate capped =
         refinement::lift_policy_quotient(
-            calc, authored, start, prices, options,
+            calc, earlier, start, prices, options,
             "capped cooperative selected-row successor fallback",
             &capped_limits);
     PC_CHECK(capped.status == refinement::PolicyExactLiftStatus::ResourceCap);
     PC_CHECK(!capped.resource_cap.empty());
     PC_CHECK(!capped.executable);
     PC_CHECK(!capped.global_lower_bound_closed);
+}
+
+void run_proof_handoff_tests() {
+    for (const bool request_finish_during_proof : {false, true}) {
+        auto session = make_solve_session({"proof_handoff"});
+        session->essence_guaranteed_mod_ids = {0};
+        ActionRegistry registry = build_action_registry(*session);
+        GoalSpec goal;
+        goal.rarity = PC_RARITY_RARE;
+        for (const std::uint32_t family : {100u, 102u, 104u, 105u}) {
+            GoalSlot slot;
+            slot.family_id = family;
+            slot.min_tier = 1;
+            goal.slots.push_back(slot);
+        }
+        CalcContext calc(session, goal, registry,
+            {registry.index_by_id.at("chaos"),
+             registry.index_by_id.at("essence:proof_handoff")});
+        pc_item_state start;
+        pc_item_clear(&start);
+        start.rarity = PC_RARITY_RARE;
+        const std::unordered_map<std::string, double> prices{
+            {"chaos", 100.0}, {"essence:proof_handoff", 1.0}};
+        SolveOptions options;
+        options.goal_progress_gated_reforges = true;
+        options.high_impact_executable_uppers = true;
+        options.allow_economic_restart = false;
+        options.consider_imprint_programs = false;
+        SolveWork work(calc, start, prices, options);
+        work.request_proof_handoff();
+        work.request_proof_handoff();
+        const auto pending = work.telemetry_snapshot();
+        PC_CHECK(pending.diagnostics.policy_refinement.proof_handoff_requested);
+        PC_CHECK(!pending.diagnostics.policy_refinement.proof_handoff_started);
+        PC_CHECK(!pending.diagnostics.requested_bounded_finish);
+        bool saw_pre_finish_proof = false;
+        bool finish_requested = false;
+        std::uint64_t steps = 0;
+        while (!work.progress().done && steps++ < 200000) {
+            work.step(1);
+            const auto progress = work.progress();
+            if (!progress.done &&
+                (progress.phase == SolvePhase::Refining ||
+                 progress.phase == SolvePhase::Compiling ||
+                 progress.phase == SolvePhase::Certifying)) {
+                const auto current = work.telemetry_snapshot();
+                if (current.diagnostics.policy_refinement.proof_handoff_started) {
+                    saw_pre_finish_proof = true;
+                    if (request_finish_during_proof && !finish_requested) {
+                        PC_CHECK(!current.diagnostics.requested_bounded_finish);
+                        work.request_bounded_finish();
+                        work.request_proof_handoff();
+                        finish_requested = true;
+                    }
+                }
+            }
+        }
+        PC_CHECK(work.progress().done);
+        PC_CHECK(saw_pre_finish_proof);
+        if (!work.progress().done) continue;
+        const SolveResult result = work.finish();
+        const auto& proof = result.diagnostics.policy_refinement;
+        std::printf("proof handoff: finish=%d started=%d strict=%s rows=%llu "
+                    "upper=%.12g steps=%llu\n",
+                    request_finish_during_proof ? 1 : 0,
+                    proof.proof_handoff_started ? 1 : 0,
+                    proof.strict_lift_status.c_str(),
+                    static_cast<unsigned long long>(proof.exact_kernels),
+                    result.upper_bound, static_cast<unsigned long long>(steps));
+        PC_CHECK(proof.proof_handoff_started);
+        PC_CHECK(result.diagnostics.expanded_states ==
+                 proof.proof_handoff_expanded_states);
+        PC_CHECK(!proof.coarse_action_envelope_closed);
+        PC_CHECK(!proof.coarse_discovery_closed);
+        PC_CHECK(!proof.strict_global_lower_bound_closed);
+        PC_CHECK(!result.converged);
+        PC_CHECK(result.policy_status != SolvePolicyStatus::Exact);
+        PC_CHECK(!result.diagnostics.resource_cap_hit);
+        PC_CHECK(result.diagnostics.requested_bounded_finish ==
+                 request_finish_during_proof);
+        PC_CHECK(result.policy_available);
+        PC_CHECK(std::isfinite(result.upper_bound));
+        PC_CHECK(result.lower_bound <= result.upper_bound);
+        PC_CHECK(!result.refined_policy_artifact.strategy_json.empty());
+        if (result.refined_policy_artifact.strategy_json.empty()) continue;
+        auto strategy = compile_strategy_json(
+            session, result.refined_policy_artifact.strategy_json.data(),
+            result.refined_policy_artifact.strategy_json.size());
+        PC_CHECK(strategy != nullptr);
+        if (!strategy) continue;
+        auto economy = std::make_shared<EconomyImpl>();
+        economy->id = "proof-handoff-fixture";
+        economy->prices = prices;
+        StrategyEvalOptions eval_options;
+        eval_options.economy = economy;
+        const auto evaluated = evaluate_strategy(*strategy, eval_options);
+        PC_CHECK(evaluated.converged && evaluated.cost_complete);
+        PC_CHECK(evaluated.success_probability >= 1.0 - 1e-10);
+        PC_CHECK(near(evaluated.total_expected_cost, result.upper_bound, 1e-7));
+        if (!request_finish_during_proof) {
+            PC_CHECK(proof.exact_kernels > 0);
+            PC_CHECK(result.termination == SolveTermination::NumericalStability ||
+                     result.termination == SolveTermination::ExactClosed);
+        } else {
+            PC_CHECK(finish_requested);
+            PC_CHECK(result.termination == SolveTermination::RequestedBoundedFinish ||
+                     result.termination == SolveTermination::ExactClosed);
+        }
+    }
 }
 
 void run_bounded_finish_publication_tests() {
@@ -12816,6 +13050,10 @@ void run_solver_bounded_finish_tests() {
     run_bounded_finish_publication_tests();
 }
 
+void run_solver_proof_handoff_tests() {
+    run_proof_handoff_tests();
+}
+
 void run_solver_solve_tests(const char* artifact_dir) {
     const SolveOptions default_options;
     PC_CHECK(default_options.max_reforge_work == 50000000);
@@ -12833,6 +13071,7 @@ void run_solver_solve_tests(const char* artifact_dir) {
     run_direct_certification_contract_tests();
     run_bounded_finish_publication_tests();
     run_alt_spam_tests();
+    run_proof_handoff_tests();
     run_solver_policy_refinement_tests();
     run_constructive_state_certificate_tests();
     run_constructive_renewal_upper_tests();

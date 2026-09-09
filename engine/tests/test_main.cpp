@@ -8,6 +8,12 @@ int g_failures = 0;
 } // namespace pctest
 
 int main(int argc, char** argv) {
+    if (argc > 1 && std::string(argv[1]) == "--solver-proof-handoff-only") {
+        run_solver_proof_handoff_tests();
+        std::printf("solver proof-handoff tests: %d checks, %d failures\n",
+                    pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--core-only") {
         const char* artifact_dir = argc > 2 ? argv[2] : nullptr;
         const char* fixtures_dir = argc > 3 ? argv[3] : nullptr;

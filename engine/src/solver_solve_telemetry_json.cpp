@@ -588,6 +588,8 @@ std::string serialize_solver_telemetry(
         json += ",\"local_reoptimization_rounds\":null";
         json += ",\"local_state_action_rows_scheduled\":null";
         json += ",\"local_state_action_rows_evaluated\":null";
+        json += ",\"new_candidate_continuation\":null";
+        json += ",\"completion_heuristic\":null";
         json += ",\"local_reoptimizations\":null";
         json += ",\"local_policy_changes\":null";
         json += ",\"local_value_changes\":null";
@@ -655,6 +657,17 @@ std::string serialize_solver_telemetry(
             diagnostics->policy_refinement;
         json += "\"triggers\":" +
                 std::to_string(refinement.triggers);
+        json += ",\"proof_handoff\":{\"requested\":" +
+                std::string(bool_json(refinement.proof_handoff_requested));
+        json += ",\"started\":" +
+                std::string(bool_json(refinement.proof_handoff_started));
+        json += ",\"expanded_states\":" +
+                std::to_string(refinement.proof_handoff_expanded_states);
+        json += ",\"rows\":" +
+                std::to_string(refinement.proof_handoff_rows);
+        json += ",\"candidate_estimate\":" +
+                telemetry_finite_json(refinement.proof_handoff_candidate_estimate);
+        json += "}";
         json += ",\"status\":";
         append_telemetry_json_string(json, refinement.status);
         json += ",\"resource_cap\":";
@@ -1899,6 +1912,21 @@ std::string serialize_solver_telemetry(
         json += ",\"local_state_action_rows_evaluated\":" +
                 std::to_string(
                     refinement.local_state_action_rows_evaluated);
+        json += ",\"new_candidate_continuation\":{\"parents\":" +
+                std::to_string(refinement.new_candidate_parents);
+        json += ",\"registered_parents\":" +
+                std::to_string(refinement.new_candidate_registered_parents);
+        json += ",\"rows\":" + std::to_string(refinement.new_candidate_rows);
+        json += ",\"transitions\":" +
+                std::to_string(refinement.new_candidate_transitions) + "}";
+        json += ",\"completion_heuristic\":{\"carriers_checked\":" +
+                std::to_string(refinement.completion_lower_carriers_checked);
+        json += ",\"positive_carriers\":" +
+                std::to_string(refinement.completion_lower_positive_carriers);
+        json += ",\"obligations_strengthened\":" +
+                std::to_string(refinement.completion_lower_obligations_strengthened);
+        json += ",\"lookup_ns\":" +
+                std::to_string(refinement.completion_lower_ns) + "}";
         json += ",\"local_reoptimizations\":" +
                 std::to_string(refinement.local_reoptimizations);
         json += ",\"local_policy_changes\":" +

@@ -57,6 +57,7 @@ struct Arguments {
     std::string case_id;
     std::string native_retention_diagnostic;
     double native_retention_target_lower = 0;
+    double proof_handoff_seconds = 0;
     bool validate_only = false;
     bool fragment_contract_rejection_probes = false;
     bool fragment_shadow_only = false;
@@ -95,6 +96,8 @@ struct NativeHandles {
 struct CaseResult {
     std::string native_retention_diagnostic;
     double native_retention_target_lower = 0;
+    double proof_handoff_seconds = 0;
+    double proof_handoff_request_elapsed_ms = 0;
     struct CompiledOperationContractResult {
         std::string type;
         std::vector<std::pair<std::string, std::string>> string_parameters;
@@ -3058,6 +3061,7 @@ CaseResult run_case(
     const bool skip_verification, const fs::path& strategy_output,
     const std::string& native_retention_diagnostic,
     const double native_retention_target_lower,
+    const double proof_handoff_seconds,
     const bool emit_progress, const std::uint64_t verification_runs_override,
     const std::uint64_t verification_seed_override,
     const std::uint32_t verification_chunk_runs,
@@ -3075,6 +3079,7 @@ CaseResult run_case(
     CaseResult report;
     report.native_retention_diagnostic=native_retention_diagnostic;
     report.native_retention_target_lower=native_retention_target_lower;
+    report.proof_handoff_seconds = proof_handoff_seconds;
     report.verification_skipped = skip_verification;
     report.max_discovered_states_override =
         max_discovered_states_override;
@@ -3476,6 +3481,13 @@ CaseResult run_case(
             requested_bounded_finish_value == nullptr
                 ? 0.0
                 : requested_bounded_finish_value->number;
+        if (proof_handoff_seconds > 0.0 &&
+            (requested_bounded_finish_seconds <= proof_handoff_seconds ||
+             boundary_config.has_value())) {
+            throw std::runtime_error(
+                "proof handoff must precede the case finish request and "
+                "cannot be combined with the separate boundary diagnostic");
+        }
         const std::uint64_t requested_bounded_finish_rows =
             boundary_config.has_value()
             ? boundary_config->limits.ordinary_finish_state_action_rows
@@ -3523,6 +3535,20 @@ CaseResult run_case(
                 report.actual_status = "watchdog_expired";
                 report.diagnostic_stop_reason = "watchdog_seconds";
                 break;
+            }
+            if (!progress.done && !requested_bounded_finish &&
+                proof_handoff_seconds > 0.0 &&
+                report.proof_handoff_request_elapsed_ms == 0.0 &&
+                milliseconds(solve_begin, after_step) >=
+                    proof_handoff_seconds * 1000.0) {
+                result = poecraft::solver::request_solver_proof_handoff(
+                    handles.solver, &error);
+                if (result != PC_RESULT_OK) {
+                    throw std::runtime_error(api_error(
+                        "request_solver_proof_handoff", result, error));
+                }
+                report.proof_handoff_request_elapsed_ms =
+                    milliseconds(solve_begin, after_step);
             }
             if (!progress.done && !requested_bounded_finish &&
                 ((requested_bounded_finish_rows > 0 &&
@@ -4399,6 +4425,12 @@ void append_case_report(
     bool first_input = true;
     if (!result.native_retention_diagnostic.empty())
     out << "  \"native_retention_diagnostic\":" << escape_json(result.native_retention_diagnostic) << ",\n";
+    if (result.proof_handoff_seconds > 0.0) {
+        out << "  \"proof_handoff_diagnostic\":{\"requested_seconds\":"
+            << result.proof_handoff_seconds
+            << ",\"request_elapsed_ms\":"
+            << result.proof_handoff_request_elapsed_ms << "},\n";
+    }
     if (result.native_retention_target_lower>0)
     out << "  \"native_retention_target_lower\":" << result.native_retention_target_lower << ",\n";
     for (const char* key : {"comparison_profile", "watchdog_seconds", "requested_bounded_finish_seconds", "session", "start", "goal", "corpus", "feasibility", "generation", "product_action_envelope", "allowed_mechanic_families", "planner_envelope_diagnostic_v1", "carrier_ladder_exact_boundary_v1", "mechanic_family_control", "compiled_operation_contract", "compiled_operation_contracts", "material_ratio_contract", "market_price_override_contracts", "forced_winner_contract", "bounded_best_policy_contract", "economy", "caps", "verification"}) {
@@ -5485,6 +5517,13 @@ Arguments parse_arguments(int argc, char** argv) {
         else if (argument == "--case") args.case_id = value("--case");
         else if (argument == "--native-retention-diagnostic") args.native_retention_diagnostic=value("--native-retention-diagnostic");
         else if (argument == "--native-retention-target-lower") args.native_retention_target_lower=std::stod(value("--native-retention-target-lower"));
+        else if (argument == "--proof-handoff-seconds") {
+            args.proof_handoff_seconds = std::stod(value("--proof-handoff-seconds"));
+            if (!std::isfinite(args.proof_handoff_seconds) ||
+                args.proof_handoff_seconds <= 0.0) {
+                throw std::runtime_error("--proof-handoff-seconds must be finite and positive");
+            }
+        }
         else if (argument == "--validate-only") args.validate_only = true;
         else if (argument == "--fragment-contract-rejection-probes") {
             args.fragment_contract_rejection_probes = true;
@@ -5551,6 +5590,14 @@ Arguments parse_arguments(int argc, char** argv) {
             args.skip_verification = true;
         }
         else throw std::runtime_error("unknown argument: " + argument);
+    }
+    if (args.proof_handoff_seconds > 0.0 &&
+        (args.case_id.empty() || args.validate_only || args.fragment_shadow_only ||
+         args.resumable_joint_policy_continuation_diagnostic ||
+         args.verified_policy_alternative_shadow_diagnostic ||
+         !args.development_checkpoint_save.empty() ||
+         !args.development_checkpoint_load.empty())) {
+        throw std::runtime_error("proof handoff requires one ordinary case without checkpoint or shadow diagnostics");
     }
     if (!args.native_retention_diagnostic.empty() &&
         ((args.native_retention_diagnostic!="cold" && args.native_retention_diagnostic!="reuse" && args.native_retention_diagnostic!="checked" && args.native_retention_diagnostic!="reuse-unconsumed") ||
@@ -5862,7 +5909,9 @@ int main(int argc, char** argv) {
                           };
                 const CaseResult result = run_case(
                     data, specification, args.skip_verification,
-                    args.strategy_output, args.native_retention_diagnostic, args.native_retention_target_lower, args.emit_progress,
+                    args.strategy_output, args.native_retention_diagnostic,
+                    args.native_retention_target_lower, args.proof_handoff_seconds,
+                    args.emit_progress,
                     args.verification_runs, args.verification_seed,
                     args.verification_chunk_runs,
                     args.verification_time_limit_seconds,

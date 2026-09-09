@@ -14,6 +14,20 @@ states/frontier, rows/transitions/logical reforge work and owned memory. Round,
 incumbent, bounded-interval and completion samples follow the native contract.
 A long blocking step does not contain invented internal observations.
 
+The September 9 useful-proof-time experiment has separate case and profile
+identities: 240-second requested finish, 300-second native watchdog and
+315-second outer process cleanup, with the existing 1 GiB and other work caps.
+The original 60/90-second fixtures remain short regressions. Read observations
+near 60, 120, 180 and 240 seconds from one trajectory; an artifact first verified
+at finalization is not an earlier verified upper. Compare treatment with control
+at the same profile, including setup, proof and delivery time.
+
+The optional native benchmark `--proof-handoff-seconds` requests a candidate
+handoff before terminal finish. Its request time and actual handoff state/row
+counts are reported separately. A request does not establish that strict work
+started: check the phase trace, strict row counters and finalization attribution.
+This diagnostic is not a public default or an extension of the finish deadline.
+
 Lower decreases and upper increases are diagnostics, not violations of an assumed
 monotonicity guarantee. Compare upper values only when compatible executable
 incumbents exist. A finite implementation ceiling is not an incumbent.

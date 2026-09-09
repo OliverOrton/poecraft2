@@ -90,6 +90,32 @@ experiments remain rejected. A requested finish is not an alternative-action
 certificate. See the [bounded-finish contract](resources-resume-replay.md#cooperative-work)
 and the [current measurements](../active/2026-09-09-empty-start-partial-continuation/README.md#bounded-finish-publication).
 
+The current useful-proof-time experiment separates candidate handoff from
+terminal delivery. After a restricted iteration reaches its existing stable
+checkpoint, the optional diagnostic freezes discovery through both the main
+recovery gate and publication preflight. The ordinary strict owner then runs
+before a real finish request. Paused discovery keeps its open obligations.
+
+Within that attempt, the quotient owner may construct an unselected parent node
+when the exact structural parent exists beyond the immutable selected table.
+The native row builder must supply the new decision, complete probability and
+observed-choice routing; no saved value is extended to that parent. Fixed-policy
+lifting retains its refusal. Counts under `new_candidate_continuation` identify
+new parents and completed rows, without claiming that the resulting controller
+or alternative envelope is closed. The initial real treatment passes the old
+parent-4741 obstruction but reaches the unchanged strict discovery cap;
+the verified prior artifact survives. See the living record for qualification
+and the remaining proof consumer.
+
+The follow-through separates a conservatively admitted option descriptor from
+its demanded native kernel. Exact option applicability is checked when building
+the requested row; unavailable rows remain open. Newly required physical coarse
+parents can be registered through the validated strict projection, without
+copying selected decisions or inventing state-local automatic admissions.
+Calculator growth invalidates inherited global action-scope closure in this
+path. A proof handoff likewise cannot promote a proof over the current
+vocabulary while paused discovery families remain open.
+
 ## Source basis
 
 This rewrite uses the [preceding reference](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/strict-closure.md). Claim IDs are registered in [the ledger](claims.md); each history states its acceptance basis. The [backbone integration](../archive/2026-09-06-solver-mathematical-backbone-v2/README.md) is complete. Remaining native correspondence is scoped in [research](research.md#open-obligations); an argument link does not confer runtime authority.

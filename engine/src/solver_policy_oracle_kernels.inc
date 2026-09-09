@@ -589,6 +589,7 @@
     RefinementLimits limits_;
     PolicyLiftAdapterTelemetry& telemetry_;
     std::uint64_t coarse_retained_bytes_at_entry_ = 0;
+    std::uint32_t coarse_states_at_entry_ = 0;
     std::shared_ptr<const SessionImpl> borrowed_session_;
     bool enable_local_reoptimization_ = false;
     bool enable_quotient_bootstrap_ = false;

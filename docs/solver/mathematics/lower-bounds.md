@@ -7,6 +7,34 @@ A lower is a statement about every allowed proper solution, not just the current
 
 This chapter gives explicit sufficient arguments. It does not claim that every native producer already proves every premise. The corresponding current mechanisms are in [Lower and Pruning Authority](../lower-pruning.md).
 
+<a id="heuristic"></a>
+### Admissible heuristics, maintained lowers and policy values
+
+A certified statewise completion lower is an **admissible expected-cost
+heuristic**: for the compatible semantic state and declared action/policy scope,
+\(h(s)\le V^*(s)\). It bounds the minimum expected remaining crafting cost,
+not the realized cost of each random craft. Zero is admissible for nonnegative
+costs but can be weak. A larger valid lower is more informative without, by
+itself, proving that any search schedule finishes sooner.
+
+The displayed \(L_t(s_0)\) is the maintained certified lower at the requested
+start. It can combine initialization with later complete proof work. The
+eligible goal-cover, clean-carrier and retention values are components; compatible
+independent components combine by maximum, as derived below. A proper evaluated
+policy instead supplies \(U_t(s)\ge V^*(s)\) on its proven entry domain.
+Restricted/coarse policy values and scheduling scores retain their own semantics;
+neither a field named `values` nor useful ordering grants lower authority.
+
+Admissibility is weaker than consistency with each Bellman operator. A valid
+native lower need not satisfy the inequalities of a newly truncated, more
+optimistic query; the initializer counterexample below still applies. Nor does
+one stronger action floor necessarily improve the complete minimum: changing
+action floors from \((400,40)\) to \((800,40)\) leaves that minimum at 40.
+The relevant state/action consumer, complete coverage and competing constraints
+must therefore be identified before attributing a root gain to the heuristic.
+The [September 9 review](../../active/2026-09-09-empty-start-partial-continuation/research-inputs/useful-proof-time-review.md)
+clarifies these existing authorities; it supplies no new native closure result.
+
 <a id="subsolution"></a>
 ## 1. A finite subsolution is a lower: the stopping argument
 
@@ -65,6 +93,34 @@ In the scalar case, impose \(x(s)\le\ell(s,a)\). It may be very weak, but the ac
 Complete canonical sets or a proved disjoint family partition establish coverage. Two duplicate action constraints cannot replace a missing different action just because the counts match. The current lower-only quotient and repaired coverage mechanisms are documented as checking that distinction. [Lower and Pruning Authority](../lower-pruning.md).
 
 When a cheap placeholder is replaced by a complete row, keep the native action represented once in the model's intended relaxation. Leaving an old, cheaper fictitious escape alongside the refined row is safe as a lower but may permanently hide the benefit. Deleting a still-required unresolved action is unsafe. Those are opposite mistakes.
+
+Candidate enumeration may conservatively include options whose exact
+applicability has not yet been checked. It must include every applicable option,
+and its scalar floor must hold wherever that option is applicable. Extra
+optimistic alternatives can only weaken the minimum. This permits lazy kernel
+construction, but does not make the descriptor an executable row or establish
+equal applicability across a quotient cell. A demanded row still needs the
+complete native legality, termination, price, observation and successor checks
+on every member. Failure to build it leaves an open obligation; it is not a
+certificate that the action is absent. Likewise, a candidate list with complete
+vocabulary coverage is not a closed alternative proof.
+
+For a strict cell \(C\), let a compatible statewise certificate satisfy
+\(h(s)\le V^*(s)\) for every represented member. For each applicable action,
+\(V^*(s)\le Q^*(s,a)\). Thus the complete-member minimum
+\(b_C=\min_{s\in C}h(s)\) is a uniform action-Q floor, and
+\(\max(c^-_{C,a},b_C)\) safely combines it with the mandatory immediate-price
+floor. Any unsupported member contributes its valid fallback, including zero;
+neither a representative nor the maximum over members can replace the minimum.
+This is an independent native lower, not a claim of consistency for a truncated
+Bellman model. [CLM-0006](../claims.md#clm-0006), [CLM-0011](../claims.md#clm-0011).
+
+The current strict consumer uses the already prepared native-retention component
+through a typed, calculator-scoped lookup. It preserves that producer's complete
+member checks and compressed-retry refusal. It does not copy a root upper into
+successor entries or rebuild lower tables inside proof. Stronger obligation
+floors and lookup counts remain intermediate evidence; only a checked root
+publication establishes the requested end-to-end gain.
 
 <a id="frontier"></a>
 ## 3. Lower-only regions do not require an incumbent route

@@ -133,6 +133,21 @@ the fixed finish request is not an elapsed-time speedup claim.
 The [living record](../active/2026-09-09-empty-start-partial-continuation/README.md)
 retains the causal variants, browser qualification and still-open exact closure.
 
+The subsequent useful-proof-time controls allow 240 seconds of work, with a
+300-second native watchdog and 315-second outer cleanup safeguard. Both spend
+the additional time in discovery and begin no strict rows before terminal
+finish. An optional handoff at an existing stable checkpoint establishes a real
+proof window. Demand-driven native rows then cross the saved-policy extent
+without extending its decisions, while conservative option descriptors avoid
+eager kernel enumeration. The prepared retention component strengthens 74,015
+strict alternative floors in the four-goal treatment, but the root interval
+remains 198.83350--5,218.04095. This does not meet the declared material root-gap
+criterion. The five-goal proof treatment retains its verified bounds but reaches
+the unchanged memory cap during partition reconstruction. The same [living record](../active/2026-09-09-empty-start-partial-continuation/README.md#useful-proof-time)
+owns final matched evidence and remaining continuation costs. These findings
+extend current source correspondence for existing claims, not their general
+status or exact-closure guarantee.
+
 <a id="rq-003"></a>
 ### RQ-003 — Can executable-policy quality be preserved while proof work scales?
 

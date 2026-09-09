@@ -93,8 +93,15 @@ root value cannot be assigned to the added entry. Complete competing-action
 proof remains necessary for any optimality claim. This is construction and
 reevaluation, not extension of the old certificate. Fixed-policy lifting may
 still refuse the absent decision, while quotient completion can explicitly
-discharge it. Unknown structural parents and changed member/control semantics
-remain separate correspondence failures. [CLM-0021](../claims.md#clm-0021).
+discharge it. A parent absent from the calculator requires a separate
+correspondence check. A demanded native exact successor can be registered
+through the existing complete goal-member and junk-class projection, preserving
+rarity, occupancy, fractures, flags and observations under the same caps. This
+registers a new coordinate, with no old selected action or value. It does not
+establish state-local automatic-action coverage at that coordinate, so the
+current implementation keeps global closure open after such growth. A missing
+member map, changed terminal/control semantics or a synthetic retry coordinate
+cannot use this physical-parent route. [CLM-0021](../claims.md#clm-0021).
 
 <a id="choices"></a>
 ## 3. Respect when a choice becomes available

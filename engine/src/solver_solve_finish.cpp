@@ -197,6 +197,15 @@ void record_live_policy_lift_telemetry(
         adapter.local_state_action_rows_scheduled;
     telemetry.local_state_action_rows_evaluated =
         adapter.local_state_action_rows_evaluated;
+    telemetry.new_candidate_parents = adapter.new_candidate_parents;
+    telemetry.new_candidate_registered_parents =
+        adapter.new_candidate_registered_parents;
+    telemetry.new_candidate_rows = adapter.new_candidate_rows;
+    telemetry.new_candidate_transitions = adapter.new_candidate_transitions;
+    telemetry.completion_lower_carriers_checked = adapter.completion_lower_carriers_checked;
+    telemetry.completion_lower_positive_carriers = adapter.completion_lower_positive_carriers;
+    telemetry.completion_lower_obligations_strengthened = adapter.completion_lower_obligations_strengthened;
+    telemetry.completion_lower_ns = adapter.completion_lower_ns;
     telemetry.local_reoptimizations = adapter.local_reoptimizations;
     telemetry.local_policy_changes = adapter.local_policy_changes;
     telemetry.local_value_changes = adapter.local_value_changes;
@@ -4319,7 +4328,9 @@ SolveWork::Impl::run_publication_pipeline() {
                     if (retain_certified_incumbent(
                             candidate, candidate_dynamic_bytes)) {
                         telemetry.direct_candidate_retained = true;
-                        if (!coarse_discovery_closed) {
+                        if (!coarse_discovery_closed &&
+                            !(proof_handoff_started &&
+                              !requested_bounded_finish)) {
                             skip_strict_lift =
                                 publish_certified_fallback(
                                     core_solve_termination);
@@ -4391,7 +4402,9 @@ SolveWork::Impl::run_publication_pipeline() {
                      * to spend the remaining allowance and earn exactness. */
                     if (options.max_policy_refinement_states != 0 &&
                         direct_precedes_verified &&
-                        !coarse_discovery_closed) {
+                        !coarse_discovery_closed &&
+                        !(proof_handoff_started &&
+                          !requested_bounded_finish)) {
                         skip_strict_lift =
                             publish_certified_fallback(
                                 core_solve_termination);
@@ -4480,7 +4493,9 @@ SolveWork::Impl::run_publication_pipeline() {
                 direct_certification_requires_strict_lift =
                     closed_coarse_candidate_requires_strict_lift(
                         coarse_discovery_closed, telemetry.triggers,
-                        skip_strict_lift);
+                        skip_strict_lift) ||
+                    (proof_handoff_started &&
+                     !requested_bounded_finish && !skip_strict_lift);
             } else {
                 const std::string reason =
                     "policy_direct_certification_" +
@@ -4589,12 +4604,25 @@ SolveWork::Impl::run_publication_pipeline() {
                     rollback_upper->exact_cost =
                         verified_rollback->evaluated_policy_cost;
                 }
+                refinement::PolicyExactLiftCompletionLower completion_lower;
+                if (options.native_retention_consume && native_retention_potential) {
+                    completion_lower.source = &calc;
+                    completion_lower.context = this;
+                    completion_lower.lookup = [](void* owner, std::uint32_t state) {
+                        // This prepared component performs a complete-member
+                        // projection and refuses compressed retry coordinates.
+                        // Its lookup allocates no new solver-owned tables.
+                        return solve_detail::ProofLowerValue{
+                            static_cast<Impl*>(owner)->native_retention_lower_value(state)};
+                    };
+                }
                 refinement::PolicyExactLiftWork lift_work(
                     calc, result, exact_start_item, prices,
                     scoped_lift_options, "solved policy", nullptr,
                     rollback_upper.has_value()
                         ? &*rollback_upper
-                        : nullptr);
+                        : nullptr,
+                    completion_lower.lookup == nullptr ? nullptr : &completion_lower);
                 co_await solve_detail::CooperativeCheckpoint{
                     lift_work.retained_bytes()};
                 while (!lift_work.progress().done) {
@@ -4677,6 +4705,14 @@ SolveWork::Impl::run_publication_pipeline() {
                 certificate.failure_reason =
                     "coarse live solve leaves no memory for exact "
                     "publication refinement";
+            }
+            /* This diagnostic deliberately paused discovery with open
+             * action-family obligations. A completed proof over its current
+             * admitted vocabulary cannot discharge those paused families. */
+            if (proof_handoff_started && !coarse_discovery_closed) {
+                certificate.global_lower_bound_closed = false;
+                certificate.adapter.global_lower_bound_closed = false;
+                certificate.adapter.exact_alternative_envelope_closed = false;
             }
             PolicyRefinementTelemetry& telemetry =
                 result.diagnostics.policy_refinement;
@@ -4963,6 +4999,17 @@ SolveWork::Impl::run_publication_pipeline() {
             telemetry.local_state_action_rows_evaluated =
                 certificate.adapter
                     .local_state_action_rows_evaluated;
+            telemetry.new_candidate_parents =
+                certificate.adapter.new_candidate_parents;
+            telemetry.new_candidate_registered_parents =
+                certificate.adapter.new_candidate_registered_parents;
+            telemetry.new_candidate_rows = certificate.adapter.new_candidate_rows;
+            telemetry.new_candidate_transitions =
+                certificate.adapter.new_candidate_transitions;
+            telemetry.completion_lower_carriers_checked = certificate.adapter.completion_lower_carriers_checked;
+            telemetry.completion_lower_positive_carriers = certificate.adapter.completion_lower_positive_carriers;
+            telemetry.completion_lower_obligations_strengthened = certificate.adapter.completion_lower_obligations_strengthened;
+            telemetry.completion_lower_ns = certificate.adapter.completion_lower_ns;
             telemetry.refinement_rounds =
                 static_cast<std::uint64_t>(
                     certificate.adapter.backward_observation_rounds) +
@@ -5992,7 +6039,7 @@ void SolveWork::Impl::begin_publication_pipeline() {
             finalized_result.has_value()) {
             return;
         }
-        if (!requested_bounded_finish &&
+        if (!requested_bounded_finish && !proof_handoff_started &&
             incremental_action_generation &&
             !incremental_envelope_closed &&
             options.high_impact_executable_uppers &&

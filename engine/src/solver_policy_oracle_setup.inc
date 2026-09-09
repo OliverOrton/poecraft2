@@ -21,6 +21,7 @@
           telemetry_(telemetry),
           coarse_retained_bytes_at_entry_(
               coarse.fast_estimated_owned_bytes()),
+          coarse_states_at_entry_(coarse.state_count()),
           borrowed_session_(borrow_session(coarse_)),
           enable_local_reoptimization_(
               reoptimization_seed != nullptr),
@@ -717,20 +718,20 @@
                        strict_->session(), action,
                        strict_->state(strict_state));
         }
-        const double immediate_lower =
-            quotient_operator_immediate_cost_lower(operator_index);
-        const bool potentially_competitive =
-            !std::isfinite(solved_.evaluated_policy_cost) ||
-            immediate_lower < solved_.evaluated_policy_cost;
-        if (!potentially_competitive) return true;
-        const OptionKernel& kernel = strict_->option_kernel(
-            strict_state, operator_index);
-        if (!kernel.supported || !kernel.legal ||
-            !kernel.terminates_almost_surely) {
-            return false;
-        }
-        (void)resource_cost(kernel.expected_resources);
+        /* An option descriptor is an unresolved candidate, not an executable
+         * row. Keep the complete coarse-admitted vocabulary without building
+         * every option kernel during carrier/partition discovery. Native
+         * applicability, proper termination, full pricing and observations
+         * are checked by candidate_selection only when its row is demanded.
+         * An unavailable row stays unresolved; descriptor inclusion supplies
+         * no exactness or executable authority. This is the same conservative
+         * inclusion previously used only for options above the root estimate. */
+        (void)quotient_operator_immediate_cost_lower(operator_index);
         return true;
+    }
+
+    bool quotient_action_scope_extended() const {
+        return coarse_.state_count() > coarse_states_at_entry_;
     }
 
     std::tuple<bool, bool, bool, bool, double, std::uint32_t>
@@ -1095,6 +1096,10 @@
         }
         telemetry_.strict_transitions_built += row.transitions.size();
         ++telemetry_.strict_kernels_built;
+        if (state.coarse_state >= solved_.policy.size()) {
+            ++telemetry_.new_candidate_rows;
+            telemetry_.new_candidate_transitions += row.transitions.size();
+        }
         saturating_add(
             alternative
                 ? telemetry_.alternative_rows_completed

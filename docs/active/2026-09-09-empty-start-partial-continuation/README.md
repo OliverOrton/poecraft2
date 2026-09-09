@@ -4,10 +4,11 @@ Active goal: implement the [owner-provided plan](research-inputs/implementation_
 and reconcile [P1Ã¢â‚¬â€œP5](research-inputs/mathematical_delta.md). No subagents or inherited
 September 7 deadline. Preserve protected `0`, unrelated work and native authority.
 The original intake began at `06d4c41d0cef62ec528bf22f25b122de230c913f`.
-Oliver has fulfilled the review pause. The latest fresh session reconciled newer
-local `267e4f3`, retained its qualified continuation implementation, and rejected
-two further strict-completion variants on measured watchdog failures. The full
-exact-closure goal remains open. Current work is local; no push or restart.
+The current continuation follows **Useful Proof Time and Demand-Driven Exact
+Continuation v1**, reviewed at pushed `3174383`; see the latest section below.
+The earlier review/package pause is superseded. Historical comparisons and
+failed experiments below retain their original scope and timing. The full
+exact-closure goal remains open. New implementation stays local without restart.
 
 ## Frozen primary comparison
 
@@ -672,3 +673,282 @@ owners now state the implemented stop contract. This checkpoint is committed
 locally without a push. The full goal is not marked achieved: no additional
 primary causal gain or new exact closure is established, and the new generated
 implementation plan remains unavailable for its required acceptance audit.
+
+<a id="useful-proof-time"></a>
+## Useful proof time and demand-driven exact continuation
+
+Oliver's new direction selects the latest Native Solver Research response,
+turn `c620633a-d9fa-4feb-a8b5-6cfbf0893f75`, final message
+`7f3bee8a-1feb-4bff-9a38-ad784e883de4`. Its complete
+[long-window review](research-inputs/useful-proof-time-review.md) and preceding
+[pre-finish review](research-inputs/pre-finish-review.md) are preserved once.
+The later message changes the development timing proposal; the original short
+fixtures remain regressions. These self-contained directions supersede the
+older unavailable package, whose contents are still not claimed as read.
+
+The initial block is two current-source long controls, one proof-allocation
+treatment if needed, one targeted continuation treatment, one measured remaining
+obstruction follow-through, and final matching five-goal qualification. Additional
+long runs require evidence from that block, not a cross-product or repeated
+unchanged retry. Focused correctness checks precede each semantic treatment.
+
+The [derived profile](long-profile/manifest.json) has separate four/five-goal
+identities, 240-second requested finish, 300-second native watchdog and a
+315-second outer process-cleanup safeguard. Its generator asserts that only case
+identity, comparison label and the two timing controls differ from the short
+cases. Target, prices, original action envelope, all other caps and exact graph
+evaluation are unchanged. The original 60/90 cases are not edited. F0 preserves
+the qualified `3174383` binaries and verifies their hashes against E provenance.
+
+Before treatments, select new four/five-goal exact closure as the preferred
+outcome; otherwise require at least 20% smaller **absolute certified four-goal
+root gap** versus its matched 240-second control, with no worse verified upper
+and no five-goal regression. The short five-goal reference remains a required
+regression. Extra strict states, a successful map, a diagnostic lower, or earlier
+return of the same policy do not meet this gate. A smaller sound improvement
+remains partial progress. Use actual trajectory samples near 60/120/180/240
+seconds and never backdate verification performed only at the final boundary.
+
+The first source correspondence is already clear: `PolicyExactLiftWork` is
+cooperative, while the ordinary work loop and finalizer distinguish discovery,
+candidate selection and publication. Whether useful compatible candidates reach
+that owner before a requested finish is measured by F1/F2 before changing it.
+
+F1/F2 complete under the new profile. Four-goal F1 returns
+198.8334996747695–8500.234970856602 in 245.282 seconds; five-goal F2 returns
+405.3694021063399–85558.70618560436 in 249.986 seconds. Both report zero strict
+rows and `not_run` strict lift. Four-goal's first trajectory upper appears only
+during final evaluation, at 241.725 seconds. Its cheaper short-run policy was
+not an independently verified artifact retained at that earlier time in this
+long run. More discovery did not establish useful proof time or improve either
+endpoint; the four-goal long result is worse than the known short result.
+
+Before observing any treatment result, make the no-trivial-success requirement
+explicit: the four-goal materiality target must also beat the already known
+short gap by 20%, i.e. absolute gap at most
+`0.8 * (5218.040949685988 - 198.8334996747695)`, and meet the matched long gate.
+Merely recovering that old policy through earlier handoff cannot close this task.
+
+The first allocation experiment uses an existing numerical-convergence boundary,
+`continue_open_incremental_envelope`. An optional native-only request at 60
+seconds waits for that boundary with a retained candidate, then enters the
+ordinary publication and cooperative strict owners. Actual handoff can occur
+later than the request. It never marks the open action envelope closed, clears
+a finish request, copies a live greedy policy into a snapshot, or adds a second
+solver. The old finish behavior remains active at 240 seconds. The focused mock
+fixture passes 41 checks: its no-finish arm constructs 110 strict kernels and
+independently verifies the returned 168-cost policy; its finish arm stops optional
+proof and evaluates its available artifact. These are synthetic correctness
+checks, not a native four-goal result. F3 measures the real bridge next.
+
+F3's request at 60 seconds does reach the convergence checkpoint (4,667 expanded
+states, 83,482 rows). The ordinary `Done` recovery gate then reopens an upper
+pass and resumes discovery before publication. The finished run reaches 7,096
+expanded states and returns the same 8,500.23497 upper with no strict work in
+245.070 seconds. Thus the first integration fails its actual allocation purpose;
+the early mock did not distinguish this reopening. F3b explicitly prevents that
+reopening for the diagnostic handoff and adds a frozen-expansion assertion.
+The request/active bits are solver lifecycle state with separate telemetry
+copies; diagnostic serialization is not a scheduling authority.
+
+F3b completed normally in 252.660 s reported total (254.342 s process),
+again L=198.8334996747695 and U=8500.234970856602 with no strict rows.
+Its handoff did fire at 4,411 expanded states, but the independent publication
+preflight reopened missing-carrier discovery (7,242 expanded at delivery).
+The main-loop recovery guard alone was insufficient. F3c also suppresses
+that preflight only after the diagnostic handoff has started. It retains
+the normal publication/strict owners and real-finish latch. The focused
+handoff fixture remains 43/0; the next four-goal run directly tests this
+second, concrete allocation gate. No continuation repair is claimed yet.
+
+F3c establishes a real pre-finish proof window: 86.659 s total, 86.275 s
+solve, 87.201 s process, normal exit and no surviving process. Coarse discovery
+stays at its 4,539-state handoff. Strict work takes 23.811 s and constructs
+5,252 exact kernels before refusing carrier 113366 / parent 4741. The current
+and indexed calculators contain 6,364 states, but the saved policy has 3,923.
+The 5,218.040949685988 strategy is independently verified and retained; lower
+198.8334996747695 is unchanged. This recovers the historical artifact and does
+not meet the stronger predeclared materiality gate.
+
+F4 now tests explicit new-candidate construction at a structurally known parent
+outside that snapshot. Fixed-policy traversal retains its refusal, missing
+structural parents still refuse, and no saved value/decision is copied or padded.
+The existing quotient row owner certifies the native kernel with every successor,
+price and observation before the new candidate can be evaluated. Dedicated
+parent/row/transition counts distinguish that work from a successful lookup.
+The focused fixture checks a frozen 55-entry policy against a 140-state physical
+calculator, newly built positive-mass rows, proper independently evaluated output,
+unchanged saved decisions/values, and capped refusal. Its fixed-policy negative
+case correctly refuses earlier at the coarse Scour successor table check
+(`invalid_solve_state`); the first fixture expectation incorrectly named a later
+mapping refusal and was corrected without changing production refusal behavior.
+
+F4 completed normally at 109.014 s total (109.543 s process), with the
+unchanged interval 198.8334996747695--5218.040949685988. It constructs 29
+complete new-candidate rows / 538 transitions at 82 beyond-table parents.
+The strict session retains one partition (4,613 cells), schedules two
+alternative obligations, certifies one, and returns a 17-state frontier from
+the other. Subsequent discovery reaches `max_discovered_states=200000`, reported
+through the existing `max_policy_refinement_states` publication cap. There are
+90,810 open alternative obligations and no new root proof or policy improvement.
+The cap is reached before the requested finish, so more elapsed time alone
+cannot solve this obstruction. F4b is a focused attribution repeat: it adds the
+planner and carrier to a resource refusal raised during automatic alternative
+admission, preserving its cap and failure category. This is not a parameter sweep.
+
+F4b identifies the cap owner exactly: descriptor admission calls the full kernel
+for `option:eldritch_side_intent:suffix:eldritch_chaos:eldritch_ichor:1` at coarse
+parent 364 / strict state 148213. This parent is inside the old policy table;
+it is not another lost selected entry. The attribution repeat preserves the
+same new-row counts and root interval (107.686 s total, 108.231 s process).
+
+F5 defers nonprimitive exact applicability to demanded candidate certification.
+Descriptor enumeration retains the complete coarse-admitted vocabulary and its
+mandatory-price lower, without constructing unrelated option kernels. Primitive
+legality stays exact and cheap. The later candidate owner still requires legal,
+supported, almost-surely terminating native kernels, complete expected pricing
+and every observed-choice successor. Unknown applicability adds conservative
+open obligations; it cannot certify a row or erase an action. Resource refusals
+now name the demanded candidate. The unchanged successor fixture passes 295/0;
+the existing automatic Veiled fixture passes 70/0 with exact compiled cost
+8.333333333333 (that toy fixture includes its existing embedded 10,000-run
+sample check; no case-level Simulator qualification was launched). F5's matched
+four-goal run tests this one measured alternative-admission obstruction.
+
+F5 removes the descriptor-enumeration cap: 103.714 s total, 104.274 s process,
+normal delivery, 1,832 new rows / 27,083 transitions at 538 beyond-table parents.
+It reaches a different correspondence boundary at strict carrier 26470, whose
+projected parent is absent from all 6,364 indexed/current coarse states. Root
+bounds remain 198.8334996747695--5218.040949685988. There is no claimed material
+root improvement, although the measured eager-admission obstruction is removed.
+
+F6 tests registering only this newly demanded native successor's complete
+strict-to-coarse projection. It preserves the immutable selected table, all
+native row checks and both calculators' caps. Synthetic retry coordinates retain
+the separate refusal. Newly registered coarse parents do not inherit state-local
+automatic admissions; calculator growth therefore disables global action-scope
+closure until that coverage is separately supplied. The diagnostic handoff also
+keeps paused coarse-family obligations open even if the current quotient's
+admitted-vocabulary proof completes. The sparse-calculator fixture compares its
+newly constructed continuation with the independently evaluated full-calculator
+reference, and checks that no exactness is claimed from new parent registration.
+
+F6 reaches the real 240-second finish and returns in 240.833 s total
+(241.388 s process), without a resource cap. Its strict work uses 178.480 s,
+with 33,218 kernels and 9,751 beyond-table rows. Root bounds are unchanged.
+The 60-second wall trigger captures 4,667 expanded states rather than F5's
+4,539; candidate/graph identities differ. No newly registered parent is counted
+in this real trajectory, so the progress past F5's missing-parent point is not
+claimed as causal evidence for parent registration. That branch is qualified by
+the sparse/full calculator fixture (363/0); handoff/open-scope checks pass 49/0.
+This timing variability is retained explicitly rather than claiming identical
+candidate snapshots for every wall-budget run.
+
+F7 connects the already prepared native-retention component to strict alternative
+lower-Q obligations. Its typed lookup is bound to the same calculator, goal,
+action scope and prices. The cell uses the minimum over every covered member,
+then the maximum with its mandatory-price floor. Unknown domains, including
+compressed retries, keep zero for this component. No lower table is rebuilt and
+no root policy upper crosses this boundary. The next matched run measures actual
+obligation and root effects; more lookups alone will not satisfy materiality.
+
+The first F7 fixture found a lifetime error: the exact-state vector had already
+been released when the new consumer tried to read its parent ids (370 checks,
+five failures). No real benchmark ran on that version. The corrected consumer
+retains only the parent ids needed for whole-cell coverage, charges their scratch
+memory, and passes 370/0. The fixture checks unchanged proper executable cost,
+positive strengthened obligations, immutable saved decisions and refusal of a
+provider from a different calculator. `F7-heuristic.patch` and
+`F7-build-identity.json` identify the corrected measured build.
+
+F7 returns normally at 240.690 s total (241.240 s process), including 178.287 s
+of strict work. It captures the same candidate identity `4ff45baf2099fb44` and
+4,667 expanded states as F6. The component checks all 4,616 relevant carriers,
+finds positive values at 4,615 and strengthens 74,015 distinct alternative
+obligations in 1.654 ms of lookup time. It builds 9,694 beyond-table rows and
+33,032 strict kernels, but retains one partition/frontier-growth yield, one
+partially evaluated scheduled obligation and zero noncompetitive retirements.
+F6 had scheduled two obligations and certified one. The remaining
+frontier continuation still consumes the proof window. The 90,810 unresolved
+obligations and root interval remain unchanged; no new controller is published.
+Native owned-memory peak is 754,247,279 bytes under the unchanged 1 GiB cap.
+
+This is a measured heuristic-consumption result, not a root improvement or
+speedup. F7's absolute gap is 5,019.2074500112185, above the predeclared
+4,015.365960008975 historical-artifact ceiling. Merely recovering the old upper
+earlier than F1 does not meet the gate. Stop this experimental branch after the
+matched five-goal and required final regression qualifications; do not add another
+unbounded round of settings or weaken the criterion.
+
+F8 is the matched long five-goal treatment with the same final engine, handoff
+and controls. It preserves the independently evaluated 405.3694021063399--
+85558.70618560436 interval, but stops at the unchanged memory cap while rebuilding
+the replay-backed closed partition. Total time is 184.099 s (184.627 s process),
+including 117.089 s of strict work. It constructs 6,780 strict kernels, reaches
+16,010 exact states and strengthens 191,505 local obligations, with no
+beyond-table rows or root improvement. One scheduled obligation is partial;
+205,396 obligations remain unresolved. This is preservation of the verified
+bounds with a new proof-memory stop, not an uncapped five-goal closure or a
+performance win. The returned artifact survives optional proof failure.
+
+The final focused native checks pass: policy-refinement contracts 2,735/0,
+candidate-handoff/open-scope checks 49/0 and bounded-finish checks 14/0. The
+separate ordinary short native and rebuilt WASM qualifications follow below.
+
+| Final native check | Lower | Verified upper | Total seconds | Outcome |
+|---|---:|---:|---:|---|
+| F9 ordinary short four-goal | 198.8334996747695 | 5218.040949685988 | 62.176 | Requested finish, no cap |
+| F10 ordinary short five-goal | 405.3694021063399 | 85558.70618560436 | 66.618 | Requested finish, no cap |
+| F11 existing three-suffix anchor | 1101.15648683309 | 1101.15648683309 | 46.678 | Exact, no cap |
+
+All three use unchanged input/action identities and byte-identical compiled
+strategies to E3/E4/E6, with complete independent exact evaluation. Their process
+times are 62.557, 67.133 and 47.030 seconds respectively, with no surviving child
+process. These are regression checks, not new independent exact milestones.
+
+F12 rebuilds production WASM successfully. Its three pre-existing warnings concern
+WASM-width comparisons against 64-bit overflow limits; no new warning is attributed
+to this change. F13's four-goal web-binding qualification passes with the same
+198.8334996747695--5218.040949685988 bounds, 61.875 s solve time and 66.764 s
+including evaluation and cleanup (75.811 s outer process). It returns at the
+requested finish with no cap and leaves zero live handles after the existing
+complete/abandoned-work cleanup checks. The five-goal WASM check follows.
+
+F14's five-goal WASM check also passes: unchanged 405.3694021063399--
+85558.70618560436 bounds, 63.878 s solve time, 75.878 s including evaluation and
+cleanup, and 78.145 s outer process. It has no cap and zero live handles after
+cleanup. Both rebuilt WASM strategies and all target, action, economy and cap
+identities match their final native short counterparts. No case-level Simulator,
+full acceptance suite or rendered UI review was run; the affected contracts and
+native/WASM paths above supply the selected qualification.
+
+`summarize_proof_time.py` verifies these identities, independent evaluations,
+process cleanup and the unchanged final native build. It preserves
+`proof-time-comparison.json`, `proof-time-provenance.json` and
+`proof-time-evidence.zip`. The comparison includes actual sampled observations
+near 60/120/180/240 seconds, retains every failed allocation/capped treatment,
+and reports the material-improvement and new-exact-closure gates as false.
+Implementation/documentation diff checks pass; the verbatim research imports
+retain their original 28 trailing-space notices rather than silently rewriting
+the preserved source responses.
+
+### Research disposition for this continuation
+
+Both full chat responses are retained once in `research-inputs/`; the later
+Useful Proof Time review governs timing. Their generated download packages were
+not retrieved or represented as read. The statewise heuristic explanation,
+whole-cell minimum argument, fixed-policy/new-candidate distinction and open
+action-scope obligations are incorporated into the existing mathematical
+chapters. The implementation applies existing CLM-0006/0008/0011 and policy
+publication obligations; no general claim status is promoted.
+
+The long controls establish missing proof allocation. The optional diagnostic
+handoff, complete native continuation rows and deferred option-kernel demand are
+incorporated with their focused checks. The old selected-policy snapshot is
+immutable. Physical parent registration has focused sparse/full-calculator
+evidence; no causal real-case gain is attributed to its zero-use F6/F7 runs.
+Heuristic consumption is observed, but its proposed root benefit remains open.
+The frontier continuation and five-goal partition-memory limits are preserved
+as measured obstructions. New exact closure and the predeclared material root
+improvement remain **unmet**; the earlier return of an existing artifact and
+local row/floor counts are insufficient. No additional settings loop is selected.

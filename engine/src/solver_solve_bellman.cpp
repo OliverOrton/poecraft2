@@ -2287,6 +2287,7 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
          */
         if (phase == SolvePhase::Done &&
             !requested_bounded_finish &&
+            !proof_handoff_started &&
             begin_incremental_upper_policy_pass()) {
             phase = SolvePhase::Expanding;
         }
