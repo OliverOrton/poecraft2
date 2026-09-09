@@ -4323,6 +4323,29 @@ void run_solver_phase_lower_tests() {
             maximum &= on.completion_proof_lower_value(state)>=std::max(before,from_state);
         }
         PC_CHECK(uniform && maximum && on.native_retention_hits>1);
+        on.options.native_retention_consume=false;
+        PC_CHECK(on.native_retention_lower_value(on.result.start_state)==0);
+        PC_CHECK(on.native_retention_potential==saved && on.project_native_retention_lower(on.result.start_state).value()>0);
+        on.options.native_retention_consume=true;
+        // The constructor's fracture frame is not the request's start. With
+        // the same crafted domain and native context, the existing fresh
+        // region must give the same checked answers at empty and partial
+        // entries. This negative control failed at the old anchored guard.
+        pc_item_state empty; pc_item_clear(&empty); empty.rarity=PC_RARITY_RARE;
+        SolveWorkTestAccess::Impl empty_work(typed_calc,empty,typed_prices,options);
+        PC_CHECK(empty_work.native_retention_potential && empty_work.native_retention_refusal.empty());
+        PC_CHECK(empty_work.exact_start_item.prefix_count==0 && empty_work.exact_start_item.suffix_count==0);
+        if (empty_work.native_retention_potential) {
+            PC_CHECK(empty_work.native_retention_potential->fractured_mod==saved->fractured_mod);
+            for (auto item : {empty,natural,crafted,crafted_goal}) {
+                for (unsigned i=0;i<item.prefix_count;++i) item.prefixes[i].flags &= ~PC_MOD_SLOT_FRACTURED;
+                for (unsigned i=0;i<item.suffix_count;++i) item.suffixes[i].flags &= ~PC_MOD_SLOT_FRACTURED;
+                const auto lower=empty_work.native_retention_potential->lookup(typed_calc,typed_prices,item,false);
+                const auto prior=saved->lookup(typed_calc,typed_prices,item,false);
+                PC_CHECK(lower && prior && std::abs(*lower-*prior)<1e-8);
+                PC_CHECK(lower && *lower==empty_work.native_retention_lower_value(typed_calc.intern_item(item)));
+            }
+        }
         auto wrong_fracture=anchor; wrong_fracture.prefixes[0].mod_id=1;
         PC_CHECK(on.native_retention_lower_value(typed_calc.intern_item(wrong_fracture))==0);
         auto influenced=anchor; influenced.generic_influence_bits=1;
@@ -4424,6 +4447,27 @@ void run_solver_phase_lower_tests() {
         rejects([&]{PhaseLowerProducer::prepare_probabilistic(fc,prices,frame,proposal,support,zero,false,true,cancel,true,{},
             PhaseContinuation::CoupledFresh,PhaseRetention::AnnulNonempty,true,{true,true,1u<<filter_kind});});
         PC_CHECK(retained==support->memory_snapshot().total_bytes);
+
+        // The coarse junk mask can contain both an ordinary member and a
+        // known metamod. The whole abstract state also observes its flags:
+        // without the metamod flag that member is impossible. This permits
+        // the ordinary class query without admitting the filtered member.
+        auto coarse_actions=basic_indices(registry); coarse_actions.push_back(bench);
+        CalcContext coarse(fs,goal,registry,coarse_actions);
+        SolveOptions ordinary_options; ordinary_options.consider_imprint_programs=false;
+        ordinary_options.native_retention_lower=true;
+        SolveWorkTestAccess::Impl ordinary(coarse,frame,prices,ordinary_options);
+        PC_CHECK(bool(ordinary.native_retention_potential));
+        auto ordinary_junk=frame; place(&ordinary_junk,PC_SIDE_SUFFIX,6,21);
+        const auto ordinary_id=coarse.intern_item(ordinary_junk);
+        const auto filtered_id=coarse.intern_item(filtered);
+        PC_CHECK(modifier_metamod_flag(*fs,7)==(filter_kind ? kFlagNoCaster : kFlagNoAttack));
+        PC_CHECK((coarse.state(filtered_id).flags & modifier_metamod_flag(*fs,7))!=0);
+        PC_CHECK(ordinary.native_retention_lower_value(ordinary_id)>0);
+        PC_CHECK(ordinary.native_retention_lower_value(filtered_id)==0);
+        const auto mixed_class=coarse.layout().junk_class_by_mod[7];
+        PC_CHECK(mixed_class!=kNoId && ordinary.native_retention_junk_safe[mixed_class]);
+        PC_CHECK(coarse.layout().junk_class_by_mod[6]==mixed_class);
     }
     static_assert(!std::is_constructible_v<PreparedPhaseRestartLower, QuotientLowerBoundary>);
     static_assert(!std::is_copy_constructible_v<PreparedPhaseRestartLower>);

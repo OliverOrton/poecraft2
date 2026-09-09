@@ -1,0 +1,94 @@
+diff --git a/engine/src/solver_solve_constructive.cpp b/engine/src/solver_solve_constructive.cpp
+index 997acec..3050e72 100644
+--- a/engine/src/solver_solve_constructive.cpp
++++ b/engine/src/solver_solve_constructive.cpp
+@@ -923,15 +923,29 @@ void SolveWork::Impl::capture_incumbent_policy(
+         candidate.choice_sources.clear();
+         for (std::uint32_t state = 0; state < state_count; ++state) {
+             if (calc.is_goal_state(calc.state(state))) continue;
+-            if (!candidate.policy_reachable.empty() &&
+-                (state >= candidate.policy_reachable.size() ||
+-                 !candidate.policy_reachable[state])) {
+-                continue;
+-            }
+             const std::uint64_t row =
+                 state < candidate.policy_rows.size()
+                     ? candidate.policy_rows[state]
+                     : no_row;
++            if (!candidate.policy_reachable.empty() &&
++                (state >= candidate.policy_reachable.size() ||
++                 !candidate.policy_reachable[state])) {
++                // A strict exit can enter a state omitted by the coarse
++                // reachable walk. Preserve its decision only when this same
++                // immutable candidate already owns a completed state row or
++                // an explicit frontier continuation. Never consult today's
++                // greedy table, extend the snapshot extent, or fabricate a
++                // fallback for an unselected state. Exact evaluation still
++                // qualifies the resulting complete native composition.
++                const bool owns_row = row != no_row &&
++                    row < transition_cache->rows.size() &&
++                    row < priced_rows.size() &&
++                    transition_cache->rows[row].owner_state == state;
++                const bool owns_frontier =
++                    state < candidate.frontier_operators.size() &&
++                    candidate.frontier_operators[state] != kNoId;
++                if (!owns_row && !owns_frontier) continue;
++            }
+             capture_incumbent_state(candidate, state, row);
+         }
+     }
+diff --git a/engine/tests/test_solver_solve.cpp b/engine/tests/test_solver_solve.cpp
+index ac36d73..829cedd 100644
+--- a/engine/tests/test_solver_solve.cpp
++++ b/engine/tests/test_solver_solve.cpp
+@@ -615,6 +615,42 @@ void run_bounded_policy_row_capture_tests() {
+         stale_row_rejected = true;
+     }
+     PC_CHECK(stale_row_rejected);
++
++    // A strict-only entry may already have a selected row in the immutable
++    // candidate, even though the coarse reachable walk excluded it. Preserve
++    // that row; do not borrow a later greedy continuation for a missing entry.
++    SolveOptions options;
++    SolveWorkTestAccess::Impl work(calc,start,{{"chaos",1.0},{"base",1.0}},options);
++    auto partial=start; partial.rarity=PC_RARITY_MAGIC;
++    const auto partial_id=calc.intern_item(partial);
++    auto newer=start; newer.rarity=PC_RARITY_NORMAL;
++    const auto newer_id=calc.intern_item(newer);
++    const auto count=calc.state_count();
++    auto& cache=*work.transition_cache;
++    cache.rows.clear(); work.priced_rows.clear();
++    for (auto owner : {state,partial_id,newer_id}) {
++        SparseRow completed; completed.owner_state=owner;
++        cache.rows.push_back(completed);
++        PricedSparseRow price; price.operator_index=0; price.cost=17.0;
++        work.priced_rows.push_back(price);
++    }
++    const auto no_row=std::numeric_limits<std::uint64_t>::max();
++    SolveWorkTestAccess::Impl::BoundedPolicyIncumbent snapshot;
++    snapshot.values.assign(count,17.0);
++    snapshot.policy_rows.assign(count,no_row);
++    snapshot.policy_rows[state]=0;
++    snapshot.policy_rows[partial_id]=1;
++    snapshot.policy_reachable.assign(count,0);
++    snapshot.policy_reachable[state]=1;
++    work.policy_rows=snapshot.policy_rows;
++    work.policy_rows[newer_id]=2; // newer selection is deliberately absent above
++    work.capture_incumbent_policy(snapshot);
++    PC_CHECK(snapshot.policy[partial_id].index==0);
++    PC_CHECK(snapshot.policy_row_costs[partial_id]==17.0);
++    PC_CHECK(snapshot.policy[newer_id].index==kNoId);
++    PC_CHECK(!snapshot.policy_reachable[partial_id]);
++    work.priced_rows[1].cost=3.0;
++    PC_CHECK(snapshot.policy_row_costs[partial_id]==17.0);
+ }
+ 
+ void run_automatic_sample_copy_ledger_tests() {
+@@ -12724,6 +12760,7 @@ void run_solver_policy_refinement_tests() {
+ 
+ void run_solver_selected_fallback_tests() {
+     run_selected_fallback_successor_tests();
++    run_bounded_policy_row_capture_tests();
+ }
+ 
+ void run_solver_solve_tests(const char* artifact_dir) {

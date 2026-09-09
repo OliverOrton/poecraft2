@@ -63,9 +63,10 @@ try {
                 assert.ok(Math.abs((summary.lower_bound ?? 0) - 358.14570884078455) < 1e-8);
                 assert.ok(pattern.solution_sweeps > 0);
             } else {
-                assert.equal(pattern.converged, false);
-                assert.equal(pattern.start_contribution, null); // no issued certificate
-                assert.match(pattern.fallback_reason, /natural anchored request/);
+                assert.equal(pattern.converged, true, pattern.fallback_reason);
+                assert.equal(pattern.fallback_reason, "");
+                assert.ok((pattern.start_contribution ?? 0) > 36.49);
+                assert.ok((summary.lower_bound ?? 0) + 1e-8 >= pattern.start_contribution!);
             }
             console.log(JSON.stringify({ fractured, elapsed_ms: performance.now() - began,
                 pattern, lower: summary.lower_bound, memory: engine.memoryStats() }));

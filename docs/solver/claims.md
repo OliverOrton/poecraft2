@@ -56,7 +56,7 @@ For a small fix, this ledger need not change. For a mathematical change, follow 
 **History:**
 - 2026-09-06 — `open` — Drafted by ChatGPT as source-linked research input. Explicit argument/counterexample supplied; local correspondence and repository acceptance remain to be reviewed. No independent reviewer or native rerun is claimed.
 - 2026-09-06 — `accepted` — Codex, responsible integration self-review: conditional mathematical argument accepted on the finite transient Neumann-series and feasible-policy subset argument. Statement and preconditions unchanged; no independent reviewer or blanket native correspondence is claimed. Native applications still require the named GAP obligations.
-- 2026-09-07 — `accepted` — Codex, scoped native accounting application: completed transient raw/shared occupancy replaces preliminary quotient flow; positive-input closed components still refuse. The [flow argument](mathematics/numerical-closure.md#flow-accounting), old-code counterexample and [verified development policy](../active/2026-09-07-continuous-bounds/README.md) retain the existing numerical contract. No native optimality claim.
+- 2026-09-07 — `accepted` — Codex, scoped native accounting application: completed transient raw/shared occupancy replaces preliminary quotient flow; positive-input closed components still refuse. The [flow argument](mathematics/numerical-closure.md#flow-accounting), old-code counterexample and [verified development policy](../archive/2026-09-07-continuous-bounds/README.md) retain the existing numerical contract. No native optimality claim.
 
 <a id="clm-0003"></a>
 ## CLM-0003 — Observed-choice timing changes the value
@@ -138,6 +138,7 @@ For a small fix, this ledger need not change. For a mathematical change, follow 
 
 **History:**
 - 2026-09-06 — `open` — Drafted by ChatGPT as source-linked research input. Explicit argument/counterexample supplied; local correspondence and repository acceptance remain to be reviewed. No independent reviewer or native rerun is claimed.
+- 2026-09-09 — `accepted` — Codex, scoped member-domain application: the full state projection includes known metamod flags. An absent flag excludes its necessarily flagged members from a mixed modifier mask; unknown roles and veiled templates remain refused. Shared native projection and positive/negative mixed-class fixtures support this limited [preimage argument](mathematics/lower-bounds.md#certificate-domain). No representative-based broadcast or retry-carrier extension is accepted.
 
 <a id="clm-0007"></a>
 ## CLM-0007 — A bounded Bellman subsolution lower-bounds every proper solution
@@ -159,7 +160,7 @@ For a small fix, this ledger need not change. For a mathematical change, follow 
 **History:**
 - 2026-09-06 — `open` — Drafted by ChatGPT as source-linked research input. Explicit argument/counterexample supplied; local correspondence and repository acceptance remain to be reviewed. No independent reviewer or native rerun is claimed.
 - 2026-09-06 — `accepted` — Codex, responsible integration self-review: conditional mathematical argument accepted on the bounded stopped-process telescoping, vanishing proper-policy tail and monotone convergence. Statement and preconditions unchanged; no independent reviewer or blanket native correspondence is claimed. Native applications still require the named GAP obligations.
-- 2026-09-07 — `accepted` — Codex, scoped early-endpoint application: a useful intermediate native vector passes complete coverage and final-vector minimization before ordinary maximum consumption. The [explicit subsolution audit](../active/2026-09-07-continuous-bounds/README.md) does not require auxiliary tightness; full-refinement audit remains unchanged. No convergence or optimality claim.
+- 2026-09-07 — `accepted` — Codex, scoped early-endpoint application: a useful intermediate native vector passes complete coverage and final-vector minimization before ordinary maximum consumption. The [explicit subsolution audit](../archive/2026-09-07-continuous-bounds/README.md) does not require auxiliary tightness; full-refinement audit remains unchanged. No convergence or optimality claim.
 
 <a id="clm-0008"></a>
 ## CLM-0008 — Omitted action computation must retain complete proof coverage
@@ -265,6 +266,7 @@ For a small fix, this ledger need not change. For a mathematical change, follow 
 **History:**
 - 2026-09-06 — `open` — Drafted by ChatGPT as source-linked research input. Explicit argument/counterexample supplied; local correspondence and repository acceptance remain to be reviewed. No independent reviewer or native rerun is claimed.
 - 2026-09-06 — `accepted` — Codex, responsible integration self-review: conditional mathematical argument accepted on the bounded stopped-region proof with independent finite boundaries and complete simultaneous inequalities. Statement and preconditions unchanged; no independent reviewer or blanket native correspondence is claimed. Native applications still require the named GAP obligations.
+- 2026-09-09 — `accepted` — Codex, scoped constructor-domain application: a separate certificate frame admits an unchanged unfractured request into the already checked coupled region. All-member guards, independent first exits and same-final-goal semantics remain necessary. [Argument and implementation correspondence](mathematics/lower-bounds.md#retention); [current evidence](../active/2026-09-09-empty-start-partial-continuation/README.md). Component correctness does not establish campaign completion or native exact closure.
 
 <a id="clm-0013"></a>
 ## CLM-0013 — Admissibility does not imply feasibility in a changed local relaxation
@@ -328,7 +330,7 @@ For a small fix, this ledger need not change. For a mathematical change, follow 
 
 **History:**
 - 2026-09-06 — `open` — Drafted by ChatGPT as source-linked research input. Explicit argument/counterexample supplied; local correspondence and repository acceptance remain to be reviewed. No independent reviewer or native rerun is claimed.
-- 2026-09-07 — `accepted` — Codex responsible mathematical self-review: repeated conditioning and the complete assignment union establish the conditional statement. The [retained-slot application](mathematics/lower-bounds.md#conditional) counts one physical fracture slot, includes guaranteed draws and excludes retained/forced goals. Exact integer cap and all 26,586 final relation checks are retained in the [campaign evidence](../active/2026-09-07-continuous-bounds/README.md); no general native correspondence or empty-start lower is asserted.
+- 2026-09-07 — `accepted` — Codex responsible mathematical self-review: repeated conditioning and the complete assignment union establish the conditional statement. The [retained-slot application](mathematics/lower-bounds.md#conditional) counts one physical fracture slot, includes guaranteed draws and excludes retained/forced goals. Exact integer cap and all 26,586 final relation checks are retained in the [campaign evidence](../archive/2026-09-07-continuous-bounds/README.md); no general native correspondence or empty-start lower is asserted.
 
 <a id="clm-0016"></a>
 ## CLM-0016 — Acquisition and completion potentials are different table roles

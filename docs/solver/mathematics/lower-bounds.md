@@ -221,7 +221,7 @@ unchanged. Exclusion budgets still cover every earlier history on both sides.
 The same region/action identity binds reused capacities, and every final row is
 minimized again at the checked vector.
 
-The [campaign control](../../active/2026-09-07-continuous-bounds/README.md) exposes
+The [campaign control](../../archive/2026-09-07-continuous-bounds/README.md) exposes
 a limiting suffix event with target weight 500 and conservative remaining other
 weight 35,700. Its integer cap falls from
 \(\lceil2^{24}(3\cdot500/36200)\rceil=695189\) to
@@ -268,6 +268,55 @@ A current-progress model can retain rarity, side occupancy, crafted/fractured ca
 **Context cannot be discarded gratuitously.** A filtered item may be cheaper to finish than an unfiltered one. Deleting the filter and looking up the unfiltered lower does not follow from monotonicity. Likewise, the cost of cleaning up and then finishing is the cost of one policy, not a lower on every continuation. [CLM-0025](../claims.md#clm-0025).
 
 **Programs.** A lower relation can telescope through mandatory primitive steps when all their intermediate semantic states and observed choices are covered. A support-only “ever acquired goals” proof does not automatically validate a different current-progress/retention potential. Each relation must use the potential's actual meaning.
+
+<a id="certificate-domain"></a>
+### Certificate frame and request start
+
+An anchored constructor does not restrict a certificate to that anchor when its
+checked domain is broader. Let D include the selected natural-fracture region
+and the separately indexed unfractured region. For every native member in D,
+require zero at the original final goal and every native action inequality,
+with independent lower values at first exits from D. Applying the stopped-region
+argument at any entry in D proves its value. The actual request need never visit
+the selected fracture. Other fracture outcomes remain covered exits; granting
+them zero continuation is optimistic, not a requirement to acquire the frame.
+This is an application of [CLM-0012](../claims.md#clm-0012) and
+[CLM-0006](../claims.md#clm-0006), not an exact-transition equivalence.
+
+The September 9 implementation accepts an explicit `CoupledFractureFrame`
+separately from the unchanged source item. It uses the source's actual fresh or
+anchored coordinate for checking and early-target selection. Native pool
+construction clears explicit affixes before obtaining complete weights;
+conditional exclusion and retained-capacity arguments still cover each region.
+Craftedness, filters, influence, terminal semantics, source context, full action
+coverage and final-vector probability minimization retain their existing guards.
+The [active evidence](../../active/2026-09-09-empty-start-partial-continuation/README.md)
+distinguishes certificate availability from causal root-policy improvement.
+
+All partial entries retain the **same final goal**. A junk-free one-goal terminal
+is not a relaxation of a junk-free two-goal terminal: the second required affix
+would count as junk under the first predicate. Subtracting goals or invoking a
+smaller request therefore cannot replace a same-goal continuation certificate.
+
+Class membership is a preimage of **all** observed coordinates, not merely its
+modifier mask. If projection ORs a known modifier flag f into every containing
+item, a class query observing f absent excludes that modifier. This remains an
+all-member argument: unknown roles without a proven nonzero flag cannot be
+excluded, nor can a representative establish flag absence. The native projection
+and lower consumer share `modifier_metamod_flag`; the existing active-flag guard
+is still required. Counterexample: removing a hypothetical filter from the mask
+without observing its absence could raise the lower above that filtered member's
+cheaper completion cost. The focused mixed-class fixture accepts the ordinary
+member and refuses the actual filter.
+
+A compressed retry carrier is a different boundary. In the current gated-reforge
+constructor, `retry_base` is captured before direct Essence/Fossil modifiers;
+zero-progress aggregation also precedes the veiled placeholder. The resulting
+carrier cannot be read as a physical empty item merely because its projected
+counts are empty. A lower at that boundary must quantify over its latent native
+members and permitted control decisions, or prove a complete action-specific
+stopped continuation. The existing retention lookup still refuses retry carriers.
+No 405-level value is assigned to that unproved domain.
 
 <a id="ceilings"></a>
 ## 10. Use the optimistic policy to identify a ceiling

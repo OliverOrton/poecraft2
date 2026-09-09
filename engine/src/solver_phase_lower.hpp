@@ -273,6 +273,11 @@ private:
 
 class PhaseLowerProducer {
 public:
+    // Selects a quantified certificate region, never a replacement start item
+    // or a policy requirement to acquire this fracture. The coupled fresh
+    // region covers all supported unfractured members; other fractures keep
+    // the existing independently bounded first-exit relation.
+    struct CoupledFractureFrame { std::uint32_t mod; };
     static std::shared_ptr<const PreparedPhaseLowerView> prepare(
         CalcContext&, const PhaseLowerPrices&, const pc_item_state& phase,
         const PhaseLowerProposal& existing_candidate,
@@ -289,7 +294,8 @@ public:
         std::shared_ptr<const PreparedPhasePotential> reuse_draws = {},
         PhaseContinuation continuation = PhaseContinuation::PriceOnly,
         PhaseRetention retention = PhaseRetention::None, bool retain_diagnostics = true,
-        PhasePreparationOptions preparation_options = {});
+        PhasePreparationOptions preparation_options = {},
+        std::optional<CoupledFractureFrame> frame = {});
     static PreparedPhaseRestartLower zero_restart_boundary(const PreparedPhaseLowerView&);
     static PhaseProgramLowerWitness compose(CalcContext&, const PhaseLowerPrices&,
         const pc_item_state&, const std::string&, const PreparedPhasePotential&,

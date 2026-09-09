@@ -23,6 +23,16 @@
         "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-fractured-4-to-5-product8.json"
       ],
       "source_binding": "full input and selected internal diagnostic mode retained in both original benchmark reports"
+    },
+    "empty-five-product8-v1": {
+      "semantic_version": "unchanged repository quality-ladder empty Rare five-goal product8 fixture",
+      "property": "same-final-goal checked lower consumption and independently evaluated executable upper; native exact closure remains open",
+      "coefficient_semantics": "complete native phase checking and compiled exact evaluation with fixture reconciliation",
+      "scope": "Conquest Lamellar empty Rare ilvl86, full priced product scope, 60-second finish, 90-second watchdog and 1 GiB",
+      "input_references": [
+        "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-clean-5-goal-product8.json"
+      ],
+      "source_binding": "baseline 06d4c41 plus retained final engine patch/executable SHA; intermediate stage hashes unavailable and labelled"
     }
   },
   "comparison_profiles": {
@@ -255,8 +265,8 @@
       "model": "saved-anchored-v1",
       "kind": "certified_native_lower",
       "producer": "native complete probability producer and exact final-vector coefficient audit",
-      "validation": "docs/active/2026-09-07-continuous-bounds/README.md",
-      "evidence": "docs/active/2026-09-07-continuous-bounds/reference.json",
+      "validation": "docs/archive/2026-09-07-continuous-bounds/README.md",
+      "evidence": "docs/archive/2026-09-07-continuous-bounds/reference.json",
       "adapter": "archived_phase_v1",
       "role": "development; complete scoped anchored controls",
       "treatment": "count the physical retained fracture slot in ordinary renewal singleton acquisition caps",
@@ -269,8 +279,8 @@
       "model": "saved-anchored-v1",
       "kind": "conditional_observation",
       "producer": "complete native checking followed by explicit checked-subsolution audit",
-      "validation": "docs/active/2026-09-07-continuous-bounds/README.md",
-      "evidence": "docs/active/2026-09-07-continuous-bounds/checked-subsolution-reference.json",
+      "validation": "docs/archive/2026-09-07-continuous-bounds/README.md",
+      "evidence": "docs/archive/2026-09-07-continuous-bounds/checked-subsolution-reference.json",
       "role": "private diagnostic stop target, full native consumer scope preserved",
       "treatment": "stop at the first fully checked source lower at least 280",
       "limitations": [
@@ -282,13 +292,30 @@
       "model": "fractured-development-product8-v1",
       "kind": "conditional_observation",
       "producer": "existing native benchmark, compiled exact evaluation and process receipts",
-      "validation": "docs/active/2026-09-07-continuous-bounds/README.md",
-      "evidence": "docs/active/2026-09-07-continuous-bounds/comparison.json",
+      "validation": "docs/archive/2026-09-07-continuous-bounds/README.md",
+      "evidence": "docs/archive/2026-09-07-continuous-bounds/comparison.json",
       "pointer": "/development",
       "role": "fixed 30-second finish and 60-second watchdog, failed full-retention finalization preserved",
       "treatment": "additive support, selected fallback parity, exact attribution recovery, slot caps and setup rejection",
       "limitations": [
         "One observation per treatment, including an explicitly resumed post-limit session; no timing distribution, target attainment or exact closure."
+      ]
+    },
+    {
+      "id": "empty-start-domain-and-consumption-20260909",
+      "model": "empty-five-product8-v1",
+      "kind": "conditional_observation",
+      "producer": "native benchmark, private prepared-but-unconsumed ablation, focused member-domain fixtures and process receipts",
+      "validation": "docs/active/2026-09-09-empty-start-partial-continuation/README.md",
+      "evidence": "docs/active/2026-09-09-empty-start-partial-continuation/comparison.json",
+      "pointer": "/runs",
+      "role": "development checkpoint; original user export unavailable, authorized repository substitute",
+      "treatment": "separate certificate frame; intersect class masks with observed native flags; retain retry refusal; remove failed preservation-only mutation",
+      "limitations": [
+        "No causal complete partial-to-root transfer or native exact closure.",
+        "Same-preparation ablation has the same upper; observed policy gain is not attributed to lower consumption.",
+        "Retention-disabled snapshot treatment hit its original watchdog without publication and was removed.",
+        "Single observations; intermediate binary hashes unavailable. Required transfer controls remain open pending Astra review."
       ]
     }
   ],

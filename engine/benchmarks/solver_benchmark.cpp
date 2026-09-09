@@ -3302,7 +3302,8 @@ CaseResult run_case(
         pc_error_info error;
         pc_error_info_init(&error);
         if (!native_retention_diagnostic.empty()) {
-            const auto mode=native_retention_diagnostic=="checked" ? poecraft::solver::NativeRetentionDiagnosticMode::CheckedTarget :
+            const auto mode=native_retention_diagnostic=="reuse-unconsumed" ? poecraft::solver::NativeRetentionDiagnosticMode::ReuseUnconsumed :
+                native_retention_diagnostic=="checked" ? poecraft::solver::NativeRetentionDiagnosticMode::CheckedTarget :
                 native_retention_diagnostic=="reuse" ? poecraft::solver::NativeRetentionDiagnosticMode::Reuse :
                 poecraft::solver::NativeRetentionDiagnosticMode::Cold;
             const auto configured=poecraft::solver::configure_solver_native_retention_diagnostic(handles.solver,mode,&error,native_retention_target_lower);
@@ -5552,7 +5553,7 @@ Arguments parse_arguments(int argc, char** argv) {
         else throw std::runtime_error("unknown argument: " + argument);
     }
     if (!args.native_retention_diagnostic.empty() &&
-        ((args.native_retention_diagnostic!="cold" && args.native_retention_diagnostic!="reuse" && args.native_retention_diagnostic!="checked") ||
+        ((args.native_retention_diagnostic!="cold" && args.native_retention_diagnostic!="reuse" && args.native_retention_diagnostic!="checked" && args.native_retention_diagnostic!="reuse-unconsumed") ||
          args.case_id.empty() || args.validate_only || args.fragment_shadow_only ||
          args.resumable_joint_policy_continuation_diagnostic || args.verified_policy_alternative_shadow_diagnostic ||
          !args.development_checkpoint_save.empty() || !args.development_checkpoint_load.empty()))

@@ -34,6 +34,15 @@ Root evaluation proves the cost of the strategy from that root. It does not esta
 
 The continuation-certificate facility explicitly requests and validates entries. A copied coarse `values` vector is not equivalent to a vector of independently certified executable continuations. A compatible operation/item/checkpoint mapping and complete reachable route remain necessary.
 
+Completed decisions in the same immutable snapshot can be candidate evidence at
+a strict-only entry; missing or newer greedy entries cannot be substituted.
+They are not independently verified entry costs. The September 9 attempt to
+capture such decisions outside the coarse reachable walk passed a synthetic
+preservation test, but the retention-disabled primary then hit its 90-second
+finalization watchdog without a policy. That mutation was removed. The
+[current campaign](../active/2026-09-09-empty-start-partial-continuation/README.md)
+retains its exact patch and failure; the implemented capture behavior is unchanged.
+
 For a class containing several exact items, scalar bounds and executable routing are different objects. Even when each member has some proper policy, the implementation still needs a valid common policy or observable selector to claim one executable class continuation. See [CLM-0006](claims.md#clm-0006).
 
 ## Recovery And Exact Terminal Success

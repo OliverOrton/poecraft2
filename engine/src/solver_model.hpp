@@ -1319,6 +1319,10 @@ struct AbstractState {
 };
 
 /* Project a concrete item onto the layout's abstract features. */
+// The modifier contribution used by project_item, including zero for unknown
+// roles. Consumers may exclude a member only through an observed nonzero flag.
+std::uint32_t modifier_metamod_flag(const SessionImpl&, std::uint32_t mod);
+
 AbstractState project_item(
     const SessionImpl& session,
     const AbstractLayout& layout,

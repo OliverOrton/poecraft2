@@ -73,7 +73,7 @@ seconds of setup and expanded only the root; its verified policy and missed
 preselected target were unchanged. Setup still exceeded the finish budget,
 leaving no measured discovery gain.
 
-The [continuous campaign](../active/2026-09-07-continuous-bounds/README.md) then
+The [continuous campaign](../archive/2026-09-07-continuous-bounds/README.md) then
 removed duplicate additive support enumeration by exact side/goal-mask identity.
 One matched compact pair reduced preparation from 25.661 to 24.835 seconds
 (3.2%), relation construction from 17.538 to 16.648 seconds, and support work
@@ -104,6 +104,23 @@ The campaign establishes preparation savings, stronger scoped lowers and
 verified-policy recovery. No new native exact closure, empty clean-five lower
 or attainment of the historical development target is established.
 
+The [September 9 empty-start checkpoint](../active/2026-09-09-empty-start-partial-continuation/README.md)
+separates the actual source from its certificate construction frame and proves
+member eligibility from the complete observed state, including absent metamod
+flags. The final repository empty five-goal request returns a checked lower
+405.36940 and independently evaluated upper 16,997,812.19923. The same full
+preparation with consumption disabled returns the old 36.48853 lower and the same
+upper: the large upper gain over baseline is not caused by lower consumption.
+Accepting additional natural partial classes raises observed lower owners from
+681 to 4,049 but does not move the root interval. No new exact closure is claimed.
+
+The next question is the semantic/control domain of compressed zero-progress
+retry carriers. Their construction can omit direct modifiers and veiled state;
+a zero occupancy projection is not a physical-empty domain proof. Existing
+retention refuses these carriers. The [Astra review request](../active/2026-09-09-empty-start-partial-continuation/astra-review.md)
+asks for the smallest complete stopped-continuation consumer or a counterexample,
+including unchanged competitor constraints that would cap its gain.
+
 <a id="rq-003"></a>
 ### RQ-003 — Can executable-policy quality be preserved while proof work scales?
 
@@ -117,7 +134,7 @@ shows why a measured scheduling conflict may come from lifecycle ownership,
 not mathematical impossibility. Keep the causal distinction after replacing its
 implementation.
 
-The [continuous campaign](../active/2026-09-07-continuous-bounds/README.md) repaired
+The [continuous campaign](../archive/2026-09-07-continuous-bounds/README.md) repaired
 stale quotient accounting after completed raw policy evaluation. On the same
 30-second development finish request with retention preparation disabled, the
 returned verified upper improved from 14,048,002.569 to 12,124.915; the lower was
@@ -138,6 +155,13 @@ failure names an existing coarse parent outside the restored incumbent policy's
 extent. Preserve that complete selected snapshot and its memory accounting as
 the next focused exact-closure task; no larger graph or weaker identity check is
 justified by the observed failure.
+
+The September 9 preservation-only follow-through kept existing same-candidate
+rows outside the coarse reachable walk without borrowing newer greedy actions.
+Its focused fixture passed, but the no-retention primary hit its 90-second
+finalization watchdog without publication. The mutation was removed and its patch
+and failed run retained. This distinguishes valid candidate preservation from a
+qualified bounded executable continuation repair; the latter remains open.
 
 Dependencies: [CLM-0002](claims.md#clm-0002), [CLM-0004](claims.md#clm-0004),
 [CLM-0020](claims.md#clm-0020), [CLM-0021](claims.md#clm-0021),

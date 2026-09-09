@@ -45,7 +45,7 @@ including edges retained before pass-through contraction. Compressed router
 traces are then reconstructed through their existing owner. Raw-attribution caps
 and failed acceptance checks still refuse; numerical thresholds are unchanged. The
 [flow argument](mathematics/numerical-closure.md#flow-accounting) explains the
-replacement; the [campaign evidence](../active/2026-09-07-continuous-bounds/README.md)
+replacement; the [campaign evidence](../archive/2026-09-07-continuous-bounds/README.md)
 records its qualification.
 
 Properness from one start does not prove properness at every operation entry present in the document. Arbitrary-entry continuation certificates request and validate their entries explicitly. A default failure, unsupported route, or incomplete member domain refuses the corresponding upper.

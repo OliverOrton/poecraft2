@@ -271,6 +271,7 @@ SolveWork::Impl::finalize_carrier_bound_attribution() {
         double terminal_debt = 0.0;
         double strict = kInfinity;
         double envelope = kInfinity;
+        double native_retention = kInfinity;
         double selected = 0.0;
     };
     const auto components = [&](const std::uint32_t state) {
@@ -302,6 +303,9 @@ SolveWork::Impl::finalize_carrier_bound_attribution() {
         if (out.envelope_available) {
             out.envelope = envelope_bellman_lower;
         }
+        if (native_retention_potential) {
+            out.native_retention = project_native_retention_lower(state).value_or(kInfinity);
+        }
         out.selected = completion_proof_lower(state).value;
         return out;
     };
@@ -318,6 +322,7 @@ SolveWork::Impl::finalize_carrier_bound_attribution() {
         TerminalDebtOwner,
         StrictOwner,
         EnvelopeOwner,
+        NativeRetentionOwner,
         ZeroFallbackOwner,
         OwnerCount,
     };
@@ -336,11 +341,14 @@ SolveWork::Impl::finalize_carrier_bound_attribution() {
             approximately_equal(value.strict, value.selected);
         result[EnvelopeOwner] = value.envelope_available &&
             approximately_equal(value.envelope, value.selected);
+        result[NativeRetentionOwner] = options.native_retention_consume &&
+            value.native_retention > 0 &&
+            approximately_equal(value.native_retention, value.selected);
         result[ZeroFallbackOwner] = value.selected == 0.0 &&
             !result[UniversalOwner] && !result[CleanOwner] &&
             !result[CarrierProgressOwner] &&
             !result[TerminalDebtOwner] && !result[StrictOwner] &&
-            !result[EnvelopeOwner];
+            !result[EnvelopeOwner] && !result[NativeRetentionOwner];
         return result;
     };
     struct Population {
@@ -445,6 +453,19 @@ SolveWork::Impl::finalize_carrier_bound_attribution() {
         samples.push_back(state);
     };
     add_sample(result.start_state);
+    // Keep bounded, semantically different partial entries before the usual
+    // policy prefix fills the sample cap. This is observation of existing
+    // states, never preparation or materialization for telemetry.
+    std::array<bool, Work::kGoalMaskCount> sampled_retention_masks{};
+    unsigned retention_samples = 0;
+    if (native_retention_potential) for (std::uint32_t state = 0; state < state_count && retention_samples < 8; ++state) {
+        if ((state+1)%1024==0) co_await solve_detail::CooperativeCheckpoint{samples.capacity() * sizeof(std::uint32_t)};
+        const auto mask = satisfied_goal_mask_for_state(state);
+        if (!mask || sampled_retention_masks[mask] || calc.is_goal_state(calc.state(state))) continue;
+        if (project_native_retention_lower(state).value_or(0) <= 0) continue;
+        add_sample(state); sampled_retention_masks[mask] = true; ++retention_samples;
+        co_await solve_detail::CooperativeCheckpoint{samples.capacity() * sizeof(std::uint32_t)};
+    }
     for (std::uint32_t state = 0; state < state_count; ++state) {
         if (state < result.policy_reachable.size() &&
             result.policy_reachable[state]) {
@@ -488,7 +509,7 @@ SolveWork::Impl::finalize_carrier_bound_attribution() {
     static constexpr std::array<const char*, OwnerCount> kOwnerNames{{
         "universal", "clean_mdp", "carrier_progress",
         "terminal_debt", "strict_clean", "envelope_bellman",
-        "zero_fallback"}};
+        "native_retention", "zero_fallback"}};
     const auto operator_family_name = [&](const std::size_t index) {
         std::string name;
         if (index < Work::kPrimitiveFamilyCount) {
@@ -561,6 +582,18 @@ SolveWork::Impl::finalize_carrier_bound_attribution() {
         json += ",\"strict_clean\":" + finite_json(value.strict);
         json += ",\"envelope_bellman\":" +
             finite_json(value.envelope);
+        json += ",\"native_retention\":" + finite_json(value.native_retention);
+        json += ",\"native_retention_consumed\":" + std::string(options.native_retention_consume ? "true" : "false");
+        json += ",\"goal_progress_retry_basin\":" + std::to_string(carrier.goal_progress_retry_basin);
+        unsigned unsafe_slots=0, unsafe_junk=0;
+        if (native_retention_potential) {
+            for (unsigned slot=0;slot<calc.layout().slots.size();++slot)
+                unsafe_slots += carrier.slot_status[slot]!=static_cast<unsigned>(GoalSlotStatus::Absent) && !native_retention_slot_safe[slot];
+            for (unsigned group=0;group<calc.layout().junk_classes.size();++group)
+                unsafe_junk += carrier.junk_counts[group] && !native_retention_junk_safe[group];
+        }
+        json += ",\"native_unsafe_goal_classes\":" + std::to_string(unsafe_slots);
+        json += ",\"native_unsafe_junk_classes\":" + std::to_string(unsafe_junk);
         json += ",\"selected_maximum\":" +
             finite_json(value.selected);
         json += ",\"owners\":";

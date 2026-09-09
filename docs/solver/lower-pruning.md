@@ -104,12 +104,29 @@ context; support canonicalization already removes repeated target cells.
 Preserving first-occurrence order therefore produces the same canonical groups
 for current-value minimization. The existing five-goal frame bounds the fixed
 storage to 64 pairs. Native pool weights, nonempty witnesses and Annul occurrence
-multiplicities still use their complete populations. The [campaign evidence](../active/2026-09-07-continuous-bounds/README.md)
+multiplicities still use their complete populations. The [campaign evidence](../archive/2026-09-07-continuous-bounds/README.md)
 records the exact-payload comparison and measured preparation effect.
 
 ## Opt-In Ordinary Native Retention Lower
 
 `SolveOptions::native_retention_lower` defaults off for native/C ABI callers. At Oliver's request, the WASM facade selects it with numerical reuse on each newly opened solver, so normal Calculator solves exercise it without a new UI setting. This browser-testing activation is not a claim that the earlier performance gate established exact-closure improvement. `SolveWork::Impl` prepares one compatible view in setup and reserves the existing 32 MiB additional proof budget within the total solver cap. `NativeRetention` contributes through the existing maximum-composition path; unsupported sources and caller scopes retain their previous lower.
+
+An explicit certificate frame now separates construction from the request's actual
+start. Supported unfractured requests query the existing jointly checked fresh
+region; the native item, full goal and allowed policies are unchanged. Other
+fractures and unsupported effects retain their existing first-exit lower floors.
+The native-only `reuse-unconsumed` diagnostic prepares and queries the same view
+but returns zero at its ordinary consumer, enabling a causal ablation without
+changing the crafting problem. It is not a browser setting.
+
+Member validity uses the intersection of class masks and observed state fields.
+`project_item` sets each known metamod's native flag regardless of its crafted
+bit. Since this consumer requires all those flags absent, a known metamod in a
+coarse class mask cannot inhabit an accepted query. Both owners use the same
+`modifier_metamod_flag` projection; unknown roles with no observed flag and veiled
+templates still refuse. Active filters are not erased or reclassified as ordinary
+junk. [Argument](mathematics/lower-bounds.md#certificate-domain) and
+[measured integration](../active/2026-09-09-empty-start-partial-continuation/README.md).
 
 The qualified frame is anchored by an exact goal fracture and couples the relevant unfractured region. Its reported scope covers the recorded side/goal domain and all Eldritch phases, with conservative handling of hidden exclusions. Generic influence, unmodeled metamods, additional fractures, veiled state, and unsupported restore memory remain outside its validated frame. Selected Cannot Roll Attack/Caster continuations are included as described below. Do not generalize its domain from the name “phase lower.”
 

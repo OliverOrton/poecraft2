@@ -132,24 +132,6 @@ bool session_mods_share_group(
     return false;
 }
 
-std::uint32_t session_metamod_flag(
-    const SessionImpl& session,
-    const std::uint32_t mod) {
-    const std::int32_t type = session.metamod_type[mod];
-    if (type < 0) return 0;
-    const DataImpl& data = *session.data;
-    if (type == data.metamod_multimod_code) return kFlagMultimod;
-    if (type == data.metamod_no_attack_code) return kFlagNoAttack;
-    if (type == data.metamod_no_caster_code) return kFlagNoCaster;
-    if (type == data.metamod_prefixes_locked_code) {
-        return kFlagPrefixesLocked;
-    }
-    if (type == data.metamod_suffixes_locked_code) {
-        return kFlagSuffixesLocked;
-    }
-    return 0;
-}
-
 void classify_slot_mask(
     const std::uint32_t source,
     const std::uint32_t all_successors,
@@ -2989,7 +2971,7 @@ ProductFractureKernel solve_detail::build_product_fracture_kernel(
         bool first_metamod = true;
         std::uint32_t uniform_metamod = 0;
         for (const std::uint32_t mod : members) {
-            const std::uint32_t flag = session_metamod_flag(session, mod);
+            const std::uint32_t flag = modifier_metamod_flag(session, mod);
             if (first_metamod) {
                 first_metamod = false;
                 uniform_metamod = flag;

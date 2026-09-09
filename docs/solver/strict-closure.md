@@ -22,7 +22,7 @@ When a strict successor has no selected coarse operator, cooperative selected-ro
 preparation reaches the synchronous builder's existing admitted-alternative
 certification. Each replacement still needs its native row and continuation
 checks; the absent coarse selection is not itself an infeasibility proof.
-Resource-cap exceptions propagate through both routes. The [campaign evidence](../active/2026-09-07-continuous-bounds/README.md)
+Resource-cap exceptions propagate through both routes. The [campaign evidence](../archive/2026-09-07-continuous-bounds/README.md)
 records the successor regression and refusal controls.
 
 When an alternative reaches outside the current closed partition, the frontier returns to the grow/repartition owner before unrelated old-generation obligations are replayed. That ordering avoids treating a known missing dependency as if it were already part of the closed proof.

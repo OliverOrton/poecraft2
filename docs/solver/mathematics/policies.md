@@ -56,6 +56,22 @@ A simple graph demonstrates the distinction: root \(r\) goes to the goal for cos
 
 Likewise, the fact that a strategy router refuses an off-policy item establishes a limitation of *that strategy*. It does not establish the native item's infeasibility and does not forbid lower-only analysis at the item. [Lower-only frontier proof](lower-bounds.md#frontier).
 
+### Saved decisions and continuation authority
+
+A completed operation, its observed-choice payload, prices and immutable row
+identity may be retained from one candidate even when a coarse root walk did not
+visit that entry. This preserves a candidate decision, not a value theorem at the
+entry. Every newly reached continuation still needs complete routing, properness
+and evaluation under the original final goal. Copying a later greedy decision
+instead changes the controller and invalidates the saved candidate's identity.
+Two individually terminating continuations that alternate forever are a concrete
+counterexample to treating preserved decisions as an executable upper.
+
+The September 9 preservation-only mutation passed a focused snapshot fixture but
+failed its ordinary no-retention qualification at the 90-second finalization
+watchdog. It was removed; this conditional argument is retained for the next
+bounded continuation repair. See the [failure and patch](../../active/2026-09-09-empty-start-partial-continuation/README.md).
+
 <a id="choices"></a>
 ## 3. Respect when a choice becomes available
 

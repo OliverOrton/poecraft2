@@ -833,7 +833,9 @@ solver::SolveOptions solve_options(
     solver::SolveOptions value = solve_options(options);
     value.native_retention_lower = holder.native_retention_diagnostic != solver::NativeRetentionDiagnosticMode::Off;
     value.native_retention_numerical_reuse = holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::Reuse ||
-        holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::CheckedTarget;
+        holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::CheckedTarget ||
+        holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::ReuseUnconsumed;
+    value.native_retention_consume = holder.native_retention_diagnostic != solver::NativeRetentionDiagnosticMode::ReuseUnconsumed;
     value.native_retention_checked_target = holder.native_retention_checked_target;
     if (holder.carrier_ladder_exact_boundary_diagnostic.has_value()) {
         value.carrier_ladder_exact_boundary_mode =
@@ -1165,7 +1167,7 @@ pc_result solver::create_solver_with_automatic_candidate_diagnostic(
 pc_result solver::configure_solver_native_retention_diagnostic(
         pc_solver_handle handle, NativeRetentionDiagnosticMode mode, pc_error_info* out_error, double checked_target) {
     if (!handle || handle->solve_work || handle->solved.has_value() ||
-        (mode!=NativeRetentionDiagnosticMode::Off && mode!=NativeRetentionDiagnosticMode::Cold && mode!=NativeRetentionDiagnosticMode::Reuse && mode!=NativeRetentionDiagnosticMode::CheckedTarget) ||
+        (mode!=NativeRetentionDiagnosticMode::Off && mode!=NativeRetentionDiagnosticMode::Cold && mode!=NativeRetentionDiagnosticMode::Reuse && mode!=NativeRetentionDiagnosticMode::CheckedTarget && mode!=NativeRetentionDiagnosticMode::ReuseUnconsumed) ||
         !std::isfinite(checked_target) || checked_target<0 ||
         ((mode==NativeRetentionDiagnosticMode::CheckedTarget) != (checked_target>0))) {
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "native retention diagnostic requires an idle unsolved handle and known mode");

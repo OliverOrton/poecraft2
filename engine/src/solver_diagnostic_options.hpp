@@ -42,7 +42,7 @@ struct CarrierLadderExactBoundaryDiagnosticConfig {
  * action_legal before asking for any kernel. */
 CalcContext& solver_lower_diagnostic_calculator(pc_solver_handle handle);
 
-enum class NativeRetentionDiagnosticMode { Off, Cold, Reuse, CheckedTarget };
+enum class NativeRetentionDiagnosticMode { Off, Cold, Reuse, CheckedTarget, ReuseUnconsumed };
 // Same ordinary consumer, native benchmark only. No public ABI/profile flag.
 pc_result configure_solver_native_retention_diagnostic(pc_solver_handle handle,
     NativeRetentionDiagnosticMode mode, pc_error_info* out_error, double checked_target = 0);

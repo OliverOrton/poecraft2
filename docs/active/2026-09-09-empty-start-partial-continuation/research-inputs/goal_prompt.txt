@@ -1,0 +1,25 @@
+/goal Make the existing solver's partial-item continuation work translate into a materially better empty-start 0-to-5 result through the current carrier ladder and proof owners. Implement the attached Empty-Start Partial-Continuation Integration and Exact Closure v1 plan; do not stop after diagnostics or one local improvement.
+
+Reviewed main: 06d4c41d0cef62ec528bf22f25b122de230c913f. Reconcile actual local changes first. Use current repository delegation policy; this is not the old September 7 deadline run or its temporary subagent exception. Do not push, change mechanics/scope, raise comparison caps, or touch protected path 0.
+
+Read the actual attached implementation_plan.md and mathematical_delta.md. Record their paths; do not substitute an older similarly named plan. The central contract is also here:
+
+Partial work SHOULD help empty-start solving. The subproblem is completion of the original final goal from an exact partial item/control state—not an independent smaller-goal craft. Preserve destructive outcomes, retries, observations, all probability mass, and complete competing-action coverage.
+
+First recover the user's recent 0-to-5 export from already available local evidence. If unavailable, proceed with fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-clean-5-goal-product8.json and label it as the repository reference. That case is empty Rare, 60-second finish/90-second watchdog, eight-work-item stepping and 1 GiB. Do not substitute the anchored 30/60-second experiment or silently run the older Imprint-enabled archive.
+
+Trace the whole chain: reached partial state -> compatible certificate or selected continuation -> complete predecessor relation -> updated root evidence -> strict lift -> compiled and independently evaluated result. Establish a matched baseline and freeze the acceptance target before treatment.
+
+Implement the missing connections: preserve compatible selected-policy snapshots; make useful partial lower queries available inside an empty-start run instead of relying only on once-at-start anchored preparation; notify existing backward dependencies; keep ordinary ladder continuation assembly and publication working. Distinguish genuinely missing continuations from discarded or newer evidence. Do not fix a short policy vector by padding it with current greedy actions.
+
+Prefer exposing an already proved larger certificate domain or one relevant run-local prepared view. Prove the original native scope and every exit. Do not simply delete the fracture guard, construct one full donor per state, force the craft to fracture, or build another planner/permanent fragment library.
+
+Use fully checked early lower endpoints where useful, without turning the diagnostic threshold 280 into a universal setting. Preparation and finalization count against end-to-end performance. Preserve an already verified incumbent when optional later proof work fails through the existing authorities.
+
+Continue through one causal ablation and a measured follow-through on the remaining root bottleneck. A partial-only gain, lookup count, snapshot fixture or faster constructor is not goal completion.
+
+Done means: a traced current-run partial-to-root contribution AND new exact closure, at least 20% smaller certified root gap with no worse evaluated upper at the same budget, or at least 20% faster attainment of a predeclared compatible policy/gap target. Follow the detailed plan for unavailable-policy baselines and appropriate existing gates. Keep at least two distinct encountered partial entries and relevant regression anchors. Qualify the actual browser path after native integration.
+
+Write and update the existing mathematical/docs owners as findings are established. Use focused tests and discriminating native probes, not repetitive suites, full censuses or routine Simulator. Keep one living record and actual knowledge receipt.
+
+Pause coherently for real usage/permission limits or a specifically established blocker; do not mark an unmet goal achieved, silently reduce the target, automatically restart, or promise background work. Begin implementation and keep selecting the next useful action until the completion contract is met or a real stop condition applies.

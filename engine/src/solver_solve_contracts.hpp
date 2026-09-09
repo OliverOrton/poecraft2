@@ -84,11 +84,12 @@ struct SolveOptions {
      * state certificate. Certified partial transition graphs are never
      * retained as price-independent re-solve caches. */
     bool state_certificate_control = true;
-    /* Internal opt-in native lower treatment. No public profile/binding enables
-     * it. Prepare once per solve; 32 MiB is the primary proof reservation. */
+    /* Internal native lower treatment. WASM explicitly enables reuse; native
+     * and C ABI defaults stay separate. Prepare once per solve, within 32 MiB. */
     bool native_retention_lower = false;
     bool native_retention_profile = false; // sampled internal attribution only
     bool native_retention_numerical_reuse = false; // private matched experiment; no public activation
+    bool native_retention_consume = true; // private causal ablation, same checked preparation
     double native_retention_checked_target = 0; // private checked-subsolution stopping experiment
     std::uint64_t native_retention_proof_bytes = 32ull << 20;
     /* White-box parity switch for the versioned successful fallback

@@ -894,6 +894,18 @@ AbstractLayout build_abstract_layout(
     return layout;
 }
 
+std::uint32_t modifier_metamod_flag(const SessionImpl& session, std::uint32_t mod) {
+    const auto type = session.metamod_type.at(mod);
+    if (type < 0) return 0;
+    const auto& data = *session.data;
+    if (type == data.metamod_multimod_code) return kFlagMultimod;
+    if (type == data.metamod_no_attack_code) return kFlagNoAttack;
+    if (type == data.metamod_no_caster_code) return kFlagNoCaster;
+    if (type == data.metamod_prefixes_locked_code) return kFlagPrefixesLocked;
+    if (type == data.metamod_suffixes_locked_code) return kFlagSuffixesLocked;
+    return 0;
+}
+
 AbstractState project_item(
     const SessionImpl& session,
     const AbstractLayout& layout,
@@ -920,7 +932,6 @@ AbstractState project_item(
         state.flags |= kFlagEldritchImplicit;
     }
 
-    const DataImpl& data = *session.data;
     std::vector<std::uint32_t> groups;
     const auto visit = [&](const pc_mod_slot& slot, int side) {
         const std::uint32_t mod = slot.mod_id;
@@ -932,20 +943,8 @@ AbstractState project_item(
             state.flags |= kFlagVeiledMod;
             state.veiled_side = static_cast<std::int8_t>(side);
         }
-        const std::int32_t metamod = session.metamod_type[mod];
-        std::uint32_t metamod_flag = 0;
-        if (metamod >= 0) {
-            if (metamod == data.metamod_multimod_code) {
-                metamod_flag = kFlagMultimod;
-            } else if (metamod == data.metamod_no_attack_code) {
-                metamod_flag = kFlagNoAttack;
-            } else if (metamod == data.metamod_no_caster_code) {
-                metamod_flag = kFlagNoCaster;
-            } else if (metamod == data.metamod_prefixes_locked_code) {
-                metamod_flag = kFlagPrefixesLocked;
-            } else if (metamod == data.metamod_suffixes_locked_code) {
-                metamod_flag = kFlagSuffixesLocked;
-            }
+        const auto metamod_flag = modifier_metamod_flag(session, mod);
+        if (metamod_flag) {
             state.flags |= metamod_flag;
             if (slot.flags & PC_MOD_SLOT_FRACTURED) {
                 state.fractured_metamod_flags |= metamod_flag;

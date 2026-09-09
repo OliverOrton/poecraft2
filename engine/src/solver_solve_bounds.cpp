@@ -15,7 +15,26 @@ void SolveWork::Impl::prepare_native_retention_lower() {
         unsigned fractures = 0;
         for (unsigned i=0;i<exact_start_item.prefix_count;++i) fractures += !!(exact_start_item.prefixes[i].flags&PC_MOD_SLOT_FRACTURED);
         for (unsigned i=0;i<exact_start_item.suffix_count;++i) fractures += !!(exact_start_item.suffixes[i].flags&PC_MOD_SLOT_FRACTURED);
-        if (fractures != 1) throw std::invalid_argument("native retention requires a natural anchored request");
+        std::optional<PhaseLowerProducer::CoupledFractureFrame> frame;
+        if (fractures == 0) {
+            // Constructor frame and actual request are separate. All fresh
+            // cells already have complete checked native action coverage;
+            // selecting a frame does not force a fractured continuation.
+            for (const auto& slot : calc.layout().slots) {
+                for (unsigned mod=0;mod<session.mod_count;++mod) {
+                    if (!pc_bitset_test(slot.satisfying_mask.data(),mod) ||
+                        session.metamod_type.at(mod)>=0 ||
+                        modifier_is_veiled_template(session,mod) ||
+                        !pc_bitset_test(session.normal_random_roll_mask.data(),mod)) continue;
+                    frame=PhaseLowerProducer::CoupledFractureFrame{mod};
+                    break;
+                }
+                if (frame) break;
+            }
+            if (!frame) throw std::invalid_argument("native retention has no natural goal frame");
+        } else if (fractures != 1) {
+            throw std::invalid_argument("native retention requires at most one natural fracture");
+        }
         const auto cap = options.native_retention_proof_bytes;
         if (cap != (32ull<<20) && cap != (64ull<<20)) throw std::invalid_argument("native retention proof budget must be labelled 32 or 64 MiB");
         const auto live = estimated_owned_bytes_with_calc(calc.audited_estimated_owned_bytes());
@@ -33,9 +52,16 @@ void SolveWork::Impl::prepare_native_retention_lower() {
             proposal,support,zero,false,true,budget,true,{},PhaseContinuation::CoupledFresh,
             PhaseRetention::AnnulNonempty,false,{true,true,3,
                 options.native_retention_numerical_reuse,options.native_retention_numerical_reuse,
-                options.native_retention_checked_target>0,options.native_retention_checked_target});
+                options.native_retention_checked_target>0,options.native_retention_checked_target},frame);
         const auto safe_member = [&](unsigned mod) {
-            return session.metamod_type.at(mod)<0 && !modifier_is_veiled_template(session,mod);
+            // A class mask is only one part of its member domain. The query
+            // also requires absence of every metamod flag. project_item adds
+            // the known flag for every such modifier regardless of crafted
+            // status, so those members cannot inhabit an accepted state.
+            // Unknown roles (no observable flag) and veiled templates still
+            // refuse; no representative substitutes for complete coverage.
+            return !modifier_is_veiled_template(session,mod) &&
+                (session.metamod_type.at(mod)<0 || modifier_metamod_flag(session,mod)!=0);
         };
         for (unsigned slot=0;slot<calc.layout().slots.size();++slot) {
             int side=-1; bool safe=true;
@@ -98,7 +124,7 @@ double SolveWork::Impl::native_retention_lower_value(std::uint32_t state_id) {
     ++native_retention_projection_checks;
     const auto value=project_native_retention_lower(state_id);
     if (value) ++native_retention_hits;
-    return value.value_or(0);
+    return options.native_retention_consume ? value.value_or(0) : 0;
 }
 
 std::optional<double> SolveWork::Impl::project_native_retention_lower(std::uint32_t state_id) const {

@@ -307,7 +307,8 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         const PreparedPhaseRestartLower& issued_restart_boundary,
         bool consider_imprint, bool retain_scour, const QuotientLowerBudget& budget,
         bool joint_refinement, std::shared_ptr<const PreparedPhasePotential> reuse_draws, PhaseContinuation continuation,
-        PhaseRetention retention, bool retain_diagnostics, PhasePreparationOptions preparation_options) {
+        PhaseRetention retention, bool retain_diagnostics, PhasePreparationOptions preparation_options,
+        std::optional<CoupledFractureFrame> frame) {
     const auto preparation_start = PreparationClock::now();
     PhasePreparationStats stats;
     checkpoint(budget);
@@ -343,11 +344,21 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         if (anchor.prefixes[i].flags & PC_MOD_SLOT_FRACTURED) fracture = anchor.prefixes[i].mod_id;
     for (unsigned i = 0; i < anchor.suffix_count; ++i)
         if (anchor.suffixes[i].flags & PC_MOD_SLOT_FRACTURED) fracture = anchor.suffixes[i].mod_id;
-    if (!in_frame(calc, anchor, fracture) || calc.session().rare_affix_cap != 3 ||
+    const bool fresh_source = fracture == kNoId;
+    if (frame) {
+        if (continuation != PhaseContinuation::CoupledFresh ||
+            (!fresh_source && fracture != frame->mod))
+            throw std::invalid_argument("coupled frame disagrees with source domain");
+        fracture = frame->mod;
+    }
+    if (!in_frame(calc, anchor, fresh_source ? kNoId : fracture) || calc.session().rare_affix_cap != 3 ||
         calc.layout().slots.size() > 5)
         throw std::invalid_argument("uncovered native probability frame");
     const auto fm = mod_mask(calc, fracture);
     if (!fm) throw std::invalid_argument("phase probability requires the measured fractured goal frame");
+    if (calc.session().metamod_type.at(fracture) >= 0 ||
+        modifier_is_veiled_template(calc.session(), fracture))
+        throw std::invalid_argument("coupled frame requires a natural goal modifier");
     const unsigned fs = calc.session().gen_type[fracture];
     const auto fracture_exclusions=modifier_exclusion_effect_signature(calc.session(),fracture);
     const auto masks = static_cast<std::uint32_t>(support->values.size());
@@ -686,7 +697,7 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
     unsigned accepted_rounds = 0;
     std::uint64_t accepted_relation_count = 0, accepted_report_bytes = 0, export_reservation = 0;
     const unsigned max_rounds=retention==PhaseRetention::None ? 32 : 64;
-    unsigned anchor_cell = static_cast<unsigned>(index(masks, anchor.rarity,
+    unsigned anchor_cell = static_cast<unsigned>((fresh_source ? fresh_offset : 0)+index(masks, anchor.rarity,
         item_mask(calc, anchor), anchor.prefix_count, anchor.suffix_count));
     if (retention != PhaseRetention::None) {
         const auto crafted = crafted_observation(calc, anchor);
@@ -730,8 +741,7 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         // and the existing boundary producer are bound by the returned view.
         boundary.evidence_identity = {version, 0x4652455348};
         if (!coupled) query.boundaries.push_back(std::move(boundary));
-        query.roots = {static_cast<std::uint32_t>(index(masks, anchor.rarity, item_mask(calc, anchor),
-            anchor.prefix_count, anchor.suffix_count))};
+        query.roots = {anchor_cell};
         std::vector<PhasePotentialRelation> relations;
         std::uint64_t report_bytes=0;
         if (exporting) {
